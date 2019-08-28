@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "outDir": "../wwwroot/js",
+        "target": "es6",
+        "lib": [
+            "dom",
+            "esnext"
+        ],
+        "types": [
+            "babylonjs",
+            "babylonjs-materials",
+            "facebook-js-sdk"
+        ],
+        "moduleResolution": "node"
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}

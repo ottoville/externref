@@ -1,0 +1,18 @@
+//type Angle={rad:number, deg:number}
+type Zone = {coord:BABYLON.Vector3,ang:Angle,size: {h:number, w:number}}
+type subTexture = {
+    x: number;
+    z: number;
+    imageData: ImageData;
+}
+type savedCamera = {id:number, camera: {alpha: number, beta:number, radius:number, target: BABYLON.Vector3, position: BABYLON.Vector3}}
+type PTDresult =
+    {
+        coord: Vector3,
+        ang: Angle,
+        size: {
+            w: number,
+            h: number
+        }
+    }
+type PTResultF= ( coords: PTDresult, plane?:BABYLON.Mesh) => void;
