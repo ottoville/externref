@@ -1,8 +1,9 @@
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -26,12 +27,12 @@ export class WorldScene extends BABYLON.Scene {
                 console.log(data);
             };
         }
-        this.SunObject = new Sun(this.getGameTime, this);
+        this.SunObject = new Sun(this);
         let gameEngine = new WorkerThread('js/workers/engine.js');
         gameEngine.message(WorkerReturn.noReturn, 'init', {
             gameTime: this.lastStateChangeGameTime
         });
-        /* (<HTMLInputElement>(document.getElementById('gameState'))).addEventListener('change', (evt) => {
+        /*(<HTMLInputElement>(document.getElementById('gameState'))).addEventListener('change', (evt) => {
              if ((<HTMLInputElement>evt.target).checked) {
                  this.lastStateChangeGameTime = this.getGameTime();
                  this.lastStateChangeTime = new Date().getTime();
@@ -351,12 +352,6 @@ export class WorldScene extends BABYLON.Scene {
     
              });*/
         }).catch(e => console.log(e));
-    }
-    getGameTime() {
-        if (this.gameSpeed < 0)
-            return this.lastStateChangeGameTime;
-        let interval = new Date().getTime() - this.lastStateChangeTime;
-        return this.lastStateChangeGameTime + (BigInt(interval * 60) << this.gameSpeed);
     }
 }
 function VERTEX_CreateGroundFromHeightMap(options) {

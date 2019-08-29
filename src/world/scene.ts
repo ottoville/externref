@@ -11,13 +11,13 @@ export class WorldScene extends BABYLON.Scene {
     private lastStateChangeGameTime = BigInt(21600 * 1000); //6 hours
     private lastStateChangeTime = new Date().getTime();
 
-    public getGameTime(): bigint {
+    /*public getGameTime(): bigint {
         if (this.gameSpeed < 0)
             return this.lastStateChangeGameTime;
         let interval = new Date().getTime() - this.lastStateChangeTime;
         return this.lastStateChangeGameTime + (BigInt(interval * 60) << this.gameSpeed);
-    }
-    public currentGameTime: bigint;
+    }*/
+    public currentGameTime: int;
     public SunObject: Sun;
     constructor(engine: BABYLON.Engine, userinfo: { name: string, email: string }, private webSocket?: WebSocket) {
         super(engine);
@@ -27,13 +27,13 @@ export class WorldScene extends BABYLON.Scene {
                 console.log(data);
             }
         }
-        this.SunObject = new Sun(this.getGameTime, this);
+        this.SunObject = new Sun(this);
         let gameEngine = new WorkerThread('js/workers/engine.js');
 
         gameEngine.message(WorkerReturn.noReturn, 'init', {
             gameTime: this.lastStateChangeGameTime
         });
-       /* (<HTMLInputElement>(document.getElementById('gameState'))).addEventListener('change', (evt) => {
+       /*(<HTMLInputElement>(document.getElementById('gameState'))).addEventListener('change', (evt) => {
             if ((<HTMLInputElement>evt.target).checked) {
                 this.lastStateChangeGameTime = this.getGameTime();
                 this.lastStateChangeTime = new Date().getTime();

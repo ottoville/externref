@@ -1,24 +1,68 @@
 ﻿@page "/game"
 @inject IJSRuntime JSRuntime;
 
-<h1>Counter</h1>
-<canvas id="renderCanvas" class="gameControl hidden" style="float:left"></canvas>
-<p>Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
-
 @code {
     int currentCount = 0;
+    static int gameSpeed = 0;
+    static long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
+    static long lastStateChangeTime = DateTime.Now.Ticks;
+    string currentGameTime;
+    protected override void OnInitialized()
+    {
+        JSRuntime.InvokeAsync<string>("console.log", "initiazed");
+        System.Threading.Timer timer = new System.Threading.Timer((e) =>
+        {
+            var curDate = new DateTime(getGameTime());
+            currentGameTime = curDate.ToShortDateString() + " " + curDate.ToShortTimeString();
+            StateHasChanged();
+        }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
+
+    }
+
     protected override void OnAfterRender()
     {
         currentCount = 100;
-          JSRuntime.InvokeAsync<string>(
-                "initCanvas");
+        JSRuntime.InvokeAsync<string>(
+              "initCanvas");
     }
-    
 
     void IncrementCount()
     {
         currentCount++;
     }
+    [JSInvokable]
+    public static Int64 getGameTime()
+    {
+        if (gameSpeed < 0)
+            return lastStateChangeGameTime;
+        var interval = DateTime.Now.Ticks - lastStateChangeTime;
+        return lastStateChangeGameTime + ((interval * 60) << gameSpeed);
+    }
+    void changeState(UIChangeEventArgs e)
+    {
+        lastStateChangeGameTime = getGameTime();
+        gameSpeed = Int32.Parse(e.Value.ToString());
+        lastStateChangeTime = DateTime.Now.Ticks;
+    }
 }
+<h1>Counter</h1>
+
+<canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:500px;height:500px"></canvas>
+<fieldset class="gameControl hidden" id="gameState" style="position:absolute;bottom:15px;right:15px;background-color:white">
+    <label>Time of day: <output id="TODout" fow="TOD">@currentGameTime</output></label>
+    <br />
+    <input name="time" type="radio" id="pause" value="-1" checked="@(gameSpeed == -1)" @onchange="@changeState" />
+    <label for="pause">⏸️</label>
+    <input name="time" type="radio" id="play" value="0" checked="@(gameSpeed == 0)" @onchange="@changeState" />
+    <label for="play">▶️</label>
+    <input name="time" type="radio" id="fastforward" value="1" checked="@(gameSpeed == 1)" @onchange="@changeState" />
+    <label for="fastforward">⏩</label>
+    <input name="time" type="radio" id="fastforward2" value="2" checked="@(gameSpeed == 2)" @onchange="@changeState" />
+    <label for="fastforward2">4⏩</label>
+    <input name="time" type="radio" id="fastforward3" value="3" checked="@(gameSpeed == 3)" @onchange="@changeState" />
+    <label for="fastforward3">8⏩</label>
+    <input name="time" type="radio" id="fastforward4" value="4" checked="@(gameSpeed == 4)" @onchange="@changeState" />
+    <label for="fastforward4">16⏩</label>
+    <input name="time" type="radio" id="fastforward5" value="5" checked="@(gameSpeed == 5)" @onchange="@changeState" />
+    <label for="fastforward5">32⏩</label>
+</fieldset>

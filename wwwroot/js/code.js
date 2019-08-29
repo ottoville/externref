@@ -1,8 +1,9 @@
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -85,30 +86,24 @@ BABYLON.Effect.prototype._loadVertexShader = function (vertex, callback) {
 var createScene = function (userinfo, loadingBar, engine) {
     return new Promise((res, rej) => {
         let webSocket = new WebSocket('ws://localhost:8081');
-        let TODOut = document.getElementById("TODout");
         webSocket.onopen = () => {
             loadingBar.value = 20;
             var scene = new WorldScene(engine, userinfo, webSocket);
             scene.collisionsEnabled = true;
-            setInterval(() => {
-                // @ts-ignore
-                TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
-            }, 500);
             res(scene);
         };
         webSocket.onerror = () => {
             var scene = new WorldScene(engine, userinfo);
             scene.collisionsEnabled = true;
-            setInterval(() => {
-                // @ts-ignore
-                TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
-            }, 500);
             res(scene);
         };
     });
 };
 window.initCanvas = function () {
     var canvas = document.getElementById("renderCanvas");
+    if (!canvas || canvas.dataset.inited === "true")
+        return;
+    canvas.dataset.inited = "true";
     console.log('canvas is ', canvas);
     var engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
     let loadingBar = document.getElementById('loadingBar');
@@ -152,10 +147,15 @@ window.initCanvas = function () {
         //document.getElementById('loading').style.display = 'block';
         //loadingBar.value = 10;
         var scene = yield createScene(userdata, loadingBar, engine);
+        let TODOut = document.getElementById("TODout");
+        setInterval(() => {
+            // @ts-ignore
+            //TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
+        }, 500);
         //loadingBar.value = 30;
         engine.runRenderLoop(function () {
             if (scene) {
-                scene.currentGameTime = scene.getGameTime();
+                scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime');
                 scene.render();
             }
         });

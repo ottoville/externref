@@ -32,7 +32,7 @@ let meridian:number=Math.PI*0.1;
 }*/
 export class Sun {
     public sunPosition:BABYLON.Vector3=new BABYLON.Vector3(0,0,0);
-    constructor(private getGameTime:() => BigInt, scene:WorldScene) {
+    constructor(scene:WorldScene) {
         let radius=1391000000;
         let sunSegments=13;
         let angleStep=(Math.PI*2)/sunSegments;

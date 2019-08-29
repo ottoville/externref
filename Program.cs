@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Blazor.Hosting;
+using System.Globalization;
 
 namespace BlazorApp1
 {
@@ -6,6 +7,7 @@ namespace BlazorApp1
     {
         public static void Main(string[] args)
         {
+            CultureInfo.CurrentCulture = new CultureInfo("fi-FI");
             //CreateHostBuilder(args).Build().Run();
 
             BlazorWebAssemblyHost.CreateDefaultBuilder()

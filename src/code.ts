@@ -106,30 +106,26 @@ BABYLON.Effect.prototype._loadVertexShader = function (vertex: any, callback: (d
 var createScene = function (userinfo: { name: string, email: string }, loadingBar: HTMLProgressElement, engine: BABYLON.Engine): Promise<WorldScene> {
     return new Promise((res, rej) => {
         let webSocket = new WebSocket('ws://localhost:8081');
-        let TODOut = <HTMLOutputElement>document.getElementById("TODout");
+        
         webSocket.onopen = () => {
             loadingBar.value = 20;
             var scene = new WorldScene(engine, userinfo, webSocket);
             scene.collisionsEnabled = true;
-            setInterval(() => {
-                // @ts-ignore
-                TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
-            }, 500);
             res(scene);
         }
         webSocket.onerror = () => {
             var scene = new WorldScene(engine, userinfo);
             scene.collisionsEnabled = true;
-            setInterval(() => {
-                // @ts-ignore
-                TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
-            }, 500);
+
             res(scene);
         }
     });
 };
 (<any>window).initCanvas=function() {
     var canvas = document.getElementById("renderCanvas");
+    if(!canvas || canvas.dataset.inited === "true")
+        return;
+    canvas.dataset.inited="true";
     console.log('canvas is ',canvas)
     var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
     let loadingBar: HTMLProgressElement = <HTMLProgressElement>document.getElementById('loadingBar');
@@ -171,10 +167,15 @@ var createScene = function (userinfo: { name: string, email: string }, loadingBa
         //document.getElementById('loading').style.display = 'block';
         //loadingBar.value = 10;
         var scene = await createScene(userdata, loadingBar, engine);
+        let TODOut = <HTMLOutputElement>document.getElementById("TODout");
+        setInterval(() => {
+            // @ts-ignore
+            //TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
+        }, 500);
         //loadingBar.value = 30;
         engine.runRenderLoop(function () {
             if (scene) {
-                scene.currentGameTime = scene.getGameTime();
+                scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime')
                 scene.render();
             }
         });

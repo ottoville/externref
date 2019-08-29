@@ -28,8 +28,7 @@ let meridian = Math.PI * 0.1;
     }
 }*/
 export class Sun {
-    constructor(getGameTime, scene) {
-        this.getGameTime = getGameTime;
+    constructor(scene) {
         this.sunPosition = new BABYLON.Vector3(0, 0, 0);
         let radius = 1391000000;
         let sunSegments = 13;
