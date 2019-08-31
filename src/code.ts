@@ -140,29 +140,6 @@ var createScene = function (userinfo: { name: string, email: string }, loadingBa
                 }
             }
         });*/
-        (<any>window).fbAsyncInit = function () {
-            FB.init({
-                appId: '417236772473746',
-                cookie: true,
-                xfbml: true,
-                version: 'v4.0'
-            });
-
-            FB.AppEvents.logPageView();
-            FB.Event.subscribe('auth.login', () => {
-                FB.api('/me', { locale: 'en_US', fields: 'name, email' }, async function (userinfo: { name: string, email: string }) {
-                    startGame()
-                });
-
-            });
-            FB.getLoginStatus((response) => {
-                if (response.status === 'connected') {
-                    FB.api('/me', { locale: 'en_US', fields: 'name, email' }, async function (userinfo: { name: string, email: string }) {
-                        startGame(response);
-                    })
-                }
-            });
-        };
     }).then(async (userdata: { name: string, email: string }) => {
         //document.getElementById('loading').style.display = 'block';
         //loadingBar.value = 10;
@@ -175,7 +152,7 @@ var createScene = function (userinfo: { name: string, email: string }, loadingBa
         //loadingBar.value = 30;
         engine.runRenderLoop(function () {
             if (scene) {
-                scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime')
+                scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime');
                 scene.render();
             }
         });

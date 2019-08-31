@@ -6,7 +6,7 @@
   "scripts": {
     "serve": "dotnet build blazorClient.sln && dotnet publish blazorClient.sln && http-server .\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\ -S -o",
     "build": "dotnet build blazorClient.sln",
-    "publish": "dotnet publish blazorClient.sln"
+    "publish": "dotnet build blazorClient.sln && dotnet publish blazorClient.sln"
   },
   "author": "",
   "license": "ISC",

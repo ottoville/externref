@@ -64,9 +64,9 @@ export class Sun {
         sun.material=sunmaterial;
         let sundistance = 149600000000;
         let sunm = rotateMatrix(Math.PI * 0.5, 'x');
-
+       // scene.onBeforeActiveMeshesEvaluationObservable.add(( DotNet.invokeMethod('BlazorApp1', 'getGameTime')));
         scene.onBeforeActiveMeshesEvaluationObservable.add(() => {
-            let secondsOfDay=~~((Number(scene.currentGameTime)/1000)%86400);
+            let secondsOfDay=~~((Number(scene.currentGameTime)/10000000)%86400);
             let minutesOfDay=secondsOfDay/60;
 
             let sunAngle= new Angle(minutesOfDay*anglePerMinute).sub(meridian); 

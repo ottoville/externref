@@ -2,7 +2,6 @@
 @inject IJSRuntime JSRuntime;
 
 @code {
-    int currentCount = 0;
     static int gameSpeed = 0;
     static long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
     static long lastStateChangeTime = DateTime.Now.Ticks;
@@ -21,14 +20,8 @@
 
     protected override void OnAfterRender()
     {
-        currentCount = 100;
         JSRuntime.InvokeAsync<string>(
               "initCanvas");
-    }
-
-    void IncrementCount()
-    {
-        currentCount++;
     }
     [JSInvokable]
     public static Int64 getGameTime()
@@ -45,8 +38,6 @@
         lastStateChangeTime = DateTime.Now.Ticks;
     }
 }
-<h1>Counter</h1>
-
 <canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:500px;height:500px"></canvas>
 <fieldset class="gameControl hidden" id="gameState" style="position:absolute;bottom:15px;right:15px;background-color:white">
     <label>Time of day: <output id="TODout" fow="TOD">@currentGameTime</output></label>
