@@ -34,7 +34,7 @@ export class Sun {
     public sunPosition:BABYLON.Vector3=new BABYLON.Vector3(0,0,0);
     constructor(scene:WorldScene) {
         let radius=1391000000;
-        let sunSegments=13;
+        let sunSegments=15;
         let angleStep=(Math.PI*2)/sunSegments;
         let vertices=new Float32Array((sunSegments+1)*3);
         let angle=0;
@@ -62,22 +62,10 @@ export class Sun {
         });
         sunmaterial.fillMode=BABYLON.Material.TriangleFanDrawMode;
         sun.material=sunmaterial;
-        let sundistance = 149600000000;
-        let sunm = rotateMatrix(Math.PI * 0.5, 'x');
 
         scene.onBeforeActiveMeshesEvaluationObservable.add(() => {
-            let secondsOfDay=~~((Number(scene.currentGameTime)/1000)%86400);
-            let minutesOfDay=secondsOfDay/60;
-
-            let sunAngle= new Angle(minutesOfDay*anglePerMinute).sub(meridian); 
-            sun.position.x=sundistance*Math.sin(sunAngle);
-            sun.position.y=sundistance*Math.cos(sunAngle);
-            let newpos=translate(sun.position.x,sun.position.y,sun.position.z,sunm);
-            sun.position.x=newpos.x
-            sun.position.y=newpos.y
-            sun.position.z=newpos.z
-            this.sunPosition=sun.position;
-            //sunPosition.set([newpos.x,newpos.y,newpos.z]);
+            [sun.position.x, sun.position.y, sun.position.z] = DotNet.invokeMethod('BlazorApp1', "sunPosition");
+            this.sunPosition = sun.position;
         });
         sun._draw=function(subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number) :BABYLON.Mesh {
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
@@ -92,9 +80,6 @@ export class Sun {
             gl.drawElements(gl.TRIANGLE_FAN, subMesh.indexCount, gl.UNSIGNED_SHORT, 0);        
             return this;
         }
-        //this.sunPosition=new Vector3(0,0,0);
-
         sun.position=new BABYLON.Vector3(0,0,0);
-        //sun.position=<BABYLON.Vector3><unknown>this.sunPosition;
     }
 }

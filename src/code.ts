@@ -175,7 +175,7 @@ var createScene = function (userinfo: { name: string, email: string }, loadingBa
         //loadingBar.value = 30;
         engine.runRenderLoop(function () {
             if (scene) {
-                scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime')
+                //scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime')
                 scene.render();
             }
         });

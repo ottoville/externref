@@ -2,7 +2,6 @@
 @inject IJSRuntime JSRuntime;
 
 @code {
-    int currentCount = 0;
     static int gameSpeed = 0;
     static long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
     static long lastStateChangeTime = DateTime.Now.Ticks;
@@ -16,19 +15,12 @@
             currentGameTime = curDate.ToShortDateString() + " " + curDate.ToShortTimeString();
             StateHasChanged();
         }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
-
     }
 
     protected override void OnAfterRender()
     {
-        currentCount = 100;
         JSRuntime.InvokeAsync<string>(
               "initCanvas");
-    }
-
-    void IncrementCount()
-    {
-        currentCount++;
     }
     [JSInvokable]
     public static Int64 getGameTime()
@@ -44,10 +36,46 @@
         gameSpeed = Int32.Parse(e.Value.ToString());
         lastStateChangeTime = DateTime.Now.Ticks;
     }
+    static double[] rotateMatrix(double rad, char axis) {
+        // https://www.3dgep.com/3d-math-primer-for-game-programmers-matrices/#Rotation
+        // if (axis == "x")
+        //{
+        return new double[16] {
+                1, 0, 0, 0,
+                0, Math.Cos(rad), Math.Sin(rad) * -1d, 0,
+                0, Math.Sin(rad), Math.Cos(rad), 0,
+                0, 0, 0, 1
+            };
+        // }
+    }
+    static void translate(ref double[] position, double[] m) {
+        position = new double[4] {
+            position[0] * m[0] + position[1] * m[1] + position[2] * m[2] + m[3],
+            position[0] * m[4] + position[1] * m[5] + position[2] * m[6] + m[7],
+            position[0] * m[8] + position[1] * m[9] + position[2] * m[10] + m[11],
+            position[0] * m[12] + position[1] * m[13] + position[2] * m[14] + m[15]
+        };
+    }
+    static double anglePerMinute=(Math.PI*2)/1439;
+    static double anglePerSecond = anglePerMinute / 60;
+    static long sundistance = 149600000000;
+    static double[] sunm = rotateMatrix(Math.PI * 0.2, 'x');
+    static double meridian = Math.PI * 0.95;
+    [JSInvokable]
+    public static double[] sunPosition()
+    {
+        var secondsOfDay=(getGameTime()/10000000)%86400;
+        var sunAngle = ((secondsOfDay * anglePerSecond) + meridian);
+        double[] position = new double[3] {
+            sundistance*Math.Sin(sunAngle),
+            sundistance*Math.Cos(sunAngle),
+            0
+        };
+        translate(ref position,sunm);
+        return position;
+    }
 }
-<h1>Counter</h1>
-
-<canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:500px;height:500px"></canvas>
+<canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:100%;height:100%"></canvas>
 <fieldset class="gameControl hidden" id="gameState" style="position:absolute;bottom:15px;right:15px;background-color:white">
     <label>Time of day: <output id="TODout" fow="TOD">@currentGameTime</output></label>
     <br />
