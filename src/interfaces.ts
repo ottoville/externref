@@ -19,5 +19,5 @@ type PTResultF= ( coords: PTDresult, plane?:BABYLON.Mesh) => void;
 
 declare namespace DotNet  {
     function invokeMethodAsync(namespace: string, method: string): Promise<any>
-    function invokeMethod(namespace: string, method: string): any;
+    function invokeMethod(namespace: string, method: string, ...param:any): any;
 }
