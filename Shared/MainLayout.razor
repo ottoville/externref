@@ -1,7 +1,17 @@
 ﻿@inherits LayoutComponentBase
-
+@inject IJSRuntime JSRuntime;
+@inject IUriHelper UriHelper;
 @code {
-
+    [JSInvokable]
+    public void startGame()
+    {
+        UriHelper.NavigateTo("game");
+    }
+    protected override void OnAfterRender()
+    {
+        JSRuntime.InvokeAsync<object>("initRouter",
+            DotNetObjectRef.Create(this));
+    }
 }
 <div class="sidebar">
     <NavMenu />

@@ -1,4 +1,7 @@
-﻿(<any>window).fbAsyncInit = function () {
+﻿var BlazorRouter : Promise<any> = new Promise((resolve, reject) => {
+    (<any>window).initRouter = resolve
+});
+(<any>window).fbAsyncInit = function () {
     FB.init({
         appId: '417236772473746',
         cookie: true,
@@ -8,13 +11,13 @@
     FB.AppEvents.logPageView();
     FB.Event.subscribe('auth.login', () => {
         FB.api('/me', { locale: 'en_US', fields: 'name, email' }, async function (userinfo: { name: string, email: string }) {
-            DotNet.invokeMethod('BlazorApp1', 'startGame');
+            (await BlazorRouter).invokeMethodAsync('startGame');
         });
     });
     FB.getLoginStatus((response) => {
         if (response.status === 'connected') {
             FB.api('/me', { locale: 'en_US', fields: 'name, email' }, async function (userinfo: { name: string, email: string }) {
-                DotNet.invokeMethod('BlazorApp1', 'startGame', response);
+                (await BlazorRouter).invokeMethodAsync('startGame');
             })
         }
     });
