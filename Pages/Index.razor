@@ -4,7 +4,7 @@
 @code {
     void loginFB()
     {
-        JSRuntime.InvokeAsync<object>("FB.login", null, new {scope = "email,user_likes"});
+        JSRuntime.InvokeAsync<object>("FB.login", null, new {scope = "email"});
     }
 }
 
