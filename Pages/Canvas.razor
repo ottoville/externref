@@ -8,7 +8,6 @@
     string currentGameTime;
     protected override void OnInitialized()
     {
-        JSRuntime.InvokeAsync<string>("console.log", "initiazed");
         System.Threading.Timer timer = new System.Threading.Timer((e) =>
         {
             var curDate = new DateTime(getGameTime());
