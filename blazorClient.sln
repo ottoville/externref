@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29209.152
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorApp1", "BlazorApp1.csproj", "{4FAE9A96-B433-4457-BC6D-DFFC91B06AFA}"
 EndProject
-Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "server", "..\server\server.njsproj", "{91E1D46E-440C-47A4-AC1D-359FA798C212}"
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "server", "..\terraserver\server.njsproj", "{91E1D46E-440C-47A4-AC1D-359FA798C212}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

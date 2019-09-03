@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "serve": "dotnet build blazorClient.sln && dotnet publish blazorClient.sln && http-server .\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\ -S -o",
-    "build": "dotnet build blazorClient.sln",
-    "publish": "dotnet build blazorClient.sln && dotnet publish blazorClient.sln"
+    "serve": "dotnet build BlazorApp1.csproj && dotnet publish BlazorApp1.csproj && http-server .\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\ -S -o",
+    "build": "dotnet build BlazorApp1.csproj",
+    "publish": "dotnet build BlazorApp1.csproj && dotnet publish BlazorApp1.csproj"
   },
   "author": "",
   "license": "ISC",
