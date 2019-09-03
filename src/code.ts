@@ -108,16 +108,11 @@ var createScene = function (userinfo: { name: string, email: string }, loadingBa
         let webSocket = new WebSocket('ws://localhost:8081');
         
         webSocket.onopen = () => {
-            loadingBar.value = 20;
-            var scene = new WorldScene(engine, userinfo, webSocket);
-            scene.collisionsEnabled = true;
-            res(scene);
+            //loadingBar.value = 20;
+            res(new WorldScene(engine, userinfo, webSocket));
         }
         webSocket.onerror = () => {
-            var scene = new WorldScene(engine, userinfo);
-            scene.collisionsEnabled = true;
-
-            res(scene);
+            res(new WorldScene(engine, userinfo));
         }
     });
 };
@@ -144,6 +139,7 @@ var createScene = function (userinfo: { name: string, email: string }, loadingBa
         //document.getElementById('loading').style.display = 'block';
         //loadingBar.value = 10;
         var scene = await createScene(userdata, loadingBar, engine);
+        scene.collisionsEnabled = true;
         let TODOut = <HTMLOutputElement>document.getElementById("TODout");
         setInterval(() => {
             // @ts-ignore
