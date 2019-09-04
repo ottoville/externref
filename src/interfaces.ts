@@ -18,6 +18,15 @@ type PTDresult =
 type PTResultF= ( coords: PTDresult, plane?:BABYLON.Mesh) => void;
 
 declare namespace DotNet  {
-    function invokeMethodAsync(namespace: string, method: string): Promise<any>
-    function invokeMethod(namespace: string, method: string, ...param:any): any;
+    function invokeMethodAsync(namespace: string, method: string, ...param: any): Promise<any>
+    function invokeMethod(namespace: string, method: string, ...param: any): any;
+    interface BlazorInstance {
+        invokeMethod(method: string, ...param: any): any;
+        invokeMethodAsync(method: string, ...param: any): Promise<any>
+    }
+}
+interface loginProvider {
+    provider: string,
+    accessToken: string,
+    userID?: string
 }

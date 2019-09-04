@@ -18,8 +18,7 @@
 
     protected override void OnAfterRender()
     {
-        JSRuntime.InvokeAsync<string>(
-              "initCanvas");
+        JSRuntime.InvokeAsync<object>("initCanvas",DotNetObjectRef.Create(this));
     }
     [JSInvokable]
     public static Int64 getGameTime()

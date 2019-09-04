@@ -103,20 +103,50 @@ BABYLON.Effect.prototype._loadVertexShader = function (vertex: any, callback: (d
     }
 })*/
 
-var createScene = function (userinfo: { name: string, email: string }, loadingBar: HTMLProgressElement, engine: BABYLON.Engine): Promise<WorldScene> {
+var createScene = function (userinfo: loginProvider, loadingBar: HTMLProgressElement, engine: BABYLON.Engine, blazor: DotNet.BlazorInstance): Promise<WorldScene> {
     return new Promise((res, rej) => {
         let webSocket = new WebSocket('ws://localhost:8081');
-        
         webSocket.onopen = () => {
             //loadingBar.value = 20;
-            res(new WorldScene(engine, userinfo, webSocket));
+            res(new WorldScene(engine, userinfo, webSocket, blazor));
         }
         webSocket.onerror = () => {
             res(new WorldScene(engine, userinfo));
         }
     });
 };
-(<any>window).initCanvas=function() {
+var BlazorRouter: Promise<DotNet.BlazorInstance> = new Promise((resolve, reject) => {
+    (<any>window).initRouter = resolve
+});
+
+var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
+    (<any>window).fbAsyncInit = function () {
+        FB.init({
+            appId: '417236772473746',
+            cookie: true,
+            xfbml: true,
+            version: 'v4.0'
+        });
+        FB.AppEvents.logPageView();
+        FB.Event.subscribe('auth.login', async (response) => {
+            (await BlazorRouter).invokeMethod('startGame');
+            login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID });
+        });
+        FB.getLoginStatus(async (response) => {
+            if (response.status === 'connected') {
+                (await BlazorRouter).invokeMethod('startGame');
+                login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID });
+            }
+        });
+    };
+    (<any>window).playAnomyous = async () => {
+        (await BlazorRouter).invokeMethod('startGame');
+        if (typeof (localStorage.accessToken) === 'undefined')
+            localStorage.accessToken = new Date().getTime().toString() + navigator.userAgent;
+        login({ provider: 'anomyous', accessToken: localStorage.accessToken });
+    }
+});
+(<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance) {
     var canvas = document.getElementById("renderCanvas");
     if(!canvas || canvas.dataset.inited === "true")
         return;
@@ -124,43 +154,32 @@ var createScene = function (userinfo: { name: string, email: string }, loadingBa
     console.log('canvas is ',canvas)
     var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
     let loadingBar: HTMLProgressElement = <HTMLProgressElement>document.getElementById('loadingBar');
-    new Promise((startGame) => {
-        startGame();
-        /*document.getElementById('loginmethods').addEventListener('click', (evt) => {
-            if ((<HTMLElement>(evt.target)).nodeName == 'BUTTON') {
-                let btn: HTMLButtonElement = <any>evt.target;
-                if (btn.dataset.action == "offline") {
-                    document.getElementById('loading').style.display = 'block';
-                    startGame();
-                }
-            }
-        });*/
-    }).then(async (userdata: { name: string, email: string }) => {
-        //document.getElementById('loading').style.display = 'block';
-        //loadingBar.value = 10;
-        var scene = await createScene(userdata, loadingBar, engine);
-        scene.collisionsEnabled = true;
-        let TODOut = <HTMLOutputElement>document.getElementById("TODout");
-        setInterval(() => {
-            // @ts-ignore
-            //TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
-        }, 500);
-        //loadingBar.value = 30;
-        engine.runRenderLoop(function () {
-            if (scene) {
-                //scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime')
-                scene.render();
-            }
-        });
-        // Resize
-        window.addEventListener("resize", function () {
-            engine.resize();
-        });
-        for (let i = 0; i < gameControlsUI.length; i++) {
-            gameControlsUI[i].classList.remove('hidden');
+
+    //document.getElementById('loading').style.display = 'block';
+    //loadingBar.value = 10;
+    var scene = await createScene((await loginPromise), loadingBar, engine, blazor);
+    scene.collisionsEnabled = true;
+    let TODOut = <HTMLOutputElement>document.getElementById("TODout");
+    setInterval(() => {
+        // @ts-ignore
+        //TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
+    }, 500);
+    //loadingBar.value = 30;
+    engine.runRenderLoop(function () {
+        if (scene) {
+            //scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime')
+            scene.render();
         }
-        //document.getElementById('loading').style.display = 'none';
     });
+    // Resize
+    window.addEventListener("resize", function () {
+        engine.resize();
+    });
+    for (let i = 0; i < gameControlsUI.length; i++) {
+        gameControlsUI[i].classList.remove('hidden');
+    }
+        //document.getElementById('loading').style.display = 'none';
+
 }
 
 let gameControlsUI = document.getElementsByClassName('gameControl');

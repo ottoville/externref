@@ -6,16 +6,18 @@
     {
         JSRuntime.InvokeAsync<object>("FB.login", null, new {scope = "email"});
     }
+    void loginAnom()
+    {
+        JSRuntime.InvokeAsync<string>("playAnomyous");
+    }
 }
 
 <div id="loginscreen" class="page">
     <h3>Log in to play the game</h3>
     <fieldset id="loginmethods">
-        <button @onclick=loginFB>Login with facebook</button>
-        <!--  <div class="fb-login-button" data-width="" data-scope="email" data-size="large" data-button-type="continue_with" data-auto-logout-link="false" data-use-continue-as="false"></div> -->
+        <button @onclick=loginFB>🎮 Login with facebook</button>
         <br /><br />
-        <NavLink class="nav-link" href="game">
-            🎮 Continue without logging in and online features
-        </NavLink>
+        <button @onclick=loginAnom>🎮 Continue without logging in and online features</button>
+
     </fieldset>
 </div>

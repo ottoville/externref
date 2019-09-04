@@ -3,8 +3,11 @@
 @inject IUriHelper UriHelper;
 @code {
     [JSInvokable]
-    public void startGame()
+    public void startGame() //System.Text.Json.JsonElement input
     {
+        //System.Console.WriteLine(input.GetProperty("authResponse"));
+        //BlazorApp1.authencation.Ifacebook userdata = input;
+        //System.Console.WriteLine(userdata.authResponse);
         UriHelper.NavigateTo("game");
     }
     protected override void OnAfterRender()
