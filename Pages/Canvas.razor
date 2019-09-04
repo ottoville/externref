@@ -6,8 +6,13 @@
     static long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
     static long lastStateChangeTime = DateTime.Now.Ticks;
     string currentGameTime;
-    protected override void OnInitialized()
+    [JSInvokable]
+    public void initGame(System.Text.Json.JsonElement input)
     {
+        lastStateChangeGameTime = input.GetProperty("lastStateChangeGameTime").GetInt64();
+        System.Console.WriteLine(input.GetProperty("lastStateChangeGameTime"));
+        System.Console.WriteLine(input.GetProperty("lastStateChangeGameTime").GetInt64());
+        lastStateChangeTime = input.GetProperty("lastStateChangeTime").GetInt64();
         System.Threading.Timer timer = new System.Threading.Timer((e) =>
         {
             var curDate = new DateTime(getGameTime());
@@ -18,7 +23,7 @@
 
     protected override void OnAfterRender()
     {
-        JSRuntime.InvokeAsync<object>("initCanvas",DotNetObjectRef.Create(this));
+        JSRuntime.InvokeAsync<object>("initCanvas",DotNetObjectRef.Create(this), lastStateChangeTime);
     }
     [JSInvokable]
     public static Int64 getGameTime()

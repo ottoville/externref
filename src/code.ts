@@ -103,18 +103,6 @@ BABYLON.Effect.prototype._loadVertexShader = function (vertex: any, callback: (d
     }
 })*/
 
-var createScene = function (userinfo: loginProvider, loadingBar: HTMLProgressElement, engine: BABYLON.Engine, blazor: DotNet.BlazorInstance): Promise<WorldScene> {
-    return new Promise((res, rej) => {
-        let webSocket = new WebSocket('ws://localhost:8081');
-        webSocket.onopen = () => {
-            //loadingBar.value = 20;
-            res(new WorldScene(engine, userinfo, webSocket, blazor));
-        }
-        webSocket.onerror = () => {
-            res(new WorldScene(engine, userinfo));
-        }
-    });
-};
 var BlazorRouter: Promise<DotNet.BlazorInstance> = new Promise((resolve, reject) => {
     (<any>window).initRouter = resolve
 });
@@ -146,18 +134,27 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
         login({ provider: 'anomyous', accessToken: localStorage.accessToken });
     }
 });
-(<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance) {
+(<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks:number) {
     var canvas = document.getElementById("renderCanvas");
     if(!canvas || canvas.dataset.inited === "true")
         return;
     canvas.dataset.inited="true";
-    console.log('canvas is ',canvas)
+    console.log('init canvas ', ticks)
     var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
     let loadingBar: HTMLProgressElement = <HTMLProgressElement>document.getElementById('loadingBar');
 
     //document.getElementById('loading').style.display = 'block';
     //loadingBar.value = 10;
-    var scene = await createScene((await loginPromise), loadingBar, engine, blazor);
+    let scene = await new Promise<WorldScene>((res, rej) => {
+        let webSocket = new WebSocket('ws://localhost:8081');
+        webSocket.onopen = async () => {
+            //loadingBar.value = 20;
+            res(new WorldScene(engine, await loginPromise, webSocket, blazor, ticks));
+        }
+        webSocket.onerror = async () => {
+            res(new WorldScene(engine, await loginPromise));
+        }
+    });
     scene.collisionsEnabled = true;
     let TODOut = <HTMLOutputElement>document.getElementById("TODout");
     setInterval(() => {

@@ -19,15 +19,15 @@ export class WorldScene extends BABYLON.Scene {
     }*/
     public currentGameTime: int;
     public SunObject: Sun;
-    constructor(engine: BABYLON.Engine, userinfo: loginProvider, private webSocket?: WebSocket, blazor?: DotNet.BlazorInstance) {
+    constructor(engine: BABYLON.Engine, userinfo: loginProvider, private webSocket?: WebSocket, blazor?: DotNet.BlazorInstance, ticks?: number) {
         super(engine);
         if (webSocket) {
-            this.webSocket.send(JSON.stringify({ action: 'init', data: userinfo }));
-            this.webSocket.onmessage = (data) => {
-                if (data.type == 'init') {
-                    blazor.invokeMethod('initGame', data)
+            this.webSocket.send(JSON.stringify({ action: 'init', data: { userinfo , ticks } }));
+            this.webSocket.onmessage = (e) => {
+                if (e.data.action == 'init') {
+                    blazor.invokeMethod('initGame', e.data);
                 }
-                console.log(data);
+                console.log(e.data);
             }
         }
         this.SunObject = new Sun(this);
