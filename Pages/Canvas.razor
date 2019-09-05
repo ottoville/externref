@@ -2,22 +2,22 @@
 @inject IJSRuntime JSRuntime;
 
 @code {
-    sbyte gameSpeed = 0;
-    long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
-    long lastStateChangeTime = DateTime.Now.Ticks;
-    string currentGameTime;
+        sbyte gameSpeed = 0;
+        long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
+        long lastStateChangeTime = DateTime.Now.Ticks;
+        string currentGameTime;
     [JSInvokable]
     public void initGame(System.Text.Json.JsonElement input)
     {
-            input.GetProperty("lastStateChangeGameTime").TryGetInt64(out lastStateChangeGameTime);
-            input.GetProperty("lastStateChangeTime").TryGetInt64(out lastStateChangeTime);
-            input.GetProperty("gameSpeed").TryGetSByte(out gameSpeed);
-            System.Threading.Timer timer = new System.Threading.Timer((e) =>
-            {
-                var curDate = new DateTime(getGameTime());
-                currentGameTime = curDate.ToShortDateString() + " " + curDate.ToShortTimeString();
-                StateHasChanged();
-            }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
+        input.GetProperty("lastStateChangeGameTime").TryGetInt64(out lastStateChangeGameTime);
+        input.GetProperty("lastStateChangeTime").TryGetInt64(out lastStateChangeTime);
+        input.GetProperty("gameSpeed").TryGetSByte(out gameSpeed);
+        System.Threading.Timer timer = new System.Threading.Timer((e) =>
+        {
+            var curDate = new DateTime(getGameTime());
+            currentGameTime = curDate.ToShortDateString() + " " + curDate.ToShortTimeString();
+            StateHasChanged();
+        }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
     }
 
     protected override void OnAfterRender(bool firstrender)
@@ -78,8 +78,20 @@
         translate(ref position,sunm);
         return position;
     }
+    string[] tools= new string[] { "Zones","Plants","Camera"};
+    public string showMenu;
 }
 <canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:100%;height:100%"></canvas>
+<fieldset style="position:absolute;top:15px;background-color:white">
+    @foreach (var tool in tools)
+    {
+
+        <button @onclick="@(e => showMenu=tool)"></button>
+        <label hidden="@(showMenu!=tool)">
+            <@BlazorApp1.Tools[tool]/>
+        </label>
+    }
+</fieldset>
 <fieldset class="gameControl hidden" id="gameState" style="position:absolute;bottom:15px;right:15px;background-color:white">
     <label>Time of day: <output id="TODout" fow="TOD">@currentGameTime</output></label>
     <br />
