@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime;
-@inject IUriHelper UriHelper;
+@inject NavigationManager UriHelper;
 @code {
     [JSInvokable]
     public void startGame() //System.Text.Json.JsonElement input
@@ -10,10 +10,10 @@
         //System.Console.WriteLine(userdata.authResponse);
         UriHelper.NavigateTo("game");
     }
-    protected override void OnAfterRender()
+    protected override void OnAfterRender(bool firstRender)
     {
         JSRuntime.InvokeAsync<object>("initRouter",
-            DotNetObjectRef.Create(this));
+            DotNetObjectReference.Create(this));
     }
 }
 <div class="sidebar">

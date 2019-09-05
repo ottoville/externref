@@ -20,9 +20,10 @@
             }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
     }
 
-    protected override void OnAfterRender()
+    protected override void OnAfterRender(bool firstrender)
     {
-        JSRuntime.InvokeAsync<object>("initCanvas",DotNetObjectRef.Create(this), lastStateChangeTime);
+        if(firstrender)
+            JSRuntime.InvokeAsync<object>("initCanvas",DotNetObjectReference.Create(this), lastStateChangeTime);
     }
     [JSInvokable]
     public Int64 getGameTime()
@@ -32,7 +33,7 @@
         var interval = DateTime.Now.Ticks - lastStateChangeTime;
         return lastStateChangeGameTime + ((interval * 60) << gameSpeed);
     }
-    void changeState(UIChangeEventArgs e)
+    void changeState(ChangeEventArgs e)
     {
         lastStateChangeGameTime = getGameTime();
         gameSpeed =  SByte.Parse(e.Value.ToString());
