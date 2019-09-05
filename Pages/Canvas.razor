@@ -2,23 +2,22 @@
 @inject IJSRuntime JSRuntime;
 
 @code {
-    static int gameSpeed = 0;
-    static long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
-    static long lastStateChangeTime = DateTime.Now.Ticks;
+    sbyte gameSpeed = 0;
+    long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
+    long lastStateChangeTime = DateTime.Now.Ticks;
     string currentGameTime;
     [JSInvokable]
     public void initGame(System.Text.Json.JsonElement input)
     {
-        lastStateChangeGameTime = input.GetProperty("lastStateChangeGameTime").GetInt64();
-        System.Console.WriteLine(input.GetProperty("lastStateChangeGameTime"));
-        System.Console.WriteLine(input.GetProperty("lastStateChangeGameTime").GetInt64());
-        lastStateChangeTime = input.GetProperty("lastStateChangeTime").GetInt64();
-        System.Threading.Timer timer = new System.Threading.Timer((e) =>
-        {
-            var curDate = new DateTime(getGameTime());
-            currentGameTime = curDate.ToShortDateString() + " " + curDate.ToShortTimeString();
-            StateHasChanged();
-        }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
+            input.GetProperty("lastStateChangeGameTime").TryGetInt64(out lastStateChangeGameTime);
+            input.GetProperty("lastStateChangeTime").TryGetInt64(out lastStateChangeTime);
+            input.GetProperty("gameSpeed").TryGetSByte(out gameSpeed);
+            System.Threading.Timer timer = new System.Threading.Timer((e) =>
+            {
+                var curDate = new DateTime(getGameTime());
+                currentGameTime = curDate.ToShortDateString() + " " + curDate.ToShortTimeString();
+                StateHasChanged();
+            }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
     }
 
     protected override void OnAfterRender()
@@ -26,7 +25,7 @@
         JSRuntime.InvokeAsync<object>("initCanvas",DotNetObjectRef.Create(this), lastStateChangeTime);
     }
     [JSInvokable]
-    public static Int64 getGameTime()
+    public Int64 getGameTime()
     {
         if (gameSpeed < 0)
             return lastStateChangeGameTime;
@@ -36,8 +35,9 @@
     void changeState(UIChangeEventArgs e)
     {
         lastStateChangeGameTime = getGameTime();
-        gameSpeed = Int32.Parse(e.Value.ToString());
+        gameSpeed =  SByte.Parse(e.Value.ToString());
         lastStateChangeTime = DateTime.Now.Ticks;
+        JSRuntime.InvokeAsync<object>("scene.stateChange", new { lastStateChangeGameTime, gameSpeed, lastStateChangeTime });
     }
     static double[] rotateMatrix(double rad, char axis) {
         // https://www.3dgep.com/3d-math-primer-for-game-programmers-matrices/#Rotation
@@ -65,7 +65,7 @@
     static double[] sunm = rotateMatrix(Math.PI * 0.2, 'x');
     static double meridian = Math.PI * 0.95;
     [JSInvokable]
-    public static double[] sunPosition()
+    public double[] sunPosition()
     {
         var secondsOfDay=(getGameTime()/10000000)%86400;
         var sunAngle = ((secondsOfDay * anglePerSecond) + meridian);

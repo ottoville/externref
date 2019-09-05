@@ -106,9 +106,15 @@ BABYLON.Effect.prototype._loadVertexShader = function (vertex: any, callback: (d
 var BlazorRouter: Promise<DotNet.BlazorInstance> = new Promise((resolve, reject) => {
     (<any>window).initRouter = resolve
 });
-
+declare global {
+    interface Window {
+        scene: WorldScene;
+        fbAsyncInit: () => void;
+        playAnomyous: () => void
+    }
+}
 var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
-    (<any>window).fbAsyncInit = function () {
+    window.fbAsyncInit = function () {
         FB.init({
             appId: '417236772473746',
             cookie: true,
@@ -127,13 +133,15 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
             }
         });
     };
-    (<any>window).playAnomyous = async () => {
+    window.playAnomyous = async () => {
         (await BlazorRouter).invokeMethod('startGame');
         if (typeof (localStorage.accessToken) === 'undefined')
             localStorage.accessToken = new Date().getTime().toString() + navigator.userAgent;
         login({ provider: 'anomyous', accessToken: localStorage.accessToken });
     }
 });
+
+
 (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks:number) {
     var canvas = document.getElementById("renderCanvas");
     if(!canvas || canvas.dataset.inited === "true")
@@ -145,17 +153,17 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
 
     //document.getElementById('loading').style.display = 'block';
     //loadingBar.value = 10;
-    let scene = await new Promise<WorldScene>((res, rej) => {
+    window.scene = await new Promise<WorldScene>((res, rej) => {
         let webSocket = new WebSocket('ws://localhost:8081');
         webSocket.onopen = async () => {
             //loadingBar.value = 20;
-            res(new WorldScene(engine, await loginPromise, webSocket, blazor, ticks));
+            res(new WorldScene(engine, await loginPromise, blazor, ticks, webSocket));
         }
         webSocket.onerror = async () => {
-            res(new WorldScene(engine, await loginPromise));
+            res(new WorldScene(engine, await loginPromise, blazor, ticks));
         }
     });
-    scene.collisionsEnabled = true;
+    window.scene.collisionsEnabled = true;
     let TODOut = <HTMLOutputElement>document.getElementById("TODout");
     setInterval(() => {
         // @ts-ignore
@@ -163,9 +171,9 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
     }, 500);
     //loadingBar.value = 30;
     engine.runRenderLoop(function () {
-        if (scene) {
+        if (window.scene) {
             //scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime')
-            scene.render();
+            window.scene.render();
         }
     });
     // Resize
@@ -176,7 +184,6 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
         gameControlsUI[i].classList.remove('hidden');
     }
         //document.getElementById('loading').style.display = 'none';
-
 }
 
 let gameControlsUI = document.getElementsByClassName('gameControl');

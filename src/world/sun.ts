@@ -64,7 +64,7 @@ export class Sun {
         sun.material=sunmaterial;
 
         scene.onBeforeActiveMeshesEvaluationObservable.add(() => {
-            [sun.position.x, sun.position.y, sun.position.z] = DotNet.invokeMethod('BlazorApp1', "sunPosition");
+            [sun.position.x, sun.position.y, sun.position.z] = scene.blazor.invokeMethod("sunPosition");
             this.sunPosition = sun.position;
         });
         sun._draw=function(subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number) :BABYLON.Mesh {

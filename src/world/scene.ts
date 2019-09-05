@@ -19,15 +19,32 @@ export class WorldScene extends BABYLON.Scene {
     }*/
     public currentGameTime: int;
     public SunObject: Sun;
-    constructor(engine: BABYLON.Engine, userinfo: loginProvider, private webSocket?: WebSocket, blazor?: DotNet.BlazorInstance, ticks?: number) {
+    public stateChange(data) {
+        console.log('state changed', data);
+        if (this.webSocket) {
+            this.webSocket.send(JSON.stringify({ action: 'stateChange', data }))
+        return;
+       /* this.lastStateChangeGameTime = this.getGameTime();
+        this.lastStateChangeTime = new Date().getTime();
+        this.gameSpeed = BigInt((<HTMLInputElement>evt.target).value);*/
+        let gameStateEvent = {
+            speed: Number(this.gameSpeed),
+            lastStateChangeGameTime: Number(this.lastStateChangeGameTime),
+            lastStateChangeTime: this.lastStateChangeTime
+        };
+        }
+        //gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
+    }
+    constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private webSocket?: WebSocket) {
         super(engine);
         if (webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'init', data: { userinfo , ticks } }));
             this.webSocket.onmessage = (e) => {
-                if (e.data.action == 'init') {
-                    blazor.invokeMethod('initGame', e.data);
+                let msg = JSON.parse(e.data);
+                if (msg.action == 'init') {
+                    console.log('going to init game', msg.currentPlayData)
+                    blazor.invokeMethod('initGame', msg.currentPlayData);
                 }
-                console.log(e.data);
             }
         }
         this.SunObject = new Sun(this);
@@ -36,22 +53,6 @@ export class WorldScene extends BABYLON.Scene {
         gameEngine.message(WorkerReturn.noReturn, 'init', {
             gameTime: this.lastStateChangeGameTime
         });
-       /*(<HTMLInputElement>(document.getElementById('gameState'))).addEventListener('change', (evt) => {
-            if ((<HTMLInputElement>evt.target).checked) {
-                this.lastStateChangeGameTime = this.getGameTime();
-                this.lastStateChangeTime = new Date().getTime();
-                this.gameSpeed = BigInt((<HTMLInputElement>evt.target).value);
-                let gameStateEvent = {
-                    speed: Number(this.gameSpeed),
-                    lastStateChangeGameTime: Number(this.lastStateChangeGameTime),
-                    lastStateChangeTime: this.lastStateChangeTime
-                };
-                if (webSocket) {
-                    this.webSocket.send(JSON.stringify({ action: 'stateChange', data: gameStateEvent }))
-                }
-                gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
-            }
-        });*/
         let CameraTab = new CameraTAB(this, engine.getRenderingCanvas() , DB);
         //let ui = new UI();
         //ui.registerTab(CameraTab);
