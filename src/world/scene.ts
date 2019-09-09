@@ -4,6 +4,8 @@ import { Plants } from "../plants/Plants.js";
 import { PlantsUI } from "../tools/plantsUI.js";
 import { Zones } from "../tools/zones.js";
 import { CameraTAB } from "../tools/camera.js";
+import { UITAB } from "../UITAB.js";
+
 //import { UI } from "../UI.js";
 
 export class WorldScene extends BABYLON.Scene {
@@ -34,7 +36,8 @@ export class WorldScene extends BABYLON.Scene {
         };
         }
         //gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
-    }
+    };
+    public tools: { [index: string]: UITAB } = {}
     constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private webSocket?: WebSocket) {
         super(engine);
         if (webSocket) {
@@ -53,7 +56,7 @@ export class WorldScene extends BABYLON.Scene {
         gameEngine.message(WorkerReturn.noReturn, 'init', {
             gameTime: this.lastStateChangeGameTime
         });
-        let CameraTab = new CameraTAB(this, engine.getRenderingCanvas() , DB);
+        this.tools['CameraTAB'] = new CameraTAB(this, engine.getRenderingCanvas() , DB);
         //let ui = new UI();
         //ui.registerTab(CameraTab);
         var sunlight = new BABYLON.PointLight("Omni", this.SunObject.sunPosition, this);
@@ -217,15 +220,15 @@ export class WorldScene extends BABYLON.Scene {
             //seaground.position.y = -1.5;
             sea.position.y = 0;
             let grass = new BABYLON.DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, this, false);
-            let plants = new Plants(this, CameraTab.camera, terrain);
+            let plants = new Plants(this,(<CameraTAB>this.tools['CameraTAB']).camera, terrain);
             DB.then(d => {
-                let plantsUI = new PlantsUI(terrain, d, engine.getRenderingCanvas(), this, CameraTab.camera, sea, grass, plants);
-                let ZoneTab = new Zones(terrain, d, engine.getRenderingCanvas(), shadermateria, this, CameraTab.camera, sea, grass);
+                this.tools['Plants'] = new PlantsUI(terrain, d, engine.getRenderingCanvas(), this,(<CameraTAB>this.tools['CameraTAB']).camera, sea, grass, plants);
+                this.tools['Zones'] = new Zones(terrain, d, engine.getRenderingCanvas(), shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, grass);
                 //ui.registerTab(ZoneTab);
                 //ui.registerTab(plantsUI);
 
-                shadermateria.setVector3("lightPos", this.SunObject.sunPosition);
-                shadermateria.setVector3("cameraPosition", CameraTab.camera.position);
+                shadermateria.setVector3("lightPos", sunlight.position);
+                shadermateria.setVector3("cameraPosition",(<CameraTAB>this.tools['CameraTAB']).camera.position);
                 terrain.material = shadermateria
 
                 shadermateria.setTexture('textureSampler2', grass);

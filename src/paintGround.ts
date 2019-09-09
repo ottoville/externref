@@ -40,6 +40,7 @@ export class paintGround {
                 this.forceSharedVertices=options.forceSharedVertices;
         }
         tempplane = null;
+        console.log('add pointer down to ', this.canvas)
         this.canvas.addEventListener("pointerdown", this.mainPointerDown, false);
         this.resolve=callback;
     }
@@ -74,18 +75,21 @@ export class paintGround {
             //tempplane.scaling.x = height;
         }
     }
-    private mainPointerDown = (evt:PointerEvent) => {
+    private mainPointerDown = (evt: PointerEvent) => {
+        console.log('pointer down triggered');
         let planeorgpos: BABYLON.Vector3;
         if (evt.button !== 0) {
+            console.log('evt.button !== 0');
             return;
         }
         // check if we are under a mesh
         var pickInfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => { return mesh === this.ground || mesh === this.sea; },undefined, this.camera);
         if (pickInfo.hit) {
             if (pickInfo.pickedMesh === this.sea) {
-                //console.log('hitted sea');
+                console.log('hitted sea');
                 return;
             }
+            console.log('hitted other than sea');
             /*if (!this.zoneToggle.checked) {
                 this.zoneToggle.checked = true;
                 var evtt = document.createEvent("HTMLEvents");
@@ -133,6 +137,7 @@ export class paintGround {
             let me = this;
 
             this.canvas.addEventListener("pointerup", function pup(evt) {
+                console.log('pointerup');
                 this.removeEventListener('pointermove', me.drawArea, false);
                 // let currentpickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) { return mesh === ground; });
                // let ang = new Angle(Math.abs(rotation));

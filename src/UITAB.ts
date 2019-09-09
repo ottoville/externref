@@ -4,5 +4,4 @@ export abstract class UITAB {
     abstract label:string;
     abstract activate:() => void;
     abstract deactivate:() => void;
-    abstract createMenu:(form:HTMLFormElement) => void;
 }

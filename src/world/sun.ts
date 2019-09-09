@@ -64,8 +64,9 @@ export class Sun {
         sun.material=sunmaterial;
 
         scene.onBeforeActiveMeshesEvaluationObservable.add(() => {
-            [sun.position.x, sun.position.y, sun.position.z] = scene.blazor.invokeMethod("sunPosition");
-            this.sunPosition = sun.position;
+            let pos = scene.blazor.invokeMethod("sunPosition");
+            [sun.position.x, sun.position.y, sun.position.z] = pos;
+            [this.sunPosition.x, this.sunPosition.y, this.sunPosition.z] = pos;
         });
         sun._draw=function(subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number) :BABYLON.Mesh {
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {

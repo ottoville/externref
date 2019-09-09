@@ -25,26 +25,7 @@ export class Zones extends UITAB {
         this.zonemateria = new BABYLON.StandardMaterial("zoneMat", scene);
         this.zonemateria.diffuseTexture = this.zonedt;
     }
-    createMenu = (form): void => {
-        form.innerHTML=`
-        <fieldset style="background-color:white">
-        <legend style="background-color:white">Draw zone</legend>
-        <label>
-            Residental
-            <input type="checkbox" name="planning" value="residental" />
-        </label><br>
-        <label>
-            Industry
-            <input type="checkbox" name="planning" value="industry" />
-        </label><br>
-        <label>
-            Commerce
-            <input type="checkbox" name="planning" value="commerce" />
-        </label>
-    </fieldset>
-        `
-    }
-        activate = (): void => {
+    activate = (): void => {
         this.activated=true;
         this.ctx = this.zonedt.getContext();
         this.ground.material = this.zonemateria;
