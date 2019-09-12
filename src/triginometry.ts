@@ -41,6 +41,9 @@ function _bindTextureDirectly(target: number, texture: any, forTextureDataUpdate
 // https://github.com/BabylonJS/Babylon.js/blob/9ff58d958c8b2a2e498be661727a8d05f2e377b6/src/Engines/engine.ts
 export function updateSubTexture(zonedt: BABYLON.DynamicTexture,
     h: number, w: number, startingPoint: BABYLON.Vector3, ang: Angle, subTexture?: subTexture): subTexture {
+    if (Number.isNaN(h) || Number.isNaN(w)) {
+        throw ('updateSubTexture non numeric width or height');
+    }
     if (ang.rad < 0) {
         throw ('updateSubTexture negative angle not supported');
     }
@@ -59,6 +62,7 @@ export function updateSubTexture(zonedt: BABYLON.DynamicTexture,
     ]
 
     let my = rotateMatrix(ang.rad, "y");
+    console.log('coords', coords)
     let translated0 = coords.map(coord => {
         return translate(coord.x, 0, coord.z, my)
     })
@@ -71,7 +75,8 @@ export function updateSubTexture(zonedt: BABYLON.DynamicTexture,
 
     let translated = translated0.map(coord => {
         return translate(coord.x, 0, coord.z, m1)
-    })
+    });
+    console.log('boundaries ', translated);
     let minX = Math.min(...translated.map(t => t.x));
     let minZ = Math.min(...translated.map(t => t.z));
     let maxX = Math.max(...translated.map(t => t.x));
@@ -109,6 +114,7 @@ export function updateSubTexture(zonedt: BABYLON.DynamicTexture,
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._currentFramebuffer);
 
     var ctx = c.getContext("2d");
+
     let imageData = ctx.createImageData(c.width, c.height);
     imageData.data.set(pixels);
     subTexture = { x: minX, z: minZ, imageData: imageData };

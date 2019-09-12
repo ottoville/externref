@@ -73,7 +73,7 @@ class Angle {
         this._rad = Math.abs(this._deg * Math.PI / 180);
         return this._rad;
     }
-    360(p1: Vector3, p2: Vector3): Angle {
+    360(p1: Vector3, p2: Vector3 | BABYLON.Vector3): Angle {
         if (p2.z - p1.z < 0) {
             if (p2.x - p1.x < 0)
                 return new Angle(Math.PI * 2 - this.rad);
@@ -124,7 +124,7 @@ function rotateMatrix(rad: number, axis: "x" | "y" | "z"): Matrix {
     return m;
 }
 function translate(x: number, y: number, z: number, transformation: Matrix) {
-    if(typeof(x)!=='number' || typeof(y)!=='number' || typeof(z)!=='number')
+    if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z))
         throw('Non numeric input passed to translate()');
     const m = transformation.m;
     var rx = x * m[0] + y * m[1] + z * m[2] + m[3];

@@ -1,7 +1,7 @@
 let startingPoint: Vector3;
 let tempplane: BABYLON.Mesh
-let global_position: Vector3
-let end_position: Vector3
+let global_position: BABYLON.Vector3
+let end_position: BABYLON.Vector3
 
 import { updateSubTexture } from "./triginometry.js";
 //import { rotateMatrix, translate } from "./math.js";
@@ -49,14 +49,99 @@ export class paintGround {
     }
    
     private drawArea = evt => {
-        
+
+        let ray = BABYLON.Ray.Zero();
+        this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
+
+        //console.log('intersect',this.ground.intersects(ray));
+
+
+        let intersection=((ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): BABYLON.PickingInfo => {
+            var pickingInfo = new BABYLON.PickingInfo();
+            const intersectionThreshold = this.ground.getClassName() === "InstancedLinesMesh" || this.ground.getClassName() === "LinesMesh" ? (this as any).intersectionThreshold : 0;
+            const boundingInfo = this.ground._boundingInfo;
+            if (!this.ground.subMeshes || !boundingInfo || !ray.intersectsSphere(boundingInfo.boundingSphere, intersectionThreshold) || !ray.intersectsBox(boundingInfo.boundingBox, intersectionThreshold)) {
+                return pickingInfo;
+            }
+
+            if (!this.ground._generatePointsArray()) {
+                return pickingInfo;
+            }
+
+            var intersectInfo: Nullable<BABYLON.IntersectionInfo> = null;
+
+            var subMeshes = this.scene.getIntersectingSubMeshCandidates(this.ground, ray);
+            var len: number = subMeshes.length;
+            for (var index = 0; index < len; index++) {
+                var subMesh = subMeshes.data[index];
+
+                // Bounding test
+                if (len > 1 && !subMesh.canIntersects(ray)) {
+                    continue;
+                }
+
+                var currentIntersectInfo = subMesh.intersects(ray, (<BABYLON.Vector3[]>this.ground._positions),
+                    (<IndicesArray>this.ground.getIndices()), fastCheck,
+                    trianglePredicate);
+
+                if (currentIntersectInfo) {
+                    if (fastCheck || !intersectInfo || currentIntersectInfo.distance < intersectInfo.distance) {
+                        intersectInfo = currentIntersectInfo;
+                        intersectInfo.subMeshId = index;
+
+                        if (fastCheck) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (intersectInfo) {
+                // Get picked point
+                const world = this.ground.getWorldMatrix();
+                const worldOrigin = BABYLON.Tmp.Vector3[0];
+                const direction = BABYLON.Tmp.Vector3[1];
+                BABYLON.Vector3.TransformCoordinatesToRef(ray.origin, world, worldOrigin);
+                ray.direction.scaleToRef(intersectInfo.distance, direction);
+                console.log('Direction', direction.x, 'world', world);
+                const worldDirection = BABYLON.Vector3.TransformNormal(direction, world);
+                
+                const pickedPoint = worldDirection.addInPlace(worldOrigin);
+
+                // Return result
+                pickingInfo.hit = true;
+                pickingInfo.distance = BABYLON.Vector3.Distance(worldOrigin, pickedPoint);
+                pickingInfo.pickedPoint = pickedPoint;
+                pickingInfo.pickedMesh = this.ground;
+                pickingInfo.bu = intersectInfo.bu || 0;
+                pickingInfo.bv = intersectInfo.bv || 0;
+                pickingInfo.faceId = intersectInfo.faceId;
+                pickingInfo.subMeshId = intersectInfo.subMeshId;
+                return pickingInfo;
+            }
+
+            return pickingInfo;
+        })(ray,false);
+
+        console.log('intersection ', intersection)
+
+
         let distance: number;
-        end_position = <Vector3><unknown>this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => { return mesh === this.ground; },undefined,this.camera).pickedPoint;
+        /*console.log(this.scene._internalPick((world) => {
+            if (!this.scene._tempPickingRay) {
+                this.scene._tempPickingRay = BABYLON.Ray.Zero();
+            }
+            
+            this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, world, this.scene._tempPickingRay, this.camera || null);
+            return this.scene._tempPickingRay;
+        }, mesh => { return mesh === this.ground; },false));*/
+        let pikked = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => { return mesh === this.ground; }, undefined, this.camera);
+        end_position = pikked.pickedPoint;
+        console.log('pikked', pikked)
         end_position.y = 1;
         let width = startingPoint.x - end_position.x;
 
         distance = Math.sqrt(Math.pow(startingPoint.x - end_position.x, 2) + Math.pow(startingPoint.z - end_position.z, 2));
-
         height = distance
 
         if (width < 0)
@@ -83,7 +168,11 @@ export class paintGround {
             return;
         }
         // check if we are under a mesh
-        var pickInfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => { return mesh === this.ground || mesh === this.sea; },undefined, this.camera);
+        console.log(this.scene.pointerX, this.scene.pointerY);
+        var pickInfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => {
+            console.log(mesh);
+            return mesh === this.ground
+        }, false, this.camera);
         if (pickInfo.hit) {
             if (pickInfo.pickedMesh === this.sea) {
                 console.log('hitted sea');
@@ -104,8 +193,8 @@ export class paintGround {
             sphereLocalOrigin.position = <BABYLON.Vector3><unknown>startingPoint;
             sphereLocalOrigin.computeWorldMatrix();
             var matrix = sphereLocalOrigin.getWorldMatrix();
-            var local_position = new Vector3(0, 1, 0);
-            global_position = Vector3.TransformCoordinates(local_position, <Matrix><unknown>matrix);
+            var local_position = new BABYLON.Vector3(0, 1, 0);
+            global_position = BABYLON.Vector3.TransformCoordinates(local_position, matrix);
             global_position.y = 50;
 
 
@@ -142,8 +231,8 @@ export class paintGround {
                 // let currentpickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) { return mesh === ground; });
                // let ang = new Angle(Math.abs(rotation));
                // let ang360 = ang[360](startingPoint, end_position);
-                if (me.type==DrawType.plane) {
-                    let meshCenter: Vector3 = end_position.subtract(global_position).divide(new Vector3(2, 2, 2));
+                if (me.type == DrawType.plane) {
+                    let meshCenter: BABYLON.Vector3 = end_position.subtract(global_position).divide(new BABYLON.Vector3(2, 2, 2));
                     tempplane.position = <BABYLON.Vector3><unknown>global_position.add(meshCenter)
                     tempplane.position.y = 0.2;
                    tempplane.scaling.x = height;
@@ -155,7 +244,7 @@ export class paintGround {
                 let clickListenerAdded = false;
                 let subTexture: subTexture;
                 if(me.type==DrawType.texture) {
-                    var func = updateSubTexture.bind(me.zonedt.getScene().getEngine());
+                    var updateSubTextureLocal = updateSubTexture.bind(me.zonedt.getScene().getEngine());
                 }
                 this.addEventListener('pointermove', function pmove2() {
                     let currentpickInfo2 = me.scene.pick(me.scene.pointerX, me.scene.pointerY, function (mesh) { return mesh === me.ground; },undefined,me.camera);
@@ -175,9 +264,11 @@ export class paintGround {
 
                     let fulldotprod = height * height;
                     let shadow = height * (dotprod / fulldotprod);
-
+                   // console.log('distance ', distance, 'shadow', shadow);
                     width = Math.abs(Math.sqrt(Math.pow(Math.abs(distance), 2) - Math.pow(shadow, 2)));
-
+                    if (Number.isNaN(width)) {
+                        throw ("width is not a number");
+                    }
                     if (ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg > me.ang[360](startingPoint, end_position).deg) {
                         if (ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg - me.ang[360](startingPoint, end_position).deg > 180)
                             mouseside = 1
@@ -221,8 +312,7 @@ export class paintGround {
 
                     }
                     if (me.type==DrawType.texture) {
-
-                        subTexture = func(me.zonedt, width * -1, height * -1, startingPoint, me.ang360, subTexture);
+                        subTexture = updateSubTextureLocal(me.zonedt, width * -1, height * -1, startingPoint, me.ang360, subTexture);
                     }
                     if (!clickListenerAdded) {
                         clickListenerAdded = true;
