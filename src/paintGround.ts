@@ -72,6 +72,7 @@ export class paintGround {
 
             var subMeshes = this.scene.getIntersectingSubMeshCandidates(this.ground, ray);
             var len: number = subMeshes.length;
+            console.log('submeshes ', subMeshes);
             for (var index = 0; index < len; index++) {
                 var subMesh = subMeshes.data[index];
 
@@ -80,10 +81,98 @@ export class paintGround {
                     continue;
                 }
 
-                var currentIntersectInfo = subMesh.intersects(ray, (<BABYLON.Vector3[]>this.ground._positions),
+
+                var currentIntersectInfo = ((ray: BABYLON.Ray, positions: BABYLON.Vector3[], indices: IndicesArray,
+                    fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): Nullable<BABYLON.IntersectionInfo> => {
+                    const material = subMesh.getMaterial();
+                    if (!material) {
+                        return null;
+                    }
+
+                    switch (material.fillMode) {
+                        case BABYLON.Constants.MATERIAL_PointListDrawMode:
+                        case BABYLON.Constants.MATERIAL_LineListDrawMode:
+                        case BABYLON.Constants.MATERIAL_LineLoopDrawMode:
+                        case BABYLON.Constants.MATERIAL_LineStripDrawMode:
+                        case BABYLON.Constants.MATERIAL_TriangleFanDrawMode:
+                        case BABYLON.Constants.MATERIAL_TriangleStripDrawMode:
+                            return null;
+                    }
+
+                    // LineMesh first as it's also a Mesh...
+                    let sMesh = subMesh.getMesh();
+                    if (sMesh.getClassName() === "InstancedLinesMesh" || sMesh.getClassName() === "LinesMesh") {
+                        // Check if mesh is unindexed
+                        if (!indices.length) {
+                            return ((ray: BABYLON.Ray, positions: BABYLON.Vector3[], indices: IndicesArray, intersectionThreshold: number, fastCheck?: boolean) => {
+                                var intersectInfo: Nullable<BABYLON.IntersectionInfo> = null;
+
+                                // Line test
+                                for (var index = subMesh.verticesStart; index < subMesh.verticesStart + subMesh.verticesCount; index += 2) {
+                                    var p0 = positions[index];
+                                    var p1 = positions[index + 1];
+
+                                    var length = ray.intersectionSegment(p0, p1, intersectionThreshold);
+                                    if (length < 0) {
+                                        continue;
+                                    }
+
+                                    if (fastCheck || !intersectInfo || length < intersectInfo.distance) {
+                                        intersectInfo = new BABYLON.IntersectionInfo(null, null, length);
+                                        intersectInfo.faceId = index / 2;
+                                        if (fastCheck) {
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                return intersectInfo;
+                            })(ray, positions, indices, (sMesh as any).intersectionThreshold, fastCheck);
+                            //return subMesh._intersectUnIndexedLines(ray, positions, indices, (sMesh as any).intersectionThreshold, fastCheck);
+                        }
+                        return ((ray: BABYLON.Ray, positions: BABYLON.Vector3[], indices: IndicesArray, intersectionThreshold: number, fastCheck?: boolean): Nullable<BABYLON.IntersectionInfo> => {
+                            var intersectInfo: Nullable<BABYLON.IntersectionInfo> = null;
+
+                            // Line test
+                            for (var index = subMesh.indexStart; index < subMesh.indexStart + subMesh.indexCount; index += 2) {
+                                var p0 = positions[indices[index]];
+                                var p1 = positions[indices[index + 1]];
+
+                                var length = ray.intersectionSegment(p0, p1, intersectionThreshold);
+                                if (length < 0) {
+                                    continue;
+                                }
+
+                                if (fastCheck || !intersectInfo || length < intersectInfo.distance) {
+                                    intersectInfo = new BABYLON.IntersectionInfo(null, null, length);
+                                    intersectInfo.faceId = index / 2;
+                                    if (fastCheck) {
+                                        break;
+                                    }
+                                }
+                            }
+                            return intersectInfo;
+                        })(ray, positions, indices, (sMesh as any).intersectionThreshold, fastCheck);
+                       // return subMesh._intersectLines(ray, positions, indices, (sMesh as any).intersectionThreshold, fastCheck);
+                    }
+                    else {
+                        // Check if mesh is unindexed
+                        if (!indices.length && subMesh._mesh._unIndexed) {
+                            return subMesh._intersectUnIndexedTriangles(ray, positions, indices, fastCheck, trianglePredicate);
+                        }
+
+                        return subMesh._intersectTriangles(ray, positions, indices, fastCheck, trianglePredicate);
+                    }
+                })(ray, (<BABYLON.Vector3[]>this.ground._positions),
                     (<IndicesArray>this.ground.getIndices()), fastCheck,
                     trianglePredicate);
 
+                /////
+
+               /* var currentIntersectInfo = subMesh.intersects(ray, (<BABYLON.Vector3[]>this.ground._positions),
+                    (<IndicesArray>this.ground.getIndices()), fastCheck,
+                    trianglePredicate);*/
+                console.log('currentIntersectInfo', currentIntersectInfo);
                 if (currentIntersectInfo) {
                     if (fastCheck || !intersectInfo || currentIntersectInfo.distance < intersectInfo.distance) {
                         intersectInfo = currentIntersectInfo;
@@ -95,15 +184,17 @@ export class paintGround {
                     }
                 }
             }
-
+            console.log('intersecinfo', intersectInfo);
+            //Missing intersectInfo.distance
             if (intersectInfo) {
                 // Get picked point
                 const world = this.ground.getWorldMatrix();
                 const worldOrigin = BABYLON.Tmp.Vector3[0];
                 const direction = BABYLON.Tmp.Vector3[1];
+
                 BABYLON.Vector3.TransformCoordinatesToRef(ray.origin, world, worldOrigin);
                 ray.direction.scaleToRef(intersectInfo.distance, direction);
-                console.log('Direction', direction.x, 'world', world);
+
                 const worldDirection = BABYLON.Vector3.TransformNormal(direction, world);
                 
                 const pickedPoint = worldDirection.addInPlace(worldOrigin);
