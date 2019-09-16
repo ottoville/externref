@@ -214,7 +214,7 @@ export class WorldScene extends BABYLON.Scene {
            }, scene);*/
 
             // canvas.addEventListener("pointerdown", DZ.mainPointerDown, false);
-
+            terrain.isPickable = true;
             var sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             //var seaground = BABYLON.Mesh.CreateGround("ground", 3601, 3601, 1, scene, false);
             //seaground.position.y = -1.5;
@@ -318,9 +318,23 @@ export class WorldScene extends BABYLON.Scene {
             });
 
 
-            /*canvas.addEventListener("pointerdown", () => {
-                var pickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) { return mesh === ground || mesh === sea; });
-                var sphereLocalOrigin = BABYLON.MeshBuilder.CreateSphere("sphereLO", { diameter: .5 }, scene);
+            engine.getRenderingCanvas().addEventListener("pointerdown", () => {
+                var pickInfo = this.pick(this.pointerX, this.pointerY);
+                let raydir = BABYLON.Vector3.Unproject(
+                    new BABYLON.Vector3(this.pointerX, this.pointerY,0),
+                    engine.getRenderWidth(),
+                    engine.getRenderHeight(),
+                    BABYLON.Matrix.Identity(), this.getViewMatrix(),
+                    this.getProjectionMatrix());
+                console.log(raydir);
+                let raydir2 = BABYLON.Vector3.Unproject(
+                    new BABYLON.Vector3(this.pointerX, this.pointerY,1000),
+                    engine.getRenderWidth(),
+                    engine.getRenderHeight(),
+                    BABYLON.Matrix.Identity(), this.getViewMatrix(),
+                    this.getProjectionMatrix());
+                console.log(raydir2);
+               /* var sphereLocalOrigin = BABYLON.MeshBuilder.CreateSphere("sphereLO", { diameter: .5 }, scene);
                 sphereLocalOrigin.material = new BABYLON.StandardMaterial("origin", scene);
                 sphereLocalOrigin.position = pickInfo.pickedPoint;
                 sphereLocalOrigin.computeWorldMatrix();
@@ -346,8 +360,8 @@ export class WorldScene extends BABYLON.Scene {
                 ctx.fillRect(global_position.x, global_position.z*-1, 21, 21);
                 ctx.fill();
                 grass.update();
-                console.log(terrain.getHeightFromMap(global_position.x,global_position.z))
-            }, false);*/
+                console.log(terrain.getHeightFromMap(global_position.x,global_position.z))*/
+            }, false);
 
 
 
