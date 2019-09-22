@@ -28,6 +28,7 @@ export class CameraTAB extends UITAB {
         this.camera.checkCollisions = true;
 
         this.camera.attachControl(canvas, true);
+        console.log('attach camera');
 
         D.then(DB => {
             DB.transaction("save").objectStore("save").get(0).onsuccess = (evt) => {

@@ -319,21 +319,10 @@ export class WorldScene extends BABYLON.Scene {
 
 
             engine.getRenderingCanvas().addEventListener("pointerdown", () => {
-                var pickInfo = this.pick(this.pointerX, this.pointerY);
-                let raydir = BABYLON.Vector3.Unproject(
-                    new BABYLON.Vector3(this.pointerX, this.pointerY,0),
-                    engine.getRenderWidth(),
-                    engine.getRenderHeight(),
-                    BABYLON.Matrix.Identity(), this.getViewMatrix(),
-                    this.getProjectionMatrix());
-                console.log(raydir);
-                let raydir2 = BABYLON.Vector3.Unproject(
-                    new BABYLON.Vector3(this.pointerX, this.pointerY,1000),
-                    engine.getRenderWidth(),
-                    engine.getRenderHeight(),
-                    BABYLON.Matrix.Identity(), this.getViewMatrix(),
-                    this.getProjectionMatrix());
-                console.log(raydir2);
+                var pickInfo = this.pick(this.pointerX, this.pointerY, (m) => {
+                    return true;
+                });
+                console.log(pickInfo);
                /* var sphereLocalOrigin = BABYLON.MeshBuilder.CreateSphere("sphereLO", { diameter: .5 }, scene);
                 sphereLocalOrigin.material = new BABYLON.StandardMaterial("origin", scene);
                 sphereLocalOrigin.position = pickInfo.pickedPoint;
