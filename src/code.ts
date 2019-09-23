@@ -169,7 +169,6 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
         //TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
     }, 500);
     //loadingBar.value = 30;
-    console.log('run renredlooå')
     engine.runRenderLoop(function () {
         if (window.scene) {
             

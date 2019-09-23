@@ -6,11 +6,11 @@
             "dom",
             "esnext"
         ],
-        "types": [
-            "babylonjs",
-            "babylonjs-materials",
-            "facebook-js-sdk"
-        ],
+      "types": [
+        "babylonjs",
+        "babylonjs-materials",
+        "facebook-js-sdk"
+      ],
         "moduleResolution": "node"
     },
     "exclude": [
