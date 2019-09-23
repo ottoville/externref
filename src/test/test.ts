@@ -3,6 +3,13 @@ let BABYLON = require('babylonjs');
 import { WorldScene } from "../world/scene.js"
 let canvas = {};
 let blazor = {};
+class Worker2 {
+    constructor(s: string | URL, o: WorkerOptions) {
+
+    }
+}
+//@ts-ignore
+globalThis.Worker = Worker2;
 var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
 var scene = new WorldScene(engine, { provider: 'anomyous', accessToken: '123' }, <DotNet.BlazorInstance>blazor, 0);
 
