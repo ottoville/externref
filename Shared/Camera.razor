@@ -1,7 +1,11 @@
-﻿<fieldset>
-    <button>Debug camera</button>
+﻿@inject IJSRuntime JSRuntime;
+@code {
+    Boolean debugCameraActivated = false;
+}
+<fieldset>
+    <button @onclick="@(() => {
+                            debugCameraActivated = !debugCameraActivated;
+                            JSRuntime.InvokeAsync<bool>("scene.tools.CameraTAB.activateDebugCamera",debugCameraActivated);
+                        })">Debug camera</button>
 </fieldset>
 
-@code {
-
-}

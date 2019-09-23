@@ -24,10 +24,13 @@ export class CameraTAB extends UITAB {
         this.camera.lowerRadiusLimit = 10;
 
         this.camera.panningAxis = new BABYLON.Vector3(1, 0, 1)
-
         this.camera.checkCollisions = true;
-
         this.camera.attachControl(canvas, true);
+
+
+        this.camera2 = new BABYLON.ArcRotateCamera("Camera2", 0, 0, 10, new BABYLON.Vector3(500, 20, 0), scene);
+        this.camera2.target = this.camera.target;
+        this.camera2.viewport = new BABYLON.Viewport(0, 0, 0.5, 1.0);
 
         D.then(DB => {
             DB.transaction("save").objectStore("save").get(0).onsuccess = (evt) => {
@@ -66,23 +69,15 @@ export class CameraTAB extends UITAB {
      }
     activate = (): void => {
         this.activated=true;
-     }
-    createMenu = (form): void => {
-        let label = form.appendChild(document.createElement('label'));
-        let input: HTMLInputElement = label.appendChild(document.createElement('input'));
-        input.type = "checkbox";
-        label.appendChild(document.createTextNode('Debug camera'));
-        input.addEventListener('change', (evt) => {
-            if ((<HTMLInputElement>evt.target).checked) {
-                this.camera2 = new BABYLON.ArcRotateCamera("Camera2", 0, 0, 10, new BABYLON.Vector3(500, 20, 0), this.scene);
-                this.camera2.target = this.camera.target;
-                this.camera2.viewport = new BABYLON.Viewport(0, 0, 0.5, 1.0);
-                this.camera.viewport = new BABYLON.Viewport(0.5, 0, 0.5, 1.0);
-                this.scene.activeCameras.push(this.camera2);
-            } else {
-                this.scene.removeCamera(this.camera2);
-                this.camera.viewport = new BABYLON.Viewport(0, 0, 1, 1.0);
-            }
-        });
+    }
+    activateDebugCamera = (enable: boolean): void => {
+        if (enable) {
+            this.camera.viewport = new BABYLON.Viewport(0.5, 0, 0.5, 1.0);
+            this.scene.activeCameras.push(this.camera2);
+        }
+        else {
+            this.camera.viewport = new BABYLON.Viewport(0, 0, 1, 1.0);
+            this.scene.removeCamera(this.camera2);
+        }
     }
 }
