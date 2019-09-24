@@ -8,7 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="src\test\test.ts" />
+    <Compile Remove="src\**" />
+    <Content Remove="src\**" />
+    <EmbeddedResource Remove="src\**" />
+    <None Remove="src\**" />
+    <TypeScriptCompile Remove="src\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +31,6 @@
     <Folder Include="Tools\" />
   </ItemGroup>
 
-  <ProjectExtensions><VisualStudio><UserProperties package_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
 </Project>
