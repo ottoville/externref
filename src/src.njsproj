@@ -34,7 +34,6 @@
   <ItemGroup>
     <None Include="code.ts" />
     <Content Include="package.json" />
-    <Content Include="test\package.json" />
     <Content Include="tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
@@ -45,7 +44,6 @@
     <TypeScriptCompile Include="paintGround.ts" />
     <TypeScriptCompile Include="plants\grass.ts" />
     <TypeScriptCompile Include="plants\Plants.ts" />
-    <TypeScriptCompile Include="test\test.ts" />
     <TypeScriptCompile Include="tools\camera.ts" />
     <TypeScriptCompile Include="tools\plantsUI.ts" />
     <TypeScriptCompile Include="tools\Zones.ts" />
@@ -57,7 +55,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="plants\" />
-    <Folder Include="test\" />
     <Folder Include="tools\" />
     <Folder Include="world\" />
   </ItemGroup>
