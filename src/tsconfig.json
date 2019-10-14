@@ -9,12 +9,12 @@
       "types": [
         "babylonjs",
         "babylonjs-materials",
-        "facebook-js-sdk"
+        "facebook-js-sdk",
+        "mocha"
       ],
         "moduleResolution": "node"
     },
     "exclude": [
-      "node_modules",
-      "test"
+      "node_modules"
     ]
 }

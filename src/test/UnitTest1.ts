@@ -1,8 +1,12 @@
+
+console.log('hello world');
+
 //import { strict as assert } from 'assert';
 //@ts-ignore
-import { WorldScene } from "./world/scene.js"
-var canvas = document.body.appendChild(document.createElement('canvas'));
-declare var BABYLON;
+//import { WorldScene } from "./world/scene.js"
+//var canvas = document.body.appendChild(document.createElement('canvas'));
+
+
 describe("Test Suite 1", () => {
     //var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
     //var scene = new WorldScene(engine, { provider: 'anomyous', accessToken: '123' }, {}, 0);

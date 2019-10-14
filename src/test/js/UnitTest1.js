@@ -1,4 +1,4 @@
-var canvas = document.body.appendChild(document.createElement('canvas'));
+console.log('hello world');
 describe("Test Suite 1", () => {
     //var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
     //var scene = new WorldScene(engine, { provider: 'anomyous', accessToken: '123' }, {}, 0);

@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/mocha": "^5.2.7",
     "babylonjs-materials": "^4.0.3"
   },
   "devDependencies": {
