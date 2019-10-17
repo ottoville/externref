@@ -26,7 +26,8 @@ module.exports = function(config) {
           { pattern: 'js/plants/*.js', type:'module'},
           { pattern: 'js/tools/*.js', type:'module'},
           { pattern: 'lib/babylon.js', served: true },
-          { pattern: 'js/*.js', type: 'module' }
+          { pattern: 'js/*.js', type: 'module' },
+          { pattern: 'js/test/*.js', type: 'module' },
     ],
 
 
