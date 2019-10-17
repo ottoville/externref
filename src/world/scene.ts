@@ -21,6 +21,7 @@ export class WorldScene extends BABYLON.Scene {
     }*/
     public currentGameTime: int;
     public SunObject: Sun;
+    public terrainReady: Promise<BABYLON.GroundMesh>;
     public stateChange(data) {
         console.log('state changed', data);
         if (this.webSocket) {
@@ -69,7 +70,7 @@ export class WorldScene extends BABYLON.Scene {
         var nbPoints: number = 500;
 
 
-        new Promise(async (res, rej) => {
+        this.terrainReady = new Promise(async (res, rej) => {
             (await DB).transaction('maps').objectStore('maps').openCursor().onsuccess = function () {
                 if (this.result) {
 
@@ -114,6 +115,7 @@ export class WorldScene extends BABYLON.Scene {
                 trans.onsuccess = () => { res(ground) };
             }
             return;
+            /*
             (await DB).transaction('maps').objectStore('maps').openCursor().onsuccess = function () {
                 if (this.result) {
                     res(this.result.value.mapData);
@@ -168,8 +170,9 @@ export class WorldScene extends BABYLON.Scene {
                     }
                     img.src = "images/tenerife2.png";
                 }
-            }
-        }).then((terrain: BABYLON.GroundMesh) => {
+            }*/
+        });
+        this.terrainReady.then((terrain: BABYLON.GroundMesh) => {
             /* Promise.all([CSG.fromMesh(this.mesh), CSG.fromMesh(grassbox)]).then(r => {
                  if (thismeshoperation !== meshoperatiocount) {
                      r[0].dispose();
