@@ -69,8 +69,9 @@ export class WorldScene extends BABYLON.Scene {
         // Data Map
         var nbPoints: number = 500;
 
-
+        console.log('init terrainReady');
         this.terrainReady = new Promise(async (res, rej) => {
+            console.log('call terrainReady');
             (await DB).transaction('maps').objectStore('maps').openCursor().onsuccess = function () {
                 if (this.result) {
 
@@ -78,7 +79,9 @@ export class WorldScene extends BABYLON.Scene {
             }
             let img = new Image();
             img.src = "images/tenerife2.png";
+            img.onerror = () => rej('Loading terrain image failed');
             img.onload = async () => {
+                console.log('img onload');
                 let canvas = document.createElement("canvas");
                 canvas.width = img.width;
                 canvas.height = img.height;
@@ -112,7 +115,10 @@ export class WorldScene extends BABYLON.Scene {
                 vertexData.applyToMesh(ground, true);
                 ground._setReady(true);
                 trans.onerror = rej;
-                trans.onsuccess = () => { res(ground) };
+                trans.onsuccess = () => {
+                    console.log('resolving terrainReady');
+                    res(ground)
+                };
             }
             return;
             /*

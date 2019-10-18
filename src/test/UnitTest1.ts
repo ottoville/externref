@@ -13,6 +13,7 @@ describe("Test Suite 1", () => {
     let ray = BABYLON.Ray.Zero();
     it("Test A", async () => {
         return scene.terrainReady.then((ground: BABYLON.GroundMesh) => {
+            console.log('terrain is Ready');
             let world = ground.getWorldMatrix();
             var cameraViewport = scene.tools['CameraTAB'].camera.viewport;
 
