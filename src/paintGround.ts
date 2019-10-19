@@ -29,8 +29,6 @@ export class paintGround {
         private sea: BABYLON.Mesh,
         private zonedt:BABYLON.DynamicTexture,
     ) {
-        console.log('camera:');
-        console.log(camera);
         
     };
     public resolve: PTResultF;

@@ -26,10 +26,14 @@ module.exports = function(config) {
           { pattern: 'js/plants/*.js', type:'module'},
           { pattern: 'js/tools/*.js', type:'module'},
           { pattern: 'lib/babylon.js', served: true },
+          { pattern: 'lib/babylonjs.materials.min.js', served: true },
           { pattern: 'js/*.js', type: 'module' },
           { pattern: 'js/test/*.js', type: 'module' },
+          { pattern: 'images/tenerife2.png', included: false, served: true },
     ],
-
+      proxies: {
+          "/images/": "/base/images/"
+      },
 
     // list of files / patterns to exclude
     exclude: [

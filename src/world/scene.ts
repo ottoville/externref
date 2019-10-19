@@ -78,7 +78,7 @@ export class WorldScene extends BABYLON.Scene {
                 }
             }
             let img = new Image();
-            img.src = "images/tenerife2.png";
+            img.src = "/images/tenerife2.png";
             img.onerror = () => rej('Loading terrain image failed');
             img.onload = async () => {
                 console.log('img onload');
@@ -290,7 +290,7 @@ export class WorldScene extends BABYLON.Scene {
                     }
                 }
             }
-            BABYLON.SceneLoader.ImportMesh("", "", "tree.babylon", this, function (mesh) {
+          /*  BABYLON.SceneLoader.ImportMesh("", "", "tree.babylon", this, function (mesh) {
                 let treemesh = mesh[0];
                 (<BABYLON.StandardMaterial>treemesh.material).opacityTexture = null;
                 treemesh.material.backFaceCulling = false;
@@ -300,7 +300,7 @@ export class WorldScene extends BABYLON.Scene {
                     ctx.translate(centerX, centerZ);
                     ctx.fillStyle = "#654321";
                 }
-                /*for (let row = -5000; row < 5000; row = row + 8) {
+                for (let row = -5000; row < 5000; row = row + 8) {
                     for (let col = -5000; col < 5000; col = col += 8) {
                         let height = terrain.getHeightFromMap(row, col)
                         //let height = ground.getHeightAtCoordinates(row, col);
@@ -316,7 +316,7 @@ export class WorldScene extends BABYLON.Scene {
                             DT && ctx.fillRect(row, col * -1, 10, 10);
                         }
                     }
-                }*/
+                }
                 if (DT) {
                     ctx.fill();
                     grass.update();
@@ -324,7 +324,7 @@ export class WorldScene extends BABYLON.Scene {
 
 
                 return this;
-            });
+            });*/
 
 
             engine.getRenderingCanvas().addEventListener("pointerdown", () => {
