@@ -31,12 +31,4 @@ describe("Test Suite 1", function() {
             
         });
     });
-    /*
-    it("Test B", () => {
-        //assert.ok(1 === 1, "This shouldn't fail");
-        console.log("This shouldn't fail");
-        throw new Error("This should fail")
-        // assert.ok(false, "This should fail");
-    });
-    */
 });

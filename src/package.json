@@ -19,6 +19,7 @@
     "@types/babylonjs": "^2.4.1",
     "@types/facebook-js-sdk": "^3.3.0",
     "esm": "^3.2.25",
-    "http-server": "^0.9.0"
+    "http-server": "^0.9.0",
+    "typescript": "^3.6.4"
   }
 }
