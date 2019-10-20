@@ -35,6 +35,7 @@
   <ItemGroup>
     <Content Include="karma.conf.js" />
     <Content Include="package.json" />
+    <Content Include="tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="UnitTest1.ts">

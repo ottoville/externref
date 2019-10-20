@@ -1,20 +1,25 @@
 {
-    "compilerOptions": {
-        "outDir": "../wwwroot/js",
-        "target": "es6",
-        "lib": [
-            "dom",
-            "esnext"
-        ],
-      "types": [
-        "babylonjs",
-        "babylonjs-materials",
-        "facebook-js-sdk",
-        "mocha"
-      ],
-        "moduleResolution": "node"
-    },
-    "exclude": [
-      "node_modules"
-    ]
+  "compilerOptions": {
+    "typeRoots": [ "./node_modules/@types", "./types", "js/declarations" ],
+    "outDir": "../wwwroot/js",
+    "declaration": true,
+    "declarationDir": "../wwwroot/js/declarations",
+    "composite": true,
+    "target": "es6",
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "types": [
+      "babylonjs",
+      "babylonjs-materials",
+      "facebook-js-sdk",
+      "mocha",
+      "interfaces"
+    ],
+    "moduleResolution": "node"
+  },
+  "exclude": [
+    "node_modules"
+  ]
 }

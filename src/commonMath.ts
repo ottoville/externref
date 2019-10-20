@@ -58,7 +58,7 @@ interface DeepImmutableArray<T> extends ReadonlyArray<DeepImmutable<T>> { }
 /* interface DeepImmutableMap<K, V> extends ReadonlyMap<DeepImmutable<K>, DeepImmutable<V>> {} // es2015+ only */
 /** @hidden */
 type DeepImmutableObject<T> = { readonly [K in keyof T]: DeepImmutable<T[K]> };
-class Angle {
+class Angle implements AngleI {
     private fullRad=Math.PI*2;
     constructor(private _rad: number, private _deg?: number) { }
     get deg(): number {

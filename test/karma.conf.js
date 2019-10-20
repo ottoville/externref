@@ -1,18 +1,11 @@
 // Karma configuration
 // Generated on Wed Sep 25 2019 10:13:00 GMT+0300 (Eastern European Summer Time)
-/*
-          { pattern: 'js/world/*.js', type:'module'},
-          { pattern: 'js/plants/*.js', type:'module'},
-          { pattern: 'js/tools/*.js', type:'module'},
-          { pattern: 'lib/babylon.js', served: true },
-          { pattern: 'js/*.js', type: 'module' }
 
-*/
 module.exports = function(config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
-      basePath: '../../bin/Debug/netstandard2.0/publish/BlazorApp1/dist',
+      basePath: '../bin/Debug/netstandard2.0/publish/BlazorApp1/dist',
 
 
     // frameworks to use

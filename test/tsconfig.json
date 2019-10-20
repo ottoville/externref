@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "outDir": "../wwwroot/js/test",
+    "rootDir": ".",
+    "types": [
+      "babylonjs",
+      "mocha"
+    ],
+    "lib": [ "dom", "esnext" ]
+  },
+  "references": [
+    { "path": "../src" }
+  ]
+}
