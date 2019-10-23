@@ -1,16 +1,24 @@
 
 //import { strict as assert } from 'assert';
-
-import { WorldScene } from "../src/world/scene.js"
-import { CameraTAB } from "../src/tools/camera.js";
+//@ts-ignore
+import { WorldScene } from "/js/world/scene.js"
+//@ts-ignore
+import { CameraTAB } from "/js/tools/camera.js";
 var canvas = document.body.appendChild(document.createElement('canvas'));
+var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
+
+const canvasInited: Promise<WorldScene> = new Promise((res) => {
+    //(<any>window).initCanvas = async function (blazor, ticks: number) {
+    res(new WorldScene(engine, { provider: 'anomyous', accessToken: '123' }, {}, 0));
+    //}
+});
 
 describe("Test Suite 1", function() {
     this.timeout(100000);
-    var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    var scene = new WorldScene(engine, { provider: 'anomyous', accessToken: '123' }, {}, 0);
     let ray = BABYLON.Ray.Zero();
     it("Test A", async () => {
+        console.log('Waiting canvas to be ready');
+        let scene = await canvasInited;
         return scene.terrainReady.then((ground: BABYLON.GroundMesh) => {
             console.log('terrain is Ready');
             let world = ground.getWorldMatrix();

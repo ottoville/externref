@@ -19,7 +19,7 @@ export class WorldScene extends BABYLON.Scene {
         let interval = new Date().getTime() - this.lastStateChangeTime;
         return this.lastStateChangeGameTime + (BigInt(interval * 60) << this.gameSpeed);
     }*/
-    public currentGameTime: int;
+    public currentGameTime: number;
     public SunObject: Sun;
     public terrainReady: Promise<BABYLON.GroundMesh>;
     public stateChange(data) {

@@ -1,5 +1,8 @@
 //type Angle={rad:number, deg:number}
-type Zone = {coord:BABYLON.Vector3,ang:Angle,size: {h:number, w:number}}
+type Zone = {
+    coord: BABYLON.Vector3, ang: any, //Angle,
+    size: { h: number, w: number }
+}
 type subTexture = {
     x: number;
     z: number;
@@ -8,8 +11,8 @@ type subTexture = {
 type savedCamera = {id:number, camera: {alpha: number, beta:number, radius:number, target: BABYLON.Vector3, position: BABYLON.Vector3}}
 type PTDresult =
     {
-        coord: Vector3,
-        ang: Angle,
+        coord: any, //Vector3,
+        ang: any, // Angle,
         size: {
             w: number,
             h: number

@@ -25,7 +25,8 @@ module.exports = function(config) {
           { pattern: 'images/tenerife2.png', included: false, served: true },
     ],
       proxies: {
-          "/images/": "/base/images/"
+          "/images/": "/base/images/",
+          "/js/": "/base/js/"
       },
 
     // list of files / patterns to exclude
