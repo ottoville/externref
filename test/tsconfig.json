@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "outDir": "../wwwroot/js/test",
+    "outDir": "./js",
     "rootDir": ".",
-    "target": "es6",
+    "target": "es5",
     "module": "es6",
     "types": [
       "babylonjs",
       "mocha"
     ],
-    "lib": [ "dom", "esnext" ],
+    "lib": [ "dom", "es6", "es2015.promise" ],
     "moduleResolution": "node"
   },
   "references": [

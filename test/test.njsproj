@@ -6,6 +6,8 @@
     <RootNamespace>test</RootNamespace>
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
     <JavaScriptTestFramework>mocha</JavaScriptTestFramework>
+    <JavaScriptTestRoot>js\</JavaScriptTestRoot>
+    <NodeExePath>C:\Program Files\nodejs\node.exe --experimental-modules -r esm</NodeExePath>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -33,14 +35,32 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="chutzpah.json">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="js\initscene.js" />
+    <Content Include="js\UnitTest1.js">
+      <TestFramework>Mocha</TestFramework>
+    </Content>
+    <Content Include="js\UnitTest2.js">
+      <TestFramework>Mocha</TestFramework>
+    </Content>
     <Content Include="karma.conf.js" />
     <Content Include="package.json" />
     <Content Include="tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="initscene.ts" />
     <TypeScriptCompile Include="UnitTest1.ts">
       <TestFramework>Mocha</TestFramework>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="UnitTest2.ts">
+      <SubType>Code</SubType>
+      <TestFramework>Mocha</TestFramework>
+    </TypeScriptCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="js\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
   <ProjectExtensions>
