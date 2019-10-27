@@ -1,4 +1,3 @@
-//import assert = require('assert');
 describe("Test Suite 1", function () {
     it("Test A", function () {
         console.log(true, "This shouldn't fail");

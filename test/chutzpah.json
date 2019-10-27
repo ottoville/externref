@@ -3,6 +3,13 @@
   "Tests": [ {"Path": "./js/UnitTest1.js"} ],
   "References": [
     { "Path": "../node_modules/es6-shim/es6-shim.js" },
+      { "Path": "../wwwroot/lib/babylon.js" },
+      { "Path": "../wwwroot/js/DB.js" },
+      { "Path": "../wwwroot/images/tenerife2.png" }
   ],
-  "Engine": "Chrome"
+  "Engine": "Chrome",
+  "Server": {
+    "Enabled": true,
+    "RootPath": "../"
+  }
 }

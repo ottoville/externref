@@ -35,47 +35,51 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 describe("Ray Test", function () {
+    var _this = this;
     this.timeout(100000);
-    window.onload = function () {
-        var code = document.body.appendChild(document.createElement('script'));
-        code.setAttribute('type', 'module');
-        code.src = 'initscene.js';
-        code.onload = function () {
-            var _this = this;
-            var sceneReadyPromise = new Promise(function (res, rej) {
-                //@ts-ignore
-                window.sceneReady = function (WorldScene) {
-                    var scene = new WorldScene(engine, { provider: 'anomyous', accessToken: '123' }, {}, 0);
-                    scene.terrainReady.then(function (ground) {
-                        console.log('terrain is Ready');
-                        res([ground, scene]);
+    it("Test A", function () { return __awaiter(_this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            return [2 /*return*/, new Promise(function (testresolver, testreject) {
+                    var canvas = document.body.appendChild(document.createElement('canvas'));
+                    var engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+                    var sceneReadyPromise = new Promise(function (res, rej) {
+                        //@ts-ignore
+                        window.sceneReady = function (WorldScene) {
+                            var scene = new WorldScene(engine, { provider: 'anomyous', accessToken: '123' }, {}, 0);
+                            scene.terrainReady.then(function (ground) {
+                                console.log('terrain is Ready');
+                                res([ground, scene]);
+                            }).catch(rej);
+                        };
                     });
-                };
-            });
-            var canvas = document.body.appendChild(document.createElement('canvas'));
-            var engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-            var ray = BABYLON.Ray.Zero();
-            it("Test A", function () { return __awaiter(_this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    sceneReadyPromise.then(function (arr) {
-                        var ground = arr[0];
-                        var scene = arr[1];
-                        var world = ground.getWorldMatrix();
-                        console.log('get cameraViewport');
-                        var cameraViewport = scene.tools['CameraTAB'].camera.viewport;
-                        console.log('get cameraViewport.toGlobal');
-                        var viewport = cameraViewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
-                        var x = 200 / engine.getHardwareScalingLevel() - viewport.x;
-                        var y = 200 / engine.getHardwareScalingLevel() - (engine.getRenderHeight() - viewport.y - viewport.height);
-                        console.log(ray.unprojectRayToRef(x, y, viewport.width, viewport.height, world, scene.tools['CameraTAB'].camera.getViewMatrix(), scene.tools['CameraTAB'].camera.getProjectionMatrix()));
-                        console.log(ray.direction);
-                        if (Number.isNaN(ray.direction.x) || Number.isNaN(ray.direction.y) || Number.isNaN(ray.direction.z)) {
+                    var code = document.body.appendChild(document.createElement('script'));
+                    code.setAttribute('type', 'module');
+                    code.src = './initscene.js';
+                    //<base href="https://www.w3schools.com/" target = "_blank" >
+                    code.onerror = function (e) {
+                        throw new Error("Failed to load initscene.js " + e.toString());
+                    };
+                    code.onload = function () {
+                        sceneReadyPromise.then(function (arr) {
+                            var ray = BABYLON.Ray.Zero();
+                            var ground = arr[0];
+                            var scene = arr[1];
+                            var world = ground.getWorldMatrix();
+                            console.log('get cameraViewport');
+                            var cameraViewport = scene.tools['CameraTAB'].camera.viewport;
+                            console.log('get cameraViewport.toGlobal');
+                            var viewport = cameraViewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
+                            var x = 200 / engine.getHardwareScalingLevel() - viewport.x;
+                            var y = 200 / engine.getHardwareScalingLevel() - (engine.getRenderHeight() - viewport.y - viewport.height);
+                            console.log(ray.unprojectRayToRef(x, y, viewport.width, viewport.height, world, scene.tools['CameraTAB'].camera.getViewMatrix(), scene.tools['CameraTAB'].camera.getProjectionMatrix()));
+                            console.log(ray.direction);
+                            //if (Number.isNaN(ray.direction.x) || Number.isNaN(ray.direction.y) || Number.isNaN(ray.direction.z)) {
                             throw new Error("Creating picking ray failed");
-                        }
-                    });
-                    return [2 /*return*/];
-                });
-            }); });
-        };
-    };
+                            testresolver();
+                            //}
+                        }).catch(testreject);
+                    };
+                })];
+        });
+    }); });
 });

@@ -81,7 +81,6 @@ export class WorldScene extends BABYLON.Scene {
             img.src = "/images/tenerife2.png";
             img.onerror = () => rej('Loading terrain image failed');
             img.onload = async () => {
-                console.log('img onload');
                 let canvas = document.createElement("canvas");
                 canvas.width = img.width;
                 canvas.height = img.height;
