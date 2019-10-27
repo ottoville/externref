@@ -48,6 +48,7 @@
     <Content Include="karma.conf.js" />
     <Content Include="package.json" />
     <Content Include="tsconfig.json" />
+    <Content Include="UnitTest1.js" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="initscene.ts" />
