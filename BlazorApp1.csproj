@@ -8,14 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="EdgeDriverTest1\**" />
     <Compile Remove="EdgeDriverTest2\**" />
     <Compile Remove="src\**" />
+    <Content Remove="EdgeDriverTest1\**" />
     <Content Remove="EdgeDriverTest2\**" />
     <Content Remove="src\**" />
+    <EmbeddedResource Remove="EdgeDriverTest1\**" />
     <EmbeddedResource Remove="EdgeDriverTest2\**" />
     <EmbeddedResource Remove="src\**" />
+    <None Remove="EdgeDriverTest1\**" />
     <None Remove="EdgeDriverTest2\**" />
     <None Remove="src\**" />
+    <TypeScriptCompile Remove="EdgeDriverTest1\**" />
     <TypeScriptCompile Remove="EdgeDriverTest2\**" />
     <TypeScriptCompile Remove="src\**" />
   </ItemGroup>
