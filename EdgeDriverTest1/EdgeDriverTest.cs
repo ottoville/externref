@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Edge;
 
-namespace EdgeDriverTest2
+namespace EdgeDriverTest1
 {
     [TestClass]
     public class EdgeDriverTest
@@ -19,10 +19,9 @@ namespace EdgeDriverTest2
             // Initialize edge driver 
             var options = new EdgeOptions
             {
-                PageLoadStrategy = PageLoadStrategy.Normal,
-
+                PageLoadStrategy = PageLoadStrategy.Normal
             };
-            _driver = new EdgeDriver("C:\\Users\\Otto\\source\\repos\\terranew\\terrasim\\EdgeDriverTest2", options);
+            _driver = new EdgeDriver(options);
         }
 
         [TestMethod]
