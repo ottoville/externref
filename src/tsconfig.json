@@ -4,7 +4,6 @@
     "outDir": "../wwwroot/js",
     "declaration": true,
     "declarationDir": "../wwwroot/js/declarations",
-    "composite": true,
     "target": "es6",
     "module": "es6",
     "lib": [
