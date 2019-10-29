@@ -19,9 +19,10 @@ namespace EdgeDriverTest2
             // Initialize edge driver 
             var options = new EdgeOptions
             {
-                PageLoadStrategy = PageLoadStrategy.Normal
+                PageLoadStrategy = PageLoadStrategy.Normal,
+
             };
-            _driver = new EdgeDriver(options);
+            _driver = new EdgeDriver("C:\\Users\\Otto\\source\\repos\\terranew\\terrasim\\EdgeDriverTest2", options);
         }
 
         [TestMethod]
