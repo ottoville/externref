@@ -1,5 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenQA.Selenium.Chrome;
+using System.IO;
+using System.Reflection;
 
 namespace EdgeDriverTest3
 {
@@ -16,7 +18,8 @@ namespace EdgeDriverTest3
         public void EdgeDriverInitialize()
         {
 
-            _driver = new ChromeDriver();
+            _driver = new ChromeDriver(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
         }
 
         [TestMethod]
