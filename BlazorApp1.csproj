@@ -11,18 +11,23 @@
     <Compile Remove="EdgeDriverTest1\**" />
     <Compile Remove="EdgeDriverTest2\**" />
     <Compile Remove="src\**" />
+    <Compile Remove="UnitTestProject1\**" />
     <Content Remove="EdgeDriverTest1\**" />
     <Content Remove="EdgeDriverTest2\**" />
     <Content Remove="src\**" />
+    <Content Remove="UnitTestProject1\**" />
     <EmbeddedResource Remove="EdgeDriverTest1\**" />
     <EmbeddedResource Remove="EdgeDriverTest2\**" />
     <EmbeddedResource Remove="src\**" />
+    <EmbeddedResource Remove="UnitTestProject1\**" />
     <None Remove="EdgeDriverTest1\**" />
     <None Remove="EdgeDriverTest2\**" />
     <None Remove="src\**" />
+    <None Remove="UnitTestProject1\**" />
     <TypeScriptCompile Remove="EdgeDriverTest1\**" />
     <TypeScriptCompile Remove="EdgeDriverTest2\**" />
     <TypeScriptCompile Remove="src\**" />
+    <TypeScriptCompile Remove="UnitTestProject1\**" />
   </ItemGroup>
 
   <ItemGroup>
