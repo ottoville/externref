@@ -16,9 +16,7 @@ namespace EdgeDriverTest3
         [TestInitialize]
         public void EdgeDriverInitialize()
         {
-
             _driver = new ChromeDriver(Environment.GetEnvironmentVariable("ChromeWebDriver"));
-
         }
 
         [TestMethod]
