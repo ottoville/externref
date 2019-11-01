@@ -5,6 +5,9 @@
     <OutputType>Exe</OutputType>
     <LangVersion>7.3</LangVersion>
     <RazorLangVersion>3.0</RazorLangVersion>
+    <PowerShellExe Condition=" '$(PowerShellExe)'=='' ">
+      %WINDIR%\System32\WindowsPowerShell\v1.0\powershell.exe
+    </PowerShellExe>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,6 +44,42 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="shaders\grass2.frag" />
+    <None Remove="shaders\grass2.vert" />
+    <None Remove="shaders\ground.frag" />
+    <None Remove="shaders\ground.vert" />
+    <None Remove="shaders\sun.frag" />
+    <None Remove="shaders\sun.vert" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="shaders\grass2.frag">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="shaders\grass2.vert">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="shaders\ground.frag">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="shaders\ground.vert">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="shaders\sun.frag">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="shaders\sun.vert">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Blazor" Version="3.0.0-preview9.19424.4" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="3.0.0-preview9.19424.4" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.HttpClient" Version="3.0.0-preview9.19424.4" />
@@ -57,5 +96,9 @@
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="&quot;%25WINDIR%25\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NonInteractive -executionpolicy Unrestricted -command cp &quot;rm $(ProjectDir)wwwroot\shaders\*; $(ProjectDir)shaders\* -Destination $(ProjectDir)wwwroot\shaders\;Get-ChildItem $(ProjectDir)wwwroot\shaders\*.vert | Rename-Item -newname { `$_.name -replace '.vert','.txt' };&quot;&#xD;&#xA;https://stackoverflow.com/questions/32311875/rename-item-and-override-if-filename-exists" />
+  </Target>
 
 </Project>
