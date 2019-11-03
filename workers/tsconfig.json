@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "outDir": "../wwwroot",
+    "module": "esnext",
+    "target": "esnext",
+    "lib": [ "esnext", "webworker" ],
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

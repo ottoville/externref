@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "serve": "npm run publish && http-server ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\ -S -o",
-    "build": "tsc && dotnet build ../BlazorApp1.csproj",
+    "build": "tsc --build",
     "publish": "tsc && dotnet build ../BlazorApp1.csproj && dotnet publish ../BlazorApp1.csproj",
     "test": "@powershell cp .\\src\\test\\package.json ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\js\\test; node --experimental-modules -r esm ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\js\\test\\test.js"
   },

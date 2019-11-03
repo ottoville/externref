@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
-    "typeRoots": [ "./node_modules/@types", "./types", "js/declarations" ],
     "outDir": "../wwwroot/js",
-    "declaration": true,
-    "declarationDir": "../wwwroot/js/declarations",
     "target": "es6",
     "module": "es6",
     "lib": [
@@ -13,8 +10,7 @@
     "types": [
       "babylonjs",
       "babylonjs-materials",
-      "facebook-js-sdk",
-      "interfaces"
+      "facebook-js-sdk"
     ],
     "moduleResolution": "node"
   },

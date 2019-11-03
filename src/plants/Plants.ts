@@ -21,7 +21,7 @@ export class Plants {
         radius: 86
     }
     private offset: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 4 * this.numBlades);
-    private worker = new WorkerThread('/js/workers/grass.js');
+   // private worker = new WorkerThread('/js/workers/grass.js');
     private ready: Promise<any>;
     private bladesVisible: number = 0;
     public fillArea(area: PTDresult) {
@@ -37,12 +37,12 @@ export class Plants {
             blade[1] = this.terrain.getHeightAtCoordinates(blade[0], blade[2]) // y
             blade[3] = Math.PI * 2.0 * Math.random() // rot
         }
-        this.ready.then(() =>
+       /* this.ready.then(() =>
             this.worker.message(WorkerReturn.noReturn, 'save',
                 {
                     buffer: offsets
                 })
-        )
+        )*/
 
     }
     constructor(
@@ -52,11 +52,11 @@ export class Plants {
     ) {
         let shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 4 * this.numBlades);
         let noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
-        this.ready = this.worker.message(WorkerReturn.Promise, 'init', {
+        /*this.ready = this.worker.message(WorkerReturn.Promise, 'init', {
             positions: this.offset,
             shape: shapes,
             noises:noises
-        });
+        });*/
         this.mat = new BABYLON.ShaderMaterial("shader", scene, "./shaders/grass2",
             {
                 attributes: ["position", "normal", "uv", "shape", "worldPos","noise"],
@@ -217,7 +217,7 @@ export class Plants {
         Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, noisebuffer, "noise", true, true, 0, true, 0, 1, undefined, undefined, true));
 
 
-        this.worker.subscribe('updated', (data) => {
+        /*this.worker.subscribe('updated', (data) => {
             this.bladesVisible = data.count;
             gl.bindBuffer(gl.ARRAY_BUFFER, offsetbufferPlain.getBuffer().underlyingResource);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));
@@ -226,12 +226,12 @@ export class Plants {
             gl.bindBuffer(gl.ARRAY_BUFFER, noisebuffer.getBuffer().underlyingResource);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(noises));
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
-        });
+        });*/
         let l = new LazyEval(() => {
-            this.worker.message(WorkerReturn.Promise, 'get', {
+            /*this.worker.message(WorkerReturn.Promise, 'get', {
                 offset: this.offset,
                 shape: shapes
-            })
+            })*/
         }, true);
         l.eval(4000);
         this.camera.onViewMatrixChangedObservable.add(() => {

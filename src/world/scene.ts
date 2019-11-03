@@ -42,7 +42,7 @@ export class WorldScene extends BABYLON.Scene {
     constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private webSocket?: WebSocket) {
         super(engine);
         if (webSocket) {
-            this.webSocket.send(JSON.stringify({ action: 'init', data: { userinfo , ticks } }));
+            this.webSocket.send(JSON.stringify({ action: 'init', data: { userinfo, ticks } }));
             this.webSocket.onmessage = (e) => {
                 let msg = JSON.parse(e.data);
                 if (msg.action == 'init') {
@@ -50,13 +50,21 @@ export class WorldScene extends BABYLON.Scene {
                     blazor.invokeMethod('initGame', msg.currentPlayData);
                 }
             }
+        } else {
+            console.log('initing without websocket connection');
+            blazor.invokeMethod('initGame', {
+                gameSpeed: 0,
+                lastStateChangeGameTime: 216000000000,
+                lastStateChangeTime: ticks
+            });
         }
         this.SunObject = new Sun(this);
-        let gameEngine = new WorkerThread('js/workers/engine.js');
 
+       /* let gameEngine = new WorkerThread('js/workers/engine.js');
         gameEngine.message(WorkerReturn.noReturn, 'init', {
             gameTime: this.lastStateChangeGameTime
-        });
+        });*/
+
         this.tools['CameraTAB'] = new CameraTAB(this, engine.getRenderingCanvas() , DB);
         //let ui = new UI();
         //ui.registerTab(CameraTab);
@@ -69,9 +77,7 @@ export class WorldScene extends BABYLON.Scene {
         // Data Map
         var nbPoints: number = 500;
 
-        console.log('init terrainReady');
         this.terrainReady = new Promise(async (res, rej) => {
-            console.log('call terrainReady');
             (await DB).transaction('maps').objectStore('maps').openCursor().onsuccess = function () {
                 if (this.result) {
 
@@ -115,7 +121,6 @@ export class WorldScene extends BABYLON.Scene {
                 ground._setReady(true);
                 trans.onerror = rej;
                 trans.onsuccess = () => {
-                    console.log('resolving terrainReady');
                     res(ground)
                 };
             }
@@ -177,7 +182,13 @@ export class WorldScene extends BABYLON.Scene {
                 }
             }*/
         });
+        //@ts-ignore
+        window.daa1 = this.terrainReady;
+        this.terrainReady.catch((e) => {
+            console.error('creating terrain failed', e);
+        })
         this.terrainReady.then((terrain: BABYLON.GroundMesh) => {
+            console.log('terrain is ready');
             /* Promise.all([CSG.fromMesh(this.mesh), CSG.fromMesh(grassbox)]).then(r => {
                  if (thismeshoperation !== meshoperatiocount) {
                      r[0].dispose();
@@ -230,16 +241,29 @@ export class WorldScene extends BABYLON.Scene {
             let grass = new BABYLON.DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, this, false);
             let plants = new Plants(this,(<CameraTAB>this.tools['CameraTAB']).camera, terrain);
             DB.then(d => {
-                this.tools['Plants'] = new PlantsUI(terrain, d, engine.getRenderingCanvas(), this,(<CameraTAB>this.tools['CameraTAB']).camera, sea, grass, plants);
-                this.tools['Zones'] = new Zones(terrain, d, engine.getRenderingCanvas(), shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, grass);
+                console.log('Database ready');
+                
+                //this.tools['Plants'] = new PlantsUI(terrain, d, engine.getRenderingCanvas(), this,(<CameraTAB>this.tools['CameraTAB']).camera, sea, grass, plants);
+                //this.tools['Zones'] = new Zones(terrain, d, engine.getRenderingCanvas(), shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, grass);
                 //ui.registerTab(ZoneTab);
                 //ui.registerTab(plantsUI);
-
+                
                 shadermateria.setVector3("lightPos", sunlight.position);
                 shadermateria.setVector3("cameraPosition",(<CameraTAB>this.tools['CameraTAB']).camera.position);
-                terrain.material = shadermateria
+                terrain.material = shadermateria;
 
-                shadermateria.setTexture('textureSampler2', grass);
+
+                /*(function (name: string, texture: BABYLON.Texture): BABYLON.ShaderMaterial {
+                    let me: BABYLON.ShaderMaterial = this;
+                    if (me._options.samplers.indexOf(name) === -1) {
+                        me._options.samplers.push(name);
+                    }
+                    me._textures[name] = texture;
+
+                    return this;
+                }).call(shadermateria, 'textureSampler2', grass)*/
+
+                //shadermateria.setTexture('textureSampler2', grass); //not working
 
                 /* D.transaction('maps').objectStore('maps').openCursor().onsuccess = function () {
                     if (this.result) {
@@ -265,7 +289,7 @@ export class WorldScene extends BABYLON.Scene {
             var green = new BABYLON.StandardMaterial("green", this);
             const DT: boolean = true
             green.diffuseColor = new BABYLON.Color3(0, 1, 0);
-            if (DT) {
+            /*if (DT) {
                 var ctx = grass.getContext();
                 ctx.beginPath();
                 ctx.fillStyle = "#3142e0";
@@ -288,7 +312,7 @@ export class WorldScene extends BABYLON.Scene {
                         }
                     }
                 }
-            }
+            }*/
           /*  BABYLON.SceneLoader.ImportMesh("", "", "tree.babylon", this, function (mesh) {
                 let treemesh = mesh[0];
                 (<BABYLON.StandardMaterial>treemesh.material).opacityTexture = null;

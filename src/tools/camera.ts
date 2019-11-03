@@ -15,7 +15,7 @@ export class CameraTAB extends UITAB {
 
         this.camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 10, new BABYLON.Vector3(500, 20, 0), scene);
         scene.activeCameras.push(this.camera);
-        this.camera.maxZ=1606;
+        this.camera.maxZ=1606000;
         this.camera.panningSensibility = 20;
         this.camera.angularSensibilityX = 1000;
         this.camera.angularSensibilityY = 2000;

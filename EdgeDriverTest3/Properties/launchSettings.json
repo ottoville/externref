@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "EdgeDriverTest3": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ChromeWebDriver": "\"C:\\Users\\ottov\\source\\repos\\terra\\terrasim\\EdgeDriverTest3\\\""
+      }
+    }
+  }
+}

@@ -53,6 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="buildShaders.js" />
     <Content Include="shaders\grass2.frag">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -98,7 +99,7 @@
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="&quot;%25WINDIR%25\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NonInteractive -executionpolicy Unrestricted -command cp &quot;rm $(ProjectDir)wwwroot\shaders\*; $(ProjectDir)shaders\* -Destination $(ProjectDir)wwwroot\shaders\;Get-ChildItem $(ProjectDir)wwwroot\shaders\*.vert | Rename-Item -newname { `$_.name -replace '.vert','.txt' };&quot;&#xD;&#xA;https://stackoverflow.com/questions/32311875/rename-item-and-override-if-filename-exists" />
+    <Exec Command="node .\buildShaders.js" />
   </Target>
 
 </Project>

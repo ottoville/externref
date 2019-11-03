@@ -15,6 +15,13 @@ import { WorldScene } from "./world/scene.js";
 
 //let zones: Zone[] = [];
 
+navigator.serviceWorker.register('/sw.js').then(function (registration) {
+    // Registration was successful
+    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+}, function (err) {
+    // registration failed :(
+    console.log('ServiceWorker registration failed: ', err);
+});
 
 
 BABYLON.Effect.prototype._loadFragmentShader = function (fragment: any, callback: (data: any) => void): void {
@@ -108,6 +115,7 @@ var BlazorRouter: Promise<DotNet.BlazorInstance> = new Promise((resolve, reject)
 declare global {
     interface Window {
         scene: WorldScene;
+        sceneInited: Promise<WorldScene>;
         fbAsyncInit: () => void;
         playAnomyous: () => void
     }
@@ -140,51 +148,54 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
     }
 });
 
+window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
+    (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number) {
+        var canvas = document.getElementById("renderCanvas");
+        if (!canvas || canvas.dataset.inited === "true")
+            return;
+        canvas.dataset.inited = "true";
+        console.log('init canvas ', ticks)
+        var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
+        let loadingBar: HTMLProgressElement = <HTMLProgressElement>document.getElementById('loadingBar');
 
-(<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks:number) {
-    var canvas = document.getElementById("renderCanvas");
-    if(!canvas || canvas.dataset.inited === "true")
-        return;
-    canvas.dataset.inited="true";
-    console.log('init canvas ', ticks)
-    var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    let loadingBar: HTMLProgressElement = <HTMLProgressElement>document.getElementById('loadingBar');
-
-    //document.getElementById('loading').style.display = 'block';
-    //loadingBar.value = 10;
-    window.scene = await new Promise<WorldScene>((res, rej) => {
+        //document.getElementById('loading').style.display = 'block';
+        //loadingBar.value = 10;
         let webSocket = new WebSocket('ws://localhost:8081');
         webSocket.onopen = async () => {
+            console.log('websocket onopen');
             //loadingBar.value = 20;
-            res(new WorldScene(engine, await loginPromise, blazor, ticks, webSocket));
+            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, webSocket));
         }
         webSocket.onerror = async () => {
-            res(new WorldScene(engine, await loginPromise, blazor, ticks));
+            console.log('websocket onerror');
+            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks));
         }
-    });
-    window.scene.collisionsEnabled = true;
+    }
+});
+window.sceneInited.then(scene => {
+    scene.collisionsEnabled = true;
     let TODOut = <HTMLOutputElement>document.getElementById("TODout");
     setInterval(() => {
         // @ts-ignore
         //TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
     }, 500);
     //loadingBar.value = 30;
-    engine.runRenderLoop(function () {
+    scene.getEngine().runRenderLoop(function () {
         if (window.scene) {
-            
+
             //scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime')
             window.scene.render();
         }
     });
     // Resize
     window.addEventListener("resize", function () {
-        engine.resize();
+        scene.getEngine().resize();
     });
     for (let i = 0; i < gameControlsUI.length; i++) {
         gameControlsUI[i].classList.remove('hidden');
     }
         //document.getElementById('loading').style.display = 'none';
-}
+})
 
 let gameControlsUI = document.getElementsByClassName('gameControl');
 new Promise((resolve, reject) => {

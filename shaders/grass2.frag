@@ -20,7 +20,7 @@ out vec4 myOutputColor;
 
 void main(void) {
     //FIX
-    vec4 color = vec4(vColor);// * texture(map, vUV);
+    vec4 color = vec4(vColor);//  texture(map, vUV);
     //gl_FragColor = vec4(vColor);
   //FIX
 	//vec4 hdata = texture2D(heightMap, vSamplePos);
