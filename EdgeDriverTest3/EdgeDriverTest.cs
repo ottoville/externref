@@ -4,6 +4,7 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System;
+using System.Collections.Generic;
 
 namespace EdgeDriverTest3
 {
@@ -35,31 +36,25 @@ namespace EdgeDriverTest3
             var myDynamicElement = (new WebDriverWait(_driver, TimeSpan.FromSeconds(30))).Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(By.CssSelector("#loginmethods > button:nth-child(4)")));
             myDynamicElement[0].Click();
             var canvas = (new WebDriverWait(_driver, TimeSpan.FromSeconds(30))).Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(By.CssSelector("canvas")))[0];
-
-            var test = (IJavaScriptExecutor)_driver.ExecuteAsyncScript(@"
+            var jsexecutor = (IJavaScriptExecutor)_driver;
+            var test = (Dictionary<string, object>)jsexecutor.ExecuteAsyncScript(@"
+                        let callback=arguments[0];
                         window.sceneInited.then((scene) => {
-                            let callback=arguments[0];
+                            let engine = scene.getEngine();
                             scene.terrainReady.then(function (ground) {
-                                console.log('terrain is Ready');
                                 var ray = BABYLON.Ray.Zero();
-                                var ground = arr[0];
                                 var world = ground.getWorldMatrix();
-                                console.log('get cameraViewport');
                                 var cameraViewport = scene.tools['CameraTAB'].camera.viewport;
-                                console.log('get cameraViewport.toGlobal');
                                 var viewport = cameraViewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
                                 var x = 200 / engine.getHardwareScalingLevel() - viewport.x;
                                 var y = 200 / engine.getHardwareScalingLevel() - (engine.getRenderHeight() - viewport.y - viewport.height);
-                                console.log(ray.unprojectRayToRef(x, y, viewport.width, viewport.height, world, scene.tools['CameraTAB'].camera.getViewMatrix(), scene.tools['CameraTAB'].camera.getProjectionMatrix()));
-                                console.log(ray.direction);
-                                //if (Number.isNaN(ray.direction.x) || Number.isNaN(ray.direction.y) || Number.isNaN(ray.direction.z)) {
-                                throw new Error('Creating picking ray failed');
-                                callback();
-                            }).catch(rej)
+                                ray.unprojectRayToRef(x, y, viewport.width, viewport.height, world, scene.tools['CameraTAB'].camera.getViewMatrix(), scene.tools['CameraTAB'].camera.getProjectionMatrix());
+                                callback(ray.direction);
+                            }).catch(e => {callback('error '+e.toString())})
                         })");
-            System.Console.WriteLine(test);
-            canvas.Click();
-            Assert.AreEqual("BingX", _driver.Title);
+            Assert.IsNotNull(test["x"]);
+            Assert.IsNotNull(test["y"]);
+            Assert.IsNotNull(test["z"]);
         }
 
         [TestCleanup]
