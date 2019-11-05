@@ -29,10 +29,9 @@ namespace EdgeDriverTest3
         }
 
         [TestMethod]
-        public void VerifyPageTitle()
+        public void PickingRay()
         {
-            // Replace with your own test logic
-            _driver.Url = "https://localhost:44316/";
+            _driver.Url = "https://localhost:50909/";
             var myDynamicElement = (new WebDriverWait(_driver, TimeSpan.FromSeconds(30))).Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(By.CssSelector("#loginmethods > button:nth-child(4)")));
             myDynamicElement[0].Click();
             var canvas = (new WebDriverWait(_driver, TimeSpan.FromSeconds(30))).Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(By.CssSelector("canvas")))[0];
