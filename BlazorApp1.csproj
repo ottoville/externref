@@ -16,31 +16,26 @@
     <Compile Remove="EdgeDriverTest3\**" />
     <Compile Remove="src\**" />
     <Compile Remove="UnitTestProject1\**" />
-    <Compile Remove="wwwroot\js\**" />
     <Content Remove="EdgeDriverTest1\**" />
     <Content Remove="EdgeDriverTest2\**" />
     <Content Remove="EdgeDriverTest3\**" />
     <Content Remove="src\**" />
     <Content Remove="UnitTestProject1\**" />
-    <Content Remove="wwwroot\js\**" />
     <EmbeddedResource Remove="EdgeDriverTest1\**" />
     <EmbeddedResource Remove="EdgeDriverTest2\**" />
     <EmbeddedResource Remove="EdgeDriverTest3\**" />
     <EmbeddedResource Remove="src\**" />
     <EmbeddedResource Remove="UnitTestProject1\**" />
-    <EmbeddedResource Remove="wwwroot\js\**" />
     <None Remove="EdgeDriverTest1\**" />
     <None Remove="EdgeDriverTest2\**" />
     <None Remove="EdgeDriverTest3\**" />
     <None Remove="src\**" />
     <None Remove="UnitTestProject1\**" />
-    <None Remove="wwwroot\js\**" />
     <TypeScriptCompile Remove="EdgeDriverTest1\**" />
     <TypeScriptCompile Remove="EdgeDriverTest2\**" />
     <TypeScriptCompile Remove="EdgeDriverTest3\**" />
     <TypeScriptCompile Remove="src\**" />
     <TypeScriptCompile Remove="UnitTestProject1\**" />
-    <TypeScriptCompile Remove="wwwroot\js\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -89,6 +84,24 @@
 
   <ItemGroup>
     <Folder Include="Tools\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\js\code.js" />
+    <None Include="wwwroot\js\commonMath.js" />
+    <None Include="wwwroot\js\DB.js" />
+    <None Include="wwwroot\js\LazyEval.js" />
+    <None Include="wwwroot\js\paintGround.js" />
+    <None Include="wwwroot\js\plants\grass.js" />
+    <None Include="wwwroot\js\plants\Plants.js" />
+    <None Include="wwwroot\js\tools\camera.js" />
+    <None Include="wwwroot\js\tools\plantsUI.js" />
+    <None Include="wwwroot\js\tools\zones.js" />
+    <None Include="wwwroot\js\triginometry.js" />
+    <None Include="wwwroot\js\UITAB.js" />
+    <None Include="wwwroot\js\WorkerThread.js" />
+    <None Include="wwwroot\js\world\scene.js" />
+    <None Include="wwwroot\js\world\sun.js" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
