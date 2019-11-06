@@ -12,7 +12,7 @@ fs.readdir(dirname, async function (err, filenames) {
                 rej(err);
                 return;
             }
-            obj[filename] = content; //.replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '');
+            obj[filename] = content.replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '');
             res();
         })
     })));
