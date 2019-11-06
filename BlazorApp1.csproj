@@ -33,7 +33,6 @@
     <None Remove="UnitTestProject1\**" />
     <TypeScriptCompile Remove="EdgeDriverTest1\**" />
     <TypeScriptCompile Remove="EdgeDriverTest2\**" />
-    <TypeScriptCompile Remove="EdgeDriverTest3\**" />
     <TypeScriptCompile Remove="src\**" />
     <TypeScriptCompile Remove="UnitTestProject1\**" />
   </ItemGroup>

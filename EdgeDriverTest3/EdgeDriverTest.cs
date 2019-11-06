@@ -31,7 +31,7 @@ namespace EdgeDriverTest3
         [TestMethod]
         public void PickingRay()
         {
-            _driver.Url = "https://localhost:50909/";
+            _driver.Url = "https://terrasim.azurewebsites.net/";
             var myDynamicElement = (new WebDriverWait(_driver, TimeSpan.FromSeconds(30))).Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(By.CssSelector("#loginmethods > button:nth-child(4)")));
             myDynamicElement[0].Click();
             var canvas = (new WebDriverWait(_driver, TimeSpan.FromSeconds(30))).Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(By.CssSelector("canvas")))[0];
