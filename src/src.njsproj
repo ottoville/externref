@@ -35,6 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="code.ts" />
+    <Content Include="libman.json" />
     <Content Include="package.json" />
     <Content Include="tsconfig.json" />
   </ItemGroup>
