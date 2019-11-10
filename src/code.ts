@@ -181,11 +181,7 @@ window.sceneInited.then(scene => {
     }, 500);
     //loadingBar.value = 30;
     scene.getEngine().runRenderLoop(function () {
-        if (window.scene) {
-
-            //scene.currentGameTime = DotNet.invokeMethod('BlazorApp1', 'getGameTime')
-            window.scene.render();
-        }
+        scene.render();
     });
     // Resize
     window.addEventListener("resize", function () {
