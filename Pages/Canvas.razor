@@ -9,7 +9,6 @@
     [JSInvokable]
     public void initGame(System.Text.Json.JsonElement input)
     {
-        System.Console.WriteLine("initGame");
         input.GetProperty("lastStateChangeGameTime").TryGetInt64(out lastStateChangeGameTime);
         input.GetProperty("lastStateChangeTime").TryGetInt64(out lastStateChangeTime);
         input.GetProperty("gameSpeed").TryGetSByte(out gameSpeed);
@@ -29,7 +28,6 @@
     [JSInvokable]
     public Int64 getGameTime()
     {
-        //System.Console.WriteLine("getGameTime");
         if (gameSpeed < 0)
             return lastStateChangeGameTime;
         var interval = DateTime.Now.Ticks - lastStateChangeTime;
@@ -84,6 +82,7 @@
     void activateMenu(string tool)
     {
         showMenu = tool;
+        System.Console.WriteLine("activateMenu "+tool);
         JSRuntime.InvokeAsync<string>("scene.tools."+tool+".activate");
         foreach(string t in tools)
         {

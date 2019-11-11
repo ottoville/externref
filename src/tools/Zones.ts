@@ -26,6 +26,7 @@ export class Zones extends UITAB {
         this.zonemateria.diffuseTexture = this.zonedt;
     }
     activate = (): void => {
+        console.log('activate zones');
         this.activated=true;
         this.ctx = this.zonedt.getContext();
         this.ground.material = this.zonemateria;

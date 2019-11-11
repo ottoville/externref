@@ -173,12 +173,9 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
     }
 });
 window.sceneInited.then(scene => {
+    window.scene = scene;
     scene.collisionsEnabled = true;
     let TODOut = <HTMLOutputElement>document.getElementById("TODout");
-    setInterval(() => {
-        // @ts-ignore
-        //TODOut.value = new Date(Number(scene.currentGameTime)).toLocaleTimeString(undefined, { timeStyle: "short", timeZone: 'UTC' });
-    }, 500);
     //loadingBar.value = 30;
     scene.getEngine().runRenderLoop(function () {
         scene.render();

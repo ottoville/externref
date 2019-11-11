@@ -182,8 +182,6 @@ export class WorldScene extends BABYLON.Scene {
                 }
             }*/
         });
-        //@ts-ignore
-        window.daa1 = this.terrainReady;
         this.terrainReady.catch((e) => {
             console.error('creating terrain failed', e);
         })
@@ -238,7 +236,6 @@ export class WorldScene extends BABYLON.Scene {
             //var seaground = BABYLON.Mesh.CreateGround("ground", 3601, 3601, 1, scene, false);
             //seaground.position.y = -1.5;
             sea.position.y = 0;
-            let grass = new BABYLON.DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, this, false);
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, terrain);
             const DT: boolean = true
             DB.then(d => {
@@ -251,11 +248,13 @@ export class WorldScene extends BABYLON.Scene {
                 
                 shadermateria.setVector3("lightPos", sunlight.position);
                 shadermateria.setVector3("cameraPosition",(<CameraTAB>this.tools['CameraTAB']).camera.position);
-               
+                let c = document.createElement('canvas');
+                c.width = 10000;
+                c.height = 10000;
+                let ctx = c.getContext("2d");
                 if (DT) {
-                    var ctx = grass.getContext();
                     ctx.beginPath();
-                    ctx.fillStyle = "#3142e0";
+                    ctx.fillStyle = "#e0e031";
                     ctx.fillRect(0, 0, 10000, 10000);
 
                     var centerX = 10000 / 2
@@ -269,26 +268,28 @@ export class WorldScene extends BABYLON.Scene {
                                 ctx.fillStyle = "green";
                                 ctx.fillRect(row, col * -1, 3, 3);
                             }
-                            else if (height > 0.3) {
+                            /*else if (height > 0.3) {
                                 ctx.fillStyle = "#e0e031";
                                 ctx.fillRect(row, col * -1, 3, 3);
-                            }
+                            }*/
                         }
                     }
-                }
+                }               
+                c.toBlob(b => {
+                    /*(function (name: string, texture: BABYLON.Texture): BABYLON.ShaderMaterial {
+                   let me: BABYLON.ShaderMaterial = this;
+                   if (me._options.samplers.indexOf(name) === -1) {
+                       me._options.samplers.push(name);
+                   }
+                   me._textures[name] = texture;
 
-                /*(function (name: string, texture: BABYLON.Texture): BABYLON.ShaderMaterial {
-                    let me: BABYLON.ShaderMaterial = this;
-                    if (me._options.samplers.indexOf(name) === -1) {
-                        me._options.samplers.push(name);
-                    }
-                    me._textures[name] = texture;
-
-                    return this;
-                }).call(shadermateria, 'textureSampler2', grass)*/
-
-                shadermateria.setTexture('textureSampler2', grass); //not working
-                terrain.material = shadermateria;
+                   return this;
+                   }).call(shadermateria, 'textureSampler2', grass)*/
+                    shadermateria.setTexture('textureSampler2', new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw(e) })); //not working
+                    terrain.material = shadermateria;
+                   
+                }, 'image/webp');
+                
                 /* D.transaction('maps').objectStore('maps').openCursor().onsuccess = function () {
                     if (this.result) {
                         shadermateria.setTexture('heightMap', new BABYLON.RawTexture(await new Response(this.result.value.image).arrayBuffer() , 10000, 10000, BABYLON.Engine.TEXTUREFORMAT_RGB, scene, false, false, undefined, BABYLON.Engine.TEXTURETYPE_FLOAT));

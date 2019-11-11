@@ -119,178 +119,6 @@ export class paintGround {
 
         //console.log('pickingray ',ray );
 
-
-        let intersection=((ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): BABYLON.PickingInfo => {
-            var pickingInfo = new BABYLON.PickingInfo();
-            const intersectionThreshold = this.ground.getClassName() === "InstancedLinesMesh" || this.ground.getClassName() === "LinesMesh" ? (this as any).intersectionThreshold : 0;
-            const boundingInfo = this.ground._boundingInfo;
-            if (!this.ground.subMeshes || !boundingInfo || !ray.intersectsSphere(boundingInfo.boundingSphere, intersectionThreshold) || !ray.intersectsBox(boundingInfo.boundingBox, intersectionThreshold)) {
-                return pickingInfo;
-            }
-
-            if (!this.ground._generatePointsArray()) {
-                return pickingInfo;
-            }
-
-            var intersectInfo: Nullable<BABYLON.IntersectionInfo> = null;
-
-            var subMeshes = this.scene.getIntersectingSubMeshCandidates(this.ground, ray);
-            var len: number = subMeshes.length;
-            for (var index = 0; index < len; index++) {
-                var subMesh = subMeshes.data[index];
-
-                // Bounding test
-                if (len > 1 && !subMesh.canIntersects(ray)) {
-                    continue;
-                }
-                var currentIntersectInfo = ((ray: BABYLON.Ray, positions: BABYLON.Vector3[], indices: IndicesArray,
-                    fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): Nullable<BABYLON.IntersectionInfo> => {
-                    const material = subMesh.getMaterial();
-                    if (!material) {
-                        return null;
-                    }
-
-                    switch (material.fillMode) {
-                        case BABYLON.Constants.MATERIAL_PointListDrawMode:
-                        case BABYLON.Constants.MATERIAL_LineListDrawMode:
-                        case BABYLON.Constants.MATERIAL_LineLoopDrawMode:
-                        case BABYLON.Constants.MATERIAL_LineStripDrawMode:
-                        case BABYLON.Constants.MATERIAL_TriangleFanDrawMode:
-                        case BABYLON.Constants.MATERIAL_TriangleStripDrawMode:
-                            return null;
-                    }
-
-                    // LineMesh first as it's also a Mesh...
-
-                    return ((ray: BABYLON.Ray, positions: BABYLON.Vector3[], indices: BABYLON.IndicesArray,
-                        fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): Nullable<BABYLON.IntersectionInfo> => {
-                        var intersectInfo: Nullable<BABYLON.IntersectionInfo> = null;
-                        // Triangles test
-                        for (var index = subMesh.indexStart; index < subMesh.indexStart + subMesh.indexCount; index += 3) {
-                            var p0 = positions[indices[index]];
-                            var p1 = positions[indices[index + 1]];
-                            var p2 = positions[indices[index + 2]];
-
-                            if (trianglePredicate && !trianglePredicate(p0, p1, p2, ray)) {
-                                continue;
-                            }
-                            var currentIntersectInfo = ((vertex0: DeepImmutable<BABYLON.Vector3>, vertex1: DeepImmutable<BABYLON.Vector3>, vertex2: DeepImmutable<BABYLON.Vector3>): Nullable<BABYLON.IntersectionInfo> => {
-                                let TmpVector3: BABYLON.Vector3[]  = [BABYLON.Vector3.Zero(), BABYLON.Vector3.Zero(), BABYLON.Vector3.Zero(), BABYLON.Vector3.Zero(), BABYLON.Vector3.Zero()];
-                                const edge1 = TmpVector3[0];
-                                const edge2 = TmpVector3[1];
-                                const pvec = TmpVector3[2];
-                                const tvec = TmpVector3[3];
-                                const qvec = TmpVector3[4];
-
-                                vertex1.subtractToRef(vertex0, edge1);
-                                vertex2.subtractToRef(vertex0, edge2);
-                                //console.log('cross to ref ', ray.direction, edge2);
-                                BABYLON.Vector3.CrossToRef(ray.direction, edge2, pvec);
-
-                                var det = BABYLON.Vector3.Dot(edge1, pvec);
-                                
-                                if (det === 0) {
-                                    return null;
-                                }
-
-                                var invdet = 1 / det;
-
-                                ray.origin.subtractToRef(vertex0, tvec);
-
-                                var bv = BABYLON.Vector3.Dot(tvec, pvec) * invdet;
-
-                                if (bv < 0 || bv > 1.0) {
-                                    return null;
-                                }
-
-                                BABYLON.Vector3.CrossToRef(tvec, edge1, qvec);
-
-                                var bw = BABYLON.Vector3.Dot(ray.direction, qvec) * invdet;
-
-                                if (bw < 0 || bv + bw > 1.0) {
-                                    return null;
-                                }
-
-                                //check if the distance is longer than the predefined length.
-                                var distance = BABYLON.Vector3.Dot(edge2, qvec) * invdet;
-                                if (distance > ray.length) {
-                                    return null;
-                                }
-
-                                return new BABYLON.IntersectionInfo(1 - bv - bw, bv, distance);
-                            })(p0, p1, p2);
-                            //var currentIntersectInfo = ray.intersectsTriangle(p0, p1, p2);
-
-                            if (currentIntersectInfo) {
-                                if (currentIntersectInfo.distance < 0) {
-                                    continue;
-                                }
-
-                                if (fastCheck || !intersectInfo || currentIntersectInfo.distance < intersectInfo.distance) {
-                                    intersectInfo = currentIntersectInfo;
-                                    intersectInfo.faceId = index / 3;
-
-                                    if (fastCheck) {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        return intersectInfo;
-                    })(ray, positions, indices, fastCheck, trianglePredicate);
-                    //return subMesh._intersectTriangles(ray, positions, indices, fastCheck, trianglePredicate);
-                    
-                })(ray, (<BABYLON.Vector3[]>this.ground._positions),
-                    (<IndicesArray>this.ground.getIndices()), fastCheck,
-                    trianglePredicate);
-
-                /////
-
-               /* var currentIntersectInfo = subMesh.intersects(ray, (<BABYLON.Vector3[]>this.ground._positions),
-                    (<IndicesArray>this.ground.getIndices()), fastCheck,
-                    trianglePredicate);*/
-                if (currentIntersectInfo) {
-                    if (fastCheck || !intersectInfo || currentIntersectInfo.distance < intersectInfo.distance) {
-                        intersectInfo = currentIntersectInfo;
-                        intersectInfo.subMeshId = index;
-
-                        if (fastCheck) {
-                            break;
-                        }
-                    }
-                }
-            }
-            //Missing intersectInfo.distance
-            if (intersectInfo) {
-                // Get picked point
-                const world = this.ground.getWorldMatrix();
-                const worldOrigin = BABYLON.Tmp.Vector3[0];
-                const direction = BABYLON.Tmp.Vector3[1];
-
-                BABYLON.Vector3.TransformCoordinatesToRef(ray.origin, world, worldOrigin);
-                ray.direction.scaleToRef(intersectInfo.distance, direction);
-
-                const worldDirection = BABYLON.Vector3.TransformNormal(direction, world);
-                
-                const pickedPoint = worldDirection.addInPlace(worldOrigin);
-
-                // Return result
-                pickingInfo.hit = true;
-                pickingInfo.distance = BABYLON.Vector3.Distance(worldOrigin, pickedPoint);
-                pickingInfo.pickedPoint = pickedPoint;
-                pickingInfo.pickedMesh = this.ground;
-                pickingInfo.bu = intersectInfo.bu || 0;
-                pickingInfo.bv = intersectInfo.bv || 0;
-                pickingInfo.faceId = intersectInfo.faceId;
-                pickingInfo.subMeshId = intersectInfo.subMeshId;
-                return pickingInfo;
-            }
-
-            return pickingInfo;
-        })(ray,false);
-
-        console.log('first intersection ', intersection);
-
         let distance: number;
         /*console.log(this.scene._internalPick((world) => {
             if (!this.scene._tempPickingRay) {
@@ -300,7 +128,8 @@ export class paintGround {
             this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, world, this.scene._tempPickingRay, this.camera || null);
             return this.scene._tempPickingRay;
         }, mesh => { return mesh === this.ground; },false));*/
-        let pikked = intersection;
+        
+        let pikked = this.ground.intersects(ray);
         //let pikked = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => { return mesh === this.ground; }, undefined, this.camera);
         end_position = pikked.pickedPoint;
         end_position.y = 1;
@@ -431,9 +260,6 @@ export class paintGround {
                     let shadow = height * (dotprod / fulldotprod);
                    // console.log('distance ', distance, 'shadow', shadow);
                     width = Math.abs(Math.sqrt(Math.pow(Math.abs(distance), 2) - Math.pow(shadow, 2)));
-                    if (Number.isNaN(width)) {
-                        throw ("width is not a number");
-                    }
                     if (ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg > me.ang[360](startingPoint, end_position).deg) {
                         if (ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg - me.ang[360](startingPoint, end_position).deg > 180)
                             mouseside = 1
