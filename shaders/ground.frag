@@ -25,8 +25,8 @@ void main(void) {
     
 
     //light //ambient
-    //vec3 color = texture(textureSampler2, vUV).rgb *0.8;
-    vec3 color = vec3(0.5,0.5,0.5);
+    vec3 color = texture(textureSampler2, vUV).rgb *0.8;
+    //vec3 color = vec3(0.5,0.5,0.5);
 
 
     // diffuse
