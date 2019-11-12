@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Components.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using System.Globalization;
-namespace BlazorApp1
+namespace TerraSim
 {
     public class Startup
     {

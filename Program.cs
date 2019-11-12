@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Blazor.Hosting;
 using System.Globalization;
 
-namespace BlazorApp1
+namespace TerraSim
 {
     public class Program
     {
