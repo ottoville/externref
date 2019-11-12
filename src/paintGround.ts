@@ -50,87 +50,14 @@ export class paintGround {
     private drawArea = evt => {
         let engine = this.zonedt.getScene().getEngine();
         engine.resize();
+
         let ray = BABYLON.Ray.Zero();
-
-
-
-
-        let world = this.ground.getWorldMatrix();
-       // createPickingRayToRef function(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
-
-            var cameraViewport = this.camera.viewport;
-            var viewport = cameraViewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
-       
-            // Moving coordinates to local viewport world
-             let x = this.scene.pointerX / engine.getHardwareScalingLevel() - viewport.x;
-        let y = this.scene.pointerY / engine.getHardwareScalingLevel() - (engine.getRenderHeight() - viewport.y - viewport.height);
-       // console.log('x and y', x,y);
-
-       // ray.unprojectRayToRef(x, y, viewport.width, viewport.height, world, this.camera.getViewMatrix(), this.camera.getProjectionMatrix());
-        // (sourceX: float, sourceY: float, viewportWidth: number, viewportHeight: number, world: DeepImmutable<Matrix>, view: DeepImmutable<Matrix>, projection: DeepImmutable<Matrix>): void {
-        var matrix = BABYLON.Matrix.Zero();
-        world.multiplyToRef(this.camera.getViewMatrix(true), matrix);
-        matrix.multiplyToRef(this.camera.getProjectionMatrix(true), matrix);
-        matrix.invert();
-        //Value between -1 and 1
-        var nearScreenSource = new BABYLON.Vector3(x / viewport.width * 2 - 1, -( y / viewport.height * 2 - 1), -1.0 );
-        var farScreenSource = new BABYLON.Vector3(nearScreenSource.x, nearScreenSource.y, 1.0);
-        const nearVec3 = BABYLON.Vector3.Zero();
-        //const farVec3 = BABYLON.Vector3.Zero();
-        BABYLON.Vector3._UnprojectFromInvertedMatrixToRef(nearScreenSource, matrix, nearVec3);
-       
-        //BABYLON.Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, matrix, farVec3);
-        //_UnprojectFromInvertedMatrixToRef(source: DeepImmutable < Vector3 >, matrix: DeepImmutable < Matrix >, result: Vector3) {
-        //BABYLON.Vector3.TransformCoordinatesToRef(farScreenSource, matrix, farVec3);
-        let mm = matrix.m;
-        //console.log('CALCULATING ' + farScreenSource.x + '*' + mm[1] + '+' + farScreenSource.y + '*' + mm[5] + '+' + farScreenSource.z + '*' + mm[9] + '+' + mm[13]);
-        //console.log('CALCULATION RESULT ', farScreenSource.x * mm[1] + farScreenSource.y * mm[5] + farScreenSource.z * mm[9] + mm[13]);
-
-        let mr0 = farScreenSource.x * mm[0] + farScreenSource.y * mm[4] + farScreenSource.z * mm[8] + mm[12];
-        let mr1 = farScreenSource.x * mm[1] + farScreenSource.y * mm[5] + farScreenSource.z * mm[9] + mm[13];
-        let mr2 = farScreenSource.x * mm[2] + farScreenSource.y * mm[6] + farScreenSource.z * mm[10] + mm[14];
-        console.log('THIS IS INFINITY: 1 / (' + farScreenSource.x + ' * ' + mm[3] + ' + ' + farScreenSource.y + ' * ' + mm[7] + ' + ' + farScreenSource.z + ' * ' + mm[11] + ' + ' + mm[15]);
-        let mr3 = 1 / (farScreenSource.x * mm[3] + farScreenSource.y * mm[7] + farScreenSource.z * mm[11] + mm[15]);
-       // console.log('CALCULATION RESULT', mr0, mr1, mr2, mr3);
-        const farVec3 = new BABYLON.Vector3(mr0, mr1, mr2);
-        //BABYLON.Vector3.TransformCoordinatesFromFloatsToRef(farScreenSource.x, farScreenSource.y, farScreenSource.z, matrix, farVec3);
-       // console.log('far phase 1', farVec3)
-            const m = matrix.m;
-            var num = farScreenSource.x * m[3] + farScreenSource.y * m[7] + farScreenSource.z * m[11] + m[15];
-            if (Scalar.WithinEpsilon(num, 1.0)) {
-                farVec3.scaleInPlace(1.0 / num);
-            }
-
-       // console.log('_UnprojectFromInvertedMatrixToRef', farScreenSource, matrix, farVec3);
-
-        ray.origin.copyFrom(nearVec3);
-        //console.log('farVec3', farVec3, 'nearVec3', nearVec3);
-        farVec3.subtractToRef(nearVec3, ray.direction);
-
-        ray.direction.normalize();
-        ray.direction = BABYLON.Vector3.Unproject(
-            new BABYLON.Vector3(this.scene.pointerX, this.scene.pointerY),
-            engine.getRenderWidth(),
-            engine.getRenderHeight(),
-            BABYLON.Matrix.Identity(), this.scene.getViewMatrix(),
-            this.scene.getProjectionMatrix()).normalize();
-
-       // this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
-
-        //console.log('pickingray ',ray );
+        this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
 
         let distance: number;
-        /*console.log(this.scene._internalPick((world) => {
-            if (!this.scene._tempPickingRay) {
-                this.scene._tempPickingRay = BABYLON.Ray.Zero();
-            }
-            
-            this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, world, this.scene._tempPickingRay, this.camera || null);
-            return this.scene._tempPickingRay;
-        }, mesh => { return mesh === this.ground; },false));*/
-        
+
         let pikked = this.ground.intersects(ray);
-        //let pikked = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => { return mesh === this.ground; }, undefined, this.camera);
+
         end_position = pikked.pickedPoint;
         end_position.y = 1;
         let width = startingPoint.x - end_position.x;

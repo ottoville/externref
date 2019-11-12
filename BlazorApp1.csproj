@@ -38,6 +38,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="src\engine.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="buildShaders.js" />
     <Content Include="src\node_modules\%40types\babylonjs\package.json" />
     <Content Include="src\node_modules\%40types\facebook-js-sdk\package.json" />

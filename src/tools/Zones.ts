@@ -8,6 +8,7 @@ export class Zones extends UITAB {
     private zonemateria: BABYLON.StandardMaterial;
     private ctx: CanvasRenderingContext2D;
     private PT: paintGround;
+    private zonedt: BABYLON.DynamicTexture
     constructor(
         private ground: BABYLON.GroundMesh,
         private db: IDBDatabase,
@@ -15,8 +16,7 @@ export class Zones extends UITAB {
         private groundMaterial: BABYLON.ShaderMaterial,
         private scene: BABYLON.Scene,
         private camera: BABYLON.ArcRotateCamera,
-        private sea: BABYLON.Mesh,
-        private zonedt: BABYLON.DynamicTexture
+        private sea: BABYLON.Mesh
     ) {
         super();
         // let DZ = new drawZone(canvas, scene, camera, ground, sea, DB, DT, groundmateria, grass, terrain);

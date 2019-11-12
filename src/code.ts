@@ -6,9 +6,9 @@ import { PlantsUI } from "./tools/plantsUI.js";
 //import { CSG } from "./csg.js";
 //import { UI } from "./UI.js";
 import { Plants } from "./plants/Plants.js";
-import { Sun } from "./world/sun.js";
 import { WorkerThread, WorkerReturn } from "./WorkerThread.js";
 import { WorldScene } from "./world/scene.js";
+
 
 //import  DB from "./DB.js";
 
@@ -176,10 +176,30 @@ window.sceneInited.then(scene => {
     window.scene = scene;
     scene.collisionsEnabled = true;
     let TODOut = <HTMLOutputElement>document.getElementById("TODout");
-    //loadingBar.value = 30;
-    scene.getEngine().runRenderLoop(function () {
+
+    let engine = scene.getEngine();
+
+    let renderFunction = function () {
         scene.render();
-    });
+    }
+    let renderLoop = (function() : void {
+        if(!this._contextWasLost) {
+            var shouldRender = true;
+            if (!this.renderEvenInBackground && this._windowIsBackground) {
+                shouldRender = false;
+            }
+            if (shouldRender) {
+                // Start new frame
+                this.beginFrame();
+                renderFunction();
+                // Present
+                this.endFrame();
+            }
+        }
+        this._frameHandler = BABYLON.Tools.QueueNewFrame(renderLoop);
+    }).bind(engine)
+    BABYLON.Tools.QueueNewFrame(renderLoop);
+
     // Resize
     window.addEventListener("resize", function () {
         scene.getEngine().resize();

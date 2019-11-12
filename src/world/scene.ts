@@ -242,7 +242,7 @@ export class WorldScene extends BABYLON.Scene {
                 console.log('Database ready');
                 
                 //this.tools['Plants'] = new PlantsUI(terrain, d, engine.getRenderingCanvas(), this,(<CameraTAB>this.tools['CameraTAB']).camera, sea, grass, plants);
-                //this.tools['Zones'] = new Zones(terrain, d, engine.getRenderingCanvas(), shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, grass);
+                this.tools['Zones'] = new Zones(terrain, d, engine.getRenderingCanvas(), shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
                 //ui.registerTab(ZoneTab);
                 //ui.registerTab(plantsUI);
                 
