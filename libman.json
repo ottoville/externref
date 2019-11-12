@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "babylonjs@4.0.3",
+      "destination": "wwwroot/lib/babylonjs/"
+    }
+  ]
+}
