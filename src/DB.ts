@@ -1,4 +1,4 @@
-type ObjStoreDetails = { version: number, parameters?: IDBObjectStoreParameters, indices?:[ObjStoreIndex] };
+type ObjStoreDetails = { version: number, parameters?: IDBObjectStoreParameters, indices?:ObjStoreIndex[] };
 type ObjStoreIndex= {version:number,name: string, keyPath: string | string[],options?: IDBIndexParameters}
 type ObjStores = { [id: string]: ObjStoreDetails }
 const ObjectStores = {
@@ -10,7 +10,8 @@ const ObjectStores = {
         version: 2,
         parameters: { keyPath: "id", autoIncrement: true },
         indices: [
-            {version:3,name:'family',keyPath:'family',options:{ unique: false }}
+            { version: 3, name: 'family', keyPath: 'family', options: { unique: false } },
+            { version: 5, name: 'grid', keyPath: 'grid', options: { unique: false } }
         ]
     },
     save: <ObjStoreDetails>{
@@ -37,7 +38,7 @@ interface EarthDatabase extends IDBDatabase {
 
 declare var DB: Promise<EarthDatabase>;
 globalThis.DB = new Promise<EarthDatabase>(function (res, rej) {
-    var IDB = indexedDB.open("City", 4);
+    var IDB = indexedDB.open("City", 5);
     IDB.onupgradeneeded = function (e) {
         console.log('IDBVersionChangeEvent',e);
         // Save the IDBDatabase interface 

@@ -25,10 +25,14 @@ export class Plants {
     private ready: Promise<any>;
     private bladesVisible: number = 0;
     public fillArea(area: PTDresult) {
-        var rotmax = rotateMatrix(area.ang.rad,"y");
-        let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 4 * 10000);
-        for (let i = 0; i < 10000; ++i) {
-            let blade = new Float32Array(offsets, i * Float32Array.BYTES_PER_ELEMENT * 4, 4);
+        var rotmax = rotateMatrix(area.ang.rad, "y");
+        let amount = Math.abs(area.size.h * area.size.w) >> 2 // one per 2*2 grid
+        if (amount === 0)
+            return;
+        let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 4 * amount);
+        
+        for (let i = 0; i < amount; ++i) {
+            let blade = new Float32Array(offsets, i<<4, 4);
             let posX = (Math.random() * area.size.h * -1);
             let posZ = (Math.random() * area.size.w * -1);
             let translated = translate(posX, 0, posZ, rotmax);

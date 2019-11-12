@@ -45,6 +45,9 @@ export class paintGround {
     }
     public deactivate() {
         this.canvas.removeEventListener("pointerdown", this.mainPointerDown, false);
+        if (this.type == DrawType.plane) {
+            tempplane.dispose();
+        }
     }
    
     private drawArea = evt => {
