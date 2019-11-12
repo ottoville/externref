@@ -1,9 +1,11 @@
-﻿<fieldset style="background-color:white">
+﻿@inject IJSRuntime JSRuntime;
+
+<fieldset style="background-color:white">
     <legend style="background-color:white">
         Terrain
     </legend>
     <button>Create grass</button>
-    <button>Create poaceae</button>
+    <button @onclick="@(e => { JSRuntime.InvokeAsync<string>("scene.tools.Plants.activateDraw"); })">Create poaceae</button>
 </fieldset>
 
 @code {

@@ -27,7 +27,7 @@ export class paintGround {
         private camera: BABYLON.ArcRotateCamera,
         private ground: BABYLON.GroundMesh,
         private sea: BABYLON.Mesh,
-        private zonedt:BABYLON.DynamicTexture,
+        private zonedt:BABYLON.Texture,
     ) {
         
     };
@@ -167,7 +167,6 @@ export class paintGround {
                 }
                 this.addEventListener('pointermove', function pmove2() {
                     let currentpickInfo2 = me.scene.pick(me.scene.pointerX, me.scene.pointerY, function (mesh) { return mesh === me.ground; },undefined,me.camera);
-                    console.log('currentpickInfo2', currentpickInfo2);
                     //Distance from first point
                     let distance = Math.sqrt(Math.pow(startingPoint.x - currentpickInfo2.pickedPoint.x, 2) + Math.pow(startingPoint.z - currentpickInfo2.pickedPoint.z, 2));
                     if (Number.isNaN(distance)) {

@@ -19,7 +19,7 @@ export class PlantsUI extends UITAB {
         private scene: BABYLON.Scene,
         private camera: BABYLON.ArcRotateCamera,
         private sea: BABYLON.Mesh,
-        private zonedt: BABYLON.DynamicTexture,
+        private zonedt: BABYLON.Texture,
         private plantsobj:Plants,
     ) {
         super();
@@ -59,16 +59,12 @@ export class PlantsUI extends UITAB {
                 var shells = PlantsUI.FurifyMesh(plane, quality);
             });
         })
-        let button2: HTMLButtonElement = fieldset.appendChild(document.createElement('button'));
-        button2.textContent = 'Create poaceae';
-        button2.addEventListener('click', (evt) => {
-            evt.preventDefault();
-            this.PT.activate(DrawType.plane, { forceSharedVertices: false }, (response:PTDresult, plane) => {
-                this.PT.deactivate();
-                this.plantsobj.fillArea(response)
-            });
-            
-        })
+    }
+    activateDraw = () => {
+        this.PT.activate(DrawType.plane, { forceSharedVertices: false }, (response: PTDresult, plane) => {
+            this.PT.deactivate();
+            this.plantsobj.fillArea(response)
+        });
     }
     activate = () => {
         this.activated=true;

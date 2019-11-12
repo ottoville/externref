@@ -241,7 +241,7 @@ export class WorldScene extends BABYLON.Scene {
             DB.then(d => {
                 console.log('Database ready');
                 
-                //this.tools['Plants'] = new PlantsUI(terrain, d, engine.getRenderingCanvas(), this,(<CameraTAB>this.tools['CameraTAB']).camera, sea, grass, plants);
+                
                 this.tools['Zones'] = new Zones(terrain, d, engine.getRenderingCanvas(), shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
                 //ui.registerTab(ZoneTab);
                 //ui.registerTab(plantsUI);
@@ -285,8 +285,10 @@ export class WorldScene extends BABYLON.Scene {
 
                    return this;
                    }).call(shadermateria, 'textureSampler2', grass)*/
-                    shadermateria.setTexture('textureSampler2', new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw(e) })); //not working
+                    let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) })
+                    shadermateria.setTexture('textureSampler2', groundtexture); //not working
                     terrain.material = shadermateria;
+                    this.tools['Plants'] = new PlantsUI(terrain, d, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
                    
                 }, 'image/webp');
                 
@@ -353,41 +355,14 @@ export class WorldScene extends BABYLON.Scene {
             });*/
 
 
-            engine.getRenderingCanvas().addEventListener("pointerdown", () => {
+         /*   engine.getRenderingCanvas().addEventListener("pointerdown", () => {
                 var pickInfo = this.pick(this.pointerX, this.pointerY, (m) => {
                     return true;
                 });
                 console.log(pickInfo);
-               /* var sphereLocalOrigin = BABYLON.MeshBuilder.CreateSphere("sphereLO", { diameter: .5 }, scene);
-                sphereLocalOrigin.material = new BABYLON.StandardMaterial("origin", scene);
-                sphereLocalOrigin.position = pickInfo.pickedPoint;
-                sphereLocalOrigin.computeWorldMatrix();
-             
-                var matrix = sphereLocalOrigin.getWorldMatrix();
-                let local_position = new BABYLON.Vector3(0, 1, 0);
-                let global_position = BABYLON.Vector3.TransformCoordinates(local_position, matrix);
-             
-             
-                if (pickInfo.hit) {
-                    if (pickInfo.pickedMesh === sea) {
-                        return;
-                    }
-                }
-                //var ctx = grass.getContext();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.fillStyle = "brown";
-                let centerX = 10000 / 2
-                let centerZ = 10000 / 2
-                ctx.beginPath();
-                ctx.translate(centerX, centerZ);
-              
-                ctx.fillRect(global_position.x, global_position.z*-1, 21, 21);
-                ctx.fill();
-                grass.update();
-                console.log(terrain.getHeightFromMap(global_position.x,global_position.z))*/
             }, false);
 
-
+*/
 
             let buildings: BABYLON.Mesh[] = [];
 

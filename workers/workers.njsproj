@@ -38,6 +38,10 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="sw.ts" />
+    <TypeScriptCompile Include="webworkers\grass.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="webworkers\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
   <ProjectExtensions>
