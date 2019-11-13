@@ -245,6 +245,18 @@ let methods= {
         for (let i = 0; i < count; i+= 4) {
 			let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 4);
 			let grid = (blade[0] | 1) + ',' + (blade[2] | 1);
+
+
+			/*
+			 *   let area = [[4,2],[7,8]]
+                evt.target.result.transaction('tiles').objectStore('tiles').index('x').getAllKeys(IDBKeyRange.bound(4,7)).onsuccess=(ee) => {
+                    console.log(ee.target.result);
+                    evt.target.result.transaction('tiles').objectStore('tiles').index('z').getAll(IDBKeyRange.bound(2,8)).onsuccess=(e) => {
+                        console.log(e.target.result);
+                        console.log(e.target.result.filter(value => ee.target.result.includes(value.id)))
+                    }
+                }
+				*/
 			objstore.index('grid').count(grid).onsuccess = e => {
 				if ((<IDBRequest>e.target).result == 0) {
 					let shape = new Float32Array(4);
