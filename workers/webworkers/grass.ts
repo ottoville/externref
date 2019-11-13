@@ -176,7 +176,8 @@ const BLADE_HEIGHT_MIN = 2.25
 const BLADE_HEIGHT_MAX = 3.0
 let positions: Float32Array;
 let shapes:  Float32Array;
-let noises:  Float32Array;
+let noises: Float32Array;
+let bladecount: number = 0;
 let methods= {
 	init: (data: WMessage) => {
 		console.log('init plants worker');
@@ -185,13 +186,63 @@ let methods= {
         noises=new Float32Array(data.data.noises);
         this.postMessage({id: data.id});
     },
-    save :async (data:WMessage) => {
-		let trans = (await DB).transaction("plantae", 'readwrite');
+	save: async (data: WMessage) => {
+		var d = new Date().getTime();
+		let trans = (await DB).transaction("plantae");
+		
 		var objstore = trans.objectStore("plantae");
-        trans.oncomplete = () => methods.get();
-        let count=data.data.buffer.byteLength / Float32Array.BYTES_PER_ELEMENT;
-        for (let i = 0; i < count; i+= 4) {
+		let objs: {
+			family: string,
+			pos: Float32Array,
+			grid: string,
+			shape: Float32Array,
+			noise: number}[] = [];
+		trans.oncomplete = async () => {
+			bladecount = Math.min(Math.max(bladecount, objs.length), positions.length)
+			console.log('Start to process, took ', new Date().getTime() - d);
+			for (let i = 0; i < Math.min(bladecount, objs.length); i++) {
+				positions.set(objs[i].pos, i * 4);
+				shapes.set(objs[i].shape, i * 4);
+				noises[i] = objs[i].noise;
+			}
+			console.log('sending grass back from worker, bladecount ', bladecount, 'took ', new Date().getTime() - d);
+			this.postMessage({ type: 'updated', count: bladecount });
+			let transs = (await DB).transaction("plantae", 'readwrite');
+			transs.onerror = function (err) {
+				console.log(err)
+			}
+			let objstore2 = transs.objectStore("plantae");
+			objs.forEach(obj => objstore2.add(obj));
+			
+			transs.oncomplete = () => {
+				console.log('sending grass back from worker2, took ', new Date().getTime() - d);
+				methods.get()
+			}
+			
+		};
+		trans.onerror = function (err) {
+			console.log(err)
+		}
+		let count = data.data.buffer.byteLength / Float32Array.BYTES_PER_ELEMENT;
 
+		let minX: number;
+		let minZ: number;
+		let maxX: number;
+		let maxZ:number;
+		for (let i = 0; i < count; i += 4) {
+			let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 3);
+			if (i == 0) {
+				maxX = minX = blade[0];
+				maxZ = minZ = blade[2];
+				continue;
+			}
+			maxX = Math.max(maxX, blade[0]);
+			maxZ = Math.max(maxZ, blade[2]);
+			minX = Math.min(minX, blade[0]);
+			minZ = Math.min(minZ, blade[2]);
+		}
+		console.log(minX, minZ, maxX, maxZ)
+        for (let i = 0; i < count; i+= 4) {
 			let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 4);
 			let grid = (blade[0] | 1) + ',' + (blade[2] | 1);
 			objstore.index('grid').count(grid).onsuccess = e => {
@@ -204,26 +255,21 @@ let methods= {
 					shape[1] = BLADE_HEIGHT_MIN + Math.pow(Math.random(), 4.0) * (BLADE_HEIGHT_MAX - BLADE_HEIGHT_MIN) + noise // height
 					shape[2] = 0.0 + Math.random() * 0.3 // lean
 					shape[3] = 0.05 + Math.random() * 0.3 // curve
-
-					objstore.put({
+					objs.push({
 						family: 'Poaceae',
 						pos: new Float32Array(blade),
 						grid: grid,
 						shape: new Float32Array(shape),
 						noise: Math.abs(simplex(blade[0] * 0.02, blade[2] * 0.02))
-					}).onerror = function (err) {
-						console.log(err)
-					};
+					})
 				}
 			};
-
-
         }
     },
     get: async () => {
         let trans = (await DB).transaction(['plantae']);
         trans.objectStore('plantae').getAll().onsuccess = (evt) => {
-			let bladecount=Math.min((<IDBRequest>evt.target).result.length,positions.length);
+			bladecount=Math.min((<IDBRequest>evt.target).result.length,positions.length);
 			trans.oncomplete = () => this.postMessage({type: 'updated', count: bladecount})
             for (let i = 0; i < bladecount; i++) {
                 let r = (<IDBRequest>evt.target).result[i];

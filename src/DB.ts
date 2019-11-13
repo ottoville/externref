@@ -11,7 +11,9 @@ const ObjectStores = {
         parameters: { keyPath: "id", autoIncrement: true },
         indices: [
             { version: 3, name: 'family', keyPath: 'family', options: { unique: false } },
-            { version: 5, name: 'grid', keyPath: 'grid', options: { unique: false } }
+            { version: 5, name: 'grid', keyPath: 'grid', options: { unique: false } },
+            { version: 6, name: 'gridx', keyPath: 'gridx', options: { unique: false } },
+            { version: 6, name: 'gridz', keyPath: 'gridz', options: { unique: false } }
         ]
     },
     save: <ObjStoreDetails>{
@@ -38,7 +40,7 @@ interface EarthDatabase extends IDBDatabase {
 
 declare var DB: Promise<EarthDatabase>;
 globalThis.DB = new Promise<EarthDatabase>(function (res, rej) {
-    var IDB = indexedDB.open("City", 5);
+    var IDB = indexedDB.open("City", 6);
     IDB.onupgradeneeded = function (e) {
         console.log('IDBVersionChangeEvent',e);
         // Save the IDBDatabase interface 
