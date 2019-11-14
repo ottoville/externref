@@ -229,6 +229,14 @@ let methods = {
 		let maxgrid = (maxX | 1) + ',' + (maxZ | 1);
 		console.log(minX, minZ, maxX, maxZ)
 		let area = [[4, 2], [7, 8]]
+		/*
+                for(let i=4;i<7+1;i++) {
+                    evt.target.result.transaction('tiles').objectStore('tiles').index('xz').getAll(IDBKeyRange.bound([i,2],[i,8])).onsuccess=(ee) => {
+                        console.log(ee.target.result);
+                    }
+                }
+		 
+		 */
 		console.log('send qetAll Query, took ', new Date().getTime() - d);
 		objstore.index('x').getAll(IDBKeyRange.bound(minX, maxX)).onsuccess = (ee) => {
 		//objstore.index('grid').getAll(IDBKeyRange.bound(mingrid, maxgrid)).onsuccess = (ee) => {
