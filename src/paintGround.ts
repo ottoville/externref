@@ -219,7 +219,9 @@ export class paintGround {
                         
                         
                         let positions = tempplane.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-
+                        if (positions == null) {
+                            throw ('getVerticesData returned null');
+                        }
                         var numberOfVertices = positions.length / 3;
                         var rotmax=rotateMatrix(me.ang360.rad,"y");
                         for (var i = 0; i < numberOfVertices; i++) {

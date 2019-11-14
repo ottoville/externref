@@ -11,14 +11,16 @@ var urlsToCache = [
         console.log('installing serviceworker')
         // Perform install steps
         let shaders = fetch('/shaders/shaders.json').then(s => s.json());
-        event.waitUntil(caches.open(CACHE_NAME).then((cache) => 
+        event.waitUntil(caches.open(CACHE_NAME).then((cache) =>
             shaders.then(jsondata => {
-                    for (var file in jsondata) {
-                        cache.put(new Request('/shaders/' + file), new Response(jsondata[file]));
-                    }
-                    return cache.addAll(urlsToCache);
-                })
-            )
+                console.log(jsondata)
+                for (var file in jsondata) {
+                    cache.put(new Request('/shaders/' + file), new Response(jsondata[file]));
+                }
+                service.skipWaiting();
+                return cache.addAll(urlsToCache);
+            })
+        )
         );
     });
     service.addEventListener('activate', event => {

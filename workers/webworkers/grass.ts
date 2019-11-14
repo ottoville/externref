@@ -178,7 +178,16 @@ let positions: Float32Array;
 let shapes:  Float32Array;
 let noises: Float32Array;
 let bladecount: number = 0;
-let methods= {
+interface PlantI {
+	family: string,
+	pos: Float32Array,
+	x: number,
+	z: number,
+	grid: string,
+	shape: Float32Array,
+	noise: number
+}
+let methods = {
 	init: (data: WMessage) => {
 		console.log('init plants worker');
         positions=new Float32Array(data.data.positions);
@@ -188,38 +197,13 @@ let methods= {
     },
 	save: async (data: WMessage) => {
 		var d = new Date().getTime();
-		let trans = (await DB).transaction("plantae");
+		let db = await DB;
+		let trans = db.transaction("plantae");
 		
 		var objstore = trans.objectStore("plantae");
-		let objs: {
-			family: string,
-			pos: Float32Array,
-			grid: string,
-			shape: Float32Array,
-			noise: number}[] = [];
-		trans.oncomplete = async () => {
-			bladecount = Math.min(Math.max(bladecount, objs.length), positions.length)
-			console.log('Start to process, took ', new Date().getTime() - d);
-			for (let i = 0; i < Math.min(bladecount, objs.length); i++) {
-				positions.set(objs[i].pos, i * 4);
-				shapes.set(objs[i].shape, i * 4);
-				noises[i] = objs[i].noise;
-			}
-			console.log('sending grass back from worker, bladecount ', bladecount, 'took ', new Date().getTime() - d);
-			this.postMessage({ type: 'updated', count: bladecount });
-			let transs = (await DB).transaction("plantae", 'readwrite');
-			transs.onerror = function (err) {
-				console.log(err)
-			}
-			let objstore2 = transs.objectStore("plantae");
-			objs.forEach(obj => objstore2.add(obj));
-			
-			transs.oncomplete = () => {
-				console.log('sending grass back from worker2, took ', new Date().getTime() - d);
-				methods.get()
-			}
-			
-		};
+		
+		let objs: PlantI[] = [];
+
 		trans.onerror = function (err) {
 			console.log(err)
 		}
@@ -241,24 +225,21 @@ let methods= {
 			minX = Math.min(minX, blade[0]);
 			minZ = Math.min(minZ, blade[2]);
 		}
+		let mingrid = (minX | 1) + ',' + (minZ | 1);
+		let maxgrid = (maxX | 1) + ',' + (maxZ | 1);
 		console.log(minX, minZ, maxX, maxZ)
-        for (let i = 0; i < count; i+= 4) {
-			let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 4);
-			let grid = (blade[0] | 1) + ',' + (blade[2] | 1);
-
-
-			/*
-			 *   let area = [[4,2],[7,8]]
-                evt.target.result.transaction('tiles').objectStore('tiles').index('x').getAllKeys(IDBKeyRange.bound(4,7)).onsuccess=(ee) => {
-                    console.log(ee.target.result);
-                    evt.target.result.transaction('tiles').objectStore('tiles').index('z').getAll(IDBKeyRange.bound(2,8)).onsuccess=(e) => {
-                        console.log(e.target.result);
-                        console.log(e.target.result.filter(value => ee.target.result.includes(value.id)))
-                    }
-                }
-				*/
-			objstore.index('grid').count(grid).onsuccess = e => {
-				if ((<IDBRequest>e.target).result == 0) {
+		let area = [[4, 2], [7, 8]]
+		console.log('send qetAll Query, took ', new Date().getTime() - d);
+		objstore.index('x').getAll(IDBKeyRange.bound(minX, maxX)).onsuccess = (ee) => {
+		//objstore.index('grid').getAll(IDBKeyRange.bound(mingrid, maxgrid)).onsuccess = (ee) => {
+			console.log('start procesing query results, took ', new Date().getTime() - d);
+			let results: PlantI[] = (<IDBRequest>ee.target).result;
+			let grids = new Set(results.filter(v => (v.z > minZ && v.z < maxZ)).map(v => v.grid));
+			console.log('grids mapped, took ', new Date().getTime() - d);
+			for (let i = 0; i < count; i += 4) {
+				let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 4);
+				let grid = (blade[0] | 1) + ',' + (blade[2] | 1);
+				if (!grids.has(grid)) {
 					let shape = new Float32Array(4);
 					let noise = Math.abs(simplex(blade[0] * 0.03, blade[2] * 0.03));
 					noise = noise * noise * noise
@@ -269,14 +250,36 @@ let methods= {
 					shape[3] = 0.05 + Math.random() * 0.3 // curve
 					objs.push({
 						family: 'Poaceae',
+						x: blade[0],
+						z: blade[2],
 						pos: new Float32Array(blade),
 						grid: grid,
 						shape: new Float32Array(shape),
 						noise: Math.abs(simplex(blade[0] * 0.02, blade[2] * 0.02))
 					})
 				}
-			};
-        }
+			}
+			bladecount = Math.min(Math.max(bladecount, objs.length), positions.length)
+			console.log('Start to process objs length, ', objs.length, ', took ', new Date().getTime() - d);
+			for (let i = 0; i < Math.min(bladecount, objs.length); i++) {
+				positions.set(objs[i].pos, i * 4);
+				shapes.set(objs[i].shape, i * 4);
+				noises[i] = objs[i].noise;
+			}
+			console.log('sending grass back from worker, bladecount ', bladecount, 'took ', new Date().getTime() - d);
+			this.postMessage({ type: 'updated', count: bladecount });
+			let transs = db.transaction("plantae", 'readwrite');
+			transs.onerror = function (err) {
+				console.log(err)
+			}
+			let objstore2 = transs.objectStore("plantae");
+			objs.forEach(obj => objstore2.add(obj));
+
+			transs.oncomplete = () => {
+				console.log('sending grass back from worker2, took ', new Date().getTime() - d);
+				methods.get()
+			}
+		}
     },
     get: async () => {
         let trans = (await DB).transaction(['plantae']);

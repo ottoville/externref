@@ -12,9 +12,11 @@ var urlsToCache = [
         // Perform install steps
         let shaders = fetch('/shaders/shaders.json').then(s => s.json());
         event.waitUntil(caches.open(CACHE_NAME).then((cache) => shaders.then(jsondata => {
+            console.log(jsondata);
             for (var file in jsondata) {
                 cache.put(new Request('/shaders/' + file), new Response(jsondata[file]));
             }
+            service.skipWaiting();
             return cache.addAll(urlsToCache);
         })));
     });
