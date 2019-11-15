@@ -13,6 +13,7 @@ const ObjectStores = {
             { version: 3, name: 'family', keyPath: 'family', options: { unique: false } },
             { version: 6, name: 'x', keyPath: 'x', options: { unique: false } },
             { version: 6, name: 'grid', keyPath: 'grid', options: { unique: false } },
+            { version: 6, name: 'gridxz', keyPath: ['gridx', 'gridz'], options: { unique: false } },
         ]
     },
     save: <ObjStoreDetails>{

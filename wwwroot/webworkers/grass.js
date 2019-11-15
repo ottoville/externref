@@ -187,12 +187,26 @@ let methods = {
             minX = Math.min(minX, blade[0]);
             minZ = Math.min(minZ, blade[2]);
         }
-        let mingrid = (minX | 1) + ',' + (minZ | 1);
-        let maxgrid = (maxX | 1) + ',' + (maxZ | 1);
-        console.log(minX, minZ, maxX, maxZ);
-        let area = [[4, 2], [7, 8]];
-        console.log('send qetAll Query, took ', new Date().getTime() - d);
+        /*let promises: Promise<Event>[] = []
+        let d1 = new Date().getTime();
+        for (let i = minX; i < maxX + 1; i++) {
+            let gridx = (i | 1);
+            let gridzmin = minZ | 1;
+            let gridzmax = maxZ | 1;
+            promises.push(new Promise((res, rej) => {
+                objstore.index('gridxz').getAll(IDBKeyRange.bound([gridx, gridzmin],[gridx, gridzmax])).onsuccess = res
+            }))
+        }
+        Promise.all(promises).then(r => {
+            console.log('PROMISE FILLED, took ', new Date().getTime() - d1);
+            r.forEach(pr => {
+                if ((<PlantI[]>(<IDBRequest>pr.target).result).length > 0) {
+                    //console.log('result id ', (<PlantI[]>(<IDBRequest>pr.target).result)[0].id)
+                }
+            });*/
+        let d2 = new Date().getTime();
         objstore.index('x').getAll(IDBKeyRange.bound(minX, maxX)).onsuccess = (ee) => {
+            console.log('PROMISE FILLED2, took ', new Date().getTime() - d2);
             //objstore.index('grid').getAll(IDBKeyRange.bound(mingrid, maxgrid)).onsuccess = (ee) => {
             console.log('start procesing query results, took ', new Date().getTime() - d);
             let results = ee.target.result;
@@ -212,6 +226,8 @@ let methods = {
                     shape[3] = 0.05 + Math.random() * 0.3; // curve
                     objs.push({
                         family: 'Poaceae',
+                        gridx: blade[0] | 1,
+                        gridz: blade[2] | 1,
                         x: blade[0],
                         z: blade[2],
                         pos: new Float32Array(blade),
@@ -241,6 +257,8 @@ let methods = {
                 methods.get();
             };
         };
+        //})
+        //console.log('send qetAll Query, took ', new Date().getTime() - d);
     },
     get: async () => {
         let trans = (await DB).transaction(['plantae']);
