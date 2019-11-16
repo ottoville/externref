@@ -60,6 +60,8 @@ export class WorldScene extends BABYLON.Scene {
         }
         this.SunObject = new Sun(this);
 
+
+
        /* let gameEngine = new WorkerThread('js/workers/engine.js');
         gameEngine.message(WorkerReturn.noReturn, 'init', {
             gameTime: this.lastStateChangeGameTime
@@ -355,14 +357,16 @@ export class WorldScene extends BABYLON.Scene {
             });*/
 
 
-         /*   engine.getRenderingCanvas().addEventListener("pointerdown", () => {
+            engine.getRenderingCanvas().addEventListener("pointerdown", () => {
                 var pickInfo = this.pick(this.pointerX, this.pointerY, (m) => {
                     return true;
                 });
+                var myBox = BABYLON.MeshBuilder.CreateBox("myBox", { height: 80, width: 80, depth: 80 }, this);
+                myBox.position= pickInfo.pickedPoint;
                 console.log(pickInfo);
             }, false);
 
-*/
+
 
             let buildings: BABYLON.Mesh[] = [];
 

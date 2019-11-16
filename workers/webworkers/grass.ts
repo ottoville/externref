@@ -292,13 +292,18 @@ let methods = {
 					console.log(err)
 				};
 					//let objstore2 = transs.objectStore("plantae");
-
+				console.log('grass count', objs.length);
+				let counter = 0;
 				(function insert(transs) {
+					console.log('batching 5000 grass, length is ', objs.length);
 					let objstore2 = transs.objectStore("plantae")
 					while (objs.length) {
 						let obj = objs.pop();
+						counter++;
 						objstore2.add(obj);
-						if (objs.length % 5000 == 0) {
+						if (objs.length % 5000 == 0 && objs.length) {
+							console.log('register another batch');
+							
 							transs.oncomplete = () => {
 								transs = db.transaction("plantae", 'readwrite');
 								transs.onerror = function (err) {
@@ -306,14 +311,17 @@ let methods = {
 								}
 								insert(transs);
 							}
+							methods.get()
+							return;
 						}
+					}
+					transs.oncomplete = () => {
+						console.log('grass count2', counter, 'sending grass back from worker2, took ', new Date().getTime() - d);
+						methods.get()
 					}
 				})(transs);
 				//objs.forEach(obj => objstore2.add(obj));
-				transs.oncomplete = () => {
-					console.log('sending grass back from worker2, took ', new Date().getTime() - d);
-					methods.get()
-				}
+
 			}
 		//})
 		
