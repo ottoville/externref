@@ -290,7 +290,7 @@ export class WorldScene extends BABYLON.Scene {
                     let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) })
                     shadermateria.setTexture('textureSampler2', groundtexture); //not working
                     terrain.material = shadermateria;
-                    this.tools['Plants'] = new PlantsUI(terrain, d, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
+                    this.tools['Plants'] = new PlantsUI(terrain, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
                    
                 }, 'image/webp');
                 
