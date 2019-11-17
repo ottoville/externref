@@ -9,7 +9,7 @@
 
 // Attributes
 in vec4 shape; // {x:width, y:height, z:lean, w:curve} (blade's shape properties)
-in vec4 worldPos; // {x:x, y:y, z:z, w:rot} (blade's position & rotation)
+in vec4 worldPos; // {x:x, y:z, z:rot w:y} (blade's position & rotation) old {x:x, y:y, z:z, w:rot}
 in float noise;
 
 // Uniforms
@@ -58,23 +58,23 @@ void main(void) {
 	);
 	
 	// Start computing a normal for this vertex
-	vec3 normal = vec3(rotate(0.0, bside * 2.0 - 1.0, worldPos.w), 0.0);
+	vec3 normal = vec3(rotate(0.0, bside * 2.0 - 1.0, worldPos.z), 0.0);
 
 	// Apply blade's natural curve amount
 	float curve = shape.w;
 	// Then add animated curve amount by time using this blade's
 	// unique properties to randomize its oscillation
-	curve += shape.w + 0.125 * (sin(time * 4.0 + worldPos.w * 0.2 * shape.y + worldPos.x + worldPos.z));
+	curve += shape.w + 0.125 * (sin(time * 4.0 + worldPos.z * 0.2 * shape.y + worldPos.x + worldPos.y));
 	// put lean and curve together
 	float rot = shape.z + curve * hpct;
 	vec2 rotv = vec2(cos(rot), sin(rot));
 	vpos.zy = rotate(vpos.z, vpos.y, rotv);
 	normal.yz = rotate(normal.y, normal.z, rotv);
 	// rotation of this blade as a vector
-	rotv = vec2(cos(worldPos.w), sin(worldPos.w));  
+	rotv = vec2(cos(worldPos.z), sin(worldPos.z));  
 	vpos.xz = rotate(vpos.x, vpos.z, rotv);
 
-	vec2 bladePos = vec2(worldPos.xz);
+	vec2 bladePos = vec2(worldPos.xy);
 
 	// Compute wind effect
 	// Using the lighting channel as noise seems make the best looking wind for some reason!
@@ -112,7 +112,7 @@ void main(void) {
 	vColor = vec4(
 		// Each blade is randomly colourized a bit by its position
 		light * 0.75 + cos(worldPos.x * 80.0) * 0.1,
-		light * 0.95 + sin(worldPos.z * 140.0) * 0.05,
+		light * 0.95 + sin(worldPos.y * 140.0) * 0.05,
 		light * 0.95 + sin(worldPos.x * 99.0) * 0.05,
 		1.0
 	);
@@ -127,16 +127,16 @@ void main(void) {
 	vUV = vec2(bedge, di * 2.0);
 
 vNormal=normal;
-    gl_Position = viewProjection  *  vec4(worldPos.xyz + vpos.xyz, 1.0);*/
-	float hpct = 0.0;
-	float di=1.0;
+    gl_Position = viewProjection  *  vec4(worldPos.xwy + vpos.xyz, 1.0);*/
+	float hpct = 0.0; // percent of height of blade this vertex is at
+	float di=1.0;  // div index (0 .. BLADE_DIVS)
 	float bedge = 1.0;
 	if(gl_VertexID==0 || gl_VertexID==1) {
-		bedge=0.0;
+		bedge=0.0; // left/right edge (x=0 or x=1)
 	}
 	if(gl_VertexID==4) {
 		hpct=1.0;
-		di=3.0;
+		di=3.0;  // div index (0 .. BLADE_DIVS)
 	}
 	else if(gl_VertexID==0 || gl_VertexID==3) {
 		di=2.0;
@@ -151,13 +151,13 @@ vNormal=normal;
 		float curve = shape.w;
 		// Then add animated curve amount by time using this blade's
 		// unique properties to randomize its oscillation
-		curve += shape.w + 0.125 * (sin(time + worldPos.w * 0.2 * shape.y + worldPos.x + worldPos.z));
+		curve += shape.w + 0.125 * (sin(time + worldPos.z * 0.2 * shape.y + worldPos.x + worldPos.y));
 		// put lean and curve together
 		float rot = shape.z + curve * hpct;
 		vec2 rotv = vec2(cos(rot), sin(rot));
 		vpos.zy = rotate(vpos.z, vpos.y, rotv);
 		// rotation of this blade as a vector
-		rotv = vec2(cos(worldPos.w), sin(worldPos.w));  
+		rotv = vec2(cos(worldPos.z), sin(worldPos.z));  
 		vpos.xz = rotate(vpos.x, vpos.z, rotv);
 
 	 float wind = ((1.0+cos((worldPos.x*0.05)+time))*0.25);
@@ -172,8 +172,8 @@ vNormal=normal;
 	vpos.zy = rotate(vpos.z, vpos.y, rotv);
 
 	//test.y=test.y+3.0;
-gl_Position = viewProjection  *  vec4(vpos.xyz+worldPos.xyz, 1.0);
-//vColor=vec4(0.2039, 0.6392*clamp(rand(worldPos.xy),0.1,0.9), 0.298,1.0);
+gl_Position = viewProjection  *  vec4(vpos.xyz+worldPos.xwy, 1.0);
+//vColor=vec4(0.2039, 0.6392*clamp(rand(worldPos.xw),0.1,0.9), 0.298,1.0);
 vColor=vec4(noise,0.9, 0.1,1.0);
     //vUV = uv;
 }

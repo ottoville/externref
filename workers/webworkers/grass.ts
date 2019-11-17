@@ -172,8 +172,8 @@ interface WorkerMessage extends MessageEvent {
 importScripts("/js/DB.js");
 const numBlades = 70000;
 const BLADE_WIDTH: number = 0.05;
-const BLADE_HEIGHT_MIN = 2.25
-const BLADE_HEIGHT_MAX = 3.0
+const BLADE_HEIGHT_MIN = 0.25
+const BLADE_HEIGHT_MAX = 0.6
 let positions: Float32Array;
 let shapes:  Float32Array;
 let noises: Float32Array;
@@ -216,17 +216,17 @@ let methods = {
 		let minZ: number;
 		let maxX: number;
 		let maxZ:number;
-		for (let i = 0; i < count; i += 4) {
-			let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 3);
+		for (let i = 0; i < count; i += 3) {
+			let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 2);
 			if (i == 0) {
 				maxX = minX = blade[0];
-				maxZ = minZ = blade[2];
+				maxZ = minZ = blade[1];
 				continue;
 			}
 			maxX = Math.max(maxX, blade[0]);
-			maxZ = Math.max(maxZ, blade[2]);
+			maxZ = Math.max(maxZ, blade[1]);
 			minX = Math.min(minX, blade[0]);
-			minZ = Math.min(minZ, blade[2]);
+			minZ = Math.min(minZ, blade[1]);
 		}
 		/*let promises: Promise<Event>[] = []
 		let d1 = new Date().getTime();
@@ -253,28 +253,28 @@ let methods = {
 				let results: PlantI[] = (<IDBRequest>ee.target).result;
 				let grids = new Set(results.filter(v => (v.z > minZ && v.z < maxZ)).map(v => v.grid));
 				console.log('grids mapped, took ', new Date().getTime() - d);
-				for (let i = 0; i < count; i += 4) {
-					let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 4);
-					let grid = (blade[0] | 1) + ',' + (blade[2] | 1);
+				for (let i = 0; i < count; i += 3) {
+					let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 3);
+					let grid = (blade[0] | 1) + ',' + (blade[1] | 1);
 					if (!grids.has(grid)) {
 						let shape = new Float32Array(4);
-						let noise = Math.abs(simplex(blade[0] * 0.03, blade[2] * 0.03));
+						let noise = Math.abs(simplex(blade[0] * 0.03, blade[1] * 0.03));
 						noise = noise * noise * noise
-						noise *= 5.0
 						shape[0] = BLADE_WIDTH + Math.random() * BLADE_WIDTH * 0.5 // width
 						shape[1] = BLADE_HEIGHT_MIN + Math.pow(Math.random(), 4.0) * (BLADE_HEIGHT_MAX - BLADE_HEIGHT_MIN) + noise // height
+						console.log(shape[1])
 						shape[2] = 0.0 + Math.random() * 0.3 // lean
 						shape[3] = 0.05 + Math.random() * 0.3 // curve
 						objs.push({
 							family: 'Poaceae',
 							gridx: blade[0] | 1,
-							gridz: blade[2] | 1,
+							gridz: blade[1] | 1,
 							x: blade[0],
-							z: blade[2],
+							z: blade[1],
 							pos: new Float32Array(blade),
 							grid: grid,
 							shape: new Float32Array(shape),
-							noise: Math.abs(simplex(blade[0] * 0.02, blade[2] * 0.02))
+							noise: Math.abs(simplex(blade[0] * 0.02, blade[1] * 0.02))
 						})
 					}
 				}

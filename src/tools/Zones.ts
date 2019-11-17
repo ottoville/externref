@@ -12,7 +12,6 @@ export class Zones extends UITAB {
     constructor(
         private ground: BABYLON.GroundMesh,
         private db: IDBDatabase,
-        private canvas: HTMLElement,
         private groundMaterial: BABYLON.ShaderMaterial,
         private scene: BABYLON.Scene,
         private camera: BABYLON.ArcRotateCamera,
@@ -21,7 +20,7 @@ export class Zones extends UITAB {
         super();
         // let DZ = new drawZone(canvas, scene, camera, ground, sea, DB, DT, groundmateria, grass, terrain);
         this.zonedt = new BABYLON.DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, scene, false);
-        this.PT = new paintGround(this.canvas, this.scene, this.camera, this.ground, this.sea, this.zonedt);
+        this.PT = new paintGround(scene.getEngine().getRenderingCanvas(), this.scene, this.camera, this.ground, this.sea, this.zonedt);
         this.zonemateria = new BABYLON.StandardMaterial("zoneMat", scene);
         this.zonemateria.diffuseTexture = this.zonedt;
     }

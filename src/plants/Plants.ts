@@ -27,22 +27,29 @@ export class Plants {
     public fillArea(area: PTDresult) {
         var d = new Date().getTime();
         var rotmax = rotateMatrix(area.ang.rad, "y");
-        //let amount = Math.abs(area.size.h * area.size.w) >> 2 // one per 2*2 grid
-        let amount = 100000
+        let amount = Math.abs(area.size.h * area.size.w) >> 2 // one per 2*2 grid
+        //let amount = 100000
         if (amount === 0)
             return;
-        let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 4 * amount);
+        let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
 
         for (let i = 0; i < amount; ++i) {
-            let blade = new Float32Array(offsets, i << 4, 4);
+            let blade = new Float32Array(offsets, i * Float32Array.BYTES_PER_ELEMENT *3, 3);
             let posX = (Math.random() * area.size.h * -1);
             let posZ = (Math.random() * area.size.w * -1);
             let translated = translate(posX, 0, posZ, rotmax);
             blade[0] = area.coord.x + translated.x // x
-            blade[2] = area.coord.z + translated.z // z
-            blade[1] = 0 // this.terrain.getHeightAtCoordinates(blade[0], blade[2]) // y
-            blade[3] = Math.PI * 2.0 * Math.random() // rot
+            blade[1] = area.coord.z + translated.z // z
+            blade[2] = Math.PI * 2.0 * Math.random() // rot
         }
+        /*
+         * 
+         * old: 0:x,    1:y,    2:z,    3:r
+         * new: 0:x,    1:z,    2:r
+         * 
+         * 
+         * 
+         * */
         this.ready.then(() => { 
             console.log('sending grass to worker, took ', new Date().getTime() - d);
             this.worker.message(WorkerReturn.noReturn, 'save',
@@ -229,8 +236,8 @@ export class Plants {
         this.worker.subscribe('updated', (data) => {
             this.bladesVisible = data.count;
             for (let i = 0; i < data.count; ++i) {
-                let blade = new Float32Array(this.offset, i << 4, 3);
-                blade[1] = this.terrain.getHeightAtCoordinates(blade[0], blade[2]) // y
+                let blade = new Float32Array(this.offset, i << 4, 4);
+                blade[3] = this.terrain.getHeightAtCoordinates(blade[0], blade[1]) // y
             }
             gl.bindBuffer(gl.ARRAY_BUFFER, offsetbufferPlain.getBuffer().underlyingResource);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));

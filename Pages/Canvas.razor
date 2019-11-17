@@ -78,7 +78,7 @@
         translate(ref position,sunm);
         return position;
     }
-    string[] tools= new string[] { "Zones","Plants","Camera"};
+    string[] tools= new string[] { "Zones","Plants","Buildings","Camera"};
     void activateMenu(string tool)
     {
         showMenu = tool;
@@ -111,6 +111,10 @@
     @if (showMenu == "Camera")
     {
         <Camera></Camera>
+    }
+    @if (showMenu == "Buildings")
+    {
+        <Buildings></Buildings>
     }
 </fieldset>
 <fieldset class="gameControl hidden" id="gameState" style="position:absolute;bottom:15px;right:15px;background-color:white">

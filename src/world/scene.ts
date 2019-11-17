@@ -5,6 +5,7 @@ import { PlantsUI } from "../tools/plantsUI.js";
 import { Zones } from "../tools/zones.js";
 import { CameraTAB } from "../tools/camera.js";
 import { UITAB } from "../UITAB.js";
+import { BuildingsUI } from "../tools/buildings.js";
 
 //import { UI } from "../UI.js";
 
@@ -239,12 +240,13 @@ export class WorldScene extends BABYLON.Scene {
             //seaground.position.y = -1.5;
             sea.position.y = 0;
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, terrain);
+            this.tools['Buildings'] = new BuildingsUI(this);
             const DT: boolean = true
             DB.then(d => {
                 console.log('Database ready');
                 
                 
-                this.tools['Zones'] = new Zones(terrain, d, engine.getRenderingCanvas(), shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
+                this.tools['Zones'] = new Zones(terrain, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
                 //ui.registerTab(ZoneTab);
                 //ui.registerTab(plantsUI);
                 
@@ -355,18 +357,6 @@ export class WorldScene extends BABYLON.Scene {
 
                 return this;
             });*/
-
-
-            engine.getRenderingCanvas().addEventListener("pointerdown", () => {
-                var pickInfo = this.pick(this.pointerX, this.pointerY, (m) => {
-                    return true;
-                });
-                var myBox = BABYLON.MeshBuilder.CreateBox("myBox", { height: 80, width: 80, depth: 80 }, this);
-                myBox.position= pickInfo.pickedPoint;
-                console.log(pickInfo);
-            }, false);
-
-
 
             let buildings: BABYLON.Mesh[] = [];
 
