@@ -129,22 +129,23 @@ void main(void) {
 vNormal=normal;
     gl_Position = viewProjection  *  vec4(worldPos.xwy + vpos.xyz, 1.0);*/
 	float hpct = 0.0; // percent of height of blade this vertex is at
-	float di=1.0;  // div index (0 .. BLADE_DIVS)
+	float di=0.0;  // div index (0 .. BLADE_DIVS)
 	float bedge = 1.0;
 	if(gl_VertexID==0 || gl_VertexID==1) {
 		bedge=0.0; // left/right edge (x=0 or x=1)
 	}
 	if(gl_VertexID==4) {
 		hpct=1.0;
-		di=3.0;  // div index (0 .. BLADE_DIVS)
+		di=2.0;  // div index (0 .. BLADE_DIVS)
 	}
 	else if(gl_VertexID==0 || gl_VertexID==3) {
-		di=2.0;
+		di=1.0;
 		hpct=0.5;
 	}
 	vec3 vpos = vec3(
 		shape.x * (bedge - 0.5) * (1.0 - pow(hpct, 3.0)), // taper blade edges as approach tip
-		(shape.y * di / BLADESEGS), // height of vtx, unbent,
+		(shape.y/BLADESEGS)*di,//(shape.y * di / BLADESEGS), // height of vtx, unbent,
+		
 		0.0 // flat y, unbent
 	);
 		// Apply blade's natural curve amount
