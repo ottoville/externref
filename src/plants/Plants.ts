@@ -26,22 +26,12 @@ export class Plants {
     private bladesVisible: number = 0;
     public fillArea(area: PTDresult) {
         var d = new Date().getTime();
-        var rotmax = rotateMatrix(area.ang.rad, "y");
+        
         let amount = Math.abs(area.size.h * area.size.w) >> 2 // one per 2*2 grid
         //let amount = 100000
         if (amount === 0)
             return;
-        let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
 
-        for (let i = 0; i < amount; ++i) {
-            let blade = new Float32Array(offsets, i * Float32Array.BYTES_PER_ELEMENT *3, 3);
-            let posX = (Math.random() * area.size.h * -1);
-            let posZ = (Math.random() * area.size.w * -1);
-            let translated = translate(posX, 0, posZ, rotmax);
-            blade[0] = area.coord.x + translated.x // x
-            blade[1] = area.coord.z + translated.z // z
-            blade[2] = Math.PI * 2.0 * Math.random() // rot
-        }
         /*
          * 
          * old: 0:x,    1:y,    2:z,    3:r
@@ -54,7 +44,8 @@ export class Plants {
             console.log('sending grass to worker, took ', new Date().getTime() - d);
             this.worker.message(WorkerReturn.noReturn, 'save',
             {
-                buffer: offsets
+                area: area,
+                amount: amount
             })
         }
         )

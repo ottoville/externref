@@ -16,7 +16,6 @@
     "esm": "^3.2.25"
   },
   "devDependencies": {
-    "@types/babylonjs": "^2.4.1",
     "@types/facebook-js-sdk": "^3.3.0",
     "typescript": "^3.7.2"
   }

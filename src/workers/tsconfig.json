@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "../../wwwroot",
+    "module": "esnext",
+    "target": "esnext",
+    "lib": [ "esnext", "webworker" ],
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "include": [
+    "./webworkers/*.ts",
+    "./sw.ts",
+    "commonMath.d.ts"
+  ]
+}

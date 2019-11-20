@@ -73,7 +73,7 @@ class Angle {
         this._rad = Math.abs(this._deg * Math.PI / 180);
         return this._rad;
     }
-    360(p1: Vector3, p2: Vector3 | BABYLON.Vector3): Angle {
+    360(p1: Vector3, p2: Vector3): Angle {
         if (p2.z - p1.z < 0) {
             if (p2.x - p1.x < 0)
                 return new Angle(Math.PI * 2 - this.rad);
@@ -1876,8 +1876,6 @@ class Vector3 {
         this.view.set(arguments);
     }
     get x(): number {
-        debugger;
-        //console.log('get X ', this.view[0])
         return this.view[0];
     }
     get y(): number {

@@ -202,22 +202,30 @@ let methods = {
 		var d = new Date().getTime();
 		let db = await DB;
 		let trans = db.transaction("plantae");
-		
 		var objstore = trans.objectStore("plantae");
-		
 		let objs: PlantI[] = [];
-
 		trans.onerror = function (err) {
 			console.log(err)
 		}
-		let count = data.data.buffer.byteLength / Float32Array.BYTES_PER_ELEMENT;
 
+		let amount = data.data.amount;
+		let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
+		var rotmax = rotateMatrix(data.data.area.ang.rad, "y");
+		for (let i = 0; i < amount; ++i) {
+			let blade = new Float32Array(offsets, i * Float32Array.BYTES_PER_ELEMENT * 3, 3);
+			let posX = (Math.random() * data.data.area.size.h * -1);
+			let posZ = (Math.random() * data.data.area.size.w * -1);
+			let translated = translate(posX, 0, posZ, rotmax);
+			blade[0] = data.data.area.coord.x + translated.x // x
+			blade[1] = data.data.area.coord.z + translated.z // z
+			blade[2] = Math.PI * 2.0 * Math.random() // rot
+		}
 		let minX: number;
 		let minZ: number;
 		let maxX: number;
 		let maxZ:number;
-		for (let i = 0; i < count; i += 3) {
-			let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 2);
+		for (let i = 0; i < amount; i += 3) {
+			let blade = new Float32Array(offsets, i * Float32Array.BYTES_PER_ELEMENT, 2);
 			if (i == 0) {
 				maxX = minX = blade[0];
 				maxZ = minZ = blade[1];
@@ -253,8 +261,8 @@ let methods = {
 				let results: PlantI[] = (<IDBRequest>ee.target).result;
 				let grids = new Set(results.filter(v => (v.z > minZ && v.z < maxZ)).map(v => v.grid));
 				console.log('grids mapped, took ', new Date().getTime() - d);
-				for (let i = 0; i < count; i += 3) {
-					let blade = new Float32Array(data.data.buffer, i * Float32Array.BYTES_PER_ELEMENT, 3);
+				for (let i = 0; i < amount; i += 3) {
+					let blade = new Float32Array(offsets, i * Float32Array.BYTES_PER_ELEMENT, 3);
 					let grid = (blade[0] | 1) + ',' + (blade[1] | 1);
 					if (!grids.has(grid)) {
 						let shape = new Float32Array(4);

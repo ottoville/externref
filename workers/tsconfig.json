@@ -8,5 +8,11 @@
   },
   "exclude": [
     "node_modules"
+  ],
+  "include": [
+    "./**/*.ts"
+  ],
+  "files": [
+    "../src/commonMath.ts"
   ]
 }

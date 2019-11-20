@@ -1,7 +1,7 @@
 let startingPoint: Vector3;
 let tempplane: BABYLON.Mesh
 let global_position: BABYLON.Vector3
-let end_position: BABYLON.Vector3
+let end_position: Vector3
 
 import { updateSubTexture } from "./triginometry.js";
 //import { rotateMatrix, translate } from "./math.js";
@@ -61,7 +61,7 @@ export class paintGround {
 
         let pikked = this.ground.intersects(ray);
 
-        end_position = pikked.pickedPoint;
+        end_position = new Vector3(pikked.pickedPoint.x, pikked.pickedPoint.y, pikked.pickedPoint.z);
         end_position.y = 1;
         let width = startingPoint.x - end_position.x;
 
@@ -154,8 +154,8 @@ export class paintGround {
                // let ang = new Angle(Math.abs(rotation));
                // let ang360 = ang[360](startingPoint, end_position);
                 if (me.type == DrawType.plane) {
-                    let meshCenter: BABYLON.Vector3 = end_position.subtract(global_position).divide(new BABYLON.Vector3(2, 2, 2));
-                    tempplane.position = <BABYLON.Vector3><unknown>global_position.add(meshCenter)
+                    let meshCenter: Vector3 = end_position.subtract(new Vector3(global_position.x, global_position.y, global_position.z)).divide(new Vector3(2, 2, 2));
+                    tempplane.position = <BABYLON.Vector3><unknown>global_position.add(new BABYLON.Vector3(meshCenter.x, meshCenter.y, meshCenter.z))
                     tempplane.position.y = 0.2;
                    tempplane.scaling.x = height;
                    tempplane.rotation.y = me.ang360.rad;
