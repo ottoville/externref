@@ -170,6 +170,7 @@ interface WorkerMessage extends MessageEvent {
     data: WMessage
 }
 importScripts("/js/DB.js");
+importScripts("/js/commonMath.js");
 const numBlades = 70000;
 const BLADE_WIDTH: number = 0.05;
 const BLADE_HEIGHT_MIN = 0.25
@@ -207,35 +208,34 @@ let methods = {
 		trans.onerror = function (err) {
 			console.log(err)
 		}
-
 		let amount = data.data.amount;
-		let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
+		console.log('creating grass, amount', amount, data)
+		
+		//let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
+		let offsets = new Float32Array(amount * 3);
 		var rotmax = rotateMatrix(data.data.area.ang.rad, "y");
-		for (let i = 0; i < amount; ++i) {
-			let blade = new Float32Array(offsets, i * Float32Array.BYTES_PER_ELEMENT * 3, 3);
-			let posX = (Math.random() * data.data.area.size.h * -1);
-			let posZ = (Math.random() * data.data.area.size.w * -1);
-			let translated = translate(posX, 0, posZ, rotmax);
-			blade[0] = data.data.area.coord.x + translated.x // x
-			blade[1] = data.data.area.coord.z + translated.z // z
-			blade[2] = Math.PI * 2.0 * Math.random() // rot
-		}
 		let minX: number;
 		let minZ: number;
 		let maxX: number;
-		let maxZ:number;
-		for (let i = 0; i < amount; i += 3) {
-			let blade = new Float32Array(offsets, i * Float32Array.BYTES_PER_ELEMENT, 2);
+		let maxZ: number;
+		for (let i = 0; i < amount; ++i) {
+			let posX = (Math.random() * data.data.area.size.h * -1);
+			let posZ = (Math.random() * data.data.area.size.w * -1);
+			let translated = translate(posX, 0, posZ, rotmax);
+			offsets[i*3+0] = data.data.area.coord.x + translated.x // x
+			offsets[i*3+1] = data.data.area.coord.z + translated.z // z
+			offsets[i*3+2] = Math.PI * 2.0 * Math.random() // rot
 			if (i == 0) {
-				maxX = minX = blade[0];
-				maxZ = minZ = blade[1];
+				maxX = minX = offsets[i * 3 + 0];
+				maxZ = minZ = offsets[i * 3 + 1];
 				continue;
 			}
-			maxX = Math.max(maxX, blade[0]);
-			maxZ = Math.max(maxZ, blade[1]);
-			minX = Math.min(minX, blade[0]);
-			minZ = Math.min(minZ, blade[1]);
+			maxX = Math.max(maxX, offsets[i * 3 + 0]);
+			maxZ = Math.max(maxZ, offsets[i * 3 + 1]);
+			minX = Math.min(minX, offsets[i * 3 + 0]);
+			minZ = Math.min(minZ, offsets[i * 3 + 1]);
 		}
+		console.log(maxX, maxZ, minX, minZ)
 		/*let promises: Promise<Event>[] = []
 		let d1 = new Date().getTime();
 		for (let i = minX; i < maxX + 1; i++) {
@@ -261,8 +261,8 @@ let methods = {
 				let results: PlantI[] = (<IDBRequest>ee.target).result;
 				let grids = new Set(results.filter(v => (v.z > minZ && v.z < maxZ)).map(v => v.grid));
 				console.log('grids mapped, took ', new Date().getTime() - d);
-				for (let i = 0; i < amount; i += 3) {
-					let blade = new Float32Array(offsets, i * Float32Array.BYTES_PER_ELEMENT, 3);
+				for (let i = 0; i < amount; i++) {
+					let blade = [offsets[i * 3], offsets[i * 3+1]]
 					let grid = (blade[0] | 1) + ',' + (blade[1] | 1);
 					if (!grids.has(grid)) {
 						let shape = new Float32Array(4);
