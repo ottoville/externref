@@ -172,9 +172,9 @@ interface WorkerMessage extends MessageEvent {
 importScripts("/js/DB.js");
 importScripts("/js/commonMath.js");
 const numBlades = 70000;
-const BLADE_WIDTH: number = 0.05;
-const BLADE_HEIGHT_MIN = 0.25
-const BLADE_HEIGHT_MAX = 0.6
+const BLADE_WIDTH: number = 0.0025;
+const BLADE_HEIGHT_MIN = 0.3
+const BLADE_HEIGHT_MAX = 0.8
 let positions: Float32Array;
 let shapes:  Float32Array;
 let noises: Float32Array;
@@ -213,7 +213,7 @@ let methods = {
 		
 		//let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
 		let offsets = new Float32Array(amount * 3);
-		var rotmax = rotateMatrix(data.data.area.ang.rad, "y");
+		var rotmax = rotateMatrix(data.data.angle, "y");
 		let minX: number;
 		let minZ: number;
 		let maxX: number;
@@ -235,7 +235,6 @@ let methods = {
 			minX = Math.min(minX, offsets[i * 3 + 0]);
 			minZ = Math.min(minZ, offsets[i * 3 + 1]);
 		}
-		console.log(maxX, maxZ, minX, minZ)
 		/*let promises: Promise<Event>[] = []
 		let d1 = new Date().getTime();
 		for (let i = minX; i < maxX + 1; i++) {
@@ -270,7 +269,6 @@ let methods = {
 						noise = noise * noise * noise
 						shape[0] = BLADE_WIDTH + Math.random() * BLADE_WIDTH * 0.5 // width
 						shape[1] = BLADE_HEIGHT_MIN + Math.pow(Math.random(), 4.0) * (BLADE_HEIGHT_MAX - BLADE_HEIGHT_MIN) + noise // height
-						console.log(shape[1])
 						shape[2] = 0.0 + Math.random() * 0.3 // lean
 						shape[3] = 0.05 + Math.random() * 0.3 // curve
 						objs.push({

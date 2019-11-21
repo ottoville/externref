@@ -9,6 +9,8 @@
       %WINDIR%\System32\WindowsPowerShell\v1.0\powershell.exe
     </PowerShellExe>
     <RootNamespace>TerraSim</RootNamespace>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Version>0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -574,7 +576,7 @@
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="node .\buildShaders.js" />
+    <Exec Command="node .\buildShaders.js&#xD;&#xA;node .\setversion.js" />
   </Target>
 
 </Project>

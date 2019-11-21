@@ -2,7 +2,7 @@
 let dirname = 'wwwroot/shaders/';
 fs.readdir(dirname, async function (err, filenames) {
     if (err) {
-        onError(err);
+        console.log(err);
         return;
     }
     let obj = {};

@@ -1,4 +1,4 @@
-var CACHE_NAME = 'terrasim-v1';
+var CACHE_NAME = 'terrasim-_VERSION_';
 var urlsToCache = [
     '/',
     'lib/babylonjs/babylon.js',

@@ -31,7 +31,7 @@ export class Plants {
         //let amount = 100000
         if (amount === 0)
             return;
-
+        
         /*
          * 
          * old: 0:x,    1:y,    2:z,    3:r
@@ -45,7 +45,8 @@ export class Plants {
             this.worker.message(WorkerReturn.noReturn, 'save',
             {
                 area: area,
-                amount: amount
+                amount: amount,
+                angle: area.ang.rad
             })
         }
         )
