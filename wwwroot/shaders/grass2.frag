@@ -28,6 +28,7 @@ void main(void) {
 
 	// make grass transparent as it approachs outer view distance perimeter
 	//color.a = 1.0 - smoothstep(grassFogFar * 0.55, grassFogFar * 0.8, depth);
+	color.a = 1.0;
     // apply terrain lightmap
     float light=0.7;
     //float light = ( 1.7 + cos(vSamplePos.x*0.01)) * 0.27;
