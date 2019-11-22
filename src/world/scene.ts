@@ -77,113 +77,112 @@ export class WorldScene extends BABYLON.Scene {
                 attributes: ["position", "normal", "uv"],
                 uniforms: ["world", "worldView", "worldViewProjection", "view", "projection", "lightPos", "cameraPosition"]
             });
-        // Data Map
-        var nbPoints: number = 500;
-
-        this.terrainReady = new Promise(async (res, rej) => {
-            (await DB).transaction('maps').objectStore('maps').openCursor().onsuccess = function () {
-                if (this.result) {
-
-                }
-            }
-            let img = new Image();
-            img.src = "/images/tenerife2.png";
-            img.onerror = () => rej('Loading terrain image failed');
-            img.onload = async () => {
-                let canvas = document.createElement("canvas");
-                canvas.width = img.width;
-                canvas.height = img.height;
-                let context = canvas.getContext("2d");
-                context.drawImage(img, 0, 0);
-                let buffer = <Uint8Array>(<any>context.getImageData(0, 0, img.width, img.height).data);
-                var vertexData = VERTEX_CreateGroundFromHeightMap({
-                    width: img.width, height: img.height,
-                    subdivisions: 250,
-                    minHeight: -2, maxHeight: 250, colorFilter: new BABYLON.Color3(0.3, 0.59, 0.11),
-                    buffer: buffer, bufferWidth: img.width, bufferHeight: img.height,
-                    alphaFilter: 0.0
-                });
-                let ground = new BABYLON.GroundMesh('ground', this);
-                ground._subdivisionsX = 250;
-                ground._subdivisionsY = 250;
-                ground._width = img.width;
-                ground._height = img.height;
-                ground._maxX = ground._width / 2.0;
-                ground._maxZ = ground._height / 2.0;
-                ground._minX = -ground._maxX;
-                ground._minZ = -ground._maxZ;
-                let trans = (await DB).transaction('maps', 'readwrite').objectStore('maps').add({
-                    width: img.width,
-                    height: img.height,
-                    indices: Uint32Array.from(vertexData.indices),
-                    normals: Float32Array.from(vertexData.normals),
-                    positions: Float32Array.from(vertexData.positions),
-                    uvs: Float32Array.from(vertexData.uvs)
-                });
-                vertexData.applyToMesh(ground, true);
-                ground._setReady(true);
-                trans.onerror = rej;
-                trans.onsuccess = () => {
-                    res(ground)
-                };
-            }
-            return;
-            /*
-            (await DB).transaction('maps').objectStore('maps').openCursor().onsuccess = function () {
-                if (this.result) {
-                    res(this.result.value.mapData);
+        interface TerrainMap {
+            width: number,
+            height: number,
+            indices: Uint32Array,
+            normals: Float32Array,
+            positions: Float32Array,
+            uvs: Float32Array,
+            texture: Uint8ClampedArray
+        }
+        const DT: boolean = true
+        this.terrainReady = new Promise(async (ccres, ccrej) => {
+            (await DB).transaction('maps').objectStore('maps').openCursor().onsuccess = (evt) => {
+                if ((<IDBRequest>evt.target).result) {
+                    console.log('callback1');
+                    ccres((<IDBRequest>evt.target).result.value);
                 }
                 else {
-                    var mapData = new Float32Array(nbPoints * nbPoints * 3); // the array that will store the generated data
                     let img = new Image();
-                    img.onload = () => {
+                    img.src = "/images/tenerife2.png";
+                    img.onerror = () => ccrej('Loading terrain image failed');
+                    img.onload = async () => {
                         let canvas = document.createElement("canvas");
                         canvas.width = img.width;
                         canvas.height = img.height;
                         let context = canvas.getContext("2d");
                         context.drawImage(img, 0, 0);
-                        let buffer = context.getImageData(0, 0, img.width, img.height).data;
-
-                        let x = 0.0;
-                        let y = 0.0;
-                        let z = 0.0;
-                        let minHeight = -2;
-                        let maxHeight = 150;
-                        let filter = new BABYLON.Color3(0.3, 0.59, 0.11);
-                        let subX = 500;
-                        let subZ = 500
-                        let offsetX = 0;
-                        let offsetZ = 0;
-                        for (let row = 0; row < subZ; row++) {
-                            for (let col = 0; col < subX; col++) {
-                                x = col * img.width / subX - img.width * 0.5;
-                                z = row * img.height / subZ - img.height * 0.5;
-                                let heightmapX = ((x + img.width * 0.5) / img.width * (img.width - 1)) | 0;
-                                let heightmapY = (img.height - 1) - ((z + img.height * 0.5) / img.height * (img.height - 1)) | 0;
-                                let pos = (heightmapX + heightmapY * img.width) * 4;
-                                let gradient = (buffer[pos] * filter.r + buffer[pos + 1] * filter.g + buffer[pos + 2] * filter.b) / 255.0;
-                                y = minHeight + (maxHeight - minHeight) * gradient;
-                                let idx = (row * subX + col) * 3;
-                                mapData[idx] = x + offsetX;
-                                mapData[idx + 1] = y;
-                                mapData[idx + 2] = z + offsetZ;
-                            }
-                        }
-                        canvas.toBlob(b => {
-                            let trans = this.transaction.db.transaction('maps', 'readwrite').objectStore('maps').add({
-                                mapData: mapData,
-                                image: b
-                                //heightMap: buffer,
-                            });
-                            trans.onerror = rej;
-                            trans.onsuccess = () => { res(mapData) };
-
-                        }, 'image/png');
-
+                        let buffer = <Uint8Array>(<any>context.getImageData(0, 0, img.width, img.height).data);
+                        var vertexData = VERTEX_CreateGroundFromHeightMap({
+                            width: img.width, height: img.height,
+                            subdivisions: 250,
+                            minHeight: -2, maxHeight: 250, colorFilter: new BABYLON.Color3(0.3, 0.59, 0.11),
+                            buffer: buffer, bufferWidth: img.width, bufferHeight: img.height,
+                            alphaFilter: 0.0
+                        });
+                        let obj = {
+                            width: img.width,
+                            height: img.height,
+                            indices: Uint32Array.from(vertexData.indices),
+                            normals: Float32Array.from(vertexData.normals),
+                            positions: Float32Array.from(vertexData.positions),
+                            uvs: Float32Array.from(vertexData.uvs)
+                        };
+                        let trans = (await DB).transaction('maps', 'readwrite').objectStore('maps').add(obj);
+                        trans.onerror = ccrej;
+                        trans.onsuccess = () => {
+                            console.log('callback2');
+                            ccres(obj)
+                        };
                     }
-                    img.src = "images/tenerife2.png";
                 }
-            }*/
+            };
+        }).then(async (vdata: TerrainMap) => {
+            console.log('creating ground');
+            let ground = new BABYLON.GroundMesh('ground', this);
+            ground._subdivisionsX = 250;
+            ground._subdivisionsY = 250;
+            ground._width = vdata.width;
+            ground._height = vdata.height;
+            ground._maxX = ground._width / 2.0;
+            ground._maxZ = ground._height / 2.0;
+            ground._minX = -ground._maxX;
+            ground._minZ = -ground._maxZ;
+            var vertexData = new BABYLON.VertexData();
+
+            vertexData.indices = vdata.indices;
+            vertexData.positions = vdata.positions;
+            vertexData.normals = vdata.normals;
+            vertexData.uvs = vdata.uvs;
+
+            vertexData.applyToMesh(ground, true);
+            ground._setReady(true);
+
+
+            let c = document.createElement('canvas');
+            c.width = 10000;
+            c.height = 10000;
+            let ctx = c.getContext("2d");
+            if (DT) {
+                ctx.beginPath();
+                ctx.fillStyle = "#e0e031";
+                ctx.fillRect(0, 0, 10000, 10000);
+
+                var centerX = 10000 / 2
+                var centerZ = 10000 / 2
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.translate(centerX, centerZ);
+                for (let row = -2500; row < 2500; row = row + 2) {
+                    for (let col = -2500; col < 2500; col = col += 2) {
+                        let height = ground.getHeightAtCoordinates(row, col)
+                        if (height > 3) {
+                            ctx.fillStyle = "green";
+                            ctx.fillRect(row, col * -1, 3, 3);
+                        }
+                    }
+                }
+                
+                vdata.texture = ctx.getImageData(0, 0, 10000, 10000).data;
+                let trans = (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
+                c.toBlob(b => {
+                    let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) })
+                    shadermateria.setTexture('textureSampler2', groundtexture); //not working
+                    ground.material = shadermateria;
+                }, 'image/webp');
+            }
+
+            return ground
         });
         this.terrainReady.catch((e) => {
             console.error('creating terrain failed', e);
@@ -241,7 +240,7 @@ export class WorldScene extends BABYLON.Scene {
             sea.position.y = 0;
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, terrain);
             this.tools['Buildings'] = new BuildingsUI(this);
-            const DT: boolean = true
+            
             DB.then(d => {
                 console.log('Database ready');
                 
@@ -272,35 +271,17 @@ export class WorldScene extends BABYLON.Scene {
                                 ctx.fillStyle = "green";
                                 ctx.fillRect(row, col * -1, 3, 3);
                             }
-                            /*else if (height > 0.3) {
-                                ctx.fillStyle = "#e0e031";
-                                ctx.fillRect(row, col * -1, 3, 3);
-                            }*/
                         }
                     }
-                }               
+                }           
                 c.toBlob(b => {
-                    /*(function (name: string, texture: BABYLON.Texture): BABYLON.ShaderMaterial {
-                   let me: BABYLON.ShaderMaterial = this;
-                   if (me._options.samplers.indexOf(name) === -1) {
-                       me._options.samplers.push(name);
-                   }
-                   me._textures[name] = texture;
 
-                   return this;
-                   }).call(shadermateria, 'textureSampler2', grass)*/
                     let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) })
                     shadermateria.setTexture('textureSampler2', groundtexture); //not working
                     terrain.material = shadermateria;
                     this.tools['Plants'] = new PlantsUI(terrain, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
                    
                 }, 'image/webp');
-                
-                /* D.transaction('maps').objectStore('maps').openCursor().onsuccess = function () {
-                    if (this.result) {
-                        shadermateria.setTexture('heightMap', new BABYLON.RawTexture(await new Response(this.result.value.image).arrayBuffer() , 10000, 10000, BABYLON.Engine.TEXTUREFORMAT_RGB, scene, false, false, undefined, BABYLON.Engine.TEXTURETYPE_FLOAT));
-                    }
-                }*/
             })
             var waterMaterial = new BABYLON.WaterMaterial("waterMaterial", this, new BABYLON.Vector2(512, 512));
             waterMaterial.bumpTexture = new BABYLON.Texture("images/waterbump.png", this);
