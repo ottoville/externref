@@ -86,7 +86,8 @@ export class WorldScene extends BABYLON.Scene {
             uvs: Float32Array,
             texture: Uint8ClampedArray
         }
-        const DT: boolean = true
+        const DT: boolean = true;
+        let sea: BABYLON.Mesh;
         this.terrainReady = new Promise(async (ccres, ccrej) => {
             (await DB).transaction('maps').objectStore('maps').openCursor().onsuccess = (evt) => {
                 if ((<IDBRequest>evt.target).result) {
@@ -149,11 +150,14 @@ export class WorldScene extends BABYLON.Scene {
             vertexData.applyToMesh(ground, true);
             ground._setReady(true);
 
-
+            sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
+            let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             let c = document.createElement('canvas');
             c.width = 10000;
             c.height = 10000;
             let ctx = c.getContext("2d");
+            shadermateria.setVector3("lightPos", sunlight.position);
+            shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
             if (DT) {
                 ctx.beginPath();
                 ctx.fillStyle = "#e0e031";
@@ -179,6 +183,7 @@ export class WorldScene extends BABYLON.Scene {
                     let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) })
                     shadermateria.setTexture('textureSampler2', groundtexture); //not working
                     ground.material = shadermateria;
+                    this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
                 }, 'image/webp');
             }
 
@@ -234,11 +239,11 @@ export class WorldScene extends BABYLON.Scene {
 
             // canvas.addEventListener("pointerdown", DZ.mainPointerDown, false);
             terrain.isPickable = true;
-            var sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
+            
             //var seaground = BABYLON.Mesh.CreateGround("ground", 3601, 3601, 1, scene, false);
             //seaground.position.y = -1.5;
             sea.position.y = 0;
-            let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, terrain);
+            
             this.tools['Buildings'] = new BuildingsUI(this);
             
             DB.then(d => {
@@ -249,9 +254,8 @@ export class WorldScene extends BABYLON.Scene {
                 //ui.registerTab(ZoneTab);
                 //ui.registerTab(plantsUI);
                 
-                shadermateria.setVector3("lightPos", sunlight.position);
-                shadermateria.setVector3("cameraPosition",(<CameraTAB>this.tools['CameraTAB']).camera.position);
-                let c = document.createElement('canvas');
+
+               /* let c = document.createElement('canvas');
                 c.width = 10000;
                 c.height = 10000;
                 let ctx = c.getContext("2d");
@@ -281,7 +285,7 @@ export class WorldScene extends BABYLON.Scene {
                     terrain.material = shadermateria;
                     this.tools['Plants'] = new PlantsUI(terrain, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
                    
-                }, 'image/webp');
+                }, 'image/webp');*/
             })
             var waterMaterial = new BABYLON.WaterMaterial("waterMaterial", this, new BABYLON.Vector2(512, 512));
             waterMaterial.bumpTexture = new BABYLON.Texture("images/waterbump.png", this);
