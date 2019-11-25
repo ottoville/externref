@@ -89,7 +89,10 @@ export class WorldScene extends BABYLON.Scene {
         const DT: boolean = true;
         let sea: BABYLON.Mesh;
         this.terrainReady = new Promise(async (ccres, ccrej) => {
-            (await DB).transaction('maps').objectStore('maps').openCursor().onsuccess = (evt) => {
+            let db = (await DB);
+            let trans = db.transaction('maps');
+            trans.onerror = ccrej;
+            trans.objectStore('maps').openCursor().onsuccess = (evt) => {
                 if ((<IDBRequest>evt.target).result) {
                     console.log('callback1');
                     ccres((<IDBRequest>evt.target).result.value);
@@ -120,17 +123,18 @@ export class WorldScene extends BABYLON.Scene {
                             positions: Float32Array.from(vertexData.positions),
                             uvs: Float32Array.from(vertexData.uvs)
                         };
-                        let trans = (await DB).transaction('maps', 'readwrite').objectStore('maps').add(obj);
-                        trans.onerror = ccrej;
-                        trans.onsuccess = () => {
-                            console.log('callback2');
-                            ccres(obj)
-                        };
+                        let trans2 = db.transaction('maps', 'readwrite');
+                        trans2.onerror = ccrej;
+                        trans2.objectStore('maps').add(obj).onsuccess = () => {
+                            trans2.objectStore('maps').openCursor().onsuccess = (e) => {                                
+                                ccres(<IDBCursorWithValue>(<IDBRequest>e.target).result.value)
+                            }
+                        }
                     }
                 }
             };
-        }).then(async (vdata: TerrainMap) => {
-            console.log('creating ground');
+        }).then((vdata: TerrainMap) => {
+            console.log('creating ground', vdata);
             let ground = new BABYLON.GroundMesh('ground', this);
             ground._subdivisionsX = 250;
             ground._subdivisionsY = 250;
@@ -178,15 +182,14 @@ export class WorldScene extends BABYLON.Scene {
                 }
                 
                 vdata.texture = ctx.getImageData(0, 0, 10000, 10000).data;
-                let trans = (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
-                c.toBlob(b => {
+                c.toBlob(async b => {
+                    (await DB).transaction('maps', 'readwrite').objectStore('maps').put(b);
                     let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) })
                     shadermateria.setTexture('textureSampler2', groundtexture); //not working
                     ground.material = shadermateria;
                     this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
-                }, 'image/webp');
+                }, 'image/webp',1);
             }
-
             return ground
         });
         this.terrainReady.catch((e) => {
