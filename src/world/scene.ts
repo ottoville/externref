@@ -84,7 +84,7 @@ export class WorldScene extends BABYLON.Scene {
             normals: Float32Array,
             positions: Float32Array,
             uvs: Float32Array,
-            texture: Uint8ClampedArray
+            texture: Blob
         }
         const DT: boolean = true;
         let sea: BABYLON.Mesh;
@@ -156,40 +156,46 @@ export class WorldScene extends BABYLON.Scene {
 
             sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
-            let c = document.createElement('canvas');
-            c.width = 10000;
-            c.height = 10000;
-            let ctx = c.getContext("2d");
+
+            
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-            if (DT) {
-                ctx.beginPath();
-                ctx.fillStyle = "#e0e031";
-                ctx.fillRect(0, 0, 10000, 10000);
+            new Promise((tres, trej) => {
+                if (typeof (vdata.texture) === 'undefined') {
+                    let c = document.createElement('canvas');
+                    c.width = 10000;
+                    c.height = 10000;
+                    let ctx = c.getContext("2d");
+                    ctx.beginPath();
+                    ctx.fillStyle = "#e0e031";
+                    ctx.fillRect(0, 0, 10000, 10000);
 
-                var centerX = 10000 / 2
-                var centerZ = 10000 / 2
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.translate(centerX, centerZ);
-                for (let row = -2500; row < 2500; row = row + 2) {
-                    for (let col = -2500; col < 2500; col = col += 2) {
-                        let height = ground.getHeightAtCoordinates(row, col)
-                        if (height > 3) {
-                            ctx.fillStyle = "green";
-                            ctx.fillRect(row, col * -1, 3, 3);
+                    var centerX = 10000 / 2
+                    var centerZ = 10000 / 2
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    ctx.translate(centerX, centerZ);
+                    for (let row = -2500; row < 2500; row = row + 2) {
+                        for (let col = -2500; col < 2500; col = col += 2) {
+                            let height = ground.getHeightAtCoordinates(row, col)
+                            if (height > 3) {
+                                ctx.fillStyle = "green";
+                                ctx.fillRect(row, col * -1, 3, 3);
+                            }
                         }
                     }
-                }
-                
-                vdata.texture = ctx.getImageData(0, 0, 10000, 10000).data;
-                c.toBlob(async b => {
-                    (await DB).transaction('maps', 'readwrite').objectStore('maps').put(b);
-                    let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) })
-                    shadermateria.setTexture('textureSampler2', groundtexture); //not working
-                    ground.material = shadermateria;
-                    this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
-                }, 'image/webp',1);
-            }
+                    c.toBlob(async b => {
+                        vdata.texture = b;
+                        tres(b);
+                        (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
+                    }, 'image/webp', 1);
+                } else
+                    tres(vdata.texture);
+            }).then(b => {
+                let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) })
+                shadermateria.setTexture('textureSampler2', groundtexture);
+                ground.material = shadermateria;
+                this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
+            })
             return ground
         });
         this.terrainReady.catch((e) => {

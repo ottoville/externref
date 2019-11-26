@@ -22,8 +22,8 @@
 
     protected override void OnAfterRender(bool firstrender)
     {
-        if(firstrender)
-            JSRuntime.InvokeAsync<object>("initCanvas",DotNetObjectReference.Create(this), lastStateChangeTime);
+        if (firstrender)
+            JSRuntime.InvokeAsync<object>("initCanvas", DotNetObjectReference.Create(this), lastStateChangeTime);
     }
     [JSInvokable]
     public Int64 getGameTime()
@@ -36,11 +36,12 @@
     void changeState(ChangeEventArgs e)
     {
         lastStateChangeGameTime = getGameTime();
-        gameSpeed =  SByte.Parse(e.Value.ToString());
+        gameSpeed = SByte.Parse(e.Value.ToString());
         lastStateChangeTime = DateTime.Now.Ticks;
         JSRuntime.InvokeAsync<object>("scene.stateChange", new { lastStateChangeGameTime, gameSpeed, lastStateChangeTime });
     }
-    static double[] rotateMatrix(double rad, char axis) {
+    static double[] rotateMatrix(double rad, char axis)
+    {
         // https://www.3dgep.com/3d-math-primer-for-game-programmers-matrices/#Rotation
         // if (axis == "x")
         //{
@@ -52,7 +53,8 @@
             };
         // }
     }
-    static void translate(ref double[] position, double[] m) {
+    static void translate(ref double[] position, double[] m)
+    {
         position = new double[4] {
             position[0] * m[0] + position[1] * m[1] + position[2] * m[2] + m[3],
             position[0] * m[4] + position[1] * m[5] + position[2] * m[6] + m[7],
@@ -60,7 +62,7 @@
             position[0] * m[12] + position[1] * m[13] + position[2] * m[14] + m[15]
         };
     }
-    static double anglePerMinute=(Math.PI*2)/1439;
+    static double anglePerMinute = (Math.PI * 2) / 1439;
     static double anglePerSecond = anglePerMinute / 60;
     static long sundistance = 149600000000;
     static double[] sunm = rotateMatrix(Math.PI * 0.2, 'x');
@@ -68,33 +70,41 @@
     [JSInvokable]
     public double[] sunPosition()
     {
-        var secondsOfDay=(getGameTime()/10000000)%86400;
+        var secondsOfDay = (getGameTime() / 10000000) % 86400;
         var sunAngle = ((secondsOfDay * anglePerSecond) + meridian);
         double[] position = new double[3] {
             sundistance*Math.Sin(sunAngle),
             sundistance*Math.Cos(sunAngle),
             0
         };
-        translate(ref position,sunm);
+        translate(ref position, sunm);
         return position;
     }
-    string[] tools= new string[] { "Zones","Plants","Buildings","Camera"};
+    string[] tools = new string[] { "Zones", "Plants", "Buildings", "Camera" };
     void activateMenu(string tool)
     {
         showMenu = tool;
-        System.Console.WriteLine("activateMenu "+tool);
-        JSRuntime.InvokeAsync<string>("scene.tools."+tool+".activate");
-        foreach(string t in tools)
+        System.Console.WriteLine("activateMenu " + tool);
+        JSRuntime.InvokeAsync<string>("scene.tools." + tool + ".activate");
+        foreach (string t in tools)
         {
-            if(t!=tool)
+            if (t != tool)
             {
-                 JSRuntime.InvokeAsync<string>("scene.tools."+t+".deactivate");
+                JSRuntime.InvokeAsync<string>("scene.tools." + t + ".deactivate");
             }
         }
     }
     public string showMenu;
 }
 <canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:100%;height:100%"></canvas>
+<div class="w3-bar w3-light-grey w3-border">
+    <a href="#" class="w3-bar-item w3-button w3-green">▧</a>
+    <a href="#" class="w3-bar-item w3-button"><i class="fa fa-search"></i></a>
+    <a href="#" class="w3-bar-item w3-button"><i class="fa fa-envelope"></i></a>
+    <a href="#" class="w3-bar-item w3-button"><i class="fa fa-globe"></i></a>
+    <a href="#" class="w3-bar-item w3-button"><i class="fa fa-sign-in"></i></a>
+</div>
+
 <fieldset style="position:absolute;top:15px;background-color:white">
     @foreach (var tool in tools)
     {
