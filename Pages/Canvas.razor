@@ -2,10 +2,10 @@
 @inject IJSRuntime JSRuntime;
 
 @code {
-    sbyte gameSpeed = 0;
-    long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
-    long lastStateChangeTime = DateTime.Now.Ticks;
-    string currentGameTime;
+        sbyte gameSpeed = 0;
+        long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
+        long lastStateChangeTime = DateTime.Now.Ticks;
+        string currentGameTime;
     [JSInvokable]
     public void initGame(System.Text.Json.JsonElement input)
     {
@@ -81,6 +81,12 @@
         return position;
     }
     string[] tools = new string[] { "Zones", "Plants", "Buildings", "Camera" };
+    Tuple<string, string>[] tools2 = new Tuple<string, string>[] {
+        new Tuple<string, string>("Zones",      "▧" ),
+        new Tuple<string, string>("Plants",     "🌲"),
+        new Tuple<string, string>("Buildings",  "🏠"),
+        new Tuple<string, string>("Camera",     "📷"),
+        new Tuple<string, string>("Terrain",    "🗻") };
     void activateMenu(string tool)
     {
         showMenu = tool;
@@ -97,13 +103,18 @@
     public string showMenu;
 }
 <canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:100%;height:100%"></canvas>
-<div class="w3-bar w3-light-grey w3-border">
-    <a href="#" class="w3-bar-item w3-button w3-green">▧</a>
-    <a href="#" class="w3-bar-item w3-button"><i class="fa fa-search"></i></a>
-    <a href="#" class="w3-bar-item w3-button"><i class="fa fa-envelope"></i></a>
-    <a href="#" class="w3-bar-item w3-button"><i class="fa fa-globe"></i></a>
-    <a href="#" class="w3-bar-item w3-button"><i class="fa fa-sign-in"></i></a>
-</div>
+<fieldset class="w3-bar w3-light-grey w3-border" style="position:absolute;top:65px">
+    @foreach (var tool in tools2)
+    {
+    <div class="w3-dropdown-click">
+        <button class="w3-bar-item w3-button" @onclick="@(e => { activateMenu(tool.Item1); })">@tool.Item2</button>
+        @if (showMenu == tool.Item1)
+        {
+            <span>daa</span>
+        }
+    </div>
+    }
+    </fieldset>
 
 <fieldset style="position:absolute;top:15px;background-color:white">
     @foreach (var tool in tools)
