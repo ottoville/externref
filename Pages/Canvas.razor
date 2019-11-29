@@ -101,6 +101,7 @@
         }
     }
     public string showMenu;
+    public Plants plants = new Plants();
 }
 <canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:100%;height:100%"></canvas>
 <fieldset class="w3-bar w3-light-grey w3-border" style="position:absolute;top:65px">
@@ -108,10 +109,7 @@
     {
     <div class="w3-dropdown-click">
         <button class="w3-bar-item w3-button" @onclick="@(e => { activateMenu(tool.Item1); })">@tool.Item2</button>
-        @if (showMenu == tool.Item1)
-        {
-            <span>daa</span>
-        }
+        <Zones tool=@tool></Zones>
     </div>
     }
     </fieldset>
