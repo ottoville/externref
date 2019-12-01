@@ -1,20 +1,14 @@
-﻿<fieldset style="background-color:white">
-    <legend style="background-color:white">Draw zone</legend>
-    <label>
-        Residental
-        <input type="checkbox" name="planning" value="residental" />
-    </label><br>
-    <label>
-        Industry
-        <input type="checkbox" name="planning" value="industry" />
-    </label><br>
-    <label>
-        Commerce
-        <input type="checkbox" name="planning" value="commerce" />
-    </label>
-</fieldset>
-@code {
-    [Parameter]
-    public RenderFragment ChildContent { get; set; }
-
-}
+﻿
+<legend style="background-color:white">Draw zone</legend>
+<label>
+    Residental
+    <input class="w3-bar-item w3-button" type="checkbox" name="planning" value="residental" />
+</label><br>
+<label>
+    Industry
+    <input class="w3-bar-item w3-button" type="checkbox" name="planning" value="industry" />
+</label><br>
+<label>
+    Commerce
+    <input class="w3-bar-item w3-button" type="checkbox" name="planning" value="commerce" />
+</label>

@@ -2,10 +2,8 @@
 @code {
     Boolean debugCameraActivated = false;
 }
-<fieldset>
-    <button @onclick="@(() => {
+    <button class="w3-bar-item w3-button" @onclick="@(() => {
                             debugCameraActivated = !debugCameraActivated;
                             JSRuntime.InvokeAsync<bool>("scene.tools.CameraTAB.activateDebugCamera",debugCameraActivated);
                         })">Debug camera</button>
-</fieldset>
 

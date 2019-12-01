@@ -1,8 +1,6 @@
 ﻿@inject IJSRuntime JSRuntime;
 
-<fieldset style="background-color:white">
-    <legend style="background-color:white">
-        Buildings
-    </legend>
-    <button @onclick="@(e => { JSRuntime.InvokeAsync<string>("scene.tools.Buildings.create","house"); })">Create house</button>
-</fieldset>
+<legend style="background-color:white">
+    Buildings
+</legend>
+<button class="w3-bar-item w3-button" @onclick="@(e => { JSRuntime.InvokeAsync<string>("scene.tools.Buildings.create","house"); })">Create house</button>

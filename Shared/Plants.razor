@@ -1,11 +1,9 @@
 ﻿@inject IJSRuntime JSRuntime;
 
-<fieldset style="background-color:white">
-    <legend style="background-color:white">
-        Terrain
-    </legend>
-    <button @onclick="@(e => { JSRuntime.InvokeAsync<string>("scene.tools.Plants.activateDraw"); })">Create poaceae</button>
-</fieldset>
+<legend style="background-color:white">
+    Terrain
+</legend>
+<button class="w3-bar-item w3-button" @onclick="@(e => { JSRuntime.InvokeAsync<string>("scene.tools.Plants.activateDraw"); })">Create poaceae</button>
 
 @code {
 

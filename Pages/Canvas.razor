@@ -103,41 +103,36 @@
     public string showMenu;
 }
 <canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:100%;height:100%"></canvas>
-<fieldset class="w3-bar w3-light-grey w3-border" style="position:absolute;top:65px">
+<fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;">
     @foreach (var tool in tools2)
     {
     <div class="w3-dropdown-click">
-        <button class="w3-bar-item w3-button" @onclick="@(e => { activateMenu(tool.Item1); })">@tool.Item2</button>
-        @if (showMenu == tool.Item1)
-        {
-            <span>daa</span>
-        }
+        <button class="w3-bar-item w3-button" @onclick="@(e => { activateMenu(tool.Item1); })" style="float:none">@tool.Item2</button>
+        <fieldset class="w3-dropdown-content w3-card-4 w3-show">
+            @if (tool.Item1 == "Zones" && showMenu == "Zones")
+            {
+                <Zones></Zones>
+            }
+            @if (tool.Item1 == "Plants" && showMenu == "Plants")
+            {
+                <Plants></Plants>
+            }
+            @if (tool.Item1 == "Camera" && showMenu == "Camera")
+            {
+                <Camera></Camera>
+            }
+            @if (tool.Item1 == "Buildings" && showMenu == "Buildings")
+            {
+                <Buildings></Buildings>
+            }
+            @if (tool.Item1 == "Terrain" && showMenu == "Terrain")
+            {
+                <Terrain></Terrain>
+            }
+        </fieldset>
     </div>
     }
     </fieldset>
-
-<fieldset style="position:absolute;top:15px;background-color:white">
-    @foreach (var tool in tools)
-    {
-        <button @onclick="@(e => { activateMenu(tool); })">@tool</button>
-    }
-    @if (showMenu == "Zones")
-    {
-        <Zones></Zones>
-    }
-    @if (showMenu == "Plants")
-    {
-        <Plants></Plants>
-    }
-    @if (showMenu == "Camera")
-    {
-        <Camera></Camera>
-    }
-    @if (showMenu == "Buildings")
-    {
-        <Buildings></Buildings>
-    }
-</fieldset>
 <fieldset class="gameControl hidden" id="gameState" style="position:absolute;bottom:15px;right:15px;background-color:white">
     <label>Time of day: <output id="TODout" fow="TOD">@currentGameTime</output></label>
     <br />
