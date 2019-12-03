@@ -107,7 +107,7 @@
     @foreach (var tool in tools2)
     {
     <div class="w3-dropdown-click">
-        <button class="w3-bar-item w3-button" @onclick="@(e => { activateMenu(tool.Item1); })" style="float:none">@tool.Item2</button>
+        <button class="w3-bar-item w3-button @(showMenu==tool.Item1?"w3-green":"")" @onclick="@(e => { activateMenu(tool.Item1); })" style="float:none">@tool.Item2</button>
         <fieldset class="w3-dropdown-content w3-card-4 w3-show">
             @if (tool.Item1 == "Zones" && showMenu == "Zones")
             {
