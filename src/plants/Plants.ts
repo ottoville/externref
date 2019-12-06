@@ -206,15 +206,12 @@ export class Plants {
             gl.drawElementsInstanced(wireframe ? gl.LINES : gl.TRIANGLE_FAN, index.length, gl.UNSIGNED_SHORT, 0, me.bladesVisible);
             return this;
         }
-        let instances: BABYLON.InstancedMesh[] = [];
-        for (let i = 0; i < 1; ++i) {
-            let bi = new BABYLON.InstancedMesh("box" + i, Poaceae);
-            bi.position = BABYLON.Vector3.Zero();
-            bi.alwaysSelectAsActiveMesh = true;
-            bi.freezeWorldMatrix();
-            bi.doNotSyncBoundingInfo = true;
-            instances.push(bi);
-        }
+        let bi = new BABYLON.InstancedMesh("box0", Poaceae);
+        bi.position = BABYLON.Vector3.Zero();
+        bi.alwaysSelectAsActiveMesh = true;
+        bi.freezeWorldMatrix();
+        bi.doNotSyncBoundingInfo = true;
+
         let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
         Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));
 

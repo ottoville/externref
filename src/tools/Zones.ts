@@ -3,7 +3,6 @@ import { paintGround, DrawType } from "../paintGround.js";
 import { UITAB } from "../UITAB.js";
 export class Zones extends UITAB {
     public name: string = "zonestab"
-    public label: string = "Zones";
     public activated:boolean;
     private zonemateria: BABYLON.StandardMaterial;
     private ctx: CanvasRenderingContext2D;

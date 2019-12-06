@@ -20,7 +20,7 @@ export class paintGround {
     private type:DrawType;
     private ang360: Angle;
     private ang: Angle;
-    private forceSharedVertices=true;
+    private forceSharedVertices = true;
     constructor(
         public canvas: HTMLElement,
         private scene: BABYLON.Scene,
@@ -29,7 +29,6 @@ export class paintGround {
         private sea: BABYLON.Mesh,
         private zonedt:BABYLON.Texture,
     ) {
-        
     };
     public resolve: PTResultF;
     public activate(type:DrawType, options: {forceSharedVertices?:boolean}, callback:PTResultF) {

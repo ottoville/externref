@@ -6,6 +6,7 @@ import { Zones } from "../tools/zones.js";
 import { CameraTAB } from "../tools/camera.js";
 import { UITAB } from "../UITAB.js";
 import { BuildingsUI } from "../tools/buildings.js";
+import { Terrain } from "../tools/Terrain.js";
 
 //import { UI } from "../UI.js";
 
@@ -68,7 +69,8 @@ export class WorldScene extends BABYLON.Scene {
             gameTime: this.lastStateChangeGameTime
         });*/
 
-        this.tools['CameraTAB'] = new CameraTAB(this, engine.getRenderingCanvas() , DB);
+        this.tools['CameraTAB'] = new CameraTAB(this, engine.getRenderingCanvas(), DB);
+        
         //let ui = new UI();
         //ui.registerTab(CameraTab);
         var sunlight = new BABYLON.PointLight("Omni", this.SunObject.sunPosition, this);
@@ -156,7 +158,7 @@ export class WorldScene extends BABYLON.Scene {
 
             sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
-
+            this.tools['Terrain'] = new Terrain(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
             
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);

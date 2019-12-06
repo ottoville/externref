@@ -3,7 +3,6 @@
 export class BuildingsUI extends UITAB {
     activated: boolean;
     name: string;
-    label: string;
     activate: () => void;
     deactivate: () => void;
     constructor(

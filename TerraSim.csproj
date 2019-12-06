@@ -48,6 +48,7 @@
   <ItemGroup>
     <None Remove="src\engine.ts" />
     <None Remove="src\tools\buildings.ts" />
+    <None Remove="src\tools\Terrain.ts" />
     <None Remove="src\workers\commonMath.d.ts" />
   </ItemGroup>
 
