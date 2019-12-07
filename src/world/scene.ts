@@ -192,11 +192,48 @@ export class WorldScene extends BABYLON.Scene {
                     }, 'image/webp', 1);
                 } else
                     tres(vdata.texture);
-            }).then(b => {
-                let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) })
-                shadermateria.setTexture('textureSampler2', groundtexture);
-                ground.material = shadermateria;
-                this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
+            }).then((b: Blob) => {
+                let img = new Image();
+                img.onload = () => {
+                    let c = document.createElement('canvas');
+                    c.width = 10000;
+                    c.height = 10000;
+                    let context = c.getContext("2d")
+                    context.drawImage(img, 0, 0);
+                    console.log('imagedata', context.getImageData(0, 0, 10000, 10000));
+                    let imagedata = context.getImageData(0, 0, 10000, 10000);
+                    let rtexture = engine.createRawTexture(imagedata.data, 10000, 10000, BABYLON.Engine.TEXTUREFORMAT_RGBA, false, true, BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE, null, BABYLON.Constants.TEXTURETYPE_UNSIGNED_INT);
+
+                    //let groundtexture = new BABYLON.RawTexture(imagedata.data, 10000, 10000, BABYLON.Engine.TEXTUREFORMAT_RGBA, this);
+                    //@ts-ignore
+                    shadermateria.setTexture('groundTexture', {
+                        _texture: rtexture,
+                        getInternalTexture: () => rtexture,
+                        isReady: () => true,
+                        wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
+                        wrapV: BABYLON.Texture.CLAMP_ADDRESSMODE
+                    });
+                    ground.material = shadermateria;
+                    //this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
+                }
+                img.src = URL.createObjectURL(b);
+
+
+                //let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) });
+                //shadermateria.setTexture('groundTexture', groundtexture);
+                /*(function (name: string, texture: BABYLON.Texture) {
+                    if (this._options.samplers.indexOf(name) === -1) {
+                        this._options.samplers.push(name);
+                    }
+                    this._textures[name] = texture;
+
+                    return this;
+                }).bind(shadermateria)('groundTexture', <BABYLON.Texture>{
+                    isReady: () => true
+                });*/
+
+                
+                //this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
             })
             return ground
         });

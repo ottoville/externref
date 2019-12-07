@@ -152,11 +152,15 @@ export class Terrain extends UITAB {
             engine._drawCalls.addCount(1, false);
             gl.drawElementsInstanced(gl.TRIANGLE_FAN, indices.length, gl.UNSIGNED_SHORT, 0, 8);
             return this;
-        }
-        let slopeBuffer = new BABYLON.Buffer(engine, this.slopeArr, true, 2, false, false);
-        this.helper._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, slopeBuffer, "slope", true, true, 0, false, 0, 2, undefined, undefined, true));
-        gl.bindBuffer(gl.ARRAY_BUFFER, slopeBuffer.getBuffer().underlyingResource);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.slopeArr);
+        };
+        /*(function (name: string, texture: BABYLON.Texture) {
+            if (this._options.samplers.indexOf(name) === -1) {
+                this._options.samplers.push(name);
+            }
+            this._textures[name] = texture;
+
+            return this;
+        }).bind(this.helper.material)('groundTexture', groundtexture);*/
 
 
     }

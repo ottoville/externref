@@ -207,46 +207,28 @@ export class Plants {
             gl.drawElementsInstanced(wireframe ? gl.LINES : gl.TRIANGLE_FAN, index.length, gl.UNSIGNED_SHORT, 0, me.bladesVisible);
             return this;
         }
-
-        var offsetbuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, offsetbuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, 1024, gl.STATIC_DRAW);
-        gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
        // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
 
         let vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.offset), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.offset), gl.DYNAMIC_DRAW);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
         //@ts-ignore
         Poaceae._geometry._vertexBuffers['worldPos'] = {
-            _kind: 'worldPos',
             type: BABYLON.VertexBuffer.FLOAT,
-            _size: 4,
             byteStride: 0,
             byteOffset: 0,
             normalized: false,
-            _instanced: true,
-            _instanceDivisor: 1,
             //@ts-ignore
-            getBuffer: () => {
-                return {
-                    underlyingResource: vbo
-                }
-            },
-            getSize: function () {
-                return this._size;
-            },
-            getIsInstanced: function () {
-                return this._instanced;
-            },
-            getInstanceDivisor:function () {
-                return this._instanceDivisor;
-            }
+            getBuffer: () => { return { underlyingResource: vbo } },
+            getSize: () => 4,
+            getIsInstanced:  () => true,
+            getInstanceDivisor: () => 1
 
         };
+
+
         //Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));
 
         let shapebuffer = new BABYLON.Buffer(engine, new Float32Array(shapes), true, 4, false, true);

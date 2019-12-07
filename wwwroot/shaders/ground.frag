@@ -8,8 +8,7 @@ in vec3 vNormal;
 in vec2 vUV;
 out vec4 outputColor;
 
-uniform sampler2D textureSampler2;
-uniform sampler2D heightMap;
+uniform sampler2D groundTexture;
 uniform mat4 world;
 uniform vec3 lightPos;
 uniform vec3 cameraPosition;
@@ -25,7 +24,7 @@ void main(void) {
     
 
     //light //ambient
-    vec3 color = texture(textureSampler2, vUV).rgb *0.8;
+    vec3 color = texture(groundTexture, vUV).rgb *0.8;
     //vec3 color = vec3(0.5,0.5,0.5);
 
 
@@ -40,6 +39,6 @@ void main(void) {
     float mmax=max(dot(viewDirectionW, reflectDir), 0.0);
     float spec = pow(mmax, 32.0) * specularStrength;
 
-    outputColor=  vec4(color * (diffuse + vec3(spec)), 1.);//texture(textureSampler2, vUV);
+    outputColor=  vec4(color * (diffuse + vec3(spec)), 1.);//texture(groundTexture, vUV);
 
 }
