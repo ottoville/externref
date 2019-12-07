@@ -116,7 +116,8 @@ export class Plants {
         //this.mat.backFaceCulling = false;
         vertexData.applyToMesh(Poaceae, true);
         Poaceae.material = this.mat;
-        Poaceae.isVisible = false;
+        Poaceae.alwaysSelectAsActiveMesh = true;
+
         let engine = scene.getEngine()
 
         let gl: WebGLRenderingContext = engine._gl
@@ -206,14 +207,47 @@ export class Plants {
             gl.drawElementsInstanced(wireframe ? gl.LINES : gl.TRIANGLE_FAN, index.length, gl.UNSIGNED_SHORT, 0, me.bladesVisible);
             return this;
         }
-        let bi = new BABYLON.InstancedMesh("box0", Poaceae);
-        bi.position = BABYLON.Vector3.Zero();
-        bi.alwaysSelectAsActiveMesh = true;
-        bi.freezeWorldMatrix();
-        bi.doNotSyncBoundingInfo = true;
 
-        let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
-        Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));
+        var offsetbuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, offsetbuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, 1024, gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+       // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
+
+        let vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.offset), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+        //@ts-ignore
+        Poaceae._geometry._vertexBuffers['worldPos'] = {
+            _kind: 'worldPos',
+            type: BABYLON.VertexBuffer.FLOAT,
+            _size: 4,
+            byteStride: 0,
+            byteOffset: 0,
+            normalized: false,
+            _instanced: true,
+            _instanceDivisor: 1,
+            //@ts-ignore
+            getBuffer: () => {
+                return {
+                    underlyingResource: vbo
+                }
+            },
+            getSize: function () {
+                return this._size;
+            },
+            getIsInstanced: function () {
+                return this._instanced;
+            },
+            getInstanceDivisor:function () {
+                return this._instanceDivisor;
+            }
+
+        };
+        //Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));
 
         let shapebuffer = new BABYLON.Buffer(engine, new Float32Array(shapes), true, 4, false, true);
         Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, shapebuffer, "shape", true, true, 0, true, 0, 4, undefined, undefined, true));
@@ -228,7 +262,7 @@ export class Plants {
                 let blade = new Float32Array(this.offset, i << 4, 4);
                 blade[3] = this.terrain.getHeightAtCoordinates(blade[0], blade[1]) // y
             }
-            gl.bindBuffer(gl.ARRAY_BUFFER, offsetbufferPlain.getBuffer().underlyingResource);
+            gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));
             gl.bindBuffer(gl.ARRAY_BUFFER, shapebuffer.getBuffer().underlyingResource);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(shapes));
