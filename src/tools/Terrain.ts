@@ -132,7 +132,7 @@ export class Terrain extends UITAB {
         let gl: WebGLRenderingContext = this.scene.getEngine()._gl;
         let helpermaterial = new BABYLON.ShaderMaterial("shader", this.scene, "./shaders/helper",
             {
-                attributes: ["position", "normal", "uv", "slope"],
+                attributes: ["position", "normal", "uv"],
                 uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
             });
         let timed = new Date().getTime();
@@ -140,6 +140,45 @@ export class Terrain extends UITAB {
             helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
         });
         helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
+
+    /*******/
+        let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
+            _engine: engine,
+            _source: 3,
+            _webGLTexture: gl.createTexture()
+        }
+
+        //@ts-ignore
+        engine._bindTextureDirectly(gl.TEXTURE_2D, rtexture2, true);
+        engine._unpackFlipY(true);
+
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG, 250, 250, 0, gl.RG, gl.UNSIGNED_BYTE, this.slopeArr);
+
+        var filters = engine._getSamplingParameters(BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE, false);
+
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filters.mag);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filters.min);
+
+
+        engine._bindTextureDirectly(gl.TEXTURE_2D, null);
+
+
+        (function () {
+            this._options.samplers.push('groundTexture');
+            //@ts-ignore
+            this._textures['groundTexture'] = <BABYLON.Texture>{
+                getInternalTexture: () => rtexture2, //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
+                isReady: () => true,
+                wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
+                wrapV: BABYLON.Texture.CLAMP_ADDRESSMODE
+            };
+            return this;
+        }).bind(helpermaterial)();
+
+
+    /********/
+
+
         this.helper.material = helpermaterial;
         this.helper._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
