@@ -159,7 +159,21 @@ export class WorldScene extends BABYLON.Scene {
             sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.tools['Terrain'] = new Terrain(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
-            
+            let gl: WebGLRenderingContext = engine._gl;
+            /*ground._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {
+                if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
+                    return this;
+                }
+                if (this._internalMeshDataInfo._onBeforeDrawObservable) {
+                    this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
+                }
+                engine.applyStates();
+                engine._drawCalls.addCount(1, false);
+                gl.drawElements(gl.TRIANGLE_FAN, vertexData.indices.length, gl.UNSIGNED_SHORT, 0);
+                return this;
+            };*/
+
+
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
             new Promise((tres, trej) => {
@@ -195,46 +209,58 @@ export class WorldScene extends BABYLON.Scene {
             }).then((b: Blob) => {
                 let img = new Image();
                 img.onload = () => {
-                    let c = document.createElement('canvas');
-                    c.width = 10000;
-                    c.height = 10000;
-                    let context = c.getContext("2d")
-                    context.drawImage(img, 0, 0);
-                    console.log('imagedata', context.getImageData(0, 0, 10000, 10000));
-                    let imagedata = context.getImageData(0, 0, 10000, 10000);
-                    let rtexture = engine.createRawTexture(imagedata.data, 10000, 10000, BABYLON.Engine.TEXTUREFORMAT_RGBA, false, true, BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE, null, BABYLON.Constants.TEXTURETYPE_UNSIGNED_INT);
+                    let width = 10000;
+                    let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
+                        _engine:engine,
+                        _source:3,
+                        _webGLTexture: gl.createTexture()
+                    }
 
-                    //let groundtexture = new BABYLON.RawTexture(imagedata.data, 10000, 10000, BABYLON.Engine.TEXTUREFORMAT_RGBA, this);
+                    //engine.updateRawTexture(rtexture2, imagedata.data, BABYLON.Engine.TEXTUREFORMAT_RGBA, true, null, BABYLON.Constants.TEXTURETYPE_UNSIGNED_INT);
                     //@ts-ignore
-                    shadermateria.setTexture('groundTexture', {
-                        _texture: rtexture,
-                        getInternalTexture: () => rtexture,
-                        isReady: () => true,
-                        wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
-                        wrapV: BABYLON.Texture.CLAMP_ADDRESSMODE
-                    });
+                    engine._bindTextureDirectly(gl.TEXTURE_2D, rtexture2, true);
+                    //gl.bindTexture(gl.TEXTURE_2D, ntexture);
+                    engine._unpackFlipY(true);
+                    if (width % 4 !== 0) {
+                        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+                    }
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, img);
+
+                    var filters = engine._getSamplingParameters(BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE, false);
+
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filters.mag);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filters.min);
+
+
+                    engine._bindTextureDirectly(gl.TEXTURE_2D, null);
+                    //gl.bindTexture(gl.TEXTURE_2D, null);
+                 //   engine._internalTexturesCache.push(rtexture2);
+
+
+                    (function () {
+                        this._options.samplers.push('groundTexture');
+                        //@ts-ignore
+                        this._textures['groundTexture'] = <BABYLON.Texture>{
+                            getInternalTexture: () => rtexture2, //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
+                            isReady: () => true,
+                            wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
+                            wrapV: BABYLON.Texture.CLAMP_ADDRESSMODE
+                        };
+                        return this;
+                    }).bind(shadermateria)();
                     ground.material = shadermateria;
-                    //this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
+                    this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
                 }
                 img.src = URL.createObjectURL(b);
 
 
                 //let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) });
                 //shadermateria.setTexture('groundTexture', groundtexture);
-                /*(function (name: string, texture: BABYLON.Texture) {
-                    if (this._options.samplers.indexOf(name) === -1) {
-                        this._options.samplers.push(name);
-                    }
-                    this._textures[name] = texture;
+               
 
-                    return this;
-                }).bind(shadermateria)('groundTexture', <BABYLON.Texture>{
-                    isReady: () => true
-                });*/
-
-                
                 //this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
-            })
+            });
+
             return ground
         });
         this.terrainReady.catch((e) => {

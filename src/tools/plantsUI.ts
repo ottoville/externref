@@ -18,11 +18,10 @@ export class PlantsUI extends UITAB {
         private scene: BABYLON.Scene,
         private camera: BABYLON.ArcRotateCamera,
         private sea: BABYLON.Mesh,
-        private zonedt: BABYLON.Texture,
         private plantsobj:Plants,
     ) {
         super();
-        this.PT = new paintGround(this.canvas, this.scene, this.camera, this.ground, this.sea, this.zonedt);
+        this.PT = new paintGround(this.canvas, this.scene, this.camera, this.ground, this.sea);
 
     }
     activateDraw = () => {

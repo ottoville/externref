@@ -27,7 +27,7 @@ export class paintGround {
         private camera: BABYLON.ArcRotateCamera,
         private ground: BABYLON.GroundMesh,
         private sea: BABYLON.Mesh,
-        private zonedt:BABYLON.Texture,
+        private zonedt?:BABYLON.Texture,
     ) {
     };
     public resolve: PTResultF;
