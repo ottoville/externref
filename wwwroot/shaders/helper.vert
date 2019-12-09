@@ -7,12 +7,13 @@ in vec3 position;
 
 uniform mat4 worldViewProjection;
 uniform float time;
-uniform sampler2D heightmap;
+uniform highp isampler2D heightmap;
 
 const float PI = 3.1415926535897932384626433832795;
 const float angleStep= (PI*2.0)/8.0;
 
 void main(void) {
+
 
     float angle=time+float(gl_InstanceID)*angleStep;
 	float c = cos(angle);
@@ -24,7 +25,8 @@ void main(void) {
 
     float posx=10.0*c;
     float posz=10.0*s;
-    float posy=texture2D(heightmap,posx,posz).r;
+    ivec4 tvec=texture(heightmap,vec2(1.0,1.0));
+    int posy = tvec.x;
 
     vec3 newpos = vec3(localposX+posx,posy,localposZ+posz);
     gl_Position = worldViewProjection * vec4(newpos, 1.0);

@@ -8,7 +8,6 @@ export class Terrain extends UITAB {
     private facet2Arr = new Float32Array(250 * 250 * 4);
 
     private mousemove = new LazyEval((evt: MouseEvent) => {
-        console.log(evt);
         this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.ground.getWorldMatrix(), this.ray, this.camera);
         let point = this.ground.intersects(this.ray);
         this.helper.position.x = point.pickedPoint.x;
@@ -151,22 +150,21 @@ export class Terrain extends UITAB {
         //@ts-ignore
         engine._bindTextureDirectly(gl.TEXTURE_2D, rtexture2, true);
         engine._unpackFlipY(true);
+        this.slopeArr[0] = 5;
+        console.log('slopearr', this.slopeArr);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG16I, 250, 250, 0, gl.RG_INTEGER, gl.SHORT, this.slopeArr);
 
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG, 250, 250, 0, gl.RG, gl.UNSIGNED_BYTE, this.slopeArr);
-
-        var filters = engine._getSamplingParameters(BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE, false);
-
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filters.mag);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filters.min);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
 
         engine._bindTextureDirectly(gl.TEXTURE_2D, null);
 
 
         (function () {
-            this._options.samplers.push('groundTexture');
+            this._options.samplers.push('heightmap');
             //@ts-ignore
-            this._textures['groundTexture'] = <BABYLON.Texture>{
+            this._textures['heightmap'] = <BABYLON.Texture>{
                 getInternalTexture: () => rtexture2, //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
                 isReady: () => true,
                 wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
@@ -208,7 +206,7 @@ export class Terrain extends UITAB {
 
     };
     mouseListener = (evt: MouseEvent): void => {
-        this.mousemove.eval(50,evt);
+        this.mousemove.eval(25,evt);
     }
     raise = (): void => {
 

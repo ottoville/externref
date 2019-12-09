@@ -226,11 +226,8 @@ export class WorldScene extends BABYLON.Scene {
                     }
                     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
-                    var filters = engine._getSamplingParameters(BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE, false);
-
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filters.mag);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filters.min);
-
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
                     engine._bindTextureDirectly(gl.TEXTURE_2D, null);
                     //gl.bindTexture(gl.TEXTURE_2D, null);
