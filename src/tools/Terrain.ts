@@ -1,9 +1,18 @@
-﻿import { UITAB } from "../UITAB.js";
+﻿type nonFilterables = 'R8I' | 'R8UI' | 'R16I' | 'R16UI' | 'R32I, gl.R32UI' | 'RG8I' | 'RG8UI' | 'RG16I' | 'RG16UI' | 'RG32I' | 'RG32UI' | 'RGB8I' | '.RGB8UI' | 'RGB16I' | 'RGB16UI' | 'RGB32I' | 'RGB32UI' | 'RGBA8I' | 'RGBA8UI' | 'RGBA16I' | 'RGBA16UI' | 'RGBA32I' | 'RGBA32UI';
+
+     
+interface notFilterrableTexture extends WebGL2RenderingContext {
+    texParameterf(target: GLenum, pname: GLenum, param: GLfloat | GLint): void;
+}
+declare function MakeTexture(gl: WebGLRenderingContext | WebGL2RenderingContext, target: GLenum, level: GLint, internalformat: nonFilterables, width: GLsizei, height: GLsizei, format: GLenum, type: GLenum, pixels: ArrayBufferView): WebGL2RenderingContext
+
+
+import { UITAB } from "../UITAB.js";
 import { LazyEval } from "../LazyEval.js";
 export class Terrain extends UITAB {
     private helper: BABYLON.Mesh;
     private ray = BABYLON.Ray.Zero();
-    private slopeArr = new Uint16Array(250 * 250 * 2);
+    private slopeArr = new Int16Array(250 * 250 * 2);
     private facet1Arr = new Float32Array(250 * 250 * 4);
     private facet2Arr = new Float32Array(250 * 250 * 4);
 
@@ -141,19 +150,30 @@ export class Terrain extends UITAB {
         });
         helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
 
+
+     /*   function makeTexture(gl: WebGL2RenderingContext, target: GLenum, level: GLint, internalformat: GLint, width: GLsizei, height: GLsizei, format: GLenum, type: GLenum, pixels: ArrayBufferView) {
+            gl.texImage2D(target, level, internalformat, width, height, 0, format, type, pixels);
+            if ([gl.R8I, gl.R8UI, gl.R16I, gl.R16UI, gl.R32I, gl.R32UI, gl.RG8I, gl.RG8UI, gl.RG16I, gl.RG16UI, gl.RG32I, gl.RG32UI, gl.RGB8I, gl.RGB8UI, gl.RGB16I, gl.RGB16UI, gl.RGB32I, gl.RGB32UI, gl.RGBA8I, gl.RGBA8UI, gl.RGBA16I, gl.RGBA16UI, gl.RGBA32I, gl.RGBA32UI].contains(internalformat)) {
+
+            }
+            return gl;
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        }*/
+
     /*******/
         let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
             _engine: engine,
             _source: 3,
             _webGLTexture: gl.createTexture()
         }
-
         //@ts-ignore
         engine._bindTextureDirectly(gl.TEXTURE_2D, rtexture2, true);
         engine._unpackFlipY(true);
         console.log('slopearr', this.slopeArr);
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG16UI, 250, 250, 0, gl.RG_INTEGER, gl.UNSIGNED_SHORT, this.slopeArr);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG16I, 250, 250, 0, gl.RG_INTEGER, gl.SHORT, this.slopeArr);
+        MakeTexture(gl, gl.TEXTURE_2D, 0,'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.slopeArr);
 
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
