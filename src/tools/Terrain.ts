@@ -3,7 +3,7 @@ import { LazyEval } from "../LazyEval.js";
 export class Terrain extends UITAB {
     private helper: BABYLON.Mesh;
     private ray = BABYLON.Ray.Zero();
-    private slopeArr = new Int16Array(250 * 250 * 2);
+    private slopeArr = new Uint16Array(250 * 250 * 2);
     private facet1Arr = new Float32Array(250 * 250 * 4);
     private facet2Arr = new Float32Array(250 * 250 * 4);
 
@@ -101,7 +101,8 @@ export class Terrain extends UITAB {
                 quad.facet1.copyFromFloats(norm1.x, norm1.y, norm1.z, d1);
                 quad.facet2.copyFromFloats(norm2.x, norm2.y, norm2.z, d2);
 
-                this.slopeArr.set([cd, h], (row * subdivisionsX + col)*2);
+                this.slopeArr.set([50,50], (row * subdivisionsX + col)*2);
+                //this.slopeArr.set([cd, h], (row * subdivisionsX + col)*2);
                 this.facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * subdivisionsX + col)*4)
                 this.facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * subdivisionsX + col)*4)
             }
@@ -150,12 +151,15 @@ export class Terrain extends UITAB {
         //@ts-ignore
         engine._bindTextureDirectly(gl.TEXTURE_2D, rtexture2, true);
         engine._unpackFlipY(true);
-        this.slopeArr[0] = 5;
         console.log('slopearr', this.slopeArr);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG16I, 250, 250, 0, gl.RG_INTEGER, gl.SHORT, this.slopeArr);
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG16UI, 250, 250, 0, gl.RG_INTEGER, gl.UNSIGNED_SHORT, this.slopeArr);
 
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
 
 
         engine._bindTextureDirectly(gl.TEXTURE_2D, null);
