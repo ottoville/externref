@@ -26,7 +26,7 @@ interface ITextureNonFilterable {
 }
 const texImage2D: ITextureStatic = class {
     constructor(public gl: WebGLRenderingContext | WebGL2RenderingContext, target: GLenum, level: GLint, internalformat: string, width: GLsizei, height: GLsizei, format: GLenum, type: GLenum, pixels: ArrayBufferView) {
-        gl.texImage2D(gl.TEXTURE_2D, level, gl[internalformat], width, height, 0, gl.RG_INTEGER, gl.SHORT, pixels);
+        gl.texImage2D(target, level, gl[internalformat], width, height, 0, format, type, pixels);
     }
     texParameterf(target: GLenum, pname: string, param: string | number) {
         this.gl.texParameteri(target, this.gl[pname], this.gl[param]);
