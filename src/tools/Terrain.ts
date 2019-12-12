@@ -24,7 +24,7 @@ interface ITextureNonFilterable {
     texParameterf(target: GLenum, pname: 'TEXTURE_BASE_LEVEL' | 'TEXTURE_MAX_LEVEL' | 'TEXTURE_MAX_LOD' | 'TEXTURE_MIN_LOD', param: number): void;
 
 }
-const Texture: ITextureStatic = class {
+const texImage2D: ITextureStatic = class {
     constructor(public gl: WebGLRenderingContext | WebGL2RenderingContext, target: GLenum, level: GLint, internalformat: string, width: GLsizei, height: GLsizei, format: GLenum, type: GLenum, pixels: ArrayBufferView) {
         gl.texImage2D(gl.TEXTURE_2D, level, gl[internalformat], width, height, 0, gl.RG_INTEGER, gl.SHORT, pixels);
     }
@@ -188,33 +188,29 @@ export class Terrain extends UITAB {
         }*/
 
     /*******/
-        let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
-            _engine: engine,
-            _source: 3,
-            _webGLTexture: gl.createTexture()
-        }
-        //@ts-ignore
-        engine._bindTextureDirectly(gl.TEXTURE_2D, rtexture2, true);
+
+        let glTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, glTexture);
+       
         engine._unpackFlipY(true);
         console.log('slopearr', this.slopeArr);
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-        //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG16I, 250, 250, 0, gl.RG_INTEGER, gl.SHORT, this.slopeArr);
-        let tex = new Texture(gl, gl.TEXTURE_2D, 0, 'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.slopeArr);
+        let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.slopeArr);
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_WRAP_S", "CLAMP_TO_EDGE");
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_WRAP_T", "CLAMP_TO_EDGE");
 
-
-
-        engine._bindTextureDirectly(gl.TEXTURE_2D, null);
-
+        gl.bindTexture(gl.TEXTURE_2D, null);
 
         (function () {
             this._options.samplers.push('heightmap');
             //@ts-ignore
             this._textures['heightmap'] = <BABYLON.Texture>{
-                getInternalTexture: () => rtexture2, //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
+                getInternalTexture: () => ({ //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
+                    _source: 3,
+                    _webGLTexture: glTexture
+                }), //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
                 isReady: () => true,
                 wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
                 wrapV: BABYLON.Texture.CLAMP_ADDRESSMODE
