@@ -136,8 +136,7 @@ export class Terrain extends UITAB {
                 quad.facet1.copyFromFloats(norm1.x, norm1.y, norm1.z, d1);
                 quad.facet2.copyFromFloats(norm2.x, norm2.y, norm2.z, d2);
 
-                this.slopeArr.set([50,50], (row * subdivisionsX + col)*2);
-                //this.slopeArr.set([cd, h], (row * subdivisionsX + col)*2);
+                this.slopeArr.set([cd, h], (row * subdivisionsX + col)*2);
                 this.facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * subdivisionsX + col)*4)
                 this.facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * subdivisionsX + col)*4)
             }
@@ -187,26 +186,21 @@ export class Terrain extends UITAB {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         }*/
 
-    /*******/
 
+    /*******/
         let glTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, glTexture);
-       
-        engine._unpackFlipY(true);
-        console.log('slopearr', this.slopeArr);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
         let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.slopeArr);
+        let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 1, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.facet1Arr);
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
-        tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_WRAP_S", "CLAMP_TO_EDGE");
-        tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_WRAP_T", "CLAMP_TO_EDGE");
-
         gl.bindTexture(gl.TEXTURE_2D, null);
-
         (function () {
-            this._options.samplers.push('heightmap');
+            this._options.samplers.push('slopeArr');
             //@ts-ignore
-            this._textures['heightmap'] = <BABYLON.Texture>{
+            this._textures['slopeArr'] = <BABYLON.Texture>{
                 getInternalTexture: () => ({ //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
                     _source: 3,
                     _webGLTexture: glTexture
@@ -217,10 +211,7 @@ export class Terrain extends UITAB {
             };
             return this;
         }).bind(helpermaterial)();
-
-
     /********/
-
 
         this.helper.material = helpermaterial;
         this.helper._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {
