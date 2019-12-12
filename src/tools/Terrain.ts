@@ -130,12 +130,12 @@ export class Terrain extends UITAB {
                 norm2.normalize();
                 d1 = -(norm1.x * v1.x + norm1.y * v1.y + norm1.z * v1.z);
                 d2 = -(norm2.x * v2.x + norm2.y * v2.y + norm2.z * v2.z);
-                
+                /*
                 let quad = heightQuads[row * subdivisionsX + col];
                 quad.slope.copyFromFloats(cd, h);
                 quad.facet1.copyFromFloats(norm1.x, norm1.y, norm1.z, d1);
                 quad.facet2.copyFromFloats(norm2.x, norm2.y, norm2.z, d2);
-
+                */
                 this.slopeArr.set([cd, h], (row * subdivisionsX + col)*2);
                 this.facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * subdivisionsX + col)*4)
                 this.facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * subdivisionsX + col)*4)
@@ -176,42 +176,62 @@ export class Terrain extends UITAB {
         helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
 
 
-     /*   function makeTexture(gl: WebGL2RenderingContext, target: GLenum, level: GLint, internalformat: GLint, width: GLsizei, height: GLsizei, format: GLenum, type: GLenum, pixels: ArrayBufferView) {
-            gl.texImage2D(target, level, internalformat, width, height, 0, format, type, pixels);
-            if ([gl.R8I, gl.R8UI, gl.R16I, gl.R16UI, gl.R32I, gl.R32UI, gl.RG8I, gl.RG8UI, gl.RG16I, gl.RG16UI, gl.RG32I, gl.RG32UI, gl.RGB8I, gl.RGB8UI, gl.RGB16I, gl.RGB16UI, gl.RGB32I, gl.RGB32UI, gl.RGBA8I, gl.RGBA8UI, gl.RGBA16I, gl.RGBA16UI, gl.RGBA32I, gl.RGBA32UI].contains(internalformat)) {
-
-            }
-            return gl;
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        }*/
-
-
     /*******/
         let glTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, glTexture);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
         let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.slopeArr);
-        let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 1, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.facet1Arr);
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
         gl.bindTexture(gl.TEXTURE_2D, null);
+
+    /********/
+        let glTexture2 = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, glTexture2);
+       
+        let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.facet1Arr);
+        tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
+        tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+    /********/
+        this.facet2Arr[0] = 30;
+        let glTexture3 = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, glTexture3);
+
+        let tex3 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.facet2Arr);
+        tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
+        tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+        gl.bindTexture(gl.TEXTURE_2D, null);
         (function () {
-            this._options.samplers.push('slopeArr');
-            //@ts-ignore
-            this._textures['slopeArr'] = <BABYLON.Texture>{
-                getInternalTexture: () => ({ //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
-                    _source: 3,
-                    _webGLTexture: glTexture
-                }), //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
-                isReady: () => true,
-                wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
-                wrapV: BABYLON.Texture.CLAMP_ADDRESSMODE
-            };
+            this._options.samplers.push('slopeArr', 'facet1Arr','facet2Arr');
+            this._textures = {
+                slopeArr: {
+                    getInternalTexture: () => ({ //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
+                        _source: 3,
+                        _webGLTexture: glTexture
+                    }),
+                    isReady: () => true
+                },
+                facet1Arr: {
+                    getInternalTexture: () => ({ 
+                        _source: 3,
+                        _webGLTexture: glTexture2
+                    }),
+                    isReady: () => true
+                },
+                facet2Arr: {
+                    getInternalTexture: () => ({ 
+                        _source: 3,
+                        _webGLTexture: glTexture3
+                    }), 
+                    isReady: () => true
+                }
+            }
             return this;
         }).bind(helpermaterial)();
-    /********/
+
 
         this.helper.material = helpermaterial;
         this.helper._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {
