@@ -46,7 +46,7 @@ export class Terrain extends UITAB {
         this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.ground.getWorldMatrix(), this.ray, this.camera);
         let point = this.ground.intersects(this.ray);
         this.helper.position.x = point.pickedPoint.x;
-        this.helper.position.y = point.pickedPoint.y + 3;
+        this.helper.position.y = 0;
         this.helper.position.z = point.pickedPoint.z;
     })
     constructor(
@@ -169,12 +169,23 @@ export class Terrain extends UITAB {
                 attributes: ["position", "normal", "uv"],
                 uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
             });
+        (function () {
+            this._options.uniforms.push("time");
+        }).bind(helpermaterial)
+
         let timed = new Date().getTime();
         this.scene.registerBeforeRender(() => {
-            helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
+            (function() {
+                this._floats["time"] = (timed - new Date().getTime()) / 1000;
+            }).bind(helpermaterial)
+            //helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
         });
         helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
 
+        console.log('slopearr', this.slopeArr);
+        //this.slopeArr[1] = -70;
+      //  console.log('set index', (125 * 250 * 2 + 125 * 2) + 1)
+        //this.slopeArr[(100 * 250 * 2 + 150 * 2) + 1]=0;
 
     /*******/
         let glTexture = gl.createTexture();
@@ -231,6 +242,30 @@ export class Terrain extends UITAB {
             }
             return this;
         }).bind(helpermaterial)();
+
+        let tester = (function _getFacetAt(x: number, z: number): Vector4 {
+            console.log('this._maxX', this._maxX);
+            console.log('this._maxZ', this._maxZ);
+            console.log('this._subdivisionsX', this._subdivisionsX);
+            console.log('this._subdivisionsY', this._subdivisionsY);
+            console.log('this._width', this._width);
+            console.log('this._height', this._height);
+            // retrieve col and row from x, z coordinates in the ground local system
+            var col = Math.floor((x + this._maxX) * this._subdivisionsX / this._width);
+            var row = Math.floor(-(z + this._maxZ) * this._subdivisionsY / this._height + this._subdivisionsY);
+            console.log('accesing index ', row, col)
+            var quad = this._heightQuads[row * this._subdivisionsX + col];
+            var facet;
+            console.log('quad slope', quad.slope)
+            if (z < quad.slope.x * x + quad.slope.y) {
+                facet = quad.facet1;
+            } else {
+                facet = quad.facet2;
+            }
+            return facet;
+        }).bind(this.ground)(1000, 1000);
+        console.log('tester', tester);
+
 
 
         this.helper.material = helpermaterial;
