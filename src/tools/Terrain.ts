@@ -32,7 +32,7 @@ const texImage2D: ITextureStatic = class {
         this.gl.texParameteri(target, this.gl[pname], this.gl[param]);
     }
 }
-//  tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_WRAP_S", "CLAMP_TO_EDGE");
+
 import { UITAB } from "../UITAB.js";
 import { LazyEval } from "../LazyEval.js";
 export class Terrain extends UITAB {
@@ -46,7 +46,7 @@ export class Terrain extends UITAB {
         this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.ground.getWorldMatrix(), this.ray, this.camera);
         let point = this.ground.intersects(this.ray);
         this.helper.position.x = point.pickedPoint.x;
-        this.helper.position.y = 0;
+        this.helper.position.y = point.pickedPoint.y;
         this.helper.position.z = point.pickedPoint.z;
     })
     constructor(
@@ -169,16 +169,16 @@ export class Terrain extends UITAB {
                 attributes: ["position", "normal", "uv"],
                 uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
             });
-        (function () {
+        /*(function () {
             this._options.uniforms.push("time");
-        }).bind(helpermaterial)
+        }).bind(helpermaterial)*/
 
         let timed = new Date().getTime();
         this.scene.registerBeforeRender(() => {
-            (function() {
+            /*(function() {
                 this._floats["time"] = (timed - new Date().getTime()) / 1000;
-            }).bind(helpermaterial)
-            //helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
+            }).bind(helpermaterial)*/
+            helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
         });
         helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
 
@@ -281,16 +281,6 @@ export class Terrain extends UITAB {
             gl.drawElementsInstanced(gl.TRIANGLE_FAN, indices.length, gl.UNSIGNED_SHORT, 0, 8);
             return this;
         };
-        /*(function (name: string, texture: BABYLON.Texture) {
-            if (this._options.samplers.indexOf(name) === -1) {
-                this._options.samplers.push(name);
-            }
-            this._textures[name] = texture;
-
-            return this;
-        }).bind(this.helper.material)('groundTexture', groundtexture);*/
-
-
     }
     deactivate = (): void => {
         this.scene.getEngine().getRenderingCanvas().removeEventListener("mousemove", this.mouseListener);

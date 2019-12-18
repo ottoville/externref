@@ -6,41 +6,47 @@ let end_position: Vector3
 import { updateSubTexture } from "./triginometry.js";
 //import { rotateMatrix, translate } from "./math.js";
 
-
+let subTextureCache: subTexture;
+let clickListenerAdded = false;
+let planeorgpos: BABYLON.Vector3;
 let width: number;
 let height: number;
 let rotation: number;
 
 export enum DrawType {
-    plane=1,
-    texture=2,
-    line=3
+    plane = 1,
+    texture = 2,
+    line = 3
 };
 export class paintGround {
-    private type:DrawType;
+    private type: DrawType;
     private ang360: Angle;
     private ang: Angle;
     private forceSharedVertices = true;
+    private updateSubTextureLocal: any;
     constructor(
         public canvas: HTMLElement,
         private scene: BABYLON.Scene,
         private camera: BABYLON.ArcRotateCamera,
         private ground: BABYLON.GroundMesh,
         private sea: BABYLON.Mesh,
-        private zonedt?:BABYLON.Texture,
+        private zonedt?: BABYLON.Texture,
     ) {
     };
     public resolve: PTResultF;
-    public activate(type:DrawType, options: {forceSharedVertices?:boolean}, callback:PTResultF) {
-        this.type=type;
-        if(type==DrawType.plane) {
-            if(typeof(options.forceSharedVertices)!=='undefined')
-                this.forceSharedVertices=options.forceSharedVertices;
+    public activate(type: DrawType, options: { forceSharedVertices?: boolean }, callback: PTResultF) {
+        this.type = type;
+        if (type == DrawType.plane) {
+            if (typeof (options.forceSharedVertices) !== 'undefined')
+                this.forceSharedVertices = options.forceSharedVertices;
         }
+        if (type == DrawType.texture)
+            this.updateSubTextureLocal = updateSubTexture.bind(this.scene.getEngine());
+
         tempplane = null;
         console.log('add pointer down to ', this.canvas)
         this.canvas.addEventListener("pointerdown", this.mainPointerDown, false);
-        this.resolve=callback;
+        this.resolve = callback;
     }
     public deactivate() {
         this.canvas.removeEventListener("pointerdown", this.mainPointerDown, false);
@@ -48,9 +54,9 @@ export class paintGround {
             tempplane.dispose();
         }
     }
-   
+
     private drawArea = evt => {
-        let engine = this.zonedt.getScene().getEngine();
+        let engine = this.scene.getEngine();
         engine.resize();
 
         let ray = BABYLON.Ray.Zero();
@@ -74,17 +80,97 @@ export class paintGround {
         this.ang = new Angle(Math.abs(rotation));
         this.ang360 = this.ang[360](startingPoint, end_position);
 
-        if (this.type==DrawType.plane) {
+        if (this.type == DrawType.plane) {
             //meshCenter = end_position.subtract(global_position).divide(new BABYLON.Vector3(2, 2, 2));
-           // tempplane.position = global_position.add(meshCenter)
+            // tempplane.position = global_position.add(meshCenter)
 
 
             //tempplane.rotation.y = this.ang360.rad;
             //tempplane.scaling.x = height;
         }
     }
+    private pmove2 = (evt) => {
+        let currentpickInfo2 = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) => (mesh === this.ground), undefined, this.camera);
+        //Distance from first point
+        let distance = Math.sqrt(Math.pow(startingPoint.x - currentpickInfo2.pickedPoint.x, 2) + Math.pow(startingPoint.z - currentpickInfo2.pickedPoint.z, 2));
+        if (Number.isNaN(distance)) {
+            throw ("distance is not a number");
+        }
+        let ang2 = new Angle(Math.acos(Math.abs(currentpickInfo2.pickedPoint.x - startingPoint.x) / distance))
+
+        let mouseside = -1;
+
+        let dotang = this.ang360.distance(ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).rad);
+        let dotprod = height * distance * Math.cos(dotang.rad);
+
+        let fulldotprod = height * height;
+        let shadow = height * (dotprod / fulldotprod);
+        width = Math.abs(Math.sqrt(Math.pow(Math.abs(distance), 2) - Math.pow(shadow, 2)));
+        if (ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg > this.ang[360](startingPoint, end_position).deg) {
+            if (ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg - this.ang[360](startingPoint, end_position).deg > 180)
+                mouseside = 1
+        }
+        else if (ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg < this.ang[360](startingPoint, end_position).deg) {
+            if (this.ang[360](startingPoint, end_position).deg - ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg < 180)
+                mouseside = 1
+        }
+        if (mouseside < 0) {
+            width = Math.abs(width) * -1
+        }
+
+        let brad = Math.PI / 2 - this.ang.rad;
+        let halfw = width / 2;
+        let addX = Math.cos(brad) * halfw
+        let addZ = Math.sin(brad) * halfw;
+
+        if (this.ang360.deg < 180)
+            addX = addX * -1
+        if (this.ang360.deg > 270 || this.ang360.deg < 90)
+            addZ = addZ * -1
+        if (this.type == DrawType.plane) {
+            if (this.forceSharedVertices)
+                tempplane.forceSharedVertices();
+            tempplane.scaling.z = width;
+            tempplane.position.x = planeorgpos.x + addX;
+            tempplane.position.z = planeorgpos.z + addZ;
+
+
+            let positions = tempplane.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+            if (positions == null) {
+                throw ('getVerticesData returned null');
+            }
+            var numberOfVertices = positions.length / 3;
+            var rotmax = rotateMatrix(this.ang360.rad, "y");
+            for (var i = 0; i < numberOfVertices; i++) {
+                let posX = (positions[i * 3]) * tempplane.scaling.x
+                let posZ = (positions[i * 3 + 2]) * tempplane.scaling.z
+                let translated = translate(posX, 0, posZ, rotmax);
+                positions[i * 3 + 1] = this.ground.getHeightAtCoordinates(tempplane.position.x + translated.x, tempplane.position.z + translated.z)
+            }
+            tempplane.updateVerticesData(BABYLON.VertexBuffer.PositionKind, positions);
+
+        }
+        if (this.type == DrawType.texture) {
+            subTextureCache = this.updateSubTextureLocal(this.zonedt, width * -1, height * -1, startingPoint, this.ang360, subTextureCache);
+        }
+        let me = this;
+        if (!clickListenerAdded) {
+            clickListenerAdded = true;
+            evt.target.addEventListener('click', async function pup2() {
+                //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
+
+                evt.target.removeEventListener('pointermove', me.pmove2, false);
+                // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
+                //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
+                evt.target.removeEventListener('click', pup2);
+                evt.target.addEventListener('pointerdown', me.mainPointerDown, false);
+                me.resolve({ coord: startingPoint, ang: me.ang360, size: { h: height, w: width } }, tempplane);
+            });
+        }
+
+    }
     private mainPointerDown = (evt: PointerEvent) => {
-        let planeorgpos: BABYLON.Vector3;
+        
         if (evt.button !== 0) {
             console.log('evt.button !== 0');
             return;
@@ -119,21 +205,21 @@ export class paintGround {
             global_position.y = 50;
 
 
-            if (this.type==DrawType.plane) {
-        
+            if (this.type == DrawType.plane) {
+
                 tempplane = BABYLON.MeshBuilder.CreateTiledGround("tgd2", { xmin: -0.5, xmax: 0.5, zmin: -0.5, zmax: 0.5, subdivisions: { w: 10, h: 10 }, precision: { w: 0, h: 0 }, updatable: true }, this.scene);
 
-                tempplane.scaling.z=10;
-                tempplane.scaling.x=10;
+                tempplane.scaling.z = 10;
+                tempplane.scaling.x = 10;
                 tempplane.rotation.y = Math.PI / 2;
-               
+
                 tempplane.position.x = global_position.x - 0.5
 
                 tempplane.position.z = global_position.z - 1
 
                 tempplane.material = new BABYLON.StandardMaterial("planeMat2", this.scene);
-                tempplane.material.wireframe=true;
-                if(this.forceSharedVertices) {
+                tempplane.material.wireframe = true;
+                if (this.forceSharedVertices) {
                     let uvdata = tempplane.getVerticesData(BABYLON.VertexBuffer.UVKind);
                     for (let uv = 0; uv < uvdata.length; uv++) {
                         uvdata[uv] = 0;
@@ -147,115 +233,32 @@ export class paintGround {
             let me = this;
 
             this.canvas.addEventListener("pointerup", function pup(evt) {
-                console.log('pointerup');
-                this.removeEventListener('pointermove', me.drawArea, false);
-                // let currentpickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) { return mesh === ground; });
-               // let ang = new Angle(Math.abs(rotation));
-               // let ang360 = ang[360](startingPoint, end_position);
-                if (me.type == DrawType.plane) {
-                    let meshCenter: Vector3 = end_position.subtract(new Vector3(global_position.x, global_position.y, global_position.z)).divide(new Vector3(2, 2, 2));
-                    tempplane.position = <BABYLON.Vector3><unknown>global_position.add(new BABYLON.Vector3(meshCenter.x, meshCenter.y, meshCenter.z))
-                    tempplane.position.y = 0.2;
-                   tempplane.scaling.x = height;
-                   tempplane.rotation.y = me.ang360.rad;
-   
-                    planeorgpos = tempplane.position.clone();
+                try {
+                    this.removeEventListener('pointermove', me.drawArea, false);
+                    if (me.type == DrawType.plane) {
+                        let meshCenter: Vector3 = end_position.subtract(new Vector3(global_position.x, global_position.y, global_position.z)).divide(new Vector3(2, 2, 2));
+                        tempplane.position = <BABYLON.Vector3><unknown>global_position.add(new BABYLON.Vector3(meshCenter.x, meshCenter.y, meshCenter.z))
+                        tempplane.position.y = 0.2;
+                        tempplane.scaling.x = height;
+                        tempplane.rotation.y = me.ang360.rad;
+                        planeorgpos = tempplane.position.clone();
+                    }
+
+                    clickListenerAdded = false;
+                    subTextureCache = null;
+                    this.addEventListener('pointermove', me.pmove2, false);
+                    end_position.y = 1;
+                    if (me.type == DrawType.line) {
+                        var lines = BABYLON.MeshBuilder.CreateLines("lines", { points: [<BABYLON.Vector3><unknown>global_position, <BABYLON.Vector3><unknown>end_position] }, me.scene);
+                    }
+                    me.camera.attachControl(this, true);
+                    
+
+                } catch (e) {
+                    console.log(e);
+                } finally {
+                    this.removeEventListener('pointerup', pup);
                 }
-
-                let clickListenerAdded = false;
-                let subTexture: subTexture;
-                if(me.type==DrawType.texture) {
-                    var updateSubTextureLocal = updateSubTexture.bind(me.zonedt.getScene().getEngine());
-                }
-                this.addEventListener('pointermove', function pmove2() {
-                    let currentpickInfo2 = me.scene.pick(me.scene.pointerX, me.scene.pointerY, function (mesh) { return mesh === me.ground; },undefined,me.camera);
-                    //Distance from first point
-                    let distance = Math.sqrt(Math.pow(startingPoint.x - currentpickInfo2.pickedPoint.x, 2) + Math.pow(startingPoint.z - currentpickInfo2.pickedPoint.z, 2));
-                    if (Number.isNaN(distance)) {
-                        throw ("distance is not a number");
-                    }
-                    //Distance from second point
-                    //let distance2 = Math.sqrt(Math.pow(end_position.x - currentpickInfo2.pickedPoint.x, 2) + Math.pow(end_position.z - currentpickInfo2.pickedPoint.z, 2));
-
-                    let ang2 = new Angle(Math.acos(Math.abs(currentpickInfo2.pickedPoint.x - startingPoint.x) / distance))
-
-                    let mouseside = -1;
-
-                    let dotang = me.ang360.distance(ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).rad);
-                    let dotprod = height * distance * Math.cos(dotang.rad);
-
-                    let fulldotprod = height * height;
-                    let shadow = height * (dotprod / fulldotprod);
-                   // console.log('distance ', distance, 'shadow', shadow);
-                    width = Math.abs(Math.sqrt(Math.pow(Math.abs(distance), 2) - Math.pow(shadow, 2)));
-                    if (ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg > me.ang[360](startingPoint, end_position).deg) {
-                        if (ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg - me.ang[360](startingPoint, end_position).deg > 180)
-                            mouseside = 1
-                    }
-                    else if (ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg < me.ang[360](startingPoint, end_position).deg) {
-                        if (me.ang[360](startingPoint, end_position).deg - ang2[360](startingPoint, <Vector3><unknown>currentpickInfo2.pickedPoint).deg < 180)
-                            mouseside = 1
-                    }
-                    if (mouseside < 0) {
-                        width = Math.abs(width) * -1
-                    }
-
-                    let brad = Math.PI / 2 - me.ang.rad;
-                    let halfw = width / 2;
-                    let addX = Math.cos(brad) * halfw
-                    let addZ = Math.sin(brad) * halfw;
-
-                    if (me.ang360.deg < 180)
-                        addX = addX * -1
-                    if (me.ang360.deg > 270 || me.ang360.deg < 90)
-                        addZ = addZ * -1
-                    if (me.type==DrawType.plane) {
-                        if(me.forceSharedVertices)
-                            tempplane.forceSharedVertices();
-                        tempplane.scaling.z = width;
-                        tempplane.position.x = planeorgpos.x + addX;
-                        tempplane.position.z = planeorgpos.z + addZ;
-                        
-                        
-                        let positions = tempplane.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-                        if (positions == null) {
-                            throw ('getVerticesData returned null');
-                        }
-                        var numberOfVertices = positions.length / 3;
-                        var rotmax=rotateMatrix(me.ang360.rad,"y");
-                        for (var i = 0; i < numberOfVertices; i++) {
-                            let posX = (positions[i * 3]) * tempplane.scaling.x
-                            let posZ = (positions[i * 3 + 2]) * tempplane.scaling.z
-                            let translated=translate(posX,0,posZ,rotmax);
-                            positions[i * 3 + 1] = me.ground.getHeightAtCoordinates(tempplane.position.x + translated.x, tempplane.position.z + translated.z)
-                        }
-                        tempplane.updateVerticesData(BABYLON.VertexBuffer.PositionKind, positions);
-
-                    }
-                    if (me.type==DrawType.texture) {
-                        subTexture = updateSubTextureLocal(me.zonedt, width * -1, height * -1, startingPoint, me.ang360, subTexture);
-                    }
-                    if (!clickListenerAdded) {
-                        clickListenerAdded = true;
-                        this.addEventListener('click', async function pup2() {
-                            //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
-
-                            this.removeEventListener('pointermove', pmove2, false);
-                            // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
-                            //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
-                            this.removeEventListener('click', pup2);
-                            this.addEventListener('pointerdown', me.mainPointerDown, false);
-                            me.resolve({ coord: startingPoint, ang: me.ang360, size: { h: height, w: width } },tempplane);
-                        });
-                    }
-
-                }, false);
-                end_position.y = 1;
-                if (me.type==DrawType.line) {
-                    var lines = BABYLON.MeshBuilder.CreateLines("lines", { points: [<BABYLON.Vector3><unknown>global_position, <BABYLON.Vector3><unknown>end_position] }, me.scene);
-                }
-                me.camera.attachControl(this, true);
-                this.removeEventListener('pointerup', pup);
             });
         }
     };

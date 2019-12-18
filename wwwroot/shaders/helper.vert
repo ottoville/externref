@@ -113,7 +113,7 @@ void main(void) {
     //float posy=  float(texelFetch(slopeArr, ivec2(150,100), 0).y)*0.1;
     //int posy = tvec.x;
 
-    vec3 newpos = vec3(localposX+posx,position.y+posy,localposZ+posz);
+    vec3 newpos = vec3(localposX+posx,50.0,localposZ+posz);
     gl_Position = worldViewProjection * vec4(newpos, 1.0);
 
 }
