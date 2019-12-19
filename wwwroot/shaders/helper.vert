@@ -8,7 +8,7 @@ in vec3 position;
 uniform mat4 world;
 uniform mat4 worldViewProjection;
 uniform float time;
-uniform vec2 flatpos;
+
 
 uniform highp isampler2D slopeArr;
 uniform sampler2D facet1Arr;
@@ -29,14 +29,6 @@ float subdivisionsY = 250.0;
 float width = 10000.0;
 float height = 10000.0;
 
-//   vec3 TransformCoordinates(float x, float y, float z, mat4 m) {
-//        float rx = x * m[0][0] + y * m[1][0] + z * m[2][0] + m[3][0];
-//        float ry = x * m[0][1] + y * m[1][1] + z * m[2][1] + m[3][1];
-//        float rz = x * m[0][2] + y * m[1][2] + z * m[2][2] + m[3][2];
-//        float rw = 1.0 / (x * m[0][3] + y * m[1][3] + z * m[2][3] + m[3][3]);
-
-//        return vec3(rx * rw,ry * rw, rz * rw);
-//    }
 vec4 getFacetAt( float x, float z) {
     // retrieve col and row from x, z coordinates in the ground local system
     
@@ -53,14 +45,10 @@ vec4 getFacetAt( float x, float z) {
     }
     return facet;
 }
-float getHeightAtCoordinates2(float x, float z) {
-
-        float newx = x;
-        float newz = z;
-        vec4 facet = getFacetAt(newx, newz);
-        float y = -(facet.x * newx + facet.z * newz + facet.w) / facet.y;
+float getHeightAtCoordinates2(vec2 xz) {
+        vec4 facet = getFacetAt(xz.x, xz.y);
+        float y = -(facet.x * xz.x + facet.z * xz.y + facet.w) / facet.y;
         return y;
-
     }
 //float getHeightAtCoordinates(float x, float z) {
 //    mat4 invMat = inverse(world);
@@ -94,7 +82,9 @@ void main(void) {
     float posz=10.0*s;
     float offsetX=localposX+posx;
     float offsetZ=localposZ+posz;
-    float posy=getHeightAtCoordinates2(flatpos.x+offsetX,flatpos.y+offsetZ);
+
+    vec4 worldpos=world*vec4(offsetX,0,offsetZ,1.0);
+    float posy=getHeightAtCoordinates2(vec2(worldpos.x,worldpos.z));
 
     vec3 newpos = vec3(offsetX,posy+2.0,offsetZ);
     gl_Position = worldViewProjection * vec4(newpos, 1.0);

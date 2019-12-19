@@ -41,7 +41,11 @@ export class Terrain extends UITAB {
     private slopeArr = new Int16Array(250 * 250 * 2);
     private facet1Arr = new Float32Array(250 * 250 * 4);
     private facet2Arr = new Float32Array(250 * 250 * 4);
-
+    private helpermaterial = new BABYLON.ShaderMaterial("shader", this.scene, "./shaders/helper",
+        {
+            attributes: ["position", "normal", "uv"],
+            uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
+        });
     private mousemove = new LazyEval((evt: MouseEvent) => {
         this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.ground.getWorldMatrix(), this.ray, this.camera);
         let point = this.ground.intersects(this.ray);
@@ -50,9 +54,6 @@ export class Terrain extends UITAB {
             this.helper.position.y = 0;
             this.helper.position.z = point.pickedPoint.z;
         }
-
-        //console.log(point.pickedPoint.x);
-        //console.log(this.ground.getHeightAtCoordinates(point.pickedPoint.x, point.pickedPoint.z));
     })
     constructor(
         private scene: BABYLON.Scene,
@@ -169,38 +170,13 @@ export class Terrain extends UITAB {
         vertexData.applyToMesh(this.helper);
 
         let gl: WebGLRenderingContext = this.scene.getEngine()._gl;
-        let helpermaterial = new BABYLON.ShaderMaterial("shader", this.scene, "./shaders/helper",
-            {
-                attributes: ["position", "normal", "uv"],
-                uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
-            });
-        /*(function () {
-            this._options.uniforms.push("time");
-        }).bind(helpermaterial)*/
+
 
         let timed = new Date().getTime();
         this.scene.registerBeforeRender(() => {
-            /*(function() {
-                this._floats["time"] = (timed - new Date().getTime()) / 1000;
-            }).bind(helpermaterial)*/
-            helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
-            console.log(this.helper.position.x, this.helper.position.z);
-            helpermaterial.setVector2("flatpos", new BABYLON.Vector2(this.helper.position.x, this.helper.position.z));
-
-            var world = this.ground.getWorldMatrix();
-            var invMat = new BABYLON.Matrix;
-            world.invertToRef(invMat);
-            var tmpVect = new BABYLON.Vector3
-            BABYLON.Vector3.TransformCoordinatesFromFloatsToRef(this.helper.position.x, 0.0, this.helper.position.z, invMat, tmpVect); // transform x,z in the mesh local space
-
-            console.log(tmpVect)
+            this.helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
         });
-        helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
-
-        console.log('slopearr', this.slopeArr);
-        //this.slopeArr[1] = -70;
-      //  console.log('set index', (125 * 250 * 2 + 125 * 2) + 1)
-        //this.slopeArr[(100 * 250 * 2 + 150 * 2) + 1]=0;
+        this.helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
 
     /*******/
         let glTexture = gl.createTexture();
@@ -256,9 +232,9 @@ export class Terrain extends UITAB {
                 }
             }
             return this;
-        }).bind(helpermaterial)();
+        }).bind(this.helpermaterial)();
 
-        this.helper.material = helpermaterial;
+        this.helper.material = this.helpermaterial;
         this.helper._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
                 return this;
