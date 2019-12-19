@@ -45,9 +45,14 @@ export class Terrain extends UITAB {
     private mousemove = new LazyEval((evt: MouseEvent) => {
         this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.ground.getWorldMatrix(), this.ray, this.camera);
         let point = this.ground.intersects(this.ray);
-        this.helper.position.x = point.pickedPoint.x;
-        this.helper.position.y = point.pickedPoint.y;
-        this.helper.position.z = point.pickedPoint.z;
+        if (point.pickedPoint) {
+            this.helper.position.x = point.pickedPoint.x;
+            this.helper.position.y = 0;
+            this.helper.position.z = point.pickedPoint.z;
+        }
+
+        //console.log(point.pickedPoint.x);
+        //console.log(this.ground.getHeightAtCoordinates(point.pickedPoint.x, point.pickedPoint.z));
     })
     constructor(
         private scene: BABYLON.Scene,
@@ -179,6 +184,16 @@ export class Terrain extends UITAB {
                 this._floats["time"] = (timed - new Date().getTime()) / 1000;
             }).bind(helpermaterial)*/
             helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
+            console.log(this.helper.position.x, this.helper.position.z);
+            helpermaterial.setVector2("flatpos", new BABYLON.Vector2(this.helper.position.x, this.helper.position.z));
+
+            var world = this.ground.getWorldMatrix();
+            var invMat = new BABYLON.Matrix;
+            world.invertToRef(invMat);
+            var tmpVect = new BABYLON.Vector3
+            BABYLON.Vector3.TransformCoordinatesFromFloatsToRef(this.helper.position.x, 0.0, this.helper.position.z, invMat, tmpVect); // transform x,z in the mesh local space
+
+            console.log(tmpVect)
         });
         helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
 
@@ -242,31 +257,6 @@ export class Terrain extends UITAB {
             }
             return this;
         }).bind(helpermaterial)();
-
-        let tester = (function _getFacetAt(x: number, z: number): Vector4 {
-            console.log('this._maxX', this._maxX);
-            console.log('this._maxZ', this._maxZ);
-            console.log('this._subdivisionsX', this._subdivisionsX);
-            console.log('this._subdivisionsY', this._subdivisionsY);
-            console.log('this._width', this._width);
-            console.log('this._height', this._height);
-            // retrieve col and row from x, z coordinates in the ground local system
-            var col = Math.floor((x + this._maxX) * this._subdivisionsX / this._width);
-            var row = Math.floor(-(z + this._maxZ) * this._subdivisionsY / this._height + this._subdivisionsY);
-            console.log('accesing index ', row, col)
-            var quad = this._heightQuads[row * this._subdivisionsX + col];
-            var facet;
-            console.log('quad slope', quad.slope)
-            if (z < quad.slope.x * x + quad.slope.y) {
-                facet = quad.facet1;
-            } else {
-                facet = quad.facet2;
-            }
-            return facet;
-        }).bind(this.ground)(1000, 1000);
-        console.log('tester', tester);
-
-
 
         this.helper.material = helpermaterial;
         this.helper._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {

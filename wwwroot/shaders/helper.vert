@@ -8,6 +8,7 @@ in vec3 position;
 uniform mat4 world;
 uniform mat4 worldViewProjection;
 uniform float time;
+uniform vec2 flatpos;
 
 uniform highp isampler2D slopeArr;
 uniform sampler2D facet1Arr;
@@ -28,70 +29,59 @@ float subdivisionsY = 250.0;
 float width = 10000.0;
 float height = 10000.0;
 
-   vec3 TransformCoordinates(float x, float y, float z, mat4 m) {
-        float rx = x * m[0][0] + y * m[1][0] + z * m[2][0] + m[3][0];
-        float ry = x * m[0][1] + y * m[1][1] + z * m[2][1] + m[3][1];
-        float rz = x * m[0][2] + y * m[1][2] + z * m[2][2] + m[3][2];
-        float rw = 1.0 / (x * m[0][3] + y * m[1][3] + z * m[2][3] + m[3][3]);
+//   vec3 TransformCoordinates(float x, float y, float z, mat4 m) {
+//        float rx = x * m[0][0] + y * m[1][0] + z * m[2][0] + m[3][0];
+//        float ry = x * m[0][1] + y * m[1][1] + z * m[2][1] + m[3][1];
+//        float rz = x * m[0][2] + y * m[1][2] + z * m[2][2] + m[3][2];
+//        float rw = 1.0 / (x * m[0][3] + y * m[1][3] + z * m[2][3] + m[3][3]);
 
-        return vec3(rx * rw,ry * rw, rz * rw);
-       /* result.x = rx * rw;
-        result.y = ry * rw;
-        result.z = rz * rw;*/
-    }
+//        return vec3(rx * rw,ry * rw, rz * rw);
+//    }
 vec4 getFacetAt( float x, float z) {
     // retrieve col and row from x, z coordinates in the ground local system
-    //var col = Math.floor((x + this._maxX) * this._subdivisionsX / this._width);
     
     float col = floor((x+maxX) * subdivisionsX / width);
     float row= floor(-(z+maxZ)*subdivisionsY / height + subdivisionsY);
-    //var row = Math.floor(-(z + this._maxZ) * this._subdivisionsY / this._height + this._subdivisionsY);
 
     ivec4 slope =  texelFetch(slopeArr, ivec2(col,row), 0);
 
-    //var quad = this._heightQuads[row * this._subdivisionsX + col];
-    //var facet;
     vec4 facet;
     if(z < float(slope.x) * x + float(slope.y)) {
         facet = texelFetch(facet1Arr, ivec2(col,row), 0);
     } else {
         facet = texelFetch(facet2Arr, ivec2( col,row), 0);
     }
-   // if (z < quad.slope.x * x + quad.slope.y) {
-    //    facet = quad.facet1;
-   // } else {
-  //      facet = quad.facet2;
-  //  }
     return facet;
 }
-float getHeightAtCoordinates(float x, float z) {
-        mat4 invMat = inverse(world);
-        //var invMat = TmpVectors.Matrix[5];
-       // world.invertToRef(invMat);
-        //var tmpVect = TmpVectors.Vector3[8];
-        vec3 tmpVect=TransformCoordinates(x, 0.0, z, invMat); // transform x,z in the mesh local space
-        float newx = tmpVect.x;
-        float newz = tmpVect.z;
-        if (newx < minX || newx > maxX || newz < minZ || newz > maxZ) {
-            return 0.0;
-        }
+float getHeightAtCoordinates2(float x, float z) {
+
+        float newx = x;
+        float newz = z;
         vec4 facet = getFacetAt(newx, newz);
         float y = -(facet.x * newx + facet.z * newz + facet.w) / facet.y;
-        // return y in the World system
-        vec3 tmpVect2= TransformCoordinates(0.0, y, 0.0, world);
-       // Vector3.TransformCoordinatesFromFloatsToRef(0.0, y, 0.0, world, tmpVect);
-        return tmpVect2.y;
-    }
+        return y;
 
+    }
+//float getHeightAtCoordinates(float x, float z) {
+//    mat4 invMat = inverse(world);
+ //   vec3 tmpVect=TransformCoordinates(x, 0.0, z, invMat); // transform x,z in the mesh local space
+//    float newx = tmpVect.x;
+//    float newz = tmpVect.z;
+//    if (newx < minX || newx > maxX || newz < minZ || newz > maxZ) {
+//        return 0.0;
+//    }
+//    vec4 facet = getFacetAt(newx, newz);
+//    float y = -(facet.x * newx + facet.z * newz + facet.w) / facet.y;
+    // return y in the World system
+//    vec3 tmpVect2= TransformCoordinates(0.0, y, 0.0, world);
+//    return tmpVect2.y;
+//}
+    
 
 
 void main(void) {
     vec4 worldcoords=world * vec4(position,1.0);
     
-    //vec4 face = getFacetAt(1000.0, 1000.0);
-
-
-
     float angle=time+float(gl_InstanceID)*angleStep;
 	float c = cos(angle);
 	float s = sin(angle);
@@ -102,18 +92,11 @@ void main(void) {
 
     float posx=10.0*c;
     float posz=10.0*s;
+    float offsetX=localposX+posx;
+    float offsetZ=localposZ+posz;
+    float posy=getHeightAtCoordinates2(flatpos.x+offsetX,flatpos.y+offsetZ);
 
-	//vec4 ch = texelFetch(facet2Arr, ivec2(0, 0), 0);
-
-//	ivec4 ch = texelFetch(slopeArr, ivec2(0, 0), 1);
-
-    
-	//float posy = face.y*100.0;
-    float posy=getHeightAtCoordinates(worldcoords.x,worldcoords.z);
-    //float posy=  float(texelFetch(slopeArr, ivec2(150,100), 0).y)*0.1;
-    //int posy = tvec.x;
-
-    vec3 newpos = vec3(localposX+posx,50.0,localposZ+posz);
+    vec3 newpos = vec3(offsetX,posy+2.0,offsetZ);
     gl_Position = worldViewProjection * vec4(newpos, 1.0);
 
 }
