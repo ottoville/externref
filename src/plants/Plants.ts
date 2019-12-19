@@ -59,7 +59,7 @@ export class Plants {
     ) {
         let shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 4 * this.numBlades);
         let noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
-        console.log('send message to worker');
+
         this.ready = this.worker.message(WorkerReturn.Promise, 'init', {
             positions: this.offset,
             shape: shapes,
