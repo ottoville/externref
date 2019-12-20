@@ -6,7 +6,8 @@ import { Zones } from "../tools/zones.js";
 import { CameraTAB } from "../tools/camera.js";
 import { UITAB } from "../UITAB.js";
 import { BuildingsUI } from "../tools/buildings.js";
-import { Terrain } from "../tools/Terrain.js";
+import { TerrainTool } from "../tools/Terrain.js";
+import { Terrain } from "./terrain.js";
 
 //import { UI } from "../UI.js";
 
@@ -24,6 +25,7 @@ export class WorldScene extends BABYLON.Scene {
     public currentGameTime: number;
     public SunObject: Sun;
     public terrainReady: Promise<BABYLON.GroundMesh>;
+
     public stateChange(data) {
         console.log('state changed', data);
         if (this.webSocket) {
@@ -88,7 +90,6 @@ export class WorldScene extends BABYLON.Scene {
             uvs: Float32Array,
             texture: Blob
         }
-        const DT: boolean = true;
         let sea: BABYLON.Mesh;
         this.terrainReady = new Promise(async (ccres, ccrej) => {
             let db = (await DB);
@@ -136,7 +137,9 @@ export class WorldScene extends BABYLON.Scene {
                 }
             };
         }).then((vdata: TerrainMap) => {
-            console.log('creating ground', vdata);
+            let terrain=new Terrain(vdata, this);
+            let ground = terrain.ground;
+/*
             let ground = new BABYLON.GroundMesh('ground', this);
             ground._subdivisionsX = 250;
             ground._subdivisionsY = 250;
@@ -155,10 +158,12 @@ export class WorldScene extends BABYLON.Scene {
 
             vertexData.applyToMesh(ground, true);
             ground._setReady(true);
+            */
+
 
             sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
-            this.tools['Terrain'] = new Terrain(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
+            this.tools['TerrainTool'] = new TerrainTool(this, terrain, (<CameraTAB>this.tools['CameraTAB']).camera);
             let gl: WebGLRenderingContext = engine._gl;
             /*ground._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {
                 if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {

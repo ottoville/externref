@@ -1,6 +1,6 @@
 ﻿@inject IJSRuntime JSRuntime;
 
 <legend style="background-color:white">Terrain</legend>
-<button class="w3-bar-item w3-button" @onclick="@(e=> { JSRuntime.InvokeAsync<string>("scene.tools.Terrain.raise"); })">⇫</button>
-<button class="w3-bar-item w3-button" style="transform: rotate(-180deg);" @onclick="@(e=> { JSRuntime.InvokeAsync<string>("scene.tools.Terrain.lower"); })">⇫</button>
+<button class="w3-bar-item w3-button" @onclick="@(e=> { JSRuntime.InvokeAsync<string>("scene.tools.TerrainTool.raise"); })">⇫</button>
+<button class="w3-bar-item w3-button" style="transform: rotate(-180deg);" @onclick="@(e=> { JSRuntime.InvokeAsync<string>("scene.tools.TerrainTool.lower"); })">⇫</button>
 

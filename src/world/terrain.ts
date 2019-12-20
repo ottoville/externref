@@ -1,0 +1,101 @@
+﻿interface TerrainMap {
+    width: number,
+    height: number,
+    indices: Uint32Array,
+    normals: Float32Array,
+    positions: Float32Array,
+    uvs: Float32Array,
+    texture: Blob
+}
+export class Terrain {
+    public slopeArr = new Int16Array(250 * 250 * 2);
+    public facet1Arr = new Float32Array(250 * 250 * 4);
+    public facet2Arr = new Float32Array(250 * 250 * 4);
+    public ground: BABYLON.GroundMesh;
+    constructor(private vdata: TerrainMap, private scene: BABYLON.Scene) {
+        this.ground = new BABYLON.GroundMesh('ground', scene);
+        this.ground._subdivisionsX = 250;
+        this.ground._subdivisionsY = 250;
+        this.ground._width = vdata.width;
+        this.ground._height = vdata.height;
+        this.ground._maxX = this.ground._width / 2.0;
+        this.ground._maxZ = this.ground._height / 2.0;
+        this.ground._minX = -this.ground._maxX;
+        this.ground._minZ = -this.ground._maxZ;
+        var vertexData = new BABYLON.VertexData();
+
+        vertexData.indices = vdata.indices;
+        vertexData.positions = vdata.positions;
+        vertexData.normals = vdata.normals;
+        vertexData.uvs = vdata.uvs;
+
+        vertexData.applyToMesh(this.ground, true);
+        this.ground._setReady(true);
+
+
+
+        /**********************/
+
+        let v1 = new BABYLON.Vector3();
+        let v2 = new BABYLON.Vector3();
+        let v3 = new BABYLON.Vector3();
+        let v4 = new BABYLON.Vector3();
+        let v1v2 = new BABYLON.Vector3();
+        let v1v3 = new BABYLON.Vector3();
+        let v1v4 = new BABYLON.Vector3();
+        let norm1 = new BABYLON.Vector3();
+        let norm2 = new BABYLON.Vector3();
+        let i = 0;
+        let j = 0;
+        let k = 0;
+        let cd = 0;     // 2D slope coefficient : z = cd * x + h
+        let h = 0;
+        let d1 = 0;     // facet plane equation : ax + by + cz + d = 0
+        let d2 = 0;
+
+        for (var row = 0; row < this.ground._subdivisionsY; row++) {
+            for (var col = 0; col < this.ground._subdivisionsX; col++) {
+                i = col * 3;
+                j = row * (this.ground._subdivisionsX + 1) * 3;
+                k = (row + 1) * (this.ground._subdivisionsX + 1) * 3;
+                v1.x = vdata.positions[j + i];
+                v1.y = vdata.positions[j + i + 1];
+                v1.z = vdata.positions[j + i + 2];
+
+                v2.x = vdata.positions[j + i + 3];
+                v2.y = vdata.positions[j + i + 4];
+                v2.z = vdata.positions[j + i + 5];
+
+                v3.x = vdata.positions[k + i];
+                v3.y = vdata.positions[k + i + 1];
+                v3.z = vdata.positions[k + i + 2];
+
+                v4.x = vdata.positions[k + i + 3];
+                v4.y = vdata.positions[k + i + 4];
+                v4.z = vdata.positions[k + i + 5];
+
+                // 2D slope V1V4
+                cd = (v4.z - v1.z) / (v4.x - v1.x);
+                h = v1.z - cd * v1.x;             // v1 belongs to the slope
+
+                // facet equations :
+                // we compute each facet normal vector
+                // the equation of the facet plane is : norm.x * x + norm.y * y + norm.z * z + d = 0
+                // we compute the value d by applying the equation to v1 which belongs to the plane
+                // then we store the facet equation in a Vector4
+                v2.subtractToRef(v1, v1v2);
+                v3.subtractToRef(v1, v1v3);
+                v4.subtractToRef(v1, v1v4);
+                BABYLON.Vector3.CrossToRef(v1v4, v1v3, norm1);  // caution : CrossToRef uses the Tmp class
+                BABYLON.Vector3.CrossToRef(v1v2, v1v4, norm2);
+                norm1.normalize();
+                norm2.normalize();
+                d1 = -(norm1.x * v1.x + norm1.y * v1.y + norm1.z * v1.z);
+                d2 = -(norm2.x * v2.x + norm2.y * v2.y + norm2.z * v2.z);
+                this.slopeArr.set([cd, h], (row * this.ground._subdivisionsX + col) * 2);
+                this.facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * this.ground._subdivisionsX + col) * 4)
+                this.facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * this.ground._subdivisionsX + col) * 4)
+            }
+        }
+    }
+}

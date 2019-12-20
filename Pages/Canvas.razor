@@ -80,13 +80,12 @@
         translate(ref position, sunm);
         return position;
     }
-    string[] tools = new string[] { "Zones", "Plants", "Buildings", "Camera" };
-    Tuple<string, string>[] tools2 = new Tuple<string, string>[] {
-        new Tuple<string, string>("Zones",      "▧" ),
-        new Tuple<string, string>("Plants",     "🌲"),
-        new Tuple<string, string>("Buildings",  "🏠"),
-        new Tuple<string, string>("Camera",     "📷"),
-        new Tuple<string, string>("Terrain",    "🗻") };
+    Tuple<string, string, string>[] tools2 = new Tuple<string, string, string>[] {
+        new Tuple<string, string, string>("Zones",      "▧" , "Zones"),
+        new Tuple<string, string, string>("Plants",     "🌲", "Plants"),
+        new Tuple<string, string, string>("Buildings",  "🏠", "Buildings"),
+        new Tuple<string, string, string>("Camera",     "📷", "Camera"),
+        new Tuple<string, string, string>("Terrain",    "🗻", "TerrainTool") };
     public string showMenu;
     void activateMenu(string tool)
     {
@@ -99,11 +98,12 @@
             showMenu = tool;
             System.Console.WriteLine("activateMenu " + tool);
             JSRuntime.InvokeAsync<string>("scene.tools." + tool + ".activate");
-            foreach (string t in tools)
+
+            foreach (Tuple<string, string, string> t in tools2)
             {
-                if (t != tool)
+                if (t.Item3 != tool)
                 {
-                    JSRuntime.InvokeAsync<string>("scene.tools." + t + ".deactivate");
+                    JSRuntime.InvokeAsync<string>("scene.tools." + t.Item3 + ".deactivate");
                 }
             }
         }
@@ -116,7 +116,7 @@
     @foreach (var tool in tools2)
     {
     <div class="w3-dropdown-click">
-        <button class="w3-bar-item w3-button @(showMenu==tool.Item1?"w3-green":"")" @onclick="@(e => { activateMenu(tool.Item1); })" style="float:none">@tool.Item2</button>
+        <button class="w3-bar-item w3-button @(showMenu==tool.Item3?"w3-green":"")" @onclick="@(e => { activateMenu(tool.Item3); })" style="float:none">@tool.Item2</button>
         <fieldset class="w3-dropdown-content w3-card-4 w3-show">
             @if (tool.Item1 == "Zones" && showMenu == "Zones")
             {
