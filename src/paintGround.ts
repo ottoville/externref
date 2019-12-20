@@ -4,6 +4,7 @@ let global_position: BABYLON.Vector3
 let end_position: Vector3
 
 import { updateSubTexture } from "./triginometry.js";
+import { LazyEval } from "./LazyEval.js";
 //import { rotateMatrix, translate } from "./math.js";
 
 let subTextureCache: subTexture;
@@ -89,7 +90,7 @@ export class paintGround {
             //tempplane.scaling.x = height;
         }
     }
-    private pmove2 = (evt) => {
+    private pmove2 = (evt: MouseEvent) => {
         let currentpickInfo2 = this.scene.pick(this.scene.pointerX, this.scene.pointerY, (mesh) => (mesh === this.ground), undefined, this.camera);
         //Distance from first point
         let distance = Math.sqrt(Math.pow(startingPoint.x - currentpickInfo2.pickedPoint.x, 2) + Math.pow(startingPoint.z - currentpickInfo2.pickedPoint.z, 2));
@@ -160,6 +161,7 @@ export class paintGround {
                 //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
 
                 evt.target.removeEventListener('pointermove', me.pmove2, false);
+
                 // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
                 //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
                 evt.target.removeEventListener('click', pup2);
@@ -246,7 +248,13 @@ export class paintGround {
 
                     clickListenerAdded = false;
                     subTextureCache = null;
-                    this.addEventListener('pointermove', me.pmove2, false);
+                    //this.addEventListener('pointermove', me.pmove2, false);
+                    let mousemove = new LazyEval((evt: MouseEvent) => {
+                        me.pmove2(evt);
+                    });
+                    evt.target.addEventListener('pointermove', (evt) => {
+                        mousemove.eval(25, evt)
+                    }, false);
                     end_position.y = 1;
                     if (me.type == DrawType.line) {
                         var lines = BABYLON.MeshBuilder.CreateLines("lines", { points: [<BABYLON.Vector3><unknown>global_position, <BABYLON.Vector3><unknown>end_position] }, me.scene);

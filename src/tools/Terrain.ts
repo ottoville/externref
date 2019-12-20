@@ -38,61 +38,54 @@ import { LazyEval } from "../LazyEval.js";
 import { Terrain } from "../world/terrain.js";
 
 export class TerrainTool extends UITAB {
-    private helper: BABYLON.Mesh;
     private ray = BABYLON.Ray.Zero();
     private mousemove = new LazyEval((evt: MouseEvent) => {
-        this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.terrain.ground.getWorldMatrix(), this.ray, this.camera);
-        let point = this.terrain.ground.intersects(this.ray);
+        this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.terrain.getWorldMatrix(), this.ray, this.camera);
+        let point = this.terrain.intersects(this.ray);
         if (point.pickedPoint) {
             this.helper.position.x = point.pickedPoint.x;
             this.helper.position.y = 0;
             this.helper.position.z = point.pickedPoint.z;
         }
-    })
+    });
+    private vertexData = new BABYLON.VertexData();
+    private helper = new BABYLON.Mesh("Helper");
+    private helpermaterial: BABYLON.ShaderMaterial;
     constructor(
         private scene: BABYLON.Scene,
         private terrain: Terrain,
         private camera: BABYLON.ArcRotateCamera,
     ) {
         super();
+        this.vertexData.positions = new Float32Array([
+            -0.5, 0, -2,
+            0.5, 0, -3,
+            0.5, 0, 3,
+            -0.5, 0, 2,
+        ]);
+        this.vertexData.indices = new Uint16Array([0, 1, 2, 3]);
+        this.vertexData.applyToMesh(this.helper);
+        this.helpermaterial = new BABYLON.ShaderMaterial("shader", this.scene, "./shaders/helper",
+            {
+                attributes: ["position", "normal", "uv"],
+                uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
+            });
+        this.helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
     }
     activated: boolean;    name: string;
     activate = (): void => {
         let engine = this.scene.getEngine();
 
         engine.getRenderingCanvas().addEventListener("mousemove", this.mouseListener);
-        this.helper = new BABYLON.Mesh("Helper", this.scene);
-
-        let vertices = new Float32Array([
-            -0.5,0,-2,
-            0.5,0,-3,
-            0.5,0,3,
-            -0.5, 0, 2,
-        ]);
-        var indices = new Uint16Array([0,1,2,3])
-        var vertexData = new BABYLON.VertexData();
-        vertexData.positions = vertices;
-        vertexData.indices = indices;
-
-        vertexData.applyToMesh(this.helper);
-
+        
         let gl: WebGLRenderingContext = this.scene.getEngine()._gl;
 
-        let helpermaterial = new BABYLON.ShaderMaterial("shader", this.scene, "./shaders/helper",
-            {
-                attributes: ["position", "normal", "uv"],
-                uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
-            });
+        
         let timed = new Date().getTime();
         this.scene.registerBeforeRender(() => {
-            helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
+            this.helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
         });
-        helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
-
-
-        console.log('slopes', this.terrain.slopeArr)
-        console.log('facet1Arr', this.terrain.facet1Arr)
-        console.log('facet2Arr', this.terrain.facet2Arr)
+        
 
     /*******/
         let glTexture = gl.createTexture();
@@ -147,20 +140,14 @@ export class TerrainTool extends UITAB {
                 }
             }
             return this;
-        }).bind(helpermaterial)();
+        }).bind(this.helpermaterial)();
         this.helper.alwaysSelectAsActiveMesh = true
-        this.helper.material = helpermaterial;
-        this.helper._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {
-            if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
-                return this;
-            }
-            if (this._internalMeshDataInfo._onBeforeDrawObservable) {
-                this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
-            }
+        this.helper.material = this.helpermaterial;
+        this.helper._draw = (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh => {
             engine.applyStates();
             engine._drawCalls.addCount(1, false);
-            gl.drawElementsInstanced(gl.TRIANGLE_FAN, indices.length, gl.UNSIGNED_SHORT, 0, 8);
-            return this;
+            gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.vertexData.indices.length, gl.UNSIGNED_SHORT, 0, 8);
+            return this.helper;
         };
     }
     deactivate = (): void => {

@@ -7,21 +7,35 @@
     uvs: Float32Array,
     texture: Blob
 }
-export class Terrain {
-    public slopeArr = new Int16Array(250 * 250 * 2);
-    public facet1Arr = new Float32Array(250 * 250 * 4);
-    public facet2Arr = new Float32Array(250 * 250 * 4);
-    public ground: BABYLON.GroundMesh;
+export class Terrain extends BABYLON.GroundMesh {
+    public slopeArr: Int16Array;
+    public facet1Arr: Float32Array;
+    public facet2Arr: Float32Array;
+
+    private ratioX: number;
+    private ratioY:number;
+
+    //public ground: BABYLON.GroundMesh;
     constructor(private vdata: TerrainMap, private scene: BABYLON.Scene) {
-        this.ground = new BABYLON.GroundMesh('ground', scene);
-        this.ground._subdivisionsX = 250;
-        this.ground._subdivisionsY = 250;
-        this.ground._width = vdata.width;
-        this.ground._height = vdata.height;
-        this.ground._maxX = this.ground._width / 2.0;
-        this.ground._maxZ = this.ground._height / 2.0;
-        this.ground._minX = -this.ground._maxX;
-        this.ground._minZ = -this.ground._maxZ;
+        super('ground', scene);
+        this._subdivisionsX = 250;
+        this._subdivisionsY = 250;
+
+        this.slopeArr = new Int16Array(this._subdivisionsX * this._subdivisionsY * 2);
+        this.facet1Arr = new Float32Array(this._subdivisionsX * this._subdivisionsY * 4);
+        this.facet2Arr = new Float32Array(this._subdivisionsX * this._subdivisionsY * 4);
+
+
+        this._width = vdata.width;
+        this._height = vdata.height;
+        this._maxX = this._width / 2.0;
+        this._maxZ = this._height / 2.0;
+        this._minX = -this._maxX;
+        this._minZ = -this._maxZ;
+
+        this.ratioX = this._subdivisionsX / this._width;
+        this.ratioY = this._subdivisionsY / this._height;
+
         var vertexData = new BABYLON.VertexData();
 
         vertexData.indices = vdata.indices;
@@ -29,8 +43,8 @@ export class Terrain {
         vertexData.normals = vdata.normals;
         vertexData.uvs = vdata.uvs;
 
-        vertexData.applyToMesh(this.ground, true);
-        this.ground._setReady(true);
+        vertexData.applyToMesh(this, true);
+        this._setReady(true);
 
 
 
@@ -53,11 +67,11 @@ export class Terrain {
         let d1 = 0;     // facet plane equation : ax + by + cz + d = 0
         let d2 = 0;
 
-        for (var row = 0; row < this.ground._subdivisionsY; row++) {
-            for (var col = 0; col < this.ground._subdivisionsX; col++) {
+        for (var row = 0; row < this._subdivisionsY; row++) {
+            for (var col = 0; col < this._subdivisionsX; col++) {
                 i = col * 3;
-                j = row * (this.ground._subdivisionsX + 1) * 3;
-                k = (row + 1) * (this.ground._subdivisionsX + 1) * 3;
+                j = row * (this._subdivisionsX + 1) * 3;
+                k = (row + 1) * (this._subdivisionsX + 1) * 3;
                 v1.x = vdata.positions[j + i];
                 v1.y = vdata.positions[j + i + 1];
                 v1.z = vdata.positions[j + i + 2];
@@ -92,10 +106,26 @@ export class Terrain {
                 norm2.normalize();
                 d1 = -(norm1.x * v1.x + norm1.y * v1.y + norm1.z * v1.z);
                 d2 = -(norm2.x * v2.x + norm2.y * v2.y + norm2.z * v2.z);
-                this.slopeArr.set([cd, h], (row * this.ground._subdivisionsX + col) * 2);
-                this.facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * this.ground._subdivisionsX + col) * 4)
-                this.facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * this.ground._subdivisionsX + col) * 4)
+                this.slopeArr.set([cd, h], (row * this._subdivisionsX + col) * 2);
+                this.facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * this._subdivisionsX + col) * 4)
+                this.facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * this._subdivisionsX + col) * 4)
             }
         }
+    }
+    //BABYLON 4103
+    //ARRAY 2800 -> 1897 -> 1720 -> 1708 -> 1631
+    //Dataview 6100
+
+
+    getHeightAtCoordinates(x: number, z: number): number {
+        let facet: Float32Array // = this.getFacetAt2(x, z);
+        let col = ~~((x + this._maxX) * this.ratioX);
+        let row = ~~(-(z + this._maxZ) * this.ratioY + this._subdivisionsY);
+        if (z < this.slopeArr[(row * this._subdivisionsX + col) << 1] * x + this.slopeArr[((row * this._subdivisionsX + col) << 1) + 1])
+            facet = new Float32Array(this.facet1Arr.buffer, ((row * this._subdivisionsX + col)  << 2) * Float32Array.BYTES_PER_ELEMENT, 4)
+         else 
+            facet = new Float32Array(this.facet2Arr.buffer, ((row * this._subdivisionsX + col) << 2) * Float32Array.BYTES_PER_ELEMENT, 4)
+
+        return -(facet[0] * x + facet[2] * z + facet[3]) / facet[1];
     }
 }

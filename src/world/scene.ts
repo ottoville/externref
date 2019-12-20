@@ -137,8 +137,7 @@ export class WorldScene extends BABYLON.Scene {
                 }
             };
         }).then((vdata: TerrainMap) => {
-            let terrain=new Terrain(vdata, this);
-            let ground = terrain.ground;
+            let ground=new Terrain(vdata, this);
 /*
             let ground = new BABYLON.GroundMesh('ground', this);
             ground._subdivisionsX = 250;
@@ -163,7 +162,7 @@ export class WorldScene extends BABYLON.Scene {
 
             sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
-            this.tools['TerrainTool'] = new TerrainTool(this, terrain, (<CameraTAB>this.tools['CameraTAB']).camera);
+            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
             let gl: WebGLRenderingContext = engine._gl;
             /*ground._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {
                 if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
@@ -195,6 +194,7 @@ export class WorldScene extends BABYLON.Scene {
                     var centerZ = 10000 / 2
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
                     ctx.translate(centerX, centerZ);
+                    let timed = new Date().getTime();
                     for (let row = -2500; row < 2500; row = row + 2) {
                         for (let col = -2500; col < 2500; col = col += 2) {
                             let height = ground.getHeightAtCoordinates(row, col)
@@ -204,6 +204,7 @@ export class WorldScene extends BABYLON.Scene {
                             }
                         }
                     }
+                    console.log('creating texture took ', new Date().getTime() - timed);
                     c.toBlob(async b => {
                         vdata.texture = b;
                         tres(b);
@@ -269,7 +270,6 @@ export class WorldScene extends BABYLON.Scene {
             console.error('creating terrain failed', e);
         })
         this.terrainReady.then((terrain: BABYLON.GroundMesh) => {
-            console.log('terrain is ready');
             /* Promise.all([CSG.fromMesh(this.mesh), CSG.fromMesh(grassbox)]).then(r => {
                  if (thismeshoperation !== meshoperatiocount) {
                      r[0].dispose();
