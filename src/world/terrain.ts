@@ -115,17 +115,26 @@ export class Terrain extends BABYLON.GroundMesh {
     //BABYLON 4103
     //ARRAY 2800 -> 1897 -> 1720 -> 1708 -> 1631
     //Dataview 6100
-
+    //pure array  848 -> 763
 
     getHeightAtCoordinates(x: number, z: number): number {
-        let facet: Float32Array // = this.getFacetAt2(x, z);
-        let col = ~~((x + this._maxX) * this.ratioX);
-        let row = ~~(-(z + this._maxZ) * this.ratioY + this._subdivisionsY);
-        if (z < this.slopeArr[(row * this._subdivisionsX + col) << 1] * x + this.slopeArr[((row * this._subdivisionsX + col) << 1) + 1])
-            facet = new Float32Array(this.facet1Arr.buffer, ((row * this._subdivisionsX + col)  << 2) * Float32Array.BYTES_PER_ELEMENT, 4)
-         else 
-            facet = new Float32Array(this.facet2Arr.buffer, ((row * this._subdivisionsX + col) << 2) * Float32Array.BYTES_PER_ELEMENT, 4)
-
+        let facet: Float32Array;
+        let col = ((x + this._maxX) * this.ratioX)|0;
+        let row = (-(z + this._maxZ) * this.ratioY + this._subdivisionsY) | 0;
+        let pos: number = row * this._subdivisionsX + col;
+        try {
+            if (z < this.slopeArr[pos << 1] * x + this.slopeArr[(pos << 1) + 1])
+                facet = new Float32Array(this.facet1Arr.buffer, pos << 4, 4) // << 4 =  4 *  Float32Array.BYTES_PER_ELEMENT
+            else {
+                facet = new Float32Array(this.facet2Arr.buffer, pos << 4, 4) // << 4 = 4 *  Float32Array.BYTES_PER_ELEMENT
+            }
+        } catch (e) {
+            if (e instanceof RangeError) {
+                console.warn('Invalid coordinate to getHeightAtCoordinates '+ x+ ' '+z);
+                return this.getHeightAtCoordinates(Math.min(Math.max(x, this._minX+1), this._maxX-1), Math.min(Math.max(z, this._minZ+1), this._maxZ-1))
+            }
+            throw (e);
+        }
         return -(facet[0] * x + facet[2] * z + facet[3]) / facet[1];
     }
 }

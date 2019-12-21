@@ -51,6 +51,14 @@ export class TerrainTool extends UITAB {
     private vertexData = new BABYLON.VertexData();
     private helper = new BABYLON.Mesh("Helper");
     private helpermaterial: BABYLON.ShaderMaterial;
+    private timed = new Date().getTime();
+    private glTexture: WebGLTexture;
+    private glTexture2: WebGLTexture;
+    private glTexture3: WebGLTexture;
+    private gl: WebGLRenderingContext;
+    private setTime=() => {
+        this.helpermaterial.setFloat("time", (this.timed - new Date().getTime()) / 1000);
+    }
     constructor(
         private scene: BABYLON.Scene,
         private terrain: Terrain,
@@ -71,25 +79,20 @@ export class TerrainTool extends UITAB {
                 uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
             });
         this.helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
+        this.gl = scene.getEngine()._gl;
+        this.helper.alwaysSelectAsActiveMesh = true
     }
     activated: boolean;    name: string;
     activate = (): void => {
         let engine = this.scene.getEngine();
-
+        this.helper.visibility = 1;
         engine.getRenderingCanvas().addEventListener("mousemove", this.mouseListener);
-        
-        let gl: WebGLRenderingContext = this.scene.getEngine()._gl;
-
-        
-        let timed = new Date().getTime();
-        this.scene.registerBeforeRender(() => {
-            this.helpermaterial.setFloat("time", (timed - new Date().getTime()) / 1000);
-        });
-        
+        this.scene.registerBeforeRender(this.setTime);
 
     /*******/
-        let glTexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, glTexture);
+        let gl = this.gl;
+        this.glTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
         let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.terrain.slopeArr);
@@ -98,8 +101,8 @@ export class TerrainTool extends UITAB {
         gl.bindTexture(gl.TEXTURE_2D, null);
 
     /********/
-        let glTexture2 = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, glTexture2);
+        this.glTexture2 = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
        
         let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr);
         tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
@@ -107,41 +110,42 @@ export class TerrainTool extends UITAB {
         gl.bindTexture(gl.TEXTURE_2D, null);
 
     /********/
-        let glTexture3 = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, glTexture3);
+        this.glTexture3 = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
 
         let tex3 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr);
         tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
         tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
         gl.bindTexture(gl.TEXTURE_2D, null);
+        let me = this;
         (function () {
             this._options.samplers.push('slopeArr', 'facet1Arr','facet2Arr');
             this._textures = {
                 slopeArr: {
                     getInternalTexture: () => ({ //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
                         _source: 3,
-                        _webGLTexture: glTexture
+                        _webGLTexture: me.glTexture
                     }),
                     isReady: () => true
                 },
                 facet1Arr: {
                     getInternalTexture: () => ({ 
                         _source: 3,
-                        _webGLTexture: glTexture2
+                        _webGLTexture: me.glTexture2
                     }),
                     isReady: () => true
                 },
                 facet2Arr: {
                     getInternalTexture: () => ({ 
                         _source: 3,
-                        _webGLTexture: glTexture3
+                        _webGLTexture: me.glTexture3
                     }), 
                     isReady: () => true
                 }
             }
             return this;
         }).bind(this.helpermaterial)();
-        this.helper.alwaysSelectAsActiveMesh = true
+        
         this.helper.material = this.helpermaterial;
         this.helper._draw = (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh => {
             engine.applyStates();
@@ -151,8 +155,17 @@ export class TerrainTool extends UITAB {
         };
     }
     deactivate = (): void => {
+        this.helper.visibility = 0;
         this.scene.getEngine().getRenderingCanvas().removeEventListener("mousemove", this.mouseListener);
-
+        this.scene.unregisterBeforeRender(this.setTime);
+        this.gl.deleteTexture(this.glTexture);
+        this.gl.deleteTexture(this.glTexture2);
+        this.gl.deleteTexture(this.glTexture3);
+        (function () {
+            this._options.samplers=[];
+            this._textures = {}
+            return this;
+        }).bind(this.helpermaterial)();
     };
     mouseListener = (evt: MouseEvent): void => {
         this.mousemove.eval(25,evt);

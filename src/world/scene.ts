@@ -190,21 +190,22 @@ export class WorldScene extends BABYLON.Scene {
                     ctx.fillStyle = "#e0e031";
                     ctx.fillRect(0, 0, 10000, 10000);
 
-                    var centerX = 10000 / 2
-                    var centerZ = 10000 / 2
+                    let centerX = c.width / 2
+                    let centerZ = c.height / 2
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
                     ctx.translate(centerX, centerZ);
                     let timed = new Date().getTime();
-                    for (let row = -2500; row < 2500; row = row + 2) {
-                        for (let col = -2500; col < 2500; col = col += 2) {
+                    let minZ = centerZ - c.height
+                    ctx.fillStyle = "green";
+                    for (let row = centerX - c.width+1; row < centerX; row = row + 2) {
+                        for (let col = minZ+1; col < centerZ; col = col += 2) {
                             let height = ground.getHeightAtCoordinates(row, col)
                             if (height > 3) {
-                                ctx.fillStyle = "green";
                                 ctx.fillRect(row, col * -1, 3, 3);
                             }
                         }
                     }
-                    console.log('creating texture took ', new Date().getTime() - timed);
+                    console.log('creating texture took ', new Date().getTime() - timed);                    
                     c.toBlob(async b => {
                         vdata.texture = b;
                         tres(b);
