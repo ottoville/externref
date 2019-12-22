@@ -1,6 +1,5 @@
 let startingPoint: Vector3;
 let tempplane: BABYLON.Mesh
-let global_position: BABYLON.Vector3
 let end_position: Vector3
 
 import { updateSubTexture } from "./triginometry.js";
@@ -174,11 +173,9 @@ export class paintGround {
     private mainPointerDown = (evt: PointerEvent) => {
         
         if (evt.button !== 0) {
-            console.log('evt.button !== 0');
             return;
         }
         // check if we are under a mesh
-        console.log(this.scene.pointerX, this.scene.pointerY);
         var pickInfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => {
             return mesh === this.ground
         }, false, this.camera);
@@ -197,16 +194,6 @@ export class paintGround {
             this.canvas.removeEventListener('pointerdown', this.mainPointerDown, false);
             startingPoint = <Vector3><unknown>pickInfo.pickedPoint;
 
-            var sphereLocalOrigin = BABYLON.MeshBuilder.CreateSphere("sphereLO", { diameter: .5 }, this.scene);
-            sphereLocalOrigin.material = new BABYLON.StandardMaterial("origin", this.scene);
-            sphereLocalOrigin.position = <BABYLON.Vector3><unknown>startingPoint;
-            sphereLocalOrigin.computeWorldMatrix();
-            var matrix = sphereLocalOrigin.getWorldMatrix();
-            var local_position = new BABYLON.Vector3(0, 1, 0);
-            global_position = BABYLON.Vector3.TransformCoordinates(local_position, matrix);
-            global_position.y = 50;
-
-
             if (this.type == DrawType.plane) {
 
                 tempplane = BABYLON.MeshBuilder.CreateTiledGround("tgd2", { xmin: -0.5, xmax: 0.5, zmin: -0.5, zmax: 0.5, subdivisions: { w: 10, h: 10 }, precision: { w: 0, h: 0 }, updatable: true }, this.scene);
@@ -215,9 +202,9 @@ export class paintGround {
                 tempplane.scaling.x = 10;
                 tempplane.rotation.y = Math.PI / 2;
 
-                tempplane.position.x = global_position.x - 0.5
+                tempplane.position.x = startingPoint.x - 0.5
 
-                tempplane.position.z = global_position.z - 1
+                tempplane.position.z = startingPoint.z - 1
 
                 tempplane.material = new BABYLON.StandardMaterial("planeMat2", this.scene);
                 tempplane.material.wireframe = true;
@@ -238,8 +225,8 @@ export class paintGround {
                 try {
                     this.removeEventListener('pointermove', me.drawArea, false);
                     if (me.type == DrawType.plane) {
-                        let meshCenter: Vector3 = end_position.subtract(new Vector3(global_position.x, global_position.y, global_position.z)).divide(new Vector3(2, 2, 2));
-                        tempplane.position = <BABYLON.Vector3><unknown>global_position.add(new BABYLON.Vector3(meshCenter.x, meshCenter.y, meshCenter.z))
+                        let meshCenter: Vector3 = end_position.subtract(startingPoint).divide(new Vector3(2, 2, 2));
+                        tempplane.position = (<BABYLON.Vector3><unknown>startingPoint).add(new BABYLON.Vector3(meshCenter.x, meshCenter.y, meshCenter.z))
                         tempplane.position.y = 0.2;
                         tempplane.scaling.x = height;
                         tempplane.rotation.y = me.ang360.rad;
@@ -257,7 +244,7 @@ export class paintGround {
                     }, false);
                     end_position.y = 1;
                     if (me.type == DrawType.line) {
-                        var lines = BABYLON.MeshBuilder.CreateLines("lines", { points: [<BABYLON.Vector3><unknown>global_position, <BABYLON.Vector3><unknown>end_position] }, me.scene);
+                        var lines = BABYLON.MeshBuilder.CreateLines("lines", { points: [<BABYLON.Vector3><unknown>startingPoint, <BABYLON.Vector3><unknown>end_position] }, me.scene);
                     }
                     me.camera.attachControl(this, true);
                     
