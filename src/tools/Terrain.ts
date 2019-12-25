@@ -39,13 +39,16 @@ import { Terrain } from "../world/terrain.js";
 
 export class TerrainTool extends UITAB {
     private ray = BABYLON.Ray.Zero();
-    private mousemove = new LazyEval((evt: MouseEvent) => {
+    private pickinfo: BABYLON.PickingInfo;
+    private mousemove = new LazyEval((evt: PointerEvent) => {
         this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.terrain.getWorldMatrix(), this.ray, this.camera);
-        let point = this.terrain.intersects(this.ray);
-        if (point.pickedPoint) {
-            this.helper.position.x = point.pickedPoint.x;
+        this.pickinfo = this.terrain.intersects(this.ray);
+        console.log('mousemove');
+        if (this.pickinfo.pickedPoint) {
+            console.log('pikked');
+            this.helper.position.x = this.pickinfo.pickedPoint.x;
             this.helper.position.y = 0;
-            this.helper.position.z = point.pickedPoint.z;
+            this.helper.position.z = this.pickinfo.pickedPoint.z;
         }
     });
     private vertexData = new BABYLON.VertexData();
@@ -82,14 +85,206 @@ export class TerrainTool extends UITAB {
         this.gl = scene.getEngine()._gl;
         this.helper.alwaysSelectAsActiveMesh = true
     }
+    private _facesOfVertices:any[];
+    private _groundVerticesPositions;
+    private _groundVerticesNormals;
+    private _groundIndices;
+    private _groundPositions;
+    private _groundFacesNormals;
+    private _subdivisionsOfVertices;
+    private _selectedVertices: number[];
+    private direction = 0;
+    private _invertDirection= 1;
+    private heightMax = 500;
+    private heightMin = -500;
+    private _prepareDataModelForElevation  () {
+        if (this._facesOfVertices == null) {
+            this._facesOfVertices = [];
+
+            this._groundVerticesPositions = this.terrain.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+            this._groundVerticesNormals = this.terrain.getVerticesData(BABYLON.VertexBuffer.NormalKind);
+            this._groundIndices = this.terrain.getIndices();
+
+            this._groundPositions = [];
+            var index;
+            for (index = 0; index < this._groundVerticesPositions.length; index += 3) {
+                this._groundPositions.push(new BABYLON.Vector3(this._groundVerticesPositions[index], this._groundVerticesPositions[index + 1], this._groundVerticesPositions[index + 2]));
+            }
+
+            this._groundFacesNormals = [];
+            for (index = 0; index < this.terrain.getTotalIndices() / 3; index++) {
+                this._computeFaceNormal(index);
+            }
+
+            this._getFacesOfVertices();
+        }
+    };
+    private _getFacesOfVertices () {
+        this._facesOfVertices = [];
+        this._subdivisionsOfVertices = [];
+        var index;
+
+        for (index = 0; index < this._groundPositions.length; index++) {
+            this._facesOfVertices[index] = [];
+            this._subdivisionsOfVertices[index] = [];
+        }
+
+        for (index = 0; index < this._groundIndices.length; index++) {
+            this._facesOfVertices[this._groundIndices[index]].push((index / 3) | 0);
+        }
+
+        for (var subIndex = 0; subIndex < this.terrain.subMeshes.length; subIndex++) {
+            var subMesh = this.terrain.subMeshes[subIndex];
+            for (index = subMesh.verticesStart; index < subMesh.verticesStart + subMesh.verticesCount; index++) {
+                this._subdivisionsOfVertices[index].push(subMesh);
+            }
+        }
+    };
+    private _getFaceVerticesIndex = function (faceID) {
+        return {
+            v1: this._groundIndices[faceID * 3],
+            v2: this._groundIndices[faceID * 3 + 1],
+            v3: this._groundIndices[faceID * 3 + 2]
+        };
+    };
+    private _computeFaceNormal (face) {
+        var faceInfo = this._getFaceVerticesIndex(face);
+
+        var v1v2 = this._groundPositions[faceInfo.v1].subtract(this._groundPositions[faceInfo.v2]);
+        var v3v2 = this._groundPositions[faceInfo.v3].subtract(this._groundPositions[faceInfo.v2]);
+
+        this._groundFacesNormals[face] = BABYLON.Vector3.Normalize(BABYLON.Vector3.Cross(v1v2, v3v2));
+    };
+    private _isBoxSphereIntersected (box, sphereCenter, sphereRadius) {
+        var vector = BABYLON.Vector3.Clamp(sphereCenter, box.minimumWorld, box.maximumWorld);
+        var num = BABYLON.Vector3.DistanceSquared(sphereCenter, vector);
+        return (num <= (sphereRadius * sphereRadius));
+    };
+    private _updateSubdivisions (vertexIndex) {
+        for (var index = 0; index < this._subdivisionsOfVertices[vertexIndex].length; index++) {
+            var sub = this._subdivisionsOfVertices[vertexIndex][index];
+            let boundingBox = sub.getBoundingInfo().boundingBox;
+            let boundingSphere = sub.getBoundingInfo().boundingSphere;
+
+            if (this._groundPositions[vertexIndex].y < boundingBox.minimum.y) {
+                boundingSphere.radius += Math.abs(this._groundPositions[vertexIndex].y - boundingBox.minimum.y);
+                boundingBox.minimum.y = this._groundPositions[vertexIndex].y;
+            } else if (this._groundPositions[vertexIndex].y > boundingBox.maximum.y) {
+                boundingBox.maximum.y = this._groundPositions[vertexIndex].y;
+            }
+        }
+
+        var boundingBox = this.terrain.getBoundingInfo().boundingBox;
+        var boundingSphere = this.terrain.getBoundingInfo().boundingSphere;
+        if (this._groundPositions[vertexIndex].y < boundingBox.minimum.y) {
+            boundingSphere.radius += Math.abs(this._groundPositions[vertexIndex].y - boundingBox.minimum.y);
+            boundingBox.minimum.y = this._groundPositions[vertexIndex].y;
+        } else if (this._groundPositions[vertexIndex].y > boundingBox.maximum.y) {
+            boundingBox.maximum.y = this._groundPositions[vertexIndex].y;
+        }
+    };
+    private _computeNormal (vertexIndex) {
+        var faces = this._facesOfVertices[vertexIndex];
+
+        var normal = BABYLON.Vector3.Zero();
+        for (var index = 0; index < faces.length; index++) {
+            normal = normal.add(this._groundFacesNormals[faces[index]]);
+        }
+
+        normal = BABYLON.Vector3.Normalize(normal.scale(1.0 / faces.length));
+
+        this._groundVerticesNormals[vertexIndex * 3] = normal.x;
+        this._groundVerticesNormals[vertexIndex * 3 + 1] = normal.y;
+        this._groundVerticesNormals[vertexIndex * 3 + 2] = normal.z;
+    };
+    private _reComputeNormals () {
+        var faces = [];
+        var face;
+
+        for (var selectedVertice in this._selectedVertices) {
+            var faceOfVertices = this._facesOfVertices[selectedVertice];
+            for (var index = 0; index < faceOfVertices.length; index++) {
+                faces[faceOfVertices[index]] = true;
+            }
+        }
+
+        for (face in faces) {
+            this._computeFaceNormal(face);
+        }
+
+        for (face in faces) {
+            var faceInfo = this._getFaceVerticesIndex(face);
+            this._computeNormal(faceInfo.v1);
+            this._computeNormal(faceInfo.v2);
+            this._computeNormal(faceInfo.v3);
+        }
+    };
+    private elevateFaces(pickInfo: BABYLON.PickingInfo, radius: number, height: number) {
+        this._prepareDataModelForElevation();
+        this._selectedVertices = [];
+
+        // Impact zone
+        var sphereCenter = pickInfo.pickedPoint;
+        sphereCenter.y = 0;
+
+        // Determine list of vertices
+        for (var subIndex = 0; subIndex < this.terrain.subMeshes.length; subIndex++) {
+            var subMesh = this.terrain.subMeshes[subIndex];
+
+            if (!this._isBoxSphereIntersected(subMesh.getBoundingInfo().boundingBox, sphereCenter, radius)) {
+                continue;
+            }
+
+            for (let index: number = subMesh.verticesStart; index < subMesh.verticesStart + subMesh.verticesCount; index++) {
+                var position = this._groundPositions[index];
+                sphereCenter.y = position.y;
+
+                let distance = BABYLON.Vector3.Distance(position, sphereCenter);
+
+                if (distance < radius) {
+                    this._selectedVertices[index] = distance;
+                }
+            }
+        }
+
+        // Elevate vertices
+        this._selectedVertices.forEach((vertice, selectedVertice) => {
+            var position = this._groundPositions[selectedVertice];
+            var distance = this._selectedVertices[selectedVertice];
+
+            var fullHeight = height * this.direction * this._invertDirection;
+            if (distance < radius * 0.3) {
+                position.y += fullHeight;
+            } else {
+                position.y += fullHeight * (1.0 - (distance - radius * 0.3) / (radius * 0.7));
+            }
+
+            if (position.y > this.heightMax)
+                position.y = this.heightMax;
+            else if (position.y < this.heightMin)
+                position.y = this.heightMin;
+
+            this._groundVerticesPositions[selectedVertice * 3 + 1] = position.y;
+
+            this._updateSubdivisions(selectedVertice);
+
+        });
+
+        // Normals
+        this._reComputeNormals();
+
+        // Update vertex buffer
+        this.terrain.updateVerticesData(BABYLON.VertexBuffer.PositionKind, this._groundVerticesPositions);
+        this.terrain.updateVerticesData(BABYLON.VertexBuffer.NormalKind, this._groundVerticesNormals);
+    };
     activated: boolean;    name: string;
     activate = (): void => {
         let engine = this.scene.getEngine();
         this.helper.visibility = 1;
-        engine.getRenderingCanvas().addEventListener("mousemove", this.mouseListener);
+        engine.getRenderingCanvas().addEventListener("pointermove", this.mouseListener);
         this.scene.registerBeforeRender(this.setTime);
 
-    /*******/
+        /*******/
         let gl = this.gl;
         this.glTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
@@ -100,16 +295,16 @@ export class TerrainTool extends UITAB {
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
         gl.bindTexture(gl.TEXTURE_2D, null);
 
-    /********/
+        /********/
         this.glTexture2 = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
-       
+
         let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr);
         tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
         tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
         gl.bindTexture(gl.TEXTURE_2D, null);
 
-    /********/
+        /********/
         this.glTexture3 = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
 
@@ -119,7 +314,7 @@ export class TerrainTool extends UITAB {
         gl.bindTexture(gl.TEXTURE_2D, null);
         let me = this;
         (function () {
-            this._options.samplers.push('slopeArr', 'facet1Arr','facet2Arr');
+            this._options.samplers.push('slopeArr', 'facet1Arr', 'facet2Arr');
             this._textures = {
                 slopeArr: {
                     getInternalTexture: () => ({ //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
@@ -129,23 +324,23 @@ export class TerrainTool extends UITAB {
                     isReady: () => true
                 },
                 facet1Arr: {
-                    getInternalTexture: () => ({ 
+                    getInternalTexture: () => ({
                         _source: 3,
                         _webGLTexture: me.glTexture2
                     }),
                     isReady: () => true
                 },
                 facet2Arr: {
-                    getInternalTexture: () => ({ 
+                    getInternalTexture: () => ({
                         _source: 3,
                         _webGLTexture: me.glTexture3
-                    }), 
+                    }),
                     isReady: () => true
                 }
             }
             return this;
         }).bind(this.helpermaterial)();
-        
+
         this.helper.material = this.helpermaterial;
         this.helper._draw = (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh => {
             engine.applyStates();
@@ -153,10 +348,30 @@ export class TerrainTool extends UITAB {
             gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.vertexData.indices.length, gl.UNSIGNED_SHORT, 0, 8);
             return this.helper;
         };
+    };
+    private mouseinterval: number;
+    pointerdownf = (evt: PointerEvent): void => {
+        if (evt.button !== 0) {
+            return;
+        }
+        let canvas = this.scene.getEngine().getRenderingCanvas();
+        canvas.addEventListener("pointerup", this.pointerupf);
+        this.camera.detachControl(canvas);
+        this.mouseinterval = setInterval(() => {
+            console.log('elevating');
+            this.elevateFaces(this.pickinfo, 50, 5);
+        }, 100);
+    }
+    pointerupf = (evt: PointerEvent): void => {
+        let canvas = this.scene.getEngine().getRenderingCanvas();
+        canvas.removeEventListener("pointerup", this.pointerupf);
+        this.camera.attachControl(canvas, true);
+        clearInterval(this.mouseinterval);
     }
     deactivate = (): void => {
+        this.scene.getEngine().getRenderingCanvas().removeEventListener("pointerdown", this.pointerdownf);
         this.helper.visibility = 0;
-        this.scene.getEngine().getRenderingCanvas().removeEventListener("mousemove", this.mouseListener);
+        this.scene.getEngine().getRenderingCanvas().removeEventListener("pointermove", this.mouseListener);
         this.scene.unregisterBeforeRender(this.setTime);
         this.gl.deleteTexture(this.glTexture);
         this.gl.deleteTexture(this.glTexture2);
@@ -167,13 +382,22 @@ export class TerrainTool extends UITAB {
             return this;
         }).bind(this.helpermaterial)();
     };
-    mouseListener = (evt: MouseEvent): void => {
-        this.mousemove.eval(25,evt);
+    mouseListener = (evt: PointerEvent): void => {
+        this.mousemove.eval(15,evt);
     }
     raise = (): void => {
+        console.log('raise')
+        this.direction = 1;
+        let canvas = this.scene.getEngine().getRenderingCanvas();
+        canvas.removeEventListener("pointerdown", this.pointerdownf);
+        canvas.addEventListener("pointerdown", this.pointerdownf);
 
     }
     lower = (): void => {
-
+        console.log('lower')
+        this.direction = -1;
+        let canvas = this.scene.getEngine().getRenderingCanvas();
+        canvas.removeEventListener("pointerdown", this.pointerdownf);
+        canvas.addEventListener("pointerdown", this.pointerdownf);
     }
 }
