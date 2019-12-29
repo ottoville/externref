@@ -50,6 +50,7 @@
     <None Remove="src\tools\buildings.ts" />
     <None Remove="src\tools\Terrain.ts" />
     <None Remove="src\workers\commonMath.d.ts" />
+    <None Remove="src\workers\webworkers\terrain.ts" />
     <None Remove="src\world\terrain.ts" />
   </ItemGroup>
 

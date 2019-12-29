@@ -153,6 +153,10 @@
         "version": "432f8af49d42cd54c9c80e3b247d6cb267cd450620459236b58e08cba0fa6ba7",
         "signature": "2b22d1846d2cadf3be08037313ecf88f73a60d458409b689ee4c379869370394"
       },
+      "../src/workers/webworkers/terrain.ts": {
+        "version": "d36f6c6b870263441146cb1f80e8a712d5b8120309a91b91c9ab565ab2eca28b",
+        "signature": "c6678bcffefae6465bd2cc73ea4d27778f3f855ff78dc6ff74e2cb2587eb09fe"
+      },
       "../src/workers/sw.ts": {
         "version": "f345e656bd7ce80eb500c89e8de1e97bacc623f2f74ca8b9992be93ae786db07",
         "signature": "506a9f6aba443bd1f9cf4471a89ef35a5fa00d6d562e54ede9bb38fe000fbf14"
@@ -188,6 +192,7 @@
     "referencedMap": {},
     "exportedModulesMap": {},
     "semanticDiagnosticsPerFile": [
+      "../src/workers/webworkers/terrain.ts",
       "../src/workers/webworkers/grass.ts",
       "../src/workers/sw.ts",
       "../src/workers/commonmath.d.ts",
