@@ -47,6 +47,8 @@ export class TerrainTool extends UITAB {
             this.helper.position.x = this.pickinfo.pickedPoint.x;
             this.helper.position.y = 0;
             this.helper.position.z = this.pickinfo.pickedPoint.z;
+            console.log(this.helper.position);
+            [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -714.7799682617188, 0, -90.85552215576172, 1]
         }
     });
     private vertexData = new BABYLON.VertexData();
@@ -387,12 +389,60 @@ export class TerrainTool extends UITAB {
         }).bind(this.helpermaterial)();
 
         this.helper.material = this.helpermaterial;
-        this.helper._draw = (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh => {
+        this.helpermaterial.bindOnlyWorldMatrix = (function (world: BABYLON.Matrix) {
+            
+            var scene = this.getScene();
+
+            if (!this._effect) {
+                return;
+            }
+            if (this._options.uniforms.indexOf("world") !== -1) {
+                let effect = (<BABYLON.Effect>this._effect);
+                //this._effect.setMatrix("world", world);
+                if (effect._cacheMatrix("world", world)) {
+                    console.log('set world matrix phase 3', world.m);
+                    //engine.setMatrices(effect.getUniform("world"), world.toArray() as Float32Array);
+                    gl.uniformMatrix4fv(effect.getUniform("world"), false, world.toArray() as Float32Array);
+                }
+            }
+
+            if (this._options.uniforms.indexOf("worldView") !== -1) {
+                world.multiplyToRef(scene.getViewMatrix(), this._cachedWorldViewMatrix);
+                this._effect.setMatrix("worldView", this._cachedWorldViewMatrix);
+            }
+
+            if (this._options.uniforms.indexOf("worldViewProjection") !== -1) {
+                if (typeof(this._cachedWorldViewProjectionMatrix) == 'undefined')
+                    this._cachedWorldViewProjectionMatrix = new BABYLON.Matrix();
+                world.multiplyToRef(scene.getTransformMatrix(), this._cachedWorldViewProjectionMatrix);
+                this._effect.setMatrix("worldViewProjection", this._cachedWorldViewProjectionMatrix);
+
+            }
+        }).bind(this.helpermaterial)
+
+
+        this.helper._processRendering = (subMesh: BABYLON.SubMesh, effect: BABYLON.Effect, fillMode: number, batch: BABYLON._InstancesBatch, hardwareInstancedRendering: boolean,
+            onBeforeDraw: (isInstance: boolean, world: BABYLON.Matrix, effectiveMaterial?: BABYLON.Material) => void, effectiveMaterial?: BABYLON.Material): BABYLON.Mesh => {
+
+                    // Draw
+                    if (onBeforeDraw) {
+                        onBeforeDraw(false, this.helper._effectiveMesh.getWorldMatrix(), effectiveMaterial);
+                    }
+                   // this._draw(subMesh, fillMode);
+                    engine.applyStates();
+                    engine._drawCalls.addCount(1, false);
+                    gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.vertexData.indices.length, gl.UNSIGNED_SHORT, 0, 8);
+                    return this.helper;
+
+            //return this;
+
+        }
+     /*   this.helper._draw = (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh => {
             engine.applyStates();
             engine._drawCalls.addCount(1, false);
             gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.vertexData.indices.length, gl.UNSIGNED_SHORT, 0, 8);
             return this.helper;
-        };
+        };*/
     };
     private mouseinterval: number;
     pointerdownf = (evt: PointerEvent): void => {
