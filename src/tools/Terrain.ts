@@ -87,8 +87,8 @@ export class TerrainTool extends UITAB {
     //private _groundVerticesPositions;
     //private _groundVerticesNormals;
     //private _groundIndices;
-    private _groundPositions: BABYLON.Vector3[];
-    private _groundFacesNormals;
+   // private _groundPositions: BABYLON.Vector3[];
+    private _groundFacesNormals: BABYLON.Vector3[];
     private _subdivisionsOfVertices;
     private _selectedVertices: { vertice:number, distance:number }[];
     private direction = 0;
@@ -99,18 +99,23 @@ export class TerrainTool extends UITAB {
         if (this._facesOfVertices == null) {
             this._facesOfVertices = [];
 
-            //this._groundVerticesNormals = this.terrain.getVerticesData(BABYLON.VertexBuffer.NormalKind);
-
-            this._groundPositions = [];
-            var index;
-            for (index = 0; index < this.terrain.positions.length; index += 3) {
-                this._groundPositions.push(new BABYLON.Vector3(...new Float32Array(this.terrain.positions.buffer, index << 2, 3)));
-                //this._groundPositions.push(new BABYLON.Vector3(this.terrain.positions[index], this.terrain.positions[index + 1], this.terrain.positions[index + 2]));
-            }
-
             this._groundFacesNormals = [];
-            for (index = 0; index < this.terrain.getTotalIndices() / 3; index++) {
-                this._computeFaceNormal(index);
+            let v1v2 = new BABYLON.Vector3();
+            let v3v2 = new BABYLON.Vector3();
+            for (let index = 0; index < this.terrain.getTotalIndices() / 3; index++) {
+                var faceInfo = this._getFaceVerticesIndex(index);
+
+                v1v2.x = this.terrain.positions[faceInfo[0] * 3] - this.terrain.positions[faceInfo[1] * 3];
+                v1v2.y = this.terrain.positions[faceInfo[0] * 3 + 1] - this.terrain.positions[faceInfo[1] * 3 + 1];
+                v1v2.z = this.terrain.positions[faceInfo[0] * 3 + 2] - this.terrain.positions[faceInfo[1] * 3 + 2];
+
+                v3v2.x = this.terrain.positions[faceInfo[2] * 3] - this.terrain.positions[faceInfo[1] * 3];
+                v3v2.y = this.terrain.positions[faceInfo[2] * 3 + 1] - this.terrain.positions[faceInfo[1] * 3 + 1];
+                v3v2.z = this.terrain.positions[faceInfo[2] * 3 + 2] - this.terrain.positions[faceInfo[1] * 3 + 2];
+
+
+                this._groundFacesNormals[index] = BABYLON.Vector3.Normalize(BABYLON.Vector3.Cross(v1v2, v3v2));
+
             }
 
             this._getFacesOfVertices();
@@ -120,11 +125,16 @@ export class TerrainTool extends UITAB {
         this._facesOfVertices = [];
         this._subdivisionsOfVertices = [];
         var index;
-
-        for (index = 0; index < this._groundPositions.length; index++) {
+        let length = this.terrain.positions.length / 3;
+        for (index = 0; index < length; index++) {
             this._facesOfVertices[index] = [];
             this._subdivisionsOfVertices[index] = [];
         }
+
+        /*for (index = 0; index < this._groundPositions.length; index++) {
+            this._facesOfVertices[index] = [];
+            this._subdivisionsOfVertices[index] = [];
+        }*/
 
         for (index = 0; index < this.terrain.indices.length; index++) {
             this._facesOfVertices[this.terrain.indices[index]].push((index / 3) | 0);
@@ -140,40 +150,33 @@ export class TerrainTool extends UITAB {
     private _getFaceVerticesIndex(faceID: number) : Uint32Array {
         return new Uint32Array(this.terrain.indices.buffer, (faceID * 3) << 2, 3);
     };
-    private _computeFaceNormal (face) {
-        var faceInfo = this._getFaceVerticesIndex(face);
-
-        var v1v2 = this._groundPositions[faceInfo[0]].subtract(this._groundPositions[faceInfo[1]]);
-        var v3v2 = this._groundPositions[faceInfo[2]].subtract(this._groundPositions[faceInfo[1]]);
-
-        this._groundFacesNormals[face] = BABYLON.Vector3.Normalize(BABYLON.Vector3.Cross(v1v2, v3v2));
-    };
     private _isBoxSphereIntersected (box, sphereCenter, sphereRadius) {
         var vector = BABYLON.Vector3.Clamp(sphereCenter, box.minimumWorld, box.maximumWorld);
         var num = BABYLON.Vector3.DistanceSquared(sphereCenter, vector);
         return (num <= (sphereRadius * sphereRadius));
     };
-    private _updateSubdivisions (vertexIndex : number) {
+    private _updateSubdivisions(vertexIndex: number) {
+        let ypos = this.terrain.positions[vertexIndex * 3 + 1];
         for (var index = 0; index < this._subdivisionsOfVertices[vertexIndex].length; index++) {
             var sub = this._subdivisionsOfVertices[vertexIndex][index];
             let boundingBox = sub.getBoundingInfo().boundingBox;
             let boundingSphere = sub.getBoundingInfo().boundingSphere;
 
-            if (this._groundPositions[vertexIndex].y < boundingBox.minimum.y) {
-                boundingSphere.radius += Math.abs(this._groundPositions[vertexIndex].y - boundingBox.minimum.y);
-                boundingBox.minimum.y = this._groundPositions[vertexIndex].y;
-            } else if (this._groundPositions[vertexIndex].y > boundingBox.maximum.y) {
-                boundingBox.maximum.y = this._groundPositions[vertexIndex].y;
+            if (ypos < boundingBox.minimum.y) {
+                boundingSphere.radius += Math.abs(ypos - boundingBox.minimum.y);
+                boundingBox.minimum.y = ypos;
+            } else if (ypos > boundingBox.maximum.y) {
+                boundingBox.maximum.y = ypos;
             }
         }
 
         var boundingBox = this.terrain.getBoundingInfo().boundingBox;
         var boundingSphere = this.terrain.getBoundingInfo().boundingSphere;
-        if (this._groundPositions[vertexIndex].y < boundingBox.minimum.y) {
-            boundingSphere.radius += Math.abs(this._groundPositions[vertexIndex].y - boundingBox.minimum.y);
-            boundingBox.minimum.y = this._groundPositions[vertexIndex].y;
-        } else if (this._groundPositions[vertexIndex].y > boundingBox.maximum.y) {
-            boundingBox.maximum.y = this._groundPositions[vertexIndex].y;
+        if (ypos < boundingBox.minimum.y) {
+            boundingSphere.radius += Math.abs(ypos - boundingBox.minimum.y);
+            boundingBox.minimum.y = ypos;
+        } else if (ypos > boundingBox.maximum.y) {
+            boundingBox.maximum.y = ypos;
         }
     };
     private _reComputeNormals() {
@@ -192,21 +195,48 @@ export class TerrainTool extends UITAB {
                 });
             }
         });
-
+        let v1v2 = new BABYLON.Vector3();
+        let v3v2 = new BABYLON.Vector3();
         faces.forEach(face => {
-            var v1v2 = this._groundPositions[face.indices[0]].subtract(this._groundPositions[face.indices[1]]);
-            var v3v2 = this._groundPositions[face.indices[2]].subtract(this._groundPositions[face.indices[1]]);
+
+            v1v2.x = this.terrain.positions[face.indices[0] * 3] - this.terrain.positions[face.indices[1] * 3];
+            v1v2.y = this.terrain.positions[face.indices[0] * 3 + 1] - this.terrain.positions[face.indices[1] * 3 + 1];
+            v1v2.z = this.terrain.positions[face.indices[0] * 3 + 2] - this.terrain.positions[face.indices[1] * 3 + 2];
+
+            v3v2.x = this.terrain.positions[face.indices[2] * 3] - this.terrain.positions[face.indices[1] * 3];
+            v3v2.y = this.terrain.positions[face.indices[2] * 3 + 1] - this.terrain.positions[face.indices[1] * 3 + 1];
+            v3v2.z = this.terrain.positions[face.indices[2] * 3 + 2] - this.terrain.positions[face.indices[1] * 3 + 2];
+
+            //var v1v2 = this._groundPositions[face.indices[0]].subtract(this._groundPositions[face.indices[1]]);
+            //var v3v2 = this._groundPositions[face.indices[2]].subtract(this._groundPositions[face.indices[1]]);
 
             this._groundFacesNormals[face.faceID] = BABYLON.Vector3.Normalize(BABYLON.Vector3.Cross(v1v2, v3v2));
-
+            
             face.indices.forEach(vertexIndex => {
                 var faces = this._facesOfVertices[vertexIndex];
-                var normal = BABYLON.Vector3.Zero();
+               // let normal = BABYLON.Vector3.Zero();
+                let x = 0;
+                let y = 0;
+                let z = 0;
                 for (var index = 0; index < faces.length; index++) {
-                    normal = normal.add(this._groundFacesNormals[faces[index]]);
+                    let facenormal = this._groundFacesNormals[faces[index]];
+                    x += facenormal.x;
+                    y += facenormal.y;
+                    z += facenormal.z;
+                    //normal = normal.add(this._groundFacesNormals[faces[index]]);
                 }
-                normal = BABYLON.Vector3.Normalize(normal.scale(1.0 / faces.length));
-                this.terrain.normals.set([normal.x, normal.y, normal.z], vertexIndex * 3);
+                let fc = 1.0 / faces.length;
+                x *= fc;
+                y *= fc;
+                z *= fc;
+                //Normalize
+                let scale = 1 / Math.sqrt(x * x + y * y + z * z);
+                x *= scale;
+                y *= scale;
+                z *= scale;
+
+               // normal = BABYLON.Vector3.Normalize(normal.scale(1.0 / faces.length));
+                this.terrain.normals.set([x, y, z], vertexIndex * 3);
             });
         });
         let min = Math.min(...faces.map(f => Math.min(...f.indices))) * 3;
@@ -229,9 +259,12 @@ export class TerrainTool extends UITAB {
             if (!this._isBoxSphereIntersected(subMesh.getBoundingInfo().boundingBox, sphereCenter, radius)) {
                 continue;
             }
-
+            let position = new BABYLON.Vector3();
             for (let index: number = subMesh.verticesStart; index < subMesh.verticesStart + subMesh.verticesCount; index++) {
-                var position = this._groundPositions[index];
+                //var position = this._groundPositions[index];
+                position.x = this.terrain.positions[index * 3];
+                position.y = this.terrain.positions[index * 3 + 1];
+                position.z = this.terrain.positions[index * 3 + 2];
                 sphereCenter.y = position.y;
 
                 let distance = BABYLON.Vector3.Distance(position, sphereCenter);
@@ -248,20 +281,21 @@ export class TerrainTool extends UITAB {
         // Elevate vertices
  
         this._selectedVertices.forEach(sv => {
-            let position = this._groundPositions[sv.vertice];
+            //let positiony = this._groundPositions[sv.vertice].y;
+            let positiony = this.terrain.positions[sv.vertice *3 +1];
             var fullHeight = height * this.direction * this._invertDirection;
             if (sv.distance < radius * 0.3) {
-                position.y += fullHeight;
+                positiony += fullHeight;
             } else {
-                position.y += fullHeight * (1.0 - (sv.distance - radius * 0.3) / (radius * 0.7));
+                positiony += fullHeight * (1.0 - (sv.distance - radius * 0.3) / (radius * 0.7));
             }
 
-            if (position.y > this.heightMax)
-                position.y = this.heightMax;
-            else if (position.y < this.heightMin)
-                position.y = this.heightMin;
+            if (positiony > this.heightMax)
+                positiony = this.heightMax;
+            else if (positiony < this.heightMin)
+                positiony = this.heightMin;
 
-            this.terrain.positions[sv.vertice * 3 + 1] = position.y;
+            this.terrain.positions[sv.vertice * 3 + 1] = positiony;
 
             this._updateSubdivisions(sv.vertice);
         });
@@ -287,9 +321,6 @@ export class TerrainTool extends UITAB {
 
       //  this.terrain._geometry.updateVerticesData(BABYLON.VertexBuffer.PositionKind, this.terrain.positions);
       //  this.terrain._geometry.updateVerticesData(BABYLON.VertexBuffer.NormalKind, this.terrain.normals);
-
-        //this.terrain.updateVerticesData(BABYLON.VertexBuffer.PositionKind, this.terrain.positions);
-        //this.terrain.updateVerticesData(BABYLON.VertexBuffer.NormalKind, this.terrain.normals);
     };
     activated: boolean;    name: string;
     activate = (): void => {
