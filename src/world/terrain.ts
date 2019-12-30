@@ -217,7 +217,7 @@ export class Terrain extends BABYLON.GroundMesh {
         var intersectInfo: Nullable<BABYLON.IntersectionInfo> = null;
 
         var subMeshes = this._scene.getIntersectingSubMeshCandidates(this, ray);
-        console.log(subMeshes);
+        //console.log(subMeshes);
         var len: number = subMeshes.length;
         let p0 = new BABYLON.Vector3();
         let p1 = new BABYLON.Vector3();
@@ -235,7 +235,7 @@ export class Terrain extends BABYLON.GroundMesh {
             let currentIntersectInfo = null;
             //let indices = <IndicesArray>this.getIndices();
            // let positions = <BABYLON.Vector3[]>this._positions;
-            console.log(subMesh);
+           // console.log(subMesh);
             let count = subMesh.indexStart + subMesh.indexCount;
             for (var index = subMesh.indexStart; index < count; index += 3) {
 

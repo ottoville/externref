@@ -8,11 +8,13 @@ function intersects(boundingInfo, ray: Ray, fastCheck ?: boolean, trianglePredic
     var pickingInfo = new PickingInfo();
     const intersectionThreshold = 0;
     //const boundingInfo = this._boundingInfo;
-    if (!this.subMeshes || !boundingInfo || !ray.intersectsSphere(boundingInfo.boundingSphere, intersectionThreshold) || !ray.intersectsBox(boundingInfo.boundingBox, intersectionThreshold)) {
+    if (!boundingInfo || !ray.intersectsSphere(boundingInfo.boundingSphere, intersectionThreshold) || !ray.intersectsBox(boundingInfo.boundingBox, intersectionThreshold)) {
+        console.log('no intersect -2');
         return pickingInfo;
     }
 
     if (!this._generatePointsArray()) {
+        console.log('no intersect -1');
         return pickingInfo;
     }
 
@@ -26,7 +28,8 @@ function intersects(boundingInfo, ray: Ray, fastCheck ?: boolean, trianglePredic
         // Bounding test
 
         //if (len > 1 && !subMesh.canIntersects(ray)) {
-        if (!ray.intersectsBox(boundingInfo.boundingBox)) {
+    if (!ray.intersectsBox(boundingInfo.boundingBox)) {
+        console.log('no intersect 0');
             return pickingInfo;
         }
 
@@ -111,6 +114,7 @@ function intersects(boundingInfo, ray: Ray, fastCheck ?: boolean, trianglePredic
 
         // Return result
         pickingInfo.hit = true;
+        console.log('calculating pickedpoint', worldOrigin, pickedPoint)
         pickingInfo.distance = Vector3.Distance(worldOrigin, pickedPoint);
         pickingInfo.pickedPoint = pickedPoint;
         //pickingInfo.pickedMesh = this;
@@ -119,6 +123,8 @@ function intersects(boundingInfo, ray: Ray, fastCheck ?: boolean, trianglePredic
         pickingInfo.faceId = intersectInfo.faceId;
         pickingInfo.subMeshId = intersectInfo.subMeshId;
         return pickingInfo;
+    } else {
+        console.log('no intersect 1');
     }
 
     return pickingInfo;
@@ -137,7 +143,8 @@ let methods2 = {
             e.data.viewportWidth, e.data.viewportHeight,
             Matrix.FromArray(e.data.world),
             Matrix.FromArray(e.data.view), Matrix.FromArray(e.data.projection));
-        intersects(e.boundingInfo, ray);
+        let pickinfo = intersects(e.boundingInfo, ray);
+        console.log(pickinfo);
     },
     createHeights: () => {
         //native: 95
