@@ -36,19 +36,36 @@ const texImage2D: ITextureStatic = class {
 import { UITAB } from "../UITAB.js";
 import { LazyEval } from "../LazyEval.js";
 import { Terrain } from "../world/terrain.js";
+import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
 
 export class TerrainTool extends UITAB {
+    private worker = new WorkerThread('/webworkers/terrainWorker.js');
     private ray = BABYLON.Ray.Zero();
     private pickinfo: BABYLON.PickingInfo;
     private mousemove = new LazyEval((evt: PointerEvent) => {
+        let engine = this.scene.getEngine();
+        let viewport = this.camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
+        let world = this.terrain.getWorldMatrix();
+        this.worker.message(WorkerReturn.noReturn, 'mousemove',
+            {
+                x: evt.clientX,
+                y: evt.clientY,
+                viewportWidth: viewport.width,
+                viewportHeight: viewport.height,
+                world: world.toArray(),
+                view: this.camera.getViewMatrix().toArray(),
+                projection: this.camera.getProjectionMatrix().toArray(),
+                boundingInfo: this.terrain.subMeshes[0].getBoundingInfo()
+            });
         this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.terrain.getWorldMatrix(), this.ray, this.camera);
         this.pickinfo = this.terrain.intersects(this.ray);
         if (this.pickinfo.pickedPoint) {
-            this.helper.position.x = this.pickinfo.pickedPoint.x;
+            /*this.helper.position.x = this.pickinfo.pickedPoint.x;
             this.helper.position.y = 0;
             this.helper.position.z = this.pickinfo.pickedPoint.z;
-            console.log(this.helper.position);
-            [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -714.7799682617188, 0, -90.85552215576172, 1]
+            console.log(this.helper.position);*/
+            this.uniformsV2.set(this.helpermaterial._effect.getUniform("flatPos"), { x: this.pickinfo.pickedPoint.x, y: this.pickinfo.pickedPoint.z})
+            //[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -714.7799682617188, 0, -90.85552215576172, 1]
         }
     });
     private vertexData = new BABYLON.VertexData();
@@ -59,6 +76,7 @@ export class TerrainTool extends UITAB {
     private glTexture2: WebGLTexture;
     private glTexture3: WebGLTexture;
     private gl: WebGLRenderingContext;
+    private uniformsV2: Map<WebGLUniformLocation, { x: number, y: number }> = new Map();
     private setTime=() => {
         this.helpermaterial.setFloat("time", (this.timed - new Date().getTime()) / 1000);
     }
@@ -68,6 +86,11 @@ export class TerrainTool extends UITAB {
         private camera: BABYLON.ArcRotateCamera,
     ) {
         super();
+        this.worker.message(WorkerReturn.noReturn, 'init',
+            {
+                positions: this.terrain.positionsBuffer,
+                indices: this.terrain.indicesBuffer
+            });
         this.vertexData.positions = new Float32Array([
             -0.5, 0, -2,
             0.5, 0, -3,
@@ -79,7 +102,7 @@ export class TerrainTool extends UITAB {
         this.helpermaterial = new BABYLON.ShaderMaterial("shader", this.scene, "./shaders/helper",
             {
                 attributes: ["position", "normal", "uv"],
-                uniforms: ["world", "worldView", "worldViewProjection", "view", "projection"]
+                uniforms: ["world", "worldView", "worldViewProjection", "view", "projection", "flatPos"]
             });
         this.helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
         this.gl = scene.getEngine()._gl;
@@ -132,12 +155,6 @@ export class TerrainTool extends UITAB {
             this._facesOfVertices[index] = [];
             this._subdivisionsOfVertices[index] = [];
         }
-
-        /*for (index = 0; index < this._groundPositions.length; index++) {
-            this._facesOfVertices[index] = [];
-            this._subdivisionsOfVertices[index] = [];
-        }*/
-
         for (index = 0; index < this.terrain.indices.length; index++) {
             this._facesOfVertices[this.terrain.indices[index]].push((index / 3) | 0);
         }
@@ -319,10 +336,6 @@ export class TerrainTool extends UITAB {
         
         //this.terrain._geometry.getVertexBuffer(BABYLON.VertexBuffer.NormalKind).update(this.terrain.normals);
         this.terrain.createHeights();
-
-
-      //  this.terrain._geometry.updateVerticesData(BABYLON.VertexBuffer.PositionKind, this.terrain.positions);
-      //  this.terrain._geometry.updateVerticesData(BABYLON.VertexBuffer.NormalKind, this.terrain.normals);
     };
     activated: boolean;    name: string;
     activate = (): void => {
@@ -420,19 +433,26 @@ export class TerrainTool extends UITAB {
             }
         }).bind(this.helpermaterial)
 
+        
 
         this.helper._processRendering = (subMesh: BABYLON.SubMesh, effect: BABYLON.Effect, fillMode: number, batch: BABYLON._InstancesBatch, hardwareInstancedRendering: boolean,
             onBeforeDraw: (isInstance: boolean, world: BABYLON.Matrix, effectiveMaterial?: BABYLON.Material) => void, effectiveMaterial?: BABYLON.Material): BABYLON.Mesh => {
 
-                    // Draw
-                    if (onBeforeDraw) {
-                        onBeforeDraw(false, this.helper._effectiveMesh.getWorldMatrix(), effectiveMaterial);
-                    }
-                   // this._draw(subMesh, fillMode);
-                    engine.applyStates();
-                    engine._drawCalls.addCount(1, false);
-                    gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.vertexData.indices.length, gl.UNSIGNED_SHORT, 0, 8);
-                    return this.helper;
+                    
+            // Draw
+            if (onBeforeDraw) {
+                onBeforeDraw(false, this.helper._effectiveMesh.getWorldMatrix(), effectiveMaterial);
+            }
+            this.uniformsV2.forEach((value, uniform) => {
+                gl.uniform2f(uniform, value.x, value.y);
+            });
+            this.uniformsV2.clear();
+
+            // this._draw(subMesh, fillMode);
+            engine.applyStates();
+            engine._drawCalls.addCount(1, false);
+            gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.vertexData.indices.length, gl.UNSIGNED_SHORT, 0, 8);
+            return this.helper;
 
             //return this;
 

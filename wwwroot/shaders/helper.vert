@@ -5,6 +5,8 @@
 
 in vec3 position;
 
+uniform vec2 flatPos;
+
 uniform mat4 world;
 uniform mat4 worldViewProjection;
 uniform float time;
@@ -49,44 +51,29 @@ float getHeightAtCoordinates2(vec2 xz) {
         vec4 facet = getFacetAt(xz.x, xz.y);
         float y = -(facet.x * xz.x + facet.z * xz.y + facet.w) / facet.y;
         return y;
-    }
-//float getHeightAtCoordinates(float x, float z) {
-//    mat4 invMat = inverse(world);
- //   vec3 tmpVect=TransformCoordinates(x, 0.0, z, invMat); // transform x,z in the mesh local space
-//    float newx = tmpVect.x;
-//    float newz = tmpVect.z;
-//    if (newx < minX || newx > maxX || newz < minZ || newz > maxZ) {
-//        return 0.0;
-//    }
-//    vec4 facet = getFacetAt(newx, newz);
-//    float y = -(facet.x * newx + facet.z * newz + facet.w) / facet.y;
-    // return y in the World system
-//    vec3 tmpVect2= TransformCoordinates(0.0, y, 0.0, world);
-//    return tmpVect2.y;
-//}
-    
-
-
+}
 void main(void) {
-    vec4 worldcoords=world * vec4(position,1.0);
+   // vec4 worldcoords=world * vec4(position,1.0);
     
     float angle=time+float(gl_InstanceID)*angleStep;
 	float c = cos(angle);
 	float s = sin(angle);
 
     vec2 rotated=vec2(position.x * c - position.z * s, position.x * s + position.z * c);
-    float localposX=rotated.x;
-    float localposZ=rotated.y;
 
-    float posx=10.0*c;
-    float posz=10.0*s;
-    float offsetX=localposX+posx;
-    float offsetZ=localposZ+posz;
+   // float posx=10.0*c;
+    //float posz=10.0*s;
+    //vec2 offset = vec2(rotated.x+posx, rotated.y+posz);
+    vec2 offset = rotated+vec2(10.0*c, 10.0*s);
+    //float offsetX=localposX+posx;
+    //float offsetZ=localposZ+posz;
 
-    vec4 worldpos=world*vec4(offsetX,0,offsetZ,1.0);
-    float posy=getHeightAtCoordinates2(vec2(worldpos.x,worldpos.z));
+    //vec4 worldpos=world*vec4(offsetX,0,offsetZ,1.0);
+    vec2 worldpos= offset + flatPos;
 
-    vec3 newpos = vec3(offsetX,posy+2.0,offsetZ);
+    float posy=getHeightAtCoordinates2(vec2(worldpos.x,worldpos.y));
+
+    vec3 newpos = vec3(worldpos.x,posy+2.0,worldpos.y);
     gl_Position = worldViewProjection * vec4(newpos, 1.0);
 
 }

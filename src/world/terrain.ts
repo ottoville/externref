@@ -15,10 +15,11 @@ export class Terrain extends BABYLON.GroundMesh {
     private ratioX: number;
     private ratioY: number;
 
-    public positionsBuffer: ArrayBuffer;
+    public positionsBuffer: SharedArrayBuffer;
     public positionsView: DataView;
 
     public indices: Uint32Array;
+    public indicesBuffer: SharedArrayBuffer;
     public normals: Float32Array;
     public normalsView: DataView;
 
@@ -28,13 +29,20 @@ export class Terrain extends BABYLON.GroundMesh {
     //public ground: BABYLON.GroundMesh;
     constructor(private vdata: TerrainMap, private scene: BABYLON.Scene) {
         super('ground', scene);
-        this.indices = vdata.indices;
+        this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * vdata.indices.length);
+        this.indices = new Uint32Array(this.indicesBuffer);
+        this.indices.set(vdata.indices);
         this.normals = vdata.normals;
         this.normalsView = new DataView(this.normals.buffer);
 
-        this.positions = vdata.positions;
-        this.positionsBuffer = this.positions.buffer;
-        this.positionsView = new DataView(this.positions.buffer);
+        this.positionsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * vdata.positions.length);
+        this.positions = new Float32Array(this.positionsBuffer);
+        this.positions.set(vdata.positions);
+
+       // this.positions = vdata.positions;
+        //this.positionsBuffer = this.positions.buffer;
+
+        this.positionsView = new DataView(this.positionsBuffer);
         this.uvs = vdata.uvs;
 
         this._subdivisionsX = 250;
@@ -209,6 +217,7 @@ export class Terrain extends BABYLON.GroundMesh {
         var intersectInfo: Nullable<BABYLON.IntersectionInfo> = null;
 
         var subMeshes = this._scene.getIntersectingSubMeshCandidates(this, ray);
+        console.log(subMeshes);
         var len: number = subMeshes.length;
         let p0 = new BABYLON.Vector3();
         let p1 = new BABYLON.Vector3();
@@ -226,6 +235,7 @@ export class Terrain extends BABYLON.GroundMesh {
             let currentIntersectInfo = null;
             //let indices = <IndicesArray>this.getIndices();
            // let positions = <BABYLON.Vector3[]>this._positions;
+            console.log(subMesh);
             let count = subMesh.indexStart + subMesh.indexCount;
             for (var index = subMesh.indexStart; index < count; index += 3) {
 
