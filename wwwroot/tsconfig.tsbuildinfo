@@ -154,12 +154,12 @@
         "signature": "2b22d1846d2cadf3be08037313ecf88f73a60d458409b689ee4c379869370394"
       },
       "../src/workers/webworkers/ray.ts": {
-        "version": "ce2d270135046bfa843d30dfda388e9afd10963108580fd6998095c44ca18009",
-        "signature": "7cf31e46edeff1379c5ba4575089b628b536e9eb0bbd055888983105a97d9c0c"
+        "version": "d0a795a1cb33af85b4532fdcbc119064b75e7844eecb23fefcac66347d897bdf",
+        "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
       },
       "../src/workers/webworkers/terrainworker.ts": {
-        "version": "bea8778726e583e8104f2729f8c3d79c71ed82dfca7bee9b19aaa256cce34587",
-        "signature": "a0e85e6bf5ea12ea21ce9babe4f16d75f83b2dd02fd5cee603e3d4726f051efa"
+        "version": "60e7cacf3b4cf03ee9bb380ad0c8dceba4b1b30b225f06b151783b7962e0e9d7",
+        "signature": "469a1f02f007744bb018d0a27f9e0e8d1ff831367141eef5fd0ae2cd69b60ac9"
       },
       "../src/workers/sw.ts": {
         "version": "f345e656bd7ce80eb500c89e8de1e97bacc623f2f74ca8b9992be93ae786db07",
@@ -172,6 +172,10 @@
       "../src/node_modules/@types/facebook-js-sdk/index.d.ts": {
         "version": "6aadc0e7ef7e8930121db014145d3085fe91b51c086c4a282cc209dfff9fc2bc",
         "signature": "6aadc0e7ef7e8930121db014145d3085fe91b51c086c4a282cc209dfff9fc2bc"
+      },
+      "../src/node_modules/@types/mocha/index.d.ts": {
+        "version": "c4c03cf65951d980ba618ae9601d10438730803fc9c8a1f7b34af8739981e205",
+        "signature": "c4c03cf65951d980ba618ae9601d10438730803fc9c8a1f7b34af8739981e205"
       }
     },
     "options": {
@@ -234,6 +238,7 @@
       "../src/workers/sw.ts",
       "../src/workers/commonmath.d.ts",
       "../src/node_modules/@types/facebook-js-sdk/index.d.ts",
+      "../src/node_modules/@types/mocha/index.d.ts",
       "../src/workers/webworkers/terrainworker.ts"
     ]
   },

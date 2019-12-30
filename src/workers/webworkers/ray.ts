@@ -10,6 +10,7 @@ import { Scene } from '../scene';
 import { Camera } from '../Cameras/camera';
 import { Plane } from '../Maths/math.plane';*/
 
+
 class PickingInfo {
     /** @hidden */
     public _pickingUnavailable = false;
@@ -1076,10 +1077,11 @@ class Ray {
      * @param projection projection matrix
      * @returns this ray updated
      */
+    /*
     public update(x: number, y: number, viewportWidth: number, viewportHeight: number, world: DeepImmutable<Matrix>, view: DeepImmutable<Matrix>, projection: DeepImmutable<Matrix>): Ray {
         this.unprojectRayToRef(x, y, viewportWidth, viewportHeight, world, view, projection);
         return this;
-    }
+    }*/
     
     // Statics
     /**
@@ -1171,11 +1173,9 @@ class Ray {
       * @param view defines the view matrix to use
       * @param projection defines the projection matrix to use
       */
-    public unprojectRayToRef(sourceX: float, sourceY: float, viewportWidth: number, viewportHeight: number, world: DeepImmutable<Matrix>, view: DeepImmutable<Matrix>, projection: DeepImmutable<Matrix>): void {
-        var matrix = new Matrix();
-        world.multiplyToRef(view, matrix);
-        matrix.multiplyToRef(projection, matrix);
-        matrix.invert();
+    public unprojectRayToRef(sourceX: float, sourceY: float, viewportWidth: number, viewportHeight: number, view: DeepImmutable<Matrix>, projection: DeepImmutable<Matrix>): void {
+        view.multiplyToRef(projection, <Matrix>view);
+        view.invert();
         var nearScreenSource = new Vector3();
         nearScreenSource.x = sourceX / viewportWidth * 2 - 1;
         nearScreenSource.y = -(sourceY / viewportHeight * 2 - 1);
@@ -1183,8 +1183,8 @@ class Ray {
         var farScreenSource = new Vector3().copyFromFloats(nearScreenSource.x, nearScreenSource.y, 1.0);
         const nearVec3 = new Vector3();
         const farVec3 = new Vector3();
-        Vector3._UnprojectFromInvertedMatrixToRef(nearScreenSource, matrix, nearVec3);
-        Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, matrix, farVec3);
+        Vector3._UnprojectFromInvertedMatrixToRef(nearScreenSource, view, nearVec3);
+        Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, view, farVec3);
 
         this.origin.copyFrom(nearVec3);
         farVec3.subtractToRef(nearVec3, this.direction);

@@ -20,6 +20,8 @@ export class Terrain extends BABYLON.GroundMesh {
 
     public indices: Uint32Array;
     public indicesBuffer: SharedArrayBuffer;
+
+    public normalsBuffer: SharedArrayBuffer;
     public normals: Float32Array;
     public normalsView: DataView;
 
@@ -32,8 +34,13 @@ export class Terrain extends BABYLON.GroundMesh {
         this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * vdata.indices.length);
         this.indices = new Uint32Array(this.indicesBuffer);
         this.indices.set(vdata.indices);
-        this.normals = vdata.normals;
-        this.normalsView = new DataView(this.normals.buffer);
+
+        this.normalsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * vdata.normals.length)
+
+        this.normals = new Float32Array(this.normalsBuffer)
+        this.normals.set(vdata.normals);
+
+        this.normalsView = new DataView(this.normalsBuffer);
 
         this.positionsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * vdata.positions.length);
         this.positions = new Float32Array(this.positionsBuffer);

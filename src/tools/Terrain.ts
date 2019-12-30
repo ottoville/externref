@@ -40,33 +40,35 @@ import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
 
 export class TerrainTool extends UITAB {
     private worker = new WorkerThread('/webworkers/terrainWorker.js');
-    private ray = BABYLON.Ray.Zero();
-    private pickinfo: BABYLON.PickingInfo;
+    //private ray = BABYLON.Ray.Zero();
+    //private pickinfo: BABYLON.PickingInfo;
     private mousemove = new LazyEval((evt: PointerEvent) => {
         let engine = this.scene.getEngine();
         let viewport = this.camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
-        let world = this.terrain.getWorldMatrix();
-        this.worker.message(WorkerReturn.noReturn, 'mousemove',
+        let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
+        this.worker.message(WorkerReturn.Promise, 'mousemove',
             {
                 x: evt.clientX,
                 y: evt.clientY,
                 viewportWidth: viewport.width,
                 viewportHeight: viewport.height,
-                world: world.toArray(),
                 view: this.camera.getViewMatrix().toArray(),
                 projection: this.camera.getProjectionMatrix().toArray(),
-                boundingInfo: this.terrain.subMeshes[0].getBoundingInfo()
+                boundingBox: boundingInfo.boundingBox,
+                boundingSphere: boundingInfo.boundingSphere
+            }).then(flatPos => {
+                this.uniformsV2.set(this.helpermaterial._effect.getUniform("flatPos"), <{x:number, y:number}><any>flatPos);
             });
-        this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.terrain.getWorldMatrix(), this.ray, this.camera);
-        this.pickinfo = this.terrain.intersects(this.ray);
-        if (this.pickinfo.pickedPoint) {
+        //this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.terrain.getWorldMatrix(), this.ray, this.camera);
+       // this.pickinfo = this.terrain.intersects(this.ray);
+        //if (this.pickinfo.pickedPoint) {
             /*this.helper.position.x = this.pickinfo.pickedPoint.x;
             this.helper.position.y = 0;
             this.helper.position.z = this.pickinfo.pickedPoint.z;
             console.log(this.helper.position);*/
-            this.uniformsV2.set(this.helpermaterial._effect.getUniform("flatPos"), { x: this.pickinfo.pickedPoint.x, y: this.pickinfo.pickedPoint.z})
+          //  this.uniformsV2.set(this.helpermaterial._effect.getUniform("flatPos"), { x: this.pickinfo.pickedPoint.x, y: this.pickinfo.pickedPoint.z})
             //[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -714.7799682617188, 0, -90.85552215576172, 1]
-        }
+       // }
     });
     private vertexData = new BABYLON.VertexData();
     private helper = new BABYLON.Mesh("Helper");
@@ -89,7 +91,8 @@ export class TerrainTool extends UITAB {
         this.worker.message(WorkerReturn.noReturn, 'init',
             {
                 positions: this.terrain.positionsBuffer,
-                indices: this.terrain.indicesBuffer
+                indices: this.terrain.indicesBuffer,
+                normals: this.terrain.normalsBuffer
             });
         this.vertexData.positions = new Float32Array([
             -0.5, 0, -2,
@@ -491,8 +494,20 @@ export class TerrainTool extends UITAB {
         canvas.addEventListener("pointerup", this.pointerupf);
         this.camera.detachControl(canvas);
         this.mouseinterval = setInterval(() => {
-            console.log('elevating');
-            this.elevateFaces(this.pickinfo, 50, 5);
+            let gl = (<WebGL2RenderingContext><any>this.gl);
+            let normalbuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.NormalKind]._buffer.getBuffer().underlyingResource;
+            let vertexbuffer: WebGLBuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.PositionKind]._buffer.getBuffer().underlyingResource;
+
+            this.worker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(e => {
+                let NormalsRange = <{ normalsMin: number, normalsMax: number }><any>e;
+                gl.bindBuffer(gl.ARRAY_BUFFER, normalbuffer);
+                gl.bufferSubData(gl.ARRAY_BUFFER, NormalsRange.normalsMin, this.terrain.normalsView, NormalsRange.normalsMin, NormalsRange.normalsMax - NormalsRange.normalsMin)
+
+                gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexbuffer);
+                let range = <{ min: number, max: number }><any>e;
+                gl.bufferSubData(this.gl.ARRAY_BUFFER, range.min, this.terrain.positionsView, range.min, range.max - range.min)
+            });
+            //this.elevateFaces(this.pickinfo, 50, 5);
         }, 100);
     }
     pointerupf = (evt: PointerEvent): void => {
