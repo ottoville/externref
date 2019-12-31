@@ -8,6 +8,10 @@
     texture: Blob
 }
 export class Terrain extends BABYLON.GroundMesh {
+    public slopeArrBuffer: SharedArrayBuffer;
+    public facet1ArrBuffer: SharedArrayBuffer;
+    public facet2ArrBuffer: SharedArrayBuffer;
+
     public slopeArr: Int16Array;
     public facet1Arr: Float32Array;
     public facet2Arr: Float32Array;
@@ -55,10 +59,12 @@ export class Terrain extends BABYLON.GroundMesh {
         this._subdivisionsX = 250;
         this._subdivisionsY = 250;
 
-        this.slopeArr = new Int16Array(this._subdivisionsX * this._subdivisionsY * 2);
-        this.facet1Arr = new Float32Array(this._subdivisionsX * this._subdivisionsY * 4);
-        this.facet2Arr = new Float32Array(this._subdivisionsX * this._subdivisionsY * 4);
-
+        this.slopeArrBuffer = new SharedArrayBuffer(Int16Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4)
+        this.facet1ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4);
+        this.facet2ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4);
+        this.slopeArr = new Int16Array(this.slopeArrBuffer);
+        this.facet1Arr = new Float32Array(this.facet1ArrBuffer);
+        this.facet2Arr = new Float32Array(this.facet2ArrBuffer);
 
         this._width = vdata.width;
         this._height = vdata.height;

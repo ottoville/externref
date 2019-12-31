@@ -92,7 +92,10 @@ export class TerrainTool extends UITAB {
             {
                 positions: this.terrain.positionsBuffer,
                 indices: this.terrain.indicesBuffer,
-                normals: this.terrain.normalsBuffer
+                normals: this.terrain.normalsBuffer,
+                slopeArr: this.terrain.slopeArrBuffer,
+                facet1Arr: this.terrain.facet1ArrBuffer,
+                facet2Arr: this.terrain.facet2ArrBuffer
             });
         this.vertexData.positions = new Float32Array([
             -0.5, 0, -2,
@@ -403,7 +406,30 @@ export class TerrainTool extends UITAB {
             }
             return this;
         }).bind(this.helpermaterial)();
+        this.worker.subscribe('heights', (v) => {
+            console.log(v);
+            gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+            gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+            let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.terrain.slopeArr);
+            tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
+            tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+            gl.bindTexture(gl.TEXTURE_2D, null);
 
+            gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
+
+            let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr);
+            tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
+            tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
+
+            let tex3 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr);
+            tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
+            tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+            gl.bindTexture(gl.TEXTURE_2D, null);
+
+        });
         this.helper.material = this.helpermaterial;
         this.helpermaterial.bindOnlyWorldMatrix = (function (world: BABYLON.Matrix) {
             
@@ -416,7 +442,6 @@ export class TerrainTool extends UITAB {
                 let effect = (<BABYLON.Effect>this._effect);
                 //this._effect.setMatrix("world", world);
                 if (effect._cacheMatrix("world", world)) {
-                    console.log('set world matrix phase 3', world.m);
                     //engine.setMatrices(effect.getUniform("world"), world.toArray() as Float32Array);
                     gl.uniformMatrix4fv(effect.getUniform("world"), false, world.toArray() as Float32Array);
                 }
