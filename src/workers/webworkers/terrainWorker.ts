@@ -230,8 +230,9 @@ let methods2 = {
             /* CREATE HEIGHTS */
 
                 //let cd = (terrainPositions[indices[0] * 3 + 2] - terrainPositions[indices[2] * 3 + 2]) / (terrainPositions[indices[0] * 3 + 3] - terrainPositions[indices[2] * 3]);
-               // let h = terrainPositions[indices[2] * 3 + 2] - cd * terrainPositions[indices[2] * 3]
-                //console.log(cd);
+                //  h = v1arr[2] - cd * v1arr[0]
+                let h = terrainPositions[indices[2] * 3 + 2] - (-1) * terrainPositions[indices[2] * 3]
+                console.log(h);
 
                 /****** */
 
@@ -283,7 +284,6 @@ let methods2 = {
         methods2.createHeights();
     },
     createHeights: () => {
-        console.log(slopeArr);
         //native: 95
         //212
         let v1arr = [];
@@ -371,7 +371,9 @@ let methods2 = {
                // let oldvalues = slopeArr.subarray((row * _subdivisionsX + col) * 2, ((row * _subdivisionsX + col) * 2) + 2);
                // if (oldvalues[0] != cd && oldvalues[1] != h) {
                     //console.log(k + i, j + i)
-                    slopeArr.set([cd, h], (row * _subdivisionsX + col) * 2);
+                //slopeArr.set([cd, h], (row * _subdivisionsX + col) * 2);
+
+                slopeArr[row * _subdivisionsX + col] = h
                     facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * _subdivisionsX + col) * 4)
                     facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * _subdivisionsX + col) * 4);
                // }

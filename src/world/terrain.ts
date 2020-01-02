@@ -59,7 +59,7 @@ export class Terrain extends BABYLON.GroundMesh {
         this._subdivisionsX = 250;
         this._subdivisionsY = 250;
 
-        this.slopeArrBuffer = new SharedArrayBuffer(Int16Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 2)
+        this.slopeArrBuffer = new SharedArrayBuffer(Int16Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY)
         this.facet1ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4);
         this.facet2ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4);
         this.slopeArr = new Int16Array(this.slopeArrBuffer);
@@ -150,8 +150,7 @@ export class Terrain extends BABYLON.GroundMesh {
                 v1v4.y = positionsView.getFloat32((k + i + 4) << 2, true) - v1arr[1];
                 v1v4.z = positionsView.getFloat32((k + i + 5) << 2, true) - v1arr[2];
 
-                //cd = (positionsView.getFloat32((k + i + 2) << 2, true) - v1arr[2]) / (positionsView.getFloat32((k + i + 3) << 2, true) - v1arr[0]);
-                
+                //cd = (positionsView.getFloat32((k + i + 5) << 2, true) - v1arr[2]) / (positionsView.getFloat32((k + i + 3) << 2, true) - v1arr[0]);
                 h = v1arr[2] - cd * v1arr[0];             // v1 belongs to the slope
 
                 // facet equations :
@@ -183,7 +182,8 @@ export class Terrain extends BABYLON.GroundMesh {
                 norm2.normalize();
                 d1 = -(norm1.x * v1arr[0] + norm1.y * v1arr[1] + norm1.z * v1arr[2]);
                 d2 = -(norm2.x * v2arr[0] + norm2.y * v2arr[1] + norm2.z * v2arr[2]);
-                this.slopeArr.set([cd, h], (row * this._subdivisionsX + col) * 2);
+                //this.slopeArr.set([cd, h], (row * this._subdivisionsX + col) * 2);
+                this.slopeArr[row * this._subdivisionsX + col] = h;
                 this.facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * this._subdivisionsX + col) * 4)
                 this.facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * this._subdivisionsX + col) * 4)
             }
@@ -202,8 +202,9 @@ export class Terrain extends BABYLON.GroundMesh {
         let row = (-(z + this._maxZ) * this.ratioY + this._subdivisionsY) | 0;
         let pos: number = row * this._subdivisionsX + col;
         try {
-            if (z < this.slopeArr[pos << 1] * x + this.slopeArr[(pos << 1) + 1])
+            if (z < -1 * x + this.slopeArr[pos]) {
                 facet = new Float32Array(this.facet1Arr.buffer, pos << 4, 4) // << 4 =  4 *  Float32Array.BYTES_PER_ELEMENT
+            }
             else {
                 facet = new Float32Array(this.facet2Arr.buffer, pos << 4, 4) // << 4 = 4 *  Float32Array.BYTES_PER_ELEMENT
             }

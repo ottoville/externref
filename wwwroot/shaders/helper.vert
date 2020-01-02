@@ -38,9 +38,8 @@ vec4 getFacetAt( float x, float z) {
     float row= floor(-(z+maxZ)*subdivisionsY / height + subdivisionsY);
 
     ivec4 slope =  texelFetch(slopeArr, ivec2(col,row), 0);
-    vec2 slopef= vec2(slope.x,slope.y);
     vec4 facet;
-    if(z < slopef.x * x + slopef.y) {
+    if(z < -1.0 * x + float(slope.x)) {
         facet = texelFetch(facet1Arr, ivec2(col,row), 0);
     } else {
         facet = texelFetch(facet2Arr, ivec2( col,row), 0);

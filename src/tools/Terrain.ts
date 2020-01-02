@@ -357,7 +357,7 @@ export class TerrainTool extends UITAB {
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-        let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.terrain.slopeArr);
+        let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'R16I', 250, 250, gl.RED_INTEGER, gl.SHORT, this.terrain.slopeArr);
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
 
@@ -409,7 +409,7 @@ export class TerrainTool extends UITAB {
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-            let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.terrain.slopeArr);
+            let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'R16I', 250, 250, gl.RED_INTEGER, gl.SHORT, this.terrain.slopeArr);
             tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
             tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
 
