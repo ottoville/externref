@@ -232,7 +232,7 @@ let methods2 = {
                 //let cd = (terrainPositions[indices[0] * 3 + 2] - terrainPositions[indices[2] * 3 + 2]) / (terrainPositions[indices[0] * 3 + 3] - terrainPositions[indices[2] * 3]);
                 //  h = v1arr[2] - cd * v1arr[0]
                 let h = terrainPositions[indices[2] * 3 + 2] - (-1) * terrainPositions[indices[2] * 3]
-                console.log(h);
+              //  console.log(h);
 
                 /****** */
 
@@ -373,7 +373,12 @@ let methods2 = {
                     //console.log(k + i, j + i)
                 //slopeArr.set([cd, h], (row * _subdivisionsX + col) * 2);
 
-                slopeArr[row * _subdivisionsX + col] = h
+                slopeArr[row * _subdivisionsX + col] = h;
+                if (facet1Arr[(row * _subdivisionsX + col) * 4] != norm1.x) {
+                    console.log('new value ', (row * _subdivisionsX + col) * 4);
+
+                }
+
                     facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * _subdivisionsX + col) * 4)
                     facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * _subdivisionsX + col) * 4);
                // }
