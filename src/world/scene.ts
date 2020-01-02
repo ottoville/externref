@@ -324,45 +324,7 @@ export class WorldScene extends BABYLON.Scene {
             this.tools['Buildings'] = new BuildingsUI(this);
             
             DB.then(d => {
-                console.log('Database ready');
-                
-                
                 this.tools['Zones'] = new Zones(terrain, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
-                //ui.registerTab(ZoneTab);
-                //ui.registerTab(plantsUI);
-                
-
-               /* let c = document.createElement('canvas');
-                c.width = 10000;
-                c.height = 10000;
-                let ctx = c.getContext("2d");
-                if (DT) {
-                    ctx.beginPath();
-                    ctx.fillStyle = "#e0e031";
-                    ctx.fillRect(0, 0, 10000, 10000);
-
-                    var centerX = 10000 / 2
-                    var centerZ = 10000 / 2
-                    ctx.setTransform(1, 0, 0, 1, 0, 0);
-                    ctx.translate(centerX, centerZ);
-                    for (let row = -2500; row < 2500; row = row + 2) {
-                        for (let col = -2500; col < 2500; col = col += 2) {
-                            let height = terrain.getHeightAtCoordinates(row, col)
-                            if (height > 3) {
-                                ctx.fillStyle = "green";
-                                ctx.fillRect(row, col * -1, 3, 3);
-                            }
-                        }
-                    }
-                }           
-                c.toBlob(b => {
-
-                    let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) })
-                    shadermateria.setTexture('textureSampler2', groundtexture); //not working
-                    terrain.material = shadermateria;
-                    this.tools['Plants'] = new PlantsUI(terrain, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
-                   
-                }, 'image/webp');*/
             })
             var waterMaterial = new BABYLON.WaterMaterial("waterMaterial", this, new BABYLON.Vector2(512, 512));
             waterMaterial.bumpTexture = new BABYLON.Texture("images/waterbump.png", this);

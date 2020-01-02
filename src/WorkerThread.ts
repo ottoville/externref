@@ -35,4 +35,7 @@ export class WorkerThread extends Worker {
     subscribe(type: string, callback: (value?: any) => void) {
         this.subscriptions[type] = callback
     }
+    unsubscribe(type: string) {
+        delete this.subscriptions[type];
+    }
 }

@@ -165,7 +165,7 @@ let methods2 = {
     },
     elevateFaces: (e: WMessage) => {
 
-
+        let radiusPow = Math.pow(e.data.radius, 2);
         // Impact zone
         if (_selectedVertices == null) {
             _selectedVertices = [];
@@ -176,11 +176,11 @@ let methods2 = {
             for (let index = 0; index < length; index++) {
                 position.x = terrainPositions[index * 3];
                 position.y = terrainPositions[index * 3 + 2];
-                let distance = Vector2.Distance(position, sphereCenter);
-                if (distance < e.data.radius) {
+                let distance = Vector2.DistanceSquared(position, sphereCenter);
+                if (distance < radiusPow) {
                     _selectedVertices.push({
                         vertice: index,
-                        distance: distance
+                        distance: Math.sqrt(distance)
                     });
                 }
             }
@@ -194,6 +194,7 @@ let methods2 = {
         }[] = [];
         let v1v2 = new Vector3();
         let v3v2 = new Vector3();
+        let selectedFaces = [];
         _selectedVertices.forEach(sv => {
             //let positiony = this._groundPositions[sv.vertice].y;
             let positiony = terrainPositions[sv.vertice * 3 + 1];
@@ -216,10 +217,7 @@ let methods2 = {
             for (let index = 0; index < faceOfVertices.length; index++) {
 
                 let indices = new Uint32Array(terrainIndices.buffer, (faceOfVertices[index] * 3) << 2, 3);
-                /*faces.push({
-                    faceID: faceOfVertices[index],
-                    indices: new Uint32Array(terrainIndices.buffer, (faceOfVertices[index] * 3) << 2, 3)
-                });*/
+
                 v1v2.x = terrainPositions[indices[0] * 3] - terrainPositions[indices[1] * 3];
                 v1v2.y = terrainPositions[indices[0] * 3 + 1] - terrainPositions[indices[1] * 3 + 1];
                 v1v2.z = terrainPositions[indices[0] * 3 + 2] - terrainPositions[indices[1] * 3 + 2];
@@ -228,8 +226,17 @@ let methods2 = {
                 v3v2.y = terrainPositions[indices[2] * 3 + 1] - terrainPositions[indices[1] * 3 + 1];
                 v3v2.z = terrainPositions[indices[2] * 3 + 2] - terrainPositions[indices[1] * 3 + 2];
 
-                //var v1v2 = this._groundPositions[face.indices[0]].subtract(this._groundPositions[face.indices[1]]);
-                //var v3v2 = this._groundPositions[face.indices[2]].subtract(this._groundPositions[face.indices[1]]);
+
+            /* CREATE HEIGHTS */
+
+                //let cd = (terrainPositions[indices[0] * 3 + 2] - terrainPositions[indices[2] * 3 + 2]) / (terrainPositions[indices[0] * 3 + 3] - terrainPositions[indices[2] * 3]);
+               // let h = terrainPositions[indices[2] * 3 + 2] - cd * terrainPositions[indices[2] * 3]
+                //console.log(cd);
+
+                /****** */
+
+
+
 
                 _groundFacesNormals[faceOfVertices[index]] = Vector3.Normalize(Vector3.Cross(v1v2, v3v2));
 
@@ -276,6 +283,7 @@ let methods2 = {
         methods2.createHeights();
     },
     createHeights: () => {
+        console.log(slopeArr);
         //native: 95
         //212
         let v1arr = [];
@@ -288,7 +296,7 @@ let methods2 = {
         let i = 0;
         let j = 0;
         let k = 0;
-        let cd = 0;     // 2D slope coefficient : z = cd * x + h
+        let cd = -1;     // 2D slope coefficient : z = cd * x + h
         let h = 0;
         let d1 = 0;     // facet plane equation : ax + by + cz + d = 0
         let d2 = 0;
@@ -316,7 +324,8 @@ let methods2 = {
                 v1v4.y = terrainPositions[k + i + 4] - v1arr[1];
                 v1v4.z = terrainPositions[k + i + 5] - v1arr[2];
 
-                cd = (terrainPositions[k + i + 2] - v1arr[2]) / (terrainPositions[k + i + 3] - v1arr[0]);
+             //   cd = (terrainPositions[k + i + 2] - v1arr[2]) / (terrainPositions[k + i + 3] - v1arr[0]);
+                //console.log(cd);
                 h = v1arr[2] - cd * v1arr[0];             // v1 belongs to the slope
 
                 // facet equations :
@@ -358,9 +367,14 @@ let methods2 = {
 
                 d1 = -(norm1.x * v1arr[0] + norm1.y * v1arr[1] + norm1.z * v1arr[2]);
                 d2 = -(norm2.x * v2arr[0] + norm2.y * v2arr[1] + norm2.z * v2arr[2]);
-                slopeArr.set([cd, h], (row * _subdivisionsX + col) * 2);
-                facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * _subdivisionsX + col) * 4)
-                facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * _subdivisionsX + col) * 4);
+
+               // let oldvalues = slopeArr.subarray((row * _subdivisionsX + col) * 2, ((row * _subdivisionsX + col) * 2) + 2);
+               // if (oldvalues[0] != cd && oldvalues[1] != h) {
+                    //console.log(k + i, j + i)
+                    slopeArr.set([cd, h], (row * _subdivisionsX + col) * 2);
+                    facet1Arr.set([norm1.x, norm1.y, norm1.z, d1], (row * _subdivisionsX + col) * 4)
+                    facet2Arr.set([norm2.x, norm2.y, norm2.z, d2], (row * _subdivisionsX + col) * 4);
+               // }
 
                 /*let d = {
                     slopeArr: {

@@ -158,7 +158,7 @@
         "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
       },
       "../src/workers/webworkers/terrainworker.ts": {
-        "version": "9ce95296fdbea5d8467da72ccfd22f6622af9c255f5818679754517602aefedb",
+        "version": "8b0f24ceda9276997cd9241f559e0c65805c2aee2898c9a0dbc558ccb35be773",
         "signature": "c2fc2ca26af69c353e70bfcf36e1be7545c38f83aab9898dc14f47ccf8eb39f1"
       },
       "../src/workers/sw.ts": {

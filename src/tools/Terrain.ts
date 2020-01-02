@@ -40,6 +40,7 @@ import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
 
 export class TerrainTool extends UITAB {
     private worker = new WorkerThread('/webworkers/terrainWorker.js');
+    private timer: number;
     //private ray = BABYLON.Ray.Zero();
     //private pickinfo: BABYLON.PickingInfo;
     private mousemove = new LazyEval((evt: PointerEvent) => {
@@ -359,7 +360,6 @@ export class TerrainTool extends UITAB {
         let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.terrain.slopeArr);
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
         tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
-        gl.bindTexture(gl.TEXTURE_2D, null);
 
         /********/
         this.glTexture2 = gl.createTexture();
@@ -368,7 +368,6 @@ export class TerrainTool extends UITAB {
         let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr);
         tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
         tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
-        gl.bindTexture(gl.TEXTURE_2D, null);
 
         /********/
         this.glTexture3 = gl.createTexture();
@@ -407,27 +406,25 @@ export class TerrainTool extends UITAB {
             return this;
         }).bind(this.helpermaterial)();
         this.worker.subscribe('heights', (v) => {
-            console.log(v);
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
             gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
             let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RG16I', 250, 250, gl.RG_INTEGER, gl.SHORT, this.terrain.slopeArr);
             tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
             tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
-            gl.bindTexture(gl.TEXTURE_2D, null);
 
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
 
             let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr);
             tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
             tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
-            gl.bindTexture(gl.TEXTURE_2D, null);
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
 
             let tex3 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr);
             tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
             tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
             gl.bindTexture(gl.TEXTURE_2D, null);
+            //console.log('Elevating took ', new Date().getTime() - this.timer );
 
         });
         this.helper.material = this.helpermaterial;
@@ -522,7 +519,7 @@ export class TerrainTool extends UITAB {
             let gl = (<WebGL2RenderingContext><any>this.gl);
             let normalbuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.NormalKind]._buffer.getBuffer().underlyingResource;
             let vertexbuffer: WebGLBuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.PositionKind]._buffer.getBuffer().underlyingResource;
-
+            this.timer = new Date().getTime();
             this.worker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(e => {
                 let NormalsRange = <{ normalsMin: number, normalsMax: number }><any>e;
                 gl.bindBuffer(gl.ARRAY_BUFFER, normalbuffer);
@@ -530,7 +527,8 @@ export class TerrainTool extends UITAB {
 
                 gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexbuffer);
                 let range = <{ min: number, max: number }><any>e;
-                gl.bufferSubData(this.gl.ARRAY_BUFFER, range.min, this.terrain.positionsView, range.min, range.max - range.min)
+                gl.bufferSubData(this.gl.ARRAY_BUFFER, range.min, this.terrain.positionsView, range.min, range.max - range.min);
+                
             });
             //this.elevateFaces(this.pickinfo, 50, 5);
         }, 100);
@@ -542,6 +540,7 @@ export class TerrainTool extends UITAB {
         clearInterval(this.mouseinterval);
     }
     deactivate = (): void => {
+        this.worker.unsubscribe('heights');
         this.scene.getEngine().getRenderingCanvas().removeEventListener("pointerdown", this.pointerdownf);
         this.helper.visibility = 0;
         this.scene.getEngine().getRenderingCanvas().removeEventListener("pointermove", this.mouseListener);
