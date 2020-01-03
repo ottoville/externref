@@ -405,6 +405,15 @@ export class TerrainTool extends UITAB {
             }
             return this;
         }).bind(this.helpermaterial)();
+        this.worker.subscribe('SubHeights', (v) => {
+            gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
+            (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.facet1Arr.offsetX, v.data.facet1Arr.offsetY, 1, 1, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr, v.data.facet1Arr.srcOffset)
+
+            gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
+            (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.facet2Arr.offsetX, v.data.facet2Arr.offsetY, 1, 1, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr, v.data.facet2Arr.srcOffset)
+
+            console.log(v);
+        });
         this.worker.subscribe('heights', (v) => {
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -425,7 +434,6 @@ export class TerrainTool extends UITAB {
             tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
             gl.bindTexture(gl.TEXTURE_2D, null);
             //console.log('Elevating took ', new Date().getTime() - this.timer );
-
         });
         this.helper.material = this.helpermaterial;
         this.helpermaterial.bindOnlyWorldMatrix = (function (world: BABYLON.Matrix) {
