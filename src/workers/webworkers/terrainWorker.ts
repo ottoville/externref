@@ -1,5 +1,6 @@
 ﻿importScripts("/js/commonMath.js");
 importScripts("/webworkers/ray.js");
+
 interface WMessage {
     type: WorkerReturn,
     action: string,
@@ -96,21 +97,20 @@ let _groundFacesNormals: Vector3[];
 let _subdivisionsOfVertices: any[];
 let heightMax = 500;
 let heightMin = -500;
-let _selectedVertices: {vertice:number, distance: number, col: number, row: number}[] = null;
-let _subdivisionsY = 250;
-let _subdivisionsX = 250;
+let _selectedVertices: { vertice: number, distance: number, col: number, row: number }[] = null;
+let _subdivisionsY:number;
+let _subdivisionsX:number;
 
 const nearScreenSource = new Vector3();
 const farScreenSource = new Vector3();
 const nearVec3 = new Vector3();
 const farVec3 = new Vector3();
 
-function calculateHeightSquad(row:number, col:number) {
+let boundingBox;
+let boundingSphere;
 
-}
 
-
-let methods2 = {
+let methods2: { [index: string]: (e: WMessage) => void} = {
     init: (e) => {
         terrainPositions = new Float32Array(e.data.positions);
         terrainIndices = new Uint32Array(e.data.indices);
@@ -118,6 +118,11 @@ let methods2 = {
         slopeArr = new Int16Array(e.data.slopeArr);
         facet1Arr = new Float32Array(e.data.facet1Arr);
         facet2Arr = new Float32Array(e.data.facet2Arr);
+        _subdivisionsX = e.data.subdivisionsX;
+        _subdivisionsY = e.data.subdivisionsY;
+
+        boundingBox = e.data.boundingBox;
+        boundingSphere = e.data.boundingSphere;
         if (_facesOfVertices == null) {
             _facesOfVertices = [];
 
@@ -149,21 +154,17 @@ let methods2 = {
             for (index = 0; index < terrainIndices.length; index++) {
                 _facesOfVertices[terrainIndices[index]].push((index / 3) | 0);
             }
-            //for (var subIndex = 0; subIndex < this.terrain.subMeshes.length; subIndex++) {
-            //var subMesh = this.terrain.subMeshes[subIndex];
-            //for (index = subMesh.verticesStart; index < subMesh.verticesStart + subMesh.verticesCount; index++) {
-            // _subdivisionsOfVertices[index].push(subMesh);
-            //}
-            //}
         }
+        methods2.createHeights(e);
+        this.postMessage({ id: e.id, data: { } });
     },
     mousemove: (e: WMessage) => {
         let ray = Ray.Zero();
-       /* ray.unprojectRayToRef(e.data.x,
-            e.data.y,
-            e.data.viewportWidth, e.data.viewportHeight,
-            Matrix.FromArray(e.data.view), Matrix.FromArray(e.data.projection));
-            */
+        /* ray.unprojectRayToRef(e.data.x,
+             e.data.y,
+             e.data.viewportWidth, e.data.viewportHeight,
+             Matrix.FromArray(e.data.view), Matrix.FromArray(e.data.projection));
+             */
 
 
         /* unprojectRayToRef start */
@@ -187,14 +188,14 @@ let methods2 = {
         ray.direction.normalize();
         /* unprojectRayToRef end */
 
-        pickInfo = intersects(e.data.boundingBox, e.data.boundingSphere, ray);
+        pickInfo = intersects(boundingBox, boundingSphere, ray);
         _selectedVertices = null
         if (pickInfo.pickedPoint) {
             this.postMessage({ id: e.id, data: { x: pickInfo.pickedPoint.x, y: pickInfo.pickedPoint.z } });
         }
     },
     elevateFaces: (e: WMessage) => {
-       // console.log('elevatefaces');
+        // console.log('elevatefaces');
         let radiusPow = Math.pow(e.data.radius, 2);
         // Impact zone
         if (_selectedVertices == null) {
@@ -208,12 +209,6 @@ let methods2 = {
                 position.y = terrainPositions[index * 3 + 2];
                 let distance = Vector2.DistanceSquared(position, sphereCenter);
                 if (distance < radiusPow) {
-
-                   // let col=250/(10000/(5000+position.x))
-                  //  let row =250/(10000/(5000-position.y))
-
-                   // console.log('selected pos ', position.x, position.y)
-                //    console.log('selected col ', col | 0, 'row', row | 0)
                     _selectedVertices.push({
                         col: 250 / (10000 / (5000 + position.x)) | 0,
                         row: 250 / (10000 / (5000 - position.y)) | 0,
@@ -223,7 +218,6 @@ let methods2 = {
                 }
             }
         }
-        //}
 
         // Elevate vertices
         let faces: {
@@ -251,8 +245,6 @@ let methods2 = {
 
             //this._updateSubdivisions(sv.vertice);
 
-           // console.log(sv.vertice, terrainIndices[sv.vertice], 'test1', terrainIndices.indexOf(sv.vertice), 'test2', _facesOfVertices[sv.vertice]);
-
 
             var faceOfVertices = _facesOfVertices[sv.vertice];
             for (let index = 0; index < faceOfVertices.length; index++) {
@@ -266,16 +258,6 @@ let methods2 = {
                 v3v2.x = terrainPositions[indices[2] * 3] - terrainPositions[indices[1] * 3];
                 v3v2.y = terrainPositions[indices[2] * 3 + 1] - terrainPositions[indices[1] * 3 + 1];
                 v3v2.z = terrainPositions[indices[2] * 3 + 2] - terrainPositions[indices[1] * 3 + 2];
-
-             //   console.log('faces ', indices[0] * 3, 'and', indices[2] * 3)
-            /* CREATE HEIGHTS */
-
-                //let cd = (terrainPositions[indices[0] * 3 + 2] - terrainPositions[indices[2] * 3 + 2]) / (terrainPositions[indices[0] * 3 + 3] - terrainPositions[indices[2] * 3]);
-                //  h = v1arr[2] - cd * v1arr[0]
-              //  let h = terrainPositions[indices[2] * 3 + 2] - (-1) * terrainPositions[indices[2] * 3]
-              //  console.log(h);
-
-                /****** */
 
                 _groundFacesNormals[faceOfVertices[index]] = Vector3.Normalize(Vector3.Cross(v1v2, v3v2));
 
@@ -305,37 +287,60 @@ let methods2 = {
                     // normal = BABYLON.Vector3.Normalize(normal.scale(1.0 / faces.length));
                     terrainNormals.set([x, y, z], vertexIndex * 3);
                 });
+            };
+            ((ypos) => {
+                //let ypos = this.terrain.positions[vertexIndex * 3 + 1];
+                //for (var index = 0; index < this._subdivisionsOfVertices[vertexIndex].length; index++) {
+                    //var sub = this._subdivisionsOfVertices[vertexIndex][index];
+                    //let boundingBox = e.data.boundingBox;
+                    //let boundingSphere = sub.getBoundingInfo().boundingSphere;
+
+                    if (ypos < boundingBox.minimum.y) {
+                        boundingSphere.radius += Math.abs(ypos - boundingBox.minimum.y);
+                        boundingBox.minimum.y = ypos;
+                    } else if (ypos > boundingBox.maximum.y) {
+                        boundingBox.maximum.y = ypos;
+                    }
+                //}
+
+                /*var boundingBox = this.terrain.getBoundingInfo().boundingBox;
+                var boundingSphere = this.terrain.getBoundingInfo().boundingSphere;
+                if (ypos < boundingBox.minimum.y) {
+                    boundingSphere.radius += Math.abs(ypos - boundingBox.minimum.y);
+                    boundingBox.minimum.y = ypos;
+                } else if (ypos > boundingBox.maximum.y) {
+                    boundingBox.maximum.y = ypos;
+                }*/
+            })(positiony);
+        });
+        this.postMessage({
+            type: 'bounding', data: {
+                boundingSphereRadius: boundingSphere.radius,
+                boundingBox: { minY: boundingBox.minimum.y, maxY: boundingBox.maximum.y}
             }
         });
 
         // Normals
-        //this._reComputeNormals();
-
-
         let normalsMin = Math.min(...faces.map(f => Math.min(...f.indices))) * 3;
         let normalsMax = Math.max(...faces.map(f => Math.max(...f.indices))) * 3;
         let subvertices = _selectedVertices.map(sv => sv.vertice);
         let min = Math.min(...subvertices) * 3;
         let max = Math.max(...subvertices) * 3;
-        
+
 
         let minCol = Math.min(..._selectedVertices.map(v => v.col));
         let maxCol = Math.max(..._selectedVertices.map(v => v.col));
         let minRow = Math.min(..._selectedVertices.map(v => v.row));
         let maxRow = Math.max(..._selectedVertices.map(v => v.row));
 
-        console.log('mincol', minCol);
-        console.log('maxcol', maxCol);
-        console.log('minrow', minRow);
-        console.log('maxrow', maxRow);
 
         let v1v3 = new Vector3();
         let v1v4 = new Vector3();
         let norm1 = new Float32Array(3);
         let norm2 = new Float32Array(3);
 
-        for (let row = minRow-1; row <= maxRow+1; row++) {
-            for (let col = minCol-1; col <= maxCol+1; col++) {
+        for (let row = minRow - 1; row <= maxRow + 1; row++) {
+            for (let col = minCol - 1; col <= maxCol + 1; col++) {
 
                 let i = col * 3;
                 let j = row * (_subdivisionsX + 1) * 3;
@@ -357,10 +362,6 @@ let methods2 = {
                 v1v4.x = terrainPositions[k + i + 3] - v1arr[0];
                 v1v4.y = terrainPositions[k + i + 4] - v1arr[1];
                 v1v4.z = terrainPositions[k + i + 5] - v1arr[2];
-
-                //   cd = (terrainPositions[k + i + 2] - v1arr[2]) / (terrainPositions[k + i + 3] - v1arr[0]);
-                //console.log(cd);
-                let h = v1arr[2] - (-1) * v1arr[0];             // v1 belongs to the slope
 
                 // facet equations :
                 // we compute each facet normal vector
@@ -403,27 +404,22 @@ let methods2 = {
 
                 facet1Arr.set([norm1[0], norm1[1], norm1[2], d1], (row * _subdivisionsX + col) * 4);
                 facet2Arr.set([norm2[0], norm2[1], norm2[2], d2], (row * _subdivisionsX + col) * 4);
-                let d = {
-                    facet1Arr: {
-                        offsetX: col,
-                        offsetY: row,
-                        srcOffset: (row * _subdivisionsX + col) * 4
-                    },
-                    facet2Arr: {
-                        offsetX: col,
-                        offsetY: row,
-                        srcOffset: (row * _subdivisionsX + col) * 4
-                    }
-                }
-                this.postMessage({ type: 'SubHeights', data: d });
             }
+            this.postMessage({
+                type: 'SubHeights', data: {
+                    offsetX: minCol - 1,
+                    endX: maxCol + 1,
+                    offsetY: row,
+                    srcOffset: (row * _subdivisionsX + minCol - 1) * 4
+                }
+            });
         }
         this.postMessage({ id: e.id, data: { min: min << 2, max: max << 2, normalsMin: normalsMin << 2, normalsMax: normalsMax << 2 } });
 
         //this.postMessage({ type: 'heights', data: {} });
         //methods2.createHeights();
     },
-    createHeights: () => {
+    createHeights: (e) => {
         //native: 95
         //212
         let v1arr = [];
@@ -465,7 +461,7 @@ let methods2 = {
                 v1v4.y = terrainPositions[k + i + 4] - v1arr[1];
                 v1v4.z = terrainPositions[k + i + 5] - v1arr[2];
 
-             //   cd = (terrainPositions[k + i + 2] - v1arr[2]) / (terrainPositions[k + i + 3] - v1arr[0]);
+                //   cd = (terrainPositions[k + i + 2] - v1arr[2]) / (terrainPositions[k + i + 3] - v1arr[0]);
                 //console.log(cd);
                 h = v1arr[2] - cd * v1arr[0];             // v1 belongs to the slope
 
@@ -508,37 +504,10 @@ let methods2 = {
                 d1 = -(norm1[0] * v1arr[0] + norm1[1] * v1arr[1] + norm1[2] * v1arr[2]);
                 d2 = -(norm2[0] * v2arr[0] + norm2[1] * v2arr[1] + norm2[2] * v2arr[2]);
 
-               // let oldvalues = slopeArr.subarray((row * _subdivisionsX + col) * 2, ((row * _subdivisionsX + col) * 2) + 2);
-               // if (oldvalues[0] != cd && oldvalues[1] != h) {
-                    //console.log(k + i, j + i)
-                //slopeArr.set([cd, h], (row * _subdivisionsX + col) * 2);
-
                 slopeArr[row * _subdivisionsX + col] = h;
-                if (facet1Arr[(row * _subdivisionsX + col) * 4] != norm1[0]) {
-                    console.log('row ', row, ' col', col);
-                    //console.log('new value for ', k + i, ' and ', j + i);
-                }
-                if (facet2Arr[(row * _subdivisionsX + col) * 4] != norm2[0]) {
-                   // console.log('new value2 for ', k + i, ' and ', j + i);
-                }
                 facet1Arr.set([norm1[0], norm1[1], norm1[2], d1], (row * _subdivisionsX + col) * 4)
                 facet2Arr.set([norm2[0], norm2[1], norm2[2], d2], (row * _subdivisionsX + col) * 4);
-               // }
 
-                /*let d = {
-                    slopeArr: {
-                        offset: (row * _subdivisionsX + col) * 2,
-                        length: 2
-                    },
-                    facet1Arr: {
-                        offset: (row * _subdivisionsX + col) * 4,
-                        length: 4
-                    },
-                    facet2Arr: {
-                        offset: (row * _subdivisionsX + col) * 4,
-                        length: 4
-                    }
-                }*/
             }
         }
         this.postMessage({ type: 'heights', data: {} });

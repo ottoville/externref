@@ -158,8 +158,8 @@
         "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
       },
       "../src/workers/webworkers/terrainworker.ts": {
-        "version": "54a24bd9faea30fdcb938b6bf5f6480781ff85455c4aa94ac3e4e84b2fb543ab",
-        "signature": "216ace0ae5b5043d883044bf5a5cfde601d7e27fdea36d26768b9befb65a04f0"
+        "version": "94cc13850d50599ce6aaad86e280adddeef9bce8514f93d45987d4fcf627f2e4",
+        "signature": "dbce43cb76093ddf1f9ffc701708adcad21ff0452d4d238b1cc5817be4957562"
       },
       "../src/workers/sw.ts": {
         "version": "f345e656bd7ce80eb500c89e8de1e97bacc623f2f74ca8b9992be93ae786db07",
@@ -172,6 +172,10 @@
       "../src/node_modules/@types/facebook-js-sdk/index.d.ts": {
         "version": "6aadc0e7ef7e8930121db014145d3085fe91b51c086c4a282cc209dfff9fc2bc",
         "signature": "6aadc0e7ef7e8930121db014145d3085fe91b51c086c4a282cc209dfff9fc2bc"
+      },
+      "../src/node_modules/@types/mocha/index.d.ts": {
+        "version": "c4c03cf65951d980ba618ae9601d10438730803fc9c8a1f7b34af8739981e205",
+        "signature": "c4c03cf65951d980ba618ae9601d10438730803fc9c8a1f7b34af8739981e205"
       }
     },
     "options": {
@@ -234,6 +238,7 @@
       "../src/workers/sw.ts",
       "../src/workers/commonmath.d.ts",
       "../src/node_modules/@types/facebook-js-sdk/index.d.ts",
+      "../src/node_modules/@types/mocha/index.d.ts",
       "../src/workers/webworkers/terrainworker.ts"
     ]
   },

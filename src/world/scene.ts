@@ -138,49 +138,15 @@ export class WorldScene extends BABYLON.Scene {
             };
         }).then((vdata: TerrainMap) => {
             let ground=new Terrain(vdata, this);
-/*
-            let ground = new BABYLON.GroundMesh('ground', this);
-            ground._subdivisionsX = 250;
-            ground._subdivisionsY = 250;
-            ground._width = vdata.width;
-            ground._height = vdata.height;
-            ground._maxX = ground._width / 2.0;
-            ground._maxZ = ground._height / 2.0;
-            ground._minX = -ground._maxX;
-            ground._minZ = -ground._maxZ;
-            var vertexData = new BABYLON.VertexData();
-
-            vertexData.indices = vdata.indices;
-            vertexData.positions = vdata.positions;
-            vertexData.normals = vdata.normals;
-            vertexData.uvs = vdata.uvs;
-
-            vertexData.applyToMesh(ground, true);
-            ground._setReady(true);
-            */
-
 
             sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
             let gl: WebGLRenderingContext = engine._gl;
-            /*ground._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {
-                if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
-                    return this;
-                }
-                if (this._internalMeshDataInfo._onBeforeDrawObservable) {
-                    this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
-                }
-                engine.applyStates();
-                engine._drawCalls.addCount(1, false);
-                gl.drawElements(gl.TRIANGLE_FAN, vertexData.indices.length, gl.UNSIGNED_SHORT, 0);
-                return this;
-            };*/
-
 
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-            new Promise((tres, trej) => {
+            new Promise(async (tres, trej) => {
                 if (typeof (vdata.texture) === 'undefined') {
                     let c = document.createElement('canvas');
                     c.width = 10000;
@@ -194,9 +160,9 @@ export class WorldScene extends BABYLON.Scene {
                     let centerZ = c.height / 2
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
                     ctx.translate(centerX, centerZ);
-                    let timed = new Date().getTime();
                     let minZ = centerZ - c.height
                     ctx.fillStyle = "green";
+                    await ground.inited;
                     for (let row = centerX - c.width+1; row < centerX; row = row + 2) {
                         for (let col = minZ+1; col < centerZ; col = col += 2) {
                             let height = ground.getHeightAtCoordinates(row, col)
@@ -205,7 +171,6 @@ export class WorldScene extends BABYLON.Scene {
                             }
                         }
                     }
-                    console.log('creating texture took ', new Date().getTime() - timed);                    
                     c.toBlob(async b => {
                         vdata.texture = b;
                         tres(b);
