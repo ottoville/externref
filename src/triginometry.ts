@@ -39,8 +39,7 @@ function _bindTextureDirectly(target: number, texture: any, forTextureDataUpdate
 //https://github.com/BabylonJS/Babylon.js/blob/a7b273c03d231bf33fa0d92818cb9848ded13eb2/src/Engines/engine.ts
 
 // https://github.com/BabylonJS/Babylon.js/blob/9ff58d958c8b2a2e498be661727a8d05f2e377b6/src/Engines/engine.ts
-export function updateSubTexture(zonedt: BABYLON.DynamicTexture,
-    h: number, w: number, startingPoint: BABYLON.Vector3, ang: Angle, subTexture?: subTexture): subTexture {
+export function updateSubTexture(zonedt: BABYLON.DynamicTexture, h: number, w: number, startingPoint: BABYLON.Vector3, ang: Angle, subTexture: subTexture | null = null): subTexture {
     if (Number.isNaN(h) || Number.isNaN(w)) {
         throw ('updateSubTexture non numeric width or height');
     }
@@ -62,7 +61,6 @@ export function updateSubTexture(zonedt: BABYLON.DynamicTexture,
     ]
 
     let my = rotateMatrix(ang.rad, "y");
-    console.log('coords', coords)
     let translated0 = coords.map(coord => {
         return translate(coord.x, 0, coord.z, my)
     })
@@ -71,7 +69,7 @@ export function updateSubTexture(zonedt: BABYLON.DynamicTexture,
     m1.setRow(1, new Vector4(0, 1, 0, 0));
     m1.setRow(2, new Vector4(0, 0, 1, centerZ + startingPoint.z));
     m1.setRow(3, new Vector4(0, 0, 0, 1));
-
+    
 
     let translated = translated0.map(coord => {
         return translate(coord.x, 0, coord.z, m1)
@@ -82,18 +80,22 @@ export function updateSubTexture(zonedt: BABYLON.DynamicTexture,
     let maxX = Math.max(...translated.map(t => t.x));
     let maxZ = Math.max(...translated.map(t => t.z));
     gl.bindTexture(gl.TEXTURE_2D, texture._webGLTexture);
-    if (typeof (subTexture) !== 'undefined') {
+    //this is null
+    if (subTexture != null) {
         let c = document.createElement('canvas');
         c.width = subTexture.imageData.width;
         c.height = subTexture.imageData.height
-        let ctx = c.getContext("2d");
-        ctx.putImageData(subTexture.imageData, 0, 0);
-        ctx.translate(0, c.height);
-        ctx.scale(1, -1);
-        ctx.drawImage(c, 0, 0);
+        let ctx: CanvasRenderingContext2D | null;
+        if (ctx = c.getContext("2d")) {
+            ctx.putImageData(subTexture.imageData, 0, 0);
+            ctx.translate(0, c.height);
+            ctx.scale(1, -1);
+            ctx.drawImage(c, 0, 0);
+        } else {
+            throw ('Cannot get 2d context');
+        }
         gl.texSubImage2D(gl.TEXTURE_2D, 0, subTexture.x, subTexture.z, gl.RGBA, gl.UNSIGNED_BYTE, c);
     }
-
     let c = document.createElement('canvas');
     c.width = maxX - minX;
     c.height = maxZ - minZ;
@@ -113,29 +115,33 @@ export function updateSubTexture(zonedt: BABYLON.DynamicTexture,
     gl.readPixels(minX, minZ, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this._currentFramebuffer);
 
-    var ctx = c.getContext("2d");
+    let ctx: CanvasRenderingContext2D | null;
+    if (ctx = c.getContext("2d")) {
+        let imageData = ctx.createImageData(c.width, c.height);
+        imageData.data.set(pixels);
+        subTexture = { x: minX, z: minZ, imageData: imageData };
 
-    let imageData = ctx.createImageData(c.width, c.height);
-    imageData.data.set(pixels);
-    subTexture = { x: minX, z: minZ, imageData: imageData };
-    ctx.save();
+        ctx.save();
 
-    ctx.putImageData(imageData, 0, 0);
-    ctx.translate(0, c.height);
-    ctx.scale(1, -1);
-    ctx.drawImage(c, 0, 0);
+        ctx.putImageData(imageData, 0, 0);
+        ctx.translate(0, c.height);
+        ctx.scale(1, -1);
+        ctx.drawImage(c, 0, 0);
 
-    ctx.restore();
-    ctx.beginPath();
-    let absDimensions: { w: number; h: number } = { w: Math.abs(w), h: Math.abs(h) }
-    ctx.translate(c.width / 2, c.height / 2);
-    ctx.rotate(ang.rad);
-    ctx.translate(c.width / -2, c.height / -2);
-    ctx.translate((c.width - absDimensions.w) / 2, (c.height - absDimensions.h) / 2);
-    ctx.fillStyle = "red";
-    ctx.rect(0, 0, absDimensions.w, absDimensions.h);
+        ctx.restore();
+        ctx.beginPath();
+        let absDimensions: { w: number; h: number } = { w: Math.abs(w), h: Math.abs(h) }
+        ctx.translate(c.width / 2, c.height / 2);
+        ctx.rotate(ang.rad);
+        ctx.translate(c.width / -2, c.height / -2);
+        ctx.translate((c.width - absDimensions.w) / 2, (c.height - absDimensions.h) / 2);
+        ctx.fillStyle = "red";
+        ctx.rect(0, 0, absDimensions.w, absDimensions.h);
 
-    ctx.fill();
+        ctx.fill();
+    } else {
+        throw ('cannot get 2D context');
+    }
 
     gl.texSubImage2D(gl.TEXTURE_2D, 0, minX, minZ, gl.RGBA, gl.UNSIGNED_BYTE, c);
     return subTexture;

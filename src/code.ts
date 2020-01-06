@@ -23,72 +23,57 @@ navigator.serviceWorker.register('/sw.js').then(function (registration) {
     console.log('ServiceWorker registration failed: ', err);
 });
 
-
-BABYLON.Effect.prototype._loadFragmentShader = function (fragment: any, callback: (data: any) => void): void {
+//@ts-ignore
+BABYLON.Effect.prototype._loadShader = function (shader: any, key: string, optionalKey: string, callback: (data: any) => void): void {
+    console.log('get shader ', shader)
     // Direct source ?
-    if (fragment.substr(0, 7) === "source:") {
-        callback(fragment.substr(7));
-        return;
-    }
-
-    // Base64 encoded ?
-    if (fragment.substr(0, 7) === "base64:") {
-        var fragmentBinary = window.atob(fragment.substr(7));
-        callback(fragmentBinary);
-        return;
-    }
-
-    // Is in local store ?
-    if (BABYLON.Effect.ShadersStore[fragment + "PixelShader"]) {
-        callback(BABYLON.Effect.ShadersStore[fragment + "PixelShader"]);
-        return;
-    }
-
-    if (BABYLON.Effect.ShadersStore[fragment + "FragmentShader"]) {
-        callback(BABYLON.Effect.ShadersStore[fragment + "FragmentShader"]);
-        return;
-    }
-
-    var fragmentShaderUrl;
-
-    if (fragment[0] === "." || fragment[0] === "/" || fragment.indexOf("http") > -1) {
-        fragmentShaderUrl = fragment;
-    } else {
-        fragmentShaderUrl = BABYLON.Effect.ShadersRepository + fragment;
-    }
-
-    // Fragment shader
-    this._engine._loadFile(fragmentShaderUrl + ".frag", callback);
-}
-BABYLON.Effect.prototype._loadVertexShader = function (vertex: any, callback: (data: any) => void): void {
-    // Direct source ?
-    if (vertex.substr(0, 7) === "source:") {
-        callback(vertex.substr(7));
+    if (shader.substr(0, 7) === "source:") {
+        callback(shader.substr(7));
         return;
     }
     // Base64 encoded ?
-    if (vertex.substr(0, 7) === "base64:") {
-        var vertexBinary = window.atob(vertex.substr(7));
+    if (shader.substr(0, 7) === "base64:") {
+        var vertexBinary = window.atob(shader.substr(7));
         callback(vertexBinary);
         return;
     }
 
     // Is in local store ?
-    if (BABYLON.Effect.ShadersStore[vertex + "VertexShader"]) {
-        callback(BABYLON.Effect.ShadersStore[vertex + "VertexShader"]);
+    if (BABYLON.Effect.ShadersStore[shader + key + "Shader"]) {
+        callback(BABYLON.Effect.ShadersStore[shader + key + "Shader"]);
         return;
     }
 
-    var vertexShaderUrl;
+    var ShaderUrl;
 
-    if (vertex[0] === "." || vertex[0] === "/" || vertex.indexOf("http") > -1) {
-        vertexShaderUrl = vertex;
+    if (shader[0] === "." || shader[0] === "/" || shader.indexOf("http") > -1) {
+        ShaderUrl = shader;
     } else {
-        vertexShaderUrl = BABYLON.Effect.ShadersRepository + vertex;
+        ShaderUrl = '/shaders/' + shader;
     }
+    let suffix = key;
+    if (key == 'Vertex')
+        suffix = '.vert';
+    if (key == 'Fragment')
+        suffix = '.frag';
 
-    // Vertex shader
-    this._engine._loadFile(vertexShaderUrl + ".vert", callback);
+    let url = ShaderUrl + suffix;
+    let onSuccess = callback;
+
+    //@ts-ignore
+    let request = BABYLON.FileTools.RequestFile(url, (data, request) => {
+        onSuccess(data);
+    });
+
+
+    (function () {
+        this._activeRequests.push(request);
+        request.onCompleteObservable.add((request) => {
+            this._activeRequests.splice(this._activeRequests.indexOf(request), 1);
+        });
+    }).bind(this._engine)()
+    return request;
+
 }
 
 
@@ -182,23 +167,67 @@ window.sceneInited.then(scene => {
     let renderFunction = function () {
         scene.render();
     }
-    let renderLoop = (function() : void {
-        if(!this._contextWasLost) {
+    /*let renderLoop = (function (): void {
+        console.log('renderloop');
+        if (!this._contextWasLost) {
             var shouldRender = true;
             if (!this.renderEvenInBackground && this._windowIsBackground) {
                 shouldRender = false;
             }
             if (shouldRender) {
+                console.log('shouldRender')
                 // Start new frame
                 this.beginFrame();
-                renderFunction();
+                //renderFunction();
+                if (!this._renderViews()) {
+                    // Main frame
+                    this._renderFrame();
+                }
                 // Present
                 this.endFrame();
             }
         }
-        this._frameHandler = BABYLON.Tools.QueueNewFrame(renderLoop);
-    }).bind(engine)
-    BABYLON.Tools.QueueNewFrame(renderLoop);
+        //this._frameHandler = this._queueNewFrame(renderLoop, this.getHostWindow());
+        if (this._activeRenderLoops.length > 0) {
+            // Register new frame
+            if (this.customAnimationFrameRequester) {
+                this.customAnimationFrameRequester.requestID = this._queueNewFrame(this.customAnimationFrameRequester.renderFunction || this._boundRenderFunction, this.customAnimationFrameRequester);
+                this._frameHandler = this.customAnimationFrameRequester.requestID;
+            } else if (this.isVRPresenting()) {
+                this._requestVRFrame();
+            } else {
+                this._frameHandler = this._queueNewFrame(this._boundRenderFunction, this.getHostWindow());
+            }
+        } else {
+            this._renderingQueueLaunched = false;
+        }
+    }).bind(engine);
+    //@ts-ignore
+    engine._queueNewFrame(renderLoop);*/
+    //BABYLON.Tools.QueueNewFrame(renderLoop);
+
+
+
+
+    /*engine.runRenderLoop(function () {
+        scene.render();
+    });*/
+
+    let rloop = function () {
+        var shouldRender = true;
+
+        if (shouldRender) {
+            // Start new frame
+            engine.beginFrame();
+            scene.render();
+            // Present
+            engine.endFrame();
+        }
+        window.requestAnimationFrame(rloop);
+
+    }
+    window.requestAnimationFrame(rloop);
+
 
     // Resize
     window.addEventListener("resize", function () {
@@ -215,7 +244,8 @@ new Promise((resolve, reject) => {
 
 
 }).then((logininfo: fb.StatusResponse) => {
-
-    document.getElementById('loginscreen').style.display = 'none';
-
+    let loginscreen;
+    if (loginscreen = document.getElementById('loginscreen')) {
+        loginscreen.style.display = 'none';
+    }
 })

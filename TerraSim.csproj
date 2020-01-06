@@ -47,8 +47,12 @@
 
   <ItemGroup>
     <None Remove="src\engine.ts" />
+    <None Remove="src\paintGround\paintLine.ts" />
+    <None Remove="src\paintGround\paintPlane.ts" />
+    <None Remove="src\paintGround\paintTexture.ts" />
     <None Remove="src\tools\buildings.ts" />
     <None Remove="src\tools\Terrain.ts" />
+    <None Remove="src\webgl.ts" />
     <None Remove="src\workers\commonMath.d.ts" />
     <None Remove="src\workers\webworkers\ray.ts" />
     <None Remove="src\workers\webworkers\terrainWorker.ts" />

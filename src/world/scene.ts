@@ -43,6 +43,176 @@ export class WorldScene extends BABYLON.Scene {
         //gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
     };
     public tools: { [index: string]: UITAB } = {}
+    public render(updateCameras = true, ignoreAnimations = false): void {
+        if (this.isDisposed) {
+            return;
+        }
+
+        //this._frameId++;
+
+        // Register components that have been associated lately to the scene.
+        //this._registerTransientComponents();
+
+        this._activeParticles.fetchNewFrame();
+        //this._totalVertices.fetchNewFrame();
+        this._activeIndices.fetchNewFrame();
+        this._activeBones.fetchNewFrame();
+        //this._meshesForIntersections.reset();
+        this.resetCachedMaterial();
+
+        this.onBeforeAnimationsObservable.notifyObservers(this);
+
+        // Actions
+        //if (this.actionManager) {
+        //    this.actionManager.processTrigger(Constants.ACTION_OnEveryFrameTrigger);
+        //}
+
+        // Animations
+        if (!ignoreAnimations) {
+            this.animate();
+        }
+
+        // Before camera update steps
+        for (let step of this._beforeCameraUpdateStage) {
+            step.action();
+        }
+
+        // Update Cameras
+        if (updateCameras) {
+            if (this.activeCameras.length > 0) {
+                for (var cameraIndex = 0; cameraIndex < this.activeCameras.length; cameraIndex++) {
+                    let camera = this.activeCameras[cameraIndex];
+                    camera.update();
+                    if (camera.cameraRigMode !== BABYLON.Camera.RIG_MODE_NONE) {
+                        // rig cameras
+                        for (var index = 0; index < camera._rigCameras.length; index++) {
+                            camera._rigCameras[index].update();
+                        }
+                    }
+                }
+            } else if (this.activeCamera) {
+                this.activeCamera.update();
+                if (this.activeCamera.cameraRigMode !== BABYLON.Camera.RIG_MODE_NONE) {
+                    // rig cameras
+                    for (var index = 0; index < this.activeCamera._rigCameras.length; index++) {
+                        this.activeCamera._rigCameras[index].update();
+                    }
+                }
+            }
+        }
+
+        // Before render
+        this.onBeforeRenderObservable.notifyObservers(this);
+
+        // Customs render targets
+        this.onBeforeRenderTargetsRenderObservable.notifyObservers(this);
+        var engine = this.getEngine();
+        var currentActiveCamera = this.activeCamera;
+        if (this.renderTargetsEnabled) {
+            BABYLON.Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
+            //this._intermediateRendering = true;
+            for (var customIndex = 0; customIndex < this.customRenderTargets.length; customIndex++) {
+                var renderTarget = this.customRenderTargets[customIndex];
+                if (renderTarget._shouldRender()) {
+                    //this._renderId++;
+
+                    this.activeCamera = renderTarget.activeCamera || this.activeCamera;
+
+                    if (!this.activeCamera) {
+                        throw new Error("Active camera not set");
+                    }
+
+                    // Viewport
+                    engine.setViewport(this.activeCamera.viewport);
+
+                    // Camera
+                    this.updateTransformMatrix();
+
+                    renderTarget.render(currentActiveCamera !== this.activeCamera, this.dumpNextRenderTargets);
+                }
+            }
+            BABYLON.Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
+            //this._intermediateRendering = false;
+            //this._renderId++;
+        }
+
+        // Restore back buffer
+        this.activeCamera = currentActiveCamera;
+        //this._bindFrameBuffer();
+        this.onAfterRenderTargetsRenderObservable.notifyObservers(this);
+
+        for (let step of this._beforeClearStage) {
+            step.action();
+        }
+
+        // Clear
+        if (this.autoClearDepthAndStencil || this.autoClear) {
+            
+            engine.clear(this.clearColor, this.autoClear || this.forceWireframe || this.forcePointsCloud, this.autoClearDepthAndStencil, this.autoClearDepthAndStencil);
+        }
+
+        // Collects render targets from external components.
+       // for (let step of this._gatherRenderTargetsStage) {
+        //    step.action(this._renderTargets);
+      //  }
+        
+        // Multi-cameras?
+        if (this.activeCameras.length > 0) {
+            for (var cameraIndex = 0; cameraIndex < this.activeCameras.length; cameraIndex++) {
+                if (cameraIndex > 0) {
+                    engine.clear(null, false, true, true);
+                }
+                (function () {
+                    this._processSubCameras(this.activeCameras[cameraIndex]);
+                }).bind(engine.scenes[0])();
+                //this._processSubCameras(this.activeCameras[cameraIndex]);
+            }
+        } else {
+            if (!this.activeCamera) {
+                throw new Error("No camera defined");
+            }
+
+            //this._processSubCameras(this.activeCamera);
+            (function () {
+                this._processSubCameras(this.activeCamera);
+            }).bind(engine.scenes[0])();
+        }
+
+        // Intersection checks
+        //this._checkIntersections();
+
+        // Executes the after render stage actions.
+        for (let step of this._afterRenderStage) {
+            step.action();
+        }
+
+        // After render
+        if (this.afterRender) {
+            this.afterRender();
+        }
+
+        this.onAfterRenderObservable.notifyObservers(this);
+
+        // Cleaning
+        if (this._toBeDisposed.length) {
+            for (var index = 0; index < this._toBeDisposed.length; index++) {
+                var data = this._toBeDisposed[index];
+                if (data) {
+                    data.dispose();
+                }
+            }
+
+            this._toBeDisposed = [];
+        }
+
+        if (this.dumpNextRenderTargets) {
+            this.dumpNextRenderTargets = false;
+        }
+
+        this._activeBones.addCount(0, true);
+        this._activeIndices.addCount(0, true);
+        this._activeParticles.addCount(0, true);
+    }
     constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private webSocket?: WebSocket) {
         super(engine);
         if (webSocket) {

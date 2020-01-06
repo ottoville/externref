@@ -1,5 +1,6 @@
 import { UITAB } from "../UITAB.js";
-import { paintGround, DrawType } from "../paintGround.js";
+//import { paintGround, DrawType } from "../paintGround.js";
+import { paintPlane } from "../paintGround/paintPlane.js";
 import { Plants } from "../plants/Plants.js";
 
 
@@ -11,7 +12,8 @@ export class PlantsUI extends UITAB {
     public label: string = 'Plants';
     public activated: boolean=false;
 
-    private PT: paintGround;
+    //private PT: paintGround;
+    private PT: paintPlane;
     constructor(
         private ground: BABYLON.GroundMesh,
         public canvas: HTMLElement,
@@ -21,14 +23,15 @@ export class PlantsUI extends UITAB {
         private plantsobj:Plants,
     ) {
         super();
-        this.PT = new paintGround(this.canvas, this.scene, this.camera, this.ground, this.sea);
+        //this.PT = new paintGround(this.canvas, this.scene, this.camera, this.ground, this.sea);
+        this.PT = new paintPlane(this.canvas, this.scene, this.camera, this.ground, this.sea);
 
     }
     activateDraw = () => {
-        this.PT.activate(DrawType.plane, { forceSharedVertices: false }, (response: PTDresult, plane) => {
+        this.PT.activate((response: PTDresult) => {
             this.PT.deactivate();
             this.plantsobj.fillArea(response)
-        });
+        }, { forceSharedVertices: false });
     }
     activate = () => {
         this.activated=true;
