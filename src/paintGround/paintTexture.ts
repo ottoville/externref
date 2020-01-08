@@ -131,7 +131,7 @@ export class paintTexture extends paintGround {
             ctx.beginPath();
             let absDimensions: { w: number; h: number } = { w: Math.abs(w), h: Math.abs(h) }
             ctx.translate(c.width / 2, c.height / 2);
-            ctx.rotate(this.ang.rad);
+            ctx.rotate(this.ang360.rad);
             ctx.translate(c.width / -2, c.height / -2);
             ctx.translate((c.width - absDimensions.w) / 2, (c.height - absDimensions.h) / 2);
             ctx.fillStyle = "red";

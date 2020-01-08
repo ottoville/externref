@@ -27,6 +27,7 @@ var urlsToCache = [
     });
     service.addEventListener('activate', event => {
         console.log('now ready to handle fetches!');
+        service.clients.claim();
     });
     service.addEventListener('fetch', function (event) {
         event.respondWith(
