@@ -1,11 +1,9 @@
 ﻿import { paintGround } from "./paintGround.js";
-import { updateSubTexture } from "../triginometry.js";
 
 export class paintTexture extends paintGround {
 
     private subTextureCache: subTexture | null;
     private startingPoint: Vector3;
-    private updateSubTextureLocal: any;
     private height: number;
     private centerX: number;
     private centerZ: number;
@@ -42,7 +40,6 @@ export class paintTexture extends paintGround {
     };
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
         super.activate(callback, options);
-        this.updateSubTextureLocal = updateSubTexture.bind(this.scene.getEngine());
     }
     onAreaDraw(width: number): void {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {
@@ -83,20 +80,20 @@ export class paintTexture extends paintGround {
             let ctx: CanvasRenderingContext2D | null;
             if (ctx = c.getContext("2d")) {
                 ctx.putImageData(this.subTextureCache.imageData, 0, 0);
-                ctx.translate(0, c.height);
-                ctx.scale(1, -1);
-                ctx.drawImage(c, 0, 0);
+
             } else {
                 throw ('Cannot get 2d context');
             }
+            this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
             this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, this.subTextureCache.x, this.subTextureCache.z, this.gl.RGBA, this.gl.UNSIGNED_BYTE, c);
+            this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
         }
         let c = document.createElement('canvas');
         c.width = maxX - minX;
         c.height = maxZ - minZ;
         let pixels: Uint8Array = new Uint8Array(4 * c.width * c.height);
         let texture = this.texture;
-        (function (gl) {
+        (function (gl: WebGL2RenderingContext) {
             if (!this._dummyFramebuffer) {
                 let dummy = gl.createFramebuffer();
 
@@ -118,15 +115,12 @@ export class paintTexture extends paintGround {
         if (ctx = c.getContext("2d")) {
             let imageData = ctx.createImageData(c.width, c.height);
             imageData.data.set(pixels);
-            this.subTextureCache = { x: minX, z: minZ, imageData: imageData };
-
             ctx.save();
-
             ctx.putImageData(imageData, 0, 0);
             ctx.translate(0, c.height);
             ctx.scale(1, -1);
             ctx.drawImage(c, 0, 0);
-
+            this.subTextureCache = { x: minX, z: minZ, imageData: imageData };
             ctx.restore();
             ctx.beginPath();
             let absDimensions: { w: number; h: number } = { w: Math.abs(w), h: Math.abs(h) }
@@ -143,10 +137,5 @@ export class paintTexture extends paintGround {
         }
 
         this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, minX, minZ, this.gl.RGBA, this.gl.UNSIGNED_BYTE, c);
-
-
-
-
-        //this.subTextureCache = this.updateSubTextureLocal(this.zonedt, width * -1, this.height * -1, this.startingPoint, this.ang360, this.centerX, this.centerZ, this.subTextureCache);
     }
 }

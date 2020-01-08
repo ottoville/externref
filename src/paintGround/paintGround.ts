@@ -46,6 +46,8 @@ export abstract class paintGround {
     }
     public deactivate() {
         this.canvas.removeEventListener("pointerdown", this.mainPointerDown, false);
+        this.canvas.removeEventListener('pointermove', this.mousemove, false);
+        this.camera.attachControl(this.canvas, true);
        /* if (this.type == DrawType.plane) {
             tempplane.dispose();
             tempplane = null;
