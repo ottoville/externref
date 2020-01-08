@@ -333,6 +333,7 @@ export class WorldScene extends BABYLON.Scene {
                     let minZ = centerZ - c.height
                     ctx.fillStyle = "green";
                     await ground.inited;
+                    console.log('ground ready');
                     for (let row = centerX - c.width+1; row < centerX; row = row + 2) {
                         for (let col = minZ+1; col < centerZ; col = col += 2) {
                             let height = ground.getHeightAtCoordinates(row, col)

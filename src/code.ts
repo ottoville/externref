@@ -25,7 +25,6 @@ navigator.serviceWorker.register('/sw.js').then(function (registration) {
 
 //@ts-ignore
 BABYLON.Effect.prototype._loadShader = function (shader: any, key: string, optionalKey: string, callback: (data: any) => void): void {
-    console.log('get shader ', shader)
     // Direct source ?
     if (shader.substr(0, 7) === "source:") {
         callback(shader.substr(7));

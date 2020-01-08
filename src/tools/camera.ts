@@ -26,8 +26,6 @@ export class CameraTAB extends UITAB {
         this.camera.panningAxis = new BABYLON.Vector3(1, 0, 1)
         this.camera.checkCollisions = true;
         this.camera.attachControl(canvas, true);
-        console.log('attach camera');
-
 
         this.camera2 = new BABYLON.ArcRotateCamera("Camera2", 0, 0, 10, new BABYLON.Vector3(500, 20, 0), scene);
         this.camera2.target = this.camera.target;
