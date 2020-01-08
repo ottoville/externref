@@ -72,20 +72,9 @@ export class paintTexture extends paintGround {
         let maxX = Math.max(...translated.map(t => t.x));
         let maxZ = Math.max(...translated.map(t => t.z));
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture._webGLTexture);
-        //this is null
         if (this.subTextureCache != null) {
-            let c = document.createElement('canvas');
-            c.width = this.subTextureCache.imageData.width;
-            c.height = this.subTextureCache.imageData.height
-            let ctx: CanvasRenderingContext2D | null;
-            if (ctx = c.getContext("2d")) {
-                ctx.putImageData(this.subTextureCache.imageData, 0, 0);
-
-            } else {
-                throw ('Cannot get 2d context');
-            }
             this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
-            this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, this.subTextureCache.x, this.subTextureCache.z, this.gl.RGBA, this.gl.UNSIGNED_BYTE, c);
+            this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, this.subTextureCache.x, this.subTextureCache.z, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.subTextureCache.imageData);
             this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
         }
         let c = document.createElement('canvas');
