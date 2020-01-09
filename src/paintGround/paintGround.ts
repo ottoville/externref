@@ -16,6 +16,7 @@ export enum DrawType {
     texture = 2,
     line = 3
 };
+//type test = keyof HTMLElementEventMap;
 export abstract class paintGround {
     //private type: DrawType;
     protected ang360: Angle;
@@ -31,27 +32,57 @@ export abstract class paintGround {
     ) {
     };
     public resolve: PTResultF;
-    public activate(callback: PTResultF, options?) {
-       /* this.type = type;
-        if (type == DrawType.plane) {
-            if (typeof (options.forceSharedVertices) !== 'undefined')
-                this.forceSharedVertices = options.forceSharedVertices;
+    private listeners: Map<
+        keyof HTMLElementEventMap,
+        Set<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any>
+    > = new Map();
+
+    private addListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: AddEventListenerOptions) {
+        let set: Set<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any> | undefined;
+        if (!(set = this.listeners.get(type))) {
+            set = new Set();
+            this.listeners.set(type, set);
         }
-        if (type == DrawType.texture)
-            this.updateSubTextureLocal = updateSubTexture.bind(this.scene.getEngine());
-        */
-        
-        this.canvas.addEventListener("pointerdown", this.mainPointerDown, {once:true});
+        if (set.has(listener)) {
+            console.warn('Adding same listener twice not supported: ', type);
+            return;
+        }
+        set.add(listener);
+        if (options && options.once) {
+            console.log('add once listener ', type);
+            this.canvas.addEventListener(type, (e) => {
+                console.log('triggered listener ', type);
+                listener.call(this.canvas, e);
+                set?.delete(listener);
+            }, options);
+        } else {
+            console.log('add listener ', type);
+            this.canvas.addEventListener(type, listener);
+        }
+    }
+    private removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: EventListenerOptions) {
+        let set: Set<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any> | undefined;
+        this.canvas.removeEventListener(type, listener);
+        console.log('remove listener ', type);
+        if (set = this.listeners.get(type))
+            set.delete(listener);
+    }
+    public activate(callback: PTResultF, options?) {
+        this.addListener("pointerdown", this.mainPointerDown, { once: true });
+        //this.canvas.addEventListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
     }
     public deactivate() {
-        this.canvas.removeEventListener("pointerdown", this.mainPointerDown, false);
-        this.canvas.removeEventListener('pointermove', this.mousemove, false);
+        this.listeners.forEach((set, type) => {
+            set.forEach(listener => {
+                console.log('remove listener ', type);
+                this.canvas.removeEventListener(type, listener);
+            });
+            set.clear();
+         });
+        /*this.canvas.removeEventListener("pointerdown", this.mainPointerDown, false);
+        this.canvas.removeEventListener('pointermove', this.mousemove, false);*/
         this.camera.attachControl(this.canvas, true);
-       /* if (this.type == DrawType.plane) {
-            tempplane.dispose();
-            tempplane = null;
-        }*/
     }
 
     private drawArea = evt => {
@@ -109,10 +140,9 @@ export abstract class paintGround {
             let shadow = height * (dotprod / fulldotprod);
 
             width = Math.abs(Math.sqrt(Math.pow(Math.abs(distance), 2) - Math.pow(shadow, 2)));
-            if (v1[0] * v2[0] + v1[1] * v2[1] < 0) {  //Dot product
-                console.log('negative', width);
+            if (v1[0] * v2[0] + v1[1] * v2[1] < 0)  //Dot product
                 width = Math.abs(width) * -1
-            }
+            
             //let timed = new Date().getTime();
             this.onAreaDraw(width);
            // console.log('onAreaDraw took ', new Date().getTime() - timed);
@@ -121,6 +151,7 @@ export abstract class paintGround {
 
     });
     private mousemove = (evt: PointerEvent) => {
+        console.log('mousemove');
         this.mousemove2.eval(25, evt)
     }
 
@@ -136,7 +167,7 @@ export abstract class paintGround {
        // console.log(pickInfo);
         if (!pickInfo)
             return;
-        if (pickInfo.hit) {
+        if (pickInfo.hit && pickInfo.pickedPoint!=null) {
             if (pickInfo.pickedMesh === this.sea) {
                 console.log('hitted sea');
                 return;
@@ -144,28 +175,36 @@ export abstract class paintGround {
             startingPoint = new Vector2(pickInfo.pickedPoint.x, pickInfo.pickedPoint.z);
 
             this.onMainPointerDown(startingPoint);
-
             this.camera.detachControl(this.canvas);
-            this.canvas.addEventListener("pointermove", this.drawArea, false);
+            
+            //this.canvas.addEventListener("pointermove", this.drawArea, false);
+            this.addListener("pointermove", this.drawArea);
 
-            this.canvas.addEventListener("pointerup", (evt) => {
+            //this.canvas.addEventListener("pointerup", (evt) => {
+             this.addListener("pointerup", (evt) => {
                 try {
-                    this.canvas.removeEventListener('pointermove', this.drawArea, false);
+                    //this.canvas.removeEventListener('pointermove', this.drawArea, false);
+                    this.removeListener('pointermove', this.drawArea);
                     this.onMainPointerUp(end_position, height);
                     this.camera.attachControl(this.canvas, true);
                 } catch (e) {
                     console.log(e);
                 } finally {
-                    this.canvas.addEventListener('pointermove', this.mousemove, false);
-                    this.canvas.addEventListener('pointermove', () => {
-                        this.canvas.addEventListener('click', async () => {
+                    //this.canvas.addEventListener('pointermove', this.mousemove, false);
+                    this.addListener('pointermove', this.mousemove);
+                    this.addListener('pointermove', () => {
+                        //this.canvas.addEventListener('pointermove', () => {
+                        this.addListener('click', async () => {
+                            //this.canvas.addEventListener('click', async () => {
                             //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
 
-                            this.canvas.removeEventListener('pointermove', this.mousemove, false);
+                            this.removeListener('pointermove', this.mousemove);
+                            //this.canvas.removeEventListener('pointermove', this.mousemove, false);
 
                             // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
                             //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
-                            this.canvas.addEventListener('pointerdown', this.mainPointerDown, { once: true });
+                            this.addListener('pointerdown', this.mainPointerDown, { once: true });
+                            //this.canvas.addEventListener('pointerdown', this.mainPointerDown, { once: true });
                             this.resolve({ coord: startingPoint, ang: this.ang360, size: { h: height, w: width } });
                         }, { once: true });
 

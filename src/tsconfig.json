@@ -2,6 +2,7 @@
   "compilerOptions": {
     "outDir": "../wwwroot/js",
     //"strictNullChecks": true,
+    "strictBindCallApply": true,
     "target": "es6",
     "module": "es6",
     "lib": [
