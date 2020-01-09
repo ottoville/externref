@@ -42,7 +42,6 @@ export class paintTexture extends paintGround {
         super.activate(callback, options);
     }
     onAreaDraw(width: number): void {
-        console.log('onAreaDraw');
         if (Number.isNaN(width) || Number.isNaN(this.height)) {
             throw ('onAreaDraw non numeric width or height');
         }

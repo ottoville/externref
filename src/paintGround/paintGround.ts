@@ -43,29 +43,32 @@ export abstract class paintGround {
             set = new Set();
             this.listeners.set(type, set);
         }
-        if (set.has(listener)) {
-            console.warn('Adding same listener twice not supported: ', type);
-            return;
-        }
-        set.add(listener);
         if (options && options.once) {
-            console.log('add once listener ', type);
-            this.canvas.addEventListener(type, (e) => {
-                console.log('triggered listener ', type);
+            let proxy = function proxyf(e)  {
                 listener.call(this.canvas, e);
-                set?.delete(listener);
-            }, options);
+                set?.delete(proxyf);
+            }
+            if (set.has(proxy)) {
+                console.warn('Adding same listener twice not supported: ', type);
+                return;
+            }
+            set.add(proxy);
+            this.canvas.addEventListener(type, proxy, options);
         } else {
-            console.log('add listener ', type);
+            if (set.has(listener)) {
+                console.warn('Adding same listener twice not supported: ', type);
+                return;
+            }
+            set.add(listener);
             this.canvas.addEventListener(type, listener);
         }
     }
     private removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: EventListenerOptions) {
         let set: Set<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any> | undefined;
         this.canvas.removeEventListener(type, listener);
-        console.log('remove listener ', type);
-        if (set = this.listeners.get(type))
+        if (set = this.listeners.get(type)) {
             set.delete(listener);
+        }
     }
     public activate(callback: PTResultF, options?) {
         this.addListener("pointerdown", this.mainPointerDown, { once: true });
@@ -73,6 +76,7 @@ export abstract class paintGround {
         this.resolve = callback;
     }
     public deactivate() {
+        console.log(this.listeners);
         this.listeners.forEach((set, type) => {
             set.forEach(listener => {
                 console.log('remove listener ', type);
@@ -151,10 +155,40 @@ export abstract class paintGround {
 
     });
     private mousemove = (evt: PointerEvent) => {
-        console.log('mousemove');
         this.mousemove2.eval(25, evt)
     }
+    private finalClick = (evt: PointerEvent) => {
+        //this.canvas.addEventListener('click', async () => {
+        //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
 
+        this.removeListener('pointermove', this.mousemove);
+        //this.canvas.removeEventListener('pointermove', this.mousemove, false);
+
+        // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
+        //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
+        this.addListener('pointerdown', this.mainPointerDown, { once: true });
+        //this.canvas.addEventListener('pointerdown', this.mainPointerDown, { once: true });
+        this.resolve({ coord: startingPoint, ang: this.ang360, size: { h: height, w: width } });
+    }
+    private mouseMoveRegisterClick = (evt: PointerEvent) => {
+        //this.canvas.addEventListener('pointermove', () => {
+        this.addListener('click', this.finalClick, { once: true });
+    }
+    private pointerUp = (evt:PointerEvent) => {
+        try {
+            //this.canvas.removeEventListener('pointermove', this.drawArea, false);
+            this.removeListener('pointermove', this.drawArea);
+            this.onMainPointerUp(end_position, height);
+            this.camera.attachControl(this.canvas, true);
+        } catch (e) {
+            console.log(e);
+        } finally {
+            //this.canvas.addEventListener('pointermove', this.mousemove, false);
+            this.addListener('pointermove', this.mousemove);
+            this.addListener('pointermove', this.mouseMoveRegisterClick, { once: true })
+
+        }
+    }
     private mainPointerDown = (evt: PointerEvent) => {
         
         if (evt.button !== 0) {
@@ -180,38 +214,11 @@ export abstract class paintGround {
             //this.canvas.addEventListener("pointermove", this.drawArea, false);
             this.addListener("pointermove", this.drawArea);
 
+
+            //There is a race condition. this.drawarea is lazyevaled every 25ms. pointerup event need variables initialized by lazy function. If it is too lazy those variables are undefined.
+
             //this.canvas.addEventListener("pointerup", (evt) => {
-             this.addListener("pointerup", (evt) => {
-                try {
-                    //this.canvas.removeEventListener('pointermove', this.drawArea, false);
-                    this.removeListener('pointermove', this.drawArea);
-                    this.onMainPointerUp(end_position, height);
-                    this.camera.attachControl(this.canvas, true);
-                } catch (e) {
-                    console.log(e);
-                } finally {
-                    //this.canvas.addEventListener('pointermove', this.mousemove, false);
-                    this.addListener('pointermove', this.mousemove);
-                    this.addListener('pointermove', () => {
-                        //this.canvas.addEventListener('pointermove', () => {
-                        this.addListener('click', async () => {
-                            //this.canvas.addEventListener('click', async () => {
-                            //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
-
-                            this.removeListener('pointermove', this.mousemove);
-                            //this.canvas.removeEventListener('pointermove', this.mousemove, false);
-
-                            // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
-                            //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
-                            this.addListener('pointerdown', this.mainPointerDown, { once: true });
-                            //this.canvas.addEventListener('pointerdown', this.mainPointerDown, { once: true });
-                            this.resolve({ coord: startingPoint, ang: this.ang360, size: { h: height, w: width } });
-                        }, { once: true });
-
-                    }, {once:true})
-
-                }
-            }, {once:true});
+            this.addListener("pointerup", this.pointerUp, {once:true});
         }
     };
 }

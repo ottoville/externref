@@ -3,6 +3,7 @@
     "outDir": "../wwwroot/js",
     //"strictNullChecks": true,
     "strictBindCallApply": true,
+    //"strictPropertyInitialization": true,
     "target": "es6",
     "module": "es6",
     "lib": [
