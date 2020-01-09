@@ -2,11 +2,12 @@
 
 export class paintLine extends paintGround {
     private subTextureCache: subTexture | null;
-    private startingPoint: Vector3;
-    onMainPointerUp(end_position: Vector3, height: number): void {
-        var lines = BABYLON.MeshBuilder.CreateLines("lines", { points: [<BABYLON.Vector3><unknown>this.startingPoint, <BABYLON.Vector3><unknown>end_position] });
+    private startingPoint: Vector2;
+    onMainPointerUp(end_position: Vector2, height: number): void {
+        //Todo, fix Y;
+        var lines = BABYLON.MeshBuilder.CreateLines("lines", { points: [new BABYLON.Vector3(this.startingPoint.x, 1, this.startingPoint.y), new BABYLON.Vector3(end_position.x,1, end_position.y)] });
     }
-    onMainPointerDown(startingPoint: Vector3): void {
+    onMainPointerDown(startingPoint: Vector2): void {
         this.startingPoint = startingPoint;
     }
     onAreaDraw(width: number): void {

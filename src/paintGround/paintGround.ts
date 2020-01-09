@@ -1,6 +1,6 @@
-let startingPoint: Vector3;
+let startingPoint: Vector2;
 //let tempplane: BABYLON.Mesh | null
-let end_position: Vector3
+let end_position: Vector2
 
 import { LazyEval } from "../LazyEval.js";
 //import { rotateMatrix, translate } from "./math.js";
@@ -68,23 +68,23 @@ export abstract class paintGround {
 
         let pikked = this.ground.intersects(ray);
         if (pikked.pickedPoint) {
-            end_position = new Vector3(pikked.pickedPoint.x, pikked.pickedPoint.y, pikked.pickedPoint.z);
-            end_position.y = 1;
+            end_position = new Vector2(pikked.pickedPoint.x, pikked.pickedPoint.z);
+
             let width = startingPoint.x - end_position.x;
 
-            distance = Math.sqrt(Math.pow(startingPoint.x - end_position.x, 2) + Math.pow(startingPoint.z - end_position.z, 2));
+            distance = Math.sqrt(Math.pow(startingPoint.x - end_position.x, 2) + Math.pow(startingPoint.y - end_position.y, 2));
             height = distance
 
             if (width < 0)
-                rotation = Math.asin((startingPoint.z - end_position.z) / distance);
+                rotation = Math.asin((startingPoint.y - end_position.y) / distance);
             else
-                rotation = Math.asin((startingPoint.z - end_position.z) / distance) * -1;
+                rotation = Math.asin((startingPoint.y - end_position.y) / distance) * -1;
             this.ang = new Angle(Math.abs(rotation));
             this.ang360 = this.ang[360](startingPoint, end_position);
         }
     });
-    abstract onMainPointerDown(startingPoint: Vector3): void;
-    abstract onMainPointerUp(end_position: Vector3, height: number): void;
+    abstract onMainPointerDown(startingPoint: Vector2): void;
+    abstract onMainPointerUp(end_position: Vector2, height: number): void;
     abstract onAreaDraw(width:number): void;
     private mousemove2 = new LazyEval((evt: PointerEvent) => {
         let ray = BABYLON.Ray.Zero();
@@ -92,16 +92,16 @@ export abstract class paintGround {
         let pikked = this.ground.intersects(ray);
         if (pikked.pickedPoint) {
             //Distance from first point
-            let distance = Math.sqrt(Math.pow(startingPoint.x - pikked.pickedPoint.x, 2) + Math.pow(startingPoint.z - pikked.pickedPoint.z, 2));
+            let distance = Math.sqrt(Math.pow(startingPoint.x - pikked.pickedPoint.x, 2) + Math.pow(startingPoint.y - pikked.pickedPoint.z, 2));
             if (Number.isNaN(distance)) {
                 throw ("distance is not a number");
             }
             let ang2 = new Angle(Math.acos(Math.abs(pikked.pickedPoint.x - startingPoint.x) / distance))
 
-            let dotang = this.ang360.distance(ang2[360](startingPoint, <Vector3><unknown>pikked.pickedPoint).rad);
+            let dotang = this.ang360.distance(ang2[360](startingPoint, new Vector2(pikked.pickedPoint.x, pikked.pickedPoint.z)).rad);
 
-            let v1 = [startingPoint.z - pikked.pickedPoint.z, (startingPoint.x - pikked.pickedPoint.x)*-1]
-            let v2 = [startingPoint.x - end_position.x, startingPoint.z - end_position.z];
+            let v1 = [startingPoint.y - pikked.pickedPoint.z, (startingPoint.x - pikked.pickedPoint.x)*-1]
+            let v2 = [startingPoint.x - end_position.x, startingPoint.y - end_position.y];
 
             let dotprod = height * distance * Math.cos(dotang.rad);
 
@@ -110,6 +110,7 @@ export abstract class paintGround {
 
             width = Math.abs(Math.sqrt(Math.pow(Math.abs(distance), 2) - Math.pow(shadow, 2)));
             if (v1[0] * v2[0] + v1[1] * v2[1] < 0) {  //Dot product
+                console.log('negative', width);
                 width = Math.abs(width) * -1
             }
             //let timed = new Date().getTime();
@@ -140,20 +141,17 @@ export abstract class paintGround {
                 console.log('hitted sea');
                 return;
             }
-            startingPoint = <Vector3><unknown>pickInfo.pickedPoint;
+            startingPoint = new Vector2(pickInfo.pickedPoint.x, pickInfo.pickedPoint.z);
 
             this.onMainPointerDown(startingPoint);
 
             this.camera.detachControl(this.canvas);
             this.canvas.addEventListener("pointermove", this.drawArea, false);
-            let me = this;
 
             this.canvas.addEventListener("pointerup", (evt) => {
                 try {
                     this.canvas.removeEventListener('pointermove', this.drawArea, false);
                     this.onMainPointerUp(end_position, height);
-
-                    end_position.y = 1;
                     this.camera.attachControl(this.canvas, true);
                 } catch (e) {
                     console.log(e);

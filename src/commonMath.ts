@@ -73,8 +73,8 @@ class Angle {
         this._rad = Math.abs(this._deg * Math.PI / 180);
         return this._rad;
     }
-    360(p1: Vector3, p2: Vector3): Angle {
-        if (p2.z - p1.z < 0) {
+    360(p1: Vector2, p2: Vector2): Angle {
+        if (p2.y - p1.y < 0) {
             if (p2.x - p1.x < 0)
                 return new Angle(Math.PI * 2 - this.rad);
             return new Angle(Math.PI + this.rad);

@@ -3,22 +3,22 @@
 export class paintTexture extends paintGround {
 
     private subTextureCache: subTexture | null;
-    private startingPoint: Vector3;
+    private startingPoint: Vector2;
     private height: number;
     private centerX: number;
     private centerZ: number;
     private m1 = new Matrix();
     private texture: BABYLON.InternalTexture
     private gl: WebGL2RenderingContext;
-    onMainPointerUp(end_position: Vector3, height: number): void {
+    onMainPointerUp(end_position: Vector2, height: number): void {
         this.height = height;
         this.subTextureCache = null
     }
-    onMainPointerDown(startingPoint: Vector3): void {
+    onMainPointerDown(startingPoint: Vector2): void {
         this.startingPoint = startingPoint;
         this.m1.setRow(0, new Vector4(1, 0, 0, this.centerX + this.startingPoint.x));
         this.m1.setRow(1, new Vector4(0, 1, 0, 0));
-        this.m1.setRow(2, new Vector4(0, 0, 1, this.centerZ + this.startingPoint.z));
+        this.m1.setRow(2, new Vector4(0, 0, 1, this.centerZ + this.startingPoint.y));
         this.m1.setRow(3, new Vector4(0, 0, 0, 1));
 
     }

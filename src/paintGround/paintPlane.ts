@@ -4,7 +4,7 @@ export class paintPlane extends paintGround {
 
     private forceSharedVertices = true;
     private tempplane: BABYLON.Mesh;
-    private startingPoint: Vector3;
+    private startingPoint: Vector2;
     private planeorgpos: BABYLON.Vector3
     constructor(
         public canvas: HTMLElement,
@@ -26,7 +26,7 @@ export class paintPlane extends paintGround {
         this.tempplane.dispose();
     }
     
-    onMainPointerDown(startingPoint: Vector3) {
+    onMainPointerDown(startingPoint: Vector2) {
         this.startingPoint = startingPoint;
         this.tempplane.scaling.z = 10;
         this.tempplane.scaling.x = 10;
@@ -34,7 +34,7 @@ export class paintPlane extends paintGround {
 
         this.tempplane.position.x = startingPoint.x - 0.5
 
-        this.tempplane.position.z = startingPoint.z - 1
+        this.tempplane.position.z = startingPoint.y - 1
 
         this.tempplane.material = new BABYLON.StandardMaterial("planeMat2", this.scene);
         this.tempplane.material.wireframe = true;
@@ -48,9 +48,10 @@ export class paintPlane extends paintGround {
             }
         }
     }
-    onMainPointerUp(end_position: Vector3, height: number): void {
-        let meshCenter: Vector3 = end_position.subtract(this.startingPoint).divide(new Vector3(2, 2, 2));
-        this.tempplane.position = (<BABYLON.Vector3><unknown>this.startingPoint).add(new BABYLON.Vector3(meshCenter.x, meshCenter.y, meshCenter.z))
+    onMainPointerUp(end_position: Vector2, height: number): void {
+        let meshCenter: Vector2 = end_position.subtract(this.startingPoint).divide(new Vector2(2, 2));
+        let pos = this.startingPoint.add(meshCenter);
+        this.tempplane.position = new BABYLON.Vector3(pos.x, 0.2, pos.y);
         this.tempplane.position.y = 0.2;
         this.tempplane.scaling.x = height;
         this.tempplane.rotation.y = this.ang360.rad;
