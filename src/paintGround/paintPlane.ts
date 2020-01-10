@@ -1,19 +1,21 @@
 ﻿import { paintGround } from "./paintGround.js";
+import { UITAB } from "../UITAB.js";
 
 export class paintPlane extends paintGround {
 
     private forceSharedVertices = true;
     private tempplane: BABYLON.Mesh;
     private startingPoint: Vector2;
-    private planeorgpos: BABYLON.Vector3
+    private planeorgpos: BABYLON.Vector3;
     constructor(
         public canvas: HTMLElement,
         protected scene: BABYLON.Scene,
         protected camera: BABYLON.ArcRotateCamera,
         protected ground: BABYLON.GroundMesh,
         protected sea: BABYLON.Mesh,
+        uitab: UITAB
     ) {
-        super(canvas, scene, camera, ground, sea);
+        super(canvas, scene, camera, ground, sea, uitab);
     };
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
         this.tempplane = BABYLON.MeshBuilder.CreateTiledGround("tgd2", { xmin: -0.5, xmax: 0.5, zmin: -0.5, zmax: 0.5, subdivisions: { w: 10, h: 10 }, precision: { w: 0, h: 0 }, updatable: true });

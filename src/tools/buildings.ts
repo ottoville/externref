@@ -5,18 +5,24 @@ export class BuildingsUI extends UITAB {
     name: string;
     activate: () => void;
     deactivate: () => void;
+    public canvas: HTMLCanvasElement;
+    public listeners: Map<
+        keyof HTMLElementEventMap,
+        Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void>
+    >;
+
     constructor(
         private scene: BABYLON.Scene
     ) {
         super();
+        this.canvas = <any>this.scene.getEngine().getRenderingCanvas();
     }
     public create = (type: string): void => {
         let scene = this.scene;
         let engine = this.scene.getEngine();
-        let canvas = engine.getRenderingCanvas();
         if(type == 'house') {
-            canvas.addEventListener("pointerdown", function doHouse() {
-                canvas.removeEventListener("pointerdown", doHouse);
+            this.canvas.addEventListener("pointerdown", function doHouse() {
+                this.removeEventListener("pointerdown", doHouse);
                 var pickInfo = scene.pick(scene.pointerX, scene.pointerY, (m) => {
                     return true;
                 });

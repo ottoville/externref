@@ -1,4 +1,5 @@
 ﻿import { paintGround } from "./paintGround.js";
+import { UITAB } from "../UITAB.js";
 
 export class paintLine extends paintGround {
     private subTextureCache: subTexture | null;
@@ -18,7 +19,8 @@ export class paintLine extends paintGround {
         protected camera: BABYLON.ArcRotateCamera,
         protected ground: BABYLON.GroundMesh,
         protected sea: BABYLON.Mesh,
+        uitab: UITAB
     ) {
-        super(canvas, scene, camera, ground, sea);
+        super(canvas, scene, camera, ground, sea, uitab);
     };
 }

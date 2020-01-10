@@ -11,12 +11,16 @@ export class PlantsUI extends UITAB {
     public name: string = "terraintab";
     public label: string = 'Plants';
     public activated: boolean=false;
+    public listeners: Map<
+        keyof HTMLElementEventMap,
+        Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void>
+    >;
 
     //private PT: paintGround;
     private PT: paintPlane;
     constructor(
         private ground: BABYLON.GroundMesh,
-        public canvas: HTMLElement,
+        public canvas: HTMLCanvasElement,
         private scene: BABYLON.Scene,
         private camera: BABYLON.ArcRotateCamera,
         private sea: BABYLON.Mesh,
@@ -24,7 +28,7 @@ export class PlantsUI extends UITAB {
     ) {
         super();
         //this.PT = new paintGround(this.canvas, this.scene, this.camera, this.ground, this.sea);
-        this.PT = new paintPlane(this.canvas, this.scene, this.camera, this.ground, this.sea);
+        this.PT = new paintPlane(this.canvas, this.scene, this.camera, this.ground, this.sea, super.getInstance());
 
     }
     activateDraw = () => {

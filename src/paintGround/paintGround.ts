@@ -3,6 +3,7 @@ let startingPoint: Vector2;
 let end_position: Vector2
 
 import { LazyEval } from "../LazyEval.js";
+import { UITAB } from "../UITAB.js";
 //import { rotateMatrix, translate } from "./math.js";
 
 let subTextureCache: subTexture;
@@ -31,15 +32,14 @@ export abstract class paintGround {
         protected camera: BABYLON.ArcRotateCamera,
         protected ground: BABYLON.GroundMesh,
         protected sea: BABYLON.Mesh,
+        private uitab: UITAB
     ) {
     };
     public resolve: PTResultF;
-    private listeners: Map<
+   /* private listeners: Map<
         keyof HTMLElementEventMap | string,
         Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void>
     > = new Map();
-
-    //private lazyListeners: Map<keyof HTMLElementEventMap, Map<(this: HTMLElement, ev) => any, (e) => void>>;
 
     private addListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: addListenerOptions) {
         let map: Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void> | undefined;
@@ -75,27 +75,26 @@ export abstract class paintGround {
                 this.canvas.addEventListener(type, listener);
             }
         }
-    }
-    private removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, lazy:boolean = false) {
+    }*/
+    /*private removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, lazy:boolean = false) {
         let map: Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void> | undefined;
         if (map = this.listeners.get(type)) {
             this.canvas.removeEventListener(type, map.get(listener) || listener);
             if (!map.delete(listener))
                 console.warn('Tried to remove listener that did not exists:', type);
         }
-
-    }
+    }*/
     public activate(callback: PTResultF, options?) {
-        this.addListener("pointerdown", this.mainPointerDown, { once: true });
+        this.uitab.addListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
     }
     public deactivate() {
-        this.listeners.forEach((map, type) => {
+       /* this.uitab.listeners.forEach((map, type) => {
             map.forEach((proxy, listener) => {
                 this.canvas.removeEventListener(type, proxy || listener);
             });
             map.clear();
-         });
+         });*/
         this.camera.attachControl(this.canvas, true);
     }
 
@@ -165,28 +164,28 @@ export abstract class paintGround {
         //this.canvas.addEventListener('click', async () => {
         //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
 
-        this.removeListener('pointermove', this.mousemove);
+        this.uitab.removeListener('pointermove', this.mousemove);
         //this.canvas.removeEventListener('pointermove', this.mousemove, false);
 
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
-        this.addListener('pointerdown', this.mainPointerDown, { once: true });
+        this.uitab.addListener('pointerdown', this.mainPointerDown, { once: true });
         this.resolve({ coord: startingPoint, ang: this.ang360, size: { h: height, w: width } });
     }
     private mouseMoveRegisterClick = (evt: PointerEvent) => {
-        this.addListener('click', this.finalClick, { once: true });
+        this.uitab.addListener('click', this.finalClick, { once: true });
     }
     private pointerUp = (evt:PointerEvent) => {
         try {
-            this.removeListener('pointermove', this.drawArea);
+            this.uitab.removeListener('pointermove', this.drawArea);
             this.onMainPointerUp(end_position, height);
             this.camera.attachControl(this.canvas, true);
         } catch (e) {
             console.log(e);
         } finally {
-            this.addListener('pointermove', this.mousemove, { lazy: 25 });
-            this.addListener('pointermove', this.testLazyEval, { lazy: 25 });
-            this.addListener('pointermove', this.mouseMoveRegisterClick, { once: true })
+            this.uitab.addListener('pointermove', this.mousemove, { lazy: 25 });
+            this.uitab.addListener('pointermove', this.testLazyEval, { lazy: 25 });
+            this.uitab.addListener('pointermove', this.mouseMoveRegisterClick, { once: true })
 
         }
     }
@@ -195,7 +194,7 @@ export abstract class paintGround {
         if (++this.testcounter == 10) {
             console.log('remove listener after ten');
             this.testcounter = 0;
-            this.removeListener('pointermove', this.testLazyEval);
+            this.uitab.removeListener('pointermove', this.testLazyEval);
         }
         console.log('hello');
     }
@@ -221,12 +220,12 @@ export abstract class paintGround {
             this.onMainPointerDown(startingPoint);
             this.camera.detachControl(this.canvas);
             
-            this.addListener("pointermove", this.drawArea, {lazy:25});
+            this.uitab.addListener("pointermove", this.drawArea, {lazy:25});
 
 
             //There is a race condition. this.drawarea is lazyevaled every 25ms. pointerup event need variables initialized by lazy function. If it is too lazy those variables are undefined.
 
-            this.addListener("pointerup", this.pointerUp, {once:true});
+            this.uitab.addListener("pointerup", this.pointerUp, {once:true});
         }
     };
 }

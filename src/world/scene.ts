@@ -240,7 +240,6 @@ export class WorldScene extends BABYLON.Scene {
         gameEngine.message(WorkerReturn.noReturn, 'init', {
             gameTime: this.lastStateChangeGameTime
         });*/
-
         this.tools['CameraTAB'] = new CameraTAB(this, engine.getRenderingCanvas(), DB);
         
         //let ui = new UI();

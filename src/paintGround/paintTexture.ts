@@ -1,7 +1,7 @@
 ﻿import { paintGround } from "./paintGround.js";
+import { UITAB } from "../UITAB.js";
 
 export class paintTexture extends paintGround {
-
     private subTextureCache: subTexture | null;
     private startingPoint: Vector2;
     private height: number;
@@ -30,9 +30,10 @@ export class paintTexture extends paintGround {
         protected sea: BABYLON.Mesh,
         protected zonedt: BABYLON.Texture,
         private textureWidth: number,
-        private textureHeight:number
+        private textureHeight: number,
+        uitab: UITAB,
     ) {
-        super(canvas, scene, camera, ground, sea);
+        super(canvas, scene, camera, ground, sea, uitab);
         this.centerX = textureWidth / 2;
         this.centerZ = textureHeight / 2;
         this.texture = <any>zonedt._texture;

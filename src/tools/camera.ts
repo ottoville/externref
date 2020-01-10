@@ -1,5 +1,6 @@
 import { UITAB } from "../UITAB.js";
 import { LazyEval } from "../LazyEval.js";
+//@ts-ignore
 export class CameraTAB extends UITAB {
     public name = 'camera';
     public label = 'Camera';
@@ -8,7 +9,7 @@ export class CameraTAB extends UITAB {
     public camera2: BABYLON.ArcRotateCamera;
     constructor(
         private scene: BABYLON.Scene,
-        private canvas: HTMLElement,
+        public canvas: HTMLCanvasElement,
         private D: Promise<IDBDatabase>
     ) {
         super();

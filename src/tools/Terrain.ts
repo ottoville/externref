@@ -1,66 +1,50 @@
 ﻿import { UITAB } from "../UITAB.js";
-import { LazyEval } from "../LazyEval.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn } from "../WorkerThread.js";
 import { texImage2D } from "../webgl.js";
 
+//@ts-ignore
 export class TerrainTool extends UITAB {
     
     private timer: number;
     //private ray = BABYLON.Ray.Zero();
     //private pickinfo: BABYLON.PickingInfo;
-    private mousemove = new LazyEval((evt: PointerEvent) => {
-        let engine = this.scene.getEngine();
-        let viewport = this.camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
-        let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
-        this.terrain.worker.message(WorkerReturn.Promise, 'mousemove',
-            {
-                x: evt.clientX,
-                y: evt.clientY,
-                viewportWidth: viewport.width,
-                viewportHeight: viewport.height,
-                view: this.camera.getViewMatrix().toArray(),
-                projection: this.camera.getProjectionMatrix().toArray()
-            }).then(flatPos => {
-                this.uniformsV2.set(this.helpermaterial._effect.getUniform("flatPos"), <{x:number, y:number}><any>flatPos);
-            });
-        //this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.terrain.getWorldMatrix(), this.ray, this.camera);
-       // this.pickinfo = this.terrain.intersects(this.ray);
-        //if (this.pickinfo.pickedPoint) {
-            /*this.helper.position.x = this.pickinfo.pickedPoint.x;
-            this.helper.position.y = 0;
-            this.helper.position.z = this.pickinfo.pickedPoint.z;
-            console.log(this.helper.position);*/
-          //  this.uniformsV2.set(this.helpermaterial._effect.getUniform("flatPos"), { x: this.pickinfo.pickedPoint.x, y: this.pickinfo.pickedPoint.z})
-            //[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -714.7799682617188, 0, -90.85552215576172, 1]
-       // }
-    });
-    private vertexData = new BABYLON.VertexData();
+    //private vertexData = new BABYLON.VertexData();
     private helper = new BABYLON.Mesh("Helper");
     private helpermaterial: BABYLON.ShaderMaterial;
     private timed = new Date().getTime();
-    private glTexture: WebGLTexture;
-    private glTexture2: WebGLTexture;
-    private glTexture3: WebGLTexture;
+    private glTexture: WebGLTexture | null;
+    private glTexture2: WebGLTexture | null;
+    private glTexture3: WebGLTexture | null;
     private gl: WebGLRenderingContext;
     private uniformsV2: Map<WebGLUniformLocation, { x: number, y: number }> = new Map();
     private setTime=() => {
         this.helpermaterial.setFloat("time", (this.timed - new Date().getTime()) / 1000);
     }
+    public canvas: HTMLCanvasElement;
+    private helperIndices = new Uint16Array([0, 1, 2, 3]);
     constructor(
         private scene: BABYLON.Scene,
         private terrain: Terrain,
         private camera: BABYLON.ArcRotateCamera,
     ) {
         super();
-        this.vertexData.positions = new Float32Array([
+        this.canvas = <any>scene.getEngine().getRenderingCanvas();
+       /* this.vertexData.positions = new Float32Array([
             -0.5, 0, -2,
             0.5, 0, -3,
             0.5, 0, 3,
             -0.5, 0, 2,
         ]);
         this.vertexData.indices = new Uint16Array([0, 1, 2, 3]);
-        this.vertexData.applyToMesh(this.helper);
+        this.vertexData.applyToMesh(this.helper);*/
+        this.helper.setIndices(this.helperIndices);
+        this.helper.setVerticesData(BABYLON.VertexBuffer.PositionKind, new Float32Array([
+            -0.5, 0, -2,
+            0.5, 0, -3,
+            0.5, 0, 3,
+            -0.5, 0, 2,
+        ]));
         this.helpermaterial = new BABYLON.ShaderMaterial("shader", this.scene, "./shaders/helper",
             {
                 attributes: ["position", "normal", "uv"],
@@ -82,32 +66,7 @@ export class TerrainTool extends UITAB {
     private _invertDirection= 1;
     private heightMax = 500;
     private heightMin = -500;
-    private _prepareDataModelForElevation  () {
-        if (this._facesOfVertices == null) {
-            this._facesOfVertices = [];
 
-            this._groundFacesNormals = [];
-            let v1v2 = new BABYLON.Vector3();
-            let v3v2 = new BABYLON.Vector3();
-            for (let index = 0; index < this.terrain.getTotalIndices() / 3; index++) {
-                var faceInfo = this._getFaceVerticesIndex(index);
-
-                v1v2.x = this.terrain.positions[faceInfo[0] * 3] - this.terrain.positions[faceInfo[1] * 3];
-                v1v2.y = this.terrain.positions[faceInfo[0] * 3 + 1] - this.terrain.positions[faceInfo[1] * 3 + 1];
-                v1v2.z = this.terrain.positions[faceInfo[0] * 3 + 2] - this.terrain.positions[faceInfo[1] * 3 + 2];
-
-                v3v2.x = this.terrain.positions[faceInfo[2] * 3] - this.terrain.positions[faceInfo[1] * 3];
-                v3v2.y = this.terrain.positions[faceInfo[2] * 3 + 1] - this.terrain.positions[faceInfo[1] * 3 + 1];
-                v3v2.z = this.terrain.positions[faceInfo[2] * 3 + 2] - this.terrain.positions[faceInfo[1] * 3 + 2];
-
-
-                this._groundFacesNormals[index] = BABYLON.Vector3.Normalize(BABYLON.Vector3.Cross(v1v2, v3v2));
-
-            }
-
-            this._getFacesOfVertices();
-        }
-    };
     private _getFacesOfVertices () {
         this._facesOfVertices = [];
         this._subdivisionsOfVertices = [];
@@ -164,7 +123,7 @@ export class TerrainTool extends UITAB {
     activate = (): void => {
         let engine = this.scene.getEngine();
         this.helper.visibility = 1;
-        engine.getRenderingCanvas().addEventListener("pointermove", this.mouseListener);
+        this.addListener("pointermove", this.mouseListener, {lazy: 15});
         this.scene.registerBeforeRender(this.setTime);
 
         /*******/
@@ -285,7 +244,8 @@ export class TerrainTool extends UITAB {
             // this._draw(subMesh, fillMode);
             engine.applyStates();
             engine._drawCalls.addCount(1, false);
-            gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.vertexData.indices.length, gl.UNSIGNED_SHORT, 0, 8);
+            gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.helperIndices.length, gl.UNSIGNED_SHORT, 0, 8);
+           // gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.vertexData.indices.length, gl.UNSIGNED_SHORT, 0, 8);
             return this.helper;
 
             //return this;
@@ -321,12 +281,13 @@ export class TerrainTool extends UITAB {
             }*/
             return;
         }
-        let canvas = this.scene.getEngine().getRenderingCanvas();
-        canvas.addEventListener("pointerup", this.pointerupf);
-        this.camera.detachControl(canvas);
+        this.addListener("pointerup", this.pointerupf, {once:true});
+        this.camera.detachControl(this.canvas);
         this.mouseinterval = setInterval(() => {
             let gl = (<WebGL2RenderingContext><any>this.gl);
+            //@ts-ignore
             let normalbuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.NormalKind]._buffer.getBuffer().underlyingResource;
+            //@ts-ignore
             let vertexbuffer: WebGLBuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.PositionKind]._buffer.getBuffer().underlyingResource;
             this.timer = new Date().getTime();
             this.terrain.worker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(e => {
@@ -343,16 +304,15 @@ export class TerrainTool extends UITAB {
         }, 100);
     }
     pointerupf = (evt: PointerEvent): void => {
-        let canvas = this.scene.getEngine().getRenderingCanvas();
-        canvas.removeEventListener("pointerup", this.pointerupf);
-        this.camera.attachControl(canvas, true);
+        this.camera.attachControl(this.canvas, true);
         clearInterval(this.mouseinterval);
     }
     deactivate = (): void => {
+        super.deactivate();
         this.terrain.worker.unsubscribe('heights');
-        this.scene.getEngine().getRenderingCanvas().removeEventListener("pointerdown", this.pointerdownf);
+        //this.removeListener("pointerdown", this.pointerdownf);
         this.helper.visibility = 0;
-        this.scene.getEngine().getRenderingCanvas().removeEventListener("pointermove", this.mouseListener);
+        //this.removeListener("pointermove", this.mouseListener);
         this.scene.unregisterBeforeRender(this.setTime);
         this.gl.deleteTexture(this.glTexture);
         this.gl.deleteTexture(this.glTexture2);
@@ -364,21 +324,47 @@ export class TerrainTool extends UITAB {
         }).bind(this.helpermaterial)();
     };
     mouseListener = (evt: PointerEvent): void => {
-        this.mousemove.eval(15,evt);
+        let engine = this.scene.getEngine();
+        let viewport = this.camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
+        let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
+        this.terrain.worker.message(WorkerReturn.Promise, 'mousemove',
+            {
+                x: evt.clientX,
+                y: evt.clientY,
+                viewportWidth: viewport.width,
+                viewportHeight: viewport.height,
+                view: this.camera.getViewMatrix().toArray(),
+                projection: this.camera.getProjectionMatrix().toArray()
+            }).then(flatPos => {
+                let uniformlocation;
+                //@ts-ignore
+                if (uniformlocation = this.helpermaterial._effect.getUniform("flatPos"))
+                    this.uniformsV2.set(uniformlocation, <{ x: number, y: number }><any>flatPos);
+            });
+        //this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.terrain.getWorldMatrix(), this.ray, this.camera);
+        // this.pickinfo = this.terrain.intersects(this.ray);
+        //if (this.pickinfo.pickedPoint) {
+        /*this.helper.position.x = this.pickinfo.pickedPoint.x;
+        this.helper.position.y = 0;
+        this.helper.position.z = this.pickinfo.pickedPoint.z;
+        console.log(this.helper.position);*/
+        //  this.uniformsV2.set(this.helpermaterial._effect.getUniform("flatPos"), { x: this.pickinfo.pickedPoint.x, y: this.pickinfo.pickedPoint.z})
+        //[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -714.7799682617188, 0, -90.85552215576172, 1]
+        // }
     }
     raise = (): void => {
         console.log('raise')
         this.direction = 1;
-        let canvas = this.scene.getEngine().getRenderingCanvas();
-        canvas.removeEventListener("pointerdown", this.pointerdownf);
-        canvas.addEventListener("pointerdown", this.pointerdownf);
+        //let canvas = this.scene.getEngine().getRenderingCanvas();
+        this.removeListener("pointerdown", this.pointerdownf);
+        this.addListener("pointerdown", this.pointerdownf);
 
     }
     lower = (): void => {
         console.log('lower')
         this.direction = -1;
-        let canvas = this.scene.getEngine().getRenderingCanvas();
-        canvas.removeEventListener("pointerdown", this.pointerdownf);
-        canvas.addEventListener("pointerdown", this.pointerdownf);
+        //let canvas = this.scene.getEngine().getRenderingCanvas();
+        this.removeListener("pointerdown", this.pointerdownf);
+        this.addListener("pointerdown", this.pointerdownf);
     }
 }

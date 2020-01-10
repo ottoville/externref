@@ -9,6 +9,7 @@ export class Zones extends UITAB {
     private PT: paintTexture;
     private zonedt: BABYLON.DynamicTexture
     private size = 10000;
+    public canvas: HTMLCanvasElement;
     constructor(
         private ground: BABYLON.GroundMesh,
         private db: IDBDatabase,
@@ -18,57 +19,11 @@ export class Zones extends UITAB {
         private sea: BABYLON.Mesh
     ) {
         super();
+        this.canvas = <any>scene.getEngine().getRenderingCanvas();
         // let DZ = new drawZone(canvas, scene, camera, ground, sea, DB, DT, groundmateria, grass, terrain);
         this.zonedt = new BABYLON.DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, scene, false);
 
-
-       /* let glTexture = gl.createTexture();
-        let gl: WebGL2RenderingContext = <WebGL2RenderingContext><any>this.scene.getEngine()._gl;
-
-        gl.bindTexture(gl.TEXTURE_2D, glTexture);
-
-        let tex3 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr);
-        tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
-        tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        let me = this;
-        (function () {
-            this._options.samplers.push('slopeArr', 'facet1Arr', 'facet2Arr');
-            this._textures = {
-                slopeArr: {
-                    getInternalTexture: () => ({ //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
-                        _source: 3,
-                        _webGLTexture: me.glTexture
-                    }),
-                    isReady: () => true
-                },
-                facet1Arr: {
-                    getInternalTexture: () => ({
-                        _source: 3,
-                        _webGLTexture: me.glTexture2
-                    }),
-                    isReady: () => true
-                },
-                facet2Arr: {
-                    getInternalTexture: () => ({
-                        _source: 3,
-                        _webGLTexture: me.glTexture3
-                    }),
-                    isReady: () => true
-                }
-            }
-            return this;
-        }).bind(this.helpermaterial)();*/
-
-
-
-
-
-
-
-
-
-        this.PT = new paintTexture(scene.getEngine().getRenderingCanvas(), this.scene, this.camera, this.ground, this.sea, this.zonedt, 10000, 10000);
+        this.PT = new paintTexture(this.canvas, this.scene, this.camera, this.ground, this.sea, this.zonedt, 10000, 10000, super.getInstance() );
         this.zonemateria = new BABYLON.StandardMaterial("zoneMat", scene);
         this.zonemateria.diffuseTexture = this.zonedt;
     }
@@ -100,7 +55,8 @@ export class Zones extends UITAB {
         }, {});
     }
     deactivate = (): void => {
-        if(this.activated) {
+        if (this.activated) {
+            super.deactivate();
             this.PT.deactivate();
             this.activated=false;
             this.ground.material = this.groundMaterial;
