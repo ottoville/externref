@@ -10,7 +10,9 @@ let planeorgpos: BABYLON.Vector3;
 let width: number;
 let height: number;
 let rotation: number;
-
+interface addListenerOptions extends AddEventListenerOptions {
+    lazy?: number;
+}
 export enum DrawType {
     plane = 1,
     texture = 2,
@@ -33,66 +35,71 @@ export abstract class paintGround {
     };
     public resolve: PTResultF;
     private listeners: Map<
-        keyof HTMLElementEventMap,
-        Set<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any>
+        keyof HTMLElementEventMap | string,
+        Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void>
     > = new Map();
 
-    private addListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: AddEventListenerOptions) {
-        let set: Set<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any> | undefined;
-        if (!(set = this.listeners.get(type))) {
-            set = new Set();
-            this.listeners.set(type, set);
+    //private lazyListeners: Map<keyof HTMLElementEventMap, Map<(this: HTMLElement, ev) => any, (e) => void>>;
+
+    private addListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: addListenerOptions) {
+        let map: Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void> | undefined;
+        if (!(map = this.listeners.get(type))) {
+            map = new Map();
+            this.listeners.set(type, map);
         }
         if (options && options.once) {
-            let proxy = function proxyf(e)  {
+            if (map.has(listener)) {
+                console.warn('Adding same listener twice not supported: ', type);
+                return;
+            }
+            this.canvas.addEventListener(type, map.set(listener, (e) => {
                 listener.call(this.canvas, e);
-                set?.delete(proxyf);
-            }
-            if (set.has(proxy)) {
-                console.warn('Adding same listener twice not supported: ', type);
-                return;
-            }
-            set.add(proxy);
-            this.canvas.addEventListener(type, proxy, options);
+                map?.delete(listener);
+            }).get(listener), options);
         } else {
-            if (set.has(listener)) {
+            if (map.has(listener)) {
                 console.warn('Adding same listener twice not supported: ', type);
                 return;
             }
-            set.add(listener);
-            this.canvas.addEventListener(type, listener);
+            let lazytimer;
+            if (options && (lazytimer = options.lazy)) {
+                let lazyf = new LazyEval((e) => {
+                    listener.call(this.canvas, e);
+                });
+                this.canvas.addEventListener(type, map.set(listener, (e) => {
+                    lazyf.eval(lazytimer, e);
+                }).get(listener));
+
+            } else {
+                map.set(listener, null);
+                this.canvas.addEventListener(type, listener);
+            }
         }
     }
-    private removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: EventListenerOptions) {
-        let set: Set<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any> | undefined;
-        this.canvas.removeEventListener(type, listener);
-        if (set = this.listeners.get(type)) {
-            set.delete(listener);
+    private removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, lazy:boolean = false) {
+        let map: Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void> | undefined;
+        if (map = this.listeners.get(type)) {
+            this.canvas.removeEventListener(type, map.get(listener) || listener);
+            if (!map.delete(listener))
+                console.warn('Tried to remove listener that did not exists:', type);
         }
+
     }
     public activate(callback: PTResultF, options?) {
         this.addListener("pointerdown", this.mainPointerDown, { once: true });
-        //this.canvas.addEventListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
     }
     public deactivate() {
-        console.log(this.listeners);
-        this.listeners.forEach((set, type) => {
-            set.forEach(listener => {
-                console.log('remove listener ', type);
-                this.canvas.removeEventListener(type, listener);
+        this.listeners.forEach((map, type) => {
+            map.forEach((proxy, listener) => {
+                this.canvas.removeEventListener(type, proxy || listener);
             });
-            set.clear();
+            map.clear();
          });
-        /*this.canvas.removeEventListener("pointerdown", this.mainPointerDown, false);
-        this.canvas.removeEventListener('pointermove', this.mousemove, false);*/
         this.camera.attachControl(this.canvas, true);
     }
 
-    private drawArea = evt => {
-        this.drawArea2.eval(25, evt)
-    }
-    private drawArea2 = new LazyEval((evt: PointerEvent) => {
+    private drawArea = (evt:PointerEvent) => {
         let engine = this.scene.getEngine();
         engine.resize();
 
@@ -117,11 +124,12 @@ export abstract class paintGround {
             this.ang = new Angle(Math.abs(rotation));
             this.ang360 = this.ang[360](startingPoint, end_position);
         }
-    });
+    }
+
     abstract onMainPointerDown(startingPoint: Vector2): void;
     abstract onMainPointerUp(end_position: Vector2, height: number): void;
     abstract onAreaDraw(width:number): void;
-    private mousemove2 = new LazyEval((evt: PointerEvent) => {
+    private mousemove = (evt: PointerEvent) => {
         let ray = BABYLON.Ray.Zero();
         this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
         let pikked = this.ground.intersects(ray);
@@ -135,7 +143,7 @@ export abstract class paintGround {
 
             let dotang = this.ang360.distance(ang2[360](startingPoint, new Vector2(pikked.pickedPoint.x, pikked.pickedPoint.z)).rad);
 
-            let v1 = [startingPoint.y - pikked.pickedPoint.z, (startingPoint.x - pikked.pickedPoint.x)*-1]
+            let v1 = [startingPoint.y - pikked.pickedPoint.z, (startingPoint.x - pikked.pickedPoint.x) * -1]
             let v2 = [startingPoint.x - end_position.x, startingPoint.y - end_position.y];
 
             let dotprod = height * distance * Math.cos(dotang.rad);
@@ -146,16 +154,12 @@ export abstract class paintGround {
             width = Math.abs(Math.sqrt(Math.pow(Math.abs(distance), 2) - Math.pow(shadow, 2)));
             if (v1[0] * v2[0] + v1[1] * v2[1] < 0)  //Dot product
                 width = Math.abs(width) * -1
-            
+
             //let timed = new Date().getTime();
             this.onAreaDraw(width);
-           // console.log('onAreaDraw took ', new Date().getTime() - timed);
+            // console.log('onAreaDraw took ', new Date().getTime() - timed);
 
         }
-
-    });
-    private mousemove = (evt: PointerEvent) => {
-        this.mousemove2.eval(25, evt)
     }
     private finalClick = (evt: PointerEvent) => {
         //this.canvas.addEventListener('click', async () => {
@@ -167,27 +171,33 @@ export abstract class paintGround {
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
         this.addListener('pointerdown', this.mainPointerDown, { once: true });
-        //this.canvas.addEventListener('pointerdown', this.mainPointerDown, { once: true });
         this.resolve({ coord: startingPoint, ang: this.ang360, size: { h: height, w: width } });
     }
     private mouseMoveRegisterClick = (evt: PointerEvent) => {
-        //this.canvas.addEventListener('pointermove', () => {
         this.addListener('click', this.finalClick, { once: true });
     }
     private pointerUp = (evt:PointerEvent) => {
         try {
-            //this.canvas.removeEventListener('pointermove', this.drawArea, false);
             this.removeListener('pointermove', this.drawArea);
             this.onMainPointerUp(end_position, height);
             this.camera.attachControl(this.canvas, true);
         } catch (e) {
             console.log(e);
         } finally {
-            //this.canvas.addEventListener('pointermove', this.mousemove, false);
-            this.addListener('pointermove', this.mousemove);
+            this.addListener('pointermove', this.mousemove, { lazy: 25 });
+            this.addListener('pointermove', this.testLazyEval, { lazy: 25 });
             this.addListener('pointermove', this.mouseMoveRegisterClick, { once: true })
 
         }
+    }
+    private testcounter = 0;
+    private testLazyEval = (evt: PointerEvent) => {
+        if (++this.testcounter == 10) {
+            console.log('remove listener after ten');
+            this.testcounter = 0;
+            this.removeListener('pointermove', this.testLazyEval);
+        }
+        console.log('hello');
     }
     private mainPointerDown = (evt: PointerEvent) => {
         
@@ -211,13 +221,11 @@ export abstract class paintGround {
             this.onMainPointerDown(startingPoint);
             this.camera.detachControl(this.canvas);
             
-            //this.canvas.addEventListener("pointermove", this.drawArea, false);
-            this.addListener("pointermove", this.drawArea);
+            this.addListener("pointermove", this.drawArea, {lazy:25});
 
 
             //There is a race condition. this.drawarea is lazyevaled every 25ms. pointerup event need variables initialized by lazy function. If it is too lazy those variables are undefined.
 
-            //this.canvas.addEventListener("pointerup", (evt) => {
             this.addListener("pointerup", this.pointerUp, {once:true});
         }
     };
