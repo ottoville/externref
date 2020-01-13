@@ -7,12 +7,10 @@
     {
         //System.Console.WriteLine(input.GetProperty("authResponse"));
         //BlazorApp1.authencation.Ifacebook userdata = input;
-        System.Console.WriteLine("Navigate to game");
         UriHelper.NavigateTo("game");
     }
     protected override void OnAfterRender(bool firstRender)
     {
-        System.Console.WriteLine("Init router");
         JSRuntime.InvokeAsync<object>("initRouter",
         DotNetObjectReference.Create(this));
     }

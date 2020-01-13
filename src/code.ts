@@ -93,7 +93,7 @@ declare global {
         scene: WorldScene;
         sceneInited: Promise<WorldScene>;
         fbAsyncInit: () => void;
-        playAnomyous: () => void
+        playAnomyous: (e) => void
     }
 }
 declare var BlazorRouter: DotNet.BlazorInstance;
@@ -117,12 +117,9 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
             }
         });
     };
-    window.playAnomyous = async () => {
-        console.log('playAnomyous clicked');
-        let router = await BlazorRouter;
-        console.log('got router', router);
-        router.invokeMethod('startGame');
-        console.log('invoked router method');
+    window.playAnomyous = async (e: PointerEvent) => {
+        alert('Device type is ' + e.pointerType + 'max touch points' + Navigator.maxTouchPoints);
+        (await BlazorRouter).invokeMethod('startGame');
         if (typeof (localStorage.accessToken) === 'undefined')
             localStorage.accessToken = new Date().getTime().toString() + navigator.userAgent;
         login({ provider: 'anomyous', accessToken: localStorage.accessToken });
