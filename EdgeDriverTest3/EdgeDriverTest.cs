@@ -20,7 +20,7 @@ namespace EdgeDriverTest3
         [TestInitialize]
         public void EdgeDriverInitialize()
         {
-            var servicePath = Environment.GetEnvironmentVariable("ChromeWebDriver", EnvironmentVariableTarget.User);
+            var servicePath = Environment.GetEnvironmentVariable("ChromeWebDriver", EnvironmentVariableTarget.Machine);
             if(servicePath=="" || servicePath==null)
             {
                 servicePath = ".\\";
