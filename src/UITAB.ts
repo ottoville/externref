@@ -37,7 +37,7 @@ export abstract class UITAB {
             }
             let proxyf = (e) => {
                 listener.call(this.canvas, e);
-                map?.delete(listener);
+                map && map.delete(listener);
             };
             map.set(listener, proxyf)
 
