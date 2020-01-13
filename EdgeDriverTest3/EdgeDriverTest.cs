@@ -20,10 +20,10 @@ namespace EdgeDriverTest3
         [TestInitialize]
         public void EdgeDriverInitialize()
         {
-            var servicePath = Environment.GetEnvironmentVariable("ChromeWebDriver");
+            var servicePath = Environment.GetEnvironmentVariable("ChromeWebDriver", EnvironmentVariableTarget.User);
             if(servicePath=="" || servicePath==null)
             {
-                servicePath = "C:\\Users\\ottov\\source\\repos\\terra\\terrasim\\EdgeDriverTest3";
+                servicePath = ".\\";
             }
             _driver = new ChromeDriver(servicePath);
         }

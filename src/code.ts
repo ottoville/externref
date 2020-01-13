@@ -94,6 +94,7 @@ BABYLON.Effect.prototype._loadShader = function (shader: any, key: string, optio
 })*/
 
 var BlazorRouter: Promise<DotNet.BlazorInstance> = new Promise((resolve, reject) => {
+    console.log('router inited');
     (<any>window).initRouter = resolve
 });
 declare global {
@@ -125,6 +126,7 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
         });
     };
     window.playAnomyous = async () => {
+        console.log('playAnomyous clicked');
         (await BlazorRouter).invokeMethod('startGame');
         if (typeof (localStorage.accessToken) === 'undefined')
             localStorage.accessToken = new Date().getTime().toString() + navigator.userAgent;
