@@ -118,7 +118,7 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
         });
     };
     window.playAnomyous = async (e: PointerEvent) => {
-        alert('Device type is ' + e.pointerType + 'max touch points' + Navigator.maxTouchPoints);
+        alert('Device type is ' + e.pointerType + 'max touch points' + navigator.maxTouchPoints);
         (await BlazorRouter).invokeMethod('startGame');
         if (typeof (localStorage.accessToken) === 'undefined')
             localStorage.accessToken = new Date().getTime().toString() + navigator.userAgent;
