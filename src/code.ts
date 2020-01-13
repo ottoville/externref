@@ -127,7 +127,10 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
     };
     window.playAnomyous = async () => {
         console.log('playAnomyous clicked');
-        (await BlazorRouter).invokeMethod('startGame');
+        let router = await BlazorRouter;
+        console.log('got router', router);
+        router.invokeMethod('startGame');
+        console.log('invoked router method');
         if (typeof (localStorage.accessToken) === 'undefined')
             localStorage.accessToken = new Date().getTime().toString() + navigator.userAgent;
         login({ provider: 'anomyous', accessToken: localStorage.accessToken });
