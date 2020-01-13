@@ -1,17 +1,12 @@
 
 
-import { PlantsUI } from "./tools/plantsUI.js";
 
 
 //import { CSG } from "./csg.js";
 //import { UI } from "./UI.js";
-import { Plants } from "./plants/Plants.js";
-import { WorkerThread, WorkerReturn } from "./WorkerThread.js";
 import { WorldScene } from "./world/scene.js";
 
-
 //import  DB from "./DB.js";
-
 
 //let zones: Zone[] = [];
 
@@ -93,10 +88,6 @@ BABYLON.Effect.prototype._loadShader = function (shader: any, key: string, optio
     }
 })*/
 
-var BlazorRouter: Promise<DotNet.BlazorInstance> = new Promise((resolve, reject) => {
-    console.log('router inited');
-    (<any>window).initRouter = resolve
-});
 declare global {
     interface Window {
         scene: WorldScene;
@@ -105,6 +96,7 @@ declare global {
         playAnomyous: () => void
     }
 }
+declare var BlazorRouter: DotNet.BlazorInstance;
 var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
     window.fbAsyncInit = function () {
         FB.init({

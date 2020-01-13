@@ -4,9 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BlazorApp1</title>
+    <title>Terrasim</title>
     <base href="/" />
-    <link href="css/site.css" rel="stylesheet" />
+
     <!--
     <script src="lib/babylonjs/babylon.js" defer></script>
     <script src="lib/babylonjs.materials.min.js" defer></script>
@@ -17,12 +17,16 @@
     <script src="js/DB.js" defer></script>
     <script type="module" src="js/code.js" defer></script>
     <script defer crossorigin="anonymous" src="https://connect.facebook.net/fi_FI/sdk.js#xfbml=1&version=v4.0&appId=417236772473746&autoLogAppEvents=1"></script>
+    <script>
+        var BlazorRouter = new Promise((resolve, reject) => {
+            window.initRouter = resolve;
+        });
+    </script>
+    <script defer src="_framework/blazor.webassembly.js"></script>
+    <link href="css/site.css" rel="stylesheet" />
     <link rel="stylesheet" href="css/w3.css">
 </head>
 <body>
-    
     <app>Loading...</app>
-
-    <script src="_framework/blazor.webassembly.js"></script>
 </body>
 </html>
