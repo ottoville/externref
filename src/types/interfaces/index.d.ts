@@ -31,5 +31,6 @@ declare namespace DotNet  {
 interface loginProvider {
     provider: string,
     accessToken: string,
+    pointerEvent: PointerEvent,
     userID?: string
 }

@@ -92,37 +92,38 @@ declare global {
     interface Window {
         scene: WorldScene;
         sceneInited: Promise<WorldScene>;
-        fbAsyncInit: () => void;
-        playAnomyous: (e) => void
+        login: (e: PointerEvent, method: string) => void
     }
 }
 declare var BlazorRouter: DotNet.BlazorInstance;
 var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
-    window.fbAsyncInit = function () {
-        FB.init({
-            appId: '417236772473746',
-            cookie: true,
-            xfbml: true,
-            version: 'v4.0'
-        });
-        FB.AppEvents.logPageView();
-        FB.Event.subscribe('auth.login', async (response) => {
+    window.login = async (e: PointerEvent, method: "facebook" | "anomyous") => {
+        if (method == "facebook") {
+            FB.login(() => {
+                FB.init({
+                    appId: '417236772473746',
+                    cookie: true,
+                    xfbml: true,
+                    version: 'v4.0'
+                });
+                FB.AppEvents.logPageView();
+                FB.Event.subscribe('auth.login', async (response) => {
+                    (await BlazorRouter).invokeMethod('startGame');
+                    login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID, pointerEvent: e });
+                });
+                FB.getLoginStatus(async (response) => {
+                    if (response.status === 'connected') {
+                        (await BlazorRouter).invokeMethod('startGame');
+                        login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID, pointerEvent: e });
+                    }
+                });
+            }, { scope: "email" });
+        } else {
             (await BlazorRouter).invokeMethod('startGame');
-            login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID });
-        });
-        FB.getLoginStatus(async (response) => {
-            if (response.status === 'connected') {
-                (await BlazorRouter).invokeMethod('startGame');
-                login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID });
-            }
-        });
-    };
-    window.playAnomyous = async (e: PointerEvent) => {
-        alert('Device type is ' + e.pointerType + 'max touch points' + navigator.maxTouchPoints);
-        (await BlazorRouter).invokeMethod('startGame');
-        if (typeof (localStorage.accessToken) === 'undefined')
-            localStorage.accessToken = new Date().getTime().toString() + navigator.userAgent;
-        login({ provider: 'anomyous', accessToken: localStorage.accessToken });
+            if (typeof (localStorage.accessToken) === 'undefined')
+                localStorage.accessToken = new Date().getTime().toString() + navigator.userAgent;
+            login({ provider: 'anomyous', accessToken: localStorage.accessToken, pointerEvent: e });
+        }
     }
 });
 

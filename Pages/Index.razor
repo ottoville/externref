@@ -2,20 +2,20 @@
 
 @inject IJSRuntime JSRuntime;
 @code {
-    void loginFB()
+    void loginFB(PointerEventArgs e)
     {
-        JSRuntime.InvokeAsync<object>("FB.login", null, new {scope = "email"});
+        JSRuntime.InvokeAsync<object>("login", e, "facebook");
     }
     void loginAnom(PointerEventArgs e)
     {
-        JSRuntime.InvokeAsync<PointerEventArgs>("playAnomyous", e);
+        JSRuntime.InvokeAsync<object>("login", e, "anomyous");
     }
 }
 
 <div id="loginscreen" class="page">
     <h3>Log in to play the game</h3>
     <fieldset id="loginmethods">
-        <button @onclick=loginFB>🎮 Login with facebook</button>
+        <button @onpointerdown=loginFB>🎮 Login with facebook</button>
         <br /><br />
         <button  @onpointerdown=loginAnom>🎮 Continue without logging in and online features</button>
 
