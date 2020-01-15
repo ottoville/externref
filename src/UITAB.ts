@@ -4,7 +4,7 @@ interface addListenerOptions extends AddEventListenerOptions {
     lazy?: number;
 }
 export abstract class UITAB {
-    abstract activated: boolean;
+    public activated: boolean = false;
     abstract name: string;
     abstract activate: () => void;
     //abstract deactivate: () => void;

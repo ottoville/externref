@@ -1,7 +1,6 @@
 ﻿import { UITAB } from "../UITAB.js";
 
 export class BuildingsUI extends UITAB {
-    activated: boolean;
     name: string;
     activate: () => void;
     deactivate: () => void;
