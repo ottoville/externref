@@ -2,9 +2,8 @@
 import { UITAB } from "../UITAB.js";
 
 export class paintTexture extends paintGround {
-    private subTextureCache: subTexture | null;
-    private startingPoint: Vector2;
-    private height: number;
+    private subTextureCache: subTexture | null = null;
+    private height: number=0;
     private centerX: number;
     private centerZ: number;
     private m1 = new Matrix();
@@ -15,10 +14,9 @@ export class paintTexture extends paintGround {
         this.subTextureCache = null
     }
     onMainPointerDown(startingPoint: Vector2): void {
-        this.startingPoint = startingPoint;
-        this.m1.setRow(0, new Vector4(1, 0, 0, this.centerX + this.startingPoint.x));
+        this.m1.setRow(0, new Vector4(1, 0, 0, this.centerX + startingPoint.x));
         this.m1.setRow(1, new Vector4(0, 1, 0, 0));
-        this.m1.setRow(2, new Vector4(0, 0, 1, this.centerZ + this.startingPoint.y));
+        this.m1.setRow(2, new Vector4(0, 0, 1, this.centerZ + startingPoint.y));
         this.m1.setRow(3, new Vector4(0, 0, 0, 1));
 
     }
@@ -49,9 +47,18 @@ export class paintTexture extends paintGround {
         if (this.ang360.rad < 0) {
             throw ('onAreaDraw negative angle not supported');
         }
-        
-        let h= width * -1
-        let w =this.height * -1
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture._webGLTexture);
+        if (this.subTextureCache != null) {
+            this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
+            this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, this.subTextureCache.x, this.subTextureCache.z, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.subTextureCache.imageData);
+            this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+        }
+        paintTexture.drawSubImage(width, this.height, this.ang360.rad, this.m1, this.texture._webGLTexture, this.scene.getEngine(), this.subTextureCache)
+    }
+    static drawSubImage(width: number, height: number, rad: number, m1: Matrix, texture: WebGLTexture, engine: BABYLON.Engine, subTextureCache?: { x: number, z: number, imageData: ImageData } | null) {
+        let gl: WebGL2RenderingContext = <any>engine._gl;
+        let h = width * -1
+        let w = height * -1
 
         let coords: { x: number, z: number }[] = [
             { x: 0, z: 0 },
@@ -59,30 +66,23 @@ export class paintTexture extends paintGround {
             { x: w, z: 0 },
             { x: w, z: h }
         ]
-      //  console.log(this.ang360.deg);
-        let my = rotateMatrix(this.ang360.rad, "y");
+        let my = rotateMatrix(rad, "y");
         let translated0 = coords.map(coord => {
             return translate(coord.x, 0, coord.z, my)
         })
         let translated = translated0.map(coord => {
-            return translate(coord.x, 0, coord.z, this.m1)
+            return translate(coord.x, 0, coord.z, m1)
         });
-
+        let c = document.createElement('canvas');
         let minX = Math.min(...translated.map(t => t.x));
         let minZ = Math.min(...translated.map(t => t.z));
         let maxX = Math.max(...translated.map(t => t.x));
         let maxZ = Math.max(...translated.map(t => t.z));
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture._webGLTexture);
-        if (this.subTextureCache != null) {
-            this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
-            this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, this.subTextureCache.x, this.subTextureCache.z, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.subTextureCache.imageData);
-            this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
-        }
-        let c = document.createElement('canvas');
+
         c.width = maxX - minX;
         c.height = maxZ - minZ;
         let pixels: Uint8Array = new Uint8Array(4 * c.width * c.height);
-        let texture = this.texture;
+
         (function (gl: WebGL2RenderingContext) {
             if (!this._dummyFramebuffer) {
                 let dummy = gl.createFramebuffer();
@@ -94,12 +94,12 @@ export class paintTexture extends paintGround {
             }
 
             gl.bindFramebuffer(gl.FRAMEBUFFER, this._dummyFramebuffer);
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture._webGLTexture, 0);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
             gl.readPixels(minX, minZ, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
             gl.bindFramebuffer(gl.FRAMEBUFFER, this._currentFramebuffer);
 
-        }).bind(this.scene.getEngine())(this.gl);
+        }).bind(engine)(gl);
 
         let ctx: CanvasRenderingContext2D | null;
         if (ctx = c.getContext("2d")) {
@@ -110,12 +110,13 @@ export class paintTexture extends paintGround {
             ctx.translate(0, c.height);
             ctx.scale(1, -1);
             ctx.drawImage(c, 0, 0);
-            this.subTextureCache = { x: minX, z: minZ, imageData: imageData };
+            if (typeof(subTextureCache)!=='undefined')
+                subTextureCache = { x: minX, z: minZ, imageData: imageData };
             ctx.restore();
             ctx.beginPath();
             let absDimensions: { w: number; h: number } = { w: Math.abs(w), h: Math.abs(h) }
             ctx.translate(c.width / 2, c.height / 2);
-            ctx.rotate(this.ang360.rad);
+            ctx.rotate(rad);
             ctx.translate(c.width / -2, c.height / -2);
             ctx.translate((c.width - absDimensions.w) / 2, (c.height - absDimensions.h) / 2);
             ctx.fillStyle = "red";
@@ -125,7 +126,7 @@ export class paintTexture extends paintGround {
         } else {
             throw ('cannot get 2D context');
         }
-
-        this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, minX, minZ, this.gl.RGBA, this.gl.UNSIGNED_BYTE, c);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, minX, minZ, gl.RGBA, gl.UNSIGNED_BYTE, c);
     }
 }

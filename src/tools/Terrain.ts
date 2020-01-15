@@ -119,7 +119,7 @@ export class TerrainTool extends UITAB {
             boundingBox.maximum.y = ypos;
         }
     };
-    activated: boolean;    name: string;
+    name: string;
     activate = (): void => {
         let engine = this.scene.getEngine();
         this.helper.visibility = 1;

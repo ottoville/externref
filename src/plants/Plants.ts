@@ -46,7 +46,7 @@ export class Plants {
             {
                 area: area,
                 amount: amount,
-                angle: area.ang.rad
+                angle: area.rad
             })
         }
         )

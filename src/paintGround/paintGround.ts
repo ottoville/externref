@@ -36,54 +36,6 @@ export abstract class paintGround {
     ) {
     };
     public resolve: PTResultF;
-   /* private listeners: Map<
-        keyof HTMLElementEventMap | string,
-        Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void>
-    > = new Map();
-
-    private addListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: addListenerOptions) {
-        let map: Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void> | undefined;
-        if (!(map = this.listeners.get(type))) {
-            map = new Map();
-            this.listeners.set(type, map);
-        }
-        if (options && options.once) {
-            if (map.has(listener)) {
-                console.warn('Adding same listener twice not supported: ', type);
-                return;
-            }
-            this.canvas.addEventListener(type, map.set(listener, (e) => {
-                listener.call(this.canvas, e);
-                map?.delete(listener);
-            }).get(listener), options);
-        } else {
-            if (map.has(listener)) {
-                console.warn('Adding same listener twice not supported: ', type);
-                return;
-            }
-            let lazytimer;
-            if (options && (lazytimer = options.lazy)) {
-                let lazyf = new LazyEval((e) => {
-                    listener.call(this.canvas, e);
-                });
-                this.canvas.addEventListener(type, map.set(listener, (e) => {
-                    lazyf.eval(lazytimer, e);
-                }).get(listener));
-
-            } else {
-                map.set(listener, null);
-                this.canvas.addEventListener(type, listener);
-            }
-        }
-    }*/
-    /*private removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, lazy:boolean = false) {
-        let map: Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void> | undefined;
-        if (map = this.listeners.get(type)) {
-            this.canvas.removeEventListener(type, map.get(listener) || listener);
-            if (!map.delete(listener))
-                console.warn('Tried to remove listener that did not exists:', type);
-        }
-    }*/
     public activate(callback: PTResultF, options?) {
         this.uitab.addListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
@@ -170,7 +122,7 @@ export abstract class paintGround {
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
         this.uitab.addListener('pointerdown', this.mainPointerDown, { once: true });
-        this.resolve({ coord: startingPoint, ang: this.ang360, size: { h: height, w: width } });
+        this.resolve({ coord: startingPoint, rad: this.ang360.rad, size: { h: height, w: width } });
     }
     private mouseMoveRegisterClick = (evt: PointerEvent) => {
         this.uitab.addListener('click', this.finalClick, { once: true });
@@ -184,20 +136,11 @@ export abstract class paintGround {
             console.log(e);
         } finally {
             this.uitab.addListener('pointermove', this.mousemove, { lazy: 25 });
-            this.uitab.addListener('pointermove', this.testLazyEval, { lazy: 25 });
             this.uitab.addListener('pointermove', this.mouseMoveRegisterClick, { once: true })
-
         }
     }
     private testcounter = 0;
-    private testLazyEval = (evt: PointerEvent) => {
-        if (++this.testcounter == 10) {
-            console.log('remove listener after ten');
-            this.testcounter = 0;
-            this.uitab.removeListener('pointermove', this.testLazyEval);
-        }
-        console.log('hello');
-    }
+
     private mainPointerDown = (evt: PointerEvent) => {
         
         if (evt.button !== 0) {

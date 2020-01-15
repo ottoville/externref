@@ -11,8 +11,8 @@ type subTexture = {
 type savedCamera = {id:number, camera: {alpha: number, beta:number, radius:number, target: BABYLON.Vector3, position: BABYLON.Vector3}}
 type PTDresult =
     {
-        coord: any, //Vector3,
-        ang: any, // Angle,
+        coord: {x:number, y:number}, //Vector3,
+        rad: number, // Angle,
         size: {
             w: number,
             h: number

@@ -4,7 +4,6 @@ import { LazyEval } from "../LazyEval.js";
 export class CameraTAB extends UITAB {
     public name = 'camera';
     public label = 'Camera';
-    public activated : boolean = false;
     public camera: BABYLON.ArcRotateCamera;
     public camera2: BABYLON.ArcRotateCamera;
     constructor(

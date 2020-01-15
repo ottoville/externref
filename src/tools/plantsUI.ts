@@ -10,7 +10,6 @@ export class PlantsUI extends UITAB {
 
     public name: string = "terraintab";
     public label: string = 'Plants';
-    public activated: boolean=false;
     public listeners: Map<
         keyof HTMLElementEventMap,
         Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void>

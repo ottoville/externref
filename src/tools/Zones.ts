@@ -3,9 +3,7 @@ import { paintTexture } from "../paintGround/paintTexture.js";
 import { texImage2D } from "../webgl.js";
 export class Zones extends UITAB {
     public name: string = "zonestab"
-    public activated:boolean;
     private zonemateria: BABYLON.StandardMaterial;
-    private ctx: CanvasRenderingContext2D;
     private PT: paintTexture;
     private zonedt: BABYLON.DynamicTexture
     private size = 10000;
@@ -29,25 +27,41 @@ export class Zones extends UITAB {
     }
     activate = (): void => {
         this.activated=true;
-        this.ctx = this.zonedt.getContext();
+        let ctx: CanvasRenderingContext2D = this.zonedt.getContext();
         this.ground.material = this.zonemateria;
         let centerX = this.size / 2
         let centerZ = this.size / 2
-        this.ctx.beginPath();
-        this.ctx.fillStyle = "yellow";
-        this.ctx.fillRect(0, 0, this.size, this.size);
+        ctx.beginPath();
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(0, 0, this.size, this.size);
+       // ctx.stroke();
+       // this.zonedt.update()
         let me = this;
         this.db.transaction("zones").objectStore("zones").getAll().onsuccess = function (evt) {
-            this.result.forEach(z => {
-                me.ctx.setTransform(1, 0, 0, 1, 0, 0);
-                me.ctx.lineWidth = 1;
-                me.ctx.strokeStyle = "blue";
-                me.ctx.translate(centerX + z.coord.x, centerZ + z.coord.z * -1);
-                me.ctx.rotate(z.ang._rad);
-                me.ctx.fillStyle = "blue";
-                me.ctx.fillRect(0, 0, z.size.h * -1, z.size.w);
-            })
-            me.ctx.stroke();
+            console.log(this.result);
+            
+            (<PTDresult[]>this.result).forEach(z => {
+                /*let m = new Matrix();
+                m.setRow(0, new Vector4(1, 0, 0, centerX + z.coord.x));
+                m.setRow(1, new Vector4(0, 1, 0, 0));
+                m.setRow(2, new Vector4(0, 0, 1, centerZ + z.coord.z));
+                m.setRow(3, new Vector4(0, 0, 0, 1));
+                paintTexture.drawSubImage(z.size.h, z.size.w, z.ang_rad, m, me.zonedt._texture, me.scene.getEngine());*/
+
+
+
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = "blue";
+                ctx.translate(centerX + z.coord.x, centerZ + z.coord.y * -1);
+                console.log('Translate ', centerX + z.coord.x, centerZ + z.coord.y * -1)
+                ctx.rotate(z.rad);
+                console.log('Rotate: ', z.rad)
+                ctx.fillStyle = "blue";
+                ctx.fillRect(0, 0, z.size.h * -1, z.size.w);
+                console.log('fillRect', 0, 0, z.size.h * -1, z.size.w)
+            });
+            ctx.stroke();
             me.zonedt.update();
         }
         this.PT.activate(async (response) => {
