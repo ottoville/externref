@@ -139,7 +139,41 @@ export class Terrain extends BABYLON.GroundMesh {
     //Dataview 6100
     //pure array  848 -> 763
 
+   /* public _collideForSubMesh(subMesh: BABYLON.SubMesh, transformMatrix: BABYLON.Matrix, collider: BABYLON.Collider): BABYLON.AbstractMesh {
+        this._generatePointsArray();
 
+        if (!this._positions) {
+            return this;
+        }
+
+        // Transformation
+        if (!subMesh._lastColliderWorldVertices || !subMesh._lastColliderTransformMatrix!.equals(transformMatrix)) {
+            subMesh._lastColliderTransformMatrix = transformMatrix.clone();
+            subMesh._lastColliderWorldVertices = [];
+            subMesh._trianglePlanes = [];
+            var start = subMesh.verticesStart;
+            var end = (subMesh.verticesStart + subMesh.verticesCount);
+            for (var i = start; i < end; i++) {
+                subMesh._lastColliderWorldVertices.push(Vector3.TransformCoordinates(this.positions[i], transformMatrix));
+
+                const m = transformation.m;
+                var rx = x * m[0] + y * m[4] + z * m[8] + m[12];
+                var ry = x * m[1] + y * m[5] + z * m[9] + m[13];
+                var rz = x * m[2] + y * m[6] + z * m[10] + m[14];
+                var rw = 1 / (x * m[3] + y * m[7] + z * m[11] + m[15]);
+
+                result.x = rx * rw;
+                result.y = ry * rw;
+                result.z = rz * rw;
+
+
+            }
+        }
+
+        // Collide
+        collider._collide(subMesh._trianglePlanes, subMesh._lastColliderWorldVertices, (<IndicesArray>this.getIndices()), subMesh.indexStart, subMesh.indexStart + subMesh.indexCount, subMesh.verticesStart, !!subMesh.getMaterial(), this);
+        return this;
+    }*/
     getHeightAtCoordinates(x: number, z: number): number {
         let facet: Float32Array;
         let col = ((x + this._maxX) * this.ratioX)|0;

@@ -36,54 +36,7 @@ export abstract class paintGround {
     ) {
     };
     public resolve: PTResultF;
-   /* private listeners: Map<
-        keyof HTMLElementEventMap | string,
-        Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void>
-    > = new Map();
 
-    private addListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: addListenerOptions) {
-        let map: Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void> | undefined;
-        if (!(map = this.listeners.get(type))) {
-            map = new Map();
-            this.listeners.set(type, map);
-        }
-        if (options && options.once) {
-            if (map.has(listener)) {
-                console.warn('Adding same listener twice not supported: ', type);
-                return;
-            }
-            this.canvas.addEventListener(type, map.set(listener, (e) => {
-                listener.call(this.canvas, e);
-                map?.delete(listener);
-            }).get(listener), options);
-        } else {
-            if (map.has(listener)) {
-                console.warn('Adding same listener twice not supported: ', type);
-                return;
-            }
-            let lazytimer;
-            if (options && (lazytimer = options.lazy)) {
-                let lazyf = new LazyEval((e) => {
-                    listener.call(this.canvas, e);
-                });
-                this.canvas.addEventListener(type, map.set(listener, (e) => {
-                    lazyf.eval(lazytimer, e);
-                }).get(listener));
-
-            } else {
-                map.set(listener, null);
-                this.canvas.addEventListener(type, listener);
-            }
-        }
-    }*/
-    /*private removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, lazy:boolean = false) {
-        let map: Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void> | undefined;
-        if (map = this.listeners.get(type)) {
-            this.canvas.removeEventListener(type, map.get(listener) || listener);
-            if (!map.delete(listener))
-                console.warn('Tried to remove listener that did not exists:', type);
-        }
-    }*/
     public activate(callback: PTResultF, options?) {
         this.uitab.addListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
