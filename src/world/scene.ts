@@ -476,6 +476,7 @@ export class WorldScene extends BABYLON.Scene {
 
 
             terrain.checkCollisions = true;
+            //Object.defineProperty(terrain, 'checkCollisions', { get: function () { debugger; return true; } } )
             var green = new BABYLON.StandardMaterial("green", this);
             
             green.diffuseColor = new BABYLON.Color3(0, 1, 0);

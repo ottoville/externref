@@ -9,8 +9,7 @@ export class CameraTAB extends UITAB {
     constructor(
         private scene: BABYLON.Scene,
         public canvas: HTMLCanvasElement,
-        private D: Promise<IDBDatabase>,
-        private terrain: Terrain
+        private D: Promise<IDBDatabase>
     ) {
         super();
 
