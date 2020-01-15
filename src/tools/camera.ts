@@ -1,6 +1,6 @@
 import { UITAB } from "../UITAB.js";
 import { LazyEval } from "../LazyEval.js";
-//@ts-ignore
+import { Terrain } from "../world/terrain.js";
 export class CameraTAB extends UITAB {
     public name = 'camera';
     public label = 'Camera';
@@ -9,7 +9,8 @@ export class CameraTAB extends UITAB {
     constructor(
         private scene: BABYLON.Scene,
         public canvas: HTMLCanvasElement,
-        private D: Promise<IDBDatabase>
+        private D: Promise<IDBDatabase>,
+        private terrain: Terrain
     ) {
         super();
 
@@ -17,10 +18,13 @@ export class CameraTAB extends UITAB {
         scene.activeCameras.push(this.camera);
         this.camera.maxZ=1606000;
         this.camera.panningSensibility = 20;
+
         this.camera.angularSensibilityX = 1000;
         this.camera.angularSensibilityY = 2000;
-        this.camera.lowerBetaLimit = 0.1;
-        this.camera.upperBetaLimit = (Math.PI / 2) * 0.99;
+
+        this.camera.lowerBetaLimit = 0.2;
+        this.camera.upperBetaLimit = (Math.PI / 2) * 0.6;
+
         this.camera.lowerRadiusLimit = 10;
 
         this.camera.panningAxis = new BABYLON.Vector3(1, 0, 1)
@@ -43,6 +47,8 @@ export class CameraTAB extends UITAB {
 
                 }
                 let l = new LazyEval(() => {
+                    console.log(this.camera.position.y);
+
                     DB.transaction("save", "readwrite").objectStore("save").put(<savedCamera>{
                         id: 0,
                         camera: { alpha: this.camera.alpha, beta: this.camera.beta, radius: this.camera.radius, target: this.camera.target, position: this.camera.position }

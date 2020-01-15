@@ -341,16 +341,6 @@ export class TerrainTool extends UITAB {
                 if (uniformlocation = this.helpermaterial._effect.getUniform("flatPos"))
                     this.uniformsV2.set(uniformlocation, <{ x: number, y: number }><any>flatPos);
             });
-        //this.scene.createPickingRayToRef(evt.clientX, evt.clientY, this.terrain.getWorldMatrix(), this.ray, this.camera);
-        // this.pickinfo = this.terrain.intersects(this.ray);
-        //if (this.pickinfo.pickedPoint) {
-        /*this.helper.position.x = this.pickinfo.pickedPoint.x;
-        this.helper.position.y = 0;
-        this.helper.position.z = this.pickinfo.pickedPoint.z;
-        console.log(this.helper.position);*/
-        //  this.uniformsV2.set(this.helpermaterial._effect.getUniform("flatPos"), { x: this.pickinfo.pickedPoint.x, y: this.pickinfo.pickedPoint.z})
-        //[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -714.7799682617188, 0, -90.85552215576172, 1]
-        // }
     }
     raise = (): void => {
         console.log('raise')

@@ -162,6 +162,7 @@ export class Terrain extends BABYLON.GroundMesh {
         return -(facet[0] * x + facet[2] * z + facet[3]) / facet[1];
     }
     public intersects(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): BABYLON.PickingInfo {
+        debugger;
         var pickingInfo = new BABYLON.PickingInfo();
         const intersectionThreshold = this.getClassName() === "InstancedLinesMesh" || this.getClassName() === "LinesMesh" ? (this as any).intersectionThreshold : 0;
         const boundingInfo = this._boundingInfo;
