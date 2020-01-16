@@ -587,4 +587,8 @@
     <Exec Command="node .\buildShaders.js&#xD;&#xA;node .\setversion.js" />
   </Target>
 
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="wasm-pack build --target web --out-dir ./wwwroot/wasm --$(ConfigurationName.ToLower())" />
+  </Target>
+
 </Project>
