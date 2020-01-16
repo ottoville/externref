@@ -87,7 +87,6 @@ function intersects(boundingBox: BoundingBox, boundingSphere: BoundingSphere, ra
         pickingInfo.subMeshId = intersectInfo.subMeshId;
         return pickingInfo;
     }
-
     return pickingInfo;
 }
 
@@ -157,6 +156,9 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
         }
         methods2.createHeights(e);
         this.postMessage({ id: e.id, data: { } });
+    },
+    intersects: (e: WMessage) => {
+        console.log(e);
     },
     mousemove: (e: WMessage) => {
         let ray = Ray.Zero();

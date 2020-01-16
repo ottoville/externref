@@ -195,9 +195,24 @@ export class Terrain extends BABYLON.GroundMesh {
         }
         return -(facet[0] * x + facet[2] * z + facet[3]) / facet[1];
     }
+    
     public intersects(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): BABYLON.PickingInfo {
+        console.log('terrain intersect')
+        //@ts-ignore
+        return new Promise((res, rej) => {
+            res(super.intersects(ray, fastCheck, trianglePredicate));
+        });
+        
+        /*
+        this.worker.message(WorkerReturn.Promise, 'intersects',
+            {
+                ray: ray,
+                fastCheck: fastCheck,
+                trianglePredicate: trianglePredicate
+            });
         debugger;
         var pickingInfo = new BABYLON.PickingInfo();
+        
         const intersectionThreshold = this.getClassName() === "InstancedLinesMesh" || this.getClassName() === "LinesMesh" ? (this as any).intersectionThreshold : 0;
         const boundingInfo = this._boundingInfo;
         if (!this.subMeshes || !boundingInfo || !ray.intersectsSphere(boundingInfo.boundingSphere, intersectionThreshold) || !ray.intersectsBox(boundingInfo.boundingBox, intersectionThreshold)) {
@@ -299,7 +314,7 @@ export class Terrain extends BABYLON.GroundMesh {
             return pickingInfo;
         }
 
-        return pickingInfo;
+        return pickingInfo;*/
     }
 
 }

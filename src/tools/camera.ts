@@ -46,7 +46,7 @@ export class CameraTAB extends UITAB {
 
                 }
                 let l = new LazyEval(() => {
-                    console.log(this.camera.position.y);
+                    //console.log(this.camera.position.y);
 
                     DB.transaction("save", "readwrite").objectStore("save").put(<savedCamera>{
                         id: 0,

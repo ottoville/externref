@@ -8,8 +8,42 @@ import { UITAB } from "../UITAB.js";
 import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
-
+function isPromise(result: BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>): result is Promise<BABYLON.PickingInfo> {
+    return (result as Promise<BABYLON.PickingInfo>).then !== undefined;
+}
 //import { UI } from "../UI.js";
+class _ClickInfo {
+    private _singleClick = false;
+    private _doubleClick = false;
+    private _hasSwiped = false;
+    private _ignore = false;
+
+    public get singleClick(): boolean {
+        return this._singleClick;
+    }
+    public get doubleClick(): boolean {
+        return this._doubleClick;
+    }
+    public get hasSwiped(): boolean {
+        return this._hasSwiped;
+    }
+    public get ignore(): boolean {
+        return this._ignore;
+    }
+
+    public set singleClick(b: boolean) {
+        this._singleClick = b;
+    }
+    public set doubleClick(b: boolean) {
+        this._doubleClick = b;
+    }
+    public set hasSwiped(b: boolean) {
+        this._hasSwiped = b;
+    }
+    public set ignore(b: boolean) {
+        this._ignore = b;
+    }
+}
 
 export class WorldScene extends BABYLON.Scene {
     private gameSpeed = BigInt(0);
@@ -30,15 +64,15 @@ export class WorldScene extends BABYLON.Scene {
         console.log('state changed', data);
         if (this.webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'stateChange', data }))
-        return;
-       /* this.lastStateChangeGameTime = this.getGameTime();
-        this.lastStateChangeTime = new Date().getTime();
-        this.gameSpeed = BigInt((<HTMLInputElement>evt.target).value);*/
-        let gameStateEvent = {
-            speed: Number(this.gameSpeed),
-            lastStateChangeGameTime: Number(this.lastStateChangeGameTime),
-            lastStateChangeTime: this.lastStateChangeTime
-        };
+            return;
+            /* this.lastStateChangeGameTime = this.getGameTime();
+             this.lastStateChangeTime = new Date().getTime();
+             this.gameSpeed = BigInt((<HTMLInputElement>evt.target).value);*/
+            let gameStateEvent = {
+                speed: Number(this.gameSpeed),
+                lastStateChangeGameTime: Number(this.lastStateChangeGameTime),
+                lastStateChangeTime: this.lastStateChangeTime
+            };
         }
         //gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
     };
@@ -147,15 +181,15 @@ export class WorldScene extends BABYLON.Scene {
 
         // Clear
         if (this.autoClearDepthAndStencil || this.autoClear) {
-            
+
             engine.clear(this.clearColor, this.autoClear || this.forceWireframe || this.forcePointsCloud, this.autoClearDepthAndStencil, this.autoClearDepthAndStencil);
         }
 
         // Collects render targets from external components.
-       // for (let step of this._gatherRenderTargetsStage) {
+        // for (let step of this._gatherRenderTargetsStage) {
         //    step.action(this._renderTargets);
-      //  }
-        
+        //  }
+
         // Multi-cameras?
         if (this.activeCameras.length > 0) {
             for (var cameraIndex = 0; cameraIndex < this.activeCameras.length; cameraIndex++) {
@@ -213,6 +247,466 @@ export class WorldScene extends BABYLON.Scene {
         this._activeIndices.addCount(0, true);
         this._activeParticles.addCount(0, true);
     }
+    public attachControl(attachUp = true, attachDown = true, attachMove = true): void {
+        //this._inputManager.attachControl(attachUp, attachDown, attachMove);
+
+        (function(scene: BABYLON.Scene, elementToAttachTo: Nullable<HTMLElement> = null) {
+
+            if (!elementToAttachTo) {
+                //@ts-ignore
+                elementToAttachTo = scene.getEngine().getInputElement();
+            }
+
+            if (!elementToAttachTo) {
+                return;
+            }
+
+            let engine = scene.getEngine();
+
+            this._initActionManager = (act: Nullable<BABYLON.AbstractActionManager>, clickInfo): Nullable<BABYLON.AbstractActionManager> => {
+                if (!this._meshPickProceed) {
+                    let pickResult = scene.pick(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers);
+                    this._currentPickResult = pickResult;
+                    if (pickResult) {
+                        act = (pickResult.hit && pickResult.pickedMesh) ? pickResult.pickedMesh._getActionManagerForTrigger() : null;
+                    }
+                    this._meshPickProceed = true;
+                }
+                return act;
+            };
+
+            this._delayedSimpleClick = (btn: number, clickInfo, cb: (clickInfo, pickResult: Nullable<BABYLON.PickingInfo>) => void) => {
+                // double click delay is over and that no double click has been raised since, or the 2 consecutive keys pressed are different
+                if ((Date.now() - this._previousStartingPointerTime > BABYLON.InputManager.DoubleClickDelay && !this._doubleClickOccured) ||
+                    btn !== this._previousButtonPressed) {
+                    this._doubleClickOccured = false;
+                    clickInfo.singleClick = true;
+                    clickInfo.ignore = false;
+                    cb(clickInfo, this._currentPickResult);
+                }
+            };
+
+            this._initClickEvent = (obs1: BABYLON.Observable<BABYLON.PointerInfoPre>, obs2: BABYLON.Observable<BABYLON.PointerInfo>, evt: PointerEvent, cb: (clickInfo, pickResult: Nullable<BABYLON.PickingInfo>) => void): void => {
+                let clickInfo = new _ClickInfo();
+                this._currentPickResult = null;
+                let act: Nullable<BABYLON.AbstractActionManager> = null;
+
+                let checkPicking = obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERPICK) || obs2.hasSpecificMask(BABYLON.PointerEventTypes.POINTERPICK)
+                    || obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERTAP) || obs2.hasSpecificMask(BABYLON.PointerEventTypes.POINTERTAP)
+                    || obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP) || obs2.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP);
+                if (!checkPicking && BABYLON.AbstractActionManager) {
+                    act = this._initActionManager(act, clickInfo);
+                    if (act) {
+                        checkPicking = act.hasPickTriggers;
+                    }
+                }
+
+                let needToIgnoreNext = false;
+
+                if (checkPicking) {
+                    let btn = evt.button;
+                    clickInfo.hasSwiped = this._isPointerSwiping();
+
+                    if (!clickInfo.hasSwiped) {
+                        let checkSingleClickImmediately = !BABYLON.InputManager.ExclusiveDoubleClickMode;
+
+                        if (!checkSingleClickImmediately) {
+                            checkSingleClickImmediately = !obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP) &&
+                                !obs2.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP);
+
+                            if (checkSingleClickImmediately && !BABYLON.AbstractActionManager.HasSpecificTrigger(BABYLON.Constants.ACTION_OnDoublePickTrigger)) {
+                                act = this._initActionManager(act, clickInfo);
+                                if (act) {
+                                    checkSingleClickImmediately = !act.hasSpecificTrigger(BABYLON.Constants.ACTION_OnDoublePickTrigger);
+                                }
+                            }
+                        }
+
+                        if (checkSingleClickImmediately) {
+                            // single click detected if double click delay is over or two different successive keys pressed without exclusive double click or no double click required
+                            if (Date.now() - this._previousStartingPointerTime > BABYLON.InputManager.DoubleClickDelay ||
+                                btn !== this._previousButtonPressed) {
+                                clickInfo.singleClick = true;
+                                cb(clickInfo, this._currentPickResult);
+                                needToIgnoreNext = true;
+                            }
+                        }
+                        // at least one double click is required to be check and exclusive double click is enabled
+                        else {
+                            // wait that no double click has been raised during the double click delay
+                            this._previousDelayedSimpleClickTimeout = this._delayedSimpleClickTimeout;
+                            this._delayedSimpleClickTimeout = window.setTimeout(this._delayedSimpleClick.bind(this, btn, clickInfo, cb), BABYLON.InputManager.DoubleClickDelay);
+                        }
+
+                        let checkDoubleClick = obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP) ||
+                            obs2.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP);
+                        if (!checkDoubleClick && BABYLON.AbstractActionManager.HasSpecificTrigger(BABYLON.Constants.ACTION_OnDoublePickTrigger)) {
+                            act = this._initActionManager(act, clickInfo);
+                            if (act) {
+                                checkDoubleClick = act.hasSpecificTrigger(BABYLON.Constants.ACTION_OnDoublePickTrigger);
+                            }
+                        }
+                        if (checkDoubleClick) {
+                            // two successive keys pressed are equal, double click delay is not over and double click has not just occurred
+                            if (btn === this._previousButtonPressed &&
+                                Date.now() - this._previousStartingPointerTime < BABYLON.InputManager.DoubleClickDelay &&
+                                !this._doubleClickOccured
+                            ) {
+                                // pointer has not moved for 2 clicks, it's a double click
+                                if (!clickInfo.hasSwiped &&
+                                    !this._isPointerSwiping()) {
+                                    this._previousStartingPointerTime = 0;
+                                    this._doubleClickOccured = true;
+                                    clickInfo.doubleClick = true;
+                                    clickInfo.ignore = false;
+                                    if (BABYLON.InputManager.ExclusiveDoubleClickMode && this._previousDelayedSimpleClickTimeout) {
+                                        clearTimeout(this._previousDelayedSimpleClickTimeout);
+                                    }
+                                    this._previousDelayedSimpleClickTimeout = this._delayedSimpleClickTimeout;
+                                    cb(clickInfo, this._currentPickResult);
+                                }
+                                // if the two successive clicks are too far, it's just two simple clicks
+                                else {
+                                    this._doubleClickOccured = false;
+                                    this._previousStartingPointerTime = this._startingPointerTime;
+                                    this._previousStartingPointerPosition.x = this._startingPointerPosition.x;
+                                    this._previousStartingPointerPosition.y = this._startingPointerPosition.y;
+                                    this._previousButtonPressed = btn;
+                                    if (BABYLON.InputManager.ExclusiveDoubleClickMode) {
+                                        if (this._previousDelayedSimpleClickTimeout) {
+                                            clearTimeout(this._previousDelayedSimpleClickTimeout);
+                                        }
+                                        this._previousDelayedSimpleClickTimeout = this._delayedSimpleClickTimeout;
+
+                                        cb(clickInfo, this._previousPickResult);
+                                    }
+                                    else {
+                                        cb(clickInfo, this._currentPickResult);
+                                    }
+                                }
+                                needToIgnoreNext = true;
+                            }
+                            // just the first click of the double has been raised
+                            else {
+                                this._doubleClickOccured = false;
+                                this._previousStartingPointerTime = this._startingPointerTime;
+                                this._previousStartingPointerPosition.x = this._startingPointerPosition.x;
+                                this._previousStartingPointerPosition.y = this._startingPointerPosition.y;
+                                this._previousButtonPressed = btn;
+                            }
+                        }
+                    }
+                }
+
+                if (!needToIgnoreNext) {
+                    cb(clickInfo, this._currentPickResult);
+                }
+            };
+
+            this._onPointerMove = (evt: PointerEvent) => {
+
+                this._updatePointerPosition(evt);
+
+                // PreObservable support
+                if (this._checkPrePointerObservable(null, evt, evt.type === this._wheelEventName ? BABYLON.PointerEventTypes.POINTERWHEEL : BABYLON.PointerEventTypes.POINTERMOVE)) {
+                    return;
+                }
+
+                if (!scene.cameraToUseForPointers && !scene.activeCamera) {
+                    return;
+                }
+
+                if (!scene.pointerMovePredicate) {
+                    scene.pointerMovePredicate = (mesh: BABYLON.AbstractMesh): boolean => (mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (mesh.enablePointerMoveEvents || scene.constantlyUpdateMeshUnderPointer || (mesh._getActionManagerForTrigger() != null)) && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0));
+                }
+
+                // Meshes
+                var pickResult = scene.pick(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerMovePredicate, false, scene.cameraToUseForPointers);
+
+                this._processPointerMove(pickResult, evt);
+            };
+
+            this._onPointerDown = (evt: PointerEvent) => {
+                this._totalPointersPressed++;
+                this._pickedDownMesh = null;
+                this._meshPickProceed = false;
+
+                this._updatePointerPosition(evt);
+
+                if (scene.preventDefaultOnPointerDown && elementToAttachTo) {
+                    evt.preventDefault();
+                    elementToAttachTo.focus();
+                }
+
+                this._startingPointerPosition.x = this._pointerX;
+                this._startingPointerPosition.y = this._pointerY;
+                this._startingPointerTime = Date.now();
+
+                // PreObservable support
+                if (this._checkPrePointerObservable(null, evt, BABYLON.PointerEventTypes.POINTERDOWN)) {
+                    return;
+                }
+
+                if (!scene.cameraToUseForPointers && !scene.activeCamera) {
+                    return;
+                }
+
+                this._pointerCaptures[evt.pointerId] = true;
+
+                if (!scene.pointerDownPredicate) {
+                    scene.pointerDownPredicate = (mesh: BABYLON.AbstractMesh): boolean => {
+                        return mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0);
+                    };
+                }
+
+                // Meshes
+                this._pickedDownMesh = null;
+                //var pickResult = scene.pick(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers);
+
+                /* var pickResult = scene._internalPick((world) => {
+                if (!scene._tempPickingRay) {
+                    scene._tempPickingRay = BABYLON.Ray.Zero();
+                }
+
+                scene.createPickingRayToRef(this._unTranslatedPointerX, this._unTranslatedPointerY, world, scene._tempPickingRay, scene.cameraToUseForPointers || null);
+                return scene._tempPickingRay;
+            }, scene.pointerDownPredicate, false);
+            */
+                let fastCheck = false;
+                let rayFunction = (world) => {
+                    if (!scene._tempPickingRay) {
+                        scene._tempPickingRay = BABYLON.Ray.Zero();
+                    }
+
+                    scene.createPickingRayToRef(this._unTranslatedPointerX, this._unTranslatedPointerY, world, scene._tempPickingRay, scene.cameraToUseForPointers || null);
+                    return scene._tempPickingRay;
+                };
+                /*for (var meshIndex = 0; meshIndex < scene.meshes.length; meshIndex++) {
+                    var mesh = scene.meshes[meshIndex];
+
+                    if (scene.pointerDownPredicate) {
+                        if (!scene.pointerDownPredicate(mesh))
+                            continue;
+                    } else if (!mesh.isEnabled() || !mesh.isVisible || !mesh.isPickable)
+                        continue;
+
+                    var world = mesh.getWorldMatrix();
+                    var ray = rayFunction(world);
+
+                    var result = mesh.intersects(ray, fastCheck);
+                    if (!result || !result.hit)
+                        continue;
+                    if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
+                        continue;
+                    pickResult = result;
+
+                    if (fastCheck)
+                        break;
+                    }*/
+
+                (function collissionCheck(meshIndex: number, pickResult: BABYLON.PickingInfo | null) {
+                    if (meshIndex > scene.meshes.length - 1)
+                        return null;
+                    let mesh = scene.meshes[meshIndex];
+                    console.log(mesh.name);
+                    if (scene.pointerDownPredicate) {
+                        if (!scene.pointerDownPredicate(mesh))
+                            return collissionCheck(++meshIndex, pickResult);
+                    } else if (!mesh.isEnabled() || !mesh.isVisible || !mesh.isPickable)
+                        return collissionCheck(++meshIndex, pickResult);
+
+                    var world = mesh.getWorldMatrix();
+                    var ray = rayFunction(world);
+
+                    return new Promise((res) => {
+                        let result = <BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>>mesh.intersects(ray, fastCheck);
+                        if (isPromise(result)) {
+                            console.log('Proceed with promise')
+                            result.then(res);
+                        } else {
+                            console.log('Proceed no promise')
+                            res(result);
+                        }
+                    }).then((result: BABYLON.PickingInfo) => {
+                        if (!result || !result.hit)
+                            return collissionCheck(++meshIndex, pickResult);
+                        if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
+                            return collissionCheck(++meshIndex, pickResult);
+
+                        if (fastCheck)
+                            return result;
+                        else
+                            return collissionCheck(++meshIndex, result);
+                    });
+                })(0, null).then((pickResult: BABYLON.PickingInfo) => {
+                    if (pickResult == null)
+                        pickResult = new BABYLON.PickingInfo();
+                    if (pickResult)
+                        pickResult.ray = scene.createPickingRay(this._unTranslatedPointerX, this._unTranslatedPointerY, BABYLON.Matrix.Identity(), scene.cameraToUseForPointers || null);
+
+                    this._processPointerDown(pickResult, evt);
+                });
+
+            };
+
+            this._onPointerUp = (evt: PointerEvent) => {
+                if (this._totalPointersPressed === 0) {  // We are attaching the pointer up to windows because of a bug in FF
+                    return;                             // So we need to test it the pointer down was pressed before.
+                }
+
+                this._totalPointersPressed--;
+                this._pickedUpMesh = null;
+                this._meshPickProceed = false;
+
+                this._updatePointerPosition(evt);
+
+                if (scene.preventDefaultOnPointerUp && elementToAttachTo) {
+                    evt.preventDefault();
+                    elementToAttachTo.focus();
+                }
+
+                this._initClickEvent(scene.onPrePointerObservable, scene.onPointerObservable, evt, (clickInfo: _ClickInfo, pickResult: Nullable<BABYLON.PickingInfo>) => {
+                    // PreObservable support
+                    if (scene.onPrePointerObservable.hasObservers()) {
+                        if (!clickInfo.ignore) {
+                            if (!clickInfo.hasSwiped) {
+                                if (clickInfo.singleClick && scene.onPrePointerObservable.hasSpecificMask(BABYLON.PointerEventTypes.POINTERTAP)) {
+                                    if (this._checkPrePointerObservable(null, evt, BABYLON.PointerEventTypes.POINTERTAP)) {
+                                        return;
+                                    }
+                                }
+                                if (clickInfo.doubleClick && scene.onPrePointerObservable.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP)) {
+                                    if (this._checkPrePointerObservable(null, evt, BABYLON.PointerEventTypes.POINTERDOUBLETAP)) {
+                                        return;
+                                    }
+                                }
+                            }
+                            if (this._checkPrePointerObservable(null, evt, BABYLON.PointerEventTypes.POINTERUP)) {
+                                return;
+                            }
+                        }
+                    }
+
+                    if (!this._pointerCaptures[evt.pointerId]) {
+                        return;
+                    }
+
+                    this._pointerCaptures[evt.pointerId] = false;
+                    if (!scene.cameraToUseForPointers && !scene.activeCamera) {
+                        return;
+                    }
+
+                    if (!scene.pointerUpPredicate) {
+                        scene.pointerUpPredicate = (mesh: BABYLON.AbstractMesh): boolean => {
+                            return mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0);
+                        };
+                    }
+
+                    // Meshes
+                    if (!this._meshPickProceed && (BABYLON.AbstractActionManager && BABYLON.AbstractActionManager.HasTriggers || scene.onPointerObservable.hasObservers())) {
+                        this._initActionManager(null, clickInfo);
+                    }
+                    if (!pickResult) {
+                        pickResult = this._currentPickResult;
+                    }
+
+                    this._processPointerUp(pickResult, evt, clickInfo);
+
+                    this._previousPickResult = this._currentPickResult;
+                });
+            };
+
+            this._onKeyDown = (evt: KeyboardEvent) => {
+                let type = BABYLON.KeyboardEventTypes.KEYDOWN;
+                if (scene.onPreKeyboardObservable.hasObservers()) {
+                    let pi = new BABYLON.KeyboardInfoPre(type, evt);
+                    scene.onPreKeyboardObservable.notifyObservers(pi, type);
+                    if (pi.skipOnPointerObservable) {
+                        return;
+                    }
+                }
+
+                if (scene.onKeyboardObservable.hasObservers()) {
+                    let pi = new BABYLON.KeyboardInfo(type, evt);
+                    scene.onKeyboardObservable.notifyObservers(pi, type);
+                }
+
+                if (scene.actionManager) {
+                    scene.actionManager.processTrigger(BABYLON.Constants.ACTION_OnKeyDownTrigger, BABYLON.ActionEvent.CreateNewFromScene(scene, evt));
+                }
+            };
+
+            this._onKeyUp = (evt: KeyboardEvent) => {
+                let type = BABYLON.KeyboardEventTypes.KEYUP;
+                if (scene.onPreKeyboardObservable.hasObservers()) {
+                    let pi = new BABYLON.KeyboardInfoPre(type, evt);
+                    scene.onPreKeyboardObservable.notifyObservers(pi, type);
+                    if (pi.skipOnPointerObservable) {
+                        return;
+                    }
+                }
+
+                if (scene.onKeyboardObservable.hasObservers()) {
+                    let pi = new BABYLON.KeyboardInfo(type, evt);
+                    scene.onKeyboardObservable.notifyObservers(pi, type);
+                }
+
+                if (scene.actionManager) {
+                    scene.actionManager.processTrigger(BABYLON.Constants.ACTION_OnKeyUpTrigger, BABYLON.ActionEvent.CreateNewFromScene(scene, evt));
+                }
+            };
+
+            // Keyboard events
+            this._onCanvasFocusObserver = engine.onCanvasFocusObservable.add((() => {
+                let fn = () => {
+                    if (!elementToAttachTo) {
+                        return;
+                    }
+                    elementToAttachTo.addEventListener("keydown", this._onKeyDown, false);
+                    elementToAttachTo.addEventListener("keyup", this._onKeyUp, false);
+                };
+                if (document.activeElement === elementToAttachTo) {
+                    fn();
+                }
+                return fn;
+            })());
+
+            this._onCanvasBlurObserver = engine.onCanvasBlurObservable.add(() => {
+                if (!elementToAttachTo) {
+                    return;
+                }
+                elementToAttachTo.removeEventListener("keydown", this._onKeyDown);
+                elementToAttachTo.removeEventListener("keyup", this._onKeyUp);
+            });
+
+            // Pointer events
+            var eventPrefix = BABYLON.Tools.GetPointerPrefix();
+
+            if (attachMove) {
+                elementToAttachTo.addEventListener(eventPrefix + "move", <any>this._onPointerMove, false);
+
+                // Wheel
+                this._wheelEventName = "onwheel" in document.createElement("div") ? "wheel" :       // Modern browsers support "wheel"
+                    (<any>document).onmousewheel !== undefined ? "mousewheel" :                     // Webkit and IE support at least "mousewheel"
+                        "DOMMouseScroll";                                                           // let's assume that remaining browsers are older Firefox
+
+                elementToAttachTo.addEventListener(this._wheelEventName, <any>this._onPointerMove, false);
+            }
+
+            if (attachDown) {
+                elementToAttachTo.addEventListener(eventPrefix + "down", <any>this._onPointerDown, false);
+            }
+
+            if (attachUp) {
+                //@ts-ignore
+                let hostWindow = scene.getEngine().getHostWindow();
+                if (hostWindow) {
+                    hostWindow.addEventListener(eventPrefix + "up", <any>this._onPointerUp, false);
+                }
+            }
+
+        }).bind(this._inputManager)(this)
+    }
     constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private webSocket?: WebSocket) {
         super(engine);
         if (webSocket) {
@@ -236,12 +730,12 @@ export class WorldScene extends BABYLON.Scene {
 
 
 
-       /* let gameEngine = new WorkerThread('js/workers/engine.js');
-        gameEngine.message(WorkerReturn.noReturn, 'init', {
-            gameTime: this.lastStateChangeGameTime
-        });*/
+        /* let gameEngine = new WorkerThread('js/workers/engine.js');
+         gameEngine.message(WorkerReturn.noReturn, 'init', {
+             gameTime: this.lastStateChangeGameTime
+         });*/
         this.tools['CameraTAB'] = new CameraTAB(this, engine.getRenderingCanvas(), DB);
-        
+
         //let ui = new UI();
         //ui.registerTab(CameraTab);
         var sunlight = new BABYLON.PointLight("Omni", this.SunObject.sunPosition, this);
@@ -298,7 +792,7 @@ export class WorldScene extends BABYLON.Scene {
                         let trans2 = db.transaction('maps', 'readwrite');
                         trans2.onerror = ccrej;
                         trans2.objectStore('maps').add(obj).onsuccess = () => {
-                            trans2.objectStore('maps').openCursor().onsuccess = (e) => {                                
+                            trans2.objectStore('maps').openCursor().onsuccess = (e) => {
                                 ccres(<IDBCursorWithValue>(<IDBRequest>e.target).result.value)
                             }
                         }
@@ -306,7 +800,7 @@ export class WorldScene extends BABYLON.Scene {
                 }
             };
         }).then((vdata: TerrainMap) => {
-            let ground=new Terrain(vdata, this);
+            let ground = new Terrain(vdata, this);
 
             sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
@@ -333,8 +827,8 @@ export class WorldScene extends BABYLON.Scene {
                     ctx.fillStyle = "green";
                     await ground.inited;
                     console.log('ground ready');
-                    for (let row = centerX - c.width+1; row < centerX; row = row + 2) {
-                        for (let col = minZ+1; col < centerZ; col = col += 2) {
+                    for (let row = centerX - c.width + 1; row < centerX; row = row + 2) {
+                        for (let col = minZ + 1; col < centerZ; col = col += 2) {
                             let height = ground.getHeightAtCoordinates(row, col)
                             if (height > 3) {
                                 ctx.fillRect(row, col * -1, 3, 3);
@@ -353,8 +847,8 @@ export class WorldScene extends BABYLON.Scene {
                 img.onload = () => {
                     let width = 10000;
                     let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
-                        _engine:engine,
-                        _source:3,
+                        _engine: engine,
+                        _source: 3,
                         _webGLTexture: gl.createTexture()
                     }
 
@@ -373,7 +867,7 @@ export class WorldScene extends BABYLON.Scene {
 
                     engine._bindTextureDirectly(gl.TEXTURE_2D, null);
                     //gl.bindTexture(gl.TEXTURE_2D, null);
-                 //   engine._internalTexturesCache.push(rtexture2);
+                    //   engine._internalTexturesCache.push(rtexture2);
 
 
                     (function () {
@@ -395,7 +889,7 @@ export class WorldScene extends BABYLON.Scene {
 
                 //let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) });
                 //shadermateria.setTexture('groundTexture', groundtexture);
-               
+
 
                 //this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
             });
@@ -451,13 +945,13 @@ export class WorldScene extends BABYLON.Scene {
 
             // canvas.addEventListener("pointerdown", DZ.mainPointerDown, false);
             terrain.isPickable = true;
-            
+
             //var seaground = BABYLON.Mesh.CreateGround("ground", 3601, 3601, 1, scene, false);
             //seaground.position.y = -1.5;
             sea.position.y = 0;
-            
+
             this.tools['Buildings'] = new BuildingsUI(this);
-            
+
             DB.then(d => {
                 this.tools['Zones'] = new Zones(terrain, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
             })
@@ -478,45 +972,45 @@ export class WorldScene extends BABYLON.Scene {
             terrain.checkCollisions = true;
             //Object.defineProperty(terrain, 'checkCollisions', { get: function () { debugger; return true; } } )
             var green = new BABYLON.StandardMaterial("green", this);
-            
+
             green.diffuseColor = new BABYLON.Color3(0, 1, 0);
-            
-
-          /*  BABYLON.SceneLoader.ImportMesh("", "", "tree.babylon", this, function (mesh) {
-                let treemesh = mesh[0];
-                (<BABYLON.StandardMaterial>treemesh.material).opacityTexture = null;
-                treemesh.material.backFaceCulling = false;
-                treemesh.isVisible = false;
-                if (DT) {
-                    ctx.setTransform(1, 0, 0, 1, 0, 0);
-                    ctx.translate(centerX, centerZ);
-                    ctx.fillStyle = "#654321";
-                }
-                for (let row = -5000; row < 5000; row = row + 8) {
-                    for (let col = -5000; col < 5000; col = col += 8) {
-                        let height = terrain.getHeightFromMap(row, col)
-                        //let height = ground.getHeightAtCoordinates(row, col);
-                        if (height > 40 && height < 110) {
-                            let newInstance = (<BABYLON.Mesh>treemesh).createInstance("i" + row.toString() + col.toString());
-                            newInstance.position.z = col + 8 * Math.random();
-                            newInstance.position.x = row + 8 * Math.random();
-                            newInstance.position.y = height;
-                            newInstance.rotate(BABYLON.Axis.Y, Math.random() * Math.PI * 2, BABYLON.Space.WORLD);
-    
-                            var scale = 0.5 + Math.random() * 2;
-                            newInstance.scaling.addInPlace(new BABYLON.Vector3(scale, scale, scale));
-                            DT && ctx.fillRect(row, col * -1, 10, 10);
-                        }
-                    }
-                }
-                if (DT) {
-                    ctx.fill();
-                    grass.update();
-                }
 
 
-                return this;
-            });*/
+            /*  BABYLON.SceneLoader.ImportMesh("", "", "tree.babylon", this, function (mesh) {
+                  let treemesh = mesh[0];
+                  (<BABYLON.StandardMaterial>treemesh.material).opacityTexture = null;
+                  treemesh.material.backFaceCulling = false;
+                  treemesh.isVisible = false;
+                  if (DT) {
+                      ctx.setTransform(1, 0, 0, 1, 0, 0);
+                      ctx.translate(centerX, centerZ);
+                      ctx.fillStyle = "#654321";
+                  }
+                  for (let row = -5000; row < 5000; row = row + 8) {
+                      for (let col = -5000; col < 5000; col = col += 8) {
+                          let height = terrain.getHeightFromMap(row, col)
+                          //let height = ground.getHeightAtCoordinates(row, col);
+                          if (height > 40 && height < 110) {
+                              let newInstance = (<BABYLON.Mesh>treemesh).createInstance("i" + row.toString() + col.toString());
+                              newInstance.position.z = col + 8 * Math.random();
+                              newInstance.position.x = row + 8 * Math.random();
+                              newInstance.position.y = height;
+                              newInstance.rotate(BABYLON.Axis.Y, Math.random() * Math.PI * 2, BABYLON.Space.WORLD);
+      
+                              var scale = 0.5 + Math.random() * 2;
+                              newInstance.scaling.addInPlace(new BABYLON.Vector3(scale, scale, scale));
+                              DT && ctx.fillRect(row, col * -1, 10, 10);
+                          }
+                      }
+                  }
+                  if (DT) {
+                      ctx.fill();
+                      grass.update();
+                  }
+  
+  
+                  return this;
+              });*/
 
             let buildings: BABYLON.Mesh[] = [];
 
