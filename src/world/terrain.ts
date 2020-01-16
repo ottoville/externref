@@ -195,7 +195,22 @@ export class Terrain extends BABYLON.GroundMesh {
         }
         return -(facet[0] * x + facet[2] * z + facet[3]) / facet[1];
     }
-    
+
+    public _checkCollision(collider: BABYLON.Collider): BABYLON.AbstractMesh {
+        console.log('_checkCollision');
+        // Bounding box test
+        if (!this._boundingInfo || !this._boundingInfo._checkCollision(collider)) {
+            return this;
+        }
+
+        // Transformation matrix
+        const collisionsScalingMatrix = new BABYLON.Matrix();
+        const collisionsTransformMatrix = new BABYLON.Matrix();
+        BABYLON.Matrix.ScalingToRef(1.0 / collider._radius.x, 1.0 / collider._radius.y, 1.0 / collider._radius.z, collisionsScalingMatrix);
+        this.worldMatrixFromCache.multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
+        this._processCollisionsForSubMeshes(collider, collisionsTransformMatrix);
+        return this;
+    }
     public intersects(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): BABYLON.PickingInfo {
         console.log('terrain intersect')
         //@ts-ignore
