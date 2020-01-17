@@ -197,12 +197,15 @@ export class Terrain extends BABYLON.GroundMesh {
     }
 
     public _checkCollision(collider: BABYLON.Collider): BABYLON.AbstractMesh {
-        console.log('_checkCollision');
+        
         // Bounding box test
-        if (!this._boundingInfo || !this._boundingInfo._checkCollision(collider)) {
+        
+
+        //if (!this._boundingInfo || !this._boundingInfo._checkCollision(collider)) {
+        if (!this._boundingInfo || !collider._canDoCollision(this._boundingInfo.boundingSphere.centerWorld, this._boundingInfo.boundingSphere.radiusWorld, this._boundingInfo.boundingBox.minimumWorld, this._boundingInfo.boundingBox.maximumWorld)) {
             return this;
         }
-
+        console.log('_checkCollision');
         // Transformation matrix
         const collisionsScalingMatrix = new BABYLON.Matrix();
         const collisionsTransformMatrix = new BABYLON.Matrix();
