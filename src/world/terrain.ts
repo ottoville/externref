@@ -1,5 +1,5 @@
 ﻿import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
-import { default as wasmp, transformcoordinatesfromfloats } from "../../wwwroot/rustwasm"
+import { default as wasmp, transformcoordinatesfromfloats } from "../rustwasm/hello_wasm.js"
 
 /*
 import { default as wasmp, transformcoordinatesfromfloats } from "/wasm/hello_wasm.js"
@@ -217,9 +217,11 @@ export class Terrain extends BABYLON.GroundMesh {
                         pos.z = this.positions[i * 3 + 2];
 
                         subMesh._lastColliderWorldVertices.push(BABYLON.Vector3.TransformCoordinates(pos, collisionsTransformMatrix));
-                       /* wasmp().then(wasm => {
-                            
-                        })*/
+                        wasmp().then(wasm => {
+                            console.log('test wasm');
+                            console.log(transformcoordinatesfromfloats(pos.x, pos.y, pos.z, collisionsTransformMatrix.m as Float32Array))
+                            console.log(BABYLON.Vector3.TransformCoordinates(pos, collisionsTransformMatrix));
+                        })
                     }
                 }
 

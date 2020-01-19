@@ -51,13 +51,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\rustwasm\.gitignore" />
-    <Content Remove="wwwroot\rustwasm\hello_wasm.d.ts" />
-    <Content Remove="wwwroot\rustwasm\hello_wasm_bg.d.ts" />
-    <Content Remove="wwwroot\rustwasm\package.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="src\engine.ts" />
     <None Remove="src\paintGround\paintLine.ts" />
     <None Remove="src\paintGround\paintPlane.ts" />
@@ -69,11 +62,6 @@
     <None Remove="src\workers\webworkers\ray.ts" />
     <None Remove="src\workers\webworkers\terrainWorker.ts" />
     <None Remove="src\world\terrain.ts" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <TypeScriptCompile Remove="wwwroot\rustwasm\hello_wasm.d.ts" />
-    <TypeScriptCompile Remove="wwwroot\rustwasm\hello_wasm_bg.d.ts" />
   </ItemGroup>
 
   <ItemGroup>
@@ -533,10 +521,6 @@
     <None Include="wwwroot\js\WorkerThread.js" />
     <None Include="wwwroot\js\world\scene.js" />
     <None Include="wwwroot\js\world\sun.js" />
-    <None Include="wwwroot\rustwasm\.gitignore" />
-    <None Include="wwwroot\rustwasm\hello_wasm.d.ts" />
-    <None Include="wwwroot\rustwasm\hello_wasm_bg.d.ts" />
-    <None Include="wwwroot\rustwasm\package.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -603,12 +587,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="wwwroot\rustwasm\hello_wasm.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\rustwasm\hello_wasm_bg.wasm">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <None Update="src\rustwasm\hello_wasm.js">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
@@ -618,7 +599,7 @@
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="wasm-pack build --target web --out-dir ./wwwroot/rustwasm --$(ConfigurationName.ToLower())" />
+    <Exec Command="wasm-pack build --target web --out-dir ./src/rustwasm --$(ConfigurationName.ToLower())" />
   </Target>
 
 </Project>

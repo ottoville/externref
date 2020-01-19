@@ -1,5 +1,4 @@
 ﻿var fs = require('fs');
-
 function readFiles(dirname, obj) {
     return new Promise((mres, mrej) => {
         fs.readdir(dirname, async function (err, filenames) {
