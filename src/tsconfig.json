@@ -15,7 +15,8 @@
       "babylonjs-materials",
       "facebook-js-sdk"
     ],
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "allowJs": true
   },
   "exclude": [
     "node_modules",

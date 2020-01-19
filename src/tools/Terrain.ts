@@ -189,11 +189,20 @@ export class TerrainTool extends UITAB {
             (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.offsetX, v.data.offsetY, width, 1, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr, v.data.srcOffset)
             gl.bindTexture(gl.TEXTURE_2D, null);
         });
+        let mainboundingInfo = this.terrain.getBoundingInfo();
         let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
         this.terrain.worker.subscribe('bounding', (v) => {
+
+            console.log('boundingY', boundingInfo.boundingBox.maximum.y, v.data.boundingBox.maxY)
+            this.terrain.subMeshes[0]._lastColliderWorldVertices = null;
             boundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
             boundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
             boundingInfo.boundingSphere.radius = v.data.boundingSphereRadius
+
+
+            mainboundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
+            mainboundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
+            mainboundingInfo.boundingSphere.radius = v.data.boundingSphereRadius
         });
         this.helper.material = this.helpermaterial;
         this.helpermaterial.bindOnlyWorldMatrix = (function (world: BABYLON.Matrix) {

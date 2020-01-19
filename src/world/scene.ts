@@ -461,17 +461,6 @@ export class WorldScene extends BABYLON.Scene {
 
                 // Meshes
                 this._pickedDownMesh = null;
-                //var pickResult = scene.pick(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers);
-
-                /* var pickResult = scene._internalPick((world) => {
-                if (!scene._tempPickingRay) {
-                    scene._tempPickingRay = BABYLON.Ray.Zero();
-                }
-
-                scene.createPickingRayToRef(this._unTranslatedPointerX, this._unTranslatedPointerY, world, scene._tempPickingRay, scene.cameraToUseForPointers || null);
-                return scene._tempPickingRay;
-            }, scene.pointerDownPredicate, false);
-            */
                 let fastCheck = false;
                 let rayFunction = (world) => {
                     if (!scene._tempPickingRay) {
@@ -481,29 +470,6 @@ export class WorldScene extends BABYLON.Scene {
                     scene.createPickingRayToRef(this._unTranslatedPointerX, this._unTranslatedPointerY, world, scene._tempPickingRay, scene.cameraToUseForPointers || null);
                     return scene._tempPickingRay;
                 };
-                /*for (var meshIndex = 0; meshIndex < scene.meshes.length; meshIndex++) {
-                    var mesh = scene.meshes[meshIndex];
-
-                    if (scene.pointerDownPredicate) {
-                        if (!scene.pointerDownPredicate(mesh))
-                            continue;
-                    } else if (!mesh.isEnabled() || !mesh.isVisible || !mesh.isPickable)
-                        continue;
-
-                    var world = mesh.getWorldMatrix();
-                    var ray = rayFunction(world);
-
-                    var result = mesh.intersects(ray, fastCheck);
-                    if (!result || !result.hit)
-                        continue;
-                    if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
-                        continue;
-                    pickResult = result;
-
-                    if (fastCheck)
-                        break;
-                    }*/
-
                 (function collissionCheck(meshIndex: number, pickResult: BABYLON.PickingInfo | null) {
                     if (meshIndex > scene.meshes.length - 1)
                         return null;
@@ -546,7 +512,6 @@ export class WorldScene extends BABYLON.Scene {
 
                     this._processPointerDown(pickResult, evt);
                 });
-
             };
 
             this._onPointerUp = (evt: PointerEvent) => {
@@ -692,7 +657,6 @@ export class WorldScene extends BABYLON.Scene {
 
                 elementToAttachTo.addEventListener(this._wheelEventName, <any>this._onPointerMove, false);
             }
-
             if (attachDown) {
                 elementToAttachTo.addEventListener(eventPrefix + "down", <any>this._onPointerDown, false);
             }

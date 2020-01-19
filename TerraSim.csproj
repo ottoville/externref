@@ -17,32 +17,44 @@
     <Compile Remove="EdgeDriverTest1\**" />
     <Compile Remove="EdgeDriverTest2\**" />
     <Compile Remove="EdgeDriverTest3\**" />
+    <Compile Remove="src\wasm\**" />
     <Compile Remove="Tools\**" />
     <Compile Remove="UnitTestProject1\**" />
     <Compile Remove="workers\**" />
     <Content Remove="EdgeDriverTest1\**" />
     <Content Remove="EdgeDriverTest2\**" />
     <Content Remove="EdgeDriverTest3\**" />
+    <Content Remove="src\wasm\**" />
     <Content Remove="Tools\**" />
     <Content Remove="UnitTestProject1\**" />
     <Content Remove="workers\**" />
     <EmbeddedResource Remove="EdgeDriverTest1\**" />
     <EmbeddedResource Remove="EdgeDriverTest2\**" />
     <EmbeddedResource Remove="EdgeDriverTest3\**" />
+    <EmbeddedResource Remove="src\wasm\**" />
     <EmbeddedResource Remove="Tools\**" />
     <EmbeddedResource Remove="UnitTestProject1\**" />
     <EmbeddedResource Remove="workers\**" />
     <None Remove="EdgeDriverTest1\**" />
     <None Remove="EdgeDriverTest2\**" />
     <None Remove="EdgeDriverTest3\**" />
+    <None Remove="src\wasm\**" />
     <None Remove="Tools\**" />
     <None Remove="UnitTestProject1\**" />
     <None Remove="workers\**" />
     <TypeScriptCompile Remove="EdgeDriverTest1\**" />
     <TypeScriptCompile Remove="EdgeDriverTest2\**" />
+    <TypeScriptCompile Remove="src\wasm\**" />
     <TypeScriptCompile Remove="Tools\**" />
     <TypeScriptCompile Remove="UnitTestProject1\**" />
     <TypeScriptCompile Remove="workers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\rustwasm\.gitignore" />
+    <Content Remove="wwwroot\rustwasm\hello_wasm.d.ts" />
+    <Content Remove="wwwroot\rustwasm\hello_wasm_bg.d.ts" />
+    <Content Remove="wwwroot\rustwasm\package.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -57,6 +69,11 @@
     <None Remove="src\workers\webworkers\ray.ts" />
     <None Remove="src\workers\webworkers\terrainWorker.ts" />
     <None Remove="src\world\terrain.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Remove="wwwroot\rustwasm\hello_wasm.d.ts" />
+    <TypeScriptCompile Remove="wwwroot\rustwasm\hello_wasm_bg.d.ts" />
   </ItemGroup>
 
   <ItemGroup>
@@ -516,6 +533,10 @@
     <None Include="wwwroot\js\WorkerThread.js" />
     <None Include="wwwroot\js\world\scene.js" />
     <None Include="wwwroot\js\world\sun.js" />
+    <None Include="wwwroot\rustwasm\.gitignore" />
+    <None Include="wwwroot\rustwasm\hello_wasm.d.ts" />
+    <None Include="wwwroot\rustwasm\hello_wasm_bg.d.ts" />
+    <None Include="wwwroot\rustwasm\package.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -581,6 +602,15 @@
     <TypeScriptCompile Include="src\node_modules\typescript\lib\typescriptServices.d.ts" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\rustwasm\hello_wasm.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\rustwasm\hello_wasm_bg.wasm">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
@@ -588,7 +618,7 @@
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="wasm-pack build --target web --out-dir ./wwwroot/wasm --$(ConfigurationName.ToLower())" />
+    <Exec Command="wasm-pack build --target web --out-dir ./wwwroot/rustwasm --$(ConfigurationName.ToLower())" />
   </Target>
 
 </Project>

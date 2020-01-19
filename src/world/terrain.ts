@@ -1,5 +1,12 @@
 ﻿import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
+import { default as wasmp, transformcoordinatesfromfloats } from "../../wwwroot/rustwasm"
 
+/*
+import { default as wasmp, transformcoordinatesfromfloats } from "/wasm/hello_wasm.js"
+wasmp().then(wasm => {
+    let value = test(13);
+    console.log(value);
+})*/
 interface TerrainMap {
     width: number,
     height: number,
@@ -139,41 +146,7 @@ export class Terrain extends BABYLON.GroundMesh {
     //Dataview 6100
     //pure array  848 -> 763
 
-   /* public _collideForSubMesh(subMesh: BABYLON.SubMesh, transformMatrix: BABYLON.Matrix, collider: BABYLON.Collider): BABYLON.AbstractMesh {
-        this._generatePointsArray();
 
-        if (!this._positions) {
-            return this;
-        }
-
-        // Transformation
-        if (!subMesh._lastColliderWorldVertices || !subMesh._lastColliderTransformMatrix!.equals(transformMatrix)) {
-            subMesh._lastColliderTransformMatrix = transformMatrix.clone();
-            subMesh._lastColliderWorldVertices = [];
-            subMesh._trianglePlanes = [];
-            var start = subMesh.verticesStart;
-            var end = (subMesh.verticesStart + subMesh.verticesCount);
-            for (var i = start; i < end; i++) {
-                subMesh._lastColliderWorldVertices.push(Vector3.TransformCoordinates(this.positions[i], transformMatrix));
-
-                const m = transformation.m;
-                var rx = x * m[0] + y * m[4] + z * m[8] + m[12];
-                var ry = x * m[1] + y * m[5] + z * m[9] + m[13];
-                var rz = x * m[2] + y * m[6] + z * m[10] + m[14];
-                var rw = 1 / (x * m[3] + y * m[7] + z * m[11] + m[15]);
-
-                result.x = rx * rw;
-                result.y = ry * rw;
-                result.z = rz * rw;
-
-
-            }
-        }
-
-        // Collide
-        collider._collide(subMesh._trianglePlanes, subMesh._lastColliderWorldVertices, (<IndicesArray>this.getIndices()), subMesh.indexStart, subMesh.indexStart + subMesh.indexCount, subMesh.verticesStart, !!subMesh.getMaterial(), this);
-        return this;
-    }*/
     getHeightAtCoordinates(x: number, z: number): number {
         let facet: Float32Array;
         let col = ((x + this._maxX) * this.ratioX)|0;
@@ -202,16 +175,72 @@ export class Terrain extends BABYLON.GroundMesh {
         
 
         //if (!this._boundingInfo || !this._boundingInfo._checkCollision(collider)) {
-        if (!this._boundingInfo || !collider._canDoCollision(this._boundingInfo.boundingSphere.centerWorld, this._boundingInfo.boundingSphere.radiusWorld, this._boundingInfo.boundingBox.minimumWorld, this._boundingInfo.boundingBox.maximumWorld)) {
+
+       if (!this._boundingInfo || !collider._canDoCollision(this._boundingInfo.boundingSphere.centerWorld, this._boundingInfo.boundingSphere.radiusWorld, this._boundingInfo.boundingBox.minimumWorld, this._boundingInfo.boundingBox.maximumWorld)) {
             return this;
         }
-        console.log('_checkCollision');
+
+
+       // console.log('_checkCollision');
         // Transformation matrix
         const collisionsScalingMatrix = new BABYLON.Matrix();
         const collisionsTransformMatrix = new BABYLON.Matrix();
         BABYLON.Matrix.ScalingToRef(1.0 / collider._radius.x, 1.0 / collider._radius.y, 1.0 / collider._radius.z, collisionsScalingMatrix);
         this.worldMatrixFromCache.multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
-        this._processCollisionsForSubMeshes(collider, collisionsTransformMatrix);
+        //this._processCollisionsForSubMeshes(collider, collisionsTransformMatrix);
+        //_processCollisionsForSubMeshes(collider: Collider, transformMatrix: Matrix): AbstractMesh {
+            const subMeshes = this._scene.getCollidingSubMeshCandidates(this, collider);
+            const len = subMeshes.length;
+
+            for (var index = 0; index < len; index++) {
+                var subMesh = subMeshes.data[index];
+
+                // Bounding test
+                if (len > 1 && !subMesh._checkCollision(collider)) {
+                    continue;
+                }
+
+                //this._collideForSubMesh(subMesh, collisionsTransformMatrix, collider);
+                  //  public _collideForSubMesh(subMesh: SubMesh, transformMatrix: Matrix, collider: Collider): AbstractMesh {
+                    //this._generatePointsArray();
+
+
+                    // Transformation
+                if (!subMesh._lastColliderWorldVertices || !subMesh._lastColliderTransformMatrix!.equals(collisionsTransformMatrix)) {
+                    subMesh._lastColliderTransformMatrix = collisionsTransformMatrix.clone();
+                    subMesh._lastColliderWorldVertices = [];
+                    subMesh._trianglePlanes = [];
+                    let pos = new BABYLON.Vector3()
+                    for (let i = 0; i < this.positions.length / 3; i++) {
+                        pos.x = this.positions[i * 3];
+                        pos.y = this.positions[i * 3 + 1]+20;
+                        pos.z = this.positions[i * 3 + 2];
+
+                        subMesh._lastColliderWorldVertices.push(BABYLON.Vector3.TransformCoordinates(pos, collisionsTransformMatrix));
+                       /* wasmp().then(wasm => {
+                            
+                        })*/
+                    }
+                }
+
+                    // Collide
+                
+                //collider._collide(subMesh._trianglePlanes, subMesh._lastColliderWorldVertices, (<IndicesArray>this.getIndices()), subMesh.indexStart, subMesh.indexStart + subMesh.indexCount, subMesh.verticesStart, !!subMesh.getMaterial(), this);
+              //  public _collide(trianglePlaneArray: Array<Plane>, pts: Vector3[], indices: IndicesArray, indexStart: number, indexEnd: number, decal: number, hasMaterial: boolean, hostMesh: AbstractMesh): void {
+                //let indices = (<IndicesArray>this.getIndices());
+                let indices = this.indices;
+                for (var i = subMesh.indexStart; i < subMesh.indexStart + subMesh.indexCount; i += 3) {
+                    var p1 = subMesh._lastColliderWorldVertices[indices[i] - subMesh.verticesStart];
+                    var p2 = subMesh._lastColliderWorldVertices[indices[i + 1] - subMesh.verticesStart];
+                    var p3 = subMesh._lastColliderWorldVertices[indices[i + 2] - subMesh.verticesStart];
+                    //@ts-ignore
+                    collider._testTriangle(i, subMesh._trianglePlanes, p3, p2, p1, !!subMesh.getMaterial(), collider);
+                }
+                    //return this;
+   // }
+
+            }
+        //}
         return this;
     }
     public intersects(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): BABYLON.PickingInfo {
