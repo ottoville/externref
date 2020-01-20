@@ -17,6 +17,7 @@
     <Compile Remove="EdgeDriverTest1\**" />
     <Compile Remove="EdgeDriverTest2\**" />
     <Compile Remove="EdgeDriverTest3\**" />
+    <Compile Remove="src\bin\**" />
     <Compile Remove="src\wasm\**" />
     <Compile Remove="Tools\**" />
     <Compile Remove="UnitTestProject1\**" />
@@ -24,6 +25,7 @@
     <Content Remove="EdgeDriverTest1\**" />
     <Content Remove="EdgeDriverTest2\**" />
     <Content Remove="EdgeDriverTest3\**" />
+    <Content Remove="src\bin\**" />
     <Content Remove="src\wasm\**" />
     <Content Remove="Tools\**" />
     <Content Remove="UnitTestProject1\**" />
@@ -31,6 +33,7 @@
     <EmbeddedResource Remove="EdgeDriverTest1\**" />
     <EmbeddedResource Remove="EdgeDriverTest2\**" />
     <EmbeddedResource Remove="EdgeDriverTest3\**" />
+    <EmbeddedResource Remove="src\bin\**" />
     <EmbeddedResource Remove="src\wasm\**" />
     <EmbeddedResource Remove="Tools\**" />
     <EmbeddedResource Remove="UnitTestProject1\**" />
@@ -38,12 +41,14 @@
     <None Remove="EdgeDriverTest1\**" />
     <None Remove="EdgeDriverTest2\**" />
     <None Remove="EdgeDriverTest3\**" />
+    <None Remove="src\bin\**" />
     <None Remove="src\wasm\**" />
     <None Remove="Tools\**" />
     <None Remove="UnitTestProject1\**" />
     <None Remove="workers\**" />
     <TypeScriptCompile Remove="EdgeDriverTest1\**" />
     <TypeScriptCompile Remove="EdgeDriverTest2\**" />
+    <TypeScriptCompile Remove="src\bin\**" />
     <TypeScriptCompile Remove="src\wasm\**" />
     <TypeScriptCompile Remove="Tools\**" />
     <TypeScriptCompile Remove="UnitTestProject1\**" />
@@ -172,10 +177,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="src\bin\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -595,7 +596,7 @@
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="node .\buildShaders.js&#xD;&#xA;node .\setversion.js" />
+    <Exec Command="node .\buildShaders.js&#xD;&#xA;node .\setversion.js&#xD;&#xA;npm run build --prefix ./src" />
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
