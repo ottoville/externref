@@ -4,6 +4,7 @@ let end_position: Vector2
 
 import { LazyEval } from "../LazyEval.js";
 import { UITAB } from "../UITAB.js";
+import { Terrain } from "../world/terrain.js";
 //import { rotateMatrix, translate } from "./math.js";
 
 let subTextureCache: subTexture;
@@ -30,7 +31,7 @@ export abstract class paintGround {
         public canvas: HTMLElement,
         protected scene: BABYLON.Scene,
         protected camera: BABYLON.ArcRotateCamera,
-        protected ground: BABYLON.GroundMesh,
+        protected ground: Terrain,
         protected sea: BABYLON.Mesh,
         private uitab: UITAB
     ) {

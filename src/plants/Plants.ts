@@ -1,6 +1,7 @@
 import { LazyEval } from "../LazyEval.js";
 //import { translate, rotateMatrix } from "../math.js";
 import {WorkerThread, WorkerReturn} from "../WorkerThread.js";
+import { Terrain } from "../world/terrain.js";
 //import simplex from '../simplex.js'
 
 
@@ -55,7 +56,7 @@ export class Plants {
     constructor(
         private scene: BABYLON.Scene,
         private camera: BABYLON.ArcRotateCamera,
-        private terrain: BABYLON.GroundMesh,
+        private terrain: Terrain,
     ) {
         let shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 4 * this.numBlades);
         let noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);

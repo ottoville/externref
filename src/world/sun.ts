@@ -4,32 +4,6 @@ import { WorldScene } from "./scene.js";
 let anglePerMinute=(Math.PI*2)/1439;
 let meridian:number=Math.PI*0.1;
 
-/*class dunamicVector extends BABYLON.Vector3 {
-    constructor(
-        x: number = 0,
-        y: number = 0,
-        z: number = 0,
-        private getGameTime:() => number
-
-    ) {
-        super(x,y,z);
-    }
-    get x(): number {
-        let gameTime=this.getGameTime();
-        let secondsOfDay=~~((Number(gameTime)/1000)%86400);
-        let minutesOfDay=~~(secondsOfDay/60);
-
-        let sundistance = 149600000000;
-        let sunAngle= new Angle(minutesOfDay*anglePerMinute).sub(meridian); 
-        return sundistance*Math.sin(sunAngle);
-    }
-    get y(): number {
-        return this.arr[1];
-    }
-    get z(): number {
-        return this.arr[2];
-    }
-}*/
 export class Sun {
     public sunPosition:BABYLON.Vector3=new BABYLON.Vector3(0,0,0);
     constructor(scene:WorldScene) {

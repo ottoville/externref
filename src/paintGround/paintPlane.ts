@@ -1,5 +1,6 @@
 ﻿import { paintGround } from "./paintGround.js";
 import { UITAB } from "../UITAB.js";
+import { Terrain } from "../world/terrain.js";
 
 export class paintPlane extends paintGround {
 
@@ -11,7 +12,7 @@ export class paintPlane extends paintGround {
         public canvas: HTMLElement,
         protected scene: BABYLON.Scene,
         protected camera: BABYLON.ArcRotateCamera,
-        protected ground: BABYLON.GroundMesh,
+        protected ground: Terrain,
         protected sea: BABYLON.Mesh,
         uitab: UITAB
     ) {

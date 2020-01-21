@@ -162,7 +162,7 @@
         "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
       },
       "../src/workers/webworkers/terrainworker.ts": {
-        "version": "61c53bf51acf2fd6f6994b2a10cb8b35c26c511aad326995665af82de016146b",
+        "version": "0e69d2ffd3c21fcb7ea97ab6a02c7ec1a73311b712e42ba971c5ded1b1563281",
         "signature": "dbce43cb76093ddf1f9ffc701708adcad21ff0452d4d238b1cc5817be4957562"
       },
       "../src/workers/sw.ts": {

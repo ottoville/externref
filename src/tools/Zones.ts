@@ -1,6 +1,7 @@
 import { UITAB } from "../UITAB.js";
 import { paintTexture } from "../paintGround/paintTexture.js";
 import { texImage2D } from "../webgl.js";
+import { Terrain } from "../world/terrain.js";
 export class Zones extends UITAB {
     public name: string = "zonestab"
     private zonemateria: BABYLON.StandardMaterial;
@@ -9,7 +10,7 @@ export class Zones extends UITAB {
     private size = 10000;
     public canvas: HTMLCanvasElement;
     constructor(
-        private ground: BABYLON.GroundMesh,
+        private ground: Terrain,
         private db: IDBDatabase,
         private groundMaterial: BABYLON.ShaderMaterial,
         private scene: BABYLON.Scene,

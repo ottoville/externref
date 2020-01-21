@@ -1,4 +1,5 @@
 ﻿import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
+import { TerraMesh } from "../TerraMesh.js";
 
 
 interface TerrainMap {
@@ -10,7 +11,19 @@ interface TerrainMap {
     uvs: Float32Array,
     texture: Blob
 }
-export class Terrain extends BABYLON.GroundMesh {
+export class Terrain extends TerraMesh {
+
+    public _subdivisionsX: number;
+    public _subdivisionsY: number;
+
+    public _width: number;
+    public _height: number;
+    public _minX: number;
+    public _maxX: number;
+    public _minZ: number;
+    public _maxZ: number;
+
+
     public slopeArrBuffer: SharedArrayBuffer;
     public facet1ArrBuffer: SharedArrayBuffer;
     public facet2ArrBuffer: SharedArrayBuffer;
@@ -40,8 +53,8 @@ export class Terrain extends BABYLON.GroundMesh {
     public inited: Promise<any>;
 
     //public ground: BABYLON.GroundMesh;
-    constructor(private vdata: TerrainMap, private scene: BABYLON.Scene, private wasm) {
-        super('ground', scene);
+    constructor(private vdata: TerrainMap, private scene: BABYLON.Scene, wasm) {
+        super('ground', wasm);
 
         this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * vdata.indices.length);
         this.indices = new Uint32Array(this.indicesBuffer);
@@ -231,18 +244,29 @@ export class Terrain extends BABYLON.GroundMesh {
         return this;
     }
     public intersects(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): BABYLON.PickingInfo {
-        //@ts-ignore
-        return new Promise((res, rej) => {
-            res(super.intersects(ray, fastCheck, trianglePredicate));
-        });
-        
-        /*
+        let bounding = this.getBoundingInfo();
         this.worker.message(WorkerReturn.Promise, 'intersects',
             {
+                boundingBox: bounding.boundingBox,
+                boundingSphere: bounding.boundingSphere,
                 ray: ray,
                 fastCheck: fastCheck,
                 trianglePredicate: trianglePredicate
+            }).then(res => {
+                console.log('promise res');
+                console.log(res);
             });
+        //@ts-ignore
+        return new Promise((res, rej) => {
+            let superreturn = super.intersects(ray, fastCheck, trianglePredicate);
+            console.log('superreturn');
+            console.log(superreturn);
+            res(superreturn);
+        });
+        
+        
+
+        /*
         debugger;
         var pickingInfo = new BABYLON.PickingInfo();
         

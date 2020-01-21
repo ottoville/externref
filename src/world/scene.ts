@@ -60,7 +60,7 @@ export class WorldScene extends BABYLON.Scene {
     }*/
     public currentGameTime: number;
     public SunObject: Sun;
-    public terrainReady: Promise<BABYLON.GroundMesh>;
+    public terrainReady: Promise<Terrain>;
 
     public stateChange(data) {
         console.log('state changed', data);
@@ -486,6 +486,10 @@ export class WorldScene extends BABYLON.Scene {
                     var world = mesh.getWorldMatrix();
                     var ray = rayFunction(world);
 
+                   /* if (typeof (mesh.intersectsP) !== 'undefined') {
+
+                    }*/
+
                     return new Promise((res) => {
                         let result = <BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>>mesh.intersects(ray, fastCheck);
                         if (isPromise(result)) {
@@ -866,7 +870,7 @@ export class WorldScene extends BABYLON.Scene {
         this.terrainReady.catch((e) => {
             console.error('creating terrain failed', e);
         })
-        this.terrainReady.then((terrain: BABYLON.GroundMesh) => {
+        this.terrainReady.then((terrain: Terrain) => {
             /* Promise.all([CSG.fromMesh(this.mesh), CSG.fromMesh(grassbox)]).then(r => {
                  if (thismeshoperation !== meshoperatiocount) {
                      r[0].dispose();

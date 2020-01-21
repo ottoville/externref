@@ -2,6 +2,7 @@ import { UITAB } from "../UITAB.js";
 //import { paintGround, DrawType } from "../paintGround.js";
 import { paintPlane } from "../paintGround/paintPlane.js";
 import { Plants } from "../plants/Plants.js";
+import { Terrain } from "../world/terrain.js";
 
 
 
@@ -18,7 +19,7 @@ export class PlantsUI extends UITAB {
     //private PT: paintGround;
     private PT: paintPlane;
     constructor(
-        private ground: BABYLON.GroundMesh,
+        private ground: Terrain,
         public canvas: HTMLCanvasElement,
         private scene: BABYLON.Scene,
         private camera: BABYLON.ArcRotateCamera,
