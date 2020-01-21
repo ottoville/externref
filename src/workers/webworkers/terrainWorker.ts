@@ -158,7 +158,7 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
         this.postMessage({ id: e.id, data: { } });
     },
     intersects: (e: WMessage) => {
-        console.log(e);
+        //console.log(e);
     },
     mousemove: (e: WMessage) => {
         let ray = Ray.Zero();

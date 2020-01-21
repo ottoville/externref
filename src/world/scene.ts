@@ -8,6 +8,8 @@ import { UITAB } from "../UITAB.js";
 import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
+import *  as Wasm from "../rustwasm/hello_wasm.js"
+
 function isPromise(result: BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>): result is Promise<BABYLON.PickingInfo> {
     return (result as Promise<BABYLON.PickingInfo>).then !== undefined;
 }
@@ -474,7 +476,7 @@ export class WorldScene extends BABYLON.Scene {
                     if (meshIndex > scene.meshes.length - 1)
                         return null;
                     let mesh = scene.meshes[meshIndex];
-                    console.log(mesh.name);
+
                     if (scene.pointerDownPredicate) {
                         if (!scene.pointerDownPredicate(mesh))
                             return collissionCheck(++meshIndex, pickResult);
@@ -487,10 +489,8 @@ export class WorldScene extends BABYLON.Scene {
                     return new Promise((res) => {
                         let result = <BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>>mesh.intersects(ray, fastCheck);
                         if (isPromise(result)) {
-                            console.log('Proceed with promise')
                             result.then(res);
                         } else {
-                            console.log('Proceed no promise')
                             res(result);
                         }
                     }).then((result: BABYLON.PickingInfo) => {
@@ -763,8 +763,11 @@ export class WorldScene extends BABYLON.Scene {
                     }
                 }
             };
-        }).then((vdata: TerrainMap) => {
-            let ground = new Terrain(vdata, this);
+        }).then(async(vdata: TerrainMap) => {
+            /* Wait webassembly to be initialized so we can use its functions on world modules */
+            await Wasm.default();
+
+            let ground = new Terrain(vdata, this, Wasm);
 
             sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);

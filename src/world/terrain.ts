@@ -1,12 +1,6 @@
 ﻿import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
-import { default as wasmp, transformcoordinatesfromfloats, transformcoordinatesfromfloats2 } from "../rustwasm/hello_wasm.js"
-let wasminit = wasmp();
-/*
-import { default as wasmp, transformcoordinatesfromfloats } from "/wasm/hello_wasm.js"
-wasmp().then(wasm => {
-    let value = test(13);
-    console.log(value);
-})*/
+
+
 interface TerrainMap {
     width: number,
     height: number,
@@ -46,7 +40,7 @@ export class Terrain extends BABYLON.GroundMesh {
     public inited: Promise<any>;
 
     //public ground: BABYLON.GroundMesh;
-    constructor(private vdata: TerrainMap, private scene: BABYLON.Scene) {
+    constructor(private vdata: TerrainMap, private scene: BABYLON.Scene, private wasm) {
         super('ground', scene);
 
         this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * vdata.indices.length);
@@ -116,7 +110,8 @@ export class Terrain extends BABYLON.GroundMesh {
             });
         this._setReady(true);
 
-
+        console.log('terrain bounding');
+        console.log(this.getBoundingInfo());
 
       //  this.worker.message(WorkerReturn.noReturn, 'createHeights', {});
     /**********************/
@@ -180,7 +175,6 @@ export class Terrain extends BABYLON.GroundMesh {
             return this;
         }
 
-
        // console.log('_checkCollision');
         // Transformation matrix
         const collisionsScalingMatrix = new BABYLON.Matrix();
@@ -199,7 +193,6 @@ export class Terrain extends BABYLON.GroundMesh {
                 if (len > 1 && !subMesh._checkCollision(collider)) {
                     continue;
                 }
-
                 //this._collideForSubMesh(subMesh, collisionsTransformMatrix, collider);
                   //  public _collideForSubMesh(subMesh: SubMesh, transformMatrix: Matrix, collider: Collider): AbstractMesh {
                     //this._generatePointsArray();
@@ -207,56 +200,14 @@ export class Terrain extends BABYLON.GroundMesh {
 
                     // Transformation
                 if (!subMesh._lastColliderWorldVertices || !subMesh._lastColliderTransformMatrix!.equals(collisionsTransformMatrix)) {
+                    console.log('recalculating collision vertices');
                     subMesh._lastColliderTransformMatrix = collisionsTransformMatrix.clone();
                     subMesh._lastColliderWorldVertices = [];
                     subMesh._trianglePlanes = [];
-                    let pos = new BABYLON.Vector3()
                     for (let i = 0; i < this.positions.length / 3; i++) {
-                        pos.x = this.positions[i * 3];
-                        pos.y = this.positions[i * 3 + 1]+20;
-                        pos.z = this.positions[i * 3 + 2];
-
-                        subMesh._lastColliderWorldVertices.push(BABYLON.Vector3.TransformCoordinates(pos, collisionsTransformMatrix));
+                        let transformed = this.wasm.transformcoordinatesfromfloats(this.positions[i * 3], this.positions[i * 3 + 1] + 20, this.positions[i * 3 + 2], collisionsTransformMatrix.m as Float32Array)
+                        subMesh._lastColliderWorldVertices.push(new BABYLON.Vector3(transformed[0], transformed[1], transformed[2]))
                     }
-                    wasminit.then(wasm => {
-                        console.log('test wasm');
-                        console.log([pos.x, pos.y, pos.z]);
-
-                        console.log(transformcoordinatesfromfloats2(pos.x, pos.y, pos.z, collisionsTransformMatrix.m as Float32Array));
-                        console.log(BABYLON.Vector3.TransformCoordinates(pos, collisionsTransformMatrix));
-
-                        let timer = new Date().getTime();
-                        for (let i = 0; i < 100000; i++) {
-                            transformcoordinatesfromfloats(pos.x, pos.y, pos.z, collisionsTransformMatrix.m as Float32Array)
-                        }
-                        console.log('wasm took', new Date().getTime() - timer);
-                        for (let i = 0; i < 100000; i++) {
-                            transformcoordinatesfromfloats2(pos.x, pos.y, pos.z, collisionsTransformMatrix.m as Float32Array)
-                        }
-                        console.log('wasm2 took ', new Date().getTime() - timer);
-
-                        timer = new Date().getTime();
-                        for (let i = 0; i < 100000; i++) {
-                            BABYLON.Vector3.TransformCoordinates(pos, collisionsTransformMatrix);
-                        }
-                        console.log('js took ', new Date().getTime() - timer);
-                        timer = new Date().getTime();
-                        for (let i = 0; i < 100000; i++) {
-                            transformcoordinatesfromfloats(pos.x, pos.y, pos.z, collisionsTransformMatrix.m as Float32Array)
-                        }
-                        console.log('wasm took ', new Date().getTime() - timer);
-                        timer = new Date().getTime();
-                        for (let i = 0; i < 100000; i++) {
-                            transformcoordinatesfromfloats2(pos.x, pos.y, pos.z, collisionsTransformMatrix.m as Float32Array)
-                        }
-                        console.log('wasm2 took ', new Date().getTime() - timer);
-
-                        timer = new Date().getTime();
-                        for (let i = 0; i < 100000; i++) {
-                            BABYLON.Vector3.TransformCoordinates(pos, collisionsTransformMatrix);
-                        }
-                        console.log('js took ', new Date().getTime() - timer);
-                    })
                 }
 
                     // Collide
@@ -280,7 +231,6 @@ export class Terrain extends BABYLON.GroundMesh {
         return this;
     }
     public intersects(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): BABYLON.PickingInfo {
-        console.log('terrain intersect')
         //@ts-ignore
         return new Promise((res, rej) => {
             res(super.intersects(ray, fastCheck, trianglePredicate));
