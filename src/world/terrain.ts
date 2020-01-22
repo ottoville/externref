@@ -34,46 +34,16 @@ export class Terrain extends TerraMesh {
 
     private ratioX: number;
     private ratioY: number;
-
-    public positionsBuffer: SharedArrayBuffer;
-    public positionsView: DataView;
-
-    public indices: Uint32Array;
-    public indicesBuffer: SharedArrayBuffer;
-
-    public normalsBuffer: SharedArrayBuffer;
-    public normals: Float32Array;
-    public normalsView: DataView;
-
-    public positions: Float32Array;
+    
     public uvs: Float32Array;
 
-    public worker = new WorkerThread('/webworkers/terrainWorker.js');
+    public terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
     public inited: Promise<any>;
 
     //public ground: BABYLON.GroundMesh;
     constructor(private vdata: TerrainMap, private scene: BABYLON.Scene, wasm) {
-        super('ground', wasm);
-
-        this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * vdata.indices.length);
-        this.indices = new Uint32Array(this.indicesBuffer);
-        this.indices.set(vdata.indices);
-
-        this.normalsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * vdata.normals.length)
-
-        this.normals = new Float32Array(this.normalsBuffer)
-        this.normals.set(vdata.normals);
-
-        this.normalsView = new DataView(this.normalsBuffer);
-
-        this.positionsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * vdata.positions.length);
-        this.positions = new Float32Array(this.positionsBuffer);
-        this.positions.set(vdata.positions);
-
-        this.positionsView = new DataView(this.positionsBuffer);
-
-
+        super('ground',vdata.indices, vdata.positions, vdata.normals, wasm);
         this.uvs = vdata.uvs;
 
         this._subdivisionsX = 250;
@@ -108,7 +78,7 @@ export class Terrain extends TerraMesh {
         vertexData.applyToMesh(this, true);
         let boundingInfo = this.subMeshes[0].getBoundingInfo();
 
-        this.inited = this.worker.message(WorkerReturn.Promise, 'init',
+        this.inited = this.terrainWorker.message(WorkerReturn.Promise, 'init',
             {
                 positions: this.positionsBuffer,
                 indices: this.indicesBuffer,
@@ -243,135 +213,4 @@ export class Terrain extends TerraMesh {
         //}
         return this;
     }
-    public intersects(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): BABYLON.PickingInfo {
-        let bounding = this.getBoundingInfo();
-        this.worker.message(WorkerReturn.Promise, 'intersects',
-            {
-                boundingBox: bounding.boundingBox,
-                boundingSphere: bounding.boundingSphere,
-                ray: ray,
-                fastCheck: fastCheck,
-                trianglePredicate: trianglePredicate
-            }).then(res => {
-                console.log('promise res');
-                console.log(res);
-            });
-        //@ts-ignore
-        return new Promise((res, rej) => {
-            let superreturn = super.intersects(ray, fastCheck, trianglePredicate);
-            console.log('superreturn');
-            console.log(superreturn);
-            res(superreturn);
-        });
-        
-        
-
-        /*
-        debugger;
-        var pickingInfo = new BABYLON.PickingInfo();
-        
-        const intersectionThreshold = this.getClassName() === "InstancedLinesMesh" || this.getClassName() === "LinesMesh" ? (this as any).intersectionThreshold : 0;
-        const boundingInfo = this._boundingInfo;
-        if (!this.subMeshes || !boundingInfo || !ray.intersectsSphere(boundingInfo.boundingSphere, intersectionThreshold) || !ray.intersectsBox(boundingInfo.boundingBox, intersectionThreshold)) {
-            return pickingInfo;
-        }
-
-        if (!this._generatePointsArray()) {
-            return pickingInfo;
-        }
-
-        var intersectInfo: Nullable<BABYLON.IntersectionInfo> = null;
-
-        var subMeshes = this._scene.getIntersectingSubMeshCandidates(this, ray);
-        //console.log(subMeshes);
-        var len: number = subMeshes.length;
-        let p0 = new BABYLON.Vector3();
-        let p1 = new BABYLON.Vector3();
-        let p2 = new BABYLON.Vector3();
-        for (var index = 0; index < len; index++) {
-            var subMesh = subMeshes.data[index];
-
-            // Bounding test
-            if (len > 1 && !subMesh.canIntersects(ray)) {
-                continue;
-            }
-
-            //var currentIntersectInfo = subMesh.intersects(ray, (<BABYLON.Vector3[]>this._positions),(<IndicesArray>this.getIndices()), fastCheck,trianglePredicate);
-            //var currentIntersectInfo = subMesh._intersectTriangles(ray, positions, indices, fastCheck, trianglePredicate);
-            let currentIntersectInfo = null;
-            //let indices = <IndicesArray>this.getIndices();
-           // let positions = <BABYLON.Vector3[]>this._positions;
-           // console.log(subMesh);
-            let count = subMesh.indexStart + subMesh.indexCount;
-            for (var index = subMesh.indexStart; index < count; index += 3) {
-
-                p0.x = this.positions[this.indices[index] * 3]
-                p0.y = this.positions[this.indices[index] * 3 + 1]
-                p0.z = this.positions[this.indices[index] * 3 + 2]
-
-                p1.x = this.positions[this.indices[index+1] * 3]
-                p1.y = this.positions[this.indices[index+1] * 3 + 1]
-                p1.z = this.positions[this.indices[index+1] * 3 + 2]
-
-                p2.x = this.positions[this.indices[index+2] * 3]
-                p2.y = this.positions[this.indices[index+2] * 3 + 1]
-                p2.z = this.positions[this.indices[index+2] * 3 + 2]
-
-                if (trianglePredicate && !trianglePredicate(p0, p1, p2, ray)) {
-                    continue;
-                }
-
-                let subcurrentIntersectInfo = ray.intersectsTriangle(p0, p1, p2);
-
-                if (subcurrentIntersectInfo) {
-                    if (subcurrentIntersectInfo.distance < 0) {
-                        continue;
-                    }
-
-                    if (fastCheck || !currentIntersectInfo || subcurrentIntersectInfo.distance < currentIntersectInfo.distance) {
-                        currentIntersectInfo = subcurrentIntersectInfo;
-                        currentIntersectInfo.faceId = index / 3;
-
-                        if (fastCheck) {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (currentIntersectInfo) {
-                if (fastCheck || !intersectInfo || currentIntersectInfo.distance < intersectInfo.distance) {
-                    intersectInfo = currentIntersectInfo;
-                    intersectInfo.subMeshId = index;
-
-                    if (fastCheck) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (intersectInfo) {
-            // Get picked point
-            const world = this.getWorldMatrix();
-            const direction = new BABYLON.Vector3();
-            ray.direction.scaleToRef(intersectInfo.distance, direction);
-            const worldDirection = BABYLON.Vector3.TransformNormal(direction, world);
-            const pickedPoint = worldDirection.addInPlace(ray.origin);
-
-            // Return result
-            pickingInfo.hit = true;
-            pickingInfo.distance = BABYLON.Vector3.Distance(ray.origin, pickedPoint);
-            pickingInfo.pickedPoint = pickedPoint;
-            pickingInfo.pickedMesh = this;
-            pickingInfo.bu = intersectInfo.bu || 0;
-            pickingInfo.bv = intersectInfo.bv || 0;
-            pickingInfo.faceId = intersectInfo.faceId;
-            pickingInfo.subMeshId = intersectInfo.subMeshId;
-            return pickingInfo;
-        }
-
-        return pickingInfo;*/
-    }
-
 }

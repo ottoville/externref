@@ -472,10 +472,11 @@ export class WorldScene extends BABYLON.Scene {
                     scene.createPickingRayToRef(this._unTranslatedPointerX, this._unTranslatedPointerY, world, scene._tempPickingRay, scene.cameraToUseForPointers || null);
                     return scene._tempPickingRay;
                 };
+
                 (function collissionCheck(meshIndex: number, pickResult: BABYLON.PickingInfo | null) {
                     if (meshIndex > scene.meshes.length - 1)
                         return null;
-                    let mesh = scene.meshes[meshIndex];
+                    let mesh = scene.meshes[meshIndex] as Terrain;
 
                     if (scene.pointerDownPredicate) {
                         if (!scene.pointerDownPredicate(mesh))
@@ -483,19 +484,17 @@ export class WorldScene extends BABYLON.Scene {
                     } else if (!mesh.isEnabled() || !mesh.isVisible || !mesh.isPickable)
                         return collissionCheck(++meshIndex, pickResult);
 
-                    var world = mesh.getWorldMatrix();
-                    var ray = rayFunction(world);
 
-                   /* if (typeof (mesh.intersectsP) !== 'undefined') {
 
-                    }*/
 
                     return new Promise((res) => {
-                        let result = <BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>>mesh.intersects(ray, fastCheck);
-                        if (isPromise(result)) {
-                            result.then(res);
+                        var world = mesh.getWorldMatrix();
+                        var ray = rayFunction(world);
+                        if (typeof (mesh.intersectsPromise) !== 'undefined') {
+                            mesh.intersectsPromise(ray, fastCheck).then(res);
                         } else {
-                            res(result);
+                            
+                            res(mesh.intersects(ray, fastCheck));
                         }
                     }).then((result: BABYLON.PickingInfo) => {
                         if (!result || !result.hit)

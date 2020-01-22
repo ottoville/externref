@@ -25,7 +25,7 @@ export class WorkerThread extends Worker {
             }
         };
     }
-    message(returntype: WorkerReturn, action: string, data: object, options?: any): Promise<() => any> {
+    message<T>(returntype: WorkerReturn, action: string, data: object, options?: any): Promise<T> {
         let toWorker: WMessage = { type: returntype, action: action, data: data };
         return new Promise((res, rej) => {
             toWorker.id = this.operations.push(res) - 1

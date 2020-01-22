@@ -54,71 +54,8 @@ export class TerrainTool extends UITAB {
         this.gl = scene.getEngine()._gl;
         this.helper.alwaysSelectAsActiveMesh = true
     }
-    private _facesOfVertices:any[];
-    //private _groundVerticesPositions;
-    //private _groundVerticesNormals;
-    //private _groundIndices;
-   // private _groundPositions: BABYLON.Vector3[];
-    private _groundFacesNormals: BABYLON.Vector3[];
-    private _subdivisionsOfVertices;
-    private _selectedVertices: { vertice:number, distance:number }[];
     private direction = 0;
-    private _invertDirection= 1;
-    private heightMax = 500;
-    private heightMin = -500;
 
-    private _getFacesOfVertices () {
-        this._facesOfVertices = [];
-        this._subdivisionsOfVertices = [];
-        var index;
-        let length = this.terrain.positions.length / 3;
-        for (index = 0; index < length; index++) {
-            this._facesOfVertices[index] = [];
-            this._subdivisionsOfVertices[index] = [];
-        }
-        for (index = 0; index < this.terrain.indices.length; index++) {
-            this._facesOfVertices[this.terrain.indices[index]].push((index / 3) | 0);
-        }
-
-        for (var subIndex = 0; subIndex < this.terrain.subMeshes.length; subIndex++) {
-            var subMesh = this.terrain.subMeshes[subIndex];
-            for (index = subMesh.verticesStart; index < subMesh.verticesStart + subMesh.verticesCount; index++) {
-                this._subdivisionsOfVertices[index].push(subMesh);
-            }
-        }
-    };
-    private _getFaceVerticesIndex(faceID: number) : Uint32Array {
-        return new Uint32Array(this.terrain.indices.buffer, (faceID * 3) << 2, 3);
-    };
-    private _isBoxSphereIntersected (box, sphereCenter, sphereRadius) {
-        var vector = BABYLON.Vector3.Clamp(sphereCenter, box.minimumWorld, box.maximumWorld);
-        var num = BABYLON.Vector3.DistanceSquared(sphereCenter, vector);
-        return (num <= (sphereRadius * sphereRadius));
-    };
-    private _updateSubdivisions(vertexIndex: number) {
-        let ypos = this.terrain.positions[vertexIndex * 3 + 1];
-        for (var index = 0; index < this._subdivisionsOfVertices[vertexIndex].length; index++) {
-            var sub = this._subdivisionsOfVertices[vertexIndex][index];
-            let boundingBox = sub.getBoundingInfo().boundingBox;
-            let boundingSphere = sub.getBoundingInfo().boundingSphere;
-
-            if (ypos < boundingBox.minimum.y) {
-                boundingSphere.radius += Math.abs(ypos - boundingBox.minimum.y);
-                boundingBox.minimum.y = ypos;
-            } else if (ypos > boundingBox.maximum.y) {
-                boundingBox.maximum.y = ypos;
-            }
-        }
-
-        var boundingBox = this.terrain.getBoundingInfo().boundingBox;
-        var boundingSphere = this.terrain.getBoundingInfo().boundingSphere;
-        if (ypos < boundingBox.minimum.y) {
-            boundingSphere.radius += Math.abs(ypos - boundingBox.minimum.y);
-            boundingBox.minimum.y = ypos;
-        } else if (ypos > boundingBox.maximum.y) {
-            boundingBox.maximum.y = ypos;
-        }
-    };
     name: string;
     activate = (): void => {
         let engine = this.scene.getEngine();
@@ -180,7 +117,7 @@ export class TerrainTool extends UITAB {
             }
             return this;
         }).bind(this.helpermaterial)();
-        this.terrain.worker.subscribe('SubHeights', (v) => {
+        this.terrain.terrainWorker.subscribe('SubHeights', (v) => {
             let width = v.data.endX - v.data.offsetX;
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
             (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.offsetX, v.data.offsetY, width, 1, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr, v.data.srcOffset)
@@ -191,7 +128,7 @@ export class TerrainTool extends UITAB {
         });
         let mainboundingInfo = this.terrain.getBoundingInfo();
         let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
-        this.terrain.worker.subscribe('bounding', (v) => {
+        this.terrain.terrainWorker.subscribe('bounding', (v) => {
             this.terrain.subMeshes[0]._lastColliderWorldVertices = null;
             boundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
             boundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
@@ -211,7 +148,7 @@ export class TerrainTool extends UITAB {
         });
         this.helper.material = this.helpermaterial;
         this.helpermaterial.bindOnlyWorldMatrix = (function (world: BABYLON.Matrix) {
-            
+
             var scene = this.getScene();
 
             if (!this._effect) {
@@ -232,15 +169,13 @@ export class TerrainTool extends UITAB {
             }
 
             if (this._options.uniforms.indexOf("worldViewProjection") !== -1) {
-                if (typeof(this._cachedWorldViewProjectionMatrix) == 'undefined')
+                if (typeof (this._cachedWorldViewProjectionMatrix) == 'undefined')
                     this._cachedWorldViewProjectionMatrix = new BABYLON.Matrix();
                 world.multiplyToRef(scene.getTransformMatrix(), this._cachedWorldViewProjectionMatrix);
                 this._effect.setMatrix("worldViewProjection", this._cachedWorldViewProjectionMatrix);
 
             }
-        }).bind(this.helpermaterial)
-
-        
+        }).bind(this.helpermaterial);
 
         this.helper._processRendering = (subMesh: BABYLON.SubMesh, effect: BABYLON.Effect, fillMode: number, batch: BABYLON._InstancesBatch, hardwareInstancedRendering: boolean,
             onBeforeDraw: (isInstance: boolean, world: BABYLON.Matrix, effectiveMaterial?: BABYLON.Material) => void, effectiveMaterial?: BABYLON.Material): BABYLON.Mesh => {
@@ -304,7 +239,7 @@ export class TerrainTool extends UITAB {
             //@ts-ignore
             let vertexbuffer: WebGLBuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.PositionKind]._buffer.getBuffer().underlyingResource;
             this.timer = new Date().getTime();
-            this.terrain.worker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(e => {
+            this.terrain.terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(e => {
                 let NormalsRange = <{ normalsMin: number, normalsMax: number }><any>e;
                 gl.bindBuffer(gl.ARRAY_BUFFER, normalbuffer);
                 gl.bufferSubData(gl.ARRAY_BUFFER, NormalsRange.normalsMin, this.terrain.normalsView, NormalsRange.normalsMin, NormalsRange.normalsMax - NormalsRange.normalsMin)
@@ -323,7 +258,7 @@ export class TerrainTool extends UITAB {
     }
     deactivate = (): void => {
         super.deactivate();
-        this.terrain.worker.unsubscribe('heights');
+        this.terrain.terrainWorker.unsubscribe('heights');
         //this.removeListener("pointerdown", this.pointerdownf);
         this.helper.visibility = 0;
         //this.removeListener("pointermove", this.mouseListener);
@@ -341,7 +276,7 @@ export class TerrainTool extends UITAB {
         let engine = this.scene.getEngine();
         let viewport = this.camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
         let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
-        this.terrain.worker.message(WorkerReturn.Promise, 'mousemove',
+        this.terrain.terrainWorker.message(WorkerReturn.Promise, 'mousemove',
             {
                 x: evt.clientX,
                 y: evt.clientY,

@@ -157,6 +157,10 @@
         "version": "432f8af49d42cd54c9c80e3b247d6cb267cd450620459236b58e08cba0fa6ba7",
         "signature": "2b22d1846d2cadf3be08037313ecf88f73a60d458409b689ee4c379869370394"
       },
+      "../src/workers/webworkers/mesh.ts": {
+        "version": "241f71320814b63de9efe7bdf2218bcf5b18f2403292b9eaf7a42eddb40e3ab6",
+        "signature": "c33b24a773026e0dd3c96ac63372e9876c897fcdced15bb000f336156f1bbbd8"
+      },
       "../src/workers/webworkers/ray.ts": {
         "version": "d0a795a1cb33af85b4532fdcbc119064b75e7844eecb23fefcac66347d897bdf",
         "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
@@ -240,11 +244,12 @@
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts",
       "../src/workers/webworkers/grass.ts",
       "../src/workers/webworkers/ray.ts",
+      "../src/workers/webworkers/terrainworker.ts",
       "../src/workers/sw.ts",
       "../src/workers/commonmath.d.ts",
       "../src/node_modules/@types/color-name/index.d.ts",
       "../src/node_modules/@types/facebook-js-sdk/index.d.ts",
-      "../src/workers/webworkers/terrainworker.ts"
+      "../src/workers/webworkers/mesh.ts"
     ]
   },
   "version": "3.8.0-beta"
