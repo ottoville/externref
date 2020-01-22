@@ -674,7 +674,7 @@ export class WorldScene extends BABYLON.Scene {
 
         }).bind(this._inputManager)(this)
     }
-    constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private webSocket?: WebSocket) {
+    constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number,progelem:HTMLProgressElement, private webSocket?: WebSocket) {
         super(engine);
         if (webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'init', data: { userinfo, ticks } }));
@@ -694,8 +694,6 @@ export class WorldScene extends BABYLON.Scene {
             });
         }
         this.SunObject = new Sun(this);
-
-
 
         /* let gameEngine = new WorkerThread('js/workers/engine.js');
          gameEngine.message(WorkerReturn.noReturn, 'init', {
@@ -726,47 +724,57 @@ export class WorldScene extends BABYLON.Scene {
             let trans = db.transaction('maps');
             trans.onerror = ccrej;
             trans.objectStore('maps').openCursor().onsuccess = (evt) => {
+                progelem.value = 40;
                 if ((<IDBRequest>evt.target).result) {
-                    console.log('callback1');
                     ccres((<IDBRequest>evt.target).result.value);
                 }
                 else {
                     let img = new Image();
                     img.src = "/images/tenerife2.png";
                     img.onerror = () => ccrej('Loading terrain image failed');
-                    img.onload = async () => {
-                        let canvas = document.createElement("canvas");
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        let context = canvas.getContext("2d");
-                        context.drawImage(img, 0, 0);
-                        let buffer = <Uint8Array>(<any>context.getImageData(0, 0, img.width, img.height).data);
-                        var vertexData = VERTEX_CreateGroundFromHeightMap({
-                            width: img.width, height: img.height,
-                            subdivisions: 250,
-                            minHeight: -2, maxHeight: 250, colorFilter: new BABYLON.Color3(0.3, 0.59, 0.11),
-                            buffer: buffer, bufferWidth: img.width, bufferHeight: img.height,
-                            alphaFilter: 0.0
-                        });
-                        let obj = {
-                            width: img.width,
-                            height: img.height,
-                            indices: Uint32Array.from(vertexData.indices),
-                            normals: Float32Array.from(vertexData.normals),
-                            positions: Float32Array.from(vertexData.positions),
-                            uvs: Float32Array.from(vertexData.uvs)
-                        };
-                        let trans2 = db.transaction('maps', 'readwrite');
-                        trans2.onerror = ccrej;
-                        trans2.objectStore('maps').add(obj).onsuccess = () => {
-                            trans2.objectStore('maps').openCursor().onsuccess = (e) => {
-                                ccres(<IDBCursorWithValue>(<IDBRequest>e.target).result.value)
+                    img.onload = () => {
+                        try {
+                            progelem.value = 50;
+                            let canvas = document.createElement("canvas");
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            let context = canvas.getContext("2d");
+                            context.drawImage(img, 0, 0);
+                            /*
+                                Uncaught (in promise) RangeError: Failed to execute 'getImageData' on 'CanvasRenderingContext2D': Out of memory at ImageData creation
+                                at Image.img.onload (scene.js:106)
+                            */
+                            let buffer = <Uint8Array>(<any>context.getImageData(0, 0, img.width, img.height).data);
+                            var vertexData = VERTEX_CreateGroundFromHeightMap({
+                                width: img.width, height: img.height,
+                                subdivisions: 250,
+                                minHeight: -2, maxHeight: 250, colorFilter: new BABYLON.Color3(0.3, 0.59, 0.11),
+                                buffer: buffer, bufferWidth: img.width, bufferHeight: img.height,
+                                alphaFilter: 0.0
+                            });
+                            let obj = {
+                                width: img.width,
+                                height: img.height,
+                                indices: Uint32Array.from(vertexData.indices),
+                                normals: Float32Array.from(vertexData.normals),
+                                positions: Float32Array.from(vertexData.positions),
+                                uvs: Float32Array.from(vertexData.uvs)
+                            };
+                            let trans2 = db.transaction('maps', 'readwrite');
+                            trans2.onerror = ccrej;
+                            trans2.objectStore('maps').add(obj).onsuccess = () => {
+                                trans2.objectStore('maps').openCursor().onsuccess = (e) => {
+                                    ccres(<IDBCursorWithValue>(<IDBRequest>e.target).result.value)
+                                }
                             }
+                        } catch (err) {
+                            ccrej(err)
                         }
                     }
                 }
             };
-        }).then(async(vdata: TerrainMap) => {
+        }).then(async (vdata: TerrainMap) => {
+            progelem.value = 60;
             /* Wait webassembly to be initialized so we can use its functions on world modules */
             await Wasm.default();
 
@@ -813,8 +821,10 @@ export class WorldScene extends BABYLON.Scene {
                 } else
                     tres(vdata.texture);
             }).then((b: Blob) => {
+                progelem.value = 70;
                 let img = new Image();
                 img.onload = () => {
+                    progelem.value = 80;
                     let width = 10000;
                     let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
                         _engine: engine,
@@ -868,8 +878,10 @@ export class WorldScene extends BABYLON.Scene {
         });
         this.terrainReady.catch((e) => {
             console.error('creating terrain failed', e);
+            progelem.parentNode.textContent = e;
         })
         this.terrainReady.then((terrain: Terrain) => {
+            progelem.parentElement.style.display = 'none';
             /* Promise.all([CSG.fromMesh(this.mesh), CSG.fromMesh(grassbox)]).then(r => {
                  if (thismeshoperation !== meshoperatiocount) {
                      r[0].dispose();

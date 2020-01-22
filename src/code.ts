@@ -96,8 +96,17 @@ declare global {
     }
 }
 declare var BlazorRouter: DotNet.BlazorInstance;
+let loadelem = document.body.appendChild(document.createElement("div"));
+let progelem = loadelem.appendChild(document.createElement("progress"))
+loadelem.style.position = 'absolute';
+loadelem.style.right= '30%';
+loadelem.style.top = '30%';
+loadelem.style.display = 'none';
 var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
     window.login = async (e: PointerEvent, method: "facebook" | "anomyous") => {
+        loadelem.style.display = 'block';
+        progelem.max = 100;
+        progelem.value = 0;
         if (method == "facebook") {
             FB.login(() => {
                 FB.init({
@@ -108,18 +117,24 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
                 });
                 FB.AppEvents.logPageView();
                 FB.Event.subscribe('auth.login', async (response) => {
+                    progelem.value = 5;
                     (await BlazorRouter).invokeMethod('startGame');
+                    progelem.value = 10;
                     login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID, pointerEvent: e });
                 });
                 FB.getLoginStatus(async (response) => {
                     if (response.status === 'connected') {
+                        progelem.value = 5;
                         (await BlazorRouter).invokeMethod('startGame');
+                        progelem.value = 10;
                         login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID, pointerEvent: e });
                     }
                 });
             }, { scope: "email" });
         } else {
+            progelem.value = 5;
             (await BlazorRouter).invokeMethod('startGame');
+            progelem.value = 10;
             if (typeof (localStorage.accessToken) === 'undefined')
                 localStorage.accessToken = new Date().getTime().toString() + navigator.userAgent;
             login({ provider: 'anomyous', accessToken: localStorage.accessToken, pointerEvent: e });
@@ -129,83 +144,33 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
 
 window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number) {
+        progelem.value = 20;
         var canvas = document.getElementById("renderCanvas");
         if (!canvas || canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
         console.log('init canvas ', ticks)
         var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
-        let loadingBar: HTMLProgressElement = <HTMLProgressElement>document.getElementById('loadingBar');
 
         //document.getElementById('loading').style.display = 'block';
         //loadingBar.value = 10;
         let webSocket = new WebSocket('ws://localhost:8081');
         webSocket.onopen = async () => {
             console.log('websocket onopen');
-            //loadingBar.value = 20;
-            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, webSocket));
+            progelem.value = 30;
+            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, progelem, webSocket));
         }
         webSocket.onerror = async () => {
             console.log('websocket onerror');
-            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks));
+            progelem.value = 30;
+            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, progelem));
         }
     }
 });
 window.sceneInited.then(scene => {
     window.scene = scene;
     scene.collisionsEnabled = true;
-    let TODOut = <HTMLOutputElement>document.getElementById("TODout");
-
     let engine = scene.getEngine();
-
-    let renderFunction = function () {
-        scene.render();
-    }
-    /*let renderLoop = (function (): void {
-        console.log('renderloop');
-        if (!this._contextWasLost) {
-            var shouldRender = true;
-            if (!this.renderEvenInBackground && this._windowIsBackground) {
-                shouldRender = false;
-            }
-            if (shouldRender) {
-                console.log('shouldRender')
-                // Start new frame
-                this.beginFrame();
-                //renderFunction();
-                if (!this._renderViews()) {
-                    // Main frame
-                    this._renderFrame();
-                }
-                // Present
-                this.endFrame();
-            }
-        }
-        //this._frameHandler = this._queueNewFrame(renderLoop, this.getHostWindow());
-        if (this._activeRenderLoops.length > 0) {
-            // Register new frame
-            if (this.customAnimationFrameRequester) {
-                this.customAnimationFrameRequester.requestID = this._queueNewFrame(this.customAnimationFrameRequester.renderFunction || this._boundRenderFunction, this.customAnimationFrameRequester);
-                this._frameHandler = this.customAnimationFrameRequester.requestID;
-            } else if (this.isVRPresenting()) {
-                this._requestVRFrame();
-            } else {
-                this._frameHandler = this._queueNewFrame(this._boundRenderFunction, this.getHostWindow());
-            }
-        } else {
-            this._renderingQueueLaunched = false;
-        }
-    }).bind(engine);
-    //@ts-ignore
-    engine._queueNewFrame(renderLoop);*/
-    //BABYLON.Tools.QueueNewFrame(renderLoop);
-
-
-
-
-    /*engine.runRenderLoop(function () {
-        scene.render();
-    });*/
 
     let rloop = function () {
         var shouldRender = true;
@@ -230,8 +195,8 @@ window.sceneInited.then(scene => {
     for (let i = 0; i < gameControlsUI.length; i++) {
         gameControlsUI[i].classList.remove('hidden');
     }
-        //document.getElementById('loading').style.display = 'none';
-})
+    //document.getElementById('loading').style.display = 'none';
+});
 
 let gameControlsUI = document.getElementsByClassName('gameControl');
 new Promise((resolve, reject) => {
