@@ -13,6 +13,7 @@ import *  as Wasm from "../rustwasm/hello_wasm.js"
 function isPromise(result: BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>): result is Promise<BABYLON.PickingInfo> {
     return (result as Promise<BABYLON.PickingInfo>).then !== undefined;
 }
+
 //import { UI } from "../UI.js";
 class _ClickInfo {
     private _singleClick = false;
@@ -51,6 +52,7 @@ export class WorldScene extends BABYLON.Scene {
     private gameSpeed = BigInt(0);
     private lastStateChangeGameTime = BigInt(21600 * 1000); //6 hours
     private lastStateChangeTime = new Date().getTime();
+    private worker = new WorkerThread('/webworkers/SceneWorker.js');
 
     /*public getGameTime(): bigint {
         if (this.gameSpeed < 0)
@@ -497,6 +499,7 @@ export class WorldScene extends BABYLON.Scene {
                             res(mesh.intersects(ray, fastCheck));
                         }
                     }).then((result: BABYLON.PickingInfo) => {
+                        console.log(result);
                         if (!result || !result.hit)
                             return collissionCheck(++meshIndex, pickResult);
                         if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
@@ -741,9 +744,13 @@ export class WorldScene extends BABYLON.Scene {
                             let context = canvas.getContext("2d");
                             context.drawImage(img, 0, 0);
                             /*
-                                Uncaught (in promise) RangeError: Failed to execute 'getImageData' on 'CanvasRenderingContext2D': Out of memory at ImageData creation
+                                Uncaught (in promise) RangeError: Failed t‰‰‰
+                                
+                                o execute 'getImageData' on 'CanvasRenderingContext2D': Out of memory at ImageData creation
                                 at Image.img.onload (scene.js:106)
                             */
+                            let offscreen=canvas.transferControlToOffscreen();
+                            this.worker.message(WorkerReturn.Promise, 'heightmap', { canvas: offscreen }, [offscreen])
                             let buffer = <Uint8Array>(<any>context.getImageData(0, 0, img.width, img.height).data);
                             var vertexData = VERTEX_CreateGroundFromHeightMap({
                                 width: img.width, height: img.height,

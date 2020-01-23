@@ -83,12 +83,6 @@ class Mesh {
         return pickingInfo;
     }
 }
-let methods3: { [index: string]: (e: WMessage) => void } = {
-    init: (e) => {
-        console.log('initing mesh', e.data)
-        meshes.set(e.data.meshId, new Mesh(e.data.indices, e.data.positions, e.data.normals));
-    }
-}
 onmessage = async (e: WorkerMessage) => {
     if (e.data.action == 'init') {
         meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));

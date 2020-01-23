@@ -157,10 +157,6 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
         methods2.createHeights(e);
         this.postMessage({ id: e.id, data: { } });
     },
-    intersects: (e: WMessage) => {
-        let pickinfo=intersects(e.data.boundingBox, e.data.boundingSphere, e.data.ray, e.data.fastCheck, e.data.trianglePredicate);
-        this.postMessage({ id: e.id, data: { pickinfo: pickinfo } });
-    },
     mousemove: (e: WMessage) => {
         let ray = Ray.Zero();
         /* ray.unprojectRayToRef(e.data.x,

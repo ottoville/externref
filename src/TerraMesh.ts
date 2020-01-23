@@ -102,6 +102,7 @@ export class TerraMesh extends BABYLON.Mesh {
         return this;
     }
     public intersectsPromise(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): Promise<BABYLON.PickingInfo> {
+        console.log('intersectsPromise');
         let bounding = this.getBoundingInfo();
         return TerraMesh.worker.message(WorkerReturn.Promise, 'intersects',
             {
