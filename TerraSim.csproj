@@ -67,6 +67,7 @@
     <None Remove="src\workers\commonMath.d.ts" />
     <None Remove="src\workers\webworkers\mesh.ts" />
     <None Remove="src\workers\webworkers\ray.ts" />
+    <None Remove="src\workers\webworkers\sceneWorker.ts" />
     <None Remove="src\workers\webworkers\terrainWorker.ts" />
     <None Remove="src\world\terrain.ts" />
   </ItemGroup>

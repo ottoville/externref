@@ -51,7 +51,7 @@ export class WorldScene extends BABYLON.Scene {
     private gameSpeed = BigInt(0);
     private lastStateChangeGameTime = BigInt(21600 * 1000); //6 hours
     private lastStateChangeTime = new Date().getTime();
-
+    private worker = new WorkerThread('/webworkers/sceneWorker.js');
     /*public getGameTime(): bigint {
         if (this.gameSpeed < 0)
             return this.lastStateChangeGameTime;
@@ -723,52 +723,41 @@ export class WorldScene extends BABYLON.Scene {
             let db = (await DB);
             let trans = db.transaction('maps');
             trans.onerror = ccrej;
-            trans.objectStore('maps').openCursor().onsuccess = (evt) => {
+            trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
                 progelem.value = 40;
                 if ((<IDBRequest>evt.target).result) {
                     ccres((<IDBRequest>evt.target).result.value);
                 }
                 else {
-                    let img = new Image();
-                    img.src = "/images/tenerife2.png";
-                    img.onerror = () => ccrej('Loading terrain image failed');
-                    img.onload = () => {
-                        try {
-                            progelem.value = 50;
-                            let canvas = document.createElement("canvas");
-                            canvas.width = img.width;
-                            canvas.height = img.height;
-                            let context = canvas.getContext("2d");
-                            context.drawImage(img, 0, 0);
-                            /*
-                                Uncaught (in promise) RangeError: Failed to execute 'getImageData' on 'CanvasRenderingContext2D': Out of memory at ImageData creation
-                                at Image.img.onload (scene.js:106)
-                            */
-                            let buffer = <Uint8Array>(<any>context.getImageData(0, 0, img.width, img.height).data);
-                            var vertexData = VERTEX_CreateGroundFromHeightMap({
-                                width: img.width, height: img.height,
-                                subdivisions: 250,
-                                minHeight: -2, maxHeight: 250, colorFilter: new BABYLON.Color3(0.3, 0.59, 0.11),
-                                buffer: buffer, bufferWidth: img.width, bufferHeight: img.height,
-                                alphaFilter: 0.0
-                            });
-                            let obj = {
-                                width: img.width,
-                                height: img.height,
-                                indices: Uint32Array.from(vertexData.indices),
-                                normals: Float32Array.from(vertexData.normals),
-                                positions: Float32Array.from(vertexData.positions),
-                                uvs: Float32Array.from(vertexData.uvs)
-                            };
-                            let trans2 = db.transaction('maps', 'readwrite');
-                            trans2.onerror = ccrej;
-                            trans2.objectStore('maps').add(obj).onsuccess = () => {
-                                trans2.objectStore('maps').openCursor().onsuccess = (e) => {
-                                    ccres(<IDBCursorWithValue>(<IDBRequest>e.target).result.value)
-                                }
-                            }
-                        } catch (err) {
-                            ccrej(err)
+                /*
+Uncaught (in promise) RangeError: Failed to execute 'getImageData' on 'CanvasRenderingContext2D': Out of memory at ImageData creation
+at Image.img.onload (scene.js:106)
+
+   terrainmap getimagedata took  3641,1757
+*/
+                    let tbuffer = await this.worker.message<{ buffer: Uint8ClampedArray, width: number, height: number }>(WorkerReturn.Promise, 'createHeightMap', {});
+                    progelem.value = 50;
+                    let buffer = new Uint8ClampedArray(tbuffer.buffer);
+                    var vertexData = VERTEX_CreateGroundFromHeightMap({
+                        width: tbuffer.width, height: tbuffer.height,
+                        subdivisions: 250,
+                        minHeight: -2, maxHeight: 250, colorFilter: new BABYLON.Color3(0.3, 0.59, 0.11),
+                        buffer: buffer, bufferWidth: tbuffer.width, bufferHeight: tbuffer.height,
+                        alphaFilter: 0.0
+                    });
+                    let obj = {
+                        width: tbuffer.width,
+                        height: tbuffer.height,
+                        indices: Uint32Array.from(vertexData.indices),
+                        normals: Float32Array.from(vertexData.normals),
+                        positions: Float32Array.from(vertexData.positions),
+                        uvs: Float32Array.from(vertexData.uvs)
+                    };
+                    let trans2 = db.transaction('maps', 'readwrite');
+                    trans2.onerror = ccrej;
+                    trans2.objectStore('maps').add(obj).onsuccess = () => {
+                        trans2.objectStore('maps').openCursor().onsuccess = (e) => {
+                            ccres(<IDBCursorWithValue>(<IDBRequest>e.target).result.value)
                         }
                     }
                 }
@@ -1030,7 +1019,7 @@ export class WorldScene extends BABYLON.Scene {
         }).catch(e => console.log(e));
     }
 }
-function VERTEX_CreateGroundFromHeightMap(options: { width: number, height: number, subdivisions: number, minHeight: number, maxHeight: number, colorFilter: BABYLON.Color3, buffer: Uint8Array, bufferWidth: number, bufferHeight: number, alphaFilter: number }): BABYLON.VertexData {
+function VERTEX_CreateGroundFromHeightMap(options: { width: number, height: number, subdivisions: number, minHeight: number, maxHeight: number, colorFilter: BABYLON.Color3, buffer: Uint8ClampedArray, bufferWidth: number, bufferHeight: number, alphaFilter: number }): BABYLON.VertexData {
     var indices = [];
     var positions = [];
     var normals = [];

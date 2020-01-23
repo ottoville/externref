@@ -165,6 +165,10 @@
         "version": "d0a795a1cb33af85b4532fdcbc119064b75e7844eecb23fefcac66347d897bdf",
         "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
       },
+      "../src/workers/webworkers/sceneworker.ts": {
+        "version": "4b632e66d1b2e4238033383ddf70579a39bf0ee1430df5a012deb378c034d222",
+        "signature": "9e4682e86059b0efbed550e5c3cdc4a7f6fdb094e4efedfe9bd409369533df69"
+      },
       "../src/workers/webworkers/terrainworker.ts": {
         "version": "0e69d2ffd3c21fcb7ea97ab6a02c7ec1a73311b712e42ba971c5ded1b1563281",
         "signature": "dbce43cb76093ddf1f9ffc701708adcad21ff0452d4d238b1cc5817be4957562"
@@ -243,13 +247,14 @@
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts",
       "../src/workers/webworkers/grass.ts",
+      "../src/workers/webworkers/mesh.ts",
       "../src/workers/webworkers/ray.ts",
       "../src/workers/webworkers/terrainworker.ts",
       "../src/workers/sw.ts",
       "../src/workers/commonmath.d.ts",
       "../src/node_modules/@types/color-name/index.d.ts",
       "../src/node_modules/@types/facebook-js-sdk/index.d.ts",
-      "../src/workers/webworkers/mesh.ts"
+      "../src/workers/webworkers/sceneworker.ts"
     ]
   },
   "version": "3.8.0-beta"
