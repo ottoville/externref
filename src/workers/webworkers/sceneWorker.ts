@@ -6,21 +6,41 @@
            
             let bitmap = await createImageBitmap(b);
             let totalbufferdata = new SharedArrayBuffer(bitmap.width * bitmap.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT);
-            let totalbuffer = new Uint8ClampedArray(totalbufferdata);
-            let canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-            let ctx = canvas.getContext("2d");
             let partcount = 2;
-            let split = (bitmap.height / partcount) | 0;
-            let buffersplit = totalbuffer.length / partcount
-            for (let i = 0; i < partcount; i++) {
-                ctx.drawImage(bitmap, 0, i * split, bitmap.width, split, 0, 0, bitmap.height, split);
-                totalbuffer.set(ctx.getImageData(0, 0, bitmap.width, split).data, buffersplit * i);
-                // console.log('subimage length: ',buffer.length)
-                //canvas.transferControlToOffscreen();
-            }
-            this.postMessage({ id: d.id, data: { buffer: totalbufferdata, width: bitmap.width, height: bitmap.height }  });
+            let readycount = 0;
+            let workers = [];
+            let width = bitmap.width;
+            let height = bitmap.height;
+            (function initWorker(bitmap) {
+                let worker = new Worker('bitmapWorker.js');
+                workers.push(worker);
+                worker.postMessage({ bitmap: bitmap, buffer: totalbufferdata, partcount: partcount, partnumber: workers.length-1 }, [bitmap]);
+                
+                worker.onmessage = e => {
+                    if (e.data.type == 'init') {
+                        if (workers.length < partcount) {
+                            bitmap = e.data.bitmap;
+                            initWorker(bitmap);
+                        }
+                    } else {
+                        readycount++;
+                        if (readycount == partcount) {
+                            this.postMessage({ id: d.id, data: { buffer: totalbufferdata, width: width, height: height } });
+                        }
+                    }
+                }
+            })();
+
+           // for (let i = 0; i < partcount; i++) {
+                //ctx.drawImage(bitmap, 0, i * split, bitmap.width, split, 0, 0, bitmap.height, split);
+                //totalbuffer.set(ctx.getImageData(0, 0, bitmap.width, split).data, buffersplit * i);
+           // }
+            //this.postMessage({ id: d.id, data: { buffer: totalbufferdata, width: bitmap.width, height: bitmap.height }  });
         } catch (e) {
-            this.postMessage({ id: d.id, rejected:true, data: e });
+            if (e instanceof DOMException) {
+                this.postMessage({ id: d.id, rejected: true, data: e.message });
+            } else
+                this.postMessage({ id: d.id, rejected: true, data: e });
         }
     }
 }
