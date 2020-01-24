@@ -64,7 +64,6 @@ export class WorldScene extends BABYLON.Scene {
     public terrainReady: Promise<Terrain>;
 
     public stateChange(data) {
-        console.log('state changed', data);
         if (this.webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'stateChange', data }))
             return;
@@ -498,7 +497,6 @@ export class WorldScene extends BABYLON.Scene {
                             res(mesh.intersects(ray, fastCheck));
                         }
                     }).then((result: BABYLON.PickingInfo) => {
-                        console.log(result);
                         if (!result || !result.hit)
                             return collissionCheck(++meshIndex, pickResult);
                         if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
@@ -726,42 +724,48 @@ export class WorldScene extends BABYLON.Scene {
             let trans = db.transaction('maps');
             trans.onerror = ccrej;
             trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
-                progelem.value = 40;
-                if ((<IDBRequest>evt.target).result) {
-                    ccres((<IDBRequest>evt.target).result.value);
-                }
-                else {
-                /*
-Uncaught (in promise) RangeError: Failed to execute 'getImageData' on 'CanvasRenderingContext2D': Out of memory at ImageData creation
-at Image.img.onload (scene.js:106)
-
-   terrainmap getimagedata took  3641,1757
-*/
-                    let tbuffer = await this.worker.message<{ buffer: Uint8ClampedArray, width: number, height: number }>(WorkerReturn.Promise, 'createHeightMap', {});
-                    progelem.value = 50;
-                    let buffer = new Uint8ClampedArray(tbuffer.buffer);
-                    var vertexData = VERTEX_CreateGroundFromHeightMap({
-                        width: tbuffer.width, height: tbuffer.height,
-                        subdivisions: 250,
-                        minHeight: -2, maxHeight: 250, colorFilter: new BABYLON.Color3(0.3, 0.59, 0.11),
-                        buffer: buffer, bufferWidth: tbuffer.width, bufferHeight: tbuffer.height,
-                        alphaFilter: 0.0
-                    });
-                    let obj = {
-                        width: tbuffer.width,
-                        height: tbuffer.height,
-                        indices: Uint32Array.from(vertexData.indices),
-                        normals: Float32Array.from(vertexData.normals),
-                        positions: Float32Array.from(vertexData.positions),
-                        uvs: Float32Array.from(vertexData.uvs)
-                    };
-                    let trans2 = db.transaction('maps', 'readwrite');
-                    trans2.onerror = ccrej;
-                    trans2.objectStore('maps').add(obj).onsuccess = () => {
-                        trans2.objectStore('maps').openCursor().onsuccess = (e) => {
-                            ccres(<IDBCursorWithValue>(<IDBRequest>e.target).result.value)
+                try {
+                    progelem.value = 40;
+                    if ((<IDBRequest>evt.target).result) {
+                        ccres((<IDBRequest>evt.target).result.value);
+                    }
+                    else {
+                        /*
+        Uncaught (in promise) RangeError: Failed to execute 'getImageData' on 'CanvasRenderingContext2D': Out of memory at ImageData creation
+        at Image.img.onload (scene.js:106)
+        
+           terrainmap getimagedata took  3641,1757
+        */
+                        let tbuffer = await this.worker.message<{ buffer: Uint8ClampedArray, width: number, height: number }>(WorkerReturn.Promise, 'createHeightMap', {});
+                        progelem.value = 50;
+                        let buffer = new Uint8ClampedArray(tbuffer.buffer);
+                        console.log('buffer', buffer);
+                        var vertexData = VERTEX_CreateGroundFromHeightMap({
+                            width: tbuffer.width, height: tbuffer.height,
+                            subdivisions: 250,
+                            minHeight: -2, maxHeight: 250, colorFilter: new BABYLON.Color3(0.3, 0.59, 0.11),
+                            buffer: buffer, bufferWidth: tbuffer.width, bufferHeight: tbuffer.height,
+                            alphaFilter: 0.0
+                        });
+                        let obj = {
+                            width: tbuffer.width,
+                            height: tbuffer.height,
+                            indices: Uint32Array.from(vertexData.indices),
+                            normals: Float32Array.from(vertexData.normals),
+                            positions: Float32Array.from(vertexData.positions),
+                            uvs: Float32Array.from(vertexData.uvs)
+                        };
+                        let trans2 = db.transaction('maps', 'readwrite');
+                        trans2.onerror = ccrej;
+                        trans2.objectStore('maps').add(obj).onsuccess = () => {
+                            trans2.objectStore('maps').openCursor().onsuccess = (e) => {
+                                ccres(<IDBCursorWithValue>(<IDBRequest>e.target).result.value)
+                            }
                         }
                     }
+                    /* Uncaught (in promise) The ImageBitmap could not be allocated. */
+                } catch (e) {
+                    ccrej(e);
                 }
             };
         }).then(async (vdata: TerrainMap) => {
