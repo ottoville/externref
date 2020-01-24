@@ -5,11 +5,14 @@
     let totalbuffer = new Uint8ClampedArray(e.data.buffer);
     let buffersplit = totalbuffer.length / e.data.partcount
     let canvas = new OffscreenCanvas(e.data.bitmap.width, e.data.bitmap.height);
-    let ctx = canvas.getContext("2d");
+    let ctx: OffscreenCanvasRenderingContext2D | null;
+    if (ctx = canvas.getContext("2d")) {
+        ctx.drawImage(e.data.bitmap, 0, e.data.partnumber * split, width, split, 0, 0, height, split);
+        self.postMessage({ type: 'init', bitmap: e.data.bitmap }, [e.data.bitmap]);
 
-    ctx.drawImage(e.data.bitmap, 0, e.data.partnumber * split, width, split, 0, 0, height, split);
-    this.postMessage({ type:'init', bitmap: e.data.bitmap }, [e.data.bitmap]);
+        totalbuffer.set(ctx.getImageData(0, 0, width, split).data, buffersplit * e.data.partcount);
+        self.postMessage({ type: 'ready' });
+    }
 
-    totalbuffer.set(ctx.getImageData(0, 0, width, split).data, buffersplit * e.data.partcount);
-    this.postMessage({ type: 'ready' });
+
 }

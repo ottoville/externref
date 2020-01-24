@@ -96,7 +96,7 @@ let _groundFacesNormals: Vector3[];
 let _subdivisionsOfVertices: any[];
 let heightMax = 500;
 let heightMin = -500;
-let _selectedVertices: { vertice: number, distance: number, col: number, row: number }[] = null;
+let _selectedVertices: { vertice: number, distance: number, col: number, row: number }[] | null = null;
 let _subdivisionsY:number;
 let _subdivisionsX:number;
 
@@ -190,7 +190,7 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
         pickInfo = intersects(boundingBox, boundingSphere, ray);
         _selectedVertices = null
         if (pickInfo.pickedPoint) {
-            this.postMessage({ id: e.id, data: { x: pickInfo.pickedPoint.x, y: pickInfo.pickedPoint.z } });
+            self.postMessage({ id: e.id, data: { x: pickInfo.pickedPoint.x, y: pickInfo.pickedPoint.z } });
         }
     },
     elevateFaces: (e: WMessage) => {
@@ -312,7 +312,7 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
                 }*/
             })(positiony);
         });
-        this.postMessage({
+        self.postMessage({
             type: 'bounding', data: {
                 boundingSphereRadius: boundingSphere.radius,
                 boundingBox: { minY: boundingBox.minimum.y, maxY: boundingBox.maximum.y}
@@ -404,7 +404,7 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
                 facet1Arr.set([norm1[0], norm1[1], norm1[2], d1], (row * _subdivisionsX + col) * 4);
                 facet2Arr.set([norm2[0], norm2[1], norm2[2], d2], (row * _subdivisionsX + col) * 4);
             }
-            this.postMessage({
+            self.postMessage({
                 type: 'SubHeights', data: {
                     offsetX: minCol - 1,
                     endX: maxCol + 1,
@@ -413,7 +413,7 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
                 }
             });
         }
-        this.postMessage({ id: e.id, data: { min: min << 2, max: max << 2, normalsMin: normalsMin << 2, normalsMax: normalsMax << 2 } });
+        self.postMessage({ id: e.id, data: { min: min << 2, max: max << 2, normalsMin: normalsMin << 2, normalsMax: normalsMax << 2 } });
 
         //this.postMessage({ type: 'heights', data: {} });
         //methods2.createHeights();
@@ -509,7 +509,7 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
 
             }
         }
-        this.postMessage({ type: 'heights', data: {} });
+        self.postMessage({ type: 'heights', data: {} });
     }
 }
 onmessage = async (e: WorkerMessage) => {
