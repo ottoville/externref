@@ -2,7 +2,6 @@
     createHeightMap: async (d: { id:number, buffer: Uint8ClampedArray, width: number, height: number }) => {
         try {
             let img = await fetch('/images/tenerife2.png');
-            img.
             let b = await img.blob();
 
             let bitmap = await createImageBitmap(b);
