@@ -170,7 +170,7 @@
         "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
       },
       "../src/workers/webworkers/sceneworker.ts": {
-        "version": "05d361bc9d1929d6494a802ad5167e58e2a0e074ddeba3d2efd9b757c6581274",
+        "version": "7bac09dd6d21df8c53fe700ebbb25db9e621806aed6b2714bc5f16c2cd1987aa",
         "signature": "b8b1a48db1211aa89ef48ea475990e6981b32e1a12ec86f7927a1a942c59bf64"
       },
       "../src/workers/webworkers/terrainworker.ts": {
@@ -178,7 +178,7 @@
         "signature": "e786ee6ab9a1d7731cddfc171ba6a914ef616851826edf811b28980427db09ef"
       },
       "../src/workers/sw.ts": {
-        "version": "99f2e010f4dc43cdc978a895f85d5dffa29f321a796b49103061d4fe8e773e7e",
+        "version": "de7f943fed95af250f549b8c29106bc3c76d149b5b9cd292e66557c96febe794",
         "signature": "506a9f6aba443bd1f9cf4471a89ef35a5fa00d6d562e54ede9bb38fe000fbf14"
       },
       "../src/workers/commonmath.d.ts": {
@@ -204,7 +204,6 @@
         "lib.webworker.d.ts"
       ],
       "sourceMap": true,
-      "project": "../src/workers/tsconfig.json",
       "listEmittedFiles": true,
       "locale": "en-US",
       "configFilePath": "../src/workers/tsconfig.json"
@@ -255,11 +254,11 @@
       "../src/workers/webworkers/mesh.ts",
       "../src/workers/webworkers/ray.ts",
       "../src/workers/webworkers/terrainworker.ts",
-      "../src/workers/sw.ts",
       "../src/workers/commonmath.d.ts",
       "../src/node_modules/@types/color-name/index.d.ts",
       "../src/node_modules/@types/facebook-js-sdk/index.d.ts",
-      "../src/workers/webworkers/sceneworker.ts"
+      "../src/workers/webworkers/sceneworker.ts",
+      "../src/workers/sw.ts"
     ]
   },
   "version": "3.8.0-beta"

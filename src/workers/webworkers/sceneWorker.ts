@@ -6,6 +6,7 @@
 
             let bitmap = await createImageBitmap(b);
 
+            /* ReferenceError: SharedArrayBuffer is not defined */
             let totalbufferdata = new SharedArrayBuffer(10000 * 10000 * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT);
 
             let align = (10000 - bitmap.width) / 2

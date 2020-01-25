@@ -16,7 +16,9 @@
       "facebook-js-sdk"
     ],
     "moduleResolution": "node",
-    "allowJs": true
+    "allowJs": true,
+    "incremental": true,
+    "tsBuildInfoFile": "tsconfig.main.tsbuildinfo"
   },
   "include": ["**/*.ts", "**/*.d.ts", "./rustwasm/*.js"],
   "exclude": [

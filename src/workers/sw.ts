@@ -35,6 +35,7 @@ var urlsToCache = [
                 if (response) {
                     return response;
                 }
+                /*TypeError: Failed to execute 'fetch' on 'WorkerGlobalScope': 'only-if-cached' can be set only with 'same-origin' mode*/
                 return fetch(event.request);
             })
         );

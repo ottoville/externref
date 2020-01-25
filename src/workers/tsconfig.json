@@ -5,8 +5,9 @@
     "module": "esnext",
     "target": "esnext",
     "lib": [ "esnext", "webworker" ],
-    "sourceMap": true
-    //"strict": true
+    "sourceMap": true,
+    //"strict": true,
+    "tsBuildInfoFile": "tsconfig.workers.tsbuildinfo"
   },
   "exclude": [
     "node_modules"

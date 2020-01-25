@@ -11,6 +11,8 @@
     <RootNamespace>TerraSim</RootNamespace>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Version>0.1.0</Version>
+	<TypeScriptBuildMode>true</TypeScriptBuildMode>
+
   </PropertyGroup>
 
   <ItemGroup>
