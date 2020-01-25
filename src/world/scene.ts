@@ -735,11 +735,14 @@ export class WorldScene extends BABYLON.Scene {
         at Image.img.onload (scene.js:106)
         
            terrainmap getimagedata took  3641,1757
+
+2383
         */
+                        
                         let tbuffer = await this.worker.message<{ buffer: Uint8ClampedArray, width: number, height: number }>(WorkerReturn.Promise, 'createHeightMap', {});
                         progelem.value = 50;
                         let buffer = new Uint8ClampedArray(tbuffer.buffer);
-                        console.log('buffer', buffer);
+
                         var vertexData = VERTEX_CreateGroundFromHeightMap({
                             width: tbuffer.width, height: tbuffer.height,
                             subdivisions: 250,

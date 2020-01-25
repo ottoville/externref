@@ -2,7 +2,6 @@ var CACHE_NAME = 'terrasim-v1';
 let version = "_VERSION_";
 var urlsToCache = [
     '/',
-    'lib/babylonjs/babylon.js',
     '_framework/_bin/System.dll',
     '_framework/wasm/mono.wasm',
     '_framework/_bin/mscorlib.dll',

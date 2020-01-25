@@ -13,8 +13,7 @@
             let partcount = 4;
             let readycount = 0;
             let workers:Worker[] = [];
-            let width = bitmap.width;
-            let height = bitmap.height;
+
             (function initWorker(bitmap) {
                 let worker = new Worker('bitmapWorker.js');
                 workers.push(worker);
@@ -28,8 +27,7 @@
                             } else
                                 bitmap.close()
                         } else if (e.data.type == 'ready') {
-                            readycount++;
-                            if (readycount == partcount) {
+                            if (++readycount == partcount) {
                                 self.postMessage({ id: d.id, data: { buffer: totalbufferdata, width: 10000, height: 10000 } });
                                 workers.forEach(w => w.terminate())
                             }
