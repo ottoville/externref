@@ -18,57 +18,7 @@ navigator.serviceWorker.register('/sw.js').then(function (registration) {
     console.log('ServiceWorker registration failed: ', err);
 });
 
-//@ts-ignore
-BABYLON.Effect.prototype._loadShader = function (shader: any, key: string, optionalKey: string, callback: (data: any) => void): void {
-    // Direct source ?
-    if (shader.substr(0, 7) === "source:") {
-        callback(shader.substr(7));
-        return;
-    }
-    // Base64 encoded ?
-    if (shader.substr(0, 7) === "base64:") {
-        var vertexBinary = window.atob(shader.substr(7));
-        callback(vertexBinary);
-        return;
-    }
 
-    // Is in local store ?
-    if (BABYLON.Effect.ShadersStore[shader + key + "Shader"]) {
-        callback(BABYLON.Effect.ShadersStore[shader + key + "Shader"]);
-        return;
-    }
-
-    var ShaderUrl;
-
-    if (shader[0] === "." || shader[0] === "/" || shader.indexOf("http") > -1) {
-        ShaderUrl = shader;
-    } else {
-        ShaderUrl = '/shaders/' + shader;
-    }
-    let suffix = key;
-    if (key == 'Vertex')
-        suffix = '.vert';
-    if (key == 'Fragment')
-        suffix = '.frag';
-
-    let url = ShaderUrl + suffix;
-    let onSuccess = callback;
-
-    //@ts-ignore
-    let request = BABYLON.FileTools.RequestFile(url, (data, request) => {
-        onSuccess(data);
-    });
-
-
-    (function () {
-        this._activeRequests.push(request);
-        request.onCompleteObservable.add((request) => {
-            this._activeRequests.splice(this._activeRequests.indexOf(request), 1);
-        });
-    }).bind(this._engine)()
-    return request;
-
-}
 
 
 
@@ -92,12 +42,12 @@ declare global {
     interface Window {
         scene: WorldScene;
         sceneInited: Promise<WorldScene>;
-        login: (e: PointerEvent, method: string) => void
+        login: (e: PointerEvent, method: "facebook" | "anomyous") => void
     }
 }
 declare var BlazorRouter: DotNet.BlazorInstance;
 let loadelem = document.body.appendChild(document.createElement("div"));
-let progelem = loadelem.appendChild(document.createElement("progress"))
+//let progelem = loadelem.appendChild(document.createElement("progress"))
 loadelem.style.position = 'absolute';
 loadelem.style.right= '30%';
 loadelem.style.top = '30%';
@@ -105,8 +55,9 @@ loadelem.style.display = 'none';
 var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
     window.login = async (e: PointerEvent, method: "facebook" | "anomyous") => {
         loadelem.style.display = 'block';
-        progelem.max = 100;
-        progelem.value = 0;
+       // blazor.invokeMethod('setProgress', 0);
+       //progelem.max = 100;
+        //progelem.value = 0;
         if (method == "facebook") {
             FB.login(() => {
                 FB.init({
@@ -117,24 +68,24 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
                 });
                 FB.AppEvents.logPageView();
                 FB.Event.subscribe('auth.login', async (response) => {
-                    progelem.value = 5;
+                    //progelem.value = 5;
                     (await BlazorRouter).invokeMethod('startGame');
-                    progelem.value = 10;
+                    //progelem.value = 10;
                     login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID, pointerEvent: e });
                 });
                 FB.getLoginStatus(async (response) => {
                     if (response.status === 'connected') {
-                        progelem.value = 5;
+                       // progelem.value = 5;
                         (await BlazorRouter).invokeMethod('startGame');
-                        progelem.value = 10;
+                       // progelem.value = 10;
                         login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID, pointerEvent: e });
                     }
                 });
             }, { scope: "email" });
         } else {
-            progelem.value = 5;
+            //progelem.value = 5;
             (await BlazorRouter).invokeMethod('startGame');
-            progelem.value = 10;
+            //progelem.value = 10;
             if (typeof (localStorage.accessToken) === 'undefined')
                 localStorage.accessToken = new Date().getTime().toString() + navigator.userAgent;
             login({ provider: 'anomyous', accessToken: localStorage.accessToken, pointerEvent: e });
@@ -143,27 +94,88 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
 });
 
 window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
-    (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number) {
-        progelem.value = 20;
-        var canvas = document.getElementById("renderCanvas");
-        if (!canvas || canvas.dataset.inited === "true")
+    (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
+        console.log('initCanvas');
+        blazor.invokeMethod('setProgress',10);
+        //progelem.value = 20;
+       // var canvas = document.getElementById("renderCanvas");
+        if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
         console.log('init canvas ', ticks)
         var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
+
+
+        //@ts-ignore
+        BABYLON.Effect.prototype._loadShader = function (shader: any, key: string, optionalKey: string, callback: (data: any) => void): void {
+            // Direct source ?
+            if (shader.substr(0, 7) === "source:") {
+                callback(shader.substr(7));
+                return;
+            }
+            // Base64 encoded ?
+            if (shader.substr(0, 7) === "base64:") {
+                var vertexBinary = window.atob(shader.substr(7));
+                callback(vertexBinary);
+                return;
+            }
+
+            // Is in local store ?
+            if (BABYLON.Effect.ShadersStore[shader + key + "Shader"]) {
+                callback(BABYLON.Effect.ShadersStore[shader + key + "Shader"]);
+                return;
+            }
+
+            var ShaderUrl;
+
+            if (shader[0] === "." || shader[0] === "/" || shader.indexOf("http") > -1) {
+                ShaderUrl = shader;
+            } else {
+                ShaderUrl = '/shaders/' + shader;
+            }
+            let suffix = key;
+            if (key == 'Vertex')
+                suffix = '.vert';
+            if (key == 'Fragment')
+                suffix = '.frag';
+
+            let url = ShaderUrl + suffix;
+            let onSuccess = callback;
+
+            //@ts-ignore
+            let request = BABYLON.FileTools.RequestFile(url, (data, request) => {
+                onSuccess(data);
+            });
+
+            (function () {
+                //@ts-ignore
+                this._activeRequests.push(request);
+                //@ts-ignore
+                request.onCompleteObservable.add((request) => {
+                    //@ts-ignore
+                    this._activeRequests.splice(this._activeRequests.indexOf(request), 1);
+                });
+            }).bind(engine)()
+            return request;
+        }
+
+
+
 
         //document.getElementById('loading').style.display = 'block';
         //loadingBar.value = 10;
         let webSocket = new WebSocket('ws://localhost:8081');
         webSocket.onopen = async () => {
             console.log('websocket onopen');
-            progelem.value = 30;
-            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, progelem, webSocket));
+            blazor.invokeMethod('setProgress', 20);
+           // progelem.value = 30;
+            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, webSocket));
         }
         webSocket.onerror = async () => {
             console.log('websocket onerror');
-            progelem.value = 30;
-            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, progelem));
+            blazor.invokeMethod('setProgress', 20);
+            //progelem.value = 30;
+            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks));
         }
     }
 });

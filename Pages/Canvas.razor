@@ -2,6 +2,7 @@
 @inject IJSRuntime JSRuntime;
 
 @code {
+    ElementReference canvas;
     sbyte gameSpeed = 0;
     long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
     long lastStateChangeTime = DateTime.Now.Ticks;
@@ -22,8 +23,21 @@
 
     protected override void OnAfterRender(bool firstrender)
     {
+
         if (firstrender)
-            JSRuntime.InvokeAsync<object>("initCanvas", DotNetObjectReference.Create(this), lastStateChangeTime);
+        {
+            progress = 0;
+            JSRuntime.InvokeAsync<object>("initCanvas", DotNetObjectReference.Create(this), lastStateChangeTime, canvas);
+        }
+    }
+    [JSInvokable]
+    public void setProgress(byte p, string error=null)
+    {
+        if(error != null)
+        {
+            progressError = error;
+        }
+        progress = p;
     }
     [JSInvokable]
     public Int64 getGameTime()
@@ -109,9 +123,10 @@
         }
 
     }
-    
+    byte progress = 0;
+    string progressError = null;
 }
-<canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:100%;height:100%"></canvas>
+<canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:100%;height:100%" @ref="canvas"></canvas>
 <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;">
     @foreach (var tool in tools2)
     {
@@ -160,3 +175,7 @@
     <input name="time" type="radio" id="fastforward5" value="5" checked="@(gameSpeed == 5)" @onchange="@changeState" />
     <label for="fastforward5">32⏩</label>
 </fieldset>
+<div>
+    <span>@progress % @progressError</span>
+    <progress style="position:absolute; right:30%;top:30%" value="@((double)progress)"></progress>
+</div>

@@ -674,7 +674,7 @@ export class WorldScene extends BABYLON.Scene {
 
         }).bind(this._inputManager)(this)
     }
-    constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number,progelem:HTMLProgressElement, private webSocket?: WebSocket) {
+    constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private webSocket?: WebSocket) {
         super(engine);
         if (webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'init', data: { userinfo, ticks } }));
@@ -725,7 +725,8 @@ export class WorldScene extends BABYLON.Scene {
             trans.onerror = ccrej;
             trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
                 try {
-                    progelem.value = 40;
+                    //progelem.value = 40;
+                    blazor.invokeMethod('setProgress', 30);
                     if ((<IDBRequest>evt.target).result) {
                         ccres((<IDBRequest>evt.target).result.value);
                     }
@@ -752,7 +753,8 @@ export class WorldScene extends BABYLON.Scene {
 
                         let vertexData = await this.worker.message<BABYLON.VertexData>(WorkerReturn.Promise, 'createHeightMap', {});
 
-                        progelem.value = 50;
+                       // progelem.value = 50;
+                        blazor.invokeMethod('setProgress', 40);
                         let obj = {
                             width: 10000,
                             height: 10000,
@@ -775,7 +777,8 @@ export class WorldScene extends BABYLON.Scene {
                 }
             };
         }).then(async (vdata: TerrainMap) => {
-            progelem.value = 60;
+            //progelem.value = 60;
+            blazor.invokeMethod('setProgress', 50);
             /* Wait webassembly to be initialized so we can use its functions on world modules */
             await Wasm.default();
 
@@ -788,12 +791,16 @@ export class WorldScene extends BABYLON.Scene {
 
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-            new Promise(async (tres, trej) => {
+           let createTexture: Promise<Blob> = new Promise(async (tres, trej) => {
                 if (typeof (vdata.texture) === 'undefined') {
                     let c = document.createElement('canvas');
                     c.width = 10000;
                     c.height = 10000;
+
                     let ctx = c.getContext("2d");
+                    if (!ctx)
+                        throw ('get 2d context failed');
+
                     ctx.beginPath();
                     ctx.fillStyle = "#e0e031";
                     ctx.fillRect(0, 0, 10000, 10000);
@@ -814,21 +821,30 @@ export class WorldScene extends BABYLON.Scene {
                             }
                         }
                     }
-                    progelem.value = 65;
+                    //progelem.value = 65;
+                    blazor.invokeMethod('setProgress', 55);
                     c.toBlob(async b => {
-                        vdata.texture = b;
-                        tres(b);
-                        (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
+                        if (b) {
+                            vdata.texture = b;
+                            tres(b);
+                            (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
+                        } else {
+                            trej('To Blob failed')
+                        }
                     }, 'image/webp', 1);
                 } else
                     tres(vdata.texture);
-            }).then((b: Blob) => {
+            });
+            
+            createTexture.then((b: Blob) => {
                 console.log('b value');
                 console.log(b);
-                progelem.value = 70;
+                //progelem.value = 70;
+                blazor.invokeMethod('setProgress', 60);
                 let img = new Image();
                 img.onload = () => {
-                    progelem.value = 80;
+                    //progelem.value = 80;
+                    blazor.invokeMethod('setProgress', 70);
                     let width = 10000;
                     let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
                         _engine: engine,
@@ -867,7 +883,8 @@ export class WorldScene extends BABYLON.Scene {
                     }).bind(shadermateria)();
                     ground.material = shadermateria;
                     this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
-                    progelem.parentElement.style.display = 'none';
+                    //progelem.parentElement.style.display = 'none';
+                    blazor.invokeMethod('setProgress', 100);
                 }
                 /*
                  *  TypeError: Failed to execute 'createObjectURL' on 'URL': No function was found that matched the signature provided.
@@ -882,13 +899,16 @@ export class WorldScene extends BABYLON.Scene {
                 //this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
             }).catch(e => {
                 console.error('creating terrain texture failed', e);
-                progelem.parentNode.textContent = e;
+                //progelem.parentNode.textContent = e;
+                blazor.invokeMethod('setProgress', 0, e);
+
             });
             return ground
         });
         this.terrainReady.catch((e) => {
             console.error('creating terrain failed', e);
-            progelem.parentNode.textContent = e;
+            //progelem.parentNode.textContent = e;
+            blazor.invokeMethod('setProgress', 0, e);
         })
         this.terrainReady.then((terrain: Terrain) => {
             
