@@ -811,6 +811,7 @@ export class WorldScene extends BABYLON.Scene {
                             }
                         }
                     }
+                    progelem.value = 65;
                     c.toBlob(async b => {
                         vdata.texture = b;
                         tres(b);
@@ -819,6 +820,8 @@ export class WorldScene extends BABYLON.Scene {
                 } else
                     tres(vdata.texture);
             }).then((b: Blob) => {
+                console.log('b value');
+                console.log(b);
                 progelem.value = 70;
                 let img = new Image();
                 img.onload = () => {
@@ -861,7 +864,11 @@ export class WorldScene extends BABYLON.Scene {
                     }).bind(shadermateria)();
                     ground.material = shadermateria;
                     this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
+                    progelem.parentElement.style.display = 'none';
                 }
+                /*
+                 *  TypeError: Failed to execute 'createObjectURL' on 'URL': No function was found that matched the signature provided.
+                 * */
                 img.src = URL.createObjectURL(b);
 
 
@@ -870,8 +877,10 @@ export class WorldScene extends BABYLON.Scene {
 
 
                 //this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
+            }).catch(e => {
+                console.error('creating terrain texture failed', e);
+                progelem.parentNode.textContent = e;
             });
-
             return ground
         });
         this.terrainReady.catch((e) => {
@@ -879,7 +888,7 @@ export class WorldScene extends BABYLON.Scene {
             progelem.parentNode.textContent = e;
         })
         this.terrainReady.then((terrain: Terrain) => {
-            progelem.parentElement.style.display = 'none';
+            
             /* Promise.all([CSG.fromMesh(this.mesh), CSG.fromMesh(grassbox)]).then(r => {
                  if (thismeshoperation !== meshoperatiocount) {
                      r[0].dispose();
