@@ -19,6 +19,7 @@
             (function initWorker(bitmap) {
                 let worker = new Worker('bitmapWorker.js');
                 workers.push(worker);
+                self.postMessage({ type: 'setProgress', data: { progress: workers.length } });
                 worker.postMessage({ bitmap: bitmap, buffer: totalbufferdata, partcount: partcount, partnumber: workers.length - 1, align: align }, [bitmap]);
                 worker.onmessage = e => {
                     try {
@@ -27,12 +28,13 @@
                                 bitmap = e.data.bitmap;
                                 initWorker(bitmap);
                             } else {
+                                self.postMessage({ type: 'setProgress', data: { progress: 45 } });
                                 bitmap.close();
-                                self.postMessage({ type: 'setProgress',  data: { progress: 43 } });
+                                self.postMessage({ type: 'setProgress',  data: { progress: 46 } });
                             }
                         } else if (e.data.type == 'ready') {
                             if (++readycount == partcount) {
-                                self.postMessage({ type: 'setProgress', data: { progress: 45 } });
+                                self.postMessage({ type: 'setProgress', data: { progress: 48 } });
                                 self.postMessage({
                                     id: d.id, data: VERTEX_CreateGroundFromHeightMap({
                                         width: 10000, height: 10000,

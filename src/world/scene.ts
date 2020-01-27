@@ -672,7 +672,7 @@ export class WorldScene extends BABYLON.Scene {
 
         }).bind(this._inputManager)(this)
     }
-    constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private webSocket?: WebSocket) {
+    constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine);
         this.worker.subscribe('setProgress', (data) => {
             console.log('got progress from worker', data);
@@ -701,7 +701,7 @@ export class WorldScene extends BABYLON.Scene {
          gameEngine.message(WorkerReturn.noReturn, 'init', {
              gameTime: this.lastStateChangeGameTime
          });*/
-        this.tools['CameraTAB'] = new CameraTAB(this, engine.getRenderingCanvas(), DB);
+        this.tools['CameraTAB'] = new CameraTAB(this, canvas, DB);
 
         //let ui = new UI();
         //ui.registerTab(CameraTab);
@@ -873,6 +873,7 @@ export class WorldScene extends BABYLON.Scene {
 
 
                     (function () {
+                        //@ts-ignore
                         this._options.samplers.push('groundTexture');
                         //@ts-ignore
                         this._textures['groundTexture'] = <BABYLON.Texture>{
@@ -881,10 +882,9 @@ export class WorldScene extends BABYLON.Scene {
                             wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
                             wrapV: BABYLON.Texture.CLAMP_ADDRESSMODE
                         };
-                        return this;
                     }).bind(shadermateria)();
                     ground.material = shadermateria;
-                    this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
+                    this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
                     //progelem.parentElement.style.display = 'none';
                     blazor.invokeMethod('setProgress', 100, null);
                 }
@@ -902,7 +902,7 @@ export class WorldScene extends BABYLON.Scene {
             }).catch(e => {
                 console.error('creating terrain texture failed', e);
                 //progelem.parentNode.textContent = e;
-                blazor.invokeMethod('setProgress', 0, e);
+                blazor.invokeMethod('setProgress', 0, e.name+e.message);
 
             });
             return ground
@@ -910,7 +910,7 @@ export class WorldScene extends BABYLON.Scene {
         this.terrainReady.catch((e) => {
             console.error('creating terrain failed', e);
             //progelem.parentNode.textContent = e;
-            blazor.invokeMethod('setProgress', 0, e);
+            blazor.invokeMethod('setProgress', 0, e.name + e.message);
         })
         this.terrainReady.then((terrain: Terrain) => {
             

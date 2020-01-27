@@ -161,9 +161,6 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             return request;
         }
 
-
-
-
         //document.getElementById('loading').style.display = 'block';
         //loadingBar.value = 10;
         let webSocket = new WebSocket('ws://localhost:8081');
@@ -171,13 +168,13 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             console.log('websocket onopen');
             blazor.invokeMethod('setProgress', 20, null);
            // progelem.value = 30;
-            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, webSocket));
+            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, canvas, webSocket));
         }
         webSocket.onerror = async () => {
             console.log('websocket onerror');
             blazor.invokeMethod('setProgress', 20, null);
             //progelem.value = 30;
-            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks));
+            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, canvas));
         }
     }
 });
