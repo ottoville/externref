@@ -96,9 +96,11 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
 window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
         console.log('initCanvas');
-        blazor.invokeMethod('setProgress',10);
+        blazor.invokeMethod('setProgress',10, null);
         //progelem.value = 20;
        // var canvas = document.getElementById("renderCanvas");
+        console.log('canvas.dataset.inited?');
+        console.log(canvas.dataset.inited)
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
@@ -167,13 +169,13 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         let webSocket = new WebSocket('ws://localhost:8081');
         webSocket.onopen = async () => {
             console.log('websocket onopen');
-            blazor.invokeMethod('setProgress', 20);
+            blazor.invokeMethod('setProgress', 20, null);
            // progelem.value = 30;
             sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, webSocket));
         }
         webSocket.onerror = async () => {
             console.log('websocket onerror');
-            blazor.invokeMethod('setProgress', 20);
+            blazor.invokeMethod('setProgress', 20, null);
             //progelem.value = 30;
             sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks));
         }
