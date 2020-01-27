@@ -15,7 +15,7 @@
             let partcount = 2;
             let readycount = 0;
             let workers: Worker[] = [];
-
+            self.postMessage({ type: 'setProgress',  data: {progress: 42} });
             (function initWorker(bitmap) {
                 let worker = new Worker('bitmapWorker.js');
                 workers.push(worker);
@@ -26,10 +26,13 @@
                             if (workers.length < partcount) {
                                 bitmap = e.data.bitmap;
                                 initWorker(bitmap);
-                            } else
-                                bitmap.close()
+                            } else {
+                                bitmap.close();
+                                self.postMessage({ type: 'setProgress',  data: { progress: 43 } });
+                            }
                         } else if (e.data.type == 'ready') {
                             if (++readycount == partcount) {
+                                self.postMessage({ type: 'setProgress', data: { progress: 45 } });
                                 self.postMessage({
                                     id: d.id, data: VERTEX_CreateGroundFromHeightMap({
                                         width: 10000, height: 10000,

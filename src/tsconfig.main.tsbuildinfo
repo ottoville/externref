@@ -162,11 +162,11 @@
         "signature": "5d75dfe70cf216b378e148535f50b8d313e9a980123af66ad8e3aafb9ceb5a60"
       },
       "./workerthread.ts": {
-        "version": "f63580be6ba96f7f1541bdd013dd0f0b22c2d6817f6094eb6be91fed245e7f4b",
+        "version": "81700d79d37621d6775df63233aa6cd2675f822161663b5ccc3f1daa86c3c8a3",
         "signature": "2c12b1a7eadd425c2ac55ecef823e1defcf47651f161b5ca58f6d20c7ac4d943"
       },
       "./terramesh.ts": {
-        "version": "fc7221dcc8bcbdd96bc33d2f21f24bf9fa2db1a5b016687eed044e9633d2b994",
+        "version": "d9b40614d2b571edefbde74aaf824c1700e9f0cf7eca59768ebcaa79646b1af4",
         "signature": "c1930bd7af0740935315e8d4b5756bd927c2b52c7677827aed580e1d63f1a39e"
       },
       "./uitab.ts": {
@@ -198,7 +198,7 @@
         "signature": "4b7a21e2dded52c755f39716a356a79fddbee5603e7bfeb0e0846ae71bda790b"
       },
       "./paintground/painttexture.ts": {
-        "version": "ee7d1a780ff866dfcdb80aabde4c747ad5c47674efe94b329acbb508bdd613b1",
+        "version": "b2af0719aa0c9884e29b5e9ef398bba0e756f06a92dfeb5d8091601a1ac86510",
         "signature": "44ac9ca7dd03c9eeaf1c0585f0ad8f3aa578e2841c0a30ee38f82c608c893565"
       },
       "./webgl.ts": {
@@ -226,7 +226,7 @@
         "signature": "ea0c02ea7508ff0b462b3c4bdeab0d05789f294f31a020d18081d9370a95821e"
       },
       "./world/scene.ts": {
-        "version": "055d01950a15f4b6a4245004bb357581620121e4c7aa8adc03b1e4d9f5dfcd5f",
+        "version": "bb8a8a8acf2cd0d1f7d338083e93b70fc1bde98c326a5ffba9ea35a0aa34d5af",
         "signature": "6e2fda24f709c1c953e93987d482940cd646302e9e0a152585a7cb0f50432347"
       },
       "./code.ts": {
@@ -506,6 +506,7 @@
       "./tools/buildings.ts",
       "./tools/terrain.ts",
       "./rustwasm/hello_wasm.d.ts",
+      "./code.ts",
       "./commonmath.ts",
       "./paintground/paintline.ts",
       "./plants/grass.ts",
@@ -515,8 +516,7 @@
       "./node_modules/babylonjs/babylon.module.d.ts",
       "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./world/scene.ts",
-      "./code.ts"
+      "./world/scene.ts"
     ]
   },
   "version": "3.8.0-beta"

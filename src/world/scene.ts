@@ -473,9 +473,9 @@ export class WorldScene extends BABYLON.Scene {
                     return scene._tempPickingRay;
                 };
 
-                (function collissionCheck(meshIndex: number, pickResult: BABYLON.PickingInfo | null) {
+                (function collissionCheck(meshIndex: number, pickResult: BABYLON.PickingInfo | null): Promise<BABYLON.PickingInfo | null> {
                     if (meshIndex > scene.meshes.length - 1)
-                        return null;
+                        return new Promise(res => res(null));
                     let mesh = scene.meshes[meshIndex] as Terrain;
 
                     if (scene.pointerDownPredicate) {
@@ -484,16 +484,12 @@ export class WorldScene extends BABYLON.Scene {
                     } else if (!mesh.isEnabled() || !mesh.isVisible || !mesh.isPickable)
                         return collissionCheck(++meshIndex, pickResult);
 
-
-
-
-                    return new Promise((res) => {
+                    return new Promise((res: (pi: BABYLON.PickingInfo) => void) => {
                         var world = mesh.getWorldMatrix();
                         var ray = rayFunction(world);
                         if (typeof (mesh.intersectsPromise) !== 'undefined') {
                             mesh.intersectsPromise(ray, fastCheck).then(res);
                         } else {
-                            
                             res(mesh.intersects(ray, fastCheck));
                         }
                     }).then((result: BABYLON.PickingInfo) => {
@@ -507,12 +503,14 @@ export class WorldScene extends BABYLON.Scene {
                         else
                             return collissionCheck(++meshIndex, result);
                     });
-                })(0, null).then((pickResult: BABYLON.PickingInfo) => {
+                })(0, null).then((pickResult: BABYLON.PickingInfo | null) => {
                     if (pickResult == null)
                         pickResult = new BABYLON.PickingInfo();
-                    if (pickResult)
+                    if (pickResult) {
+                        //@ts-ignore
                         pickResult.ray = scene.createPickingRay(this._unTranslatedPointerX, this._unTranslatedPointerY, BABYLON.Matrix.Identity(), scene.cameraToUseForPointers || null);
-
+                    }
+                    //@ts-ignore
                     this._processPointerDown(pickResult, evt);
                 });
             };
@@ -676,6 +674,10 @@ export class WorldScene extends BABYLON.Scene {
     }
     constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private webSocket?: WebSocket) {
         super(engine);
+        this.worker.subscribe('setProgress', (data) => {
+            console.log('got progress from worker', data);
+            blazor.invokeMethod('setProgress', data.data.progress, data.data.error);
+        });
         if (webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'init', data: { userinfo, ticks } }));
             this.webSocket.onmessage = (e) => {

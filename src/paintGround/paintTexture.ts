@@ -85,19 +85,22 @@ export class paintTexture extends paintGround {
         let pixels: Uint8Array = new Uint8Array(4 * c.width * c.height);
 
         (function (gl: WebGL2RenderingContext) {
+            //@ts-ignore
             if (!this._dummyFramebuffer) {
                 let dummy = gl.createFramebuffer();
 
                 if (!dummy) {
                     throw new Error("Unable to create dummy framebuffer");
                 }
+                //@ts-ignore
                 this._dummyFramebuffer = dummy;
             }
-
+            //@ts-ignore
             gl.bindFramebuffer(gl.FRAMEBUFFER, this._dummyFramebuffer);
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
             gl.readPixels(minX, minZ, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+            //@ts-ignore
             gl.bindFramebuffer(gl.FRAMEBUFFER, this._currentFramebuffer);
 
         }).bind(engine)(gl);

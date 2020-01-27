@@ -13,8 +13,8 @@ interface WorkerMessage extends MessageEvent {
 }
 export class WorkerThread extends Worker {
     private operations: [
-        { (value?: unknown): void },
-        { (value?: unknown): void }
+         (value?: unknown) => void ,
+         (value?: unknown) => void 
     ][] = [];
     private subscriptions: { [key: string]: (value?: unknown) => void; } = {};
     constructor(stringUrl: any, options?: WorkerOptions) {
