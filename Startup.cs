@@ -6,7 +6,8 @@ namespace TerraSim
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            
+            services.AddApplicationInsightsTelemetry();
+
         }
 
         public void Configure(IComponentsApplicationBuilder app)

@@ -12,6 +12,7 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Version>0.1.0</Version>
 	<TypeScriptBuildMode>true</TypeScriptBuildMode>
+	<ApplicationInsightsResourceId>/subscriptions/235f31bd-1e8d-42fa-853a-8610f202e58d/resourcegroups/terrasim-rg/providers/microsoft.insights/components/terrasim</ApplicationInsightsResourceId>
 
   </PropertyGroup>
 
@@ -175,6 +176,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.12.0" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor" Version="3.1.0-preview4.19579.2" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="3.1.0-preview4.19579.2" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.HttpClient" Version="3.1.0-preview4.19579.2" />
@@ -597,6 +599,10 @@
     <None Update="src\rustwasm\hello_wasm.js">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
