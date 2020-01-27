@@ -233,12 +233,13 @@ export class Plants {
         //Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));
 
         let shapebuffer = new BABYLON.Buffer(engine, new Float32Array(shapes), true, 4, false, true);
-        Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, shapebuffer, "shape", true, true, 0, true, 0, 4, undefined, undefined, true));
+        let geometry: BABYLON.Geometry | null;
+        if (geometry = Poaceae._geometry) {
+            geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, shapebuffer, "shape", true, true, 0, true, 0, 4, undefined, undefined, true));
 
-        let noisebuffer = new BABYLON.Buffer(engine, new Float32Array(noises), true, 1, false, true);
-        Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, noisebuffer, "noise", true, true, 0, true, 0, 1, undefined, undefined, true));
-
-
+            let noisebuffer = new BABYLON.Buffer(engine, new Float32Array(noises), true, 1, false, true);
+            geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, noisebuffer, "noise", true, true, 0, true, 0, 1, undefined, undefined, true));
+        }
         this.worker.subscribe('updated', (data) => {
             this.bladesVisible = data.count;
             for (let i = 0; i < data.count; ++i) {

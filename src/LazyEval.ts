@@ -1,6 +1,6 @@
 export class LazyEval {
-    private timerStart: number = null;
-    private timeoutID: number = null;
+    private timerStart: number | null = null;
+    private timeoutID: number = 0;
     private runned:boolean=false;
     constructor(
         private callback: (...args) => void,
@@ -25,7 +25,6 @@ export class LazyEval {
     }
     run(args:any[]) {
         this.timerStart = null;
-        this.timeoutID = null;
         this.callback(...args);
     }
 }

@@ -45,18 +45,23 @@ globalThis.DB = new Promise<EarthDatabase>(function (res, rej) {
         console.log('IDBVersionChangeEvent',e);
         // Save the IDBDatabase interface 
         var db: EarthDatabase = this.result;
-        console.log(db);
+
+        
+
         Object.keys(ObjectStores).forEach((objstore: ObjectStore) => {
             let createdStore :IDBObjectStore 
             if(ObjectStores[objstore].version>e.oldVersion) {
                 createdStore = db.createObjectStore(objstore, ObjectStores[objstore].parameters);
             } else {
+                if (!this.transaction)
+                    throw (new Error('No transaction'));
                 createdStore=this.transaction.objectStore(objstore);
             }
-            if(ObjectStores[objstore].indices) {
-                ObjectStores[objstore].indices.forEach((index) => {
-                    if(e.oldVersion<index.version) {
-                        createdStore.createIndex(index.name,index.keyPath, index.options);
+            let indices: ObjStoreIndex[] | undefined;
+            if (indices = ObjectStores[objstore].indices) {
+                indices.forEach((index) => {
+                    if (e.oldVersion < index.version) {
+                        createdStore.createIndex(index.name, index.keyPath, index.options);
                     }
                 })
             }
@@ -64,7 +69,7 @@ globalThis.DB = new Promise<EarthDatabase>(function (res, rej) {
     };
     IDB.onsuccess = function (event) {
         this.result.onerror = function (e) {
-             console.log(e,(<IDBRequest>e.target).error.message);
+             console.log(e,((<IDBRequest>e.target)!).error!.message);
         }
         res(this.result);
     }

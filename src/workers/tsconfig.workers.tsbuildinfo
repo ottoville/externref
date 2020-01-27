@@ -154,7 +154,7 @@
         "signature": "c799367a4032e7b69c739637db52385c4cbd036882952865c43ebcc52ce5cd44"
       },
       "./webworkers/bitmapworker.ts": {
-        "version": "6cfa10ee1808b9d546ce201cdadde881710e570a1a7a2b7c5244a0dd74f5f53f",
+        "version": "b1ab70eea9560303e46ef7834897165ea9205e78279f1d2f569c280f65c69fad",
         "signature": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "./webworkers/grass.ts": {
@@ -170,7 +170,7 @@
         "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
       },
       "./webworkers/sceneworker.ts": {
-        "version": "1ca2b977567b1a210c1710ac506cfaff7ff9ae1b544c1a29d0f001bc66428bc0",
+        "version": "26e3f6db24c13803551362cca6ab8b3d19bf38e3391152ad4b8f6eded92b9136",
         "signature": "b4db54ba8e510c81f79f482a81027bb327f05054fe853df2d4a15b04c23c78a5"
       },
       "./webworkers/terrainworker.ts": {
@@ -253,13 +253,13 @@
       "./webworkers/grass.ts",
       "./webworkers/mesh.ts",
       "./webworkers/ray.ts",
-      "./webworkers/sceneworker.ts",
       "./webworkers/terrainworker.ts",
       "./sw.ts",
       "./commonmath.d.ts",
       "../node_modules/@types/color-name/index.d.ts",
       "../node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./webworkers/bitmapworker.ts"
+      "./webworkers/bitmapworker.ts",
+      "./webworkers/sceneworker.ts"
     ]
   },
   "version": "3.8.0-beta"

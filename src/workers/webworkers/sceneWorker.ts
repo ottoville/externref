@@ -1,4 +1,5 @@
-﻿let methods4: { [index: string]: (data: any) => void } = {
+﻿/* Progress 40-50 are reserved for this worker */
+let methods4: { [index: string]: (data: any) => void } = {
     createHeightMap: async (d: { id: number, buffer: Uint8ClampedArray, width: number, height: number }) => {
         try {
             let img = await fetch('/images/tenerife3_75.webp');
@@ -15,10 +16,14 @@
             let partcount = 2;
             let readycount = 0;
             let workers: Worker[] = [];
-
+            self.postMessage({ type: 'setProgress',  data: {progress: 41} });
             (function initWorker(bitmap) {
                 let worker = new Worker('bitmapWorker.js');
                 workers.push(worker);
+            /* progress 42 and 43 are reserved for this */
+                console.log('spawning bitmap thread');
+                self.postMessage({ type: 'setProgress', data: { progress: 41 + (2 * (workers.length / partcount)) } });
+                console.log('bitmap thread spawned');
                 worker.postMessage({ bitmap: bitmap, buffer: totalbufferdata, partcount: partcount, partnumber: workers.length - 1, align: align }, [bitmap]);
                 worker.onmessage = e => {
                     try {
@@ -26,10 +31,14 @@
                             if (workers.length < partcount) {
                                 bitmap = e.data.bitmap;
                                 initWorker(bitmap);
-                            } else
-                                bitmap.close()
+                            } else {
+                                self.postMessage({ type: 'setProgress', data: { progress: 45 } });
+                                bitmap.close();
+                                self.postMessage({ type: 'setProgress',  data: { progress: 46 } });
+                            }
                         } else if (e.data.type == 'ready') {
                             if (++readycount == partcount) {
+                                self.postMessage({ type: 'setProgress', data: { progress: 48 } });
                                 self.postMessage({
                                     id: d.id, data: VERTEX_CreateGroundFromHeightMap({
                                         width: 10000, height: 10000,

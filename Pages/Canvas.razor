@@ -20,7 +20,17 @@
             StateHasChanged();
         }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
     }
-
+    [JSInvokable]
+    public void setProgress(byte p, string error = null)
+    {
+        System.Console.WriteLine("setProgress " + p);
+        if (error != null)
+        {
+            progressError = error;
+        }
+        progress = p;
+        this.StateHasChanged();
+    }
     protected override void OnAfterRender(bool firstrender)
     {
 
@@ -30,15 +40,7 @@
             JSRuntime.InvokeAsync<object>("initCanvas", DotNetObjectReference.Create(this), lastStateChangeTime, canvas);
         }
     }
-    [JSInvokable]
-    public void setProgress(byte p, string error=null)
-    {
-        if(error != null)
-        {
-            progressError = error;
-        }
-        progress = p;
-    }
+
     [JSInvokable]
     public Int64 getGameTime()
     {
@@ -103,11 +105,12 @@
     public string showMenu;
     void activateMenu(string tool)
     {
-        if(showMenu == tool)
+        if (showMenu == tool)
         {
-            showMenu=null;
+            showMenu = null;
             JSRuntime.InvokeAsync<string>("scene.tools." + tool + ".deactivate");
-        } else
+        }
+        else
         {
             showMenu = tool;
             System.Console.WriteLine("activateMenu " + tool);
@@ -130,33 +133,33 @@
 <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;">
     @foreach (var tool in tools2)
     {
-    <div class="w3-dropdown-click">
-        <button class="w3-bar-item w3-button @(showMenu==tool.Item3?"w3-green":"")" @onclick="@(e => { activateMenu(tool.Item3); })" style="float:none">@tool.Item2</button>
-        <fieldset class="w3-dropdown-content w3-card-4 w3-show">
-            @if (tool.Item1 == "Zones" && showMenu == "Zones")
-            {
-                <Zones></Zones>
-            }
-            @if (tool.Item1 == "Plants" && showMenu == "Plants")
-            {
-                <Plants></Plants>
-            }
-            @if (tool.Item1 == "Camera" && showMenu == "Camera")
-            {
-                <Camera></Camera>
-            }
-            @if (tool.Item1 == "Buildings" && showMenu == "Buildings")
-            {
-                <Buildings></Buildings>
-            }
-            @if (tool.Item1 == "Terrain" && showMenu == "TerrainTool")
-            {
-                <Terrain></Terrain>
-            }
-        </fieldset>
-    </div>
+        <div class="w3-dropdown-click">
+            <button class="w3-bar-item w3-button @(showMenu==tool.Item3?"w3-green":"")" @onclick="@(e => { activateMenu(tool.Item3); })" style="float:none">@tool.Item2</button>
+            <fieldset class="w3-dropdown-content w3-card-4 w3-show">
+                @if (tool.Item1 == "Zones" && showMenu == "Zones")
+                {
+                    <Zones></Zones>
+                }
+                @if (tool.Item1 == "Plants" && showMenu == "Plants")
+                {
+                    <Plants></Plants>
+                }
+                @if (tool.Item1 == "Camera" && showMenu == "Camera")
+                {
+                    <Camera></Camera>
+                }
+                @if (tool.Item1 == "Buildings" && showMenu == "Buildings")
+                {
+                    <Buildings></Buildings>
+                }
+                @if (tool.Item1 == "Terrain" && showMenu == "TerrainTool")
+                {
+                    <Terrain></Terrain>
+                }
+            </fieldset>
+        </div>
     }
-    </fieldset>
+</fieldset>
 <fieldset class="gameControl hidden" id="gameState" style="position:absolute;bottom:15px;right:15px;background-color:white">
     <label>Time of day: <output id="TODout" fow="TOD">@currentGameTime</output></label>
     <br />
@@ -175,7 +178,10 @@
     <input name="time" type="radio" id="fastforward5" value="5" checked="@(gameSpeed == 5)" @onchange="@changeState" />
     <label for="fastforward5">32⏩</label>
 </fieldset>
-<div>
-    <span>@progress % @progressError</span>
-    <progress style="position:absolute; right:30%;top:30%" value="@((double)progress)"></progress>
-</div>
+@if (@progress < 100)
+{
+    <div style="position:absolute;top:30%; background-color:white;width:100%;text-align:center ">
+        <span>@progress % @progressError</span><br />
+        <progress min="0" max="100" value="@progress"></progress>
+    </div>
+}
