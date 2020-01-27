@@ -24,6 +24,8 @@
     public void setProgress(byte p, string error = null)
     {
         System.Console.WriteLine("setProgress " + p);
+        JSRuntime.InvokeVoidAsync("appInsights.trackEvent", new { progress = p });
+
         if (error != null)
         {
             progressError = error;

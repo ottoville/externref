@@ -234,10 +234,9 @@ export class Plants {
 
         let shapebuffer = new BABYLON.Buffer(engine, new Float32Array(shapes), true, 4, false, true);
         let geometry: BABYLON.Geometry | null;
+        let noisebuffer = new BABYLON.Buffer(engine, new Float32Array(noises), true, 1, false, true);
         if (geometry = Poaceae._geometry) {
             geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, shapebuffer, "shape", true, true, 0, true, 0, 4, undefined, undefined, true));
-
-            let noisebuffer = new BABYLON.Buffer(engine, new Float32Array(noises), true, 1, false, true);
             geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, noisebuffer, "noise", true, true, 0, true, 0, 1, undefined, undefined, true));
         }
         this.worker.subscribe('updated', (data) => {

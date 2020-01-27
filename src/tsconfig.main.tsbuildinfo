@@ -154,7 +154,7 @@
         "signature": "c799367a4032e7b69c739637db52385c4cbd036882952865c43ebcc52ce5cd44"
       },
       "./db.ts": {
-        "version": "e7ab287f57fbc968ee68cc3128bd2095aea958ce4982a38b012aa492afdee55a",
+        "version": "9eadf31538fc6b410ed4c34e3a1b7904dea44b71ebe42498a2ce4e01f25d0d79",
         "signature": "ae1dae60ac4ec7b2640da57ccfb4cc124720d5575be26ef2e61dc296e6b2c097"
       },
       "./lazyeval.ts": {
@@ -182,7 +182,7 @@
         "signature": "506bf9f18157fee7233ba9210c7f5d7cccf345e565e847bad4dd5b35cc7f26c9"
       },
       "./plants/plants.ts": {
-        "version": "f5c4d066384a7c3dfc650551b9ce42a77c2dcac12d082263dc5a58f8017b597d",
+        "version": "0903390fc8faa39b9a6fee7f4d152a45674d006a8fb6b4fb0a6d57ec134bded0",
         "signature": "a33ffac193acff7864634472bcdb758197d57a9cf9563f11d4e3b25c33cc1d70"
       },
       "./paintground/paintground.ts": {
@@ -234,8 +234,8 @@
         "signature": "7bb14ed09d07de3d85469b409069a2f9dffa28c294f39a5744e3d945aeadf265"
       },
       "./commonmath.ts": {
-        "version": "c1a7ca1f75c62660b2870f9b55fd6394563ebea103e96d203d14bd8cf64c2eb8",
-        "signature": "808e6a592f34a106aa83ee53f557c6735c53dd5cc16a168fdd6f941069ab1d96"
+        "version": "257b2ffe948476ab0433142d74252a73d07b3266059d756b7f52f7d917b3cb5c",
+        "signature": "1963562b86d9c48d3fffa4923d9d7b7fdcb30bd26eff2454d5c5df254f55b6f5"
       },
       "./paintground/paintline.ts": {
         "version": "b718e0a71ca655684dd56a326faa29c3be20e0f6c14b1aca204d64d20d5c72f0",
@@ -382,20 +382,35 @@
       ]
     },
     "exportedModulesMap": {
-      "./terramesh.ts": [
-        "./workerthread.ts"
+      "./tools/camera.ts": [
+        "./uitab.ts"
+      ],
+      "./world/scene.ts": [
+        "./world/sun.ts",
+        "./world/terrain.ts",
+        "./uitab.ts"
+      ],
+      "./code.ts": [
+        "./world/scene.ts"
       ],
       "./world/sun.ts": [
         "./world/scene.ts"
       ],
-      "./world/terrain.ts": [
-        "./workerthread.ts",
-        "./terramesh.ts"
-      ],
-      "./plants/plants.ts": [
-        "./world/terrain.ts"
-      ],
       "./paintground/paintground.ts": [
+        "./world/terrain.ts",
+        "./uitab.ts"
+      ],
+      "./paintground/paintline.ts": [
+        "./world/terrain.ts",
+        "./uitab.ts",
+        "./paintground/paintground.ts"
+      ],
+      "./paintground/painttexture.ts": [
+        "./world/terrain.ts",
+        "./uitab.ts",
+        "./paintground/paintground.ts"
+      ],
+      "./tools/zones.ts": [
         "./world/terrain.ts",
         "./uitab.ts"
       ],
@@ -409,37 +424,22 @@
         "./plants/plants.ts",
         "./uitab.ts"
       ],
-      "./paintground/painttexture.ts": [
-        "./world/terrain.ts",
-        "./uitab.ts",
-        "./paintground/paintground.ts"
-      ],
-      "./tools/zones.ts": [
-        "./world/terrain.ts",
-        "./uitab.ts"
-      ],
-      "./tools/camera.ts": [
-        "./uitab.ts"
-      ],
-      "./tools/buildings.ts": [
-        "./uitab.ts"
+      "./plants/plants.ts": [
+        "./world/terrain.ts"
       ],
       "./tools/terrain.ts": [
         "./world/terrain.ts",
         "./uitab.ts"
       ],
-      "./world/scene.ts": [
-        "./world/sun.ts",
-        "./world/terrain.ts",
+      "./tools/buildings.ts": [
         "./uitab.ts"
       ],
-      "./code.ts": [
-        "./world/scene.ts"
+      "./world/terrain.ts": [
+        "./workerthread.ts",
+        "./terramesh.ts"
       ],
-      "./paintground/paintline.ts": [
-        "./world/terrain.ts",
-        "./uitab.ts",
-        "./paintground/paintground.ts"
+      "./terramesh.ts": [
+        "./workerthread.ts"
       ],
       "./node_modules/babylonjs/babylon.module.d.ts": [
         "./node_modules/babylonjs/babylon.module.d.ts"
@@ -450,7 +450,35 @@
       ]
     },
     "semanticDiagnosticsPerFile": [
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es5.d.ts",
+      "./db.ts",
+      "./lazyeval.ts",
+      "./workerthread.ts",
+      "./terramesh.ts",
+      "./uitab.ts",
+      "./world/sun.ts",
+      "./world/terrain.ts",
+      "./plants/plants.ts",
+      "./paintground/paintground.ts",
+      "./paintground/paintplane.ts",
+      "./tools/plantsui.ts",
+      "./paintground/painttexture.ts",
+      "./webgl.ts",
+      "./tools/zones.ts",
+      "./tools/camera.ts",
+      "./tools/buildings.ts",
+      "./tools/terrain.ts",
+      "./rustwasm/hello_wasm.d.ts",
+      "./world/scene.ts",
+      "./code.ts",
+      "./commonmath.ts",
+      "./paintground/paintline.ts",
+      "./plants/grass.ts",
+      "./rustwasm/hello_wasm_bg.d.ts",
+      "./types/interfaces/index.d.ts",
+      "./rustwasm/hello_wasm.js",
+      "./node_modules/babylonjs/babylon.module.d.ts",
+      "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
+      "./node_modules/@types/facebook-js-sdk/index.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2016.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.d.ts",
@@ -458,6 +486,7 @@
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es5.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.dom.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.core.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.collection.d.ts",
@@ -487,36 +516,7 @@
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.promise.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.string.d.ts",
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts",
-      "./db.ts",
-      "./workerthread.ts",
-      "./terramesh.ts",
-      "./uitab.ts",
-      "./world/sun.ts",
-      "./world/terrain.ts",
-      "./plants/plants.ts",
-      "./paintground/paintground.ts",
-      "./paintground/paintplane.ts",
-      "./tools/plantsui.ts",
-      "./paintground/painttexture.ts",
-      "./webgl.ts",
-      "./tools/zones.ts",
-      "./tools/camera.ts",
-      "./tools/buildings.ts",
-      "./tools/terrain.ts",
-      "./rustwasm/hello_wasm.d.ts",
-      "./code.ts",
-      "./commonmath.ts",
-      "./paintground/paintline.ts",
-      "./plants/grass.ts",
-      "./rustwasm/hello_wasm_bg.d.ts",
-      "./types/interfaces/index.d.ts",
-      "./rustwasm/hello_wasm.js",
-      "./node_modules/babylonjs/babylon.module.d.ts",
-      "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
-      "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./lazyeval.ts",
-      "./world/scene.ts"
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts"
     ]
   },
   "version": "3.8.0-beta"
