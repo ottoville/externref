@@ -154,7 +154,7 @@
         "signature": "c799367a4032e7b69c739637db52385c4cbd036882952865c43ebcc52ce5cd44"
       },
       "./webworkers/bitmapworker.ts": {
-        "version": "843970db3ddf31a36ee895869e59488a18b5cdf89a07599953b9fa94403f16b4",
+        "version": "b1ab70eea9560303e46ef7834897165ea9205e78279f1d2f569c280f65c69fad",
         "signature": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "./webworkers/grass.ts": {
@@ -170,7 +170,7 @@
         "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
       },
       "./webworkers/sceneworker.ts": {
-        "version": "22c872e0bf7e29a4ee6b91e1fcdffb15d749518097563cb541684bb7b0de9b38",
+        "version": "26e3f6db24c13803551362cca6ab8b3d19bf38e3391152ad4b8f6eded92b9136",
         "signature": "b4db54ba8e510c81f79f482a81027bb327f05054fe853df2d4a15b04c23c78a5"
       },
       "./webworkers/terrainworker.ts": {
