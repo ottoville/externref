@@ -756,7 +756,7 @@ export class WorldScene extends BABYLON.Scene {
                         let vertexData = await this.worker.message<BABYLON.VertexData>(WorkerReturn.Promise, 'createHeightMap', {});
 
                        // progelem.value = 50;
-                        blazor.invokeMethod('setProgress', 40, null);
+                        blazor.invokeMethod('setProgress', 50, null);
                         let obj = {
                             width: 10000,
                             height: 10000,
@@ -780,7 +780,7 @@ export class WorldScene extends BABYLON.Scene {
             };
         }).then(async (vdata: TerrainMap) => {
             //progelem.value = 60;
-            blazor.invokeMethod('setProgress', 50,null);
+            blazor.invokeMethod('setProgress', 55,null);
             /* Wait webassembly to be initialized so we can use its functions on world modules */
             await Wasm.default();
 
@@ -824,7 +824,7 @@ export class WorldScene extends BABYLON.Scene {
                         }
                     }
                     //progelem.value = 65;
-                    blazor.invokeMethod('setProgress', 55,null);
+                    blazor.invokeMethod('setProgress', 60,null);
                     c.toBlob(async b => {
                         if (b) {
                             vdata.texture = b;
@@ -842,11 +842,11 @@ export class WorldScene extends BABYLON.Scene {
                 console.log('b value');
                 console.log(b);
                 //progelem.value = 70;
-                blazor.invokeMethod('setProgress', 60,null);
+                blazor.invokeMethod('setProgress', 65,null);
                 let img = new Image();
                 img.onload = () => {
                     //progelem.value = 80;
-                    blazor.invokeMethod('setProgress', 70, null);
+                    blazor.invokeMethod('setProgress', 75, null);
                     let width = 10000;
                     let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
                         _engine: engine,

@@ -1,4 +1,5 @@
-﻿let methods4: { [index: string]: (data: any) => void } = {
+﻿/* Progress 40-50 are reserved for this worker */
+let methods4: { [index: string]: (data: any) => void } = {
     createHeightMap: async (d: { id: number, buffer: Uint8ClampedArray, width: number, height: number }) => {
         try {
             let img = await fetch('/images/tenerife3_75.webp');
@@ -15,11 +16,12 @@
             let partcount = 2;
             let readycount = 0;
             let workers: Worker[] = [];
-            self.postMessage({ type: 'setProgress',  data: {progress: 42} });
+            self.postMessage({ type: 'setProgress',  data: {progress: 41} });
             (function initWorker(bitmap) {
                 let worker = new Worker('bitmapWorker.js');
                 workers.push(worker);
-                self.postMessage({ type: 'setProgress', data: { progress: workers.length } });
+                /* progress 42 and 43 are reserved for this */
+                self.postMessage({ type: 'setProgress', data: { progress: 41 + (2 * (workers.length / partcount)) } });
                 worker.postMessage({ bitmap: bitmap, buffer: totalbufferdata, partcount: partcount, partnumber: workers.length - 1, align: align }, [bitmap]);
                 worker.onmessage = e => {
                     try {
