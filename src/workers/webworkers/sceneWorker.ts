@@ -20,8 +20,10 @@ let methods4: { [index: string]: (data: any) => void } = {
             (function initWorker(bitmap) {
                 let worker = new Worker('bitmapWorker.js');
                 workers.push(worker);
-                /* progress 42 and 43 are reserved for this */
+            /* progress 42 and 43 are reserved for this */
+                console.log('spawning bitmap thread');
                 self.postMessage({ type: 'setProgress', data: { progress: 41 + (2 * (workers.length / partcount)) } });
+                console.log('bitmap thread spawned');
                 worker.postMessage({ bitmap: bitmap, buffer: totalbufferdata, partcount: partcount, partnumber: workers.length - 1, align: align }, [bitmap]);
                 worker.onmessage = e => {
                     try {

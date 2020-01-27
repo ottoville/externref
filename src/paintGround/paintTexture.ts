@@ -8,7 +8,7 @@ export class paintTexture extends paintGround {
     private centerX: number;
     private centerZ: number;
     private m1 = new Matrix();
-    private texture: BABYLON.InternalTexture
+    private texture: WebGLTexture
     private gl: WebGL2RenderingContext;
     onMainPointerUp(end_position: Vector2, height: number): void {
         this.height = height;
@@ -35,7 +35,9 @@ export class paintTexture extends paintGround {
         super(canvas, scene, camera, ground, sea, uitab);
         this.centerX = textureWidth / 2;
         this.centerZ = textureHeight / 2;
-        this.texture = <any>zonedt._texture;
+        if (!zonedt._texture || !zonedt._texture._webGLTexture)
+            throw ('zonedt has no texture');
+        this.texture = zonedt._texture._webGLTexture;
         this.gl = <WebGL2RenderingContext><any>scene.getEngine()._gl;
     };
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
@@ -48,13 +50,13 @@ export class paintTexture extends paintGround {
         if (this.ang360.rad < 0) {
             throw ('onAreaDraw negative angle not supported');
         }
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture._webGLTexture);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
         if (this.subTextureCache != null) {
             this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
             this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, this.subTextureCache.x, this.subTextureCache.z, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.subTextureCache.imageData);
             this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
         }
-        paintTexture.drawSubImage(width, this.height, this.ang360.rad, this.m1, this.texture._webGLTexture, this.scene.getEngine(), this.subTextureCache)
+        paintTexture.drawSubImage(width, this.height, this.ang360.rad, this.m1, this.texture, this.scene.getEngine(), this.subTextureCache)
     }
     static drawSubImage(width: number, height: number, rad: number, m1: Matrix, texture: WebGLTexture, engine: BABYLON.Engine, subTextureCache?: { x: number, z: number, imageData: ImageData } | null) {
         let gl: WebGL2RenderingContext = <any>engine._gl;

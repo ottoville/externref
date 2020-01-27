@@ -154,7 +154,7 @@
         "signature": "c799367a4032e7b69c739637db52385c4cbd036882952865c43ebcc52ce5cd44"
       },
       "./webworkers/bitmapworker.ts": {
-        "version": "6cfa10ee1808b9d546ce201cdadde881710e570a1a7a2b7c5244a0dd74f5f53f",
+        "version": "843970db3ddf31a36ee895869e59488a18b5cdf89a07599953b9fa94403f16b4",
         "signature": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "./webworkers/grass.ts": {
@@ -170,7 +170,7 @@
         "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
       },
       "./webworkers/sceneworker.ts": {
-        "version": "f354f2c8a0162ca822df3231f85f3811cfd1d10edf903a34c4d0a3635a0991c9",
+        "version": "22c872e0bf7e29a4ee6b91e1fcdffb15d749518097563cb541684bb7b0de9b38",
         "signature": "b4db54ba8e510c81f79f482a81027bb327f05054fe853df2d4a15b04c23c78a5"
       },
       "./webworkers/terrainworker.ts": {
@@ -250,7 +250,6 @@
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.string.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts",
-      "./webworkers/bitmapworker.ts",
       "./webworkers/grass.ts",
       "./webworkers/mesh.ts",
       "./webworkers/ray.ts",
@@ -259,6 +258,7 @@
       "./commonmath.d.ts",
       "../node_modules/@types/color-name/index.d.ts",
       "../node_modules/@types/facebook-js-sdk/index.d.ts",
+      "./webworkers/bitmapworker.ts",
       "./webworkers/sceneworker.ts"
     ]
   },

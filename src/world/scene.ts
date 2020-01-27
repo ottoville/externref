@@ -679,8 +679,8 @@ export class WorldScene extends BABYLON.Scene {
             blazor.invokeMethod('setProgress', data.data.progress, data.data.error);
         });
         if (webSocket) {
-            this.webSocket.send(JSON.stringify({ action: 'init', data: { userinfo, ticks } }));
-            this.webSocket.onmessage = (e) => {
+            webSocket.send(JSON.stringify({ action: 'init', data: { userinfo, ticks } }));
+            webSocket.onmessage = (e) => {
                 let msg = JSON.parse(e.data);
                 if (msg.action == 'init') {
                     console.log('going to init game', msg.currentPlayData)
@@ -753,7 +753,7 @@ export class WorldScene extends BABYLON.Scene {
                             alphaFilter: 0.0
                         });*/
 
-                        let vertexData = await this.worker.message<BABYLON.VertexData>(WorkerReturn.Promise, 'createHeightMap', {});
+                        let vertexData = await this.worker.message<{ indices: number[], positions: number[], normals: number[], uvs: number[] }, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {});
 
                        // progelem.value = 50;
                         blazor.invokeMethod('setProgress', 50, null);
