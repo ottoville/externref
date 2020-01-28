@@ -23,8 +23,8 @@
     [JSInvokable]
     public void setProgress(byte p, string error = null)
     {
-        System.Console.WriteLine("setProgress " + p);
-        JSRuntime.InvokeVoidAsync("appInsights.trackEvent", new { progress = p });
+        System.Diagnostics.Debug.WriteLine("setProgress " + p);
+        JSRuntime.InvokeVoidAsync("appInsights.trackEvent", new { name = "startprogress_"+p });
 
         if (error != null)
         {
