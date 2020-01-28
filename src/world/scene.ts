@@ -814,7 +814,7 @@ export class WorldScene extends BABYLON.Scene {
                     let minZ = centerZ - c.height
                     ctx.fillStyle = "green";
                     await ground.inited;
-                    console.log('ground ready');
+                    console.debug('ground ready');
                     for (let row = centerX - c.width + 1; row < centerX; row = row + 2) {
                         for (let col = minZ + 1; col < centerZ; col = col += 2) {
                             let height = ground.getHeightAtCoordinates(row, col)
@@ -826,10 +826,14 @@ export class WorldScene extends BABYLON.Scene {
                     //progelem.value = 65;
                     blazor.invokeMethod('setProgress', 60,null);
                     c.toBlob(async b => {
+                        console.debug('blob ready');
+                        blazor.invokeMethod('setProgress', 63, null);
                         if (b) {
                             vdata.texture = b;
                             tres(b);
-                            (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
+                            queueMicrotask(async () => {
+                                (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
+                            });
                         } else {
                             trej('To Blob failed')
                         }
@@ -839,8 +843,7 @@ export class WorldScene extends BABYLON.Scene {
             });
             
             createTexture.then((b: Blob) => {
-                console.log('b value');
-                console.log(b);
+                console.debug('createTexture ready');
                 //progelem.value = 70;
                 blazor.invokeMethod('setProgress', 65,null);
                 let img = new Image();
