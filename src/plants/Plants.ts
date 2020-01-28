@@ -239,6 +239,9 @@ export class Plants {
             geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, shapebuffer, "shape", true, true, 0, true, 0, 4, undefined, undefined, true));
             geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, noisebuffer, "noise", true, true, 0, true, 0, 1, undefined, undefined, true));
         }
+        let glsbuffer: WebGLBuffer = shapebuffer.getBuffer()!.underlyingResource;
+        let glnoisebuffer: WebGLBuffer = noisebuffer.getBuffer()!.underlyingResource;
+
         this.worker.subscribe('updated', (data) => {
             this.bladesVisible = data.count;
             for (let i = 0; i < data.count; ++i) {
@@ -247,9 +250,9 @@ export class Plants {
             }
             gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));
-            gl.bindBuffer(gl.ARRAY_BUFFER, shapebuffer.getBuffer().underlyingResource);
+            gl.bindBuffer(gl.ARRAY_BUFFER, glsbuffer);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(shapes));
-            gl.bindBuffer(gl.ARRAY_BUFFER, noisebuffer.getBuffer().underlyingResource);
+            gl.bindBuffer(gl.ARRAY_BUFFER, glnoisebuffer);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(noises));
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
         });

@@ -22,15 +22,20 @@ export class BuildingsUI extends UITAB {
         if(type == 'house') {
             this.canvas.addEventListener("pointerdown", function doHouse() {
                 this.removeEventListener("pointerdown", doHouse);
-                var pickInfo = scene.pick(scene.pointerX, scene.pointerY, (m) => {
+                let pickInfo: BABYLON.PickingInfo | null;
+                if (pickInfo = scene.pick(scene.pointerX, scene.pointerY, (m) => {
                     return true;
-                });
-                let height = 7;
-                var myBox = BABYLON.MeshBuilder.CreateBox("myBox", { height: height, width: 8, depth: 8 }, scene);
-                myBox.position.x = pickInfo.pickedPoint.x;
-                myBox.position.z = pickInfo.pickedPoint.z;
-                myBox.position.y = pickInfo.pickedPoint.y + (height*0.5)-0.5;
-                console.log(pickInfo);
+                })) {
+                    if (pickInfo.pickedPoint) {
+                        let height = 7;
+                        var myBox = BABYLON.MeshBuilder.CreateBox("myBox", { height: height, width: 8, depth: 8 }, scene);
+                        myBox.position.x = pickInfo.pickedPoint.x;
+                        myBox.position.z = pickInfo.pickedPoint.z;
+                        myBox.position.y = pickInfo.pickedPoint.y + (height * 0.5) - 0.5;
+                        console.log(pickInfo);
+                    }
+                }
+
             }, false);
         }
     }

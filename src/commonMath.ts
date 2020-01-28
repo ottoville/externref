@@ -70,6 +70,9 @@ class Angle {
     get rad(): number {
         if (typeof (this._rad) === 'number')
             return this._rad;
+        if (typeof (this._deg) == 'undefined') {
+            throw (new Error('Broken Angle instance'));
+        }
         this._rad = Math.abs(this._deg * Math.PI / 180);
         return this._rad;
     }
