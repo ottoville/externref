@@ -166,7 +166,7 @@
         "signature": "6a9168f9d59fea88fd3db7eed3e91552d463b67c3e54408294f9112ca70d43e9"
       },
       "./terramesh.ts": {
-        "version": "d9b40614d2b571edefbde74aaf824c1700e9f0cf7eca59768ebcaa79646b1af4",
+        "version": "34cb4ad2d87d4cbe0acc32f3ff691f32de082be50ed5f1d1c759e22022a03984",
         "signature": "c1930bd7af0740935315e8d4b5756bd927c2b52c7677827aed580e1d63f1a39e"
       },
       "./uitab.ts": {
@@ -178,11 +178,11 @@
         "signature": "6c373ca5d35c73904132d88446bec36b0b45d0bb9757c1a1e5e62a6a6c9e9540"
       },
       "./world/terrain.ts": {
-        "version": "f279bc98ea04b589f48f51ccadcd614656c7adec9b1c3ccfa344f4d3b5224737",
-        "signature": "506bf9f18157fee7233ba9210c7f5d7cccf345e565e847bad4dd5b35cc7f26c9"
+        "version": "d62e82d35da475a08ee3ab50e303a944db236d522baa1c6c99f6b7e83468ba9e",
+        "signature": "3609a41307aa7892a5f8d5a1c92a077cafe4b1ed2a38d87965eeca4d5ed6ce66"
       },
       "./plants/plants.ts": {
-        "version": "0903390fc8faa39b9a6fee7f4d152a45674d006a8fb6b4fb0a6d57ec134bded0",
+        "version": "76a30d01a67679ee295cb158522faeafd13a9d1c496f0f5e502124404be009a8",
         "signature": "a33ffac193acff7864634472bcdb758197d57a9cf9563f11d4e3b25c33cc1d70"
       },
       "./paintground/paintground.ts": {
@@ -214,7 +214,7 @@
         "signature": "6fca0c2e799809d8570cb4b17047f1d790f9c7da55d6f055859888227a212b84"
       },
       "./tools/buildings.ts": {
-        "version": "aba17c29a94459c79afae1756dbd83bd4da8a432d3d2b5606afa24be8c149da5",
+        "version": "c0adaa36bbff4c070cafeec0e4ee048e4490dae2090f51e13a99b949832220b1",
         "signature": "ac9512fff781783e8fa6205fa14feb1f3d7c8cbcaead0aaa9cd7fec586e0b85a"
       },
       "./tools/terrain.ts": {
@@ -222,11 +222,11 @@
         "signature": "2b2f3632c4d649d2bbe33a984d66084aad77c27806598fb2a515a80f3cbfe738"
       },
       "./rustwasm/hello_wasm.d.ts": {
-        "version": "ea0c02ea7508ff0b462b3c4bdeab0d05789f294f31a020d18081d9370a95821e",
-        "signature": "ea0c02ea7508ff0b462b3c4bdeab0d05789f294f31a020d18081d9370a95821e"
+        "version": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c",
+        "signature": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c"
       },
       "./world/scene.ts": {
-        "version": "f06dc6512d7f32171de80219057c381fafa84cc05c5a070776e2a07f8f84c23f",
+        "version": "85623edd6a0c0b87ce305ad09c4d583d21f2d9e27c39cdfedd8a61e24a2b1631",
         "signature": "16461b22e5855b9e0bc7d37295ac18585dd07fda1ecddba8eeb02f41259f62e6"
       },
       "./code.ts": {
@@ -234,7 +234,7 @@
         "signature": "7bb14ed09d07de3d85469b409069a2f9dffa28c294f39a5744e3d945aeadf265"
       },
       "./commonmath.ts": {
-        "version": "257b2ffe948476ab0433142d74252a73d07b3266059d756b7f52f7d917b3cb5c",
+        "version": "1d129d31aa7ddc17b6f5b96bc563b606a7cb53bd54f9ed247ed8b6e816b3c4a0",
         "signature": "1963562b86d9c48d3fffa4923d9d7b7fdcb30bd26eff2454d5c5df254f55b6f5"
       },
       "./paintground/paintline.ts": {
@@ -246,16 +246,16 @@
         "signature": "0a41ea16e99415f020cc8e313456b43b97aee60bee33a25fed49731e7ca8fc33"
       },
       "./rustwasm/hello_wasm_bg.d.ts": {
-        "version": "10a068d4c08aa3ab46e55f04e8c3851581aa0688b0512a3e9c95a086b64ebaa5",
-        "signature": "10a068d4c08aa3ab46e55f04e8c3851581aa0688b0512a3e9c95a086b64ebaa5"
+        "version": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86",
+        "signature": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86"
       },
       "./types/interfaces/index.d.ts": {
         "version": "6be1ca6b1a624640969bdc5c3e2a32f20a4e28b28941e43896f0478a4474e792",
         "signature": "6be1ca6b1a624640969bdc5c3e2a32f20a4e28b28941e43896f0478a4474e792"
       },
       "./rustwasm/hello_wasm.js": {
-        "version": "cc0713228d320e62237a79cad4bf1351c58bcefa0a826281785537219da26e63",
-        "signature": "695c0b9b7387a6b3276860287f351c5248449f35de92e2c180512bb44339ef6f"
+        "version": "6a46400090dd40da2263903087a43a1de57d6db13fe10c05852c18360dc809d4",
+        "signature": "ce7196f043e593877984a7c982df828e9f356e408ce4d35a0a2c542aec421000"
       },
       "./node_modules/babylonjs/babylon.module.d.ts": {
         "version": "5d4a4dd8ffc2a980dff6e4a9c8c86dc9d21df42912ff33403c0e749a187f7ad9",
@@ -506,17 +506,17 @@
       "./tools/buildings.ts",
       "./tools/terrain.ts",
       "./rustwasm/hello_wasm.d.ts",
+      "./world/scene.ts",
       "./code.ts",
       "./commonmath.ts",
       "./paintground/paintline.ts",
       "./plants/grass.ts",
       "./rustwasm/hello_wasm_bg.d.ts",
       "./types/interfaces/index.d.ts",
-      "./rustwasm/hello_wasm.js",
       "./node_modules/babylonjs/babylon.module.d.ts",
       "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./world/scene.ts"
+      "./rustwasm/hello_wasm.js"
     ]
   },
   "version": "3.8.0-beta"

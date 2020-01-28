@@ -818,7 +818,6 @@ export class WorldScene extends BABYLON.Scene {
                     blazor.invokeMethod('setProgress', 57, null);
                     for (let row = centerX - c.width + 1; row < centerX; row = row + 2) {
                         /* Progress 58, 59 and 60 are reserved for this */
-                        blazor.invokeMethod('setProgress', 58 + (3 * (row / centerX)), null);
                         
                         for (let col = minZ + 1; col < centerZ; col = col += 2) {
                             let height = ground.getHeightAtCoordinates(row, col)

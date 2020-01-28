@@ -75,10 +75,15 @@ export class TerraMesh extends BABYLON.Mesh {
                 subMesh._lastColliderTransformMatrix = collisionsTransformMatrix.clone();
                 subMesh._lastColliderWorldVertices = [];
                 subMesh._trianglePlanes = [];
-                for (let i = 0; i < this.positions.length / 3; i++) {
-                    let transformed = this.wasm.transformcoordinatesfromfloats(this.positions[i * 3], this.positions[i * 3 + 1] + 20, this.positions[i * 3 + 2], collisionsTransformMatrix.m as Float32Array)
-                    subMesh._lastColliderWorldVertices.push(new BABYLON.Vector3(transformed[0], transformed[1], transformed[2]))
+
+                let transformed = this.wasm.calculatelastcolliderworldvertices(this.positions, collisionsTransformMatrix.m as Float32Array);
+                for (let i = 0; i < transformed.length / 3; i++) {
+                    subMesh._lastColliderWorldVertices.push(new BABYLON.Vector3(transformed[i * 3], transformed[i * 3 + 1], transformed[i * 3+2]));
                 }
+                /*for (let i = 0; i < this.positions.length / 3; i++) {
+                    let transformed = this.wasm.transformcoordinatesfromfloats(this.positions[i * 3], this.positions[i * 3 + 1] + 20, this.positions[i * 3 + 2], collisionsTransformMatrix.m as Float32Array)
+                    subMesh._lastColliderWorldVertices.push(new BABYLON.Vector3(transformed[0], transformed[1], transformed[2]));
+                }*/
             }
 
             // Collide
