@@ -166,8 +166,8 @@
         "signature": "6a9168f9d59fea88fd3db7eed3e91552d463b67c3e54408294f9112ca70d43e9"
       },
       "./terramesh.ts": {
-        "version": "65c108efba0fb993574810013ce9bf14dc716df8951952a0432efc99f9dee1ac",
-        "signature": "c1930bd7af0740935315e8d4b5756bd927c2b52c7677827aed580e1d63f1a39e"
+        "version": "ea028a9a1282a8187e98a526a76d8e68f027bfebe67a4236854ff14b34cd5764",
+        "signature": "f2ca71c1f7b51109da248563497db44de57b86e2fa14ce03f204537f182e6c39"
       },
       "./uitab.ts": {
         "version": "1eab8f32de097f9a100604ab9311ea902dff9cd81b5a98d9fbac9557a1f7158e",
@@ -226,7 +226,7 @@
         "signature": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c"
       },
       "./world/scene.ts": {
-        "version": "85623edd6a0c0b87ce305ad09c4d583d21f2d9e27c39cdfedd8a61e24a2b1631",
+        "version": "054c708b39beaab63743194e6f4b649a37df01928df24de0d4ad8114e800da5a",
         "signature": "16461b22e5855b9e0bc7d37295ac18585dd07fda1ecddba8eeb02f41259f62e6"
       },
       "./code.ts": {
@@ -491,6 +491,7 @@
       "./db.ts",
       "./lazyeval.ts",
       "./workerthread.ts",
+      "./terramesh.ts",
       "./uitab.ts",
       "./world/sun.ts",
       "./world/terrain.ts",
@@ -505,7 +506,6 @@
       "./tools/buildings.ts",
       "./tools/terrain.ts",
       "./rustwasm/hello_wasm.d.ts",
-      "./world/scene.ts",
       "./code.ts",
       "./commonmath.ts",
       "./paintground/paintline.ts",
@@ -516,7 +516,7 @@
       "./node_modules/babylonjs/babylon.module.d.ts",
       "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./terramesh.ts"
+      "./world/scene.ts"
     ]
   },
   "version": "3.8.0-beta"

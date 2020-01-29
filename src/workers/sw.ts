@@ -3,7 +3,7 @@ let version = "_VERSION_";
 var urlsToCache = [
     '/',
     '_framework/_bin/System.dll',
-    '_framework/wasm/mono.wasm',
+    '_framework/wasm/dotnet.wasm',
     '_framework/_bin/mscorlib.dll',
     '_framework/_bin/System.Core.dll',
     '_framework/_bin/System.Text.Json.dll'

@@ -1,22 +1,21 @@
-﻿using Microsoft.AspNetCore.Blazor.Hosting;
-using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Text;
+using Microsoft.AspNetCore.Blazor.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TerraSim
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            CultureInfo.CurrentCulture = new CultureInfo("fi-FI");
-            //CreateHostBuilder(args).Build().Run();
+            var builder = WebAssemblyHostBuilder.CreateDefault(args);
+            builder.RootComponents.Add<App>("app");
+            //builder.Services.AddApplicationInsightsTelemetry();
 
-            BlazorWebAssemblyHost.CreateDefaultBuilder()
-                .UseBlazorStartup<Startup>().Build().Run(); 
+            await builder.Build().RunAsync();
         }
-
-       /* public static IWebAssemblyHostBuilder CreateHostBuilder(string[] args) {
-            return BlazorWebAssemblyHost.CreateDefaultBuilder()
-                .UseBlazorStartup<Startup>();
-        }*/
     }
 }

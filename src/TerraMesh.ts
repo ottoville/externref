@@ -113,4 +113,154 @@ export class TerraMesh extends BABYLON.Mesh {
                 args: [bounding.boundingBox, bounding.boundingSphere, ray.origin, ray.direction, fastCheck, trianglePredicate]
             });
     }
+    public render(subMesh: BABYLON.SubMesh, enableAlphaMode: boolean, effectiveMeshReplacement?: BABYLON.AbstractMesh): BABYLON.Mesh {
+        if (this._internalAbstractMeshDataInfo._isActiveIntermediate) {
+            this._internalAbstractMeshDataInfo._isActiveIntermediate = false;
+        } else {
+            this._internalAbstractMeshDataInfo._isActive = false;
+        }
+
+        if (this._checkOcclusionQuery()) {
+            return this;
+        }
+
+        //  @ts-ignore Managing instances
+        var batch = this._getInstancesRenderList(subMesh._id, !!effectiveMeshReplacement);
+
+        if (batch.mustReturn) {
+            return this;
+        }
+
+        // Checking geometry state
+        if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
+            return this;
+        }
+        (function () {
+            if (this._internalMeshDataInfo._onBeforeRenderObservable) {
+                this._internalMeshDataInfo._onBeforeRenderObservable.notifyObservers(this);
+            }
+        }).bind(this)()
+
+        var engine = this._scene.getEngine();
+        var hardwareInstancedRendering = batch.hardwareInstancedRendering[subMesh._id];
+        let instanceDataStorage = this._instanceDataStorage;
+
+        let material = subMesh.getMaterial();
+
+        if (!material) {
+            return this;
+        }
+
+        // @ts-ignore Material
+        if (!instanceDataStorage.isFrozen || !this._effectiveMaterial || this._effectiveMaterial !== material) {
+            if (material._storeEffectOnSubMeshes) {
+                if (!material.isReadyForSubMesh(this, subMesh, hardwareInstancedRendering)) {
+                    return this;
+                }
+            } else if (!material.isReady(this, hardwareInstancedRendering)) {
+                return this;
+            }
+            //@ts-ignore
+            this._effectiveMaterial = material;
+        }
+
+        // Alpha mode
+        if (enableAlphaMode) {
+            //@ts-ignore
+            engine.setAlphaMode(this._effectiveMaterial.alphaMode);
+        }
+
+        for (let step of this._scene._beforeRenderingMeshStage) {
+            step.action(this, subMesh, batch);
+        }
+
+        var effect: Nullable<BABYLON.Effect>;
+        //@ts-ignore
+        if (this._effectiveMaterial._storeEffectOnSubMeshes) {
+            effect = subMesh.effect;
+        } else {
+            //@ts-ignore
+            effect = this._effectiveMaterial.getEffect();
+        }
+
+        if (!effect) {
+            return this;
+        }
+
+        const effectiveMesh = effectiveMeshReplacement || this._effectiveMesh;
+
+        var sideOrientation: Nullable<number>;
+        //@ts-ignore
+        if (!instanceDataStorage.isFrozen && this._effectiveMaterial.backFaceCulling) {
+            let mainDeterminant = effectiveMesh._getWorldMatrixDeterminant();
+            sideOrientation = this.overrideMaterialSideOrientation;
+            if (sideOrientation == null) {
+                //@ts-ignore
+                sideOrientation = this._effectiveMaterial.sideOrientation;
+            }
+            if (mainDeterminant < 0) {
+                sideOrientation = (sideOrientation === BABYLON.Material.ClockWiseSideOrientation ? BABYLON.Material.CounterClockWiseSideOrientation : BABYLON.Material.ClockWiseSideOrientation);
+            }
+            instanceDataStorage.sideOrientation = sideOrientation!;
+        } else {
+            sideOrientation = instanceDataStorage.sideOrientation;
+        }
+        //@ts-ignore
+        var reverse = this._effectiveMaterial._preBind(effect, sideOrientation);
+        //@ts-ignore
+        if (this._effectiveMaterial.forceDepthWrite) {
+            engine.setDepthWrite(true);
+        }
+
+        // Bind
+        //@ts-ignore
+        var fillMode = scene.forcePointsCloud ? BABYLON.Material.PointFillMode : (scene.forceWireframe ? BABYLON.Material.WireFrameFillMode : this._effectiveMaterial.fillMode);
+        //@ts-ignore
+        if (this._internalMeshDataInfo._onBeforeBindObservable) {
+            //@ts-ignore
+            this._internalMeshDataInfo._onBeforeBindObservable.notifyObservers(this);
+        }
+
+        if (!hardwareInstancedRendering) { // Binding will be done later because we need to add more info to the VB
+            this._bind(subMesh, effect, fillMode);
+        }
+
+        var world = effectiveMesh.getWorldMatrix();
+        //@ts-ignore
+        if (this._effectiveMaterial._storeEffectOnSubMeshes) {
+            //@ts-ignore
+            this._effectiveMaterial.bindForSubMesh(world, this, subMesh);
+        } else {
+            //@ts-ignore
+            this._effectiveMaterial.bind(world, this);
+        }
+        //@ts-ignore
+        if (!this._effectiveMaterial.backFaceCulling && this._effectiveMaterial.separateCullingPass) {
+            //@ts-ignore
+            engine.setState(true, this._effectiveMaterial.zOffset, false, !reverse);
+            //@ts-ignore
+            this._processRendering(subMesh, effect, fillMode, batch, hardwareInstancedRendering, this._onBeforeDraw, this._effectiveMaterial);
+            //@ts-ignore
+            engine.setState(true, this._effectiveMaterial.zOffset, false, reverse);
+        }
+
+        // Draw
+        //@ts-ignore
+        this._processRendering(subMesh, effect, fillMode, batch, hardwareInstancedRendering, this._onBeforeDraw, this._effectiveMaterial);
+
+        // Unbind
+        //@ts-ignore
+        this._effectiveMaterial.unbind();
+
+        for (let step of this._scene._afterRenderingMeshStage) {
+            step.action(this, subMesh, batch);
+        }
+        //@ts-ignore
+        if (this._internalMeshDataInfo._onAfterRenderObservable) {
+            //@ts-ignore
+            this._internalMeshDataInfo._onAfterRenderObservable.notifyObservers(this);
+        }
+        return this;
+    }
+
 }
