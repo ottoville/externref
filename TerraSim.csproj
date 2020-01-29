@@ -514,17 +514,14 @@
     <None Include="src\node_modules\wordwrap\README.markdown" />
     <None Include="src\node_modules\wordwrap\test\break.js" />
     <None Include="src\node_modules\wordwrap\test\wrap.js" />
-    <None Include="wwwroot\js\code.js" />
     <None Include="wwwroot\js\commonMath.js" />
     <None Include="wwwroot\js\DB.js" />
     <None Include="wwwroot\js\LazyEval.js" />
-    <None Include="wwwroot\js\paintGround.js" />
     <None Include="wwwroot\js\plants\grass.js" />
     <None Include="wwwroot\js\plants\Plants.js" />
     <None Include="wwwroot\js\tools\camera.js" />
     <None Include="wwwroot\js\tools\plantsUI.js" />
     <None Include="wwwroot\js\tools\zones.js" />
-    <None Include="wwwroot\js\triginometry.js" />
     <None Include="wwwroot\js\UITAB.js" />
     <None Include="wwwroot\js\WorkerThread.js" />
     <None Include="wwwroot\js\world\scene.js" />

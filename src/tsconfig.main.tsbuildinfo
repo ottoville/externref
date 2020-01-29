@@ -166,7 +166,7 @@
         "signature": "6a9168f9d59fea88fd3db7eed3e91552d463b67c3e54408294f9112ca70d43e9"
       },
       "./terramesh.ts": {
-        "version": "34cb4ad2d87d4cbe0acc32f3ff691f32de082be50ed5f1d1c759e22022a03984",
+        "version": "65c108efba0fb993574810013ce9bf14dc716df8951952a0432efc99f9dee1ac",
         "signature": "c1930bd7af0740935315e8d4b5756bd927c2b52c7677827aed580e1d63f1a39e"
       },
       "./uitab.ts": {
@@ -491,7 +491,6 @@
       "./db.ts",
       "./lazyeval.ts",
       "./workerthread.ts",
-      "./terramesh.ts",
       "./uitab.ts",
       "./world/sun.ts",
       "./world/terrain.ts",
@@ -513,10 +512,11 @@
       "./plants/grass.ts",
       "./rustwasm/hello_wasm_bg.d.ts",
       "./types/interfaces/index.d.ts",
+      "./rustwasm/hello_wasm.js",
       "./node_modules/babylonjs/babylon.module.d.ts",
       "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./rustwasm/hello_wasm.js"
+      "./terramesh.ts"
     ]
   },
   "version": "3.8.0-beta"
