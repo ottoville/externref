@@ -272,8 +272,24 @@ export class Terrain extends TerraMesh {
             const arrayBuffer = await gpuReadBuffer.mapReadAsync();
             let testcanvas = document.createElement('canvas');
             let testctx = testcanvas.getContext('2d');
-           // testctx.putImageData()
-            console.log(new Float32Array(arrayBuffer));
+            // testctx.putImageData()
+            console.log('debug webgpu');
+            //console.log(new Float32Array(arrayBuffer));
+            console.log(new Int32Array(arrayBuffer));
+            console.log(this.slopeArr.slice(0, 20));
+            let debugarr = [];
+            /*let row = 124;
+            for (let col = 125; col > 0; col--) {
+                for (let pix = 0; pix < 40; pix++) {
+                    debugarr.push(this.slopeArr[row * this._subdivisionsX + col]);
+                }
+            }
+            console.log(debugarr);*/
+
+                
+
+
+
 
         /* WEBGPU ENDS */
 

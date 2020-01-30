@@ -33,7 +33,7 @@ float height = 10000.0;
 //}
   layout(std430, set = 0, binding = 0) readonly buffer FirstMatrix {
       vec2 size;
-      float numbers[];
+      int numbers[];
   } firstMatrix;
 
   layout(std430, set = 0, binding = 1) readonly buffer SecondMatrix {
@@ -48,7 +48,7 @@ float height = 10000.0;
 
   layout(std430, set = 0, binding = 3) buffer ResultMatrix {
       vec2 size;
-      float numbers[];
+      int numbers[];
   } resultMatrix;
 
   void main() {
@@ -62,16 +62,17 @@ float height = 10000.0;
      //   for (int z = 0; z < 10000; z++) {
             int col = int(floor((x+maxX) * subdivisionsX / width));
             int row= int(floor(-(z+maxZ)*subdivisionsY / height + subdivisionsY));
-            float slope = firstMatrix.numbers[col*250 + row];
+            int slope = firstMatrix.numbers[col*250 + row];
             vec4 facet;
-            if(z < (-1.0 * int(x)) + slope) {
+            if(z < (-1.0 * x) + slope) {
                 facet=vec4(secondMatrix.numbers[(col * 250 + row)*4], secondMatrix.numbers[(col*250 + row)*4+1], secondMatrix.numbers[(col*250 + row)*4+2], secondMatrix.numbers[(col*250 + row)*4+3]);
              } else {
                facet=vec4(thirdMatrix.numbers[(col * 250  + row)*4], thirdMatrix.numbers[(col*250 + row)*4+1], thirdMatrix.numbers[(col*250 + row)*4+2], thirdMatrix.numbers[(col*250 + row)*4+3]);
               }
               float y = -(facet.x * x + facet.z * z + facet.w) / facet.y;
               //resultMatrix.numbers[x*5000 + z] = z;
-              resultMatrix.numbers[x*5000 + z] = y;
+              //resultMatrix.numbers[x*5000 + z] = firstMatrix.numbers[10];
+              resultMatrix.numbers[x*5000 + z] = slope;
     //    }
     // }
 

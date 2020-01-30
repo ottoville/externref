@@ -178,7 +178,7 @@
         "signature": "6c373ca5d35c73904132d88446bec36b0b45d0bb9757c1a1e5e62a6a6c9e9540"
       },
       "./world/terrain.ts": {
-        "version": "37757c05bbcde380e9c0cf29f062a9e5e254c7d51ff45538fbfdc0c1d58c492c",
+        "version": "e6b0cb7b0e4ff330999d3d24ac49be5f0a25db42eb450fe5ca6a590b2a3b305d",
         "signature": "3609a41307aa7892a5f8d5a1c92a077cafe4b1ed2a38d87965eeca4d5ed6ce66"
       },
       "./plants/plants.ts": {
