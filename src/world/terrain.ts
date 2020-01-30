@@ -1,5 +1,7 @@
 ﻿import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
 import { TerraMesh } from "../TerraMesh.js";
+//@ts-ignore
+import glslangModule from 'https://unpkg.com/@webgpu/glslang@0.0.8/dist/web-devel/glslang.js';
 
 
 interface TerrainMap {
@@ -91,32 +93,180 @@ export class Terrain extends TerraMesh {
                 boundingBox: boundingInfo.boundingBox,
                 boundingSphere: boundingInfo.boundingSphere
             });
+
+        this.inited.then(async () => {
+            /* WEBGPU START */
+
+            //@ts-ignore
+            const adapter = await navigator.gpu.requestAdapter();
+            const device = await adapter.requestDevice();
+
+
+            // First Matrix
+
+            const slopeArrMatrix = new Int16Array(this.slopeArr.length + 2);
+            slopeArrMatrix[0] = this._subdivisionsY;
+            slopeArrMatrix[1] = this._subdivisionsX;
+            slopeArrMatrix.set(this.slopeArr, 2);
+
+            const facet1ArrMatrix = new Float32Array(this.facet1Arr.length + 2);
+            facet1ArrMatrix[0] = this._subdivisionsY;
+            facet1ArrMatrix[1] = this._subdivisionsX;
+            facet1ArrMatrix.set(this.facet1Arr, 2);
+
+            const facet2ArrMatrix = new Float32Array(this.facet2Arr.length + 2);
+            facet2ArrMatrix[0] = this._subdivisionsY;
+            facet2ArrMatrix[1] = this._subdivisionsX;
+            facet2ArrMatrix.set(this.facet2Arr, 2);
+
+
+            const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] = device.createBufferMapped({
+                size: slopeArrMatrix.byteLength,
+                //@ts-ignore
+                usage: GPUBufferUsage.STORAGE,
+            });
+            new Int16Array(arrayBufferFirstMatrix).set(slopeArrMatrix);
+            gpuBufferFirstMatrix.unmap();
+
+
+            // Second Matrix
+
+
+
+            const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] = device.createBufferMapped({
+                size: facet1ArrMatrix.byteLength,
+                //@ts-ignore
+                usage: GPUBufferUsage.STORAGE,
+            });
+            new Float32Array(arrayBufferSecondMatrix).set(facet1ArrMatrix);
+            gpuBufferSecondMatrix.unmap();
+
+            const [gpuBufferThirdMatrix, arrayBufferThirdMatrix] = device.createBufferMapped({
+                size: facet1ArrMatrix.byteLength,
+                //@ts-ignore
+                usage: GPUBufferUsage.STORAGE,
+            });
+            new Float32Array(arrayBufferThirdMatrix).set(facet2ArrMatrix);
+            gpuBufferThirdMatrix.unmap();
+
+            // Result Matrix
+
+            //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 + firstMatrix[0] * secondMatrix[1]);
+            const resultMatrixBufferSize = Uint8Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY;
+            const resultMatrixBuffer = device.createBuffer({
+                size: resultMatrixBufferSize,
+                //@ts-ignore
+                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+            });
+
+
+            const bindGroupLayout = device.createBindGroupLayout({
+                bindings: [
+                    {
+                        binding: 0,
+                        //@ts-ignore
+                        visibility: GPUShaderStage.COMPUTE,
+                        type: "readonly-storage-buffer"
+                    },
+                    {
+                        binding: 1,
+                        //@ts-ignore
+                        visibility: GPUShaderStage.COMPUTE,
+                        type: "readonly-storage-buffer"
+                    },
+                    {
+                        binding: 2,
+                        //@ts-ignore
+                        visibility: GPUShaderStage.COMPUTE,
+                        type: "storage-buffer"
+                    }
+                ]
+            });
+
+            const bindGroup = device.createBindGroup({
+                layout: bindGroupLayout,
+                bindings: [
+                    {
+                        binding: 0,
+                        resource: {
+                            buffer: gpuBufferFirstMatrix
+                        }
+                    },
+                    {
+                        binding: 1,
+                        resource: {
+                            buffer: gpuBufferSecondMatrix
+                        }
+                    },
+                    {
+                        binding: 2,
+                        resource: {
+                            buffer: resultMatrixBuffer
+                        }
+                    }
+                ]
+            });
+            const computeShaderCode = await (await (fetch('../../shaders/webgpu.comp'))).text();
+
+            const glslang = await glslangModule();
+
+            const computePipeline = device.createComputePipeline({
+                layout: device.createPipelineLayout({
+                    bindGroupLayouts: [bindGroupLayout]
+                }),
+                computeStage: {
+                    module: device.createShaderModule({
+                        code: glslang.compileGLSL(computeShaderCode, "compute")
+                    }),
+                    entryPoint: "main"
+                }
+            });
+
+
+            const commandEncoder = device.createCommandEncoder();
+
+            const passEncoder = commandEncoder.beginComputePass();
+            passEncoder.setPipeline(computePipeline);
+            passEncoder.setBindGroup(0, bindGroup);
+            passEncoder.dispatch(slopeArrMatrix[0] /* x */, facet1ArrMatrix[1] /* y */);
+            passEncoder.endPass();
+
+
+            // Get a GPU buffer for reading in an unmapped state.
+            const gpuReadBuffer = device.createBuffer({
+                size: resultMatrixBufferSize,
+                //@ts-ignore
+                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+            });
+
+            // Encode commands for copying buffer to buffer.
+            commandEncoder.copyBufferToBuffer(
+                resultMatrixBuffer /* source buffer */,
+                0 /* source offset */,
+                gpuReadBuffer /* destination buffer */,
+                0 /* destination offset */,
+                resultMatrixBufferSize /* size */
+            );
+
+            // Submit GPU commands.
+            const gpuCommands = commandEncoder.finish();
+            device.defaultQueue.submit([gpuCommands]);
+
+
+            // Read buffer.
+            const arrayBuffer = await gpuReadBuffer.mapReadAsync();
+            console.log(new Float32Array(arrayBuffer));
+
+        /* WEBGPU ENDS */
+
+        })
+
+
         this._setReady(true);
 
         console.log('terrain bounding');
         console.log(this.getBoundingInfo());
 
-      //  this.worker.message(WorkerReturn.noReturn, 'createHeights', {});
-    /**********************/
-        //this.createHeights();
-      /*  
-        let avarages = {
-            heights1: [],
-            heights2: [],
-            heights3: [],
-            heights4: []
-
-        };
-        for (let i = 0; i < 30; i++) {
-            let timed = new Date().getTime();
-            this.createHeights(positionsBuffer);
-            avarages['heights1'].push(new Date().getTime() - timed)
-        }
-        for (let key in avarages) {
-            avarages[key].shift(); avarages[key].shift(); avarages[key].shift();
-            console.log(key, avarages[key].reduce((a, b) => a + b, 0)/27)
-        }
-        console.log(avarages);*/
     }
   
     //BABYLON 4103
