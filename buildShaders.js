@@ -7,7 +7,7 @@ function readFiles(dirname, obj) {
                 return;
             }
             Promise.all(filenames.map(filename => new Promise((res, rej) => {
-                if (filename.substr(-5) == '.vert' || filename.substr(-5) == '.frag') {
+                if (filename.substr(-5) == '.vert' || filename.substr(-5) == '.frag' || filename.substr(-5) == '.comp') {
                     fs.readFile(dirname + filename, 'utf-8', function (err, content) {
                         if (err) {
                             rej(err);

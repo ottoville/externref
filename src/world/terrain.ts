@@ -152,7 +152,10 @@ export class Terrain extends TerraMesh {
             // Result Matrix
 
             //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 + firstMatrix[0] * secondMatrix[1]);
-            const resultMatrixBufferSize = Uint8Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY;
+
+            //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY;
+
+            const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 + 5000 * 5000);
             const resultMatrixBuffer = device.createBuffer({
                 size: resultMatrixBufferSize,
                 //@ts-ignore
@@ -178,6 +181,12 @@ export class Terrain extends TerraMesh {
                         binding: 2,
                         //@ts-ignore
                         visibility: GPUShaderStage.COMPUTE,
+                        type: "readonly-storage-buffer"
+                    },
+                    {
+                        binding: 3,
+                        //@ts-ignore
+                        visibility: GPUShaderStage.COMPUTE,
                         type: "storage-buffer"
                     }
                 ]
@@ -200,6 +209,12 @@ export class Terrain extends TerraMesh {
                     },
                     {
                         binding: 2,
+                        resource: {
+                            buffer: gpuBufferThirdMatrix
+                        }
+                    },
+                    {
+                        binding: 3,
                         resource: {
                             buffer: resultMatrixBuffer
                         }
@@ -228,7 +243,7 @@ export class Terrain extends TerraMesh {
             const passEncoder = commandEncoder.beginComputePass();
             passEncoder.setPipeline(computePipeline);
             passEncoder.setBindGroup(0, bindGroup);
-            passEncoder.dispatch(slopeArrMatrix[0] /* x */, facet1ArrMatrix[1] /* y */);
+            passEncoder.dispatch(5000 /* x */, 5000 /* y */);
             passEncoder.endPass();
 
 
@@ -255,6 +270,9 @@ export class Terrain extends TerraMesh {
 
             // Read buffer.
             const arrayBuffer = await gpuReadBuffer.mapReadAsync();
+            let testcanvas = document.createElement('canvas');
+            let testctx = testcanvas.getContext('2d');
+           // testctx.putImageData()
             console.log(new Float32Array(arrayBuffer));
 
         /* WEBGPU ENDS */

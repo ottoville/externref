@@ -178,7 +178,7 @@
         "signature": "6c373ca5d35c73904132d88446bec36b0b45d0bb9757c1a1e5e62a6a6c9e9540"
       },
       "./world/terrain.ts": {
-        "version": "d62e82d35da475a08ee3ab50e303a944db236d522baa1c6c99f6b7e83468ba9e",
+        "version": "37757c05bbcde380e9c0cf29f062a9e5e254c7d51ff45538fbfdc0c1d58c492c",
         "signature": "3609a41307aa7892a5f8d5a1c92a077cafe4b1ed2a38d87965eeca4d5ed6ce66"
       },
       "./plants/plants.ts": {
@@ -226,7 +226,7 @@
         "signature": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c"
       },
       "./world/scene.ts": {
-        "version": "054c708b39beaab63743194e6f4b649a37df01928df24de0d4ad8114e800da5a",
+        "version": "fee850bcd2bc12e493e5c1efa512d3cd2733e7a5c37f0699595fbe9a369cd507",
         "signature": "16461b22e5855b9e0bc7d37295ac18585dd07fda1ecddba8eeb02f41259f62e6"
       },
       "./code.ts": {
@@ -494,7 +494,6 @@
       "./terramesh.ts",
       "./uitab.ts",
       "./world/sun.ts",
-      "./world/terrain.ts",
       "./plants/plants.ts",
       "./paintground/paintground.ts",
       "./paintground/paintplane.ts",
@@ -506,6 +505,7 @@
       "./tools/buildings.ts",
       "./tools/terrain.ts",
       "./rustwasm/hello_wasm.d.ts",
+      "./world/scene.ts",
       "./code.ts",
       "./commonmath.ts",
       "./paintground/paintline.ts",
@@ -516,7 +516,7 @@
       "./node_modules/babylonjs/babylon.module.d.ts",
       "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./world/scene.ts"
+      "./world/terrain.ts"
     ]
   },
   "version": "3.8.0-beta"

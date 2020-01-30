@@ -11,26 +11,26 @@ float subdivisionsY = 250.0;
 float width = 10000.0;
 float height = 10000.0;
 
-vec4 getFacetAt( float x, float z) {
+//vec4 getFacetAt( float x, float z) {
     // retrieve col and row from x, z coordinates in the ground local system
     
-    float col = floor((x+maxX) * subdivisionsX / width);
-    float row= floor(-(z+maxZ)*subdivisionsY / height + subdivisionsY);
+//    float col = floor((x+maxX) * subdivisionsX / width);
+ //   float row= floor(-(z+maxZ)*subdivisionsY / height + subdivisionsY);
 
-    ivec4 slope =  texelFetch(slopeArr, ivec2(col,row), 0);
-    vec4 facet;
-    if(z < -1.0 * x + float(slope.x)) {
-        facet = texelFetch(facet1Arr, ivec2(col,row), 0);
-    } else {
-        facet = texelFetch(facet2Arr, ivec2( col,row), 0);
-    }
-    return facet;
-}
-float getHeightAtCoordinates(vec2 xz) {
-        vec4 facet = getFacetAt(xz.x, xz.y);
-        float y = -(facet.x * xz.x + facet.z * xz.y + facet.w) / facet.y;
-        return y;
-}
+ //   ivec4 slope =  texelFetch(slopeArr, ivec2(col,row), 0);
+ //   vec4 facet;
+ //   if(z < -1.0 * x + float(slope.x)) {
+  //      facet = texelFetch(facet1Arr, ivec2(col,row), 0);
+  //  } else {
+  //      facet = texelFetch(facet2Arr, ivec2( col,row), 0);
+  //  }
+  //  return facet;
+//}
+//float getHeightAtCoordinates(vec2 xz) {
+//        vec4 facet = getFacetAt(xz.x, xz.y);
+//        float y = -(facet.x * xz.x + facet.z * xz.y + facet.w) / facet.y;
+//        return y;
+//}
   layout(std430, set = 0, binding = 0) readonly buffer FirstMatrix {
       vec2 size;
       float numbers[];
@@ -52,32 +52,38 @@ float getHeightAtCoordinates(vec2 xz) {
   } resultMatrix;
 
   void main() {
-    resultMatrix.size = vec2(firstMatrix.size.x, secondMatrix.size.y);
+    resultMatrix.size = vec2(250, 250);
 
     ivec2 resultCell = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
 
-
-     for (int x = 0; x < 10000; x++) {
-        for (int z = 0; z < 10000; z++) {
+    uint x= gl_GlobalInvocationID.x;
+    uint z =  gl_GlobalInvocationID.y;
+     //for (int x = 0; x < 10000; x++) {
+     //   for (int z = 0; z < 10000; z++) {
             int col = int(floor((x+maxX) * subdivisionsX / width));
             int row= int(floor(-(z+maxZ)*subdivisionsY / height + subdivisionsY));
-            float slope = firstMatrix.numbers[col*x + row];
+            float slope = firstMatrix.numbers[col*250 + row];
             vec4 facet;
-            if(z < -1.0 * x + float(slope)) {
-                facet=vec4(secondMatrix.numbers[col*x + row], secondMatrix.numbers[col*x + row+1], secondMatrix.numbers[col*x + row +2], secondMatrix.numbers[col*x + row +3]);
-             }
-        }
-     }
+            if(z < (-1.0 * int(x)) + slope) {
+                facet=vec4(secondMatrix.numbers[(col * 250 + row)*4], secondMatrix.numbers[(col*250 + row)*4+1], secondMatrix.numbers[(col*250 + row)*4+2], secondMatrix.numbers[(col*250 + row)*4+3]);
+             } else {
+               facet=vec4(thirdMatrix.numbers[(col * 250  + row)*4], thirdMatrix.numbers[(col*250 + row)*4+1], thirdMatrix.numbers[(col*250 + row)*4+2], thirdMatrix.numbers[(col*250 + row)*4+3]);
+              }
+              float y = -(facet.x * x + facet.z * z + facet.w) / facet.y;
+              //resultMatrix.numbers[x*5000 + z] = z;
+              resultMatrix.numbers[x*5000 + z] = y;
+    //    }
+    // }
 
 
 
-    float result = 0.0;
-    for (int i = 0; i < firstMatrix.size.y; i++) {
-      int a = i + resultCell.x * int(firstMatrix.size.y);
-      int b = resultCell.y + i * int(secondMatrix.size.y);
-      result += firstMatrix.numbers[a] * secondMatrix.numbers[b];
-    }
+   // float result = 0.0;
+   // for (int i = 0; i < firstMatrix.size.y; i++) {
+    //  int a = i + resultCell.x * int(firstMatrix.size.y);
+     // int b = resultCell.y + i * int(secondMatrix.size.y);
+    //  result += firstMatrix.numbers[a] * secondMatrix.numbers[b];
+    //}
 
-    int index = resultCell.y + resultCell.x * int(secondMatrix.size.y);
-    resultMatrix.numbers[index] = result;
+    //int index = resultCell.y + resultCell.x * int(secondMatrix.size.y);
+    //resultMatrix.numbers[index] = result;
   }
