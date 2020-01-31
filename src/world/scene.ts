@@ -794,7 +794,7 @@ export class WorldScene extends BABYLON.Scene {
 
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-           let createTexture: Promise<Blob> = new Promise(async (tres, trej) => {
+           /*let createTexture: Promise<Blob> = new Promise(async (tres, trej) => {
                 if (typeof (vdata.texture) === 'undefined') {
                     let c = document.createElement('canvas');
                     c.width = 10000;
@@ -815,10 +815,12 @@ export class WorldScene extends BABYLON.Scene {
                     let minZ = centerZ - c.height
                     ctx.fillStyle = "green";
                     await ground.inited;
+                    await ground.textureCreated;
                     console.debug('ground ready');
                     blazor.invokeMethod('setProgress', 57, null);
+                    let timer = new Date().getTime();
                     for (let row = centerX - c.width + 1; row < centerX; row = row + 2) {
-                        /* Progress 58, 59 and 60 are reserved for this */
+                        // Progress 58, 59 and 60 are reserved for this 
                         
                         for (let col = minZ + 1; col < centerZ; col = col += 2) {
                             let height = ground.getHeightAtCoordinates(row, col)
@@ -827,11 +829,11 @@ export class WorldScene extends BABYLON.Scene {
                             }
                         }
                     }
-                    console.debug('Terrain painted')
+                    console.debug('Terrain painted, took', new Date().getTime() - timer);
                     //progelem.value = 65;
                     blazor.invokeMethod('setProgress', 61,null);
                     c.toBlob(async b => {
-                        console.debug('blob ready');
+
                         blazor.invokeMethod('setProgress', 63, null);
                         if (b) {
                             vdata.texture = b;
@@ -845,9 +847,9 @@ export class WorldScene extends BABYLON.Scene {
                     }, 'image/webp', 1);
                 } else
                     tres(vdata.texture);
-            });
+            });*/
             
-            createTexture.then((b: Blob) => {
+            ground.textureCreated.then((b: Blob) => {
                 console.debug('createTexture ready');
                 //progelem.value = 70;
                 blazor.invokeMethod('setProgress', 65,null);

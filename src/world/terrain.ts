@@ -42,6 +42,7 @@ export class Terrain extends TerraMesh {
     public terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
     public inited: Promise<any>;
+    public textureCreated: Promise<any>;
 
     //public ground: BABYLON.GroundMesh;
     constructor(private vdata: TerrainMap, private scene: BABYLON.Scene, wasm) {
@@ -93,207 +94,214 @@ export class Terrain extends TerraMesh {
                 boundingBox: boundingInfo.boundingBox,
                 boundingSphere: boundingInfo.boundingSphere
             });
-
-        this.inited.then(async () => {
-            /* WEBGPU START */
-
-            //@ts-ignore
-            const adapter = await navigator.gpu.requestAdapter();
-            const device = await adapter.requestDevice();
-
-
-            // First Matrix
-
-            const slopeArrMatrix = new Int16Array(this.slopeArr.length + 2);
-            slopeArrMatrix[0] = this._subdivisionsY;
-            slopeArrMatrix[1] = this._subdivisionsX;
-            slopeArrMatrix.set(this.slopeArr, 2);
-
-            const facet1ArrMatrix = new Float32Array(this.facet1Arr.length + 2);
-            facet1ArrMatrix[0] = this._subdivisionsY;
-            facet1ArrMatrix[1] = this._subdivisionsX;
-            facet1ArrMatrix.set(this.facet1Arr, 2);
-
-            const facet2ArrMatrix = new Float32Array(this.facet2Arr.length + 2);
-            facet2ArrMatrix[0] = this._subdivisionsY;
-            facet2ArrMatrix[1] = this._subdivisionsX;
-            facet2ArrMatrix.set(this.facet2Arr, 2);
-
-
-            const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] = device.createBufferMapped({
-                size: slopeArrMatrix.byteLength,
+        this.textureCreated = new Promise((tres, trej) => {
+            this.inited.then(async () => {
+                /* WEBGPU START */
+                const computeShaderCode = await (await (fetch('../../shaders/webgpu.comp'))).text();
+                let timer = new Date().getTime();
                 //@ts-ignore
-                usage: GPUBufferUsage.STORAGE,
-            });
-            new Int16Array(arrayBufferFirstMatrix).set(slopeArrMatrix);
-            gpuBufferFirstMatrix.unmap();
+                const adapter = await navigator.gpu.requestAdapter();
+                const device = await adapter.requestDevice();
 
 
-            // Second Matrix
+                // First Matrix
+
+                const slopeArrMatrix = new Int16Array(this.slopeArr.length + 2);
+                slopeArrMatrix[0] = this._subdivisionsY;
+                slopeArrMatrix[1] = this._subdivisionsX;
+                slopeArrMatrix.set(this.slopeArr, 2);
+
+                const facet1ArrMatrix = new Float32Array(this.facet1Arr.length + 2);
+                facet1ArrMatrix[0] = this._subdivisionsY;
+                facet1ArrMatrix[1] = this._subdivisionsX;
+                facet1ArrMatrix.set(this.facet1Arr, 2);
+
+                const facet2ArrMatrix = new Float32Array(this.facet2Arr.length + 2);
+                facet2ArrMatrix[0] = this._subdivisionsY;
+                facet2ArrMatrix[1] = this._subdivisionsX;
+                facet2ArrMatrix.set(this.facet2Arr, 2);
+
+                let slopesAsInt32 = new Int32Array(slopeArrMatrix);
+                const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] = device.createBufferMapped({
+                    size: slopesAsInt32.byteLength,
+                    //@ts-ignore
+                    usage: GPUBufferUsage.STORAGE,
+                });
+                new Int32Array(arrayBufferFirstMatrix).set(slopesAsInt32);
+                gpuBufferFirstMatrix.unmap();
+
+
+                // Second Matrix
 
 
 
-            const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] = device.createBufferMapped({
-                size: facet1ArrMatrix.byteLength,
-                //@ts-ignore
-                usage: GPUBufferUsage.STORAGE,
-            });
-            new Float32Array(arrayBufferSecondMatrix).set(facet1ArrMatrix);
-            gpuBufferSecondMatrix.unmap();
+                const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] = device.createBufferMapped({
+                    size: facet1ArrMatrix.byteLength,
+                    //@ts-ignore
+                    usage: GPUBufferUsage.STORAGE,
+                });
+                new Float32Array(arrayBufferSecondMatrix).set(facet1ArrMatrix);
+                gpuBufferSecondMatrix.unmap();
 
-            const [gpuBufferThirdMatrix, arrayBufferThirdMatrix] = device.createBufferMapped({
-                size: facet1ArrMatrix.byteLength,
-                //@ts-ignore
-                usage: GPUBufferUsage.STORAGE,
-            });
-            new Float32Array(arrayBufferThirdMatrix).set(facet2ArrMatrix);
-            gpuBufferThirdMatrix.unmap();
+                const [gpuBufferThirdMatrix, arrayBufferThirdMatrix] = device.createBufferMapped({
+                    size: facet1ArrMatrix.byteLength,
+                    //@ts-ignore
+                    usage: GPUBufferUsage.STORAGE,
+                });
+                new Float32Array(arrayBufferThirdMatrix).set(facet2ArrMatrix);
+                gpuBufferThirdMatrix.unmap();
 
-            // Result Matrix
+                // Result Matrix
 
-            //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 + firstMatrix[0] * secondMatrix[1]);
+                //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 + firstMatrix[0] * secondMatrix[1]);
 
-            //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY;
+                //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY;
 
-            const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 + 5000 * 5000);
-            const resultMatrixBuffer = device.createBuffer({
-                size: resultMatrixBufferSize,
-                //@ts-ignore
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
-            });
+                //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 + 5000 * 5000);
+                const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5000 * 5000);
+                const resultMatrixBuffer = device.createBuffer({
+                    size: resultMatrixBufferSize,
+                    //@ts-ignore
+                    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+                });
 
 
-            const bindGroupLayout = device.createBindGroupLayout({
-                bindings: [
-                    {
-                        binding: 0,
-                        //@ts-ignore
-                        visibility: GPUShaderStage.COMPUTE,
-                        type: "readonly-storage-buffer"
-                    },
-                    {
-                        binding: 1,
-                        //@ts-ignore
-                        visibility: GPUShaderStage.COMPUTE,
-                        type: "readonly-storage-buffer"
-                    },
-                    {
-                        binding: 2,
-                        //@ts-ignore
-                        visibility: GPUShaderStage.COMPUTE,
-                        type: "readonly-storage-buffer"
-                    },
-                    {
-                        binding: 3,
-                        //@ts-ignore
-                        visibility: GPUShaderStage.COMPUTE,
-                        type: "storage-buffer"
-                    }
-                ]
-            });
-
-            const bindGroup = device.createBindGroup({
-                layout: bindGroupLayout,
-                bindings: [
-                    {
-                        binding: 0,
-                        resource: {
-                            buffer: gpuBufferFirstMatrix
+                const bindGroupLayout = device.createBindGroupLayout({
+                    bindings: [
+                        {
+                            binding: 0,
+                            //@ts-ignore
+                            visibility: GPUShaderStage.COMPUTE,
+                            type: "readonly-storage-buffer"
+                        },
+                        {
+                            binding: 1,
+                            //@ts-ignore
+                            visibility: GPUShaderStage.COMPUTE,
+                            type: "readonly-storage-buffer"
+                        },
+                        {
+                            binding: 2,
+                            //@ts-ignore
+                            visibility: GPUShaderStage.COMPUTE,
+                            type: "readonly-storage-buffer"
+                        },
+                        {
+                            binding: 3,
+                            //@ts-ignore
+                            visibility: GPUShaderStage.COMPUTE,
+                            type: "storage-buffer"
                         }
-                    },
-                    {
-                        binding: 1,
-                        resource: {
-                            buffer: gpuBufferSecondMatrix
-                        }
-                    },
-                    {
-                        binding: 2,
-                        resource: {
-                            buffer: gpuBufferThirdMatrix
-                        }
-                    },
-                    {
-                        binding: 3,
-                        resource: {
-                            buffer: resultMatrixBuffer
-                        }
-                    }
-                ]
-            });
-            const computeShaderCode = await (await (fetch('../../shaders/webgpu.comp'))).text();
+                    ]
+                });
 
-            const glslang = await glslangModule();
+                const bindGroup = device.createBindGroup({
+                    layout: bindGroupLayout,
+                    bindings: [
+                        {
+                            binding: 0,
+                            resource: {
+                                buffer: gpuBufferFirstMatrix
+                            }
+                        },
+                        {
+                            binding: 1,
+                            resource: {
+                                buffer: gpuBufferSecondMatrix
+                            }
+                        },
+                        {
+                            binding: 2,
+                            resource: {
+                                buffer: gpuBufferThirdMatrix
+                            }
+                        },
+                        {
+                            binding: 3,
+                            resource: {
+                                buffer: resultMatrixBuffer
+                            }
+                        }
+                    ]
+                });
 
-            const computePipeline = device.createComputePipeline({
-                layout: device.createPipelineLayout({
-                    bindGroupLayouts: [bindGroupLayout]
-                }),
-                computeStage: {
-                    module: device.createShaderModule({
-                        code: glslang.compileGLSL(computeShaderCode, "compute")
+                const glslang = await glslangModule();
+
+                const computePipeline = device.createComputePipeline({
+                    layout: device.createPipelineLayout({
+                        bindGroupLayouts: [bindGroupLayout]
                     }),
-                    entryPoint: "main"
+                    computeStage: {
+                        module: device.createShaderModule({
+                            code: glslang.compileGLSL(computeShaderCode, "compute")
+                        }),
+                        entryPoint: "main"
+                    }
+                });
+
+
+                const commandEncoder = device.createCommandEncoder();
+
+                const passEncoder = commandEncoder.beginComputePass();
+                passEncoder.setPipeline(computePipeline);
+                passEncoder.setBindGroup(0, bindGroup);
+                passEncoder.dispatch(5000 /* x */, 5000 /* y */);
+                passEncoder.endPass();
+
+                // Get a GPU buffer for reading in an unmapped state.
+                const gpuReadBuffer = device.createBuffer({
+                    size: resultMatrixBufferSize,
+                    //@ts-ignore
+                    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+                });
+
+                // Encode commands for copying buffer to buffer.
+                commandEncoder.copyBufferToBuffer(
+                    resultMatrixBuffer /* source buffer */,
+                    0 /* source offset */,
+                    gpuReadBuffer /* destination buffer */,
+                    0 /* destination offset */,
+                    resultMatrixBufferSize /* size */
+                );
+
+                // Submit GPU commands.
+                const gpuCommands = commandEncoder.finish();
+                device.defaultQueue.submit([gpuCommands]);
+
+
+                // Read buffer.
+                const arrayBuffer = await gpuReadBuffer.mapReadAsync();
+                let data = new Int32Array(arrayBuffer);
+                let testcanvas = document.createElement('canvas');
+                testcanvas.width = 5000;
+                testcanvas.height = 5000;
+
+                let testctx = testcanvas.getContext('2d');
+                let imagedata = testctx.getImageData(0, 0, 5000, 5000);
+                for (let i = 2; i < data.length; i++) {
+                    if (data[i] == 1)
+                        imagedata.data.set([0, 255, 0, 255], (i - 2) * 4);
+                    else
+                        imagedata.data.set([255, 255, 0, 255], (i - 2) * 4);
                 }
-            });
-
-
-            const commandEncoder = device.createCommandEncoder();
-
-            const passEncoder = commandEncoder.beginComputePass();
-            passEncoder.setPipeline(computePipeline);
-            passEncoder.setBindGroup(0, bindGroup);
-            passEncoder.dispatch(5000 /* x */, 5000 /* y */);
-            passEncoder.endPass();
-
-
-            // Get a GPU buffer for reading in an unmapped state.
-            const gpuReadBuffer = device.createBuffer({
-                size: resultMatrixBufferSize,
-                //@ts-ignore
-                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
-            });
-
-            // Encode commands for copying buffer to buffer.
-            commandEncoder.copyBufferToBuffer(
-                resultMatrixBuffer /* source buffer */,
-                0 /* source offset */,
-                gpuReadBuffer /* destination buffer */,
-                0 /* destination offset */,
-                resultMatrixBufferSize /* size */
-            );
-
-            // Submit GPU commands.
-            const gpuCommands = commandEncoder.finish();
-            device.defaultQueue.submit([gpuCommands]);
-
-
-            // Read buffer.
-            const arrayBuffer = await gpuReadBuffer.mapReadAsync();
-            let testcanvas = document.createElement('canvas');
-            let testctx = testcanvas.getContext('2d');
-            // testctx.putImageData()
-            console.log('debug webgpu');
-            //console.log(new Float32Array(arrayBuffer));
-            console.log(new Int32Array(arrayBuffer));
-            console.log(this.slopeArr.slice(0, 20));
-            let debugarr = [];
-            /*let row = 124;
-            for (let col = 125; col > 0; col--) {
-                for (let pix = 0; pix < 40; pix++) {
-                    debugarr.push(this.slopeArr[row * this._subdivisionsX + col]);
-                }
-            }
-            console.log(debugarr);*/
-
+                testctx.putImageData(imagedata, 0, 0);
+                console.debug('Webgpu painted, took', new Date().getTime() - timer);
                 
+                testcanvas.toBlob(b => {
+                    tres(b);
+                    /*let a = document.createElement('a');
+                    let url = window.URL.createObjectURL(b);
+                    a.href = url;
+                    a.download = 'kuva';
+                    a.click();
+                    window.URL.revokeObjectURL(url);*/
+                }, 'image/webp', 1);
 
+                /* WEBGPU ENDS */
 
+            })
+        });
 
-
-        /* WEBGPU ENDS */
-
-        })
 
 
         this._setReady(true);
