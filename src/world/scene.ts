@@ -734,26 +734,6 @@ export class WorldScene extends BABYLON.Scene {
                         ccres((<IDBRequest>evt.target).result.value);
                     }
                     else {
-                        /*
-        Uncaught (in promise) RangeError: Failed to execute 'getImageData' on 'CanvasRenderingContext2D': Out of memory at ImageData creation
-        at Image.img.onload (scene.js:106)
-        
-           terrainmap getimagedata took  3641,1757
-
-2383
-        */
-                        
-                        /*let tbuffer = await this.worker.message<{ buffer: Uint8ClampedArray, width: number, height: number }>(WorkerReturn.Promise, 'createHeightMap', {});
-                        
-                        let buffer = new Uint8ClampedArray(tbuffer.buffer);
-                        var vertexData = VERTEX_CreateGroundFromHeightMap({
-                            width: tbuffer.width, height: tbuffer.height,
-                            subdivisions: 250,
-                            minHeight: -2, maxHeight: 250, colorFilter: new BABYLON.Color3(0.3, 0.59, 0.11),
-                            buffer: buffer, bufferWidth: tbuffer.width, bufferHeight: tbuffer.height,
-                            alphaFilter: 0.0
-                        });*/
-
                         let vertexData = await this.worker.message<{ indices: number[], positions: number[], normals: number[], uvs: number[] }, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {});
 
                        // progelem.value = 50;
@@ -849,12 +829,9 @@ export class WorldScene extends BABYLON.Scene {
                     tres(vdata.texture);
             });*/
             
-            ground.textureCreated.then((b: Blob) => {
+            ground.textureCreated.then((imgdata) => {
                 console.debug('createTexture ready');
-                //progelem.value = 70;
-                blazor.invokeMethod('setProgress', 65,null);
-                let img = new Image();
-                img.onload = () => {
+
                     //progelem.value = 80;
                     blazor.invokeMethod('setProgress', 75, null);
                     let width = 10000;
@@ -869,11 +846,13 @@ export class WorldScene extends BABYLON.Scene {
                     gl.bindTexture(gl.TEXTURE_2D, rtexture2._webGLTexture);
 
                     //gl.bindTexture(gl.TEXTURE_2D, ntexture);
-                    engine._unpackFlipY(true);
+                    //engine._unpackFlipY(true);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                     if (width % 4 !== 0) {
                         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-                    }
-                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, img);
+                }
+                    let size = new Float32Array(imgdata, 0, 2);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, size[0], size[1], 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8ClampedArray(imgdata, Int32Array.BYTES_PER_ELEMENT * 2));
 
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -881,12 +860,6 @@ export class WorldScene extends BABYLON.Scene {
                     gl.bindTexture(gl.TEXTURE_2D, null);
 
                     
-
-
-
-
-
-
 
                     /*
                      * https://stackoverflow.com/questions/50013385/hello-world-example-of-webgl-parallelism
@@ -909,18 +882,6 @@ export class WorldScene extends BABYLON.Scene {
                     this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
                     //progelem.parentElement.style.display = 'none';
                     blazor.invokeMethod('setProgress', 100, null);
-                }
-                /*
-                 *  TypeError: Failed to execute 'createObjectURL' on 'URL': No function was found that matched the signature provided.
-                 * */
-                img.src = URL.createObjectURL(b);
-
-
-                //let groundtexture = new BABYLON.Texture(URL.createObjectURL(b), this, undefined, undefined, undefined, undefined, (e) => { throw (e) });
-                //shadermateria.setTexture('groundTexture', groundtexture);
-
-
-                //this.tools['Plants'] = new PlantsUI(ground, engine.getRenderingCanvas(), this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, groundtexture, plants);
             }).catch(e => {
                 console.error('creating terrain texture failed', e);
                 //progelem.parentNode.textContent = e;

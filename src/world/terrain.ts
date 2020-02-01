@@ -42,7 +42,7 @@ export class Terrain extends TerraMesh {
     public terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
     public inited: Promise<any>;
-    public textureCreated: Promise<any>;
+    public textureCreated: Promise<ArrayBuffer>;
 
     //public ground: BABYLON.GroundMesh;
     constructor(private vdata: TerrainMap, private scene: BABYLON.Scene, wasm) {
@@ -270,33 +270,44 @@ export class Terrain extends TerraMesh {
 
 
                 // Read buffer.
-                const arrayBuffer = await gpuReadBuffer.mapReadAsync();
-                let data = new Int32Array(arrayBuffer);
-                let testcanvas = document.createElement('canvas');
-                testcanvas.width = 5000;
-                testcanvas.height = 5000;
+                const arrayBuffer: ArrayBuffer = await gpuReadBuffer.mapReadAsync();
+                tres(arrayBuffer);
 
-                let testctx = testcanvas.getContext('2d');
-                let imagedata = testctx.getImageData(0, 0, 5000, 5000);
+                let c = document.createElement('canvas');
+                c.width = new Float32Array(arrayBuffer, 0, 1)[0];
+                c.height = new Float32Array(arrayBuffer, 1, 2)[0];
+                let ctx = c.getContext("2d");
+                if (!ctx)
+                    throw ('get 2d context failed');
+                ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer, Int32Array.BYTES_PER_ELEMENT * 2), c.width, c.height), 0, 0);
+                c.toBlob(async b => {
+                    if (b) {
+                        vdata.texture = b;
+                        queueMicrotask(async () => {
+                            (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
+                        });
+                    } else {
+                        trej('To Blob failed')
+                    }
+                }, 'image/webp', 1);
+
+                //let data = new Int32Array(arrayBuffer);
+                //let imagedata = new Uint8ClampedArray(arrayBuffer, Int32Array.BYTES_PER_ELEMENT * 2);
+                console.log('width and height:', new Float32Array(arrayBuffer, 0, 2));
+                //let imagedata = new ImageData(new Uint8ClampedArray(arrayBuffer, Int32Array.BYTES_PER_ELEMENT*2), 5000, 5000);
+
+
+              /*  //let imagedata = testctx.getImageData(0, 0, 5000, 5000);
                 for (let i = 2; i < data.length; i++) {
                     if (data[i] == 1)
                         imagedata.data.set([0, 255, 0, 255], (i - 2) * 4);
                     else
                         imagedata.data.set([255, 255, 0, 255], (i - 2) * 4);
-                }
-                testctx.putImageData(imagedata, 0, 0);
+                }*/
+                
+                //testctx.putImageData(imagedata, 0, 0);
                 console.debug('Webgpu painted, took', new Date().getTime() - timer);
                 
-                testcanvas.toBlob(b => {
-                    tres(b);
-                    /*let a = document.createElement('a');
-                    let url = window.URL.createObjectURL(b);
-                    a.href = url;
-                    a.download = 'kuva';
-                    a.click();
-                    window.URL.revokeObjectURL(url);*/
-                }, 'image/webp', 1);
-
                 /* WEBGPU ENDS */
 
             })
