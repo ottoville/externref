@@ -40,5 +40,4 @@ void main(void) {
     float spec = pow(mmax, 32.0) * specularStrength;
 
     outputColor=  vec4(color * (diffuse + vec3(spec)), 1.);//texture(groundTexture, vUV);
-
 }

@@ -95,16 +95,12 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
 
 window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
-        console.log('initCanvas');
         blazor.invokeMethod('setProgress',10, null);
         //progelem.value = 20;
        // var canvas = document.getElementById("renderCanvas");
-        console.log('canvas.dataset.inited?');
-        console.log(canvas.dataset.inited)
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
-        console.log('init canvas ', ticks)
         var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
 
 

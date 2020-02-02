@@ -13,18 +13,11 @@
         if (!ctx)
             throw ('Unable to get 2d context on bitmapworker ' + totalWidth + ' ' + split);
 
-        console.log('bitmapWorker 2d contect created'); /* Stuck after this line */
-
         ctx.drawImage(data.bitmap, 0, split * data.partnumber, width, split, data.align, 0, width, split);
-        console.log('bitmapWorker image drawed');
         self.postMessage({ type: 'init', bitmap: data.bitmap }, [data.bitmap]);
-        console.log('bitmapWorker getting imagedata');
         let imgdata = ctx.getImageData(0, 0, totalWidth, split).data;
 
-        console.log('bitmapWorker has imagedata');
-
         totalbuffer.set(imgdata, ((data.align * totalWidth * 4)) + buffersplit * data.partnumber);
-        console.log('bitmapWorker buffer setted');
         self.postMessage({ type: 'ready' });
         self.close();
         

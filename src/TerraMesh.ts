@@ -8,22 +8,18 @@ export class TerraMesh extends BABYLON.Mesh {
     public indices: Uint32Array;
     public indicesBuffer: SharedArrayBuffer;
 
-    public normalsBuffer: SharedArrayBuffer;
-    public normals: Float32Array;
-    public normalsView: DataView;
+    public normalsBuffer: SharedArrayBuffer | null;
+    public normals: Float32Array | null;
+    public normalsView: DataView | null;
 
     static worker = new WorkerThread('/webworkers/mesh.js');
 
-    constructor(name: string, indices: Uint32Array, positions: Float32Array, normals: Float32Array, protected wasm) {
+    constructor(name: string, indices: Uint32Array, positions: Float32Array, protected wasm, normals?: Float32Array) {
         super(name);
         this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * indices.length);
         this.indices = new Uint32Array(this.indicesBuffer);
         this.indices.set(indices);
 
-        this.normalsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * normals.length)
-        this.normals = new Float32Array(this.normalsBuffer)
-        this.normals.set(normals);
-        this.normalsView = new DataView(this.normalsBuffer);
 
 
         this.positionsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * positions.length);
@@ -31,13 +27,29 @@ export class TerraMesh extends BABYLON.Mesh {
         this.positions.set(positions);
         this.positionsView = new DataView(this.positionsBuffer);
 
-        TerraMesh.worker.message(WorkerReturn.Promise, 'init',
-            {
-                meshId: this.uniqueId,
-                positions: this.positionsBuffer,
-                indices: this.indicesBuffer,
-                normals: this.normalsBuffer,
-            });
+
+        if (typeof (normals) !== 'undefined') {
+            this.normalsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * normals.length)
+            this.normals = new Float32Array(this.normalsBuffer)
+            this.normals.set(normals);
+            this.normalsView = new DataView(this.normalsBuffer);
+
+            TerraMesh.worker.message(WorkerReturn.Promise, 'init',
+                {
+                    meshId: this.uniqueId,
+                    positions: this.positionsBuffer,
+                    indices: this.indicesBuffer,
+                    normals: this.normalsBuffer,
+                });
+        } else {
+            TerraMesh.worker.message(WorkerReturn.Promise, 'init',
+                {
+                    meshId: this.uniqueId,
+                    positions: this.positionsBuffer,
+                    indices: this.indicesBuffer,
+                });
+        }
+
     }
     public _checkCollision(collider: BABYLON.Collider): BABYLON.AbstractMesh {
 

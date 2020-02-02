@@ -9,6 +9,7 @@ import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
 import *  as Wasm from "../rustwasm/hello_wasm.js"
+import { texImage2D } from "../webgl.js";
 
 
 function isPromise(result: BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>): result is Promise<BABYLON.PickingInfo> {
@@ -723,6 +724,85 @@ export class WorldScene extends BABYLON.Scene {
         }
         let sea: BABYLON.Mesh;
         this.terrainReady = new Promise(async (ccres, ccrej) => {
+            await Wasm.default();
+            let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp', Wasm);
+            sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
+            let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
+            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
+            let gl: WebGLRenderingContext = engine._gl;
+
+            shadermateria.setVector3("lightPos", sunlight.position);
+            shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
+            ground.textureCreated.then((imgdata) => {
+                console.debug('createTexture ready');
+
+                //progelem.value = 80;
+                blazor.invokeMethod('setProgress', 75, null);
+                let width = 10000;
+                let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
+                    _engine: engine,
+                    _source: 3,
+                    _webGLTexture: gl.createTexture()
+                }
+
+                //engine.updateRawTexture(rtexture2, imagedata.data, BABYLON.Engine.TEXTUREFORMAT_RGBA, true, null, BABYLON.Constants.TEXTURETYPE_UNSIGNED_INT);
+
+                gl.bindTexture(gl.TEXTURE_2D, rtexture2._webGLTexture);
+
+                //gl.bindTexture(gl.TEXTURE_2D, ntexture);
+                //engine._unpackFlipY(true);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                if (width % 4 !== 0) {
+                    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+                }
+                console.log('imgdata');
+                console.log(imgdata);
+                let size = new Float32Array(imgdata, 0, 2);
+                console.log('set ground texture, width/height', size);
+                console.log(new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2));
+                let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, "RGBA8", size[0], size[1], gl.RGBA, gl.UNSIGNED_BYTE, new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2));
+                tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
+                tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+
+              /*  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, size[0], size[1], 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2));
+
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);*/
+
+                gl.bindTexture(gl.TEXTURE_2D, null);
+
+
+
+                /*
+                 * https://stackoverflow.com/questions/50013385/hello-world-example-of-webgl-parallelism
+                 * 
+                 */
+
+                (function () {
+                    //@ts-ignore
+                    this._options.samplers.push('groundTexture');
+                    //@ts-ignore
+                    this._textures['groundTexture'] = <BABYLON.Texture>{
+                        getInternalTexture: () => rtexture2, //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
+                        isReady: () => true,
+                        wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
+                        wrapV: BABYLON.Texture.CLAMP_ADDRESSMODE
+                    };
+                }).bind(shadermateria)();
+                ground.material = shadermateria;
+                this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
+                //progelem.parentElement.style.display = 'none';
+                blazor.invokeMethod('setProgress', 100, null);
+            }).catch(e => {
+                console.error('creating terrain texture failed', e);
+                //progelem.parentNode.textContent = e;
+                blazor.invokeMethod('setProgress', 0, e.name + e.message);
+
+            });
+            return ground;
+        });
+        /*
+        this.terrainReady = new Promise(async (ccres, ccrej) => {
             let db = (await DB);
             let trans = db.transaction('maps');
             trans.onerror = ccrej;
@@ -754,7 +834,7 @@ export class WorldScene extends BABYLON.Scene {
                             }
                         }
                     }
-                    /* Uncaught (in promise) The ImageBitmap could not be allocated. */
+
                 } catch (e) {
                     ccrej(e);
                 }
@@ -762,10 +842,10 @@ export class WorldScene extends BABYLON.Scene {
         }).then(async (vdata: TerrainMap) => {
             //progelem.value = 60;
             blazor.invokeMethod('setProgress', 55,null);
-            /* Wait webassembly to be initialized so we can use its functions on world modules */
+
             await Wasm.default();
 
-            let ground = new Terrain(vdata, this, Wasm);
+            let ground = new Terrain(vdata, Wasm);
 
             sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
@@ -774,122 +854,10 @@ export class WorldScene extends BABYLON.Scene {
 
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-           /*let createTexture: Promise<Blob> = new Promise(async (tres, trej) => {
-                if (typeof (vdata.texture) === 'undefined') {
-                    let c = document.createElement('canvas');
-                    c.width = 10000;
-                    c.height = 10000;
+  
 
-                    let ctx = c.getContext("2d");
-                    if (!ctx)
-                        throw ('get 2d context failed');
-
-                    ctx.beginPath();
-                    ctx.fillStyle = "#e0e031";
-                    ctx.fillRect(0, 0, 10000, 10000);
-
-                    let centerX = c.width / 2
-                    let centerZ = c.height / 2
-                    ctx.setTransform(1, 0, 0, 1, 0, 0);
-                    ctx.translate(centerX, centerZ);
-                    let minZ = centerZ - c.height
-                    ctx.fillStyle = "green";
-                    await ground.inited;
-                    await ground.textureCreated;
-                    console.debug('ground ready');
-                    blazor.invokeMethod('setProgress', 57, null);
-                    let timer = new Date().getTime();
-                    for (let row = centerX - c.width + 1; row < centerX; row = row + 2) {
-                        // Progress 58, 59 and 60 are reserved for this 
-                        
-                        for (let col = minZ + 1; col < centerZ; col = col += 2) {
-                            let height = ground.getHeightAtCoordinates(row, col)
-                            if (height > 3) {
-                                ctx.fillRect(row, col * -1, 3, 3);
-                            }
-                        }
-                    }
-                    console.debug('Terrain painted, took', new Date().getTime() - timer);
-                    //progelem.value = 65;
-                    blazor.invokeMethod('setProgress', 61,null);
-                    c.toBlob(async b => {
-
-                        blazor.invokeMethod('setProgress', 63, null);
-                        if (b) {
-                            vdata.texture = b;
-                            tres(b);
-                            queueMicrotask(async () => {
-                                (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
-                            });
-                        } else {
-                            trej('To Blob failed')
-                        }
-                    }, 'image/webp', 1);
-                } else
-                    tres(vdata.texture);
-            });*/
-            
-            ground.textureCreated.then((imgdata) => {
-                console.debug('createTexture ready');
-
-                    //progelem.value = 80;
-                    blazor.invokeMethod('setProgress', 75, null);
-                    let width = 10000;
-                    let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
-                        _engine: engine,
-                        _source: 3,
-                        _webGLTexture: gl.createTexture()
-                    }
-
-                    //engine.updateRawTexture(rtexture2, imagedata.data, BABYLON.Engine.TEXTUREFORMAT_RGBA, true, null, BABYLON.Constants.TEXTURETYPE_UNSIGNED_INT);
-
-                    gl.bindTexture(gl.TEXTURE_2D, rtexture2._webGLTexture);
-
-                    //gl.bindTexture(gl.TEXTURE_2D, ntexture);
-                    //engine._unpackFlipY(true);
-                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                    if (width % 4 !== 0) {
-                        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-                }
-                    let size = new Float32Array(imgdata, 0, 2);
-                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, size[0], size[1], 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8ClampedArray(imgdata, Int32Array.BYTES_PER_ELEMENT * 2));
-
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-                    gl.bindTexture(gl.TEXTURE_2D, null);
-
-                    
-
-                    /*
-                     * https://stackoverflow.com/questions/50013385/hello-world-example-of-webgl-parallelism
-                     * 
-                     */
-
-
-                    (function () {
-                        //@ts-ignore
-                        this._options.samplers.push('groundTexture');
-                        //@ts-ignore
-                        this._textures['groundTexture'] = <BABYLON.Texture>{
-                            getInternalTexture: () =>  rtexture2, //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
-                            isReady: () => true,
-                            wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
-                            wrapV: BABYLON.Texture.CLAMP_ADDRESSMODE
-                        };
-                    }).bind(shadermateria)();
-                    ground.material = shadermateria;
-                    this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
-                    //progelem.parentElement.style.display = 'none';
-                    blazor.invokeMethod('setProgress', 100, null);
-            }).catch(e => {
-                console.error('creating terrain texture failed', e);
-                //progelem.parentNode.textContent = e;
-                blazor.invokeMethod('setProgress', 0, e.name+e.message);
-
-            });
             return ground
-        });
+        });*/
         this.terrainReady.catch((e) => {
             console.error('creating terrain failed', e);
             //progelem.parentNode.textContent = e;

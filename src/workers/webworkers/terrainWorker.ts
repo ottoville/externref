@@ -14,6 +14,112 @@ let slopeArr: Int16Array;
 let facet1Arr: Float32Array;
 let facet2Arr: Float32Array;
 
+function VERTEX_CreateGroundFromHeightMap(options: { width: number, height: number, subdivisions: number, minHeight: number, maxHeight: number, colorFilter: number[], buffer: Uint8ClampedArray, bufferWidth: number, bufferHeight: number, alphaFilter: number }) {
+    var indices = [];
+    var positions = [];
+    var normals = [];
+    var uvs = [];
+    var row, col;
+    var filter = options.colorFilter || [0.3, 0.59, 0.11];
+    var alphaFilter = options.alphaFilter || 0.0;
+    var invert = false;
+
+    if (options.minHeight > options.maxHeight) {
+        invert = true;
+        let temp = options.maxHeight;
+        options.maxHeight = options.minHeight;
+        options.minHeight = temp;
+    }
+    var position = {
+        x: 0,
+        y: 0,
+        z: 0
+    }
+    // Vertices
+    for (row = 0; row <= options.subdivisions; row++) {
+        for (col = 0; col <= options.subdivisions; col++) {
+            position.x = (col * options.width) / options.subdivisions - (options.width / 2.0);
+            position.z = ((options.subdivisions - row) * options.height) / options.subdivisions - (options.height / 2.0);
+
+
+            // Compute height
+            var heightMapX = (((position.x + options.width / 2) / options.width) * (options.bufferWidth - 1)) | 0;
+            var heightMapY = ((1.0 - (position.z + options.height / 2) / options.height) * (options.bufferHeight - 1)) | 0;
+
+            var pos = (heightMapX + heightMapY * options.bufferWidth) * 4;
+            var r = options.buffer[pos] / 255.0;
+            var g = options.buffer[pos + 1] / 255.0;
+            var b = options.buffer[pos + 2] / 255.0;
+            var a = options.buffer[pos + 3] / 255.0;
+
+            if (invert) {
+                r = 1.0 - r;
+                g = 1.0 - g;
+                b = 1.0 - b;
+            }
+
+            var gradient = r * filter[0] + g * filter[1] + b * filter[2];
+
+            // If our alpha channel is not within our filter then we will assign a 'special' height
+            // Then when building the indices, we will ignore any vertex that is using the special height
+            if (a >= alphaFilter) {
+                position.y = options.minHeight + (options.maxHeight - options.minHeight) * gradient;
+            }
+            else {
+                position.y = options.minHeight - Epsilon; // We can't have a height below minHeight, normally.
+            }
+
+            // Add  vertex
+            positions.push(position.x, position.y, position.z);
+            normals.push(0, 0, 0);
+            uvs.push(col / options.subdivisions, 1.0 - row / options.subdivisions);
+        }
+    }
+
+    // Indices
+    for (row = 0; row < options.subdivisions; row++) {
+        for (col = 0; col < options.subdivisions; col++) {
+            // Calculate Indices
+            var idx1 = (col + 1 + (row + 1) * (options.subdivisions + 1));
+            var idx2 = (col + 1 + row * (options.subdivisions + 1));
+            var idx3 = (col + row * (options.subdivisions + 1));
+            var idx4 = (col + (row + 1) * (options.subdivisions + 1));
+
+            // Check that all indices are visible (based on our special height)
+            // Only display the vertex if all Indices are visible
+            // Positions are stored x,y,z for each vertex, hence the * 3 and + 1 for height
+            var isVisibleIdx1 = positions[idx1 * 3 + 1] >= options.minHeight;
+            var isVisibleIdx2 = positions[idx2 * 3 + 1] >= options.minHeight;
+            var isVisibleIdx3 = positions[idx3 * 3 + 1] >= options.minHeight;
+            if (isVisibleIdx1 && isVisibleIdx2 && isVisibleIdx3) {
+                indices.push(idx1);
+                indices.push(idx2);
+                indices.push(idx3);
+            }
+
+            var isVisibleIdx4 = positions[idx4 * 3 + 1] >= options.minHeight;
+            if (isVisibleIdx4 && isVisibleIdx1 && isVisibleIdx3) {
+                indices.push(idx4);
+                indices.push(idx1);
+                indices.push(idx3);
+            }
+        }
+    }
+
+    // Normals
+    //ComputeNormals(positions, indices, normals);
+
+    // Result
+    var vertexData = { indices: [], positions: [], uvs: [] };
+
+    vertexData.indices = indices;
+    vertexData.positions = positions;
+    //vertexData.normals = normals;
+    vertexData.uvs = uvs;
+
+    return vertexData;
+};
+
 function intersects(boundingBox: BoundingBox, boundingSphere: BoundingSphere, ray: Ray, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): PickingInfo {
     let pickingInfo = new PickingInfo();
     //const boundingInfo = this._boundingInfo;
@@ -156,6 +262,74 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
         }
         methods2.createHeights(e);
         this.postMessage({ id: e.id, data: { } });
+    },
+    createHeightMap: async (d: { id?: number }) => {
+        try {
+            let img = await fetch('/images/tenerife3_75.webp');
+            let b = await img.blob();
+
+            let bitmap = await createImageBitmap(b);
+
+            /* RangeError: Array buffer allocation failed */
+            //let totalbufferdata = new SharedArrayBuffer(10000 * 10000 * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT);
+            let totalbufferdata = new SharedArrayBuffer(250 * 250 * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT);
+
+            let align = (250 - bitmap.width) / 2
+
+            let partcount = 2;
+            let readycount = 0;
+            let workers: Worker[] = [];
+            self.postMessage({ type: 'setProgress', data: { progress: 41 } });
+            (function initWorker(bitmap) {
+                let worker = new Worker('bitmapWorker.js');
+                workers.push(worker);
+                /* progress 42 and 43 are reserved for this */
+                console.log('spawning bitmap thread');
+                self.postMessage({ type: 'setProgress', data: { progress: 41 + (2 * (workers.length / partcount)) } });
+                console.log('bitmap thread spawned');
+                worker.postMessage({ bitmap: bitmap, buffer: totalbufferdata, partcount: partcount, partnumber: workers.length - 1, align: align }, [bitmap]);
+                worker.onmessage = e => {
+                    try {
+                        if (e.data.type == 'init') {
+                            if (workers.length < partcount) {
+                                bitmap = e.data.bitmap;
+                                initWorker(bitmap);
+                            } else {
+                                self.postMessage({ type: 'setProgress', data: { progress: 45 } });
+                                bitmap.close();
+                                self.postMessage({ type: 'setProgress', data: { progress: 46 } });
+                            }
+                        } else if (e.data.type == 'ready') {
+                            if (++readycount == partcount) {
+                                self.postMessage({ type: 'setProgress', data: { progress: 48 } });
+                                self.postMessage({
+                                    id: d.id, data: VERTEX_CreateGroundFromHeightMap({
+                                        width: 10000, height: 10000,
+                                        subdivisions: 250,
+                                        minHeight: -2, maxHeight: 250, colorFilter: [0.3, 0.59, 0.11],
+                                        buffer: new Uint8ClampedArray(totalbufferdata), bufferWidth: 250, bufferHeight: 250,
+                                        alphaFilter: 0.0
+                                    })
+                                });
+                                workers.forEach(w => w.terminate());
+                            }
+                        } else if (e.data.type == 'rejected') {
+                            throw (e.data.data);
+                        }
+                    } catch (e) {
+                        if (e instanceof DOMException) {
+                            self.postMessage({ id: d.id, rejected: true, data: e.message });
+                        } else
+                            self.postMessage({ id: d.id, rejected: true, data: e });
+                    }
+                }
+            })(bitmap);
+        } catch (e) {
+            if (e instanceof DOMException) {
+                self.postMessage({ id: d.id, rejected: true, data: e.name + ': ' + e.message });
+            } else
+                self.postMessage({ id: d.id, rejected: true, data: e });
+        }
     },
     mousemove: (e: WMessage) => {
         let ray = Ray.Zero();

@@ -117,7 +117,7 @@ export class TerrainTool extends UITAB {
             }
             return this;
         }).bind(this.helpermaterial)();
-        this.terrain.terrainWorker.subscribe('SubHeights', (v) => {
+        Terrain.terrainWorker.subscribe('SubHeights', (v) => {
             let width = v.data.endX - v.data.offsetX;
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
             (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.offsetX, v.data.offsetY, width, 1, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr, v.data.srcOffset)
@@ -128,7 +128,7 @@ export class TerrainTool extends UITAB {
         });
         let mainboundingInfo = this.terrain.getBoundingInfo();
         let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
-        this.terrain.terrainWorker.subscribe('bounding', (v) => {
+        Terrain.terrainWorker.subscribe('bounding', (v) => {
             this.terrain.subMeshes[0]._lastColliderWorldVertices = null;
             boundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
             boundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
@@ -239,7 +239,7 @@ export class TerrainTool extends UITAB {
             //@ts-ignore
             let vertexbuffer: WebGLBuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.PositionKind]._buffer.getBuffer().underlyingResource;
             this.timer = new Date().getTime();
-            this.terrain.terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(e => {
+            Terrain.terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(e => {
                 let NormalsRange = <{ normalsMin: number, normalsMax: number }><any>e;
                 gl.bindBuffer(gl.ARRAY_BUFFER, normalbuffer);
                 gl.bufferSubData(gl.ARRAY_BUFFER, NormalsRange.normalsMin, this.terrain.normalsView, NormalsRange.normalsMin, NormalsRange.normalsMax - NormalsRange.normalsMin)
@@ -258,7 +258,7 @@ export class TerrainTool extends UITAB {
     }
     deactivate = (): void => {
         super.deactivate();
-        this.terrain.terrainWorker.unsubscribe('heights');
+        Terrain.terrainWorker.unsubscribe('heights');
         //this.removeListener("pointerdown", this.pointerdownf);
         this.helper.visibility = 0;
         //this.removeListener("pointermove", this.mouseListener);
@@ -276,7 +276,7 @@ export class TerrainTool extends UITAB {
         let engine = this.scene.getEngine();
         let viewport = this.camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
         let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
-        this.terrain.terrainWorker.message(WorkerReturn.Promise, 'mousemove',
+        Terrain.terrainWorker.message(WorkerReturn.Promise, 'mousemove',
             {
                 x: evt.clientX,
                 y: evt.clientY,

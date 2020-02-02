@@ -154,7 +154,7 @@
         "signature": "c799367a4032e7b69c739637db52385c4cbd036882952865c43ebcc52ce5cd44"
       },
       "./webworkers/bitmapworker.ts": {
-        "version": "d397882b22bf079d414acaa47e8fea88d6529edee5a29c03a173122802dd2ef7",
+        "version": "f4ec24cf4b3f88bbaca262164076dddbce4e843c14cd952dedc17e8ec6596449",
         "signature": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "./webworkers/grass.ts": {
@@ -162,20 +162,20 @@
         "signature": "2b22d1846d2cadf3be08037313ecf88f73a60d458409b689ee4c379869370394"
       },
       "./webworkers/mesh.ts": {
-        "version": "de17badcace0a13dd764f0d5e96fc6cd42099c03a1d77c6b60a4bf9a9d8d97bc",
-        "signature": "29c5670bf7d2cdf92af60341970a55853d028fc30c55064172116c094807b3bd"
+        "version": "10e238c87911c2baa6e36fa3f46fec8f546ef8376e0836c72692fd6fe9b014a0",
+        "signature": "a7b560a9449aa72fae3fa02015d38869cdd8c3efde73ace3aeb6d4e6ff36c5aa"
       },
       "./webworkers/ray.ts": {
         "version": "d0a795a1cb33af85b4532fdcbc119064b75e7844eecb23fefcac66347d897bdf",
         "signature": "18c32230268def88f3a8c49b95760e540de31e78dc2d5849c5a703d6d7ab18bf"
       },
       "./webworkers/sceneworker.ts": {
-        "version": "26e3f6db24c13803551362cca6ab8b3d19bf38e3391152ad4b8f6eded92b9136",
-        "signature": "b4db54ba8e510c81f79f482a81027bb327f05054fe853df2d4a15b04c23c78a5"
+        "version": "44902de831d012f293f7b63dabd65c9c759873aa315b626ae88bef7369ca2dee",
+        "signature": "b8b1a48db1211aa89ef48ea475990e6981b32e1a12ec86f7927a1a942c59bf64"
       },
       "./webworkers/terrainworker.ts": {
-        "version": "c53cbb51e90bc6f0c778f1843a8f72c008f302c62901d09d7f50da880be929e1",
-        "signature": "e786ee6ab9a1d7731cddfc171ba6a914ef616851826edf811b28980427db09ef"
+        "version": "4c5ab51b41e7ef4e815d1ac9d38ffa8a2317ceabdcd0c88a68a985f143f42ab2",
+        "signature": "ba5e4370e13f280cd99e095dd9818794cddaa114945f26ecd55f1c848616ea84"
       },
       "./sw.ts": {
         "version": "aeb474c22122788fcb555a7f55bd8cdee455fcc4da31b71ca511e52b03d6aae3",
