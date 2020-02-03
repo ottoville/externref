@@ -68,6 +68,7 @@
     <None Remove="src\tools\Terrain.ts" />
     <None Remove="src\webgl.ts" />
     <None Remove="src\workers\commonMath.d.ts" />
+    <None Remove="src\workers\interfaces.ts" />
     <None Remove="src\workers\webworkers\bitmapWorker.ts" />
     <None Remove="src\workers\webworkers\mesh.ts" />
     <None Remove="src\workers\webworkers\ray.ts" />

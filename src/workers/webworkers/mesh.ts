@@ -322,13 +322,15 @@ class Mesh {
         return this.normals;
     }
 }
-onmessage = async (e: WorkerMessage) => {
+onmessage = async (e: WorkerMessage<{meshId: number, args: any[]}>) => {
     if (e.data.action == 'init') {
-        meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));
+        meshes.set(e.data.data.meshId, new Mesh(...<[SharedArrayBuffer, SharedArrayBuffer, SharedArrayBuffer | null]>e.data.data.args));
+        //meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));
     } else {
         let mesh: Mesh = null;
         if (mesh = meshes.get(e.data.data.meshId)) {
             console.log(e);
+            //TypeError: mesh[e.data.action] is not iterable (cannot read property Symbol(Symbol.iterator))
             let r = mesh[e.data.action](...e.data.data.args);
             this.postMessage({ id: e.data.id, data: r });
         }

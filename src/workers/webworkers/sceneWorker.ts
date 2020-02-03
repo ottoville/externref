@@ -69,6 +69,6 @@ let methods4: { [index: string]: (data: any) => void } = {
         }
     }
 }
-onmessage = async (e: WorkerMessage) => {
+onmessage = async (e: WorkerMessage<any>) => {
     methods4[<string>e.data.action](e.data);
 }

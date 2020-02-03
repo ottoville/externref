@@ -1,12 +1,7 @@
 ﻿importScripts("/js/commonMath.js");
 importScripts("/webworkers/ray.js");
 
-interface WMessage {
-    type: WorkerReturn,
-    action: string,
-    data: any,
-    id?: number
-}
+
 let terrainPositions: Float32Array;
 let terrainIndices: Uint32Array;
 let terrainNormals: Float32Array;
@@ -215,8 +210,8 @@ let boundingBox;
 let boundingSphere;
 
 
-let methods2: { [index: string]: (e: WMessage) => void} = {
-    init: (e) => {
+let methods2: { [index: string]: (e: WMessage<any>) => void} = {
+    init: (e: WMessage<{ positions: any, indices: any, normals: any, slopeArr: any, facet1Arr: any, facet2Arr: any, subdivisionsX: any, subdivisionsY: any, boundingBox: any, boundingSphere: any }>) => {
         terrainPositions = new Float32Array(e.data.positions);
         terrainIndices = new Uint32Array(e.data.indices);
         terrainNormals = new Float32Array(e.data.normals);
@@ -331,7 +326,7 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
                 self.postMessage({ id: d.id, rejected: true, data: e });
         }
     },
-    mousemove: (e: WMessage) => {
+    mousemove: (e: WMessage<{x:number, y:number, viewportWidth:number, viewportHeight:number, projection: any, view:any}>) => {
         let ray = Ray.Zero();
         /* ray.unprojectRayToRef(e.data.x,
              e.data.y,
@@ -367,7 +362,7 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
             self.postMessage({ id: e.id, data: { x: pickInfo.pickedPoint.x, y: pickInfo.pickedPoint.z } });
         }
     },
-    elevateFaces: (e: WMessage) => {
+    elevateFaces: (e: WMessage<{radius:number, height:number, direction: number}>) => {
         // console.log('elevatefaces');
         let radiusPow = Math.pow(e.data.radius, 2);
         // Impact zone
@@ -686,6 +681,6 @@ let methods2: { [index: string]: (e: WMessage) => void} = {
         self.postMessage({ type: 'heights', data: {} });
     }
 }
-onmessage = async (e: WorkerMessage) => {
+onmessage = async (e: WorkerMessage<any>) => {
     methods2[e.data.action](e.data);
 }

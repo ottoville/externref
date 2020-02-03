@@ -82,10 +82,7 @@ export class Terrain extends TerraMesh {
         
         vertexData.uvs = this.uvs;
 
-
-        this.inited=TerraMesh.worker.message<SharedArrayBuffer, PostMessageOptions>(WorkerReturn.Promise, 'ComputeNormals', {
-            meshId: this.uniqueId
-        }).then(async normalsb => {
+        this.inited = TerraMesh.worker.message<SharedArrayBuffer, PostMessageOptions>(this.uniqueId, 'ComputeNormals').then(async normalsb => {
             console.log('normals computed')
             let boundingInfo = this.subMeshes[0].getBoundingInfo();
             this.normalsBuffer = normalsb;

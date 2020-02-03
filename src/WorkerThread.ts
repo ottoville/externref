@@ -3,7 +3,7 @@ export enum WorkerReturn {
     Promise
 }
 interface WMessage {
-    type: WorkerReturn,
+    type?: WorkerReturn,
     action: string,
     data: any,
     id?: number
@@ -12,7 +12,7 @@ interface WorkerMessage extends MessageEvent {
     data: WMessage
 }
 export class WorkerThread extends Worker {
-    private operations: ([
+    protected operations: ([
          (value?: unknown) => void,
          (value?: unknown) => void 
     ]|null)[] = [];
@@ -49,5 +49,22 @@ export class WorkerThread extends Worker {
     }
     unsubscribe(type: string) {
         delete this.subscriptions[type];
+    }
+}
+export class ObjectWorkerThread extends WorkerThread {
+    constructor(stringUrl: any, options?: WorkerOptions) {
+        super(stringUrl, options);
+    }
+    message<T, U>(objectID: number, action: string, args?: any[], options?: U): Promise<T> {
+        let toWorker: WMessage = {
+            action: action, data: {
+                meshId: objectID,
+                args: typeof(args)!=='undefined'?args:[]
+            }
+        };
+        return new Promise((res, rej) => {
+            toWorker.id = this.operations.push([res, rej]) - 1
+            super.postMessage(toWorker, options);
+        })
     }
 }

@@ -1,4 +1,4 @@
-﻿import { WorkerThread, WorkerReturn } from "./WorkerThread.js";
+﻿import { ObjectWorkerThread, WorkerReturn } from "./WorkerThread.js";
 
 export class TerraMesh extends BABYLON.Mesh {
     public positionsBuffer: SharedArrayBuffer;
@@ -8,18 +8,22 @@ export class TerraMesh extends BABYLON.Mesh {
     public indices: Uint32Array;
     public indicesBuffer: SharedArrayBuffer;
 
-    public normalsBuffer: SharedArrayBuffer | null;
-    public normals: Float32Array | null;
-    public normalsView: DataView | null;
+    public normalsBuffer: SharedArrayBuffer;
+    public normals: Float32Array;
+    public normalsView: DataView;
 
-    static worker = new WorkerThread('/webworkers/mesh.js');
+    static worker = new ObjectWorkerThread('/webworkers/mesh.js');
 
-    constructor(name: string, indices: Uint32Array, positions: Float32Array, protected wasm, normals?: Float32Array) {
+    constructor(name: string, indices: Uint32Array, positions: Float32Array, normals: Float32Array, protected wasm) {
         super(name);
         this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * indices.length);
         this.indices = new Uint32Array(this.indicesBuffer);
         this.indices.set(indices);
 
+        this.normalsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * normals.length)
+        this.normals = new Float32Array(this.normalsBuffer)
+        this.normals.set(normals);
+        this.normalsView = new DataView(this.normalsBuffer);
 
 
         this.positionsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * positions.length);
@@ -27,29 +31,7 @@ export class TerraMesh extends BABYLON.Mesh {
         this.positions.set(positions);
         this.positionsView = new DataView(this.positionsBuffer);
 
-
-        if (typeof (normals) !== 'undefined') {
-            this.normalsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * normals.length)
-            this.normals = new Float32Array(this.normalsBuffer)
-            this.normals.set(normals);
-            this.normalsView = new DataView(this.normalsBuffer);
-
-            TerraMesh.worker.message(WorkerReturn.Promise, 'init',
-                {
-                    meshId: this.uniqueId,
-                    positions: this.positionsBuffer,
-                    indices: this.indicesBuffer,
-                    normals: this.normalsBuffer,
-                });
-        } else {
-            TerraMesh.worker.message(WorkerReturn.Promise, 'init',
-                {
-                    meshId: this.uniqueId,
-                    positions: this.positionsBuffer,
-                    indices: this.indicesBuffer,
-                });
-        }
-
+        TerraMesh.worker.message(this.uniqueId, 'init', [this.indicesBuffer, this.positionsBuffer, this.normalsBuffer]);
     }
     public _checkCollision(collider: BABYLON.Collider): BABYLON.AbstractMesh {
 
@@ -119,11 +101,7 @@ export class TerraMesh extends BABYLON.Mesh {
     }
     public intersectsPromise(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): Promise<BABYLON.PickingInfo> {
         let bounding = this.getBoundingInfo();
-        return TerraMesh.worker.message(WorkerReturn.Promise, 'intersects',
-            {
-                meshId: this.uniqueId,
-                args: [bounding.boundingBox, bounding.boundingSphere, ray.origin, ray.direction, fastCheck, trianglePredicate]
-            });
+        return TerraMesh.worker.message(this.uniqueId, 'intersects', [bounding.boundingBox, bounding.boundingSphere, ray.origin, ray.direction, fastCheck, trianglePredicate]);
     }
     public render(subMesh: BABYLON.SubMesh, enableAlphaMode: boolean, effectiveMeshReplacement?: BABYLON.AbstractMesh): BABYLON.Mesh {
         if (this._internalAbstractMeshDataInfo._isActiveIntermediate) {

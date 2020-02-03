@@ -155,20 +155,7 @@ function simplex(xin: number, yin: number) {
 
 
 declare var DB: Promise<IDBDatabase>;
-enum WorkerReturn {
-    noReturn,
-    Promise
-}
-interface WMessage
-{
-    type: WorkerReturn,
-    action:string,
-    data: any,
-    id?: number
-}
-interface WorkerMessage extends MessageEvent {
-    data: WMessage
-}
+
 importScripts("/js/DB.js");
 importScripts("/js/commonMath.js");
 const numBlades = 70000;
@@ -192,14 +179,14 @@ interface PlantI {
 	noise: number
 }
 let methods = {
-	init: (data: WMessage) => {
+	init: (data: WMessage<{positions:any, shape:any, noises:any}>) => {
 		console.log('init plants worker');
         positions=new Float32Array(data.data.positions);
         shapes=new Float32Array(data.data.shape);
         noises=new Float32Array(data.data.noises);
         this.postMessage({id: data.id});
     },
-	save: async (data: WMessage) => {
+	save: async (data: WMessage<{ amount: number, angle: number, area: {size:any, coord: any}}>) => {
 		var d = new Date().getTime();
 		let db = await DB;
 		let trans = db.transaction("plantae");
@@ -347,7 +334,7 @@ let methods = {
         }
     }
 }
-onmessage = async (e: WorkerMessage) => {
+onmessage = async (e: WorkerMessage<{}>) => {
     methods[e.data.action](e.data);
 }
 
