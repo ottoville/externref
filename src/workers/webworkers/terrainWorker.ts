@@ -258,6 +258,25 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
         methods2.createHeights(e);
         this.postMessage({ id: e.id, data: { } });
     },
+    saveTexture: (arrayBuffer: WMessage<ArrayBuffer>) => {
+        //@ts-ignore
+        let c = new OffscreenCanvas(...new Int32Array(arrayBuffer.data, 0, 2))
+
+        let ctx = c.getContext("2d");
+        if (!ctx)
+            throw ('get 2d context failed');
+        ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer.data, Int32Array.BYTES_PER_ELEMENT * 2), c.width, c.height), 0, 0);
+        c.toBlob(async b => {
+            if (b) {
+                vdata.texture = b;
+                queueMicrotask(async () => {
+                    (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
+                });
+            } else {
+                trej('To Blob failed')
+            }
+        }, 'image/webp', 1);
+    },
     createHeightMap: async (d: { id?: number }) => {
         try {
             let img = await fetch('/images/tenerife3_75.webp');

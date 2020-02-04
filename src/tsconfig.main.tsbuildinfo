@@ -226,7 +226,7 @@
         "signature": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c"
       },
       "./world/scene.ts": {
-        "version": "28e36e337cb45e32668676268b2f90bf1f64dffb6c73870de4d251fb3097ab6c",
+        "version": "41dc29001b3524d1772f82fd0ac25f95da935937eb03abf96096a805db97c3d4",
         "signature": "0132eca9818a69322b8980110e789c27b2ed16a3ce041863d60786285a6167b4"
       },
       "./code.ts": {
@@ -496,10 +496,22 @@
       "./workerthread.ts",
       "./terramesh.ts",
       "./uitab.ts",
+      "./world/sun.ts",
+      "./world/terrain.ts",
+      "./plants/plants.ts",
+      "./paintground/paintground.ts",
+      "./paintground/paintplane.ts",
+      "./tools/plantsui.ts",
+      "./paintground/painttexture.ts",
       "./webgl.ts",
+      "./tools/zones.ts",
+      "./tools/camera.ts",
       "./tools/buildings.ts",
+      "./tools/terrain.ts",
       "./rustwasm/hello_wasm.d.ts",
+      "./code.ts",
       "./commonmath.ts",
+      "./paintground/paintline.ts",
       "./plants/grass.ts",
       "./rustwasm/hello_wasm_bg.d.ts",
       "./types/interfaces/index.d.ts",
@@ -507,19 +519,7 @@
       "./node_modules/babylonjs/babylon.module.d.ts",
       "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./world/terrain.ts",
-      "./paintground/paintline.ts",
-      "./world/scene.ts",
-      "./tools/terrain.ts",
-      "./tools/camera.ts",
-      "./tools/zones.ts",
-      "./paintground/painttexture.ts",
-      "./tools/plantsui.ts",
-      "./paintground/paintplane.ts",
-      "./paintground/paintground.ts",
-      "./plants/plants.ts",
-      "./world/sun.ts",
-      "./code.ts"
+      "./world/scene.ts"
     ]
   },
   "version": "3.8.0-beta"

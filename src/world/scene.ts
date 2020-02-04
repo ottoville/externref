@@ -731,18 +731,20 @@ export class WorldScene extends BABYLON.Scene {
             let trans = db.transaction('maps');
             trans.onerror = ccrej;
 
-            let [ground, createtexture] = await new Promise<[Terrain, boolean]>((tres, trej) => {
+            let [ground, texture] = await new Promise<[Terrain, Promise<ArrayBuffer | HTMLImageElement>]>((tres, trej) => {
                 trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
                     try {
                         //progelem.value = 40;
                         blazor.invokeMethod('setProgress', 30, null);
                         if ((<IDBRequest>evt.target).result) {
                             ccres((<IDBRequest>evt.target).result.value);
-                            tres([new Terrain((<IDBRequest>evt.target).result.value, Wasm), typeof((<IDBRequest>evt.target).result.value.texture)==='undefined']);
+                            let img = new Image();
+                            img.src = URL.createObjectURL((<IDBRequest>evt.target).result.value.texture);
+                            tres([new Terrain((<IDBRequest>evt.target).result.value, Wasm), img.decode().then(() => img)]);
                         }
                         else {
                             let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp', Wasm);
-                            tres([ground,true]);
+                            tres([ground, ground.createTexture()]);
                             let obj = {
                                 width: 10000,
                                 height: 10000,
@@ -753,7 +755,6 @@ export class WorldScene extends BABYLON.Scene {
                             let trans2 = db.transaction('maps', 'readwrite');
                             trans2.onerror = ccrej;
                             trans2.objectStore('maps').add(obj);
-
                         }
 
                     } catch (e) {
@@ -761,25 +762,7 @@ export class WorldScene extends BABYLON.Scene {
                     }
                 }
             });
-
-
-            ground.isPickable = true;
-            sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
-            sea.position.y = 0;
-            let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
-            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
-            let gl: WebGLRenderingContext = engine._gl;
-
-            shadermateria.setVector3("lightPos", sunlight.position);
-            shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-            ccres(ground);
-            if (createtexture) {
-
-            }
-            ground.createTexture().then((imgdata) => {
-                console.debug('createTexture ready');
-                
-                //progelem.value = 80;
+            texture.then(imgdata => {
                 blazor.invokeMethod('setProgress', 75, null);
                 let width = 10000;
                 let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
@@ -798,11 +781,17 @@ export class WorldScene extends BABYLON.Scene {
                 if (width % 4 !== 0) {
                     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
                 }
-
-                let size = new Float32Array(imgdata, 0, 2);
-                let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, "RGBA8", size[0], size[1], gl.RGBA, gl.UNSIGNED_BYTE, new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2));
-                tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
-                tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+                if (imgdata instanceof HTMLImageElement) {
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, imgdata);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                } else {
+                    let size = new Float32Array(imgdata, 0, 2);
+                    let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, "RGBA8", size[0], size[1], gl.RGBA, gl.UNSIGNED_BYTE, new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2));
+                    tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
+                    tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+                }
+                //progelem.value = 80;
 
 
                 gl.bindTexture(gl.TEXTURE_2D, null);
@@ -825,15 +814,25 @@ export class WorldScene extends BABYLON.Scene {
                     };
                 }).bind(shadermateria)();
                 ground.material = shadermateria;
-                this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
-                //progelem.parentElement.style.display = 'none';
-                blazor.invokeMethod('setProgress', 100, null);
-            }).catch(e => {
-                console.error('creating terrain texture failed', e);
-                //progelem.parentNode.textContent = e;
-                blazor.invokeMethod('setProgress', 0, e.name + e.message);
+            })
 
-            });
+            ground.isPickable = true;
+            sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
+            sea.position.y = 0;
+            let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
+            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
+            let gl: WebGLRenderingContext = engine._gl;
+
+            shadermateria.setVector3("lightPos", sunlight.position);
+            shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
+            ccres(ground);
+            
+ 
+            this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
+            //progelem.parentElement.style.display = 'none';
+            blazor.invokeMethod('setProgress', 100, null);
+
+                
             return ground;
         });
         /*
