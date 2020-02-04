@@ -54,7 +54,6 @@ export class WorldScene extends BABYLON.Scene {
     private gameSpeed = BigInt(0);
     private lastStateChangeGameTime = BigInt(21600 * 1000); //6 hours
     private lastStateChangeTime = new Date().getTime();
-    private worker = new WorkerThread('/webworkers/sceneWorker.js');
     /*public getGameTime(): bigint {
         if (this.gameSpeed < 0)
             return this.lastStateChangeGameTime;
@@ -675,21 +674,17 @@ export class WorldScene extends BABYLON.Scene {
     }
     constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine);
-        this.worker.subscribe('setProgress', (data) => {
-            console.log('got progress from worker', data);
-            blazor.invokeMethod('setProgress', data.data.progress, data.data.error);
-        });
         if (webSocket) {
             webSocket.send(JSON.stringify({ action: 'init', data: { userinfo, ticks } }));
             webSocket.onmessage = (e) => {
                 let msg = JSON.parse(e.data);
                 if (msg.action == 'init') {
-                    console.log('going to init game', msg.currentPlayData)
+                    console.debug('going to init game', msg.currentPlayData)
                     blazor.invokeMethod('initGame', msg.currentPlayData);
                 }
             }
         } else {
-            console.log('initing without websocket connection');
+            console.debug('initing without websocket connection');
             blazor.invokeMethod('initGame', {
                 gameSpeed: 0,
                 lastStateChangeGameTime: 216000000000,
@@ -724,17 +719,66 @@ export class WorldScene extends BABYLON.Scene {
         let sea: BABYLON.Mesh;
         this.terrainReady = new Promise(async (ccres, ccrej) => {
             await Wasm.default();
-            let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp', Wasm);
+            /*
+             *         this.worker.subscribe('setProgress', (data) => {
+            console.log('got progress from worker', data);
+            blazor.invokeMethod('setProgress', data.data.progress, data.data.error);
+        });
+        */
+
+
+            let db = (await DB);
+            let trans = db.transaction('maps');
+            trans.onerror = ccrej;
+
+            let [ground, createtexture] = await new Promise<[Terrain, boolean]>((tres, trej) => {
+                trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
+                    try {
+                        //progelem.value = 40;
+                        blazor.invokeMethod('setProgress', 30, null);
+                        if ((<IDBRequest>evt.target).result) {
+                            ccres((<IDBRequest>evt.target).result.value);
+                            tres([new Terrain((<IDBRequest>evt.target).result.value, Wasm), typeof((<IDBRequest>evt.target).result.value.texture)==='undefined']);
+                        }
+                        else {
+                            let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp', Wasm);
+                            tres([ground,true]);
+                            let obj = {
+                                width: 10000,
+                                height: 10000,
+                                indices: new Uint32Array(ground.indices),
+                                positions: new Float32Array(ground.positions),
+                                uvs: new Float32Array(ground.uvs)
+                            };
+                            let trans2 = db.transaction('maps', 'readwrite');
+                            trans2.onerror = ccrej;
+                            trans2.objectStore('maps').add(obj);
+
+                        }
+
+                    } catch (e) {
+                        ccrej(e);
+                    }
+                }
+            });
+
+
+            ground.isPickable = true;
             sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
+            sea.position.y = 0;
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
             let gl: WebGLRenderingContext = engine._gl;
 
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-            ground.textureCreated.then((imgdata) => {
-                console.debug('createTexture ready');
+            ccres(ground);
+            if (createtexture) {
 
+            }
+            ground.createTexture().then((imgdata) => {
+                console.debug('createTexture ready');
+                
                 //progelem.value = 80;
                 blazor.invokeMethod('setProgress', 75, null);
                 let width = 10000;
@@ -754,22 +798,14 @@ export class WorldScene extends BABYLON.Scene {
                 if (width % 4 !== 0) {
                     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
                 }
-                console.log('imgdata');
-                console.log(imgdata);
+
                 let size = new Float32Array(imgdata, 0, 2);
-                console.log('set ground texture, width/height', size);
-                console.log(new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2));
                 let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, "RGBA8", size[0], size[1], gl.RGBA, gl.UNSIGNED_BYTE, new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2));
                 tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
                 tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
 
-              /*  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, size[0], size[1], 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2));
-
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);*/
 
                 gl.bindTexture(gl.TEXTURE_2D, null);
-
 
 
                 /*
@@ -863,7 +899,7 @@ export class WorldScene extends BABYLON.Scene {
             blazor.invokeMethod('setProgress', 0, e.name + e.message);
         })
         this.terrainReady.then((terrain: Terrain) => {
-            
+            console.debug('terrain ready');
             /* Promise.all([CSG.fromMesh(this.mesh), CSG.fromMesh(grassbox)]).then(r => {
                  if (thismeshoperation !== meshoperatiocount) {
                      r[0].dispose();
@@ -908,11 +944,11 @@ export class WorldScene extends BABYLON.Scene {
            }, scene);*/
 
             // canvas.addEventListener("pointerdown", DZ.mainPointerDown, false);
-            terrain.isPickable = true;
+            
 
             //var seaground = BABYLON.Mesh.CreateGround("ground", 3601, 3601, 1, scene, false);
             //seaground.position.y = -1.5;
-            sea.position.y = 0;
+            
 
             this.tools['Buildings'] = new BuildingsUI(this);
 

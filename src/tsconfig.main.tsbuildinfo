@@ -178,15 +178,15 @@
         "signature": "6c373ca5d35c73904132d88446bec36b0b45d0bb9757c1a1e5e62a6a6c9e9540"
       },
       "./world/terrain.ts": {
-        "version": "c74235fa901c9eb8afb359afad57cbc9bdcda810dbefadf5048860a3468c062c",
-        "signature": "298aaf6c2b9b133f12dd2e66837104f4dbfe81e15485b681d0b617793d0a6b0a"
+        "version": "018a8de7efcce6bad2a5fcaea434eeef50b7e21ad456c1f80406eb5489b19e23",
+        "signature": "24431575ca2beeb4dfbde5f23e7612d667bd34f24619be5dc9dfe8cb7d9a3228"
       },
       "./plants/plants.ts": {
         "version": "76a30d01a67679ee295cb158522faeafd13a9d1c496f0f5e502124404be009a8",
         "signature": "a33ffac193acff7864634472bcdb758197d57a9cf9563f11d4e3b25c33cc1d70"
       },
       "./paintground/paintground.ts": {
-        "version": "11c4894099345f51e346dec1fd3eeb04df0571bc45609407c3172ff76d50360e",
+        "version": "5cc25cfe2d02d2558c86382ee4aced5661e71daf6e5878fd1dc217e2982f1e29",
         "signature": "88feb0e7a0b3612977d4ad82c55b6b49a3c7100701d801671a8dd8541da6a04b"
       },
       "./paintground/paintplane.ts": {
@@ -198,8 +198,8 @@
         "signature": "383d602e5892880ef0057cccaf3c8598011d0e173b2ccecd5dff485f030816f1"
       },
       "./paintground/painttexture.ts": {
-        "version": "2046264c243cac4e20131a97f48dc1e8a997fee4394efdb0dedb89dac13db54f",
-        "signature": "44ac9ca7dd03c9eeaf1c0585f0ad8f3aa578e2841c0a30ee38f82c608c893565"
+        "version": "62f93b373de55cf81fb8e8d2e42e4046fdb68077ed2f2987bb414f07731134c8",
+        "signature": "b59f8c5e075b4bf7dc005cd5c947df0730a8f91d8947af244a5811b431f34f2e"
       },
       "./webgl.ts": {
         "version": "007051624f52dcb05ba0b2571afc2e166197eb88d93263ea3aa3be2669434e22",
@@ -226,8 +226,8 @@
         "signature": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c"
       },
       "./world/scene.ts": {
-        "version": "11de2e69ccd538f54c6ed1fcc03fc11b18729d9fea89bad264def344402d9001",
-        "signature": "0aed11969014d2ed5d8924ffd0a220cef2ac9857ecd1820eab7751961334dab5"
+        "version": "28e36e337cb45e32668676268b2f90bf1f64dffb6c73870de4d251fb3097ab6c",
+        "signature": "0132eca9818a69322b8980110e789c27b2ed16a3ce041863d60786285a6167b4"
       },
       "./code.ts": {
         "version": "341c3421d2d7e36caeb306f87111602f42641f42fb78da7dd3e32448c0fcf617",
@@ -250,8 +250,8 @@
         "signature": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86"
       },
       "./types/interfaces/index.d.ts": {
-        "version": "6be1ca6b1a624640969bdc5c3e2a32f20a4e28b28941e43896f0478a4474e792",
-        "signature": "6be1ca6b1a624640969bdc5c3e2a32f20a4e28b28941e43896f0478a4474e792"
+        "version": "721775e79adf481c398dcae22896133ddb35328c6081c973a1598a09be6f74c8",
+        "signature": "721775e79adf481c398dcae22896133ddb35328c6081c973a1598a09be6f74c8"
       },
       "./rustwasm/hello_wasm.js": {
         "version": "6a46400090dd40da2263903087a43a1de57d6db13fe10c05852c18360dc809d4",
@@ -315,7 +315,6 @@
         "./world/terrain.ts"
       ],
       "./paintground/paintground.ts": [
-        "./lazyeval.ts",
         "./uitab.ts",
         "./world/terrain.ts"
       ],

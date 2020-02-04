@@ -6,7 +6,7 @@ type Zone = {
 type subTexture = {
     x: number;
     z: number;
-    imageData: ImageData;
+    imageData: ImageData | null;
 }
 type savedCamera = {id:number, camera: {alpha: number, beta:number, radius:number, target: BABYLON.Vector3, position: BABYLON.Vector3}}
 type PTDresult =

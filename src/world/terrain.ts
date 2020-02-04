@@ -41,70 +41,12 @@ export class Terrain extends TerraMesh {
     public static terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
     public inited: Promise<any>;
-    public textureCreated: Promise<ArrayBuffer>;
     public static async fromHeightMap(map: string, wasm): Promise<Terrain> {
         let vdata = await Terrain.terrainWorker.message<TerrainMap, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {url: map});
         return new Terrain(vdata, wasm);
     }
-    //public ground: BABYLON.GroundMesh;
-    constructor(vdata: TerrainMap, wasm) {
-        super('ground', vdata.indices, vdata.positions, wasm);
-        console.debug('create terrain');
-        this.uvs = vdata.uvs;
-
-        this._subdivisionsX = 250;
-        this._subdivisionsY = 250;
-
-        this.slopeArrBuffer = new SharedArrayBuffer(Int16Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY)
-        this.facet1ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4);
-        this.facet2ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4);
-        this.slopeArr = new Int16Array(this.slopeArrBuffer);
-        this.facet1Arr = new Float32Array(this.facet1ArrBuffer);
-        this.facet2Arr = new Float32Array(this.facet2ArrBuffer);
-
-
-
-        this._width = vdata.width;
-        this._height = vdata.height;
-        this._maxX = this._width / 2.0;
-        this._maxZ = this._height / 2.0;
-        this._minX = -this._maxX;
-        this._minZ = -this._maxZ;
-
-        this.ratioX = this._subdivisionsX / this._width;
-        this.ratioY = this._subdivisionsY / this._height;
-
-        var vertexData = new BABYLON.VertexData();
-
-        vertexData.indices = this.indices;
-        vertexData.positions = this.positions;
-        
-        vertexData.uvs = this.uvs;
-
-        this.inited = TerraMesh.worker.message<SharedArrayBuffer, PostMessageOptions>(this.uniqueId, 'ComputeNormals').then(async normalsb => {
-            this.normalsBuffer = normalsb;
-            this.normals = new Float32Array(this.normalsBuffer)
-            this.normalsView = new DataView(this.normalsBuffer);
-            vertexData.normals = this.normals;
-            console.log('normals computed')           
-            console.log(vertexData.normals);
-            vertexData.applyToMesh(this, true);
-            let boundingInfo = this.subMeshes[0].getBoundingInfo();
-            return Terrain.terrainWorker.message(WorkerReturn.Promise, 'init',
-                {
-                    positions: this.positionsBuffer,
-                    indices: this.indicesBuffer,
-                    normals: this.normalsBuffer,
-                    slopeArr: this.slopeArrBuffer,
-                    facet1Arr: this.facet1ArrBuffer,
-                    facet2Arr: this.facet2ArrBuffer,
-                    subdivisionsX: this._subdivisionsX,
-                    subdivisionsY: this._subdivisionsY,
-                    boundingBox: boundingInfo.boundingBox,
-                    boundingSphere: boundingInfo.boundingSphere
-                });
-        })
-        this.textureCreated = new Promise((tres, trej) => {
+    public createTexture() : Promise<ArrayBuffer> {
+        return new Promise((tres, trej) => {
             this.inited.then(async () => {
                 console.log('creating terrain texture')
                 /* WEBGPU START */
@@ -163,11 +105,6 @@ export class Terrain extends TerraMesh {
 
                 // Result Matrix
 
-                //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 + firstMatrix[0] * secondMatrix[1]);
-
-                //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY;
-
-                //const resultMatrixBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 + 5000 * 5000);
                 const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5000 * 5000);
                 const resultMatrixBuffer = device.createBuffer({
                     size: resultMatrixBufferSize,
@@ -284,23 +221,23 @@ export class Terrain extends TerraMesh {
                 console.debug('Webgpu painted, took', new Date().getTime() - timer);
                 tres(arrayBuffer);
 
-               /* let c = document.createElement('canvas');
-                [c.width, c.height] = new Int32Array(arrayBuffer, 0, 2)
-
-                let ctx = c.getContext("2d");
-                if (!ctx)
-                    throw ('get 2d context failed');
-                ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer, Int32Array.BYTES_PER_ELEMENT * 2), c.width, c.height), 0, 0);
-                c.toBlob(async b => {
-                    if (b) {
-                        vdata.texture = b;
-                        queueMicrotask(async () => {
-                            (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
-                        });
-                    } else {
-                        trej('To Blob failed')
-                    }
-                }, 'image/webp', 1);*/
+                /* let c = document.createElement('canvas');
+                 [c.width, c.height] = new Int32Array(arrayBuffer, 0, 2)
+ 
+                 let ctx = c.getContext("2d");
+                 if (!ctx)
+                     throw ('get 2d context failed');
+                 ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer, Int32Array.BYTES_PER_ELEMENT * 2), c.width, c.height), 0, 0);
+                 c.toBlob(async b => {
+                     if (b) {
+                         vdata.texture = b;
+                         queueMicrotask(async () => {
+                             (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
+                         });
+                     } else {
+                         trej('To Blob failed')
+                     }
+                 }, 'image/webp', 1);*/
 
                 //let data = new Int32Array(arrayBuffer);
                 //let imagedata = new Uint8ClampedArray(arrayBuffer, Int32Array.BYTES_PER_ELEMENT * 2);
@@ -308,23 +245,78 @@ export class Terrain extends TerraMesh {
                 //let imagedata = new ImageData(new Uint8ClampedArray(arrayBuffer, Int32Array.BYTES_PER_ELEMENT*2), 5000, 5000);
 
 
-              /*  //let imagedata = testctx.getImageData(0, 0, 5000, 5000);
-                for (let i = 2; i < data.length; i++) {
-                    if (data[i] == 1)
-                        imagedata.data.set([0, 255, 0, 255], (i - 2) * 4);
-                    else
-                        imagedata.data.set([255, 255, 0, 255], (i - 2) * 4);
-                }*/
-                
+                /*  //let imagedata = testctx.getImageData(0, 0, 5000, 5000);
+                  for (let i = 2; i < data.length; i++) {
+                      if (data[i] == 1)
+                          imagedata.data.set([0, 255, 0, 255], (i - 2) * 4);
+                      else
+                          imagedata.data.set([255, 255, 0, 255], (i - 2) * 4);
+                  }*/
+
                 //testctx.putImageData(imagedata, 0, 0);
-                
-                
+
+
                 /* WEBGPU ENDS */
 
             })
         });
+    }
+    //public ground: BABYLON.GroundMesh;
+    constructor(vdata: TerrainMap, wasm) {
+        super('ground', vdata.indices, vdata.positions, wasm);
+        console.debug('create terrain');
+        this.uvs = vdata.uvs;
+
+        this._subdivisionsX = 250;
+        this._subdivisionsY = 250;
+
+        this.slopeArrBuffer = new SharedArrayBuffer(Int16Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY)
+        this.facet1ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4);
+        this.facet2ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4);
+        this.slopeArr = new Int16Array(this.slopeArrBuffer);
+        this.facet1Arr = new Float32Array(this.facet1ArrBuffer);
+        this.facet2Arr = new Float32Array(this.facet2ArrBuffer);
 
 
+
+        this._width = vdata.width;
+        this._height = vdata.height;
+        this._maxX = this._width / 2.0;
+        this._maxZ = this._height / 2.0;
+        this._minX = -this._maxX;
+        this._minZ = -this._maxZ;
+
+        this.ratioX = this._subdivisionsX / this._width;
+        this.ratioY = this._subdivisionsY / this._height;
+
+        var vertexData = new BABYLON.VertexData();
+
+        vertexData.indices = this.indices;
+        vertexData.positions = this.positions;
+        
+        vertexData.uvs = this.uvs;
+
+        this.inited = TerraMesh.worker.message<SharedArrayBuffer, PostMessageOptions>(this.uniqueId, 'ComputeNormals').then(async normalsb => {
+            this.normalsBuffer = normalsb;
+            this.normals = new Float32Array(this.normalsBuffer)
+            this.normalsView = new DataView(this.normalsBuffer);
+            vertexData.normals = this.normals;
+            vertexData.applyToMesh(this, true);
+            let boundingInfo = this.subMeshes[0].getBoundingInfo();
+            return Terrain.terrainWorker.message(WorkerReturn.Promise, 'init',
+                {
+                    positions: this.positionsBuffer,
+                    indices: this.indicesBuffer,
+                    normals: this.normalsBuffer,
+                    slopeArr: this.slopeArrBuffer,
+                    facet1Arr: this.facet1ArrBuffer,
+                    facet2Arr: this.facet2ArrBuffer,
+                    subdivisionsX: this._subdivisionsX,
+                    subdivisionsY: this._subdivisionsY,
+                    boundingBox: boundingInfo.boundingBox,
+                    boundingSphere: boundingInfo.boundingSphere
+                });
+        })
 
         this._setReady(true);
 

@@ -2,13 +2,10 @@ let startingPoint: Vector2;
 //let tempplane: BABYLON.Mesh | null
 let end_position: Vector2
 
-import { LazyEval } from "../LazyEval.js";
 import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 //import { rotateMatrix, translate } from "./math.js";
 
-let subTextureCache: subTexture;
-let planeorgpos: BABYLON.Vector3;
 let width: number;
 let height: number;
 let rotation: number;
@@ -22,11 +19,8 @@ export enum DrawType {
 };
 //type test = keyof HTMLElementEventMap;
 export abstract class paintGround {
-    //private type: DrawType;
     protected ang360: Angle = new Angle(0);
     protected ang: Angle = new Angle(0);
-    //private forceSharedVertices = true;
-    //private updateSubTextureLocal: any;
     constructor(
         public canvas: HTMLElement,
         protected scene: BABYLON.Scene,
@@ -42,12 +36,6 @@ export abstract class paintGround {
         this.resolve = callback;
     }
     public deactivate() {
-       /* this.uitab.listeners.forEach((map, type) => {
-            map.forEach((proxy, listener) => {
-                this.canvas.removeEventListener(type, proxy || listener);
-            });
-            map.clear();
-         });*/
         this.camera.attachControl(this.canvas, true);
     }
 
