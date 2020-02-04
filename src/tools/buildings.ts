@@ -1,14 +1,9 @@
 ﻿import { UITAB } from "../UITAB.js";
 
 export class BuildingsUI extends UITAB {
-    name: string;
-    activate: () => void;
-    deactivate: () => void;
+    activate: () => void= () => null;
+    deactivate: () => void = () => null;
     public canvas: HTMLCanvasElement;
-    public listeners: Map<
-        keyof HTMLElementEventMap,
-        Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void>
-    >;
 
     constructor(
         private scene: BABYLON.Scene

@@ -23,8 +23,8 @@ export enum DrawType {
 //type test = keyof HTMLElementEventMap;
 export abstract class paintGround {
     //private type: DrawType;
-    protected ang360: Angle;
-    protected ang: Angle;
+    protected ang360: Angle = new Angle(0);
+    protected ang: Angle = new Angle(0);
     //private forceSharedVertices = true;
     //private updateSubTextureLocal: any;
     constructor(
@@ -36,7 +36,7 @@ export abstract class paintGround {
         private uitab: UITAB
     ) {
     };
-    public resolve: PTResultF;
+    public resolve: PTResultF = () => null;
     public activate(callback: PTResultF, options?) {
         this.uitab.addListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
@@ -126,7 +126,7 @@ export abstract class paintGround {
         this.resolve({ coord: startingPoint, rad: this.ang360.rad, size: { h: height, w: width } });
     }
     private mouseMoveRegisterClick = (evt: PointerEvent) => {
-        this.uitab.addListener('click', this.finalClick, { once: true });
+        this.uitab.addListener('pointerdown', this.finalClick, { once: true });
     }
     private pointerUp = (evt:PointerEvent) => {
         try {

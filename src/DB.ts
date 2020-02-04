@@ -48,7 +48,7 @@ globalThis.DB = new Promise<EarthDatabase>(function (res, rej) {
 
         
 
-        Object.keys(ObjectStores).forEach((objstore: ObjectStore) => {
+        (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach((objstore) => {
             let createdStore :IDBObjectStore 
             if(ObjectStores[objstore].version>e.oldVersion) {
                 createdStore = db.createObjectStore(objstore, ObjectStores[objstore].parameters);

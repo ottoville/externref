@@ -206,12 +206,3 @@ window.sceneInited.then(scene => {
 });
 
 let gameControlsUI = document.getElementsByClassName('gameControl');
-new Promise((resolve, reject) => {
-
-
-}).then((logininfo: fb.StatusResponse) => {
-    let loginscreen;
-    if (loginscreen = document.getElementById('loginscreen')) {
-        loginscreen.style.display = 'none';
-    }
-})

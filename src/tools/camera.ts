@@ -2,7 +2,6 @@ import { UITAB } from "../UITAB.js";
 import { LazyEval } from "../LazyEval.js";
 import { Terrain } from "../world/terrain.js";
 export class CameraTAB extends UITAB {
-    public name = 'camera';
     public label = 'Camera';
     public camera: BABYLON.ArcRotateCamera;
     public camera2: BABYLON.ArcRotateCamera;

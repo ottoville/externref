@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
     "outDir": "../wwwroot/js",
-    //"strictNullChecks": true,
+    "strictNullChecks": true,
     "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
     //"strict": true,
     "target": "esnext",
     "module": "es6",

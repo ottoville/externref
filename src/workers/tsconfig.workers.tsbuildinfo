@@ -158,16 +158,16 @@
         "signature": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "./webworkers/grass.ts": {
-        "version": "d06657e7daed117e689a54ececd8ce13446b09f85350b6137302352917d8213e",
-        "signature": "85db2069394a4ac12293347fd6b4d8557a558234182a76e9fdb54bfa70bdac7b"
+        "version": "15ef38ea62a24b56065d366f1780ec353343841192a3a7096c83bf54253b05d6",
+        "signature": "1287bdfbcc9573aa73ef2640f697475373fdbdb04db5448b2e49c0acb1963aba"
       },
       "./webworkers/interfaces.ts": {
-        "version": "4e36038c50d6012e46a42339c573aa1a232ee80dfc53499a3a59a0fdc40c6890",
-        "signature": "abf618be34f2f4fd9c13ea1a874ceae17d3d3391bb5cdbfce5f838cd79c04756"
+        "version": "def5bd4d81c63fd96ca31702593f4b32fef7038af1db912d9ac3dcf73eb18b0b",
+        "signature": "9dc58648dfb65bcc48fa10ff6123ae8549feea504d23398e260f35379ada6269"
       },
       "./webworkers/mesh.ts": {
-        "version": "1413602833ef51c5d190ae525dfbb44b1600be8d1c3fa57c80a39c03cfd5b378",
-        "signature": "a7b560a9449aa72fae3fa02015d38869cdd8c3efde73ace3aeb6d4e6ff36c5aa"
+        "version": "87ecff3e4a0982df0e5220fbd9b37e7ac46d037977aab0ba6af4e19d840ee6b6",
+        "signature": "ed58433a218f76ccd9dfda0e94ea26b545f7d4e4661b8d09537850422d97aaab"
       },
       "./webworkers/ray.ts": {
         "version": "d0a795a1cb33af85b4532fdcbc119064b75e7844eecb23fefcac66347d897bdf",
@@ -178,7 +178,7 @@
         "signature": "b8b1a48db1211aa89ef48ea475990e6981b32e1a12ec86f7927a1a942c59bf64"
       },
       "./webworkers/terrainworker.ts": {
-        "version": "660946015ed1545df374e07a818a8566beb9c2150c162c3ad08d3561313b5e49",
+        "version": "8f14a449ee54522f00a4d230298edd524b151a555a5cf3434e1f153fefd0a230",
         "signature": "70b5436710e8bcb14d4cf7ff60f0123d26b3eb984ea8209ea6df3e3d575e4f71"
       },
       "./sw.ts": {
@@ -216,17 +216,6 @@
     "referencedMap": {},
     "exportedModulesMap": {},
     "semanticDiagnosticsPerFile": [
-      "./webworkers/grass.ts",
-      "./webworkers/bitmapworker.ts",
-      "./webworkers/interfaces.ts",
-      "./webworkers/mesh.ts",
-      "./webworkers/ray.ts",
-      "./webworkers/sceneworker.ts",
-      "./webworkers/terrainworker.ts",
-      "./sw.ts",
-      "./commonmath.d.ts",
-      "../node_modules/@types/color-name/index.d.ts",
-      "../node_modules/@types/facebook-js-sdk/index.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es5.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2016.d.ts",
@@ -264,7 +253,18 @@
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.promise.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.string.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts"
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts",
+      "./webworkers/bitmapworker.ts",
+      "./webworkers/grass.ts",
+      "./webworkers/interfaces.ts",
+      "./webworkers/ray.ts",
+      "./webworkers/sceneworker.ts",
+      "./webworkers/terrainworker.ts",
+      "./sw.ts",
+      "./commonmath.d.ts",
+      "../node_modules/@types/color-name/index.d.ts",
+      "../node_modules/@types/facebook-js-sdk/index.d.ts",
+      "./webworkers/mesh.ts"
     ]
   },
   "version": "3.8.0-beta"

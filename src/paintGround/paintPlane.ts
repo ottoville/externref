@@ -5,9 +5,9 @@ import { Terrain } from "../world/terrain.js";
 export class paintPlane extends paintGround {
 
     private forceSharedVertices = true;
-    private tempplane: BABYLON.Mesh;
-    private startingPoint: Vector2;
-    private planeorgpos: BABYLON.Vector3;
+    private tempplane: BABYLON.Mesh | null = null;
+    private startingPoint: Vector2 = Vector2.Zero();
+    private planeorgpos: BABYLON.Vector3 = BABYLON.Vector3.Zero();
     constructor(
         public canvas: HTMLElement,
         protected scene: BABYLON.Scene,
@@ -26,11 +26,14 @@ export class paintPlane extends paintGround {
     }
     public deactivate() {
         super.deactivate();
-        this.tempplane.dispose();
+        if (this.tempplane)
+            this.tempplane.dispose();
     }
     
     onMainPointerDown(startingPoint: Vector2) {
         this.startingPoint = startingPoint;
+        if (!this.tempplane)
+            throw(new Error('templane object has not been initalized'))
         this.tempplane.scaling.z = 10;
         this.tempplane.scaling.x = 10;
         this.tempplane.rotation.y = Math.PI / 2;
@@ -54,6 +57,9 @@ export class paintPlane extends paintGround {
     onMainPointerUp(end_position: Vector2, height: number): void {
         let meshCenter: Vector2 = end_position.subtract(this.startingPoint).divide(new Vector2(2, 2));
         let pos = this.startingPoint.add(meshCenter);
+        if (!this.tempplane)
+            throw (new Error('templane object has not been initalized'))
+
         this.tempplane.position = new BABYLON.Vector3(pos.x, 0.2, pos.y);
         this.tempplane.position.y = 0.2;
         this.tempplane.scaling.x = height;
@@ -61,7 +67,10 @@ export class paintPlane extends paintGround {
         this.planeorgpos = this.tempplane.position.clone();
 
     }
-    onAreaDraw(width:number): void {
+    onAreaDraw(width: number): void {
+        if (!this.tempplane)
+            throw (new Error('templane object has not been initalized'))
+
         let brad = Math.PI / 2 - this.ang.rad;
         let halfw = width / 2;
         let addX = Math.cos(brad) * halfw

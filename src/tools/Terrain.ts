@@ -6,16 +6,15 @@ import { texImage2D } from "../webgl.js";
 //@ts-ignore
 export class TerrainTool extends UITAB {
     
-    private timer: number;
     //private ray = BABYLON.Ray.Zero();
     //private pickinfo: BABYLON.PickingInfo;
     //private vertexData = new BABYLON.VertexData();
     private helper = new BABYLON.Mesh("Helper");
     private helpermaterial: BABYLON.ShaderMaterial;
     private timed = new Date().getTime();
-    private glTexture: WebGLTexture | null;
-    private glTexture2: WebGLTexture | null;
-    private glTexture3: WebGLTexture | null;
+    private glTexture: WebGLTexture | null = null;
+    private glTexture2: WebGLTexture | null = null;
+    private glTexture3: WebGLTexture | null = null;
     private gl: WebGLRenderingContext;
     private uniformsV2: Map<WebGLUniformLocation, { x: number, y: number }> = new Map();
     private setTime=() => {
@@ -56,7 +55,6 @@ export class TerrainTool extends UITAB {
     }
     private direction = 0;
 
-    name: string;
     activate = (): void => {
         let engine = this.scene.getEngine();
         this.helper.visibility = 1;
@@ -207,8 +205,10 @@ export class TerrainTool extends UITAB {
             return this.helper;
         };*/
     };
-    private mouseinterval: number;
+    private mouseinterval: number=0;
     pointerdownf = (evt: PointerEvent): void => {
+        console.log(this);
+        debugger;
         if (evt.button !== 0) {
             /*let avarages = {
                 test1: [],
@@ -238,11 +238,11 @@ export class TerrainTool extends UITAB {
             let normalbuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.NormalKind]._buffer.getBuffer().underlyingResource;
             //@ts-ignore
             let vertexbuffer: WebGLBuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.PositionKind]._buffer.getBuffer().underlyingResource;
-            this.timer = new Date().getTime();
             Terrain.terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(e => {
                 let NormalsRange = <{ normalsMin: number, normalsMax: number }><any>e;
                 gl.bindBuffer(gl.ARRAY_BUFFER, normalbuffer);
-                gl.bufferSubData(gl.ARRAY_BUFFER, NormalsRange.normalsMin, this.terrain.normalsView, NormalsRange.normalsMin, NormalsRange.normalsMax - NormalsRange.normalsMin)
+                if (this.terrain.normalsView!==null)
+                    gl.bufferSubData(gl.ARRAY_BUFFER, NormalsRange.normalsMin, this.terrain.normalsView, NormalsRange.normalsMin, NormalsRange.normalsMax - NormalsRange.normalsMin)
                 gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
                 gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexbuffer);
                 let range = <{ min: number, max: number }><any>e;
@@ -292,7 +292,6 @@ export class TerrainTool extends UITAB {
             });
     }
     raise = (): void => {
-        console.log('raise')
         this.direction = 1;
         //let canvas = this.scene.getEngine().getRenderingCanvas();
         this.removeListener("pointerdown", this.pointerdownf);
@@ -300,7 +299,6 @@ export class TerrainTool extends UITAB {
 
     }
     lower = (): void => {
-        console.log('lower')
         this.direction = -1;
         //let canvas = this.scene.getEngine().getRenderingCanvas();
         this.removeListener("pointerdown", this.pointerdownf);

@@ -4,10 +4,19 @@
 }
 interface WMessage<T> {
     type: WorkerReturn,
-    action: string,
     data: T,
-    id?: number
+    action: string,
+    id: number
 }
 interface WorkerMessage<T> extends MessageEvent {
     data: WMessage<T>
+}
+
+interface WMessageObject<T, O> {
+    action: keyof O,
+    data: T,
+    id: number
+}
+interface WorkerMessageObject<T, O> extends MessageEvent {
+    data: WMessageObject<T, O | 'init'>
 }

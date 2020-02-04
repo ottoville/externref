@@ -3,7 +3,6 @@ import { paintTexture } from "../paintGround/paintTexture.js";
 import { texImage2D } from "../webgl.js";
 import { Terrain } from "../world/terrain.js";
 export class Zones extends UITAB {
-    public name: string = "zonestab"
     private zonemateria: BABYLON.StandardMaterial;
     private PT: paintTexture;
     private zonedt: BABYLON.DynamicTexture

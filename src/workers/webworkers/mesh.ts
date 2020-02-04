@@ -4,12 +4,13 @@ let meshes = new Map();
 class Mesh {
     private positionsView: Float32Array;
     private indicesView: Uint32Array;
-    private normalsView: Float32Array | null;
-    constructor(private indices: SharedArrayBuffer, private positions: SharedArrayBuffer, private normals: SharedArrayBuffer = null) {
+    constructor(
+        private indices: SharedArrayBuffer,
+        private positions: SharedArrayBuffer,
+        private normals: SharedArrayBuffer | null = null) {
+
         this.positionsView = new Float32Array(positions);
         this.indicesView = new Uint32Array(indices);
-        if (normals)
-            this.normalsView = new Float32Array(normals);
     }
     intersects(boundingBox: BoundingBox, boundingSphere: BoundingSphere, origin: Vector3, direction: Vector3, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): PickingInfo {
         let pickingInfo = new PickingInfo();
@@ -103,14 +104,14 @@ class Mesh {
  */
     ComputeNormals(options?: {
         facetNormals?: any, facetPositions?: any, facetPartitioning?: any, ratio?: number, bInfo?: any, bbSize?: Vector3, subDiv?: any,
-        useRightHandedSystem?: boolean, depthSort?: boolean, distanceTo?: { x: number, number: number, z: number }, depthSortedFacets?: any
+        useRightHandedSystem?: boolean, depthSort?: boolean, distanceTo?: { x: number, y: number, z: number }, depthSortedFacets?: any
     }): SharedArrayBuffer {
 
         if (this.normals === null) {
+            console.log('creating normals buffer with length ', this.positionsView.byteLength);
             this.normals = new SharedArrayBuffer(this.positionsView.byteLength);
-            this.normalsView = new Float32Array(this.normals)
         }
-
+        let normalsView = new Float32Array(this.normals)
         // temporary scalar variables
         var index = 0;                      // facet index
         var p1p2x = 0.0;                    // p1p2 vector x coordinate
@@ -188,11 +189,12 @@ class Mesh {
         }
 
         // reset the normals
-        for (index = 0; index < positions.length; index++) {
-            this.normalsView[index] = 0.0;
+        for (index = 0; index < this.positionsView.length; index++) {
+            normalsView[index] = 0.0;
         }
 
         // Loop : 1 indice triplet = 1 facet
+
         var nbFaces = (this.indicesView.length / 3) | 0;
         for (index = 0; index < nbFaces; index++) {
 
@@ -207,13 +209,13 @@ class Mesh {
             v3y = v3x + 1;
             v3z = v3x + 2;
 
-            p1p2x = positions[v1x] - positions[v2x];          // compute two vectors per facet : p1p2 and p3p2
-            p1p2y = positions[v1y] - positions[v2y];
-            p1p2z = positions[v1z] - positions[v2z];
+            p1p2x = this.positionsView[v1x] - this.positionsView[v2x];          // compute two vectors per facet : p1p2 and p3p2
+            p1p2y = this.positionsView[v1y] - this.positionsView[v2y];
+            p1p2z = this.positionsView[v1z] - this.positionsView[v2z];
 
-            p3p2x = positions[v3x] - positions[v2x];
-            p3p2y = positions[v3y] - positions[v2y];
-            p3p2z = positions[v3z] - positions[v2z];
+            p3p2x = this.positionsView[v3x] - this.positionsView[v2x];
+            p3p2y = this.positionsView[v3y] - this.positionsView[v2y];
+            p3p2z = this.positionsView[v3z] - this.positionsView[v2z];
 
             // compute the face normal with the cross product
             faceNormalx = faceNormalSign * (p1p2y * p3p2z - p1p2z * p3p2y);
@@ -234,9 +236,9 @@ class Mesh {
 
             if (computeFacetPositions && options) {
                 // compute and the facet barycenter coordinates in the array facetPositions
-                options.facetPositions[index].x = (positions[v1x] + positions[v2x] + positions[v3x]) / 3.0;
-                options.facetPositions[index].y = (positions[v1y] + positions[v2y] + positions[v3y]) / 3.0;
-                options.facetPositions[index].z = (positions[v1z] + positions[v2z] + positions[v3z]) / 3.0;
+                options.facetPositions[index].x = (this.positionsView[v1x] + this.positionsView[v2x] + this.positionsView[v3x]) / 3.0;
+                options.facetPositions[index].y = (this.positionsView[v1y] + this.positionsView[v2y] + this.positionsView[v3y]) / 3.0;
+                options.facetPositions[index].z = (this.positionsView[v1z] + this.positionsView[v2z] + this.positionsView[v3z]) / 3.0;
             }
 
             if (computeFacetPartitioning && options) {
@@ -245,15 +247,15 @@ class Mesh {
                 ox = Math.floor((options.facetPositions[index].x - options.bInfo.minimum.x * ratio) * xSubRatio);
                 oy = Math.floor((options.facetPositions[index].y - options.bInfo.minimum.y * ratio) * ySubRatio);
                 oz = Math.floor((options.facetPositions[index].z - options.bInfo.minimum.z * ratio) * zSubRatio);
-                b1x = Math.floor((positions[v1x] - options.bInfo.minimum.x * ratio) * xSubRatio);
-                b1y = Math.floor((positions[v1y] - options.bInfo.minimum.y * ratio) * ySubRatio);
-                b1z = Math.floor((positions[v1z] - options.bInfo.minimum.z * ratio) * zSubRatio);
-                b2x = Math.floor((positions[v2x] - options.bInfo.minimum.x * ratio) * xSubRatio);
-                b2y = Math.floor((positions[v2y] - options.bInfo.minimum.y * ratio) * ySubRatio);
-                b2z = Math.floor((positions[v2z] - options.bInfo.minimum.z * ratio) * zSubRatio);
-                b3x = Math.floor((positions[v3x] - options.bInfo.minimum.x * ratio) * xSubRatio);
-                b3y = Math.floor((positions[v3y] - options.bInfo.minimum.y * ratio) * ySubRatio);
-                b3z = Math.floor((positions[v3z] - options.bInfo.minimum.z * ratio) * zSubRatio);
+                b1x = Math.floor((this.positionsView[v1x] - options.bInfo.minimum.x * ratio) * xSubRatio);
+                b1y = Math.floor((this.positionsView[v1y] - options.bInfo.minimum.y * ratio) * ySubRatio);
+                b1z = Math.floor((this.positionsView[v1z] - options.bInfo.minimum.z * ratio) * zSubRatio);
+                b2x = Math.floor((this.positionsView[v2x] - options.bInfo.minimum.x * ratio) * xSubRatio);
+                b2y = Math.floor((this.positionsView[v2y] - options.bInfo.minimum.y * ratio) * ySubRatio);
+                b2z = Math.floor((this.positionsView[v2z] - options.bInfo.minimum.z * ratio) * zSubRatio);
+                b3x = Math.floor((this.positionsView[v3x] - options.bInfo.minimum.x * ratio) * xSubRatio);
+                b3y = Math.floor((this.positionsView[v3y] - options.bInfo.minimum.y * ratio) * ySubRatio);
+                b3z = Math.floor((this.positionsView[v3z] - options.bInfo.minimum.z * ratio) * zSubRatio);
 
                 block_idx_v1 = b1x + options.subDiv.max * b1y + subSq * b1z;
                 block_idx_v2 = b2x + options.subDiv.max * b2y + subSq * b2z;
@@ -283,31 +285,30 @@ class Mesh {
                 dsf.ind = index * 3;
                 //dsf.sqDistance = Vector3.DistanceSquared(options.facetPositions[index], distanceTo!);
 
-                var x = options.facetPositions[index].x - distanceTo.x;
-                var y = options.facetPositions[index].y - distanceTo.y;
-                var z = options.facetPositions[index].z - distanceTo.z;
+                var x = options.facetPositions[index].x - distanceTo!.x;
+                var y = options.facetPositions[index].y - distanceTo!.y;
+                var z = options.facetPositions[index].z - distanceTo!.z;
 
                 dsf.sqDistance = (x * x) + (y * y) + (z * z);
 
 
             }
-
             // compute the normals anyway
-            this.normalsView[v1x] += faceNormalx;                         // accumulate all the normals per face
-            this.normalsView[v1y] += faceNormaly;
-            this.normalsView[v1z] += faceNormalz;
-            this.normalsView[v2x] += faceNormalx;
-            this.normalsView[v2y] += faceNormaly;
-            this.normalsView[v2z] += faceNormalz;
-            this.normalsView[v3x] += faceNormalx;
-            this.normalsView[v3y] += faceNormaly;
-            this.normalsView[v3z] += faceNormalz;
+            normalsView[v1x] += faceNormalx;                         // accumulate all the normals per face
+            normalsView[v1y] += faceNormaly;
+            normalsView[v1z] += faceNormalz;
+            normalsView[v2x] += faceNormalx;
+            normalsView[v2y] += faceNormaly;
+            normalsView[v2z] += faceNormalz;
+            normalsView[v3x] += faceNormalx;
+            normalsView[v3y] += faceNormaly;
+            normalsView[v3z] += faceNormalz;
         }
         // last normalization of each normal
-        for (index = 0; index < this.normalsView.length / 3; index++) {
-            faceNormalx = this.normalsView[index * 3];
-            faceNormaly = this.normalsView[index * 3 + 1];
-            faceNormalz = this.normalsView[index * 3 + 2];
+        for (index = 0; index < normalsView.length / 3; index++) {
+            faceNormalx = normalsView[index * 3];
+            faceNormaly = normalsView[index * 3 + 1];
+            faceNormalz = normalsView[index * 3 + 2];
 
             length = Math.sqrt(faceNormalx * faceNormalx + faceNormaly * faceNormaly + faceNormalz * faceNormalz);
             length = (length === 0) ? 1.0 : length;
@@ -315,24 +316,25 @@ class Mesh {
             faceNormaly /= length;
             faceNormalz /= length;
 
-            this.normalsView[index * 3] = faceNormalx;
-            this.normalsView[index * 3 + 1] = faceNormaly;
-            this.normalsView[index * 3 + 2] = faceNormalz;
+            normalsView[index * 3] = faceNormalx;
+            normalsView[index * 3 + 1] = faceNormaly;
+            normalsView[index * 3 + 2] = faceNormalz;
         }
+        console.log('normals worker return normals sharedarraybugger');
+        console.log(this.normals);
         return this.normals;
     }
 }
-onmessage = async (e: WorkerMessage<{meshId: number, args: any[]}>) => {
+onmessage = async (e: WorkerMessageObject<{meshId: number, args: any[]},Mesh>) => {
     if (e.data.action == 'init') {
         meshes.set(e.data.data.meshId, new Mesh(...<[SharedArrayBuffer, SharedArrayBuffer, SharedArrayBuffer | null]>e.data.data.args));
         //meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));
     } else {
-        let mesh: Mesh = null;
+        let mesh: Mesh;
         if (mesh = meshes.get(e.data.data.meshId)) {
-            console.log(e);
-            //TypeError: mesh[e.data.action] is not iterable (cannot read property Symbol(Symbol.iterator))
+            //@ts-ignore
             let r = mesh[e.data.action](...e.data.data.args);
-            this.postMessage({ id: e.data.id, data: r });
+            self.postMessage({ id: e.data.id, data: r });
         }
     }
 }

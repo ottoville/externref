@@ -279,9 +279,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
                 let worker = new Worker('bitmapWorker.js');
                 workers.push(worker);
                 /* progress 42 and 43 are reserved for this */
-                console.log('spawning bitmap thread');
                 self.postMessage({ type: 'setProgress', data: { progress: 41 + (2 * (workers.length / partcount)) } });
-                console.log('bitmap thread spawned');
                 worker.postMessage({ bitmap: bitmap, buffer: totalbufferdata, partcount: partcount, partnumber: workers.length - 1, align: align }, [bitmap]);
                 worker.onmessage = e => {
                     try {
@@ -363,7 +361,6 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
         }
     },
     elevateFaces: (e: WMessage<{radius:number, height:number, direction: number}>) => {
-        // console.log('elevatefaces');
         let radiusPow = Math.pow(e.data.radius, 2);
         // Impact zone
         if (_selectedVertices == null) {
@@ -630,7 +627,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
                 v1v4.z = terrainPositions[k + i + 5] - v1arr[2];
 
                 //   cd = (terrainPositions[k + i + 2] - v1arr[2]) / (terrainPositions[k + i + 3] - v1arr[0]);
-                //console.log(cd);
+
                 h = v1arr[2] - cd * v1arr[0];             // v1 belongs to the slope
 
                 // facet equations :

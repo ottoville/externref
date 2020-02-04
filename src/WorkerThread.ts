@@ -11,19 +11,19 @@ interface WMessage {
 interface WorkerMessage extends MessageEvent {
     data: WMessage
 }
-export class WorkerThread extends Worker {
+abstract class MainWorker extends Worker {
     protected operations: ([
-         (value?: unknown) => void,
-         (value?: unknown) => void 
-    ]|null)[] = [];
+        (value?: any | PromiseLike<any> | undefined) => void,
+        (value?: unknown | PromiseLike<unknown> | undefined) => void,
+    ] | null)[] = [];
     private subscriptions: { [key: string]: (value?: unknown) => void; } = {};
     constructor(stringUrl: any, options?: WorkerOptions) {
         super(stringUrl, options);
         this.onmessage = (e) => {
             if (typeof (e.data.id) !== 'undefined') {
                 let operation: [
-                    (value?: unknown) => void,
-                    (value?: unknown) => void
+                    (value?: unknown | PromiseLike<unknown> | undefined) => void,
+                    (value?: unknown | PromiseLike<unknown> | undefined) => void
                 ] | null;
                 if (operation = this.operations[e.data.id]) {
                     if (e.data.rejected)
@@ -37,13 +37,6 @@ export class WorkerThread extends Worker {
             }
         };
     }
-    message<T, U>(returntype: WorkerReturn, action: string, data: object, options?: U): Promise<T> {
-        let toWorker: WMessage = { type: returntype, action: action, data: data };
-        return new Promise((res, rej) => {
-            toWorker.id = this.operations.push([res,rej]) - 1
-            super.postMessage(toWorker, options);
-        })
-    }
     subscribe(type: string, callback: (value?: any) => void) {
         this.subscriptions[type] = callback
     }
@@ -51,10 +44,16 @@ export class WorkerThread extends Worker {
         delete this.subscriptions[type];
     }
 }
-export class ObjectWorkerThread extends WorkerThread {
-    constructor(stringUrl: any, options?: WorkerOptions) {
-        super(stringUrl, options);
+export class WorkerThread extends MainWorker {
+    message<T, U>(returntype: WorkerReturn, action: string, data: object, options?: U): Promise<T> {
+        let toWorker: WMessage = { type: returntype, action: action, data: data };
+        return new Promise((res, rej) => {
+            toWorker.id = this.operations.push([res,rej]) - 1
+            super.postMessage(toWorker, options);
+        })
     }
+}
+export class ObjectWorkerThread extends MainWorker {
     message<T, U>(objectID: number, action: string, args?: any[], options?: U): Promise<T> {
         let toWorker: WMessage = {
             action: action, data: {

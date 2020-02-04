@@ -9,12 +9,7 @@ import { Terrain } from "../world/terrain.js";
 
 export class PlantsUI extends UITAB {
 
-    public name: string = "terraintab";
     public label: string = 'Plants';
-    public listeners: Map<
-        keyof HTMLElementEventMap,
-        Map<(this: HTMLElement, ev: HTMLElementEventMap[keyof HTMLElementEventMap]) => any, (e) => void>
-    >;
 
     //private PT: paintGround;
     private PT: paintPlane;

@@ -162,7 +162,7 @@ const numBlades = 70000;
 const BLADE_WIDTH: number = 0.0025;
 const BLADE_HEIGHT_MIN = 0.3
 const BLADE_HEIGHT_MAX = 0.8
-let positions: Float32Array;
+let grasspositions: Float32Array;
 let shapes:  Float32Array;
 let noises: Float32Array;
 let bladecount: number = 0;
@@ -181,7 +181,7 @@ interface PlantI {
 let methods = {
 	init: (data: WMessage<{positions:any, shape:any, noises:any}>) => {
 		console.log('init plants worker');
-        positions=new Float32Array(data.data.positions);
+		grasspositions=new Float32Array(data.data.positions);
         shapes=new Float32Array(data.data.shape);
         noises=new Float32Array(data.data.noises);
         this.postMessage({id: data.id});
@@ -271,10 +271,10 @@ let methods = {
 						})
 					}
 				}
-				bladecount = Math.min(Math.max(bladecount, objs.length), positions.length)
+				bladecount = Math.min(Math.max(bladecount, objs.length), grasspositions.length)
 				console.log('Start to process objs length, ', objs.length, ', took ', new Date().getTime() - d);
 				for (let i = 0; i < Math.min(bladecount, objs.length); i++) {
-					positions.set(objs[i].pos, i * 4);
+					grasspositions.set(objs[i].pos, i * 4);
 					shapes.set(objs[i].shape, i * 4);
 					noises[i] = objs[i].noise;
 				}
@@ -323,11 +323,11 @@ let methods = {
     get: async () => {
         let trans = (await DB).transaction(['plantae']);
         trans.objectStore('plantae').getAll().onsuccess = (evt) => {
-			bladecount=Math.min((<IDBRequest>evt.target).result.length,positions.length);
+			bladecount = Math.min((<IDBRequest>evt.target).result.length, grasspositions.length);
 			trans.oncomplete = () => this.postMessage({type: 'updated', count: bladecount})
             for (let i = 0; i < bladecount; i++) {
                 let r = (<IDBRequest>evt.target).result[i];
-                positions.set(r.pos, i * 4);
+				grasspositions.set(r.pos, i * 4);
 				shapes.set(r.shape, i * 4);
 				noises[i]=r.noise;
             }

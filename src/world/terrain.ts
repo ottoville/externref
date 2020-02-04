@@ -8,7 +8,6 @@ interface TerrainMap {
     width: number,
     height: number,
     indices: Uint32Array,
-    normals: Float32Array,
     positions: Float32Array,
     uvs: Float32Array,
     texture: Blob
@@ -49,7 +48,7 @@ export class Terrain extends TerraMesh {
     }
     //public ground: BABYLON.GroundMesh;
     constructor(vdata: TerrainMap, wasm) {
-        super('ground', vdata.indices, vdata.positions, vdata.normals, wasm);
+        super('ground', vdata.indices, vdata.positions, wasm);
         console.debug('create terrain');
         this.uvs = vdata.uvs;
 
@@ -83,13 +82,14 @@ export class Terrain extends TerraMesh {
         vertexData.uvs = this.uvs;
 
         this.inited = TerraMesh.worker.message<SharedArrayBuffer, PostMessageOptions>(this.uniqueId, 'ComputeNormals').then(async normalsb => {
-            console.log('normals computed')
-            let boundingInfo = this.subMeshes[0].getBoundingInfo();
             this.normalsBuffer = normalsb;
             this.normals = new Float32Array(this.normalsBuffer)
             this.normalsView = new DataView(this.normalsBuffer);
             vertexData.normals = this.normals;
+            console.log('normals computed')           
+            console.log(vertexData.normals);
             vertexData.applyToMesh(this, true);
+            let boundingInfo = this.subMeshes[0].getBoundingInfo();
             return Terrain.terrainWorker.message(WorkerReturn.Promise, 'init',
                 {
                     positions: this.positionsBuffer,

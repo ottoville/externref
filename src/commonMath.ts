@@ -4362,65 +4362,6 @@ class Matrix {
         }
         return hash;
     }
-
-    /**
-     * Decomposes the current Matrix into a translation, rotation and scaling components
-     * @param scale defines the scale vector3 given as a reference to update
-     * @param rotation defines the rotation quaternion given as a reference to update
-     * @param translation defines the translation vector3 given as a reference to update
-     * @returns true if operation was successful
-     */
-    public decompose(scale?: Vector3, rotation?: Quaternion, translation?: Vector3): boolean {
-        if (this._isIdentity) {
-            if (translation) {
-                translation.setAll(0);
-            }
-            if (scale) {
-                scale.setAll(1);
-            }
-            if (rotation) {
-                rotation.copyFromFloats(0, 0, 0, 1);
-            }
-            return true;
-        }
-
-        const m = this._m;
-        if (translation) {
-            translation.copyFromFloats(m[12], m[13], m[14]);
-        }
-        debugger;
-        scale = scale// || MathTmp.Vector3[0];
-        scale.x = Math.sqrt(m[0] * m[0] + m[1] * m[1] + m[2] * m[2]);
-        scale.y = Math.sqrt(m[4] * m[4] + m[5] * m[5] + m[6] * m[6]);
-        scale.z = Math.sqrt(m[8] * m[8] + m[9] * m[9] + m[10] * m[10]);
-
-        if (this.determinant() <= 0) {
-            scale.y *= -1;
-        }
-
-        if (scale.x === 0 || scale.y === 0 || scale.z === 0) {
-            if (rotation) {
-                rotation.copyFromFloats(0.0, 0.0, 0.0, 1.0);
-            }
-            return false;
-        }
-
-        if (rotation) {
-            const sx = 1 / scale.x, sy = 1 / scale.y, sz = 1 / scale.z;
-            Matrix.FromValuesToRef(
-                m[0] * sx, m[1] * sx, m[2] * sx, 0.0,
-                m[4] * sy, m[5] * sy, m[6] * sy, 0.0,
-                m[8] * sz, m[9] * sz, m[10] * sz, 0.0,
-                0.0, 0.0, 0.0, 1.0,
-                MathTmp.Matrix[0]
-            );
-
-            Quaternion.FromRotationMatrixToRef(MathTmp.Matrix[0], rotation);
-        }
-
-        return true;
-    }
-
     /**
      * Gets specific row of the matrix
      * @param index defines the number of the row to get

@@ -154,7 +154,7 @@
         "signature": "c799367a4032e7b69c739637db52385c4cbd036882952865c43ebcc52ce5cd44"
       },
       "./db.ts": {
-        "version": "9eadf31538fc6b410ed4c34e3a1b7904dea44b71ebe42498a2ce4e01f25d0d79",
+        "version": "4b6af661fde390ee2acd766714c57f708d3da2797b912eac1340039f15a89b9a",
         "signature": "ae1dae60ac4ec7b2640da57ccfb4cc124720d5575be26ef2e61dc296e6b2c097"
       },
       "./lazyeval.ts": {
@@ -162,40 +162,40 @@
         "signature": "5d75dfe70cf216b378e148535f50b8d313e9a980123af66ad8e3aafb9ceb5a60"
       },
       "./workerthread.ts": {
-        "version": "d44a4d6fb763773e65916fdc94990679ef75ca7fa41d1028a11a948898067438",
-        "signature": "3ff94510a24a60296ca2b51af8dd9bc02fa50daca8efc46dd4a71a0ed7f8aabd"
+        "version": "365154fbc2f856a91325deaaf36583a72748018e30893c07dfc11385031b5335",
+        "signature": "449974bb70c444474f94e428738dca887a8ff3cdf941850ff1100eea515d4355"
       },
       "./terramesh.ts": {
-        "version": "f87d7877b444c4a4a0cbc9bd213b6e9c00864844baaa1135de30a5abe424683e",
-        "signature": "30f54e783e65710cec96cc000f6d6b370c44bbc057003df94382c9377683cfb1"
+        "version": "9a5692f2b219241bfad975a170fa3a42496027b770fd6e0658898d1ed9a6b743",
+        "signature": "4f54ebc800a3a0dba86bdfe35cb6b40234f9ac5ae89b3cceedd2e3c7e53f9e30"
       },
       "./uitab.ts": {
-        "version": "1eab8f32de097f9a100604ab9311ea902dff9cd81b5a98d9fbac9557a1f7158e",
-        "signature": "2b3064a3e643c70e36c343281b1716fbe90dc96dfa30a1bb2ddde47454ae45eb"
+        "version": "32a7eabb413acdb50493bb9c83447d6d71afdd36a22f34d9540ce5b759843baa",
+        "signature": "8e999924bf60c261c8464eb42002dbd7f141f67dc9ad505f5a1473d813205766"
       },
       "./world/sun.ts": {
         "version": "0df82b6c6a3be6a5e555585e10acc25ecd50f678c8a61227df9f6ba256fb5923",
         "signature": "6c373ca5d35c73904132d88446bec36b0b45d0bb9757c1a1e5e62a6a6c9e9540"
       },
       "./world/terrain.ts": {
-        "version": "2bc6bfd19c62eaae9e7ab35be6a172e77c12b63b0fad15bd4843daf46ef3f569",
-        "signature": "40a9112e71bb1496a0b29f636671df450982f003c7b6e8f362a69d290f31c5b6"
+        "version": "c74235fa901c9eb8afb359afad57cbc9bdcda810dbefadf5048860a3468c062c",
+        "signature": "298aaf6c2b9b133f12dd2e66837104f4dbfe81e15485b681d0b617793d0a6b0a"
       },
       "./plants/plants.ts": {
         "version": "76a30d01a67679ee295cb158522faeafd13a9d1c496f0f5e502124404be009a8",
         "signature": "a33ffac193acff7864634472bcdb758197d57a9cf9563f11d4e3b25c33cc1d70"
       },
       "./paintground/paintground.ts": {
-        "version": "526dd50e4319b6a4588cad13a70a60824daffa88661fcb54398267bf93659e33",
+        "version": "11c4894099345f51e346dec1fd3eeb04df0571bc45609407c3172ff76d50360e",
         "signature": "88feb0e7a0b3612977d4ad82c55b6b49a3c7100701d801671a8dd8541da6a04b"
       },
       "./paintground/paintplane.ts": {
-        "version": "495d7f99ed8d69fe4419764b404ed9bf530c28d5c368f7ed812ed354de3354cf",
+        "version": "d55f8be679c3000de01a358d330521c3e1c14eb53489a77a46f99796a05e63af",
         "signature": "0d53f554c41125dd01fc4650a652dd1587fef3de352d0502263fcc5014667c6f"
       },
       "./tools/plantsui.ts": {
-        "version": "708af12720e2fa2327e5c4f2d65b7bad0da98f2fbe8a7fb55cdb429e10dbf9be",
-        "signature": "4b7a21e2dded52c755f39716a356a79fddbee5603e7bfeb0e0846ae71bda790b"
+        "version": "e16cc9db8a42712464acf23a289d67785d7ef29a0f23c65a75e752bd1a7e77d5",
+        "signature": "383d602e5892880ef0057cccaf3c8598011d0e173b2ccecd5dff485f030816f1"
       },
       "./paintground/painttexture.ts": {
         "version": "2046264c243cac4e20131a97f48dc1e8a997fee4394efdb0dedb89dac13db54f",
@@ -206,40 +206,40 @@
         "signature": "94f5371ee557b58008a5455f219d45e589e743e89fba9b58517cedcc9ba1a0f3"
       },
       "./tools/zones.ts": {
-        "version": "d2552838869f303b4af1f3ec71654caea0f62da30720308371e9bef4654beeb9",
-        "signature": "46667df7919c6b531d1770bf2f31eb031af1991ab2b95aacaf0b35cab3f93f33"
+        "version": "5db5531e4899ecd15b07348d36ff3a13bdfb374b55df2a7dc1c17aef3a8c3b4c",
+        "signature": "d1879d69226c50426477da66fee69326bd756463d562c3b48d185345eb329617"
       },
       "./tools/camera.ts": {
-        "version": "77a365827d5b14ebf53c2909bb4ababb1e4bcc752feb90d7f551212ceba98e6c",
-        "signature": "6fca0c2e799809d8570cb4b17047f1d790f9c7da55d6f055859888227a212b84"
+        "version": "0a0399e62b2590258f091f9f8195461a1d93546dd833cd25f81c9bff73e1fd08",
+        "signature": "0f0f4f11e2860c69f000f1ebc446b90f87b4c24b3e344dc6019c70b30bb69fce"
       },
       "./tools/buildings.ts": {
-        "version": "c0adaa36bbff4c070cafeec0e4ee048e4490dae2090f51e13a99b949832220b1",
-        "signature": "ac9512fff781783e8fa6205fa14feb1f3d7c8cbcaead0aaa9cd7fec586e0b85a"
+        "version": "c750d261d0f86d5c8a24ec8c89364e85269635d67e8877e48d6f454da02df2ae",
+        "signature": "e1cb789ebbe6244738450ad0fa8864a21ab2940ffbde09ceebef6cdef4f97947"
       },
       "./tools/terrain.ts": {
-        "version": "6a7d983992a5a8c474bb42a255c20b98353dff068620953685aed1eba97ab2ed",
-        "signature": "2b2f3632c4d649d2bbe33a984d66084aad77c27806598fb2a515a80f3cbfe738"
+        "version": "a657d10624bfdf3f0f8d68aa09890fa4d36229b4c7e7226c304caa56a0136057",
+        "signature": "0c8517ffcfe7e5858e7ec1418fb2377fa0beb1abbcd81a1222360b48c92196c2"
       },
       "./rustwasm/hello_wasm.d.ts": {
         "version": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c",
         "signature": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c"
       },
       "./world/scene.ts": {
-        "version": "540248ae8bda446b02547d1862d39cb56c3892554ddb2b0cd50ebe9b15fdfe25",
-        "signature": "16461b22e5855b9e0bc7d37295ac18585dd07fda1ecddba8eeb02f41259f62e6"
+        "version": "11de2e69ccd538f54c6ed1fcc03fc11b18729d9fea89bad264def344402d9001",
+        "signature": "0aed11969014d2ed5d8924ffd0a220cef2ac9857ecd1820eab7751961334dab5"
       },
       "./code.ts": {
-        "version": "11ada2a477d7e119539376b074916deccd29958bf8d21e0c1f6b6d66edb23b3b",
+        "version": "341c3421d2d7e36caeb306f87111602f42641f42fb78da7dd3e32448c0fcf617",
         "signature": "7bb14ed09d07de3d85469b409069a2f9dffa28c294f39a5744e3d945aeadf265"
       },
       "./commonmath.ts": {
-        "version": "1d129d31aa7ddc17b6f5b96bc563b606a7cb53bd54f9ed247ed8b6e816b3c4a0",
-        "signature": "1963562b86d9c48d3fffa4923d9d7b7fdcb30bd26eff2454d5c5df254f55b6f5"
+        "version": "0bc951583b53f24f6af25118b6397b741f870a1a74cdd6eea9862c8493282814",
+        "signature": "a21a9e1df1568ce18630e76cf8a971abd5209c350ab8d4708f961d55d7c49abe"
       },
       "./paintground/paintline.ts": {
-        "version": "b718e0a71ca655684dd56a326faa29c3be20e0f6c14b1aca204d64d20d5c72f0",
-        "signature": "99bb96ad6332e1a2ac6467b6eebbe3413c4c0610aac8ef075235de1fd1b1e4a6"
+        "version": "4cd52e39931fff0b2c9de9b30e570038c17cfdaf37139ff19447afd42e06ee49",
+        "signature": "99150b44ab4d84fabc987ce662568fe9f5e6fc718d9f866358c17f875588471a"
       },
       "./plants/grass.ts": {
         "version": "b92b72342285cbcbb2208819749cd8f9ad6211b7b94384e9fed2247f3ce0bce0",
@@ -272,7 +272,10 @@
     },
     "options": {
       "outDir": "../wwwroot/js",
+      "strictNullChecks": true,
       "strictBindCallApply": true,
+      "strictFunctionTypes": true,
+      "strictPropertyInitialization": true,
       "target": 99,
       "module": 5,
       "lib": [
@@ -491,6 +494,8 @@
       "../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts",
       "./db.ts",
       "./lazyeval.ts",
+      "./workerthread.ts",
+      "./terramesh.ts",
       "./uitab.ts",
       "./webgl.ts",
       "./tools/buildings.ts",
@@ -503,21 +508,19 @@
       "./node_modules/babylonjs/babylon.module.d.ts",
       "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./workerthread.ts",
       "./world/terrain.ts",
-      "./terramesh.ts",
-      "./world/sun.ts",
-      "./plants/plants.ts",
-      "./paintground/paintground.ts",
-      "./paintground/paintplane.ts",
-      "./tools/plantsui.ts",
-      "./paintground/painttexture.ts",
-      "./tools/zones.ts",
-      "./tools/camera.ts",
-      "./tools/terrain.ts",
+      "./paintground/paintline.ts",
       "./world/scene.ts",
-      "./code.ts",
-      "./paintground/paintline.ts"
+      "./tools/terrain.ts",
+      "./tools/camera.ts",
+      "./tools/zones.ts",
+      "./paintground/painttexture.ts",
+      "./tools/plantsui.ts",
+      "./paintground/paintplane.ts",
+      "./paintground/paintground.ts",
+      "./plants/plants.ts",
+      "./world/sun.ts",
+      "./code.ts"
     ]
   },
   "version": "3.8.0-beta"
