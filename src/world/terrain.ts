@@ -86,7 +86,6 @@ export class Terrain extends TerraMesh {
                 // Second Matrix
 
 
-
                 const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] = device.createBufferMapped({
                     size: facet1ArrMatrix.byteLength,
                     //@ts-ignore
@@ -111,39 +110,21 @@ export class Terrain extends TerraMesh {
                     //@ts-ignore
                     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
                 });
+                const glslang = await glslangModule();
 
-
-                const bindGroupLayout = device.createBindGroupLayout({
-                    bindings: [
-                        {
-                            binding: 0,
-                            //@ts-ignore
-                            visibility: GPUShaderStage.COMPUTE,
-                            type: "readonly-storage-buffer"
-                        },
-                        {
-                            binding: 1,
-                            //@ts-ignore
-                            visibility: GPUShaderStage.COMPUTE,
-                            type: "readonly-storage-buffer"
-                        },
-                        {
-                            binding: 2,
-                            //@ts-ignore
-                            visibility: GPUShaderStage.COMPUTE,
-                            type: "readonly-storage-buffer"
-                        },
-                        {
-                            binding: 3,
-                            //@ts-ignore
-                            visibility: GPUShaderStage.COMPUTE,
-                            type: "storage-buffer"
-                        }
-                    ]
+                const computePipeline = device.createComputePipeline({
+                    /*   layout: device.createPipelineLayout({
+                           bindGroupLayouts: [bindGroupLayout]
+                       }),*/
+                    computeStage: {
+                        module: device.createShaderModule({
+                            code: glslang.compileGLSL(computeShaderCode, "compute")
+                        }),
+                        entryPoint: "main"
+                    }
                 });
-
                 const bindGroup = device.createBindGroup({
-                    layout: bindGroupLayout,
+                    layout: computePipeline.getBindGroupLayout(0 /* index */),
                     bindings: [
                         {
                             binding: 0,
@@ -172,19 +153,7 @@ export class Terrain extends TerraMesh {
                     ]
                 });
 
-                const glslang = await glslangModule();
 
-                const computePipeline = device.createComputePipeline({
-                    layout: device.createPipelineLayout({
-                        bindGroupLayouts: [bindGroupLayout]
-                    }),
-                    computeStage: {
-                        module: device.createShaderModule({
-                            code: glslang.compileGLSL(computeShaderCode, "compute")
-                        }),
-                        entryPoint: "main"
-                    }
-                });
 
 
                 const commandEncoder = device.createCommandEncoder();

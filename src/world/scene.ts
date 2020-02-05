@@ -723,8 +723,6 @@ export class WorldScene extends BABYLON.Scene {
     });
     */
 
-
-
         new Promise<[Terrain, Promise<ArrayBuffer | HTMLImageElement>]>(async (tres, trej) => {
             let db = (await DB);
             let trans = db.transaction('maps');

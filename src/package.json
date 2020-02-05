@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "serve": "npm run publish && http-server ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\ -S -o",
-    "build": ".\\node_modules\\wasm-opt\\out\\wasm-opt.exe .\\rustwasm\\hello_wasm_bg.wasm -o ..\\wwwroot\\js\\rustwasm\\hello_wasm_bg.wasm",
+    "buildWasm": ".\\node_modules\\wasm-opt\\out\\wasm-opt.exe .\\rustwasm\\hello_wasm_bg.wasm -o ..\\wwwroot\\js\\rustwasm\\hello_wasm_bg.wasm",
+    "build": "npm run buildWasm",
     "publish": "tsc && dotnet build ../BlazorApp1.csproj && dotnet publish ../BlazorApp1.csproj",
     "test": "@powershell cp .\\src\\test\\package.json ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\js\\test; node --experimental-modules -r esm ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\js\\test\\test.js"
   },
@@ -18,6 +19,6 @@
     "wasm-opt": "^1.1.1"
   },
   "devDependencies": {
-    "typescript": "^3.8.0"
+    "typescript": "^3.8.0-beta"
   }
 }
