@@ -127,6 +127,11 @@ export class TerrainTool extends UITAB {
         let mainboundingInfo = this.terrain.getBoundingInfo();
         let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
         Terrain.terrainWorker.subscribe('bounding', (v) => {
+
+            
+            this.terrain.lastColliderWorldVertices = null;
+         /*
+          *
             this.terrain.subMeshes[0]._lastColliderWorldVertices = null;
             boundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
             boundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
@@ -134,7 +139,7 @@ export class TerrainTool extends UITAB {
             boundingInfo.boundingBox.maximumWorld.y = v.data.boundingBox.maxY
 
             boundingInfo.boundingSphere.radius = v.data.boundingSphereRadius
-            boundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius
+            boundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius*/
 
             mainboundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
             mainboundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
@@ -207,8 +212,6 @@ export class TerrainTool extends UITAB {
     };
     private mouseinterval: number=0;
     pointerdownf = (evt: PointerEvent): void => {
-        console.log(this);
-        debugger;
         if (evt.button !== 0) {
             /*let avarages = {
                 test1: [],

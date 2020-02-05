@@ -5,6 +5,9 @@ export class TerraMesh extends BABYLON.Mesh {
     public positionsView: DataView;
     public positions: Float32Array;
 
+    public lastColliderWorldVertices: SharedArrayBuffer | null = null;
+    public lastColliderTransformMatrix: BABYLON.Matrix = BABYLON.Matrix.Zero();
+
     public indices: Uint32Array;
     public indicesBuffer: SharedArrayBuffer;
 
@@ -34,35 +37,60 @@ export class TerraMesh extends BABYLON.Mesh {
 
         TerraMesh.worker.message(this.uniqueId, 'init', [this.indicesBuffer, this.positionsBuffer, this.normalsBuffer]);
     }
+    public _trianglePlanes = [];
     public _checkCollision(collider: BABYLON.Collider): BABYLON.AbstractMesh {
 
         // Bounding box test
         if (!this._boundingInfo || !collider._canDoCollision(this._boundingInfo.boundingSphere.centerWorld, this._boundingInfo.boundingSphere.radiusWorld, this._boundingInfo.boundingBox.minimumWorld, this._boundingInfo.boundingBox.maximumWorld)) {
             return this;
         }
-
-        // console.log('_checkCollision');
+        console.debug('checkcollision');
         // Transformation matrix
         const collisionsScalingMatrix = new BABYLON.Matrix();
         const collisionsTransformMatrix = new BABYLON.Matrix();
         BABYLON.Matrix.ScalingToRef(1.0 / collider._radius.x, 1.0 / collider._radius.y, 1.0 / collider._radius.z, collisionsScalingMatrix);
         this.worldMatrixFromCache.multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
-        //this._processCollisionsForSubMeshes(collider, collisionsTransformMatrix);
-        //_processCollisionsForSubMeshes(collider: Collider, transformMatrix: Matrix): AbstractMesh {
+
+       
+
+        ///
+        
+        if (!this.lastColliderWorldVertices || !this.lastColliderTransformMatrix.equals(collisionsTransformMatrix)) {
+            console.debug('recalculating collision vertices');
+            this.lastColliderTransformMatrix = collisionsTransformMatrix.clone();
+            this.lastColliderWorldVertices = new SharedArrayBuffer(this.positionsBuffer.byteLength);
+            let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
+            this._trianglePlanes = [];
+            lastColliderVertices.set(this.wasm.calculatelastcolliderworldvertices(this.positions, collisionsTransformMatrix.m as Float32Array));
+        }
+        let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
+        let indices = this.indices;
+        let p1 = BABYLON.Vector3.Zero();
+        let p2 = BABYLON.Vector3.Zero();
+        let p3 = BABYLON.Vector3.Zero();
+        console.log('submesh material?', !!this.subMeshes[0].getMaterial());
+        let len = indices.length;
+        for (var i = 0; i < len; i += 3) {
+            p1.x = lastColliderVertices[indices[i * 3 ]];
+            p1.y = lastColliderVertices[indices[i * 3 + 1 ]];
+            p1.z = lastColliderVertices[indices[i * 3 + 2] ];
+
+            p2.x = lastColliderVertices[indices[(i + 1) * 3 ]];
+            p2.y = lastColliderVertices[indices[(i + 1) * 3 + 1 ]];
+            p2.z = lastColliderVertices[indices[(i + 1) * 3 + 2 ]];
+
+            p3.x = lastColliderVertices[indices[(i + 2) * 3 ]];
+            p3.y = lastColliderVertices[indices[(i + 2) * 3 + 1]];
+            p3.z = lastColliderVertices[indices[(i + 2) * 3 + 2]];
+            //@ts-ignore
+            collider._testTriangle(i, this._trianglePlanes, p3, p2, p1, false, collider);
+        }
+        ////
+       /* 
         const subMeshes = this._scene.getCollidingSubMeshCandidates(this, collider);
         const len = subMeshes.length;
-
-        for (var index = 0; index < len; index++) {
+         for (var index = 0; index < len; index++) {
             var subMesh = subMeshes.data[index];
-
-            // Bounding test
-            if (len > 1 && !subMesh._checkCollision(collider)) {
-                continue;
-            }
-            //this._collideForSubMesh(subMesh, collisionsTransformMatrix, collider);
-            //  public _collideForSubMesh(subMesh: SubMesh, transformMatrix: Matrix, collider: Collider): AbstractMesh {
-            //this._generatePointsArray();
-
 
             // Transformation
             if (!subMesh._lastColliderWorldVertices || !subMesh._lastColliderTransformMatrix!.equals(collisionsTransformMatrix)) {
@@ -74,17 +102,8 @@ export class TerraMesh extends BABYLON.Mesh {
                 for (let i = 0; i < transformed.length / 3; i++) {
                     subMesh._lastColliderWorldVertices.push(new BABYLON.Vector3(transformed[i * 3], transformed[i * 3 + 1], transformed[i * 3+2]));
                 }
-               /* for (let i = 0; i < this.positions.length / 3; i++) {
-                    let transformed = this.wasm.transformcoordinatesfromfloats(this.positions[i * 3], this.positions[i * 3 + 1] + 20, this.positions[i * 3 + 2], collisionsTransformMatrix.m as Float32Array)
-                    subMesh._lastColliderWorldVertices.push(new BABYLON.Vector3(transformed[0], transformed[1], transformed[2]));
-                }*/
             }
 
-            // Collide
-
-            //collider._collide(subMesh._trianglePlanes, subMesh._lastColliderWorldVertices, (<IndicesArray>this.getIndices()), subMesh.indexStart, subMesh.indexStart + subMesh.indexCount, subMesh.verticesStart, !!subMesh.getMaterial(), this);
-            //  public _collide(trianglePlaneArray: Array<Plane>, pts: Vector3[], indices: IndicesArray, indexStart: number, indexEnd: number, decal: number, hasMaterial: boolean, hostMesh: AbstractMesh): void {
-            //let indices = (<IndicesArray>this.getIndices());
             let indices = this.indices;
             for (var i = subMesh.indexStart; i < subMesh.indexStart + subMesh.indexCount; i += 3) {
                 var p1 = subMesh._lastColliderWorldVertices[indices[i] - subMesh.verticesStart];
@@ -93,11 +112,7 @@ export class TerraMesh extends BABYLON.Mesh {
                 //@ts-ignore
                 collider._testTriangle(i, subMesh._trianglePlanes, p3, p2, p1, !!subMesh.getMaterial(), collider);
             }
-            //return this;
-            // }
-
-        }
-        //}
+        }*/
         return this;
     }
     public intersectsPromise(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): Promise<BABYLON.PickingInfo> {

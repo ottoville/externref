@@ -781,7 +781,7 @@ export class WorldScene extends BABYLON.Scene {
             sea.material = waterMaterial;
 
             ground.checkCollisions = true;
-
+            blazor.invokeMethod('setProgress', 50, null);
             texture.then(imgdata => {
                 blazor.invokeMethod('setProgress', 75, null);
                 let width = 10000;
@@ -848,7 +848,7 @@ export class WorldScene extends BABYLON.Scene {
 
             this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
             //progelem.parentElement.style.display = 'none';
-            blazor.invokeMethod('setProgress', 100, null);
+            
         })
     }
 }

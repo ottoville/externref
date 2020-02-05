@@ -166,8 +166,8 @@
         "signature": "449974bb70c444474f94e428738dca887a8ff3cdf941850ff1100eea515d4355"
       },
       "./terramesh.ts": {
-        "version": "9a5692f2b219241bfad975a170fa3a42496027b770fd6e0658898d1ed9a6b743",
-        "signature": "4f54ebc800a3a0dba86bdfe35cb6b40234f9ac5ae89b3cceedd2e3c7e53f9e30"
+        "version": "4b74fa97b75274e32e8e26242a79f0e6e1f7acc9a4b1c1794383687884446ff7",
+        "signature": "316545821a46be8882b717feab4955158811832a2700597ae9eb8810deac4cbd"
       },
       "./uitab.ts": {
         "version": "32a7eabb413acdb50493bb9c83447d6d71afdd36a22f34d9540ce5b759843baa",
@@ -218,7 +218,7 @@
         "signature": "e1cb789ebbe6244738450ad0fa8864a21ab2940ffbde09ceebef6cdef4f97947"
       },
       "./tools/terrain.ts": {
-        "version": "a657d10624bfdf3f0f8d68aa09890fa4d36229b4c7e7226c304caa56a0136057",
+        "version": "6a7183a9ebd49caf8f3e4121e866d39ded809cea25a43450a7b917f528ac7ada",
         "signature": "0c8517ffcfe7e5858e7ec1418fb2377fa0beb1abbcd81a1222360b48c92196c2"
       },
       "./rustwasm/hello_wasm.d.ts": {
@@ -226,7 +226,7 @@
         "signature": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c"
       },
       "./world/scene.ts": {
-        "version": "d4a8ef51d9e27dfdc82980e61da8522a117f383023a840de20bd2bcbb030f106",
+        "version": "f08c55128a6baf0b0c343e28bab85680766cfe41f204a37e23f8b3930a6659a3",
         "signature": "143074186692d3e74bee8c8fc69071fb881b5deeb8c87b751c7bc7a7fb4dd8ff"
       },
       "./code.ts": {
@@ -493,9 +493,9 @@
       "./db.ts",
       "./lazyeval.ts",
       "./workerthread.ts",
-      "./terramesh.ts",
       "./uitab.ts",
       "./world/sun.ts",
+      "./world/terrain.ts",
       "./plants/plants.ts",
       "./paintground/paintground.ts",
       "./paintground/paintplane.ts",
@@ -505,7 +505,6 @@
       "./tools/zones.ts",
       "./tools/camera.ts",
       "./tools/buildings.ts",
-      "./tools/terrain.ts",
       "./rustwasm/hello_wasm.d.ts",
       "./world/scene.ts",
       "./code.ts",
@@ -518,7 +517,8 @@
       "./node_modules/babylonjs/babylon.module.d.ts",
       "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./world/terrain.ts"
+      "./terramesh.ts",
+      "./tools/terrain.ts"
     ]
   },
   "version": "3.8.0-beta"
