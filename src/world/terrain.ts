@@ -51,7 +51,7 @@ export class Terrain extends TerraMesh {
                 console.log('creating terrain texture')
                 /* WEBGPU START */
                 const computeShaderCode = await (await (fetch('../../shaders/webgpu.comp'))).text();
-                let timer = new Date().getTime();
+                
                 //@ts-ignore
                 const adapter = await navigator.gpu.requestAdapter();
                 const device = await adapter.requestDevice();
@@ -155,7 +155,7 @@ export class Terrain extends TerraMesh {
 
 
 
-
+                let timer = new Date().getTime();
                 const commandEncoder = device.createCommandEncoder();
 
                 const passEncoder = commandEncoder.beginComputePass();

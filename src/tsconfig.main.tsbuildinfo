@@ -178,7 +178,7 @@
         "signature": "6c373ca5d35c73904132d88446bec36b0b45d0bb9757c1a1e5e62a6a6c9e9540"
       },
       "./world/terrain.ts": {
-        "version": "a5b7a6f63df1aea253eb4e96474f55235af308a584f8b59f442224a46a40ecc0",
+        "version": "d910c1df8c40c7e0a069cc546addc1de64ace093e52c4e5683a0573aae718b7f",
         "signature": "24431575ca2beeb4dfbde5f23e7612d667bd34f24619be5dc9dfe8cb7d9a3228"
       },
       "./plants/plants.ts": {
@@ -507,6 +507,7 @@
       "./tools/buildings.ts",
       "./tools/terrain.ts",
       "./rustwasm/hello_wasm.d.ts",
+      "./world/scene.ts",
       "./code.ts",
       "./commonmath.ts",
       "./paintground/paintline.ts",
@@ -517,8 +518,7 @@
       "./node_modules/babylonjs/babylon.module.d.ts",
       "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./world/terrain.ts",
-      "./world/scene.ts"
+      "./world/terrain.ts"
     ]
   },
   "version": "3.8.0-beta"
