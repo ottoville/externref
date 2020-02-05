@@ -52,8 +52,6 @@ export class paintTexture extends paintGround {
         }
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
         if (this.subTextureCache.imageData != null) {
-            console.log('restore texture');
-            console.log(this.subTextureCache);
             this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
             this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, this.subTextureCache.x, this.subTextureCache.z, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.subTextureCache.imageData);
             this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);

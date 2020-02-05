@@ -178,7 +178,7 @@
         "signature": "b8b1a48db1211aa89ef48ea475990e6981b32e1a12ec86f7927a1a942c59bf64"
       },
       "./webworkers/terrainworker.ts": {
-        "version": "8f14a449ee54522f00a4d230298edd524b151a555a5cf3434e1f153fefd0a230",
+        "version": "20922a6b37206eaa8d43d4cf4b4d931aec8fe1e747f29aa242f6b284fb2d5119",
         "signature": "70b5436710e8bcb14d4cf7ff60f0123d26b3eb984ea8209ea6df3e3d575e4f71"
       },
       "./sw.ts": {
@@ -216,17 +216,7 @@
     "referencedMap": {},
     "exportedModulesMap": {},
     "semanticDiagnosticsPerFile": [
-      "./webworkers/bitmapworker.ts",
-      "./webworkers/grass.ts",
-      "./webworkers/interfaces.ts",
-      "./webworkers/mesh.ts",
-      "./webworkers/ray.ts",
-      "./webworkers/sceneworker.ts",
-      "./webworkers/terrainworker.ts",
-      "./sw.ts",
-      "./commonmath.d.ts",
-      "../node_modules/@types/color-name/index.d.ts",
-      "../node_modules/@types/facebook-js-sdk/index.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es5.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2016.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.d.ts",
@@ -234,7 +224,6 @@
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es5.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.webworker.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.core.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.collection.d.ts",
@@ -264,7 +253,18 @@
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.promise.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.string.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts"
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts",
+      "./webworkers/bitmapworker.ts",
+      "./webworkers/grass.ts",
+      "./webworkers/interfaces.ts",
+      "./webworkers/mesh.ts",
+      "./webworkers/ray.ts",
+      "./webworkers/sceneworker.ts",
+      "./sw.ts",
+      "./commonmath.d.ts",
+      "../node_modules/@types/color-name/index.d.ts",
+      "../node_modules/@types/facebook-js-sdk/index.d.ts",
+      "./webworkers/terrainworker.ts"
     ]
   },
   "version": "3.8.0-beta"

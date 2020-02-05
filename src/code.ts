@@ -170,7 +170,13 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             console.log('websocket onerror');
             blazor.invokeMethod('setProgress', 20, null);
             //progelem.value = 30;
-            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, canvas));
+            try {
+                sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, canvas));
+            } catch (e) {
+                console.error('creating terrain failed', e);
+                //progelem.parentNode.textContent = e;
+                blazor.invokeMethod('setProgress', 0, e.name + e.message);
+            }
         }
     }
 });

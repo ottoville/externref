@@ -61,8 +61,6 @@ export class WorldScene extends BABYLON.Scene {
         return this.lastStateChangeGameTime + (BigInt(interval * 60) << this.gameSpeed);
     }*/
     public SunObject: Sun;
-    public terrainReady: Promise<Terrain>;
-
     public stateChange(data) {
         if (this.webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'stateChange', data }))
@@ -252,7 +250,7 @@ export class WorldScene extends BABYLON.Scene {
     public attachControl(attachUp = true, attachDown = true, attachMove = true): void {
         //this._inputManager.attachControl(attachUp, attachDown, attachMove);
 
-        (function(scene: BABYLON.Scene, elementToAttachTo: Nullable<HTMLElement> = null) {
+        (function (scene: BABYLON.Scene, elementToAttachTo: Nullable<HTMLElement> = null) {
 
             if (!elementToAttachTo) {
                 //@ts-ignore
@@ -717,51 +715,75 @@ export class WorldScene extends BABYLON.Scene {
             texture: Blob
         }
         let sea: BABYLON.Mesh;
-        this.terrainReady = new Promise(async (ccres, ccrej) => {
-            await Wasm.default();
-            /*
-             *         this.worker.subscribe('setProgress', (data) => {
-            console.log('got progress from worker', data);
-            blazor.invokeMethod('setProgress', data.data.progress, data.data.error);
-        });
-        */
+
+        /*
+         *         this.worker.subscribe('setProgress', (data) => {
+        console.log('got progress from worker', data);
+        blazor.invokeMethod('setProgress', data.data.progress, data.data.error);
+    });
+    */
 
 
+
+        new Promise<[Terrain, Promise<ArrayBuffer | HTMLImageElement>]>(async (tres, trej) => {
             let db = (await DB);
             let trans = db.transaction('maps');
-            trans.onerror = ccrej;
-
-            let [ground, texture] = await new Promise<[Terrain, Promise<ArrayBuffer | HTMLImageElement>]>((tres, trej) => {
-                trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
-                    try {
-                        //progelem.value = 40;
-                        blazor.invokeMethod('setProgress', 30, null);
-                        if ((<IDBRequest>evt.target).result) {
-                            ccres((<IDBRequest>evt.target).result.value);
-                            let img = new Image();
-                            img.src = URL.createObjectURL((<IDBRequest>evt.target).result.value.texture);
-                            tres([new Terrain((<IDBRequest>evt.target).result.value, Wasm), img.decode().then(() => img)]);
-                        }
-                        else {
-                            let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp', Wasm);
-                            tres([ground, ground.createTexture()]);
-                            let obj = {
-                                width: 10000,
-                                height: 10000,
-                                indices: new Uint32Array(ground.indices),
-                                positions: new Float32Array(ground.positions),
-                                uvs: new Float32Array(ground.uvs)
-                            };
-                            let trans2 = db.transaction('maps', 'readwrite');
-                            trans2.onerror = ccrej;
-                            trans2.objectStore('maps').add(obj);
-                        }
-
-                    } catch (e) {
-                        ccrej(e);
+            trans.onerror = trej;
+            trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
+                try {
+                    await Wasm.default();
+                    //progelem.value = 40;
+                    blazor.invokeMethod('setProgress', 30, null);
+                    if ((<IDBRequest>evt.target).result) {
+                        let img = new Image();
+                        img.src = URL.createObjectURL((<IDBRequest>evt.target).result.value.texture);
+                        tres([new Terrain((<IDBRequest>evt.target).result.value, Wasm), img.decode().then(() => img)]);
                     }
+                    else {
+                        let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp', Wasm);
+                        tres([ground, ground.createTexture()]);
+                        let obj = {
+                            width: 10000,
+                            height: 10000,
+                            indices: new Uint32Array(ground.indices),
+                            positions: new Float32Array(ground.positions),
+                            uvs: new Float32Array(ground.uvs)
+                        };
+                        let trans2 = db.transaction('maps', 'readwrite');
+                        trans2.objectStore('maps').add(obj);
+                    }
+
+                } catch (e) {
+                    trej(e);
                 }
-            });
+            }
+        }).then(gt => {
+            blazor.invokeMethod('setProgress', 40, null);
+            let [ground, texture] = gt;
+            console.debug('terrain ready');
+
+            this.tools['Buildings'] = new BuildingsUI(this);
+
+            DB.then(d => {
+                this.tools['Zones'] = new Zones(ground, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
+            })
+            var waterMaterial = new BABYLON.WaterMaterial("waterMaterial", this, new BABYLON.Vector2(512, 512));
+            waterMaterial.bumpTexture = new BABYLON.Texture("images/waterbump.png", this);
+            waterMaterial.windForce = -10;
+            waterMaterial.waveHeight = 0.4;
+            waterMaterial.bumpHeight = 0.1;
+            waterMaterial.waveLength = 0.1;
+            waterMaterial.waveSpeed = 50.0;
+            waterMaterial.colorBlendFactor = 0;
+            waterMaterial.windDirection = new BABYLON.Vector2(1, 1);
+            waterMaterial.colorBlendFactor = 0;
+            waterMaterial.addToRenderList(ground);
+            sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
+            sea.position.y = 0;
+            sea.material = waterMaterial;
+
+            ground.checkCollisions = true;
+
             texture.then(imgdata => {
                 blazor.invokeMethod('setProgress', 75, null);
                 let width = 10000;
@@ -814,236 +836,21 @@ export class WorldScene extends BABYLON.Scene {
                     };
                 }).bind(shadermateria)();
                 ground.material = shadermateria;
+                blazor.invokeMethod('setProgress', 100, null);
             })
 
             ground.isPickable = true;
-            sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
-            sea.position.y = 0;
+
             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
             let gl: WebGLRenderingContext = engine._gl;
 
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-            ccres(ground);
-            
- 
+
             this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
             //progelem.parentElement.style.display = 'none';
             blazor.invokeMethod('setProgress', 100, null);
-
-                
-            return ground;
-        });
-        /*
-        this.terrainReady = new Promise(async (ccres, ccrej) => {
-            let db = (await DB);
-            let trans = db.transaction('maps');
-            trans.onerror = ccrej;
-            trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
-                try {
-                    //progelem.value = 40;
-                    blazor.invokeMethod('setProgress', 30, null);
-                    if ((<IDBRequest>evt.target).result) {
-                        ccres((<IDBRequest>evt.target).result.value);
-                    }
-                    else {
-                        let vertexData = await this.worker.message<{ indices: number[], positions: number[], normals: number[], uvs: number[] }, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {});
-
-                       // progelem.value = 50;
-                        blazor.invokeMethod('setProgress', 50, null);
-                        let obj = {
-                            width: 10000,
-                            height: 10000,
-                            indices: Uint32Array.from(vertexData.indices),
-                            normals: Float32Array.from(vertexData.normals),
-                            positions: Float32Array.from(vertexData.positions),
-                            uvs: Float32Array.from(vertexData.uvs)
-                        };
-                        let trans2 = db.transaction('maps', 'readwrite');
-                        trans2.onerror = ccrej;
-                        trans2.objectStore('maps').add(obj).onsuccess = () => {
-                            trans2.objectStore('maps').openCursor().onsuccess = (e) => {
-                                ccres(<IDBCursorWithValue>(<IDBRequest>e.target).result.value)
-                            }
-                        }
-                    }
-
-                } catch (e) {
-                    ccrej(e);
-                }
-            };
-        }).then(async (vdata: TerrainMap) => {
-            //progelem.value = 60;
-            blazor.invokeMethod('setProgress', 55,null);
-
-            await Wasm.default();
-
-            let ground = new Terrain(vdata, Wasm);
-
-            sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
-            let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
-            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
-            let gl: WebGLRenderingContext = engine._gl;
-
-            shadermateria.setVector3("lightPos", sunlight.position);
-            shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-  
-
-            return ground
-        });*/
-        this.terrainReady.catch((e) => {
-            console.error('creating terrain failed', e);
-            //progelem.parentNode.textContent = e;
-            blazor.invokeMethod('setProgress', 0, e.name + e.message);
         })
-        this.terrainReady.then((terrain: Terrain) => {
-            console.debug('terrain ready');
-            /* Promise.all([CSG.fromMesh(this.mesh), CSG.fromMesh(grassbox)]).then(r => {
-                 if (thismeshoperation !== meshoperatiocount) {
-                     r[0].dispose();
-                     r[1].dispose();
-                     return;
-                 }
-                 r[0].intersect(r[1]).then(newcsg => {
-                     r[0].dispose();
-                     r[1].dispose();
-                     if (thismeshoperation !== meshoperatiocount) {
-                         
-                         newcsg.dispose();
-                         return;
-                     }
-                     newcsg.toMesh("unined", brown, scene, true).then(newmesh => {
-                         newcsg.dispose();
-                         if (typeof (oldmesh) !== 'undefined') {
-                             if (thismeshoperation !== meshoperatiocount) {
-                                 newmesh.dispose();
-                                 return;
-                             }
-                             oldmesh.dispose();
-                         }
-                         oldmesh = newmesh;
-                         newmesh.position.y += 4;
-                     });
-                 });
-             })*/
-            /*   var aCSG = BABYLON.CSG.FromMesh(terrain);
-    
-               var bCSG = BABYLON.CSG.FromMesh(grassbox);
-    
-               
-               let unioned=aCSG.intersect(bCSG); //SLOW
-               if (typeof (oldmesh) !== 'undefined')
-                 oldmesh.dispose();
-               let newmesh=unioned.toMesh("unined",brown,scene,true);
-               oldmesh = newmesh;
-               newmesh.position.y+=4;*/
-
-            /*   }
-           }, scene);*/
-
-            // canvas.addEventListener("pointerdown", DZ.mainPointerDown, false);
-            
-
-            //var seaground = BABYLON.Mesh.CreateGround("ground", 3601, 3601, 1, scene, false);
-            //seaground.position.y = -1.5;
-            
-
-            this.tools['Buildings'] = new BuildingsUI(this);
-
-            DB.then(d => {
-                this.tools['Zones'] = new Zones(terrain, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
-            })
-            var waterMaterial = new BABYLON.WaterMaterial("waterMaterial", this, new BABYLON.Vector2(512, 512));
-            waterMaterial.bumpTexture = new BABYLON.Texture("images/waterbump.png", this);
-            waterMaterial.windForce = -10;
-            waterMaterial.waveHeight = 0.4;
-            waterMaterial.bumpHeight = 0.1;
-            waterMaterial.waveLength = 0.1;
-            waterMaterial.waveSpeed = 50.0;
-            waterMaterial.colorBlendFactor = 0;
-            waterMaterial.windDirection = new BABYLON.Vector2(1, 1);
-            waterMaterial.colorBlendFactor = 0;
-            waterMaterial.addToRenderList(terrain);
-            sea.material = waterMaterial;
-
-
-            terrain.checkCollisions = true;
-            //Object.defineProperty(terrain, 'checkCollisions', { get: function () { debugger; return true; } } )
-            var green = new BABYLON.StandardMaterial("green", this);
-
-            green.diffuseColor = new BABYLON.Color3(0, 1, 0);
-
-
-            /*  BABYLON.SceneLoader.ImportMesh("", "", "tree.babylon", this, function (mesh) {
-                  let treemesh = mesh[0];
-                  (<BABYLON.StandardMaterial>treemesh.material).opacityTexture = null;
-                  treemesh.material.backFaceCulling = false;
-                  treemesh.isVisible = false;
-                  if (DT) {
-                      ctx.setTransform(1, 0, 0, 1, 0, 0);
-                      ctx.translate(centerX, centerZ);
-                      ctx.fillStyle = "#654321";
-                  }
-                  for (let row = -5000; row < 5000; row = row + 8) {
-                      for (let col = -5000; col < 5000; col = col += 8) {
-                          let height = terrain.getHeightFromMap(row, col)
-                          //let height = ground.getHeightAtCoordinates(row, col);
-                          if (height > 40 && height < 110) {
-                              let newInstance = (<BABYLON.Mesh>treemesh).createInstance("i" + row.toString() + col.toString());
-                              newInstance.position.z = col + 8 * Math.random();
-                              newInstance.position.x = row + 8 * Math.random();
-                              newInstance.position.y = height;
-                              newInstance.rotate(BABYLON.Axis.Y, Math.random() * Math.PI * 2, BABYLON.Space.WORLD);
-      
-                              var scale = 0.5 + Math.random() * 2;
-                              newInstance.scaling.addInPlace(new BABYLON.Vector3(scale, scale, scale));
-                              DT && ctx.fillRect(row, col * -1, 10, 10);
-                          }
-                      }
-                  }
-                  if (DT) {
-                      ctx.fill();
-                      grass.update();
-                  }
-  
-  
-                  return this;
-              });*/
-
-            let buildings: BABYLON.Mesh[] = [];
-
-            let size = 10000
-            /* DB.then(db => {
-                 let centerX = size / 2
-                 let centerZ = size / 2
-                 window.setInterval(() => {
-                     db.transaction("zones").objectStore("zones").getAll().onsuccess = function (evt) {
-                         this.result.forEach(z => {
-                             let height = terrain.getHeightFromMap(row, col)
-                             let width = 50;
-                             let depth = 50;
-    
-                             let box = BABYLON.MeshBuilder.CreateBox("myBox", {
-                                 height: 20,
-                                 width,
-                                 depth
-                             }, scene);
-                             box.position.x = z.coord.x;
-                             box.position.z = z.coord.z * -1;
-                             // for (let i = 0; i < buildings.length; i++) {
-                               //   if (box.intersectsMesh(buildings[i], true)) {
-                              //        box.position.x++;
-                              //        i = 0;
-                              //    }
-                             // }
-                             buildings.push(box);
-                         })
-                     }
-                 }, 1000)
-    
-             });*/
-
-        }).catch(e => console.log(e));
     }
 }

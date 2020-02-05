@@ -1,6 +1,6 @@
 ﻿importScripts("/js/commonMath.js");
 importScripts("/webworkers/ray.js");
-
+importScripts("/js/DB.js");
 
 let terrainPositions: Float32Array;
 let terrainIndices: Uint32Array;
@@ -258,24 +258,30 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
         methods2.createHeights(e);
         this.postMessage({ id: e.id, data: { } });
     },
-    saveTexture: (arrayBuffer: WMessage<ArrayBuffer>) => {
-        //@ts-ignore
-        let c = new OffscreenCanvas(...new Int32Array(arrayBuffer.data, 0, 2))
+    saveTexture: async (e: WMessage<ArrayBuffer>) => {
 
+        //@ts-ignore
+        let c = new OffscreenCanvas(...new Float32Array(e.data, 0, 2));
         let ctx = c.getContext("2d");
         if (!ctx)
             throw ('get 2d context failed');
-        ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer.data, Int32Array.BYTES_PER_ELEMENT * 2), c.width, c.height), 0, 0);
-        c.toBlob(async b => {
-            if (b) {
-                vdata.texture = b;
+        
+        ctx.putImageData(new ImageData(new Uint8ClampedArray(e.data, Float32Array.BYTES_PER_ELEMENT * 2), c.width, c.height), 0, 0);
+        self.postMessage({ id: e.id, data: e.data }, [e.data]);
+        let b = await c.convertToBlob({
+            type: "image/webp",
+            quality: 1
+        })
+        let db = (await DB);
+        let trans = db.transaction('maps');
+        trans.objectStore('maps').openCursor().onsuccess = (evt) => {
+            if ((<IDBRequest>evt.target).result) {
+                (<IDBRequest>evt.target).result.value.texture = b
                 queueMicrotask(async () => {
-                    (await DB).transaction('maps', 'readwrite').objectStore('maps').put(vdata);
+                    (await DB).transaction('maps', 'readwrite').objectStore('maps').put((<IDBRequest>evt.target).result.value);
                 });
-            } else {
-                trej('To Blob failed')
             }
-        }, 'image/webp', 1);
+        }
     },
     createHeightMap: async (d: { id?: number }) => {
         try {

@@ -178,7 +178,7 @@
         "signature": "6c373ca5d35c73904132d88446bec36b0b45d0bb9757c1a1e5e62a6a6c9e9540"
       },
       "./world/terrain.ts": {
-        "version": "018a8de7efcce6bad2a5fcaea434eeef50b7e21ad456c1f80406eb5489b19e23",
+        "version": "29f1b9fe4dfb41ec63fa684d36ff37db1292b461d51418e7e913c11f6545f92b",
         "signature": "24431575ca2beeb4dfbde5f23e7612d667bd34f24619be5dc9dfe8cb7d9a3228"
       },
       "./plants/plants.ts": {
@@ -198,7 +198,7 @@
         "signature": "383d602e5892880ef0057cccaf3c8598011d0e173b2ccecd5dff485f030816f1"
       },
       "./paintground/painttexture.ts": {
-        "version": "62f93b373de55cf81fb8e8d2e42e4046fdb68077ed2f2987bb414f07731134c8",
+        "version": "fabd4f888db9db6bcd08caa24270fc65f2afd7b79203b028116e6b6868ee85f4",
         "signature": "b59f8c5e075b4bf7dc005cd5c947df0730a8f91d8947af244a5811b431f34f2e"
       },
       "./webgl.ts": {
@@ -226,11 +226,11 @@
         "signature": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c"
       },
       "./world/scene.ts": {
-        "version": "41dc29001b3524d1772f82fd0ac25f95da935937eb03abf96096a805db97c3d4",
-        "signature": "0132eca9818a69322b8980110e789c27b2ed16a3ce041863d60786285a6167b4"
+        "version": "bd09eeccd2787ed4180eb8a8416645db0a95c20f5ab266983c7e26fef8c38a95",
+        "signature": "143074186692d3e74bee8c8fc69071fb881b5deeb8c87b751c7bc7a7fb4dd8ff"
       },
       "./code.ts": {
-        "version": "341c3421d2d7e36caeb306f87111602f42641f42fb78da7dd3e32448c0fcf617",
+        "version": "500bf389370f5d3075900fdcdd735af990759569395778a653e56493346f88f8",
         "signature": "7bb14ed09d07de3d85469b409069a2f9dffa28c294f39a5744e3d945aeadf265"
       },
       "./commonmath.ts": {
@@ -433,7 +433,6 @@
       ],
       "./world/scene.ts": [
         "./world/sun.ts",
-        "./world/terrain.ts",
         "./uitab.ts"
       ],
       "./code.ts": [
