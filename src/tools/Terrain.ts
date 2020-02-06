@@ -125,21 +125,21 @@ export class TerrainTool extends UITAB {
             gl.bindTexture(gl.TEXTURE_2D, null);
         });
         let mainboundingInfo = this.terrain.getBoundingInfo();
-        let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
+       // let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
         Terrain.terrainWorker.subscribe('bounding', (v) => {
 
             
             this.terrain.lastColliderWorldVertices = null;
          
           
-            this.terrain.subMeshes[0]._lastColliderWorldVertices = null;
+          /*  this.terrain.subMeshes[0]._lastColliderWorldVertices = null;
             boundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
             boundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
             boundingInfo.boundingBox.minimumWorld.y = v.data.boundingBox.minY
             boundingInfo.boundingBox.maximumWorld.y = v.data.boundingBox.maxY
 
             boundingInfo.boundingSphere.radius = v.data.boundingSphereRadius
-            boundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius
+            boundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius*/
 
             mainboundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
             mainboundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY

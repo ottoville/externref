@@ -273,30 +273,29 @@ export class TerraMesh extends BABYLON.Mesh {
     }
 
     public _trianglePlanes = [];
-    public lastColliderWorldVectors: BABYLON.Vector3[] = []; 
+    public lastColliderWorldVectors: BABYLON.Vector3[] = [];
     public _checkCollision(collider: BABYLON.Collider): BABYLON.AbstractMesh {
 
         // Bounding box test
         if (!this._boundingInfo || !collider._canDoCollision(this._boundingInfo.boundingSphere.centerWorld, this._boundingInfo.boundingSphere.radiusWorld, this._boundingInfo.boundingBox.minimumWorld, this._boundingInfo.boundingBox.maximumWorld)) {
             return this;
         }
-        console.debug('checkcollision');
         // Transformation matrix
         const collisionsScalingMatrix = new BABYLON.Matrix();
         const collisionsTransformMatrix = new BABYLON.Matrix();
         BABYLON.Matrix.ScalingToRef(1.0 / collider._radius.x, 1.0 / collider._radius.y, 1.0 / collider._radius.z, collisionsScalingMatrix);
         this.worldMatrixFromCache.multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
 
-       
 
         ///
-        
+
         if (!this.lastColliderWorldVertices || !this.lastColliderTransformMatrix.equals(collisionsTransformMatrix)) {
             console.debug('recalculating collision vertices');
             this.lastColliderTransformMatrix = collisionsTransformMatrix.clone();
             this.lastColliderWorldVertices = new SharedArrayBuffer(this.positionsBuffer.byteLength);
             let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
             this._trianglePlanes = [];
+            this.lastColliderWorldVectors = [];
             this.subMeshes[0]._trianglePlanes = [];
             lastColliderVertices.set(this.wasm.calculatelastcolliderworldvertices(this.positions, collisionsTransformMatrix.m as Float32Array));
             for (let i = 0; i < lastColliderVertices.length / 3; i++) {
@@ -306,24 +305,24 @@ export class TerraMesh extends BABYLON.Mesh {
         }
         //let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
         let indices = this.indices;
-/*let pp1 = BABYLON.Vector3.Zero();
-        let pp2 = BABYLON.Vector3.Zero();
-        let pp3 = BABYLON.Vector3.Zero();*/
+        /*let pp1 = BABYLON.Vector3.Zero();
+                let pp2 = BABYLON.Vector3.Zero();
+                let pp3 = BABYLON.Vector3.Zero();*/
         //console.log('submesh material?', !!this.subMeshes[0].getMaterial());
         let lenn = indices.length;
-        let timer = new Date().getTime();
+      //  let timer = new Date().getTime();
         for (var i = 0; i < lenn; i += 3) {
-           /* pp1.x = lastColliderVertices[indices[i * 3 ]];
-            pp1.y = lastColliderVertices[indices[i * 3 + 1 ]];
-            pp1.z = lastColliderVertices[indices[i * 3 + 2] ];
-
-            pp2.x = lastColliderVertices[indices[(i + 1) * 3 ]];
-            pp2.y = lastColliderVertices[indices[(i + 1) * 3 + 1 ]];
-            pp2.z = lastColliderVertices[indices[(i + 1) * 3 + 2 ]];
-
-            pp3.x = lastColliderVertices[indices[(i + 2) * 3 ]];
-            pp3.y = lastColliderVertices[indices[(i + 2) * 3 + 1]];
-            pp3.z = lastColliderVertices[indices[(i + 2) * 3 + 2]];*/
+            /* pp1.x = lastColliderVertices[indices[i * 3 ]];
+             pp1.y = lastColliderVertices[indices[i * 3 + 1 ]];
+             pp1.z = lastColliderVertices[indices[i * 3 + 2] ];
+ 
+             pp2.x = lastColliderVertices[indices[(i + 1) * 3 ]];
+             pp2.y = lastColliderVertices[indices[(i + 1) * 3 + 1 ]];
+             pp2.z = lastColliderVertices[indices[(i + 1) * 3 + 2 ]];
+ 
+             pp3.x = lastColliderVertices[indices[(i + 2) * 3 ]];
+             pp3.y = lastColliderVertices[indices[(i + 2) * 3 + 1]];
+             pp3.z = lastColliderVertices[indices[(i + 2) * 3 + 2]];*/
 
 
             var pp1 = this.lastColliderWorldVectors[indices[i]];
@@ -331,80 +330,29 @@ export class TerraMesh extends BABYLON.Mesh {
             var pp3 = this.lastColliderWorldVectors[indices[i + 2]];
 
             //@ts-ignore
-           // collider._testTriangle(i, this.subMeshes[0]._trianglePlanes, pp3, pp2, pp1, !!this.subMeshes[0].getMaterial(), this);
-           /* this._testTriangle({
-                //@ts-ignore
-                _normalizedVelocity: collider._normalizedVelocity,
-                //@ts-ignore
-                _basePoint: collider._basePoint,
-                //@ts-ignore
-                _velocity: collider._velocity,
-                //@ts-ignore
-                _collisionPoint: collider._collisionPoint,
-                //@ts-ignore
-                _planeIntersectionPoint: collider._planeIntersectionPoint,
-                //@ts-ignore
-                _tempVector: collider._tempVector,
-                BabylonCollider: collider,
-                //@ts-ignore
-                _edge: collider._edge,
-                //@ts-ignore
-                _baseToVertex: collider._baseToVertex,
-            }, i, this._trianglePlanes, pp3, pp2, pp1, !!this.subMeshes[0].getMaterial(), this)*/
+            collider._testTriangle(i, this.subMeshes[0]._trianglePlanes, pp3, pp2, pp1, !!this.subMeshes[0].getMaterial(), this);
+            /* this._testTriangle({
+                 //@ts-ignore
+                 _normalizedVelocity: collider._normalizedVelocity,
+                 //@ts-ignore
+                 _basePoint: collider._basePoint,
+                 //@ts-ignore
+                 _velocity: collider._velocity,
+                 //@ts-ignore
+                 _collisionPoint: collider._collisionPoint,
+                 //@ts-ignore
+                 _planeIntersectionPoint: collider._planeIntersectionPoint,
+                 //@ts-ignore
+                 _tempVector: collider._tempVector,
+                 BabylonCollider: collider,
+                 //@ts-ignore
+                 _edge: collider._edge,
+                 //@ts-ignore
+                 _baseToVertex: collider._baseToVertex,
+             }, i, this._trianglePlanes, pp3, pp2, pp1, !!this.subMeshes[0].getMaterial(), this)*/
         }
-        console.log('collider check one took ', new Date().getTime()-timer, 'length ',lenn)
-        ////
-       
-        const subMeshes = this._scene.getCollidingSubMeshCandidates(this, collider);
-        const len = subMeshes.length;
-         for (var index = 0; index < len; index++) {
-            var subMesh = subMeshes.data[index];
-
-            // Transformation
-            if (!subMesh._lastColliderWorldVertices || !subMesh._lastColliderTransformMatrix!.equals(collisionsTransformMatrix)) {
-                console.log('recalculating collision vertices');
-                subMesh._lastColliderTransformMatrix = collisionsTransformMatrix.clone();
-                subMesh._lastColliderWorldVertices = [];
-                subMesh._trianglePlanes = [];
-                let transformed = this.wasm.calculatelastcolliderworldvertices(this.positions, collisionsTransformMatrix.m as Float32Array);
-                for (let i = 0; i < transformed.length / 3; i++) {
-                    subMesh._lastColliderWorldVertices.push(new BABYLON.Vector3(transformed[i * 3], transformed[i * 3 + 1], transformed[i * 3+2]));
-                }
-            }
-
-             let indices = this.indices;
-             timer = new Date().getTime();
-            for (var i = subMesh.indexStart; i < subMesh.indexStart + subMesh.indexCount; i += 3) {
-                var p1 = subMesh._lastColliderWorldVertices[indices[i] - subMesh.verticesStart];
-                var p2 = subMesh._lastColliderWorldVertices[indices[i + 1] - subMesh.verticesStart];
-                var p3 = subMesh._lastColliderWorldVertices[indices[i + 2] - subMesh.verticesStart];
-                //@ts-ignore
-                collider._testTriangle(i, subMesh._trianglePlanes, p3, p2, p1, !!subMesh.getMaterial(), this);
-               /* this._testTriangle({
-                    //@ts-ignore
-                    _normalizedVelocity: collider._normalizedVelocity,
-                    //@ts-ignore
-                    _basePoint: collider._basePoint,
-                    //@ts-ignore
-                    _velocity: collider._velocity,
-                    //@ts-ignore
-                    _collisionPoint: collider._collisionPoint,
-                    //@ts-ignore
-                    _planeIntersectionPoint: collider._planeIntersectionPoint,
-                    //@ts-ignore
-                    _tempVector: collider._tempVector,
-                    BabylonCollider: collider,
-                    //@ts-ignore
-                    _edge: collider._edge,
-                    //@ts-ignore
-                    _baseToVertex: collider._baseToVertex,
-                    //@ts-ignore
-                    _nearestDistance: collider._nearestDistance,
-
-                }, i, this._trianglePlanes, p3, p2, p1, !!this.subMeshes[0].getMaterial(), this);*/
-             }
-             console.log('collider check two took ', new Date().getTime() - timer, 'startindex', subMesh.indexStart, 'indexcount ', subMesh.indexCount, 'verticesstart', subMesh.verticesStart);
-        }
+       // console.log('collider check one took ', new Date().getTime() - timer, 'length ', lenn, 'collides?', collider.collisionFound)
+      
         return this;
     }
     public intersectsPromise(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): Promise<BABYLON.PickingInfo> {
