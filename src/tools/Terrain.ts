@@ -130,8 +130,8 @@ export class TerrainTool extends UITAB {
 
             
             this.terrain.lastColliderWorldVertices = null;
-         /*
-          *
+         
+          
             this.terrain.subMeshes[0]._lastColliderWorldVertices = null;
             boundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
             boundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
@@ -139,7 +139,7 @@ export class TerrainTool extends UITAB {
             boundingInfo.boundingBox.maximumWorld.y = v.data.boundingBox.maxY
 
             boundingInfo.boundingSphere.radius = v.data.boundingSphereRadius
-            boundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius*/
+            boundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius
 
             mainboundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
             mainboundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
