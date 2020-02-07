@@ -36,14 +36,12 @@ export class Terrain extends TerraMesh {
     private ratioX: number;
     private ratioY: number;
     
-    public uvs: Float32Array;
-
     public static terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
     public inited: Promise<any>;
-    public static async fromHeightMap(map: string, wasm): Promise<Terrain> {
+    public static async fromHeightMap(map: string): Promise<Terrain> {
         let vdata = await Terrain.terrainWorker.message<TerrainMap, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {url: map});
-        return new Terrain(vdata, wasm);
+        return new Terrain(vdata);
     }
     public createTexture() : Promise<ArrayBuffer> {
         return new Promise((tres, trej) => {
@@ -196,10 +194,9 @@ export class Terrain extends TerraMesh {
         });
     }
     //public ground: BABYLON.GroundMesh;
-    constructor(vdata: TerrainMap, wasm) {
-        super('ground', vdata.indices, vdata.positions, wasm);
+    constructor(vdata: TerrainMap) {
+        super('ground', vdata.indices, vdata.positions, undefined, vdata.uvs);
         console.debug('create terrain');
-        this.uvs = vdata.uvs;
 
         this._subdivisionsX = 250;
         this._subdivisionsY = 250;
@@ -223,19 +220,24 @@ export class Terrain extends TerraMesh {
         this.ratioX = this._subdivisionsX / this._width;
         this.ratioY = this._subdivisionsY / this._height;
 
-        var vertexData = new BABYLON.VertexData();
+       // var vertexData = new BABYLON.VertexData();
 
-        vertexData.indices = this.indices;
-        vertexData.positions = this.positions;
+        //vertexData.indices = this.indices;
+        //vertexData.positions = this.positions;
         
-        vertexData.uvs = this.uvs;
+        
 
         this.inited = TerraMesh.worker.message<SharedArrayBuffer, PostMessageOptions>(this.uniqueId, 'ComputeNormals').then(async normalsb => {
             this.normalsBuffer = normalsb;
             this.normals = new Float32Array(this.normalsBuffer)
             this.normalsView = new DataView(this.normalsBuffer);
+           /* var vertexData = new BABYLON.VertexData();
+            vertexData.uvs = this.uvs;
             vertexData.normals = this.normals;
-            vertexData.applyToMesh(this, true);
+            vertexData.applyToMesh(this, true);*/
+           // this.updateVerticesData(BABYLON.VertexBuffer.UVKind, this.uvs);
+            this.updateVerticesData(BABYLON.VertexBuffer.NormalKind, this.normals);
+
             let boundingInfo = this.subMeshes[0].getBoundingInfo();
             return Terrain.terrainWorker.message(WorkerReturn.Promise, 'init',
                 {

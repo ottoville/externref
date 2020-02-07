@@ -50,9 +50,11 @@ export class TerraMesh extends BABYLON.Mesh {
     public normals: Float32Array | null = null;
     public normalsView: DataView | null = null;
 
+    public uvs: SharedArrayBuffer | null = null;
+
     static worker = new ObjectWorkerThread('/webworkers/mesh.js');
 
-    constructor(name: string, indices: Uint32Array, positions: Float32Array, protected wasm, normals?: Float32Array) {
+    constructor(name: string, indices: Uint32Array, positions: Float32Array, normals?: Float32Array, uvs?: Float32Array) {
         super(name);
         this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * indices.length);
         this.indices = new Uint32Array(this.indicesBuffer);
@@ -64,6 +66,11 @@ export class TerraMesh extends BABYLON.Mesh {
             this.normals.set(normals);
             this.normalsView = new DataView(this.normalsBuffer);
         }
+        if (typeof (uvs) !== 'undefined') {
+            this.uvs = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * uvs.length)
+            let uvsview = new Float32Array(this.uvs);
+            uvsview.set(uvs);
+        }
 
         this.positionsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * positions.length);
         this.positions = new Float32Array(this.positionsBuffer);
@@ -71,6 +78,12 @@ export class TerraMesh extends BABYLON.Mesh {
         this.positionsView = new DataView(this.positionsBuffer);
 
         TerraMesh.worker.message(this.uniqueId, 'init', [this.indicesBuffer, this.positionsBuffer, this.normalsBuffer]);
+        var vertexData = new BABYLON.VertexData();
+        vertexData.indices = this.indices;
+        vertexData.positions = this.positions;
+        if (this.uvs)
+            vertexData.uvs = new Float32Array(this.uvs)
+        vertexData.applyToMesh(this, true);
     }
     public _testTriangle(collider: {
         _normalizedVelocity: BABYLON.Vector3,
@@ -275,7 +288,6 @@ export class TerraMesh extends BABYLON.Mesh {
     public _trianglePlanes = [];
     public lastColliderWorldVectors: BABYLON.Vector3[] = [];
     public _checkCollision(collider: BABYLON.Collider): BABYLON.AbstractMesh {
-
         // Bounding box test
         if (!this._boundingInfo || !collider._canDoCollision(this._boundingInfo.boundingSphere.centerWorld, this._boundingInfo.boundingSphere.radiusWorld, this._boundingInfo.boundingBox.minimumWorld, this._boundingInfo.boundingBox.maximumWorld)) {
             return this;
@@ -297,7 +309,7 @@ export class TerraMesh extends BABYLON.Mesh {
             this._trianglePlanes = [];
             this.lastColliderWorldVectors = [];
             this.subMeshes[0]._trianglePlanes = [];
-            lastColliderVertices.set(this.wasm.calculatelastcolliderworldvertices(this.positions, collisionsTransformMatrix.m as Float32Array));
+            lastColliderVertices.set(window.Wasm.calculatelastcolliderworldvertices(this.positions, collisionsTransformMatrix.m as Float32Array));
             for (let i = 0; i < lastColliderVertices.length / 3; i++) {
                 this.lastColliderWorldVectors.push(new BABYLON.Vector3(lastColliderVertices[i * 3], lastColliderVertices[i * 3 + 1], lastColliderVertices[i * 3 + 2]));
             }

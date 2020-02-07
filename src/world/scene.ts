@@ -1,5 +1,4 @@
 import { Sun } from "./sun.js";
-import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
 import { Plants } from "../plants/Plants.js";
 import { PlantsUI } from "../tools/plantsUI.js";
 import { Zones } from "../tools/zones.js";
@@ -8,7 +7,6 @@ import { UITAB } from "../UITAB.js";
 import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
-import *  as Wasm from "../rustwasm/hello_wasm.js"
 import { texImage2D } from "../webgl.js";
 
 
@@ -729,23 +727,22 @@ export class WorldScene extends BABYLON.Scene {
             trans.onerror = trej;
             trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
                 try {
-                    await Wasm.default();
                     //progelem.value = 40;
                     blazor.invokeMethod('setProgress', 30, null);
                     if ((<IDBRequest>evt.target).result) {
                         let img = new Image();
                         img.src = URL.createObjectURL((<IDBRequest>evt.target).result.value.texture);
-                        tres([new Terrain((<IDBRequest>evt.target).result.value, Wasm), img.decode().then(() => img)]);
+                        tres([new Terrain((<IDBRequest>evt.target).result.value), img.decode().then(() => img)]);
                     }
                     else {
-                        let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp', Wasm);
+                        let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp');
                         tres([ground, ground.createTexture()]);
                         let obj = {
                             width: 10000,
                             height: 10000,
                             indices: new Uint32Array(ground.indices),
                             positions: new Float32Array(ground.positions),
-                            uvs: new Float32Array(ground.uvs)
+                            uvs: new Float32Array(ground.uvs || [])
                         };
                         let trans2 = db.transaction('maps', 'readwrite');
                         trans2.objectStore('maps').add(obj);

@@ -1,9 +1,5 @@
 
-
-
-
-//import { CSG } from "./csg.js";
-//import { UI } from "./UI.js";
+import *  as Wasm from "./rustwasm/hello_wasm.js"
 import { WorldScene } from "./world/scene.js";
 
 //import  DB from "./DB.js";
@@ -42,7 +38,8 @@ declare global {
     interface Window {
         scene: WorldScene;
         sceneInited: Promise<WorldScene>;
-        login: (e: PointerEvent, method: "facebook" | "anomyous") => void
+        login: (e: PointerEvent, method: "facebook" | "anomyous") => void;
+        Wasm:any
     }
 }
 declare var BlazorRouter: DotNet.BlazorInstance;
@@ -95,7 +92,9 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
 
 window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
-        blazor.invokeMethod('setProgress',10, null);
+        blazor.invokeMethod('setProgress', 10, null);
+        await Wasm.default()
+        window.Wasm = Wasm;
         //progelem.value = 20;
        // var canvas = document.getElementById("renderCanvas");
         if (canvas.dataset.inited === "true")
