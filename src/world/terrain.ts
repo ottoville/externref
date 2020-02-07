@@ -236,7 +236,7 @@ export class Terrain extends TerraMesh {
             vertexData.normals = this.normals;
             vertexData.applyToMesh(this, true);*/
            // this.updateVerticesData(BABYLON.VertexBuffer.UVKind, this.uvs);
-            this.updateVerticesData(BABYLON.VertexBuffer.NormalKind, this.normals);
+            this.setVerticesData(BABYLON.VertexBuffer.NormalKind, this.normals);
 
             let boundingInfo = this.subMeshes[0].getBoundingInfo();
             return Terrain.terrainWorker.message(WorkerReturn.Promise, 'init',

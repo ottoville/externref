@@ -8,6 +8,7 @@ import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
 import { texImage2D } from "../webgl.js";
+import { TerraMesh } from "../TerraMesh.js";
 
 
 function isPromise(result: BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>): result is Promise<BABYLON.PickingInfo> {
@@ -670,6 +671,48 @@ export class WorldScene extends BABYLON.Scene {
     }
     constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine);
+        //@ts-ignore
+        this.collisionCoordinator._collideWithWorld = function (position: BABYLON.Vector3, velocity: BABYLON.Vector3, collider: BABYLON.Collider, maximumRetry: number, finalPosition: BABYLON.Vector3, excludedMesh: Nullable < AbstractMesh > = null): void  {
+            var closeDistance = BABYLON.Engine.CollisionsEpsilon * 10.0;
+
+            if (collider._retry >= maximumRetry) {
+                finalPosition.copyFrom(position);
+                return;
+            }
+
+            // Check if this is a mesh else camera or -1
+            var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
+
+            collider._initialize(position, velocity, closeDistance);
+
+            // Check all meshes
+            for (var index = 0; index < this._scene.meshes.length; index++) {
+                var mesh: TerraMesh = this._scene.meshes[index];
+                if (mesh.isEnabled() && mesh.checkCollisions && mesh.subMeshes && mesh !== excludedMesh && ((collisionMask & mesh.collisionGroup) !== 0)) {
+                    mesh._checkCollision(collider);
+                    if (mesh.name == 'building') {
+                        console.log('collides? ', collider.collisionFound);
+                    }
+                } 
+            }
+
+            if (!collider.collisionFound) {
+                position.addToRef(velocity, finalPosition);
+                return;
+            }
+
+            if (velocity.x !== 0 || velocity.y !== 0 || velocity.z !== 0) {
+                collider._getResponse(position, velocity);
+            }
+
+            if (velocity.length() <= closeDistance) {
+                finalPosition.copyFrom(position);
+                return;
+            }
+
+            collider._retry++;
+            this._collideWithWorld(position, velocity, collider, maximumRetry, finalPosition, excludedMesh);
+        }
         if (webSocket) {
             webSocket.send(JSON.stringify({ action: 'init', data: { userinfo, ticks } }));
             webSocket.onmessage = (e) => {

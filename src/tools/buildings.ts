@@ -36,7 +36,7 @@ export class BuildingsUI extends UITAB {
                             []
                         );
                         let building = new TerraMesh('building', indices, new Float32Array(positions),normals)
-                        
+                        building.checkCollisions = true;
 
                        // var myBox = BABYLON.MeshBuilder.CreateBox("myBox", { height: height, width: 200, depth: 200 }, scene);
                        /* let orgcheckCollision = myBox._checkCollision;

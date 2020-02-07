@@ -288,6 +288,7 @@ export class TerraMesh extends BABYLON.Mesh {
     public _trianglePlanes = [];
     public lastColliderWorldVectors: BABYLON.Vector3[] = [];
     public _checkCollision(collider: BABYLON.Collider): BABYLON.AbstractMesh {
+       // console.log('_checkCollision', this.name, this._boundingInfo);
         // Bounding box test
         if (!this._boundingInfo || !collider._canDoCollision(this._boundingInfo.boundingSphere.centerWorld, this._boundingInfo.boundingSphere.radiusWorld, this._boundingInfo.boundingBox.minimumWorld, this._boundingInfo.boundingBox.maximumWorld)) {
             return this;
