@@ -690,9 +690,9 @@ export class WorldScene extends BABYLON.Scene {
                 var mesh: TerraMesh = this._scene.meshes[index];
                 if (mesh.isEnabled() && mesh.checkCollisions && mesh.subMeshes && mesh !== excludedMesh && ((collisionMask & mesh.collisionGroup) !== 0)) {
                     mesh._checkCollision(collider);
-                    if (mesh.name == 'building') {
+                   /* if (mesh.name == 'building') {
                         console.log('collides? ', collider.collisionFound);
-                    }
+                    }*/
                 } 
             }
 

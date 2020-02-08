@@ -303,7 +303,9 @@ export class TerraMesh extends BABYLON.Mesh {
         ///
 
         if (!this.lastColliderWorldVertices || !this.lastColliderTransformMatrix.equals(collisionsTransformMatrix)) {
-            console.debug('recalculating collision vertices');
+            console.debug('recalculating collision vertices on ', this.name);
+            
+
             this.lastColliderTransformMatrix = collisionsTransformMatrix.clone();
             this.lastColliderWorldVertices = new SharedArrayBuffer(this.positionsBuffer.byteLength);
             let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);

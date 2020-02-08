@@ -166,7 +166,7 @@
         "signature": "449974bb70c444474f94e428738dca887a8ff3cdf941850ff1100eea515d4355"
       },
       "./terramesh.ts": {
-        "version": "d7c0ad0cb5c94d6fd3cb73c50c8379cc7421a663fe781161f14800390048df99",
+        "version": "bc50293a30a8a0bb83a4e3cc55f9ac7db8cce3ae63cc489c18ee6f0b957dc450",
         "signature": "1fead5382abc188de3a6d08fafd3e49d1ee18f4ff67e6f4f8327ee97ad0a331d"
       },
       "./uitab.ts": {
@@ -218,7 +218,7 @@
         "signature": "0f0f4f11e2860c69f000f1ebc446b90f87b4c24b3e344dc6019c70b30bb69fce"
       },
       "./tools/buildings.ts": {
-        "version": "a4eca67a1a55b406768b88a0e446f96c6e2f4c8d81111bae900d41617472560b",
+        "version": "d98fda559e5680b7acecd2ca351f77ea65ca524a2100945d0507967c039edac9",
         "signature": "e1cb789ebbe6244738450ad0fa8864a21ab2940ffbde09ceebef6cdef4f97947"
       },
       "./tools/terrain.ts": {
@@ -226,7 +226,7 @@
         "signature": "0c8517ffcfe7e5858e7ec1418fb2377fa0beb1abbcd81a1222360b48c92196c2"
       },
       "./world/scene.ts": {
-        "version": "3a966877aac1f1a482ef9c72de2d58b3b652c5ea7ed329d3f56d0fbcbeb6c3ec",
+        "version": "b18f8ec82ced9ef5eb50621c7814af8ebb40fbe1001148a47479c3687e6a134c",
         "signature": "143074186692d3e74bee8c8fc69071fb881b5deeb8c87b751c7bc7a7fb4dd8ff"
       },
       "./code.ts": {
@@ -254,7 +254,7 @@
         "signature": "721775e79adf481c398dcae22896133ddb35328c6081c973a1598a09be6f74c8"
       },
       "./rustwasm/hello_wasm.js": {
-        "version": "6a46400090dd40da2263903087a43a1de57d6db13fe10c05852c18360dc809d4",
+        "version": "e1ed2a91845f7240482b6d82b7630668cf951b5df4c97ef281a3d440dcab008b",
         "signature": "ce7196f043e593877984a7c982df828e9f356e408ce4d35a0a2c542aec421000"
       },
       "./node_modules/babylonjs/babylon.module.d.ts": {
@@ -494,7 +494,6 @@
       "./db.ts",
       "./lazyeval.ts",
       "./workerthread.ts",
-      "./terramesh.ts",
       "./uitab.ts",
       "./rustwasm/hello_wasm.d.ts",
       "./world/sun.ts",
@@ -509,17 +508,18 @@
       "./tools/camera.ts",
       "./tools/buildings.ts",
       "./tools/terrain.ts",
+      "./world/scene.ts",
       "./code.ts",
       "./commonmath.ts",
       "./paintground/paintline.ts",
       "./plants/grass.ts",
       "./rustwasm/hello_wasm_bg.d.ts",
       "./types/interfaces/index.d.ts",
-      "./rustwasm/hello_wasm.js",
       "./node_modules/babylonjs/babylon.module.d.ts",
       "./node_modules/babylonjs-materials/babylonjs.materials.module.d.ts",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./world/scene.ts"
+      "./terramesh.ts",
+      "./rustwasm/hello_wasm.js"
     ]
   },
   "version": "3.8.0-beta"
