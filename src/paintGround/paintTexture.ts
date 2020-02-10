@@ -1,9 +1,13 @@
 ﻿import { paintGround } from "./paintGround.js";
 import { UITAB } from "../UITAB.js";
-import { Terrain } from "../world/terrain.js";
-import * as BABYLON from "../lib/babylon/index.js"
+import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
-
+import type { Vector2 } from "../lib/babylon/Maths/math.vector.js";
+import type { Scene } from "../lib/babylon/scene.js";
+import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
+import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
+import type { Texture } from "../lib/babylon/Materials/Textures/texture.js";
+import type { Engine } from "../lib/babylon/Engines/engine.js";
 export class paintTexture extends paintGround {
     private subTextureCache: subTexture = { x: 0, z: 0, imageData: null };
     private height: number=0;
@@ -25,11 +29,11 @@ export class paintTexture extends paintGround {
     }
     constructor(
         public canvas: HTMLElement,
-        protected scene: BABYLON.Scene,
-        protected camera: BABYLON.ArcRotateCamera,
+        protected scene: Scene,
+        protected camera: ArcRotateCamera,
         protected ground: Terrain,
-        protected sea: BABYLON.Mesh,
-        protected zonedt: BABYLON.Texture,
+        protected sea: Mesh,
+        protected zonedt: Texture,
         private textureWidth: number,
         private textureHeight: number,
         uitab: UITAB,
@@ -60,7 +64,7 @@ export class paintTexture extends paintGround {
         }
         paintTexture.drawSubImage(width, this.height, this.ang360.rad, this.m1, this.texture, this.scene.getEngine(), this.subTextureCache)
     }
-    static drawSubImage(width: number, height: number, rad: number, m1: Matrix, texture: WebGLTexture, engine: BABYLON.Engine, subTextureCache?: subTexture) {
+    static drawSubImage(width: number, height: number, rad: number, m1: Matrix, texture: WebGLTexture, engine: Engine, subTextureCache?: subTexture) {
         let gl: WebGL2RenderingContext = <any>engine._gl;
         let h = width * -1
         let w = height * -1

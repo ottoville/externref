@@ -3,9 +3,14 @@ let startingPoint: Vector2;
 let end_position: Vector2
 
 import { UITAB } from "../UITAB.js";
-import { Terrain } from "../world/terrain.js";
-import * as BABYLON from "../lib/babylon/index.js"
+import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
+import type { Scene } from "../lib/babylon/scene.js";
+import { Ray } from "../lib/babylon/Culling/ray.js";
+import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
+import type { Mesh } from "../lib/babylon/Meshes/index.js";
+import { Vector2 } from "../lib/babylon/Maths/math.vector.js";
+
 //import { rotateMatrix, translate } from "./math.js";
 
 let width: number;
@@ -25,10 +30,10 @@ export abstract class paintGround {
     protected ang: Angle = new Angle(0);
     constructor(
         public canvas: HTMLElement,
-        protected scene: BABYLON.Scene,
-        protected camera: BABYLON.ArcRotateCamera,
+        protected scene: Scene,
+        protected camera: ArcRotateCamera,
         protected ground: Terrain,
-        protected sea: BABYLON.Mesh,
+        protected sea: Mesh,
         private uitab: UITAB
     ) {
     };
@@ -45,7 +50,7 @@ export abstract class paintGround {
         let engine = this.scene.getEngine();
         engine.resize();
 
-        let ray = BABYLON.Ray.Zero();
+        let ray = Ray.Zero();
         this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
 
         let distance: number;
@@ -64,6 +69,7 @@ export abstract class paintGround {
             else
                 rotation = Math.asin((startingPoint.y - end_position.y) / distance) * -1;
             this.ang = new Angle(Math.abs(rotation));
+            //@ts-ignore
             this.ang360 = this.ang[360](startingPoint, end_position);
         }
     }
@@ -72,7 +78,7 @@ export abstract class paintGround {
     abstract onMainPointerUp(end_position: Vector2, height: number): void;
     abstract onAreaDraw(width:number): void;
     private mousemove = (evt: PointerEvent) => {
-        let ray = BABYLON.Ray.Zero();
+        let ray = Ray.Zero();
         this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
         let pikked = this.ground.intersects(ray);
         if (pikked.pickedPoint) {
@@ -82,7 +88,7 @@ export abstract class paintGround {
                 throw ("distance is not a number");
             }
             let ang2 = new Angle(Math.acos(Math.abs(pikked.pickedPoint.x - startingPoint.x) / distance))
-
+            //@ts-ignore
             let dotang = this.ang360.distance(ang2[360](startingPoint, new Vector2(pikked.pickedPoint.x, pikked.pickedPoint.z)).rad);
 
             let v1 = [startingPoint.y - pikked.pickedPoint.z, (startingPoint.x - pikked.pickedPoint.x) * -1]

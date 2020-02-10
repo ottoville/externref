@@ -1,155 +1,155 @@
 {
   "program": {
     "fileInfos": {
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es5.d.ts": {
-        "version": "86c30a29c35d56322436cb2c68e9a3c8b3d72c7667aef4823e8fb38eb23014a4",
-        "signature": "86c30a29c35d56322436cb2c68e9a3c8b3d72c7667aef4823e8fb38eb23014a4"
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es5.d.ts": {
+        "version": "7c1b028965a993eef7d465ac1fd75e35cb558372031dea10b5366038f640a182",
+        "signature": "7c1b028965a993eef7d465ac1fd75e35cb558372031dea10b5366038f640a182"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.d.ts": {
         "version": "44b592f91ebaf4ea12b19daa9daf51a54601c03cd3acd5dd301592d01a8aa88d",
         "signature": "44b592f91ebaf4ea12b19daa9daf51a54601c03cd3acd5dd301592d01a8aa88d"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2016.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2016.d.ts": {
         "version": "a076876bf7bacf01d3eff29b20d56c616e61e49c92b4379e0867d64d4050ecff",
         "signature": "a076876bf7bacf01d3eff29b20d56c616e61e49c92b4379e0867d64d4050ecff"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.d.ts": {
         "version": "a6b9bcaef1d7f6444af29f96244cf46e08749e51d2970de547ce97191605f355",
         "signature": "a6b9bcaef1d7f6444af29f96244cf46e08749e51d2970de547ce97191605f355"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.d.ts": {
         "version": "a6eb198a90ce4c218fc6527d7dc4e7487b71745ac05f36fd5c75931b4b7cb68a",
         "signature": "a6eb198a90ce4c218fc6527d7dc4e7487b71745ac05f36fd5c75931b4b7cb68a"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.d.ts": {
         "version": "069683a5bc1f0ff273a7d40809b551a0b4fe17b70deb7eadf736452475e4adf4",
         "signature": "069683a5bc1f0ff273a7d40809b551a0b4fe17b70deb7eadf736452475e4adf4"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.d.ts": {
         "version": "87154c383b31876f1c74b686ddab7e813ce36db0f3562d84f6aa021e02a9b3ed",
         "signature": "87154c383b31876f1c74b686ddab7e813ce36db0f3562d84f6aa021e02a9b3ed"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.esnext.d.ts": {
         "version": "e4eeaaf8caef302f49f69748d16bb330a31d191d5c1cbe7e7c2ede24e555f60e",
         "signature": "e4eeaaf8caef302f49f69748d16bb330a31d191d5c1cbe7e7c2ede24e555f60e"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.webworker.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.webworker.d.ts": {
         "version": "0546587fd19c5ec4902462ad83d42c6e394b709dbb5bba381c5b9e881e34360c",
         "signature": "0546587fd19c5ec4902462ad83d42c6e394b709dbb5bba381c5b9e881e34360c"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.core.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.core.d.ts": {
         "version": "4624517d08f6dd53903549b060c314a065e04222509096c38063b327df3ea951",
         "signature": "4624517d08f6dd53903549b060c314a065e04222509096c38063b327df3ea951"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.collection.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.collection.d.ts": {
         "version": "516bd54254229463b14e9bcd065bb3813589e1ef91f150a202a503da31b38d30",
         "signature": "516bd54254229463b14e9bcd065bb3813589e1ef91f150a202a503da31b38d30"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.generator.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.generator.d.ts": {
         "version": "ecbc907a9b42436dab7896613e548e0d1c76e6c7e07228418294832baa703462",
         "signature": "ecbc907a9b42436dab7896613e548e0d1c76e6c7e07228418294832baa703462"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.iterable.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.iterable.d.ts": {
         "version": "1c522d50cfcacbf6f0fc475ffec52f608b509448b6b8ccb57b94479b195fe55d",
         "signature": "1c522d50cfcacbf6f0fc475ffec52f608b509448b6b8ccb57b94479b195fe55d"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.promise.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.promise.d.ts": {
         "version": "effe615f7edfd363f6d142ea23cf1f65cec9aae4f06cbf16872cac64d3990b8f",
         "signature": "effe615f7edfd363f6d142ea23cf1f65cec9aae4f06cbf16872cac64d3990b8f"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.proxy.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.proxy.d.ts": {
         "version": "0ca606647cf7aa4e365d69763d097e725d958480079014f7cb30a9d5244e283a",
         "signature": "0ca606647cf7aa4e365d69763d097e725d958480079014f7cb30a9d5244e283a"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.reflect.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.reflect.d.ts": {
         "version": "b4a3b009b8256079fcc352de3ddfb5ed770b6046938d111cc2842d729777ecbb",
         "signature": "b4a3b009b8256079fcc352de3ddfb5ed770b6046938d111cc2842d729777ecbb"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.symbol.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.symbol.d.ts": {
         "version": "e55cd239bc1dc69de5791ae2c45ea0d70a57a361017a4c6e342ba42bdd0ef4bd",
         "signature": "e55cd239bc1dc69de5791ae2c45ea0d70a57a361017a4c6e342ba42bdd0ef4bd"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.symbol.wellknown.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.symbol.wellknown.d.ts": {
         "version": "81e24ff087a1aa21fc93d465b746fe9c58185a67537502fd90bf388dc85a3a6c",
         "signature": "81e24ff087a1aa21fc93d465b746fe9c58185a67537502fd90bf388dc85a3a6c"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2016.array.include.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2016.array.include.d.ts": {
         "version": "bb64bbc331b368e6d6a6ccb3bf8b031add880795d09aac8513b6baf6c559bc5a",
         "signature": "bb64bbc331b368e6d6a6ccb3bf8b031add880795d09aac8513b6baf6c559bc5a"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.object.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.object.d.ts": {
         "version": "41f93ccce5b8352038208dfefd7c26034e1caae0d3df257c88d457fdd87e144c",
         "signature": "41f93ccce5b8352038208dfefd7c26034e1caae0d3df257c88d457fdd87e144c"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.sharedmemory.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.sharedmemory.d.ts": {
         "version": "da4ee0d8dc5df05bfb708ad5f809b1445408be8b7ba6dae36a902ec094f4c4f0",
         "signature": "da4ee0d8dc5df05bfb708ad5f809b1445408be8b7ba6dae36a902ec094f4c4f0"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.string.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.string.d.ts": {
         "version": "3d96641f2745a941f6134e2513c193bbbe5ebf71f8c29e45f73da87d159be05b",
         "signature": "3d96641f2745a941f6134e2513c193bbbe5ebf71f8c29e45f73da87d159be05b"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.intl.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.intl.d.ts": {
         "version": "661c0d67111048d038099f7be0b13b5b22f9d1f59ca7e73c7c3c5ab20ed1c228",
         "signature": "661c0d67111048d038099f7be0b13b5b22f9d1f59ca7e73c7c3c5ab20ed1c228"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.typedarrays.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.typedarrays.d.ts": {
         "version": "17caa3775b6d5d83dc008cf2141a9a3186ac53a01b9db02556ab62571d6a7aad",
         "signature": "17caa3775b6d5d83dc008cf2141a9a3186ac53a01b9db02556ab62571d6a7aad"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.asyncgenerator.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.asyncgenerator.d.ts": {
         "version": "24f7cf08a979e1b921e6ad2bbc70d64ed9d669240e0b0485333181d8107bba39",
         "signature": "24f7cf08a979e1b921e6ad2bbc70d64ed9d669240e0b0485333181d8107bba39"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.asynciterable.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.asynciterable.d.ts": {
         "version": "18fe801f526628a9f6d8ea30cb96af82f1460078caae86d883e1b0b5b0f7cd95",
         "signature": "18fe801f526628a9f6d8ea30cb96af82f1460078caae86d883e1b0b5b0f7cd95"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.intl.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.intl.d.ts": {
         "version": "19f2a06398eaf87f4f51a0300f954c2a74665251cfd3fe719e8953c631ddd38b",
         "signature": "19f2a06398eaf87f4f51a0300f954c2a74665251cfd3fe719e8953c631ddd38b"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.promise.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.promise.d.ts": {
         "version": "2296a1434a53d18ff834c2f9c608b6231a65b5cd4ecdc8a9a6288f95a91e591a",
         "signature": "2296a1434a53d18ff834c2f9c608b6231a65b5cd4ecdc8a9a6288f95a91e591a"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.regexp.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.regexp.d.ts": {
         "version": "243dfca4cd5f984918b72ac286044eff866128a7d992d8021c9368c2e2b50601",
         "signature": "243dfca4cd5f984918b72ac286044eff866128a7d992d8021c9368c2e2b50601"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.array.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.array.d.ts": {
         "version": "8e6641884c996884234bb8bc5b26aea2b5f1adb3697f299e1ff5b132aea4378f",
         "signature": "8e6641884c996884234bb8bc5b26aea2b5f1adb3697f299e1ff5b132aea4378f"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.object.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.object.d.ts": {
         "version": "f4419501aaa704c24a9f4024957490a8d7783aa8bc1a81081fc64bb48400d5de",
         "signature": "f4419501aaa704c24a9f4024957490a8d7783aa8bc1a81081fc64bb48400d5de"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.string.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.string.d.ts": {
         "version": "e86f61c8cf7f3a1651c811849ea9aca784b3c8b9532167784063f1b6ba143e20",
         "signature": "e86f61c8cf7f3a1651c811849ea9aca784b3c8b9532167784063f1b6ba143e20"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.symbol.d.ts": {
-        "version": "e7fb2beae5dd023aa9d1f18fb8fc4a225f87b49dbedb41b70ef6776ebb227c31",
-        "signature": "e7fb2beae5dd023aa9d1f18fb8fc4a225f87b49dbedb41b70ef6776ebb227c31"
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.symbol.d.ts": {
+        "version": "48f0d390fa3ef96ff0d20d49eadbd5a801ac55138191211648ad513480a63404",
+        "signature": "48f0d390fa3ef96ff0d20d49eadbd5a801ac55138191211648ad513480a63404"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.bigint.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.bigint.d.ts": {
         "version": "4a243813ba11cc69df6fb2da907512275a728efb5050efef758338c96abdf6e2",
         "signature": "4a243813ba11cc69df6fb2da907512275a728efb5050efef758338c96abdf6e2"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.promise.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.promise.d.ts": {
         "version": "95b6edae4fc536d86fcd36f06c0200300bc0cabdd03764959952e0db51bbd8eb",
         "signature": "95b6edae4fc536d86fcd36f06c0200300bc0cabdd03764959952e0db51bbd8eb"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.string.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.string.d.ts": {
         "version": "036b3930f24e95beac7861f34f1f5979552914806b957362d1d28bccd62419db",
         "signature": "036b3930f24e95beac7861f34f1f5979552914806b957362d1d28bccd62419db"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.symbol.wellknown.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.symbol.wellknown.d.ts": {
         "version": "1649bbecdc05d9882ee93e9ba659a380de2ca700afb68d202aeb765bb3e05096",
         "signature": "1649bbecdc05d9882ee93e9ba659a380de2ca700afb68d202aeb765bb3e05096"
       },
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts": {
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.esnext.intl.d.ts": {
         "version": "c799367a4032e7b69c739637db52385c4cbd036882952865c43ebcc52ce5cd44",
         "signature": "c799367a4032e7b69c739637db52385c4cbd036882952865c43ebcc52ce5cd44"
       },
@@ -178,7 +178,7 @@
         "signature": "70b5436710e8bcb14d4cf7ff60f0123d26b3eb984ea8209ea6df3e3d575e4f71"
       },
       "./sw.ts": {
-        "version": "0bc091bf6081c08719e4d5a4374e09d6f4d75767291f9f9bb4021a6e931c158d",
+        "version": "f7c860b4265b9176085652d53ebb4a1aae1c58ca3c4ad1010ec431b274ec25d6",
         "signature": "506a9f6aba443bd1f9cf4471a89ef35a5fa00d6d562e54ede9bb38fe000fbf14"
       },
       "./commonmath.d.ts": {
@@ -212,44 +212,44 @@
     "referencedMap": {},
     "exportedModulesMap": {},
     "semanticDiagnosticsPerFile": [
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es5.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2016.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.webworker.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.core.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.collection.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.generator.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.iterable.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.promise.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.proxy.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.reflect.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.symbol.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2015.symbol.wellknown.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2016.array.include.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.object.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.sharedmemory.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.string.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.intl.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2017.typedarrays.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.asyncgenerator.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.asynciterable.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.intl.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.promise.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2018.regexp.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.array.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.object.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.string.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2019.symbol.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.bigint.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.promise.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.string.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.0-beta/tools/tsc/lib.esnext.intl.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es5.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2016.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.esnext.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.webworker.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.core.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.collection.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.generator.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.iterable.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.promise.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.proxy.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.reflect.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.symbol.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.symbol.wellknown.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2016.array.include.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.object.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.sharedmemory.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.string.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.intl.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.typedarrays.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.asyncgenerator.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.asynciterable.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.intl.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.promise.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2018.regexp.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.array.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.object.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.string.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.symbol.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.bigint.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.promise.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.string.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.esnext.intl.d.ts",
       "./webworkers/bitmapworker.ts",
       "./webworkers/grass.ts",
       "./webworkers/interfaces.ts",
@@ -262,5 +262,5 @@
       "./sw.ts"
     ]
   },
-  "version": "3.8.0-beta"
+  "version": "3.8.1-rc"
 }

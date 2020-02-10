@@ -26,8 +26,8 @@ import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { _TypeStore } from "../Misc/typeStore";
 import { MaterialFlags } from "./materialFlags";
 
-import "../Shaders/default.fragment";
-import "../Shaders/default.vertex";
+//import "../Shaders/default.fragment";
+//import "../Shaders/default.vertex";
 import { Constants } from "../Engines/constants";
 import { EffectFallbacks } from './effectFallbacks';
 import { IEffectCreationOptions } from './effect';

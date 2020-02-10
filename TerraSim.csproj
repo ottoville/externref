@@ -177,7 +177,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="src\buildShaders.js" />
     <Content Include="src\node_modules\%40types\babylonjs\package.json" />
     <Content Include="src\node_modules\%40types\facebook-js-sdk\package.json" />
     <Content Include="src\node_modules\babylonjs-materials\package.json" />
@@ -214,7 +213,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="3.2.0-preview1.20073.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.HttpClient" Version="3.2.0-preview1.20073.1" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.DevServer" Version="3.2.0-preview1.20073.1" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.8.0-beta">
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.8.1-rc">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -410,6 +409,10 @@
 
   <ItemGroup>
     <WCFMetadata Include="Connected Services" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="src\lib\babylon\Legacy\" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>

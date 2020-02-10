@@ -1,30 +1,35 @@
 import { UITAB } from "../UITAB.js";
 import { paintTexture } from "../paintGround/paintTexture.js";
-import { texImage2D } from "../webgl.js";
-import { Terrain } from "../world/terrain.js";
-import * as BABYLON from "../lib/babylon/index.js"
+import type { Terrain } from "../world/terrain.js";
+//import * as BABYLON from "../lib/babylon/index.js"
 import type { PTDresult } from "../types/interfaces/index.js";
+import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
+import { DynamicTexture } from "../lib/babylon/Materials/Textures/dynamicTexture.js";
+import type { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
+import type { Scene } from "../lib/babylon/scene.js";
+import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
+import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 export class Zones extends UITAB {
-    private zonemateria: BABYLON.StandardMaterial;
+    private zonemateria: StandardMaterial;
     private PT: paintTexture;
-    private zonedt: BABYLON.DynamicTexture
+    private zonedt: DynamicTexture
     private size = 10000;
     public canvas: HTMLCanvasElement;
     constructor(
         private ground: Terrain,
         private db: IDBDatabase,
-        private groundMaterial: BABYLON.ShaderMaterial,
-        private scene: BABYLON.Scene,
-        private camera: BABYLON.ArcRotateCamera,
-        private sea: BABYLON.Mesh
+        private groundMaterial: ShaderMaterial,
+        private scene: Scene,
+        private camera: ArcRotateCamera,
+        private sea: Mesh
     ) {
         super();
         this.canvas = <any>scene.getEngine().getRenderingCanvas();
         // let DZ = new drawZone(canvas, scene, camera, ground, sea, DB, DT, groundmateria, grass, terrain);
-        this.zonedt = new BABYLON.DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, scene, false);
+        this.zonedt = new DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, scene, false);
 
         this.PT = new paintTexture(this.canvas, this.scene, this.camera, this.ground, this.sea, this.zonedt, 10000, 10000, super.getInstance() );
-        this.zonemateria = new BABYLON.StandardMaterial("zoneMat", scene);
+        this.zonemateria = new StandardMaterial("zoneMat", scene);
         this.zonemateria.diffuseTexture = this.zonedt;
     }
     activate = (): void => {

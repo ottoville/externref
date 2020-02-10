@@ -1,10 +1,10 @@
 
 import *  as Wasm from "./rustwasm/hello_wasm.js"
-import { WorldScene } from "./world/scene.js";
+import type { WorldScene } from "./world/scene.js";
 //import * as BABYLON from "./lib/babylon/index.js"
 import type { loginProvider, DotNet } from "./types/interfaces/index.js";
-import { Engine } from "./lib/babylon/Engines/index.js";
-import { Effect } from "./lib/babylon/Materials/effect.js";
+//import { Engine } from "./lib/babylon/Engines/index.js";
+//import { Effect } from "./lib/babylon/Materials/effect.js";
 
 //import  DB from "./DB.js";
 
@@ -90,6 +90,15 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
 
 window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
+
+
+        let EngineModule = await import('./lib/babylon/Engines/engine.js');
+        blazor.invokeMethod('setProgress', 2, null);
+        let EffectModule = await import('./lib/babylon/Materials/effect.js');
+        blazor.invokeMethod('setProgress', 4, null);
+        let WorldSceneModule = await import('./world/scene.js');
+        blazor.invokeMethod('setProgress', 9, null);
+        let FileToolsModule = await import('./lib/babylon/Misc/fileTools.js');
         blazor.invokeMethod('setProgress', 10, null);
         await Wasm.default()
         window.Wasm = Wasm;
@@ -98,14 +107,14 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
-        var engine = new Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
+        
+        var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
 
         //var engine = new BABYLON.WebGPUEngine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
        // await engine.initAsync();
 
-
         //@ts-ignore
-        BABYLON.Effect.prototype._loadShader = function (shader: any, key: string, optionalKey: string, callback: (data: any) => void): void {
+        EffectModule.Effect.prototype._loadShader = function (shader: any, key: string, optionalKey: string, callback: (data: any) => void): void {
             // Direct source ?
             if (shader.substr(0, 7) === "source:") {
                 callback(shader.substr(7));
@@ -119,8 +128,8 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             }
 
             // Is in local store ?
-            if (Effect.ShadersStore[shader + key + "Shader"]) {
-                callback(Effect.ShadersStore[shader + key + "Shader"]);
+            if (EffectModule.Effect.ShadersStore[shader + key + "Shader"]) {
+                callback(EffectModule.Effect.ShadersStore[shader + key + "Shader"]);
                 return;
             }
 
@@ -140,8 +149,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             let url = ShaderUrl + suffix;
             let onSuccess = callback;
 
-            //@ts-ignore
-            let request = BABYLON.FileTools.RequestFile(url, (data, request) => {
+            let request = FileToolsModule.FileTools.RequestFile(url, (data, request) => {
                 onSuccess(data);
             });
 
@@ -163,14 +171,14 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             console.log('websocket onopen');
             blazor.invokeMethod('setProgress', 20, null);
            // progelem.value = 30;
-            sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, canvas, webSocket));
+            sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, webSocket));
         }
         webSocket.onerror = async () => {
             console.log('websocket onerror');
             blazor.invokeMethod('setProgress', 20, null);
             //progelem.value = 30;
             try {
-                sceneInitedred(new WorldScene(engine, await loginPromise, blazor, ticks, canvas));
+                sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas));
             } catch (e) {
                 console.error('creating terrain failed', e);
                 //progelem.parentNode.textContent = e;

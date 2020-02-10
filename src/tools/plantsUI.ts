@@ -1,10 +1,13 @@
 import { UITAB } from "../UITAB.js";
 //import { paintGround, DrawType } from "../paintGround.js";
 import { paintPlane } from "../paintGround/paintPlane.js";
-import { Plants } from "../plants/Plants.js";
-import { Terrain } from "../world/terrain.js";
-import * as BABYLON from "../lib/babylon/index.js"
+import type { Plants } from "../plants/Plants.js";
+import type { Terrain } from "../world/terrain.js";
+
 import type { PTDresult } from "../types/interfaces/index.js";
+import type { Scene } from "../lib/babylon/scene.js";
+import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
+import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 
 
 
@@ -18,9 +21,9 @@ export class PlantsUI extends UITAB {
     constructor(
         private ground: Terrain,
         public canvas: HTMLCanvasElement,
-        private scene: BABYLON.Scene,
-        private camera: BABYLON.ArcRotateCamera,
-        private sea: BABYLON.Mesh,
+        private scene: Scene,
+        private camera: ArcRotateCamera,
+        private sea: Mesh,
         private plantsobj:Plants,
     ) {
         super();

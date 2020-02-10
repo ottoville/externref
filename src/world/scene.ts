@@ -8,17 +8,44 @@ import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
 import { texImage2D } from "../webgl.js";
-import { TerraMesh } from "../TerraMesh.js";
-import * as BABYLON from "../lib/babylon/index.js"
+import type { TerraMesh } from "../TerraMesh.js";
+
 import { InputManager } from "../lib/babylon/Inputs/scene.inputManager.js";
+console.log('p1');
 import { WaterMaterial } from "../lib/materials/water/waterMaterial.js";
 import type { loginProvider, DotNet } from "../types/interfaces/index.js";
-
-
-function isPromise(result: BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>): result is Promise<BABYLON.PickingInfo> {
-    return (result as Promise<BABYLON.PickingInfo>).then !== undefined;
-}
-
+console.log('p2');
+import { Scene } from "../lib/babylon/scene.js";
+import { PickingInfo } from "../lib/babylon/Collisions/pickingInfo.js";
+console.log('p3');
+import { Camera } from "../lib/babylon/Cameras/camera.js";
+import { Tools } from "../lib/babylon/Misc/tools.js";
+console.log('p4');
+import { AbstractActionManager } from "../lib/babylon/Actions/abstractActionManager.js";
+import type { Observable } from "../lib/babylon/Misc/observable.js";
+console.log('p5');
+import type { PointerInfoPre, PointerInfo } from "../lib/babylon/Events/pointerEvents.js";
+import { PointerEventTypes } from "../lib/babylon/Events/pointerEvents.js";
+console.log('p6');
+import { Constants } from "../lib/babylon/Engines/constants.js";
+import type { AbstractMesh } from "../lib/babylon/Meshes/abstractMesh.js";
+console.log('p7');
+import { Ray } from "../lib/babylon/Culling/ray.js";
+import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
+console.log('p8');
+import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
+import { Engine } from "../lib/babylon/Engines/engine.js";
+console.log('p9');
+import { PointLight } from "../lib/babylon/Lights/pointLight.js";
+import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
+console.log('p10');
+import { Mesh } from "../lib/babylon/Meshes/mesh.js";
+import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
+console.log('p11');
+import type { Matrix } from "../lib/babylon/Maths/math.js";
+console.log('p12');
+import { Vector2 } from "../lib/babylon/Maths/math.vector.js";
+console.log('p13');
 //import { UI } from "../UI.js";
 class _ClickInfo {
     private _singleClick = false;
@@ -53,7 +80,7 @@ class _ClickInfo {
     }
 }
 
-export class WorldScene extends BABYLON.Scene {
+export class WorldScene extends Scene {
     private gameSpeed = BigInt(0);
     private lastStateChangeGameTime = BigInt(21600 * 1000); //6 hours
     private lastStateChangeTime = new Date().getTime();
@@ -120,7 +147,7 @@ export class WorldScene extends BABYLON.Scene {
                 for (var cameraIndex = 0; cameraIndex < this.activeCameras.length; cameraIndex++) {
                     let camera = this.activeCameras[cameraIndex];
                     camera.update();
-                    if (camera.cameraRigMode !== BABYLON.Camera.RIG_MODE_NONE) {
+                    if (camera.cameraRigMode !== Camera.RIG_MODE_NONE) {
                         // rig cameras
                         for (var index = 0; index < camera._rigCameras.length; index++) {
                             camera._rigCameras[index].update();
@@ -129,7 +156,7 @@ export class WorldScene extends BABYLON.Scene {
                 }
             } else if (this.activeCamera) {
                 this.activeCamera.update();
-                if (this.activeCamera.cameraRigMode !== BABYLON.Camera.RIG_MODE_NONE) {
+                if (this.activeCamera.cameraRigMode !== Camera.RIG_MODE_NONE) {
                     // rig cameras
                     for (var index = 0; index < this.activeCamera._rigCameras.length; index++) {
                         this.activeCamera._rigCameras[index].update();
@@ -146,7 +173,7 @@ export class WorldScene extends BABYLON.Scene {
         var engine = this.getEngine();
         var currentActiveCamera = this.activeCamera;
         if (this.renderTargetsEnabled) {
-            BABYLON.Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
+            Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
             //this._intermediateRendering = true;
             for (var customIndex = 0; customIndex < this.customRenderTargets.length; customIndex++) {
                 var renderTarget = this.customRenderTargets[customIndex];
@@ -168,7 +195,7 @@ export class WorldScene extends BABYLON.Scene {
                     renderTarget.render(currentActiveCamera !== this.activeCamera, this.dumpNextRenderTargets);
                 }
             }
-            BABYLON.Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
+            Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
             //this._intermediateRendering = false;
             //this._renderId++;
         }
@@ -253,7 +280,7 @@ export class WorldScene extends BABYLON.Scene {
     public attachControl(attachUp = true, attachDown = true, attachMove = true): void {
         //this._inputManager.attachControl(attachUp, attachDown, attachMove);
 
-        (function (scene: BABYLON.Scene, elementToAttachTo: Nullable<HTMLElement> = null) {
+        (function (scene: Scene, elementToAttachTo: Nullable<HTMLElement> = null) {
 
             if (!elementToAttachTo) {
                 //@ts-ignore
@@ -266,7 +293,7 @@ export class WorldScene extends BABYLON.Scene {
 
             let engine = scene.getEngine();
 
-            this._initActionManager = (act: Nullable<BABYLON.AbstractActionManager>, clickInfo: _ClickInfo): Nullable<BABYLON.AbstractActionManager> => {
+            this._initActionManager = (act: Nullable<AbstractActionManager>, clickInfo: _ClickInfo): Nullable<AbstractActionManager> => {
                 if (!this._meshPickProceed) {
                     let pickResult = scene.pick(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers);
                     this._currentPickResult = pickResult;
@@ -278,7 +305,7 @@ export class WorldScene extends BABYLON.Scene {
                 return act;
             };
 
-            this._delayedSimpleClick = (btn: number, clickInfo: _ClickInfo, cb: (clickInfo: _ClickInfo, pickResult: Nullable<BABYLON.PickingInfo>) => void) => {
+            this._delayedSimpleClick = (btn: number, clickInfo: _ClickInfo, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void) => {
                 // double click delay is over and that no double click has been raised since, or the 2 consecutive keys pressed are different
                 if ((Date.now() - this._previousStartingPointerTime > InputManager.DoubleClickDelay && !this._doubleClickOccured) ||
                     btn !== this._previousButtonPressed) {
@@ -289,15 +316,15 @@ export class WorldScene extends BABYLON.Scene {
                 }
             };
 
-            this._initClickEvent = (obs1: BABYLON.Observable<BABYLON.PointerInfoPre>, obs2: BABYLON.Observable<BABYLON.PointerInfo>, evt: PointerEvent, cb: (clickInfo: _ClickInfo, pickResult: Nullable<BABYLON.PickingInfo>) => void): void => {
+            this._initClickEvent = (obs1: Observable<PointerInfoPre>, obs2: Observable<PointerInfo>, evt: PointerEvent, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void): void => {
                 let clickInfo = new _ClickInfo();
                 this._currentPickResult = null;
-                let act: Nullable<BABYLON.AbstractActionManager> = null;
+                let act: Nullable<AbstractActionManager> = null;
 
-                let checkPicking = obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERPICK) || obs2.hasSpecificMask(BABYLON.PointerEventTypes.POINTERPICK)
-                    || obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERTAP) || obs2.hasSpecificMask(BABYLON.PointerEventTypes.POINTERTAP)
-                    || obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP) || obs2.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP);
-                if (!checkPicking && BABYLON.AbstractActionManager) {
+                let checkPicking = obs1.hasSpecificMask(PointerEventTypes.POINTERPICK) || obs2.hasSpecificMask(PointerEventTypes.POINTERPICK)
+                    || obs1.hasSpecificMask(PointerEventTypes.POINTERTAP) || obs2.hasSpecificMask(PointerEventTypes.POINTERTAP)
+                    || obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) || obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
+                if (!checkPicking && AbstractActionManager) {
                     act = this._initActionManager(act, clickInfo);
                     if (act) {
                         checkPicking = act.hasPickTriggers;
@@ -314,13 +341,13 @@ export class WorldScene extends BABYLON.Scene {
                         let checkSingleClickImmediately = !InputManager.ExclusiveDoubleClickMode;
 
                         if (!checkSingleClickImmediately) {
-                            checkSingleClickImmediately = !obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP) &&
-                                !obs2.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP);
+                            checkSingleClickImmediately = !obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) &&
+                                !obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
 
-                            if (checkSingleClickImmediately && !BABYLON.AbstractActionManager.HasSpecificTrigger(BABYLON.Constants.ACTION_OnDoublePickTrigger)) {
+                            if (checkSingleClickImmediately && !AbstractActionManager.HasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger)) {
                                 act = this._initActionManager(act, clickInfo);
                                 if (act) {
-                                    checkSingleClickImmediately = !act.hasSpecificTrigger(BABYLON.Constants.ACTION_OnDoublePickTrigger);
+                                    checkSingleClickImmediately = !act.hasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger);
                                 }
                             }
                         }
@@ -341,12 +368,12 @@ export class WorldScene extends BABYLON.Scene {
                             this._delayedSimpleClickTimeout = window.setTimeout(this._delayedSimpleClick.bind(this, btn, clickInfo, cb), InputManager.DoubleClickDelay);
                         }
 
-                        let checkDoubleClick = obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP) ||
-                            obs2.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP);
-                        if (!checkDoubleClick && BABYLON.AbstractActionManager.HasSpecificTrigger(BABYLON.Constants.ACTION_OnDoublePickTrigger)) {
+                        let checkDoubleClick = obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) ||
+                            obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
+                        if (!checkDoubleClick && AbstractActionManager.HasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger)) {
                             act = this._initActionManager(act, clickInfo);
                             if (act) {
-                                checkDoubleClick = act.hasSpecificTrigger(BABYLON.Constants.ACTION_OnDoublePickTrigger);
+                                checkDoubleClick = act.hasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger);
                             }
                         }
                         if (checkDoubleClick) {
@@ -411,7 +438,7 @@ export class WorldScene extends BABYLON.Scene {
                 this._updatePointerPosition(evt);
 
                 // PreObservable support
-                if (this._checkPrePointerObservable(null, evt, evt.type === this._wheelEventName ? BABYLON.PointerEventTypes.POINTERWHEEL : BABYLON.PointerEventTypes.POINTERMOVE)) {
+                if (this._checkPrePointerObservable(null, evt, evt.type === this._wheelEventName ? PointerEventTypes.POINTERWHEEL : PointerEventTypes.POINTERMOVE)) {
                     return;
                 }
 
@@ -420,7 +447,7 @@ export class WorldScene extends BABYLON.Scene {
                 }
 
                 if (!scene.pointerMovePredicate) {
-                    scene.pointerMovePredicate = (mesh: BABYLON.AbstractMesh): boolean => (mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (mesh.enablePointerMoveEvents || scene.constantlyUpdateMeshUnderPointer || (mesh._getActionManagerForTrigger() != null)) && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0));
+                    scene.pointerMovePredicate = (mesh: AbstractMesh): boolean => (mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (mesh.enablePointerMoveEvents || scene.constantlyUpdateMeshUnderPointer || (mesh._getActionManagerForTrigger() != null)) && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0));
                 }
 
                 // Meshes
@@ -446,7 +473,7 @@ export class WorldScene extends BABYLON.Scene {
                 this._startingPointerTime = Date.now();
 
                 // PreObservable support
-                if (this._checkPrePointerObservable(null, evt, BABYLON.PointerEventTypes.POINTERDOWN)) {
+                if (this._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERDOWN)) {
                     return;
                 }
 
@@ -457,7 +484,7 @@ export class WorldScene extends BABYLON.Scene {
                 this._pointerCaptures[evt.pointerId] = true;
 
                 if (!scene.pointerDownPredicate) {
-                    scene.pointerDownPredicate = (mesh: BABYLON.AbstractMesh): boolean => {
+                    scene.pointerDownPredicate = (mesh: AbstractMesh): boolean => {
                         return mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0);
                     };
                 }
@@ -465,16 +492,16 @@ export class WorldScene extends BABYLON.Scene {
                 // Meshes
                 this._pickedDownMesh = null;
                 let fastCheck = false;
-                let rayFunction = (world: BABYLON.Matrix) => {
+                let rayFunction = (world: Matrix) => {
                     if (!scene._tempPickingRay) {
-                        scene._tempPickingRay = BABYLON.Ray.Zero();
+                        scene._tempPickingRay = Ray.Zero();
                     }
 
                     scene.createPickingRayToRef(this._unTranslatedPointerX, this._unTranslatedPointerY, world, scene._tempPickingRay, scene.cameraToUseForPointers || null);
                     return scene._tempPickingRay;
                 };
 
-                (function collissionCheck(meshIndex: number, pickResult: BABYLON.PickingInfo | null): Promise<BABYLON.PickingInfo | null> {
+                (function collissionCheck(meshIndex: number, pickResult: PickingInfo | null): Promise<PickingInfo | null> {
                     if (meshIndex > scene.meshes.length - 1)
                         return new Promise(res => res(null));
                     let mesh = scene.meshes[meshIndex] as Terrain;
@@ -485,7 +512,7 @@ export class WorldScene extends BABYLON.Scene {
                     } else if (!mesh.isEnabled() || !mesh.isVisible || !mesh.isPickable)
                         return collissionCheck(++meshIndex, pickResult);
 
-                    return new Promise((res: (pi: BABYLON.PickingInfo) => void) => {
+                    return new Promise((res: (pi: PickingInfo) => void) => {
                         var world = mesh.getWorldMatrix();
                         var ray = rayFunction(world);
                         if (typeof (mesh.intersectsPromise) !== 'undefined') {
@@ -493,7 +520,7 @@ export class WorldScene extends BABYLON.Scene {
                         } else {
                             res(mesh.intersects(ray, fastCheck));
                         }
-                    }).then((result: BABYLON.PickingInfo) => {
+                    }).then((result: PickingInfo) => {
                         if (!result || !result.hit)
                             return collissionCheck(++meshIndex, pickResult);
                         if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
@@ -504,9 +531,9 @@ export class WorldScene extends BABYLON.Scene {
                         else
                             return collissionCheck(++meshIndex, result);
                     });
-                })(0, null).then((pickResult: BABYLON.PickingInfo | null) => {
+                })(0, null).then((pickResult: PickingInfo | null) => {
                     if (pickResult == null)
-                        pickResult = new BABYLON.PickingInfo();
+                        pickResult = new PickingInfo();
                     if (pickResult) {
                         //@ts-ignore
                         pickResult.ray = scene.createPickingRay(this._unTranslatedPointerX, this._unTranslatedPointerY, BABYLON.Matrix.Identity(), scene.cameraToUseForPointers || null);
@@ -532,23 +559,23 @@ export class WorldScene extends BABYLON.Scene {
                     elementToAttachTo.focus();
                 }
 
-                this._initClickEvent(scene.onPrePointerObservable, scene.onPointerObservable, evt, (clickInfo: _ClickInfo, pickResult: Nullable<BABYLON.PickingInfo>) => {
+                this._initClickEvent(scene.onPrePointerObservable, scene.onPointerObservable, evt, (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => {
                     // PreObservable support
                     if (scene.onPrePointerObservable.hasObservers()) {
                         if (!clickInfo.ignore) {
                             if (!clickInfo.hasSwiped) {
-                                if (clickInfo.singleClick && scene.onPrePointerObservable.hasSpecificMask(BABYLON.PointerEventTypes.POINTERTAP)) {
-                                    if (this._checkPrePointerObservable(null, evt, BABYLON.PointerEventTypes.POINTERTAP)) {
+                                if (clickInfo.singleClick && scene.onPrePointerObservable.hasSpecificMask(PointerEventTypes.POINTERTAP)) {
+                                    if (this._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERTAP)) {
                                         return;
                                     }
                                 }
-                                if (clickInfo.doubleClick && scene.onPrePointerObservable.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP)) {
-                                    if (this._checkPrePointerObservable(null, evt, BABYLON.PointerEventTypes.POINTERDOUBLETAP)) {
+                                if (clickInfo.doubleClick && scene.onPrePointerObservable.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP)) {
+                                    if (this._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERDOUBLETAP)) {
                                         return;
                                     }
                                 }
                             }
-                            if (this._checkPrePointerObservable(null, evt, BABYLON.PointerEventTypes.POINTERUP)) {
+                            if (this._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERUP)) {
                                 return;
                             }
                         }
@@ -564,13 +591,13 @@ export class WorldScene extends BABYLON.Scene {
                     }
 
                     if (!scene.pointerUpPredicate) {
-                        scene.pointerUpPredicate = (mesh: BABYLON.AbstractMesh): boolean => {
+                        scene.pointerUpPredicate = (mesh: AbstractMesh): boolean => {
                             return mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0);
                         };
                     }
 
                     // Meshes
-                    if (!this._meshPickProceed && (BABYLON.AbstractActionManager && BABYLON.AbstractActionManager.HasTriggers || scene.onPointerObservable.hasObservers())) {
+                    if (!this._meshPickProceed && (AbstractActionManager && AbstractActionManager.HasTriggers || scene.onPointerObservable.hasObservers())) {
                         this._initActionManager(null, clickInfo);
                     }
                     if (!pickResult) {
@@ -584,9 +611,9 @@ export class WorldScene extends BABYLON.Scene {
             };
 
             this._onKeyDown = (evt: KeyboardEvent) => {
-                let type = BABYLON.KeyboardEventTypes.KEYDOWN;
+                let type = KeyboardEventTypes.KEYDOWN;
                 if (scene.onPreKeyboardObservable.hasObservers()) {
-                    let pi = new BABYLON.KeyboardInfoPre(type, evt);
+                    let pi = new KeyboardInfoPre(type, evt);
                     scene.onPreKeyboardObservable.notifyObservers(pi, type);
                     if (pi.skipOnPointerObservable) {
                         return;
@@ -594,19 +621,19 @@ export class WorldScene extends BABYLON.Scene {
                 }
 
                 if (scene.onKeyboardObservable.hasObservers()) {
-                    let pi = new BABYLON.KeyboardInfo(type, evt);
+                    let pi = new KeyboardInfo(type, evt);
                     scene.onKeyboardObservable.notifyObservers(pi, type);
                 }
 
                 if (scene.actionManager) {
-                    scene.actionManager.processTrigger(BABYLON.Constants.ACTION_OnKeyDownTrigger, BABYLON.ActionEvent.CreateNewFromScene(scene, evt));
+                    scene.actionManager.processTrigger(Constants.ACTION_OnKeyDownTrigger, ActionEvent.CreateNewFromScene(scene, evt));
                 }
             };
 
             this._onKeyUp = (evt: KeyboardEvent) => {
-                let type = BABYLON.KeyboardEventTypes.KEYUP;
+                let type = KeyboardEventTypes.KEYUP;
                 if (scene.onPreKeyboardObservable.hasObservers()) {
-                    let pi = new BABYLON.KeyboardInfoPre(type, evt);
+                    let pi = new KeyboardInfoPre(type, evt);
                     scene.onPreKeyboardObservable.notifyObservers(pi, type);
                     if (pi.skipOnPointerObservable) {
                         return;
@@ -614,12 +641,12 @@ export class WorldScene extends BABYLON.Scene {
                 }
 
                 if (scene.onKeyboardObservable.hasObservers()) {
-                    let pi = new BABYLON.KeyboardInfo(type, evt);
+                    let pi = new KeyboardInfo(type, evt);
                     scene.onKeyboardObservable.notifyObservers(pi, type);
                 }
 
                 if (scene.actionManager) {
-                    scene.actionManager.processTrigger(BABYLON.Constants.ACTION_OnKeyUpTrigger, BABYLON.ActionEvent.CreateNewFromScene(scene, evt));
+                    scene.actionManager.processTrigger(Constants.ACTION_OnKeyUpTrigger, ActionEvent.CreateNewFromScene(scene, evt));
                 }
             };
 
@@ -647,7 +674,7 @@ export class WorldScene extends BABYLON.Scene {
             });
 
             // Pointer events
-            var eventPrefix = BABYLON.Tools.GetPointerPrefix();
+            var eventPrefix = Tools.GetPointerPrefix();
 
             if (attachMove) {
                 elementToAttachTo.addEventListener(eventPrefix + "move", <any>this._onPointerMove, false);
@@ -673,11 +700,11 @@ export class WorldScene extends BABYLON.Scene {
 
         }).bind(this._inputManager)(this)
     }
-    constructor(engine: BABYLON.Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
+    constructor(engine: Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine);
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: BABYLON.Vector3, velocity: BABYLON.Vector3, collider: BABYLON.Collider, maximumRetry: number, finalPosition: BABYLON.Vector3, excludedMesh: Nullable < AbstractMesh > = null): void  {
-            var closeDistance = BABYLON.Engine.CollisionsEpsilon * 10.0;
+            var closeDistance = Engine.CollisionsEpsilon * 10.0;
 
             if (collider._retry >= maximumRetry) {
                 finalPosition.copyFrom(position);
@@ -744,8 +771,8 @@ export class WorldScene extends BABYLON.Scene {
 
         //let ui = new UI();
         //ui.registerTab(CameraTab);
-        var sunlight = new BABYLON.PointLight("Omni", this.SunObject.sunPosition, this);
-        let shadermateria = new BABYLON.ShaderMaterial("shader", this, "./shaders/ground",
+        var sunlight = new PointLight("Omni", this.SunObject.sunPosition, this);
+        let shadermateria = new ShaderMaterial("shader", this, "./shaders/ground",
             {
                 attributes: ["position", "normal", "uv"],
                 uniforms: ["world", "worldView", "worldViewProjection", "view", "projection", "lightPos", "cameraPosition"]
@@ -759,7 +786,7 @@ export class WorldScene extends BABYLON.Scene {
             uvs: Float32Array,
             texture: Blob
         }
-        let sea: BABYLON.Mesh;
+        let sea: Mesh;
 
         /*
          *         this.worker.subscribe('setProgress', (data) => {
@@ -809,18 +836,18 @@ export class WorldScene extends BABYLON.Scene {
             DB.then(d => {
                 this.tools['Zones'] = new Zones(ground, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
             })
-            var waterMaterial = new WaterMaterial("waterMaterial", this, new BABYLON.Vector2(512, 512));
-            waterMaterial.bumpTexture = new BABYLON.Texture("images/waterbump.png", this);
+            var waterMaterial = new WaterMaterial("waterMaterial", this, new Vector2(512, 512));
+            waterMaterial.bumpTexture = new Texture("images/waterbump.png", this);
             waterMaterial.windForce = -10;
             waterMaterial.waveHeight = 0.4;
             waterMaterial.bumpHeight = 0.1;
             waterMaterial.waveLength = 0.1;
             waterMaterial.waveSpeed = 50.0;
             waterMaterial.colorBlendFactor = 0;
-            waterMaterial.windDirection = new BABYLON.Vector2(1, 1);
+            waterMaterial.windDirection = new Vector2(1, 1);
             waterMaterial.colorBlendFactor = 0;
             waterMaterial.addToRenderList(ground);
-            sea = BABYLON.Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
+            sea = Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
             sea.position.y = 0;
             sea.material = waterMaterial;
 
@@ -873,8 +900,8 @@ export class WorldScene extends BABYLON.Scene {
                     this._textures['groundTexture'] = <BABYLON.Texture>{
                         getInternalTexture: () => rtexture2, //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
                         isReady: () => true,
-                        wrapU: BABYLON.Texture.CLAMP_ADDRESSMODE,
-                        wrapV: BABYLON.Texture.CLAMP_ADDRESSMODE
+                        wrapU: Texture.CLAMP_ADDRESSMODE,
+                        wrapV: Texture.CLAMP_ADDRESSMODE
                     };
                 }).bind(shadermateria)();
                 ground.material = shadermateria;

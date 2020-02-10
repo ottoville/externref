@@ -2,7 +2,15 @@
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn } from "../WorkerThread.js";
 import { texImage2D } from "../webgl.js";
-import * as BABYLON from "../lib/babylon/index.js"
+import { Mesh } from "../lib/babylon/Meshes/mesh.js";
+import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
+import type { Scene } from "../lib/babylon/scene.js";
+import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
+import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
+import { Material } from "../lib/babylon/Materials/material.js";
+import type { Effect } from "../lib/babylon/Materials/effect.js";
+import type { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
+
 
 //@ts-ignore
 export class TerrainTool extends UITAB {
@@ -10,8 +18,8 @@ export class TerrainTool extends UITAB {
     //private ray = BABYLON.Ray.Zero();
     //private pickinfo: BABYLON.PickingInfo;
     //private vertexData = new BABYLON.VertexData();
-    private helper = new BABYLON.Mesh("Helper");
-    private helpermaterial: BABYLON.ShaderMaterial;
+    private helper = new Mesh("Helper");
+    private helpermaterial: ShaderMaterial;
     private timed = new Date().getTime();
     private glTexture: WebGLTexture | null = null;
     private glTexture2: WebGLTexture | null = null;
@@ -24,9 +32,9 @@ export class TerrainTool extends UITAB {
     public canvas: HTMLCanvasElement;
     private helperIndices = new Uint16Array([0, 1, 2, 3]);
     constructor(
-        private scene: BABYLON.Scene,
+        private scene: Scene,
         private terrain: Terrain,
-        private camera: BABYLON.ArcRotateCamera,
+        private camera: ArcRotateCamera,
     ) {
         super();
         this.canvas = <any>scene.getEngine().getRenderingCanvas();
@@ -39,18 +47,18 @@ export class TerrainTool extends UITAB {
         this.vertexData.indices = new Uint16Array([0, 1, 2, 3]);
         this.vertexData.applyToMesh(this.helper);*/
         this.helper.setIndices(this.helperIndices);
-        this.helper.setVerticesData(BABYLON.VertexBuffer.PositionKind, new Float32Array([
+        this.helper.setVerticesData(VertexBuffer.PositionKind, new Float32Array([
             -0.5, 0, -2,
             0.5, 0, -3,
             0.5, 0, 3,
             -0.5, 0, 2,
         ]));
-        this.helpermaterial = new BABYLON.ShaderMaterial("shader", this.scene, "./shaders/helper",
+        this.helpermaterial = new ShaderMaterial("shader", this.scene, "./shaders/helper",
             {
                 attributes: ["position", "normal", "uv"],
                 uniforms: ["world", "worldView", "worldViewProjection", "view", "projection", "flatPos"]
             });
-        this.helpermaterial.fillMode = BABYLON.Material.TriangleFanDrawMode;
+        this.helpermaterial.fillMode = Material.TriangleFanDrawMode;
         this.gl = scene.getEngine()._gl;
         this.helper.alwaysSelectAsActiveMesh = true
     }
@@ -151,7 +159,7 @@ export class TerrainTool extends UITAB {
             mainboundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius
         });
         this.helper.material = this.helpermaterial;
-        this.helpermaterial.bindOnlyWorldMatrix = (function (world: BABYLON.Matrix) {
+        this.helpermaterial.bindOnlyWorldMatrix = (function (world: Matrix) {
 
             var scene = this.getScene();
 
@@ -159,7 +167,7 @@ export class TerrainTool extends UITAB {
                 return;
             }
             if (this._options.uniforms.indexOf("world") !== -1) {
-                let effect = (<BABYLON.Effect>this._effect);
+                let effect = (<Effect>this._effect);
                 //this._effect.setMatrix("world", world);
                 if (effect._cacheMatrix("world", world)) {
                     //engine.setMatrices(effect.getUniform("world"), world.toArray() as Float32Array);
@@ -174,19 +182,20 @@ export class TerrainTool extends UITAB {
 
             if (this._options.uniforms.indexOf("worldViewProjection") !== -1) {
                 if (typeof (this._cachedWorldViewProjectionMatrix) == 'undefined')
-                    this._cachedWorldViewProjectionMatrix = new BABYLON.Matrix();
+                    this._cachedWorldViewProjectionMatrix = new Matrix();
                 world.multiplyToRef(scene.getTransformMatrix(), this._cachedWorldViewProjectionMatrix);
                 this._effect.setMatrix("worldViewProjection", this._cachedWorldViewProjectionMatrix);
 
             }
         }).bind(this.helpermaterial);
-
-        this.helper._processRendering = (subMesh: BABYLON.SubMesh, effect: BABYLON.Effect, fillMode: number, batch: BABYLON._InstancesBatch, hardwareInstancedRendering: boolean,
-            onBeforeDraw: (isInstance: boolean, world: BABYLON.Matrix, effectiveMaterial?: BABYLON.Material) => void, effectiveMaterial?: BABYLON.Material): BABYLON.Mesh => {
+        //@ts-ignore
+        this.helper._processRendering = (subMesh: SubMesh, effect: Effect, fillMode: number, batch: any, hardwareInstancedRendering: boolean,
+            onBeforeDraw: (isInstance: boolean, world: Matrix, effectiveMaterial?: Material) => void, effectiveMaterial?: Material): Mesh => {
 
                     
             // Draw
             if (onBeforeDraw) {
+                //@ts-ignore
                 onBeforeDraw(false, this.helper._effectiveMesh.getWorldMatrix(), effectiveMaterial);
             }
             this.uniformsV2.forEach((value, uniform) => {

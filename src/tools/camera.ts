@@ -1,20 +1,23 @@
 import { UITAB } from "../UITAB.js";
 import { LazyEval } from "../LazyEval.js";
-import { Terrain } from "../world/terrain.js";
-import * as BABYLON from "../lib/babylon/index.js"
+
+//import * as BABYLON from "../lib/babylon/index.js"
 import type { savedCamera } from "../types/interfaces/index.js";
+import { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
+import type { Scene } from "../lib/babylon/scene.js";
+import { Vector3 } from "../lib/babylon/Maths/math.vector.js";
 export class CameraTAB extends UITAB {
     public label = 'Camera';
-    public camera: BABYLON.ArcRotateCamera;
-    public camera2: BABYLON.ArcRotateCamera;
+    public camera: ArcRotateCamera;
+    public camera2: ArcRotateCamera;
     constructor(
-        private scene: BABYLON.Scene,
+        private scene: Scene,
         public canvas: HTMLCanvasElement,
         private D: Promise<IDBDatabase>
     ) {
         super();
 
-        this.camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 10, new BABYLON.Vector3(500, 20, 0), scene);
+        this.camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), scene);
         scene.activeCameras.push(this.camera);
         this.camera.maxZ=1606000;
         this.camera.panningSensibility = 20;
@@ -27,14 +30,14 @@ export class CameraTAB extends UITAB {
 
         this.camera.lowerRadiusLimit = 10;
 
-        this.camera.panningAxis = new BABYLON.Vector3(1, 0, 1)
+        this.camera.panningAxis = new Vector3(1, 0, 1)
         this.camera.checkCollisions = true;
         //Object.defineProperty(this.camera, 'checkCollisions', { get() { debugger; return true; } })
         this.camera.attachControl(canvas, true);
 
-        this.camera2 = new BABYLON.ArcRotateCamera("Camera2", 0, 0, 10, new BABYLON.Vector3(500, 20, 0), scene);
+        this.camera2 = new ArcRotateCamera("Camera2", 0, 0, 10, new Vector3(500, 20, 0), scene);
         this.camera2.target = this.camera.target;
-        this.camera2.viewport = new BABYLON.Viewport(0, 0, 0.5, 1.0);
+        this.camera2.viewport = new Viewport(0, 0, 0.5, 1.0);
 
         D.then(DB => {
             DB.transaction("save").objectStore("save").get(0).onsuccess = (evt) => {
@@ -43,7 +46,7 @@ export class CameraTAB extends UITAB {
                     this.camera.alpha = restored.alpha;
                     this.camera.beta = restored.beta;
                     this.camera.radius = restored.radius;
-                    this.camera.target = new BABYLON.Vector3(restored.target.x, restored.target.y, restored.target.z);
+                    this.camera.target = new Vector3(restored.target.x, restored.target.y, restored.target.z);
                     this.camera.position = restored.position;
 
                 }
@@ -58,8 +61,8 @@ export class CameraTAB extends UITAB {
                         this.camera2.alpha = 0;
                         this.camera2.beta = 0;
                         this.camera2.radius = 60;
-                        this.camera2.target = new BABYLON.Vector3(this.camera.target.x, 1, this.camera.target.z);
-                        this.camera2.position = new BABYLON.Vector3(this.camera.target.x, 1000, this.camera.target.z);
+                        this.camera2.target = new Vector3(this.camera.target.x, 1, this.camera.target.z);
+                        this.camera2.position = new Vector3(this.camera.target.x, 1000, this.camera.target.z);
                     }
                  })
                 this.camera.onProjectionMatrixChangedObservable.add(() => {
@@ -78,11 +81,11 @@ export class CameraTAB extends UITAB {
     }
     activateDebugCamera = (enable: boolean): void => {
         if (enable) {
-            this.camera.viewport = new BABYLON.Viewport(0.5, 0, 0.5, 1.0);
+            this.camera.viewport = new Viewport(0.5, 0, 0.5, 1.0);
             this.scene.activeCameras.push(this.camera2);
         }
         else {
-            this.camera.viewport = new BABYLON.Viewport(0, 0, 1, 1.0);
+            this.camera.viewport = new Viewport(0, 0, 1, 1.0);
             this.scene.removeCamera(this.camera2);
         }
     }

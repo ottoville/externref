@@ -1,5 +1,16 @@
 ﻿import { ObjectWorkerThread, WorkerReturn } from "./WorkerThread.js";
-import * as BABYLON from "./lib/babylon/index.js"
+import { Mesh } from "./lib/babylon/Meshes/mesh.js";
+import { VertexData } from "./lib/babylon/Meshes/mesh.vertexData.js";
+import type { Collider } from "./lib/babylon/Collisions/collider.js";
+import type { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
+import { Vector3 } from "./lib/babylon/Maths/math.vector.js";
+import { Matrix } from "./lib/babylon/Maths/math.js";
+import type { Ray, TrianglePickingPredicate } from "./lib/babylon/Culling/ray.js";
+import type { PickingInfo } from "./lib/babylon/Collisions/pickingInfo.js";
+import type { SubMesh } from "./lib/babylon/Meshes/subMesh.js";
+import type { Effect } from "./lib/babylon/Materials/effect.js";
+import { Material } from "./lib/babylon/Materials/material.js";
+
 
 var getLowestRoot: (a: number, b: number, c: number, maxR: number) => { root: number, found: boolean } =
     (function () {
@@ -37,13 +48,13 @@ var getLowestRoot: (a: number, b: number, c: number, maxR: number) => { root: nu
         };
     }
     )();
-export class TerraMesh extends BABYLON.Mesh {
+export class TerraMesh extends Mesh {
     public positionsBuffer: SharedArrayBuffer;
     public positionsView: DataView;
     public positions: Float32Array;
 
     public lastColliderWorldVertices: SharedArrayBuffer | null = null;
-    public lastColliderTransformMatrix: BABYLON.Matrix = BABYLON.Matrix.Zero();
+    public lastColliderTransformMatrix: Matrix = Matrix.Zero();
 
     public indices: Uint32Array;
     public indicesBuffer: SharedArrayBuffer;
@@ -80,7 +91,7 @@ export class TerraMesh extends BABYLON.Mesh {
         this.positionsView = new DataView(this.positionsBuffer);
 
         TerraMesh.worker.message(this.uniqueId, 'init', [this.indicesBuffer, this.positionsBuffer, this.normalsBuffer]);
-        var vertexData = new BABYLON.VertexData();
+        var vertexData = new VertexData();
         vertexData.indices = this.indices;
         vertexData.positions = this.positions;
         if (this.uvs)
@@ -88,17 +99,17 @@ export class TerraMesh extends BABYLON.Mesh {
         vertexData.applyToMesh(this, true);
     }
     public _testTriangle(collider: {
-        _normalizedVelocity: BABYLON.Vector3,
-        _basePoint: BABYLON.Vector3,
-        _velocity: BABYLON.Vector3,
-        _collisionPoint: BABYLON.Vector3,
-        _planeIntersectionPoint: BABYLON.Vector3,
-        _tempVector: BABYLON.Vector3,
-        BabylonCollider: BABYLON.Collider,
-        _edge: BABYLON.Vector3,
-        _baseToVertex: BABYLON.Vector3,
+        _normalizedVelocity: Vector3,
+        _basePoint: Vector3,
+        _velocity: Vector3,
+        _collisionPoint: Vector3,
+        _planeIntersectionPoint: Vector3,
+        _tempVector: Vector3,
+        BabylonCollider: Collider,
+        _edge: Vector3,
+        _baseToVertex: Vector3,
         _nearestDistance: number,
-    }, faceIndex: number, trianglePlaneArray: BABYLON.Plane[], p1: BABYLON.Vector3, p2: BABYLON.Vector3, p3: BABYLON.Vector3, hasMaterial: boolean, hostMesh: BABYLON.AbstractMesh): void {
+    }, faceIndex: number, trianglePlaneArray: Plane[], p1: Vector3, p2: Vector3, p3: Vector3, hasMaterial: boolean, hostMesh: AbstractMesh): void {
         var t0;
         var embeddedInPlane = false;
 
@@ -108,18 +119,20 @@ export class TerraMesh extends BABYLON.Mesh {
         }
 
         if (!trianglePlaneArray[faceIndex]) {
-            trianglePlaneArray[faceIndex] = new BABYLON.Plane(0, 0, 0, 0);
+            trianglePlaneArray[faceIndex] = new Plane(0, 0, 0, 0);
+            //@ts-ignore
             trianglePlaneArray[faceIndex].copyFromPoints(p1, p2, p3);
         }
 
         var trianglePlane = trianglePlaneArray[faceIndex];
-
+        //@ts-ignore
         if ((!hasMaterial) && !trianglePlane.isFrontFacingTo(collider._normalizedVelocity, 0)) {
             return;
         }
-
+        //@ts-ignore
         var signedDistToTrianglePlane = trianglePlane.signedDistanceTo(collider._basePoint);
-        var normalDotVelocity = BABYLON.Vector3.Dot(trianglePlane.normal, collider._velocity);
+        //@ts-ignore
+        var normalDotVelocity = Vector3.Dot(trianglePlane.normal, collider._velocity);
 
         if (normalDotVelocity == 0) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
@@ -156,10 +169,11 @@ export class TerraMesh extends BABYLON.Mesh {
         var t = 1.0;
 
         if (!embeddedInPlane) {
+            //@ts-ignore
             collider._basePoint.subtractToRef(trianglePlane.normal, collider._planeIntersectionPoint);
             collider._velocity.scaleToRef(t0, collider._tempVector);
             collider._planeIntersectionPoint.addInPlace(collider._tempVector);
-
+            //@ts-ignore
             if (collider.BabylonCollider._checkPointInTriangle(collider._planeIntersectionPoint, p1, p2, p3, trianglePlane.normal)) {
                 found = true;
                 t = t0;
@@ -173,7 +187,7 @@ export class TerraMesh extends BABYLON.Mesh {
             var a = velocitySquaredLength;
 
             collider._basePoint.subtractToRef(p1, collider._tempVector);
-            var b = 2.0 * (BABYLON.Vector3.Dot(collider._velocity, collider._tempVector));
+            var b = 2.0 * (Vector3.Dot(collider._velocity, collider._tempVector));
             var c = collider._tempVector.lengthSquared() - 1.0;
 
             var lowestRoot = getLowestRoot(a, b, c, t);
@@ -184,7 +198,7 @@ export class TerraMesh extends BABYLON.Mesh {
             }
 
             collider._basePoint.subtractToRef(p2, collider._tempVector);
-            b = 2.0 * (BABYLON.Vector3.Dot(collider._velocity, collider._tempVector));
+            b = 2.0 * (Vector3.Dot(collider._velocity, collider._tempVector));
             c = collider._tempVector.lengthSquared() - 1.0;
 
             lowestRoot = getLowestRoot(a, b, c, t);
@@ -195,7 +209,7 @@ export class TerraMesh extends BABYLON.Mesh {
             }
 
             collider._basePoint.subtractToRef(p3, collider._tempVector);
-            b = 2.0 * (BABYLON.Vector3.Dot(collider._velocity, collider._tempVector));
+            b = 2.0 * (Vector3.Dot(collider._velocity, collider._tempVector));
             c = collider._tempVector.lengthSquared() - 1.0;
 
             lowestRoot = getLowestRoot(a, b, c, t);
@@ -208,11 +222,11 @@ export class TerraMesh extends BABYLON.Mesh {
             p2.subtractToRef(p1, collider._edge);
             p1.subtractToRef(collider._basePoint, collider._baseToVertex);
             var edgeSquaredLength = collider._edge.lengthSquared();
-            var edgeDotVelocity = BABYLON.Vector3.Dot(collider._edge, collider._velocity);
-            var edgeDotBaseToVertex = BABYLON.Vector3.Dot(collider._edge, collider._baseToVertex);
+            var edgeDotVelocity = Vector3.Dot(collider._edge, collider._velocity);
+            var edgeDotBaseToVertex = Vector3.Dot(collider._edge, collider._baseToVertex);
 
             a = edgeSquaredLength * (-velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
-            b = edgeSquaredLength * (2.0 * BABYLON.Vector3.Dot(collider._velocity, collider._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
+            b = edgeSquaredLength * (2.0 * Vector3.Dot(collider._velocity, collider._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
             c = edgeSquaredLength * (1.0 - collider._baseToVertex.lengthSquared()) + edgeDotBaseToVertex * edgeDotBaseToVertex;
 
             lowestRoot = getLowestRoot(a, b, c, t);
@@ -230,11 +244,11 @@ export class TerraMesh extends BABYLON.Mesh {
             p3.subtractToRef(p2, collider._edge);
             p2.subtractToRef(collider._basePoint, collider._baseToVertex);
             edgeSquaredLength = collider._edge.lengthSquared();
-            edgeDotVelocity = BABYLON.Vector3.Dot(collider._edge, collider._velocity);
-            edgeDotBaseToVertex = BABYLON.Vector3.Dot(collider._edge, collider._baseToVertex);
+            edgeDotVelocity = Vector3.Dot(collider._edge, collider._velocity);
+            edgeDotBaseToVertex = Vector3.Dot(collider._edge, collider._baseToVertex);
 
             a = edgeSquaredLength * (-velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
-            b = edgeSquaredLength * (2.0 * BABYLON.Vector3.Dot(collider._velocity, collider._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
+            b = edgeSquaredLength * (2.0 * Vector3.Dot(collider._velocity, collider._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
             c = edgeSquaredLength * (1.0 - collider._baseToVertex.lengthSquared()) + edgeDotBaseToVertex * edgeDotBaseToVertex;
             lowestRoot = getLowestRoot(a, b, c, t);
             if (lowestRoot.found) {
@@ -251,11 +265,11 @@ export class TerraMesh extends BABYLON.Mesh {
             p1.subtractToRef(p3, collider._edge);
             p3.subtractToRef(collider._basePoint, collider._baseToVertex);
             edgeSquaredLength = collider._edge.lengthSquared();
-            edgeDotVelocity = BABYLON.Vector3.Dot(collider._edge, collider._velocity);
-            edgeDotBaseToVertex = BABYLON.Vector3.Dot(collider._edge, collider._baseToVertex);
+            edgeDotVelocity = Vector3.Dot(collider._edge, collider._velocity);
+            edgeDotBaseToVertex = Vector3.Dot(collider._edge, collider._baseToVertex);
 
             a = edgeSquaredLength * (-velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
-            b = edgeSquaredLength * (2.0 * BABYLON.Vector3.Dot(collider._velocity, collider._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
+            b = edgeSquaredLength * (2.0 * Vector3.Dot(collider._velocity, collider._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
             c = edgeSquaredLength * (1.0 - collider._baseToVertex.lengthSquared()) + edgeDotBaseToVertex * edgeDotBaseToVertex;
 
             lowestRoot = getLowestRoot(a, b, c, t);
@@ -288,17 +302,17 @@ export class TerraMesh extends BABYLON.Mesh {
     }
 
     public _trianglePlanes = [];
-    public lastColliderWorldVectors: BABYLON.Vector3[] = [];
-    public _checkCollision(collider: BABYLON.Collider): BABYLON.AbstractMesh {
+    public lastColliderWorldVectors: Vector3[] = [];
+    public _checkCollision(collider: Collider): AbstractMesh {
        // console.log('_checkCollision', this.name, this._boundingInfo);
         // Bounding box test
         if (!this._boundingInfo || !collider._canDoCollision(this._boundingInfo.boundingSphere.centerWorld, this._boundingInfo.boundingSphere.radiusWorld, this._boundingInfo.boundingBox.minimumWorld, this._boundingInfo.boundingBox.maximumWorld)) {
             return this;
         }
         // Transformation matrix
-        const collisionsScalingMatrix = new BABYLON.Matrix();
-        const collisionsTransformMatrix = new BABYLON.Matrix();
-        BABYLON.Matrix.ScalingToRef(1.0 / collider._radius.x, 1.0 / collider._radius.y, 1.0 / collider._radius.z, collisionsScalingMatrix);
+        const collisionsScalingMatrix = new Matrix();
+        const collisionsTransformMatrix = new Matrix();
+        Matrix.ScalingToRef(1.0 / collider._radius.x, 1.0 / collider._radius.y, 1.0 / collider._radius.z, collisionsScalingMatrix);
         this.worldMatrixFromCache.multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
 
 
@@ -316,7 +330,7 @@ export class TerraMesh extends BABYLON.Mesh {
             this.subMeshes[0]._trianglePlanes = [];
             lastColliderVertices.set(window.Wasm.calculatelastcolliderworldvertices(this.positions, collisionsTransformMatrix.m as Float32Array));
             for (let i = 0; i < lastColliderVertices.length / 3; i++) {
-                this.lastColliderWorldVectors.push(new BABYLON.Vector3(lastColliderVertices[i * 3], lastColliderVertices[i * 3 + 1], lastColliderVertices[i * 3 + 2]));
+                this.lastColliderWorldVectors.push(new Vector3(lastColliderVertices[i * 3], lastColliderVertices[i * 3 + 1], lastColliderVertices[i * 3 + 2]));
             }
 
         }
@@ -372,11 +386,11 @@ export class TerraMesh extends BABYLON.Mesh {
       
         return this;
     }
-    public intersectsPromise(ray: BABYLON.Ray, fastCheck?: boolean, trianglePredicate?: BABYLON.TrianglePickingPredicate): Promise<BABYLON.PickingInfo> {
+    public intersectsPromise(ray: Ray, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): Promise<PickingInfo> {
         let bounding = this.getBoundingInfo();
         return TerraMesh.worker.message(this.uniqueId, 'intersects', [bounding.boundingBox, bounding.boundingSphere, ray.origin, ray.direction, fastCheck, trianglePredicate]);
     }
-    public render(subMesh: BABYLON.SubMesh, enableAlphaMode: boolean, effectiveMeshReplacement?: BABYLON.AbstractMesh): BABYLON.Mesh {
+    public render(subMesh: SubMesh, enableAlphaMode: boolean, effectiveMeshReplacement?: AbstractMesh): Mesh {
         if (this._internalAbstractMeshDataInfo._isActiveIntermediate) {
             this._internalAbstractMeshDataInfo._isActiveIntermediate = false;
         } else {
@@ -437,7 +451,7 @@ export class TerraMesh extends BABYLON.Mesh {
             step.action(this, subMesh, batch);
         }
 
-        var effect: Nullable<BABYLON.Effect>;
+        var effect: Nullable<Effect>;
         //@ts-ignore
         if (this._effectiveMaterial._storeEffectOnSubMeshes) {
             effect = subMesh.effect;
@@ -462,7 +476,7 @@ export class TerraMesh extends BABYLON.Mesh {
                 sideOrientation = this._effectiveMaterial.sideOrientation;
             }
             if (mainDeterminant < 0) {
-                sideOrientation = (sideOrientation === BABYLON.Material.ClockWiseSideOrientation ? BABYLON.Material.CounterClockWiseSideOrientation : BABYLON.Material.ClockWiseSideOrientation);
+                sideOrientation = (sideOrientation === Material.ClockWiseSideOrientation ? Material.CounterClockWiseSideOrientation : Material.ClockWiseSideOrientation);
             }
             instanceDataStorage.sideOrientation = sideOrientation!;
         } else {

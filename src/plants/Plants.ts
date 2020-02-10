@@ -1,10 +1,22 @@
 import { LazyEval } from "../LazyEval.js";
 //import { translate, rotateMatrix } from "../math.js";
 import {WorkerThread, WorkerReturn} from "../WorkerThread.js";
-import { Terrain } from "../world/terrain.js";
+import type { Terrain } from "../world/terrain.js";
 //import simplex from '../simplex.js'
-import * as BABYLON from "../lib/babylon/index.js"
+
 import type { PTDresult } from "../types/interfaces/index.js";
+import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
+import type { Scene } from "../lib/babylon/scene.js";
+import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
+import { Mesh } from "../lib/babylon/Meshes/mesh.js";
+import { Color3 } from "../lib/babylon/Maths/math.color.js";
+import { Vector3 } from "../lib/babylon/Maths/math.vector.js";
+import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
+import type { Geometry } from "../lib/babylon/Meshes/geometry.js";
+import type { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
+import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData.js";
+import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
+import { Buffer } from "../lib/babylon/Meshes/buffer.js";
 
 const BLADE_SEGS = 2 // # of blade segments
 
@@ -17,7 +29,7 @@ const BLADE_SEGS = 2 // # of blade segments
  */
 
 export class Plants {
-    private mat: BABYLON.ShaderMaterial;
+    private mat: ShaderMaterial;
     public numBlades: number = 4000000;
     public opts = {
         radius: 86
@@ -55,8 +67,8 @@ export class Plants {
 
     }
     constructor(
-        private scene: BABYLON.Scene,
-        private camera: BABYLON.ArcRotateCamera,
+        private scene: Scene,
+        private camera: ArcRotateCamera,
         private terrain: Terrain,
     ) {
         let shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 4 * this.numBlades);
@@ -67,13 +79,13 @@ export class Plants {
             shape: shapes,
             noises:noises
         });
-        this.mat = new BABYLON.ShaderMaterial("shader", scene, "./shaders/grass2",
+        this.mat = new ShaderMaterial("shader", scene, "./shaders/grass2",
             {
                 attributes: ["position", "normal", "uv", "shape", "worldPos","noise"],
                 uniforms: ["viewProjection", "view", "projection", "time", "map", "windIntensity", "grassColor", "lightDir", "camDir", "fogColor", "grassFogFar", "fogNear", "fogFar", "lightPos", "BLADESEGS", "BLADEVERTS"]
             });
 
-        var Poaceae = new BABYLON.Mesh("custom", scene);
+        var Poaceae = new Mesh("custom", scene);
 
         //Vertices for babylonjs mesh
         let vertices=Float32Array.from([
@@ -85,20 +97,20 @@ export class Plants {
         let index=Uint16Array.from([0,1,2,3,4]);
         //Empty array to contain calculated values or normals added
         var normals : number[]= [];
-        BABYLON.VertexData.ComputeNormals(vertices, index, normals);
-        let vertexData = new BABYLON.VertexData()
+        VertexData.ComputeNormals(vertices, index, normals);
+        let vertexData = new VertexData()
         vertexData.positions = vertices;
         vertexData.indices = index;
         vertexData.normals = normals
         vertexData.uvs = vertices.map(v => 0);
-        this.mat.setTexture("map", new BABYLON.Texture("./images/grass2.jpg", scene));
-        this.mat.setColor3("grassColor", new BABYLON.Color3(0.45, 0.46, 0.19));
-        this.mat.setColor3("fogColor", new BABYLON.Color3(0.74, 0.77, 0.91));
-        let LIGHT_DIR = new BABYLON.Vector3(1, 0, 0)
+        this.mat.setTexture("map", new Texture("./images/grass2.jpg", scene));
+        this.mat.setColor3("grassColor", new Color3(0.45, 0.46, 0.19));
+        this.mat.setColor3("fogColor", new Color3(0.74, 0.77, 0.91));
+        let LIGHT_DIR = new Vector3(1, 0, 0)
         LIGHT_DIR = LIGHT_DIR.normalize();
         LIGHT_DIR.z *= 0.5
         LIGHT_DIR = LIGHT_DIR.normalize();
-        this.mat.setVector3("lightPos", new BABYLON.Vector3(20, 4000, 2));
+        this.mat.setVector3("lightPos", new Vector3(20, 4000, 2));
         this.mat.setVector3("lightDir", LIGHT_DIR);
         let timed = new Date();
         scene.registerBeforeRender(() => {
@@ -125,7 +137,7 @@ export class Plants {
         let gl: WebGLRenderingContext = engine._gl
         this.mat.backFaceCulling = false;
         let me = this;
-        Poaceae._draw = function (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh {
+        Poaceae._draw = function (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
                 return this;
             }
@@ -218,7 +230,7 @@ export class Plants {
 
         //@ts-ignore
         Poaceae._geometry._vertexBuffers['worldPos'] = {
-            type: BABYLON.VertexBuffer.FLOAT,
+            type: VertexBuffer.FLOAT,
             byteStride: 0,
             byteOffset: 0,
             normalized: false,
@@ -233,12 +245,12 @@ export class Plants {
 
         //Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));
 
-        let shapebuffer = new BABYLON.Buffer(engine, new Float32Array(shapes), true, 4, false, true);
-        let geometry: BABYLON.Geometry | null;
-        let noisebuffer = new BABYLON.Buffer(engine, new Float32Array(noises), true, 1, false, true);
+        let shapebuffer = new Buffer(engine, new Float32Array(shapes), true, 4, false, true);
+        let geometry: Geometry | null;
+        let noisebuffer = new Buffer(engine, new Float32Array(noises), true, 1, false, true);
         if (geometry = Poaceae._geometry) {
-            geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, shapebuffer, "shape", true, true, 0, true, 0, 4, undefined, undefined, true));
-            geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, noisebuffer, "noise", true, true, 0, true, 0, 1, undefined, undefined, true));
+            geometry.setVerticesBuffer(new VertexBuffer(engine, shapebuffer, "shape", true, true, 0, true, 0, 4, undefined, undefined, true));
+            geometry.setVerticesBuffer(new VertexBuffer(engine, noisebuffer, "noise", true, true, 0, true, 0, 1, undefined, undefined, true));
         }
         let glsbuffer: WebGLBuffer = shapebuffer.getBuffer()!.underlyingResource;
         let glnoisebuffer: WebGLBuffer = noisebuffer.getBuffer()!.underlyingResource;

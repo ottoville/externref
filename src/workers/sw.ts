@@ -30,14 +30,23 @@ var urlsToCache = [
     });
     service.addEventListener('fetch', function (event) {
         console.log(event.request);
+        let req = event.request;
+        if (event.request.destination == 'script' && event.request.url.substr(-3) !== '.js') {
+            if (event.request.url.substr(-7) == '.vertex' || event.request.url.substr(-9) == '.fragment') {
+                let filename = event.request.url.split('/').pop();
+                req = new Request('/shaders/' + filename + '.fx');
+             }
+            else
+                req=new Request(event.request.url+'.js')
+        }
         event.respondWith(
-            caches.match(event.request).then(function (response) {
+            caches.match(req).then(function (response) {
                 // Cache hit - return response
                 if (response) {
                     return response;
                 }
                 /*TypeError: Failed to execute 'fetch' on 'WorkerGlobalScope': 'only-if-cached' can be set only with 'same-origin' mode*/
-                return fetch(event.request);
+                return fetch(req);
             })
         );
     });

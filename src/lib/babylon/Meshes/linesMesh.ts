@@ -11,8 +11,8 @@ import { Material } from "../Materials/material";
 import { ShaderMaterial } from "../Materials/shaderMaterial";
 import { MaterialHelper } from '../Materials/materialHelper';
 
-import "../Shaders/color.fragment";
-import "../Shaders/color.vertex";
+//import "../Shaders/color.fragment";
+//import "../Shaders/color.vertex";
 
 /**
  * Line mesh
