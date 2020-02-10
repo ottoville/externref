@@ -3,7 +3,8 @@ import { LazyEval } from "../LazyEval.js";
 import {WorkerThread, WorkerReturn} from "../WorkerThread.js";
 import { Terrain } from "../world/terrain.js";
 //import simplex from '../simplex.js'
-
+import * as BABYLON from "../lib/babylon/index.js"
+import type { PTDresult } from "../types/interfaces/index.js";
 
 const BLADE_SEGS = 2 // # of blade segments
 
@@ -83,7 +84,7 @@ export class Plants {
             0.015625, 1,  0].map(v => v*1));
         let index=Uint16Array.from([0,1,2,3,4]);
         //Empty array to contain calculated values or normals added
-        var normals = [];
+        var normals : number[]= [];
         BABYLON.VertexData.ComputeNormals(vertices, index, normals);
         let vertexData = new BABYLON.VertexData()
         vertexData.positions = vertices;

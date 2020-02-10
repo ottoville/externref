@@ -2,6 +2,8 @@ import { UITAB } from "../UITAB.js";
 import { paintTexture } from "../paintGround/paintTexture.js";
 import { texImage2D } from "../webgl.js";
 import { Terrain } from "../world/terrain.js";
+import * as BABYLON from "../lib/babylon/index.js"
+import type { PTDresult } from "../types/interfaces/index.js";
 export class Zones extends UITAB {
     private zonemateria: BABYLON.StandardMaterial;
     private PT: paintTexture;

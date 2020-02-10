@@ -1,5 +1,5 @@
 import { WorldScene } from "./scene.js";
-
+import * as BABYLON from "../lib/babylon/index.js"
 //import { Vector3 } from "../math.js";
 let anglePerMinute=(Math.PI*2)/1439;
 let meridian:number=Math.PI*0.1;

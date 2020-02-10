@@ -1,4 +1,6 @@
 //type Angle={rad:number, deg:number}
+import * as BABYLON from "../../lib/babylon/index.js"
+
 type Zone = {
     coord: BABYLON.Vector3, ang: any, //Angle,
     size: { h: number, w: number }

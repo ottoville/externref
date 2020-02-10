@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
+      "experimentalDecorators": true,
     "outDir": "../wwwroot/js",
-    "strictNullChecks": true,
-    "strictBindCallApply": true,
-    "strictFunctionTypes": true,
-    "strictPropertyInitialization": true,
+   // "strictNullChecks": true,
+   // "strictBindCallApply": true,
+    //"strictFunctionTypes": true,
+    //"strictPropertyInitialization": true,
+    //"noImplicitAny": true,
     //"strict": true,
     "target": "esnext",
     "module": "es6",
@@ -13,14 +15,18 @@
       "esnext"
     ],
     "types": [
-      "babylonjs",
-      "babylonjs-materials",
       "facebook-js-sdk"
     ],
     "moduleResolution": "node",
     "allowJs": true,
     "incremental": true,
-    "tsBuildInfoFile": "tsconfig.main.tsbuildinfo"
+    "tsBuildInfoFile": "tsconfig.main.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      "babylonjs/*": [
+        "./lib/babylon/"
+      ]
+    }
   },
   "include": ["**/*.ts", "**/*.d.ts", "./rustwasm/*.js"],
   "exclude": [

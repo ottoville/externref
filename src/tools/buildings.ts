@@ -1,5 +1,6 @@
 ﻿import { UITAB } from "../UITAB.js";
 import { TerraMesh } from "../TerraMesh.js";
+import * as BABYLON from "../lib/babylon/index.js"
 
 export class BuildingsUI extends UITAB {
     activate: () => void= () => null;

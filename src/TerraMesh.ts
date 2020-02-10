@@ -1,4 +1,6 @@
 ﻿import { ObjectWorkerThread, WorkerReturn } from "./WorkerThread.js";
+import * as BABYLON from "./lib/babylon/index.js"
+
 var getLowestRoot: (a: number, b: number, c: number, maxR: number) => { root: number, found: boolean } =
     (function () {
         var result = { root: 0, found: false };

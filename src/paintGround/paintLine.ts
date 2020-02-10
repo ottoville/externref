@@ -1,6 +1,7 @@
 ﻿import { paintGround } from "./paintGround.js";
 import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
+import * as BABYLON from "../lib/babylon/index.js"
 
 export class paintLine extends paintGround {
     private startingPoint: Vector2 = Vector2.Zero();;

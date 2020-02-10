@@ -1,7 +1,8 @@
 ﻿import { paintGround } from "./paintGround.js";
 import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
-
+import * as BABYLON from "../lib/babylon/index.js"
+import type { PTResultF } from "../types/interfaces/index.js";
 export class paintPlane extends paintGround {
 
     private forceSharedVertices = true;

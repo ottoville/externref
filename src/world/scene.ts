@@ -9,6 +9,10 @@ import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
 import { texImage2D } from "../webgl.js";
 import { TerraMesh } from "../TerraMesh.js";
+import * as BABYLON from "../lib/babylon/index.js"
+import { InputManager } from "../lib/babylon/Inputs/scene.inputManager.js";
+import { WaterMaterial } from "../lib/materials/water/waterMaterial.js";
+import type { loginProvider, DotNet } from "../types/interfaces/index.js";
 
 
 function isPromise(result: BABYLON.PickingInfo | Promise<BABYLON.PickingInfo>): result is Promise<BABYLON.PickingInfo> {
@@ -60,7 +64,7 @@ export class WorldScene extends BABYLON.Scene {
         return this.lastStateChangeGameTime + (BigInt(interval * 60) << this.gameSpeed);
     }*/
     public SunObject: Sun;
-    public stateChange(data) {
+    public stateChange(data: number) {
         if (this.webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'stateChange', data }))
             return;
@@ -262,7 +266,7 @@ export class WorldScene extends BABYLON.Scene {
 
             let engine = scene.getEngine();
 
-            this._initActionManager = (act: Nullable<BABYLON.AbstractActionManager>, clickInfo): Nullable<BABYLON.AbstractActionManager> => {
+            this._initActionManager = (act: Nullable<BABYLON.AbstractActionManager>, clickInfo: _ClickInfo): Nullable<BABYLON.AbstractActionManager> => {
                 if (!this._meshPickProceed) {
                     let pickResult = scene.pick(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers);
                     this._currentPickResult = pickResult;
@@ -274,9 +278,9 @@ export class WorldScene extends BABYLON.Scene {
                 return act;
             };
 
-            this._delayedSimpleClick = (btn: number, clickInfo, cb: (clickInfo, pickResult: Nullable<BABYLON.PickingInfo>) => void) => {
+            this._delayedSimpleClick = (btn: number, clickInfo: _ClickInfo, cb: (clickInfo: _ClickInfo, pickResult: Nullable<BABYLON.PickingInfo>) => void) => {
                 // double click delay is over and that no double click has been raised since, or the 2 consecutive keys pressed are different
-                if ((Date.now() - this._previousStartingPointerTime > BABYLON.InputManager.DoubleClickDelay && !this._doubleClickOccured) ||
+                if ((Date.now() - this._previousStartingPointerTime > InputManager.DoubleClickDelay && !this._doubleClickOccured) ||
                     btn !== this._previousButtonPressed) {
                     this._doubleClickOccured = false;
                     clickInfo.singleClick = true;
@@ -285,7 +289,7 @@ export class WorldScene extends BABYLON.Scene {
                 }
             };
 
-            this._initClickEvent = (obs1: BABYLON.Observable<BABYLON.PointerInfoPre>, obs2: BABYLON.Observable<BABYLON.PointerInfo>, evt: PointerEvent, cb: (clickInfo, pickResult: Nullable<BABYLON.PickingInfo>) => void): void => {
+            this._initClickEvent = (obs1: BABYLON.Observable<BABYLON.PointerInfoPre>, obs2: BABYLON.Observable<BABYLON.PointerInfo>, evt: PointerEvent, cb: (clickInfo: _ClickInfo, pickResult: Nullable<BABYLON.PickingInfo>) => void): void => {
                 let clickInfo = new _ClickInfo();
                 this._currentPickResult = null;
                 let act: Nullable<BABYLON.AbstractActionManager> = null;
@@ -307,7 +311,7 @@ export class WorldScene extends BABYLON.Scene {
                     clickInfo.hasSwiped = this._isPointerSwiping();
 
                     if (!clickInfo.hasSwiped) {
-                        let checkSingleClickImmediately = !BABYLON.InputManager.ExclusiveDoubleClickMode;
+                        let checkSingleClickImmediately = !InputManager.ExclusiveDoubleClickMode;
 
                         if (!checkSingleClickImmediately) {
                             checkSingleClickImmediately = !obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP) &&
@@ -323,7 +327,7 @@ export class WorldScene extends BABYLON.Scene {
 
                         if (checkSingleClickImmediately) {
                             // single click detected if double click delay is over or two different successive keys pressed without exclusive double click or no double click required
-                            if (Date.now() - this._previousStartingPointerTime > BABYLON.InputManager.DoubleClickDelay ||
+                            if (Date.now() - this._previousStartingPointerTime > InputManager.DoubleClickDelay ||
                                 btn !== this._previousButtonPressed) {
                                 clickInfo.singleClick = true;
                                 cb(clickInfo, this._currentPickResult);
@@ -334,7 +338,7 @@ export class WorldScene extends BABYLON.Scene {
                         else {
                             // wait that no double click has been raised during the double click delay
                             this._previousDelayedSimpleClickTimeout = this._delayedSimpleClickTimeout;
-                            this._delayedSimpleClickTimeout = window.setTimeout(this._delayedSimpleClick.bind(this, btn, clickInfo, cb), BABYLON.InputManager.DoubleClickDelay);
+                            this._delayedSimpleClickTimeout = window.setTimeout(this._delayedSimpleClick.bind(this, btn, clickInfo, cb), InputManager.DoubleClickDelay);
                         }
 
                         let checkDoubleClick = obs1.hasSpecificMask(BABYLON.PointerEventTypes.POINTERDOUBLETAP) ||
@@ -348,7 +352,7 @@ export class WorldScene extends BABYLON.Scene {
                         if (checkDoubleClick) {
                             // two successive keys pressed are equal, double click delay is not over and double click has not just occurred
                             if (btn === this._previousButtonPressed &&
-                                Date.now() - this._previousStartingPointerTime < BABYLON.InputManager.DoubleClickDelay &&
+                                Date.now() - this._previousStartingPointerTime < InputManager.DoubleClickDelay &&
                                 !this._doubleClickOccured
                             ) {
                                 // pointer has not moved for 2 clicks, it's a double click
@@ -358,7 +362,7 @@ export class WorldScene extends BABYLON.Scene {
                                     this._doubleClickOccured = true;
                                     clickInfo.doubleClick = true;
                                     clickInfo.ignore = false;
-                                    if (BABYLON.InputManager.ExclusiveDoubleClickMode && this._previousDelayedSimpleClickTimeout) {
+                                    if (InputManager.ExclusiveDoubleClickMode && this._previousDelayedSimpleClickTimeout) {
                                         clearTimeout(this._previousDelayedSimpleClickTimeout);
                                     }
                                     this._previousDelayedSimpleClickTimeout = this._delayedSimpleClickTimeout;
@@ -371,7 +375,7 @@ export class WorldScene extends BABYLON.Scene {
                                     this._previousStartingPointerPosition.x = this._startingPointerPosition.x;
                                     this._previousStartingPointerPosition.y = this._startingPointerPosition.y;
                                     this._previousButtonPressed = btn;
-                                    if (BABYLON.InputManager.ExclusiveDoubleClickMode) {
+                                    if (InputManager.ExclusiveDoubleClickMode) {
                                         if (this._previousDelayedSimpleClickTimeout) {
                                             clearTimeout(this._previousDelayedSimpleClickTimeout);
                                         }
@@ -461,7 +465,7 @@ export class WorldScene extends BABYLON.Scene {
                 // Meshes
                 this._pickedDownMesh = null;
                 let fastCheck = false;
-                let rayFunction = (world) => {
+                let rayFunction = (world: BABYLON.Matrix) => {
                     if (!scene._tempPickingRay) {
                         scene._tempPickingRay = BABYLON.Ray.Zero();
                     }
@@ -805,7 +809,7 @@ export class WorldScene extends BABYLON.Scene {
             DB.then(d => {
                 this.tools['Zones'] = new Zones(ground, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
             })
-            var waterMaterial = new BABYLON.WaterMaterial("waterMaterial", this, new BABYLON.Vector2(512, 512));
+            var waterMaterial = new WaterMaterial("waterMaterial", this, new BABYLON.Vector2(512, 512));
             waterMaterial.bumpTexture = new BABYLON.Texture("images/waterbump.png", this);
             waterMaterial.windForce = -10;
             waterMaterial.waveHeight = 0.4;

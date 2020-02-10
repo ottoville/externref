@@ -14,7 +14,6 @@
   "license": "ISC",
   "dependencies": {
     "@types/facebook-js-sdk": "^3.3.0",
-    "babylonjs-materials": "^4.0.3",
     "esm": "^3.2.25",
     "wasm-opt": "^1.1.1"
   },

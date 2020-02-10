@@ -1,18 +1,16 @@
 
 import *  as Wasm from "./rustwasm/hello_wasm.js"
 import { WorldScene } from "./world/scene.js";
+//import * as BABYLON from "./lib/babylon/index.js"
+import type { loginProvider, DotNet } from "./types/interfaces/index.js";
+import { Engine } from "./lib/babylon/Engines/index.js";
+import { Effect } from "./lib/babylon/Materials/effect.js";
 
 //import  DB from "./DB.js";
 
 //let zones: Zone[] = [];
 
-navigator.serviceWorker.register('/sw.js').then(function (registration) {
-    // Registration was successful
-    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-}, function (err) {
-    // registration failed :(
-    console.log('ServiceWorker registration failed: ', err);
-});
+
 
 
 
@@ -100,7 +98,10 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
-        var engine = new BABYLON.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
+        var engine = new Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
+
+        //var engine = new BABYLON.WebGPUEngine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
+       // await engine.initAsync();
 
 
         //@ts-ignore
@@ -118,8 +119,8 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             }
 
             // Is in local store ?
-            if (BABYLON.Effect.ShadersStore[shader + key + "Shader"]) {
-                callback(BABYLON.Effect.ShadersStore[shader + key + "Shader"]);
+            if (Effect.ShadersStore[shader + key + "Shader"]) {
+                callback(Effect.ShadersStore[shader + key + "Shader"]);
                 return;
             }
 
@@ -153,7 +154,6 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
                     this._activeRequests.splice(this._activeRequests.indexOf(request), 1);
                 });
             }).bind(engine)()
-            return request;
         }
 
         //document.getElementById('loading').style.display = 'block';

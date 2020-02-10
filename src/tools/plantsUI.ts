@@ -3,6 +3,8 @@ import { UITAB } from "../UITAB.js";
 import { paintPlane } from "../paintGround/paintPlane.js";
 import { Plants } from "../plants/Plants.js";
 import { Terrain } from "../world/terrain.js";
+import * as BABYLON from "../lib/babylon/index.js"
+import type { PTDresult } from "../types/interfaces/index.js";
 
 
 

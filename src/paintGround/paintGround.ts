@@ -4,6 +4,8 @@ let end_position: Vector2
 
 import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
+import * as BABYLON from "../lib/babylon/index.js"
+import type { PTResultF } from "../types/interfaces/index.js";
 //import { rotateMatrix, translate } from "./math.js";
 
 let width: number;
@@ -31,7 +33,7 @@ export abstract class paintGround {
     ) {
     };
     public resolve: PTResultF = () => null;
-    public activate(callback: PTResultF, options?) {
+    public activate(callback: PTResultF, options?:any) {
         this.uitab.addListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
     }

@@ -1,5 +1,6 @@
 ﻿import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
 import { TerraMesh } from "../TerraMesh.js";
+import * as BABYLON from "../lib/babylon/index.js"
 //@ts-ignore
 import glslangModule from 'https://unpkg.com/@webgpu/glslang@0.0.8/dist/web-devel/glslang.js';
 

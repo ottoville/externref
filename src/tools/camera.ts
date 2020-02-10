@@ -1,6 +1,8 @@
 import { UITAB } from "../UITAB.js";
 import { LazyEval } from "../LazyEval.js";
 import { Terrain } from "../world/terrain.js";
+import * as BABYLON from "../lib/babylon/index.js"
+import type { savedCamera } from "../types/interfaces/index.js";
 export class CameraTAB extends UITAB {
     public label = 'Camera';
     public camera: BABYLON.ArcRotateCamera;
@@ -60,7 +62,7 @@ export class CameraTAB extends UITAB {
                         this.camera2.position = new BABYLON.Vector3(this.camera.target.x, 1000, this.camera.target.z);
                     }
                  })
-                this.camera.onViewMatrixChangedObservable.add(() => {
+                this.camera.onProjectionMatrixChangedObservable.add(() => {
                     l.eval(500);
                 });
 

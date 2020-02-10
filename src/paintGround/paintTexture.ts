@@ -1,6 +1,8 @@
 ﻿import { paintGround } from "./paintGround.js";
 import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
+import * as BABYLON from "../lib/babylon/index.js"
+import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 
 export class paintTexture extends paintGround {
     private subTextureCache: subTexture = { x: 0, z: 0, imageData: null };

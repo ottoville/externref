@@ -2,6 +2,7 @@
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn } from "../WorkerThread.js";
 import { texImage2D } from "../webgl.js";
+import * as BABYLON from "../lib/babylon/index.js"
 
 //@ts-ignore
 export class TerrainTool extends UITAB {
