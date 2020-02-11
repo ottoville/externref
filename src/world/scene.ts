@@ -3,7 +3,7 @@ import { Plants } from "../plants/Plants.js";
 import { PlantsUI } from "../tools/plantsUI.js";
 import { Zones } from "../tools/zones.js";
 import { CameraTAB } from "../tools/camera.js";
-import { UITAB } from "../UITAB.js";
+import type { UITAB } from "../UITAB.js";
 import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
@@ -12,7 +12,6 @@ import type { TerraMesh } from "../TerraMesh.js";
 
 import { InputManager } from "../lib/babylon/Inputs/scene.inputManager.js";
 console.log('p1');
-import { WaterMaterial } from "../lib/materials/water/waterMaterial.js";
 import type { loginProvider, DotNet } from "../types/interfaces/index.js";
 console.log('p2');
 import { Scene } from "../lib/babylon/scene.js";
@@ -39,13 +38,42 @@ console.log('p9');
 import { PointLight } from "../lib/babylon/Lights/pointLight.js";
 import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
 console.log('p10');
-import { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
 console.log('p11');
-import type { Matrix } from "../lib/babylon/Maths/math.js";
+import { Matrix } from "../lib/babylon/Maths/math.js";
 console.log('p12');
-import { Vector2 } from "../lib/babylon/Maths/math.vector.js";
+
+import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collisionCoordinator.js';
+import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
+import { Sea } from "./water.js";
 console.log('p13');
+Scene.CollisionCoordinatorFactory = () => {
+    return new DefaultCollisionCoordinator();
+};
+Scene.DefaultMaterialFactory = (scene: Scene) => {
+    return new StandardMaterial("default material", scene);
+};
+Scene.prototype.createPickingRayToRef = function (x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
+    var engine = this.getEngine();
+
+    if (!camera) {
+        if (!this.activeCamera) {
+            return this;
+        }
+
+        camera = this.activeCamera;
+    }
+
+    var cameraViewport = camera.viewport;
+    var viewport = cameraViewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
+
+    // Moving coordinates to local viewport world
+    x = x / engine.getHardwareScalingLevel() - viewport.x;
+    y = y / engine.getHardwareScalingLevel() - (engine.getRenderHeight() - viewport.y - viewport.height);
+
+    result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : camera.getViewMatrix(), camera.getProjectionMatrix());
+    return this;
+};
 //import { UI } from "../UI.js";
 class _ClickInfo {
     private _singleClick = false;
@@ -535,8 +563,9 @@ export class WorldScene extends Scene {
                     if (pickResult == null)
                         pickResult = new PickingInfo();
                     if (pickResult) {
-                        //@ts-ignore
-                        pickResult.ray = scene.createPickingRay(this._unTranslatedPointerX, this._unTranslatedPointerY, BABYLON.Matrix.Identity(), scene.cameraToUseForPointers || null);
+                        pickResult.ray = Ray.Zero();
+                        //pickResult.ray = scene.createPickingRay(this._unTranslatedPointerX, this._unTranslatedPointerY, Matrix.Identity(), scene.cameraToUseForPointers || null);
+                        scene.createPickingRayToRef(this._unTranslatedPointerX, this._unTranslatedPointerY, Matrix.Identity(), pickResult.ray, scene.cameraToUseForPointers || null, false)
                     }
                     //@ts-ignore
                     this._processPointerDown(pickResult, evt);
@@ -703,7 +732,7 @@ export class WorldScene extends Scene {
     constructor(engine: Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine);
         //@ts-ignore
-        this.collisionCoordinator._collideWithWorld = function (position: BABYLON.Vector3, velocity: BABYLON.Vector3, collider: BABYLON.Collider, maximumRetry: number, finalPosition: BABYLON.Vector3, excludedMesh: Nullable < AbstractMesh > = null): void  {
+        this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable < AbstractMesh > = null): void  {
             var closeDistance = Engine.CollisionsEpsilon * 10.0;
 
             if (collider._retry >= maximumRetry) {
@@ -786,7 +815,7 @@ export class WorldScene extends Scene {
             uvs: Float32Array,
             texture: Blob
         }
-        let sea: Mesh;
+        //let sea: Mesh;
 
         /*
          *         this.worker.subscribe('setProgress', (data) => {
@@ -802,7 +831,7 @@ export class WorldScene extends Scene {
             trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
                 try {
                     //progelem.value = 40;
-                    blazor.invokeMethod('setProgress', 30, null);
+                    blazor.invokeMethod('setProgress', 30);
                     if ((<IDBRequest>evt.target).result) {
                         let img = new Image();
                         img.src = URL.createObjectURL((<IDBRequest>evt.target).result.value.texture);
@@ -827,34 +856,44 @@ export class WorldScene extends Scene {
                 }
             }
         }).then(gt => {
-            blazor.invokeMethod('setProgress', 40, null);
+            blazor.invokeMethod('setProgress', 40);
             let [ground, texture] = gt;
             console.debug('terrain ready');
 
             this.tools['Buildings'] = new BuildingsUI(this);
-
+            let sea = new Sea(this);
             DB.then(d => {
                 this.tools['Zones'] = new Zones(ground, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
             })
-            var waterMaterial = new WaterMaterial("waterMaterial", this, new Vector2(512, 512));
-            waterMaterial.bumpTexture = new Texture("images/waterbump.png", this);
-            waterMaterial.windForce = -10;
-            waterMaterial.waveHeight = 0.4;
-            waterMaterial.bumpHeight = 0.1;
-            waterMaterial.waveLength = 0.1;
-            waterMaterial.waveSpeed = 50.0;
-            waterMaterial.colorBlendFactor = 0;
-            waterMaterial.windDirection = new Vector2(1, 1);
-            waterMaterial.colorBlendFactor = 0;
-            waterMaterial.addToRenderList(ground);
-            sea = Mesh.CreateGround("waterMesh", 10000, 10000, 1, this, false);
-            sea.position.y = 0;
-            sea.material = waterMaterial;
+           
+           /* sea = GroundBuilder.CreateGround(name, {
+                width: 10000,
+                height: 10000,
+                subdivisions: 1,
+                updatable: false
+            }, this);*/
 
+         //  import("../lib/babylon/Maths/math.vector.js").then(vectorModule => {
+             //   var waterMaterial = new WaterMaterial("waterMaterial", this);
+               /* waterMaterial.bumpTexture = new Texture("images/waterbump.png", this);
+                waterMaterial.windForce = -10;
+                waterMaterial.waveHeight = 0.4;
+                waterMaterial.bumpHeight = 0.1;
+                waterMaterial.waveLength = 0.1;
+                waterMaterial.waveSpeed = 50.0;
+                waterMaterial.colorBlendFactor = 0;
+                //waterMaterial.windDirection = new vectorModule.Vector2(1, 1);
+                waterMaterial.colorBlendFactor = 0;
+                waterMaterial.addToRenderList(ground);
+                sea.material = waterMaterial;*/
+           // })
+            
+            //sea.position.y = 0;
+            
             ground.checkCollisions = true;
-            blazor.invokeMethod('setProgress', 50, null);
+            blazor.invokeMethod('setProgress', 50);
             texture.then(imgdata => {
-                blazor.invokeMethod('setProgress', 75, null);
+                blazor.invokeMethod('setProgress', 75);
                 let width = 10000;
                 let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
                     _engine: engine,
@@ -897,7 +936,7 @@ export class WorldScene extends Scene {
                     //@ts-ignore
                     this._options.samplers.push('groundTexture');
                     //@ts-ignore
-                    this._textures['groundTexture'] = <BABYLON.Texture>{
+                    this._textures['groundTexture'] = <Texture>{
                         getInternalTexture: () => rtexture2, //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
                         isReady: () => true,
                         wrapU: Texture.CLAMP_ADDRESSMODE,
@@ -905,7 +944,7 @@ export class WorldScene extends Scene {
                     };
                 }).bind(shadermateria)();
                 ground.material = shadermateria;
-                blazor.invokeMethod('setProgress', 100, null);
+                blazor.invokeMethod('setProgress', 100);
             })
 
             ground.isPickable = true;
@@ -920,6 +959,8 @@ export class WorldScene extends Scene {
             this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
             //progelem.parentElement.style.display = 'none';
             
+        }).catch(e => {
+            blazor.invokeMethod('setProgressError', e.name + e.message);
         })
     }
 }

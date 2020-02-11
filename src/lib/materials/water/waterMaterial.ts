@@ -1,30 +1,31 @@
-import { Nullable } from "babylonjs/types";
-import { serializeAsVector2, serializeAsTexture, serialize, expandToProperty, serializeAsColor3, SerializationHelper } from "babylonjs/Misc/decorators";
+import type { Nullable } from "babylonjs/types";
+import { expandToProperty, SerializationHelper, serialize, serializeAsColor3, serializeAsTexture, serializeAsVector2 } from "babylonjs/Misc/decorators";
 import { Matrix, Vector2, Vector3 } from "babylonjs/Maths/math.vector";
 import { Color3 } from "babylonjs/Maths/math.color";
 import { Plane } from 'babylonjs/Maths/math.plane';
-import { IAnimatable } from 'babylonjs/Animations/animatable.interface';
+import type { IAnimatable } from 'babylonjs/Animations/animatable.interface';
 import { Constants } from "babylonjs/Engines/constants";
 import { SmartArray } from "babylonjs/Misc/smartArray";
-import { Observer } from 'babylonjs/Misc/observable';
-import { BaseTexture } from "babylonjs/Materials/Textures/baseTexture";
+import type { Observer } from 'babylonjs/Misc/observable';
+import type { BaseTexture } from "babylonjs/Materials/Textures/baseTexture";
 import { RenderTargetTexture } from "babylonjs/Materials/Textures/renderTargetTexture";
-import { IEffectCreationOptions } from "babylonjs/Materials/effect";
+import type { IEffectCreationOptions } from "babylonjs/Materials/effect";
 import { MaterialDefines } from "babylonjs/Materials/materialDefines";
-import { IImageProcessingConfigurationDefines, ImageProcessingConfiguration } from "babylonjs/Materials/imageProcessingConfiguration";
+import type { IImageProcessingConfigurationDefines } from "babylonjs/Materials/imageProcessingConfiguration";
+import { ImageProcessingConfiguration } from "babylonjs/Materials/imageProcessingConfiguration";
 import { MaterialHelper } from "babylonjs/Materials/materialHelper";
 import { PushMaterial } from "babylonjs/Materials/pushMaterial";
 import { MaterialFlags } from "babylonjs/Materials/materialFlags";
 import { VertexBuffer } from "babylonjs/Meshes/buffer";
-import { AbstractMesh } from "babylonjs/Meshes/abstractMesh";
-import { SubMesh } from "babylonjs/Meshes/subMesh";
+import type { AbstractMesh } from "babylonjs/Meshes/abstractMesh";
+import type { SubMesh } from "babylonjs/Meshes/subMesh";
 import { Mesh } from "babylonjs/Meshes/mesh";
-import { Camera } from "babylonjs/Cameras/camera";
+import type { Camera } from "babylonjs/Cameras/camera";
 import { Scene } from "babylonjs/scene";
 import { _TypeStore } from 'babylonjs/Misc/typeStore';
 
-import "./water.fragment";
-import "./water.vertex";
+//import "./water.fragment";
+//import "./water.vertex";
 import { EffectFallbacks } from 'babylonjs/Materials/effectFallbacks';
 
 class WaterMaterialDefines extends MaterialDefines implements IImageProcessingConfigurationDefines {
@@ -220,7 +221,6 @@ export class WaterMaterial extends PushMaterial {
     */
     constructor(name: string, scene: Scene, public renderTargetSize: Vector2 = new Vector2(512, 512)) {
         super(name, scene);
-
         this._createRenderTargets(scene, renderTargetSize);
 
         // Create render targets

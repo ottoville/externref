@@ -178,7 +178,7 @@
         "signature": "70b5436710e8bcb14d4cf7ff60f0123d26b3eb984ea8209ea6df3e3d575e4f71"
       },
       "./sw.ts": {
-        "version": "f7c860b4265b9176085652d53ebb4a1aae1c58ca3c4ad1010ec431b274ec25d6",
+        "version": "c90877e044ca3aba3692214a10bd7bcfa7231b44cea2a1fde103bc31307d9444",
         "signature": "506a9f6aba443bd1f9cf4471a89ef35a5fa00d6d562e54ede9bb38fe000fbf14"
       },
       "./commonmath.d.ts": {

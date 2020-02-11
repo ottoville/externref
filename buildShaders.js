@@ -13,6 +13,13 @@ function readFiles(dirname, obj) {
                             rej(err);
                             return;
                         }
+                        if (filename.substr(-3) == '.fx') {
+                            if (filename.substr(-3) == 'fragment.fx') {
+                                filename = filename.substr(-7)
+                            } else {
+                                filename = filename.substr(-5)
+                            }
+                        }
                         obj[filename] = content.replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '');
                         res();
                     })

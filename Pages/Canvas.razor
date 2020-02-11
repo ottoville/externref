@@ -21,18 +21,20 @@
         }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
     }
     [JSInvokable]
-    public void setProgress(byte p, string error = null)
+    public void setProgress(byte p)
     {
         System.Diagnostics.Debug.WriteLine("setProgress " + p);
         JSRuntime.InvokeVoidAsync("appInsights.trackEvent", new { name = "startprogress_"+p });
-
-        if (error != null)
-        {
-            progressError = error;
-        }
         progress = p;
         this.StateHasChanged();
     }
+    [JSInvokable]
+    public void setProgressError(string error = null)
+    {
+        progressError = error;
+        this.StateHasChanged();
+    }
+
     protected override void OnAfterRender(bool firstrender)
     {
 
