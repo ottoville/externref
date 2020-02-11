@@ -24,7 +24,7 @@ export class Sea extends GroundMesh {
         });
 
         vertexData.applyToMesh(this, false);
-        this.position.y = 4
+        this.position.y = 3
 
         var watermaterial = new StandardMaterial("watermaterial", scene);
 

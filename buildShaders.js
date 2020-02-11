@@ -13,12 +13,10 @@ function readFiles(dirname, obj) {
                             rej(err);
                             return;
                         }
-                        if (filename.substr(-3) == '.fx') {
-                            if (filename.substr(-3) == 'fragment.fx') {
-                                filename = filename.substr(-7)
-                            } else {
-                                filename = filename.substr(-5)
-                            }
+                        if (filename.substr(-11) == 'fragment.fx') {
+                            filename = filename.substr(0,filename.length-7)
+                        } else if (filename.substr(-9) == 'vertex.fx') {
+                            filename = filename.substr(0, filename.length -5)
                         }
                         obj[filename] = content.replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '');
                         res();
@@ -32,7 +30,7 @@ function readFiles(dirname, obj) {
 }
 let obj = {};
 (async () => {
-    await Promise.all([readFiles('wwwroot/shaders/', obj), readFiles('src/lib/babylon/Shaders/', obj)]).then(() => {
+    await Promise.all([readFiles('wwwroot/shaders/', obj), readFiles('src/lib/babylon/Shaders/', obj), readFiles('src/lib/babylon/Shaders/ShadersInclude/', obj)]).then(() => {
         fs.writeFile('wwwroot/shaders/shaders.json', JSON.stringify(obj), (err) => {
             if (err) throw err;
             console.log('Shaders optimized');
