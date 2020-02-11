@@ -38,7 +38,8 @@ export abstract class paintGround {
     ) {
     };
     public resolve: PTResultF = () => null;
-    public activate(callback: PTResultF, options?:any) {
+    public activate(callback: PTResultF, options?: any) {
+        console.debug('add mainpointerdown listener');
         this.uitab.addListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
     }
@@ -139,7 +140,7 @@ export abstract class paintGround {
     private testcounter = 0;
 
     private mainPointerDown = (evt: PointerEvent) => {
-        
+        console.log('mainPointerDown');
         if (evt.button !== 0) {
             return;
         }
@@ -148,24 +149,29 @@ export abstract class paintGround {
             return mesh === this.ground
         }, false, this.camera);
        // console.log(pickInfo);
-        if (!pickInfo)
+        if (!pickInfo) {
+            console.log('pick did not hit');
+            console.log(pickInfo);
             return;
-        if (pickInfo.hit && pickInfo.pickedPoint!=null) {
+        }
+        if (pickInfo.hit && pickInfo.pickedPoint != null) {
             if (pickInfo.pickedMesh === this.sea) {
                 console.log('hitted sea');
                 return;
             }
             startingPoint = new Vector2(pickInfo.pickedPoint.x, pickInfo.pickedPoint.z);
-
+            console.debug('Calling child onMainPointerDown');
             this.onMainPointerDown(startingPoint);
             this.camera.detachControl(this.canvas);
-            
-            this.uitab.addListener("pointermove", this.drawArea, {lazy:25});
+
+            this.uitab.addListener("pointermove", this.drawArea, { lazy: 25 });
 
 
             //There is a race condition. this.drawarea is lazyevaled every 25ms. pointerup event need variables initialized by lazy function. If it is too lazy those variables are undefined.
 
-            this.uitab.addListener("pointerup", this.pointerUp, {once:true});
+            this.uitab.addListener("pointerup", this.pointerUp, { once: true });
+        } else {
+            console.debug('no pickinfo pickedpoint')
         }
     };
 }

@@ -21,6 +21,7 @@ export class paintTexture extends paintGround {
         this.subTextureCache = { x: 0, z: 0, imageData: null }
     }
     onMainPointerDown(startingPoint: Vector2): void {
+        console.debug('painttexture mainpointerdown');
         this.m1.setRow(0, new Vector4(1, 0, 0, this.centerX + startingPoint.x));
         this.m1.setRow(1, new Vector4(0, 1, 0, 0));
         this.m1.setRow(2, new Vector4(0, 0, 1, this.centerZ + startingPoint.y));
