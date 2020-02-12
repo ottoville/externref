@@ -3,13 +3,13 @@ import { UITAB } from "../UITAB.js";
 import type { Terrain } from "../world/terrain.js";
 
 import type { PTResultF } from "../types/interfaces/index.js";
-import type { Scene } from "../lib/babylon/scene.js";
 import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
 import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import { Vector2, Vector3 } from "../lib/babylon/Maths/math.vector.js";
+import type { WorldScene } from "../world/scene.js";
 
 export class paintPlane extends paintGround {
 
@@ -19,7 +19,7 @@ export class paintPlane extends paintGround {
     private planeorgpos: Vector3 = Vector3.Zero();
     constructor(
         public canvas: HTMLElement,
-        protected scene: Scene,
+        protected scene: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,

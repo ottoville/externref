@@ -6,9 +6,9 @@ import type { PTDresult } from "../types/interfaces/index.js";
 import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import { DynamicTexture } from "../lib/babylon/Materials/Textures/dynamicTexture.js";
 import type { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
-import type { Scene } from "../lib/babylon/scene.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
+import type { WorldScene } from "../world/scene.js";
 export class Zones extends UITAB {
     private zonemateria: StandardMaterial;
     private PT: paintTexture;
@@ -19,7 +19,7 @@ export class Zones extends UITAB {
         private ground: Terrain,
         private db: IDBDatabase,
         private groundMaterial: ShaderMaterial,
-        private scene: Scene,
+        private scene: WorldScene,
         private camera: ArcRotateCamera,
         private sea: Mesh
     ) {

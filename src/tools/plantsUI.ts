@@ -5,9 +5,9 @@ import type { Plants } from "../plants/Plants.js";
 import type { Terrain } from "../world/terrain.js";
 
 import type { PTDresult } from "../types/interfaces/index.js";
-import type { Scene } from "../lib/babylon/scene.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
+import type { WorldScene } from "../world/scene.js";
 
 
 
@@ -21,7 +21,7 @@ export class PlantsUI extends UITAB {
     constructor(
         private ground: Terrain,
         public canvas: HTMLCanvasElement,
-        private scene: Scene,
+        private scene: WorldScene,
         private camera: ArcRotateCamera,
         private sea: Mesh,
         private plantsobj:Plants,

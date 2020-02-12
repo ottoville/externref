@@ -8,7 +8,7 @@ import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
 import { texImage2D } from "../webgl.js";
-import type { TerraMesh } from "../TerraMesh.js";
+import { TerraMesh } from "../TerraMesh.js";
 
 import { InputManager } from "../lib/babylon/Inputs/scene.inputManager.js";
 console.log('p1');
@@ -30,6 +30,7 @@ import { Constants } from "../lib/babylon/Engines/constants.js";
 import type { AbstractMesh } from "../lib/babylon/Meshes/abstractMesh.js";
 console.log('p7');
 import { Ray } from "../lib/babylon/Culling/ray.js";
+import type { TrianglePickingPredicate } from "../lib/babylon/Culling/ray.js";
 import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
 console.log('p8');
 import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
@@ -46,6 +47,7 @@ console.log('p12');
 import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collisionCoordinator.js';
 import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import { Sea } from "./water.js";
+import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 console.log('p13');
 Scene.CollisionCoordinatorFactory = () => {
     return new DefaultCollisionCoordinator();
@@ -53,7 +55,7 @@ Scene.CollisionCoordinatorFactory = () => {
 Scene.DefaultMaterialFactory = (scene: Scene) => {
     return new StandardMaterial("default material", scene);
 };
-Scene.prototype.createPickingRayToRef = function (x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
+/*Scene.prototype.createPickingRayToRef = function (x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
     var engine = this.getEngine();
 
     if (!camera) {
@@ -73,7 +75,7 @@ Scene.prototype.createPickingRayToRef = function (x: number, y: number, world: M
 
     result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : camera.getViewMatrix(), camera.getProjectionMatrix());
     return this;
-};
+};*/
 //import { UI } from "../UI.js";
 class _ClickInfo {
     private _singleClick = false;
@@ -109,6 +111,82 @@ class _ClickInfo {
 }
 
 export class WorldScene extends Scene {
+    createPickingRayToRef(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
+        console.log('createPickingRayToRef');
+        var engine = this.getEngine();
+
+        if (!camera) {
+            if (!this.activeCamera) {
+                return this;
+            }
+
+            camera = this.activeCamera;
+        }
+
+        var cameraViewport = camera.viewport;
+        var viewport = cameraViewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
+
+        // Moving coordinates to local viewport world
+        x = x / engine.getHardwareScalingLevel() - viewport.x;
+        y = y / engine.getHardwareScalingLevel() - (engine.getRenderHeight() - viewport.y - viewport.height);
+
+        result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : camera.getViewMatrix(), camera.getProjectionMatrix());
+        return this;
+    }
+    /* This is same as babylonjs _internalPick but with promise */
+    collissionCheck(rayFunction: (world: Matrix) => Ray, meshIndex: number, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: AbstractMesh) => boolean): Promise<PickingInfo | null> {
+        if (meshIndex > this.meshes.length - 1)
+            return new Promise(res => res(pickResult));
+        let mesh = this.meshes[meshIndex] as TerraMesh | Mesh;
+
+        if (predicate) {
+            if (!predicate(mesh))
+                return this.collissionCheck(rayFunction, ++meshIndex, pickResult, fastCheck, predicate);
+        } else if (!mesh.isEnabled() || !mesh.isVisible || !mesh.isPickable)
+            return this.collissionCheck(rayFunction, ++meshIndex, pickResult, fastCheck, predicate);
+        return new Promise((res: (pi: PickingInfo) => void) => {
+            var world = mesh.getWorldMatrix();
+            var ray = rayFunction(world);
+            if (mesh instanceof TerraMesh) {
+                mesh.intersectsPromise(ray, fastCheck).then(res);
+            } else {
+                res(mesh.intersects(ray, fastCheck));
+            }
+        }).then((result: PickingInfo) => {
+            if (!result || !result.hit)
+                return this.collissionCheck(rayFunction, ++meshIndex, pickResult, fastCheck, predicate);
+            if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
+                return this.collissionCheck(rayFunction, ++meshIndex, pickResult, fastCheck, predicate);
+            pickResult = result;
+            if (fastCheck)
+                return result;
+            else
+                return this.collissionCheck(rayFunction, ++meshIndex, pickResult);
+        });
+    }
+    pickPromise(x: number, y: number, predicate?: (mesh: AbstractMesh) => boolean, fastCheck?: boolean, camera?: Nullable<Camera>,
+        trianglePredicate?: TrianglePickingPredicate): Promise<PickingInfo>  {
+
+        let rayFunction = (world: Matrix) => {
+            if (!this._tempPickingRay) {
+                this._tempPickingRay = Ray.Zero();
+            }
+
+            this.createPickingRayToRef(x, y, world, this._tempPickingRay, this.cameraToUseForPointers || null);
+            return this._tempPickingRay;
+        };
+        return this.collissionCheck(rayFunction, 0, null, fastCheck, predicate).then((pickResult: PickingInfo | null) => {
+            /* _internalPick ends */
+            if (pickResult == null)
+                pickResult = new PickingInfo();
+            if (pickResult) {
+                pickResult.ray = Ray.Zero();
+                this.createPickingRayToRef(x, y, Matrix.Identity(), pickResult.ray, this.cameraToUseForPointers || null, false)
+            }
+            return pickResult;
+        });
+    }
+
     private gameSpeed = BigInt(0);
     private lastStateChangeGameTime = BigInt(21600 * 1000); //6 hours
     private lastStateChangeTime = new Date().getTime();
@@ -305,22 +383,17 @@ export class WorldScene extends Scene {
         this._activeIndices.addCount(0, true);
         this._activeParticles.addCount(0, true);
     }
-    public attachControl(attachUp = true, attachDown = true, attachMove = true): void {
+    public attachControl(attachUp = true, attachDown = true, attachMove = true, elementToAttachTo: Nullable<HTMLElement> = null): void {
         //this._inputManager.attachControl(attachUp, attachDown, attachMove);
-
-        (function (scene: Scene, elementToAttachTo: Nullable<HTMLElement> = null) {
-
+        let engine = this.getEngine();
+        (function (scene: WorldScene, elementToAttachTo: Nullable<HTMLElement> = null) {
             if (!elementToAttachTo) {
-                //@ts-ignore
-                elementToAttachTo = scene.getEngine().getInputElement();
+                elementToAttachTo = engine.getInputElement();
             }
 
             if (!elementToAttachTo) {
                 return;
             }
-
-            let engine = scene.getEngine();
-
             this._initActionManager = (act: Nullable<AbstractActionManager>, clickInfo: _ClickInfo): Nullable<AbstractActionManager> => {
                 if (!this._meshPickProceed) {
                     let pickResult = scene.pick(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers);
@@ -519,55 +592,7 @@ export class WorldScene extends Scene {
 
                 // Meshes
                 this._pickedDownMesh = null;
-                let fastCheck = false;
-                let rayFunction = (world: Matrix) => {
-                    if (!scene._tempPickingRay) {
-                        scene._tempPickingRay = Ray.Zero();
-                    }
-
-                    scene.createPickingRayToRef(this._unTranslatedPointerX, this._unTranslatedPointerY, world, scene._tempPickingRay, scene.cameraToUseForPointers || null);
-                    return scene._tempPickingRay;
-                };
-
-                (function collissionCheck(meshIndex: number, pickResult: PickingInfo | null): Promise<PickingInfo | null> {
-                    if (meshIndex > scene.meshes.length - 1)
-                        return new Promise(res => res(null));
-                    let mesh = scene.meshes[meshIndex] as Terrain;
-
-                    if (scene.pointerDownPredicate) {
-                        if (!scene.pointerDownPredicate(mesh))
-                            return collissionCheck(++meshIndex, pickResult);
-                    } else if (!mesh.isEnabled() || !mesh.isVisible || !mesh.isPickable)
-                        return collissionCheck(++meshIndex, pickResult);
-
-                    return new Promise((res: (pi: PickingInfo) => void) => {
-                        var world = mesh.getWorldMatrix();
-                        var ray = rayFunction(world);
-                        if (typeof (mesh.intersectsPromise) !== 'undefined') {
-                            mesh.intersectsPromise(ray, fastCheck).then(res);
-                        } else {
-                            res(mesh.intersects(ray, fastCheck));
-                        }
-                    }).then((result: PickingInfo) => {
-                        if (!result || !result.hit)
-                            return collissionCheck(++meshIndex, pickResult);
-                        if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
-                            return collissionCheck(++meshIndex, pickResult);
-
-                        if (fastCheck)
-                            return result;
-                        else
-                            return collissionCheck(++meshIndex, result);
-                    });
-                })(0, null).then((pickResult: PickingInfo | null) => {
-                    if (pickResult == null)
-                        pickResult = new PickingInfo();
-                    if (pickResult) {
-                        pickResult.ray = Ray.Zero();
-                        //pickResult.ray = scene.createPickingRay(this._unTranslatedPointerX, this._unTranslatedPointerY, Matrix.Identity(), scene.cameraToUseForPointers || null);
-                        scene.createPickingRayToRef(this._unTranslatedPointerX, this._unTranslatedPointerY, Matrix.Identity(), pickResult.ray, scene.cameraToUseForPointers || null, false)
-                    }
-                    //@ts-ignore
+                scene.pickPromise(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers).then(pickResult => {
                     this._processPointerDown(pickResult, evt);
                 });
             };
@@ -727,7 +752,7 @@ export class WorldScene extends Scene {
                 }
             }
 
-        }).bind(this._inputManager)(this)
+        }).bind(this._inputManager)(this, elementToAttachTo);
     }
     constructor(engine: Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine);

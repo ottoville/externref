@@ -5,11 +5,11 @@ let end_position: Vector2
 import { UITAB } from "../UITAB.js";
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
-import type { Scene } from "../lib/babylon/scene.js";
 import { Ray } from "../lib/babylon/Culling/ray.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/index.js";
 import { Vector2 } from "../lib/babylon/Maths/math.vector.js";
+import type { WorldScene } from "../world/scene.js";
 
 //import { rotateMatrix, translate } from "./math.js";
 
@@ -30,7 +30,7 @@ export abstract class paintGround {
     protected ang: Angle = new Angle(0);
     constructor(
         public canvas: HTMLElement,
-        protected scene: Scene,
+        protected scene: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,
@@ -139,15 +139,18 @@ export abstract class paintGround {
     }
     private testcounter = 0;
 
-    private mainPointerDown = (evt: PointerEvent) => {
+    private mainPointerDown = async (evt: PointerEvent) => {
         console.log('mainPointerDown');
         if (evt.button !== 0) {
             return;
         }
         // check if we are under a mesh
-        var pickInfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => {
+      /*  var pickInfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => {
             return mesh === this.ground
-        }, false, this.camera);
+        }, false, this.camera);*/
+
+        var pickInfo = await this.scene.pickPromise(this.scene.pointerX, this.scene.pointerY, mesh => { return mesh === this.ground }, false, this.camera);
+
        // console.log(pickInfo);
         if (!pickInfo) {
             console.log('pick did not hit');
@@ -171,7 +174,8 @@ export abstract class paintGround {
 
             this.uitab.addListener("pointerup", this.pointerUp, { once: true });
         } else {
-            console.debug('no pickinfo pickedpoint')
+            console.debug('no pickinfo pickedpoint');
+            console.log(pickInfo);
         }
     };
 }

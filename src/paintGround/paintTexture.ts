@@ -1,13 +1,13 @@
 ﻿import { paintGround } from "./paintGround.js";
-import { UITAB } from "../UITAB.js";
+import type { UITAB } from "../UITAB.js";
 import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 import type { Vector2 } from "../lib/babylon/Maths/math.vector.js";
-import type { Scene } from "../lib/babylon/scene.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { Texture } from "../lib/babylon/Materials/Textures/texture.js";
 import type { Engine } from "../lib/babylon/Engines/engine.js";
+import type { WorldScene } from "../world/scene.js";
 export class paintTexture extends paintGround {
     private subTextureCache: subTexture = { x: 0, z: 0, imageData: null };
     private height: number=0;
@@ -30,7 +30,7 @@ export class paintTexture extends paintGround {
     }
     constructor(
         public canvas: HTMLElement,
-        protected scene: Scene,
+        protected scene: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,

@@ -387,6 +387,7 @@ export class TerraMesh extends Mesh {
         return this;
     }
     public intersectsPromise(ray: Ray, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): Promise<PickingInfo> {
+        console.log('intersectsPromise ', this.name);
         let bounding = this.getBoundingInfo();
         return TerraMesh.worker.message(this.uniqueId, 'intersects', [bounding.boundingBox, bounding.boundingSphere, ray.origin, ray.direction, fastCheck, trianglePredicate]);
     }

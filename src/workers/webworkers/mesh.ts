@@ -25,7 +25,6 @@ class Mesh {
         if (!ray.intersectsBox(boundingBox)) {
             return pickingInfo;
         }
-
         // Triangles test
         let p0 = new Vector3();
         let p1 = new Vector3();
@@ -80,6 +79,8 @@ class Mesh {
             pickingInfo.bv = intersectInfo.bv || 0;
             pickingInfo.faceId = intersectInfo.faceId;
             pickingInfo.subMeshId = intersectInfo.subMeshId;
+            console.log('mesh worker return ');
+            console.log(pickingInfo);
             return pickingInfo;
         }
         return pickingInfo;

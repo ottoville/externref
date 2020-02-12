@@ -29,7 +29,6 @@ var urlsToCache = [
         service.clients.claim();
     });
     service.addEventListener('fetch', function (event) {
-        console.log(event.request);
         let req = event.request;
         if (event.request.destination == 'script' && event.request.url.substr(-3) !== '.js') {
             req=new Request(event.request.url+'.js')
