@@ -1,6 +1,7 @@
 import { Nullable } from "../../../types";
 import { Scene } from "../../../scene";
 import { EngineStore } from "../../../Engines/engineStore";
+import { _TimeToken } from "../../../Instrumentation/timeToken";
 import { Texture } from "../../../Materials/Textures/texture";
 import { ProceduralTexture } from "./proceduralTexture";
 import { _TypeStore } from '../../../Misc/typeStore';

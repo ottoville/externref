@@ -17,7 +17,7 @@ export interface INavigationEnginePlugin {
      * @param meshes array of all the geometry used to compute the navigatio mesh
      * @param parameters bunch of parameters used to filter geometry
      */
-    createNavMesh(meshes: Array<Mesh>, parameters: INavMeshParameters): void;
+    createMavMesh(meshes: Array<Mesh>, parameters: INavMeshParameters): void;
 
     /**
      * Create a navigation mesh debug mesh
@@ -144,20 +144,6 @@ export interface ICrowd {
      * @param destination targeted world position
      */
     agentGoto(index: number, destination: Vector3): void;
-
-    /**
-     * Teleport the agent to a new position
-     * @param index agent index returned by addAgent
-     * @param destination targeted world position
-     */
-    agentTeleport(index: number, destination: Vector3): void;
-
-    /**
-     * Update agent parameters
-     * @param index agent index returned by addAgent
-     * @param parameters agent parameters
-     */
-    updateAgentParameters(index: number, parameters: IAgentParameters): void;
 
     /**
      * Set the Bounding box extent for doing spatial queries (getClosestPoint, getRandomPointAround, ...)

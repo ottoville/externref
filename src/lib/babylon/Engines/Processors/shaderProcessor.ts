@@ -24,6 +24,14 @@ export class ShaderProcessor {
         });
     }
 
+    public static Finalize(vertexCode: string, fragmentCode: string, options: ProcessingOptions): { vertexCode: string, fragmentCode: string } {
+        if (!options.processor || !options.processor.finalizeShaders) {
+            return { vertexCode, fragmentCode };
+        }
+
+        return options.processor.finalizeShaders(vertexCode, fragmentCode, options.processingContext);
+    }
+
     private static _ProcessPrecision(source: string, options: ProcessingOptions): string {
         const shouldUseHighPrecisionShader = options.shouldUseHighPrecisionShader;
 
@@ -251,14 +259,14 @@ export class ShaderProcessor {
 
         // General pre processing
         if (options.processor.preProcessor) {
-            preparedSourceCode = options.processor.preProcessor(preparedSourceCode, defines, options.isFragment);
+            preparedSourceCode = options.processor.preProcessor(preparedSourceCode, defines, options.isFragment, options.processingContext);
         }
 
         preparedSourceCode = this._EvaluatePreProcessors(preparedSourceCode, preprocessors, options);
 
         // Post processing
         if (options.processor.postProcessor) {
-            preparedSourceCode = options.processor.postProcessor(preparedSourceCode, defines, options.isFragment);
+            preparedSourceCode = options.processor.postProcessor(preparedSourceCode, defines, options.isFragment, options.processingContext);
         }
 
         return preparedSourceCode;

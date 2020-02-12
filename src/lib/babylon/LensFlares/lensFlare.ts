@@ -1,6 +1,7 @@
 import { Nullable } from "../types";
 import { Color3 } from "../Maths/math.color";
 import { Texture } from "../Materials/Textures/texture";
+import { _TimeToken } from "../Instrumentation/timeToken";
 import { LensFlareSystem } from "./lensFlareSystem";
 import { Constants } from "../Engines/constants";
 /**

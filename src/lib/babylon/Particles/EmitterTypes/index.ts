@@ -5,5 +5,3 @@ export * from "./hemisphericParticleEmitter";
 export * from "./IParticleEmitterType";
 export * from "./pointParticleEmitter";
 export * from "./sphereParticleEmitter";
-export * from "./customParticleEmitter";
-export * from "./meshParticleEmitter";

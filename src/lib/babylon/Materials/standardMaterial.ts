@@ -26,8 +26,8 @@ import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { _TypeStore } from "../Misc/typeStore";
 import { MaterialFlags } from "./materialFlags";
 
-//import "../Shaders/default.fragment";
-//import "../Shaders/default.vertex";
+import "../Shaders/default.fragment";
+import "../Shaders/default.vertex";
 import { Constants } from "../Engines/constants";
 import { EffectFallbacks } from './effectFallbacks';
 import { IEffectCreationOptions } from './effect';
@@ -96,6 +96,7 @@ export class StandardMaterialDefines extends MaterialDefines implements IImagePr
     public USE_LOCAL_REFLECTIONMAP_CUBIC = false;
     public REFLECTIONMAP_PROJECTION = false;
     public REFLECTIONMAP_SKYBOX = false;
+    public REFLECTIONMAP_SKYBOX_TRANSFORMED = false;
     public REFLECTIONMAP_EXPLICIT = false;
     public REFLECTIONMAP_EQUIRECTANGULAR = false;
     public REFLECTIONMAP_EQUIRECTANGULAR_FIXED = false;
@@ -863,6 +864,7 @@ export class StandardMaterial extends PushMaterial {
                                 break;
                             case Texture.SKYBOX_MODE:
                                 defines.setReflectionMode("REFLECTIONMAP_SKYBOX");
+                                defines.REFLECTIONMAP_SKYBOX_TRANSFORMED = !this._reflectionTexture.getReflectionTextureMatrix().isIdentity();
                                 break;
                             case Texture.SPHERICAL_MODE:
                                 defines.setReflectionMode("REFLECTIONMAP_SPHERICAL");

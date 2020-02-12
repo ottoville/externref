@@ -636,7 +636,7 @@ export class PhysicsImpostor {
     }
 
     /**
-     * Get a specific parameter from the options parameters
+     * Get a specific parametes from the options parameter
      * @param paramName The object parameter name
      * @returns The object parameter
      */

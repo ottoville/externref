@@ -15,6 +15,7 @@ import { HDRCubeTexture } from "../../Materials/Textures/hdrCubeTexture";
 import { AnimationGroup } from "../../Animations/animationGroup";
 import { Light } from "../../Lights/light";
 import { SceneComponentConstants } from "../../sceneComponent";
+import { _TimeToken } from "../../Instrumentation/timeToken";
 import { SceneLoader } from "../../Loading/sceneLoader";
 import { AbstractScene } from "../../abstractScene";
 import { AssetContainer } from "../../assetContainer";
@@ -435,6 +436,10 @@ var loadAssetContainer = (scene: Scene, data: string, rootUrl: string, onError?:
         if (parsedData.actions !== undefined && parsedData.actions !== null) {
             ActionManager.Parse(parsedData.actions, null, scene);
         }
+
+        if (!addToScene) {
+            container.removeAllFromScene();
+        }
     } catch (err) {
         let msg = logOperation("loadAssets", parsedData ? parsedData.producer : "Unknown") + log;
         if (onError) {
@@ -444,9 +449,6 @@ var loadAssetContainer = (scene: Scene, data: string, rootUrl: string, onError?:
             throw err;
         }
     } finally {
-        if (!addToScene) {
-            container.removeAllFromScene();
-        }
         if (log !== null && SceneLoader.loggingLevel !== SceneLoader.NO_LOGGING) {
             Logger.Log(logOperation("loadAssets", parsedData ? parsedData.producer : "Unknown") + (SceneLoader.loggingLevel !== SceneLoader.MINIMAL_LOGGING ? log : ""));
         }

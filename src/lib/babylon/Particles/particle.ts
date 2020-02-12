@@ -213,7 +213,6 @@ export class Particle {
     /** @hidden */
     public _reset() {
         this.age = 0;
-        this.id = Particle._Count++;
         this._currentColorGradient = null;
         this._currentSizeGradient = null;
         this._currentAngularSpeedGradient = null;

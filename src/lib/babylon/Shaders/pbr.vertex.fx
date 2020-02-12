@@ -6,33 +6,70 @@
 
 // Attributes
 attribute vec3 position;
+// #endif
+
 #ifdef NORMAL
-attribute vec3 normal;
+    attribute vec3 normal;
 #endif
+
 #ifdef TANGENT
-attribute vec4 tangent;
+    attribute vec4 tangent;
 #endif
+
 #ifdef UV1
-attribute vec2 uv;
+    attribute vec2 uv;
 #endif
+
 #ifdef UV2
-attribute vec2 uv2;
+    attribute vec2 uv2;
 #endif
-#ifdef MAINUV1
-varying vec2 vMainUV1;
-#endif
-#ifdef MAINUV2
-varying vec2 vMainUV2; 
-#endif 
+
 #ifdef VERTEXCOLOR
-attribute vec4 color;
+    attribute vec4 color;
+#endif
+
+#ifdef INSTANCES
+    attribute vec4 world0;
+    attribute vec4 world1;
+    attribute vec4 world2;
+    attribute vec4 world3;
 #endif
 
 #include<helperFunctions>
 #include<bonesDeclaration>
 
-// Uniforms
-#include<instancesDeclaration>
+// Output
+varying vec3 vPositionW;
+
+#ifdef NORMAL
+    varying vec3 vNormalW;
+
+    #if defined(USESPHERICALFROMREFLECTIONMAP) && defined(USESPHERICALINVERTEX)
+        varying vec3 vEnvironmentIrradiance;
+        
+        #include<harmonicsFunctions>
+    #endif
+#endif
+
+#ifdef VERTEXCOLOR
+    varying vec4 vColor;
+#endif
+
+#ifdef REFLECTIONMAP_SKYBOX
+    varying vec3 vPositionUVW;
+#endif
+
+#if DEBUGMODE > 0
+    varying vec4 vClipSpacePosition;
+#endif
+
+#ifdef MAINUV1
+    varying vec2 vMainUV1;
+#endif
+
+#ifdef MAINUV2
+    varying vec2 vMainUV2;
+#endif
 
 #if defined(ALBEDO) && ALBEDODIRECTUV == 0
 varying vec2 vAlbedoUV;
@@ -98,41 +135,14 @@ varying vec2 vBumpUV;
     #endif
 #endif
 
-// Output
-varying vec3 vPositionW;
-#if DEBUGMODE > 0
-    varying vec4 vClipSpacePosition;
-#endif
-#ifdef NORMAL
-    varying vec3 vNormalW;
-    #if defined(USESPHERICALFROMREFLECTIONMAP) && defined(USESPHERICALINVERTEX)
-        varying vec3 vEnvironmentIrradiance;
-        
-        #include<harmonicsFunctions>
-    #endif
-#endif
-
-#ifdef VERTEXCOLOR
-varying vec4 vColor;
-#endif
-
 #include<bumpVertexDeclaration>
 #include<clipPlaneVertexDeclaration>
 #include<fogVertexDeclaration>
 #include<__decl__lightFragment>[0..maxSimultaneousLights]
-
 #include<morphTargetsVertexGlobalDeclaration>
 #include<morphTargetsVertexDeclaration>[0..maxSimultaneousMorphTargets]
-
-#ifdef REFLECTIONMAP_SKYBOX
-varying vec3 vPositionUVW;
-#endif
-
-#if defined(REFLECTIONMAP_EQUIRECTANGULAR_FIXED) || defined(REFLECTIONMAP_MIRROREDEQUIRECTANGULAR_FIXED)
-varying vec3 vDirectionW;
-#endif
-
 #include<logDepthDeclaration>
+
 #define CUSTOM_VERTEX_DEFINITIONS
 
 void main(void) {
@@ -153,7 +163,11 @@ void main(void) {
 #include<morphTargetsVertex>[0..maxSimultaneousMorphTargets]
 
 #ifdef REFLECTIONMAP_SKYBOX
-    vPositionUVW = positionUpdated;
+    #ifdef REFLECTIONMAP_SKYBOX_TRANSFORMED
+        vPositionUVW = (reflectionMatrix * vec4(positionUpdated, 1.0)).xyz;
+    #else
+        vPositionUVW = positionUpdated;
+    #endif
 #endif 
 
 #define CUSTOM_VERTEX_UPDATE_POSITION

@@ -1,6 +1,7 @@
 import { Scene } from "../scene";
 import { TransformNode } from "../Meshes/transformNode";
 import { Mesh } from "../Meshes/mesh";
+import { _TimeToken } from "../Instrumentation/timeToken";
 import { Texture } from "../Materials/Textures/texture";
 import { VideoTexture, VideoTextureSettings } from "../Materials/Textures/videoTexture";
 import { BackgroundMaterial } from "../Materials/Background/backgroundMaterial";

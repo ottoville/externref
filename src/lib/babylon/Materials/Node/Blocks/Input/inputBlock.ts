@@ -30,9 +30,6 @@ export class InputBlock extends NodeMaterialBlock {
     /** Gets or set a value used to limit the range of float values */
     public max: number = 0;
 
-    /** Gets or set a value indicating that this input can only get 0 and 1 values */
-    public isBoolean: boolean = false;
-
     /** Gets or sets a value used by the Node Material editor to determine how to configure the current value if it is a matrix */
     public matrixMode: number = 0;
 
@@ -74,9 +71,6 @@ export class InputBlock extends NodeMaterialBlock {
                         return this._type;
                     case "Color4":
                         this._type = NodeMaterialBlockConnectionPointTypes.Color4;
-                        return this._type;
-                    case "Matrix":
-                        this._type = NodeMaterialBlockConnectionPointTypes.Matrix;
                         return this._type;
                 }
             }
@@ -187,16 +181,6 @@ export class InputBlock extends NodeMaterialBlock {
     }
 
     public set value(value: any) {
-        if (this.type === NodeMaterialBlockConnectionPointTypes.Float) {
-            if (this.isBoolean) {
-                value = value ? 1 : 0;
-            }
-            else if (this.min !== this.max) {
-                value = Math.max(this.min, value);
-                value = Math.min(this.max, value);
-            }
-        }
-
         this._storedValue = value;
         this._mode = NodeMaterialBlockConnectionPointMode.Uniform;
     }
@@ -573,7 +557,6 @@ export class InputBlock extends NodeMaterialBlock {
 
                     returnValue += `${variableName}.min = ${this.min};\r\n`;
                     returnValue += `${variableName}.max = ${this.max};\r\n`;
-                    returnValue += `${variableName}.isBoolean = ${this.isBoolean};\r\n`;
                     returnValue += `${variableName}.matrixMode = ${this.matrixMode};\r\n`;
                     returnValue += `${variableName}.animationType  = BABYLON.AnimatedInputBlockTypes.${AnimatedInputBlockTypes[this.animationType]};\r\n`;
 
@@ -592,9 +575,6 @@ export class InputBlock extends NodeMaterialBlock {
                     break;
                 case NodeMaterialBlockConnectionPointTypes.Color4:
                     valueString = `new BABYLON.Color4(${this.value.r}, ${this.value.g}, ${this.value.b}, ${this.value.a})`;
-                    break;
-                case NodeMaterialBlockConnectionPointTypes.Matrix:
-                    valueString = `BABYLON.Matrix.FromArray([${(this.value as Matrix).m.toString()}])`;
                     break;
             }
             let finalOutput = `${variableName}.value = ${valueString};\r\n`;
@@ -616,7 +596,6 @@ export class InputBlock extends NodeMaterialBlock {
         serializationObject.visibleInInspector = this.visibleInInspector;
         serializationObject.min = this.min;
         serializationObject.max = this.max;
-        serializationObject.isBoolean = this.isBoolean;
         serializationObject.matrixMode = this.matrixMode;
         serializationObject.isConstant = this.isConstant;
         serializationObject.groupInInspector = this.groupInInspector;
@@ -644,7 +623,6 @@ export class InputBlock extends NodeMaterialBlock {
         this.visibleInInspector = serializationObject.visibleInInspector;
         this.min = serializationObject.min || 0;
         this.max = serializationObject.max || 0;
-        this.isBoolean = !!serializationObject.isBoolean;
         this.matrixMode = serializationObject.matrixMode || 0;
         this.isConstant = !!serializationObject.isConstant;
         this.groupInInspector = serializationObject.groupInInspector || "";

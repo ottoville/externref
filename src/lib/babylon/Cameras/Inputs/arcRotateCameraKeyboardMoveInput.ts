@@ -50,7 +50,7 @@ export class ArcRotateCameraKeyboardMoveInput implements ICameraInput<ArcRotateC
 
     /**
      * Defines the panning sensibility of the inputs.
-     * (How fast is the camera panning)
+     * (How fast is the camera paning)
      */
     @serialize()
     public panningSensibility: number = 50.0;
@@ -63,7 +63,7 @@ export class ArcRotateCameraKeyboardMoveInput implements ICameraInput<ArcRotateC
     public zoomingSensibility: number = 25.0;
 
     /**
-     * Defines whether maintaining the alt key down switch the movement mode from
+     * Defines wether maintaining the alt key down switch the movement mode from
      * orientation to zoom.
      */
     @serialize()

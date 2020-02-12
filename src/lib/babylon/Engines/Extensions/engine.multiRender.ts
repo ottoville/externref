@@ -243,6 +243,7 @@ ThinEngine.prototype.createMultipleRenderTarget = function(size: any, options: I
     }
 
     gl.drawBuffers(attachments);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     this._bindUnboundFramebuffer(null);
 
     this.resetTextureCache();

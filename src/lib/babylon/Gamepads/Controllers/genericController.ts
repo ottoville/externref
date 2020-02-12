@@ -1,5 +1,6 @@
 import { Scene } from "../../scene";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
+import { _TimeToken } from "../../Instrumentation/timeToken";
 import { SceneLoader } from "../../Loading/sceneLoader";
 
 import { WebVRController } from "./webVRController";

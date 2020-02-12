@@ -34,7 +34,6 @@ import type { TrianglePickingPredicate } from "../lib/babylon/Culling/ray.js";
 import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
 console.log('p8');
 import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
-import { Engine } from "../lib/babylon/Engines/engine.js";
 console.log('p9');
 import { PointLight } from "../lib/babylon/Lights/pointLight.js";
 import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
@@ -48,6 +47,7 @@ import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collision
 import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import { Sea } from "./water.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
+import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 console.log('p13');
 Scene.CollisionCoordinatorFactory = () => {
     return new DefaultCollisionCoordinator();
@@ -754,7 +754,7 @@ export class WorldScene extends Scene {
 
         }).bind(this._inputManager)(this, elementToAttachTo);
     }
-    constructor(engine: Engine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
+    constructor(engine: WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine);
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable < AbstractMesh > = null): void  {

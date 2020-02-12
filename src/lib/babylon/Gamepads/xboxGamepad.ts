@@ -1,5 +1,6 @@
 import { Observable } from "../Misc/observable";
 import { Gamepad } from "../Gamepads/gamepad";
+import { _TimeToken } from "../Instrumentation/timeToken";
 /**
  * Defines supported buttons for XBox360 compatible gamepads
  */

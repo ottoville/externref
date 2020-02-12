@@ -1,4 +1,5 @@
 import { Nullable } from "../../types";
+import { _TimeToken } from "../../Instrumentation/timeToken";
 import { InternalTexture, InternalTextureSource } from '../../Materials/Textures/internalTexture';
 import { Logger } from '../../Misc/logger';
 import { Tools } from '../../Misc/tools';

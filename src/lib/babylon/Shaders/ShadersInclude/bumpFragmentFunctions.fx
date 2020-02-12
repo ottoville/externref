@@ -46,23 +46,23 @@
 	}
 #endif
 
-#if defined(BUMP)
-	#if BUMPDIRECTUV == 1
-		#define vBumpUV vMainUV1
-	#elif BUMPDIRECTUV == 2
-		#define vBumpUV vMainUV2
-	#else
-		varying vec2 vBumpUV;
+#ifdef BUMP
+	#ifndef PBR
+		#if BUMPDIRECTUV == 1
+			#define vBumpUV vMainUV1
+		#elif BUMPDIRECTUV == 2
+			#define vBumpUV vMainUV2
+		#else
+			varying vec2 vBumpUV;
+		#endif
+		uniform sampler2D bumpSampler;
 	#endif
-	uniform sampler2D bumpSampler;
-	
+
 	vec3 perturbNormal(mat3 cotangentFrame, vec2 uv)
 	{
 		return perturbNormal(cotangentFrame, texture2D(bumpSampler, uv).xyz, vBumpInfos.y);
 	}
-#endif
 
-#if defined(BUMP) || defined(CLEARCOAT_BUMP)
 	vec3 perturbNormal(mat3 cotangentFrame, vec3 color)
 	{
 		return perturbNormal(cotangentFrame, color, vBumpInfos.y);

@@ -1,7 +1,6 @@
 import { RenderTargetTexture } from '../Textures/renderTargetTexture';
 import { Scene } from '../../scene';
 import { InternalTextureSource } from '../Textures/internalTexture';
-import { Constants } from '../../Engines/constants';
 
 /**
  * Renders to multiple views with a single draw call
@@ -17,7 +16,6 @@ export class MultiviewRenderTarget extends RenderTargetTexture {
         super("multiview rtt", size, scene, false, true, InternalTextureSource.Unknown, false, undefined, false, false, true, undefined, true);
         var internalTexture = scene.getEngine().createMultiviewRenderTargetTexture(this.getRenderWidth(), this.getRenderHeight());
         internalTexture.isMultiview = true;
-        internalTexture.format = Constants.TEXTUREFORMAT_RGBA;
         this._texture = internalTexture;
         this.samples = this._engine.getCaps().maxSamples || this.samples;
     }

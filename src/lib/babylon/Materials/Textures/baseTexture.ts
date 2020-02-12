@@ -5,6 +5,7 @@ import { Scene } from "../../scene";
 import { Matrix } from "../../Maths/math.vector";
 import { EngineStore } from "../../Engines/engineStore";
 import { InternalTexture } from "../../Materials/Textures/internalTexture";
+import { _TimeToken } from "../../Instrumentation/timeToken";
 import { Constants } from "../../Engines/constants";
 import { IAnimatable } from '../../Animations/animatable.interface';
 import { GUID } from '../../Misc/guid';
@@ -705,21 +706,23 @@ export class BaseTexture implements IAnimatable {
      * Dispose the texture and release its associated resources.
      */
     public dispose(): void {
-        if (this._scene) {
-            // Animations
-            if (this._scene.stopAnimation) {
-                this._scene.stopAnimation(this);
-            }
-
-            // Remove from scene
-            this._scene._removePendingData(this);
-            var index = this._scene.textures.indexOf(this);
-
-            if (index >= 0) {
-                this._scene.textures.splice(index, 1);
-            }
-            this._scene.onTextureRemovedObservable.notifyObservers(this);
+        if (!this._scene) {
+            return;
         }
+
+        // Animations
+        if (this._scene.stopAnimation) {
+            this._scene.stopAnimation(this);
+        }
+
+        // Remove from scene
+        this._scene._removePendingData(this);
+        var index = this._scene.textures.indexOf(this);
+
+        if (index >= 0) {
+            this._scene.textures.splice(index, 1);
+        }
+        this._scene.onTextureRemovedObservable.notifyObservers(this);
 
         if (this._texture === undefined) {
             return;
@@ -773,16 +776,14 @@ export class BaseTexture implements IAnimatable {
             else {
                 var onLoadObservable = (texture as any).onLoadObservable as Observable<BaseTexture>;
 
-                if (onLoadObservable) {
-                    let onLoadCallback = () => {
-                        onLoadObservable.removeCallback(onLoadCallback);
-                        if (--numRemaining === 0) {
-                            callback();
-                        }
-                    };
+                let onLoadCallback = () => {
+                    onLoadObservable.removeCallback(onLoadCallback);
+                    if (--numRemaining === 0) {
+                        callback();
+                    }
+                };
 
-                    onLoadObservable.add(onLoadCallback);
-                }
+                onLoadObservable.add(onLoadCallback);
             }
         }
     }

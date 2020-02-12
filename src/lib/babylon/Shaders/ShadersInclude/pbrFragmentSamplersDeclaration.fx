@@ -1,3 +1,50 @@
+#ifdef ENVIRONMENTBRDF
+    uniform sampler2D environmentBrdfSampler;
+#endif
+
+// Reflection
+#ifdef REFLECTION
+    #ifdef REFLECTIONMAP_3D
+        #define sampleReflection(s, c) textureCube(s, c)
+
+        uniform samplerCube reflectionSampler;
+
+        #ifdef LODBASEDMICROSFURACE
+            #define sampleReflectionLod(s, c, l) textureCubeLodEXT(s, c, l)
+        #else
+            uniform samplerCube reflectionSamplerLow;
+            uniform samplerCube reflectionSamplerHigh;
+        #endif
+
+        #ifdef USEIRRADIANCEMAP
+            uniform samplerCube irradianceSampler;
+        #endif
+    #else
+        #define sampleReflection(s, c) texture2D(s, c)
+
+        uniform sampler2D reflectionSampler;
+
+        #ifdef LODBASEDMICROSFURACE
+            #define sampleReflectionLod(s, c, l) texture2DLodEXT(s, c, l)
+        #else
+            uniform samplerCube reflectionSamplerLow;
+            uniform samplerCube reflectionSamplerHigh;
+        #endif
+
+        #ifdef USEIRRADIANCEMAP
+            uniform samplerCube irradianceSampler;
+        #endif
+    #endif
+
+    #ifdef REFLECTIONMAP_SKYBOX
+        varying vec3 vPositionUVW;
+    #else
+        #if defined(REFLECTIONMAP_EQUIRECTANGULAR_FIXED) || defined(REFLECTIONMAP_MIRROREDEQUIRECTANGULAR_FIXED)
+            varying vec3 vDirectionW;
+        #endif
+    #endif
+#endif
+
 #ifdef ALBEDO
     #if ALBEDODIRECTUV == 1
         #define vAlbedoUV vMainUV1
@@ -6,7 +53,20 @@
     #else
         varying vec2 vAlbedoUV;
     #endif
+
     uniform sampler2D albedoSampler;
+#endif
+
+#ifdef REFLECTIVITY
+    #if REFLECTIVITYDIRECTUV == 1
+        #define vReflectivityUV vMainUV1
+    #elif REFLECTIVITYDIRECTUV == 2
+        #define vReflectivityUV vMainUV2
+    #else
+        varying vec2 vReflectivityUV;
+    #endif
+
+    uniform sampler2D reflectivitySampler;
 #endif
 
 #ifdef AMBIENT
@@ -17,7 +77,32 @@
     #else
         varying vec2 vAmbientUV;
     #endif
+
     uniform sampler2D ambientSampler;
+#endif
+
+#ifdef EMISSIVE
+    #if EMISSIVEDIRECTUV == 1
+        #define vEmissiveUV vMainUV1
+    #elif EMISSIVEDIRECTUV == 2
+        #define vEmissiveUV vMainUV2
+    #else
+        varying vec2 vEmissiveUV;
+    #endif
+
+    uniform sampler2D emissiveSampler;
+#endif
+
+#ifdef BUMP
+    #if BUMPDIRECTUV == 1
+        #define vBumpUV vMainUV1
+    #elif BUMPDIRECTUV == 2
+        #define vBumpUV vMainUV2
+    #else
+        varying vec2 vBumpUV;
+    #endif
+
+    uniform sampler2D bumpSampler;
 #endif
 
 #ifdef OPACITY
@@ -31,17 +116,6 @@
     uniform sampler2D opacitySampler;
 #endif
 
-#ifdef EMISSIVE
-    #if EMISSIVEDIRECTUV == 1
-        #define vEmissiveUV vMainUV1
-    #elif EMISSIVEDIRECTUV == 2
-        #define vEmissiveUV vMainUV2
-    #else
-        varying vec2 vEmissiveUV;
-    #endif
-    uniform sampler2D emissiveSampler;
-#endif
-
 #ifdef LIGHTMAP
     #if LIGHTMAPDIRECTUV == 1
         #define vLightmapUV vMainUV1
@@ -51,17 +125,6 @@
         varying vec2 vLightmapUV;
     #endif
     uniform sampler2D lightmapSampler;
-#endif
-
-#ifdef REFLECTIVITY
-    #if REFLECTIVITYDIRECTUV == 1
-        #define vReflectivityUV vMainUV1
-    #elif REFLECTIVITYDIRECTUV == 2
-        #define vReflectivityUV vMainUV2
-    #else
-        varying vec2 vReflectivityUV;
-    #endif
-    uniform sampler2D reflectivitySampler;
 #endif
 
 #ifdef MICROSURFACEMAP
@@ -134,53 +197,6 @@
         #endif
         uniform sampler2D anisotropySampler;
     #endif
-#endif
-
-// Reflection
-#ifdef REFLECTION
-    #ifdef REFLECTIONMAP_3D
-        #define sampleReflection(s, c) textureCube(s, c)
-
-        uniform samplerCube reflectionSampler;
-        
-        #ifdef LODBASEDMICROSFURACE
-            #define sampleReflectionLod(s, c, l) textureCubeLodEXT(s, c, l)
-        #else
-            uniform samplerCube reflectionSamplerLow;
-            uniform samplerCube reflectionSamplerHigh;
-        #endif
-
-        #ifdef USEIRRADIANCEMAP
-            uniform samplerCube irradianceSampler;
-        #endif
-    #else
-        #define sampleReflection(s, c) texture2D(s, c)
-
-        uniform sampler2D reflectionSampler;
-
-        #ifdef LODBASEDMICROSFURACE
-            #define sampleReflectionLod(s, c, l) texture2DLodEXT(s, c, l)
-        #else
-            uniform sampler2D reflectionSamplerLow;
-            uniform sampler2D reflectionSamplerHigh;
-        #endif
-
-        #ifdef USEIRRADIANCEMAP
-            uniform sampler2D irradianceSampler;
-        #endif
-    #endif
-
-    #ifdef REFLECTIONMAP_SKYBOX
-        varying vec3 vPositionUVW;
-    #else
-        #if defined(REFLECTIONMAP_EQUIRECTANGULAR_FIXED) || defined(REFLECTIONMAP_MIRROREDEQUIRECTANGULAR_FIXED)
-            varying vec3 vDirectionW;
-        #endif
-    #endif
-#endif
-
-#ifdef ENVIRONMENTBRDF
-    uniform sampler2D environmentBrdfSampler;
 #endif
 
 // SUBSURFACE

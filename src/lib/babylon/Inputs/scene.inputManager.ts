@@ -162,14 +162,13 @@ export class InputManager {
 
     private _processPointerMove(pickResult: Nullable<PickingInfo>, evt: PointerEvent) {
         let scene = this._scene;
-        let engine = scene.getEngine();
-        var canvas = engine.getInputElement();
+        var canvas = scene.getEngine().getInputElement();
 
         if (!canvas) {
             return;
         }
 
-        canvas.tabIndex = engine.canvasTabIndex;
+        canvas.tabIndex = 1;
 
         // Restore pointer
         if (!scene.doNotHandleCursors) {
@@ -445,16 +444,12 @@ export class InputManager {
     * @param attachUp defines if you want to attach events to pointerup
     * @param attachDown defines if you want to attach events to pointerdown
     * @param attachMove defines if you want to attach events to pointermove
-    * @param elementToAttachTo defines the target DOM element to attach to (will use the canvas by default)
     */
-    public attachControl(attachUp = true, attachDown = true, attachMove = true, elementToAttachTo: Nullable<HTMLElement> = null): void {
+    public attachControl(attachUp = true, attachDown = true, attachMove = true): void {
         let scene = this._scene;
+        var canvas = scene.getEngine().getInputElement();
 
-        if (!elementToAttachTo) {
-            elementToAttachTo = scene.getEngine().getInputElement();
-        }
-
-        if (!elementToAttachTo) {
+        if (!canvas) {
             return;
         }
 
@@ -630,9 +625,9 @@ export class InputManager {
 
             this._updatePointerPosition(evt);
 
-            if (scene.preventDefaultOnPointerDown && elementToAttachTo) {
+            if (scene.preventDefaultOnPointerDown && canvas) {
                 evt.preventDefault();
-                elementToAttachTo.focus();
+                canvas.focus();
             }
 
             this._startingPointerPosition.x = this._pointerX;
@@ -674,9 +669,9 @@ export class InputManager {
 
             this._updatePointerPosition(evt);
 
-            if (scene.preventDefaultOnPointerUp && elementToAttachTo) {
+            if (scene.preventDefaultOnPointerUp && canvas) {
                 evt.preventDefault();
-                elementToAttachTo.focus();
+                canvas.focus();
             }
 
             this._initClickEvent(scene.onPrePointerObservable, scene.onPointerObservable, evt, (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => {
@@ -773,42 +768,42 @@ export class InputManager {
         // Keyboard events
         this._onCanvasFocusObserver = engine.onCanvasFocusObservable.add((() => {
             let fn = () => {
-                if (!elementToAttachTo) {
+                if (!canvas) {
                     return;
                 }
-                elementToAttachTo.addEventListener("keydown", this._onKeyDown, false);
-                elementToAttachTo.addEventListener("keyup", this._onKeyUp, false);
+                canvas.addEventListener("keydown", this._onKeyDown, false);
+                canvas.addEventListener("keyup", this._onKeyUp, false);
             };
-            if (document.activeElement === elementToAttachTo) {
+            if (document.activeElement === canvas) {
                 fn();
             }
             return fn;
         })());
 
         this._onCanvasBlurObserver = engine.onCanvasBlurObservable.add(() => {
-            if (!elementToAttachTo) {
+            if (!canvas) {
                 return;
             }
-            elementToAttachTo.removeEventListener("keydown", this._onKeyDown);
-            elementToAttachTo.removeEventListener("keyup", this._onKeyUp);
+            canvas.removeEventListener("keydown", this._onKeyDown);
+            canvas.removeEventListener("keyup", this._onKeyUp);
         });
 
         // Pointer events
         var eventPrefix = Tools.GetPointerPrefix();
 
         if (attachMove) {
-            elementToAttachTo.addEventListener(eventPrefix + "move", <any>this._onPointerMove, false);
+            canvas.addEventListener(eventPrefix + "move", <any>this._onPointerMove, false);
 
             // Wheel
             this._wheelEventName = "onwheel" in document.createElement("div") ? "wheel" :       // Modern browsers support "wheel"
                 (<any>document).onmousewheel !== undefined ? "mousewheel" :                     // Webkit and IE support at least "mousewheel"
                     "DOMMouseScroll";                                                           // let's assume that remaining browsers are older Firefox
 
-                    elementToAttachTo.addEventListener(this._wheelEventName, <any>this._onPointerMove, false);
+            canvas.addEventListener(this._wheelEventName, <any>this._onPointerMove, false);
         }
 
         if (attachDown) {
-            elementToAttachTo.addEventListener(eventPrefix + "down", <any>this._onPointerDown, false);
+            canvas.addEventListener(eventPrefix + "down", <any>this._onPointerDown, false);
         }
 
         if (attachUp) {

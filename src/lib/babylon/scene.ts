@@ -63,6 +63,7 @@ declare type Animatable = import("./Animations/animatable").Animatable;
 declare type AnimationGroup = import("./Animations/animationGroup").AnimationGroup;
 declare type AnimationPropertiesOverride = import("./Animations/animationPropertiesOverride").AnimationPropertiesOverride;
 declare type Collider = import("./Collisions/collider").Collider;
+declare type WebGPUEngine = import("./Engines/webgpuEngine").WebGPUEngine;
 
 /**
  * Define an interface for all classes that will hold resources
@@ -151,9 +152,6 @@ export class Scene extends AbstractScene implements IAnimatable {
 
     /** @hidden */
     public readonly _isScene = true;
-
-    /** @hidden */
-    public _blockEntityCollection = false;
 
     /**
      * Gets or sets a boolean that indicates if the scene must clear the render buffer before rendering a frame
@@ -358,7 +356,7 @@ export class Scene extends AbstractScene implements IAnimatable {
      */
     public defaultCursor: string = "";
     /**
-     * Defines whether cursors are handled by the scene.
+     * Defines wether cursors are handled by the scene.
      */
     public doNotHandleCursors = false;
     /**
@@ -1367,6 +1365,8 @@ export class Scene extends AbstractScene implements IAnimatable {
      */
     private geometriesByUniqueId: Nullable<{ [uniqueId: string]: number | undefined }> = null;
 
+    private _renderBundles: Nullable<GPURenderBundle[]> = null;
+
     /**
      * Creates a new Scene
      * @param engine defines the engine to use to render this scene
@@ -1649,6 +1649,7 @@ export class Scene extends AbstractScene implements IAnimatable {
         this._sceneUbo = new UniformBuffer(this._engine, undefined, true);
         this._sceneUbo.addUniform("viewProjection", 16);
         this._sceneUbo.addUniform("view", 16);
+        this._sceneUbo.addUniform("viewPosition", 4);
     }
 
     /**
@@ -2015,6 +2016,15 @@ export class Scene extends AbstractScene implements IAnimatable {
         } else if (this._sceneUbo.useUbo) {
             this._sceneUbo.updateMatrix("viewProjection", this._transformMatrix);
             this._sceneUbo.updateMatrix("view", this._viewMatrix);
+
+            const eyePosition = this._forcedViewPosition ? this._forcedViewPosition : (this._mirroredCameraPosition ? this._mirroredCameraPosition : (this.activeCamera!).globalPosition);
+            const invertNormal = (this.useRightHandedSystem === (this._mirroredCameraPosition != null));
+            this._sceneUbo.updateFloat4("viewPosition",
+                eyePosition.x,
+                eyePosition.y,
+                eyePosition.z,
+                invertNormal ? -1 : 1);
+
             this._sceneUbo.update();
         }
     }
@@ -2041,10 +2051,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param recursive if all child meshes should also be added to the scene
      */
     public addMesh(newMesh: AbstractMesh, recursive = false) {
-        if (this._blockEntityCollection) {
-            return;
-        }
-
         this.meshes.push(newMesh);
 
         newMesh._resyncLightSources();
@@ -2094,9 +2100,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newTransformNode defines the transform node to add
      */
     public addTransformNode(newTransformNode: TransformNode) {
-        if (this._blockEntityCollection) {
-            return;
-        }
         newTransformNode._indexInSceneTransformNodesArray = this.transformNodes.length;
         this.transformNodes.push(newTransformNode);
 
@@ -2339,9 +2342,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newLight The light to add
      */
     public addLight(newLight: Light): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
         this.lights.push(newLight);
         this.sortLightsByPriority();
 
@@ -2349,7 +2349,7 @@ export class Scene extends AbstractScene implements IAnimatable {
             newLight._addToSceneRootNodes();
         }
 
-        // Add light to all meshes (To support if the light is removed and then re-added)
+        // Add light to all meshes (To support if the light is removed and then readded)
         for (var mesh of this.meshes) {
             if (mesh.lightSources.indexOf(newLight) === -1) {
                 mesh.lightSources.push(newLight);
@@ -2374,10 +2374,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newCamera The camera to add
      */
     public addCamera(newCamera: Camera): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
-
         this.cameras.push(newCamera);
         this.onNewCameraAddedObservable.notifyObservers(newCamera);
 
@@ -2391,9 +2387,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newSkeleton The skeleton to add
      */
     public addSkeleton(newSkeleton: Skeleton): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
         this.skeletons.push(newSkeleton);
         this.onNewSkeletonAddedObservable.notifyObservers(newSkeleton);
     }
@@ -2403,9 +2396,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newParticleSystem The particle system to add
      */
     public addParticleSystem(newParticleSystem: IParticleSystem): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
         this.particleSystems.push(newParticleSystem);
     }
 
@@ -2414,9 +2404,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newAnimation The animation to add
      */
     public addAnimation(newAnimation: Animation): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
         this.animations.push(newAnimation);
     }
 
@@ -2425,9 +2412,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newAnimationGroup The animation group to add
      */
     public addAnimationGroup(newAnimationGroup: AnimationGroup): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
         this.animationGroups.push(newAnimationGroup);
     }
 
@@ -2436,9 +2420,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newMultiMaterial The multi-material to add
      */
     public addMultiMaterial(newMultiMaterial: MultiMaterial): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
         this.multiMaterials.push(newMultiMaterial);
     }
 
@@ -2447,10 +2428,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newMaterial The material to add
      */
     public addMaterial(newMaterial: Material): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
-
         newMaterial._indexInSceneMaterialArray = this.materials.length;
         this.materials.push(newMaterial);
         this.onNewMaterialAddedObservable.notifyObservers(newMaterial);
@@ -2461,9 +2438,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newMorphTargetManager The morph target to add
      */
     public addMorphTargetManager(newMorphTargetManager: MorphTargetManager): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
         this.morphTargetManagers.push(newMorphTargetManager);
     }
 
@@ -2472,10 +2446,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newGeometry The geometry to add
      */
     public addGeometry(newGeometry: Geometry): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
-
         if (this.geometriesByUniqueId) {
             this.geometriesByUniqueId[newGeometry.uniqueId] = this.geometries.length;
         }
@@ -2496,9 +2466,6 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param newTexture The texture to add
      */
     public addTexture(newTexture: BaseTexture): void {
-        if (this._blockEntityCollection) {
-            return;
-        }
         this.textures.push(newTexture);
         this.onNewTextureAddedObservable.notifyObservers(newTexture);
     }
@@ -3727,6 +3694,7 @@ export class Scene extends AbstractScene implements IAnimatable {
 
         // Render
         this.onBeforeDrawPhaseObservable.notifyObservers(this);
+
         this._renderingManager.render(null, null, true, true);
         this.onAfterDrawPhaseObservable.notifyObservers(this);
 
@@ -3946,9 +3914,43 @@ export class Scene extends AbstractScene implements IAnimatable {
         // Before render
         this.onBeforeRenderObservable.notifyObservers(this);
 
+        var engine = this.getEngine();
+        if (engine.isWebGPU) {
+            const webgpuEngine = (engine as WebGPUEngine);
+            if (this._activeMeshesFrozen) {
+                if (this.activeCameras.length) {
+                    for (let cameraIndex = 0; cameraIndex < this.activeCameras.length; cameraIndex++) {
+                        const camera = this.activeCameras[cameraIndex];
+                        this.setTransformMatrix(camera.getViewMatrix(), camera.getProjectionMatrix());
+                    }
+                }
+                else {
+                    const camera = this.activeCamera!;
+                    this.setTransformMatrix(camera.getViewMatrix(), camera.getProjectionMatrix());
+                }
+
+                if (this._renderBundles) {
+                    webgpuEngine.executeBundles(this._renderBundles);
+                    return;
+                }
+
+                webgpuEngine.startRecordBundle();
+                webgpuEngine.onEndFrameObservable.addOnce(() => {
+                    this._renderBundles = [ webgpuEngine.stopRecordBundle() ];
+                    // TODO. WEBGPU. Frame lost.
+                    // webgpuEngine.executeBundles(this._renderBundles);
+                });
+            }
+            else {
+                if (this._renderBundles) {
+                    this._renderBundles = null;
+                }
+            }
+        }
+
         // Customs render targets
         this.onBeforeRenderTargetsRenderObservable.notifyObservers(this);
-        var engine = this.getEngine();
+
         var currentActiveCamera = this.activeCamera;
         if (this.renderTargetsEnabled) {
             Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
@@ -4074,6 +4076,8 @@ export class Scene extends AbstractScene implements IAnimatable {
      * Releases all held ressources
      */
     public dispose(): void {
+        this._renderBundles = null;
+
         this.beforeRender = null;
         this.afterRender = null;
 

@@ -2,6 +2,7 @@ import { Nullable } from "../../../types";
 import { Engine } from "../../../Engines/engine";
 import { InternalTexture } from "../../../Materials/Textures/internalTexture";
 import { IInternalTextureLoader } from "../../../Materials/Textures/internalTextureLoader";
+import { _TimeToken } from "../../../Instrumentation/timeToken";
 import { BasisTools } from "../../../Misc/basis";
 import { Tools } from '../../../Misc/tools';
 
@@ -55,7 +56,7 @@ export class _BasisTextureLoader implements IInternalTextureLoader {
      * @param onLoad defines the callback to trigger once the texture is ready
      * @param onError defines the callback to trigger in case of error
      */
-    public loadCubeData(data: ArrayBufferView | ArrayBufferView[], texture: InternalTexture, createPolynomials: boolean, onLoad: Nullable<(data?: any) => void>, onError: Nullable<(message?: string, exception?: any) => void>): void {
+    public loadCubeData(data: string | ArrayBuffer | (string | ArrayBuffer)[], texture: InternalTexture, createPolynomials: boolean, onLoad: Nullable<(data?: any) => void>, onError: Nullable<(message?: string, exception?: any) => void>): void {
         if (Array.isArray(data)) {
             return;
         }
@@ -68,7 +69,7 @@ export class _BasisTextureLoader implements IInternalTextureLoader {
                 etc2: caps.etc2 ? true : false
             }
         };
-        BasisTools.TranscodeAsync(data, transcodeConfig).then((result) => {
+        BasisTools.TranscodeAsync(data as ArrayBuffer, transcodeConfig).then((result) => {
             var hasMipmap = result.fileInfo.images[0].levels.length > 1 && texture.generateMipMaps;
             BasisTools.LoadTextureFromTranscodeResult(texture, result);
             (texture.getEngine() as Engine)._setCubeMapTextureParams(hasMipmap);
@@ -90,7 +91,7 @@ export class _BasisTextureLoader implements IInternalTextureLoader {
      * @param texture defines the BabylonJS internal texture
      * @param callback defines the method to call once ready to upload
      */
-    public loadData(data: ArrayBufferView, texture: InternalTexture,
+    public loadData(data: ArrayBuffer, texture: InternalTexture,
         callback: (width: number, height: number, loadMipmap: boolean, isCompressed: boolean, done: () => void) => void): void {
         var caps = texture.getEngine().getCaps();
         var transcodeConfig = {

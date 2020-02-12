@@ -28,7 +28,6 @@ import { SerializationHelper } from '../../Misc/decorators';
 import { TextureBlock } from './Blocks/Dual/textureBlock';
 import { ReflectionTextureBlock } from './Blocks/Dual/reflectionTextureBlock';
 import { EffectFallbacks } from '../effectFallbacks';
-import { WebRequest } from '../../Misc/webRequest';
 
 // declare NODEEDITOR namespace for compilation issue
 declare var NODEEDITOR: any;
@@ -44,10 +43,6 @@ export interface INodeMaterialEditorOptions {
 
 /** @hidden */
 export class NodeMaterialDefines extends MaterialDefines implements IImageProcessingConfigurationDefines {
-    public NORMAL = false;
-    public TANGENT = false;
-    public UV1 = false;
-
     /** BONES */
     public NUM_BONE_INFLUENCERS = 0;
     public BonesPerMesh = 0;
@@ -119,11 +114,8 @@ export class NodeMaterial extends PushMaterial {
     private _optimizers = new Array<NodeMaterialOptimizer>();
     private _animationFrame = -1;
 
-    /** Define the Url to load node editor script */
+    /** Define the URl to load node editor script */
     public static EditorURL = `https://unpkg.com/babylonjs-node-editor@${Engine.Version}/babylon.nodeEditor.js`;
-
-    /** Define the Url to load snippets */
-    public static SnippetUrl = "https://snippet.babylonjs.com";
 
     private BJSNODEMATERIALEDITOR = this._getGlobalNodeMaterialEditor();
 
@@ -664,19 +656,15 @@ export class NodeMaterial extends PushMaterial {
     }
 
     private _prepareDefinesForAttributes(mesh: AbstractMesh, defines: NodeMaterialDefines) {
-        let oldNormal = defines["NORMAL"];
-        let oldTangent = defines["TANGENT"];
-        let oldUV1 = defines["UV1"];
+        if (!defines._areAttributesDirty) {
+            return;
+        }
 
         defines["NORMAL"] = mesh.isVerticesDataPresent(VertexBuffer.NormalKind);
 
         defines["TANGENT"] = mesh.isVerticesDataPresent(VertexBuffer.TangentKind);
 
         defines["UV1"] = mesh.isVerticesDataPresent(VertexBuffer.UVKind);
-
-        if (oldNormal !== defines["NORMAL"] || oldTangent !== defines["TANGENT"] || oldUV1 !== defines["UV1"]) {
-            defines.markAsAttributesDirty();
-        }
     }
 
     /**
@@ -882,7 +870,7 @@ export class NodeMaterial extends PushMaterial {
 
         if (mustRebind) {
             let sharedData = this._sharedData;
-            if (effect && scene.getCachedEffect() !== effect) {
+            if (effect && scene.getCachedMaterial() !== this) {
                 // Bindable blocks
                 for (var block of sharedData.bindableBlocks) {
                     block.bind(effect, this, mesh);
@@ -905,9 +893,7 @@ export class NodeMaterial extends PushMaterial {
     public getActiveTextures(): BaseTexture[] {
         var activeTextures = super.getActiveTextures();
 
-        if (this._sharedData) {
-            activeTextures.push(...this._sharedData.textureBlocks.filter((tb) => tb.texture).map((tb) => tb.texture!));
-        }
+        activeTextures.push(...this._sharedData.textureBlocks.filter((tb) => tb.texture).map((tb) => tb.texture!));
 
         return activeTextures;
     }
@@ -1019,31 +1005,31 @@ export class NodeMaterial extends PushMaterial {
 
         this.editorData = null;
 
-        var positionInput = new InputBlock("Position");
+        var positionInput = new InputBlock("position");
         positionInput.setAsAttribute("position");
 
-        var worldInput = new InputBlock("World");
+        var worldInput = new InputBlock("world");
         worldInput.setAsSystemValue(BABYLON.NodeMaterialSystemValues.World);
 
-        var worldPos = new TransformBlock("WorldPos");
+        var worldPos = new TransformBlock("worldPos");
         positionInput.connectTo(worldPos);
         worldInput.connectTo(worldPos);
 
-        var viewProjectionInput = new InputBlock("ViewProjection");
+        var viewProjectionInput = new InputBlock("viewProjection");
         viewProjectionInput.setAsSystemValue(BABYLON.NodeMaterialSystemValues.ViewProjection);
 
-        var worldPosdMultipliedByViewProjection = new TransformBlock("WorldPos * ViewProjectionTransform");
+        var worldPosdMultipliedByViewProjection = new TransformBlock("worldPos * viewProjectionTransform");
         worldPos.connectTo(worldPosdMultipliedByViewProjection);
         viewProjectionInput.connectTo(worldPosdMultipliedByViewProjection);
 
-        var vertexOutput = new VertexOutputBlock("VertexOutput");
+        var vertexOutput = new VertexOutputBlock("vertexOutput");
         worldPosdMultipliedByViewProjection.connectTo(vertexOutput);
 
         // Pixel
         var pixelColor = new InputBlock("color");
         pixelColor.value = new Color4(0.8, 0.8, 0.8, 1);
 
-        var fragmentOutput = new FragmentOutputBlock("FragmentOutput");
+        var fragmentOutput = new FragmentOutputBlock("fragmentOutput");
         pixelColor.connectTo(fragmentOutput);
 
         // Add to nodes
@@ -1298,56 +1284,6 @@ export class NodeMaterial extends PushMaterial {
         nodeMaterial.build();
 
         return nodeMaterial;
-    }
-
-    /**
-     * Creates a node material from a snippet saved in a remote file
-     * @param name defines the name of the material to create
-     * @param url defines the url to load from
-     * @param scene defines the hosting scene
-     * @returns a promise that will resolve to the new node material
-     */
-    public static ParseFromFileAsync(name: string, url: string, scene: Scene): Promise<NodeMaterial> {
-        var material = new NodeMaterial(name, scene);
-
-        return new Promise((resolve, reject) => {
-            return material.loadAsync(url).then(() => resolve(material)).catch(reject);
-        });
-    }
-
-    /**
-     * Creates a node material from a snippet saved by the node material editor
-     * @param snippetId defines the snippet to load
-     * @param scene defines the hosting scene
-     * @param rootUrl defines the root URL to use to load textures and relative dependencies
-     * @returns a promise that will resolve to the new node material
-     */
-    public static ParseFromSnippetAsync(snippetId: string, scene: Scene, rootUrl: string = ""): Promise<NodeMaterial> {
-        return new Promise((resolve, reject) => {
-            var request = new WebRequest();
-            request.addEventListener("readystatechange", () => {
-                if (request.readyState == 4) {
-                    if (request.status == 200) {
-                        var snippet = JSON.parse(JSON.parse(request.responseText).jsonPayload);
-                        let serializationObject = JSON.parse(snippet.nodeMaterial);
-                        let nodeMaterial = SerializationHelper.Parse(() => new NodeMaterial(snippetId, scene), serializationObject, scene, rootUrl);
-
-                        nodeMaterial.loadFromSerialization(serializationObject);
-                        try {
-                            nodeMaterial.build(true);
-                            resolve(nodeMaterial);
-                        } catch (err) {
-                            reject(err);
-                        }
-                    } else {
-                        reject("Unable to load the snippet " + snippetId);
-                    }
-                }
-            });
-
-            request.open("GET", this.SnippetUrl + "/" + snippetId.replace("#", "/"));
-            request.send();
-        });
     }
 
     /**

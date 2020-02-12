@@ -4,6 +4,7 @@ import { Scene } from "../scene";
 import { Matrix, Vector3 } from "../Maths/math.vector";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Light } from "./light";
+import { _TimeToken } from "../Instrumentation/timeToken";
 import { Axis } from '../Maths/math.axis';
 /**
  * Interface describing all the common properties and methods a shadow light needs to implement.

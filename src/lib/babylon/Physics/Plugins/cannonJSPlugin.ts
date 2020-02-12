@@ -155,7 +155,7 @@ export class CannonJSPlugin implements IPhysicsEnginePlugin {
                 if (childImpostor) {
                     var parent = childImpostor.parent;
                     if (parent !== mainImpostor) {
-                        var pPosition = mesh.position.clone();
+                        var pPosition = mesh.getAbsolutePosition().subtract(mainImpostor.object.getAbsolutePosition());
                         let localRotation = mesh.rotationQuaternion.multiply(Quaternion.Inverse(currentRotation));
                         if (childImpostor.physicsBody) {
                             this.removePhysicsBody(childImpostor);
@@ -598,6 +598,18 @@ export class CannonJSPlugin implements IPhysicsEnginePlugin {
     public updateDistanceJoint(joint: PhysicsJoint, maxDistance: number) {
         joint.physicsJoint.distance = maxDistance;
     }
+
+    // private enableMotor(joint: IMotorEnabledJoint, motorIndex?: number) {
+    //     if (!motorIndex) {
+    //         joint.physicsJoint.enableMotor();
+    //     }
+    // }
+
+    // private disableMotor(joint: IMotorEnabledJoint, motorIndex?: number) {
+    //     if (!motorIndex) {
+    //         joint.physicsJoint.disableMotor();
+    //     }
+    // }
 
     public setMotor(joint: IMotorEnabledJoint, speed?: number, maxForce?: number, motorIndex?: number) {
         if (!motorIndex) {

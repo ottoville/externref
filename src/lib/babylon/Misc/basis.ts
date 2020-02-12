@@ -151,13 +151,11 @@ export class BasisTools {
 
     /**
      * Transcodes a loaded image file to compressed pixel data
-     * @param data image data to transcode
+     * @param imageData image data to transcode
      * @param config configuration options for the transcoding
      * @returns a promise resulting in the transcoded image
      */
-    public static TranscodeAsync(data: ArrayBuffer | ArrayBufferView, config: BasisTranscodeConfiguration): Promise<TranscodeResult> {
-        const dataView = data instanceof ArrayBuffer ? new Uint8Array(data) : data;
-
+    public static TranscodeAsync(imageData: ArrayBuffer, config: BasisTranscodeConfiguration): Promise<TranscodeResult> {
         return new Promise((res, rej) => {
             this._CreateWorkerAsync().then(() => {
                 var actionId = this._actionId++;
@@ -172,10 +170,7 @@ export class BasisTools {
                     }
                 };
                 this._Worker!.addEventListener("message", messageHandler);
-
-                const dataViewCopy = new Uint8Array(dataView.byteLength);
-                dataViewCopy.set(new Uint8Array(dataView.buffer, dataView.byteOffset, dataView.byteLength));
-                this._Worker!.postMessage({action: "transcode", id: actionId, imageData: dataViewCopy, config: config, ignoreSupportedFormats: this._IgnoreSupportedFormats}, [dataViewCopy.buffer]);
+                this._Worker!.postMessage({action: "transcode", id: actionId, imageData: imageData, config: config, ignoreSupportedFormats: this._IgnoreSupportedFormats}, [imageData]);
             });
         });
     }
@@ -279,7 +274,7 @@ function workerFunc(): void {
             // Transcode the basis image and return the resulting pixels
             var config: BasisTranscodeConfiguration = event.data.config;
             var imgData = event.data.imageData;
-            var loadedFile = new Module.BasisFile(imgData);
+            var loadedFile = new Module.BasisFile(new Uint8Array(imgData));
             var fileInfo = GetFileInfo(loadedFile);
             var format = event.data.ignoreSupportedFormats ? null : GetSupportedTranscodeFormat(event.data.config, fileInfo);
 
@@ -387,7 +382,7 @@ function workerFunc(): void {
         return info;
     }
 
-    function TranscodeLevel(loadedFile: any, imageIndex: number, levelIndex: number, format: number, convertToRgb565: boolean): any {
+    function TranscodeLevel(loadedFile: any, imageIndex: number, levelIndex: number, format: number, convertToRgb565: boolean): Nullable<Uint16Array> {
         var dstSize = loadedFile.getImageTranscodedSizeInBytes(imageIndex, levelIndex, format);
         var dst = new Uint8Array(dstSize);
         if (!loadedFile.transcodeImage(dst, imageIndex, levelIndex, format, 1, 0)) {
@@ -413,7 +408,7 @@ function workerFunc(): void {
      * @param  height aligned height of the image
      * @return the converted pixels
      */
-    function ConvertDxtToRgb565(src: Uint8Array, srcByteOffset: number, width: number, height: number): any {
+    function ConvertDxtToRgb565(src: Uint8Array, srcByteOffset: number, width: number, height: number): Uint16Array {
         var c = new Uint16Array(4);
         var dst = new Uint16Array(width * height);
 

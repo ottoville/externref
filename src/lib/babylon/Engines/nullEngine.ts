@@ -6,6 +6,7 @@ import { RenderTargetCreationOptions } from "../Materials/Textures/renderTargetC
 import { VertexBuffer } from "../Meshes/buffer";
 import { InternalTexture, InternalTextureSource } from "../Materials/Textures/internalTexture";
 import { Effect } from "../Materials/effect";
+import { _TimeToken } from "../Instrumentation/timeToken";
 import { Constants } from "./constants";
 import { IPipelineContext } from './IPipelineContext';
 import { DataBuffer } from '../Meshes/dataBuffer';
@@ -81,8 +82,6 @@ export class NullEngine extends Engine {
 
     public constructor(options: NullEngineOptions = new NullEngineOptions()) {
         super(null);
-
-        Engine.Instances.push(this);
 
         if (options.deterministicLockstep === undefined) {
             options.deterministicLockstep = false;
@@ -648,6 +647,7 @@ export class NullEngine extends Engine {
      * @param requiredWidth The width of the target to render to
      * @param requiredHeight The height of the target to render to
      * @param forceFullscreenViewport Forces the viewport to be the entire texture/screen if true
+     * @param depthStencilTexture The depth stencil texture to use to render
      * @param lodLevel defines le lod level to bind to the frame buffer
      */
     public bindFramebuffer(texture: InternalTexture, faceIndex?: number, requiredWidth?: number, requiredHeight?: number, forceFullscreenViewport?: boolean): void {

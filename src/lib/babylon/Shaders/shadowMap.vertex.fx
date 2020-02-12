@@ -21,10 +21,6 @@ uniform vec2 depthValues;
 
 varying float vDepthMetric;
 
-#ifdef USEDISTANCE
-varying vec3 vPositionW;
-#endif
-
 #ifdef ALPHATEST
 varying vec2 vUV;
 uniform mat4 diffuseMatrix;
@@ -35,12 +31,6 @@ attribute vec2 uv;
 attribute vec2 uv2;
 #endif
 #endif
-
-#ifdef DEPTHCLAMP
-varying float z;
-#endif
-
-#include<clipPlaneVertexDeclaration>
 
 void main(void)
 {
@@ -80,26 +70,16 @@ vec4 worldPos = finalWorld * vec4(positionUpdated, 1.0);
     worldPos.xyz -= worldNor * normalBias;
 #endif
 
-#ifdef USEDISTANCE
-vPositionW = worldPos.xyz;
-#endif
-
 // Projection.
 gl_Position = viewProjection * worldPos;
-
 
 #ifdef DEPTHTEXTURE
     // Depth texture Linear bias.
     gl_Position.z += biasAndScale.x * gl_Position.w;
 #endif
 
-#ifdef DEPTHCLAMP
-    z = gl_Position.z;
-    gl_Position.z = 0.0;
-#elif !defined(USEDISTANCE)
     // Color Texture Linear bias.
     vDepthMetric = ((gl_Position.z + depthValues.x) / (depthValues.y)) + biasAndScale.x;
-#endif
 
 #ifdef ALPHATEST
     #ifdef UV1
@@ -109,7 +89,4 @@ gl_Position = viewProjection * worldPos;
         vUV = vec2(diffuseMatrix * vec4(uv2, 1.0, 0.0));
     #endif
 #endif
-
-#include<clipPlaneVertex>
-
 }

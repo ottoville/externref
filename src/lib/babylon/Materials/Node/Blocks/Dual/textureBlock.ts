@@ -12,6 +12,7 @@ import { Nullable } from '../../../../types';
 import { _TypeStore } from '../../../../Misc/typeStore';
 import { Texture } from '../../../Textures/texture';
 import { Scene } from '../../../../scene';
+import { Constants } from '../../../../Engines/constants';
 
 import "../../../../Shaders/ShadersInclude/helperFunctions";
 
@@ -33,11 +34,6 @@ export class TextureBlock extends NodeMaterialBlock {
      * Gets or sets the texture associated with the node
      */
     public texture: Nullable<Texture>;
-
-    /**
-     * Gets or sets a boolean indicating if content needs to be converted to gamma space
-     */
-    public convertToGammaSpace = false;
 
     /**
      * Create a new TextureBlock
@@ -188,15 +184,27 @@ export class TextureBlock extends NodeMaterialBlock {
             return;
         }
 
-        defines.setValue(this._linearDefineName, this.convertToGammaSpace);
+        defines.setValue(this._linearDefineName, !this.texture.gammaSpace);
         if (this._isMixed) {
-            if (!this.texture.getTextureMatrix().isIdentityAs3x2()) {
+            if (!this.texture.getTextureMatrix(this._getTextureBase(mesh as Mesh)).isIdentityAs3x2()) {
                 defines.setValue(this._defineName, true);
             } else {
                 defines.setValue(this._defineName, false);
                 defines.setValue(this._mainUVDefineName, true);
             }
         }
+    }
+
+    private _getTextureBase(mesh?: Mesh) {
+        let base = 1;
+        // By default textures loaded by the node material are loaded with invertY set to false. But for regular meshes (created by the MeshBuilder) we need to switch it
+        if (this.texture && mesh && (mesh.overrideMaterialSideOrientation === null || mesh.overrideMaterialSideOrientation === Constants.MATERIAL_CounterClockWiseSideOrientation)) {
+            if (!this.texture.invertY) {
+                base = -1;
+            }
+        }
+
+        return base;
     }
 
     public isReady() {
@@ -214,7 +222,7 @@ export class TextureBlock extends NodeMaterialBlock {
 
         if (this._isMixed) {
             effect.setFloat(this._textureInfoName, this.texture.level);
-            effect.setMatrix(this._textureTransformName, this.texture.getTextureMatrix());
+            effect.setMatrix(this._textureTransformName, this.texture.getTextureMatrix(this._getTextureBase(mesh)));
         }
         effect.setTexture(this._samplerName, this.texture);
     }
@@ -250,7 +258,8 @@ export class TextureBlock extends NodeMaterialBlock {
 
         state.compilationString += `#ifdef ${this._defineName}\r\n`;
         state.compilationString += `${this._transformedUVName} = vec2(${this._textureTransformName} * vec4(${uvInput.associatedVariableName}.xy, 1.0, 0.0));\r\n`;
-        state.compilationString += `#elif defined(${this._mainUVDefineName})\r\n`;
+        state.compilationString += `#endif\r\n`;
+        state.compilationString += `#ifdef ${this._mainUVDefineName}\r\n`;
         state.compilationString += `${this._mainUVName} = ${uvInput.associatedVariableName}.xy;\r\n`;
         state.compilationString += `#endif\r\n`;
 
@@ -286,7 +295,8 @@ export class TextureBlock extends NodeMaterialBlock {
 
         state.compilationString += `#ifdef ${this._defineName}\r\n`;
         state.compilationString += `vec4 ${this._tempTextureRead} = texture2D(${this._samplerName}, ${this._transformedUVName});\r\n`;
-        state.compilationString += `#elif defined(${this._mainUVDefineName})\r\n`;
+        state.compilationString += `#endif\r\n`;
+        state.compilationString += `#ifdef ${this._mainUVDefineName}\r\n`;
         state.compilationString += `vec4 ${this._tempTextureRead} = texture2D(${this._samplerName}, ${this._mainUVName});\r\n`;
         state.compilationString += `#endif\r\n`;
     }
@@ -386,7 +396,7 @@ export class TextureBlock extends NodeMaterialBlock {
         codeString += `${this._codeVariableName}.texture.vOffset = ${this.texture.vOffset};\r\n`;
         codeString += `${this._codeVariableName}.texture.uScale = ${this.texture.uScale};\r\n`;
         codeString += `${this._codeVariableName}.texture.vScale = ${this.texture.vScale};\r\n`;
-        codeString += `${this._codeVariableName}.convertToGammaSpace = ${this.convertToGammaSpace};\r\n`;
+        codeString += `${this._codeVariableName}.texture.gammaSpace = ${this.texture.gammaSpace};\r\n`;
 
         return codeString;
     }
@@ -394,7 +404,6 @@ export class TextureBlock extends NodeMaterialBlock {
     public serialize(): any {
         let serializationObject = super.serialize();
 
-        serializationObject.convertToGammaSpace = this.convertToGammaSpace;
         if (this.texture) {
             serializationObject.texture = this.texture.serialize();
         }
@@ -404,8 +413,6 @@ export class TextureBlock extends NodeMaterialBlock {
 
     public _deserialize(serializationObject: any, scene: Scene, rootUrl: string) {
         super._deserialize(serializationObject, scene, rootUrl);
-
-        this.convertToGammaSpace = serializationObject.convertToGammaSpace;
 
         if (serializationObject.texture) {
             rootUrl = serializationObject.texture.url.indexOf("data:") === 0 ? "" : rootUrl;

@@ -78,10 +78,6 @@ export class Camera extends Node {
      */
     public static readonly RIG_MODE_STEREOSCOPIC_OVERUNDER = 13;
     /**
-     * Defines that both eyes of the camera will be rendered on successive lines interlaced for passive 3d monitors.
-     */
-    public static readonly RIG_MODE_STEREOSCOPIC_INTERLACED = 14;
-    /**
      * Defines that both eyes of the camera should be renderered in a VR mode (carbox).
      */
     public static readonly RIG_MODE_VR = 20;
@@ -190,7 +186,7 @@ export class Camera extends Node {
     public mode = Camera.PERSPECTIVE_CAMERA;
 
     /**
-     * Define whether the camera is intermediate.
+     * Define wether the camera is intermediate.
      * This is useful to not present the output directly to the screen in case of rig without post process for instance
      */
     public isIntermediate = false;
@@ -265,17 +261,6 @@ export class Camera extends Node {
      * Observable triggered when reset has been called and applied to the camera.
      */
     public onRestoreStateObservable = new Observable<Camera>();
-
-    /**
-     * Is this camera a part of a rig system?
-     */
-    public isRigCamera: boolean = false;
-
-    /**
-     * If isRigCamera set to true this will be set with the parent camera.
-     * The parent camera is not (!) necessarily the .parent of this camera (like in the case of XR)
-     */
-    public rigParent?: Camera;
 
     /** @hidden */
     public _cameraRigParams: any;
@@ -411,7 +396,7 @@ export class Camera extends Node {
     }
 
     /**
-     * Check whether a mesh is part of the current active mesh list of the camera
+     * Check wether a mesh is part of the current active mesh list of the camera
      * @param mesh Defines the mesh to check
      * @returns true if active, false otherwise
      */
@@ -1018,8 +1003,7 @@ export class Camera extends Node {
             case Camera.RIG_MODE_STEREOSCOPIC_SIDEBYSIDE_PARALLEL:
             case Camera.RIG_MODE_STEREOSCOPIC_SIDEBYSIDE_CROSSEYED:
             case Camera.RIG_MODE_STEREOSCOPIC_OVERUNDER:
-            case Camera.RIG_MODE_STEREOSCOPIC_INTERLACED:
-                    Camera._setStereoscopicRigMode(this);
+                Camera._setStereoscopicRigMode(this);
                 break;
             case Camera.RIG_MODE_VR:
                 Camera._setVRRigMode(this, rigParams);

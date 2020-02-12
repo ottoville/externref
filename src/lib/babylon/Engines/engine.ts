@@ -2,6 +2,7 @@ import { Observable } from "../Misc/observable";
 import { Nullable, IndicesArray, DataArray } from "../types";
 import { Scene } from "../scene";
 import { InternalTexture } from "../Materials/Textures/internalTexture";
+import { _TimeToken } from "../Instrumentation/timeToken";
 import { IAudioEngine } from "../Audio/audioEngine";
 import { IOfflineProvider } from "../Offline/IOfflineProvider";
 import { ILoadingScreen } from "../Loading/loadingScreen";
@@ -421,9 +422,9 @@ export class Engine extends ThinEngine {
     private _rescalePostProcess: PostProcess;
 
     // Deterministic lockstepMaxSteps
-    private _deterministicLockstep: boolean = false;
-    private _lockstepMaxSteps: number = 4;
-    private _timeStep: number = 1 / 60;
+    protected _deterministicLockstep: boolean = false;
+    protected _lockstepMaxSteps: number = 4;
+    protected _timeStep: number = 1 / 60;
 
     protected get _supportsHardwareTextureRescaling() {
         return !!Engine._RescalePostProcessFactory;
@@ -435,9 +436,6 @@ export class Engine extends ThinEngine {
 
     /** @hidden */
     public _drawCalls = new PerfCounter();
-
-    /** Gets or sets the tab index to set to the rendering canvas. 1 is the minimum value to set to be able to capture keyboard events */
-    public canvasTabIndex = 1;
 
     /**
      * Turn this value on if you want to pause FPS computation when in background
@@ -494,47 +492,13 @@ export class Engine extends ThinEngine {
         if ((<any>canvasOrContext).getContext) {
             let canvas = <HTMLCanvasElement>canvasOrContext;
 
-            this._onCanvasFocus = () => {
-                this.onCanvasFocusObservable.notifyObservers(this);
-            };
-
-            this._onCanvasBlur = () => {
-                this.onCanvasBlurObservable.notifyObservers(this);
-            };
-
-            canvas.addEventListener("focus", this._onCanvasFocus);
-            canvas.addEventListener("blur", this._onCanvasBlur);
-
-            this._onBlur = () => {
-                if (this.disablePerformanceMonitorInBackground) {
-                    this._performanceMonitor.disable();
-                }
-                this._windowIsBackground = true;
-            };
-
-            this._onFocus = () => {
-                if (this.disablePerformanceMonitorInBackground) {
-                    this._performanceMonitor.enable();
-                }
-                this._windowIsBackground = false;
-            };
-
-            this._onCanvasPointerOut = (ev) => {
-                this.onCanvasPointerOutObservable.notifyObservers(ev);
-            };
-
-            canvas.addEventListener("pointerout", this._onCanvasPointerOut);
+            this._sharedInit(canvas, !!options.doNotHandleTouchAction, options.audioEngine!);
 
             if (DomManagement.IsWindowObjectExist()) {
-                let hostWindow = this.getHostWindow()!;
-                hostWindow.addEventListener("blur", this._onBlur);
-                hostWindow.addEventListener("focus", this._onFocus);
-
-                let anyDoc = document as any;
+                const anyDoc = document as any;
 
                 // Fullscreen
                 this._onFullscreenChange = () => {
-
                     if (anyDoc.fullscreen !== undefined) {
                         this.isFullscreen = anyDoc.fullscreen;
                     } else if (anyDoc.mozFullScreen !== undefined) {
@@ -580,10 +544,6 @@ export class Engine extends ThinEngine {
 
             this.enableOfflineSupport = Engine.OfflineProviderFactory !== undefined;
 
-            if (!options.doNotHandleTouchAction) {
-                this._disableTouchAction();
-            }
-
             this._deterministicLockstep = !!options.deterministicLockstep;
             this._lockstepMaxSteps = options.lockstepMaxSteps || 0;
             this._timeStep = options.timeStep || 1 / 60;
@@ -594,6 +554,64 @@ export class Engine extends ThinEngine {
         this._prepareVRComponent();
         if (options.autoEnableWebVR) {
             this.initWebVR();
+        }
+    }
+
+    /**
+     * Shared initialization across engines types.
+     * @param canvas The canvas associated with this instance of the engine.
+     * @param doNotHandleTouchAction Defines that engine should ignore modifying touch action attribute and style
+     * @param audioEngine Defines if an audio engine should be created by default
+     */
+    protected _sharedInit(canvas: HTMLCanvasElement, doNotHandleTouchAction: boolean, audioEngine: boolean) {
+        super._sharedInit(canvas, doNotHandleTouchAction, audioEngine);
+
+        this._onCanvasFocus = () => {
+            this.onCanvasFocusObservable.notifyObservers(this);
+        };
+
+        this._onCanvasBlur = () => {
+            this.onCanvasBlurObservable.notifyObservers(this);
+        };
+
+        canvas.addEventListener("focus", this._onCanvasFocus);
+        canvas.addEventListener("blur", this._onCanvasBlur);
+
+        this._onBlur = () => {
+            if (this.disablePerformanceMonitorInBackground) {
+                this._performanceMonitor.disable();
+            }
+            this._windowIsBackground = true;
+        };
+
+        this._onFocus = () => {
+            if (this.disablePerformanceMonitorInBackground) {
+                this._performanceMonitor.enable();
+            }
+            this._windowIsBackground = false;
+        };
+
+        this._onCanvasPointerOut = (ev) => {
+            this.onCanvasPointerOutObservable.notifyObservers(ev);
+        };
+
+        if (DomManagement.IsWindowObjectExist()) {
+            const hostWindow = this.getHostWindow();
+            if (hostWindow) {
+                hostWindow.addEventListener("blur", this._onBlur);
+                hostWindow.addEventListener("focus", this._onFocus);
+            }
+        }
+
+        canvas.addEventListener("pointerout", this._onCanvasPointerOut);
+
+        if (!doNotHandleTouchAction) {
+            this._disableTouchAction();
+        }
+
+        // Create Audio Engine if needed.
+        if (!Engine.audioEngine && audioEngine && Engine.AudioEngineFactory) {
+            Engine.audioEngine = Engine.AudioEngineFactory(this.getRenderingCanvas());
         }
     }
 
@@ -1632,6 +1650,40 @@ export class Engine extends ThinEngine {
     }
 
     /**
+     * Sets the frame buffer Depth / Stencil attachement of the render target to the defined depth stencil texture.
+     * @param renderTarget The render target to set the frame buffer for
+     */
+    public setFrameBufferDepthStencilTexture(renderTarget: RenderTargetTexture): void {
+        // Create the framebuffer
+        var internalTexture = renderTarget.getInternalTexture();
+        if (!internalTexture || !internalTexture._framebuffer || !renderTarget.depthStencilTexture) {
+            return;
+        }
+
+        var gl = this._gl;
+        var depthStencilTexture = renderTarget.depthStencilTexture;
+
+        this._bindUnboundFramebuffer(internalTexture._framebuffer);
+        if (depthStencilTexture.isCube) {
+            if (depthStencilTexture._generateStencilBuffer) {
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_CUBE_MAP_POSITIVE_X, depthStencilTexture._webGLTexture, 0);
+            }
+            else {
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_CUBE_MAP_POSITIVE_X, depthStencilTexture._webGLTexture, 0);
+            }
+        }
+        else {
+            if (depthStencilTexture._generateStencilBuffer) {
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, depthStencilTexture._webGLTexture, 0);
+            }
+            else {
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthStencilTexture._webGLTexture, 0);
+            }
+        }
+        this._bindUnboundFramebuffer(null);
+    }
+
+    /**
      * Update a dynamic index buffer
      * @param indexBuffer defines the target index buffer
      * @param indices defines the data to update
@@ -1719,6 +1771,7 @@ export class Engine extends ThinEngine {
         texture.samples = samples;
         texture._depthStencilBuffer = this._setupFramebufferDepthAttachments(texture._generateStencilBuffer, texture._generateDepthBuffer, texture.width, texture.height, samples);
 
+        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
         this._bindUnboundFramebuffer(null);
 
         return samples;
@@ -1796,58 +1849,6 @@ export class Engine extends ThinEngine {
      */
     public deleteInstancesBuffer(buffer: WebGLBuffer): void {
         this._gl.deleteBuffer(buffer);
-    }
-
-    private _clientWaitAsync(sync: WebGLSync, flags = 0, interval_ms = 10) {
-        let gl = <WebGL2RenderingContext>(this._gl as any);
-        return new Promise((resolve, reject) => {
-            let check = () => {
-                const res = gl.clientWaitSync(sync, flags, 0);
-                if (res == gl.WAIT_FAILED) {
-                reject();
-                return;
-                }
-                if (res == gl.TIMEOUT_EXPIRED) {
-                setTimeout(check, interval_ms);
-                return;
-                }
-                resolve();
-            };
-
-            check();
-        });
-    }
-
-    /** @hidden */
-    public _readPixelsAsync(x: number, y: number, w: number, h: number, format: number, type: number, outputBuffer: ArrayBufferView) {
-        if (this._webGLVersion < 2) {
-            throw new Error("_readPixelsAsync only work on WebGL2+");
-        }
-
-        let gl = <WebGL2RenderingContext>(this._gl as any);
-        const buf = gl.createBuffer();
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
-        gl.bufferData(gl.PIXEL_PACK_BUFFER, outputBuffer.byteLength, gl.STREAM_READ);
-        gl.readPixels(x, y, w, h, format, type, 0);
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-
-        const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-        if (!sync) {
-            return null;
-        }
-
-        gl.flush();
-
-        return this._clientWaitAsync(sync, 0, 10).then(() => {
-            gl.deleteSync(sync);
-
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
-            gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, outputBuffer);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-            gl.deleteBuffer(buf);
-
-            return outputBuffer;
-        });
     }
 
     /** @hidden */

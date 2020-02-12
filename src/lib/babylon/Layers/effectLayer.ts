@@ -14,6 +14,7 @@ import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { PostProcess } from "../PostProcesses/postProcess";
+import { _TimeToken } from "../Instrumentation/timeToken";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { Texture } from "../Materials/Textures/texture";
 import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
@@ -100,7 +101,7 @@ export abstract class EffectLayer {
     public neutralColor: Color4 = new Color4();
 
     /**
-     * Specifies whether the highlight layer is enabled or not.
+     * Specifies wether the highlight layer is enabled or not.
      */
     @serialize()
     public isEnabled: boolean = true;
@@ -196,13 +197,13 @@ export abstract class EffectLayer {
     /**
      * Checks for the readiness of the element composing the layer.
      * @param subMesh the mesh to check for
-     * @param useInstances specify whether or not to use instances to render the mesh
+     * @param useInstances specify wether or not to use instances to render the mesh
      * @return true if ready otherwise, false
      */
     public abstract isReady(subMesh: SubMesh, useInstances: boolean): boolean;
 
     /**
-     * Returns whether or nood the layer needs stencil enabled during the mesh rendering.
+     * Returns wether or nood the layer needs stencil enabled during the mesh rendering.
      * @returns true if the effect requires stencil during the main canvas render pass.
      */
     public abstract needStencil(): boolean;
@@ -387,7 +388,7 @@ export abstract class EffectLayer {
     /**
      * Checks for the readiness of the element composing the layer.
      * @param subMesh the mesh to check for
-     * @param useInstances specify whether or not to use instances to render the mesh
+     * @param useInstances specify wether or not to use instances to render the mesh
      * @param emissiveTexture the associated emissive texture used to generate the glow
      * @return true if ready otherwise, false
      */
@@ -760,7 +761,7 @@ export abstract class EffectLayer {
             }
 
             // Draw
-            mesh._processRendering(subMesh, this._effectLayerMapGenerationEffect, material.fillMode, batch, hardwareInstancedRendering,
+            mesh._processRendering(subMesh, this._effectLayerMapGenerationEffect, Material.TriangleFillMode, batch, hardwareInstancedRendering,
                 (isInstance, world) => this._effectLayerMapGenerationEffect.setMatrix("world", world));
         } else {
             // Need to reset refresh rate of the main map
@@ -771,7 +772,7 @@ export abstract class EffectLayer {
     }
 
     /**
-     * Defines whether the current material of the mesh should be use to render the effect.
+     * Defines wether the current material of the mesh should be use to render the effect.
      * @param mesh defines the current mesh to render
      */
     protected _useMeshMaterial(mesh: AbstractMesh): boolean {

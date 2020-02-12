@@ -92,7 +92,7 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
 window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
                 
-        let EngineModule = await import('./lib/babylon/Engines/engine.js');
+        let EngineModule = await import('./lib/babylon/Engines/webgpuEngine.js');
         blazor.invokeMethod('setProgress', 2);
         let EffectModule = await import('./lib/babylon/Materials/effect.js');
         blazor.invokeMethod('setProgress', 4);
@@ -108,9 +108,9 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             return;
         canvas.dataset.inited = "true";
         
-        var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
-        //var engine = new BABYLON.WebGPUEngine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
-       // await engine.initAsync();
+       // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
+        var engine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas);
+        await engine.initAsync();
         engine.createEffect = function (baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | ThinEngine, samplers ?: string[], defines ?: string,
             fallbacks ?: IEffectFallbacks,
             onCompiled?: Nullable<(effect: Effect) => void>, onError?: Nullable<(effect: Effect, errors: string) => void>, indexParameters?: any): Effect {

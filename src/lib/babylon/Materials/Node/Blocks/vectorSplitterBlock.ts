@@ -27,8 +27,6 @@ export class VectorSplitterBlock extends NodeMaterialBlock {
         this.registerOutput("y", NodeMaterialBlockConnectionPointTypes.Float);
         this.registerOutput("z", NodeMaterialBlockConnectionPointTypes.Float);
         this.registerOutput("w", NodeMaterialBlockConnectionPointTypes.Float);
-
-        this.inputsAreExclusive = true;
     }
 
     /**

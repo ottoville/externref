@@ -432,8 +432,6 @@ export class TargetCamera extends Camera {
     public createRigCamera(name: string, cameraIndex: number): Nullable<Camera> {
         if (this.cameraRigMode !== Camera.RIG_MODE_NONE) {
             var rigCamera = new TargetCamera(name, this.position.clone(), this.getScene());
-            rigCamera.isRigCamera = true;
-            rigCamera.rigParent = this;
             if (this.cameraRigMode === Camera.RIG_MODE_VR || this.cameraRigMode === Camera.RIG_MODE_WEBVR) {
                 if (!this.rotationQuaternion) {
                     this.rotationQuaternion = new Quaternion();
@@ -460,7 +458,6 @@ export class TargetCamera extends Camera {
             case Camera.RIG_MODE_STEREOSCOPIC_SIDEBYSIDE_PARALLEL:
             case Camera.RIG_MODE_STEREOSCOPIC_SIDEBYSIDE_CROSSEYED:
             case Camera.RIG_MODE_STEREOSCOPIC_OVERUNDER:
-            case Camera.RIG_MODE_STEREOSCOPIC_INTERLACED:
                 //provisionnaly using _cameraRigParams.stereoHalfAngle instead of calculations based on _cameraRigParams.interaxialDistance:
                 var leftSign = (this.cameraRigMode === Camera.RIG_MODE_STEREOSCOPIC_SIDEBYSIDE_CROSSEYED) ? 1 : -1;
                 var rightSign = (this.cameraRigMode === Camera.RIG_MODE_STEREOSCOPIC_SIDEBYSIDE_CROSSEYED) ? -1 : 1;

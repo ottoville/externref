@@ -11,6 +11,7 @@ import { Texture } from "../Materials/Textures/texture";
 import { MirrorTexture } from "../Materials/Textures/mirrorTexture";
 import { CubeTexture } from "../Materials/Textures/cubeTexture";
 import { BackgroundMaterial } from "../Materials/Background/backgroundMaterial";
+import { _TimeToken } from "../Instrumentation/timeToken";
 import { Constants } from "../Engines/constants";
 
 import "../Meshes/Builders/planeBuilder";
@@ -25,7 +26,7 @@ import { Plane } from '../Maths/math.plane';
  */
 export interface IEnvironmentHelperOptions {
     /**
-     * Specifies whether or not to create a ground.
+     * Specifies wether or not to create a ground.
      * True by default.
      */
     createGround: boolean;
@@ -106,7 +107,7 @@ export interface IEnvironmentHelperOptions {
     groundYBias: number;
 
     /**
-     * Specifies whether or not to create a skybox.
+     * Specifies wether or not to create a skybox.
      * True by default.
      */
     createSkybox: boolean;
@@ -172,7 +173,7 @@ export interface IEnvironmentHelperOptions {
     cameraContrast: number;
 
     /**
-     * Specifies whether or not tonemapping should be enabled in the scene.
+     * Specifies wether or not tonemapping should be enabled in the scene.
      * true by default if setupImageProcessing is true.
      */
     toneMappingEnabled: boolean;
