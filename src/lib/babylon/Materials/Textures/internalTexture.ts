@@ -424,7 +424,6 @@ export class InternalTexture {
                 return;
 
             case InternalTextureSource.CubePrefiltered:
-                //@ts-ignore
                 proxy = this._engine.createPrefilteredCubeTexture(this.url, null, this._lodGenerationScale, this._lodGenerationOffset, (proxy) => {
                     if (proxy) {
                         proxy._swapAndDie(this);

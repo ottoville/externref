@@ -238,7 +238,7 @@
         "signature": "68f9707e860b50a84ab1f346ba4efd5ee2318749842cdd2dacbed290c99e8b1c"
       },
       "./lib/babylon/maths/math.path.ts": {
-        "version": "b5162a3bfbe14d7429ed5f6d252cc00ede2a169ae32b298cd20747f82a3319f8",
+        "version": "5ff65239b08d858f0f78a0c170ad475e528c39b6fb9016be1f469db8c3c49eae",
         "signature": "fe8b672a0a8f57ec774250833d1e1e883478148bf386671fa1ffc8aba64f60cb"
       },
       "./lib/babylon/animations/easing.ts": {
@@ -390,7 +390,7 @@
         "signature": "870b830384a7a5bc2d26f7b9b7bbf7b9e288fa4b8a58aeb36f63921955d940be"
       },
       "./lib/babylon/materials/textures/internaltexture.ts": {
-        "version": "37fc29813b3f78c6bda56c716b72d86c11429211cf04c9af8771871d33194718",
+        "version": "11c70cb70e473dc4c621876fb78492a769ab3d345568a4262e86b77a17fb726c",
         "signature": "070e48f14ae40443e3799914fdcfe7c4d7ff61c622f4f86641ee043b056a73a5"
       },
       "./lib/babylon/materials/textures/internaltextureloader.ts": {
@@ -466,7 +466,7 @@
         "signature": "8e5d0e66113df3cee60d762c14c9b1971280002addb143dacdb7ca4a00b2adbf"
       },
       "./lib/babylon/materials/textures/cubetexture.ts": {
-        "version": "c1017b6c0afbde28c1eec85c18fb2906c5cd6d39ef7fc74ad79f13a497aeae3d",
+        "version": "ac34603b9110a2da6139cdc581e87d043ba770ae2d186122738f46b6c6096d2a",
         "signature": "b2fd9909d43290af2b06270279d57ad22c168e52c0b65e5c8b44b8dab9b7bc40"
       },
       "./lib/babylon/materials/materialdefines.ts": {
@@ -622,7 +622,7 @@
         "signature": "447de7173620a9127b6e873db4b0cd061b196c6109b93dfabd2af21c0ec1a893"
       },
       "./lib/babylon/particles/particlesystem.ts": {
-        "version": "4747cc7e2bd1eb6952ce22655a28927a2513c43f635049c2994f3a27645121e8",
+        "version": "9368b95f02d987f33946bb4db6782c3f01ed064b8c28861733f176d8d7b69066",
         "signature": "3e00558d4ceda735c6038a9f0f73ad66338f06de9e98a275536efae811509f72"
       },
       "./lib/babylon/particles/particle.ts": {
@@ -686,8 +686,8 @@
         "signature": "0aac9e1b0e1f5c265d9974bfa3afe297e3ea54aad35b55529151082719623446"
       },
       "./lib/babylon/sprites/spritemanager.ts": {
-        "version": "5748e2a1cedf97eaae14011085bbcd2cda1f8028acc7e1ff3af3edeaf4e846e6",
-        "signature": "8ce49ab8f0af8f618c176130eaabcb4176ed21188d6e0a8ce0abed4ca169bea7"
+        "version": "4a2ea0aed645586cf97b53072fa02881063469d3ef5a1ef4d976b35bbdbcf3c3",
+        "signature": "b86119b17267d1d9e7b2b6cbf6546de98610f557ce294d51c7711b3b3f8c2896"
       },
       "./lib/babylon/sprites/sprite.ts": {
         "version": "966777e69f1697019d696d520bfb76998d037074e96bb3d5fdb575a82114a349",
@@ -778,7 +778,7 @@
         "signature": "56635c04fb6eb466418e134158a3672ff03709bc081f5ea01a04e5cc0682ae50"
       },
       "./lib/babylon/materials/shadermaterial.ts": {
-        "version": "ae594c66e2128367a34849a89eb60ecca54ef82f3d746bf8652661c26820d9be",
+        "version": "913f234551d7cff79619a75a85f0a9651c9baf159572f5e125d76f23ace68dac",
         "signature": "82e650126f930fab90519694f417597bab2a245a4c71b303aaad9e0a9cea8168"
       },
       "./lib/babylon/meshes/linesmesh.ts": {
@@ -786,7 +786,7 @@
         "signature": "a643a7ec78ddc60f5f646498106ad8567b0089cc9b026e0042286b384744e0ce"
       },
       "./lib/babylon/rendering/edgesrenderer.ts": {
-        "version": "f828b9ec63dcff1cddd91f1dcf10f9ade31f4ebd5e38bc3a79794536e814a8e9",
+        "version": "e83df3e2b737f5883f580367745cb35d9b03215fc797c47261193d8af4b24559",
         "signature": "e4f295af71af1470562dd6ac258ace8923378e36222f97f6d86cdea4d66ed7e3"
       },
       "./lib/babylon/rendering/renderinggroup.ts": {
@@ -838,7 +838,7 @@
         "signature": "e16b58d380ec07306fd83668ba76d5980a3ed3c241fae9ffb180a0b9ed0e0713"
       },
       "./lib/babylon/engines/thinengine.ts": {
-        "version": "19e0cae621ba4edfbb8267c51660a14b800e3f937e2e1db42a55a5b50710958a",
+        "version": "19ff2ae5a48929f2c2c27b2d6eb2b74be3321c70266858d1af8348f63dda3438",
         "signature": "0112dc40e6de79eb99ff9061ae94d22f369bfa6584b2404f2997d204cc2ce26c"
       },
       "./lib/babylon/misc/filetools.ts": {
@@ -922,7 +922,7 @@
         "signature": "595ef0fcf2304cd189f9fd1a89593f06f472563015b460bb8f763a2cafd8126e"
       },
       "./lib/babylon/cameras/camera.ts": {
-        "version": "4b66f2df815c816764f956478c5401d69a1dee29b6f5fb0af6229a92f9dcb62d",
+        "version": "da0089a35b848b6a163272b21bb92237f202e9a3e27c5b57d57dea5be4da5a9f",
         "signature": "ae3bbd21bd0dbd99a25069590802c0035077859e36a3e90aff0f46cff353178c"
       },
       "./lib/babylon/misc/decorators.ts": {
@@ -986,8 +986,8 @@
         "signature": "2a4d69f9f6b3be253bf8afcf4554522e3cdd34d6cb795fb53200bbef4d1a8c85"
       },
       "./lib/babylon/engines/engine.ts": {
-        "version": "8c38620aa4c931949d9a2a3260039b327cdade7632659fcc688437e3e205d78a",
-        "signature": "0b634399744ef9549db89899931046eeafecfb00d9c51344d566bdb8ef43e6c5"
+        "version": "b3df307323816f14944d37d8ad1f37650e749765dd593169b9648965490793a7",
+        "signature": "2f4b5a6b70d5b3bf5f8d70388f84731c1d35db59cce9e599d52189161ddf422f"
       },
       "./lib/babylon/engines/enginestore.ts": {
         "version": "e1ac1bb3f4d26a71ee222ea19c8736ca086fe3d5f0ae6a785c3011dcc41fc4a5",
@@ -1106,11 +1106,11 @@
         "signature": "16619903e0a26ef7ce9b2cdb412e7c2020b918d525da175cbe5b9c2df85d16ab"
       },
       "./lib/babylon/behaviors/cameras/framingbehavior.ts": {
-        "version": "dd5b0447a778095e5d75ca78d25e00c650b9cab934a2c1ad288a198d3d993c19",
-        "signature": "d65b8de7dc9d3a083b6a5ae8a086c0ce373475d577ec789fb9f36e169e94e248"
+        "version": "a0d8422fcc691ed3059b5c4431f55d4f275b5b3df89a77065959025e22dfefe8",
+        "signature": "bc0d214acabd2c0f7b7c20f1b2d6fbd5e8f8a5e36555a737cd6790543cdb8cd9"
       },
       "./lib/babylon/cameras/inputs/basecamerapointersinput.ts": {
-        "version": "7c2d1721029b808eda99365ff7cef3e97e460dfa44fcb83c5fd9f0bbc7898087",
+        "version": "80fea302e7c4a9f7c7e7085d7c0ed0ff60b4163d7b15e6f7dd5147adf6eb77e7",
         "signature": "0c8895e185fa5b7afb2f581965f62e0182d007565bae7226f2c5e8583fabb492"
       },
       "./lib/babylon/cameras/inputs/arcrotatecamerapointersinput.ts": {
@@ -1222,7 +1222,7 @@
         "signature": "0151f7b11bedcd9773845bdadafd2eef0487c52de5cc7e54d5e7d7eab1310055"
       },
       "./lib/babylon/cameras/followcamerainputsmanager.ts": {
-        "version": "a10c433ca054881a2453cfdd83fdaae228f1dfef7a2fb2e9a05338fbced55fee",
+        "version": "a397116f8a532926a438fba1349d9bedcf6810b3d78e185011947d39cfdbeb0a",
         "signature": "2f46127b625d2bf4d8f13668ab2a27aa6dea7b4e472116f402eea772ea047ac7"
       },
       "./lib/babylon/cameras/followcamera.ts": {
@@ -1230,7 +1230,7 @@
         "signature": "526a957ce5bdddb381722ff070c4276c49ac6866892c5eff5f51199019c4f33d"
       },
       "./lib/babylon/cameras/inputs/followcamerakeyboardmoveinput.ts": {
-        "version": "1544d911db81e3d6ce27b43e1a7ef5e12691af975178ccfec28498824221d213",
+        "version": "beb2e86c900ca2bd862d3d96fefc445ad5f8e4732472eeb1fd97b4df191287b3",
         "signature": "23d7d36b18debec0753631b6c3ce89002281d04d07ba8588119990dabb5b7e50"
       },
       "./lib/babylon/cameras/inputs/freecameradeviceorientationinput.ts": {
@@ -1513,8 +1513,56 @@
         "version": "b092fa20b39807bfb0ba0c1c6091129b6c21d17257e33641d627d308fa570d87",
         "signature": "0a17618855aab0f4995f44b2dfa9f46459b2883cc0307442bc0d2bae3b64e026"
       },
+      "./lib/babylon/gizmos/gizmo.ts": {
+        "version": "c883d5b2187dc36bfb5a9afb3008e385693764c973fd122307b4f9a1f2e08a68",
+        "signature": "73160687add06f58cbc231f1ac60fcf5924003c2ce750544cce89d9cac4b3509"
+      },
+      "./lib/babylon/gizmos/planedraggizmo.ts": {
+        "version": "835297d2ce8bceb82f861cbda5ad5d148f0d9c2f14471501c2b0b749fd674506",
+        "signature": "a452f066df8e69518183696575787ba8ee1f5edd5c6ca4911e39232006ad9791"
+      },
+      "./lib/babylon/gizmos/positiongizmo.ts": {
+        "version": "df538c402c4bc71da1b7188a3355bdd3a7f195a484282b8eb11a86041410d958",
+        "signature": "84aff5606cac21b441f54c4dee38b98ea736cf353e5b53e3ea79c6428a92d574"
+      },
+      "./lib/babylon/gizmos/axisdraggizmo.ts": {
+        "version": "99b08e41750ad5ce8b5e44977128c0565fbd4610f4b39a33bb9be27c71460b89",
+        "signature": "1ea015ec0f835e94114ecd4a26d68163c9cbea67495925fc2160706cd43403fb"
+      },
+      "./lib/babylon/debug/axesviewer.ts": {
+        "version": "47fe5c0d70947e8854cdfec1c188e2c9f308ffa63c99397d90f4e8005f7c6bf4",
+        "signature": "df095b67eefc72086414727862911ced19fd09a76bbf5abf044d2e1aab5e6aa8"
+      },
+      "./lib/babylon/debug/boneaxesviewer.ts": {
+        "version": "672062a4e007359ac5c91170e7d9f1864bb8dc02a8bc6d9670ba84a31d3c89cf",
+        "signature": "133976060405402055ed269a7a938a4b2b7909b68590fb2ac44bb33ee59e93c7"
+      },
+      "./lib/babylon/debug/debuglayer.ts": {
+        "version": "a24d6a4880b148a4a05f8786ac8a5b511c215f1314529b3095550ffd38cc29cf",
+        "signature": "eb75523b6a99003e727f1cc4c5a38d9bddccd43dce49ca22a2effc0231560976"
+      },
+      "./lib/babylon/meshes/builders/boxbuilder.ts": {
+        "version": "db7ba9cbb42bd75881822bf91fb13783ee55dddb2dc7d26e8947f3e3a396f385",
+        "signature": "cab2665d1a9b8730d72305af6d939c056f3d96e51d5d5c47b13abf2f3df6c682"
+      },
+      "./lib/babylon/debug/physicsviewer.ts": {
+        "version": "7fe9f022e0f015a548b1c7ea0db38d3baae957dc2c34898817f9a5b3c9ca1024",
+        "signature": "4500ae96d89c38e6feaa981b24ebfaeeebd1497536d56b04a0a5f3602dedcf05"
+      },
+      "./lib/babylon/debug/rayhelper.ts": {
+        "version": "e581df8a97fb5828e4d69c0131eb68f5fdd5de22aa80328fcbeeff750db8a91f",
+        "signature": "c0aa2e905858ee06aab39d3d8079ef695702be4367bfb9813f899928ca32a9d1"
+      },
+      "./lib/babylon/debug/skeletonviewer.ts": {
+        "version": "3702078787062527091c91a3d6a0e66bc62dc5cd79a9719deef242c19963eda0",
+        "signature": "e2e7c902cd803f93e0a677a6d003580a2fe85c710fbc420d74a6da544d0ad306"
+      },
+      "./lib/babylon/debug/index.ts": {
+        "version": "2bdef7c2efbf43c514130b1248fc88b3b73e8e1841ed6e89e1e008de4e493838",
+        "signature": "5a291795576860a9cd46f6bfb72b5b30dcec24c246c5b077cb92c7a5146d55fb"
+      },
       "./lib/babylon/engines/nullengine.ts": {
-        "version": "82305bb70fc782a453a49b98413192be822137e2794c3ff6a3fb8bfbb906cb3b",
+        "version": "beac89698b77e2e202a6468f0961ea88dc4d3a03367b583771a7b788e0cc252f",
         "signature": "4ca5ee52768cd243100aacba90f2212c229fcf9ff4dd65fc2c99e2b18afe84c8"
       },
       "./lib/babylon/instrumentation/timetoken.ts": {
@@ -1574,7 +1622,7 @@
         "signature": "2270dd2952efaff785a8a2b2f32fe0326da5d6bb2c6260435f992d673be94911"
       },
       "./lib/babylon/events/clipboardevents.ts": {
-        "version": "e5d33e4103b236b2360422f848ff8b68582af26b04b558fb5c220626247e5ebe",
+        "version": "b575492e815c984e59a2fceaa03b738730588be2757d1d36456919198330c86e",
         "signature": "76b0fa2c1fd29f27921884e086f962bbb426b3671d5d197116757627ce385daf"
       },
       "./lib/babylon/events/index.ts": {
@@ -1613,26 +1661,6 @@
         "version": "c6a1f530a550ab3a7f8165dfe551b3039320dfec9f66d6dcfe1c16106229ebd4",
         "signature": "104d90210a7062d7ec2285a4235d9e760d424ba3076254956141a2d7f8c5af6f"
       },
-      "./lib/babylon/gizmos/gizmo.ts": {
-        "version": "c883d5b2187dc36bfb5a9afb3008e385693764c973fd122307b4f9a1f2e08a68",
-        "signature": "73160687add06f58cbc231f1ac60fcf5924003c2ce750544cce89d9cac4b3509"
-      },
-      "./lib/babylon/gizmos/planedraggizmo.ts": {
-        "version": "835297d2ce8bceb82f861cbda5ad5d148f0d9c2f14471501c2b0b749fd674506",
-        "signature": "a452f066df8e69518183696575787ba8ee1f5edd5c6ca4911e39232006ad9791"
-      },
-      "./lib/babylon/gizmos/positiongizmo.ts": {
-        "version": "df538c402c4bc71da1b7188a3355bdd3a7f195a484282b8eb11a86041410d958",
-        "signature": "84aff5606cac21b441f54c4dee38b98ea736cf353e5b53e3ea79c6428a92d574"
-      },
-      "./lib/babylon/gizmos/axisdraggizmo.ts": {
-        "version": "99b08e41750ad5ce8b5e44977128c0565fbd4610f4b39a33bb9be27c71460b89",
-        "signature": "1ea015ec0f835e94114ecd4a26d68163c9cbea67495925fc2160706cd43403fb"
-      },
-      "./lib/babylon/meshes/builders/boxbuilder.ts": {
-        "version": "db7ba9cbb42bd75881822bf91fb13783ee55dddb2dc7d26e8947f3e3a396f385",
-        "signature": "cab2665d1a9b8730d72305af6d939c056f3d96e51d5d5c47b13abf2f3df6c682"
-      },
       "./lib/babylon/meshes/builders/polyhedronbuilder.ts": {
         "version": "f98eb4a040e6dc7b406831891fa80d4fbc6e799c7e933e8cf0f20b4808e7131f",
         "signature": "ef3485374cb974c1b32db161feae55ff12f7678eb4cf34d35b0eb355cbfc0349"
@@ -1650,7 +1678,7 @@
         "signature": "ef8a9e5bf6bc050d5f02c74c6ca935b4a4ea46944480fe687061fff96b0c46f5"
       },
       "./lib/babylon/gizmos/planerotationgizmo.ts": {
-        "version": "7358272157b10e46825406084fdef7e2628b4c859a71807de2230e726e77be92",
+        "version": "d5fe376b5a60e65a367d141660533c051dc42b825bcc0bc8400f5eb8892761ff",
         "signature": "02db0e609f3b520f18b5ec999189f4ba724213e0d54c02de404dd5cc073c1301"
       },
       "./lib/babylon/gizmos/rotationgizmo.ts": {
@@ -1658,7 +1686,7 @@
         "signature": "224618671e2b1ce8473d970e8c2d8a9cf08e5341ebde516a9a9f38a88d61999c"
       },
       "./lib/babylon/gizmos/gizmomanager.ts": {
-        "version": "7633af13bf6461630d8d775984fc0dcde0e6d396bbc99bb396972aced3dfd261",
+        "version": "125fbdd8d68546fea7ef2a42ea74688b6138aeec08b3761a9a7313f137408039",
         "signature": "7d6afd405ba23715e079f732716e8f783b44c4c77ed578e37330089ffc0d8b39"
       },
       "./lib/babylon/lights/directionallight.ts": {
@@ -1670,7 +1698,7 @@
         "signature": "55ca9aeed7a0a7225e6a25b4fcb5468454cfd2667dc2c5c6545a4e1d866501fd"
       },
       "./lib/babylon/lights/spotlight.ts": {
-        "version": "8504c5c36f5b1f040bfb6014d6104d5701479f3844a2c673bf2d36c1c00e7fae",
+        "version": "58450ac77f98b836f21cc29c9675c2480c700f8895679f63eea37a3b29b65d84",
         "signature": "a3d4da914ac75d0b34855f407e01a73f19e005cc0259472e16c1686e80049cc6"
       },
       "./lib/babylon/gizmos/lightgizmo.ts": {
@@ -1726,7 +1754,7 @@
         "signature": "dabcb1b8874affbaae2e4b25e15a48f3597a081fef7dca23e5da75c1f5fc2c6a"
       },
       "./lib/babylon/materials/pbr/pbrmaterial.ts": {
-        "version": "2863cbf554e420d567fe3fd60e90905842e202d4e3b7ead1f0f5fc3a64df175f",
+        "version": "2f575434bb25773da46ba86cad2570c208017eec5bbfd84a8b28e3097b79c64e",
         "signature": "ef45747ec6561c2cc8092df4d81e690271db69add38159904e0f4bb778265b4f"
       },
       "./lib/babylon/misc/dds.ts": {
@@ -1854,7 +1882,7 @@
         "signature": "d77a0c47c453fa6a7767a78fd76e6f4c4cad295197047856607b5f568abe8cda"
       },
       "./lib/babylon/materials/textures/hdrcubetexture.ts": {
-        "version": "a7be8d35d2d914ad524819717c6d227f4da1c2fb59d4cab5c97fe304894844e0",
+        "version": "24a7e4d6e9119f6e7a57237d69ace658aee111fbbdb0dbab83b7450da6060ab3",
         "signature": "b2dc3525c062f0163e72729beec8acc3e3588c581a4a428949b54773db274985"
       },
       "./lib/babylon/physics/physicsengine.ts": {
@@ -1866,7 +1894,7 @@
         "signature": "46a6e6dbeed0a4b74248fc9d50ef671526a4516d473e2872f4ca5ea2ac68173e"
       },
       "./lib/babylon/physics/plugins/oimojsplugin.ts": {
-        "version": "b39747c26593df8f64299aaffe891e3c03321bf2118ffad8c84cb3466c3e4171",
+        "version": "c89a4865075d6fe1658d779d27216dbdd6a14e9e392a02691c3855151aba9cee",
         "signature": "e68bbeacf388cf68772deb813bfec6c6ace0a589f207b43d00b7778563b58844"
       },
       "./lib/babylon/meshes/builders/ribbonbuilder.ts": {
@@ -1886,7 +1914,7 @@
         "signature": "0fe902a6fd3744422aa12ac658939359f5ecb38b720c3eba1dd4be714cc9735b"
       },
       "./lib/babylon/loading/plugins/babylonfileloader.ts": {
-        "version": "76868bf4afa211269b5d4af83ea3a28e4ba99d461ad3b9a142815bf265471cf3",
+        "version": "fc592d3f2e264b04ac6a6c34b6556a3f89b70187823f1771477b699c88c0b444",
         "signature": "2b6e495508ea6f5b06c39d02b3d686e2eaef0ab8213bd4fa1d0125c3edfc67bd"
       },
       "./lib/babylon/loading/plugins/index.ts": {
@@ -1906,11 +1934,11 @@
         "signature": "60345f6d9e94b483a102a40685a0d5368f59febad3016e1aba67844e50b22902"
       },
       "./lib/babylon/materials/pbr/pbrmetallicroughnessmaterial.ts": {
-        "version": "c19af8d55e43ba2fed038da4724f5c7dabd82e498ab518727cd77635081925b1",
+        "version": "c2d42df93790b6ca053af144ce529a696ecafbc89ebe9cd9311c2f2b6c62bda9",
         "signature": "fe9f40758c5d6e201ee2c4145f6640bb72156fbb5a8f9365a77146c169e50fd5"
       },
       "./lib/babylon/materials/pbr/pbrspecularglossinessmaterial.ts": {
-        "version": "65e91be4cd3090e5d5edeb62b8cfcb0d224b54fca7cb7c24997593c6380b5971",
+        "version": "899949dfc84a6bd0ecf88e1e41edd53efd86413107cebc2b312b8c77b4dd5d63",
         "signature": "8534268fee63230152dee42549d5af7d849e11689f3258bee9c788db61dd5480"
       },
       "./lib/babylon/materials/pbr/index.ts": {
@@ -1922,7 +1950,7 @@
         "signature": "e4a73377785e21cafb913e92e0799fef54c929bdce9219296d6f5b19c2a41fe9"
       },
       "./lib/babylon/materials/textures/equirectangularcubetexture.ts": {
-        "version": "4e0886c5d581c3282e23374e2f58ce6ef88667e39aa7897a7748ed40fb698dec",
+        "version": "113f8f7a483d8c465522db57b492775821169b914ac6e39e4199de857185c588",
         "signature": "96fe96d30b21445d55e77056ac0f7d336ec4c502bd1e77cd0cb1a83636355c34"
       },
       "./lib/babylon/misc/tga.ts": {
@@ -2294,7 +2322,7 @@
         "signature": "94fada097b31582fe7585244aba7e8250b9d41861dcfed18a14cb86b2272c8e0"
       },
       "./lib/babylon/materials/node/blocks/index.ts": {
-        "version": "fe9a8879d1045e2eb124d58a5463e8fd5bef3d7b8832bf143ca8433552f41803",
+        "version": "419f2bc717b654c64806aa30ba292abf9d837565511ae28843e7012967f2da4e",
         "signature": "fe9a8879d1045e2eb124d58a5463e8fd5bef3d7b8832bf143ca8433552f41803"
       },
       "./lib/babylon/materials/node/optimizers/index.ts": {
@@ -2426,11 +2454,11 @@
         "signature": "e5123565924b630bcd45b6fe710755b0b1ae9b1a3263bee57384400fd4a6053d"
       },
       "./lib/babylon/particles/particlesystemset.ts": {
-        "version": "ce6bf1d05030f10c5d610fee5c557f49646dc026fc6d3a52a381c36ee4b54547",
+        "version": "fe58aa266a2ef41d5b42022350c1312f797b3e5565a71f98c9bef307588a51cc",
         "signature": "5adc5698fc1f112b21e4ff96535f5e306fea83d8f9e86a96c59cebe92f8db4c5"
       },
       "./lib/babylon/particles/particlehelper.ts": {
-        "version": "c44772af0bd6bafb96289fb51961e57b9567be7d59238d0074acdfe1ece275cb",
+        "version": "f4b4bb880f1fc11b2fd4ab459fa8c33bddfaaa560f2982e1b983465017ea0ad2",
         "signature": "27cb9c9a9f3d5b94fcffa89b195c4c6727b73bee1cce5def7ae0551b83761748"
       },
       "./lib/babylon/particles/particlesystemcomponent.ts": {
@@ -2686,8 +2714,8 @@
         "signature": "e8c3037ff77d9975df8ead1ce0a9d19b752287a9b21645154699006b0efa8d31"
       },
       "./lib/babylon/misc/screenshottools.ts": {
-        "version": "5cdcaab4d88e7ac80b6b79519c807e35e835c79dfab3b3737f11b68d571de6f5",
-        "signature": "634cb5442b8a47b750b373ec9dcd740930aeecae3f91316679ae0418acc5bf6c"
+        "version": "92f26ce544882b80048a6685a75ceaf51377ac89b5091bb7d406d33a5f6e0912",
+        "signature": "ec867a375b6480ef0a6ce98b9d07c37b2494145b4ba0595939c5062ba363f15c"
       },
       "./lib/babylon/misc/datareader.ts": {
         "version": "d497e8b653b9da56be890cf92fa9baf116b8f7e4da4b2ad01362f3bbdb081615",
@@ -2742,8 +2770,8 @@
         "signature": "25a27393f32ac2bd0806a655d213d738b3a4b62ce648b61b9940f7a237151948"
       },
       "./lib/babylon/index.ts": {
-        "version": "96d77bcf5cfb1a1665e2a4a78bc6c8afc9a014fee5b0db63503d98fcbb84268f",
-        "signature": "f4ba30121635527a89471cb55523b559215dea854c900ae325f9586bdf10dd85"
+        "version": "0ce1c7082bdbcc2359f11541c2f107e851efb407eac4ecdd9e54f35c7e51f327",
+        "signature": "b70681a4b87d4cc3a8ffb8e591129d96ac94994201c51dbb1d8528d8fa57a9a5"
       },
       "./types/interfaces/index.d.ts": {
         "version": "1e00de25393683b41e7b99c0731c24a9c451009f7e5a199e6f03eff73d8ed7b1",
@@ -2794,7 +2822,7 @@
         "signature": "f817aa73453a07036351635de696f4628ebfda774e4d7ca2a466afc673eb6bed"
       },
       "./world/scene.ts": {
-        "version": "d89e1a1fafcc3feae289d32a59c957cb60f7484dc2d7b2b4c8bf0f882a7bb74f",
+        "version": "093e23a455481d425c8f83c400a803c22c0709cb3a62eb871ab8a124b2f9997e",
         "signature": "2c3eaed1dadbb01bb571685d283344a96874d31076747043a3aad31b3bba8df4"
       },
       "./code.ts": {
@@ -3353,6 +3381,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -3474,6 +3503,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -3859,6 +3889,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -4032,6 +4063,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -5142,6 +5174,7 @@
         "./lib/babylon/engines/extensions/engine.multiview.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -5564,6 +5597,7 @@
         "./lib/babylon/engines/extensions/engine.multiview.ts",
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -6138,6 +6172,7 @@
         "./lib/babylon/engines/extensions/engine.multiview.ts",
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -6161,6 +6196,159 @@
         "./lib/babylon/culling/boundingsphere.ts",
         "./lib/babylon/culling/octrees/index.ts",
         "./lib/babylon/culling/ray.ts"
+      ],
+      "./lib/babylon/gizmos/gizmo.ts": [
+        "./lib/babylon/misc/observable.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/cameras/vr/webvrcamera.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/rendering/utilitylayerrenderer.ts"
+      ],
+      "./lib/babylon/gizmos/planedraggizmo.ts": [
+        "./lib/babylon/misc/observable.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/events/pointerevents.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/meshes/transformnode.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/meshes/builders/planebuilder.ts",
+        "./lib/babylon/behaviors/meshes/pointerdragbehavior.ts",
+        "./lib/babylon/gizmos/gizmo.ts",
+        "./lib/babylon/rendering/utilitylayerrenderer.ts",
+        "./lib/babylon/materials/standardmaterial.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/gizmos/positiongizmo.ts"
+      ],
+      "./lib/babylon/gizmos/positiongizmo.ts": [
+        "./lib/babylon/misc/logger.ts",
+        "./lib/babylon/misc/observable.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/gizmos/gizmo.ts",
+        "./lib/babylon/gizmos/axisdraggizmo.ts",
+        "./lib/babylon/gizmos/planedraggizmo.ts",
+        "./lib/babylon/rendering/utilitylayerrenderer.ts"
+      ],
+      "./lib/babylon/gizmos/axisdraggizmo.ts": [
+        "./lib/babylon/misc/observable.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/events/pointerevents.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/meshes/transformnode.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/meshes/linesmesh.ts",
+        "./lib/babylon/meshes/builders/cylinderbuilder.ts",
+        "./lib/babylon/behaviors/meshes/pointerdragbehavior.ts",
+        "./lib/babylon/gizmos/gizmo.ts",
+        "./lib/babylon/rendering/utilitylayerrenderer.ts",
+        "./lib/babylon/materials/standardmaterial.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/gizmos/positiongizmo.ts",
+        "./lib/babylon/maths/math.color.ts"
+      ],
+      "./lib/babylon/debug/axesviewer.ts": [
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/meshes/transformnode.ts",
+        "./lib/babylon/materials/standardmaterial.ts",
+        "./lib/babylon/gizmos/axisdraggizmo.ts",
+        "./lib/babylon/maths/math.color.ts"
+      ],
+      "./lib/babylon/debug/boneaxesviewer.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/debug/axesviewer.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/bones/bone.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/maths/math.axis.ts"
+      ],
+      "./lib/babylon/debug/debuglayer.ts": [
+        "./lib/babylon/misc/tools.ts",
+        "./lib/babylon/misc/observable.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/engines/engine.ts",
+        "./lib/babylon/animations/animatable.ts",
+        "./lib/babylon/culling/ray.ts",
+        "./lib/babylon/sprites/spritescenecomponent.ts",
+        "./lib/babylon/engines/extensions/engine.multiview.ts",
+        "./lib/babylon/audio/audioscenecomponent.ts",
+        "./lib/babylon/gamepads/gamepadscenecomponent.ts",
+        "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/helpers/scenehelpers.ts",
+        "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
+        "./lib/babylon/physics/physicsenginecomponent.ts",
+        "./lib/babylon/rendering/geometrybufferrendererscenecomponent.ts",
+        "./lib/babylon/postprocesses/renderpipeline/postprocessrenderpipelinemanagerscenecomponent.ts",
+        "./lib/babylon/rendering/boundingboxrenderer.ts",
+        "./lib/babylon/rendering/depthrendererscenecomponent.ts",
+        "./lib/babylon/rendering/outlinerenderer.ts"
+      ],
+      "./lib/babylon/meshes/builders/boxbuilder.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/meshes/mesh.vertexdata.ts"
+      ],
+      "./lib/babylon/debug/physicsviewer.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/meshes/builders/boxbuilder.ts",
+        "./lib/babylon/meshes/builders/spherebuilder.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/materials/material.ts",
+        "./lib/babylon/engines/enginestore.ts",
+        "./lib/babylon/materials/standardmaterial.ts",
+        "./lib/babylon/physics/iphysicsengine.ts",
+        "./lib/babylon/physics/physicsimpostor.ts",
+        "./lib/babylon/rendering/utilitylayerrenderer.ts",
+        "./lib/babylon/meshes/builders/cylinderbuilder.ts"
+      ],
+      "./lib/babylon/debug/rayhelper.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/culling/ray.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/meshes/linesmesh.ts",
+        "./lib/babylon/meshes/builders/linesbuilder.ts"
+      ],
+      "./lib/babylon/debug/skeletonviewer.ts": [
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/bones/bone.ts",
+        "./lib/babylon/bones/skeleton.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/meshes/linesmesh.ts",
+        "./lib/babylon/meshes/builders/linesbuilder.ts",
+        "./lib/babylon/rendering/utilitylayerrenderer.ts"
+      ],
+      "./lib/babylon/debug/index.ts": [
+        "./lib/babylon/debug/axesviewer.ts",
+        "./lib/babylon/debug/boneaxesviewer.ts",
+        "./lib/babylon/debug/debuglayer.ts",
+        "./lib/babylon/debug/physicsviewer.ts",
+        "./lib/babylon/debug/rayhelper.ts",
+        "./lib/babylon/debug/skeletonviewer.ts"
       ],
       "./lib/babylon/engines/nullengine.ts": [
         "./lib/babylon/misc/logger.ts",
@@ -6430,72 +6618,6 @@
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/gamepads/xboxgamepad.ts",
         "./lib/babylon/gamepads/dualshockgamepad.ts"
-      ],
-      "./lib/babylon/gizmos/gizmo.ts": [
-        "./lib/babylon/misc/observable.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/cameras/vr/webvrcamera.ts",
-        "./lib/babylon/scene.ts",
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/meshes/abstractmesh.ts",
-        "./lib/babylon/meshes/mesh.ts",
-        "./lib/babylon/rendering/utilitylayerrenderer.ts"
-      ],
-      "./lib/babylon/gizmos/planedraggizmo.ts": [
-        "./lib/babylon/misc/observable.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/events/pointerevents.ts",
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/maths/math.color.ts",
-        "./lib/babylon/meshes/transformnode.ts",
-        "./lib/babylon/meshes/abstractmesh.ts",
-        "./lib/babylon/meshes/mesh.ts",
-        "./lib/babylon/meshes/builders/planebuilder.ts",
-        "./lib/babylon/behaviors/meshes/pointerdragbehavior.ts",
-        "./lib/babylon/gizmos/gizmo.ts",
-        "./lib/babylon/rendering/utilitylayerrenderer.ts",
-        "./lib/babylon/materials/standardmaterial.ts",
-        "./lib/babylon/scene.ts",
-        "./lib/babylon/gizmos/positiongizmo.ts"
-      ],
-      "./lib/babylon/gizmos/positiongizmo.ts": [
-        "./lib/babylon/misc/logger.ts",
-        "./lib/babylon/misc/observable.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/maths/math.color.ts",
-        "./lib/babylon/meshes/abstractmesh.ts",
-        "./lib/babylon/meshes/mesh.ts",
-        "./lib/babylon/gizmos/gizmo.ts",
-        "./lib/babylon/gizmos/axisdraggizmo.ts",
-        "./lib/babylon/gizmos/planedraggizmo.ts",
-        "./lib/babylon/rendering/utilitylayerrenderer.ts"
-      ],
-      "./lib/babylon/gizmos/axisdraggizmo.ts": [
-        "./lib/babylon/misc/observable.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/events/pointerevents.ts",
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/meshes/transformnode.ts",
-        "./lib/babylon/meshes/abstractmesh.ts",
-        "./lib/babylon/meshes/mesh.ts",
-        "./lib/babylon/meshes/linesmesh.ts",
-        "./lib/babylon/meshes/builders/cylinderbuilder.ts",
-        "./lib/babylon/behaviors/meshes/pointerdragbehavior.ts",
-        "./lib/babylon/gizmos/gizmo.ts",
-        "./lib/babylon/rendering/utilitylayerrenderer.ts",
-        "./lib/babylon/materials/standardmaterial.ts",
-        "./lib/babylon/scene.ts",
-        "./lib/babylon/gizmos/positiongizmo.ts",
-        "./lib/babylon/maths/math.color.ts"
-      ],
-      "./lib/babylon/meshes/builders/boxbuilder.ts": [
-        "./lib/babylon/types.ts",
-        "./lib/babylon/scene.ts",
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/maths/math.color.ts",
-        "./lib/babylon/meshes/mesh.ts",
-        "./lib/babylon/meshes/mesh.vertexdata.ts"
       ],
       "./lib/babylon/meshes/builders/polyhedronbuilder.ts": [
         "./lib/babylon/scene.ts",
@@ -6913,6 +7035,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
         "./lib/babylon/rendering/geometrybufferrendererscenecomponent.ts",
@@ -8523,6 +8646,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
         "./lib/babylon/rendering/geometrybufferrendererscenecomponent.ts",
@@ -8757,6 +8881,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/rendering/geometrybufferrendererscenecomponent.ts",
@@ -8974,6 +9099,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -9037,6 +9163,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -9263,6 +9390,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -9290,6 +9418,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -9315,6 +9444,7 @@
         "./lib/babylon/audio/audioscenecomponent.ts",
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/culling/octrees/octreescenecomponent.ts",
+        "./lib/babylon/debug/debuglayer.ts",
         "./lib/babylon/helpers/scenehelpers.ts",
         "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
         "./lib/babylon/physics/physicsenginecomponent.ts",
@@ -9616,6 +9746,7 @@
         "./lib/babylon/cameras/index.ts",
         "./lib/babylon/collisions/index.ts",
         "./lib/babylon/culling/index.ts",
+        "./lib/babylon/debug/index.ts",
         "./lib/babylon/engines/index.ts",
         "./lib/babylon/events/index.ts",
         "./lib/babylon/gamepads/index.ts",
@@ -12031,6 +12162,108 @@
         "./lib/babylon/culling/octrees/index.ts",
         "./lib/babylon/culling/ray.ts"
       ],
+      "./lib/babylon/gizmos/gizmo.ts": [
+        "./lib/babylon/rendering/utilitylayerrenderer.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/scene.ts"
+      ],
+      "./lib/babylon/gizmos/planedraggizmo.ts": [
+        "./lib/babylon/behaviors/meshes/pointerdragbehavior.ts",
+        "./lib/babylon/misc/observable.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/materials/standardmaterial.ts",
+        "./lib/babylon/meshes/transformnode.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/rendering/utilitylayerrenderer.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/gizmos/positiongizmo.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/gizmos/gizmo.ts"
+      ],
+      "./lib/babylon/gizmos/positiongizmo.ts": [
+        "./lib/babylon/gizmos/axisdraggizmo.ts",
+        "./lib/babylon/gizmos/planedraggizmo.ts",
+        "./lib/babylon/misc/observable.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/rendering/utilitylayerrenderer.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/gizmos/gizmo.ts"
+      ],
+      "./lib/babylon/gizmos/axisdraggizmo.ts": [
+        "./lib/babylon/behaviors/meshes/pointerdragbehavior.ts",
+        "./lib/babylon/misc/observable.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/materials/standardmaterial.ts",
+        "./lib/babylon/meshes/transformnode.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/rendering/utilitylayerrenderer.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/gizmos/positiongizmo.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/gizmos/gizmo.ts"
+      ],
+      "./lib/babylon/debug/axesviewer.ts": [
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/meshes/transformnode.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/maths/math.vector.ts"
+      ],
+      "./lib/babylon/debug/boneaxesviewer.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/meshes/mesh.ts",
+        "./lib/babylon/bones/bone.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/debug/axesviewer.ts"
+      ],
+      "./lib/babylon/debug/debuglayer.ts": [
+        "./lib/babylon/scene.ts"
+      ],
+      "./lib/babylon/meshes/builders/boxbuilder.ts": [
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/meshes/mesh.ts"
+      ],
+      "./lib/babylon/debug/physicsviewer.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/physics/physicsimpostor.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/physics/iphysicsengine.ts",
+        "./lib/babylon/meshes/mesh.ts"
+      ],
+      "./lib/babylon/debug/rayhelper.ts": [
+        "./lib/babylon/meshes/builders/linesbuilder.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/culling/ray.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/maths/math.vector.ts"
+      ],
+      "./lib/babylon/debug/skeletonviewer.ts": [
+        "./lib/babylon/bones/skeleton.ts",
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/meshes/linesmesh.ts",
+        "./lib/babylon/scene.ts"
+      ],
+      "./lib/babylon/debug/index.ts": [
+        "./lib/babylon/debug/axesviewer.ts",
+        "./lib/babylon/debug/boneaxesviewer.ts",
+        "./lib/babylon/debug/debuglayer.ts",
+        "./lib/babylon/debug/physicsviewer.ts",
+        "./lib/babylon/debug/rayhelper.ts",
+        "./lib/babylon/debug/skeletonviewer.ts"
+      ],
       "./lib/babylon/engines/nullengine.ts": [
         "./lib/babylon/types.ts",
         "./lib/babylon/meshes/databuffer.ts",
@@ -12211,58 +12444,6 @@
         "./lib/babylon/gamepads/gamepadscenecomponent.ts",
         "./lib/babylon/gamepads/xboxgamepad.ts",
         "./lib/babylon/gamepads/dualshockgamepad.ts"
-      ],
-      "./lib/babylon/gizmos/gizmo.ts": [
-        "./lib/babylon/rendering/utilitylayerrenderer.ts",
-        "./lib/babylon/meshes/mesh.ts",
-        "./lib/babylon/meshes/abstractmesh.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/scene.ts"
-      ],
-      "./lib/babylon/gizmos/planedraggizmo.ts": [
-        "./lib/babylon/behaviors/meshes/pointerdragbehavior.ts",
-        "./lib/babylon/misc/observable.ts",
-        "./lib/babylon/scene.ts",
-        "./lib/babylon/materials/standardmaterial.ts",
-        "./lib/babylon/meshes/transformnode.ts",
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/maths/math.color.ts",
-        "./lib/babylon/rendering/utilitylayerrenderer.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/gizmos/positiongizmo.ts",
-        "./lib/babylon/meshes/abstractmesh.ts",
-        "./lib/babylon/gizmos/gizmo.ts"
-      ],
-      "./lib/babylon/gizmos/positiongizmo.ts": [
-        "./lib/babylon/gizmos/axisdraggizmo.ts",
-        "./lib/babylon/gizmos/planedraggizmo.ts",
-        "./lib/babylon/misc/observable.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/meshes/abstractmesh.ts",
-        "./lib/babylon/rendering/utilitylayerrenderer.ts",
-        "./lib/babylon/meshes/mesh.ts",
-        "./lib/babylon/gizmos/gizmo.ts"
-      ],
-      "./lib/babylon/gizmos/axisdraggizmo.ts": [
-        "./lib/babylon/behaviors/meshes/pointerdragbehavior.ts",
-        "./lib/babylon/misc/observable.ts",
-        "./lib/babylon/scene.ts",
-        "./lib/babylon/materials/standardmaterial.ts",
-        "./lib/babylon/meshes/transformnode.ts",
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/maths/math.color.ts",
-        "./lib/babylon/rendering/utilitylayerrenderer.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/gizmos/positiongizmo.ts",
-        "./lib/babylon/meshes/abstractmesh.ts",
-        "./lib/babylon/gizmos/gizmo.ts"
-      ],
-      "./lib/babylon/meshes/builders/boxbuilder.ts": [
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/maths/math.color.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/scene.ts",
-        "./lib/babylon/meshes/mesh.ts"
       ],
       "./lib/babylon/meshes/builders/polyhedronbuilder.ts": [
         "./lib/babylon/maths/math.vector.ts",
@@ -14308,6 +14489,7 @@
         "./lib/babylon/cameras/index.ts",
         "./lib/babylon/collisions/index.ts",
         "./lib/babylon/culling/index.ts",
+        "./lib/babylon/debug/index.ts",
         "./lib/babylon/engines/index.ts",
         "./lib/babylon/events/index.ts",
         "./lib/babylon/gamepads/index.ts",
@@ -14639,17 +14821,12 @@
       "./lib/babylon/misc/andornotevaluator.ts",
       "./lib/babylon/misc/tags.ts",
       "./lib/babylon/misc/smartarray.ts",
-      "./lib/babylon/cameras/camerainputsmanager.ts",
       "./lib/babylon/behaviors/behavior.ts",
       "./lib/babylon/meshes/databuffer.ts",
-      "./lib/babylon/meshes/buffer.ts",
       "./lib/babylon/collisions/intersectioninfo.ts",
       "./lib/babylon/engines/constants.ts",
       "./lib/babylon/maths/math.plane.ts",
       "./lib/babylon/culling/boundingsphere.ts",
-      "./lib/babylon/culling/boundingbox.ts",
-      "./lib/babylon/collisions/collider.ts",
-      "./lib/babylon/culling/boundinginfo.ts",
       "./lib/babylon/engines/ipipelinecontext.ts",
       "./lib/babylon/engines/processors/ishaderprocessor.ts",
       "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
@@ -14669,44 +14846,119 @@
       "./lib/babylon/materials/textures/rendertargetcreationoptions.ts",
       "./lib/babylon/misc/guid.ts",
       "./lib/babylon/maths/math.size.ts",
-      "./lib/babylon/materials/textures/basetexture.ts",
       "./lib/babylon/maths/sphericalpolynomial.ts",
-      "./lib/babylon/materials/textures/internaltexture.ts",
-      "./lib/babylon/materials/textures/internaltextureloader.ts",
       "./lib/babylon/meshes/webgl/webgldatabuffer.ts",
-      "./lib/babylon/engines/webgl/webglpipelinecontext.ts",
-      "./lib/babylon/engines/extensions/engine.uniformbuffer.ts",
-      "./lib/babylon/materials/uniformbuffer.ts",
       "./lib/babylon/engines/enginecapabilities.ts",
       "./lib/babylon/states/depthcullingstate.ts",
       "./lib/babylon/states/stencilstate.ts",
       "./lib/babylon/states/alphacullingstate.ts",
       "./lib/babylon/engines/webgl/webgl2shaderprocessors.ts",
       "./lib/babylon/engines/instancingattributeinfo.ts",
-      "./lib/babylon/materials/ieffectfallbacks.ts",
       "./lib/babylon/misc/canvasgenerator.ts",
       "./lib/babylon/misc/iinspectable.ts",
       "./lib/babylon/misc/timingtools.ts",
       "./lib/babylon/misc/instantiationtools.ts",
       "./lib/babylon/engines/depthtexturecreationoptions.ts",
-      "./lib/babylon/engines/extensions/engine.cubetexture.ts",
-      "./lib/babylon/materials/textures/cubetexture.ts",
       "./lib/babylon/materials/materialdefines.ts",
       "./lib/babylon/maths/math.axis.ts",
+      "./lib/babylon/animations/animationevent.ts",
+      "./lib/babylon/animations/animationkey.ts",
+      "./lib/babylon/animations/animationrange.ts",
+      "./lib/babylon/events/keyboardevents.ts",
+      "./lib/babylon/misc/gradients.ts",
+      "./lib/babylon/gamepads/gamepad.ts",
+      "./lib/babylon/maths/math.frustum.ts",
+      "./lib/babylon/engines/processors/shaderprocessor.ts",
+      "./lib/babylon/maths/math.functions.ts",
+      "./lib/babylon/loading/sceneloaderflags.ts",
+      "./lib/babylon/misc/stringdictionary.ts",
+      "./lib/babylon/misc/perfcounter.ts",
+      "./lib/babylon/misc/uniqueidgenerator.ts",
+      "./lib/babylon/misc/customanimationframerequester.ts",
+      "./lib/babylon/misc/performancemonitor.ts",
+      "./lib/babylon/misc/promise.ts",
+      "./lib/babylon/misc/interfaces/screenshotsize.ts",
+      "./lib/babylon/physics/physicsraycastresult.ts",
+      "./lib/babylon/maths/math.vertexformat.ts",
+      "./lib/babylon/maths/math.ts",
+      "./terraray.ts",
+      "./uitab.ts",
+      "./rustwasm/hello_wasm.d.ts",
+      "./lib/babylon/misc/virtualjoystick.ts",
+      "./lib/babylon/gamepads/xboxgamepad.ts",
+      "./lib/babylon/gamepads/dualshockgamepad.ts",
+      "./lib/babylon/cameras/vr/vrcamerametrics.ts",
+      "./lib/babylon/cameras/rigmodes/index.ts",
+      "./lib/babylon/instrumentation/timetoken.ts",
+      "./lib/babylon/misc/highdynamicrange/panoramatocubemap.ts",
+      "./lib/babylon/engines/native/nativeshaderprocessor.ts",
+      "./lib/babylon/events/clipboardevents.ts",
+      "./lib/babylon/misc/highdynamicrange/hdr.ts",
+      "./lib/babylon/materials/textures/packer/frame.ts",
+      "./lib/babylon/materials/node/enums/nodematerialblocktargets.ts",
+      "./lib/babylon/materials/node/enums/nodematerialblockconnectionpointtypes.ts",
+      "./lib/babylon/materials/node/enums/nodematerialblockconnectionpointmode.ts",
+      "./lib/babylon/materials/node/enums/nodematerialsystemvalues.ts",
+      "./lib/babylon/materials/node/enums/index.ts",
+      "./lib/babylon/materials/node/blocks/input/animatedinputblocktypes.ts",
+      "./lib/babylon/maths/index.ts",
+      "./lib/babylon/offline/index.ts",
+      "./lib/babylon/sprites/isprites.ts",
+      "./lib/babylon/states/index.ts",
+      "./lib/babylon/misc/deferred.ts",
+      "./lib/babylon/misc/datareader.ts",
+      "./webgl.ts",
+      "./commonmath.ts",
+      "./lib/babylon/animations/pathcursor.ts",
+      "./lib/babylon/engines/processors/expressions/operators/index.ts",
+      "./lib/babylon/engines/processors/expressions/index.ts",
+      "./lib/babylon/engines/processors/index.ts",
+      "./lib/babylon/libdeclarations/browser.d.ts",
+      "./lib/babylon/libdeclarations/webgl.d.ts",
+      "./lib/babylon/libdeclarations/webgl2.d.ts",
+      "./lib/babylon/libdeclarations/webvr.d.ts",
+      "./lib/babylon/libdeclarations/webxr.d.ts",
+      "./plants/grass.ts",
+      "./rustwasm/hello_wasm_bg.d.ts",
+      "./rustwasm/hello_wasm.js",
+      "./node_modules/@types/facebook-js-sdk/index.d.ts",
+      "./lib/babylon/meshes/linesmesh.ts",
+      "./lib/babylon/meshes/index.ts",
+      "./lib/babylon/meshes/meshbuilder.ts",
+      "./lib/babylon/physics/plugins/ammojsplugin.ts",
+      "./lib/babylon/gizmos/planerotationgizmo.ts",
+      "./lib/babylon/gizmos/boundingboxgizmo.ts",
+      "./lib/babylon/gizmos/axisscalegizmo.ts",
+      "./lib/babylon/debug/skeletonviewer.ts",
+      "./lib/babylon/debug/rayhelper.ts",
+      "./lib/babylon/gizmos/axisdraggizmo.ts",
+      "./lib/babylon/meshes/builders/linesbuilder.ts",
+      "./lib/babylon/meshes/mesh.ts",
+      "./lib/babylon/rendering/edgesrenderer.ts",
+      "./lib/babylon/cameras/camerainputsmanager.ts",
+      "./lib/babylon/meshes/buffer.ts",
+      "./lib/babylon/culling/boundingbox.ts",
+      "./lib/babylon/collisions/collider.ts",
+      "./lib/babylon/culling/boundinginfo.ts",
+      "./lib/babylon/materials/textures/basetexture.ts",
+      "./lib/babylon/materials/textures/internaltexture.ts",
+      "./lib/babylon/materials/textures/internaltextureloader.ts",
+      "./lib/babylon/engines/webgl/webglpipelinecontext.ts",
+      "./lib/babylon/engines/extensions/engine.uniformbuffer.ts",
+      "./lib/babylon/materials/uniformbuffer.ts",
+      "./lib/babylon/materials/ieffectfallbacks.ts",
+      "./lib/babylon/engines/extensions/engine.cubetexture.ts",
+      "./lib/babylon/materials/textures/cubetexture.ts",
       "./lib/babylon/meshes/transformnode.ts",
       "./lib/babylon/animations/animationpropertiesoverride.ts",
       "./lib/babylon/bones/bone.ts",
       "./lib/babylon/engines/extensions/engine.rawtexture.ts",
       "./lib/babylon/materials/textures/rawtexture.ts",
-      "./lib/babylon/animations/animationevent.ts",
-      "./lib/babylon/animations/animationkey.ts",
       "./lib/babylon/animations/runtimeanimation.ts",
       "./lib/babylon/animations/animatable.ts",
-      "./lib/babylon/animations/animationrange.ts",
       "./lib/babylon/bones/skeleton.ts",
       "./lib/babylon/lights/shadowlight.ts",
       "./lib/babylon/cameras/targetcamera.ts",
-      "./lib/babylon/events/keyboardevents.ts",
       "./lib/babylon/cameras/inputs/freecamerakeyboardmoveinput.ts",
       "./lib/babylon/actions/action.ts",
       "./lib/babylon/actions/condition.ts",
@@ -14718,7 +14970,6 @@
       "./lib/babylon/animations/animationgroup.ts",
       "./lib/babylon/materials/multimaterial.ts",
       "./lib/babylon/assetcontainer.ts",
-      "./lib/babylon/misc/gradients.ts",
       "./lib/babylon/materials/colorcurves.ts",
       "./lib/babylon/materials/imageprocessingconfiguration.ts",
       "./lib/babylon/engines/extensions/engine.dynamictexture.ts",
@@ -14753,13 +15004,11 @@
       "./lib/babylon/cameras/inputs/freecameratouchinput.ts",
       "./lib/babylon/cameras/freecamerainputsmanager.ts",
       "./lib/babylon/cameras/freecamera.ts",
-      "./lib/babylon/gamepads/gamepad.ts",
       "./lib/babylon/gamepads/controllers/poseenabledcontroller.ts",
       "./lib/babylon/gamepads/controllers/webvrcontroller.ts",
       "./lib/babylon/lights/hemisphericlight.ts",
       "./lib/babylon/postprocesses/postprocess.ts",
       "./lib/babylon/materials/textures/multiviewrendertarget.ts",
-      "./lib/babylon/maths/math.frustum.ts",
       "./lib/babylon/engines/extensions/engine.multiview.ts",
       "./lib/babylon/postprocesses/vrmultiviewtosingleviewpostprocess.ts",
       "./lib/babylon/cameras/rigmodes/webvrrigmode.ts",
@@ -14769,8 +15018,6 @@
       "./lib/babylon/materials/materialhelper.ts",
       "./lib/babylon/postprocesses/blurpostprocess.ts",
       "./lib/babylon/materials/shadermaterial.ts",
-      "./lib/babylon/meshes/linesmesh.ts",
-      "./lib/babylon/rendering/edgesrenderer.ts",
       "./lib/babylon/rendering/renderinggroup.ts",
       "./lib/babylon/rendering/renderingmanager.ts",
       "./lib/babylon/lights/shadows/shadowgenerator.ts",
@@ -14785,11 +15032,8 @@
       "./lib/babylon/materials/textures/videotexture.ts",
       "./lib/babylon/engines/thinengine.ts",
       "./lib/babylon/misc/filetools.ts",
-      "./lib/babylon/engines/processors/shaderprocessor.ts",
       "./lib/babylon/materials/effect.ts",
-      "./lib/babylon/maths/math.functions.ts",
       "./lib/babylon/meshes/submesh.ts",
-      "./lib/babylon/loading/sceneloaderflags.ts",
       "./lib/babylon/meshes/geometry.ts",
       "./lib/babylon/meshes/mesh.vertexdata.ts",
       "./lib/babylon/meshes/builders/discbuilder.ts",
@@ -14808,36 +15052,22 @@
       "./lib/babylon/misc/decorators.ts",
       "./lib/babylon/animations/animation.ts",
       "./lib/babylon/animations/animatable.interface.ts",
-      "./lib/babylon/misc/stringdictionary.ts",
       "./lib/babylon/collisions/collisioncoordinator.ts",
       "./lib/babylon/inputs/scene.inputmanager.ts",
-      "./lib/babylon/misc/perfcounter.ts",
-      "./lib/babylon/misc/uniqueidgenerator.ts",
       "./lib/babylon/scene.ts",
       "./lib/babylon/audio/analyser.ts",
       "./lib/babylon/audio/audioengine.ts",
       "./lib/babylon/loading/loadingscreen.ts",
-      "./lib/babylon/misc/customanimationframerequester.ts",
-      "./lib/babylon/misc/performancemonitor.ts",
       "./lib/babylon/engines/extensions/engine.alpha.ts",
       "./lib/babylon/engines/engine.ts",
       "./lib/babylon/engines/enginestore.ts",
-      "./lib/babylon/misc/promise.ts",
-      "./lib/babylon/misc/interfaces/screenshotsize.ts",
       "./lib/babylon/misc/tools.ts",
       "./lib/babylon/meshes/meshlodlevel.ts",
       "./lib/babylon/meshes/groundmesh.ts",
       "./lib/babylon/physics/physicsjoint.ts",
-      "./lib/babylon/physics/physicsraycastresult.ts",
       "./lib/babylon/physics/iphysicsengine.ts",
       "./lib/babylon/physics/physicsimpostor.ts",
-      "./lib/babylon/meshes/mesh.ts",
-      "./lib/babylon/maths/math.vertexformat.ts",
-      "./lib/babylon/maths/math.ts",
       "./terramesh.ts",
-      "./terraray.ts",
-      "./uitab.ts",
-      "./rustwasm/hello_wasm.d.ts",
       "./world/sun.ts",
       "./world/terrain.ts",
       "./lib/babylon/audio/sound.ts",
@@ -14884,13 +15114,10 @@
       "./lib/babylon/cameras/inputs/followcamerakeyboardmoveinput.ts",
       "./lib/babylon/cameras/inputs/freecameradeviceorientationinput.ts",
       "./lib/babylon/cameras/inputs/freecameragamepadinput.ts",
-      "./lib/babylon/misc/virtualjoystick.ts",
       "./lib/babylon/cameras/inputs/freecameravirtualjoystickinput.ts",
       "./lib/babylon/cameras/inputs/index.ts",
       "./lib/babylon/cameras/touchcamera.ts",
       "./lib/babylon/cameras/deviceorientationcamera.ts",
-      "./lib/babylon/gamepads/xboxgamepad.ts",
-      "./lib/babylon/gamepads/dualshockgamepad.ts",
       "./lib/babylon/gamepads/gamepadmanager.ts",
       "./lib/babylon/gamepads/gamepadscenecomponent.ts",
       "./lib/babylon/cameras/universalcamera.ts",
@@ -14910,7 +15137,6 @@
       "./lib/babylon/cameras/stereoscopic/stereoscopicuniversalcamera.ts",
       "./lib/babylon/cameras/stereoscopic/index.ts",
       "./lib/babylon/cameras/virtualjoystickscamera.ts",
-      "./lib/babylon/cameras/vr/vrcamerametrics.ts",
       "./lib/babylon/postprocesses/vrdistortioncorrectionpostprocess.ts",
       "./lib/babylon/cameras/rigmodes/vrrigmode.ts",
       "./lib/babylon/cameras/vr/vrdeviceorientationarcrotatecamera.ts",
@@ -14939,12 +15165,10 @@
       "./lib/babylon/rendering/utilitylayerrenderer.ts",
       "./lib/babylon/xr/features/webxrcontrollerpointerselection.ts",
       "./lib/babylon/xr/webxrenterexitui.ts",
-      "./lib/babylon/meshes/builders/linesbuilder.ts",
       "./lib/babylon/xr/features/webxrcontrollerteleportation.ts",
       "./lib/babylon/xr/webxrdefaultexperience.ts",
       "./lib/babylon/cameras/vr/vrexperiencehelper.ts",
       "./lib/babylon/cameras/vr/index.ts",
-      "./lib/babylon/cameras/rigmodes/index.ts",
       "./lib/babylon/cameras/index.ts",
       "./lib/babylon/collisions/index.ts",
       "./lib/babylon/culling/octrees/octreeblock.ts",
@@ -14952,22 +15176,27 @@
       "./lib/babylon/culling/octrees/octreescenecomponent.ts",
       "./lib/babylon/culling/octrees/index.ts",
       "./lib/babylon/culling/index.ts",
+      "./lib/babylon/gizmos/gizmo.ts",
+      "./lib/babylon/gizmos/planedraggizmo.ts",
+      "./lib/babylon/gizmos/positiongizmo.ts",
+      "./lib/babylon/debug/axesviewer.ts",
+      "./lib/babylon/debug/boneaxesviewer.ts",
+      "./lib/babylon/debug/debuglayer.ts",
+      "./lib/babylon/meshes/builders/boxbuilder.ts",
+      "./lib/babylon/debug/physicsviewer.ts",
+      "./lib/babylon/debug/index.ts",
       "./lib/babylon/engines/nullengine.ts",
-      "./lib/babylon/instrumentation/timetoken.ts",
       "./lib/babylon/engines/extensions/engine.occlusionquery.ts",
       "./lib/babylon/engines/extensions/engine.transformfeedback.ts",
       "./lib/babylon/materials/textures/multirendertarget.ts",
       "./lib/babylon/engines/extensions/engine.multirender.ts",
       "./lib/babylon/engines/extensions/engine.views.ts",
       "./lib/babylon/engines/extensions/index.ts",
-      "./lib/babylon/misc/highdynamicrange/panoramatocubemap.ts",
       "./lib/babylon/misc/highdynamicrange/cubemaptosphericalpolynomial.ts",
       "./lib/babylon/materials/textures/basetexture.polynomial.ts",
       "./lib/babylon/misc/environmenttexturetools.ts",
-      "./lib/babylon/engines/native/nativeshaderprocessor.ts",
       "./lib/babylon/engines/nativeengine.ts",
       "./lib/babylon/engines/index.ts",
-      "./lib/babylon/events/clipboardevents.ts",
       "./lib/babylon/events/index.ts",
       "./lib/babylon/gamepads/controllers/daydreamcontroller.ts",
       "./lib/babylon/gamepads/controllers/gearvrcontroller.ts",
@@ -14977,16 +15206,8 @@
       "./lib/babylon/gamepads/controllers/windowsmotioncontroller.ts",
       "./lib/babylon/gamepads/controllers/index.ts",
       "./lib/babylon/gamepads/index.ts",
-      "./lib/babylon/gizmos/gizmo.ts",
-      "./lib/babylon/gizmos/planedraggizmo.ts",
-      "./lib/babylon/gizmos/positiongizmo.ts",
-      "./lib/babylon/gizmos/axisdraggizmo.ts",
-      "./lib/babylon/meshes/builders/boxbuilder.ts",
       "./lib/babylon/meshes/builders/polyhedronbuilder.ts",
       "./lib/babylon/gizmos/scalegizmo.ts",
-      "./lib/babylon/gizmos/axisscalegizmo.ts",
-      "./lib/babylon/gizmos/boundingboxgizmo.ts",
-      "./lib/babylon/gizmos/planerotationgizmo.ts",
       "./lib/babylon/gizmos/rotationgizmo.ts",
       "./lib/babylon/gizmos/gizmomanager.ts",
       "./lib/babylon/lights/directionallight.ts",
@@ -15036,14 +15257,12 @@
       "./lib/babylon/lights/shadows/index.ts",
       "./lib/babylon/lights/pointlight.ts",
       "./lib/babylon/lights/index.ts",
-      "./lib/babylon/misc/highdynamicrange/hdr.ts",
       "./lib/babylon/materials/textures/hdrcubetexture.ts",
       "./lib/babylon/physics/physicsengine.ts",
       "./lib/babylon/physics/plugins/cannonjsplugin.ts",
       "./lib/babylon/physics/plugins/oimojsplugin.ts",
       "./lib/babylon/meshes/builders/ribbonbuilder.ts",
       "./lib/babylon/meshes/builders/shapebuilder.ts",
-      "./lib/babylon/physics/plugins/ammojsplugin.ts",
       "./lib/babylon/probes/reflectionprobe.ts",
       "./lib/babylon/loading/plugins/babylonfileloader.ts",
       "./lib/babylon/loading/plugins/index.ts",
@@ -15068,15 +15287,9 @@
       "./lib/babylon/materials/textures/rawtexture2darray.ts",
       "./lib/babylon/materials/textures/refractiontexture.ts",
       "./lib/babylon/materials/textures/htmlelementtexture.ts",
-      "./lib/babylon/materials/textures/packer/frame.ts",
       "./lib/babylon/materials/textures/packer/packer.ts",
       "./lib/babylon/materials/textures/packer/index.ts",
       "./lib/babylon/materials/textures/index.ts",
-      "./lib/babylon/materials/node/enums/nodematerialblocktargets.ts",
-      "./lib/babylon/materials/node/enums/nodematerialblockconnectionpointtypes.ts",
-      "./lib/babylon/materials/node/enums/nodematerialblockconnectionpointmode.ts",
-      "./lib/babylon/materials/node/enums/nodematerialsystemvalues.ts",
-      "./lib/babylon/materials/node/enums/index.ts",
       "./lib/babylon/materials/node/optimizers/nodematerialoptimizer.ts",
       "./lib/babylon/materials/node/blocks/transformblock.ts",
       "./lib/babylon/materials/node/blocks/vertex/vertexoutputblock.ts",
@@ -15087,7 +15300,6 @@
       "./lib/babylon/materials/node/nodematerialbuildstateshareddata.ts",
       "./lib/babylon/materials/node/nodematerialbuildstate.ts",
       "./lib/babylon/materials/node/nodematerialblock.ts",
-      "./lib/babylon/materials/node/blocks/input/animatedinputblocktypes.ts",
       "./lib/babylon/materials/node/blocks/input/inputblock.ts",
       "./lib/babylon/materials/node/nodematerialblockconnectionpoint.ts",
       "./lib/babylon/materials/node/blocks/vertex/bonesblock.ts",
@@ -15152,7 +15364,6 @@
       "./lib/babylon/materials/node/index.ts",
       "./lib/babylon/materials/effectrenderer.ts",
       "./lib/babylon/materials/index.ts",
-      "./lib/babylon/maths/index.ts",
       "./lib/babylon/misc/workerpool.ts",
       "./lib/babylon/meshes/compression/dracocompression.ts",
       "./lib/babylon/meshes/compression/index.ts",
@@ -15167,18 +15378,15 @@
       "./lib/babylon/meshes/builders/tubebuilder.ts",
       "./lib/babylon/meshes/builders/icospherebuilder.ts",
       "./lib/babylon/meshes/builders/decalbuilder.ts",
-      "./lib/babylon/meshes/meshbuilder.ts",
       "./lib/babylon/meshes/meshsimplification.ts",
       "./lib/babylon/meshes/meshsimplificationscenecomponent.ts",
       "./lib/babylon/meshes/builders/index.ts",
-      "./lib/babylon/meshes/index.ts",
       "./lib/babylon/morph/index.ts",
       "./lib/babylon/navigation/inavigationengine.ts",
       "./lib/babylon/navigation/plugins/recastjsplugin.ts",
       "./lib/babylon/navigation/plugins/index.ts",
       "./lib/babylon/navigation/index.ts",
       "./lib/babylon/offline/database.ts",
-      "./lib/babylon/offline/index.ts",
       "./lib/babylon/particles/gpuparticlesystem.ts",
       "./lib/babylon/particles/particlesystemset.ts",
       "./lib/babylon/particles/particlehelper.ts",
@@ -15231,13 +15439,10 @@
       "./lib/babylon/rendering/depthrendererscenecomponent.ts",
       "./lib/babylon/rendering/outlinerenderer.ts",
       "./lib/babylon/rendering/index.ts",
-      "./lib/babylon/sprites/isprites.ts",
       "./lib/babylon/sprites/spritemap.ts",
       "./lib/babylon/sprites/spritepackedmanager.ts",
       "./lib/babylon/sprites/index.ts",
-      "./lib/babylon/states/index.ts",
       "./lib/babylon/misc/assetsmanager.ts",
-      "./lib/babylon/misc/deferred.ts",
       "./lib/babylon/misc/meshexploder.ts",
       "./lib/babylon/misc/filesinput.ts",
       "./lib/babylon/misc/highdynamicrange/index.ts",
@@ -15246,7 +15451,6 @@
       "./lib/babylon/misc/texturetools.ts",
       "./lib/babylon/misc/videorecorder.ts",
       "./lib/babylon/misc/screenshottools.ts",
-      "./lib/babylon/misc/datareader.ts",
       "./lib/babylon/misc/index.ts",
       "./lib/babylon/xr/features/webxrhittestlegacy.ts",
       "./lib/babylon/xr/features/webxrplanedetector.ts",
@@ -15269,20 +15473,10 @@
       "./tools/zones.ts",
       "./tools/camera.ts",
       "./tools/buildings.ts",
-      "./webgl.ts",
       "./tools/terrain.ts",
       "./world/water.ts",
+      "./world/scene.ts",
       "./code.ts",
-      "./commonmath.ts",
-      "./lib/babylon/animations/pathcursor.ts",
-      "./lib/babylon/engines/processors/expressions/operators/index.ts",
-      "./lib/babylon/engines/processors/expressions/index.ts",
-      "./lib/babylon/engines/processors/index.ts",
-      "./lib/babylon/libdeclarations/browser.d.ts",
-      "./lib/babylon/libdeclarations/webgl.d.ts",
-      "./lib/babylon/libdeclarations/webgl2.d.ts",
-      "./lib/babylon/libdeclarations/webvr.d.ts",
-      "./lib/babylon/libdeclarations/webxr.d.ts",
       "./lib/materials/cell/cellmaterial.ts",
       "./lib/materials/cell/index.ts",
       "./lib/materials/custom/custommaterial.ts",
@@ -15315,12 +15509,7 @@
       "./lib/materials/water/watermaterial.ts",
       "./lib/materials/water/index.ts",
       "./lib/materials/index.ts",
-      "./paintground/paintline.ts",
-      "./plants/grass.ts",
-      "./rustwasm/hello_wasm_bg.d.ts",
-      "./rustwasm/hello_wasm.js",
-      "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./world/scene.ts"
+      "./paintground/paintline.ts"
     ]
   },
   "version": "3.8.1-rc"

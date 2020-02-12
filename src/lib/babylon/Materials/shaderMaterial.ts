@@ -85,7 +85,7 @@ export class ShaderMaterial extends Material {
     private _vectors4Arrays: { [name: string]: number[] } = {};
     private _cachedWorldViewMatrix = new Matrix();
     private _cachedWorldViewProjectionMatrix = new Matrix();
-    private _renderId!: number;
+    private _renderId: number;
     private _multiview: boolean = false;
 
     /**

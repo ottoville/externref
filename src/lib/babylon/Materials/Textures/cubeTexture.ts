@@ -228,7 +228,6 @@ export class CubeTexture extends BaseTexture {
         if (!this._texture) {
             if (!scene.useDelayedTextureLoading) {
                 if (prefiltered) {
-                    //@ts-ignore
                     this._texture = scene.getEngine().createPrefilteredCubeTexture(rootUrl, scene, lodScale, lodOffset, onLoad, onError, format, forcedExtension, this._createPolynomials);
                 }
                 else {
@@ -314,7 +313,6 @@ export class CubeTexture extends BaseTexture {
 
         if (!this._texture) {
             if (this._prefiltered) {
-                //@ts-ignore
                 this._texture = scene.getEngine().createPrefilteredCubeTexture(this.url, scene, 0.8, 0, this._delayedOnLoad, undefined, this._format, undefined, this._createPolynomials);
             }
             else {

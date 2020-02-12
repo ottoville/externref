@@ -8,6 +8,7 @@ export * from "./Bones/index";
 export * from "./Cameras/index";
 export * from "./Collisions/index";
 export * from "./Culling/index";
+export * from "./Debug/index";
 export * from "./Engines/index";
 export * from "./Events/index";
 export * from "./Gamepads/index";

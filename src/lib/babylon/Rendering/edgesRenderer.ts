@@ -79,8 +79,7 @@ declare module "../Meshes/linesMesh" {
     }
 }
 
-InstancedLinesMesh.prototype.enableEdgesRendering = function (epsilon = 0.95, checkVerticesInsteadOfIndices = false): InstancedLinesMesh {
-    //@ts-ignore
+InstancedLinesMesh.prototype.enableEdgesRendering = function(epsilon = 0.95, checkVerticesInsteadOfIndices = false): InstancedLinesMesh {
     LinesMesh.prototype.enableEdgesRendering.apply(this, arguments);
     return this;
 };
