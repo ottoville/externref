@@ -335,10 +335,8 @@ export class WorldScene extends Scene {
                 if (cameraIndex > 0) {
                     engine.clear(null, false, true, true);
                 }
-                (function () {
-                    this._processSubCameras(this.activeCameras[cameraIndex]);
-                }).bind(engine.scenes[0])();
-                //this._processSubCameras(this.activeCameras[cameraIndex]);
+                //@ts-ignore
+                this._processSubCameras(this.activeCameras[cameraIndex]);
             }
         } else {
             if (!this.activeCamera) {
@@ -889,6 +887,7 @@ export class WorldScene extends Scene {
             console.debug('terrain ready');
 
             this.tools['Buildings'] = new BuildingsUI(this);
+            console.log('creating sea');
             let sea = new Sea(this);
             DB.then(d => {
                 this.tools['Zones'] = new Zones(ground, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);

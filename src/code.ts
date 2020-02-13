@@ -4,8 +4,8 @@ import type { WorldScene } from "./world/scene.js";
 //import * as BABYLON from "./lib/babylon/index.js"
 import type { loginProvider, DotNet } from "./types/interfaces/index.js";
 import type { IEffectCreationOptions, Effect } from "./lib/babylon/Materials/effect.js";
-import type  { ThinEngine } from "./lib/babylon/Engines/thinEngine.js";
-import type { IEffectFallbacks } from "./lib/babylon/Materials/iEffectFallbacks.js";
+import type { Engine } from "./lib/babylon/Engines/engine.js";
+import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks.js";
 
 //import  DB from "./DB.js";
 
@@ -38,21 +38,21 @@ declare global {
         scene: WorldScene;
         sceneInited: Promise<WorldScene>;
         login: (e: PointerEvent, method: "facebook" | "anomyous") => void;
-        Wasm:any
+        Wasm: any
     }
 }
 declare var BlazorRouter: DotNet.BlazorInstance;
 let loadelem = document.body.appendChild(document.createElement("div"));
 //let progelem = loadelem.appendChild(document.createElement("progress"))
 loadelem.style.position = 'absolute';
-loadelem.style.right= '30%';
+loadelem.style.right = '30%';
 loadelem.style.top = '30%';
 loadelem.style.display = 'none';
-var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
+var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
     window.login = async (e: PointerEvent, method: "facebook" | "anomyous") => {
         loadelem.style.display = 'block';
-       // blazor.invokeMethod('setProgress', 0);
-       //progelem.max = 100;
+        // blazor.invokeMethod('setProgress', 0);
+        //progelem.max = 100;
         //progelem.value = 0;
         if (method == "facebook") {
             FB.login(() => {
@@ -71,9 +71,9 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
                 });
                 FB.getLoginStatus(async (response) => {
                     if (response.status === 'connected') {
-                       // progelem.value = 5;
+                        // progelem.value = 5;
                         (await BlazorRouter).invokeMethod('startGame');
-                       // progelem.value = 10;
+                        // progelem.value = 10;
                         login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID, pointerEvent: e });
                     }
                 });
@@ -92,7 +92,7 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
 window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
         await Wasm.default()
-        window.Wasm = Wasm;        
+        window.Wasm = Wasm;
         let EngineModule = await import('./lib/babylon/Engines/webgpuEngine.js');
         blazor.invokeMethod('setProgress', 2);
         let EffectModule = await import('./lib/babylon/Materials/effect.js');
@@ -103,35 +103,29 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         blazor.invokeMethod('setProgress', 10);
 
         //progelem.value = 20;
-       // var canvas = document.getElementById("renderCanvas");
+        // var canvas = document.getElementById("renderCanvas");
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
-        
-       // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
+
+        // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
         var engine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas);
         await engine.initAsync();
         blazor.invokeMethod('setProgress', 11);
-        engine.createEffect = function (baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | ThinEngine, samplers ?: string[], defines ?: string,
-            fallbacks ?: IEffectFallbacks,
+
+        engine.createEffect = function (baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | Engine, samplers?: string[], defines?: string, fallbacks?: EffectFallbacks,
             onCompiled?: Nullable<(effect: Effect) => void>, onError?: Nullable<(effect: Effect, errors: string) => void>, indexParameters?: any): Effect {
-            var vertex = baseName.vertexElement || baseName.vertex || baseName;
-            var fragment = baseName.fragmentElement || baseName.fragment || baseName;
+            const vertex = baseName.vertexElement || baseName.vertex || baseName;
+            const fragment = baseName.fragmentElement || baseName.fragment || baseName;
 
-            var name = vertex + "+" + fragment + "@" + (defines ? defines : (<IEffectCreationOptions>attributesNamesOrOptions).defines);
-            if (this._compiledEffects[name]) {
-                var compiledEffect = <Effect>this._compiledEffects[name];
-                if (onCompiled && compiledEffect.isReady()) {
-                    onCompiled(compiledEffect);
-                }
-
-                return compiledEffect;
+            const name = vertex + "+" + fragment + "@" + (defines ? defines : (<IEffectCreationOptions>attributesNamesOrOptions).defines);
+            const shader = this._compiledShaders[name];
+            if (shader) {
+                return new EffectModule.Effect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, shader.sources);
             }
-            var effect = new EffectModule.Effect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters);
-            effect._key = name;
-            this._compiledEffects[name] = effect;
-
-            return effect;
+            else {
+                return new EffectModule.Effect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name);
+            }
         }
 
         //@ts-ignore
@@ -191,12 +185,12 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         webSocket.onopen = async () => {
             console.log('websocket onopen');
             blazor.invokeMethod('setProgress', 20);
-           // progelem.value = 30;
+            // progelem.value = 30;
             sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, webSocket));
         }
         webSocket.onerror = async () => {
             console.log('websocket onerror');
-            
+
             try {
                 //blazor.invokeMethod('setProgress', 20);
                 sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas));

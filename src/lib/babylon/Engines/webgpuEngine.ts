@@ -2238,6 +2238,7 @@ export class WebGPUEngine extends Engine {
     }
 
     public drawArraysType(fillMode: number, verticesStart: number, verticesCount: number, instancesCount: number = 1): void {
+        console.log('drawArraysType2 ', verticesStart, verticesCount)
         const renderPass = this._bundleEncoder || this._currentRenderPass!;
 
         this._currentIndexBuffer = null;

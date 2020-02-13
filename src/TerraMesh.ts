@@ -66,7 +66,6 @@ export class TerraMesh extends Mesh {
     public uvs: SharedArrayBuffer | null = null;
 
     static worker = new ObjectWorkerThread('/webworkers/mesh.js');
-
     constructor(name: string, indices: Uint32Array, positions: Float32Array, normals?: Float32Array, uvs?: Float32Array) {
         super(name);
         this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * indices.length);
@@ -96,6 +95,8 @@ export class TerraMesh extends Mesh {
         vertexData.positions = this.positions;
         if (this.uvs)
             vertexData.uvs = new Float32Array(this.uvs)
+        if (this.normals)
+            vertexData.normals = new Float32Array(this.normalsBuffer)
         vertexData.applyToMesh(this, true);
     }
     public _testTriangle(collider: {
@@ -391,7 +392,34 @@ export class TerraMesh extends Mesh {
         let bounding = this.getBoundingInfo();
         return TerraMesh.worker.message(this.uniqueId, 'intersects', [bounding.boundingBox, bounding.boundingSphere, ray.origin, ray.direction, fastCheck, trianglePredicate]);
     }
+    public _draw(subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
+        
+        if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
+            return this;
+        }
+        //@ts-ignore
+        if (this._internalMeshDataInfo._onBeforeDrawObservable) {
+            //@ts-ignore
+            this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
+        }
+
+        let scene = this.getScene();
+        let engine = scene.getEngine();
+        console.log('render ', fillMode, this.name);
+        if (this._unIndexed || fillMode == Material.PointFillMode) {
+            // or triangles as points
+            engine.drawArraysType(fillMode, subMesh.verticesStart, subMesh.verticesCount, instancesCount);
+        } else if (fillMode == Material.WireFrameFillMode) {
+            // Triangles as wireframe
+            engine.drawElementsType(fillMode, 0, subMesh._linesIndexCount, instancesCount);
+        } else {
+            engine.drawElementsType(fillMode, subMesh.indexStart, subMesh.indexCount, instancesCount);
+        }
+
+        return this;
+    }
     public render(subMesh: SubMesh, enableAlphaMode: boolean, effectiveMeshReplacement?: AbstractMesh): Mesh {
+        
         if (this._internalAbstractMeshDataInfo._isActiveIntermediate) {
             this._internalAbstractMeshDataInfo._isActiveIntermediate = false;
         } else {
@@ -413,6 +441,7 @@ export class TerraMesh extends Mesh {
         if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
             return this;
         }
+        
         (function () {
             if (this._internalMeshDataInfo._onBeforeRenderObservable) {
                 this._internalMeshDataInfo._onBeforeRenderObservable.notifyObservers(this);
@@ -428,7 +457,7 @@ export class TerraMesh extends Mesh {
         if (!material) {
             return this;
         }
-
+        
         // @ts-ignore Material
         if (!instanceDataStorage.isFrozen || !this._effectiveMaterial || this._effectiveMaterial !== material) {
             if (material._storeEffectOnSubMeshes) {
@@ -441,7 +470,7 @@ export class TerraMesh extends Mesh {
             //@ts-ignore
             this._effectiveMaterial = material;
         }
-
+        
         // Alpha mode
         if (enableAlphaMode) {
             //@ts-ignore
@@ -464,7 +493,6 @@ export class TerraMesh extends Mesh {
         if (!effect) {
             return this;
         }
-
         const effectiveMesh = effectiveMeshReplacement || this._effectiveMesh;
 
         var sideOrientation: Nullable<number>;

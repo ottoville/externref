@@ -974,7 +974,7 @@
         "signature": "1594be047b2eb21abda024c3497af57af6dfc16136eac4d2135c6c11f03f8e85"
       },
       "./lib/babylon/engines/webgpuengine.ts": {
-        "version": "d94e816f277cfac2104d9489c497cbf25a23ce0e7318fbb454dcaa3c531829e5",
+        "version": "b9b76548606571e962c465b8a3a8fad7d1a384c906503ec6b8e0cd944b4c117f",
         "signature": "2e12ecb8250147cf551ab47a1d8de8a1fdad615431026a173e8cba677d16806c"
       },
       "./lib/babylon/scene.ts": {
@@ -1054,8 +1054,8 @@
         "signature": "273bf1659e5e0974cfa287c8353738873f06e8ab17c5c2c5a1268c9cc868f7d6"
       },
       "./terramesh.ts": {
-        "version": "01a4f33b1bcfc6390722bcae10bffb91891c0a97e25275a05d94e8bf2760d772",
-        "signature": "1fe372a2159cf06543e7471595ddcfa2e05d2a6d6fb4d88c8bd26f2fe5d1f6e5"
+        "version": "d6198b055408629238675dd10cf0ee60461f2a998cdd9a54124586bacf7578b9",
+        "signature": "ef258492f55f793c848435641dee2c9e9770dd8695c837277b9b2da4fe4240fd"
       },
       "./terraray.ts": {
         "version": "2e8ffd3263938ad9baa94a0371c1d496b805536ace3e8a20f8a3046112e7215e",
@@ -2690,15 +2690,15 @@
         "signature": "eb94175b7a88122b33bb92473af7420a341917b278897036756867fe9b9c9d7f"
       },
       "./world/water.ts": {
-        "version": "6f7719da956d826221e5f10c241f2f55b229a78939d6ba93e5ff6988e91978d3",
-        "signature": "f817aa73453a07036351635de696f4628ebfda774e4d7ca2a466afc673eb6bed"
+        "version": "e6121d790e36faf546c830fdbd0c9d1bd0f91859b6ba0a49d9f1b469e110643a",
+        "signature": "69b97ca99fd38ece03e3d7693a37d0e9d1956f4b2f73cced6a94e477f9ff391f"
       },
       "./world/scene.ts": {
-        "version": "3f69e20cee6c77881e4e8bcadd2cc45486dea9860a5788547d33b1a185b9502a",
+        "version": "4399d15e699bf561991b5bb02a9f35d5f69c0ee08ac12b162099ff57103de5a4",
         "signature": "d2f94f8d4de03dd29922d4ecd0833c50a2abf73c9e573548b02169557c13e125"
       },
       "./code.ts": {
-        "version": "5c3abe5af35c6795838ea80de3e38b7a59db1e8201fda50518b9da35038d8471",
+        "version": "a2b063b509b6d9ad6d710fd1beebc3309d0eb1f23e6f43625013e467c244265a",
         "signature": "e0e3ce2dce2eaf2e4b5f030fec79a8c159a4ee7da195eac1dfcbfe02588bc731"
       },
       "./commonmath.ts": {
@@ -9524,10 +9524,10 @@
       ],
       "./world/water.ts": [
         "./world/scene.ts",
-        "./lib/babylon/meshes/groundmesh.ts",
         "./lib/babylon/meshes/mesh.vertexdata.ts",
         "./lib/babylon/materials/standardmaterial.ts",
-        "./lib/babylon/maths/math.color.ts"
+        "./lib/babylon/maths/math.color.ts",
+        "./terramesh.ts"
       ],
       "./world/scene.ts": [
         "./world/sun.ts",
@@ -9572,8 +9572,8 @@
         "./world/scene.ts",
         "./types/interfaces/index.d.ts",
         "./lib/babylon/materials/effect.ts",
-        "./lib/babylon/engines/thinengine.ts",
-        "./lib/babylon/materials/ieffectfallbacks.ts",
+        "./lib/babylon/engines/engine.ts",
+        "./lib/babylon/materials/effectfallbacks.ts",
         "./lib/babylon/engines/webgpuengine.ts",
         "./lib/babylon/misc/filetools.ts"
       ],
@@ -14033,7 +14033,7 @@
       ],
       "./world/water.ts": [
         "./world/scene.ts",
-        "./lib/babylon/meshes/groundmesh.ts"
+        "./terramesh.ts"
       ],
       "./world/scene.ts": [
         "./types/interfaces/index.d.ts",
@@ -14887,7 +14887,7 @@
       "./webgl.ts",
       "./tools/terrain.ts",
       "./world/water.ts",
-      "./code.ts",
+      "./world/scene.ts",
       "./commonmath.ts",
       "./lib/babylon/animations/pathcursor.ts",
       "./lib/babylon/engines/processors/expressions/operators/index.ts",
@@ -14940,7 +14940,7 @@
       "./rustwasm/hello_wasm_bg.d.ts",
       "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./world/scene.ts"
+      "./code.ts"
     ]
   },
   "version": "3.8.1-rc"

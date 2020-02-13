@@ -1,8 +1,8 @@
 ﻿import type { WorldScene } from "./scene";
-import { GroundMesh } from "../lib/babylon/Meshes/groundMesh";
 import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData";
 import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial";
 import { Color3 } from "../lib/babylon/Maths/math.color";
+import { TerraMesh } from "../TerraMesh";
 VertexData.CreateGround = function (options: { width?: number, height?: number, subdivisions?: number, subdivisionsX?: number, subdivisionsY?: number }): VertexData {
     var indices = [];
     var positions = [];
@@ -48,9 +48,27 @@ VertexData.CreateGround = function (options: { width?: number, height?: number, 
 
     return vertexData;
 };
-export class Sea extends GroundMesh {
+export class Sea extends TerraMesh {
+
+    public _subdivisionsX: number;
+    public _subdivisionsY: number;
+
+    public _width: number;
+    public _height: number;
+    public _minX: number;
+    public _maxX: number;
+    public _minZ: number;
+    public _maxZ: number;
+
     constructor(scene: WorldScene) {
-        super('sea', scene);
+        super('sea', new Uint32Array([3, 1, 0, 2, 3, 0]), new Float32Array([-5000, 0, 5000, 5000, 0, 5000, -5000, 0, -5000, 5000, 0, -5000]), new Float32Array([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]), new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]));
+        /*
+         * 
+        indices: (6) [3, 1, 0, 2, 3, 0]
+normals: (12) [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]
+positions: (12) [-5000, 0, 5000, 5000, 0, 5000, -5000, 0, -5000, 5000, 0, -5000]
+uvs: (8) [0, 1, 1, 1, 0, 0, 1, 0]
+         */
         this._setReady(false);
         this._subdivisionsX = 1;
         this._subdivisionsY = 1;
@@ -60,24 +78,24 @@ export class Sea extends GroundMesh {
         this._maxZ = this._height / 2;
         this._minX = -this._maxX;
         this._minZ = -this._maxZ;
-
-        var vertexData = VertexData.CreateGround({
+      /*  var vertexData = VertexData.CreateGround({
             width: 10000,
             height: 10000,
             subdivisions: 1,
         });
+        console.log('vertexdata');
+        console.log(vertexData);
+        vertexData.applyToMesh(this, true);*/
+        this.position.y = 50
 
-        vertexData.applyToMesh(this, false);
-        this.position.y = 3
-
-        var watermaterial = new StandardMaterial("watermaterial", scene);
+       /* var watermaterial = new StandardMaterial("watermaterial", scene);
 
         watermaterial.diffuseColor = new Color3(0, 0.2, 1);
         watermaterial.specularColor = new Color3(0.0, 0.2, 0.87);
         watermaterial.emissiveColor = new Color3(0, 0.2, 1);
         watermaterial.ambientColor = new Color3(0.0, 0.2, 0.93);
 
-        this.material = watermaterial;
+        this.material = watermaterial;*/
 
         this._setReady(true);
     }
