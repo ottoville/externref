@@ -12,8 +12,8 @@ import { MaterialHelper } from "../Materials/materialHelper";
 import { Scene } from "../scene";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 
-import "../Shaders/geometry.fragment";
-import "../Shaders/geometry.vertex";
+//import "../Shaders/geometry.fragment";
+//import "../Shaders/geometry.vertex";
 import { _DevTools } from '../Misc/devTools';
 import { Color4 } from '../Maths/math.color';
 

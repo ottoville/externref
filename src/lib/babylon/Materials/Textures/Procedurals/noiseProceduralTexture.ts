@@ -6,7 +6,7 @@ import { Texture } from "../../../Materials/Textures/texture";
 import { ProceduralTexture } from "./proceduralTexture";
 import { _TypeStore } from '../../../Misc/typeStore';
 
-import "../../../Shaders/noise.fragment";
+//import "../../../Shaders/noise.fragment";
 
 /**
  * Class used to generate noise procedural textures

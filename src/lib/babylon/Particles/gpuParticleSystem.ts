@@ -24,10 +24,10 @@ import { EngineStore } from "../Engines/engineStore";
 import { DeepCopier } from "../Misc/deepCopier";
 import { IAnimatable } from '../Animations/animatable.interface';
 
-import "../Shaders/gpuUpdateParticles.fragment";
-import "../Shaders/gpuUpdateParticles.vertex";
-import "../Shaders/gpuRenderParticles.fragment";
-import "../Shaders/gpuRenderParticles.vertex";
+//import "../Shaders/gpuUpdateParticles.fragment";
+//import "../Shaders/gpuUpdateParticles.vertex";
+//import "../Shaders/gpuRenderParticles.fragment";
+//import "../Shaders/gpuRenderParticles.vertex";
 
 /**
  * This represents a GPU particle system in Babylon

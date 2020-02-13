@@ -5,7 +5,7 @@ import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/grain.fragment";
+//import "../Shaders/grain.fragment";
 
 /**
  * The GrainPostProcess adds noise to the image at mid luminance levels

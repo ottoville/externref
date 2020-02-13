@@ -5,7 +5,7 @@ import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/depthOfFieldMerge.fragment";
+//import "../Shaders/depthOfFieldMerge.fragment";
 
 /**
  * Options to be set when merging outputs from the default pipeline.

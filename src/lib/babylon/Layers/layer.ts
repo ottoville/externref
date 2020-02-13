@@ -14,8 +14,8 @@ import { LayerSceneComponent } from "./layerSceneComponent";
 import { Constants } from "../Engines/constants";
 import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 
-import "../Shaders/layer.fragment";
-import "../Shaders/layer.vertex";
+//import "../Shaders/layer.fragment";
+//import "../Shaders/layer.vertex";
 import { DataBuffer } from '../Meshes/dataBuffer';
 
 /**

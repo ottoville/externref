@@ -91,7 +91,8 @@ var loginPromise: Promise<loginProvider> =new Promise<loginProvider>(login => {
 
 window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
-                
+        await Wasm.default()
+        window.Wasm = Wasm;        
         let EngineModule = await import('./lib/babylon/Engines/webgpuEngine.js');
         blazor.invokeMethod('setProgress', 2);
         let EffectModule = await import('./lib/babylon/Materials/effect.js');
@@ -100,8 +101,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         blazor.invokeMethod('setProgress', 9);
         let FileToolsModule = await import('./lib/babylon/Misc/fileTools.js');
         blazor.invokeMethod('setProgress', 10);
-        await Wasm.default()
-        window.Wasm = Wasm;
+
         //progelem.value = 20;
        // var canvas = document.getElementById("renderCanvas");
         if (canvas.dataset.inited === "true")
@@ -111,6 +111,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
        // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
         var engine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas);
         await engine.initAsync();
+        blazor.invokeMethod('setProgress', 11);
         engine.createEffect = function (baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | ThinEngine, samplers ?: string[], defines ?: string,
             fallbacks ?: IEffectFallbacks,
             onCompiled?: Nullable<(effect: Effect) => void>, onError?: Nullable<(effect: Effect, errors: string) => void>, indexParameters?: any): Effect {
@@ -195,9 +196,9 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         }
         webSocket.onerror = async () => {
             console.log('websocket onerror');
-            blazor.invokeMethod('setProgress', 20);
-            //progelem.value = 30;
+            
             try {
+                //blazor.invokeMethod('setProgress', 20);
                 sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas));
             } catch (e) {
                 console.error('creating terrain failed', e);

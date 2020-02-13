@@ -7,7 +7,7 @@ import { Camera } from "../Cameras/camera";
 import { Logger } from "../Misc/logger";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/circleOfConfusion.fragment";
+//import "../Shaders/circleOfConfusion.fragment";
 
 /**
  * The CircleOfConfusionPostProcess computes the circle of confusion value for each pixel given required lens parameters. See https://en.wikipedia.org/wiki/Circle_of_confusion

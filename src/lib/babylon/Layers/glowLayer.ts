@@ -20,9 +20,9 @@ import { _TypeStore } from '../Misc/typeStore';
 import { Engine } from '../Engines/engine';
 import { Color4 } from '../Maths/math.color';
 
-import "../Shaders/glowMapMerge.fragment";
-import "../Shaders/glowMapMerge.vertex";
-import "../Layers/effectLayerSceneComponent";
+//import "../Shaders/glowMapMerge.fragment";
+//import "../Shaders/glowMapMerge.vertex";
+//import "../Layers/effectLayerSceneComponent";
 
 declare module "../abstractScene" {
     export interface AbstractScene {

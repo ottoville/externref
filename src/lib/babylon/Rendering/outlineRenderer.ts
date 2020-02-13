@@ -9,8 +9,8 @@ import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
 
-import "../Shaders/outline.fragment";
-import "../Shaders/outline.vertex";
+//import "../Shaders/outline.fragment";
+//import "../Shaders/outline.vertex";
 
 declare module "../scene" {
     export interface Scene {

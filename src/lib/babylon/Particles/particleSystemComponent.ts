@@ -9,7 +9,7 @@ import { Scene } from "../scene";
 import { SceneComponentConstants } from "../sceneComponent";
 import { AssetContainer } from "../assetContainer";
 
-import "../Shaders/particles.vertex";
+//import "../Shaders/particles.vertex";
 import { EffectFallbacks } from '../Materials/effectFallbacks';
 
 // Adds the parsers to the scene parsers.

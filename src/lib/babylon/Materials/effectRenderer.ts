@@ -11,7 +11,7 @@ import { DataBuffer } from '../Meshes/dataBuffer';
 import "../Engines/Extensions/engine.renderTarget";
 
 // Prevents ES6 Crash if not imported.
-import "../Shaders/postprocess.vertex";
+//import "../Shaders/postprocess.vertex";
 
 /**
  * Effect Render Options

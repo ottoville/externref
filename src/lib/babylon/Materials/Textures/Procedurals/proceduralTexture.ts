@@ -15,9 +15,9 @@ import { Texture } from "../../../Materials/Textures/texture";
 import { RenderTargetTexture } from "../../../Materials/Textures/renderTargetTexture";
 import { ProceduralTextureSceneComponent } from "./proceduralTextureSceneComponent";
 
-import "../../../Engines/Extensions/engine.renderTarget";
-import "../../../Engines/Extensions/engine.renderTargetCube";
-import "../../../Shaders/procedural.vertex";
+//import "../../../Engines/Extensions/engine.renderTarget";
+//import "../../../Engines/Extensions/engine.renderTargetCube";
+//import "../../../Shaders/procedural.vertex";
 import { DataBuffer } from '../../../Meshes/dataBuffer';
 
 /**

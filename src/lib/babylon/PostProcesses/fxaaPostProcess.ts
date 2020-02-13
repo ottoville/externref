@@ -6,8 +6,8 @@ import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/fxaa.fragment";
-import "../Shaders/fxaa.vertex";
+//import "../Shaders/fxaa.fragment";
+//import "../Shaders/fxaa.vertex";
 
 /**
  * Fxaa post process

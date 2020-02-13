@@ -15,8 +15,8 @@ import { SceneComponentConstants } from "../sceneComponent";
 import { Constants } from "../Engines/constants";
 import { Logger } from "../Misc/logger";
 
-import "../Shaders/sprites.fragment";
-import "../Shaders/sprites.vertex";
+//import "../Shaders/sprites.fragment";
+//import "../Shaders/sprites.vertex";
 import { DataBuffer } from '../Meshes/dataBuffer';
 declare type Ray = import("../Culling/ray").Ray;
 

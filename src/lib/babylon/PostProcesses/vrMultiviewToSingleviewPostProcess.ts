@@ -3,8 +3,8 @@ import { Effect } from "../Materials/effect";
 import { Texture } from "../Materials/Textures/texture";
 import { PostProcess } from "./postProcess";
 
-import "../Shaders/vrMultiviewToSingleview.fragment";
-import "../Engines/Extensions/engine.multiview";
+//import "../Shaders/vrMultiviewToSingleview.fragment";
+//import "../Engines/Extensions/engine.multiview";
 
 /**
  * VRMultiviewToSingleview used to convert multiview texture arrays to standard textures for scenarios such as webVR

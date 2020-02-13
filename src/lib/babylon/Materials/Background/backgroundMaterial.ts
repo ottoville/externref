@@ -25,8 +25,8 @@ import { _TypeStore } from "../../Misc/typeStore";
 import { MaterialFlags } from "../materialFlags";
 import { Color3 } from '../../Maths/math.color';
 
-import "../../Shaders/background.fragment";
-import "../../Shaders/background.vertex";
+//import "../../Shaders/background.fragment";
+//import "../../Shaders/background.vertex";
 import { EffectFallbacks } from '../effectFallbacks';
 
 /**

@@ -382,7 +382,7 @@ function workerFunc(): void {
         return info;
     }
 
-    function TranscodeLevel(loadedFile: any, imageIndex: number, levelIndex: number, format: number, convertToRgb565: boolean): Nullable<Uint16Array> {
+    function TranscodeLevel(loadedFile: any, imageIndex: number, levelIndex: number, format: number, convertToRgb565: boolean): any {
         var dstSize = loadedFile.getImageTranscodedSizeInBytes(imageIndex, levelIndex, format);
         var dst = new Uint8Array(dstSize);
         if (!loadedFile.transcodeImage(dst, imageIndex, levelIndex, format, 1, 0)) {
@@ -408,7 +408,7 @@ function workerFunc(): void {
      * @param  height aligned height of the image
      * @return the converted pixels
      */
-    function ConvertDxtToRgb565(src: Uint8Array, srcByteOffset: number, width: number, height: number): Uint16Array {
+    function ConvertDxtToRgb565(src: Uint8Array, srcByteOffset: number, width: number, height: number): any {
         var c = new Uint16Array(4);
         var dst = new Uint16Array(width * height);
 

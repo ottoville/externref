@@ -34,6 +34,7 @@ import type { TrianglePickingPredicate } from "../lib/babylon/Culling/ray.js";
 import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
 console.log('p8');
 import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
+import { Engine } from "../lib/babylon/Engines/engine.js";
 console.log('p9');
 import { PointLight } from "../lib/babylon/Lights/pointLight.js";
 import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
@@ -48,6 +49,8 @@ import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import { Sea } from "./water.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
+import { InternalTexture } from "../lib/babylon/Materials/Textures/internalTexture.js";
+
 console.log('p13');
 Scene.CollisionCoordinatorFactory = () => {
     return new DefaultCollisionCoordinator();
@@ -754,8 +757,8 @@ export class WorldScene extends Scene {
 
         }).bind(this._inputManager)(this, elementToAttachTo);
     }
-    constructor(engine: WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
-        super(engine);
+    constructor(engine: Engine | WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
+        super(engine as Engine);
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable < AbstractMesh > = null): void  {
             var closeDistance = Engine.CollisionsEpsilon * 10.0;
@@ -920,16 +923,22 @@ export class WorldScene extends Scene {
             texture.then(imgdata => {
                 blazor.invokeMethod('setProgress', 75);
                 let width = 10000;
-                let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
+
+                let rtexture2 = new InternalTexture(engine, 3);
+               /* let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
                     _engine: engine,
                     _source: 3,
                     _webGLTexture: gl.createTexture()
+                }*/
+                if (imgdata instanceof HTMLImageElement) {
+
+                } else {
+                    //engine.updateRawTexture(rtexture2, new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2), Engine.TEXTUREFORMAT_RGBA, true, null, Constants.TEXTURETYPE_UNSIGNED_INT);
                 }
+               
 
-                //engine.updateRawTexture(rtexture2, imagedata.data, BABYLON.Engine.TEXTUREFORMAT_RGBA, true, null, BABYLON.Constants.TEXTURETYPE_UNSIGNED_INT);
-
+                /*
                 gl.bindTexture(gl.TEXTURE_2D, rtexture2._webGLTexture);
-
                 //gl.bindTexture(gl.TEXTURE_2D, ntexture);
                 //engine._unpackFlipY(true);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -950,7 +959,7 @@ export class WorldScene extends Scene {
 
 
                 gl.bindTexture(gl.TEXTURE_2D, null);
-
+                */
 
                 /*
                  * https://stackoverflow.com/questions/50013385/hello-world-example-of-webgl-parallelism
@@ -968,23 +977,22 @@ export class WorldScene extends Scene {
                         wrapV: Texture.CLAMP_ADDRESSMODE
                     };
                 }).bind(shadermateria)();
-                ground.material = shadermateria;
+                //ground.material = shadermateria;
                 blazor.invokeMethod('setProgress', 100);
             })
 
             ground.isPickable = true;
 
-            let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
+           // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
-            let gl: WebGLRenderingContext = engine._gl;
 
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
 
-            this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
-            //progelem.parentElement.style.display = 'none';
+           // this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
             
         }).catch(e => {
+            console.error(e);
             blazor.invokeMethod('setProgressError', e.name + e.message);
         })
     }

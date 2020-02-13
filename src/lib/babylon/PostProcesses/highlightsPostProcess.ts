@@ -4,7 +4,7 @@ import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/highlights.fragment";
+//import "../Shaders/highlights.fragment";
 
 /**
  * Extracts highlights from the image

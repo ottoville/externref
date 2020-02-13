@@ -18,7 +18,6 @@ import "../Materials/Textures/Loaders/ddsTextureLoader";
 import "../Materials/Textures/Loaders/envTextureLoader";
 import "../Materials/Textures/Loaders/ktxTextureLoader";
 import "../Meshes/Builders/boxBuilder";
-import { WebXRDefaultExperience, WebXRDefaultExperienceOptions } from '../Cameras/XR/webXRDefaultExperience';
 
 /** @hidden */
 export var _forceSceneHelpersToBundle = true;
@@ -84,7 +83,6 @@ declare module "../scene" {
          * @param options experience options
          * @returns a promise for a new WebXRDefaultExperience
          */
-        createDefaultXRExperienceAsync(options: WebXRDefaultExperienceOptions): Promise<WebXRDefaultExperience>;
     }
 }
 
@@ -206,10 +204,4 @@ Scene.prototype.createDefaultEnvironment = function(options: Partial<IEnvironmen
 
 Scene.prototype.createDefaultVRExperience = function(webVROptions: VRExperienceHelperOptions = {}): VRExperienceHelper {
     return new VRExperienceHelper(this, webVROptions);
-};
-
-Scene.prototype.createDefaultXRExperienceAsync = function(options: WebXRDefaultExperienceOptions): Promise<WebXRDefaultExperience> {
-    return WebXRDefaultExperience.CreateAsync(this, options).then((helper) => {
-        return helper;
-    });
 };

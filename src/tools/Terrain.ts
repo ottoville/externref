@@ -168,11 +168,11 @@ export class TerrainTool extends UITAB {
             }
             if (this._options.uniforms.indexOf("world") !== -1) {
                 let effect = (<Effect>this._effect);
-                //this._effect.setMatrix("world", world);
-                if (effect._cacheMatrix("world", world)) {
+                this._effect.setMatrix("world", world);
+                //if (effect._cacheMatrix("world", world)) {
                     //engine.setMatrices(effect.getUniform("world"), world.toArray() as Float32Array);
-                    gl.uniformMatrix4fv(effect.getUniform("world"), false, world.toArray() as Float32Array);
-                }
+                   // gl.uniformMatrix4fv(effect.getUniform("world"), false, world.toArray() as Float32Array);
+               // }
             }
 
             if (this._options.uniforms.indexOf("worldView") !== -1) {

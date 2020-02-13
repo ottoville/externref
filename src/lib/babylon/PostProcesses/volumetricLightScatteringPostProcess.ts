@@ -19,10 +19,10 @@ import { Scene } from "../scene";
 
 import "../Meshes/Builders/planeBuilder";
 
-import "../Shaders/depth.vertex";
-import "../Shaders/volumetricLightScattering.fragment";
-import "../Shaders/volumetricLightScatteringPass.vertex";
-import "../Shaders/volumetricLightScatteringPass.fragment";
+//import "../Shaders/depth.vertex";
+//import "../Shaders/volumetricLightScattering.fragment";
+//import "../Shaders/volumetricLightScatteringPass.vertex";
+//import "../Shaders/volumetricLightScatteringPass.fragment";
 import { Color4, Color3 } from '../Maths/math.color';
 import { Viewport } from '../Maths/math.viewport';
 

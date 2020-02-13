@@ -14,8 +14,8 @@ import { Logger } from "../Misc/logger";
 import "../Engines/Extensions/engine.renderTargetCube";
 import "../Materials/Textures/baseTexture.polynomial";
 
-import "../Shaders/rgbdEncode.fragment";
-import "../Shaders/rgbdDecode.fragment";
+//import "../Shaders/rgbdEncode.fragment";
+//import "../Shaders/rgbdDecode.fragment";
 import { Engine } from '../Engines/engine';
 
 /**

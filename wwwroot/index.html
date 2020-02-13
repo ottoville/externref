@@ -27,6 +27,26 @@
         var BlazorRouter = new Promise((resolve, reject) => {
             window.initRouter = resolve;
         });
+        window._modules = {};
+        Object.defineProperty(window, 'Module', {
+            get: function () {
+                let stack = new Error().stack;
+                if (stack.includes('glslang')) {
+                    return window._modules['glslang'];
+                }
+                //console.log(new Error().stack);
+                return window._modules['dotnet']
+            },
+            set: function (module) {
+                let script = new Error().stack.split('\n').pop();
+                if (script.includes('blazor') || script.includes('dotnet')) {
+                    window._modules['dotnet'] = module;
+                }
+                if (script.includes('glslang')) {
+                    window._modules['glslang'] = module;
+                }
+            }
+        });
     </script>
     <script defer src="_framework/blazor.webassembly.js"></script>
     <link href="css/site.css" rel="stylesheet" />
@@ -41,7 +61,7 @@
         );
         window[aiName] = aisdk, aisdk.queue && 0 === aisdk.queue.length && aisdk.trackPageView({});
     </script>
-    <script type="module" src="js/code.js" defer></script>
+    <script type="module" src="js/code.js"></script>
 </head>
 <body>
     <app>Loading...</app>

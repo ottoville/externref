@@ -35,8 +35,8 @@ import { Constants } from "../../Engines/constants";
 import { IAnimatable } from '../../Animations/animatable.interface';
 
 import "../../Materials/Textures/baseTexture.polynomial";
-import "../../Shaders/pbr.fragment";
-import "../../Shaders/pbr.vertex";
+//import "../../Shaders/pbr.fragment";
+//import "../../Shaders/pbr.vertex";
 import { EffectFallbacks } from '../effectFallbacks';
 
 /**

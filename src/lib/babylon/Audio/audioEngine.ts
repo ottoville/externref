@@ -166,6 +166,7 @@ export class AudioEngine implements IAudioEngine {
      */
     constructor(hostElement: Nullable<HTMLElement> = null) {
         if (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined') {
+            //@ts-ignore
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
             this.canUseWebAudio = true;
         }

@@ -12,8 +12,8 @@ import { Camera } from "../Cameras/camera";
 import { Constants } from "../Engines/constants";
 import { Node } from "../node";
 
-import "../Shaders/line.fragment";
-import "../Shaders/line.vertex";
+//import "../Shaders/line.fragment";
+//import "../Shaders/line.vertex";
 import { DataBuffer } from '../Meshes/dataBuffer';
 
 declare module "../Meshes/abstractMesh" {

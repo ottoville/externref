@@ -13,8 +13,8 @@ import { _TimeToken } from "../Instrumentation/timeToken";
 import { LensFlare } from "./lensFlare";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/lensFlare.fragment";
-import "../Shaders/lensFlare.vertex";
+//import "../Shaders/lensFlare.fragment";
+//import "../Shaders/lensFlare.vertex";
 import { _DevTools } from '../Misc/devTools';
 import { DataBuffer } from '../Meshes/dataBuffer';
 import { Color3 } from '../Maths/math.color';

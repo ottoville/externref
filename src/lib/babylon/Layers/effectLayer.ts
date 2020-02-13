@@ -23,8 +23,8 @@ import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/glowMapGeneration.fragment";
-import "../Shaders/glowMapGeneration.vertex";
+//import "../Shaders/glowMapGeneration.fragment";
+//import "../Shaders/glowMapGeneration.vertex";
 import { _DevTools } from '../Misc/devTools';
 import { DataBuffer } from '../Meshes/dataBuffer';
 import { EffectFallbacks } from '../Materials/effectFallbacks';

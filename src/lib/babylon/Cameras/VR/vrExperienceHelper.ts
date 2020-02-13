@@ -36,10 +36,6 @@ import "../../Meshes/Builders/cylinderBuilder";
 import "../../Gamepads/gamepadSceneComponent";
 import "../../Animations/animatable";
 import { Axis } from '../../Maths/math.axis';
-import { WebXRSessionManager } from '../XR/webXRSessionManager';
-import { WebXRDefaultExperience } from '../XR/webXRDefaultExperience';
-import { WebXRState } from '../XR/webXRTypes';
-import { WebXRControllerTeleportation } from '../XR/webXRControllerTeleportation';
 
 /**
  * Options to modify the vr teleportation behavior.
@@ -695,7 +691,7 @@ export class VRExperienceHelper {
     /**
      * If asking to force XR, this will be populated with the default xr experience
      */
-    public xr: WebXRDefaultExperience;
+    public xr: any;
 
     /**
      * Was the XR test done already. If this is true AND this.xr exists, xr is initialized.
@@ -782,87 +778,7 @@ export class VRExperienceHelper {
         }
 
         if (this.webVROptions.useXR && (navigator as any).xr) {
-            // force-check XR session support
-            WebXRSessionManager.IsSessionSupportedAsync("immersive-vr").then((supported) => {
-                if (supported) {
-                    Logger.Log("Using WebXR. It is recommended to use the WebXRDefaultExperience directly");
-                    // it is possible to use XR, let's do it!
-                    scene.createDefaultXRExperienceAsync({
-                        floorMeshes: webVROptions.floorMeshes || []
-                    }).then((xr) => {
-                        this.xr = xr;
-                        // connect observables
-                        this.xrTestDone = true;
-
-                        this._cameraGazer = new VRExperienceHelperCameraGazer(() => { return this.xr.baseExperience.camera; }, scene);
-
-                        this.xr.baseExperience.onStateChangedObservable.add((state) => {
-                            // support for entering / exiting
-                            switch (state) {
-                                case WebXRState.ENTERING_XR:
-                                    this.onEnteringVRObservable.notifyObservers(this);
-                                    if (this._interactionsEnabled) {
-                                        this._scene.registerBeforeRender(this.beforeRender);
-                                    }
-                                    if (this._displayLaserPointer) {
-                                        [this._leftController, this._rightController].forEach((controller) => {
-                                            if (controller) {
-                                                controller._activatePointer();
-                                            }
-                                        });
-                                    }
-                                    break;
-                                case WebXRState.EXITING_XR:
-                                    this.onExitingVRObservable.notifyObservers(this);
-                                    if (this._interactionsEnabled) {
-                                        this._scene.unregisterBeforeRender(this.beforeRender);
-                                        this._cameraGazer._gazeTracker.isVisible = false;
-                                        if (this._leftController) {
-                                            this._leftController._gazeTracker.isVisible = false;
-                                        }
-                                        if (this._rightController) {
-                                            this._rightController._gazeTracker.isVisible = false;
-                                        }
-                                    }
-
-                                    // resize to update width and height when exiting vr exits fullscreen
-                                    this._scene.getEngine().resize();
-
-                                    [this._leftController, this._rightController].forEach((controller) => {
-                                        if (controller) {
-                                            controller._deactivatePointer();
-                                        }
-                                    });
-                                    break;
-                                case WebXRState.IN_XR:
-                                    this._hasEnteredVR = true;
-                                    break;
-                                case WebXRState.NOT_IN_XR:
-                                    this._hasEnteredVR = false;
-                                    break;
-                            }
-                        });
-
-                        this.xr.input.onControllerAddedObservable.add((controller) => {
-                            // var webVRController = controller.gamepadController;
-                            // if (webVRController) {
-                            //     var localController = new VRExperienceHelperControllerGazer(webVRController, this._scene, this._cameraGazer._gazeTracker);
-
-                            //     if (controller.inputSource.handedness === "right" || (this._leftController)) {
-                            //         this._rightController = localController;
-                            //     } else {
-                            //         this._leftController = localController;
-                            //     }
-
-                            //     this._tryEnableInteractionOnController(localController);
-                            // }
-                        });
-                    });
-                } else {
-                    // XR not supported (thou exists), continue WebVR init
-                    this.completeVRInit(scene, webVROptions);
-                }
-            });
+           
         } else {
             // no XR, continue init synchronous
             this.completeVRInit(scene, webVROptions);
@@ -1069,7 +985,7 @@ export class VRExperienceHelper {
      * Gets a value indicating if we are currently in VR mode.
      */
     public get isInVRMode(): boolean {
-        return (this.xr && this.webVROptions.useXR && this.xr.baseExperience.state === WebXRState.IN_XR) || (this._webVRpresenting || this._fullscreenVRpresenting);
+        return (this.xr && this.webVROptions.useXR) || (this._webVRpresenting || this._fullscreenVRpresenting);
     }
 
     private onVrDisplayPresentChange() {
@@ -1460,14 +1376,12 @@ export class VRExperienceHelper {
                     }
                 }
                 if (this.xr) {
-                    this.xr.teleportation = new WebXRControllerTeleportation(this.xr.input, floorMeshes);
                     return;
                 } else if (!this.xrTestDone) {
                     const waitForXr = () => {
                         if (this.xrTestDone) {
                             this._scene.unregisterBeforeRender(waitForXr);
                             if (this.xr) {
-                                this.xr.teleportation = new WebXRControllerTeleportation(this.xr.input, floorMeshes);
                             } else {
                                 this.enableTeleportation(vrTeleportationOptions);
                             }
@@ -1479,7 +1393,6 @@ export class VRExperienceHelper {
             }
 
             if (this.xr && vrTeleportationOptions.floorMeshes) {
-                this.xr.teleportation = new WebXRControllerTeleportation(this.xr.input, vrTeleportationOptions.floorMeshes);
                 return;
             } else {
                 if (this.webVROptions.useXR && !this.xrTestDone) {

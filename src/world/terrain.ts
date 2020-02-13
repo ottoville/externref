@@ -110,7 +110,7 @@ export class Terrain extends TerraMesh {
                     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
                 });
                 const glslang = await glslangModule();
-
+                //@ts-ignore
                 const computePipeline = device.createComputePipeline({
                     /*   layout: device.createPipelineLayout({
                            bindGroupLayouts: [bindGroupLayout]
@@ -123,6 +123,7 @@ export class Terrain extends TerraMesh {
                     }
                 });
                 const bindGroup = device.createBindGroup({
+                    //@ts-ignore
                     layout: computePipeline.getBindGroupLayout(0 /* index */),
                     bindings: [
                         {

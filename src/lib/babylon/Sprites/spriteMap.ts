@@ -10,9 +10,9 @@ import { PickingInfo } from "../Collisions/pickingInfo";
 import { ISpriteJSONSprite, ISpriteJSONAtlas } from "./ISprites";
 import { Effect } from "../Materials/effect";
 
-import "../Meshes/Builders/planeBuilder";
-import "../Shaders/spriteMap.fragment";
-import "../Shaders/spriteMap.vertex";
+//import "../Meshes/Builders/planeBuilder";
+//import "../Shaders/spriteMap.fragment";
+//import "../Shaders/spriteMap.vertex";
 
 /**
  * Defines the basic options interface of a SpriteMap

@@ -13,8 +13,8 @@ import { MaterialHelper } from "../Materials/materialHelper";
 import { Camera } from "../Cameras/camera";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/depth.fragment";
-import "../Shaders/depth.vertex";
+//import "../Shaders/depth.fragment";
+//import "../Shaders/depth.vertex";
 import { _DevTools } from '../Misc/devTools';
 
 /**

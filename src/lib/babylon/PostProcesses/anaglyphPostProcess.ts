@@ -4,7 +4,7 @@ import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Camera } from "../Cameras/camera";
 import { Effect } from "../Materials/effect";
 
-import "../Shaders/anaglyph.fragment";
+//import "../Shaders/anaglyph.fragment";
 
 /**
  * Postprocess used to generate anaglyphic rendering

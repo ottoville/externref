@@ -14,8 +14,8 @@ import { ShaderMaterial } from "../Materials/shaderMaterial";
 
 import "../Meshes/Builders/boxBuilder";
 
-import "../Shaders/color.fragment";
-import "../Shaders/color.vertex";
+//import "../Shaders/color.fragment";
+//import "../Shaders/color.vertex";
 import { DataBuffer } from '../Meshes/dataBuffer';
 import { Color3 } from '../Maths/math.color';
 

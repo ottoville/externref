@@ -4,8 +4,8 @@ import { Camera } from "../Cameras/camera";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
 
-import "../Shaders/pass.fragment";
-import "../Shaders/passCube.fragment";
+//import "../Shaders/pass.fragment";
+//import "../Shaders/passCube.fragment";
 
 /**
  * PassPostProcess which produces an output the same as it's input

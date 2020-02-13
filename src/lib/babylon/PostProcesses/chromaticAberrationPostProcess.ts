@@ -6,7 +6,7 @@ import { Camera } from "../Cameras/camera";
 import { Engine } from "../Engines/engine";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/chromaticAberration.fragment";
+//import "../Shaders/chromaticAberration.fragment";
 
 /**
  * The ChromaticAberrationPostProcess separates the rgb channels in an image to produce chromatic distortion around the edges of the screen

@@ -5,7 +5,7 @@ import { Texture } from "../Materials/Textures/texture";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
 
-import "../Shaders/refraction.fragment";
+//import "../Shaders/refraction.fragment";
 
 /**
  * Post process which applies a refractin texture

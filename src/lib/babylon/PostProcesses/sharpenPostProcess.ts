@@ -4,7 +4,7 @@ import { Effect } from "../Materials/effect";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/sharpen.fragment";
+//import "../Shaders/sharpen.fragment";
 
 declare type Engine = import("../Engines/engine").Engine;
 /**

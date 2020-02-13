@@ -13,8 +13,8 @@ import { EngineStore } from "../Engines/engineStore";
 import { Scene } from "../scene";
 import { Constants } from "../Engines/constants";
 
-import "../Shaders/imageProcessing.fragment";
-import "../Shaders/postprocess.vertex";
+//import "../Shaders/imageProcessing.fragment";
+//import "../Shaders/postprocess.vertex";
 
 /**
  * ImageProcessingPostProcess

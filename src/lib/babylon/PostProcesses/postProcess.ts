@@ -5,7 +5,7 @@ import { Vector2 } from "../Maths/math.vector";
 import { Camera } from "../Cameras/camera";
 import { Effect } from "../Materials/effect";
 import { Constants } from "../Engines/constants";
-import "../Shaders/postprocess.vertex";
+//import "../Shaders/postprocess.vertex";
 import { IInspectable } from '../Misc/iInspectable';
 import { Engine } from '../Engines/engine';
 import { Color4 } from '../Maths/math.color';
