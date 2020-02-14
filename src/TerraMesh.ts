@@ -392,32 +392,7 @@ export class TerraMesh extends Mesh {
         let bounding = this.getBoundingInfo();
         return TerraMesh.worker.message(this.uniqueId, 'intersects', [bounding.boundingBox, bounding.boundingSphere, ray.origin, ray.direction, fastCheck, trianglePredicate]);
     }
-    public _draw(subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
-        
-        if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
-            return this;
-        }
-        //@ts-ignore
-        if (this._internalMeshDataInfo._onBeforeDrawObservable) {
-            //@ts-ignore
-            this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
-        }
 
-        let scene = this.getScene();
-        let engine = scene.getEngine();
-        console.log('render ', fillMode, this.name);
-        if (this._unIndexed || fillMode == Material.PointFillMode) {
-            // or triangles as points
-            engine.drawArraysType(fillMode, subMesh.verticesStart, subMesh.verticesCount, instancesCount);
-        } else if (fillMode == Material.WireFrameFillMode) {
-            // Triangles as wireframe
-            engine.drawElementsType(fillMode, 0, subMesh._linesIndexCount, instancesCount);
-        } else {
-            engine.drawElementsType(fillMode, subMesh.indexStart, subMesh.indexCount, instancesCount);
-        }
-
-        return this;
-    }
     public render(subMesh: SubMesh, enableAlphaMode: boolean, effectiveMeshReplacement?: AbstractMesh): Mesh {
         
         if (this._internalAbstractMeshDataInfo._isActiveIntermediate) {

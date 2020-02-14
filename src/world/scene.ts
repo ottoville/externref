@@ -41,7 +41,7 @@ import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
 console.log('p10');
 import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
 console.log('p11');
-import { Matrix } from "../lib/babylon/Maths/math.js";
+import { Matrix, Color3 } from "../lib/babylon/Maths/math.js";
 console.log('p12');
 
 import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collisionCoordinator.js';
@@ -49,7 +49,9 @@ import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import { Sea } from "./water.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
-import { InternalTexture } from "../lib/babylon/Materials/Textures/internalTexture.js";
+import { InternalTexture, InternalTextureSource } from "../lib/babylon/Materials/Textures/internalTexture.js";
+import type { DataBuffer } from "../lib/babylon/Meshes/dataBuffer.js";
+import { WebGPUConstants } from "../lib/babylon/Engines/WebGPU/webgpuConstants.js";
 
 console.log('p13');
 Scene.CollisionCoordinatorFactory = () => {
@@ -58,27 +60,7 @@ Scene.CollisionCoordinatorFactory = () => {
 Scene.DefaultMaterialFactory = (scene: Scene) => {
     return new StandardMaterial("default material", scene);
 };
-/*Scene.prototype.createPickingRayToRef = function (x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
-    var engine = this.getEngine();
 
-    if (!camera) {
-        if (!this.activeCamera) {
-            return this;
-        }
-
-        camera = this.activeCamera;
-    }
-
-    var cameraViewport = camera.viewport;
-    var viewport = cameraViewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
-
-    // Moving coordinates to local viewport world
-    x = x / engine.getHardwareScalingLevel() - viewport.x;
-    y = y / engine.getHardwareScalingLevel() - (engine.getRenderHeight() - viewport.y - viewport.height);
-
-    result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : camera.getViewMatrix(), camera.getProjectionMatrix());
-    return this;
-};*/
 //import { UI } from "../UI.js";
 class _ClickInfo {
     private _singleClick = false;
@@ -964,7 +946,7 @@ export class WorldScene extends Scene {
                  * https://stackoverflow.com/questions/50013385/hello-world-example-of-webgl-parallelism
                  * 
                  */
-
+/*
                 (function () {
                     //@ts-ignore
                     this._options.samplers.push('groundTexture');
@@ -975,8 +957,94 @@ export class WorldScene extends Scene {
                         wrapU: Texture.CLAMP_ADDRESSMODE,
                         wrapV: Texture.CLAMP_ADDRESSMODE
                     };
-                }).bind(shadermateria)();
-                //ground.material = shadermateria;
+                }).bind(shadermateria)();*/
+
+                let mipMaps = Scalar.Log2(Math.max(512, 512));
+                mipMaps = Math.floor(mipMaps);
+                const textureExtent = {
+                    width: 512,
+                    height: 512,
+                    depth:1,
+                };
+                const textureDescriptor: GPUTextureDescriptor = {
+                    dimension: '2d',
+                    format: "rgba8unorm",
+                    arrayLayerCount: 1,
+                    mipLevelCount: mipMaps + 1,
+                    sampleCount: 1,
+                    size: textureExtent,
+                    //@ts-ignore
+                    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
+                };
+
+                //@ts-ignore
+                let device: GPUDevice = (engine as WebGPUEngine)._device;
+
+
+                let internaltex = new InternalTexture(engine, InternalTextureSource.Url);
+                internaltex.width = 512;
+                internaltex.height = 512;
+                internaltex.baseWidth = 512;
+                internaltex.baseHeight = 512;
+                internaltex._isRGBD = internaltex._isRGBD;
+                //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
+
+
+                internaltex._webGPUTexture = device.createTexture(textureDescriptor);
+                
+
+                /*** _uploadFromWebglTexture start */
+                let pixels = new Uint8ClampedArray(1048576);
+                pixels.fill(125);
+                const textureView: GPUTextureCopyView = {
+                    texture: internaltex._webGPUTexture,
+                    origin: {
+                        x: 0,
+                        y: 0,
+                        z: 0
+                    },
+                    mipLevel: 0,
+                    arrayLayer: Math.max(-1, 0),
+                };
+
+                const commandEncoder = device.createCommandEncoder({});
+                const rowPitch = Math.ceil(512 * 4 / 256) * 256;
+
+                let dataBuffer: DataBuffer;
+                if (rowPitch == 512 * 4) {
+                    //@ts-ignore
+                    dataBuffer = (engine as WebGPUEngine)._createBuffer(pixels, WebGPUConstants.GPUBufferUsage_TRANSFER_SRC | WebGPUConstants.GPUBufferUsage_TRANSFER_DST);
+                    const bufferView: GPUBufferCopyView = {
+                        buffer: dataBuffer.underlyingResource,
+                        rowPitch: rowPitch,
+                        imageHeight: 512,
+                        offset: 0,
+                    };
+                    commandEncoder.copyBufferToTexture(bufferView, textureView, textureExtent);
+                }
+                device.defaultQueue.submit([commandEncoder.finish()]);
+
+                (engine as WebGPUEngine)._releaseBuffer(dataBuffer);
+
+
+            /**** _uploadFromWebglTexture ends */
+                internaltex._webGPUTextureView = internaltex._webGPUTexture.createView();
+                internaltex.onLoadedObservable.notifyObservers(internaltex);
+                internaltex.onLoadedObservable.clear();
+                internaltex.url = String("https://playground.babylonjs.com/textures/grass.png");
+                internaltex.generateMipMaps = false;
+                internaltex.invertY = true;
+                internaltex.samplingMode = Texture.TRILINEAR_SAMPLINGMODE;
+                internaltex.isReady = true;
+                (engine as WebGPUEngine)._internalTexturesCache.push(internaltex);
+
+
+                var grass2 = new StandardMaterial("grass2", this);
+
+                //engine.createTexture("https://playground.babylonjs.com/textures/grass.png", false, true, this);
+                grass2.ambientTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
+                grass2.diffuseColor = new Color3(0.2, 1, 0.3);
+                ground.material = grass2;
                 blazor.invokeMethod('setProgress', 100);
             })
 

@@ -86,16 +86,16 @@ uvs: (8) [0, 1, 1, 1, 0, 0, 1, 0]
         console.log('vertexdata');
         console.log(vertexData);
         vertexData.applyToMesh(this, true);*/
-        this.position.y = 50
+        this.position.y = 3
 
-       /* var watermaterial = new StandardMaterial("watermaterial", scene);
+        var watermaterial = new StandardMaterial("watermaterial", scene);
 
         watermaterial.diffuseColor = new Color3(0, 0.2, 1);
         watermaterial.specularColor = new Color3(0.0, 0.2, 0.87);
         watermaterial.emissiveColor = new Color3(0, 0.2, 1);
         watermaterial.ambientColor = new Color3(0.0, 0.2, 0.93);
 
-        this.material = watermaterial;*/
+        this.material = watermaterial;
 
         this._setReady(true);
     }

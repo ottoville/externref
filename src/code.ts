@@ -6,6 +6,7 @@ import type { loginProvider, DotNet } from "./types/interfaces/index.js";
 import type { IEffectCreationOptions, Effect } from "./lib/babylon/Materials/effect.js";
 import type { Engine } from "./lib/babylon/Engines/engine.js";
 import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks.js";
+import type { GlslangOptions } from "./lib/babylon/Engines/webgpuEngine.js";
 
 //import  DB from "./DB.js";
 
