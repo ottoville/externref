@@ -94,13 +94,13 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
         await Wasm.default()
         window.Wasm = Wasm;
-        let EngineModule = await import('./lib/babylon/Engines/webgpuEngine.js');
         blazor.invokeMethod('setProgress', 2);
-        let EffectModule = await import('./lib/babylon/Materials/effect.js');
+        let EngineModule = await import('./lib/babylon/Engines/webgpuEngine.js');
         blazor.invokeMethod('setProgress', 4);
-        let WorldSceneModule = await import('./world/scene.js');
+        let EffectModule = await import('./TerraEffect.js');
         blazor.invokeMethod('setProgress', 9);
-        let FileToolsModule = await import('./lib/babylon/Misc/fileTools.js');
+        let WorldSceneModule = await import('./world/scene.js');
+        
         blazor.invokeMethod('setProgress', 10);
 
         //progelem.value = 20;
@@ -122,62 +122,11 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             const name = vertex + "+" + fragment + "@" + (defines ? defines : (<IEffectCreationOptions>attributesNamesOrOptions).defines);
             const shader = this._compiledShaders[name];
             if (shader) {
-                return new EffectModule.Effect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, shader.sources);
+                return <unknown>new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, shader.sources) as Effect;
             }
             else {
-                return new EffectModule.Effect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name);
+                return <unknown>new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name) as Effect;
             }
-        }
-
-        //@ts-ignore
-        EffectModule.Effect.prototype._loadShader = function (shader: any, key: string, optionalKey: string, callback: (data: any) => void): void {
-            // Direct source ?
-            if (shader.substr(0, 7) === "source:") {
-                callback(shader.substr(7));
-                return;
-            }
-            // Base64 encoded ?
-            if (shader.substr(0, 7) === "base64:") {
-                var vertexBinary = window.atob(shader.substr(7));
-                callback(vertexBinary);
-                return;
-            }
-
-            // Is in local store ?
-            if (EffectModule.Effect.ShadersStore[shader + key + "Shader"]) {
-                callback(EffectModule.Effect.ShadersStore[shader + key + "Shader"]);
-                return;
-            }
-
-            var ShaderUrl;
-
-            if (shader[0] === "." || shader[0] === "/" || shader.indexOf("http") > -1) {
-                ShaderUrl = shader;
-            } else {
-                ShaderUrl = '/shaders/' + shader;
-            }
-            let suffix = key;
-            if (key == 'Vertex')
-                suffix = '.vert';
-            if (key == 'Fragment')
-                suffix = '.frag';
-
-            let url = ShaderUrl + suffix;
-            let onSuccess = callback;
-
-            let request = FileToolsModule.FileTools.RequestFile(url, (data, request) => {
-                onSuccess(data);
-            });
-
-            (function () {
-                //@ts-ignore
-                this._activeRequests.push(request);
-                //@ts-ignore
-                request.onCompleteObservable.add((request) => {
-                    //@ts-ignore
-                    this._activeRequests.splice(this._activeRequests.indexOf(request), 1);
-                });
-            }).bind(engine)()
         }
 
         //document.getElementById('loading').style.display = 'block';

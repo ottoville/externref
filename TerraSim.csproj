@@ -163,6 +163,7 @@
     <None Remove="src\paintGround\paintLine.ts" />
     <None Remove="src\paintGround\paintPlane.ts" />
     <None Remove="src\paintGround\paintTexture.ts" />
+    <None Remove="src\TerraEffect.ts" />
     <None Remove="src\TerraMesh.ts" />
     <None Remove="src\TerraRay.ts" />
     <None Remove="src\tools\buildings.ts" />

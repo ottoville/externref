@@ -1,6 +1,6 @@
 ﻿import type { WorldScene } from "./scene";
 import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData";
-import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial";
+import type { StandardMaterial } from "../lib/babylon/Materials/standardMaterial";
 import { Color3 } from "../lib/babylon/Maths/math.color";
 import { TerraMesh } from "../TerraMesh";
 VertexData.CreateGround = function (options: { width?: number, height?: number, subdivisions?: number, subdivisionsX?: number, subdivisionsY?: number }): VertexData {
@@ -88,7 +88,9 @@ uvs: (8) [0, 1, 1, 1, 0, 0, 1, 0]
         vertexData.applyToMesh(this, true);*/
         this.position.y = 3
 
-        var watermaterial = new StandardMaterial("watermaterial", scene);
+        //var watermaterial = new StandardMaterial("watermaterial", scene);
+
+        var watermaterial = scene.defaultMaterial as StandardMaterial;
 
         watermaterial.diffuseColor = new Color3(0, 0.2, 1);
         watermaterial.specularColor = new Color3(0.0, 0.2, 0.87);

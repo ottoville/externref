@@ -290,7 +290,6 @@ export class ShaderProcessor {
                 }
                 includeFile = includeFile + "Declaration";
             }
-
             if (options.includesShadersStore[includeFile]) {
                 // Substitution
                 var includeContent = options.includesShadersStore[includeFile];
@@ -346,6 +345,7 @@ export class ShaderProcessor {
 
                 ShaderProcessor._FileToolsLoadFile(includeShaderUrl, (fileContent) => {
                     options.includesShadersStore[includeFile] = fileContent as string;
+                    
                     this._ProcessIncludes(<string>returnValue, options, callback);
                 });
                 return;

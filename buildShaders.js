@@ -1,5 +1,5 @@
 ﻿var fs = require('fs');
-function readFiles(dirname, obj) {
+function readFiles(dirname, obj, prefix = "") {
     return new Promise((mres, mrej) => {
         fs.readdir(dirname, async function (err, filenames) {
             if (err) {
@@ -18,7 +18,7 @@ function readFiles(dirname, obj) {
                         } else if (filename.substr(-9) == 'vertex.fx') {
                             filename = filename.substr(0, filename.length -5)
                         }
-                        obj[filename] = content.replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '');
+                        obj[prefix+filename] = content.replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '');
                         res();
                     })
                 } else {
@@ -30,7 +30,7 @@ function readFiles(dirname, obj) {
 }
 let obj = {};
 (async () => {
-    await Promise.all([readFiles('wwwroot/shaders/', obj), readFiles('src/lib/babylon/Shaders/', obj), readFiles('src/lib/babylon/Shaders/ShadersInclude/', obj)]).then(() => {
+    await Promise.all([readFiles('wwwroot/shaders/', obj), readFiles('src/lib/babylon/Shaders/', obj), readFiles('src/lib/babylon/Shaders/ShadersInclude/', obj, "ShadersInclude/")]).then(() => {
         fs.writeFile('wwwroot/shaders/shaders.json', JSON.stringify(obj), (err) => {
             if (err) throw err;
             console.log('Shaders optimized');

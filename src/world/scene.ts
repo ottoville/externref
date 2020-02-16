@@ -901,7 +901,7 @@ export class WorldScene extends Scene {
             
             ground.checkCollisions = true;
             blazor.invokeMethod('setProgress', 50);
-            texture.then(imgdata => {
+            texture.then(async imgdata => {
                 blazor.invokeMethod('setProgress', 75);
                 let width = 10000;
 
@@ -970,7 +970,7 @@ export class WorldScene extends Scene {
                     dimension: '2d',
                     format: "rgba8unorm",
                     arrayLayerCount: 1,
-                    mipLevelCount: mipMaps + 1,
+                    mipLevelCount: 1,
                     sampleCount: 1,
                     size: textureExtent,
                     //@ts-ignore
@@ -980,7 +980,7 @@ export class WorldScene extends Scene {
                 //@ts-ignore
                 let device: GPUDevice = (engine as WebGPUEngine)._device;
 
-
+                
                 let internaltex = new InternalTexture(engine, InternalTextureSource.Url);
                 internaltex.width = 512;
                 internaltex.height = 512;
@@ -993,9 +993,18 @@ export class WorldScene extends Scene {
                 internaltex._webGPUTexture = device.createTexture(textureDescriptor);
                 
 
-                /*** _uploadFromWebglTexture start */
-                let pixels = new Uint8ClampedArray(1048576);
-                pixels.fill(125);
+            //_uploadFromWebglTexture start 
+                let grassimg = new Image();
+                grassimg.crossOrigin = "Anonymous";
+                grassimg.src = 'https://playground.babylonjs.com/textures/grass.png';
+                await grassimg.decode();
+                let crasscanvas = new OffscreenCanvas(512, 512);
+                let grassctx = crasscanvas.getContext('2d');
+                grassctx.drawImage(grassimg, 0, 0);
+                let pixels=grassctx.getImageData(0, 0, 512, 512).data
+                console.log('pixels',pixels)
+                //let pixels = new Uint8ClampedArray(1048576);
+               // pixels.fill(255);
                 const textureView: GPUTextureCopyView = {
                     texture: internaltex._webGPUTexture,
                     origin: {
@@ -1027,7 +1036,7 @@ export class WorldScene extends Scene {
                 (engine as WebGPUEngine)._releaseBuffer(dataBuffer);
 
 
-            /**** _uploadFromWebglTexture ends */
+            // _uploadFromWebglTexture ends
                 internaltex._webGPUTextureView = internaltex._webGPUTexture.createView();
                 internaltex.onLoadedObservable.notifyObservers(internaltex);
                 internaltex.onLoadedObservable.clear();
@@ -1037,11 +1046,11 @@ export class WorldScene extends Scene {
                 internaltex.samplingMode = Texture.TRILINEAR_SAMPLINGMODE;
                 internaltex.isReady = true;
                 (engine as WebGPUEngine)._internalTexturesCache.push(internaltex);
-
+                
 
                 var grass2 = new StandardMaterial("grass2", this);
 
-                //engine.createTexture("https://playground.babylonjs.com/textures/grass.png", false, true, this);
+               // engine.createTexture("https://playground.babylonjs.com/textures/grass.png", true, true, this);
                 grass2.ambientTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
                 grass2.diffuseColor = new Color3(0.2, 1, 0.3);
                 ground.material = grass2;
