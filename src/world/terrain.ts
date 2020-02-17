@@ -103,7 +103,7 @@ export class Terrain extends TerraMesh {
 
                 // Result Matrix
 
-                const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5000 * 5000);
+                const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5120 * 5120);
                 const resultMatrixBuffer = device.createBuffer({
                     size: resultMatrixBufferSize,
                     //@ts-ignore
@@ -161,7 +161,7 @@ export class Terrain extends TerraMesh {
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipeline);
                 passEncoder.setBindGroup(0, bindGroup);
-                passEncoder.dispatch(5000 /* x */, 5000 /* y */);
+                passEncoder.dispatch(5120 /* x */, 5120 /* y */);
                 passEncoder.endPass();
 
                 // Get a GPU buffer for reading in an unmapped state.

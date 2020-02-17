@@ -11,26 +11,6 @@ float subdivisionsY = 250.0;
 float width = 10000.0;
 float height = 10000.0;
 
-//vec4 getFacetAt( float x, float z) {
-    // retrieve col and row from x, z coordinates in the ground local system
-    
-//    float col = floor((x+maxX) * subdivisionsX / width);
- //   float row= floor(-(z+maxZ)*subdivisionsY / height + subdivisionsY);
-
- //   ivec4 slope =  texelFetch(slopeArr, ivec2(col,row), 0);
- //   vec4 facet;
- //   if(z < -1.0 * x + float(slope.x)) {
-  //      facet = texelFetch(facet1Arr, ivec2(col,row), 0);
-  //  } else {
-  //      facet = texelFetch(facet2Arr, ivec2( col,row), 0);
-  //  }
-  //  return facet;
-//}
-//float getHeightAtCoordinates(vec2 xz) {
-//        vec4 facet = getFacetAt(xz.x, xz.y);
-//        float y = -(facet.x * xz.x + facet.z * xz.y + facet.w) / facet.y;
-//        return y;
-//}
   layout(std430, set = 0, binding = 0) readonly buffer FirstMatrix {
       vec2 size;
       int numbers[];
@@ -52,13 +32,10 @@ float height = 10000.0;
   } resultMatrix;
 
   void main() {
-    resultMatrix.size = vec2(5000, 5000);
+    resultMatrix.size = vec2(5120, 5120);
 
-    uint x = gl_GlobalInvocationID.x;
-    uint z =  gl_GlobalInvocationID.y;
-
-    int cx=int(x)*2 - 5000;
-    int cz=int(z)*2 - 5000;
+    int cx=int(gl_GlobalInvocationID.x*1.95 - 5000);
+    int cz=int(gl_GlobalInvocationID.y*1.95 - 5000);
 
     int col = int(floor((cx+maxX) * subdivisionsX / width));
     int row= int(floor(-(cz+maxZ)*subdivisionsY / height + subdivisionsY));
@@ -73,7 +50,7 @@ float height = 10000.0;
     float y = -(facet.x * cx + facet.z * cz + facet.w) / facet.y;
     if( y>3 ) {
         
-        resultMatrix.numbers[z*5000 + x]=-16711936; //Int32 represation of uint8 0, 255, 0, 255
+        resultMatrix.numbers[gl_GlobalInvocationID.y*5120 + gl_GlobalInvocationID.x]=-16711936; //Int32 represation of uint8 0, 255, 0, 255
      } else
-     resultMatrix.numbers[z*5000 + x]=-16711681; //Int32 represation of uint8 255, 255, 0, 255
+     resultMatrix.numbers[gl_GlobalInvocationID.y*5120 + gl_GlobalInvocationID.x]=-16711681; //Int32 represation of uint8 255, 255, 0, 255
   }

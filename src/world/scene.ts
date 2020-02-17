@@ -925,7 +925,7 @@ export class WorldScene extends Scene {
 
 
                 //let size = new Float32Array(imgdata as ArrayBuffer, 0, 2);
-                let size = [5000, 5000];
+                let size = [5120, 5120];
                 console.log('size ', size);
                 let mipMaps = Scalar.Log2(Math.max(size[0], size[1]));
                 mipMaps = Math.floor(mipMaps);
@@ -966,7 +966,7 @@ export class WorldScene extends Scene {
                 //console.log('pixels', pixels)
 
                 const commandEncoder = device.createCommandEncoder({});
-                const rowPitch = Math.ceil(size[0] * 4 / 256) * 256;
+                //const rowPitch = Math.ceil(size[0] * 4 / 256) * 256;
 
                /* if (rowPitch != size[0] * 4) {
                     const alignedPixels = new Uint8ClampedArray(rowPitch * size[1]);
@@ -1007,9 +1007,9 @@ export class WorldScene extends Scene {
                 }; */
                 let bufferView2: GPUBufferCopyView = {
                     buffer: imgdata as GPUBuffer,
-                    rowPitch: rowPitch,
+                    rowPitch: size[0]*4,
                     imageHeight: size[1],
-                    offset: Float32Array.BYTES_PER_ELEMENT*2,
+                    offset: 0,
                 };
                 commandEncoder.copyBufferToTexture(bufferView2, {
                     texture: internaltex._webGPUTexture,
