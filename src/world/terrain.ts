@@ -44,7 +44,7 @@ export class Terrain extends TerraMesh {
         let vdata = await Terrain.terrainWorker.message<TerrainMap, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {url: map});
         return new Terrain(vdata);
     }
-    public createTexture() : Promise<ArrayBuffer> {
+    public createTexture() : Promise<GPUBuffer> {
         return new Promise((tres, trej) => {
             this.inited.then(async () => {
                 console.log('creating terrain texture')
@@ -189,7 +189,7 @@ export class Terrain extends TerraMesh {
                 let arrayBuffer: ArrayBuffer = await gpuReadBuffer.mapReadAsync();
                 console.debug('Webgpu painted, took', new Date().getTime() - timer);
                 arrayBuffer = await Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
-                tres(arrayBuffer);
+                tres(resultMatrixBuffer);
                 
 
             })

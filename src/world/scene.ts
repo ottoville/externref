@@ -50,6 +50,7 @@ import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { InternalTexture, InternalTextureSource } from "../lib/babylon/Materials/Textures/internalTexture.js";
 import type { DataBuffer } from "../lib/babylon/Meshes/dataBuffer.js";
 import { WebGPUConstants } from "../lib/babylon/Engines/WebGPU/webgpuConstants.js";
+import { WebGPUDataBuffer } from "../lib/babylon/Meshes/WebGPU/webgpuDataBuffer.js";
 
 console.log('p13');
 Scene.CollisionCoordinatorFactory = () => {
@@ -830,7 +831,7 @@ export class WorldScene extends Scene {
     });
     */
 
-        new Promise<[Terrain, Promise<ArrayBuffer | HTMLImageElement>]>(async (tres, trej) => {
+        new Promise<[Terrain, Promise<GPUBuffer | HTMLImageElement>]>(async (tres, trej) => {
             let db = (await DB);
             let trans = db.transaction('maps');
             trans.onerror = trej;
@@ -873,29 +874,6 @@ export class WorldScene extends Scene {
                 this.tools['Zones'] = new Zones(ground, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
             })
            
-           /* sea = GroundBuilder.CreateGround(name, {
-                width: 10000,
-                height: 10000,
-                subdivisions: 1,
-                updatable: false
-            }, this);*/
-
-         //  import("../lib/babylon/Maths/math.vector.js").then(vectorModule => {
-             //   var waterMaterial = new WaterMaterial("waterMaterial", this);
-               /* waterMaterial.bumpTexture = new Texture("images/waterbump.png", this);
-                waterMaterial.windForce = -10;
-                waterMaterial.waveHeight = 0.4;
-                waterMaterial.bumpHeight = 0.1;
-                waterMaterial.waveLength = 0.1;
-                waterMaterial.waveSpeed = 50.0;
-                waterMaterial.colorBlendFactor = 0;
-                //waterMaterial.windDirection = new vectorModule.Vector2(1, 1);
-                waterMaterial.colorBlendFactor = 0;
-                waterMaterial.addToRenderList(ground);
-                sea.material = waterMaterial;*/
-           // })
-            
-            //sea.position.y = 0;
             
             ground.checkCollisions = true;
             blazor.invokeMethod('setProgress', 50);
@@ -944,20 +922,10 @@ export class WorldScene extends Scene {
                  * https://stackoverflow.com/questions/50013385/hello-world-example-of-webgl-parallelism
                  * 
                  */
-/*
-                (function () {
-                    //@ts-ignore
-                    this._options.samplers.push('groundTexture');
-                    //@ts-ignore
-                    this._textures['groundTexture'] = <Texture>{
-                        getInternalTexture: () => rtexture2, //(<BABYLON.InternalTexture>{ _associatedChannel: -1 }), //rtexture2,
-                        isReady: () => true,
-                        wrapU: Texture.CLAMP_ADDRESSMODE,
-                        wrapV: Texture.CLAMP_ADDRESSMODE
-                    };
-                }).bind(shadermateria)();*/
 
-                let size = new Float32Array(imgdata as ArrayBuffer, 0, 2);
+
+                //let size = new Float32Array(imgdata as ArrayBuffer, 0, 2);
+                let size = [5000, 5000];
                 console.log('size ', size);
                 let mipMaps = Scalar.Log2(Math.max(size[0], size[1]));
                 mipMaps = Math.floor(mipMaps);
@@ -993,38 +961,15 @@ export class WorldScene extends Scene {
 
             //_uploadFromWebglTexture start 
 
-                let pixels = new Uint8ClampedArray((imgdata as ArrayBuffer), Float32Array.BYTES_PER_ELEMENT * 2);
-                //let pixels=grassctx.getImageData(0, 0, 512, 512).data
-                console.log('pixels',pixels)
-                //let pixels = new Uint8ClampedArray(1048576);
-               // pixels.fill(255);
-                const textureView: GPUTextureCopyView = {
-                    texture: internaltex._webGPUTexture,
-                    origin: {
-                        x: 0,
-                        y: 0,
-                        z: 0
-                    },
-                    mipLevel: 0,
-                    arrayLayer: Math.max(-1, 0),
-                };
+                //let pixels = new Uint8ClampedArray((imgdata as ArrayBuffer), Float32Array.BYTES_PER_ELEMENT * 2);
+
+                //console.log('pixels', pixels)
 
                 const commandEncoder = device.createCommandEncoder({});
                 const rowPitch = Math.ceil(size[0] * 4 / 256) * 256;
 
-                let dataBuffer: DataBuffer;
-                if (rowPitch == size[0] * 4) {
-                    //@ts-ignore
-                    dataBuffer = (engine as WebGPUEngine)._createBuffer(pixels, WebGPUConstants.GPUBufferUsage_TRANSFER_SRC | WebGPUConstants.GPUBufferUsage_TRANSFER_DST);
-                    const bufferView: GPUBufferCopyView = {
-                        buffer: dataBuffer.underlyingResource,
-                        rowPitch: rowPitch,
-                        imageHeight: size[1],
-                        offset: 0,
-                    };
-                    commandEncoder.copyBufferToTexture(bufferView, textureView, textureExtent);
-                } else {
-                    const alignedPixels = new Uint8Array(rowPitch * size[1]);
+               /* if (rowPitch != size[0] * 4) {
+                    const alignedPixels = new Uint8ClampedArray(rowPitch * size[1]);
                     let pixelsIndex = 0;
                     for (let y = 0; y < size[1]; ++y) {
                         for (let x = 0; x < size[0]; ++x) {
@@ -1037,19 +982,49 @@ export class WorldScene extends Scene {
                             pixelsIndex += 4;
                         }
                     }
-                    //@ts-ignore
-                    dataBuffer = (engine as WebGPUEngine)._createBuffer(alignedPixels, WebGPUConstants.GPUBufferUsage_TRANSFER_SRC | WebGPUConstants.GPUBufferUsage_TRANSFER_DST);
-                    const bufferView: GPUBufferCopyView = {
-                        buffer: dataBuffer.underlyingResource,
-                        rowPitch: rowPitch,
-                        imageHeight: size[1],
-                        offset: 0,
-                    };
-                    commandEncoder.copyBufferToTexture(bufferView, textureView, textureExtent);
-                }
+                    pixels = alignedPixels;
+                }*/
+
+
+               // const padding = pixels.byteLength % 4;
+               /* const buffer = device.createBuffer({
+                    size: pixels.byteLength + padding,
+                    usage: WebGPUConstants.GPUBufferUsage_TRANSFER_SRC | WebGPUConstants.GPUBufferUsage_TRANSFER_DST
+                });
+                const dataBuffer = new WebGPUDataBuffer(buffer);
+                dataBuffer.references = 1;
+                dataBuffer.capacity = pixels.byteLength;
+                //@ts-ignore
+                (engine as WebGPUEngine)._setSubData(dataBuffer, 0, pixels);
+               
+
+
+                let bufferView: GPUBufferCopyView = {
+                    buffer: dataBuffer.underlyingResource,
+                    rowPitch: rowPitch,
+                    imageHeight: size[1],
+                    offset: 0,
+                }; */
+                let bufferView2: GPUBufferCopyView = {
+                    buffer: imgdata as GPUBuffer,
+                    rowPitch: rowPitch,
+                    imageHeight: size[1],
+                    offset: Float32Array.BYTES_PER_ELEMENT*2,
+                };
+                commandEncoder.copyBufferToTexture(bufferView2, {
+                    texture: internaltex._webGPUTexture,
+                    origin: {
+                        x: 0,
+                        y: 0,
+                        z: 0
+                    },
+                    mipLevel: 0,
+                    arrayLayer: Math.max(-1, 0),
+                }, textureExtent);
                 device.defaultQueue.submit([commandEncoder.finish()]);
 
-                (engine as WebGPUEngine)._releaseBuffer(dataBuffer);
+                (imgdata as GPUBuffer).destroy();
+                //(engine as WebGPUEngine)._releaseBuffer(dataBuffer);
 
 
             // _uploadFromWebglTexture ends

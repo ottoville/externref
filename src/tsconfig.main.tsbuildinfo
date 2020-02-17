@@ -1074,8 +1074,8 @@
         "signature": "e7fb5c9de06faae672d1c3e4c1640b8ed7cf8602d792f9cb4183b45d35147f41"
       },
       "./world/terrain.ts": {
-        "version": "951e2f2fcdb51fce8d6de47ffe5b6e2a0337c8837356b7fd7960f662b368e8de",
-        "signature": "4fd0ed7bb4058dd05875d043679999715db89e97766cafbd06aff84f4f31aaec"
+        "version": "6feced74354acbb52e57b4d7fddca5e497e3a4b45f61a8df6c6ee868e818c2a1",
+        "signature": "9d411f092e76309577a27206d14ba75194fbf1eeb3ca84e25feb0f5525135db3"
       },
       "./lib/babylon/audio/sound.ts": {
         "version": "8e54ab54f77673e30869ae3a3dea0eee4bffff8439d40b6cd72cf31d86bcbd92",
@@ -2690,11 +2690,11 @@
         "signature": "eb94175b7a88122b33bb92473af7420a341917b278897036756867fe9b9c9d7f"
       },
       "./world/water.ts": {
-        "version": "dc7235bb493715cc751dbcf2b61dc5d7c90e516378cac81c6e208fc8eaa44383",
+        "version": "18fc814b80b8c628ea275882051299df6e204d20c7435e09841899b1ecea7128",
         "signature": "69b97ca99fd38ece03e3d7693a37d0e9d1956f4b2f73cced6a94e477f9ff391f"
       },
       "./world/scene.ts": {
-        "version": "b5623b4bfcf2decb1b9b7af1b07d4a55132bc5a4b49529846fd95af767690869",
+        "version": "b2f114ad6467e39c3dc1a8d292a77bac8257fc6b08354fe74e5a4d8406c4d8bd",
         "signature": "a7c109ff872e17e96645dec9fea18e5c355c60530a3e2a5b0c463da8fa3b28f4"
       },
       "./code.ts": {
@@ -9586,7 +9586,8 @@
         "./lib/babylon/engines/webgpuengine.ts",
         "./lib/babylon/materials/textures/internaltexture.ts",
         "./lib/babylon/meshes/databuffer.ts",
-        "./lib/babylon/engines/webgpu/webgpuconstants.ts"
+        "./lib/babylon/engines/webgpu/webgpuconstants.ts",
+        "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts"
       ],
       "./code.ts": [
         "./world/scene.ts",
