@@ -9,16 +9,14 @@ import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
 import { texImage2D } from "../webgl.js";
 import { TerraMesh } from "../TerraMesh.js";
-
 import { InputManager } from "../lib/babylon/Inputs/scene.inputManager.js";
-console.log('p1');
+
 import type { loginProvider, DotNet } from "../types/interfaces/index.js";
 console.log('p2');
 import { Scene } from "../lib/babylon/scene.js";
 import { PickingInfo } from "../lib/babylon/Collisions/pickingInfo.js";
 console.log('p3');
-import { Camera } from "../lib/babylon/Cameras/camera.js";
-import { Tools } from "../lib/babylon/Misc/tools.js";
+import type { Camera } from "../lib/babylon/Cameras/camera.js";
 console.log('p4');
 import { AbstractActionManager } from "../lib/babylon/Actions/abstractActionManager.js";
 import type { Observable } from "../lib/babylon/Misc/observable.js";
@@ -238,7 +236,7 @@ export class WorldScene extends Scene {
                 for (var cameraIndex = 0; cameraIndex < this.activeCameras.length; cameraIndex++) {
                     let camera = this.activeCameras[cameraIndex];
                     camera.update();
-                    if (camera.cameraRigMode !== Camera.RIG_MODE_NONE) {
+                    if (camera.cameraRigMode !== 0) {
                         // rig cameras
                         for (var index = 0; index < camera._rigCameras.length; index++) {
                             camera._rigCameras[index].update();
@@ -247,7 +245,7 @@ export class WorldScene extends Scene {
                 }
             } else if (this.activeCamera) {
                 this.activeCamera.update();
-                if (this.activeCamera.cameraRigMode !== Camera.RIG_MODE_NONE) {
+                if (this.activeCamera.cameraRigMode !== 0) {
                     // rig cameras
                     for (var index = 0; index < this.activeCamera._rigCameras.length; index++) {
                         this.activeCamera._rigCameras[index].update();
@@ -264,7 +262,7 @@ export class WorldScene extends Scene {
         var engine = this.getEngine();
         var currentActiveCamera = this.activeCamera;
         if (this.renderTargetsEnabled) {
-            Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
+            //Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
             //this._intermediateRendering = true;
             for (var customIndex = 0; customIndex < this.customRenderTargets.length; customIndex++) {
                 var renderTarget = this.customRenderTargets[customIndex];
@@ -286,7 +284,7 @@ export class WorldScene extends Scene {
                     renderTarget.render(currentActiveCamera !== this.activeCamera, this.dumpNextRenderTargets);
                 }
             }
-            Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
+            //Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
             //this._intermediateRendering = false;
             //this._renderId++;
         }
@@ -711,7 +709,7 @@ export class WorldScene extends Scene {
             });
 
             // Pointer events
-            var eventPrefix = Tools.GetPointerPrefix();
+            var eventPrefix = "pointer";
 
             if (attachMove) {
                 elementToAttachTo.addEventListener(eventPrefix + "move", <any>this._onPointerMove, false);
@@ -905,7 +903,7 @@ export class WorldScene extends Scene {
                 blazor.invokeMethod('setProgress', 75);
                 let width = 10000;
 
-                let rtexture2 = new InternalTexture(engine, 3);
+                //let rtexture2 = new InternalTexture(engine, 3);
                /* let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
                     _engine: engine,
                     _source: 3,
@@ -959,14 +957,29 @@ export class WorldScene extends Scene {
                     };
                 }).bind(shadermateria)();*/
 
-                let mipMaps = Scalar.Log2(Math.max(512, 512));
+                let size = new Float32Array(imgdata as ArrayBuffer, 0, 2);
+                console.log('size ', size);
+                let mipMaps = Scalar.Log2(Math.max(size[0], size[1]));
                 mipMaps = Math.floor(mipMaps);
                 const textureExtent = {
-                    width: 512,
-                    height: 512,
+                    width: size[0],
+                    height: size[1],
                     depth:1,
                 };
-                const textureDescriptor: GPUTextureDescriptor = {
+                //@ts-ignore
+                let device: GPUDevice = (engine as WebGPUEngine)._device;
+
+                
+                let internaltex = new InternalTexture(engine, InternalTextureSource.Url);
+                internaltex.width = size[0];
+                internaltex.height = size[1];
+                internaltex.baseWidth = size[0];
+                internaltex.baseHeight = size[1];
+                internaltex._isRGBD = internaltex._isRGBD;
+                //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
+
+
+                internaltex._webGPUTexture = device.createTexture({
                     dimension: '2d',
                     format: "rgba8unorm",
                     arrayLayerCount: 1,
@@ -975,33 +988,13 @@ export class WorldScene extends Scene {
                     size: textureExtent,
                     //@ts-ignore
                     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
-                };
-
-                //@ts-ignore
-                let device: GPUDevice = (engine as WebGPUEngine)._device;
-
-                
-                let internaltex = new InternalTexture(engine, InternalTextureSource.Url);
-                internaltex.width = 512;
-                internaltex.height = 512;
-                internaltex.baseWidth = 512;
-                internaltex.baseHeight = 512;
-                internaltex._isRGBD = internaltex._isRGBD;
-                //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
-
-
-                internaltex._webGPUTexture = device.createTexture(textureDescriptor);
+                });
                 
 
             //_uploadFromWebglTexture start 
-                let grassimg = new Image();
-                grassimg.crossOrigin = "Anonymous";
-                grassimg.src = 'https://playground.babylonjs.com/textures/grass.png';
-                await grassimg.decode();
-                let crasscanvas = new OffscreenCanvas(512, 512);
-                let grassctx = crasscanvas.getContext('2d');
-                grassctx.drawImage(grassimg, 0, 0);
-                let pixels=grassctx.getImageData(0, 0, 512, 512).data
+
+                let pixels = new Uint8ClampedArray((imgdata as ArrayBuffer), Float32Array.BYTES_PER_ELEMENT * 2);
+                //let pixels=grassctx.getImageData(0, 0, 512, 512).data
                 console.log('pixels',pixels)
                 //let pixels = new Uint8ClampedArray(1048576);
                // pixels.fill(255);
@@ -1017,16 +1010,39 @@ export class WorldScene extends Scene {
                 };
 
                 const commandEncoder = device.createCommandEncoder({});
-                const rowPitch = Math.ceil(512 * 4 / 256) * 256;
+                const rowPitch = Math.ceil(size[0] * 4 / 256) * 256;
 
                 let dataBuffer: DataBuffer;
-                if (rowPitch == 512 * 4) {
+                if (rowPitch == size[0] * 4) {
                     //@ts-ignore
                     dataBuffer = (engine as WebGPUEngine)._createBuffer(pixels, WebGPUConstants.GPUBufferUsage_TRANSFER_SRC | WebGPUConstants.GPUBufferUsage_TRANSFER_DST);
                     const bufferView: GPUBufferCopyView = {
                         buffer: dataBuffer.underlyingResource,
                         rowPitch: rowPitch,
-                        imageHeight: 512,
+                        imageHeight: size[1],
+                        offset: 0,
+                    };
+                    commandEncoder.copyBufferToTexture(bufferView, textureView, textureExtent);
+                } else {
+                    const alignedPixels = new Uint8Array(rowPitch * size[1]);
+                    let pixelsIndex = 0;
+                    for (let y = 0; y < size[1]; ++y) {
+                        for (let x = 0; x < size[0]; ++x) {
+                            let i = x * 4 + y * rowPitch;
+
+                            alignedPixels[i] = (pixels as any)[pixelsIndex];
+                            alignedPixels[i + 1] = (pixels as any)[pixelsIndex + 1];
+                            alignedPixels[i + 2] = (pixels as any)[pixelsIndex + 2];
+                            alignedPixels[i + 3] = (pixels as any)[pixelsIndex + 3];
+                            pixelsIndex += 4;
+                        }
+                    }
+                    //@ts-ignore
+                    dataBuffer = (engine as WebGPUEngine)._createBuffer(alignedPixels, WebGPUConstants.GPUBufferUsage_TRANSFER_SRC | WebGPUConstants.GPUBufferUsage_TRANSFER_DST);
+                    const bufferView: GPUBufferCopyView = {
+                        buffer: dataBuffer.underlyingResource,
+                        rowPitch: rowPitch,
+                        imageHeight: size[1],
                         offset: 0,
                     };
                     commandEncoder.copyBufferToTexture(bufferView, textureView, textureExtent);
@@ -1050,9 +1066,10 @@ export class WorldScene extends Scene {
 
                 var grass2 = new StandardMaterial("grass2", this);
 
-               // engine.createTexture("https://playground.babylonjs.com/textures/grass.png", true, true, this);
-                grass2.ambientTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
-                grass2.diffuseColor = new Color3(0.2, 1, 0.3);
+                //engine.createTexture("https://playground.babylonjs.com/textures/grass.png", true, true, this);
+               // grass2.ambientTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
+                grass2.diffuseTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
+               // grass2.diffuseColor = new Color3(0.2, 1, 0.3);
                 ground.material = grass2;
                 blazor.invokeMethod('setProgress', 100);
             })

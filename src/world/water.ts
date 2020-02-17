@@ -86,7 +86,7 @@ uvs: (8) [0, 1, 1, 1, 0, 0, 1, 0]
         console.log('vertexdata');
         console.log(vertexData);
         vertexData.applyToMesh(this, true);*/
-        this.position.y = 3
+        this.position.y = -3
 
         //var watermaterial = new StandardMaterial("watermaterial", scene);
 

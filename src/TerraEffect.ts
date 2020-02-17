@@ -15,14 +15,22 @@ import type { RenderTargetTexture } from "./lib/babylon/Materials/Textures/rende
 import type { PostProcess } from "./lib/babylon/PostProcesses/postProcess";
 import type { IColor4Like, IVector4Like, IMatrixLike, IVector2Like, IVector3Like, IColor3Like } from "./lib/babylon/Maths/math.like";
 
+/*Object.defineProperty(ShaderProcessor, '_FileToolsLoadFile', {
+    get: function () {
+
+    },
+    set: function (module) {
+        debugger;
+    }
+});*/
 //@ts-ignore
-ShaderProcessor._FileToolsLoadFile = function (url, onSuccess) {
+/*ShaderProcessor._FileToolsLoadFile = function (url, onSuccess) {
     caches.match(url).then(async response => {
         if (!response)
             response = await fetch(url);
         onSuccess(await response.text());
     })
-}
+}*/
 export class TerraEffect {
     /**
    * Release all associated resources.

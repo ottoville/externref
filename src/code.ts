@@ -1,12 +1,11 @@
 
-import *  as Wasm from "./rustwasm/hello_wasm.js"
 import type { WorldScene } from "./world/scene.js";
 //import * as BABYLON from "./lib/babylon/index.js"
 import type { loginProvider, DotNet } from "./types/interfaces/index.js";
 import type { IEffectCreationOptions, Effect } from "./lib/babylon/Materials/effect.js";
 import type { Engine } from "./lib/babylon/Engines/engine.js";
 import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks.js";
-import type { GlslangOptions } from "./lib/babylon/Engines/webgpuEngine.js";
+import type { WebGPUEngine } from "./lib/babylon/Engines/webgpuEngine.js";
 
 //import  DB from "./DB.js";
 
@@ -92,17 +91,22 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
-        await Wasm.default()
-        window.Wasm = Wasm;
+
+
+        let [WasmModule, EngineModule, EffectModule, WorldSceneModule]=await Promise.all(['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js', './world/scene.js'].map(url => import(url)))
+
+        /*let WasmModule = await import('./rustwasm/hello_wasm.js');
         blazor.invokeMethod('setProgress', 2);
         let EngineModule = await import('./lib/babylon/Engines/webgpuEngine.js');
         blazor.invokeMethod('setProgress', 4);
         let EffectModule = await import('./TerraEffect.js');
         blazor.invokeMethod('setProgress', 9);
-        let WorldSceneModule = await import('./world/scene.js');
+        let WorldSceneModule = await import('./world/scene.js');*/
         
         blazor.invokeMethod('setProgress', 10);
 
+
+        WasmModule.default().then(() => window.Wasm = WasmModule);
         //progelem.value = 20;
         // var canvas = document.getElementById("renderCanvas");
         if (canvas.dataset.inited === "true")
@@ -110,8 +114,37 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         canvas.dataset.inited = "true";
 
         // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
-        var engine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas);
-        await engine.initAsync();
+        var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas);
+        //await engine.initAsync();
+
+        //@ts-ignore
+        engine._glslang = await new Promise((res, rej) => {
+            let glslangOptions = {
+                ...EngineModule.WebGPUEngine._glslangDefaultOptions
+            };
+            if (glslangOptions.glslang)
+                res(glslangOptions.glslang);
+            if ((window as any).glslang)
+                res((window as any).glslang(glslangOptions!.wasmPath));
+
+            let script = document.createElement('script');
+            script.onload = () =>  res((window as any).glslang(glslangOptions!.wasmPath));
+            script.onerror = rej;
+            script.src = glslangOptions.jsPath;
+            document.head.appendChild(script);
+        })
+         //@ts-ignore
+        engine._adapter = await navigator.gpu!.requestAdapter(engine._options);
+        //@ts-ignore
+        engine._device = await engine._adapter.requestDevice(engine._options.deviceDescriptor);
+         //@ts-ignore
+        engine._initializeLimits();
+         //@ts-ignore
+        engine._initializeContextAndSwapChain();
+        engine.resize();
+
+
+
         blazor.invokeMethod('setProgress', 11);
 
         engine.createEffect = function (baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | Engine, samplers?: string[], defines?: string, fallbacks?: EffectFallbacks,

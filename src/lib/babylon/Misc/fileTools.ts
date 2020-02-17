@@ -302,7 +302,7 @@ export class FileTools {
      */
     public static LoadFile(url: string, onSuccess: (data: string | ArrayBuffer, responseURL?: string) => void, onProgress?: (ev: ProgressEvent) => void, offlineProvider?: IOfflineProvider, useArrayBuffer?: boolean, onError?: (request?: WebRequest, exception?: LoadFileError) => void): IFileRequest {
         // If file and file input are set
-        if (url.indexOf("file:") !== -1) {
+        /*if (url.indexOf("file:") !== -1) {
             let fileName = decodeURIComponent(url.substring(5).toLowerCase());
             if (fileName.indexOf('./') === 0) {
                 fileName = fileName.substring(2);
@@ -318,6 +318,20 @@ export class FileTools {
         }, onProgress, offlineProvider, useArrayBuffer, onError ? (error) => {
             onError(error.request, new LoadFileError(error.message, error.request));
         } : undefined);
+        */
+        let obs= {
+            onCompleteObservable: new Observable<IFileRequest>(),
+            abort: () => { }
+        }
+
+        caches.match(url).then(async response => {
+            if (!response)
+                response = await fetch(url);
+            onSuccess(await response.text());
+            obs.onCompleteObservable.notifyObservers(obs);
+            obs.onCompleteObservable.clear();
+        });
+        return obs;
     }
 
     /**

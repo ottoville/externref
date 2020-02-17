@@ -23,7 +23,7 @@ import { IShaderProcessor } from "./Processors/iShaderProcessor";
 import { WebGPUShaderProcessor } from "./WebGPU/webgpuShaderProcessors";
 import { ShaderProcessingContext } from "./Processors/shaderProcessingOptions";
 import { WebGPUShaderProcessingContext } from "./WebGPU/webgpuShaderProcessingContext";
-import { Tools } from "../Misc/tools";
+//import { Tools } from "../Misc/tools";
 
 /**
  * Options to load the associated Glslang library
@@ -248,7 +248,7 @@ export class WebGPUEngine extends Engine {
      * @param glslangOptions Defines the GLSLang compiler options if necessary
      * @returns a promise notifying the readiness of the engine.
      */
-    public initAsync(glslangOptions?: GlslangOptions): Promise<void> {
+    /*public initAsync(glslangOptions?: GlslangOptions): Promise<void> {
         return this._initGlslang(glslangOptions)
             .then((glslang: any) => {
                 this._glslang = glslang;
@@ -295,7 +295,7 @@ export class WebGPUEngine extends Engine {
         }
 
         return Promise.reject("gslang is not available.");
-    }
+    }*/
 
     private _initializeLimits(): void {
         // Init caps
