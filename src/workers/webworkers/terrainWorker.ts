@@ -259,7 +259,6 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
         this.postMessage({ id: e.id, data: { } });
     },
     saveTexture: async (e: WMessage<ArrayBuffer>) => {
-
         //@ts-ignore
         let c = new OffscreenCanvas(...new Float32Array(e.data, 0, 2));
         let ctx = c.getContext("2d");
@@ -267,21 +266,8 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
             throw ('get 2d context failed');
         
         ctx.putImageData(new ImageData(new Uint8ClampedArray(e.data, Float32Array.BYTES_PER_ELEMENT * 2), c.width, c.height), 0, 0);
-        self.postMessage({ id: e.id, data: e.data }, [e.data]);
-        let b = await c.convertToBlob({
-            type: "image/webp",
-            quality: 1
-        })
-        let db = (await DB);
-        let trans = db.transaction('maps');
-        trans.objectStore('maps').openCursor().onsuccess = (evt) => {
-            if ((<IDBRequest>evt.target).result) {
-                (<IDBRequest>evt.target).result.value.texture = b
-                queueMicrotask(async () => {
-                    (await DB).transaction('maps', 'readwrite').objectStore('maps').put((<IDBRequest>evt.target).result.value);
-                });
-            }
-        }
+        (await caches.open('save')).put(new Request('/terrainTexture.webp'), new Response(await c.convertToBlob({type: "image/webp",quality: 1 })))
+
     },
     createHeightMap: async (d: { id?: number }) => {
         try {

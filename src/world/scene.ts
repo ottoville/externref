@@ -7,40 +7,28 @@ import type { UITAB } from "../UITAB.js";
 import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
-import { texImage2D } from "../webgl.js";
-import { TerraMesh } from "../TerraMesh.js";
-import { InputManager } from "../lib/babylon/Inputs/scene.inputManager.js";
+
+import type { TerraMesh } from "../TerraMesh.js";
 
 import type { loginProvider, DotNet } from "../types/interfaces/index.js";
-console.log('p2');
 import { Scene } from "../lib/babylon/scene.js";
-import { PickingInfo } from "../lib/babylon/Collisions/pickingInfo.js";
-console.log('p3');
+import type { PickingInfo } from "../lib/babylon/Collisions/pickingInfo.js";
 import type { Camera } from "../lib/babylon/Cameras/camera.js";
-console.log('p4');
 import { AbstractActionManager } from "../lib/babylon/Actions/abstractActionManager.js";
 import type { Observable } from "../lib/babylon/Misc/observable.js";
-console.log('p5');
 import type { PointerInfoPre, PointerInfo } from "../lib/babylon/Events/pointerEvents.js";
 import { PointerEventTypes } from "../lib/babylon/Events/pointerEvents.js";
-console.log('p6');
 import { Constants } from "../lib/babylon/Engines/constants.js";
 import type { AbstractMesh } from "../lib/babylon/Meshes/abstractMesh.js";
-console.log('p7');
 import { Ray } from "../lib/babylon/Culling/ray.js";
 import type { TrianglePickingPredicate } from "../lib/babylon/Culling/ray.js";
 import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
-console.log('p8');
 import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
 import { Engine } from "../lib/babylon/Engines/engine.js";
-console.log('p9');
 import { PointLight } from "../lib/babylon/Lights/pointLight.js";
 import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
-console.log('p10');
 import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
-console.log('p11');
-import { Matrix, Color3 } from "../lib/babylon/Maths/math.js";
-console.log('p12');
+import { Matrix } from "../lib/babylon/Maths/math.js";
 
 import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collisionCoordinator.js';
 import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
@@ -48,7 +36,6 @@ import { Sea } from "./water.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { InternalTexture, InternalTextureSource } from "../lib/babylon/Materials/Textures/internalTexture.js";
-import type { DataBuffer } from "../lib/babylon/Meshes/dataBuffer.js";
 import { WebGPUConstants } from "../lib/babylon/Engines/WebGPU/webgpuConstants.js";
 import { WebGPUDataBuffer } from "../lib/babylon/Meshes/WebGPU/webgpuDataBuffer.js";
 
@@ -96,7 +83,7 @@ class _ClickInfo {
 
 export class WorldScene extends Scene {
     createPickingRayToRef(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
-        console.log('createPickingRayToRef');
+
         var engine = this.getEngine();
 
         if (!camera) {
@@ -131,11 +118,10 @@ export class WorldScene extends Scene {
         return new Promise((res: (pi: PickingInfo) => void) => {
             var world = mesh.getWorldMatrix();
             var ray = rayFunction(world);
-            if (mesh instanceof TerraMesh) {
-                mesh.intersectsPromise(ray, fastCheck).then(res);
-            } else {
+            if (typeof ((mesh as TerraMesh).intersectsPromise) !== 'undefined')
+                (mesh as TerraMesh).intersectsPromise(ray, fastCheck).then(res);
+            else
                 res(mesh.intersects(ray, fastCheck));
-            }
         }).then((result: PickingInfo) => {
             if (!result || !result.hit)
                 return this.collissionCheck(rayFunction, ++meshIndex, pickResult, fastCheck, predicate);
@@ -149,7 +135,7 @@ export class WorldScene extends Scene {
         });
     }
     pickPromise(x: number, y: number, predicate?: (mesh: AbstractMesh) => boolean, fastCheck?: boolean, camera?: Nullable<Camera>,
-        trianglePredicate?: TrianglePickingPredicate): Promise<PickingInfo>  {
+        trianglePredicate?: TrianglePickingPredicate): Promise<PickingInfo | null> {
 
         let rayFunction = (world: Matrix) => {
             if (!this._tempPickingRay) {
@@ -161,8 +147,6 @@ export class WorldScene extends Scene {
         };
         return this.collissionCheck(rayFunction, 0, null, fastCheck, predicate).then((pickResult: PickingInfo | null) => {
             /* _internalPick ends */
-            if (pickResult == null)
-                pickResult = new PickingInfo();
             if (pickResult) {
                 pickResult.ray = Ray.Zero();
                 this.createPickingRayToRef(x, y, Matrix.Identity(), pickResult.ray, this.cameraToUseForPointers || null, false)
@@ -367,6 +351,8 @@ export class WorldScene extends Scene {
     }
     public attachControl(attachUp = true, attachDown = true, attachMove = true, elementToAttachTo: Nullable<HTMLElement> = null): void {
         //this._inputManager.attachControl(attachUp, attachDown, attachMove);
+        let DoubleClickDelay = 300;
+        let ExclusiveDoubleClickMode = false;
         let engine = this.getEngine();
         (function (scene: WorldScene, elementToAttachTo: Nullable<HTMLElement> = null) {
             if (!elementToAttachTo) {
@@ -390,7 +376,7 @@ export class WorldScene extends Scene {
 
             this._delayedSimpleClick = (btn: number, clickInfo: _ClickInfo, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void) => {
                 // double click delay is over and that no double click has been raised since, or the 2 consecutive keys pressed are different
-                if ((Date.now() - this._previousStartingPointerTime > InputManager.DoubleClickDelay && !this._doubleClickOccured) ||
+                if ((Date.now() - this._previousStartingPointerTime > DoubleClickDelay && !this._doubleClickOccured) ||
                     btn !== this._previousButtonPressed) {
                     this._doubleClickOccured = false;
                     clickInfo.singleClick = true;
@@ -421,7 +407,7 @@ export class WorldScene extends Scene {
                     clickInfo.hasSwiped = this._isPointerSwiping();
 
                     if (!clickInfo.hasSwiped) {
-                        let checkSingleClickImmediately = !InputManager.ExclusiveDoubleClickMode;
+                        let checkSingleClickImmediately = !ExclusiveDoubleClickMode;
 
                         if (!checkSingleClickImmediately) {
                             checkSingleClickImmediately = !obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) &&
@@ -437,7 +423,7 @@ export class WorldScene extends Scene {
 
                         if (checkSingleClickImmediately) {
                             // single click detected if double click delay is over or two different successive keys pressed without exclusive double click or no double click required
-                            if (Date.now() - this._previousStartingPointerTime > InputManager.DoubleClickDelay ||
+                            if (Date.now() - this._previousStartingPointerTime > DoubleClickDelay ||
                                 btn !== this._previousButtonPressed) {
                                 clickInfo.singleClick = true;
                                 cb(clickInfo, this._currentPickResult);
@@ -448,7 +434,7 @@ export class WorldScene extends Scene {
                         else {
                             // wait that no double click has been raised during the double click delay
                             this._previousDelayedSimpleClickTimeout = this._delayedSimpleClickTimeout;
-                            this._delayedSimpleClickTimeout = window.setTimeout(this._delayedSimpleClick.bind(this, btn, clickInfo, cb), InputManager.DoubleClickDelay);
+                            this._delayedSimpleClickTimeout = window.setTimeout(this._delayedSimpleClick.bind(this, btn, clickInfo, cb), DoubleClickDelay);
                         }
 
                         let checkDoubleClick = obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) ||
@@ -462,7 +448,7 @@ export class WorldScene extends Scene {
                         if (checkDoubleClick) {
                             // two successive keys pressed are equal, double click delay is not over and double click has not just occurred
                             if (btn === this._previousButtonPressed &&
-                                Date.now() - this._previousStartingPointerTime < InputManager.DoubleClickDelay &&
+                                Date.now() - this._previousStartingPointerTime < DoubleClickDelay &&
                                 !this._doubleClickOccured
                             ) {
                                 // pointer has not moved for 2 clicks, it's a double click
@@ -472,7 +458,7 @@ export class WorldScene extends Scene {
                                     this._doubleClickOccured = true;
                                     clickInfo.doubleClick = true;
                                     clickInfo.ignore = false;
-                                    if (InputManager.ExclusiveDoubleClickMode && this._previousDelayedSimpleClickTimeout) {
+                                    if (ExclusiveDoubleClickMode && this._previousDelayedSimpleClickTimeout) {
                                         clearTimeout(this._previousDelayedSimpleClickTimeout);
                                     }
                                     this._previousDelayedSimpleClickTimeout = this._delayedSimpleClickTimeout;
@@ -485,7 +471,7 @@ export class WorldScene extends Scene {
                                     this._previousStartingPointerPosition.x = this._startingPointerPosition.x;
                                     this._previousStartingPointerPosition.y = this._startingPointerPosition.y;
                                     this._previousButtonPressed = btn;
-                                    if (InputManager.ExclusiveDoubleClickMode) {
+                                    if (ExclusiveDoubleClickMode) {
                                         if (this._previousDelayedSimpleClickTimeout) {
                                             clearTimeout(this._previousDelayedSimpleClickTimeout);
                                         }
@@ -575,7 +561,8 @@ export class WorldScene extends Scene {
                 // Meshes
                 this._pickedDownMesh = null;
                 scene.pickPromise(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers).then(pickResult => {
-                    this._processPointerDown(pickResult, evt);
+                    if (pickResult)
+                        this._processPointerDown(pickResult, evt);
                 });
             };
 
@@ -739,7 +726,7 @@ export class WorldScene extends Scene {
     constructor(engine: Engine | WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine as Engine);
         //@ts-ignore
-        this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable < AbstractMesh > = null): void  {
+        this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
             var closeDistance = Engine.CollisionsEpsilon * 10.0;
 
             if (collider._retry >= maximumRetry) {
@@ -757,10 +744,10 @@ export class WorldScene extends Scene {
                 var mesh: TerraMesh = this._scene.meshes[index];
                 if (mesh.isEnabled() && mesh.checkCollisions && mesh.subMeshes && mesh !== excludedMesh && ((collisionMask & mesh.collisionGroup) !== 0)) {
                     mesh._checkCollision(collider);
-                   /* if (mesh.name == 'building') {
-                        console.log('collides? ', collider.collisionFound);
-                    }*/
-                } 
+                    /* if (mesh.name == 'building') {
+                         console.log('collides? ', collider.collisionFound);
+                     }*/
+                }
             }
 
             if (!collider.collisionFound) {
@@ -831,36 +818,53 @@ export class WorldScene extends Scene {
     });
     */
 
-        new Promise<[Terrain, Promise<GPUBuffer | HTMLImageElement>]>(async (tres, trej) => {
-            let db = (await DB);
-            let trans = db.transaction('maps');
-            trans.onerror = trej;
-            trans.objectStore('maps').openCursor().onsuccess = async (evt) => {
-                try {
-                    //progelem.value = 40;
-                    blazor.invokeMethod('setProgress', 30);
-                    if ((<IDBRequest>evt.target).result) {
-                        let img = new Image();
-                        img.src = URL.createObjectURL((<IDBRequest>evt.target).result.value.texture);
-                        tres([new Terrain((<IDBRequest>evt.target).result.value), img.decode().then(() => img)]);
-                    }
-                    else {
-                        let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp');
-                        tres([ground, ground.createTexture()]);
-                        let obj = {
-                            width: 10000,
-                            height: 10000,
-                            indices: new Uint32Array(ground.indices),
-                            positions: new Float32Array(ground.positions),
-                            uvs: new Float32Array(ground.uvs || [])
-                        };
-                        let trans2 = db.transaction('maps', 'readwrite');
-                        trans2.objectStore('maps').add(obj);
-                    }
+        new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
+            try {
+                let cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
+                if (cachedtexture) {
 
-                } catch (e) {
-                    trej(e);
+                    let cacheimg = new Image();
+                    cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
+                    let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp');
+                    //tres([ground, cacheimg.decode().then(() => cacheimg)]);
+
+
+                    await cacheimg.decode();
+                    let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
+                    let imgctx = imgcanvas.getContext('2d');
+                    imgctx.drawImage(cacheimg, 0, 0);
+                    //let pixels = imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data;
+                    // const padding = pixels.byteLength % 4;
+                    //@ts-ignore
+                    let device: GPUDevice = (engine as WebGPUEngine)._device;
+                    const [gpuBuffer, arrarBuffer] = device.createBufferMapped({
+                        size: cacheimg.width * cacheimg.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT,
+                        //@ts-ignore
+                        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+                    });
+                    new Uint8ClampedArray(arrarBuffer).set(imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data);
+                    gpuBuffer.unmap();
+                    tres([ground, new Promise((resolve) => resolve(gpuBuffer))]);
+                    return;
                 }
+                //progelem.value = 40;
+                blazor.invokeMethod('setProgress', 30);
+
+                let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp');
+                tres([ground, ground.createTexture()]);
+                let obj = {
+                    width: 10000,
+                    height: 10000,
+                    indices: new Uint32Array(ground.indices),
+                    positions: new Float32Array(ground.positions),
+                    uvs: new Float32Array(ground.uvs || [])
+                };
+                let trans2 = (await DB).transaction('maps', 'readwrite');
+                trans2.objectStore('maps').add(obj);
+
+
+            } catch (e) {
+                trej(e);
             }
         }).then(gt => {
             blazor.invokeMethod('setProgress', 40);
@@ -873,8 +877,8 @@ export class WorldScene extends Scene {
             DB.then(d => {
                 this.tools['Zones'] = new Zones(ground, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
             })
-           
-            
+
+
             ground.checkCollisions = true;
             blazor.invokeMethod('setProgress', 50);
             texture.then(async imgdata => {
@@ -882,17 +886,17 @@ export class WorldScene extends Scene {
                 let width = 10000;
 
                 //let rtexture2 = new InternalTexture(engine, 3);
-               /* let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
-                    _engine: engine,
-                    _source: 3,
-                    _webGLTexture: gl.createTexture()
-                }*/
+                /* let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
+                     _engine: engine,
+                     _source: 3,
+                     _webGLTexture: gl.createTexture()
+                 }*/
                 if (imgdata instanceof HTMLImageElement) {
 
                 } else {
                     //engine.updateRawTexture(rtexture2, new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2), Engine.TEXTUREFORMAT_RGBA, true, null, Constants.TEXTURETYPE_UNSIGNED_INT);
                 }
-               
+
 
                 /*
                 gl.bindTexture(gl.TEXTURE_2D, rtexture2._webGLTexture);
@@ -932,12 +936,12 @@ export class WorldScene extends Scene {
                 const textureExtent = {
                     width: size[0],
                     height: size[1],
-                    depth:1,
+                    depth: 1,
                 };
                 //@ts-ignore
                 let device: GPUDevice = (engine as WebGPUEngine)._device;
 
-                
+
                 let internaltex = new InternalTexture(engine, InternalTextureSource.Url);
                 internaltex.width = size[0];
                 internaltex.height = size[1];
@@ -945,7 +949,6 @@ export class WorldScene extends Scene {
                 internaltex.baseHeight = size[1];
                 internaltex._isRGBD = internaltex._isRGBD;
                 //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
-
 
                 internaltex._webGPUTexture = device.createTexture({
                     dimension: '2d',
@@ -957,9 +960,9 @@ export class WorldScene extends Scene {
                     //@ts-ignore
                     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
                 });
-                
 
-            //_uploadFromWebglTexture start 
+
+                //_uploadFromWebglTexture start 
 
                 //let pixels = new Uint8ClampedArray((imgdata as ArrayBuffer), Float32Array.BYTES_PER_ELEMENT * 2);
 
@@ -968,50 +971,40 @@ export class WorldScene extends Scene {
                 const commandEncoder = device.createCommandEncoder({});
                 //const rowPitch = Math.ceil(size[0] * 4 / 256) * 256;
 
-               /* if (rowPitch != size[0] * 4) {
-                    const alignedPixels = new Uint8ClampedArray(rowPitch * size[1]);
-                    let pixelsIndex = 0;
-                    for (let y = 0; y < size[1]; ++y) {
-                        for (let x = 0; x < size[0]; ++x) {
-                            let i = x * 4 + y * rowPitch;
-
-                            alignedPixels[i] = (pixels as any)[pixelsIndex];
-                            alignedPixels[i + 1] = (pixels as any)[pixelsIndex + 1];
-                            alignedPixels[i + 2] = (pixels as any)[pixelsIndex + 2];
-                            alignedPixels[i + 3] = (pixels as any)[pixelsIndex + 3];
-                            pixelsIndex += 4;
-                        }
-                    }
-                    pixels = alignedPixels;
-                }*/
-
-
-               // const padding = pixels.byteLength % 4;
-               /* const buffer = device.createBuffer({
-                    size: pixels.byteLength + padding,
-                    usage: WebGPUConstants.GPUBufferUsage_TRANSFER_SRC | WebGPUConstants.GPUBufferUsage_TRANSFER_DST
-                });
-                const dataBuffer = new WebGPUDataBuffer(buffer);
-                dataBuffer.references = 1;
-                dataBuffer.capacity = pixels.byteLength;
-                //@ts-ignore
-                (engine as WebGPUEngine)._setSubData(dataBuffer, 0, pixels);
-               
-
-
-                let bufferView: GPUBufferCopyView = {
-                    buffer: dataBuffer.underlyingResource,
-                    rowPitch: rowPitch,
-                    imageHeight: size[1],
-                    offset: 0,
-                }; */
-                let bufferView2: GPUBufferCopyView = {
-                    buffer: imgdata as GPUBuffer,
-                    rowPitch: size[0]*4,
+                let bufferView: GPUBufferCopyView;
+                let gpuBuffer: GPUBuffer;
+                /* if (imgdata instanceof HTMLImageElement) {
+                     console.log('Terrain texture from cache');
+                     let imgcanvas = new OffscreenCanvas(imgdata.width, imgdata.height);
+                     let imgctx = imgcanvas.getContext('2d');
+                     imgctx.drawImage(imgdata, 0, 0);
+                     let pixels=imgctx.getImageData(0, 0, imgdata.width, imgdata.height).data;
+                     // const padding = pixels.byteLength % 4;
+                     let arrarBuffer: ArrayBuffer;
+                     [gpuBuffer, arrarBuffer] = device.createBufferMapped({
+                         size: pixels.byteLength,
+                         //@ts-ignore
+                         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+                     });
+                     new Uint8ClampedArray(arrarBuffer).set(pixels);
+                     gpuBuffer.unmap();
+                      bufferView = {
+                          buffer: gpuBuffer,
+                          rowPitch: imgdata.width*4,
+                          imageHeight: size[1],
+                          offset: 0
+                      };
+                 } else {*/
+                gpuBuffer = imgdata;
+                bufferView = {
+                    buffer: gpuBuffer,
+                    rowPitch: size[0] * 4,
                     imageHeight: size[1],
                     offset: 0,
                 };
-                commandEncoder.copyBufferToTexture(bufferView2, {
+                // }
+
+                commandEncoder.copyBufferToTexture(bufferView, {
                     texture: internaltex._webGPUTexture,
                     origin: {
                         x: 0,
@@ -1023,11 +1016,11 @@ export class WorldScene extends Scene {
                 }, textureExtent);
                 device.defaultQueue.submit([commandEncoder.finish()]);
 
-                (imgdata as GPUBuffer).destroy();
+                gpuBuffer.destroy();
                 //(engine as WebGPUEngine)._releaseBuffer(dataBuffer);
 
 
-            // _uploadFromWebglTexture ends
+                // _uploadFromWebglTexture ends
                 internaltex._webGPUTextureView = internaltex._webGPUTexture.createView();
                 internaltex.onLoadedObservable.notifyObservers(internaltex);
                 internaltex.onLoadedObservable.clear();
@@ -1037,28 +1030,28 @@ export class WorldScene extends Scene {
                 internaltex.samplingMode = Texture.TRILINEAR_SAMPLINGMODE;
                 internaltex.isReady = true;
                 (engine as WebGPUEngine)._internalTexturesCache.push(internaltex);
-                
+
 
                 var grass2 = new StandardMaterial("grass2", this);
 
                 //engine.createTexture("https://playground.babylonjs.com/textures/grass.png", true, true, this);
-               // grass2.ambientTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
+                // grass2.ambientTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
                 grass2.diffuseTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
-               // grass2.diffuseColor = new Color3(0.2, 1, 0.3);
+                // grass2.diffuseColor = new Color3(0.2, 1, 0.3);
                 ground.material = grass2;
                 blazor.invokeMethod('setProgress', 100);
             })
 
             ground.isPickable = true;
 
-           // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
+            // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
 
             shadermateria.setVector3("lightPos", sunlight.position);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
 
-           // this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
-            
+            // this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
+
         }).catch(e => {
             console.error(e);
             blazor.invokeMethod('setProgressError', e.name + e.message);

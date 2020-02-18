@@ -154,7 +154,6 @@ export class Terrain extends TerraMesh {
                 });
 
 
-
                 let timer = new Date().getTime();
                 const commandEncoder = device.createCommandEncoder();
 
@@ -163,7 +162,8 @@ export class Terrain extends TerraMesh {
                 passEncoder.setBindGroup(0, bindGroup);
                 passEncoder.dispatch(5120 /* x */, 5120 /* y */);
                 passEncoder.endPass();
-
+                tres(resultMatrixBuffer);
+                console.debug('Webgpu painted, took', new Date().getTime() - timer);
                 // Get a GPU buffer for reading in an unmapped state.
                 const gpuReadBuffer = device.createBuffer({
                     size: resultMatrixBufferSize,
@@ -184,14 +184,10 @@ export class Terrain extends TerraMesh {
                 const gpuCommands = commandEncoder.finish();
                 device.defaultQueue.submit([gpuCommands]);
 
-
                 // Read buffer.
                 let arrayBuffer: ArrayBuffer = await gpuReadBuffer.mapReadAsync();
-                console.debug('Webgpu painted, took', new Date().getTime() - timer);
-                arrayBuffer = await Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
-                tres(resultMatrixBuffer);
+                Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
                 
-
             })
         });
     }
