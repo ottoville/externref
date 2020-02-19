@@ -8,12 +8,12 @@ var urlsToCache = [
     '_framework/_bin/System.Core.dll',
     '_framework/_bin/System.Text.Json.dll'
 ];
+let shaders: Promise<{ [key: string]:string}> = fetch('/shaders/shaders.json').then(s => s.json());
 ((service: ServiceWorkerGlobalScope): void => {
     service.addEventListener('install', function (event) {
         console.log('installing serviceworker')
         service.skipWaiting();
         // Perform install steps
-        let shaders = fetch('/shaders/shaders.json').then(s => s.json());
         event.waitUntil(caches.open(CACHE_NAME).then((cache) =>
             shaders.then(jsondata => {
                 for (var file in jsondata) {
@@ -38,12 +38,18 @@ var urlsToCache = [
             req = new Request('/shaders/' + filename);
         }
         event.respondWith(
-            caches.match(req).then(function (response) {
+            caches.match(req).then(async function (response) {
                 // Cache hit - return response
                 if (response) {
                     return response;
+                } else {    // Visual studio javascript debug workaround
+                    let jsondata = await shaders;
+                    if (jsondata[req.url]) {
+                        console.log('Visual studio javascript debug workaround');
+                        console.log(req);
+                        return new Response(jsondata[req.url]);
+                    }
                 }
-                /*TypeError: Failed to execute 'fetch' on 'WorkerGlobalScope': 'only-if-cached' can be set only with 'same-origin' mode*/
                 return fetch(req);
             })
         );

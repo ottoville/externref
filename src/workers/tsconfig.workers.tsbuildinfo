@@ -166,7 +166,7 @@
         "signature": "9dc58648dfb65bcc48fa10ff6123ae8549feea504d23398e260f35379ada6269"
       },
       "./webworkers/mesh.ts": {
-        "version": "8f1d82ba040961fa7a5822b80e4afa6258740d892d5dcb56befa7b285730de3c",
+        "version": "81764dec30d4c73dcacd501bd40be18e9a6c9fc205c695b15949e0c9a7a758ea",
         "signature": "ed58433a218f76ccd9dfda0e94ea26b545f7d4e4661b8d09537850422d97aaab"
       },
       "./webworkers/ray.ts": {
@@ -178,8 +178,8 @@
         "signature": "70b5436710e8bcb14d4cf7ff60f0123d26b3eb984ea8209ea6df3e3d575e4f71"
       },
       "./sw.ts": {
-        "version": "fadd2029a75d4d285e8504ed0cf9922cf41a53f9383dcc732dc602a459d1f999",
-        "signature": "506a9f6aba443bd1f9cf4471a89ef35a5fa00d6d562e54ede9bb38fe000fbf14"
+        "version": "5160c2f45eeacacc82e985837c5de4dde6682dda7901a73b2ff78e685447799f",
+        "signature": "a3de0f34fd7c3f47591cc2f8ed19e9a75360c4f1cf4656cf41e173f7b44ae7ef"
       },
       "./commonmath.d.ts": {
         "version": "32b34ab405c2665817d40519983af4cb76c28678868fb90505531fe022857fe3",
@@ -259,12 +259,12 @@
       "./webworkers/interfaces.ts",
       "./webworkers/mesh.ts",
       "./webworkers/ray.ts",
-      "./sw.ts",
+      "./webworkers/terrainworker.ts",
       "./commonmath.d.ts",
       "./webgpu.d.ts",
       "../node_modules/@types/color-name/index.d.ts",
       "../node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./webworkers/terrainworker.ts"
+      "./sw.ts"
     ]
   },
   "version": "3.8.1-rc"

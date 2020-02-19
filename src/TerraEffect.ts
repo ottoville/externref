@@ -851,6 +851,7 @@ export class TerraEffect {
                 engine._preparePipelineContext(this._pipelineContext, this._vertexSourceCodeOverride, this._fragmentSourceCodeOverride, true, rebuildRebind, null, this._transformFeedbackVaryings, this._key);
             }
             else {
+                console.log(this._vertexSourceCode);
                 engine._preparePipelineContext(this._pipelineContext, this._vertexSourceCode, this._fragmentSourceCode, false, rebuildRebind, defines, this._transformFeedbackVaryings, this._key);
             }
 

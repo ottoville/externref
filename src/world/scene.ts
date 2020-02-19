@@ -822,29 +822,26 @@ export class WorldScene extends Scene {
             try {
                 let cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
                 if (cachedtexture) {
-
                     let cacheimg = new Image();
                     cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
                     let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp');
-                    //tres([ground, cacheimg.decode().then(() => cacheimg)]);
-
-
-                    await cacheimg.decode();
-                    let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
-                    let imgctx = imgcanvas.getContext('2d');
-                    imgctx.drawImage(cacheimg, 0, 0);
-                    //let pixels = imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data;
-                    // const padding = pixels.byteLength % 4;
-                    //@ts-ignore
-                    let device: GPUDevice = (engine as WebGPUEngine)._device;
-                    const [gpuBuffer, arrarBuffer] = device.createBufferMapped({
-                        size: cacheimg.width * cacheimg.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT,
+                    tres([ground,cacheimg.decode().then(() => {
+                        let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
+                        let imgctx = imgcanvas.getContext('2d');
+                        imgctx.drawImage(cacheimg, 0, 0);
+                        //let pixels = imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data;
+                        // const padding = pixels.byteLength % 4;
                         //@ts-ignore
-                        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-                    });
-                    new Uint8ClampedArray(arrarBuffer).set(imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data);
-                    gpuBuffer.unmap();
-                    tres([ground, new Promise((resolve) => resolve(gpuBuffer))]);
+                        let device: GPUDevice = (engine as WebGPUEngine)._device;
+                        const [gpuBuffer, arrarBuffer] = device.createBufferMapped({
+                            size: cacheimg.width * cacheimg.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT,
+                            //@ts-ignore
+                            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+                        });
+                        new Uint8ClampedArray(arrarBuffer).set(imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data);
+                        gpuBuffer.unmap();
+                        return gpuBuffer;
+                    })]);
                     return;
                 }
                 //progelem.value = 40;
@@ -883,54 +880,9 @@ export class WorldScene extends Scene {
             blazor.invokeMethod('setProgress', 50);
             texture.then(async imgdata => {
                 blazor.invokeMethod('setProgress', 75);
-                let width = 10000;
-
-                //let rtexture2 = new InternalTexture(engine, 3);
-                /* let rtexture2 = { //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
-                     _engine: engine,
-                     _source: 3,
-                     _webGLTexture: gl.createTexture()
-                 }*/
-                if (imgdata instanceof HTMLImageElement) {
-
-                } else {
-                    //engine.updateRawTexture(rtexture2, new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2), Engine.TEXTUREFORMAT_RGBA, true, null, Constants.TEXTURETYPE_UNSIGNED_INT);
-                }
-
-
-                /*
-                gl.bindTexture(gl.TEXTURE_2D, rtexture2._webGLTexture);
-                //gl.bindTexture(gl.TEXTURE_2D, ntexture);
-                //engine._unpackFlipY(true);
-                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                if (width % 4 !== 0) {
-                    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-                }
-                if (imgdata instanceof HTMLImageElement) {
-                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, imgdata);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-                } else {
-                    let size = new Float32Array(imgdata, 0, 2);
-                    let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, "RGBA8", size[0], size[1], gl.RGBA, gl.UNSIGNED_BYTE, new Uint8ClampedArray(imgdata, Float32Array.BYTES_PER_ELEMENT * 2));
-                    tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
-                    tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
-                }
-                //progelem.value = 80;
-
-
-                gl.bindTexture(gl.TEXTURE_2D, null);
-                */
-
-                /*
-                 * https://stackoverflow.com/questions/50013385/hello-world-example-of-webgl-parallelism
-                 * 
-                 */
-
-
+                
                 //let size = new Float32Array(imgdata as ArrayBuffer, 0, 2);
                 let size = [5120, 5120];
-                console.log('size ', size);
                 let mipMaps = Scalar.Log2(Math.max(size[0], size[1]));
                 mipMaps = Math.floor(mipMaps);
                 const textureExtent = {
@@ -961,40 +913,12 @@ export class WorldScene extends Scene {
                     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
                 });
 
-
-                //_uploadFromWebglTexture start 
-
-                //let pixels = new Uint8ClampedArray((imgdata as ArrayBuffer), Float32Array.BYTES_PER_ELEMENT * 2);
-
-                //console.log('pixels', pixels)
-
                 const commandEncoder = device.createCommandEncoder({});
                 //const rowPitch = Math.ceil(size[0] * 4 / 256) * 256;
 
                 let bufferView: GPUBufferCopyView;
                 let gpuBuffer: GPUBuffer;
-                /* if (imgdata instanceof HTMLImageElement) {
-                     console.log('Terrain texture from cache');
-                     let imgcanvas = new OffscreenCanvas(imgdata.width, imgdata.height);
-                     let imgctx = imgcanvas.getContext('2d');
-                     imgctx.drawImage(imgdata, 0, 0);
-                     let pixels=imgctx.getImageData(0, 0, imgdata.width, imgdata.height).data;
-                     // const padding = pixels.byteLength % 4;
-                     let arrarBuffer: ArrayBuffer;
-                     [gpuBuffer, arrarBuffer] = device.createBufferMapped({
-                         size: pixels.byteLength,
-                         //@ts-ignore
-                         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-                     });
-                     new Uint8ClampedArray(arrarBuffer).set(pixels);
-                     gpuBuffer.unmap();
-                      bufferView = {
-                          buffer: gpuBuffer,
-                          rowPitch: imgdata.width*4,
-                          imageHeight: size[1],
-                          offset: 0
-                      };
-                 } else {*/
+
                 gpuBuffer = imgdata;
                 bufferView = {
                     buffer: gpuBuffer,
@@ -1017,10 +941,7 @@ export class WorldScene extends Scene {
                 device.defaultQueue.submit([commandEncoder.finish()]);
 
                 gpuBuffer.destroy();
-                //(engine as WebGPUEngine)._releaseBuffer(dataBuffer);
 
-
-                // _uploadFromWebglTexture ends
                 internaltex._webGPUTextureView = internaltex._webGPUTexture.createView();
                 internaltex.onLoadedObservable.notifyObservers(internaltex);
                 internaltex.onLoadedObservable.clear();

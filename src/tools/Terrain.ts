@@ -1,15 +1,14 @@
 ﻿import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn } from "../WorkerThread.js";
-import { texImage2D } from "../webgl.js";
 import { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
 import type { Scene } from "../lib/babylon/scene.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
 import { Material } from "../lib/babylon/Materials/material.js";
-import type { Effect } from "../lib/babylon/Materials/effect.js";
+import type { Effect, IEffectCreationOptions } from "../lib/babylon/Materials/effect.js";
 import type { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
+import { TerraMesh } from "../TerraMesh.js";
 
 
 //@ts-ignore
@@ -18,7 +17,12 @@ export class TerrainTool extends UITAB {
     //private ray = BABYLON.Ray.Zero();
     //private pickinfo: BABYLON.PickingInfo;
     //private vertexData = new BABYLON.VertexData();
-    private helper = new Mesh("Helper");
+    private helper = new TerraMesh("Helper", new Uint32Array([0, 1, 2, 3]), new Float32Array([
+        -0.5, 0, -2,
+        0.5, 0, -3,
+        0.5, 0, 3,
+        -0.5, 0, 2,
+    ]));
     private helpermaterial: ShaderMaterial;
     private timed = new Date().getTime();
     private glTexture: WebGLTexture | null = null;
@@ -30,7 +34,7 @@ export class TerrainTool extends UITAB {
         this.helpermaterial.setFloat("time", (this.timed - new Date().getTime()) / 1000);
     }
     public canvas: HTMLCanvasElement;
-    private helperIndices = new Uint16Array([0, 1, 2, 3]);
+   // private helperIndices = new Uint16Array([0, 1, 2, 3]);
     constructor(
         private scene: Scene,
         private terrain: Terrain,
@@ -38,21 +42,21 @@ export class TerrainTool extends UITAB {
     ) {
         super();
         this.canvas = <any>scene.getEngine().getRenderingCanvas();
-       /* this.vertexData.positions = new Float32Array([
-            -0.5, 0, -2,
-            0.5, 0, -3,
-            0.5, 0, 3,
-            -0.5, 0, 2,
-        ]);
-        this.vertexData.indices = new Uint16Array([0, 1, 2, 3]);
-        this.vertexData.applyToMesh(this.helper);*/
-        this.helper.setIndices(this.helperIndices);
+        this.helper.subMeshes[0]._materialEffect = scene.getEngine().createEffect("./shaders/helper", <IEffectCreationOptions>{
+            attributes: ["position", "normal", "uv"],
+            uniformsNames: ["worldViewProjection"],
+            uniformBuffersNames: [],
+            samplers: [],
+            defines:''
+        }, scene.getEngine());
+       /* this.helper.setIndices(this.helperIndices);
         this.helper.setVerticesData(VertexBuffer.PositionKind, new Float32Array([
             -0.5, 0, -2,
             0.5, 0, -3,
             0.5, 0, 3,
             -0.5, 0, 2,
-        ]));
+        ]));*/
+
         this.helpermaterial = new ShaderMaterial("shader", this.scene, "./shaders/helper",
             {
                 attributes: ["position", "normal", "uv"],
@@ -76,25 +80,25 @@ export class TerrainTool extends UITAB {
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-        let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'R16I', 250, 250, gl.RED_INTEGER, gl.SHORT, this.terrain.slopeArr);
-        tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
-        tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+        //let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'R16I', 250, 250, gl.RED_INTEGER, gl.SHORT, this.terrain.slopeArr);
+        //tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
+       // tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
 
         /********/
         this.glTexture2 = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
 
-        let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr);
-        tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
-        tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+        //let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr);
+       // tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
+        //tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
 
         /********/
         this.glTexture3 = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
 
-        let tex3 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr);
-        tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
-        tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+       // let tex3 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr);
+        //tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
+       // tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
         gl.bindTexture(gl.TEXTURE_2D, null);
         let me = this;
         (function () {
@@ -206,13 +210,13 @@ export class TerrainTool extends UITAB {
             // this._draw(subMesh, fillMode);
             engine.applyStates();
             engine._drawCalls.addCount(1, false);
-            gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.helperIndices.length, gl.UNSIGNED_SHORT, 0, 8);
-           // gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.vertexData.indices.length, gl.UNSIGNED_SHORT, 0, 8);
+            //gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.helperIndices.length, gl.UNSIGNED_SHORT, 0, 8);
             return this.helper;
 
             //return this;
 
         }
+
      /*   this.helper._draw = (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh => {
             engine.applyStates();
             engine._drawCalls.addCount(1, false);
@@ -299,7 +303,6 @@ export class TerrainTool extends UITAB {
                 projection: this.camera.getProjectionMatrix().toArray()
             }).then(flatPos => {
                 let uniformlocation;
-                //@ts-ignore
                 if (uniformlocation = this.helpermaterial._effect.getUniform("flatPos"))
                     this.uniformsV2.set(uniformlocation, <{ x: number, y: number }><any>flatPos);
             });

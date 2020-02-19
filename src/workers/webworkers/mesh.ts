@@ -79,8 +79,6 @@ class Mesh {
             pickingInfo.bv = intersectInfo.bv || 0;
             pickingInfo.faceId = intersectInfo.faceId;
             pickingInfo.subMeshId = intersectInfo.subMeshId;
-            console.log('mesh worker return ');
-            console.log(pickingInfo);
             return pickingInfo;
         }
         return pickingInfo;
@@ -109,7 +107,6 @@ class Mesh {
     }): SharedArrayBuffer {
 
         if (this.normals === null) {
-            console.log('creating normals buffer with length ', this.positionsView.byteLength);
             this.normals = new SharedArrayBuffer(this.positionsView.byteLength);
         }
         let normalsView = new Float32Array(this.normals)
@@ -321,8 +318,6 @@ class Mesh {
             normalsView[index * 3 + 1] = faceNormaly;
             normalsView[index * 3 + 2] = faceNormalz;
         }
-        console.log('normals worker return normals sharedarraybugger');
-        console.log(this.normals);
         return this.normals;
     }
 }
