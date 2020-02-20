@@ -1,4 +1,4 @@
-﻿import type { Effect} from "./lib/babylon/Materials/effect";
+﻿import type { Effect } from "./lib/babylon/Materials/effect";
 import type { IEffectCreationOptions } from "./lib/babylon/Materials/effect";
 import type { ThinEngine } from "./lib/babylon/Engines/thinEngine";
 import type { IEffectFallbacks } from "./lib/babylon/Materials/iEffectFallbacks";
@@ -14,6 +14,9 @@ import type { BaseTexture } from "./lib/babylon/Materials/Textures/baseTexture";
 import type { RenderTargetTexture } from "./lib/babylon/Materials/Textures/renderTargetTexture";
 import type { PostProcess } from "./lib/babylon/PostProcesses/postProcess";
 import type { IColor4Like, IVector4Like, IMatrixLike, IVector2Like, IVector3Like, IColor3Like } from "./lib/babylon/Maths/math.like";
+import type { WebGPUPipelineContext } from "./lib/babylon/Engines/WebGPU/webgpuPipelineContext";
+import { UniformBuffer } from "./lib/babylon/Materials/uniformBuffer";
+import type { WebGPUEngine } from "./lib/babylon/Engines/webgpuEngine";
 
 /*Object.defineProperty(ShaderProcessor, '_FileToolsLoadFile', {
     get: function () {
@@ -204,7 +207,7 @@ export class TerraEffect {
      * @param array array to be set.
      * @returns this effect.
      */
-    public setFloatArray(uniformName: string, array: Float32Array): TerraEffect {
+    public setFloatArray(uniformName: string, array: any): TerraEffect {
         this._pipelineContext!.setArray(uniformName, array);
         return this;
     }
@@ -215,7 +218,7 @@ export class TerraEffect {
      * @param array array to be set.
      * @returns this effect.
      */
-    public setFloatArray2(uniformName: string, array: Float32Array): TerraEffect {
+    public setFloatArray2(uniformName: string, array: any): TerraEffect {
         this._pipelineContext!.setArray2(uniformName, array);
         return this;
     }
@@ -226,7 +229,7 @@ export class TerraEffect {
      * @param array array to be set.
      * @returns this effect.
      */
-    public setFloatArray3(uniformName: string, array: Float32Array): TerraEffect {
+    public setFloatArray3(uniformName: string, array: any): TerraEffect {
         this._pipelineContext!.setArray3(uniformName, array);
         return this;
     }
@@ -237,7 +240,7 @@ export class TerraEffect {
      * @param array array to be set.
      * @returns this effect.
      */
-    public setFloatArray4(uniformName: string, array: Float32Array): TerraEffect {
+    public setFloatArray4(uniformName: string, array: any): TerraEffect {
         this._pipelineContext!.setArray4(uniformName, array);
         return this;
     }
@@ -673,7 +676,7 @@ export class TerraEffect {
      * Compiled shader to webGL program.
      * @hidden
      */
-    public _pipelineContext: Nullable<IPipelineContext> = null;
+    public _pipelineContext: Nullable<WebGPUPipelineContext> = null;
     /** @hidden */
     public _vertexSourceCode: string = "";
     /** @hidden */
@@ -746,7 +749,7 @@ export class TerraEffect {
         if (baseName.vertexSource) {
             vertexSource = "source:" + baseName.vertexSource;
         } else if (baseName.vertexElement) {
-                vertexSource = baseName.vertexElement;
+            vertexSource = baseName.vertexElement;
         } else {
             vertexSource = baseName.vertex || baseName;
         }
@@ -754,7 +757,7 @@ export class TerraEffect {
         if (baseName.fragmentSource) {
             fragmentSource = "source:" + baseName.fragmentSource;
         } else if (baseName.fragmentElement) {
-                fragmentSource = baseName.fragmentElement;
+            fragmentSource = baseName.fragmentElement;
         } else {
             fragmentSource = baseName.fragment || baseName;
         }
@@ -842,57 +845,131 @@ export class TerraEffect {
         var previousPipelineContext = this._pipelineContext;
 
         try {
-            let engine = this._engine;
+            let engine = this._engine as WebGPUEngine;
 
-            this._pipelineContext = engine.createPipelineContext(this._processingContext);
+            this._pipelineContext = engine.createPipelineContext(this._processingContext) as WebGPUPipelineContext;
 
             let rebuildRebind = this._rebuildProgram.bind(this);
             if (this._vertexSourceCodeOverride && this._fragmentSourceCodeOverride) {
                 engine._preparePipelineContext(this._pipelineContext, this._vertexSourceCodeOverride, this._fragmentSourceCodeOverride, true, rebuildRebind, null, this._transformFeedbackVaryings, this._key);
             }
             else {
-                console.log(this._vertexSourceCode);
+                //console.log(this._vertexSourceCode);
                 engine._preparePipelineContext(this._pipelineContext, this._vertexSourceCode, this._fragmentSourceCode, false, rebuildRebind, defines, this._transformFeedbackVaryings, this._key);
             }
 
-            engine._executeWhenRenderingStateIsCompiled(this._pipelineContext, () => {
-                this._attributes = [];
-                this._pipelineContext!._fillEffectInformation(<unknown>this as Effect,
-                    this._uniformBuffersNames,
-                    this._uniformsNames,
-                    this._uniforms,
-                    this._samplerList,
-                    this._samplers,
-                    attributesNames,
-                    this._attributes);
+            //engine._executeWhenRenderingStateIsCompiled(this._pipelineContext, () => {
+            this._attributes = [];
+            /*this._pipelineContext!._fillEffectInformation(<unknown>this as Effect,
+                this._uniformBuffersNames,
+                this._uniformsNames,
+                this._uniforms,
+                this._samplerList,
+                this._samplers,
+                attributesNames,
+                this._attributes);*/
+            console.log('_uniformBuffersNames', this._uniformBuffersNames)
+            console.log('uniformnames', this._uniformsNames)
+            console.log('_uniforms', this._uniforms)
+            console.log('attributesNames', attributesNames)
+            console.log('_attributes', this._attributes)
 
-                // Caches attribute locations.
-                if (attributesNames) {
-                    for (let i = 0; i < attributesNames.length; i++) {
-                        const name = attributesNames[i];
-                        this._attributeLocationByName[name] = this._attributes[i];
-                    }
-                }
 
-                engine.bindSamplers(<unknown>this as Effect);
-
-                this._compilationError = "";
-                this._isReady = true;
-                if (this.onCompiled) {
-                    this.onCompiled(this);
-                }
-                this.onCompileObservable.notifyObservers(this);
-                this.onCompileObservable.clear();
-
-                // Unbind mesh reference in fallbacks
-                if (this._fallbacks) {
-                    this._fallbacks.unBindMesh();
-                }
-
-                if (previousPipelineContext) {
-                    this._engine._deletePipelineContext(previousPipelineContext);
-                }
+            // TODO WEBGPU. Cleanup SEB on this entire function. Should not need anything in here or almost.
+            let effectAvailableUniforms = engine.getUniforms(this._pipelineContext, this._uniformsNames);
+            effectAvailableUniforms.forEach((uniform, index) => {
+                this._uniforms[this._uniformsNames[index]] = uniform;
             });
+
+            // Prevent Memory Leak by reducing the number of string, refer to the string instead of copy.
+            this._fragmentSourceCode = "";
+            this._vertexSourceCode = "";
+            // this._fragmentSourceCodeOverride = "";
+            // this._vertexSourceCodeOverride = "";
+
+            const foundSamplers = this._pipelineContext.availableSamplers;
+            let index: number;
+            for (index = 0; index < this._samplerList.length; index++) {
+                const name = this._samplerList[index];
+                const sampler = foundSamplers[this._samplerList[index]];
+
+                if (sampler == null || sampler == undefined) {
+                    this._samplerList.splice(index, 1);
+                    index--;
+                }
+                else {
+                    this._samplers[name] = index;
+                }
+            }
+
+            for (let attr of engine.getAttributes(this._pipelineContext, attributesNames)) {
+                this._attributes.push(attr);
+            }
+
+            // Build the uniform layout for the left over uniforms.
+            //this._pipelineContext.buildUniformLayout();
+            const _uniformSizes: { [type: string]: number } = {
+                "float": 1,
+                "vec2": 2,
+                "vec3": 3,
+                "vec4": 4,
+                "mat2": 4,
+                "mat3": 9,
+                "mat4": 16
+            };
+
+            if (this._pipelineContext.leftOverUniforms.length) {
+                this._pipelineContext.uniformBuffer = new UniformBuffer(engine);
+
+                for (let leftOverUniform of this._pipelineContext.leftOverUniforms) {
+                    const size = _uniformSizes[leftOverUniform.type];
+                    this._pipelineContext.uniformBuffer.addUniform(leftOverUniform.name, size, leftOverUniform.length);
+                    // TODO WEBGPU. Replace with info from uniform buffer class
+                    this._pipelineContext.leftOverUniformsByName[leftOverUniform.name] = leftOverUniform.type;
+                }
+
+                this._pipelineContext.uniformBuffer.create();
+            }
+
+
+
+
+
+            /* *********************** */
+
+
+
+
+
+
+
+            // Caches attribute locations.
+            if (attributesNames) {
+                for (let i = 0; i < attributesNames.length; i++) {
+                    const name = attributesNames[i];
+                    this._attributeLocationByName[name] = this._attributes[i];
+                }
+            }
+
+            engine.bindSamplers(<unknown>this as Effect);
+
+            this._compilationError = "";
+            this._isReady = true;
+            if (this.onCompiled) {
+                this.onCompiled(this);
+            }
+            this.onCompileObservable.notifyObservers(this);
+            this.onCompileObservable.clear();
+
+            // Unbind mesh reference in fallbacks
+            if (this._fallbacks) {
+                this._fallbacks.unBindMesh();
+            }
+
+            if (previousPipelineContext) {
+                this._engine._deletePipelineContext(previousPipelineContext);
+            }
+            //});
 
             if (this._pipelineContext.isAsync) {
                 this._checkIsReady(previousPipelineContext);
@@ -902,7 +979,7 @@ export class TerraEffect {
             this._processCompilationErrors(e, previousPipelineContext);
         }
     }
-    private _processCompilationErrors(e: any, previousPipelineContext: Nullable<IPipelineContext> = null) {
+    private _processCompilationErrors(e: any, previousPipelineContext: Nullable<WebGPUPipelineContext> = null) {
         this._compilationError = e.message;
         let attributesNames = this._attributesNames;
         let fallbacks = this._fallbacks;
@@ -1006,7 +1083,7 @@ export class TerraEffect {
         }
         return false;
     }
-    private _checkIsReady(previousPipelineContext: Nullable<IPipelineContext>) {
+    private _checkIsReady(previousPipelineContext: Nullable<WebGPUPipelineContext>) {
         try {
             if (this._isReadyInternal()) {
                 return;

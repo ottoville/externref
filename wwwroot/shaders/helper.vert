@@ -1,15 +1,37 @@
-//in vec3 position;
+#version 450
+layout(std430, set = 0, binding = 0) readonly buffer slopeArr {
+    vec2 size;
+    int numbers[];
+} firstMatrix;
+layout(std430, set = 0, binding = 1) readonly buffer facet1Arr {
+    vec2 size;
+    float numbers[];
+} secondMatrix;
 
-uniform vec2 flatPos;
+layout(std430, set = 0, binding = 2) readonly buffer facet2Arr {
+    vec2 size;
+    float numbers[];
+} thirdMatrix;
 
-uniform mat4 world;
-uniform mat4 worldViewProjection;
-uniform float time;
+layout(set = 0, binding = 3) uniform Uniforms {
+    vec2 flatPos;
+    mat4 world;
+    mat4 worldViewProjection;
+    float time;
+  } uniforms;
+
+layout(location = 0) in vec3 position;
+
+//uniform vec2 flatPos;
+
+//uniform mat4 world;
+//uniform mat4 worldViewProjection;
+//uniform float time;
 
 
-uniform highp isampler2D slopeArr;
-uniform sampler2D facet1Arr;
-uniform sampler2D facet2Arr;
+//uniform highp isampler2D slopeArr;
+//uniform sampler2D facet1Arr;
+//uniform sampler2D facet2Arr;
 
 const float PI = 3.1415926535897932384626433832795;
 const float angleStep= (PI*2.0)/8.0;
@@ -26,30 +48,33 @@ float subdivisionsY = 250.0;
 float width = 10000.0;
 float height = 10000.0;
 
-vec4 getFacetAt( float x, float z) {
+vec4 getFacetAt( int cx, int cz) {
     // retrieve col and row from x, z coordinates in the ground local system
     
-    float col = floor((x+maxX) * subdivisionsX / width);
-    float row= floor(-(z+maxZ)*subdivisionsY / height + subdivisionsY);
+    //float col = floor((x+maxX) * subdivisionsX / width);
+    //float row= floor(-(z+maxZ)*subdivisionsY / height + subdivisionsY);
+    int col = int(floor((cx+maxX) * subdivisionsX / width));
+    int row= int(floor(-(cz+maxZ)*subdivisionsY / height + subdivisionsY));
 
-    ivec4 slope =  texelFetch(slopeArr, ivec2(col,row), 0);
+    //ivec4 slope =  texelFetch(slopeArr, ivec2(col,row), 0);
+    int slope = firstMatrix.numbers[row*250 + col];
     vec4 facet;
-    if(z < -1.0 * x + float(slope.x)) {
-        facet = texelFetch(facet1Arr, ivec2(col,row), 0);
+    if(cz < -1 * cx + slope) {
+        facet=vec4(secondMatrix.numbers[(row * 250 + col)*4], secondMatrix.numbers[(row * 250 + col)*4+1], secondMatrix.numbers[(row * 250 + col)*4+2], secondMatrix.numbers[(row * 250 + col)*4+3]);
     } else {
-        facet = texelFetch(facet2Arr, ivec2( col,row), 0);
+        facet=vec4(thirdMatrix.numbers[(row * 250 + col)*4], thirdMatrix.numbers[(row * 250 + col)*4+1], thirdMatrix.numbers[(row * 250 + col)*4+2], thirdMatrix.numbers[(row * 250 + col)*4+3]);
     }
     return facet;
 }
 float getHeightAtCoordinates2(vec2 xz) {
-        vec4 facet = getFacetAt(xz.x, xz.y);
+        vec4 facet = getFacetAt(int(xz.x), int(xz.y));
         float y = -(facet.x * xz.x + facet.z * xz.y + facet.w) / facet.y;
         return y;
 }
 void main(void) {
    // vec4 worldcoords=world * vec4(position,1.0);
     
-    float angle=time+float(gl_InstanceID)*angleStep;
+    float angle=uniforms.time+float(gl_InstanceIndex)*angleStep;
 	float c = cos(angle);
 	float s = sin(angle);
 
@@ -63,11 +88,11 @@ void main(void) {
     //float offsetZ=localposZ+posz;
 
     //vec4 worldpos=world*vec4(offsetX,0,offsetZ,1.0);
-    vec2 worldpos= offset + flatPos;
+    vec2 worldpos= offset + uniforms.flatPos;
 
     float posy=getHeightAtCoordinates2(vec2(worldpos.x,worldpos.y));
 
     vec3 newpos = vec3(worldpos.x,posy+2.0,worldpos.y);
-    gl_Position = worldViewProjection * vec4(newpos, 1.0);
+    gl_Position = uniforms.worldViewProjection * vec4(newpos, 1.0);
 
 }

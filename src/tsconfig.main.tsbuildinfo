@@ -1050,8 +1050,8 @@
         "signature": "0119cb31070effab13506b0fa7791b68a23b20107075fdcb8eba6ae29a33a6d6"
       },
       "./terraeffect.ts": {
-        "version": "4bf08afd1adaa6bd6fee4a8b18f281124271359ce3b6b03d77dcdd08b127a012",
-        "signature": "2ee1a3d9b29b01b1161068ed71db27d06565e1f959747d3d962a9ab5bc6c6484"
+        "version": "e3e8df72fe5b5e94aee89c3349b413efd57e60481e74f7dde87c6bf53e5d2aba",
+        "signature": "7e96a0c96308a5c3c81c58e8f8ee0df76ea51b8dcdc4b7af6a25933b816de0e1"
       },
       "./workerthread.ts": {
         "version": "365154fbc2f856a91325deaaf36583a72748018e30893c07dfc11385031b5335",
@@ -2682,7 +2682,7 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "c9747b33215c716bba90215c96ecd7ed9c4c9576dfd173ebb4a4ea78c7892b27",
+        "version": "e223f2abb4007652dfd08f0400e4841d2ed314bfb10cbc70682195481113f080",
         "signature": "5f2979860f0076d300dd5b78c7fe03b97147915f161a99478702097b1e9fa9b7"
       },
       "./world/water.ts": {
@@ -4994,7 +4994,10 @@
         "./lib/babylon/materials/textures/basetexture.ts",
         "./lib/babylon/materials/textures/rendertargettexture.ts",
         "./lib/babylon/postprocesses/postprocess.ts",
-        "./lib/babylon/maths/math.like.ts"
+        "./lib/babylon/maths/math.like.ts",
+        "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
+        "./lib/babylon/materials/uniformbuffer.ts",
+        "./lib/babylon/engines/webgpuengine.ts"
       ],
       "./terramesh.ts": [
         "./workerthread.ts",
@@ -9539,7 +9542,11 @@
         "./lib/babylon/materials/material.ts",
         "./lib/babylon/materials/effect.ts",
         "./lib/babylon/meshes/submesh.ts",
-        "./terramesh.ts"
+        "./terramesh.ts",
+        "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
+        "./lib/babylon/engines/webgpuengine.ts",
+        "./terraeffect.ts",
+        "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts"
       ],
       "./world/water.ts": [
         "./world/scene.ts",
@@ -11129,6 +11136,7 @@
         "./lib/babylon/engines/ipipelinecontext.ts",
         "./lib/babylon/materials/effect.ts",
         "./lib/babylon/misc/observable.ts",
+        "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
         "./lib/babylon/engines/thinengine.ts",
         "./lib/babylon/materials/ieffectfallbacks.ts"
       ],
@@ -14506,6 +14514,7 @@
       "./lib/babylon/engines/webgpuengine.ts",
       "./lib/babylon/scene.ts",
       "./lib/babylon/materials/effect.ts",
+      "./terraeffect.ts",
       "./workerthread.ts",
       "./terramesh.ts",
       "./terraray.ts",
@@ -14913,7 +14922,6 @@
       "./tools/zones.ts",
       "./tools/camera.ts",
       "./tools/buildings.ts",
-      "./tools/terrain.ts",
       "./world/water.ts",
       "./world/scene.ts",
       "./code.ts",
@@ -14971,7 +14979,7 @@
       "./rustwasm/hello_wasm_bg.d.ts",
       "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./terraeffect.ts"
+      "./tools/terrain.ts"
     ]
   },
   "version": "3.8.1-rc"

@@ -9,6 +9,10 @@ import { Material } from "../lib/babylon/Materials/material.js";
 import type { Effect, IEffectCreationOptions } from "../lib/babylon/Materials/effect.js";
 import type { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
 import { TerraMesh } from "../TerraMesh.js";
+import { WebGPUShaderProcessingContext } from "../lib/babylon/Engines/WebGPU/webgpuShaderProcessingContext.js";
+import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
+import { TerraEffect } from "../TerraEffect.js";
+import { WebGPUDataBuffer } from "../lib/babylon/Meshes/WebGPU/webgpuDataBuffer.js";
 
 
 //@ts-ignore
@@ -42,13 +46,65 @@ export class TerrainTool extends UITAB {
     ) {
         super();
         this.canvas = <any>scene.getEngine().getRenderingCanvas();
-        this.helper.subMeshes[0]._materialEffect = scene.getEngine().createEffect("./shaders/helper", <IEffectCreationOptions>{
+        //this.helper.subMeshes[0]._materialEffect = 
+        let engine = scene.getEngine() as WebGPUEngine;
+        let pipeline = (scene.getEngine() as WebGPUEngine).createPipelineContext(new WebGPUShaderProcessingContext());
+        Promise.all([fetch('/shaders/helper.vert'), fetch('/shaders/helper.frag')]).then(async shaders => {
+            let shaderssource = await Promise.all(shaders.map(shader => shader.text()));
+            console.log(shaderssource);
+            engine._preparePipelineContext(pipeline, shaderssource[0], shaderssource[1], true, true, '', [], 'helper');
+            //@ts-ignore;
+            let compiledshader = engine._compiledShaders['helper'];
+            let effect = new TerraEffect("./shaders/helper",
+                {
+                    attributes: ['position'],
+                    uniformsNames: ['flatPos', 'world', 'worldViewProjection', 'time'],
+                    uniformBuffersNames: ['slopeArr', 'facet1Arr', 'facet2Arr'],
+                    samplers: [],
+                    defines: null,
+                    fallbacks: null,
+                    onCompiled: null,
+                    onError:null
+                }, engine, null, null, null, null,null,null, null,'helper', compiledshader.sources);
+
+            //@ts-ignore
+            let device: GPUDevice = (engine as WebGPUEngine)._device;
+
+            const [GPUslopeBuffer, slopeBuffer] = device.createBufferMapped({
+                size: 250 * 250 * Uint16Array.BYTES_PER_ELEMENT,
+                //@ts-ignore
+                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+            });
+            GPUslopeBuffer.unmap();
+            const [GPUfacet1Buffer, facet1Buffer] = device.createBufferMapped({
+                size: 250 * 250 * Float32Array.BYTES_PER_ELEMENT,
+                //@ts-ignore
+                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+            });
+            GPUfacet1Buffer.unmap();
+            const [GPUfacet2Buffer, facet2Buffer] = device.createBufferMapped({
+                size: 250 * 250 * Float32Array.BYTES_PER_ELEMENT,
+                //@ts-ignore
+                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+            });
+            GPUfacet2Buffer.unmap();
+
+            engine.bindUniformBufferBase(new WebGPUDataBuffer(GPUslopeBuffer), 0, 'slopeArr');
+            engine.bindUniformBufferBase(new WebGPUDataBuffer(GPUfacet1Buffer), 1, 'facet1Arr');
+            engine.bindUniformBufferBase(new WebGPUDataBuffer(GPUfacet2Buffer), 2, 'facet2Arr');
+
+            //@ts-ignore
+            this.helper.subMeshes[0]._materialEffect = effect;
+        });
+        
+        /*let effect=scene.getEngine().createEffect("./shaders/helper", <IEffectCreationOptions>{
             attributes: ["position", "normal", "uv"],
             uniformsNames: ["worldViewProjection"],
             uniformBuffersNames: [],
-            samplers: [],
+            samplers: ['facet1Arr', 'facetArr', 'slopeArr'],
             defines:''
-        }, scene.getEngine());
+        }, scene.getEngine());*/
+
        /* this.helper.setIndices(this.helperIndices);
         this.helper.setVerticesData(VertexBuffer.PositionKind, new Float32Array([
             -0.5, 0, -2,

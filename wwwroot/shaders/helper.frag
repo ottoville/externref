@@ -1,6 +1,6 @@
-out vec4 outputColor;
+#version 450
 
-uniform vec3 cameraPosition;
+layout(location = 0) out vec4 outputColor;
 
 void main(void) {
     outputColor=  vec4(1.0,1.0,1.0,0.9);
