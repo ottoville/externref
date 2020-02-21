@@ -652,7 +652,7 @@ export class TerraEffect {
     public _samplerList: string[];
 
     private static _uniqueIdSeed = 0;
-    private _engine: Engine;
+    private _engine: WebGPUEngine;
     private _uniformsNames: string[];
     private _samplers: { [key: string]: number } = {};
     private _isReady = false;
@@ -701,7 +701,7 @@ export class TerraEffect {
 
         if ((<IEffectCreationOptions>attributesNamesOrOptions).attributes) {
             var options = <IEffectCreationOptions>attributesNamesOrOptions;
-            this._engine = <Engine>uniformsNamesOrEngine;
+            this._engine = <WebGPUEngine>uniformsNamesOrEngine;
 
             this._attributesNames = options.attributes;
             this._uniformsNames = options.uniformsNames.concat(options.samplers);
@@ -719,7 +719,7 @@ export class TerraEffect {
                 }
             }
         } else {
-            this._engine = <Engine>engine;
+            this._engine = <WebGPUEngine>engine;
             this.defines = (defines == null ? "" : defines);
             this._uniformsNames = (<string[]>uniformsNamesOrEngine).concat(<string[]>samplers);
             this._samplerList = samplers ? <string[]>samplers.slice() : [];
@@ -768,7 +768,7 @@ export class TerraEffect {
             defines: this.defines.split("\n"),
             indexParameters: this._indexParameters,
             isFragment: false,
-            shouldUseHighPrecisionShader: this._engine._shouldUseHighPrecisionShader,
+            shouldUseHighPrecisionShader: (this._engine as WebGPUEngine)._shouldUseHighPrecisionShader,
             processor: this._engine._shaderProcessor,
             supportsUniformBuffers: this._engine.supportsUniformBuffers,
             shadersRepository: TerraEffect.ShadersRepository,
@@ -868,11 +868,11 @@ export class TerraEffect {
                 this._samplers,
                 attributesNames,
                 this._attributes);*/
-            console.log('_uniformBuffersNames', this._uniformBuffersNames)
+            /*console.log('_uniformBuffersNames', this._uniformBuffersNames)
             console.log('uniformnames', this._uniformsNames)
             console.log('_uniforms', this._uniforms)
             console.log('attributesNames', attributesNames)
-            console.log('_attributes', this._attributes)
+            console.log('_attributes', this._attributes)*/
 
 
             // TODO WEBGPU. Cleanup SEB on this entire function. Should not need anything in here or almost.

@@ -2215,6 +2215,10 @@ export class WebGPUEngine extends Engine {
         const renderPass = this._bundleEncoder || this._currentRenderPass!;
 
         const pipeline = this._getRenderPipeline(fillMode);
+        if(this._currentEffect.name=="./shaders/helper") {
+            console.log(pipeline);
+            debugger;
+        }
         renderPass.setPipeline(pipeline);
 
         const vertexInputs = this._getVertexInputsToRender();

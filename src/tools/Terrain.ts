@@ -13,6 +13,7 @@ import { WebGPUShaderProcessingContext } from "../lib/babylon/Engines/WebGPU/web
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { TerraEffect } from "../TerraEffect.js";
 import { WebGPUDataBuffer } from "../lib/babylon/Meshes/WebGPU/webgpuDataBuffer.js";
+import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
 
 
 //@ts-ignore
@@ -48,7 +49,14 @@ export class TerrainTool extends UITAB {
         this.canvas = <any>scene.getEngine().getRenderingCanvas();
         //this.helper.subMeshes[0]._materialEffect = 
         let engine = scene.getEngine() as WebGPUEngine;
-        let pipeline = (scene.getEngine() as WebGPUEngine).createPipelineContext(new WebGPUShaderProcessingContext());
+        let ctx = new WebGPUShaderProcessingContext();
+        ctx.availableUBOs = {
+            'slopeArr' : { setIndex: 0, bindingIndex: 0 },
+            'facet1Arr' : { setIndex: 1, bindingIndex: 1 },
+            'facet2Arr' : { setIndex: 2, bindingIndex: 2 }
+        }
+        ctx.orderedUBOsAndSamplers = [[{ name: 'slopeArr', isSampler: false }, { name: 'facet1Arr', isSampler: false }, { name: 'facet2Arr', isSampler: false }]]
+        let pipeline = engine.createPipelineContext(ctx);
         Promise.all([fetch('/shaders/helper.vert'), fetch('/shaders/helper.frag')]).then(async shaders => {
             let shaderssource = await Promise.all(shaders.map(shader => shader.text()));
             console.log(shaderssource);
@@ -89,10 +97,14 @@ export class TerrainTool extends UITAB {
             });
             GPUfacet2Buffer.unmap();
 
-            engine.bindUniformBufferBase(new WebGPUDataBuffer(GPUslopeBuffer), 0, 'slopeArr');
-            engine.bindUniformBufferBase(new WebGPUDataBuffer(GPUfacet1Buffer), 1, 'facet1Arr');
-            engine.bindUniformBufferBase(new WebGPUDataBuffer(GPUfacet2Buffer), 2, 'facet2Arr');
-
+            //@ts-ignore
+            engine._uniformsBuffers['slopeArr'] = new WebGPUDataBuffer(GPUslopeBuffer);
+            //@ts-ignore
+            engine._uniformsBuffers['facet1Arr'] = new WebGPUDataBuffer(GPUfacet1Buffer);
+            //@ts-ignore
+            engine._uniformsBuffers['facet2Arr'] = new WebGPUDataBuffer(GPUfacet2Buffer);
+            console.log('_pipelineContext');
+            console.log(effect._pipelineContext);
             //@ts-ignore
             this.helper.subMeshes[0]._materialEffect = effect;
         });
