@@ -55,7 +55,7 @@ export class TerrainTool extends UITAB {
             'facet1Arr' : { setIndex: 1, bindingIndex: 1 },
             'facet2Arr' : { setIndex: 2, bindingIndex: 2 }
         }
-        ctx.orderedUBOsAndSamplers = [[{ name: 'slopeArr', isSampler: false }, { name: 'facet1Arr', isSampler: false }, { name: 'facet2Arr', isSampler: false }]]
+        ctx.orderedUBOsAndSamplers = [[{ name: 'slopeArr', isSampler: false }, { name: 'facet1Arr', isSampler: false }, { name: 'facet2Arr', isSampler: false }, { name: 'uniforms', isSampler: false }]]
         let pipeline = engine.createPipelineContext(ctx);
         Promise.all([fetch('/shaders/helper.vert'), fetch('/shaders/helper.frag')]).then(async shaders => {
             let shaderssource = await Promise.all(shaders.map(shader => shader.text()));
@@ -91,11 +91,17 @@ export class TerrainTool extends UITAB {
             });
             GPUfacet1Buffer.unmap();
             const [GPUfacet2Buffer, facet2Buffer] = device.createBufferMapped({
-                size: 250 * 250 * Float32Array.BYTES_PER_ELEMENT,
+                size: 2*4 +4*4+4*4+4,
                 //@ts-ignore
                 usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
             });
             GPUfacet2Buffer.unmap();
+            const [GPUuniformBuffer, uniformBuffer] = device.createBufferMapped({
+                size: 250 * 250 * Float32Array.BYTES_PER_ELEMENT,
+                //@ts-ignore
+                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_SRC,
+            });
+            GPUuniformBuffer.unmap();
 
             //@ts-ignore
             engine._uniformsBuffers['slopeArr'] = new WebGPUDataBuffer(GPUslopeBuffer);
@@ -103,8 +109,65 @@ export class TerrainTool extends UITAB {
             engine._uniformsBuffers['facet1Arr'] = new WebGPUDataBuffer(GPUfacet1Buffer);
             //@ts-ignore
             engine._uniformsBuffers['facet2Arr'] = new WebGPUDataBuffer(GPUfacet2Buffer);
+            //@ts-ignore
+            engine._uniformsBuffers['uniforms'] = new WebGPUDataBuffer(GPUuniformBuffer);
             console.log('_pipelineContext');
             console.log(effect._pipelineContext);
+           /* let uniformBindGroupLayout = device.createBindGroupLayout({
+                bindings: [{
+                    binding: 0,
+                    //@ts-ignore
+                    visibility: GPUShaderStage.VERTEX,
+                    type: "uniform-buffer"
+                }]
+            });*/
+            effect._pipelineContext.renderPipeline = device.createRenderPipeline({
+                //@ts-ignore
+                vertexStage: {
+                    module: device.createShaderModule({
+                        //@ts-ignore
+                        code: engine._compileRawShaderToSpirV(shaderssource[0], "vertex"),
+                    }),
+                    entryPoint: "main",
+                },
+                //@ts-ignore
+                fragmentStage: {
+                    module: device.createShaderModule({
+                        //@ts-ignore
+                        code: engine._compileRawShaderToSpirV(shaderssource[1], "fragment"),
+                    }),
+                    entryPoint: "main"
+                },
+
+                primitiveTopology: 'triangle-list',
+                colorStates: [{
+                    format: "bgra8unorm",
+                }],
+                /*depthStencilState: {
+                    depthWriteEnabled: true,
+                    depthCompare: "less",
+                    format: "depth24plus-stencil8",
+                },*/
+                vertexState: {
+                    vertexBuffers: [/*{
+                        arrayStride: 4,
+                        attributes: [{
+                            // position
+                            shaderLocation: 0,
+                            offset: 0,
+                            format: "float4"
+                        }]
+                    }*/],
+                },
+                /*rasterizationState: {
+                    cullMode: 'back',
+                }*/
+            });
+            effect._pipelineContext.bindGroupLayouts = [
+                //@ts-ignore
+                effect._pipelineContext.renderPipeline.getBindGroupLayout(0 /* index */)
+            ]
+
             //@ts-ignore
             this.helper.subMeshes[0]._materialEffect = effect;
         });

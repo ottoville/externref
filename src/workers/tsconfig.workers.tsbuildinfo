@@ -186,8 +186,8 @@
         "signature": "32b34ab405c2665817d40519983af4cb76c28678868fb90505531fe022857fe3"
       },
       "./webgpu.d.ts": {
-        "version": "37e9b7c8008666667e0ce17fa8c7efa68f12c7ed839715f3ed9dcc18412b0bb7",
-        "signature": "37e9b7c8008666667e0ce17fa8c7efa68f12c7ed839715f3ed9dcc18412b0bb7"
+        "version": "bb98c26e16cf3a1f1436b581198cfe0114f91af525b72fd45afbc90713e54762",
+        "signature": "bb98c26e16cf3a1f1436b581198cfe0114f91af525b72fd45afbc90713e54762"
       },
       "../node_modules/@types/color-name/index.d.ts": {
         "version": "f0cb4b3ab88193e3e51e9e2622e4c375955003f1f81239d72c5b7a95415dad3e",
@@ -216,6 +216,17 @@
     "referencedMap": {},
     "exportedModulesMap": {},
     "semanticDiagnosticsPerFile": [
+      "./webgpu.d.ts",
+      "./webworkers/bitmapworker.ts",
+      "./webworkers/grass.ts",
+      "./webworkers/interfaces.ts",
+      "./webworkers/mesh.ts",
+      "./webworkers/ray.ts",
+      "./webworkers/terrainworker.ts",
+      "./sw.ts",
+      "./commonmath.d.ts",
+      "../node_modules/@types/color-name/index.d.ts",
+      "../node_modules/@types/facebook-js-sdk/index.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es5.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2016.d.ts",
@@ -253,18 +264,7 @@
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.promise.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.string.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.esnext.intl.d.ts",
-      "./webworkers/bitmapworker.ts",
-      "./webworkers/grass.ts",
-      "./webworkers/interfaces.ts",
-      "./webworkers/mesh.ts",
-      "./webworkers/ray.ts",
-      "./webworkers/terrainworker.ts",
-      "./commonmath.d.ts",
-      "./webgpu.d.ts",
-      "../node_modules/@types/color-name/index.d.ts",
-      "../node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./sw.ts"
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.esnext.intl.d.ts"
     ]
   },
   "version": "3.8.1-rc"

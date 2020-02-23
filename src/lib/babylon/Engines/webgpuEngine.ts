@@ -2019,7 +2019,9 @@ export class WebGPUEngine extends Engine {
         if (gpuPipeline.renderPipeline) {
             return gpuPipeline.renderPipeline;
         }
-
+        if (this._currentEffect.name == "./shaders/helper") {
+            debugger;
+        }
         // Unsupported at the moment but needs to be extracted from the MSAA param.
         const topology = this._getTopology(fillMode);
         const rasterizationStateDescriptor = this._getRasterizationStateDescriptor();
@@ -2176,6 +2178,13 @@ export class WebGPUEngine extends Engine {
 
             const groupLayout = bindGroupLayouts[i];
             if (groupLayout) {
+                if (this._currentEffect.name == "./shaders/helper") {
+                    console.log('bind group');
+                    console.log({
+                        layout: groupLayout,
+                        bindings,
+                    })
+                }
                 bindGroups[i] = this._device.createBindGroup({
                     layout: groupLayout,
                     bindings,
@@ -2216,8 +2225,8 @@ export class WebGPUEngine extends Engine {
 
         const pipeline = this._getRenderPipeline(fillMode);
         if(this._currentEffect.name=="./shaders/helper") {
-            console.log(pipeline);
-            debugger;
+            //console.log(pipeline);
+            //debugger;
         }
         renderPass.setPipeline(pipeline);
 
