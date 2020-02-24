@@ -9,6 +9,7 @@ import { Color3 } from '../Maths/math.color';
 import { IMatrixLike } from '../Maths/math.like';
 
 import "../Engines/Extensions/engine.uniformBuffer";
+import { WebGPUEngine } from "../Engines/webgpuEngine";
 
 /**
  * Uniform buffer objects.
@@ -463,7 +464,7 @@ export class UniformBuffer {
             return;
         }
 
-        this._engine.updateUniformBuffer(this._buffer, this._bufferData);
+        (this._engine as WebGPUEngine).updateUniformBuffer(this._buffer, this._bufferData);
 
         this._needSync = false;
     }

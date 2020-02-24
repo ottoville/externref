@@ -77,29 +77,42 @@ export class TerrainTool extends UITAB {
 
             //@ts-ignore
             let device: GPUDevice = (engine as WebGPUEngine)._device;
+            let vertices = new Float32Array([
+                -0.5, 0, -2,
+                0.5, 0, -3,
+                0.5, 0, 3,
+                -0.5, 0, 2,
+            ]);
+            let indices = new Uint16Array([0, 1, 2, 3]);
 
+            const [GPUvertexBuffer, vertexBuffer] = device.createBufferMapped({
+                size: vertices.byteLength,
+                //@ts-ignore
+                usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+            });
+            GPUvertexBuffer.unmap();
             const [GPUslopeBuffer, slopeBuffer] = device.createBufferMapped({
                 size: 250 * 250 * Uint16Array.BYTES_PER_ELEMENT,
                 //@ts-ignore
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
             });
             GPUslopeBuffer.unmap();
             const [GPUfacet1Buffer, facet1Buffer] = device.createBufferMapped({
                 size: 250 * 250 * Float32Array.BYTES_PER_ELEMENT,
                 //@ts-ignore
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
             });
             GPUfacet1Buffer.unmap();
             const [GPUfacet2Buffer, facet2Buffer] = device.createBufferMapped({
-                size: 2*4 +4*4+4*4+4,
+                size: 250 * 250 * Float32Array.BYTES_PER_ELEMENT,
                 //@ts-ignore
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
             });
             GPUfacet2Buffer.unmap();
             const [GPUuniformBuffer, uniformBuffer] = device.createBufferMapped({
-                size: 250 * 250 * Float32Array.BYTES_PER_ELEMENT,
+                size: 2* 4 + 4 * 4 + 4 * 4 + 4,
                 //@ts-ignore
-                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_SRC,
+                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
             });
             GPUuniformBuffer.unmap();
 
@@ -113,14 +126,30 @@ export class TerrainTool extends UITAB {
             engine._uniformsBuffers['uniforms'] = new WebGPUDataBuffer(GPUuniformBuffer);
             console.log('_pipelineContext');
             console.log(effect._pipelineContext);
-           /* let uniformBindGroupLayout = device.createBindGroupLayout({
+            let uniformBindGroupLayout = device.createBindGroupLayout({
                 bindings: [{
                     binding: 0,
                     //@ts-ignore
                     visibility: GPUShaderStage.VERTEX,
                     type: "uniform-buffer"
                 }]
-            });*/
+            });
+            const uniformBindGroup = device.createBindGroup({
+                layout: uniformsBindGroupLayout,
+                bindings: [{
+                    binding: 0,
+                    resource: {
+                        buffer: uniformBuffer,
+                    }
+                }],
+            });
+            effect._pipelineContext.bindGroups = [uniformBindGroup]
+            //@ts-ignore
+            effect._pipelineContext.vertexInputs = {
+                vertexStartSlot: 0,
+                vertexBuffers: [GPUvertexBuffer],
+                vertexOffsets: [0]
+            }
             effect._pipelineContext.renderPipeline = device.createRenderPipeline({
                 //@ts-ignore
                 vertexStage: {
@@ -143,25 +172,25 @@ export class TerrainTool extends UITAB {
                 colorStates: [{
                     format: "bgra8unorm",
                 }],
-                /*depthStencilState: {
+                depthStencilState: {
                     depthWriteEnabled: true,
                     depthCompare: "less",
                     format: "depth24plus-stencil8",
-                },*/
+                },
                 vertexState: {
-                    vertexBuffers: [/*{
-                        arrayStride: 4,
+                    vertexBuffers: [{
+                        arrayStride: 4*3,
                         attributes: [{
                             // position
                             shaderLocation: 0,
                             offset: 0,
-                            format: "float4"
+                            format: "float3"
                         }]
-                    }*/],
+                    }],
                 },
-                /*rasterizationState: {
+                rasterizationState: {
                     cullMode: 'back',
-                }*/
+                }
             });
             effect._pipelineContext.bindGroupLayouts = [
                 //@ts-ignore

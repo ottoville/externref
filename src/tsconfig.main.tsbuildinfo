@@ -586,7 +586,7 @@
         "signature": "447de7173620a9127b6e873db4b0cd061b196c6109b93dfabd2af21c0ec1a893"
       },
       "./lib/babylon/particles/particlesystem.ts": {
-        "version": "fe37665d538aaba7d2faf28f41fb0a81523f274d653b7546a0c79f010f4918ba",
+        "version": "5bd105a65ff089344b947507c6b4f8d014f74f5a2d57c63a7560fee9809cbb0c",
         "signature": "3e00558d4ceda735c6038a9f0f73ad66338f06de9e98a275536efae811509f72"
       },
       "./lib/babylon/particles/particle.ts": {
@@ -810,7 +810,7 @@
         "signature": "26756363c4f0dcfa77350b232045433f15c3b8368e27d956828200796c1de447"
       },
       "./lib/babylon/cameras/camera.ts": {
-        "version": "557b1e51ae08b5921d2244efdb97ddee525646a109625e094b6d61ac27517d65",
+        "version": "a316eca209a6a7fc209494da787d46e19bae077faf2d39114ebabc642ae08535",
         "signature": "c125bcc4fde39a1d7b64ae084c0d5d16dfb30d11448bff440d9ea89c2424607c"
       },
       "./lib/babylon/meshes/builders/discbuilder.ts": {
@@ -1022,7 +1022,7 @@
         "signature": "09f1164f49b8741734a22f222ef8ee0723f499ab2b84ede96e7823dae1136004"
       },
       "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts": {
-        "version": "8b888b1c0e46868074a7949d17bc8431c0129ca8941db8dd76465c317abcc6dc",
+        "version": "f8f62e46fce384c564321c81693c0b6c7fd306d78769cce44dc3337946939a05",
         "signature": "6889b1cf7e8e32071129d5c59566a175f9b2a678a85ad8fccb9f5dc2c2b6e6a9"
       },
       "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts": {
@@ -1622,7 +1622,7 @@
         "signature": "ef8a9e5bf6bc050d5f02c74c6ca935b4a4ea46944480fe687061fff96b0c46f5"
       },
       "./lib/babylon/gizmos/planerotationgizmo.ts": {
-        "version": "f40836c9f82649690e27dec39f527859adb2482e3baaf5966b285e8c03c816d7",
+        "version": "fdeee5407fab041f29a686a4bd72eac543c1f44fd84f68da257bbaae76757304",
         "signature": "02db0e609f3b520f18b5ec999189f4ba724213e0d54c02de404dd5cc073c1301"
       },
       "./lib/babylon/gizmos/rotationgizmo.ts": {
@@ -1630,7 +1630,7 @@
         "signature": "224618671e2b1ce8473d970e8c2d8a9cf08e5341ebde516a9a9f38a88d61999c"
       },
       "./lib/babylon/gizmos/gizmomanager.ts": {
-        "version": "0cc6d0e09c1a921560e36414c6595596d9547ba86da33b655fac7e489497515c",
+        "version": "2c6cdb8dd38fe6199ca6efdcad23d108af7fe1c6192e0334264246c9420dbfc6",
         "signature": "7d6afd405ba23715e079f732716e8f783b44c4c77ed578e37330089ffc0d8b39"
       },
       "./lib/babylon/lights/directionallight.ts": {
@@ -2682,7 +2682,7 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "fff5a9547490859333d4f846dff6377de91910c4dc199f17941c98a4af073ee1",
+        "version": "2e9ed01543793170ba5831129667023c5cb4f5322f9db77d09513220204b3774",
         "signature": "5f2979860f0076d300dd5b78c7fe03b97147915f161a99478702097b1e9fa9b7"
       },
       "./world/water.ts": {
@@ -2738,8 +2738,8 @@
         "signature": "69f5ac00da2accfda2a48b0f04ba78deddff5c1eb3a90843f335fd7720fd45ed"
       },
       "./lib/babylon/libdeclarations/webgpu.d.ts": {
-        "version": "bb98c26e16cf3a1f1436b581198cfe0114f91af525b72fd45afbc90713e54762",
-        "signature": "bb98c26e16cf3a1f1436b581198cfe0114f91af525b72fd45afbc90713e54762"
+        "version": "37e9b7c8008666667e0ce17fa8c7efa68f12c7ed839715f3ed9dcc18412b0bb7",
+        "signature": "37e9b7c8008666667e0ce17fa8c7efa68f12c7ed839715f3ed9dcc18412b0bb7"
       },
       "./lib/babylon/libdeclarations/webvr.d.ts": {
         "version": "55ab3c58d63af02efff5f66b787cfed3aa7714baff7436eee007fb0be3bbcf5e",
@@ -2770,15 +2770,15 @@
         "signature": "6fb1a35e7955cbe618ac429a59c6e188f8e2454922b0f3ec7a4dd8a103d70a53"
       },
       "./lib/materials/custom/custommaterial.ts": {
-        "version": "dfc3d3c0900b62b1ccf88b00833cf8f8220a5dd6e35b3ad64da370f907770d59",
+        "version": "b70740e5450b4b8ffc03612d7c26c06cc7f2f7ab399ad11b6e3bb35565177cd0",
         "signature": "8f10ba4d56210e6ce4cea08ea6be3116afe8570e8d46d2eb0c8c72fc77435520"
       },
       "./lib/materials/custom/pbrcustommaterial.ts": {
-        "version": "758c925fadc83976b3770ce317820bfda24c8b312763d8ae8235160f07cfbc2f",
+        "version": "dc7a62a9489088985943b7255ad2f839a3cdc1d0bc024174103f524a4814378a",
         "signature": "5fe143c560543de1bf8e9495637ea8b5d85a27677ca826b0573baaf21e6f8cd4"
       },
       "./lib/materials/custom/index.ts": {
-        "version": "7d20be3567d240e4ccdb5ba6a87369b6e262b953cd6f847b2b1164d940c2a89b",
+        "version": "135b29e41b3c275b2b5c5aad1005867f26126045302ffec837e6aa6830cb8795",
         "signature": "dd6a702e02fc902296da85de8384880882f158d8f9ae7969c71405b1fd182405"
       },
       "./lib/materials/fire/firematerial.ts": {
@@ -2814,7 +2814,7 @@
         "signature": "5e7c60e6de077388f50cb267485f644ab983f18a2c6f96e361f43aebde9ac740"
       },
       "./lib/materials/lava/lavamaterial.ts": {
-        "version": "a4d3ae65474db7df0e7f00c14a44c2c26edf03f9bfb0ba3c2240620d9a08ddf9",
+        "version": "68cce84d90d245084cb08b7e596852a5a60b8a7cd7945476ba45cd9e09dbc835",
         "signature": "4b97666cd30c92978497ce3b2d6cce565c48288472a7db9627a578691d0b8d28"
       },
       "./lib/materials/lava/index.ts": {
@@ -2906,7 +2906,7 @@
         "signature": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86"
       },
       "./rustwasm/hello_wasm.js": {
-        "version": "e1ed2a91845f7240482b6d82b7630668cf951b5df4c97ef281a3d440dcab008b",
+        "version": "6a46400090dd40da2263903087a43a1de57d6db13fe10c05852c18360dc809d4",
         "signature": "ce7196f043e593877984a7c982df828e9f356e408ce4d35a0a2c542aec421000"
       },
       "./node_modules/@types/facebook-js-sdk/index.d.ts": {
