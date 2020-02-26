@@ -126,7 +126,7 @@ export class TerrainTool extends UITAB {
             engine._uniformsBuffers['uniforms'] = new WebGPUDataBuffer(GPUuniformBuffer);
             console.log('_pipelineContext');
             console.log(effect._pipelineContext);
-            let uniformBindGroupLayout = device.createBindGroupLayout({
+            let uniformsBindGroupLayout = device.createBindGroupLayout({
                 bindings: [{
                     binding: 0,
                     //@ts-ignore
@@ -139,7 +139,7 @@ export class TerrainTool extends UITAB {
                 bindings: [{
                     binding: 0,
                     resource: {
-                        buffer: uniformBuffer,
+                        buffer: GPUuniformBuffer,
                     }
                 }],
             });
