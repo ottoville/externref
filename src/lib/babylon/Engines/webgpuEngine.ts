@@ -2249,6 +2249,7 @@ export class WebGPUEngine extends Engine {
             const renderPass = this._bundleEncoder || this._currentRenderPass!;
             const pipeline = this._getRenderPipeline(fillMode);
             renderPass.setPipeline(pipeline);
+            debugger;
             renderPass.setVertexBuffer(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).vertexInputs.vertexBuffers[0])
             renderPass.setBindGroup(0,(this._currentEffect!._pipelineContext as WebGPUPipelineContext).bindGroups[0])
         } else {

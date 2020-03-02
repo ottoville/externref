@@ -20,9 +20,9 @@ layout(set = 0, binding = 3) uniform Uniforms {
     float time;
   } uniforms;
 
-//layout(location = 0) in vec3 position;
+layout(location = 0) in vec3 position;
 
-const vec3 position=vec3(1.0,1.0,1.0);
+//const vec3 position=vec3(1.0,1.0,1.0);
 
 //uniform vec2 flatPos;
 
