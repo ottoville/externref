@@ -81,7 +81,7 @@ export class TerrainTool extends UITAB {
                 -0.5, 0, -2,
                 0.5, 0, -3,
                 0.5, 0, 3,
-                -0.5, 0, 2,
+                //-0.5, 0, 2,
             ]);
             let indices = new Uint16Array([0, 1, 2, 3]);
 
@@ -110,30 +110,30 @@ export class TerrainTool extends UITAB {
             });
             GPUfacet2Buffer.unmap();
             const [GPUuniformBuffer, uniformBuffer] = device.createBufferMapped({
-                size: 2 * 4 + 4 * 4 + 4 * 4 + 4,
+                size: (2 * 4) + (4 * 16) + (4 * 16) + 4,
                 //@ts-ignore
                 usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
             });
             GPUuniformBuffer.unmap();
 
             //@ts-ignore
-            engine._uniformsBuffers['slopeArr'] = new WebGPUDataBuffer(GPUslopeBuffer);
+            //engine._uniformsBuffers['slopeArr'] = new WebGPUDataBuffer(GPUslopeBuffer);
             //@ts-ignore
-            engine._uniformsBuffers['facet1Arr'] = new WebGPUDataBuffer(GPUfacet1Buffer);
+            //engine._uniformsBuffers['facet1Arr'] = new WebGPUDataBuffer(GPUfacet1Buffer);
             //@ts-ignore
-            engine._uniformsBuffers['facet2Arr'] = new WebGPUDataBuffer(GPUfacet2Buffer);
+            //engine._uniformsBuffers['facet2Arr'] = new WebGPUDataBuffer(GPUfacet2Buffer);
             //@ts-ignore
-            engine._uniformsBuffers['uniforms'] = new WebGPUDataBuffer(GPUuniformBuffer);
+           // engine._uniformsBuffers['uniforms'] = new WebGPUDataBuffer(GPUuniformBuffer);
             console.log('_pipelineContext');
             console.log(effect._pipelineContext);
-            let uniformsBindGroupLayout = device.createBindGroupLayout({
+           /* let uniformsBindGroupLayout = device.createBindGroupLayout({
                 bindings: [{
                     binding: 0,
                     //@ts-ignore
                     visibility: GPUShaderStage.VERTEX,
                     type: "uniform-buffer"
                 }]
-            });
+            });*/
 
             //@ts-ignore
             effect._pipelineContext.vertexInputs = {
@@ -213,11 +213,12 @@ export class TerrainTool extends UITAB {
             });
             effect._pipelineContext.bindGroups = [uniformBindGroup];
             //IS this needed?
-            effect._pipelineContext.bindGroupLayouts = [
+            /*effect._pipelineContext.bindGroupLayouts = [
                 //@ts-ignore
-                effect._pipelineContext.renderPipeline.getBindGroupLayout(0 /* index */)
-            ]
+                effect._pipelineContext.renderPipeline.getBindGroupLayout(0 )
+            ]*/
 
+            this.helper.isUnIndexed = true;
             //@ts-ignore
             this.helper.subMeshes[0]._materialEffect = effect;
         });

@@ -2245,17 +2245,8 @@ export class WebGPUEngine extends Engine {
     public drawElementsType(fillMode: number, indexStart: number, indexCount: number, instancesCount: number = 1): void {
         const renderPass = this._bundleEncoder || this._currentRenderPass!;
 
-        if(this._currentEffect!.name=="./shaders/helper") {
-            const renderPass = this._bundleEncoder || this._currentRenderPass!;
-            const pipeline = this._getRenderPipeline(fillMode);
-            renderPass.setPipeline(pipeline);
-            debugger;
-            renderPass.setVertexBuffer(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).vertexInputs.vertexBuffers[0])
-            renderPass.setBindGroup(0,(this._currentEffect!._pipelineContext as WebGPUPipelineContext).bindGroups[0])
-        } else {
-            this._setRenderPipeline(fillMode);
-        }
-
+        this._setRenderPipeline(fillMode);
+ 
         renderPass.drawIndexed(indexCount, instancesCount, indexStart, 0, 0);
     }
 
@@ -2263,9 +2254,18 @@ export class WebGPUEngine extends Engine {
         const renderPass = this._bundleEncoder || this._currentRenderPass!;
 
         this._currentIndexBuffer = null;
-
-        this._setRenderPipeline(fillMode);
-
+        if (this._currentEffect!.name == "./shaders/helper") {
+            const renderPass = this._bundleEncoder || this._currentRenderPass!;
+            const pipeline = this._getRenderPipeline(fillMode);
+            renderPass.setPipeline(pipeline);
+            debugger;
+            renderPass.setVertexBuffer(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).vertexInputs.vertexBuffers[0]);
+            debugger;
+            renderPass.setBindGroup(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).bindGroups[0]);
+            debugger;
+        } else {
+            this._setRenderPipeline(fillMode);
+        }
         renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
     }
 

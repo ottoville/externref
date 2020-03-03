@@ -930,7 +930,7 @@
         "signature": "1594be047b2eb21abda024c3497af57af6dfc16136eac4d2135c6c11f03f8e85"
       },
       "./lib/babylon/engines/webgpuengine.ts": {
-        "version": "eeab11c3e74b88164444741714d7d9264f5cb5dbb648f565f67bee2861e5fee1",
+        "version": "3c65cc668f573e313c42fabaa81ebcf87b40f0b3e0e82a4299870c8627eb9314",
         "signature": "0c4440bd04a70ceadae0cb24d2327db6709bb46539075fa6317d67e7e377cd35"
       },
       "./lib/babylon/materials/uniformbuffer.ts": {
@@ -2682,7 +2682,7 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "528d0ac5905d158e3fc4b5e265544f7dc2e118db609341f163f59d0616001973",
+        "version": "b03b15741b82ec87f7990c3d19787d231e07617a177befe2354cba67df79031f",
         "signature": "5f2979860f0076d300dd5b78c7fe03b97147915f161a99478702097b1e9fa9b7"
       },
       "./world/water.ts": {
