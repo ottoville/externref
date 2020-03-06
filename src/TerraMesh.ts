@@ -394,7 +394,6 @@ export class TerraMesh extends Mesh {
     }
 
     public render(subMesh: SubMesh, enableAlphaMode: boolean, effectiveMeshReplacement?: AbstractMesh): Mesh {
-        
         if (this._internalAbstractMeshDataInfo._isActiveIntermediate) {
             this._internalAbstractMeshDataInfo._isActiveIntermediate = false;
         } else {
@@ -524,15 +523,22 @@ export class TerraMesh extends Mesh {
             //@ts-ignore
             engine.setState(true, this._effectiveMaterial.zOffset, false, reverse);
         }
-
-        // Draw
         //@ts-ignore
-        this._processRendering(subMesh, effect, fillMode, batch, hardwareInstancedRendering, this._onBeforeDraw, this._effectiveMaterial);
+        if (engine._currentEffect!.name == "./shaders/helper") {
+            debugger;
+            //@ts-ignore
+            this._processRendering(subMesh, effect, fillMode, batch, hardwareInstancedRendering, this._onBeforeDraw, this._effectiveMaterial);
+            debugger;
+        } else {
+            debugger;
+            // Draw
+            //@ts-ignore
+            this._processRendering(subMesh, effect, fillMode, batch, hardwareInstancedRendering, this._onBeforeDraw, this._effectiveMaterial);
+        }
 
         // Unbind
         //@ts-ignore
         this._effectiveMaterial.unbind();
-
         for (let step of this._scene._afterRenderingMeshStage) {
             step.action(this, subMesh, batch);
         }
@@ -541,6 +547,7 @@ export class TerraMesh extends Mesh {
             //@ts-ignore
             this._internalMeshDataInfo._onAfterRenderObservable.notifyObservers(this);
         }
+        debugger;
         return this;
     }
 

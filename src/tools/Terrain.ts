@@ -26,7 +26,7 @@ export class TerrainTool extends UITAB {
         -0.5, 0, -2,
         0.5, 0, -3,
         0.5, 0, 3,
-        -0.5, 0, 2,
+        //-0.5, 0, 2,
     ]));
     private helpermaterial: ShaderMaterial;
     private timed = new Date().getTime();

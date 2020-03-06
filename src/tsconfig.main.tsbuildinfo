@@ -930,8 +930,8 @@
         "signature": "1594be047b2eb21abda024c3497af57af6dfc16136eac4d2135c6c11f03f8e85"
       },
       "./lib/babylon/engines/webgpuengine.ts": {
-        "version": "3c65cc668f573e313c42fabaa81ebcf87b40f0b3e0e82a4299870c8627eb9314",
-        "signature": "0c4440bd04a70ceadae0cb24d2327db6709bb46539075fa6317d67e7e377cd35"
+        "version": "6f3c486e6378ca11cf96e4b36c5ff90fd68092e83c0519163b5262f699c67ce6",
+        "signature": "0da886df304eec0fe4c6cfc7a4d4f2ef635d6eb3c847ac5a3ad8f815a5c6f3a2"
       },
       "./lib/babylon/materials/uniformbuffer.ts": {
         "version": "f83f27ad8135452e5e72652eb77da3632bd62be091f38c44813a729657708326",
@@ -1058,7 +1058,7 @@
         "signature": "449974bb70c444474f94e428738dca887a8ff3cdf941850ff1100eea515d4355"
       },
       "./terramesh.ts": {
-        "version": "9d7ca46ef8ee9364ebd4bd75806d81866e25ddb53bf3316e21d034757dd7bb0e",
+        "version": "ae1b48d2e28247eb8d44394ca7c1f1a40948bafa07adac0fc2d339595444d933",
         "signature": "1fe372a2159cf06543e7471595ddcfa2e05d2a6d6fb4d88c8bd26f2fe5d1f6e5"
       },
       "./terraray.ts": {
@@ -2682,7 +2682,7 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "b03b15741b82ec87f7990c3d19787d231e07617a177befe2354cba67df79031f",
+        "version": "e022086e19f1ca15f8e265dad167364505ddf7e437cac58d106a3d9630a5e5cf",
         "signature": "5f2979860f0076d300dd5b78c7fe03b97147915f161a99478702097b1e9fa9b7"
       },
       "./world/water.ts": {
@@ -2694,7 +2694,7 @@
         "signature": "de7a5f957b0a402d53cb01f876bcda19b11fed165f4df38143f215009e19fc42"
       },
       "./code.ts": {
-        "version": "09e4a3fbc0e6c01520075ca0eeeddb6bd317f8c8496eb6ad352cf23c675c948f",
+        "version": "3cfb65ecaf780be6088b761565d199a6a8bc499f34593f21a6439e4b965e1588",
         "signature": "e0e3ce2dce2eaf2e4b5f030fec79a8c159a4ee7da195eac1dfcbfe02588bc731"
       },
       "./commonmath.ts": {
@@ -14923,6 +14923,7 @@
       "./tools/zones.ts",
       "./tools/camera.ts",
       "./tools/buildings.ts",
+      "./tools/terrain.ts",
       "./world/water.ts",
       "./world/scene.ts",
       "./code.ts",
@@ -14980,8 +14981,7 @@
       "./rustwasm/hello_wasm_bg.d.ts",
       "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./lib/babylon/engines/webgpuengine.ts",
-      "./tools/terrain.ts"
+      "./lib/babylon/engines/webgpuengine.ts"
     ]
   },
   "version": "3.8.1-rc"

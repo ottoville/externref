@@ -198,8 +198,10 @@ window.sceneInited.then(scene => {
             // Start new frame
             engine.beginFrame();
             scene.render();
+            debugger;
             // Present
             engine.endFrame();
+            debugger;
         }
         window.requestAnimationFrame(rloop);
 

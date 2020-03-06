@@ -136,7 +136,7 @@ export class WebGPUEngine extends Engine {
     private _mainDepthAttachment: GPURenderPassDepthStencilAttachmentDescriptor;
 
     // Frame Life Cycle (recreated each frame)
-    private _uploadEncoder: GPUCommandEncoder;
+    //private _uploadEncoder: GPUCommandEncoder;
     private _renderEncoder: GPUCommandEncoder;
 
     private _commandBuffers: GPUCommandBuffer[] = [null as any, null as any];
@@ -1433,7 +1433,7 @@ export class WebGPUEngine extends Engine {
     public beginFrame(): void {
         super.beginFrame();
 
-        this._uploadEncoder = this._device.createCommandEncoder(this._uploadEncoderDescriptor);
+       // this._uploadEncoder = this._device.createCommandEncoder(this._uploadEncoderDescriptor);
         this._renderEncoder = this._device.createCommandEncoder(this._renderEncoderDescriptor);
     }
 
@@ -1443,11 +1443,12 @@ export class WebGPUEngine extends Engine {
     public endFrame(): void {
         this._endRenderPass();
 
-        this._commandBuffers[0] = this._uploadEncoder.finish();
-        this._commandBuffers[1] = this._renderEncoder.finish();
-
-        this._device.defaultQueue.submit(this._commandBuffers);
-
+        //this._commandBuffers[0] = this._uploadEncoder.finish();
+        //this._commandBuffers[1] = this._renderEncoder.finish();
+        debugger;
+        this._device.defaultQueue.submit([this._renderEncoder.finish()]);
+        //this._device.defaultQueue.submit(this._commandBuffers);
+        debugger;
         super.endFrame();
     }
 
@@ -2019,9 +2020,6 @@ export class WebGPUEngine extends Engine {
         if (gpuPipeline.renderPipeline) {
             return gpuPipeline.renderPipeline;
         }
-        if (this._currentEffect.name == "./shaders/helper") {
-            debugger;
-        }
         // Unsupported at the moment but needs to be extracted from the MSAA param.
         const topology = this._getTopology(fillMode);
         const rasterizationStateDescriptor = this._getRasterizationStateDescriptor();
@@ -2224,10 +2222,7 @@ export class WebGPUEngine extends Engine {
         const renderPass = this._bundleEncoder || this._currentRenderPass!;
 
         const pipeline = this._getRenderPipeline(fillMode);
-        if(this._currentEffect.name=="./shaders/helper") {
-            //console.log(pipeline);
-            //debugger;
-        }
+
         renderPass.setPipeline(pipeline);
 
         const vertexInputs = this._getVertexInputsToRender();
@@ -2246,8 +2241,9 @@ export class WebGPUEngine extends Engine {
         const renderPass = this._bundleEncoder || this._currentRenderPass!;
 
         this._setRenderPipeline(fillMode);
- 
+        debugger;
         renderPass.drawIndexed(indexCount, instancesCount, indexStart, 0, 0);
+        debugger;
     }
 
     public drawArraysType(fillMode: number, verticesStart: number, verticesCount: number, instancesCount: number = 1): void {
@@ -2258,15 +2254,15 @@ export class WebGPUEngine extends Engine {
             const renderPass = this._bundleEncoder || this._currentRenderPass!;
             const pipeline = this._getRenderPipeline(fillMode);
             renderPass.setPipeline(pipeline);
-            debugger;
             renderPass.setVertexBuffer(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).vertexInputs.vertexBuffers[0]);
-            debugger;
             renderPass.setBindGroup(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).bindGroups[0]);
-            debugger;
+            renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
         } else {
             this._setRenderPipeline(fillMode);
+            debugger;
+            renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
+            debugger;
         }
-        renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
     }
 
     /**
