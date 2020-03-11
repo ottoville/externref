@@ -343,7 +343,6 @@ export class WebGPUEngine extends Engine {
 
     private _initializeContextAndSwapChain(): void {
         this._context = this._canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
-        debugger;
         this._swapChain = this._context.configureSwapChain({
             device: this._device,
             format: this._options.swapChainFormat!,
@@ -353,6 +352,7 @@ export class WebGPUEngine extends Engine {
 
     // Set default values as WebGL with depth and stencil attachment for the broadest Compat.
     private _initializeMainAttachments(): void {
+        debugger;
         this._mainTextureExtends = {
             width: this.getRenderWidth(),
             height: this.getRenderHeight(),
@@ -371,6 +371,7 @@ export class WebGPUEngine extends Engine {
             };
 
             if (this._mainTexture) {
+                debugger;
                 this._mainTexture.destroy();
             }
             this._mainTexture = this._device.createTexture(mainTextureDescriptor);
@@ -399,6 +400,7 @@ export class WebGPUEngine extends Engine {
         };
 
         if (this._depthTexture) {
+            debugger;
             this._depthTexture.destroy();
         }
         this._depthTexture = this._device.createTexture(depthTextureDescriptor);
@@ -950,6 +952,7 @@ export class WebGPUEngine extends Engine {
     /** @hidden */
     public _releaseTexture(texture: InternalTexture): void {
         if (texture._webGPUTexture) {
+            debugger;
             texture._webGPUTexture.destroy();
         }
     }
@@ -2328,9 +2331,11 @@ export class WebGPUEngine extends Engine {
         this._decodeEngine.dispose();
         this._compiledShaders = { };
         if (this._mainTexture) {
+            debugger;
             this._mainTexture.destroy();
         }
         if (this._depthTexture) {
+            debugger;
             this._depthTexture.destroy();
         }
         super.dispose();

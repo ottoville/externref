@@ -5,7 +5,7 @@ import type { loginProvider, DotNet } from "./types/interfaces/index.js";
 import type { IEffectCreationOptions, Effect } from "./lib/babylon/Materials/effect.js";
 import type { Engine } from "./lib/babylon/Engines/engine.js";
 import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks.js";
-import type { WebGPUEngine } from "./lib/babylon/Engines/webgpuEngine.js";
+import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine.js";
 
 //import  DB from "./DB.js";
 
@@ -114,7 +114,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         canvas.dataset.inited = "true";
 
         // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
-        var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas);
+        var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: true } as WebGPUEngineOptions);
         //await engine.initAsync();
 
         //@ts-ignore
@@ -140,7 +140,17 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
          //@ts-ignore
         engine._initializeLimits();
          //@ts-ignore
-        engine._initializeContextAndSwapChain();
+        //engine._initializeContextAndSwapChain();
+        engine._context = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
+        //@ts-ignore
+        engine._swapChain = engine._context.configureSwapChain({
+            //@ts-ignore
+            device: engine._device,
+            //@ts-ignore
+            format: engine._options.swapChainFormat!,
+            //@ts-ignore
+            usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+        });
         engine.resize();
 
 
@@ -189,6 +199,8 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
 window.sceneInited.then(scene => {
     window.scene = scene;
     scene.collisionsEnabled = true;
+    scene.autoClear = false;
+    scene.autoClearDepthAndStencil = false;
     let engine = scene.getEngine() as WebGPUEngine;
 
     let rloop = function () {
@@ -203,11 +215,54 @@ window.sceneInited.then(scene => {
             engine.onBeginFrameObservable.notifyObservers(engine);
             //@ts-ignore
             engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
+
+            // Some PGs are using color3...
+            if (scene.clearColor.a === undefined) {
+                scene.clearColor.a = 1;
+            }
+             //@ts-ignore
+            engine._mainColorAttachments[0].loadValue = scene.clearColor;
+             //@ts-ignore
+            engine._mainDepthAttachment.depthLoadValue = engine._clearDepthValue;
+             //@ts-ignore
+            engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
+             //@ts-ignore
+            //engine._startMainRenderPass();
+            debugger;
+            // Resolve in case of MSAA
+             //@ts-ignore
+            if (engine._options.antialiasing) {
+                //@ts-ignore
+                engine._mainColorAttachments[0].resolveTarget = engine._swapChain.getCurrentTexture().createView();
+            }
+            else {
+                //@ts-ignore
+                engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
+            }
+            debugger;
+            //@ts-ignore
+            engine._currentRenderPass = engine._renderEncoder.beginRenderPass({
+                //@ts-ignore
+                colorAttachments: engine._mainColorAttachments,
+                //@ts-ignore
+                depthStencilAttachment: engine._mainDepthAttachment
+            });
+            debugger;
+
+
             scene.render();
+            debugger;
             // Present
             //engine.endFrame();
              //@ts-ignore
-            engine._endRenderPass();
+            //engine._endRenderPass();
+            if (engine._currentRenderPass) {
+                //@ts-ignore
+                engine._currentRenderPass.endPass();
+                debugger;
+                //@ts-ignore
+                engine._currentRenderPass = null;
+            }
             debugger;
              //@ts-ignore
             engine._device.defaultQueue.submit([engine._renderEncoder.finish()]);
