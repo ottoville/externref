@@ -343,6 +343,7 @@ export class WebGPUEngine extends Engine {
 
     private _initializeContextAndSwapChain(): void {
         this._context = this._canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
+        debugger;
         this._swapChain = this._context.configureSwapChain({
             device: this._device,
             format: this._options.swapChainFormat!,
@@ -1457,6 +1458,7 @@ export class WebGPUEngine extends Engine {
     //------------------------------------------------------------------------------
 
     private _startMainRenderPass(): void {
+        debugger;
         if (this._currentRenderPass) {
             this._endRenderPass();
         }

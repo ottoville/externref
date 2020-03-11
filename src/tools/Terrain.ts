@@ -164,7 +164,7 @@ export class TerrainTool extends UITAB {
                     format: "bgra8unorm",
                 }],
                 depthStencilState: {
-                    depthWriteEnabled: true,
+                    depthWriteEnabled: false,
                     depthCompare: "less",
                     format: "depth24plus-stencil8",
                 },

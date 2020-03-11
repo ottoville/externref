@@ -189,18 +189,31 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
 window.sceneInited.then(scene => {
     window.scene = scene;
     scene.collisionsEnabled = true;
-    let engine = scene.getEngine();
+    let engine = scene.getEngine() as WebGPUEngine;
 
     let rloop = function () {
         var shouldRender = true;
 
         if (shouldRender) {
             // Start new frame
-            engine.beginFrame();
+            //engine.beginFrame();
+            //@ts-ignore
+            engine._measureFps();
+            //@ts-ignore
+            engine.onBeginFrameObservable.notifyObservers(engine);
+            //@ts-ignore
+            engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
             scene.render();
-            debugger;
             // Present
-            engine.endFrame();
+            //engine.endFrame();
+             //@ts-ignore
+            engine._endRenderPass();
+            debugger;
+             //@ts-ignore
+            engine._device.defaultQueue.submit([engine._renderEncoder.finish()]);
+            debugger;
+            engine.onEndFrameObservable.notifyObservers(engine);
+
             debugger;
         }
         window.requestAnimationFrame(rloop);
