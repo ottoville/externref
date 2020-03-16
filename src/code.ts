@@ -114,7 +114,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         canvas.dataset.inited = "true";
 
         // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
-        var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: true } as WebGPUEngineOptions);
+        var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: false } as WebGPUEngineOptions);
         //await engine.initAsync();
 
         //@ts-ignore
@@ -141,7 +141,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         engine._initializeLimits();
          //@ts-ignore
         //engine._initializeContextAndSwapChain();
-        engine._context = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
+       /* engine._context = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
         //@ts-ignore
         engine._swapChain = engine._context.configureSwapChain({
             //@ts-ignore
@@ -150,7 +150,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             format: engine._options.swapChainFormat!,
             //@ts-ignore
             usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-        });
+        });*/
         engine.resize();
 
 
@@ -196,13 +196,19 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         }
     }
 });
+
 window.sceneInited.then(scene => {
     window.scene = scene;
     scene.collisionsEnabled = true;
     scene.autoClear = false;
     scene.autoClearDepthAndStencil = false;
     let engine = scene.getEngine() as WebGPUEngine;
-
+    let context = engine.getRenderingCanvas().getContext('gpupresent') as unknown as GPUCanvasContext;
+    const swapChain = context.configureSwapChain({
+        //@ts-ignore
+        device: engine._device,
+        format: "bgra8unorm"
+    });
     let rloop = function () {
         var shouldRender = true;
 
@@ -237,7 +243,8 @@ window.sceneInited.then(scene => {
             }
             else {
                 //@ts-ignore
-                engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
+                //engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
+                engine._mainColorAttachments[0].attachment = swapChain.getCurrentTexture().createView();
             }
             debugger;
             //@ts-ignore
