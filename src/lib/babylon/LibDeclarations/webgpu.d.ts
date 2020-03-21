@@ -384,7 +384,7 @@ interface GPURenderPassColorAttachmentDescriptor {
   resolveTarget?: GPUTextureView;
 
   loadValue: GPULoadOp | GPUColor;
-  storeOp: GPUStoreOp;
+  storeOp?: GPUStoreOp;
 }
 
 interface GPURenderPassDepthStencilAttachmentDescriptor {

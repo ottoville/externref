@@ -358,7 +358,7 @@ export class WebGPUEngine extends Engine {
             height: this.getRenderHeight(),
             depth: 1
         };
-
+        debugger;
         if (this._options.antialiasing) {
             const mainTextureDescriptor = {
                 size: this._mainTextureExtends,
@@ -387,8 +387,12 @@ export class WebGPUEngine extends Engine {
                 loadValue: new Color4(0, 0, 0, 1),
                 storeOp: WebGPUConstants.GPUStoreOp_store
             }];
+           /* this._mainColorAttachments = [{
+                attachment: undefined,
+                loadValue: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
+            }];*/
         }
-
+        debugger;
         const depthTextureDescriptor = {
             size: this._mainTextureExtends,
             arrayLayerCount: 1,
@@ -404,6 +408,7 @@ export class WebGPUEngine extends Engine {
             this._depthTexture.destroy();
         }
         this._depthTexture = this._device.createTexture(depthTextureDescriptor);
+        debugger;
         this._mainDepthAttachment = {
             attachment: this._depthTexture.createView(),
 
@@ -412,6 +417,7 @@ export class WebGPUEngine extends Engine {
             stencilLoadValue: this._clearStencilValue,
             stencilStoreOp: WebGPUConstants.GPUStoreOp_store,
         };
+        debugger;
     }
 
     /**
