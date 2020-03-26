@@ -382,17 +382,16 @@ export class WebGPUEngine extends Engine {
             }];
         }
         else {
-            this._mainColorAttachments = [{
+            /*this._mainColorAttachments = [{
                 attachment: this._swapChain.getCurrentTexture().createView(),
                 loadValue: new Color4(0, 0, 0, 1),
                 storeOp: WebGPUConstants.GPUStoreOp_store
-            }];
-           /* this._mainColorAttachments = [{
+            }];*/
+            this._mainColorAttachments = [{
                 attachment: undefined,
                 loadValue: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
-            }];*/
+            }];
         }
-        debugger;
         const depthTextureDescriptor = {
             size: this._mainTextureExtends,
             arrayLayerCount: 1,

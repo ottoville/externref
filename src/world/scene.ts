@@ -723,6 +723,7 @@ export class WorldScene extends Scene {
 
         }).bind(this._inputManager)(this, elementToAttachTo);
     }
+    public terrainReady: Promise<void>;
     constructor(engine: Engine | WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine as Engine);
         //@ts-ignore
@@ -818,7 +819,7 @@ export class WorldScene extends Scene {
     });
     */
 
-        new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
+        this.terrainReady = new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
             try {
                 let cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
                 if (cachedtexture) {
@@ -878,18 +879,23 @@ export class WorldScene extends Scene {
 
             ground.checkCollisions = true;
             blazor.invokeMethod('setProgress', 50);
-            texture.then(async imgdata => {
+            ground.isPickable = true;
+            // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
+            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
+            blazor.invokeMethod('setProgress', 51);
+            shadermateria.setVector3("lightPos", sunlight.position);
+            blazor.invokeMethod('setProgress', 52);
+            shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
+
+            // this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
+            blazor.invokeMethod('setProgress', 53);
+            return texture.then(async gpuBuffer => {
                 blazor.invokeMethod('setProgress', 75);
                 
                 //let size = new Float32Array(imgdata as ArrayBuffer, 0, 2);
                 let size = [5120, 5120];
-                let mipMaps = Scalar.Log2(Math.max(size[0], size[1]));
-                mipMaps = Math.floor(mipMaps);
-                const textureExtent = {
-                    width: size[0],
-                    height: size[1],
-                    depth: 1,
-                };
+
+
                 //@ts-ignore
                 let device: GPUDevice = (engine as WebGPUEngine)._device;
 
@@ -901,7 +907,11 @@ export class WorldScene extends Scene {
                 internaltex.baseHeight = size[1];
                 internaltex._isRGBD = internaltex._isRGBD;
                 //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
-
+                const textureExtent = {
+                    width: size[0],
+                    height: size[1],
+                    depth: 1,
+                };
                 internaltex._webGPUTexture = device.createTexture({
                     dimension: '2d',
                     format: "rgba8unorm",
@@ -912,36 +922,46 @@ export class WorldScene extends Scene {
                     //@ts-ignore
                     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
                 });
-
                 const commandEncoder = device.createCommandEncoder({});
-                //const rowPitch = Math.ceil(size[0] * 4 / 256) * 256;
 
-                let bufferView: GPUBufferCopyView;
-                let gpuBuffer: GPUBuffer;
-
-                gpuBuffer = imgdata;
-                bufferView = {
+                let bufferView: GPUBufferCopyView = {
                     buffer: gpuBuffer,
                     rowPitch: size[0] * 4,
-                    imageHeight: size[1],
+                    imageHeight: 0,
                     offset: 0,
                 };
-                // }
 
-                commandEncoder.copyBufferToTexture(bufferView, {
-                    texture: internaltex._webGPUTexture,
-                    origin: {
-                        x: 0,
-                        y: 0,
-                        z: 0
+
+                //Workaround for "Copy would overflow the buffer" begin
+                let arrayBuffer: ArrayBuffer = await gpuBuffer.mapReadAsync();
+                const [textureDataBuffer, textureDataArrayBuffer] = device.createBufferMapped({
+                      size: arrayBuffer.byteLength,
+                      //@ts-ignore
+                    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+                  });
+                new Float32Array(textureDataArrayBuffer).set(new Float32Array(arrayBuffer));
+                textureDataBuffer.unmap();
+                bufferView.buffer = textureDataBuffer
+                //Workaround end
+
+
+
+
+
+                commandEncoder.copyBufferToTexture(bufferView,
+                    {
+                        texture: internaltex._webGPUTexture,
+                        origin: {
+                            x: 0,
+                            y: 0,
+                            z: 0
                     },
                     mipLevel: 0,
                     arrayLayer: Math.max(-1, 0),
-                }, textureExtent);
-                device.defaultQueue.submit([commandEncoder.finish()]);
-
+                    }, textureExtent);
+                device.defaultQueue.submit([commandEncoder.finish()]); //Copy would overflow the buffer
                 gpuBuffer.destroy();
-
+                textureDataBuffer.destroy();
                 internaltex._webGPUTextureView = internaltex._webGPUTexture.createView();
                 internaltex.onLoadedObservable.notifyObservers(internaltex);
                 internaltex.onLoadedObservable.clear();
@@ -961,17 +981,10 @@ export class WorldScene extends Scene {
                 // grass2.diffuseColor = new Color3(0.2, 1, 0.3);
                 ground.material = grass2;
                 blazor.invokeMethod('setProgress', 100);
+                
             })
 
-            ground.isPickable = true;
-
-            // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
-            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
-
-            shadermateria.setVector3("lightPos", sunlight.position);
-            shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-
-            // this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
+            
 
         }).catch(e => {
             console.error(e);

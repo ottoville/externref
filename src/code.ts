@@ -93,7 +93,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
 
 
-        let [WasmModule, EngineModule, EffectModule, WorldSceneModule]=await Promise.all(['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js', './world/scene.js'].map(url => import(url)))
+        let [WasmModule, EngineModule, EffectModule, WorldSceneModule] = await Promise.all(['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js', './world/scene.js'].map(url => import(url)))
 
         /*let WasmModule = await import('./rustwasm/hello_wasm.js');
         blazor.invokeMethod('setProgress', 2);
@@ -102,7 +102,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         let EffectModule = await import('./TerraEffect.js');
         blazor.invokeMethod('setProgress', 9);
         let WorldSceneModule = await import('./world/scene.js');*/
-        
+
         blazor.invokeMethod('setProgress', 10);
 
 
@@ -128,20 +128,20 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
                 res((window as any).glslang(glslangOptions!.wasmPath));
 
             let script = document.createElement('script');
-            script.onload = () =>  res((window as any).glslang(glslangOptions!.wasmPath));
+            script.onload = () => res((window as any).glslang(glslangOptions!.wasmPath));
             script.onerror = rej;
             script.src = glslangOptions.jsPath;
             document.head.appendChild(script);
         })
         blazor.invokeMethod('setProgress', 12);
-         //@ts-ignore
+        //@ts-ignore
         engine._adapter = await navigator.gpu!.requestAdapter(engine._options);
         //@ts-ignore
         engine._device = await engine._adapter.requestDevice(engine._options.deviceDescriptor);
-         //@ts-ignore
+        //@ts-ignore
         engine._initializeLimits();
         blazor.invokeMethod('setProgress', 13);
-         //@ts-ignore
+        //@ts-ignore
         //engine._initializeContextAndSwapChain();
         engine._context = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
         /*
@@ -159,7 +159,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         /*let width = this._renderingCanvas ? this._renderingCanvas.clientWidth : window.innerWidth;
         let height = this._renderingCanvas ? this._renderingCanvas.clientHeight : window.innerHeight;
         engine.setSize(width, height)*/
-         //@ts-ignore
+        //@ts-ignore
         engine._swapChain = engine._context.configureSwapChain({
             //@ts-ignore
             device: engine._device,
@@ -212,27 +212,32 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
     }
 });
 
-window.sceneInited.then(scene => {
+window.sceneInited.then(async scene => {
+    debugger;
+    await scene.terrainReady;
+    debugger;
     window.scene = scene;
     scene.collisionsEnabled = true;
     scene.autoClear = false;
     scene.autoClearDepthAndStencil = false;
     let engine = scene.getEngine() as WebGPUEngine;
     let context = engine.getRenderingCanvas().getContext('gpupresent') as unknown as GPUCanvasContext;
-
+    debugger;
     let rloop = function () {
         var shouldRender = true;
 
         if (shouldRender) {
+            debugger;
             // Start new frame
             //engine.beginFrame();
             //@ts-ignore
             engine._measureFps();
+            debugger;
             //@ts-ignore
             engine.onBeginFrameObservable.notifyObservers(engine);
             //@ts-ignore
             engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
-
+            debugger;
             // Some PGs are using color3...
             if (scene.clearColor.a === undefined) {
                 scene.clearColor.a = 1;
@@ -265,11 +270,9 @@ window.sceneInited.then(scene => {
                 //@ts-ignore
                 depthStencilAttachment: engine._mainDepthAttachment
             });
-            debugger;
 
 
             scene.render();
-            debugger;
             // Present
             //engine.endFrame();
              //@ts-ignore

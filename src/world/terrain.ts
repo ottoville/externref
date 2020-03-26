@@ -162,11 +162,11 @@ export class Terrain extends TerraMesh {
                 passEncoder.setBindGroup(0, bindGroup);
                 passEncoder.dispatch(5120 /* x */, 5120 /* y */);
                 passEncoder.endPass();
-                tres(resultMatrixBuffer);
+                //tres(resultMatrixBuffer);
                 console.debug('Webgpu painted, took', new Date().getTime() - timer);
                 // Get a GPU buffer for reading in an unmapped state.
                 const gpuReadBuffer = device.createBuffer({
-                    size: resultMatrixBufferSize,
+                    size: resultMatrixBufferSize-8,
                     //@ts-ignore
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
                 });
@@ -174,20 +174,23 @@ export class Terrain extends TerraMesh {
                 // Encode commands for copying buffer to buffer.
                 commandEncoder.copyBufferToBuffer(
                     resultMatrixBuffer /* source buffer */,
-                    0 /* source offset */,
+                    8 /* source offset */,
                     gpuReadBuffer /* destination buffer */,
                     0 /* destination offset */,
-                    resultMatrixBufferSize /* size */
+                    resultMatrixBufferSize-8 /* size */
                 );
 
                 // Submit GPU commands.
                 const gpuCommands = commandEncoder.finish();
                 device.defaultQueue.submit([gpuCommands]);
-
+                debugger;
                 // Read buffer.
-                let arrayBuffer: ArrayBuffer = await gpuReadBuffer.mapReadAsync();
-                Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
-                
+                //let arrayBuffer: ArrayBuffer = await gpuReadBuffer.mapReadAsync();
+                //console.log(arrayBuffer);
+                tres(gpuReadBuffer);
+
+                debugger;
+               // Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
             })
         });
     }

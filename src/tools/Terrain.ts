@@ -220,7 +220,7 @@ export class TerrainTool extends UITAB {
 
             this.helper.isUnIndexed = true;
             //@ts-ignore
-            this.helper.subMeshes[0]._materialEffect = effect;
+           // this.helper.subMeshes[0]._materialEffect = effect;
         });
 
         /*let effect=scene.getEngine().createEffect("./shaders/helper", <IEffectCreationOptions>{
