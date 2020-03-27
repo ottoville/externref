@@ -170,7 +170,6 @@ export class Terrain extends TerraMesh {
                     //@ts-ignore
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
                 });
-
                 // Encode commands for copying buffer to buffer.
                 commandEncoder.copyBufferToBuffer(
                     resultMatrixBuffer /* source buffer */,
@@ -183,14 +182,21 @@ export class Terrain extends TerraMesh {
                 // Submit GPU commands.
                 const gpuCommands = commandEncoder.finish();
                 device.defaultQueue.submit([gpuCommands]);
+                resultMatrixBuffer.destroy();
+                gpuBufferFirstMatrix.destroy();
+                gpuBufferSecondMatrix.destroy();
+                gpuBufferThirdMatrix.destroy();
+
                 debugger;
                 // Read buffer.
-                //let arrayBuffer: ArrayBuffer = await gpuReadBuffer.mapReadAsync();
+                let arrayBuffer: ArrayBuffer = await gpuReadBuffer.mapReadAsync();
+                gpuReadBuffer.unmap();
                 //console.log(arrayBuffer);
+                gpuReadBuffer.label = 'computed';
                 tres(gpuReadBuffer);
 
                 debugger;
-               // Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
+                Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
             })
         });
     }

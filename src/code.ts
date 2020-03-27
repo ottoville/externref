@@ -213,31 +213,26 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
 });
 
 window.sceneInited.then(async scene => {
-    debugger;
     await scene.terrainReady;
-    debugger;
     window.scene = scene;
     scene.collisionsEnabled = true;
     scene.autoClear = false;
     scene.autoClearDepthAndStencil = false;
     let engine = scene.getEngine() as WebGPUEngine;
     let context = engine.getRenderingCanvas().getContext('gpupresent') as unknown as GPUCanvasContext;
-    debugger;
     let rloop = function () {
         var shouldRender = true;
 
         if (shouldRender) {
-            debugger;
+            
             // Start new frame
             //engine.beginFrame();
             //@ts-ignore
             engine._measureFps();
-            debugger;
             //@ts-ignore
             engine.onBeginFrameObservable.notifyObservers(engine);
             //@ts-ignore
             engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
-            debugger;
             // Some PGs are using color3...
             if (scene.clearColor.a === undefined) {
                 scene.clearColor.a = 1;
@@ -250,7 +245,6 @@ window.sceneInited.then(async scene => {
             engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
              //@ts-ignore
             //engine._startMainRenderPass();
-            debugger;
             // Resolve in case of MSAA
              //@ts-ignore
             if (engine._options.antialiasing) {
@@ -262,7 +256,6 @@ window.sceneInited.then(async scene => {
                 //engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
                 engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
             }
-            debugger;
             //@ts-ignore
             engine._currentRenderPass = engine._renderEncoder.beginRenderPass({
                 //@ts-ignore
@@ -270,7 +263,6 @@ window.sceneInited.then(async scene => {
                 //@ts-ignore
                 depthStencilAttachment: engine._mainDepthAttachment
             });
-
 
             scene.render();
             // Present
@@ -280,17 +272,13 @@ window.sceneInited.then(async scene => {
             if (engine._currentRenderPass) {
                 //@ts-ignore
                 engine._currentRenderPass.endPass();
-                debugger;
                 //@ts-ignore
                 engine._currentRenderPass = null;
             }
-            debugger;
              //@ts-ignore
             engine._device.defaultQueue.submit([engine._renderEncoder.finish()]);
-            debugger;
             engine.onEndFrameObservable.notifyObservers(engine);
 
-            debugger;
         }
         window.requestAnimationFrame(rloop);
 

@@ -425,7 +425,6 @@ export class TerraMesh extends Mesh {
         var engine = this._scene.getEngine();
         var hardwareInstancedRendering = batch.hardwareInstancedRendering[subMesh._id];
         let instanceDataStorage = this._instanceDataStorage;
-
         let material = subMesh.getMaterial();
 
         if (!material) {
@@ -491,7 +490,7 @@ export class TerraMesh extends Mesh {
         if (this._effectiveMaterial.forceDepthWrite) {
             engine.setDepthWrite(true);
         }
-
+        
         // Bind
         //@ts-ignore
         var fillMode = scene.forcePointsCloud ? BABYLON.Material.PointFillMode : (scene.forceWireframe ? BABYLON.Material.WireFrameFillMode : this._effectiveMaterial.fillMode);
@@ -525,12 +524,9 @@ export class TerraMesh extends Mesh {
         }
         //@ts-ignore
         if (engine._currentEffect!.name == "./shaders/helper") {
-            debugger;
             //@ts-ignore
             this._processRendering(subMesh, effect, fillMode, batch, hardwareInstancedRendering, this._onBeforeDraw, this._effectiveMaterial);
-            debugger;
         } else {
-            debugger;
             // Draw
             //@ts-ignore
             this._processRendering(subMesh, effect, fillMode, batch, hardwareInstancedRendering, this._onBeforeDraw, this._effectiveMaterial);
@@ -547,7 +543,6 @@ export class TerraMesh extends Mesh {
             //@ts-ignore
             this._internalMeshDataInfo._onAfterRenderObservable.notifyObservers(this);
         }
-        debugger;
         return this;
     }
 

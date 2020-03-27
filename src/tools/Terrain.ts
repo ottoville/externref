@@ -59,7 +59,6 @@ export class TerrainTool extends UITAB {
         let pipeline = engine.createPipelineContext(ctx);
         Promise.all([fetch('/shaders/helper.vert'), fetch('/shaders/helper.frag')]).then(async shaders => {
             let shaderssource = await Promise.all(shaders.map(shader => shader.text()));
-            console.log(shaderssource);
             engine._preparePipelineContext(pipeline, shaderssource[0], shaderssource[1], true, true, '', [], 'helper');
             //@ts-ignore;
             let compiledshader = engine._compiledShaders['helper'];
@@ -124,8 +123,7 @@ export class TerrainTool extends UITAB {
             //engine._uniformsBuffers['facet2Arr'] = new WebGPUDataBuffer(GPUfacet2Buffer);
             //@ts-ignore
            // engine._uniformsBuffers['uniforms'] = new WebGPUDataBuffer(GPUuniformBuffer);
-            console.log('_pipelineContext');
-            console.log(effect._pipelineContext);
+
            /* let uniformsBindGroupLayout = device.createBindGroupLayout({
                 bindings: [{
                     binding: 0,

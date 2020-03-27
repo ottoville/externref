@@ -930,20 +930,23 @@ export class WorldScene extends Scene {
                     imageHeight: 0,
                     offset: 0,
                 };
-
-
-                //Workaround for "Copy would overflow the buffer" begin
-                let arrayBuffer: ArrayBuffer = await gpuBuffer.mapReadAsync();
-                const [textureDataBuffer, textureDataArrayBuffer] = device.createBufferMapped({
-                      size: arrayBuffer.byteLength,
-                      //@ts-ignore
-                    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
-                  });
-                new Float32Array(textureDataArrayBuffer).set(new Float32Array(arrayBuffer));
-                textureDataBuffer.unmap();
-                bufferView.buffer = textureDataBuffer
-                //Workaround end
-
+                console.log(gpuBuffer.label);
+                debugger;
+                if (gpuBuffer.label == 'computed') {
+                    
+                    //Workaround for "Copy would overflow the buffer" begin
+                    let arrayBuffer: ArrayBuffer = await gpuBuffer.mapReadAsync();
+                    gpuBuffer.destroy();
+                    const [textureDataBuffer, textureDataArrayBuffer] = device.createBufferMapped({
+                        size: arrayBuffer.byteLength,
+                        //@ts-ignore
+                        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+                    });
+                    new Uint8ClampedArray(textureDataArrayBuffer).set(new Uint8ClampedArray(arrayBuffer));
+                    textureDataBuffer.unmap();
+                    bufferView.buffer = textureDataBuffer
+                    //Workaround end
+                }
 
 
 
@@ -960,8 +963,7 @@ export class WorldScene extends Scene {
                     arrayLayer: Math.max(-1, 0),
                     }, textureExtent);
                 device.defaultQueue.submit([commandEncoder.finish()]); //Copy would overflow the buffer
-                gpuBuffer.destroy();
-                textureDataBuffer.destroy();
+                bufferView.buffer.destroy();
                 internaltex._webGPUTextureView = internaltex._webGPUTexture.createView();
                 internaltex.onLoadedObservable.notifyObservers(internaltex);
                 internaltex.onLoadedObservable.clear();

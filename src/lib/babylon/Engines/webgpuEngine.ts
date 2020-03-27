@@ -352,13 +352,11 @@ export class WebGPUEngine extends Engine {
 
     // Set default values as WebGL with depth and stencil attachment for the broadest Compat.
     private _initializeMainAttachments(): void {
-        debugger;
         this._mainTextureExtends = {
             width: this.getRenderWidth(),
             height: this.getRenderHeight(),
             depth: 1
         };
-        debugger;
         if (this._options.antialiasing) {
             const mainTextureDescriptor = {
                 size: this._mainTextureExtends,
@@ -371,7 +369,6 @@ export class WebGPUEngine extends Engine {
             };
 
             if (this._mainTexture) {
-                debugger;
                 this._mainTexture.destroy();
             }
             this._mainTexture = this._device.createTexture(mainTextureDescriptor);
@@ -403,11 +400,9 @@ export class WebGPUEngine extends Engine {
         };
 
         if (this._depthTexture) {
-            debugger;
             this._depthTexture.destroy();
         }
         this._depthTexture = this._device.createTexture(depthTextureDescriptor);
-        debugger;
         this._mainDepthAttachment = {
             attachment: this._depthTexture.createView(),
 
@@ -416,7 +411,6 @@ export class WebGPUEngine extends Engine {
             stencilLoadValue: this._clearStencilValue,
             stencilStoreOp: WebGPUConstants.GPUStoreOp_store,
         };
-        debugger;
     }
 
     /**
@@ -957,7 +951,6 @@ export class WebGPUEngine extends Engine {
     /** @hidden */
     public _releaseTexture(texture: InternalTexture): void {
         if (texture._webGPUTexture) {
-            debugger;
             texture._webGPUTexture.destroy();
         }
     }
@@ -1454,10 +1447,8 @@ export class WebGPUEngine extends Engine {
 
         //this._commandBuffers[0] = this._uploadEncoder.finish();
         //this._commandBuffers[1] = this._renderEncoder.finish();
-        debugger;
         this._device.defaultQueue.submit([this._renderEncoder.finish()]);
         //this._device.defaultQueue.submit(this._commandBuffers);
-        debugger;
         super.endFrame();
     }
 
@@ -1466,7 +1457,6 @@ export class WebGPUEngine extends Engine {
     //------------------------------------------------------------------------------
 
     private _startMainRenderPass(): void {
-        debugger;
         if (this._currentRenderPass) {
             this._endRenderPass();
         }
@@ -2151,8 +2141,9 @@ export class WebGPUEngine extends Engine {
                             const samplerDescriptor: GPUSamplerDescriptor = this._getSamplerDescriptor(bindingInfo.texture!);
                             const gpuSampler = this._device.createSampler(samplerDescriptor);
                             bindingInfo.texture._webGPUSampler = gpuSampler;
+                            console.log(samplerDescriptor);
+                            debugger;
                         }
-
                         bindings.push({
                             binding: bindingInfo.textureBinding,
                             resource: bindingInfo.texture._webGPUTextureView!,
