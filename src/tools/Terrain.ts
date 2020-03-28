@@ -182,8 +182,6 @@ export class TerrainTool extends UITAB {
                     cullMode: 'back',
                 }
             });
-            //@ts-ignore
-            effect._pipelineContext.renderPipeline.foobar = 'faa';
             const uniformBindGroup = device.createBindGroup({
                 //@ts-ignore
                 layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(0 /* index */),
@@ -218,7 +216,9 @@ export class TerrainTool extends UITAB {
 
             this.helper.isUnIndexed = true;
             //@ts-ignore
-           // this.helper.subMeshes[0]._materialEffect = effect;
+            this.helper.subMeshes[0]._materialEffect = effect;
+            //@ts-ignore
+            this.helpermaterial._effect = effect;
         });
 
         /*let effect=scene.getEngine().createEffect("./shaders/helper", <IEffectCreationOptions>{
@@ -243,6 +243,7 @@ export class TerrainTool extends UITAB {
                 uniforms: ["world", "worldView", "worldViewProjection", "view", "projection", "flatPos"]
             });
         this.helpermaterial.fillMode = Material.TriangleFanDrawMode;
+        this.helpermaterial.isReady = () => true;
         this.gl = scene.getEngine()._gl;
         this.helper.alwaysSelectAsActiveMesh = true
     }
@@ -255,31 +256,22 @@ export class TerrainTool extends UITAB {
         this.scene.registerBeforeRender(this.setTime);
 
         /*******/
-        let gl = this.gl;
+       /* let gl = this.gl;
         this.glTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-        //let tex = new texImage2D(gl, gl.TEXTURE_2D, 0, 'R16I', 250, 250, gl.RED_INTEGER, gl.SHORT, this.terrain.slopeArr);
-        //tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
-        // tex.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
+       
 
-        /********/
         this.glTexture2 = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
 
-        //let tex2 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr);
-        // tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
-        //tex2.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
 
-        /********/
+
         this.glTexture3 = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
 
-        // let tex3 = new texImage2D(gl, gl.TEXTURE_2D, 0, 'RGBA32F', 250, 250, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr);
-        //tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MAG_FILTER", "NEAREST");
-        // tex3.texParameterf(gl.TEXTURE_2D, "TEXTURE_MIN_FILTER", "NEAREST");
-        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindTexture(gl.TEXTURE_2D, null);*/
         let me = this;
         (function () {
             this._options.samplers.push('slopeArr', 'facet1Arr', 'facet2Arr');
@@ -309,13 +301,13 @@ export class TerrainTool extends UITAB {
             return this;
         }).bind(this.helpermaterial)();
         Terrain.terrainWorker.subscribe('SubHeights', (v) => {
-            let width = v.data.endX - v.data.offsetX;
+            /*let width = v.data.endX - v.data.offsetX;
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
             (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.offsetX, v.data.offsetY, width, 1, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr, v.data.srcOffset)
 
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
             (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.offsetX, v.data.offsetY, width, 1, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr, v.data.srcOffset)
-            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindTexture(gl.TEXTURE_2D, null);*/
         });
         let mainboundingInfo = this.terrain.getBoundingInfo();
         // let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
@@ -383,26 +375,17 @@ export class TerrainTool extends UITAB {
                 onBeforeDraw(false, this.helper._effectiveMesh.getWorldMatrix(), effectiveMaterial);
             }
             this.uniformsV2.forEach((value, uniform) => {
-                gl.uniform2f(uniform, value.x, value.y);
+                //gl.uniform2f(uniform, value.x, value.y);
             });
             this.uniformsV2.clear();
 
-            // this._draw(subMesh, fillMode);
             engine.applyStates();
             engine._drawCalls.addCount(1, false);
-            //gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.helperIndices.length, gl.UNSIGNED_SHORT, 0, 8);
             return this.helper;
 
             //return this;
 
         }
-
-        /*   this.helper._draw = (subMesh: BABYLON.SubMesh, fillMode: number, instancesCount?: number): BABYLON.Mesh => {
-               engine.applyStates();
-               engine._drawCalls.addCount(1, false);
-               gl.drawElementsInstanced(gl.TRIANGLE_FAN, this.vertexData.indices.length, gl.UNSIGNED_SHORT, 0, 8);
-               return this.helper;
-           };*/
     };
     private mouseinterval: number = 0;
     pointerdownf = (evt: PointerEvent): void => {

@@ -930,7 +930,7 @@
         "signature": "1594be047b2eb21abda024c3497af57af6dfc16136eac4d2135c6c11f03f8e85"
       },
       "./lib/babylon/engines/webgpuengine.ts": {
-        "version": "030e08b99641a1f4919850301e1650d127b27e45c61a5e7461457ef5ea07190c",
+        "version": "c1fa0916c10d0b8268a7c7dfdb103cf2d9e2fa8ec26d618be67b2f679de34d46",
         "signature": "0da886df304eec0fe4c6cfc7a4d4f2ef635d6eb3c847ac5a3ad8f815a5c6f3a2"
       },
       "./lib/babylon/materials/uniformbuffer.ts": {
@@ -1074,7 +1074,7 @@
         "signature": "e7fb5c9de06faae672d1c3e4c1640b8ed7cf8602d792f9cb4183b45d35147f41"
       },
       "./world/terrain.ts": {
-        "version": "c5d1175cf9c858ca331c5e41b57f082442cf09c684db24d305c33b0fe964d446",
+        "version": "0f82a7d032eb187cf653e20527cbcc856d8b450e9663a979ca393c178adbdb74",
         "signature": "9d411f092e76309577a27206d14ba75194fbf1eeb3ca84e25feb0f5525135db3"
       },
       "./lib/babylon/audio/sound.ts": {
@@ -2682,7 +2682,7 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "f10a8b4d096b3a5755e2177a31ae799db44df24b0b58653894200eee35646811",
+        "version": "da7094a7e854425b1004b050cbb9c4e3ef5abd9bb75567b540a69a4a817be136",
         "signature": "5f2979860f0076d300dd5b78c7fe03b97147915f161a99478702097b1e9fa9b7"
       },
       "./world/water.ts": {
@@ -2690,7 +2690,7 @@
         "signature": "69b97ca99fd38ece03e3d7693a37d0e9d1956f4b2f73cced6a94e477f9ff391f"
       },
       "./world/scene.ts": {
-        "version": "91df30ba82275375c1b0f68a8355c28647f924b46d004eb19678d1d121abeeae",
+        "version": "d13215ced98605bad867ae7e7719ffc3dee0d47d813cfe835d235aade1281425",
         "signature": "c8fd2160d389ae3fef674440157c8bddc5eda96528145031b0bd3e6ef45665a4"
       },
       "./code.ts": {
@@ -14522,6 +14522,7 @@
       "./terraray.ts",
       "./uitab.ts",
       "./world/sun.ts",
+      "./world/terrain.ts",
       "./lib/babylon/audio/sound.ts",
       "./lib/babylon/actions/directaudioactions.ts",
       "./lib/babylon/actions/interpolatevalueaction.ts",
@@ -14923,7 +14924,6 @@
       "./tools/zones.ts",
       "./tools/camera.ts",
       "./tools/buildings.ts",
-      "./tools/terrain.ts",
       "./world/water.ts",
       "./world/scene.ts",
       "./code.ts",
@@ -14981,7 +14981,7 @@
       "./rustwasm/hello_wasm_bg.d.ts",
       "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./world/terrain.ts"
+      "./tools/terrain.ts"
     ]
   },
   "version": "3.8.1-rc"

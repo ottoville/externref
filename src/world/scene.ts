@@ -930,10 +930,7 @@ export class WorldScene extends Scene {
                     imageHeight: 0,
                     offset: 0,
                 };
-                console.log(gpuBuffer.label);
-                debugger;
                 if (gpuBuffer.label == 'computed') {
-                    
                     //Workaround for "Copy would overflow the buffer" begin
                     let arrayBuffer: ArrayBuffer = await gpuBuffer.mapReadAsync();
                     gpuBuffer.destroy();
@@ -947,8 +944,6 @@ export class WorldScene extends Scene {
                     bufferView.buffer = textureDataBuffer
                     //Workaround end
                 }
-
-
 
 
                 commandEncoder.copyBufferToTexture(bufferView,
