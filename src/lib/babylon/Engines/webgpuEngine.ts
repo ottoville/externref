@@ -536,6 +536,7 @@ export class WebGPUEngine extends Engine {
     }
 
     private _setSubData(dataBuffer: WebGPUDataBuffer, dstByteOffset: number, src: ArrayBufferView, srcByteOffset = 0, byteLength = 0): void {
+
         const buffer = dataBuffer.underlyingResource as GPUBuffer;
 
         byteLength = byteLength || src.byteLength;
@@ -2258,8 +2259,12 @@ export class WebGPUEngine extends Engine {
             const renderPass = this._bundleEncoder || this._currentRenderPass!;
             const pipeline = this._getRenderPipeline(fillMode);
             renderPass.setPipeline(pipeline);
-            renderPass.setVertexBuffer(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).vertexInputs.vertexBuffers[0]);
-            renderPass.setBindGroup(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).bindGroups[0]);
+            const vertexInputs = this._getVertexInputsToRender();
+            this._bindVertexInputs(vertexInputs);
+            const bindGroups = this._getBindGroupsToRender();
+            this._setRenderBindGroups(bindGroups);
+           // renderPass.setVertexBuffer(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).vertexInputs.vertexBuffers[0]);
+           // renderPass.setBindGroup(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).bindGroups[0]);
             renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
         } else {
             this._setRenderPipeline(fillMode);

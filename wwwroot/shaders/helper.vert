@@ -1,22 +1,25 @@
 #version 450
-layout(std430, set = 0, binding = 0) readonly buffer slopeArr {
+layout(set = 0, binding = 0) uniform Scene {
+    mat4 viewProjection;
+    mat4 view;
+    vec4 viewPosition;
+} babylonuniforms;
+layout(std430, set = 1, binding = 0) readonly buffer slopeArr {
     vec2 size;
     int numbers[];
 } firstMatrix;
-layout(std430, set = 0, binding = 1) readonly buffer facet1Arr {
+layout(std430, set = 1, binding = 1) readonly buffer facet1Arr {
     vec2 size;
     float numbers[];
 } secondMatrix;
 
-layout(std430, set = 0, binding = 2) readonly buffer facet2Arr {
+layout(std430, set = 1, binding = 2) readonly buffer facet2Arr {
     vec2 size;
     float numbers[];
 } thirdMatrix;
 
-layout(set = 0, binding = 3) uniform Uniforms {
+layout(set = 1, binding = 3) uniform Uniforms {
     vec2 flatPos;
-    mat4 world;
-    mat4 worldViewProjection;
     float time;
   } uniforms;
 
@@ -95,6 +98,6 @@ void main(void) {
     float posy=getHeightAtCoordinates2(vec2(worldpos.x,worldpos.y));
 
     vec3 newpos = vec3(worldpos.x,posy+2.0,worldpos.y);
-    gl_Position = uniforms.worldViewProjection * vec4(newpos, 1.0);
+    gl_Position = babylonuniforms.viewProjection * vec4(newpos, 1.0);
 
 }

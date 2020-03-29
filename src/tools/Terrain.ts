@@ -109,7 +109,7 @@ export class TerrainTool extends UITAB {
             });
             GPUfacet2Buffer.unmap();
             const [GPUuniformBuffer, uniformBuffer] = device.createBufferMapped({
-                size: (2 * 4) + (4 * 16) + (4 * 16) + 4,
+                size: (2 * 4) + 4,
                 //@ts-ignore
                 usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
             });
@@ -182,9 +182,25 @@ export class TerrainTool extends UITAB {
                     cullMode: 'back',
                 }
             });
-            const uniformBindGroup = device.createBindGroup({
+            const [GPUuniformBuffer1, uniformBuffer1] = device.createBufferMapped({
+                size: (16 * 4) + (16 * 4) + (4 * 4),
+                //@ts-ignore
+                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+            });
+            GPUuniformBuffer1.unmap();
+            const uniformBindGroup1 = device.createBindGroup({
                 //@ts-ignore
                 layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(0 /* index */),
+                bindings: [{
+                    binding: 0,
+                    resource: {
+                        buffer: GPUuniformBuffer1,
+                    }
+                }],
+            });
+            const uniformBindGroup2 = device.createBindGroup({
+                //@ts-ignore
+                layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(1 /* index */),
                 bindings: [{
                     binding: 0,
                     resource: {
@@ -207,7 +223,7 @@ export class TerrainTool extends UITAB {
                     }
                 }],
             });
-            effect._pipelineContext.bindGroups = [uniformBindGroup];
+            effect._pipelineContext.bindGroups = [uniformBindGroup1, uniformBindGroup2];
             //IS this needed?
             /*effect._pipelineContext.bindGroupLayouts = [
                 //@ts-ignore
@@ -466,8 +482,11 @@ export class TerrainTool extends UITAB {
                 projection: this.camera.getProjectionMatrix().toArray()
             }).then(flatPos => {
                 let uniformlocation;
-                if (uniformlocation = this.helpermaterial._effect.getUniform("flatPos"))
+                if (uniformlocation = this.helpermaterial._effect.getUniform("flatPos")) {
                     this.uniformsV2.set(uniformlocation, <{ x: number, y: number }><any>flatPos);
+                    debugger;
+                }
+                
             });
     }
     raise = (): void => {
