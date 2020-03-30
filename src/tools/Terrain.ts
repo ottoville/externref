@@ -40,6 +40,7 @@ export class TerrainTool extends UITAB {
     }
     public canvas: HTMLCanvasElement;
     // private helperIndices = new Uint16Array([0, 1, 2, 3]);
+    private GPUuniformBuffer: GPUBuffer;
     constructor(
         private scene: Scene,
         private terrain: Terrain,
@@ -114,6 +115,7 @@ export class TerrainTool extends UITAB {
                 usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
             });
             GPUuniformBuffer.unmap();
+            this.GPUuniformBuffer = GPUuniformBuffer;
 
             //@ts-ignore
             //engine._uniformsBuffers['slopeArr'] = new WebGPUDataBuffer(GPUslopeBuffer);
@@ -480,12 +482,13 @@ export class TerrainTool extends UITAB {
                 viewportHeight: viewport.height,
                 view: this.camera.getViewMatrix().toArray(),
                 projection: this.camera.getProjectionMatrix().toArray()
-            }).then(flatPos => {
-                let uniformlocation;
-                if (uniformlocation = this.helpermaterial._effect.getUniform("flatPos")) {
+            }).then((flatPos: { x: number, y: number }) => {
+                //let uniformlocation;
+                this.GPUuniformBuffer.setSubData(0, new Float32Array([flatPos.x, flatPos.y]))
+                /*if (uniformlocation = this.helpermaterial._effect.getUniform("flatPos")) {
                     this.uniformsV2.set(uniformlocation, <{ x: number, y: number }><any>flatPos);
                     debugger;
-                }
+                }*/
                 
             });
     }

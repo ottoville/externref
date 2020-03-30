@@ -428,6 +428,7 @@ export class TerraMesh extends Mesh {
         let material = subMesh.getMaterial();
 
         if (!material) {
+            console.log('no material ', this.name);
             return this;
         }
         

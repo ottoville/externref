@@ -99,6 +99,20 @@ export interface WebGPUEngineOptions extends GPURequestAdapterOptions {
     antialiasing?: boolean;
 }
 
+export interface compiledShader {
+    stages: GPURenderPipelineStageDescriptor,
+    availableAttributes: { [key: string]: number },
+    availableUBOs: { [key: string]: { setIndex: number, bindingIndex: number } },
+    availableSamplers: { [key: string]: { setIndex: number, bindingIndex: number } },
+    orderedAttributes: string[],
+    orderedUBOsAndSamplers: { name: string, isSampler: boolean }[][],
+    leftOverUniforms: { name: string, type: string, length: number }[],
+    leftOverUniformsByName: { [name: string]: string },
+    sources: {
+        vertex: string
+        fragment: string,
+    }
+}
 /**
  * The web GPU engine class provides support for WebGPU version of babylon.js.
  */
@@ -152,21 +166,10 @@ export class WebGPUEngine extends Engine {
     private __colorWrite = true;
     private _uniformsBuffers: { [name: string]: WebGPUDataBuffer } = {};
 
+    
     // Caches
-    private _compiledShaders: { [key: string]: {
-        stages: GPURenderPipelineStageDescriptor,
-        availableAttributes: { [key: string]: number },
-        availableUBOs: { [key: string]: { setIndex: number, bindingIndex: number} },
-        availableSamplers: { [key: string]: { setIndex: number, bindingIndex: number} },
-        orderedAttributes: string[],
-        orderedUBOsAndSamplers: { name: string, isSampler: boolean }[][],
-        leftOverUniforms: { name: string, type: string, length: number }[],
-        leftOverUniformsByName: { [name: string]: string },
-        sources: {
-            vertex: string
-            fragment: string,
-        }
-    } } = {};
+    public _compiledShadersPromises: { [key: string]: Promise<void> } = {};
+    private _compiledShaders: { [key: string]: compiledShader } = {};
 
     // TODO WEBGPU. Texture Management. Temporary...
     private _decodeCanvas = document.createElement("canvas");
@@ -769,7 +772,7 @@ export class WebGPUEngine extends Engine {
     //------------------------------------------------------------------------------
     //                              Effects
     //------------------------------------------------------------------------------
-
+/*
     public createEffect(baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | Engine, samplers?: string[], defines?: string, fallbacks?: EffectFallbacks,
         onCompiled?: Nullable<(effect: Effect) => void>, onError?: Nullable<(effect: Effect, errors: string) => void>, indexParameters?: any): Effect {
         const vertex = baseName.vertexElement || baseName.vertex || baseName;
@@ -778,13 +781,13 @@ export class WebGPUEngine extends Engine {
         const name = vertex + "+" + fragment + "@" + (defines ? defines : (<IEffectCreationOptions>attributesNamesOrOptions).defines);
         const shader = this._compiledShaders[name];
         if (shader) {
-            return new Effect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, shader.sources);
+            return new Effect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, await shader.sources);
         }
         else {
             return new Effect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name);
         }
     }
-
+    */
     private _compileRawShaderToSpirV(source: string, type: string): Uint32Array {
         debugger;
         let compiled = this._glslang.compileGLSL(source, type);
@@ -857,6 +860,7 @@ export class WebGPUEngine extends Engine {
         const webGpuContext = pipelineContext as WebGPUPipelineContext;
 
         // TODO WEBGPU. Check if caches could be reuse from piepline ???
+        const shaderp = this._compiledShadersPromises[key]
         const shader = this._compiledShaders[key];
         if (shader) {
             webGpuContext.stages = shader.stages;

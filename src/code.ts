@@ -171,20 +171,21 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
 
 
         blazor.invokeMethod('setProgress', 15);
-
+        //@ts-ignore
         engine.createEffect = function (baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | Engine, samplers?: string[], defines?: string, fallbacks?: EffectFallbacks,
             onCompiled?: Nullable<(effect: Effect) => void>, onError?: Nullable<(effect: Effect, errors: string) => void>, indexParameters?: any): Effect {
             const vertex = baseName.vertexElement || baseName.vertex || baseName;
             const fragment = baseName.fragmentElement || baseName.fragment || baseName;
 
             const name = vertex + "+" + fragment + "@" + (defines ? defines : (<IEffectCreationOptions>attributesNamesOrOptions).defines);
-            const shader = this._compiledShaders[name];
-            if (shader) {
-                return <unknown>new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, shader.sources) as Effect;
-            }
-            else {
-                return <unknown>new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name) as Effect;
-            }
+            //@ts-ignore
+            const shader = (this as WebGPUEngine)._compiledShaders[name];
+                if (shader) {
+                    return new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, shader.sources) as Effect;
+                }
+                else {
+                    return new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name) as Effect;
+                }
         }
 
         //document.getElementById('loading').style.display = 'block';

@@ -1726,6 +1726,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
         let material = subMesh.getMaterial();
 
         if (!material) {
+            console.log('no material ',this.name);
             return this;
         }
 

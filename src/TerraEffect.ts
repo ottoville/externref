@@ -16,7 +16,7 @@ import type { PostProcess } from "./lib/babylon/PostProcesses/postProcess";
 import type { IColor4Like, IVector4Like, IMatrixLike, IVector2Like, IVector3Like, IColor3Like } from "./lib/babylon/Maths/math.like";
 import type { WebGPUPipelineContext } from "./lib/babylon/Engines/WebGPU/webgpuPipelineContext";
 import { UniformBuffer } from "./lib/babylon/Materials/uniformBuffer";
-import type { WebGPUEngine } from "./lib/babylon/Engines/webgpuEngine";
+import type { WebGPUEngine, compiledShader } from "./lib/babylon/Engines/webgpuEngine";
 
 /*Object.defineProperty(ShaderProcessor, '_FileToolsLoadFile', {
     get: function () {
@@ -763,11 +763,10 @@ export class TerraEffect {
         }
 
         this._processingContext = engine!._getShaderProcessingContext();
-
+        //@ts-ignore
         const processorOptions: ProcessingOptions = {
             defines: this.defines.split("\n"),
             indexParameters: this._indexParameters,
-            isFragment: false,
             shouldUseHighPrecisionShader: (this._engine as WebGPUEngine)._shouldUseHighPrecisionShader,
             processor: this._engine._shaderProcessor,
             supportsUniformBuffers: this._engine.supportsUniformBuffers,
@@ -777,8 +776,24 @@ export class TerraEffect {
             platformName: this._engine.shaderPlatformName,
             processingContext: this._processingContext
         };
+        if (typeof (this._engine._compiledShadersPromises[key]) !== 'undefined')
+            return;
+        //@ts-ignore
+        this._engine._compiledShadersPromises[key] = Promise.all([
+            this._loadShader2(vertexSource, "Vertex").then(vertexCode =>
+                new Promise(res => ShaderProcessor.Process(vertexCode, Object.assign({ isFragment: false }, processorOptions), migratedVertexCode => res(migratedVertexCode)))
+            ),
+            this._loadShader2(fragmentSource, "Fragment").then(fragmentCode =>
+                new Promise(res => ShaderProcessor.Process(fragmentCode, Object.assign({ isFragment: true }, processorOptions), (migratedFragmentCode) => res(migratedFragmentCode)))
+            )
+        ]).then((r: [string, string]) => {
+            let [migratedVertexCode, migratedFragmentCode] = r;
+            console.log('load vertex ', vertexSource);
+            const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
+            this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
+        });
 
-        this._loadShader(vertexSource, "Vertex", "", (vertexCode) => {
+        /*this._loadShader(vertexSource, "Vertex", "", (vertexCode) => {
             this._loadShader(fragmentSource, "Fragment", "Pixel", (fragmentCode) => {
                 ShaderProcessor.Process(vertexCode, processorOptions, (migratedVertexCode) => {
                     processorOptions.isFragment = true;
@@ -788,7 +803,7 @@ export class TerraEffect {
                     });
                 });
             });
-        });
+        });*/
     }
     private _useFinalCode(migratedVertexCode: string, migratedFragmentCode: string, baseName: any) {
         if (baseName) {
@@ -848,7 +863,7 @@ export class TerraEffect {
             let engine = this._engine as WebGPUEngine;
 
             this._pipelineContext = engine.createPipelineContext(this._processingContext) as WebGPUPipelineContext;
-
+            
             let rebuildRebind = this._rebuildProgram.bind(this);
             if (this._vertexSourceCodeOverride && this._fragmentSourceCodeOverride) {
                 engine._preparePipelineContext(this._pipelineContext, this._vertexSourceCodeOverride, this._fragmentSourceCodeOverride, true, rebuildRebind, null, this._transformFeedbackVaryings, this._key);
@@ -1073,6 +1088,21 @@ export class TerraEffect {
             callback(await response.text());
         })
         //this._engine._loadFile(shaderUrl + "." + key.toLowerCase() + ".fx", callback);
+    }
+    private _loadShader2(shader: any, key: string) : Promise<string> {
+        var shaderUrl = TerraEffect.ShadersRepository + shader;
+        let suffix = key;
+        if (key == 'Vertex')
+            suffix = '.vert';
+        if (key == 'Fragment')
+            suffix = '.frag';
+        let url = shaderUrl + suffix;
+        // Vertex shader
+        return caches.match(url).then(async response => {
+            if (!response)
+                response = await fetch(url);
+            return response.text();
+        })
     }
     private _isReadyInternal(): boolean {
         if (this._isReady) {
