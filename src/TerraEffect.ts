@@ -743,6 +743,11 @@ export class TerraEffect {
             return;
         }
 
+        this._processingContext = (engine as WebGPUEngine)!._getShaderProcessingContext();
+
+        if (typeof (this._engine._compiledShadersPromises[key]) !== 'undefined')
+            return;
+
         var vertexSource: any;
         var fragmentSource: any;
 
@@ -761,8 +766,6 @@ export class TerraEffect {
         } else {
             fragmentSource = baseName.fragment || baseName;
         }
-
-        this._processingContext = engine!._getShaderProcessingContext();
         //@ts-ignore
         const processorOptions: ProcessingOptions = {
             defines: this.defines.split("\n"),
@@ -776,34 +779,137 @@ export class TerraEffect {
             platformName: this._engine.shaderPlatformName,
             processingContext: this._processingContext
         };
-        if (typeof (this._engine._compiledShadersPromises[key]) !== 'undefined')
-            return;
+
         //@ts-ignore
         this._engine._compiledShadersPromises[key] = Promise.all([
-            this._loadShader2(vertexSource, "Vertex").then(vertexCode =>
-                new Promise(res => ShaderProcessor.Process(vertexCode, Object.assign({ isFragment: false }, processorOptions), migratedVertexCode => res(migratedVertexCode)))
-            ),
-            this._loadShader2(fragmentSource, "Fragment").then(fragmentCode =>
-                new Promise(res => ShaderProcessor.Process(fragmentCode, Object.assign({ isFragment: true }, processorOptions), (migratedFragmentCode) => res(migratedFragmentCode)))
-            )
-        ]).then((r: [string, string]) => {
-            let [migratedVertexCode, migratedFragmentCode] = r;
-            console.log('load vertex ', vertexSource);
+            this._loadShader2(vertexSource, "Vertex").then(vertexCode => TerraEffect.Process(vertexCode, Object.assign({ isFragment: false }, processorOptions))),
+            this._loadShader2(fragmentSource, "Fragment")
+        ]).then(async (r: [string, string]) => {
+            let [migratedVertexCode, fragmentCode] = r;
+            let migratedFragmentCode = await TerraEffect.Process(fragmentCode, Object.assign({ isFragment: true }, processorOptions))
+                        
             const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
             this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
         });
+    }
+    public static Process(sourceCode: string, options: ProcessingOptions): Promise<string> {
+        return TerraEffect._ProcessIncludes(sourceCode, options).then(codeWithIncludes =>
+            TerraEffect._ProcessShaderConversion(codeWithIncludes, options)
+        );
+    }
+    private static _ProcessShaderConversion(sourceCode: String, options: ProcessingOptions): string {
+        //@ts-ignore
+        var preparedSourceCode = ShaderProcessor._ProcessPrecision(sourceCode, options);
+        if (!options.processor) {
+            return preparedSourceCode;
+        }
 
-        /*this._loadShader(vertexSource, "Vertex", "", (vertexCode) => {
-            this._loadShader(fragmentSource, "Fragment", "Pixel", (fragmentCode) => {
-                ShaderProcessor.Process(vertexCode, processorOptions, (migratedVertexCode) => {
-                    processorOptions.isFragment = true;
-                    ShaderProcessor.Process(fragmentCode, processorOptions, (migratedFragmentCode) => {
-                        const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
-                        this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
+        // Already converted
+        if (preparedSourceCode.indexOf("#version 3") !== -1) {
+            return preparedSourceCode.replace("#version 300 es", "");
+        }
+
+        let defines = options.defines;
+        //@ts-ignore
+        let preprocessors = ShaderProcessor._PreparePreProcessors(options);
+
+        // General pre processing
+        if (options.processor.preProcessor) {
+            preparedSourceCode = options.processor.preProcessor(preparedSourceCode, defines, options.isFragment, options.processingContext);
+        }
+        //@ts-ignore
+        preparedSourceCode = ShaderProcessor._EvaluatePreProcessors(preparedSourceCode, preprocessors, options);
+        // Post processing
+        if (options.processor.postProcessor) {
+            preparedSourceCode = options.processor.postProcessor(preparedSourceCode, defines, options.isFragment, options.processingContext);
+        }
+
+        return preparedSourceCode;
+    }
+    private static _ProcessIncludes(sourceCode: string, options: ProcessingOptions): Promise<String> {
+        return new Promise(res => {
+            var regex = /#include<(.+)>(\((.*)\))*(\[(.*)\])*/g;
+            var match = regex.exec(sourceCode);
+
+            var returnValue = new String(sourceCode);
+
+            while (match != null) {
+                var includeFile = match[1];
+
+                // Uniform declaration
+                if (includeFile.indexOf("__decl__") !== -1) {
+                    includeFile = includeFile.replace(/__decl__/, "");
+                    if (options.supportsUniformBuffers) {
+                        includeFile = includeFile.replace(/Vertex/, "Ubo");
+                        includeFile = includeFile.replace(/Fragment/, "Ubo");
+                    }
+                    includeFile = includeFile + "Declaration";
+                }
+                if (options.includesShadersStore[includeFile]) {
+                    // Substitution
+                    var includeContent = options.includesShadersStore[includeFile];
+                    if (match[2]) {
+                        var splits = match[3].split(",");
+
+                        for (var index = 0; index < splits.length; index += 2) {
+                            var source = new RegExp(splits[index], "g");
+                            var dest = splits[index + 1];
+
+                            includeContent = includeContent.replace(source, dest);
+                        }
+                    }
+
+                    if (match[4]) {
+                        var indexString = match[5];
+
+                        if (indexString.indexOf("..") !== -1) {
+                            var indexSplits = indexString.split("..");
+                            var minIndex = parseInt(indexSplits[0]);
+                            var maxIndex = parseInt(indexSplits[1]);
+                            var sourceIncludeContent = includeContent.slice(0);
+                            includeContent = "";
+
+                            if (isNaN(maxIndex)) {
+                                maxIndex = options.indexParameters[indexSplits[1]];
+                            }
+
+                            for (var i = minIndex; i < maxIndex; i++) {
+                                if (!options.supportsUniformBuffers) {
+                                    // Ubo replacement
+                                    sourceIncludeContent = sourceIncludeContent.replace(/light\{X\}.(\w*)/g, (str: string, p1: string) => {
+                                        return p1 + "{X}";
+                                    });
+                                }
+                                includeContent += sourceIncludeContent.replace(/\{X\}/g, i.toString()) + "\n";
+                            }
+                        } else {
+                            if (!options.supportsUniformBuffers) {
+                                // Ubo replacement
+                                includeContent = includeContent.replace(/light\{X\}.(\w*)/g, (str: string, p1: string) => {
+                                    return p1 + "{X}";
+                                });
+                            }
+                            includeContent = includeContent.replace(/\{X\}/g, indexString);
+                        }
+                    }
+
+                    // Replace
+                    returnValue = returnValue.replace(match[0], includeContent);
+                } else {
+                    var includeShaderUrl = options.shadersRepository + "ShadersInclude/" + includeFile + ".fx";
+
+                    ShaderProcessor._FileToolsLoadFile(includeShaderUrl, async (fileContent) => {
+                        options.includesShadersStore[includeFile] = fileContent as string;
+
+                        res(await this._ProcessIncludes(<string>returnValue, options));
                     });
-                });
-            });
-        });*/
+                    return;
+                }
+
+                match = regex.exec(sourceCode);
+            }
+            res(returnValue);
+        });
     }
     private _useFinalCode(migratedVertexCode: string, migratedFragmentCode: string, baseName: any) {
         if (baseName) {
@@ -1041,53 +1147,6 @@ export class TerraEffect {
         } else {
             this._allFallbacksProcessed = true;
         }
-    }
-    private _loadShader(shader: any, key: string, optionalKey: string, callback: (data: any) => void): void {
-
-        // Direct source ?
-        if (shader.substr(0, 7) === "source:") {
-            callback(shader.substr(7));
-            return;
-        }
-
-        // Base64 encoded ?
-        if (shader.substr(0, 7) === "base64:") {
-            var shaderBinary = window.atob(shader.substr(7));
-            callback(shaderBinary);
-            return;
-        }
-
-        // Is in local store ?
-        /*if (Effect.ShadersStore[shader + key + "Shader"]) {
-            callback(Effect.ShadersStore[shader + key + "Shader"]);
-            return;
-        }
-
-        if (optionalKey && Effect.ShadersStore[shader + optionalKey + "Shader"]) {
-            callback(Effect.ShadersStore[shader + optionalKey + "Shader"]);
-            return;
-        }*/
-
-        var shaderUrl;
-
-        if (shader[0] === "." || shader[0] === "/" || shader.indexOf("http") > -1) {
-            shaderUrl = shader;
-        } else {
-            shaderUrl = TerraEffect.ShadersRepository + shader;
-        }
-        let suffix = key;
-        if (key == 'Vertex')
-            suffix = '.vert';
-        if (key == 'Fragment')
-            suffix = '.frag';
-        let url = shaderUrl + suffix;
-        // Vertex shader
-        caches.match(url).then(async response => {
-            if (!response)
-                response = await fetch(url);
-            callback(await response.text());
-        })
-        //this._engine._loadFile(shaderUrl + "." + key.toLowerCase() + ".fx", callback);
     }
     private _loadShader2(shader: any, key: string) : Promise<string> {
         var shaderUrl = TerraEffect.ShadersRepository + shader;

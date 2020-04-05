@@ -789,9 +789,7 @@ export class WebGPUEngine extends Engine {
     }
     */
     private _compileRawShaderToSpirV(source: string, type: string): Uint32Array {
-        debugger;
         let compiled = this._glslang.compileGLSL(source, type);
-        debugger;
         return compiled;
     }
 
@@ -2150,7 +2148,6 @@ export class WebGPUEngine extends Engine {
                             const gpuSampler = this._device.createSampler(samplerDescriptor);
                             bindingInfo.texture._webGPUSampler = gpuSampler;
                             console.log(samplerDescriptor);
-                            debugger;
                         }
                         bindings.push({
                             binding: bindingInfo.textureBinding,
@@ -2250,9 +2247,7 @@ export class WebGPUEngine extends Engine {
         const renderPass = this._bundleEncoder || this._currentRenderPass!;
 
         this._setRenderPipeline(fillMode);
-        //debugger;
         renderPass.drawIndexed(indexCount, instancesCount, indexStart, 0, 0);
-        //debugger;
     }
 
     public drawArraysType(fillMode: number, verticesStart: number, verticesCount: number, instancesCount: number = 1): void {

@@ -930,7 +930,7 @@
         "signature": "1594be047b2eb21abda024c3497af57af6dfc16136eac4d2135c6c11f03f8e85"
       },
       "./lib/babylon/engines/webgpuengine.ts": {
-        "version": "4ac50a95a8a5c4217173ea6228b57e5c5d551236911ce55a1c66d12e98f06a1d",
+        "version": "df28ad4b4d50f5682b98eb32f5eee1e78855c863d732efa78fd5405419fb70f2",
         "signature": "cecbc397e6b14afa3b41091690328f7ebc57a2c32d60235bf1114463525128cb"
       },
       "./lib/babylon/materials/uniformbuffer.ts": {
@@ -1050,8 +1050,8 @@
         "signature": "0119cb31070effab13506b0fa7791b68a23b20107075fdcb8eba6ae29a33a6d6"
       },
       "./terraeffect.ts": {
-        "version": "abafeb6457d23e961863a5ec50b8899e24ef5f73227abfb06a41eaff6844ab25",
-        "signature": "02ddd855c17234f538b8726fa9e35af911ccb756f37165994ab9eecd9b76a50b"
+        "version": "c366f59fa17233e16b08c8fc1c6ce3c6aa3318821b63a5c64d4d29d5072b5add",
+        "signature": "8713efc6296f904aedc319638f2a989c5d4c676616cdefcde43bb43a2786fd46"
       },
       "./workerthread.ts": {
         "version": "365154fbc2f856a91325deaaf36583a72748018e30893c07dfc11385031b5335",
@@ -11139,7 +11139,8 @@
         "./lib/babylon/misc/observable.ts",
         "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
         "./lib/babylon/engines/thinengine.ts",
-        "./lib/babylon/materials/ieffectfallbacks.ts"
+        "./lib/babylon/materials/ieffectfallbacks.ts",
+        "./lib/babylon/engines/processors/shaderprocessingoptions.ts"
       ],
       "./terramesh.ts": [
         "./lib/babylon/maths/math.ts",
@@ -14922,7 +14923,6 @@
       "./tools/zones.ts",
       "./tools/camera.ts",
       "./tools/buildings.ts",
-      "./tools/terrain.ts",
       "./world/water.ts",
       "./world/scene.ts",
       "./code.ts",
@@ -14980,7 +14980,8 @@
       "./rustwasm/hello_wasm_bg.d.ts",
       "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./terraeffect.ts"
+      "./terraeffect.ts",
+      "./tools/terrain.ts"
     ]
   },
   "version": "3.8.1-rc"
