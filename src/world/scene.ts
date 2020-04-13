@@ -726,6 +726,7 @@ export class WorldScene extends Scene {
     public terrainReady: Promise<void>;
     constructor(engine: Engine | WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine as Engine);
+        blazor.invokeMethod('setProgress', 21);
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
             var closeDistance = Engine.CollisionsEpsilon * 10.0;
@@ -773,12 +774,14 @@ export class WorldScene extends Scene {
             webSocket.onmessage = (e) => {
                 let msg = JSON.parse(e.data);
                 if (msg.action == 'init') {
+                    blazor.invokeMethod('setProgress', 22);
                     console.debug('going to init game', msg.currentPlayData)
                     blazor.invokeMethod('initGame', msg.currentPlayData);
                 }
             }
         } else {
             console.debug('initing without websocket connection');
+            blazor.invokeMethod('setProgress', 22);
             blazor.invokeMethod('initGame', {
                 gameSpeed: 0,
                 lastStateChangeGameTime: 216000000000,

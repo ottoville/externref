@@ -35,6 +35,7 @@ import { Path3D } from '../Maths/math.path';
 import { Plane } from '../Maths/math.plane';
 import { TransformNode } from './transformNode';
 import { CanvasGenerator } from '../Misc/canvasGenerator';
+import { WebGPUEngine } from "../Engines";
 
 declare type LinesMesh = import("./linesMesh").LinesMesh;
 declare type InstancedMesh = import("./instancedMesh").InstancedMesh;
@@ -1439,7 +1440,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
         }
 
         let scene = this.getScene();
-        let engine = scene.getEngine();
+        let engine = scene.getEngine() as WebGPUEngine;
 
         if (this._unIndexed || fillMode == Material.PointFillMode) {
             // or triangles as points
@@ -1528,6 +1529,10 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
 
     /** @hidden */
     public _renderWithInstances(subMesh: SubMesh, fillMode: number, batch: _InstancesBatch, effect: Effect, engine: Engine): Mesh {
+        //@ts-ignore
+        if (engine._currentEffect!.name == "./shaders/helper") {
+            debugger;
+        }
         var visibleInstances = batch.visibleInstances[subMesh._id];
         if (!visibleInstances) {
             return this;
@@ -1611,7 +1616,11 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
         onBeforeDraw: (isInstance: boolean, world: Matrix, effectiveMaterial?: Material) => void, effectiveMaterial?: Material): Mesh {
         var scene = this.getScene();
         var engine = scene.getEngine();
-
+        //@ts-ignore
+        //@ts-ignore
+        if (engine._currentEffect!.name == "./shaders/helper") {
+            debugger;
+        }
         if (hardwareInstancedRendering) {
             this._renderWithInstances(subMesh, fillMode, batch, effect, engine);
         } else {

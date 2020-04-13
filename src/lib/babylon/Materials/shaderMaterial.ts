@@ -634,7 +634,7 @@ export class ShaderMaterial extends Material {
     public bind(world: Matrix, mesh?: Mesh): void {
         // Std values
         this.bindOnlyWorldMatrix(world);
-
+        debugger;
         if (this._effect && this.getScene().getCachedMaterial() !== this) {
             if (this._options.uniforms.indexOf("view") !== -1) {
                 this._effect.setMatrix("view", this.getScene().getViewMatrix());
@@ -645,6 +645,7 @@ export class ShaderMaterial extends Material {
             }
 
             if (this._options.uniforms.indexOf("viewProjection") !== -1) {
+                debugger;
                 this._effect.setMatrix("viewProjection", this.getScene().getTransformMatrix());
                 if (this._multiview) {
                     this._effect.setMatrix("viewProjectionR", this.getScene()._transformMatrixR);

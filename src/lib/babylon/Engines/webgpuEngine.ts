@@ -2262,8 +2262,6 @@ export class WebGPUEngine extends Engine {
             this._bindVertexInputs(vertexInputs);
             const bindGroups = this._getBindGroupsToRender();
             this._setRenderBindGroups(bindGroups);
-           // renderPass.setVertexBuffer(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).vertexInputs.vertexBuffers[0]);
-           // renderPass.setBindGroup(0, (this._currentEffect!._pipelineContext as WebGPUPipelineContext).bindGroups[0]);
             renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
         } else {
             this._setRenderPipeline(fillMode);

@@ -223,7 +223,8 @@ interface GPUBindGroupBinding {
 
 interface GPUBindGroupDescriptor extends GPUObjectDescriptorBase {
   layout: GPUBindGroupLayout;
-  bindings: GPUBindGroupBinding[];
+  bindings?: GPUBindGroupBinding[];
+  entries?: GPUBindGroupBinding[];
 }
 
 interface GPUBindGroupLayoutBinding {

@@ -4,6 +4,7 @@ layout(set = 0, binding = 0) uniform Scene {
     mat4 view;
     vec4 viewPosition;
 } babylonuniforms;
+
 layout(std430, set = 1, binding = 0) readonly buffer slopeArr {
     vec2 size;
     int numbers[];
@@ -21,6 +22,7 @@ layout(std430, set = 1, binding = 2) readonly buffer facet2Arr {
 layout(set = 1, binding = 3) uniform Uniforms {
     vec2 flatPos;
     float time;
+    mat4 modelViewProjectionMatrix;
   } uniforms;
 
 layout(location = 0) in vec3 position;
@@ -77,7 +79,11 @@ float getHeightAtCoordinates2(vec2 xz) {
         return y;
 }
 void main(void) {
-   // vec4 worldcoords=world * vec4(position,1.0);
+    //gl_Position = babylonuniforms.viewProjection * vec4(position, 1.0);
+
+    //gl_Position = vec4(position.x,position.z, 0.0, 1.0);
+
+       // vec4 worldcoords=world * vec4(position,1.0);
     
     float angle=uniforms.time+float(gl_InstanceIndex)*angleStep;
 	float c = cos(angle);
@@ -98,6 +104,11 @@ void main(void) {
     float posy=getHeightAtCoordinates2(vec2(worldpos.x,worldpos.y));
 
     vec3 newpos = vec3(worldpos.x,posy+2.0,worldpos.y);
-    gl_Position = babylonuniforms.viewProjection * vec4(newpos, 1.0);
+    //gl_Position = babylonuniforms.viewProjection * vec4(newpos, 1.0);
+
+
+
+    //gl_Position = babylonuniforms.viewProjection * vec4(uniforms.flatPos.x, 30.0, uniforms.flatPos.y, 1.0);
+    gl_Position = uniforms.modelViewProjectionMatrix * vec4(position.x, 30.0, position.z, 1.0);
 
 }

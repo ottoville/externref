@@ -199,7 +199,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         }
         webSocket.onerror = async () => {
             console.log('websocket onerror');
-
+            blazor.invokeMethod('setProgress', 20);
             try {
                 //blazor.invokeMethod('setProgress', 20);
                 sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas));
