@@ -1711,19 +1711,16 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
         if (this._checkOcclusionQuery()) {
             return this;
         }
-
         // Managing instances
         var batch = this._getInstancesRenderList(subMesh._id, !!effectiveMeshReplacement);
 
         if (batch.mustReturn) {
             return this;
         }
-
         // Checking geometry state
         if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
             return this;
         }
-
         if (this._internalMeshDataInfo._onBeforeRenderObservable) {
             this._internalMeshDataInfo._onBeforeRenderObservable.notifyObservers(this);
         }

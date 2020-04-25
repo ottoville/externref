@@ -15,6 +15,7 @@ import { Tools } from "../Misc/tools";
 import { Tags } from "../Misc/tags";
 import { DataBuffer } from './dataBuffer';
 import { extractMinAndMax } from '../Maths/math.functions';
+import { WebGPUEngine } from "../Engines";
 
 declare type Mesh = import("../Meshes/mesh").Mesh;
 
@@ -125,7 +126,6 @@ export class Geometry implements IGetSetVerticesData {
         this._vertexBuffers = {};
         this._indices = [];
         this._updatable = updatable;
-
         // vertexData
         if (vertexData) {
             this.setAllVerticesData(vertexData, updatable);
@@ -134,11 +134,9 @@ export class Geometry implements IGetSetVerticesData {
             this._totalVertices = 0;
             this._indices = [];
         }
-
         if (this._engine.getCaps().vertexArrayObject) {
             this._vertexArrayObjects = {};
         }
-
         // applyToMesh
         if (mesh) {
             this.applyToMesh(mesh);
@@ -566,7 +564,8 @@ export class Geometry implements IGetSetVerticesData {
         this._indices = indices;
         this._indexBufferIsUpdatable = updatable;
         if (this._meshes.length !== 0 && this._indices) {
-            this._indexBuffer = this._engine.createIndexBuffer(this._indices, updatable);
+            //@ts-ignore
+            this._indexBuffer = (this._engine as WebGPUEngine).createIndexBuffer(this._indices, updatable);
         }
 
         if (totalVertices != undefined) { // including null and undefined

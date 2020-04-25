@@ -18,14 +18,7 @@ import type { WebGPUPipelineContext } from "./lib/babylon/Engines/WebGPU/webgpuP
 import { UniformBuffer } from "./lib/babylon/Materials/uniformBuffer";
 import type { WebGPUEngine, compiledShader } from "./lib/babylon/Engines/webgpuEngine";
 
-/*Object.defineProperty(ShaderProcessor, '_FileToolsLoadFile', {
-    get: function () {
 
-    },
-    set: function (module) {
-        debugger;
-    }
-});*/
 //@ts-ignore
 /*ShaderProcessor._FileToolsLoadFile = function (url, onSuccess) {
     caches.match(url).then(async response => {
@@ -735,7 +728,6 @@ export class TerraEffect {
         this._attributeLocationByName = {};
 
         this.uniqueId = TerraEffect._uniqueIdSeed++;
-
         if (sources) {
             this._fragmentSourceCode = sources.fragment;
             this._vertexSourceCode = sources.vertex;
@@ -787,7 +779,6 @@ export class TerraEffect {
         ]).then(async (r: [string, string]) => {
             let [migratedVertexCode, fragmentCode] = r;
             let migratedFragmentCode = await TerraEffect.Process(fragmentCode, Object.assign({ isFragment: true }, processorOptions))
-                        
             const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
             this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
         });

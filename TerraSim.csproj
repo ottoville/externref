@@ -159,6 +159,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\shaders\helper2.frag" />
+    <Content Remove="wwwroot\shaders\helper2.vert" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="src\engine.ts" />
     <None Remove="src\paintGround\paintLine.ts" />
     <None Remove="src\paintGround\paintPlane.ts" />
@@ -341,6 +346,8 @@
     <None Include="wwwroot\js\WorkerThread.js" />
     <None Include="wwwroot\js\world\scene.js" />
     <None Include="wwwroot\js\world\sun.js" />
+    <None Include="wwwroot\shaders\helper2.frag" />
+    <None Include="wwwroot\shaders\helper2.vert" />
   </ItemGroup>
 
   <ItemGroup>

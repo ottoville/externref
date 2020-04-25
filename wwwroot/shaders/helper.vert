@@ -23,6 +23,8 @@ layout(set = 1, binding = 3) uniform Uniforms {
     vec2 flatPos;
     float time;
     mat4 modelViewProjectionMatrix;
+    mat4 world;
+    mat4 worldViewProjection;
   } uniforms;
 
 layout(location = 0) in vec3 position;
@@ -104,11 +106,21 @@ void main(void) {
     float posy=getHeightAtCoordinates2(vec2(worldpos.x,worldpos.y));
 
     vec3 newpos = vec3(worldpos.x,posy+2.0,worldpos.y);
-    //gl_Position = babylonuniforms.viewProjection * vec4(newpos, 1.0);
+   //gl_Position = uniforms.modelViewProjectionMatrix * vec4(newpos, 1.0);
 
 
 
-    //gl_Position = babylonuniforms.viewProjection * vec4(uniforms.flatPos.x, 30.0, uniforms.flatPos.y, 1.0);
-    gl_Position = uniforms.modelViewProjectionMatrix * vec4(position.x, 30.0, position.z, 1.0);
+   //gl_Position = uniforms.modelViewProjectionMatrix * vec4(uniforms.flatPos.x, 30.0, uniforms.flatPos.y, 1.0);
+    //gl_Position = uniforms.modelViewProjectionMatrix * vec4(position.x, 30.0, position.z, 1.0);
+   // gl_Position = babylonuniforms.viewPosition * vec4(position.x, 30.0, position.z, 1.0);
+
+
+    mat4 finalWorld = uniforms.world;
+    vec3 positionUpdated = position;
+    positionUpdated.y=30.0;
+    vec4 worldPos = finalWorld * vec4(positionUpdated, 1.0);
+    //gl_Position = uniforms.modelViewProjectionMatrix * worldPos;
+    gl_Position = uniforms.worldViewProjection * worldPos;
+    gl_Position.y *= -1.;
 
 }

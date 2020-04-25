@@ -730,7 +730,6 @@ export class WorldScene extends Scene {
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
             var closeDistance = Engine.CollisionsEpsilon * 10.0;
-
             if (collider._retry >= maximumRetry) {
                 finalPosition.copyFrom(position);
                 return;
@@ -740,7 +739,6 @@ export class WorldScene extends Scene {
             var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
 
             collider._initialize(position, velocity, closeDistance);
-
             // Check all meshes
             for (var index = 0; index < this._scene.meshes.length; index++) {
                 var mesh: TerraMesh = this._scene.meshes[index];
@@ -751,21 +749,19 @@ export class WorldScene extends Scene {
                      }*/
                 }
             }
-
             if (!collider.collisionFound) {
+                
                 position.addToRef(velocity, finalPosition);
                 return;
             }
-
             if (velocity.x !== 0 || velocity.y !== 0 || velocity.z !== 0) {
                 collider._getResponse(position, velocity);
             }
-
+            
             if (velocity.length() <= closeDistance) {
                 finalPosition.copyFrom(position);
                 return;
             }
-
             collider._retry++;
             this._collideWithWorld(position, velocity, collider, maximumRetry, finalPosition, excludedMesh);
         }
@@ -875,6 +871,7 @@ export class WorldScene extends Scene {
             this.tools['Buildings'] = new BuildingsUI(this);
             console.log('creating sea');
             let sea = new Sea(this);
+            console.log('sea created');
             DB.then(d => {
                 this.tools['Zones'] = new Zones(ground, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
             })
@@ -884,7 +881,9 @@ export class WorldScene extends Scene {
             blazor.invokeMethod('setProgress', 50);
             ground.isPickable = true;
             // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
+            console.log('creating TerrainTool');
             this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
+            console.log('TerrainTool created');
             blazor.invokeMethod('setProgress', 51);
             shadermateria.setVector3("lightPos", sunlight.position);
             blazor.invokeMethod('setProgress', 52);
@@ -892,6 +891,7 @@ export class WorldScene extends Scene {
 
             // this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
             blazor.invokeMethod('setProgress', 53);
+            console.debug('waiting terrain texture to be ready');
             return texture.then(async gpuBuffer => {
                 blazor.invokeMethod('setProgress', 75);
                 
@@ -918,7 +918,6 @@ export class WorldScene extends Scene {
                 internaltex._webGPUTexture = device.createTexture({
                     dimension: '2d',
                     format: "rgba8unorm",
-                    arrayLayerCount: 1,
                     mipLevelCount: 1,
                     sampleCount: 1,
                     size: textureExtent,
@@ -929,8 +928,8 @@ export class WorldScene extends Scene {
 
                 let bufferView: GPUBufferCopyView = {
                     buffer: gpuBuffer,
-                    rowPitch: size[0] * 4,
-                    imageHeight: 0,
+                    bytesPerRow: size[0] * 4,
+                    rowsPerImage: 0,
                     offset: 0,
                 };
                 if (gpuBuffer.label == 'computed') {

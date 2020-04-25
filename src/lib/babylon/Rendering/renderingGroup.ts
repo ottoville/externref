@@ -240,6 +240,7 @@ export class RenderingGroup {
      * @param subMeshes The submeshes to render
      */
     private static renderUnsorted(subMeshes: SmartArray<SubMesh>): void {
+        console.log('submeshes length', subMeshes.length)
         for (var subIndex = 0; subIndex < subMeshes.length; subIndex++) {
             let submesh = subMeshes.data[subIndex];
             submesh.render(false);

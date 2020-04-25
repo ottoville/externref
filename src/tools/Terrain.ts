@@ -14,6 +14,11 @@ import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { TerraEffect } from "../TerraEffect.js";
 import { WebGPUDataBuffer } from "../lib/babylon/Meshes/WebGPU/webgpuDataBuffer.js";
 import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
+import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
+import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial.js";
+import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData.js";
+import { Geometry } from "../lib/babylon/Meshes/geometry.js";
+import { Debug } from "../lib/babylon/Legacy/legacy.js";
 
 
 //@ts-ignore
@@ -41,22 +46,77 @@ export class TerrainTool extends UITAB {
     public canvas: HTMLCanvasElement;
     // private helperIndices = new Uint16Array([0, 1, 2, 3]);
     private GPUuniformBuffer: GPUBuffer;
+    private myBox: Mesh;
     constructor(
         private scene: Scene,
         private terrain: Terrain,
         private camera: ArcRotateCamera,
     ) {
         super();
+
+
+        //this.myBox = MeshBuilder.CreateBox("myBox", { height: 20, width: 20, depth: 20 });
+        let vertices = new Float32Array([
+            -10.5, 30, 20,
+            -10.5, 30, -20,
+            10.5, 30, 30,
+            10.5, 30, -30,
+        ]);
+        this.myBox = new Mesh("myBox2", scene);
+        this.myBox.isUnIndexed = true;
+        let options = { height: 20, width: 20, depth: 20, sideOrientation: Mesh._GetDefaultSideOrientation(undefined) };
+        this.myBox._originalBuilderSideOrientation = options.sideOrientation;
+        var vertexData = new VertexData();
+        //vertexData.positions = vertices;
+        var basePositions = [1, -1, 1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1, 1, -1, -1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 1];
+        //vertexData.positions = basePositions;
+        var scaleArray = [20 / 2, 20 / 2, 20 / 2];
+        let helperpositions = basePositions.reduce(
+            (accumulator: Array<number>, currentValue, currentIndex) => accumulator.concat(currentValue * scaleArray[currentIndex % 3]),
+            []
+        );
+        //vertexData.applyToMesh(this.myBox, false);
+        //this.myBox.setVerticesData("position", basePositions, false);
+        vertexData.set(helperpositions, "position");
+        new Geometry(Geometry.RandomId(), scene, vertexData, false, this.myBox);
+        
+
+
+        //this.myBox = this.helper;
+        this.myBox.material = new StandardMaterial("boxmaterial", scene);
+        this.myBox.subMeshes[0].materialDefines = new StandardMaterialDefines();
+        
+        let ubo = this.myBox.getMeshUniformBuffer();
+
+        (this.myBox.material as StandardMaterial).customShaderNameResolve = (shaderName: string, uniforms: string[], uniformBuffers: string[], samplers: string[], defines: StandardMaterialDefines) => {
+            return "helper2";
+        }
+
+        this.myBox._draw = function (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
+            debugger;
+            if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
+                return this;
+            }
+
+            if (this._internalMeshDataInfo._onBeforeDrawObservable) {
+                this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
+            }
+            let engine = scene.getEngine() as WebGPUEngine;
+            engine.drawArraysType(7, subMesh.verticesStart, subMesh.verticesCount, instancesCount);
+            return this;
+        }
+
+
+        this.myBox.visibility = 0;
+
+
+
+
         this.helper.visibility = 0;
         let engine = scene.getEngine() as WebGPUEngine;
         //@ts-ignore
         let device: GPUDevice = (engine as WebGPUEngine)._device;
-        let vertices = new Float32Array([
-            -10.5, 30, 12,
-            -10.5, 30, -12,
-            10.5, 30, 13,
-            10.5, 30, -13,
-        ]);
+
        /* let vertices = new Float32Array([
             -0.16, 0, 0.6,
             -0.16, 0, -0.6,
@@ -158,7 +218,7 @@ export class TerrainTool extends UITAB {
             });
             GPUfacet2Buffer.unmap();
             const [GPUuniformBuffer, uniformBuffer] = device.createBufferMapped({
-                size: (2 * 4) + 4 + (16*4),
+                size: (2 * 4) + 4 + (16 * 4) + (16 * 4) + (16 * 4),
                 //@ts-ignore
                 usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
             });
@@ -285,6 +345,10 @@ export class TerrainTool extends UITAB {
             this.helper.subMeshes[0]._materialEffect = effect;
             //@ts-ignore
             this.helpermaterial._effect = effect;
+
+           /* Object.defineProperty(this.myBox, '_materialEffect', {
+                set: function () { debugger; }
+            });*/
         });
 
         /*let effect=scene.getEngine().createEffect("./shaders/helper", <IEffectCreationOptions>{
@@ -317,7 +381,8 @@ export class TerrainTool extends UITAB {
 
     activate = (): void => {
         let engine = this.scene.getEngine();
-        this.helper.visibility = 1;
+        //this.helper.visibility = 1;
+        this.myBox.visibility = 1;
         this.addListener("pointermove", this.mouseListener, { lazy: 15 });
         this.scene.registerBeforeRender(this.setTime);
 
@@ -338,8 +403,7 @@ export class TerrainTool extends UITAB {
         gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
 
         gl.bindTexture(gl.TEXTURE_2D, null);*/
-        let me = this;
-        (function () {
+       /* (function () {
             this._options.samplers.push('slopeArr', 'facet1Arr', 'facet2Arr');
             this._textures = {
                 slopeArr: {
@@ -365,7 +429,7 @@ export class TerrainTool extends UITAB {
                 }
             }
             return this;
-        }).bind(this.helpermaterial)();
+        }).bind(this.helpermaterial)();*/
         Terrain.terrainWorker.subscribe('SubHeights', (v) => {
             /*let width = v.data.endX - v.data.offsetX;
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
@@ -401,8 +465,8 @@ export class TerrainTool extends UITAB {
             mainboundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius
         });
         this.helper.material = this.helpermaterial;
+        let me = this;
         this.helpermaterial.bindOnlyWorldMatrix = (function (world: Matrix) {
-            debugger;
             var scene = this.getScene();
 
             if (!this._effect) {
@@ -411,6 +475,7 @@ export class TerrainTool extends UITAB {
             if (this._options.uniforms.indexOf("world") !== -1) {
                 let effect = (<Effect>this._effect);
                 this._effect.setMatrix("world", world);
+                me.GPUuniformBuffer.setSubData((2 * 4) + 4 + (16*4), world.m as Float32Array);
                 //if (effect._cacheMatrix("world", world)) {
                 //engine.setMatrices(effect.getUniform("world"), world.toArray() as Float32Array);
                 // gl.uniformMatrix4fv(effect.getUniform("world"), false, world.toArray() as Float32Array);
@@ -427,6 +492,7 @@ export class TerrainTool extends UITAB {
                     this._cachedWorldViewProjectionMatrix = new Matrix();
                 world.multiplyToRef(scene.getTransformMatrix(), this._cachedWorldViewProjectionMatrix);
                 this._effect.setMatrix("worldViewProjection", this._cachedWorldViewProjectionMatrix);
+                me.GPUuniformBuffer.setSubData((2 * 4) + 4 + (16 * 4) + (16 * 4), this._cachedWorldViewProjectionMatrix.m as Float32Array);
             }
         }).bind(this.helpermaterial);
     };
@@ -484,6 +550,7 @@ export class TerrainTool extends UITAB {
         Terrain.terrainWorker.unsubscribe('heights');
         //this.removeListener("pointerdown", this.pointerdownf);
         this.helper.visibility = 0;
+        this.myBox.visibility = 0;
         //this.removeListener("pointermove", this.mouseListener);
         this.scene.unregisterBeforeRender(this.setTime);
         this.gl.deleteTexture(this.glTexture);
@@ -509,11 +576,17 @@ export class TerrainTool extends UITAB {
                 projection: this.camera.getProjectionMatrix().toArray()
             }).then((flatPos: { x: number, y: number }) => {
                 //let uniformlocation;
-                
+                this.helper.position.x = flatPos.x;
+                this.helper.position.z = flatPos.y;
+                this.myBox.position.x = flatPos.x;
+                this.myBox.position.z = flatPos.y;
+                this.myBox.position.y = 40;
                 this.GPUuniformBuffer.setSubData(0, new Float32Array([flatPos.x, flatPos.y]))
                 let transformmatrix = this.scene.getTransformMatrix();
                 this.GPUuniformBuffer.setSubData((2 * 4) + 4, transformmatrix.m as Float32Array);
-                console.log(transformmatrix);
+
+                
+
                 /*if (uniformlocation = this.helpermaterial._effect.getUniform("flatPos")) {
                     this.uniformsV2.set(uniformlocation, <{ x: number, y: number }><any>flatPos);
                     debugger;

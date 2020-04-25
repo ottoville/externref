@@ -265,8 +265,10 @@ interface GPUBufferBinding {
 interface GPUBufferCopyView {
   buffer: GPUBuffer;
   offset?: number;
-  rowPitch: number;
-  imageHeight: number;
+    rowPitch?: number;
+    bytesPerRow?: number,
+    imageHeight?: number;
+    rowsPerImage?: number;
 }
 
 interface GPUTextureCopyView {
