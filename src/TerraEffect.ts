@@ -17,7 +17,8 @@ import type { IColor4Like, IVector4Like, IMatrixLike, IVector2Like, IVector3Like
 import type { WebGPUPipelineContext } from "./lib/babylon/Engines/WebGPU/webgpuPipelineContext";
 import { UniformBuffer } from "./lib/babylon/Materials/uniformBuffer";
 import type { WebGPUEngine, compiledShader } from "./lib/babylon/Engines/webgpuEngine";
-
+import { WebGPUConstants } from "./lib/babylon/Engines/WebGPU/webgpuConstants";
+import { Mesh } from "./lib/babylon/Meshes/mesh.js";
 
 //@ts-ignore
 /*ShaderProcessor._FileToolsLoadFile = function (url, onSuccess) {
@@ -595,7 +596,11 @@ export class TerraEffect {
     /**
      * Callback that will be called when the shader is compiled.
      */
-    public onCompiled: Nullable<(effect: TerraEffect | Effect) => void> = null;
+    #compiledCallBack: () => void = () => { };
+    public onCompiled: Promise<void> = new Promise((res) => {
+        this.#compiledCallBack = res;
+    });
+   
     /**
      * Callback that will be called if an error occurs during shader compilation.
      */
@@ -613,6 +618,7 @@ export class TerraEffect {
      * It is recommended to use executeWhenCompile() or to make sure that scene.isReady() is called to get this observable raised.
      */
     public onCompileObservable = new Observable<TerraEffect>();
+
     /**
      * Observable that will be called if an error occurs during shader compilation.
      */
@@ -680,6 +686,121 @@ export class TerraEffect {
 
     public static IncludesShadersStore: { [key: string]: string } = {};
 
+    public getPipelineLayout(): GPUPipelineLayout {
+        const bindGroupLayouts: GPUBindGroupLayout[] = [];
+        const webgpuPipelineContext = this._pipelineContext;
+        for (let i = 0; i < webgpuPipelineContext.orderedUBOsAndSamplers.length; i++) {
+            const setDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i];
+            if (setDefinition === undefined) {
+                const bindings: GPUBindGroupLayoutBinding[] = [];
+                const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
+                    bindings,
+                });
+                bindGroupLayouts[i] = uniformsBindGroupLayout;
+                continue;
+            }
+
+            const bindings: GPUBindGroupLayoutBinding[] = [];
+            for (let j = 0; j < setDefinition.length; j++) {
+                const bindingDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i][j];
+                if (bindingDefinition === undefined) {
+                    continue;
+                }
+
+                // TODO WEBGPU. Optimize shared samplers visibility for vertex/framgent.
+                if (bindingDefinition.isSampler) {
+                    bindings.push({
+                        binding: j,
+                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
+                        type: WebGPUConstants.GPUBindingType_sampledTexture,
+                        textureDimension: bindingDefinition.textureDimension,
+                        // TODO WEBGPU. Handle texture component type properly.
+                        // textureComponentType?: GPUTextureComponentType,
+                    }, {
+                        // TODO WEBGPU. No Magic + 1 (coming from current 1 texture 1 sampler startegy).
+                        binding: j + 1,
+                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
+                        type: WebGPUConstants.GPUBindingType_sampler
+                    });
+                }
+                else {
+                    bindings.push({
+                        binding: j,
+                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
+                        type: WebGPUConstants.GPUBindingType_uniformBuffer,
+                    });
+                }
+            }
+
+            if (bindings.length > 0) {
+                const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
+                    bindings,
+                });
+                bindGroupLayouts[i] = uniformsBindGroupLayout;
+            }
+        }
+
+        webgpuPipelineContext.bindGroupLayouts = bindGroupLayouts;
+        return this._engine.getDevice().createPipelineLayout({ bindGroupLayouts });
+    }
+
+    public createPipelineLayout(renderPipeline:GPURenderPipeline): GPUPipelineLayout {
+        const bindGroupLayouts: GPUBindGroupLayout[] = [];
+        const webgpuPipelineContext = this._pipelineContext;
+        for (let i = 0; i < webgpuPipelineContext.orderedUBOsAndSamplers.length; i++) {
+            const setDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i];
+            if (setDefinition === undefined) {
+                const bindings: GPUBindGroupLayoutBinding[] = [];
+                const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
+                    bindings,
+                });
+                bindGroupLayouts[i] = uniformsBindGroupLayout;
+                continue;
+            }
+
+            const bindings: GPUBindGroupLayoutBinding[] = [];
+            for (let j = 0; j < setDefinition.length; j++) {
+                const bindingDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i][j];
+                if (bindingDefinition === undefined) {
+                    continue;
+                }
+
+                // TODO WEBGPU. Optimize shared samplers visibility for vertex/framgent.
+                if (bindingDefinition.isSampler) {
+                    bindings.push({
+                        binding: j,
+                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
+                        type: WebGPUConstants.GPUBindingType_sampledTexture,
+                        textureDimension: bindingDefinition.textureDimension,
+                        // TODO WEBGPU. Handle texture component type properly.
+                        // textureComponentType?: GPUTextureComponentType,
+                    }, {
+                        // TODO WEBGPU. No Magic + 1 (coming from current 1 texture 1 sampler startegy).
+                        binding: j + 1,
+                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
+                        type: WebGPUConstants.GPUBindingType_sampler
+                    });
+                }
+                else {
+                    bindings.push({
+                        binding: j,
+                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
+                        type: WebGPUConstants.GPUBindingType_uniformBuffer,
+                    });
+                }
+            }
+
+            if (bindings.length > 0) {
+                const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
+                    bindings,
+                });
+                bindGroupLayouts[i] = uniformsBindGroupLayout;
+            }
+        }
+
+        webgpuPipelineContext.bindGroupLayouts = bindGroupLayouts;
+        return this._engine.getDevice().createPipelineLayout({ bindGroupLayouts });
+    }
     constructor(baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | ThinEngine, samplers: Nullable<string[]> = null,
 
         engine?: ThinEngine, defines: Nullable<string> = null,
@@ -701,7 +822,6 @@ export class TerraEffect {
             this._samplerList = options.samplers.slice();
             this.defines = options.defines;
             this.onError = options.onError;
-            this.onCompiled = options.onCompiled;
             this._fallbacks = options.fallbacks;
             this._indexParameters = options.indexParameters;
             this._transformFeedbackVaryings = options.transformFeedbackVaryings || null;
@@ -719,7 +839,6 @@ export class TerraEffect {
             this._attributesNames = (<string[]>attributesNamesOrOptions);
 
             this.onError = onError;
-            this.onCompiled = onCompiled;
 
             this._indexParameters = indexParameters;
             this._fallbacks = fallbacks;
@@ -736,8 +855,7 @@ export class TerraEffect {
         }
 
         this._processingContext = (engine as WebGPUEngine)!._getShaderProcessingContext();
-
-        if (typeof (this._engine._compiledShadersPromises[key]) !== 'undefined')
+        if (this._engine.compilingShaders.has(key))
             return;
 
         var vertexSource: any;
@@ -771,17 +889,33 @@ export class TerraEffect {
             platformName: this._engine.shaderPlatformName,
             processingContext: this._processingContext
         };
-
+        this._engine.compilingShaders.add(key);
         //@ts-ignore
-        this._engine._compiledShadersPromises[key] = Promise.all([
-            this._loadShader2(vertexSource, "Vertex").then(vertexCode => TerraEffect.Process(vertexCode, Object.assign({ isFragment: false }, processorOptions))),
-            this._loadShader2(fragmentSource, "Fragment")
-        ]).then(async (r: [string, string]) => {
-            let [migratedVertexCode, fragmentCode] = r;
-            let migratedFragmentCode = await TerraEffect.Process(fragmentCode, Object.assign({ isFragment: true }, processorOptions))
-            const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
-            this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
-        });
+        if (attributesNamesOrOptions.preprocessed) {
+            Promise.all([
+                this._loadShader2(vertexSource, "Vertex"),
+                this._loadShader2(fragmentSource, "Fragment")
+            ]).then(r => {
+                const [migratedVertexCode, migratedFragmentCode] = r;
+                const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
+                this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
+            })
+        }
+        else {
+            Promise.all([
+                this._loadShader2(vertexSource, "Vertex").then(vertexCode => TerraEffect.Process(vertexCode, Object.assign({ isFragment: false }, processorOptions))),
+                this._loadShader2(fragmentSource, "Fragment")
+            ]).then(async (r: [string, string]) => {
+                let [migratedVertexCode, fragmentCode] = r;
+                let migratedFragmentCode = await TerraEffect.Process(fragmentCode, Object.assign({ isFragment: true }, processorOptions));
+                const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
+                caches.open('finalShaders').then((cache) => {
+                    cache.put(vertexSource + '.vert', new Response(new Blob([finalShaders.vertexCode], { type: 'text/plain' })));
+                    cache.put(fragmentSource + '.frag', new Response(new Blob([finalShaders.fragmentCode], { type: 'text/plain' })));
+                })
+                this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
+            });
+        }
     }
     public static Process(sourceCode: string, options: ProcessingOptions): Promise<string> {
         return TerraEffect._ProcessIncludes(sourceCode, options).then(codeWithIncludes =>
@@ -909,10 +1043,15 @@ export class TerraEffect {
 
             this._vertexSourceCode = "#define SHADER_NAME vertex:" + vertex + "\n" + migratedVertexCode;
             this._fragmentSourceCode = "#define SHADER_NAME fragment:" + fragment + "\n" + migratedFragmentCode;
+            /*caches.open('compiledShaders').then((cache) => {
+                cache.put(baseName + '.vert', new Response(new Blob([this._vertexSourceCode], { type: 'text/plain' })));
+                cache.put(baseName + '.frag', new Response(new Blob([this._fragmentSourceCode], { type: 'text/plain' })));
+            })*/
         } else {
             this._vertexSourceCode = migratedVertexCode;
             this._fragmentSourceCode = migratedFragmentCode;
         }
+
         this._prepareEffect();
     }
     /**
@@ -933,6 +1072,7 @@ export class TerraEffect {
                 onError(error);
             }
         };
+        /*
         this.onCompiled = () => {
             var scenes = this._engine.scenes;
             if (scenes) {
@@ -942,7 +1082,7 @@ export class TerraEffect {
             }
 
             this._pipelineContext!._handlesSpectorRebuildCallback(onCompiled);
-        };
+        };*/
         this._fallbacks = null;
         this._prepareEffect();
     }
@@ -957,103 +1097,28 @@ export class TerraEffect {
         var previousPipelineContext = this._pipelineContext;
 
         try {
-            let engine = this._engine as WebGPUEngine;
+            let engine = this._engine;
 
             this._pipelineContext = engine.createPipelineContext(this._processingContext) as WebGPUPipelineContext;
-            
+
             let rebuildRebind = this._rebuildProgram.bind(this);
             if (this._vertexSourceCodeOverride && this._fragmentSourceCodeOverride) {
                 engine._preparePipelineContext(this._pipelineContext, this._vertexSourceCodeOverride, this._fragmentSourceCodeOverride, true, rebuildRebind, null, this._transformFeedbackVaryings, this._key);
             }
             else {
-                //console.log(this._vertexSourceCode);
                 engine._preparePipelineContext(this._pipelineContext, this._vertexSourceCode, this._fragmentSourceCode, false, rebuildRebind, defines, this._transformFeedbackVaryings, this._key);
             }
 
-            //engine._executeWhenRenderingStateIsCompiled(this._pipelineContext, () => {
             this._attributes = [];
-            /*this._pipelineContext!._fillEffectInformation(<unknown>this as Effect,
+            //@ts-ignore
+            this._pipelineContext!._fillEffectInformation(this as Effect,
                 this._uniformBuffersNames,
                 this._uniformsNames,
                 this._uniforms,
                 this._samplerList,
                 this._samplers,
                 attributesNames,
-                this._attributes);*/
-            /*console.log('_uniformBuffersNames', this._uniformBuffersNames)
-            console.log('uniformnames', this._uniformsNames)
-            console.log('_uniforms', this._uniforms)
-            console.log('attributesNames', attributesNames)
-            console.log('_attributes', this._attributes)*/
-
-
-            // TODO WEBGPU. Cleanup SEB on this entire function. Should not need anything in here or almost.
-            let effectAvailableUniforms = engine.getUniforms(this._pipelineContext, this._uniformsNames);
-            effectAvailableUniforms.forEach((uniform, index) => {
-                this._uniforms[this._uniformsNames[index]] = uniform;
-            });
-
-            // Prevent Memory Leak by reducing the number of string, refer to the string instead of copy.
-            this._fragmentSourceCode = "";
-            this._vertexSourceCode = "";
-            // this._fragmentSourceCodeOverride = "";
-            // this._vertexSourceCodeOverride = "";
-
-            const foundSamplers = this._pipelineContext.availableSamplers;
-            let index: number;
-            for (index = 0; index < this._samplerList.length; index++) {
-                const name = this._samplerList[index];
-                const sampler = foundSamplers[this._samplerList[index]];
-
-                if (sampler == null || sampler == undefined) {
-                    this._samplerList.splice(index, 1);
-                    index--;
-                }
-                else {
-                    this._samplers[name] = index;
-                }
-            }
-
-            for (let attr of engine.getAttributes(this._pipelineContext, attributesNames)) {
-                this._attributes.push(attr);
-            }
-
-            // Build the uniform layout for the left over uniforms.
-            //this._pipelineContext.buildUniformLayout();
-            const _uniformSizes: { [type: string]: number } = {
-                "float": 1,
-                "vec2": 2,
-                "vec3": 3,
-                "vec4": 4,
-                "mat2": 4,
-                "mat3": 9,
-                "mat4": 16
-            };
-
-            if (this._pipelineContext.leftOverUniforms.length) {
-                this._pipelineContext.uniformBuffer = new UniformBuffer(engine);
-
-                for (let leftOverUniform of this._pipelineContext.leftOverUniforms) {
-                    const size = _uniformSizes[leftOverUniform.type];
-                    this._pipelineContext.uniformBuffer.addUniform(leftOverUniform.name, size, leftOverUniform.length);
-                    // TODO WEBGPU. Replace with info from uniform buffer class
-                    this._pipelineContext.leftOverUniformsByName[leftOverUniform.name] = leftOverUniform.type;
-                }
-
-                this._pipelineContext.uniformBuffer.create();
-            }
-
-
-
-
-
-            /* *********************** */
-
-
-
-
-
-
+                this._attributes);
 
             // Caches attribute locations.
             if (attributesNames) {
@@ -1062,14 +1127,16 @@ export class TerraEffect {
                     this._attributeLocationByName[name] = this._attributes[i];
                 }
             }
-
-            engine.bindSamplers(<unknown>this as Effect);
+            //@ts-ignore
+            engine.bindSamplers(this);
 
             this._compilationError = "";
             this._isReady = true;
-            if (this.onCompiled) {
-                this.onCompiled(this);
-            }
+            this.#compiledCallBack();
+            // if (this.onCompiled) {
+                //@ts-ignore
+                // this.onCompiled(this);
+            // }
             this.onCompileObservable.notifyObservers(this);
             this.onCompileObservable.clear();
 
@@ -1079,9 +1146,8 @@ export class TerraEffect {
             }
 
             if (previousPipelineContext) {
-                this._engine._deletePipelineContext(previousPipelineContext);
+                this.getEngine()._deletePipelineContext(previousPipelineContext);
             }
-            //});
 
             if (this._pipelineContext.isAsync) {
                 this._checkIsReady(previousPipelineContext);

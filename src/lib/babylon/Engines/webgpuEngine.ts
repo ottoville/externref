@@ -163,12 +163,15 @@ export class WebGPUEngine extends Engine {
     // protected _currentEffect: Nullable<Effect> = null;
     private _currentVertexBuffers: Nullable<{ [key: string]: Nullable<VertexBuffer> }> = null;
     private _currentIndexBuffer: Nullable<DataBuffer> = null;
+    public getCurrentIndexBuffer() {
+        return this._currentIndexBuffer;
+    }
     private __colorWrite = true;
     private _uniformsBuffers: { [name: string]: WebGPUDataBuffer } = {};
     private _maxBufferChunk = 1024 * 1024 * 15;
     
     // Caches
-    public _compiledShadersPromises: { [key: string]: Promise<void> } = {};
+    public compilingShaders: Set<string> = new Set();
     private _compiledShaders: { [key: string]: compiledShader } = {};
 
     // TODO WEBGPU. Texture Management. Temporary...
@@ -463,7 +466,9 @@ export class WebGPUEngine extends Engine {
     public getColorWrite(): boolean {
         return this.__colorWrite;
     }
-
+    public getDevice(): GPUDevice {
+        return this._device;
+    }
     //------------------------------------------------------------------------------
     //                              Dynamic WebGPU States
     //------------------------------------------------------------------------------
@@ -603,7 +608,6 @@ export class WebGPUEngine extends Engine {
         } finally {
             tempBuffers.forEach(buff => buff.destroy());
         }
-      
     }
 
     //------------------------------------------------------------------------------
@@ -886,7 +890,6 @@ export class WebGPUEngine extends Engine {
         const webGpuContext = pipelineContext as WebGPUPipelineContext;
 
         // TODO WEBGPU. Check if caches could be reuse from piepline ???
-        const shaderp = this._compiledShadersPromises[key]
         const shader = this._compiledShaders[key];
         if (shader) {
             webGpuContext.stages = shader.stages;
@@ -1989,65 +1992,6 @@ export class WebGPUEngine extends Engine {
         return inputStateDescriptor;
     }
 
-    private _getPipelineLayout(): GPUPipelineLayout {
-        const bindGroupLayouts: GPUBindGroupLayout[] = [];
-        const webgpuPipelineContext = this._currentEffect!._pipelineContext as WebGPUPipelineContext;
-
-        for (let i = 0; i < webgpuPipelineContext.orderedUBOsAndSamplers.length; i++) {
-            const setDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i];
-            if (setDefinition === undefined) {
-                const bindings: GPUBindGroupLayoutBinding[] = [];
-                const uniformsBindGroupLayout = this._device.createBindGroupLayout({
-                    bindings,
-                });
-                bindGroupLayouts[i] = uniformsBindGroupLayout;
-                continue;
-            }
-
-            const bindings: GPUBindGroupLayoutBinding[] = [];
-            for (let j = 0; j < setDefinition.length; j++) {
-                const bindingDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i][j];
-                if (bindingDefinition === undefined) {
-                    continue;
-                }
-
-                // TODO WEBGPU. Optimize shared samplers visibility for vertex/framgent.
-                if (bindingDefinition.isSampler) {
-                    bindings.push({
-                        binding: j,
-                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
-                        type: WebGPUConstants.GPUBindingType_sampledTexture,
-                        textureDimension: bindingDefinition.textureDimension,
-                        // TODO WEBGPU. Handle texture component type properly.
-                        // textureComponentType?: GPUTextureComponentType,
-                    }, {
-                        // TODO WEBGPU. No Magic + 1 (coming from current 1 texture 1 sampler startegy).
-                        binding: j + 1,
-                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
-                        type: WebGPUConstants.GPUBindingType_sampler
-                    });
-                }
-                else {
-                    bindings.push({
-                        binding: j,
-                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
-                        type: WebGPUConstants.GPUBindingType_uniformBuffer,
-                    });
-                }
-            }
-
-            if (bindings.length > 0) {
-                const uniformsBindGroupLayout = this._device.createBindGroupLayout({
-                    bindings,
-                });
-                bindGroupLayouts[i] = uniformsBindGroupLayout;
-            }
-        }
-
-        webgpuPipelineContext.bindGroupLayouts = bindGroupLayouts;
-        return this._device.createPipelineLayout({ bindGroupLayouts });
-    }
-
     private _getRenderPipeline(fillMode: number): GPURenderPipeline {
         // This is wrong to cache this way but workarounds the need of cache in the simple demo context.
         const gpuPipeline = this._currentEffect!._pipelineContext as WebGPUPipelineContext;
@@ -2060,9 +2004,14 @@ export class WebGPUEngine extends Engine {
         const depthStateDescriptor = this._getDepthStencilStateDescriptor();
         const colorStateDescriptors = this._getColorStateDescriptors();
         const stages = this._getStages();
+        //const inputStateDescriptor = this._currentEffect.getVertexInputDescriptor();
         const inputStateDescriptor = this._getVertexInputDescriptor();
-        const pipelineLayout = this._getPipelineLayout();
-
+        //const pipelineLayout = this._getPipelineLayout();
+       // const pipelineLayout = this._currentEffect!.getPipelineLayout();
+        if (this._currentEffect!.name == 'helper2') {
+            console.log(inputStateDescriptor);
+            //debugger;
+        }
         gpuPipeline.renderPipeline = this._device.createRenderPipeline({
             sampleCount: this._mainPassSampleCount,
             primitiveTopology: topology,
@@ -2072,8 +2021,9 @@ export class WebGPUEngine extends Engine {
 
             ...stages,
             vertexState: inputStateDescriptor,
-            layout: pipelineLayout,
+            //layout: pipelineLayout,
         });
+
         return gpuPipeline.renderPipeline;
     }
 
@@ -2150,13 +2100,15 @@ export class WebGPUEngine extends Engine {
         for (let i = 0; i < webgpuPipelineContext.orderedUBOsAndSamplers.length; i++) {
             const setDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i];
             if (setDefinition === undefined) {
-                const groupLayout = bindGroupLayouts[i];
-                if (groupLayout) {
-                    bindGroups[i] = this._device.createBindGroup({
-                        layout: groupLayout,
-                        bindings: [],
-                    });
-                }
+                let groupLayout: GPUBindGroupLayout;;
+                if (bindGroupLayouts && bindGroupLayouts[i])
+                    groupLayout = bindGroupLayouts[i];
+                else
+                    groupLayout = webgpuPipelineContext.renderPipeline.getBindGroupLayout(i);
+                bindGroups[i] = this._device.createBindGroup({
+                    layout: groupLayout,
+                    entries: [],
+                });
                 continue;
             }
 
@@ -2175,8 +2127,8 @@ export class WebGPUEngine extends Engine {
                             const samplerDescriptor: GPUSamplerDescriptor = this._getSamplerDescriptor(bindingInfo.texture!);
                             const gpuSampler = this._device.createSampler(samplerDescriptor);
                             bindingInfo.texture._webGPUSampler = gpuSampler;
-                            console.log(samplerDescriptor);
                         }
+
                         bindings.push({
                             binding: bindingInfo.textureBinding,
                             resource: bindingInfo.texture._webGPUTextureView!,
@@ -2208,18 +2160,15 @@ export class WebGPUEngine extends Engine {
                 }
             }
 
-            const groupLayout = bindGroupLayouts[i];
-            if (groupLayout) {
-                if (this._currentEffect.name == "./shaders/helper") {
-                    console.log('bind group');
-                    console.log({
-                        layout: groupLayout,
-                        bindings,
-                    })
-                }
+            if (bindings.length > 0) {
+                let groupLayout: GPUBindGroupLayout;
+                if (bindGroupLayouts && bindGroupLayouts[i])
+                    groupLayout = bindGroupLayouts[i];
+                else
+                    groupLayout = webgpuPipelineContext.renderPipeline.getBindGroupLayout(i);
                 bindGroups[i] = this._device.createBindGroup({
                     layout: groupLayout,
-                    bindings,
+                    entries: bindings,
                 });
             }
         }
@@ -2260,9 +2209,11 @@ export class WebGPUEngine extends Engine {
         renderPass.setPipeline(pipeline);
 
         const vertexInputs = this._getVertexInputsToRender();
+
         this._bindVertexInputs(vertexInputs);
 
         const bindGroups = this._getBindGroupsToRender();
+
         this._setRenderBindGroups(bindGroups);
 
         if (this._alphaState.alphaBlend && this._alphaState._isBlendConstantsDirty) {

@@ -12,13 +12,14 @@ import { TerraMesh } from "../TerraMesh.js";
 import { WebGPUShaderProcessingContext } from "../lib/babylon/Engines/WebGPU/webgpuShaderProcessingContext.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { TerraEffect } from "../TerraEffect.js";
-import { WebGPUDataBuffer } from "../lib/babylon/Meshes/WebGPU/webgpuDataBuffer.js";
-import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
-import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
 import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial.js";
 import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData.js";
 import { Geometry } from "../lib/babylon/Meshes/geometry.js";
-import { Debug } from "../lib/babylon/Legacy/legacy.js";
+import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
+import { MaterialHelper } from "../lib/babylon/Materials/materialHelper.js";
+import { ImageProcessingConfiguration } from "../lib/babylon/Materials/imageProcessingConfiguration.js";
+import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
+import { Color3 } from "../lib/babylon/Maths/math.color.js";
 
 
 //@ts-ignore
@@ -47,6 +48,8 @@ export class TerrainTool extends UITAB {
     // private helperIndices = new Uint16Array([0, 1, 2, 3]);
     private GPUuniformBuffer: GPUBuffer;
     private myBox: Mesh;
+
+
     constructor(
         private scene: Scene,
         private terrain: Terrain,
@@ -62,38 +65,375 @@ export class TerrainTool extends UITAB {
             10.5, 30, 30,
             10.5, 30, -30,
         ]);
+        let engine = scene.getEngine() as WebGPUEngine;
+        //@ts-ignore
+        let device: GPUDevice = (engine as WebGPUEngine)._device;
+
         this.myBox = new Mesh("myBox2", scene);
+        this.myBox.visibility = 0;
         this.myBox.isUnIndexed = true;
         let options = { height: 20, width: 20, depth: 20, sideOrientation: Mesh._GetDefaultSideOrientation(undefined) };
         this.myBox._originalBuilderSideOrientation = options.sideOrientation;
         var vertexData = new VertexData();
         //vertexData.positions = vertices;
-        var basePositions = [1, -1, 1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1, 1, -1, -1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 1];
         //vertexData.positions = basePositions;
-        var scaleArray = [20 / 2, 20 / 2, 20 / 2];
-        let helperpositions = basePositions.reduce(
-            (accumulator: Array<number>, currentValue, currentIndex) => accumulator.concat(currentValue * scaleArray[currentIndex % 3]),
-            []
-        );
+
         //vertexData.applyToMesh(this.myBox, false);
         //this.myBox.setVerticesData("position", basePositions, false);
-        vertexData.set(helperpositions, "position");
+        vertexData.set(vertices, "position");
         new Geometry(Geometry.RandomId(), scene, vertexData, false, this.myBox);
+
+
         
-
-
         //this.myBox = this.helper;
         this.myBox.material = new StandardMaterial("boxmaterial", scene);
         this.myBox.subMeshes[0].materialDefines = new StandardMaterialDefines();
-        
-        let ubo = this.myBox.getMeshUniformBuffer();
 
-        (this.myBox.material as StandardMaterial).customShaderNameResolve = (shaderName: string, uniforms: string[], uniformBuffers: string[], samplers: string[], defines: StandardMaterialDefines) => {
-            return "helper2";
+        let ubo = this.myBox.getMeshUniformBuffer();
+        
+        let defines = this.myBox.subMeshes[0]._materialDefines as StandardMaterialDefines;
+        const lightDisposed = defines._areLightsDisposed;
+        defines.markAsProcessed();
+        
+
+        //Attributes
+        var attribs = [VertexBuffer.PositionKind];
+
+        if (defines.NORMAL) {
+            attribs.push(VertexBuffer.NormalKind);
         }
 
+        if (defines.UV1) {
+            attribs.push(VertexBuffer.UVKind);
+        }
+
+        if (defines.UV2) {
+            attribs.push(VertexBuffer.UV2Kind);
+        }
+
+        if (defines.VERTEXCOLOR) {
+            attribs.push(VertexBuffer.ColorKind);
+        }
+
+        MaterialHelper.PrepareAttributesForInstances(attribs, defines);
+        MaterialHelper.PrepareAttributesForMorphTargets(attribs, this.myBox, defines);
+
+        var shaderName = "helper2";
+
+        var uniforms = ["world", "view", "viewProjection", "vEyePosition", "vLightsType", "vAmbientColor", "vDiffuseColor", "vSpecularColor", "vEmissiveColor", "visibility",
+            "vFogInfos", "vFogColor", "pointSize",
+            "vDiffuseInfos", "vAmbientInfos", "vOpacityInfos", "vReflectionInfos", "vEmissiveInfos", "vSpecularInfos", "vBumpInfos", "vLightmapInfos", "vRefractionInfos",
+            "mBones",
+            "vClipPlane", "vClipPlane2", "vClipPlane3", "vClipPlane4", "vClipPlane5", "vClipPlane6", "diffuseMatrix", "ambientMatrix", "opacityMatrix", "reflectionMatrix", "emissiveMatrix", "specularMatrix", "bumpMatrix", "normalMatrix", "lightmapMatrix", "refractionMatrix",
+            "diffuseLeftColor", "diffuseRightColor", "opacityParts", "reflectionLeftColor", "reflectionRightColor", "emissiveLeftColor", "emissiveRightColor", "refractionLeftColor", "refractionRightColor",
+            "vReflectionPosition", "vReflectionSize",
+            "logarithmicDepthConstant", "vTangentSpaceParams", "alphaCutOff", "boneTextureWidth"
+        ];
+
+        var samplers = ["diffuseSampler", "ambientSampler", "opacitySampler", "reflectionCubeSampler",
+            "reflection2DSampler", "emissiveSampler", "specularSampler", "bumpSampler", "lightmapSampler",
+            "refractionCubeSampler", "refraction2DSampler", "boneSampler"];
+
+        var uniformBuffers = ["Material", "Scene"];
+
+        if (ImageProcessingConfiguration) {
+            ImageProcessingConfiguration.PrepareUniforms(uniforms, defines);
+            ImageProcessingConfiguration.PrepareSamplers(samplers, defines);
+        }
+        
+        MaterialHelper.PrepareUniformsAndSamplersList(<IEffectCreationOptions>{
+            uniformsNames: uniforms,
+            uniformBuffersNames: uniformBuffers,
+            samplers: samplers,
+            defines: defines,
+            //@ts-ignore
+            maxSimultaneousLights: (this.myBox.material as StandardMaterial)._maxSimultaneousLights
+        });
+        
+        var join = defines.toString();
+        
+        let effect = new TerraEffect(shaderName, <IEffectCreationOptions>{
+            preprocessed: true,
+            attributes: attribs,
+            uniformsNames: uniforms,
+            uniformBuffersNames: uniformBuffers,
+            samplers: samplers,
+            defines: join,
+            fallbacks: null,
+            onCompiled: (this.myBox.material as StandardMaterial).onCompiled,
+            onError: (this.myBox.material as StandardMaterial).onError,
+            //@ts-ignore
+            indexParameters: { maxSimultaneousLights: (this.myBox.material as StandardMaterial)._maxSimultaneousLights, maxSimultaneousMorphTargets: defines.NUM_MORPH_INFLUENCERS }
+
+        }, engine, undefined, engine, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+        
+            //@ts-ignore
+            (this.myBox.material as StandardMaterial)._rebuildInParallel = false;
+            scene.resetCachedMaterial();
+            //@ts-ignore
+        this.myBox.subMeshes[0].setEffect(effect as Effect, defines);
+        effect.onCompiled.then(() => {
+           // const rasterizationStateDescriptor = this._getRasterizationStateDescriptor();
+            //const depthStateDescriptor = this._getDepthStencilStateDescriptor();
+            //const colorStateDescriptors = this._getColorStateDescriptors();
+           const stages = effect._pipelineContext.stages;
+            const inputStateDescriptor = this.myBox.subMeshes[0].getVertexInputDescriptor();
+          // const pipelineLayout = effect.getPipelineLayout();
+           // console.log(effect._pipelineContext.bindGroupLayouts);
+
+            effect._pipelineContext.renderPipeline = device.createRenderPipeline({
+                //@ts-ignore
+                sampleCount: engine._mainPassSampleCount,
+                primitiveTopology: 'triangle-strip',
+                rasterizationState: {
+                    cullMode: 'none',
+                },
+                depthStencilState: {
+                    depthWriteEnabled: false,
+                    depthCompare: "less",
+                    format: "depth24plus-stencil8",
+                },
+                colorStates: [{
+                    format: "bgra8unorm",
+                }],
+
+                ...stages,
+                vertexState: inputStateDescriptor,
+               // layout: pipelineLayout,
+            });
+        });
+        //@ts-ignore
+
+        // (this.myBox.material as StandardMaterial).buildUniformLayout();
+        (this.myBox.material as StandardMaterial).bindForSubMesh = function (world: Matrix, mesh: Mesh, subMesh: SubMesh): void {
+            var scene = this.getScene();
+
+            var defines = <StandardMaterialDefines>subMesh._materialDefines;
+            if (!defines) {
+                return;
+            }
+
+            var effect = subMesh.effect;
+            if (!effect) {
+                return;
+            }
+            this._activeEffect = effect;
+
+            // Matrices
+            if (!defines.INSTANCES) {
+                this.bindOnlyWorldMatrix(world);
+            }
+
+            // Normal Matrix
+            if (defines.OBJECTSPACE_NORMALMAP) {
+                world.toNormalMatrix(this._normalMatrix);
+                this.bindOnlyNormalMatrix(this._normalMatrix);
+            }
+
+            let mustRebind = this._mustRebind(scene, effect, mesh.visibility);
+
+            // Bones
+            MaterialHelper.BindBonesParameters(mesh, effect);
+            let ubo = this._uniformBuffer;
+            if (mustRebind) {
+                ubo.bindToEffect(effect, "Material");
+
+                this.bindViewProjection(effect);
+                if (!ubo.useUbo || !this.isFrozen || !ubo.isSync) {
+
+                    if (StandardMaterial.FresnelEnabled && defines.FRESNEL) {
+                        // Fresnel
+                        if (this.diffuseFresnelParameters && this.diffuseFresnelParameters.isEnabled) {
+                            ubo.updateColor4("diffuseLeftColor", this.diffuseFresnelParameters.leftColor, this.diffuseFresnelParameters.power);
+                            ubo.updateColor4("diffuseRightColor", this.diffuseFresnelParameters.rightColor, this.diffuseFresnelParameters.bias);
+                        }
+
+                        if (this.opacityFresnelParameters && this.opacityFresnelParameters.isEnabled) {
+                            ubo.updateColor4("opacityParts", new Color3(this.opacityFresnelParameters.leftColor.toLuminance(), this.opacityFresnelParameters.rightColor.toLuminance(), this.opacityFresnelParameters.bias), this.opacityFresnelParameters.power);
+                        }
+
+                        if (this.reflectionFresnelParameters && this.reflectionFresnelParameters.isEnabled) {
+                            ubo.updateColor4("reflectionLeftColor", this.reflectionFresnelParameters.leftColor, this.reflectionFresnelParameters.power);
+                            ubo.updateColor4("reflectionRightColor", this.reflectionFresnelParameters.rightColor, this.reflectionFresnelParameters.bias);
+                        }
+
+                        if (this.refractionFresnelParameters && this.refractionFresnelParameters.isEnabled) {
+                            ubo.updateColor4("refractionLeftColor", this.refractionFresnelParameters.leftColor, this.refractionFresnelParameters.power);
+                            ubo.updateColor4("refractionRightColor", this.refractionFresnelParameters.rightColor, this.refractionFresnelParameters.bias);
+                        }
+
+                        if (this.emissiveFresnelParameters && this.emissiveFresnelParameters.isEnabled) {
+                            ubo.updateColor4("emissiveLeftColor", this.emissiveFresnelParameters.leftColor, this.emissiveFresnelParameters.power);
+                            ubo.updateColor4("emissiveRightColor", this.emissiveFresnelParameters.rightColor, this.emissiveFresnelParameters.bias);
+                        }
+                    }
+
+                    // Textures
+                    if (scene.texturesEnabled) {
+                        if (this._diffuseTexture && StandardMaterial.DiffuseTextureEnabled) {
+                            ubo.updateFloat2("vDiffuseInfos", this._diffuseTexture.coordinatesIndex, this._diffuseTexture.level);
+                            MaterialHelper.BindTextureMatrix(this._diffuseTexture, ubo, "diffuse");
+
+                            if (this._diffuseTexture.hasAlpha) {
+                                effect.setFloat("alphaCutOff", this.alphaCutOff);
+                            }
+                        }
+
+                        if (this._ambientTexture && StandardMaterial.AmbientTextureEnabled) {
+                            ubo.updateFloat2("vAmbientInfos", this._ambientTexture.coordinatesIndex, this._ambientTexture.level);
+                            MaterialHelper.BindTextureMatrix(this._ambientTexture, ubo, "ambient");
+                        }
+
+                        if (this._opacityTexture && StandardMaterial.OpacityTextureEnabled) {
+                            ubo.updateFloat2("vOpacityInfos", this._opacityTexture.coordinatesIndex, this._opacityTexture.level);
+                            MaterialHelper.BindTextureMatrix(this._opacityTexture, ubo, "opacity");
+                        }
+
+                        if (this._emissiveTexture && StandardMaterial.EmissiveTextureEnabled) {
+                            ubo.updateFloat2("vEmissiveInfos", this._emissiveTexture.coordinatesIndex, this._emissiveTexture.level);
+                            MaterialHelper.BindTextureMatrix(this._emissiveTexture, ubo, "emissive");
+                        }
+
+                        if (this._lightmapTexture && StandardMaterial.LightmapTextureEnabled) {
+                            ubo.updateFloat2("vLightmapInfos", this._lightmapTexture.coordinatesIndex, this._lightmapTexture.level);
+                            MaterialHelper.BindTextureMatrix(this._lightmapTexture, ubo, "lightmap");
+                        }
+
+                        if (this._specularTexture && StandardMaterial.SpecularTextureEnabled) {
+                            ubo.updateFloat2("vSpecularInfos", this._specularTexture.coordinatesIndex, this._specularTexture.level);
+                            MaterialHelper.BindTextureMatrix(this._specularTexture, ubo, "specular");
+                        }
+
+                        if (this._bumpTexture && scene.getEngine().getCaps().standardDerivatives && StandardMaterial.BumpTextureEnabled) {
+                            ubo.updateFloat3("vBumpInfos", this._bumpTexture.coordinatesIndex, 1.0 / this._bumpTexture.level, this.parallaxScaleBias);
+                            MaterialHelper.BindTextureMatrix(this._bumpTexture, ubo, "bump");
+
+                            if (scene._mirroredCameraPosition) {
+                                ubo.updateFloat2("vTangentSpaceParams", this._invertNormalMapX ? 1.0 : -1.0, this._invertNormalMapY ? 1.0 : -1.0);
+                            } else {
+                                ubo.updateFloat2("vTangentSpaceParams", this._invertNormalMapX ? -1.0 : 1.0, this._invertNormalMapY ? -1.0 : 1.0);
+                            }
+                        }
+
+                        if (this._refractionTexture && StandardMaterial.RefractionTextureEnabled) {
+                            var depth = 1.0;
+                            if (!this._refractionTexture.isCube) {
+                                ubo.updateMatrix("refractionMatrix", this._refractionTexture.getReflectionTextureMatrix());
+
+                                if ((<any>this._refractionTexture).depth) {
+                                    depth = (<any>this._refractionTexture).depth;
+                                }
+                            }
+                            ubo.updateFloat4("vRefractionInfos", this._refractionTexture.level, this.indexOfRefraction, depth, this.invertRefractionY ? -1 : 1);
+                        }
+                    }
+
+                    // Point size
+                    if (this.pointsCloud) {
+                        ubo.updateFloat("pointSize", this.pointSize);
+                    }
+
+                    if (defines.SPECULARTERM) {
+                        ubo.updateColor4("vSpecularColor", this.specularColor, this.specularPower);
+                    }
+                    ubo.updateColor3("vEmissiveColor", StandardMaterial.EmissiveTextureEnabled ? this.emissiveColor : Color3.BlackReadOnly);
+
+                    // Visibility
+                    //ubo.updateFloat("visibility", mesh.visibility);
+
+                    // Diffuse
+                    //ubo.updateColor4("vDiffuseColor", this.diffuseColor, this.alpha);
+                }
+
+                // Textures
+                if (scene.texturesEnabled) {
+                    if (this._diffuseTexture && StandardMaterial.DiffuseTextureEnabled) {
+                        effect.setTexture("diffuseSampler", this._diffuseTexture);
+                    }
+
+                    if (this._ambientTexture && StandardMaterial.AmbientTextureEnabled) {
+                        effect.setTexture("ambientSampler", this._ambientTexture);
+                    }
+
+                    if (this._opacityTexture && StandardMaterial.OpacityTextureEnabled) {
+                        effect.setTexture("opacitySampler", this._opacityTexture);
+                    }
+
+                    if (this._reflectionTexture && StandardMaterial.ReflectionTextureEnabled) {
+                        if (this._reflectionTexture.isCube) {
+                            effect.setTexture("reflectionCubeSampler", this._reflectionTexture);
+                        } else {
+                            effect.setTexture("reflection2DSampler", this._reflectionTexture);
+                        }
+                    }
+
+                    if (this._emissiveTexture && StandardMaterial.EmissiveTextureEnabled) {
+                        effect.setTexture("emissiveSampler", this._emissiveTexture);
+                    }
+
+                    if (this._lightmapTexture && StandardMaterial.LightmapTextureEnabled) {
+                        effect.setTexture("lightmapSampler", this._lightmapTexture);
+                    }
+
+                    if (this._specularTexture && StandardMaterial.SpecularTextureEnabled) {
+                        effect.setTexture("specularSampler", this._specularTexture);
+                    }
+
+                    if (this._bumpTexture && scene.getEngine().getCaps().standardDerivatives && StandardMaterial.BumpTextureEnabled) {
+                        effect.setTexture("bumpSampler", this._bumpTexture);
+                    }
+
+                    if (this._refractionTexture && StandardMaterial.RefractionTextureEnabled) {
+                        var depth = 1.0;
+                        if (this._refractionTexture.isCube) {
+                            effect.setTexture("refractionCubeSampler", this._refractionTexture);
+                        } else {
+                            effect.setTexture("refraction2DSampler", this._refractionTexture);
+                        }
+                    }
+                }
+
+                // Clip plane
+                MaterialHelper.BindClipPlane(effect, scene);
+
+                // Colors
+                scene.ambientColor.multiplyToRef(this.ambientColor, this._globalAmbientColor);
+
+                MaterialHelper.BindEyePosition(effect, scene);
+                effect.setColor3("vAmbientColor", this._globalAmbientColor);
+            }
+
+            if (mustRebind || !this.isFrozen) {
+                // Lights
+                if (scene.lightsEnabled && !this._disableLighting) {
+                    MaterialHelper.BindLights(scene, mesh, effect, defines, this._maxSimultaneousLights, this._rebuildInParallel);
+                }
+
+                // Fog
+                MaterialHelper.BindFogParameters(scene, mesh, effect);
+
+                // Morph targets
+                if (defines.NUM_MORPH_INFLUENCERS) {
+                    MaterialHelper.BindMorphTargetParameters(mesh, effect);
+                }
+
+                // Log. depth
+                if (this.useLogarithmicDepth) {
+                    MaterialHelper.BindLogDepth(defines, effect, scene);
+                }
+
+                // image processing
+                if (this._imageProcessingConfiguration && !this._imageProcessingConfiguration.applyByPostProcess) {
+                    this._imageProcessingConfiguration.bind(this._activeEffect);
+                }
+            }
+
+            ubo.update();
+            this._afterBind(mesh, this._activeEffect);
+        }
+
+
         this.myBox._draw = function (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
-            debugger;
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
                 return this;
             }
@@ -102,27 +442,35 @@ export class TerrainTool extends UITAB {
                 this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
             }
             let engine = scene.getEngine() as WebGPUEngine;
-            engine.drawArraysType(7, subMesh.verticesStart, subMesh.verticesCount, instancesCount);
+
+            //engine.drawArraysType(7, subMesh.verticesStart, subMesh.verticesCount, instancesCount);
+            //@ts-ignore
+            const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
+            //@ts-ignore
+            engine._currentIndexBuffer = null;
+            //@ts-ignore
+            engine._setRenderPipeline(7);
+            renderPass.draw(subMesh.verticesCount, 8, subMesh.verticesStart, 0);
             return this;
         }
 
 
-        this.myBox.visibility = 0;
+        
 
 
 
 
         this.helper.visibility = 0;
-        let engine = scene.getEngine() as WebGPUEngine;
-        //@ts-ignore
-        let device: GPUDevice = (engine as WebGPUEngine)._device;
 
-       /* let vertices = new Float32Array([
-            -0.16, 0, 0.6,
-            -0.16, 0, -0.6,
-            0.16, 0, 1,
-            0.16, 0, -1,
-        ]);*/
+        //@ts-ignore
+
+
+        /* let vertices = new Float32Array([
+             -0.16, 0, 0.6,
+             -0.16, 0, -0.6,
+             0.16, 0, 1,
+             0.16, 0, -1,
+         ]);*/
         // let indices = new Uint16Array([0, 1, 2, 3]);
 
         const [GPUvertexBuffer, vertexBuffer] = device.createBufferMapped({
@@ -131,7 +479,7 @@ export class TerrainTool extends UITAB {
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
         });
         new Float32Array(vertexBuffer).set(vertices);
-        //@ts-ignore
+       /* //@ts-ignore
         this.helper._processRendering = (subMesh: SubMesh, effect: Effect, fillMode: number, batch: any, hardwareInstancedRendering: boolean,
             onBeforeDraw: (isInstance: boolean, world: Matrix, effectiveMaterial?: Material) => void, effectiveMaterial?: Material): Mesh => {
 
@@ -145,33 +493,33 @@ export class TerrainTool extends UITAB {
             //@ts-ignore
             const pipeline = engine._getRenderPipeline(fillMode);
             renderPass.setPipeline(pipeline);
-             //@ts-ignore
+            //@ts-ignore
             //const vertexInputs = engine._getVertexInputsToRender();
-             //@ts-ignore
+            //@ts-ignore
             //engine._bindVertexInputs(vertexInputs);
             renderPass.setVertexBuffer(0, GPUvertexBuffer);
-             //@ts-ignore
+            //@ts-ignore
             const bindGroups = engine._getBindGroupsToRender();
-             //@ts-ignore
+            //@ts-ignore
             engine._setRenderBindGroups(bindGroups);
             renderPass.draw(4, 8, 0, 0);
             renderPass.setPipeline(pipeline);
 
-           // this.uniformsV2.forEach((value, uniform) => {
-                //gl.uniform2f(uniform, value.x, value.y);
-           // });
-           // this.uniformsV2.clear();
+            // this.uniformsV2.forEach((value, uniform) => {
+            //gl.uniform2f(uniform, value.x, value.y);
+            // });
+            // this.uniformsV2.clear();
 
-           // engine.applyStates();
+            // engine.applyStates();
             engine._drawCalls.addCount(1, false);
             return this.helper;
 
             //return this;
 
-        }
+        }*/
         this.canvas = <any>scene.getEngine().getRenderingCanvas();
         //this.helper.subMeshes[0]._materialEffect = 
-        
+
         let ctx = new WebGPUShaderProcessingContext();
         ctx.availableUBOs = {
             'slopeArr': { setIndex: 0, bindingIndex: 0 },
@@ -232,16 +580,16 @@ export class TerrainTool extends UITAB {
             //@ts-ignore
             //engine._uniformsBuffers['facet2Arr'] = new WebGPUDataBuffer(GPUfacet2Buffer);
             //@ts-ignore
-           // engine._uniformsBuffers['uniforms'] = new WebGPUDataBuffer(GPUuniformBuffer);
+            // engine._uniformsBuffers['uniforms'] = new WebGPUDataBuffer(GPUuniformBuffer);
 
-           /* let uniformsBindGroupLayout = device.createBindGroupLayout({
-                bindings: [{
-                    binding: 0,
-                    //@ts-ignore
-                    visibility: GPUShaderStage.VERTEX,
-                    type: "uniform-buffer"
-                }]
-            });*/
+            /* let uniformsBindGroupLayout = device.createBindGroupLayout({
+                 bindings: [{
+                     binding: 0,
+                     //@ts-ignore
+                     visibility: GPUShaderStage.VERTEX,
+                     type: "uniform-buffer"
+                 }]
+             });*/
 
             //@ts-ignore
             effect._pipelineContext.vertexInputs = {
@@ -334,11 +682,7 @@ export class TerrainTool extends UITAB {
                 }],
             });
             effect._pipelineContext.bindGroups = [uniformBindGroup1, uniformBindGroup2];
-            //IS this needed?
-            /*effect._pipelineContext.bindGroupLayouts = [
-                //@ts-ignore
-                effect._pipelineContext.renderPipeline.getBindGroupLayout(0 )
-            ]*/
+
 
             this.helper.isUnIndexed = true;
             //@ts-ignore
@@ -346,9 +690,6 @@ export class TerrainTool extends UITAB {
             //@ts-ignore
             this.helpermaterial._effect = effect;
 
-           /* Object.defineProperty(this.myBox, '_materialEffect', {
-                set: function () { debugger; }
-            });*/
         });
 
         /*let effect=scene.getEngine().createEffect("./shaders/helper", <IEffectCreationOptions>{
@@ -380,56 +721,13 @@ export class TerrainTool extends UITAB {
     private direction = 0;
 
     activate = (): void => {
-        let engine = this.scene.getEngine();
+
         //this.helper.visibility = 1;
         this.myBox.visibility = 1;
+        
         this.addListener("pointermove", this.mouseListener, { lazy: 15 });
         this.scene.registerBeforeRender(this.setTime);
 
-        /*******/
-       /* let gl = this.gl;
-        this.glTexture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-       
-
-        this.glTexture2 = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
-
-
-
-        this.glTexture3 = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
-
-        gl.bindTexture(gl.TEXTURE_2D, null);*/
-       /* (function () {
-            this._options.samplers.push('slopeArr', 'facet1Arr', 'facet2Arr');
-            this._textures = {
-                slopeArr: {
-                    getInternalTexture: () => ({ //https://github.com/BabylonJS/Babylon.js/blob/f287a1ea59027b97cb917850a5079c2e03d8fce4/src/Materials/Textures/internalTexture.ts
-                        _source: 3,
-                        _webGLTexture: me.glTexture
-                    }),
-                    isReady: () => true
-                },
-                facet1Arr: {
-                    getInternalTexture: () => ({
-                        _source: 3,
-                        _webGLTexture: me.glTexture2
-                    }),
-                    isReady: () => true
-                },
-                facet2Arr: {
-                    getInternalTexture: () => ({
-                        _source: 3,
-                        _webGLTexture: me.glTexture3
-                    }),
-                    isReady: () => true
-                }
-            }
-            return this;
-        }).bind(this.helpermaterial)();*/
         Terrain.terrainWorker.subscribe('SubHeights', (v) => {
             /*let width = v.data.endX - v.data.offsetX;
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
@@ -475,7 +773,7 @@ export class TerrainTool extends UITAB {
             if (this._options.uniforms.indexOf("world") !== -1) {
                 let effect = (<Effect>this._effect);
                 this._effect.setMatrix("world", world);
-                me.GPUuniformBuffer.setSubData((2 * 4) + 4 + (16*4), world.m as Float32Array);
+                me.GPUuniformBuffer.setSubData((2 * 4) + 4 + (16 * 4), world.m as Float32Array);
                 //if (effect._cacheMatrix("world", world)) {
                 //engine.setMatrices(effect.getUniform("world"), world.toArray() as Float32Array);
                 // gl.uniformMatrix4fv(effect.getUniform("world"), false, world.toArray() as Float32Array);
@@ -585,13 +883,13 @@ export class TerrainTool extends UITAB {
                 let transformmatrix = this.scene.getTransformMatrix();
                 this.GPUuniformBuffer.setSubData((2 * 4) + 4, transformmatrix.m as Float32Array);
 
-                
+
 
                 /*if (uniformlocation = this.helpermaterial._effect.getUniform("flatPos")) {
                     this.uniformsV2.set(uniformlocation, <{ x: number, y: number }><any>flatPos);
                     debugger;
                 }*/
-                
+
             });
     }
     raise = (): void => {

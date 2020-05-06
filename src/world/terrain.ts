@@ -3,6 +3,7 @@ import { TerraMesh } from "../TerraMesh.js";
 //@ts-ignore
 import glslangModule from 'https://unpkg.com/@webgpu/glslang@0.0.8/dist/web-devel/glslang.js';
 import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
+import { WebGPUEngine } from "../lib/babylon/index.js";
 
 
 interface TerrainMap {
@@ -44,7 +45,7 @@ export class Terrain extends TerraMesh {
         let vdata = await Terrain.terrainWorker.message<TerrainMap, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {url: map});
         return new Terrain(vdata);
     }
-    public createTexture() : Promise<GPUBuffer> {
+    public createTexture(engine: WebGPUEngine) : Promise<GPUBuffer> {
         return new Promise((tres, trej) => {
             this.inited.then(async () => {
                 console.log('creating terrain texture')
@@ -52,10 +53,10 @@ export class Terrain extends TerraMesh {
                 const computeShaderCode = await (await (fetch('../../shaders/webgpu.comp'))).text();
                 
                 //@ts-ignore
-                const adapter = await navigator.gpu.requestAdapter();
-                const device = await adapter.requestDevice();
+                //const adapter = await navigator.gpu.requestAdapter();
+               // const device = await adapter.requestDevice();
 
-
+                const device: GPUDevice = engine._device;
                 // First Matrix
 
                 const slopeArrMatrix = new Int16Array(this.slopeArr.length + 2);
@@ -125,7 +126,7 @@ export class Terrain extends TerraMesh {
                 const bindGroup = device.createBindGroup({
                     //@ts-ignore
                     layout: computePipeline.getBindGroupLayout(0 /* index */),
-                    bindings: [
+                    entries: [
                         {
                             binding: 0,
                             resource: {
@@ -180,19 +181,18 @@ export class Terrain extends TerraMesh {
                 // Submit GPU commands.
                 const gpuCommands = commandEncoder.finish();
                 device.defaultQueue.submit([gpuCommands]);
-                resultMatrixBuffer.destroy();
+                //resultMatrixBuffer.destroy();
+                tres(resultMatrixBuffer);
                 gpuBufferFirstMatrix.destroy();
                 gpuBufferSecondMatrix.destroy();
                 gpuBufferThirdMatrix.destroy();
 
                 // Read buffer.
                 let arrayBuffer: ArrayBuffer = await gpuReadBuffer.mapReadAsync();
-                gpuReadBuffer.unmap();
-                //console.log(arrayBuffer);
                 gpuReadBuffer.label = 'computed';
-                tres(gpuReadBuffer);
-
+                
                 Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
+                gpuReadBuffer.destroy()
             })
         });
     }

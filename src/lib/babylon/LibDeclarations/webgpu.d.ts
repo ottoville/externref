@@ -223,8 +223,7 @@ interface GPUBindGroupBinding {
 
 interface GPUBindGroupDescriptor extends GPUObjectDescriptorBase {
   layout: GPUBindGroupLayout;
-  bindings?: GPUBindGroupBinding[];
-  entries?: GPUBindGroupBinding[];
+  entries: GPUBindGroupBinding[];
 }
 
 interface GPUBindGroupLayoutBinding {
@@ -362,7 +361,7 @@ interface GPULimitsOut {
 
 interface GPUPipelineDescriptorBase {
   label?: string;
-  layout: GPUPipelineLayout;
+  layout?: GPUPipelineLayout;
 }
 
 interface GPUPipelineLayoutDescriptor extends GPUObjectDescriptorBase {
@@ -807,6 +806,7 @@ interface GPURenderBundleEncoderDescriptor
 
 declare class GPURenderPipeline implements GPUObjectBase {
   label: string | undefined;
+  getBindGroupLayout: (number) => GPUBindGroupLayout;
 }
 
 declare class GPUSampler implements GPUObjectBase {

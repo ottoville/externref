@@ -1,6 +1,7 @@
 import { Nullable, DataArray } from "../types";
 import { Engine } from "../Engines/engine";
 import { DataBuffer } from './dataBuffer';
+import { WebGPUConstants } from "../Engines/WebGPU/webgpuConstants";
 
 /**
  * Class used to store data that will be store in GPU memory
@@ -243,7 +244,73 @@ export class VertexBuffer {
             this._instanced = true;
         }
     }
+    public getVertexInputDescriptorFormat(): GPUVertexFormat {
+        switch (this.type) {
+            case VertexBuffer.BYTE:
+                switch (this._size) {
+                    case 2:
+                        return this.normalized ? WebGPUConstants.GPUVertexFormat_char2norm : WebGPUConstants.GPUVertexFormat_char2;
+                    case 4:
+                        return this.normalized ? WebGPUConstants.GPUVertexFormat_char4norm : WebGPUConstants.GPUVertexFormat_char4;
+                }
+            case VertexBuffer.UNSIGNED_BYTE:
+                switch (this._size) {
+                    case 2:
+                        return this.normalized ? WebGPUConstants.GPUVertexFormat_uchar2norm : WebGPUConstants.GPUVertexFormat_uchar2;
+                    case 4:
+                        return this.normalized ? WebGPUConstants.GPUVertexFormat_uchar4norm : WebGPUConstants.GPUVertexFormat_uchar4;
+                }
+            case VertexBuffer.SHORT:
+                switch (this._size) {
+                    case 2:
+                        return this.normalized ? WebGPUConstants.GPUVertexFormat_short2norm : WebGPUConstants.GPUVertexFormat_short2;
+                    case 4:
+                        return this.normalized ? WebGPUConstants.GPUVertexFormat_short4norm : WebGPUConstants.GPUVertexFormat_short4;
+                }
+            case VertexBuffer.UNSIGNED_SHORT:
+                switch (this._size) {
+                    case 2:
+                        return this.normalized ? WebGPUConstants.GPUVertexFormat_ushort2norm : WebGPUConstants.GPUVertexFormat_ushort2;
+                    case 4:
+                        return this.normalized ? WebGPUConstants.GPUVertexFormat_ushort4norm : WebGPUConstants.GPUVertexFormat_ushort4;
+                }
+            case VertexBuffer.INT:
+                switch (this._size) {
+                    case 1:
+                        return WebGPUConstants.GPUVertexFormat_int;
+                    case 2:
+                        return WebGPUConstants.GPUVertexFormat_int2;
+                    case 3:
+                        return WebGPUConstants.GPUVertexFormat_int3;
+                    case 4:
+                        return WebGPUConstants.GPUVertexFormat_int4;
+                }
+            case VertexBuffer.UNSIGNED_INT:
+                switch (this._size) {
+                    case 1:
+                        return WebGPUConstants.GPUVertexFormat_uint;
+                    case 2:
+                        return WebGPUConstants.GPUVertexFormat_uint2;
+                    case 3:
+                        return WebGPUConstants.GPUVertexFormat_uint3;
+                    case 4:
+                        return WebGPUConstants.GPUVertexFormat_uint4;
+                }
+            case VertexBuffer.FLOAT:
+                switch (this._size) {
+                    case 1:
+                        return WebGPUConstants.GPUVertexFormat_float;
+                    case 2:
+                        return WebGPUConstants.GPUVertexFormat_float2;
+                    case 3:
+                        return WebGPUConstants.GPUVertexFormat_float3;
+                    case 4:
+                        return WebGPUConstants.GPUVertexFormat_float4;
+                }
+        }
 
+        throw new Error("Invalid Format '" + this._kind + "'");
+    }
     /**
      * Gets the byte stride.
      */

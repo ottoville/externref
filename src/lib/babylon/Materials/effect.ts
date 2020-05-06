@@ -11,6 +11,9 @@ import { ProcessingOptions, ShaderProcessingContext } from '../Engines/Processor
 import { IMatrixLike, IVector2Like, IVector3Like, IVector4Like, IColor3Like, IColor4Like } from '../Maths/math.like';
 import { ThinEngine } from '../Engines/thinEngine';
 import { IEffectFallbacks } from './iEffectFallbacks';
+import type { WebGPUEngine } from "../Engines/webgpuEngine.js";
+import { WebGPUPipelineContext } from "../Engines/WebGPU/webgpuPipelineContext";
+import { WebGPUConstants } from "../Engines/WebGPU/webgpuConstants";
 
 declare type Engine = import("../Engines/engine").Engine;
 declare type InternalTexture = import("../Materials/Textures/internalTexture").InternalTexture;
@@ -286,16 +289,26 @@ export class Effect implements IDisposable {
             processingContext: this._processingContext
         };
 
-        this._loadShader(vertexSource, "Vertex", "", (vertexCode) => {
-            this._loadShader(fragmentSource, "Fragment", "Pixel", (fragmentCode) => {
-                ShaderProcessor.Process(vertexCode, processorOptions, (migratedVertexCode) => {
-                    processorOptions.isFragment = true;
-                    ShaderProcessor.Process(fragmentCode, processorOptions, (migratedFragmentCode) => {
-                        const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
-                        this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
-                    });
+        let shaderCodes: [string | undefined, string | undefined] = [undefined, undefined];
+        let shadersLoaded = () => {
+            if (shaderCodes[0] && shaderCodes[1]) {
+                processorOptions.isFragment = true;
+                let [migratedVertexCode, fragmentCode] = shaderCodes;
+                ShaderProcessor.Process(fragmentCode, processorOptions, (migratedFragmentCode) => {
+                    const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
+                    this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
                 });
+            }
+        }
+        this._loadShader(vertexSource, "Vertex", "", (vertexCode) => {
+            ShaderProcessor.Process(vertexCode, processorOptions, (migratedVertexCode) => {
+                shaderCodes[0] = migratedVertexCode;
+                shadersLoaded();
             });
+        });
+        this._loadShader(fragmentSource, "Fragment", "Pixel", (fragmentCode) => {
+            shaderCodes[1] = fragmentCode;
+            shadersLoaded();
         });
     }
 
@@ -319,7 +332,64 @@ export class Effect implements IDisposable {
     public get key(): string {
         return this._key;
     }
+    public getPipelineLayout(): GPUPipelineLayout {
+        const bindGroupLayouts: GPUBindGroupLayout[] = [];
+        const webgpuPipelineContext = this._pipelineContext as WebGPUPipelineContext;
 
+        for (let i = 0; i < webgpuPipelineContext.orderedUBOsAndSamplers.length; i++) {
+            const setDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i];
+            if (setDefinition === undefined) {
+                const bindings: GPUBindGroupLayoutBinding[] = [];
+                const uniformsBindGroupLayout = (this._engine as WebGPUEngine).getDevice().createBindGroupLayout({
+                    bindings,
+                });
+                bindGroupLayouts[i] = uniformsBindGroupLayout;
+                continue;
+            }
+
+            const bindings: GPUBindGroupLayoutBinding[] = [];
+            for (let j = 0; j < setDefinition.length; j++) {
+                const bindingDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i][j];
+                if (bindingDefinition === undefined) {
+                    continue;
+                }
+
+                // TODO WEBGPU. Optimize shared samplers visibility for vertex/framgent.
+                if (bindingDefinition.isSampler) {
+                    bindings.push({
+                        binding: j,
+                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
+                        type: WebGPUConstants.GPUBindingType_sampledTexture,
+                        textureDimension: bindingDefinition.textureDimension,
+                        // TODO WEBGPU. Handle texture component type properly.
+                        // textureComponentType?: GPUTextureComponentType,
+                    }, {
+                        // TODO WEBGPU. No Magic + 1 (coming from current 1 texture 1 sampler startegy).
+                        binding: j + 1,
+                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
+                        type: WebGPUConstants.GPUBindingType_sampler
+                    });
+                }
+                else {
+                    bindings.push({
+                        binding: j,
+                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
+                        type: WebGPUConstants.GPUBindingType_uniformBuffer,
+                    });
+                }
+            }
+
+            if (bindings.length > 0) {
+                /*const uniformsBindGroupLayout = (this._engine as WebGPUEngine).getDevice().createBindGroupLayout({
+                    bindings,
+                });*/
+                //bindGroupLayouts[i] = uniformsBindGroupLayout;
+            }
+        }
+
+        webgpuPipelineContext.bindGroupLayouts = bindGroupLayouts;
+        return (this._engine as WebGPUEngine).getDevice().createPipelineLayout({ bindGroupLayouts });
+    }
     /**
      * If the effect has been compiled and prepared.
      * @returns if the effect is compiled and prepared.

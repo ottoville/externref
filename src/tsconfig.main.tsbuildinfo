@@ -305,9 +305,13 @@
         "version": "a20efe9193a7bd06f2e12bb706b53b6bc89a1745982bd05692d0039886a8dd66",
         "signature": "5b54c6456ed30305ced080415e27f7bf6d0df0e884844f6a540c7d06f3ab7a56"
       },
+      "./lib/babylon/engines/webgpu/webgpuconstants.ts": {
+        "version": "0b74bbf046f702138826097ad3790623aaa66a47f2dbd7d6b05237fbaea03f5d",
+        "signature": "09f1164f49b8741734a22f222ef8ee0723f499ab2b84ede96e7823dae1136004"
+      },
       "./lib/babylon/meshes/buffer.ts": {
-        "version": "4447ab38bddcd403253cd84c0062a40165b7228ede45745041c647fd22df3061",
-        "signature": "b35561209db5a1f7fa2c7ab6171df54d61895a8bdd53eb1bc7ba17c96bacd2e1"
+        "version": "256dac0173f6972b1b954e878ea97763bf5972a21c4b1846f33b024d062d7efd",
+        "signature": "b86a5ae76d95531fb136ea4be560c10ddbb342aaf957764cf6e3c664d200c96a"
       },
       "./lib/babylon/collisions/intersectioninfo.ts": {
         "version": "71e57e622961c4af2d51b96bb0fc6318a8d9ee29c5ff8c9ba2b711503b350b1b",
@@ -336,6 +340,62 @@
       "./lib/babylon/maths/math.functions.ts": {
         "version": "e513f92cb36a647c87fabe770bae7f043ca24903d6505d4c2ff367738b3598e7",
         "signature": "155bb3b1ed027bce5da13be98301c751d3cd7f87e4d0e6e96da4253641de6172"
+      },
+      "./lib/babylon/maths/math.axis.ts": {
+        "version": "23965a05eefe1f64e8a215f8e2623803261821d3d5475d4019a445a4d3a43f4d",
+        "signature": "b37a448a15df265723af15e8756a5b852d90de1fe86c1f361b2957a3ba058c6e"
+      },
+      "./lib/babylon/maths/math.frustum.ts": {
+        "version": "06c6566616a93474d483fecc489dfb158041629441f7cb6210dd17c03f5c66ae",
+        "signature": "26756363c4f0dcfa77350b232045433f15c3b8368e27d956828200796c1de447"
+      },
+      "./lib/babylon/maths/math.size.ts": {
+        "version": "2e4b6361399d8fbbf7dd1712d53b2786454117874041b039664fd563a7b41316",
+        "signature": "5dcecc707eec0d169265421f22e64ad56ccb0cb86baf86a4c626232d8ee657f1"
+      },
+      "./lib/babylon/maths/math.vertexformat.ts": {
+        "version": "be7f23187d0c0f51927b63a9be3021af1ef273249880a1d53e4d5c8bbcbef980",
+        "signature": "b21ab7086a1f8edd09689936fa2d3690743da9bfc908bad425bc13dd135c921d"
+      },
+      "./lib/babylon/maths/math.ts": {
+        "version": "ab4e824995b94edf6bcfdc33f5d92a8f1186e49b82b0416ce40c56d92de21a14",
+        "signature": "ab4e824995b94edf6bcfdc33f5d92a8f1186e49b82b0416ce40c56d92de21a14"
+      },
+      "./lib/babylon/engines/instancingattributeinfo.ts": {
+        "version": "679f675f27f2481063b6424002fe18e9e92020e9dee918efc21efff2e1d246b1",
+        "signature": "0a341b76d24642b23a00f9f73c7ed4ec2c7dca475f67a29ad6fab105de815b56"
+      },
+      "./lib/babylon/materials/ieffectfallbacks.ts": {
+        "version": "0501a5737e0918b80987ab620569f60a05b1e88119c2926a5dfa7b1b8c657286",
+        "signature": "d8952add27bae29aad4bc518be97d9e06c64504296dd4a1a8e2fee76c300c647"
+      },
+      "./lib/babylon/materials/effectfallbacks.ts": {
+        "version": "eb28cc9d58d2ca4fc7eddbe686a2d2c964c89466616fc0515ed5496d42ed172f",
+        "signature": "377a4965c9475c231a20fe577f2fcd607ce9a2f01746526da66c295ad361fb4a"
+      },
+      "./lib/babylon/engines/ipipelinecontext.ts": {
+        "version": "11a78cc8abc20967a23818bb795148ea8799015353e578c10b36d6d98ef325a2",
+        "signature": "85169c111ac4d838b850e2767b6e7363c84a0b704a8c21b5f9e1014d4c211cb7"
+      },
+      "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts": {
+        "version": "8b888b1c0e46868074a7949d17bc8431c0129ca8941db8dd76465c317abcc6dc",
+        "signature": "6889b1cf7e8e32071129d5c59566a175f9b2a678a85ad8fccb9f5dc2c2b6e6a9"
+      },
+      "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts": {
+        "version": "a69bba66fea7dc782499127cd6548c63926080abda2d3161425b33337c8c6617",
+        "signature": "928c1ec18d4a27486ea482837598af135ff6b169ce50721a848a42ca0e960aa7"
+      },
+      "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts": {
+        "version": "ded6030cb46d90a0d779d003357b1ccae2cfe669fe0bccb6eaef0b5e448b5eb4",
+        "signature": "cf650db163b0ace6cb5c6f6e0bdf022c419b7578e99e089c0598fb5174e07276"
+      },
+      "./lib/babylon/engines/webgpu/webgpushaderprocessors.ts": {
+        "version": "ba12c065a68f9140046c37f85464b410385903c5dffd57c4ae74ade79b0dd266",
+        "signature": "1594be047b2eb21abda024c3497af57af6dfc16136eac4d2135c6c11f03f8e85"
+      },
+      "./lib/babylon/engines/webgpuengine.ts": {
+        "version": "c257c6349cc052939cbc3381add19a2e5bbf271ae9458d37088d663df22a5901",
+        "signature": "74ca6651e9698f204f3adbcfaaa76a790384489dc1da5b8ab69937cf3ddae461"
       },
       "./lib/babylon/misc/iinspectable.ts": {
         "version": "6b638256988d250cc3579ccedd8bab81146d88481023186ae4eed21f70bd55c4",
@@ -437,10 +497,6 @@
         "version": "a9a9d671acdd2a2956770addc680a33bc1b62e60a0beabac2e54878459d822a2",
         "signature": "567ce8a9dbf29f90a3b148bff1550bd4423da83308eb9cf6e0ce93cad5864e7c"
       },
-      "./lib/babylon/maths/math.axis.ts": {
-        "version": "23965a05eefe1f64e8a215f8e2623803261821d3d5475d4019a445a4d3a43f4d",
-        "signature": "b37a448a15df265723af15e8756a5b852d90de1fe86c1f361b2957a3ba058c6e"
-      },
       "./lib/babylon/cameras/targetcamera.ts": {
         "version": "d367fa3ebf19d84a8ff34a5221efee577f90a8652c358389e49fc20e02abfad1",
         "signature": "ec5ebdab4d32c585b6a7da6b0e6446a705cd166d2372858c722252c4bd0a2e06"
@@ -456,14 +512,6 @@
       "./lib/babylon/lights/shadowlight.ts": {
         "version": "9adf7f539abba9c3f3e215595aa164f3c431f3234c24dd806924f590a76811ad",
         "signature": "d6c9c34018865f58c5a96058d87832a6625e12cc5f82112804c0cc097d8c6681"
-      },
-      "./lib/babylon/materials/ieffectfallbacks.ts": {
-        "version": "0501a5737e0918b80987ab620569f60a05b1e88119c2926a5dfa7b1b8c657286",
-        "signature": "d8952add27bae29aad4bc518be97d9e06c64504296dd4a1a8e2fee76c300c647"
-      },
-      "./lib/babylon/materials/effectfallbacks.ts": {
-        "version": "eb28cc9d58d2ca4fc7eddbe686a2d2c964c89466616fc0515ed5496d42ed172f",
-        "signature": "377a4965c9475c231a20fe577f2fcd607ce9a2f01746526da66c295ad361fb4a"
       },
       "./lib/babylon/materials/materialhelper.ts": {
         "version": "072d530da033f8ed4b0df20efcfe2c9509464a7d53c7a990e7a645ddb668ee65",
@@ -504,10 +552,6 @@
       "./lib/babylon/materials/textures/rawtexture.ts": {
         "version": "34b7c2d986d493bcf17f306aec4d8b16b5f05f9fb1345babc0dc667b0faa1578",
         "signature": "ab1e268c28bca9c90cd60fa89194d275bd55daeea5f900795cf4c266fabe53e2"
-      },
-      "./lib/babylon/maths/math.size.ts": {
-        "version": "2e4b6361399d8fbbf7dd1712d53b2786454117874041b039664fd563a7b41316",
-        "signature": "5dcecc707eec0d169265421f22e64ad56ccb0cb86baf86a4c626232d8ee657f1"
       },
       "./lib/babylon/animations/runtimeanimation.ts": {
         "version": "120183d6bab4b1138ca81a4636971d789bfeac3e708f51944669a404110726e5",
@@ -742,7 +786,7 @@
         "signature": "2025d3dd1d0b39c6b59f3fc6b3015e6344d0881b5827516470ccc1b3ec36abe5"
       },
       "./lib/babylon/rendering/renderinggroup.ts": {
-        "version": "bfa9e11aa49d70cd98c7892db2de7c913c0eb65fe6b8c5d43595349bebd2062d",
+        "version": "1458439d6faa6909d58554394fd60fc618cd9d419ab9a6b35c070279eb78c9b4",
         "signature": "7eeb82d840206092a42482cad2dd80129a7ff87fbd8a497689f96acb82e9b4d6"
       },
       "./lib/babylon/rendering/renderingmanager.ts": {
@@ -762,8 +806,8 @@
         "signature": "10a5150fc8ce060e2ce4486f1adb7228f5dad5d7cbf06e7b530a63d02fdf288a"
       },
       "./lib/babylon/meshes/submesh.ts": {
-        "version": "5cd1dffd9bee6fdccd38710918a4464a4115cc1092b97d556db8ea038840a3a2",
-        "signature": "c0673ebfd726556ea9500ca17740b19b3a31ec34798b7f3c782bad1e6dc73923"
+        "version": "b1c326b5830eb3758bfe8ab66356d3c94d337065d44db777266d0ab98225dc4d",
+        "signature": "dd618f05fc0fbc8c860522ab20db174cb443803758aea7cebda2ca8e46955989"
       },
       "./lib/babylon/loading/sceneloaderflags.ts": {
         "version": "d384bb18b8333187af9b4e35b8e35a7bb5720d30ae55ffac0d87098313fb7ec0",
@@ -772,14 +816,6 @@
       "./lib/babylon/engines/enginecapabilities.ts": {
         "version": "f8a073e0a69cd3b9b420c1c6a7c8a71eda25674defc66fc3b52b67920ac28abf",
         "signature": "447e4d272275a0309d21f28ae213db83a9529f8c13c2f0da87dbfbc167d3fb87"
-      },
-      "./lib/babylon/engines/instancingattributeinfo.ts": {
-        "version": "679f675f27f2481063b6424002fe18e9e92020e9dee918efc21efff2e1d246b1",
-        "signature": "0a341b76d24642b23a00f9f73c7ed4ec2c7dca475f67a29ad6fab105de815b56"
-      },
-      "./lib/babylon/engines/ipipelinecontext.ts": {
-        "version": "11a78cc8abc20967a23818bb795148ea8799015353e578c10b36d6d98ef325a2",
-        "signature": "85169c111ac4d838b850e2767b6e7363c84a0b704a8c21b5f9e1014d4c211cb7"
       },
       "./lib/babylon/engines/nullengine.ts": {
         "version": "8de7e7372d242bbd63d6f132c9bf162e5868dd1f150a685a0a45b58e6df50e13",
@@ -800,10 +836,6 @@
       "./lib/babylon/materials/textures/multiviewrendertarget.ts": {
         "version": "bb525c88a4627155c9e441dfb5bcd6f48db55d9f71d1c4eb60a9e27a656f85c6",
         "signature": "12c05afbd095a3b0a22e6b51cb8bb56966a57fca704b73092d27369c6666f167"
-      },
-      "./lib/babylon/maths/math.frustum.ts": {
-        "version": "06c6566616a93474d483fecc489dfb158041629441f7cb6210dd17c03f5c66ae",
-        "signature": "26756363c4f0dcfa77350b232045433f15c3b8368e27d956828200796c1de447"
       },
       "./lib/babylon/engines/extensions/engine.multiview.ts": {
         "version": "c8d3210ca48948f0037cc4bb755ce48a6716248bd4134a7817313e93b3316af6",
@@ -840,38 +872,6 @@
       "./lib/babylon/engines/extensions/index.ts": {
         "version": "6fb05b9471ec30a08c3c129eb28f2157b7fd00827d7557d6baeef1131d851d02",
         "signature": "b3bb0738dc8a5499e7dcb789a19da737afc596d15dc7e22995190e12049953cd"
-      },
-      "./lib/babylon/engines/webgpu/webgpuconstants.ts": {
-        "version": "0b74bbf046f702138826097ad3790623aaa66a47f2dbd7d6b05237fbaea03f5d",
-        "signature": "09f1164f49b8741734a22f222ef8ee0723f499ab2b84ede96e7823dae1136004"
-      },
-      "./lib/babylon/maths/math.vertexformat.ts": {
-        "version": "be7f23187d0c0f51927b63a9be3021af1ef273249880a1d53e4d5c8bbcbef980",
-        "signature": "b21ab7086a1f8edd09689936fa2d3690743da9bfc908bad425bc13dd135c921d"
-      },
-      "./lib/babylon/maths/math.ts": {
-        "version": "ab4e824995b94edf6bcfdc33f5d92a8f1186e49b82b0416ce40c56d92de21a14",
-        "signature": "ab4e824995b94edf6bcfdc33f5d92a8f1186e49b82b0416ce40c56d92de21a14"
-      },
-      "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts": {
-        "version": "8b888b1c0e46868074a7949d17bc8431c0129ca8941db8dd76465c317abcc6dc",
-        "signature": "6889b1cf7e8e32071129d5c59566a175f9b2a678a85ad8fccb9f5dc2c2b6e6a9"
-      },
-      "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts": {
-        "version": "a69bba66fea7dc782499127cd6548c63926080abda2d3161425b33337c8c6617",
-        "signature": "928c1ec18d4a27486ea482837598af135ff6b169ce50721a848a42ca0e960aa7"
-      },
-      "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts": {
-        "version": "ded6030cb46d90a0d779d003357b1ccae2cfe669fe0bccb6eaef0b5e448b5eb4",
-        "signature": "cf650db163b0ace6cb5c6f6e0bdf022c419b7578e99e089c0598fb5174e07276"
-      },
-      "./lib/babylon/engines/webgpu/webgpushaderprocessors.ts": {
-        "version": "ba12c065a68f9140046c37f85464b410385903c5dffd57c4ae74ade79b0dd266",
-        "signature": "1594be047b2eb21abda024c3497af57af6dfc16136eac4d2135c6c11f03f8e85"
-      },
-      "./lib/babylon/engines/webgpuengine.ts": {
-        "version": "c29b06f38cff8e9f796e4353976ff247a1783cb621f7d72e8bbf57c9154ef0ad",
-        "signature": "30bae77c35b0f1bc3abffc72147e47bf76c0254a9f7e8417c4f1024b27bf1c96"
       },
       "./lib/babylon/engines/webgl/webgl2shaderprocessors.ts": {
         "version": "09cf08e732f922d859c77fff4c80bcd296c929737fd69c6a99ccb8ad831564e5",
@@ -946,7 +946,7 @@
         "signature": "5d7f4da23de456d6d23760162ec18ec0062966e912d779b19067a802f135e415"
       },
       "./lib/babylon/meshes/mesh.ts": {
-        "version": "793dbb1038bf660394c599011675fb87a55493fc4e16c51d47465f3966615de5",
+        "version": "31ee7de5fa08b5db2c5d0a3ad2d662137ffc667c8f42af8e61e245bd6a73ce87",
         "signature": "273bf1659e5e0974cfa287c8353738873f06e8ab17c5c2c5a1268c9cc868f7d6"
       },
       "./lib/babylon/cameras/camera.ts": {
@@ -1022,7 +1022,7 @@
         "signature": "5c4274a9c7ebbedaf680ba5403fb3f8e94739aeb414094f3e78250e0e1eb6456"
       },
       "./lib/babylon/materials/uniformbuffer.ts": {
-        "version": "f83f27ad8135452e5e72652eb77da3632bd62be091f38c44813a729657708326",
+        "version": "16e045e7fe74b738b5ab20b9cb4d2b4a0cb85cdcbbeb6815b5a3250565faec33",
         "signature": "9aa78c1699ef05538dd1748f733f1ccea5c98a3f09bafacc468bb32462d4eb78"
       },
       "./lib/babylon/states/depthcullingstate.ts": {
@@ -1110,12 +1110,12 @@
         "signature": "ffc054fe5f3e35483b707881e581db8b26f86e58af8a071b179c3cdce1950770"
       },
       "./lib/babylon/materials/effect.ts": {
-        "version": "27e47bf4996e5e5f5fd25fd748d1dadbb220516526986672b4514579a63e1c2d",
-        "signature": "0119cb31070effab13506b0fa7791b68a23b20107075fdcb8eba6ae29a33a6d6"
+        "version": "743638308349474718ffeb272fdf8ddfc2533b54d04008756d9652eff5edd84e",
+        "signature": "9978d29688daff82cd03e573e86949bfad256f27204db859d32622319fe039f5"
       },
       "./terraeffect.ts": {
-        "version": "6690499f0e67d75a9826cac1b922d03cfc8596c44bec7ba9c640c92d6acff08e",
-        "signature": "8713efc6296f904aedc319638f2a989c5d4c676616cdefcde43bb43a2786fd46"
+        "version": "a30a83bd20e49638b1901b730d98a5322ddd9520137e6e377a05d53ade223dd9",
+        "signature": "77b9053b6b97712f32d265be0d9f88acf546ce0753c2a06ea561fa004caa8a93"
       },
       "./workerthread.ts": {
         "version": "365154fbc2f856a91325deaaf36583a72748018e30893c07dfc11385031b5335",
@@ -1136,10 +1136,6 @@
       "./world/sun.ts": {
         "version": "7041076584ef099628f72ae2c874a6a350ddd5ada4478060a47e7c16b789bccf",
         "signature": "e7fb5c9de06faae672d1c3e4c1640b8ed7cf8602d792f9cb4183b45d35147f41"
-      },
-      "./world/terrain.ts": {
-        "version": "0f82a7d032eb187cf653e20527cbcc856d8b450e9663a979ca393c178adbdb74",
-        "signature": "9d411f092e76309577a27206d14ba75194fbf1eeb3ca84e25feb0f5525135db3"
       },
       "./lib/babylon/audio/sound.ts": {
         "version": "8e54ab54f77673e30869ae3a3dea0eee4bffff8439d40b6cd72cf31d86bcbd92",
@@ -2645,6 +2641,10 @@
         "version": "2ad50dbab7271960b5805bc9a683d0dc2297e7b147cbab822a8af05df427c15f",
         "signature": "5524b38454127f0fa31410de1336d4ded4e6f5af66c56789603aacf2851943b8"
       },
+      "./world/terrain.ts": {
+        "version": "9418ac1da54034d45a0dbf0e6253cd8ced0cb64c182b2194c0767f9c6947ca24",
+        "signature": "9953fdc3eaf32144297251a9d8011ef726441a8bdd5fc5e8f9d27f359e5f5491"
+      },
       "./types/interfaces/index.d.ts": {
         "version": "1e00de25393683b41e7b99c0731c24a9c451009f7e5a199e6f03eff73d8ed7b1",
         "signature": "1e00de25393683b41e7b99c0731c24a9c451009f7e5a199e6f03eff73d8ed7b1"
@@ -2681,12 +2681,8 @@
         "version": "4337150e682ab818bf26c6a575eddb3167c25d3effce8034c6b852b98e1a9bb8",
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
-      "./lib/babylon/legacy/legacy.ts": {
-        "version": "c4f08c7c261455dabf25ca1d023125b247bb2027e42aaa85d806afd67ca9116f",
-        "signature": "dd0ff86cf76b6572e168ff9fc4da15ab43b934a10b6a93f75292814ea6f48678"
-      },
       "./tools/terrain.ts": {
-        "version": "78484aca4f54946c2e6a6aa2e74d4cea0af8a0b75b1219def8bd1cff800b6bd9",
+        "version": "57c10933878ce1589ba374aa4442cdb2f6690b5e84a155ab7fd7ff31df81244e",
         "signature": "11227bc80f7d30f4ebea403264a37108d0c482fa3a72eaddf70ff7509dbf02af"
       },
       "./world/water.ts": {
@@ -2694,7 +2690,7 @@
         "signature": "69b97ca99fd38ece03e3d7693a37d0e9d1956f4b2f73cced6a94e477f9ff391f"
       },
       "./world/scene.ts": {
-        "version": "30ff89249844768d5e281206d05729d600d861cdd42ad529d24a47ce357b45cc",
+        "version": "3dd2dc9850af83bec2602fed43d8ba95d411e3d80c4583469760d280d66828be",
         "signature": "c8fd2160d389ae3fef674440157c8bddc5eda96528145031b0bd3e6ef45665a4"
       },
       "./code.ts": {
@@ -2725,6 +2721,10 @@
         "version": "743da0a8c398591724cb164cb90ff514f23915a4c63e20d2d6db66a580410c4c",
         "signature": "0f65f9a3865670f46e122029d48d5fe23ac87e7c6dec2b7e9a0c587bde5787d9"
       },
+      "./lib/babylon/legacy/legacy.ts": {
+        "version": "c4f08c7c261455dabf25ca1d023125b247bb2027e42aaa85d806afd67ca9116f",
+        "signature": "dd0ff86cf76b6572e168ff9fc4da15ab43b934a10b6a93f75292814ea6f48678"
+      },
       "./lib/babylon/libdeclarations/browser.d.ts": {
         "version": "8ab92328b70f2db4b5f16869781c33f3bd5c577312d380c4116d5d3d670053c6",
         "signature": "8ab92328b70f2db4b5f16869781c33f3bd5c577312d380c4116d5d3d670053c6"
@@ -2738,8 +2738,8 @@
         "signature": "69f5ac00da2accfda2a48b0f04ba78deddff5c1eb3a90843f335fd7720fd45ed"
       },
       "./lib/babylon/libdeclarations/webgpu.d.ts": {
-        "version": "1bac5569ca2ab41bbb714f6d81566b71dc3c874835a289ee65dfb45b7b6b9162",
-        "signature": "1bac5569ca2ab41bbb714f6d81566b71dc3c874835a289ee65dfb45b7b6b9162"
+        "version": "ea377cd7d679773a46fd8fbdcd3903fc274c948e458541082b0e6b9f0db2c66a",
+        "signature": "ea377cd7d679773a46fd8fbdcd3903fc274c948e458541082b0e6b9f0db2c66a"
       },
       "./lib/babylon/libdeclarations/webvr.d.ts": {
         "version": "55ab3c58d63af02efff5f66b787cfed3aa7714baff7436eee007fb0be3bbcf5e",
@@ -3016,7 +3016,8 @@
       "./lib/babylon/meshes/buffer.ts": [
         "./lib/babylon/types.ts",
         "./lib/babylon/engines/engine.ts",
-        "./lib/babylon/meshes/databuffer.ts"
+        "./lib/babylon/meshes/databuffer.ts",
+        "./lib/babylon/engines/webgpu/webgpuconstants.ts"
       ],
       "./lib/babylon/collisions/intersectioninfo.ts": [
         "./lib/babylon/types.ts"
@@ -3059,6 +3060,94 @@
       "./lib/babylon/maths/math.functions.ts": [
         "./lib/babylon/types.ts",
         "./lib/babylon/maths/math.vector.ts"
+      ],
+      "./lib/babylon/maths/math.axis.ts": [
+        "./lib/babylon/maths/math.vector.ts"
+      ],
+      "./lib/babylon/maths/math.frustum.ts": [
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/maths/math.plane.ts"
+      ],
+      "./lib/babylon/maths/math.vertexformat.ts": [
+        "./lib/babylon/maths/math.vector.ts"
+      ],
+      "./lib/babylon/maths/math.ts": [
+        "./lib/babylon/maths/math.axis.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/maths/math.constants.ts",
+        "./lib/babylon/maths/math.frustum.ts",
+        "./lib/babylon/maths/math.path.ts",
+        "./lib/babylon/maths/math.plane.ts",
+        "./lib/babylon/maths/math.size.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.vertexformat.ts",
+        "./lib/babylon/maths/math.viewport.ts"
+      ],
+      "./lib/babylon/materials/ieffectfallbacks.ts": [
+        "./lib/babylon/materials/effect.ts"
+      ],
+      "./lib/babylon/materials/effectfallbacks.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/materials/ieffectfallbacks.ts",
+        "./lib/babylon/materials/effect.ts",
+        "./lib/babylon/meshes/abstractmesh.ts"
+      ],
+      "./lib/babylon/engines/ipipelinecontext.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/materials/effect.ts",
+        "./lib/babylon/maths/math.like.ts"
+      ],
+      "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts": [
+        "./lib/babylon/engines/processors/shaderprocessingoptions.ts"
+      ],
+      "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts": [
+        "./lib/babylon/engines/ipipelinecontext.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/engines/webgpuengine.ts",
+        "./lib/babylon/materials/textures/internaltexture.ts",
+        "./lib/babylon/materials/effect.ts",
+        "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
+        "./lib/babylon/materials/uniformbuffer.ts",
+        "./lib/babylon/maths/math.like.ts"
+      ],
+      "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts": [
+        "./lib/babylon/meshes/databuffer.ts",
+        "./lib/babylon/types.ts"
+      ],
+      "./lib/babylon/engines/webgpu/webgpushaderprocessors.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/engines/processors/ishaderprocessor.ts",
+        "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
+        "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
+        "./lib/babylon/engines/webgpu/webgpuconstants.ts"
+      ],
+      "./lib/babylon/engines/webgpuengine.ts": [
+        "./lib/babylon/misc/logger.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/maths/math.ts",
+        "./lib/babylon/maths/math.scalar.ts",
+        "./lib/babylon/engines/engine.ts",
+        "./lib/babylon/engines/instancingattributeinfo.ts",
+        "./lib/babylon/materials/textures/rendertargetcreationoptions.ts",
+        "./lib/babylon/materials/textures/internaltexture.ts",
+        "./lib/babylon/materials/effect.ts",
+        "./lib/babylon/materials/effectfallbacks.ts",
+        "./lib/babylon/instrumentation/timetoken.ts",
+        "./lib/babylon/engines/constants.ts",
+        "./lib/babylon/engines/webgpu/webgpuconstants.ts",
+        "./lib/babylon/meshes/buffer.ts",
+        "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
+        "./lib/babylon/engines/ipipelinecontext.ts",
+        "./lib/babylon/meshes/databuffer.ts",
+        "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts",
+        "./lib/babylon/materials/textures/internaltextureloader.ts",
+        "./lib/babylon/materials/textures/basetexture.ts",
+        "./lib/babylon/engines/processors/ishaderprocessor.ts",
+        "./lib/babylon/engines/webgpu/webgpushaderprocessors.ts",
+        "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
+        "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts"
       ],
       "./lib/babylon/misc/timingtools.ts": [
         "./lib/babylon/misc/dommanagement.ts"
@@ -3190,9 +3279,6 @@
         "./lib/babylon/engines/extensions/engine.uniformbuffer.ts",
         "./lib/babylon/misc/dds.ts"
       ],
-      "./lib/babylon/maths/math.axis.ts": [
-        "./lib/babylon/maths/math.vector.ts"
-      ],
       "./lib/babylon/cameras/targetcamera.ts": [
         "./lib/babylon/misc/decorators.ts",
         "./lib/babylon/types.ts",
@@ -3222,15 +3308,6 @@
         "./lib/babylon/lights/light.ts",
         "./lib/babylon/instrumentation/timetoken.ts",
         "./lib/babylon/maths/math.axis.ts"
-      ],
-      "./lib/babylon/materials/ieffectfallbacks.ts": [
-        "./lib/babylon/materials/effect.ts"
-      ],
-      "./lib/babylon/materials/effectfallbacks.ts": [
-        "./lib/babylon/types.ts",
-        "./lib/babylon/materials/ieffectfallbacks.ts",
-        "./lib/babylon/materials/effect.ts",
-        "./lib/babylon/meshes/abstractmesh.ts"
       ],
       "./lib/babylon/materials/materialhelper.ts": [
         "./lib/babylon/misc/logger.ts",
@@ -4203,6 +4280,8 @@
         "./lib/babylon/meshes/databuffer.ts",
         "./lib/babylon/maths/math.functions.ts",
         "./lib/babylon/maths/math.plane.ts",
+        "./lib/babylon/engines/webgpu/webgpuconstants.ts",
+        "./lib/babylon/engines/webgpuengine.ts",
         "./lib/babylon/collisions/collider.ts",
         "./lib/babylon/materials/material.ts",
         "./lib/babylon/materials/materialdefines.ts",
@@ -4213,11 +4292,6 @@
       ],
       "./lib/babylon/loading/sceneloaderflags.ts": [
         "./lib/babylon/engines/constants.ts"
-      ],
-      "./lib/babylon/engines/ipipelinecontext.ts": [
-        "./lib/babylon/types.ts",
-        "./lib/babylon/materials/effect.ts",
-        "./lib/babylon/maths/math.like.ts"
       ],
       "./lib/babylon/engines/nullengine.ts": [
         "./lib/babylon/misc/logger.ts",
@@ -4280,11 +4354,6 @@
         "./lib/babylon/materials/textures/rendertargettexture.ts",
         "./lib/babylon/scene.ts",
         "./lib/babylon/materials/textures/internaltexture.ts"
-      ],
-      "./lib/babylon/maths/math.frustum.ts": [
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/maths/math.plane.ts"
       ],
       "./lib/babylon/engines/extensions/engine.multiview.ts": [
         "./lib/babylon/cameras/camera.ts",
@@ -4412,72 +4481,6 @@
         "./lib/babylon/engines/extensions/engine.webvr.ts",
         "./lib/babylon/engines/extensions/engine.uniformbuffer.ts",
         "./lib/babylon/engines/extensions/engine.views.ts"
-      ],
-      "./lib/babylon/maths/math.vertexformat.ts": [
-        "./lib/babylon/maths/math.vector.ts"
-      ],
-      "./lib/babylon/maths/math.ts": [
-        "./lib/babylon/maths/math.axis.ts",
-        "./lib/babylon/maths/math.color.ts",
-        "./lib/babylon/maths/math.constants.ts",
-        "./lib/babylon/maths/math.frustum.ts",
-        "./lib/babylon/maths/math.path.ts",
-        "./lib/babylon/maths/math.plane.ts",
-        "./lib/babylon/maths/math.size.ts",
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/maths/math.vertexformat.ts",
-        "./lib/babylon/maths/math.viewport.ts"
-      ],
-      "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts": [
-        "./lib/babylon/engines/processors/shaderprocessingoptions.ts"
-      ],
-      "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts": [
-        "./lib/babylon/engines/ipipelinecontext.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/engines/webgpuengine.ts",
-        "./lib/babylon/materials/textures/internaltexture.ts",
-        "./lib/babylon/materials/effect.ts",
-        "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
-        "./lib/babylon/materials/uniformbuffer.ts",
-        "./lib/babylon/maths/math.like.ts"
-      ],
-      "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts": [
-        "./lib/babylon/meshes/databuffer.ts",
-        "./lib/babylon/types.ts"
-      ],
-      "./lib/babylon/engines/webgpu/webgpushaderprocessors.ts": [
-        "./lib/babylon/types.ts",
-        "./lib/babylon/engines/processors/ishaderprocessor.ts",
-        "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
-        "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
-        "./lib/babylon/engines/webgpu/webgpuconstants.ts"
-      ],
-      "./lib/babylon/engines/webgpuengine.ts": [
-        "./lib/babylon/misc/logger.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/scene.ts",
-        "./lib/babylon/maths/math.ts",
-        "./lib/babylon/maths/math.scalar.ts",
-        "./lib/babylon/engines/engine.ts",
-        "./lib/babylon/engines/instancingattributeinfo.ts",
-        "./lib/babylon/materials/textures/rendertargetcreationoptions.ts",
-        "./lib/babylon/materials/textures/internaltexture.ts",
-        "./lib/babylon/materials/effect.ts",
-        "./lib/babylon/materials/effectfallbacks.ts",
-        "./lib/babylon/instrumentation/timetoken.ts",
-        "./lib/babylon/engines/constants.ts",
-        "./lib/babylon/engines/webgpu/webgpuconstants.ts",
-        "./lib/babylon/meshes/buffer.ts",
-        "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
-        "./lib/babylon/engines/ipipelinecontext.ts",
-        "./lib/babylon/meshes/databuffer.ts",
-        "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts",
-        "./lib/babylon/materials/textures/internaltextureloader.ts",
-        "./lib/babylon/materials/textures/basetexture.ts",
-        "./lib/babylon/engines/processors/ishaderprocessor.ts",
-        "./lib/babylon/engines/webgpu/webgpushaderprocessors.ts",
-        "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
-        "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts"
       ],
       "./lib/babylon/engines/webgl/webgl2shaderprocessors.ts": [
         "./lib/babylon/engines/processors/ishaderprocessor.ts"
@@ -4690,7 +4693,8 @@
         "./lib/babylon/maths/math.plane.ts",
         "./lib/babylon/meshes/transformnode.ts",
         "./lib/babylon/misc/canvasgenerator.ts",
-        "./lib/babylon/engines/index.ts",
+        "./lib/babylon/engines/webgpuengine.ts",
+        "./lib/babylon/engines/webgpu/webgpuconstants.ts",
         "./lib/babylon/meshes/linesmesh.ts",
         "./lib/babylon/meshes/instancedmesh.ts",
         "./lib/babylon/meshes/groundmesh.ts",
@@ -5198,6 +5202,9 @@
         "./lib/babylon/maths/math.like.ts",
         "./lib/babylon/engines/thinengine.ts",
         "./lib/babylon/materials/ieffectfallbacks.ts",
+        "./lib/babylon/engines/webgpuengine.ts",
+        "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
+        "./lib/babylon/engines/webgpu/webgpuconstants.ts",
         "./lib/babylon/engines/engine.ts",
         "./lib/babylon/materials/textures/internaltexture.ts",
         "./lib/babylon/materials/textures/basetexture.ts",
@@ -5222,7 +5229,9 @@
         "./lib/babylon/maths/math.like.ts",
         "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
         "./lib/babylon/materials/uniformbuffer.ts",
-        "./lib/babylon/engines/webgpuengine.ts"
+        "./lib/babylon/engines/webgpuengine.ts",
+        "./lib/babylon/engines/webgpu/webgpuconstants.ts",
+        "./lib/babylon/meshes/mesh.ts"
       ],
       "./terramesh.ts": [
         "./workerthread.ts",
@@ -5249,11 +5258,6 @@
         "./lib/babylon/meshes/mesh.ts",
         "./lib/babylon/materials/shadermaterial.ts",
         "./lib/babylon/materials/material.ts"
-      ],
-      "./world/terrain.ts": [
-        "./workerthread.ts",
-        "./terramesh.ts",
-        "./lib/babylon/meshes/buffer.ts"
       ],
       "./lib/babylon/audio/sound.ts": [
         "./lib/babylon/misc/tools.ts",
@@ -9444,6 +9448,12 @@
         "./lib/babylon/misc/index.ts",
         "./lib/babylon/types.ts"
       ],
+      "./world/terrain.ts": [
+        "./workerthread.ts",
+        "./terramesh.ts",
+        "./lib/babylon/meshes/buffer.ts",
+        "./lib/babylon/index.ts"
+      ],
       "./types/interfaces/index.d.ts": [
         "./lib/babylon/index.ts"
       ],
@@ -9534,10 +9544,6 @@
         "./terramesh.ts",
         "./lib/babylon/index.ts"
       ],
-      "./lib/babylon/legacy/legacy.ts": [
-        "./lib/babylon/index.ts",
-        "./lib/babylon/debug/index.ts"
-      ],
       "./tools/terrain.ts": [
         "./uitab.ts",
         "./world/terrain.ts",
@@ -9553,13 +9559,14 @@
         "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
         "./lib/babylon/engines/webgpuengine.ts",
         "./terraeffect.ts",
-        "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts",
-        "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
-        "./lib/babylon/meshes/meshbuilder.ts",
         "./lib/babylon/materials/standardmaterial.ts",
         "./lib/babylon/meshes/mesh.vertexdata.ts",
         "./lib/babylon/meshes/geometry.ts",
-        "./lib/babylon/legacy/legacy.ts"
+        "./lib/babylon/meshes/buffer.ts",
+        "./lib/babylon/materials/materialhelper.ts",
+        "./lib/babylon/materials/imageprocessingconfiguration.ts",
+        "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
+        "./lib/babylon/maths/math.color.ts"
       ],
       "./world/water.ts": [
         "./world/scene.ts",
@@ -9636,6 +9643,10 @@
         "./lib/babylon/engines/processors/shadercodetestnode.ts",
         "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
         "./lib/babylon/engines/processors/shaderprocessor.ts"
+      ],
+      "./lib/babylon/legacy/legacy.ts": [
+        "./lib/babylon/index.ts",
+        "./lib/babylon/debug/index.ts"
       ],
       "./lib/babylon/materials/textures/packer/frame.ts": [
         "./lib/babylon/maths/math.vector.ts"
@@ -9869,6 +9880,80 @@
         "./lib/babylon/types.ts",
         "./lib/babylon/maths/math.vector.ts"
       ],
+      "./lib/babylon/maths/math.axis.ts": [
+        "./lib/babylon/maths/math.vector.ts"
+      ],
+      "./lib/babylon/maths/math.frustum.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.plane.ts"
+      ],
+      "./lib/babylon/maths/math.vertexformat.ts": [
+        "./lib/babylon/maths/math.vector.ts"
+      ],
+      "./lib/babylon/maths/math.ts": [
+        "./lib/babylon/maths/math.axis.ts",
+        "./lib/babylon/maths/math.color.ts",
+        "./lib/babylon/maths/math.constants.ts",
+        "./lib/babylon/maths/math.frustum.ts",
+        "./lib/babylon/maths/math.path.ts",
+        "./lib/babylon/maths/math.plane.ts",
+        "./lib/babylon/maths/math.size.ts",
+        "./lib/babylon/maths/math.vector.ts",
+        "./lib/babylon/maths/math.vertexformat.ts",
+        "./lib/babylon/maths/math.viewport.ts"
+      ],
+      "./lib/babylon/materials/ieffectfallbacks.ts": [
+        "./lib/babylon/materials/effect.ts"
+      ],
+      "./lib/babylon/materials/effectfallbacks.ts": [
+        "./lib/babylon/meshes/abstractmesh.ts",
+        "./lib/babylon/materials/effect.ts",
+        "./lib/babylon/materials/ieffectfallbacks.ts"
+      ],
+      "./lib/babylon/engines/ipipelinecontext.ts": [
+        "./lib/babylon/materials/effect.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/maths/math.like.ts"
+      ],
+      "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts": [
+        "./lib/babylon/engines/processors/shaderprocessingoptions.ts"
+      ],
+      "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts": [
+        "./lib/babylon/materials/textures/internaltexture.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/engines/webgpuengine.ts",
+        "./lib/babylon/materials/uniformbuffer.ts",
+        "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
+        "./lib/babylon/materials/effect.ts",
+        "./lib/babylon/maths/math.like.ts",
+        "./lib/babylon/engines/ipipelinecontext.ts"
+      ],
+      "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts": [
+        "./lib/babylon/meshes/databuffer.ts"
+      ],
+      "./lib/babylon/engines/webgpu/webgpushaderprocessors.ts": [
+        "./lib/babylon/types.ts",
+        "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
+        "./lib/babylon/engines/processors/ishaderprocessor.ts"
+      ],
+      "./lib/babylon/engines/webgpuengine.ts": [
+        "./lib/babylon/meshes/databuffer.ts",
+        "./lib/babylon/types.ts",
+        "./lib/babylon/engines/processors/ishaderprocessor.ts",
+        "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
+        "./lib/babylon/maths/math.ts",
+        "./lib/babylon/materials/effect.ts",
+        "./lib/babylon/engines/instancingattributeinfo.ts",
+        "./lib/babylon/meshes/buffer.ts",
+        "./lib/babylon/engines/ipipelinecontext.ts",
+        "./lib/babylon/materials/textures/internaltexture.ts",
+        "./lib/babylon/scene.ts",
+        "./lib/babylon/materials/textures/internaltextureloader.ts",
+        "./lib/babylon/materials/textures/basetexture.ts",
+        "./lib/babylon/materials/textures/rendertargetcreationoptions.ts",
+        "./lib/babylon/engines/engine.ts"
+      ],
       "./lib/babylon/misc/retrystrategy.ts": [
         "./lib/babylon/misc/webrequest.ts"
       ],
@@ -9942,9 +10027,6 @@
         "./lib/babylon/engines/depthtexturecreationoptions.ts",
         "./lib/babylon/engines/thinengine.ts"
       ],
-      "./lib/babylon/maths/math.axis.ts": [
-        "./lib/babylon/maths/math.vector.ts"
-      ],
       "./lib/babylon/cameras/targetcamera.ts": [
         "./lib/babylon/maths/math.vector.ts",
         "./lib/babylon/scene.ts",
@@ -9962,14 +10044,6 @@
         "./lib/babylon/scene.ts",
         "./lib/babylon/meshes/abstractmesh.ts",
         "./lib/babylon/cameras/camera.ts"
-      ],
-      "./lib/babylon/materials/ieffectfallbacks.ts": [
-        "./lib/babylon/materials/effect.ts"
-      ],
-      "./lib/babylon/materials/effectfallbacks.ts": [
-        "./lib/babylon/meshes/abstractmesh.ts",
-        "./lib/babylon/materials/effect.ts",
-        "./lib/babylon/materials/ieffectfallbacks.ts"
       ],
       "./lib/babylon/materials/materialhelper.ts": [
         "./lib/babylon/materials/effect.ts",
@@ -10598,11 +10672,6 @@
         "./lib/babylon/culling/ray.ts",
         "./lib/babylon/collisions/intersectioninfo.ts"
       ],
-      "./lib/babylon/engines/ipipelinecontext.ts": [
-        "./lib/babylon/materials/effect.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/maths/math.like.ts"
-      ],
       "./lib/babylon/engines/nullengine.ts": [
         "./lib/babylon/types.ts",
         "./lib/babylon/meshes/databuffer.ts",
@@ -10632,11 +10701,6 @@
       "./lib/babylon/materials/textures/multiviewrendertarget.ts": [
         "./lib/babylon/scene.ts",
         "./lib/babylon/materials/textures/rendertargettexture.ts"
-      ],
-      "./lib/babylon/maths/math.frustum.ts": [
-        "./lib/babylon/types.ts",
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/maths/math.plane.ts"
       ],
       "./lib/babylon/engines/extensions/engine.multiview.ts": [
         "./lib/babylon/materials/textures/internaltexture.ts",
@@ -10702,59 +10766,6 @@
         "./lib/babylon/engines/extensions/engine.webvr.ts",
         "./lib/babylon/engines/extensions/engine.uniformbuffer.ts",
         "./lib/babylon/engines/extensions/engine.views.ts"
-      ],
-      "./lib/babylon/maths/math.vertexformat.ts": [
-        "./lib/babylon/maths/math.vector.ts"
-      ],
-      "./lib/babylon/maths/math.ts": [
-        "./lib/babylon/maths/math.axis.ts",
-        "./lib/babylon/maths/math.color.ts",
-        "./lib/babylon/maths/math.constants.ts",
-        "./lib/babylon/maths/math.frustum.ts",
-        "./lib/babylon/maths/math.path.ts",
-        "./lib/babylon/maths/math.plane.ts",
-        "./lib/babylon/maths/math.size.ts",
-        "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/maths/math.vertexformat.ts",
-        "./lib/babylon/maths/math.viewport.ts"
-      ],
-      "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts": [
-        "./lib/babylon/engines/processors/shaderprocessingoptions.ts"
-      ],
-      "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts": [
-        "./lib/babylon/materials/textures/internaltexture.ts",
-        "./lib/babylon/types.ts",
-        "./lib/babylon/engines/webgpuengine.ts",
-        "./lib/babylon/materials/uniformbuffer.ts",
-        "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
-        "./lib/babylon/materials/effect.ts",
-        "./lib/babylon/maths/math.like.ts",
-        "./lib/babylon/engines/ipipelinecontext.ts"
-      ],
-      "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts": [
-        "./lib/babylon/meshes/databuffer.ts"
-      ],
-      "./lib/babylon/engines/webgpu/webgpushaderprocessors.ts": [
-        "./lib/babylon/types.ts",
-        "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
-        "./lib/babylon/engines/processors/ishaderprocessor.ts"
-      ],
-      "./lib/babylon/engines/webgpuengine.ts": [
-        "./lib/babylon/types.ts",
-        "./lib/babylon/engines/processors/ishaderprocessor.ts",
-        "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
-        "./lib/babylon/maths/math.ts",
-        "./lib/babylon/meshes/databuffer.ts",
-        "./lib/babylon/materials/effect.ts",
-        "./lib/babylon/engines/instancingattributeinfo.ts",
-        "./lib/babylon/meshes/buffer.ts",
-        "./lib/babylon/engines/ipipelinecontext.ts",
-        "./lib/babylon/materials/textures/internaltexture.ts",
-        "./lib/babylon/scene.ts",
-        "./lib/babylon/materials/textures/internaltextureloader.ts",
-        "./lib/babylon/materials/textures/basetexture.ts",
-        "./lib/babylon/materials/textures/rendertargetcreationoptions.ts",
-        "./lib/babylon/engines/engine.ts"
       ],
       "./lib/babylon/engines/webgl/webgl2shaderprocessors.ts": [
         "./lib/babylon/engines/processors/ishaderprocessor.ts"
@@ -11287,10 +11298,6 @@
       "./world/sun.ts": [
         "./lib/babylon/maths/math.vector.ts",
         "./world/scene.ts"
-      ],
-      "./world/terrain.ts": [
-        "./workerthread.ts",
-        "./terramesh.ts"
       ],
       "./lib/babylon/audio/sound.ts": [
         "./lib/babylon/misc/observable.ts",
@@ -14007,6 +14014,11 @@
         "./lib/babylon/misc/index.ts",
         "./lib/babylon/types.ts"
       ],
+      "./world/terrain.ts": [
+        "./workerthread.ts",
+        "./lib/babylon/index.ts",
+        "./terramesh.ts"
+      ],
       "./types/interfaces/index.d.ts": [
         "./lib/babylon/index.ts"
       ],
@@ -14072,9 +14084,6 @@
         "./lib/babylon/index.ts",
         "./uitab.ts"
       ],
-      "./lib/babylon/legacy/legacy.ts": [
-        "./lib/babylon/index.ts"
-      ],
       "./tools/terrain.ts": [
         "./lib/babylon/scene.ts",
         "./world/terrain.ts",
@@ -14124,6 +14133,9 @@
         "./lib/babylon/engines/processors/shadercodetestnode.ts",
         "./lib/babylon/engines/processors/shaderprocessingoptions.ts",
         "./lib/babylon/engines/processors/shaderprocessor.ts"
+      ],
+      "./lib/babylon/legacy/legacy.ts": [
+        "./lib/babylon/index.ts"
       ],
       "./lib/babylon/materials/textures/packer/frame.ts": [
         "./lib/babylon/maths/math.vector.ts"
@@ -14337,6 +14349,7 @@
       "./lib/babylon/misc/smartarray.ts",
       "./lib/babylon/cameras/camerainputsmanager.ts",
       "./lib/babylon/meshes/databuffer.ts",
+      "./lib/babylon/engines/webgpu/webgpuconstants.ts",
       "./lib/babylon/meshes/buffer.ts",
       "./lib/babylon/collisions/intersectioninfo.ts",
       "./lib/babylon/maths/math.plane.ts",
@@ -14345,6 +14358,20 @@
       "./lib/babylon/collisions/collider.ts",
       "./lib/babylon/culling/boundinginfo.ts",
       "./lib/babylon/maths/math.functions.ts",
+      "./lib/babylon/maths/math.axis.ts",
+      "./lib/babylon/maths/math.frustum.ts",
+      "./lib/babylon/maths/math.size.ts",
+      "./lib/babylon/maths/math.vertexformat.ts",
+      "./lib/babylon/maths/math.ts",
+      "./lib/babylon/engines/instancingattributeinfo.ts",
+      "./lib/babylon/materials/ieffectfallbacks.ts",
+      "./lib/babylon/materials/effectfallbacks.ts",
+      "./lib/babylon/engines/ipipelinecontext.ts",
+      "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
+      "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
+      "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts",
+      "./lib/babylon/engines/webgpu/webgpushaderprocessors.ts",
+      "./lib/babylon/engines/webgpuengine.ts",
       "./lib/babylon/misc/iinspectable.ts",
       "./lib/babylon/misc/timingtools.ts",
       "./lib/babylon/misc/instantiationtools.ts",
@@ -14370,13 +14397,10 @@
       "./lib/babylon/materials/colorcurves.ts",
       "./lib/babylon/materials/imageprocessingconfiguration.ts",
       "./lib/babylon/engines/extensions/engine.rendertarget.ts",
-      "./lib/babylon/maths/math.axis.ts",
       "./lib/babylon/cameras/targetcamera.ts",
       "./lib/babylon/events/keyboardevents.ts",
       "./lib/babylon/cameras/inputs/freecamerakeyboardmoveinput.ts",
       "./lib/babylon/lights/shadowlight.ts",
-      "./lib/babylon/materials/ieffectfallbacks.ts",
-      "./lib/babylon/materials/effectfallbacks.ts",
       "./lib/babylon/materials/materialhelper.ts",
       "./lib/babylon/lights/shadows/shadowgenerator.ts",
       "./lib/babylon/lights/light.ts",
@@ -14387,7 +14411,6 @@
       "./lib/babylon/culling/ray.ts",
       "./lib/babylon/engines/extensions/engine.rawtexture.ts",
       "./lib/babylon/materials/textures/rawtexture.ts",
-      "./lib/babylon/maths/math.size.ts",
       "./lib/babylon/animations/runtimeanimation.ts",
       "./lib/babylon/animations/animatable.ts",
       "./lib/babylon/animations/animationpropertiesoverride.ts",
@@ -14454,14 +14477,11 @@
       "./lib/babylon/meshes/submesh.ts",
       "./lib/babylon/loading/sceneloaderflags.ts",
       "./lib/babylon/engines/enginecapabilities.ts",
-      "./lib/babylon/engines/instancingattributeinfo.ts",
-      "./lib/babylon/engines/ipipelinecontext.ts",
       "./lib/babylon/engines/nullengine.ts",
       "./lib/babylon/engines/extensions/engine.alpha.ts",
       "./lib/babylon/engines/extensions/engine.occlusionquery.ts",
       "./lib/babylon/engines/extensions/engine.transformfeedback.ts",
       "./lib/babylon/materials/textures/multiviewrendertarget.ts",
-      "./lib/babylon/maths/math.frustum.ts",
       "./lib/babylon/engines/extensions/engine.multiview.ts",
       "./lib/babylon/engines/extensions/engine.videotexture.ts",
       "./lib/babylon/materials/textures/multirendertarget.ts",
@@ -14471,14 +14491,6 @@
       "./lib/babylon/engines/extensions/engine.uniformbuffer.ts",
       "./lib/babylon/engines/extensions/engine.views.ts",
       "./lib/babylon/engines/extensions/index.ts",
-      "./lib/babylon/engines/webgpu/webgpuconstants.ts",
-      "./lib/babylon/maths/math.vertexformat.ts",
-      "./lib/babylon/maths/math.ts",
-      "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
-      "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
-      "./lib/babylon/meshes/webgpu/webgpudatabuffer.ts",
-      "./lib/babylon/engines/webgpu/webgpushaderprocessors.ts",
-      "./lib/babylon/engines/webgpuengine.ts",
       "./lib/babylon/engines/webgl/webgl2shaderprocessors.ts",
       "./lib/babylon/materials/textures/videotexture.ts",
       "./lib/babylon/maths/sphericalpolynomial.ts",
@@ -14497,6 +14509,7 @@
       "./lib/babylon/physics/physicsraycastresult.ts",
       "./lib/babylon/physics/iphysicsengine.ts",
       "./lib/babylon/physics/physicsimpostor.ts",
+      "./lib/babylon/meshes/mesh.ts",
       "./lib/babylon/cameras/camera.ts",
       "./lib/babylon/meshes/builders/discbuilder.ts",
       "./lib/babylon/materials/fresnelparameters.ts",
@@ -14515,7 +14528,6 @@
       "./lib/babylon/misc/decorators.ts",
       "./lib/babylon/misc/guid.ts",
       "./lib/babylon/materials/textures/basetexture.ts",
-      "./lib/babylon/materials/uniformbuffer.ts",
       "./lib/babylon/states/depthcullingstate.ts",
       "./lib/babylon/states/stencilstate.ts",
       "./lib/babylon/states/alphacullingstate.ts",
@@ -14544,7 +14556,6 @@
       "./terraray.ts",
       "./uitab.ts",
       "./world/sun.ts",
-      "./world/terrain.ts",
       "./lib/babylon/audio/sound.ts",
       "./lib/babylon/actions/directaudioactions.ts",
       "./lib/babylon/actions/interpolatevalueaction.ts",
@@ -14921,6 +14932,7 @@
       "./lib/babylon/misc/datareader.ts",
       "./lib/babylon/misc/index.ts",
       "./lib/babylon/index.ts",
+      "./world/terrain.ts",
       "./types/interfaces/index.d.ts",
       "./plants/plants.ts",
       "./paintground/paintground.ts",
@@ -14930,7 +14942,6 @@
       "./tools/zones.ts",
       "./tools/camera.ts",
       "./tools/buildings.ts",
-      "./lib/babylon/legacy/legacy.ts",
       "./world/water.ts",
       "./world/scene.ts",
       "./code.ts",
@@ -14940,6 +14951,7 @@
       "./lib/babylon/engines/processors/expressions/operators/index.ts",
       "./lib/babylon/engines/processors/expressions/index.ts",
       "./lib/babylon/engines/processors/index.ts",
+      "./lib/babylon/legacy/legacy.ts",
       "./lib/babylon/libdeclarations/browser.d.ts",
       "./lib/babylon/libdeclarations/webgl.d.ts",
       "./lib/babylon/libdeclarations/webgl2.d.ts",
@@ -14987,7 +14999,7 @@
       "./rustwasm/hello_wasm_bg.d.ts",
       "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./lib/babylon/meshes/mesh.ts",
+      "./lib/babylon/materials/uniformbuffer.ts",
       "./tools/terrain.ts"
     ]
   },

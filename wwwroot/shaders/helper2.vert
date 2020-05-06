@@ -1,265 +1,152 @@
-﻿#include<__decl__defaultVertex>
-// Attributes
+﻿layout(set = 2, binding = 0) uniform LeftOver {
+        mat4 world;
+};
 
+precision highp float;
+layout(std140, column_major) uniform;
+layout(set = 1, binding = 0) uniform Material {
+    vec4 diffuseLeftColor;
+    vec4 diffuseRightColor;
+    vec4 opacityParts;
+    vec4 reflectionLeftColor;
+    vec4 reflectionRightColor;
+    vec4 refractionLeftColor;
+    vec4 refractionRightColor;
+    vec4 emissiveLeftColor;
+    vec4 emissiveRightColor;
+    vec2 vDiffuseInfos;
+    vec2 vAmbientInfos;
+    vec2 vOpacityInfos;
+    vec2 vReflectionInfos;
+    vec3 vReflectionPosition;
+    vec3 vReflectionSize;
+    vec2 vEmissiveInfos;
+    vec2 vLightmapInfos;
+    vec2 vSpecularInfos;
+    vec3 vBumpInfos;
+    mat4 diffuseMatrix;
+    mat4 ambientMatrix;
+    mat4 opacityMatrix;
+    mat4 reflectionMatrix;
+    mat4 emissiveMatrix;
+    mat4 lightmapMatrix;
+    mat4 specularMatrix;
+    mat4 bumpMatrix;
+    vec2 vTangentSpaceParams;
+    float pointSize;
+    mat4 refractionMatrix;
+    vec4 vRefractionInfos;
+    vec4 vSpecularColor;
+    vec3 vEmissiveColor;
+    float visibility;
+    vec4 vDiffuseColor;
+};
+layout(set = 0, binding = 0) uniform Scene {
+    mat4 viewProjection;
+    mat4 view;
+    vec4 viewPosition;
+};
 #define CUSTOM_VERTEX_BEGIN
 
-attribute vec3 position;
-#ifdef NORMAL
-attribute vec3 normal;
-#endif
-#ifdef TANGENT
-attribute vec4 tangent;
-#endif
-#ifdef UV1
-attribute vec2 uv;
-#endif
-#ifdef UV2
-attribute vec2 uv2;
-#endif
-#ifdef VERTEXCOLOR
-attribute vec4 color;
-#endif
+layout(location = 0) in vec3 position;
+const float PI = 3.1415926535897932384626433832795;
+const float LinearEncodePowerApprox = 2.2;
+const float GammaEncodePowerApprox = 1.0 / LinearEncodePowerApprox;
+const vec3 LuminanceEncodeApprox = vec3(0.2126, 0.7152, 0.0722);
+const float Epsilon = 0.0000001;
+#define saturate(x)         clamp(x, 0.0, 1.0)
 
-#include<helperFunctions>
+#define absEps(x)           abs(x) + Epsilon
 
-#include<bonesDeclaration>
+#define maxEps(x)           max(x, Epsilon)
 
-// Uniforms
-#include<instancesDeclaration>
+#define saturateEps(x)      clamp(x, Epsilon, 1.0)
 
-#ifdef MAINUV1
-	varying vec2 vMainUV1;
-#endif
+mat3 transposeMat3(mat3 inMatrix) {
+    vec3 i0 = inMatrix[0];
+    vec3 i1 = inMatrix[1];
+    vec3 i2 = inMatrix[2];
+    mat3 outMatrix = mat3(
+        vec3(i0.x, i1.x, i2.x),
+        vec3(i0.y, i1.y, i2.y),
+        vec3(i0.z, i1.z, i2.z)
+    );
+    return outMatrix;
+}
+mat3 inverseMat3(mat3 inMatrix) {
+    float a00 = inMatrix[0][0], a01 = inMatrix[0][1], a02 = inMatrix[0][2];
+    float a10 = inMatrix[1][0], a11 = inMatrix[1][1], a12 = inMatrix[1][2];
+    float a20 = inMatrix[2][0], a21 = inMatrix[2][1], a22 = inMatrix[2][2];
+    float b01 = a22 * a11 - a12 * a21;
+    float b11 = -a22 * a10 + a12 * a20;
+    float b21 = a21 * a10 - a11 * a20;
+    float det = a00 * b01 + a01 * b11 + a02 * b21;
+    return mat3(b01, (-a22 * a01 + a02 * a21), (a12 * a01 - a02 * a11),
+    b11, (a22 * a00 - a02 * a20), (-a12 * a00 + a02 * a10),
+    b21, (-a21 * a00 + a01 * a20), (a11 * a00 - a01 * a10)) / det;
+}
+vec3 toLinearSpace(vec3 color)
+{
+    return pow(color, vec3(LinearEncodePowerApprox));
+}
+vec3 toGammaSpace(vec3 color)
+{
+    return pow(color, vec3(GammaEncodePowerApprox));
+}
+float toGammaSpace(float color)
+{
+    return pow(color, GammaEncodePowerApprox);
+}
+float square(float value)
+{
+    return value * value;
+}
+float pow5(float value) {
+    float sq = value * value;
+    return sq * sq * value;
+}
+float getLuminance(vec3 color)
+{
+return clamp(dot(color, LuminanceEncodeApprox), 0., 1.);
+}
+float getRand(vec2 seed) {
+    return fract(sin(dot(seed.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+float dither(vec2 seed, float varianceAmount) {
+    float rand = getRand(seed);
+    float dither = mix(-varianceAmount/255.0, varianceAmount/255.0, rand);
+    return dither;
+}
+const float rgbdMaxRange = 255.0;
+vec4 toRGBD(vec3 color) {
+    float maxRGB = maxEps(max(color.r, max(color.g, color.b)));
+    float D      = max(rgbdMaxRange / maxRGB, 1.);
+    D            = clamp(floor(D) / 255.0, 0., 1.);
+    vec3 rgb = color.rgb * D;
+    rgb = toGammaSpace(rgb);
+    return vec4(rgb, D);
+}
+vec3 fromRGBD(vec4 rgbd) {
+    rgbd.rgb = toLinearSpace(rgbd.rgb);
+    return rgbd.rgb / rgbd.a;
+}
 
-#ifdef MAINUV2
-	varying vec2 vMainUV2;
-#endif
-
-#if defined(DIFFUSE) && DIFFUSEDIRECTUV == 0
-varying vec2 vDiffuseUV;
-#endif
-
-#if defined(AMBIENT) && AMBIENTDIRECTUV == 0
-varying vec2 vAmbientUV;
-#endif
-
-#if defined(OPACITY) && OPACITYDIRECTUV == 0
-varying vec2 vOpacityUV;
-#endif
-
-#if defined(EMISSIVE) && EMISSIVEDIRECTUV == 0
-varying vec2 vEmissiveUV;
-#endif
-
-#if defined(LIGHTMAP) && LIGHTMAPDIRECTUV == 0
-varying vec2 vLightmapUV;
-#endif
-
-#if defined(SPECULAR) && defined(SPECULARTERM) && SPECULARDIRECTUV == 0
-varying vec2 vSpecularUV;
-#endif
-
-#if defined(BUMP) && BUMPDIRECTUV == 0
-varying vec2 vBumpUV;
-#endif
-
-// Output
-varying vec3 vPositionW;
-#ifdef NORMAL
-varying vec3 vNormalW;
-#endif
-
-#ifdef VERTEXCOLOR
-varying vec4 vColor;
-#endif
-
-#include<bumpVertexDeclaration>
-
-#include<clipPlaneVertexDeclaration>
-
-#include<fogVertexDeclaration>
-#include<__decl__lightFragment>[0..maxSimultaneousLights]
-
-#include<morphTargetsVertexGlobalDeclaration>
-#include<morphTargetsVertexDeclaration>[0..maxSimultaneousMorphTargets]
-
-#ifdef REFLECTIONMAP_SKYBOX
-varying vec3 vPositionUVW;
-#endif
-
-#if defined(REFLECTIONMAP_EQUIRECTANGULAR_FIXED) || defined(REFLECTIONMAP_MIRROREDEQUIRECTANGULAR_FIXED)
-varying vec3 vDirectionW;
-#endif
-
-#include<logDepthDeclaration>
+layout(location = 0) out vec3 vPositionW;
 #define CUSTOM_VERTEX_DEFINITIONS
 
 void main(void) {
-	
-	#define CUSTOM_VERTEX_MAIN_BEGIN
-	
-	vec3 positionUpdated = position;
-#ifdef NORMAL	
-	vec3 normalUpdated = normal;
-#endif
-#ifdef TANGENT
-	vec4 tangentUpdated = tangent;
-#endif
-#ifdef UV1
-	vec2 uvUpdated = uv;
-#endif
-
-#include<morphTargetsVertex>[0..maxSimultaneousMorphTargets]
-
-#ifdef REFLECTIONMAP_SKYBOX
-	#ifdef REFLECTIONMAP_SKYBOX_TRANSFORMED
-		vPositionUVW = (reflectionMatrix * vec4(positionUpdated, 1.0)).xyz;
-	#else
-		vPositionUVW = positionUpdated;
-	#endif
-#endif 
-
+#define CUSTOM_VERTEX_MAIN_BEGIN
+vec3 positionUpdated = position;
 #define CUSTOM_VERTEX_UPDATE_POSITION
 
 #define CUSTOM_VERTEX_UPDATE_NORMAL
 
-#include<instancesVertex>
-#include<bonesVertex>
-
-	vec4 worldPos = finalWorld * vec4(positionUpdated, 1.0);
-
-#ifdef MULTIVIEW
-	if (gl_ViewID_OVR == 0u) {
-		gl_Position = viewProjection * worldPos;
-	} else {
-		gl_Position = viewProjectionR * worldPos;
-	}
-#else
-	gl_Position = viewProjection * worldPos;
-#endif	
-
-	vPositionW = vec3(worldPos);
-
-#ifdef NORMAL
-	mat3 normalWorld = mat3(finalWorld);
-
-	#ifdef NONUNIFORMSCALING
-		normalWorld = transposeMat3(inverseMat3(normalWorld));
-	#endif
-
-	vNormalW = normalize(normalWorld * normalUpdated);
-#endif
-
-#if defined(REFLECTIONMAP_EQUIRECTANGULAR_FIXED) || defined(REFLECTIONMAP_MIRROREDEQUIRECTANGULAR_FIXED)
-	vDirectionW = normalize(vec3(finalWorld * vec4(positionUpdated, 0.0)));
-#endif
-
-	// Texture coordinates
-#ifndef UV1
-	vec2 uvUpdated = vec2(0., 0.);
-#endif
-#ifndef UV2
-	vec2 uv2 = vec2(0., 0.);
-#endif
-
-#ifdef MAINUV1
-	vMainUV1 = uvUpdated;
-#endif
-
-#ifdef MAINUV2
-	vMainUV2 = uv2;
-#endif
-
-#if defined(DIFFUSE) && DIFFUSEDIRECTUV == 0
-	if (vDiffuseInfos.x == 0.)
-	{
-		vDiffuseUV = vec2(diffuseMatrix * vec4(uvUpdated, 1.0, 0.0));
-	}
-	else
-	{
-		vDiffuseUV = vec2(diffuseMatrix * vec4(uv2, 1.0, 0.0));
-	}
-#endif
-
-#if defined(AMBIENT) && AMBIENTDIRECTUV == 0
-	if (vAmbientInfos.x == 0.)
-	{
-		vAmbientUV = vec2(ambientMatrix * vec4(uvUpdated, 1.0, 0.0));
-	}
-	else
-	{
-		vAmbientUV = vec2(ambientMatrix * vec4(uv2, 1.0, 0.0));
-	}
-#endif
-
-#if defined(OPACITY) && OPACITYDIRECTUV == 0
-	if (vOpacityInfos.x == 0.)
-	{
-		vOpacityUV = vec2(opacityMatrix * vec4(uvUpdated, 1.0, 0.0));
-	}
-	else
-	{
-		vOpacityUV = vec2(opacityMatrix * vec4(uv2, 1.0, 0.0));
-	}
-#endif
-
-#if defined(EMISSIVE) && EMISSIVEDIRECTUV == 0
-	if (vEmissiveInfos.x == 0.)
-	{
-		vEmissiveUV = vec2(emissiveMatrix * vec4(uvUpdated, 1.0, 0.0));
-	}
-	else
-	{
-		vEmissiveUV = vec2(emissiveMatrix * vec4(uv2, 1.0, 0.0));
-	}
-#endif
-
-#if defined(LIGHTMAP) && LIGHTMAPDIRECTUV == 0
-	if (vLightmapInfos.x == 0.)
-	{
-		vLightmapUV = vec2(lightmapMatrix * vec4(uvUpdated, 1.0, 0.0));
-	}
-	else
-	{
-		vLightmapUV = vec2(lightmapMatrix * vec4(uv2, 1.0, 0.0));
-	}
-#endif
-
-#if defined(SPECULAR) && defined(SPECULARTERM) && SPECULARDIRECTUV == 0
-	if (vSpecularInfos.x == 0.)
-	{
-		vSpecularUV = vec2(specularMatrix * vec4(uvUpdated, 1.0, 0.0));
-	}
-	else
-	{
-		vSpecularUV = vec2(specularMatrix * vec4(uv2, 1.0, 0.0));
-	}
-#endif
-
-#if defined(BUMP) && BUMPDIRECTUV == 0
-	if (vBumpInfos.x == 0.)
-	{
-		vBumpUV = vec2(bumpMatrix * vec4(uvUpdated, 1.0, 0.0));
-	}
-	else
-	{
-		vBumpUV = vec2(bumpMatrix * vec4(uv2, 1.0, 0.0));
-	}
-#endif
-
-#include<bumpVertex>
-#include<clipPlaneVertex>
-#include<fogVertex>
-#include<shadowsVertex>[0..maxSimultaneousLights]
-
-#ifdef VERTEXCOLOR
-	// Vertex color
-	vColor = color;
-#endif
-
-#include<pointCloudVertex>
-#include<logDepthVertex>
-
+mat4 finalWorld = world;
+vec4 worldPos = finalWorld * vec4(positionUpdated, 1.0);
+gl_Position = viewProjection * worldPos;
+vPositionW = vec3(worldPos);
+vec2 uvUpdated = vec2(0., 0.);
+vec2 uv2 = vec2(0., 0.);
 #define CUSTOM_VERTEX_MAIN_END
 
-}
+gl_Position.y *= -1.; }

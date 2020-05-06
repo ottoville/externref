@@ -275,7 +275,6 @@ export class UniformBuffer {
         if (this._noUBO) {
             return;
         }
-
         if (this._uniformLocations[name] !== undefined) {
             // Already existing uniform
             return;

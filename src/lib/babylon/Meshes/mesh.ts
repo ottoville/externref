@@ -35,7 +35,8 @@ import { Path3D } from '../Maths/math.path';
 import { Plane } from '../Maths/math.plane';
 import { TransformNode } from './transformNode';
 import { CanvasGenerator } from '../Misc/canvasGenerator';
-import { WebGPUEngine } from "../Engines";
+import type { WebGPUEngine } from "../Engines/webgpuEngine.js";
+import { WebGPUConstants } from "../Engines/WebGPU/webgpuConstants";
 
 declare type LinesMesh = import("./linesMesh").LinesMesh;
 declare type InstancedMesh = import("./instancedMesh").InstancedMesh;
@@ -2102,7 +2103,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
 
         return results;
     }
-
     /**
      * Modifies the mesh geometry according to the passed transformation matrix.
      * This method returns nothing but it really modifies the mesh even if it's originally not set as updatable.

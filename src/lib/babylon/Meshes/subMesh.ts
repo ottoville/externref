@@ -9,6 +9,8 @@ import { Constants } from "../Engines/constants";
 import { DataBuffer } from './dataBuffer';
 import { extractMinAndMaxIndexed } from '../Maths/math.functions';
 import { Plane } from '../Maths/math.plane';
+import { WebGPUConstants } from "../Engines/WebGPU/webgpuConstants";
+import type { WebGPUEngine } from "../Engines/webgpuEngine.js";
 
 declare type Collider = import("../Collisions/collider").Collider;
 declare type Material = import("../Materials/material").Material;
@@ -154,7 +156,51 @@ export class SubMesh extends BaseSubMesh implements ICullable {
     public get IsGlobal(): boolean {
         return (this.verticesStart === 0 && this.verticesCount === this._mesh.getTotalVertices());
     }
+    public getVertexInputDescriptor(): GPUVertexStateDescriptor {
+        const effect = this.effect;
+        const descriptors: GPUVertexBufferLayoutDescriptor[] = [];
+        const attributes = effect.getAttributesNames();
+        const engine = this._mesh.getScene().getEngine() as WebGPUEngine;
+        for (var index = 0; index < attributes.length; index++) {
+            const location = effect.getAttributeLocation(index);
 
+            if (location >= 0) {
+                let vbs = this.getRenderingMesh()._geometry.getVertexBuffers();
+                const vertexBuffer = vbs[attributes[index]];
+                if (!vertexBuffer) {
+                    continue;
+                }
+
+                const positionAttributeDescriptor: GPUVertexAttributeDescriptor = {
+                    shaderLocation: location,
+                    offset: 0, // not available in WebGL
+                    format: vertexBuffer.getVertexInputDescriptorFormat(),
+                };
+
+                // TODO WEBGPU. Factorize the one with the same underlying buffer.
+                const vertexBufferDescriptor: GPUVertexBufferLayoutDescriptor = {
+                    arrayStride: vertexBuffer.byteStride,
+                    stepMode: vertexBuffer.getIsInstanced() ? WebGPUConstants.GPUInputStepMode_instance : WebGPUConstants.GPUInputStepMode_vertex,
+                    attributes: [positionAttributeDescriptor]
+                };
+
+                descriptors.push(vertexBufferDescriptor);
+            }
+        }
+
+        if (!engine.getCurrentIndexBuffer()) {
+            return {
+                indexFormat: WebGPUConstants.GPUIndexFormat_uint32,
+                vertexBuffers: descriptors
+            };
+        }
+
+        const inputStateDescriptor: GPUVertexStateDescriptor = {
+            indexFormat: engine.getCurrentIndexBuffer().is32Bits ? WebGPUConstants.GPUIndexFormat_uint32 : WebGPUConstants.GPUIndexFormat_uint16,
+            vertexBuffers: descriptors
+        };
+        return inputStateDescriptor;
+    }
     /**
      * Returns the submesh BoudingInfo object
      * @returns current bounding info (or mesh's one if the submesh is global)

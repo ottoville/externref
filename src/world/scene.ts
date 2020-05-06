@@ -848,7 +848,7 @@ export class WorldScene extends Scene {
                 blazor.invokeMethod('setProgress', 30);
 
                 let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp');
-                tres([ground, ground.createTexture()]);
+                tres([ground, ground.createTexture(engine as WebGPUEngine)]);
                 let obj = {
                     width: 10000,
                     height: 10000,
@@ -893,6 +893,7 @@ export class WorldScene extends Scene {
             blazor.invokeMethod('setProgress', 53);
             console.debug('waiting terrain texture to be ready');
             return texture.then(async gpuBuffer => {
+                console.debug('terrain texture is ready');
                 blazor.invokeMethod('setProgress', 75);
                 
                 //let size = new Float32Array(imgdata as ArrayBuffer, 0, 2);
@@ -909,6 +910,7 @@ export class WorldScene extends Scene {
                 internaltex.baseWidth = size[0];
                 internaltex.baseHeight = size[1];
                 internaltex._isRGBD = internaltex._isRGBD;
+                blazor.invokeMethod('setProgress', 80);
                 //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
                 const textureExtent = {
                     width: size[0],
@@ -925,17 +927,18 @@ export class WorldScene extends Scene {
                     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
                 });
                 const commandEncoder = device.createCommandEncoder({});
-
+                blazor.invokeMethod('setProgress', 85);
                 let bufferView: GPUBufferCopyView = {
                     buffer: gpuBuffer,
                     bytesPerRow: size[0] * 4,
                     rowsPerImage: 0,
                     offset: 0,
                 };
-                if (gpuBuffer.label == 'computed') {
+               /* if (gpuBuffer.label == 'computed') {
                     //Workaround for "Copy would overflow the buffer" begin
                     let arrayBuffer: ArrayBuffer = await gpuBuffer.mapReadAsync();
                     gpuBuffer.destroy();
+
                     const [textureDataBuffer, textureDataArrayBuffer] = device.createBufferMapped({
                         size: arrayBuffer.byteLength,
                         //@ts-ignore
@@ -945,8 +948,8 @@ export class WorldScene extends Scene {
                     textureDataBuffer.unmap();
                     bufferView.buffer = textureDataBuffer
                     //Workaround end
-                }
-
+                }*/
+                blazor.invokeMethod('setProgress', 90);
 
                 commandEncoder.copyBufferToTexture(bufferView,
                     {
@@ -970,7 +973,7 @@ export class WorldScene extends Scene {
                 internaltex.samplingMode = Texture.TRILINEAR_SAMPLINGMODE;
                 internaltex.isReady = true;
                 (engine as WebGPUEngine)._internalTexturesCache.push(internaltex);
-
+                blazor.invokeMethod('setProgress', 95);
 
                 var grass2 = new StandardMaterial("grass2", this);
 
@@ -980,6 +983,7 @@ export class WorldScene extends Scene {
                 // grass2.diffuseColor = new Color3(0.2, 1, 0.3);
                 ground.material = grass2;
                 blazor.invokeMethod('setProgress', 100);
+                console.debug("Progress 100");
                 
             })
 
