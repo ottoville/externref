@@ -180,8 +180,8 @@ export class TerrainTool extends UITAB {
            let ubo = this._uniformBuffer;
 
             ubo.addUniform("vEmissiveColor", 3);
-            ubo.addUniform("visibility", 1);
-            ubo.addUniform("vDiffuseColor", 4);
+            //ubo.addUniform("visibility", 1);
+            //ubo.addUniform("vDiffuseColor", 4);
 
             ubo.create();
         }
@@ -236,16 +236,8 @@ export class TerrainTool extends UITAB {
                 this.bindOnlyWorldMatrix(world);
             }
 
-            // Normal Matrix
-            if (defines.OBJECTSPACE_NORMALMAP) {
-                world.toNormalMatrix(this._normalMatrix);
-                this.bindOnlyNormalMatrix(this._normalMatrix);
-            }
-
             let mustRebind = this._mustRebind(scene, effect, mesh.visibility);
 
-            // Bones
-            MaterialHelper.BindBonesParameters(mesh, effect);
           let ubo: UniformBuffer = this._uniformBuffer;
             if (mustRebind) {
                 ubo.bindToEffect(effect, "Material");
@@ -254,9 +246,7 @@ export class TerrainTool extends UITAB {
                 if (!ubo.useUbo || !this.isFrozen || !ubo.isSync) {
                     ubo.updateColor3("vEmissiveColor", StandardMaterial.EmissiveTextureEnabled ? this.emissiveColor : Color3.BlackReadOnly);
                 }
-
             }
-
             ubo.update();
             this._afterBind(mesh, this._activeEffect);
         }
