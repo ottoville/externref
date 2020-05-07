@@ -268,66 +268,6 @@ export class TerrainTool extends UITAB {
                         }
                     }
 
-                    // Textures
-                    if (scene.texturesEnabled) {
-                        if (this._diffuseTexture && StandardMaterial.DiffuseTextureEnabled) {
-                            ubo.updateFloat2("vDiffuseInfos", this._diffuseTexture.coordinatesIndex, this._diffuseTexture.level);
-                            MaterialHelper.BindTextureMatrix(this._diffuseTexture, ubo, "diffuse");
-
-                            if (this._diffuseTexture.hasAlpha) {
-                                effect.setFloat("alphaCutOff", this.alphaCutOff);
-                            }
-                        }
-
-                        if (this._ambientTexture && StandardMaterial.AmbientTextureEnabled) {
-                            ubo.updateFloat2("vAmbientInfos", this._ambientTexture.coordinatesIndex, this._ambientTexture.level);
-                            MaterialHelper.BindTextureMatrix(this._ambientTexture, ubo, "ambient");
-                        }
-
-                        if (this._opacityTexture && StandardMaterial.OpacityTextureEnabled) {
-                            ubo.updateFloat2("vOpacityInfos", this._opacityTexture.coordinatesIndex, this._opacityTexture.level);
-                            MaterialHelper.BindTextureMatrix(this._opacityTexture, ubo, "opacity");
-                        }
-
-                        if (this._emissiveTexture && StandardMaterial.EmissiveTextureEnabled) {
-                            ubo.updateFloat2("vEmissiveInfos", this._emissiveTexture.coordinatesIndex, this._emissiveTexture.level);
-                            MaterialHelper.BindTextureMatrix(this._emissiveTexture, ubo, "emissive");
-                        }
-
-                        if (this._lightmapTexture && StandardMaterial.LightmapTextureEnabled) {
-                            ubo.updateFloat2("vLightmapInfos", this._lightmapTexture.coordinatesIndex, this._lightmapTexture.level);
-                            MaterialHelper.BindTextureMatrix(this._lightmapTexture, ubo, "lightmap");
-                        }
-
-                        if (this._specularTexture && StandardMaterial.SpecularTextureEnabled) {
-                            ubo.updateFloat2("vSpecularInfos", this._specularTexture.coordinatesIndex, this._specularTexture.level);
-                            MaterialHelper.BindTextureMatrix(this._specularTexture, ubo, "specular");
-                        }
-
-                        if (this._bumpTexture && scene.getEngine().getCaps().standardDerivatives && StandardMaterial.BumpTextureEnabled) {
-                            ubo.updateFloat3("vBumpInfos", this._bumpTexture.coordinatesIndex, 1.0 / this._bumpTexture.level, this.parallaxScaleBias);
-                            MaterialHelper.BindTextureMatrix(this._bumpTexture, ubo, "bump");
-
-                            if (scene._mirroredCameraPosition) {
-                                ubo.updateFloat2("vTangentSpaceParams", this._invertNormalMapX ? 1.0 : -1.0, this._invertNormalMapY ? 1.0 : -1.0);
-                            } else {
-                                ubo.updateFloat2("vTangentSpaceParams", this._invertNormalMapX ? -1.0 : 1.0, this._invertNormalMapY ? -1.0 : 1.0);
-                            }
-                        }
-
-                        if (this._refractionTexture && StandardMaterial.RefractionTextureEnabled) {
-                            var depth = 1.0;
-                            if (!this._refractionTexture.isCube) {
-                                ubo.updateMatrix("refractionMatrix", this._refractionTexture.getReflectionTextureMatrix());
-
-                                if ((<any>this._refractionTexture).depth) {
-                                    depth = (<any>this._refractionTexture).depth;
-                                }
-                            }
-                            ubo.updateFloat4("vRefractionInfos", this._refractionTexture.level, this.indexOfRefraction, depth, this.invertRefractionY ? -1 : 1);
-                        }
-                    }
-
                     // Point size
                     if (this.pointsCloud) {
                         ubo.updateFloat("pointSize", this.pointSize);
