@@ -5,15 +5,6 @@
 precision highp float;
 layout(std140, column_major) uniform;
 layout(set = 1, binding = 0) uniform Material {
-    vec4 diffuseLeftColor;
-    vec4 diffuseRightColor;
-    vec4 opacityParts;
-    vec4 reflectionLeftColor;
-    vec4 reflectionRightColor;
-    vec4 refractionLeftColor;
-    vec4 refractionRightColor;
-    vec4 emissiveLeftColor;
-    vec4 emissiveRightColor;
     vec2 vReflectionInfos;
     vec3 vReflectionPosition;
     vec3 vReflectionSize;
@@ -25,8 +16,6 @@ layout(set = 1, binding = 0) uniform Material {
     mat4 lightmapMatrix;
     mat4 specularMatrix;
     mat4 bumpMatrix;
-    float pointSize;
-    vec4 vSpecularColor;
     vec3 vEmissiveColor;
     float visibility;
     vec4 vDiffuseColor;

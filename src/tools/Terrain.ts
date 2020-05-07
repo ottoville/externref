@@ -241,41 +241,7 @@ export class TerrainTool extends UITAB {
                 this.bindViewProjection(effect);
                 if (!ubo.useUbo || !this.isFrozen || !ubo.isSync) {
 
-                    if (StandardMaterial.FresnelEnabled && defines.FRESNEL) {
-                        // Fresnel
-                        if (this.diffuseFresnelParameters && this.diffuseFresnelParameters.isEnabled) {
-                            ubo.updateColor4("diffuseLeftColor", this.diffuseFresnelParameters.leftColor, this.diffuseFresnelParameters.power);
-                            ubo.updateColor4("diffuseRightColor", this.diffuseFresnelParameters.rightColor, this.diffuseFresnelParameters.bias);
-                        }
 
-                        if (this.opacityFresnelParameters && this.opacityFresnelParameters.isEnabled) {
-                            ubo.updateColor4("opacityParts", new Color3(this.opacityFresnelParameters.leftColor.toLuminance(), this.opacityFresnelParameters.rightColor.toLuminance(), this.opacityFresnelParameters.bias), this.opacityFresnelParameters.power);
-                        }
-
-                        if (this.reflectionFresnelParameters && this.reflectionFresnelParameters.isEnabled) {
-                            ubo.updateColor4("reflectionLeftColor", this.reflectionFresnelParameters.leftColor, this.reflectionFresnelParameters.power);
-                            ubo.updateColor4("reflectionRightColor", this.reflectionFresnelParameters.rightColor, this.reflectionFresnelParameters.bias);
-                        }
-
-                        if (this.refractionFresnelParameters && this.refractionFresnelParameters.isEnabled) {
-                            ubo.updateColor4("refractionLeftColor", this.refractionFresnelParameters.leftColor, this.refractionFresnelParameters.power);
-                            ubo.updateColor4("refractionRightColor", this.refractionFresnelParameters.rightColor, this.refractionFresnelParameters.bias);
-                        }
-
-                        if (this.emissiveFresnelParameters && this.emissiveFresnelParameters.isEnabled) {
-                            ubo.updateColor4("emissiveLeftColor", this.emissiveFresnelParameters.leftColor, this.emissiveFresnelParameters.power);
-                            ubo.updateColor4("emissiveRightColor", this.emissiveFresnelParameters.rightColor, this.emissiveFresnelParameters.bias);
-                        }
-                    }
-
-                    // Point size
-                    if (this.pointsCloud) {
-                        ubo.updateFloat("pointSize", this.pointSize);
-                    }
-
-                    if (defines.SPECULARTERM) {
-                        ubo.updateColor4("vSpecularColor", this.specularColor, this.specularPower);
-                    }
                     ubo.updateColor3("vEmissiveColor", StandardMaterial.EmissiveTextureEnabled ? this.emissiveColor : Color3.BlackReadOnly);
 
                     // Visibility
