@@ -2682,7 +2682,7 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "5480c2c21f7206d587234f501dfd038cf93907fd3db0c5656a7dbd325306ff1c",
+        "version": "0627c468154a9cad9f12a087e3c81d7b231973e663f8ae359bf6937f1d6ba2e5",
         "signature": "11227bc80f7d30f4ebea403264a37108d0c482fa3a72eaddf70ff7509dbf02af"
       },
       "./world/water.ts": {
@@ -9564,6 +9564,7 @@
         "./lib/babylon/meshes/geometry.ts",
         "./lib/babylon/meshes/buffer.ts",
         "./lib/babylon/materials/materialhelper.ts",
+        "./lib/babylon/materials/uniformbuffer.ts",
         "./lib/babylon/materials/imageprocessingconfiguration.ts",
         "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts",
         "./lib/babylon/maths/math.color.ts"

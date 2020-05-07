@@ -17,6 +17,7 @@ import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData.js";
 import { Geometry } from "../lib/babylon/Meshes/geometry.js";
 import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
 import { MaterialHelper } from "../lib/babylon/Materials/materialHelper.js";
+import { UniformBuffer } from "../lib/babylon/Materials/uniformBuffer.js";
 import { ImageProcessingConfiguration } from "../lib/babylon/Materials/imageProcessingConfiguration.js";
 import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
 import { Color3 } from "../lib/babylon/Maths/math.color.js";
@@ -176,7 +177,7 @@ export class TerrainTool extends UITAB {
 
         (this.myBox.material as StandardMaterial).buildUniformLayout = function (): void {
             // Order is important !
-            let ubo = this._uniformBuffer;
+           let ubo = this._uniformBuffer;
 
             ubo.addUniform("vEmissiveColor", 3);
             ubo.addUniform("visibility", 1);
@@ -245,7 +246,7 @@ export class TerrainTool extends UITAB {
 
             // Bones
             MaterialHelper.BindBonesParameters(mesh, effect);
-            let ubo = this._uniformBuffer;
+          let ubo: UniformBuffer = this._uniformBuffer;
             if (mustRebind) {
                 ubo.bindToEffect(effect, "Material");
 
