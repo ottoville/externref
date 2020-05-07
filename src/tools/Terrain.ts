@@ -172,6 +172,19 @@ export class TerrainTool extends UITAB {
             scene.resetCachedMaterial();
             //@ts-ignore
         this.myBox.subMeshes[0].setEffect(effect as Effect, defines);
+
+
+        (this.myBox.material as StandardMaterial).buildUniformLayout = function (): void {
+            // Order is important !
+            let ubo = this._uniformBuffer;
+
+            ubo.addUniform("vEmissiveColor", 3);
+            ubo.addUniform("visibility", 1);
+            ubo.addUniform("vDiffuseColor", 4);
+
+            ubo.create();
+        }
+
         effect.onCompiled.then(() => {
            // const rasterizationStateDescriptor = this._getRasterizationStateDescriptor();
             //const depthStateDescriptor = this._getDepthStencilStateDescriptor();
@@ -214,9 +227,7 @@ export class TerrainTool extends UITAB {
             }
 
             var effect = subMesh.effect;
-            if (!effect) {
-                return;
-            }
+
             this._activeEffect = effect;
 
             // Matrices
@@ -240,98 +251,9 @@ export class TerrainTool extends UITAB {
 
                 this.bindViewProjection(effect);
                 if (!ubo.useUbo || !this.isFrozen || !ubo.isSync) {
-
-
                     ubo.updateColor3("vEmissiveColor", StandardMaterial.EmissiveTextureEnabled ? this.emissiveColor : Color3.BlackReadOnly);
-
-                    // Visibility
-                    //ubo.updateFloat("visibility", mesh.visibility);
-
-                    // Diffuse
-                    //ubo.updateColor4("vDiffuseColor", this.diffuseColor, this.alpha);
                 }
 
-                // Textures
-                if (scene.texturesEnabled) {
-                    if (this._diffuseTexture && StandardMaterial.DiffuseTextureEnabled) {
-                        effect.setTexture("diffuseSampler", this._diffuseTexture);
-                    }
-
-                    if (this._ambientTexture && StandardMaterial.AmbientTextureEnabled) {
-                        effect.setTexture("ambientSampler", this._ambientTexture);
-                    }
-
-                    if (this._opacityTexture && StandardMaterial.OpacityTextureEnabled) {
-                        effect.setTexture("opacitySampler", this._opacityTexture);
-                    }
-
-                    if (this._reflectionTexture && StandardMaterial.ReflectionTextureEnabled) {
-                        if (this._reflectionTexture.isCube) {
-                            effect.setTexture("reflectionCubeSampler", this._reflectionTexture);
-                        } else {
-                            effect.setTexture("reflection2DSampler", this._reflectionTexture);
-                        }
-                    }
-
-                    if (this._emissiveTexture && StandardMaterial.EmissiveTextureEnabled) {
-                        effect.setTexture("emissiveSampler", this._emissiveTexture);
-                    }
-
-                    if (this._lightmapTexture && StandardMaterial.LightmapTextureEnabled) {
-                        effect.setTexture("lightmapSampler", this._lightmapTexture);
-                    }
-
-                    if (this._specularTexture && StandardMaterial.SpecularTextureEnabled) {
-                        effect.setTexture("specularSampler", this._specularTexture);
-                    }
-
-                    if (this._bumpTexture && scene.getEngine().getCaps().standardDerivatives && StandardMaterial.BumpTextureEnabled) {
-                        effect.setTexture("bumpSampler", this._bumpTexture);
-                    }
-
-                    if (this._refractionTexture && StandardMaterial.RefractionTextureEnabled) {
-                        var depth = 1.0;
-                        if (this._refractionTexture.isCube) {
-                            effect.setTexture("refractionCubeSampler", this._refractionTexture);
-                        } else {
-                            effect.setTexture("refraction2DSampler", this._refractionTexture);
-                        }
-                    }
-                }
-
-                // Clip plane
-                MaterialHelper.BindClipPlane(effect, scene);
-
-                // Colors
-                scene.ambientColor.multiplyToRef(this.ambientColor, this._globalAmbientColor);
-
-                MaterialHelper.BindEyePosition(effect, scene);
-                effect.setColor3("vAmbientColor", this._globalAmbientColor);
-            }
-
-            if (mustRebind || !this.isFrozen) {
-                // Lights
-                if (scene.lightsEnabled && !this._disableLighting) {
-                    MaterialHelper.BindLights(scene, mesh, effect, defines, this._maxSimultaneousLights, this._rebuildInParallel);
-                }
-
-                // Fog
-                MaterialHelper.BindFogParameters(scene, mesh, effect);
-
-                // Morph targets
-                if (defines.NUM_MORPH_INFLUENCERS) {
-                    MaterialHelper.BindMorphTargetParameters(mesh, effect);
-                }
-
-                // Log. depth
-                if (this.useLogarithmicDepth) {
-                    MaterialHelper.BindLogDepth(defines, effect, scene);
-                }
-
-                // image processing
-                if (this._imageProcessingConfiguration && !this._imageProcessingConfiguration.applyByPostProcess) {
-                    this._imageProcessingConfiguration.bind(this._activeEffect);
-                }
             }
 
             ubo.update();

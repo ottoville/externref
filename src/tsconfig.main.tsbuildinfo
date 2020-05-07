@@ -2682,7 +2682,7 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "e4bde265b3bfc00d4731e020bc095d5b404eef5c3bddb8676514e8e6e1a0fc5e",
+        "version": "5480c2c21f7206d587234f501dfd038cf93907fd3db0c5656a7dbd325306ff1c",
         "signature": "11227bc80f7d30f4ebea403264a37108d0c482fa3a72eaddf70ff7509dbf02af"
       },
       "./world/water.ts": {
