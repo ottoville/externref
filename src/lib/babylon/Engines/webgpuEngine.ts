@@ -909,7 +909,6 @@ export class WebGPUEngine extends Engine {
             else {
                 webGpuContext.stages = this._compilePipelineStageDescriptor(vertexSourceCode, fragmentSourceCode, defines);
             }
-
             this._compiledShaders[key] = {
                 stages: webGpuContext.stages,
                 availableAttributes: webGpuContext.availableAttributes,
@@ -2008,10 +2007,7 @@ export class WebGPUEngine extends Engine {
         const inputStateDescriptor = this._getVertexInputDescriptor();
         //const pipelineLayout = this._getPipelineLayout();
        // const pipelineLayout = this._currentEffect!.getPipelineLayout();
-        if (this._currentEffect!.name == 'helper2') {
-            console.log(inputStateDescriptor);
-            //debugger;
-        }
+
         gpuPipeline.renderPipeline = this._device.createRenderPipeline({
             sampleCount: this._mainPassSampleCount,
             primitiveTopology: topology,
@@ -2244,9 +2240,7 @@ export class WebGPUEngine extends Engine {
             renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
         } else {
             this._setRenderPipeline(fillMode);
-            //debugger;
             renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
-            //debugger;
         }
     }
 
@@ -2311,11 +2305,9 @@ export class WebGPUEngine extends Engine {
         this._decodeEngine.dispose();
         this._compiledShaders = { };
         if (this._mainTexture) {
-            debugger;
             this._mainTexture.destroy();
         }
         if (this._depthTexture) {
-            debugger;
             this._depthTexture.destroy();
         }
         super.dispose();

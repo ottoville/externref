@@ -1,9 +1,9 @@
-import { Nullable } from "../types";
-import { Scene } from "../scene";
+import type { Nullable } from "../types";
+import type { Scene } from "../scene";
 import { Vector3 } from "../Maths/math.vector";
 import { Engine } from "../Engines/engine";
 import { Collider } from "./collider";
-import { AbstractMesh } from "../Meshes/abstractMesh";
+import type { AbstractMesh } from "../Meshes/abstractMesh";
 
 /** @hidden */
 export interface ICollisionCoordinator {
@@ -83,7 +83,8 @@ export class DefaultCollisionCoordinator implements ICollisionCoordinator {
         this._collideWithWorld(position, velocity, collider, maximumRetry, finalPosition, excludedMesh);
     }
 }
-
+/*
 Scene.CollisionCoordinatorFactory = () => {
     return new DefaultCollisionCoordinator();
 };
+*/

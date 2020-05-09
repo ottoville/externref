@@ -174,7 +174,7 @@ export class UniformBuffer {
             this.updateColor3 = this._updateColor3ForEffect;
             this.updateColor4 = this._updateColor4ForEffect;
         } else {
-            this._engine._uniformBuffers.push(this);
+            (this._engine as WebGPUEngine)._uniformBuffers.push(this);
 
             this.updateMatrix3x3 = this._updateMatrix3x3ForUniform;
             this.updateMatrix2x2 = this._updateMatrix2x2ForUniform;
@@ -475,7 +475,6 @@ export class UniformBuffer {
      * @param size Define the size of the data.
      */
     public updateUniform(uniformName: string, data: FloatArray, size: number) {
-
         var location = this._uniformLocations[uniformName];
         if (location === undefined) {
             if (this._buffer) {

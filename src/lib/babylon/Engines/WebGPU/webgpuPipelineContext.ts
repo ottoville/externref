@@ -134,11 +134,9 @@ export class WebGPUPipelineContext implements IPipelineContext {
                 samplers[name] = index;
             }
         }
-
         for (let attr of engine.getAttributes(this, attributesNames)) {
             attributes.push(attr);
         }
-
         // Build the uniform layout for the left over uniforms.
         this.buildUniformLayout();
     }

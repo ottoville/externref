@@ -1,26 +1,25 @@
 ﻿import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn } from "../WorkerThread.js";
-import { Mesh } from "../lib/babylon/Meshes/mesh.js";
-import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
-import type { Scene } from "../lib/babylon/scene.js";
-import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import { Material } from "../lib/babylon/Materials/material.js";
-import type { Effect, IEffectCreationOptions } from "../lib/babylon/Materials/effect.js";
-import type { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
+import { Mesh } from "../lib/babylon/Meshes/mesh";
+import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial";
+import type { Scene } from "../lib/babylon/scene";
+import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera";
+import { Material } from "../lib/babylon/Materials/material";
+import type { Effect, IEffectCreationOptions } from "../lib/babylon/Materials/effect";
+import type { SubMesh } from "../lib/babylon/Meshes/subMesh";
 import { TerraMesh } from "../TerraMesh.js";
-import { WebGPUShaderProcessingContext } from "../lib/babylon/Engines/WebGPU/webgpuShaderProcessingContext.js";
-import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
+import { WebGPUShaderProcessingContext } from "../lib/babylon/Engines/WebGPU/webgpuShaderProcessingContext";
+import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
 import { TerraEffect } from "../TerraEffect.js";
-import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial.js";
-import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData.js";
-import { Geometry } from "../lib/babylon/Meshes/geometry.js";
-import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
-import { MaterialHelper } from "../lib/babylon/Materials/materialHelper.js";
-import { UniformBuffer } from "../lib/babylon/Materials/uniformBuffer.js";
-import { ImageProcessingConfiguration } from "../lib/babylon/Materials/imageProcessingConfiguration.js";
-import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
-import { Color3 } from "../lib/babylon/Maths/math.color.js";
+import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial";
+import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData";
+import { Geometry } from "../lib/babylon/Meshes/geometry";
+import { VertexBuffer } from "../lib/babylon/Meshes/buffer";
+import { MaterialHelper } from "../lib/babylon/Materials/materialHelper";
+import { UniformBuffer } from "../lib/babylon/Materials/uniformBuffer";
+import { ImageProcessingConfiguration } from "../lib/babylon/Materials/imageProcessingConfiguration";
+import { Color3 } from "../lib/babylon/Maths/math.color";
 
 
 //@ts-ignore
@@ -175,7 +174,7 @@ export class TerrainTool extends UITAB {
         this.myBox.subMeshes[0].setEffect(effect as Effect, defines);
 
 
-        (this.myBox.material as StandardMaterial).buildUniformLayout = function (): void {
+        /*(this.myBox.material as StandardMaterial).buildUniformLayout = function (): void {
             // Order is important !
            let ubo = this._uniformBuffer;
 
@@ -184,17 +183,20 @@ export class TerrainTool extends UITAB {
             //ubo.addUniform("vDiffuseColor", 4);
 
             ubo.create();
-        }
-
+            debugger;
+        }*/
         effect.onCompiled.then(() => {
-           // const rasterizationStateDescriptor = this._getRasterizationStateDescriptor();
+            console.log('scene ready observable');
+            // const rasterizationStateDescriptor = this._getRasterizationStateDescriptor();
             //const depthStateDescriptor = this._getDepthStencilStateDescriptor();
             //const colorStateDescriptors = this._getColorStateDescriptors();
-           const stages = effect._pipelineContext.stages;
-            const inputStateDescriptor = this.myBox.subMeshes[0].getVertexInputDescriptor();
-          // const pipelineLayout = effect.getPipelineLayout();
-           // console.log(effect._pipelineContext.bindGroupLayouts);
+            const stages = effect._pipelineContext.stages;
+              //  const inputStateDescriptor = this.myBox.subMeshes[0].getVertexInputDescriptor();
 
+            // const pipelineLayout = effect.getPipelineLayout();
+            //console.log(inputStateDescriptor);
+            
+            
             effect._pipelineContext.renderPipeline = device.createRenderPipeline({
                 //@ts-ignore
                 sampleCount: engine._mainPassSampleCount,
@@ -212,13 +214,68 @@ export class TerrainTool extends UITAB {
                 }],
 
                 ...stages,
-                vertexState: inputStateDescriptor,
-               // layout: pipelineLayout,
+                vertexState: {
+                    vertexBuffers:
+                        [{
+                            arrayStride: 4 * 3,
+                            stepMode: "vertex" as GPUInputStepMode,
+                            attributes: [{
+                                // position
+                                shaderLocation: 0,
+                                offset: 0,
+                                format: "float3" as GPUVertexFormat
+                            }]
+                        }]
+                },
+                // layout: pipelineLayout,
             });
+            effect._pipelineContext.leftOverUniforms.push({
+                type: 'mat4',
+                name: 'world',
+                length: 0
+            })
+            effect._pipelineContext.buildUniformLayout();
+            /*effect._pipelineContext.uniformBuffer.update = () => {
+                debugger;
+            }*/
+            effect._pipelineContext.bindGroups = [
+                device.createBindGroup({
+                    layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(0),
+                    entries: [{
+                        binding: 0,
+                        resource: {
+                            //@ts-ignore
+                            buffer: scene.getSceneUniformBuffer()._buffer.underlyingResource
+                        }
+                    }],
+                }),
+                device.createBindGroup({
+                    layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(1),
+                    entries: [{
+                        binding: 0,
+                        resource: {
+                            //@ts-ignore
+                            buffer: (this.myBox.material as StandardMaterial)._uniformBuffer.getBuffer().underlyingResource //this.myBox._uniformBuffer._buffer.underlyingResource
+                        }
+                    }],
+                }),
+                device.createBindGroup({
+                    layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(2),
+                    entries: [{
+                        binding: 0,
+                        resource: {
+                            //@ts-ignore
+                            buffer: effect._pipelineContext.uniformBuffer.getBuffer().underlyingResource, //leftover
+                        }
+                    }],
+                })
+            ];
         });
-        //@ts-ignore
+        // (this.myBox.material as StandardMaterial)._uniformBuffer.getBuffer().underlyingResource material
+        
 
-        // (this.myBox.material as StandardMaterial).buildUniformLayout();
+        (this.myBox.material as StandardMaterial).buildUniformLayout();
+        //@ts-ignore
         (this.myBox.material as StandardMaterial).bindForSubMesh = function (world: Matrix, mesh: Mesh, subMesh: SubMesh): void {
             var scene = this.getScene();
 
@@ -233,12 +290,15 @@ export class TerrainTool extends UITAB {
 
             // Matrices
             if (!defines.INSTANCES) {
-                this.bindOnlyWorldMatrix(world);
+                //@ts-ignore
+               // (this as StandardMaterial).bindOnlyWorldMatrix(world);
+                 //@ts-ignore
+                (effect as TerraEffect).setMatrix("world", world);
             }
 
             let mustRebind = this._mustRebind(scene, effect, mesh.visibility);
 
-          let ubo: UniformBuffer = this._uniformBuffer;
+            let ubo: UniformBuffer = this._uniformBuffer;
             if (mustRebind) {
                 ubo.bindToEffect(effect, "Material");
 
@@ -249,10 +309,11 @@ export class TerrainTool extends UITAB {
             }
             ubo.update();
             this._afterBind(mesh, this._activeEffect);
-        }
+        };
 
 
         this.myBox._draw = function (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
+            
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
                 return this;
             }
@@ -267,8 +328,24 @@ export class TerrainTool extends UITAB {
             const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
             //@ts-ignore
             engine._currentIndexBuffer = null;
+           // console.log(effect._pipelineContext.vertexInputs);
             //@ts-ignore
-            engine._setRenderPipeline(7);
+            //engine._setRenderPipeline(7);
+
+            const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
+            renderPass.setPipeline(effect._pipelineContext.renderPipeline);
+            //@ts-ignore
+            const vertexInputs = engine._getVertexInputsToRender();
+            //@ts-ignore
+            engine._bindVertexInputs(vertexInputs);
+            //@ts-ignore
+            engine._setRenderBindGroups(effect._pipelineContext.bindGroups);
+            if (engine._alphaState.alphaBlend && engine._alphaState._isBlendConstantsDirty) {
+                // TODO WebGPU. should use renderPass.
+                //@ts-ignore
+                engine._currentRenderPass!.setBlendColor(engine._alphaState._blendConstants as any);
+            }
+
             renderPass.draw(subMesh.verticesCount, 8, subMesh.verticesStart, 0);
             return this;
         }
@@ -542,8 +619,8 @@ export class TerrainTool extends UITAB {
     activate = (): void => {
 
         //this.helper.visibility = 1;
-        this.myBox.visibility = 1;
-        
+        //this.myBox.visibility = 1;
+        this.myBox._internalAbstractMeshDataInfo._visibility = 1;
         this.addListener("pointermove", this.mouseListener, { lazy: 15 });
         this.scene.registerBeforeRender(this.setTime);
 

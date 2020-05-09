@@ -1400,7 +1400,7 @@ export class Scene extends AbstractScene implements IAnimatable {
         if (DomManagement.IsWindowObjectExist()) {
             this.attachControl();
         }
-
+        console.log('create scene ubo');
         // Uniform Buffer
         this._createUbo();
 

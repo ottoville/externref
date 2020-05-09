@@ -163,10 +163,11 @@ export class SubMesh extends BaseSubMesh implements ICullable {
         const engine = this._mesh.getScene().getEngine() as WebGPUEngine;
         for (var index = 0; index < attributes.length; index++) {
             const location = effect.getAttributeLocation(index);
-
+            debugger;
             if (location >= 0) {
                 let vbs = this.getRenderingMesh()._geometry.getVertexBuffers();
                 const vertexBuffer = vbs[attributes[index]];
+                debugger;
                 if (!vertexBuffer) {
                     continue;
                 }
@@ -189,12 +190,13 @@ export class SubMesh extends BaseSubMesh implements ICullable {
         }
 
         if (!engine.getCurrentIndexBuffer()) {
+            debugger;
             return {
                 indexFormat: WebGPUConstants.GPUIndexFormat_uint32,
                 vertexBuffers: descriptors
             };
         }
-
+        debugger;
         const inputStateDescriptor: GPUVertexStateDescriptor = {
             indexFormat: engine.getCurrentIndexBuffer().is32Bits ? WebGPUConstants.GPUIndexFormat_uint32 : WebGPUConstants.GPUIndexFormat_uint16,
             vertexBuffers: descriptors

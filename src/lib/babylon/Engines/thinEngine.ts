@@ -790,6 +790,7 @@ export class ThinEngine {
 
     protected _rebuildBuffers(): void {
         // Uniforms
+        debugger;
         for (var uniformBuffer of this._uniformBuffers) {
             uniformBuffer._rebuild();
         }

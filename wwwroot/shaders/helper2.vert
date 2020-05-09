@@ -1,15 +1,22 @@
-﻿layout(set = 2, binding = 0) uniform LeftOver {
-        mat4 world;
-};
-
-precision highp float;
-layout(std140, column_major) uniform;
-
-layout(set = 0, binding = 0) uniform Scene {
+﻿layout(set = 0, binding = 0) uniform Scene {
     mat4 viewProjection;
     mat4 view;
     vec4 viewPosition;
 };
+layout(set = 1, binding = 0) uniform Material {
+    mat4 specularMatrix;
+    mat4 bumpMatrix;
+    vec3 vEmissiveColor;
+    float visibility;
+    vec4 vDiffuseColor;
+};
+layout(set = 2, binding = 0) uniform LeftOver {
+        mat4 world;
+};
+
+precision highp float;
+//layout(std140, column_major) uniform;
+
 #define CUSTOM_VERTEX_BEGIN
 
 layout(location = 0) in vec3 position;
@@ -95,23 +102,22 @@ vec3 fromRGBD(vec4 rgbd) {
     return rgbd.rgb / rgbd.a;
 }
 
-layout(location = 0) out vec3 vPositionW;
+//layout(location = 0) out vec3 vPositionW;
 #define CUSTOM_VERTEX_DEFINITIONS
 
 void main(void) {
-    #define CUSTOM_VERTEX_MAIN_BEGIN
-    vec3 positionUpdated = position;
-    #define CUSTOM_VERTEX_UPDATE_POSITION
+#define CUSTOM_VERTEX_MAIN_BEGIN
+vec3 positionUpdated = position;
+#define CUSTOM_VERTEX_UPDATE_POSITION
 
-    #define CUSTOM_VERTEX_UPDATE_NORMAL
+#define CUSTOM_VERTEX_UPDATE_NORMAL
 
-    mat4 finalWorld = world;
-    vec4 worldPos = finalWorld * vec4(positionUpdated, 1.0);
-    gl_Position = viewProjection * worldPos;
-    vPositionW = vec3(worldPos);
-    vec2 uvUpdated = vec2(0., 0.);
-    vec2 uv2 = vec2(0., 0.);
-    #define CUSTOM_VERTEX_MAIN_END
+mat4 finalWorld = world;
+vec4 worldPos = finalWorld * vec4(positionUpdated, 1.0);
+gl_Position = viewProjection * worldPos;
+//vPositionW = vec3(worldPos);
+vec2 uvUpdated = vec2(0., 0.);
+vec2 uv2 = vec2(0., 0.);
+#define CUSTOM_VERTEX_MAIN_END
 
-    gl_Position.y *= -1.;
-}
+gl_Position.y *= -1.; }

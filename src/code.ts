@@ -2,10 +2,10 @@
 import type { WorldScene } from "./world/scene.js";
 //import * as BABYLON from "./lib/babylon/index.js"
 import type { loginProvider, DotNet } from "./types/interfaces/index.js";
-import type { IEffectCreationOptions, Effect } from "./lib/babylon/Materials/effect.js";
-import type { Engine } from "./lib/babylon/Engines/engine.js";
-import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks.js";
-import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine.js";
+import type { IEffectCreationOptions, Effect } from "./lib/babylon/Materials/effect";
+import type { Engine } from "./lib/babylon/Engines/engine";
+import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks";
+import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine";
 
 //import  DB from "./DB.js";
 
@@ -93,15 +93,16 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
     (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
 
 
-        let [WasmModule, EngineModule, EffectModule, WorldSceneModule] = await Promise.all(['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js', './world/scene.js'].map(url => import(url)))
+        let [WasmModuleP, EngineModuleP, EffectModuleP, WorldSceneModuleP] = ['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js', './world/scene.js'].map(url => import(url));
 
-        /*let WasmModule = await import('./rustwasm/hello_wasm.js');
+        let WasmModule = await WasmModuleP;
         blazor.invokeMethod('setProgress', 2);
-        let EngineModule = await import('./lib/babylon/Engines/webgpuEngine.js');
+        let EngineModule = await EngineModuleP;
         blazor.invokeMethod('setProgress', 4);
-        let EffectModule = await import('./TerraEffect.js');
+        let EffectModule = await EffectModuleP;
         blazor.invokeMethod('setProgress', 9);
-        let WorldSceneModule = await import('./world/scene.js');*/
+        debugger;
+        let WorldSceneModule = await WorldSceneModuleP;
 
         blazor.invokeMethod('setProgress', 10);
 
@@ -120,6 +121,7 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
         //@ts-ignore
         engine._glslang = await new Promise((res, rej) => {
             let glslangOptions = {
+                //@ts-ignore
                 ...EngineModule.WebGPUEngine._glslangDefaultOptions
             };
             if (glslangOptions.glslang)
@@ -180,10 +182,12 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             const name = vertex + "+" + fragment + "@" + (defines ? defines : (<IEffectCreationOptions>attributesNamesOrOptions).defines);
             //@ts-ignore
             const shader = (this as WebGPUEngine)._compiledShaders[name];
-                if (shader) {
+            if (shader) {
+                    //@ts-ignore
                     return new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, shader.sources) as Effect;
                 }
                 else {
+                    //@ts-ignore
                     return new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name) as Effect;
                 }
         }
@@ -220,7 +224,7 @@ window.sceneInited.then(async scene => {
     scene.autoClear = false;
     scene.autoClearDepthAndStencil = false;
     let engine = scene.getEngine() as WebGPUEngine;
-    let context = engine.getRenderingCanvas().getContext('gpupresent') as unknown as GPUCanvasContext;
+    
     let rloop = function () {
         var shouldRender = true;
 

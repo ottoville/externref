@@ -1,3 +1,4 @@
+console.log('p0');
 import { Sun } from "./sun.js";
 import { Plants } from "../plants/Plants.js";
 import { PlantsUI } from "../tools/plantsUI.js";
@@ -11,41 +12,39 @@ import { Terrain } from "./terrain.js";
 import type { TerraMesh } from "../TerraMesh.js";
 
 import type { loginProvider, DotNet } from "../types/interfaces/index.js";
-import { Scene } from "../lib/babylon/scene.js";
-import type { PickingInfo } from "../lib/babylon/Collisions/pickingInfo.js";
-import type { Camera } from "../lib/babylon/Cameras/camera.js";
-import { AbstractActionManager } from "../lib/babylon/Actions/abstractActionManager.js";
-import type { Observable } from "../lib/babylon/Misc/observable.js";
-import type { PointerInfoPre, PointerInfo } from "../lib/babylon/Events/pointerEvents.js";
-import { PointerEventTypes } from "../lib/babylon/Events/pointerEvents.js";
-import { Constants } from "../lib/babylon/Engines/constants.js";
-import type { AbstractMesh } from "../lib/babylon/Meshes/abstractMesh.js";
-import { Ray } from "../lib/babylon/Culling/ray.js";
-import type { TrianglePickingPredicate } from "../lib/babylon/Culling/ray.js";
-import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
-import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
-import { Engine } from "../lib/babylon/Engines/engine.js";
-import { PointLight } from "../lib/babylon/Lights/pointLight.js";
-import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
-import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
-import { Matrix } from "../lib/babylon/Maths/math.js";
-
-import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collisionCoordinator.js';
-import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
+import { Scene } from "../lib/babylon/scene";
+import type { PickingInfo } from "../lib/babylon/Collisions/pickingInfo";
+import type { Camera } from "../lib/babylon/Cameras/camera";
+import { AbstractActionManager } from "../lib/babylon/Actions/abstractActionManager";
+import type { Observable } from "../lib/babylon/Misc/observable";
+import type { PointerInfoPre, PointerInfo } from "../lib/babylon/Events/pointerEvents";
+import { PointerEventTypes } from "../lib/babylon/Events/pointerEvents";
+import { Constants } from "../lib/babylon/Engines/constants";
+import type { AbstractMesh } from "../lib/babylon/Meshes/abstractMesh";
+import { Ray } from "../lib/babylon/Culling/ray";
+import type { TrianglePickingPredicate } from "../lib/babylon/Culling/ray";
+import { ActionEvent } from "../lib/babylon/Actions/actionEvent";
+import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents";
+import { Engine } from "../lib/babylon/Engines/engine";
+import { PointLight } from "../lib/babylon/Lights/pointLight";
+import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial";
+import { Texture } from "../lib/babylon/Materials/Textures/texture";
+import { Matrix } from "../lib/babylon/Maths/math";
+import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collisionCoordinator';
+import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial";
 import { Sea } from "./water.js";
-import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
-import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
-import { InternalTexture, InternalTextureSource } from "../lib/babylon/Materials/Textures/internalTexture.js";
-import { WebGPUConstants } from "../lib/babylon/Engines/WebGPU/webgpuConstants.js";
-import { WebGPUDataBuffer } from "../lib/babylon/Meshes/WebGPU/webgpuDataBuffer.js";
+import type { Mesh } from "../lib/babylon/Meshes/mesh";
+import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
+import { InternalTexture, InternalTextureSource } from "../lib/babylon/Materials/Textures/internalTexture";
 
 console.log('p13');
 Scene.CollisionCoordinatorFactory = () => {
     return new DefaultCollisionCoordinator();
 };
-Scene.DefaultMaterialFactory = (scene: Scene) => {
+
+/*Scene.DefaultMaterialFactory = (scene: Scene) => {
     return new StandardMaterial("default material", scene);
-};
+};*/
 
 //import { UI } from "../UI.js";
 class _ClickInfo {
@@ -881,6 +880,7 @@ export class WorldScene extends Scene {
             blazor.invokeMethod('setProgress', 50);
             ground.isPickable = true;
             // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
+            this.getSceneUniformBuffer().update();
             console.log('creating TerrainTool');
             this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
             console.log('TerrainTool created');
