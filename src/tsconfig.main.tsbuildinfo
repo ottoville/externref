@@ -2682,7 +2682,7 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "6dafbcab035df5ad907f91e3fa340885dbc0649c5d7aea5eadd7e20e37c40b03",
+        "version": "a198f19dbdb65c7cfc94e2c1fe6c89df3a36084d2127d7faf9ff7b618c092400",
         "signature": "865da709bf893dd7b7404280dfbf6bfc32155a3891d3b15443cbf0adcad5e29a"
       },
       "./world/water.ts": {
@@ -2690,12 +2690,12 @@
         "signature": "69b97ca99fd38ece03e3d7693a37d0e9d1956f4b2f73cced6a94e477f9ff391f"
       },
       "./world/scene.ts": {
-        "version": "968ff2920d0af9a4beca7d30a136ad91e17b3de7cdd9fd8d0cc6beff1ccced3a",
+        "version": "66d030d3895a9aa259c7925c919bf8cd9232ff5779ccc2cdf8dfb0a0085276fd",
         "signature": "ee9a4e56f5e2c2b14041f72515a6bb150a696ada0d7b64ec1df6196f39016744"
       },
       "./code.ts": {
-        "version": "c9ed1f02d0d960577314d7a87be93b7ba381f606e26bfc514d112ba24ee4a7bc",
-        "signature": "e0e3ce2dce2eaf2e4b5f030fec79a8c159a4ee7da195eac1dfcbfe02588bc731"
+        "version": "64a44a47781d5e6cd33a091b1ba4a7a44b0fec7b8f8beb4f627cf79f3c41b86a",
+        "signature": "55e264eb1aba9b8548b7ce3d9d65e8b050491cf6b30e55b95690d2a68c840f94"
       },
       "./commonmath.ts": {
         "version": "0bc951583b53f24f6af25118b6397b741f870a1a74cdd6eea9862c8493282814",
@@ -14554,6 +14554,7 @@
       "./terramesh.ts",
       "./terraray.ts",
       "./uitab.ts",
+      "./world/sun.ts",
       "./lib/babylon/audio/sound.ts",
       "./lib/babylon/actions/directaudioactions.ts",
       "./lib/babylon/actions/interpolatevalueaction.ts",
@@ -14933,8 +14934,16 @@
       "./world/terrain.ts",
       "./types/interfaces/index.d.ts",
       "./plants/plants.ts",
+      "./paintground/paintground.ts",
+      "./paintground/paintplane.ts",
+      "./tools/plantsui.ts",
+      "./paintground/painttexture.ts",
+      "./tools/zones.ts",
       "./tools/camera.ts",
       "./tools/buildings.ts",
+      "./world/water.ts",
+      "./world/scene.ts",
+      "./code.ts",
       "./commonmath.ts",
       "./webgl.ts",
       "./lib/babylon/animations/pathcursor.ts",
@@ -14983,22 +14992,13 @@
       "./lib/materials/water/watermaterial.ts",
       "./lib/materials/water/index.ts",
       "./lib/materials/index.ts",
+      "./paintground/paintline.ts",
       "./plants/grass.ts",
       "./rustwasm/hello_wasm.d.ts",
       "./rustwasm/hello_wasm_bg.d.ts",
       "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./tools/terrain.ts",
-      "./world/scene.ts",
-      "./paintground/paintline.ts",
-      "./code.ts",
-      "./world/water.ts",
-      "./tools/zones.ts",
-      "./paintground/painttexture.ts",
-      "./tools/plantsui.ts",
-      "./paintground/paintplane.ts",
-      "./paintground/paintground.ts",
-      "./world/sun.ts"
+      "./tools/terrain.ts"
     ]
   },
   "version": "3.8.1-rc"

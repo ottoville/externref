@@ -725,6 +725,7 @@ export class WorldScene extends Scene {
     public terrainReady: Promise<void>;
     constructor(engine: Engine | WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
         super(engine as Engine);
+        
         blazor.invokeMethod('setProgress', 21);
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
@@ -991,7 +992,7 @@ export class WorldScene extends Scene {
 
         }).catch(e => {
             console.error(e);
-            blazor.invokeMethod('setProgressError', e.name + e.message);
+            blazor.invokeMethod('setProgressError', e.name +' '+ e.message);
         })
     }
 }

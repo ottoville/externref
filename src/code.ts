@@ -36,7 +36,6 @@ import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/we
 declare global {
     interface Window {
         scene: WorldScene;
-        sceneInited: Promise<WorldScene>;
         login: (e: PointerEvent, method: "facebook" | "anomyous") => void;
         Wasm: any
     }
@@ -89,24 +88,24 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
     }
 });
 
-window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
-    (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
 
-
+(<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
+    try {
         let [WasmModuleP, EngineModuleP, EffectModuleP, WorldSceneModuleP] = ['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js', './world/scene.js'].map(url => import(url));
-
+        //try {
         let WasmModule = await WasmModuleP;
         blazor.invokeMethod('setProgress', 2);
         let EngineModule = await EngineModuleP;
         blazor.invokeMethod('setProgress', 4);
         let EffectModule = await EffectModuleP;
         blazor.invokeMethod('setProgress', 9);
-        debugger;
         let WorldSceneModule = await WorldSceneModuleP;
 
         blazor.invokeMethod('setProgress', 10);
-
-
+        /*   } catch (e) {
+               console.log('error');
+               console.error(e);
+           }*/
         WasmModule.default().then(() => window.Wasm = WasmModule);
         //progelem.value = 20;
         // var canvas = document.getElementById("renderCanvas");
@@ -183,122 +182,122 @@ window.sceneInited = new Promise<WorldScene>((sceneInitedred, sceneInitedrej) =>
             //@ts-ignore
             const shader = (this as WebGPUEngine)._compiledShaders[name];
             if (shader) {
-                    //@ts-ignore
-                    return new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, shader.sources) as Effect;
-                }
-                else {
-                    //@ts-ignore
-                    return new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name) as Effect;
-                }
+                //@ts-ignore
+                return new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, shader.sources) as Effect;
+            }
+            else {
+                //@ts-ignore
+                return new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name) as Effect;
+            }
         }
 
         //document.getElementById('loading').style.display = 'block';
         //loadingBar.value = 10;
-        let webSocket = new WebSocket('ws://localhost:8081');
-        webSocket.onopen = async () => {
-            console.log('websocket onopen');
-            blazor.invokeMethod('setProgress', 20);
-            // progelem.value = 30;
-            sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, webSocket));
-        }
-        webSocket.onerror = async () => {
-            console.log('websocket onerror');
-            blazor.invokeMethod('setProgress', 20);
-            try {
-                //blazor.invokeMethod('setProgress', 20);
-                sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas));
-            } catch (e) {
-                console.error('creating terrain failed', e);
-                //progelem.parentNode.textContent = e;
-                blazor.invokeMethod('setProgress', 0);
-                blazor.invokeMethod('setProgressError', e.name + e.message);
+        const scene = await new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
+            let webSocket = new WebSocket('ws://localhost:8081');
+            webSocket.onopen = async () => {
+                console.log('websocket onopen');
+                blazor.invokeMethod('setProgress', 20);
+                // progelem.value = 30;
+                sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, webSocket));
             }
-        }
-    }
-});
+            webSocket.onerror = async () => {
+                console.log('websocket onerror');
+                blazor.invokeMethod('setProgress', 20);
+                try {
+                    //blazor.invokeMethod('setProgress', 20);
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas));
+                } catch (e) {
+                    sceneInitedrej(e);
+                }
+            }
+        });
+        await scene.terrainReady;
+        window.scene = scene;
+        scene.collisionsEnabled = true;
+        scene.autoClear = false;
+        scene.autoClearDepthAndStencil = false;
 
-window.sceneInited.then(async scene => {
-    await scene.terrainReady;
-    window.scene = scene;
-    scene.collisionsEnabled = true;
-    scene.autoClear = false;
-    scene.autoClearDepthAndStencil = false;
-    let engine = scene.getEngine() as WebGPUEngine;
-    
-    let rloop = function () {
-        var shouldRender = true;
+        let rloop = function () {
+            var shouldRender = true;
 
-        if (shouldRender) {
-            
-            // Start new frame
-            //engine.beginFrame();
-            //@ts-ignore
-            engine._measureFps();
-            //@ts-ignore
-            engine.onBeginFrameObservable.notifyObservers(engine);
-            //@ts-ignore
-            engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
-            // Some PGs are using color3...
-            if (scene.clearColor.a === undefined) {
-                scene.clearColor.a = 1;
-            }
-             //@ts-ignore
-            engine._mainColorAttachments[0].loadValue = scene.clearColor;
-             //@ts-ignore
-            engine._mainDepthAttachment.depthLoadValue = engine._clearDepthValue;
-             //@ts-ignore
-            engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
-             //@ts-ignore
-            //engine._startMainRenderPass();
-            // Resolve in case of MSAA
-             //@ts-ignore
-            if (engine._options.antialiasing) {
-                //@ts-ignore
-                engine._mainColorAttachments[0].resolveTarget = engine._swapChain.getCurrentTexture().createView();
-            }
-            else {
-                //@ts-ignore
-                //engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
-                engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
-            }
-            //@ts-ignore
-            engine._currentRenderPass = engine._renderEncoder.beginRenderPass({
-                //@ts-ignore
-                colorAttachments: engine._mainColorAttachments,
-                //@ts-ignore
-                depthStencilAttachment: engine._mainDepthAttachment
-            });
+            if (shouldRender) {
 
-            scene.render();
-            // Present
-            //engine.endFrame();
-             //@ts-ignore
-            //engine._endRenderPass();
-            if (engine._currentRenderPass) {
+                // Start new frame
+                //engine.beginFrame();
                 //@ts-ignore
-                engine._currentRenderPass.endPass();
+                engine._measureFps();
                 //@ts-ignore
-                engine._currentRenderPass = null;
+                engine.onBeginFrameObservable.notifyObservers(engine);
+                //@ts-ignore
+                engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
+                // Some PGs are using color3...
+                if (scene.clearColor.a === undefined) {
+                    scene.clearColor.a = 1;
+                }
+                //@ts-ignore
+                engine._mainColorAttachments[0].loadValue = scene.clearColor;
+                //@ts-ignore
+                engine._mainDepthAttachment.depthLoadValue = engine._clearDepthValue;
+                //@ts-ignore
+                engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
+                //@ts-ignore
+                //engine._startMainRenderPass();
+                // Resolve in case of MSAA
+                //@ts-ignore
+                if (engine._options.antialiasing) {
+                    //@ts-ignore
+                    engine._mainColorAttachments[0].resolveTarget = engine._swapChain.getCurrentTexture().createView();
+                }
+                else {
+                    //@ts-ignore
+                    //engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
+                    engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
+                }
+                //@ts-ignore
+                engine._currentRenderPass = engine._renderEncoder.beginRenderPass({
+                    //@ts-ignore
+                    colorAttachments: engine._mainColorAttachments,
+                    //@ts-ignore
+                    depthStencilAttachment: engine._mainDepthAttachment
+                });
+
+                scene.render();
+                // Present
+                //engine.endFrame();
+                //@ts-ignore
+                //engine._endRenderPass();
+                if (engine._currentRenderPass) {
+                    //@ts-ignore
+                    engine._currentRenderPass.endPass();
+                    //@ts-ignore
+                    engine._currentRenderPass = null;
+                }
+                //@ts-ignore
+                engine._device.defaultQueue.submit([engine._renderEncoder.finish()]);
+                engine.onEndFrameObservable.notifyObservers(engine);
+
             }
-             //@ts-ignore
-            engine._device.defaultQueue.submit([engine._renderEncoder.finish()]);
-            engine.onEndFrameObservable.notifyObservers(engine);
+            window.requestAnimationFrame(rloop);
 
         }
         window.requestAnimationFrame(rloop);
 
-    }
-    window.requestAnimationFrame(rloop);
 
+        // Resize
+        window.addEventListener("resize", function () {
+            scene.getEngine().resize();
+        });
+        for (let i = 0; i < gameControlsUI.length; i++) {
+            gameControlsUI[i].classList.remove('hidden');
+        }
+    } catch (e) {
+        console.error('creating terrain failed', e);
+        //progelem.parentNode.textContent = e;
+        blazor.invokeMethod('setProgress', 0);
+        blazor.invokeMethod('setProgressError', e.name + ' ' + e.message);
 
-    // Resize
-    window.addEventListener("resize", function () {
-        scene.getEngine().resize();
-    });
-    for (let i = 0; i < gameControlsUI.length; i++) {
-        gameControlsUI[i].classList.remove('hidden');
     }
-    //document.getElementById('loading').style.display = 'none';
-});
+ }
 
 let gameControlsUI = document.getElementsByClassName('gameControl');

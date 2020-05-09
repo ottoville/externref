@@ -313,7 +313,7 @@ export class TerrainTool extends UITAB {
 
 
         this.myBox._draw = function (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
-            
+           
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
                 return this;
             }
@@ -325,15 +325,15 @@ export class TerrainTool extends UITAB {
 
             //engine.drawArraysType(7, subMesh.verticesStart, subMesh.verticesCount, instancesCount);
             //@ts-ignore
-            const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
-            //@ts-ignore
             engine._currentIndexBuffer = null;
            // console.log(effect._pipelineContext.vertexInputs);
             //@ts-ignore
-            //engine._setRenderPipeline(7);
-
+            engine._setRenderPipeline(7);
+              //@ts-ignore
             const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
-            renderPass.setPipeline(effect._pipelineContext.renderPipeline);
+            
+          /*  renderPass.setPipeline(effect._pipelineContext.renderPipeline);
+           
             //@ts-ignore
             const vertexInputs = engine._getVertexInputsToRender();
             //@ts-ignore
@@ -344,7 +344,7 @@ export class TerrainTool extends UITAB {
                 // TODO WebGPU. should use renderPass.
                 //@ts-ignore
                 engine._currentRenderPass!.setBlendColor(engine._alphaState._blendConstants as any);
-            }
+            }*/
 
             renderPass.draw(subMesh.verticesCount, 8, subMesh.verticesStart, 0);
             return this;
