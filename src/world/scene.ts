@@ -1,4 +1,3 @@
-console.log('p0');
 import { Sun } from "./sun.js";
 import { Plants } from "../plants/Plants.js";
 import { PlantsUI } from "../tools/plantsUI.js";
@@ -37,7 +36,6 @@ import type { Mesh } from "../lib/babylon/Meshes/mesh";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
 import { InternalTexture, InternalTextureSource } from "../lib/babylon/Materials/Textures/internalTexture";
 
-console.log('p13');
 Scene.CollisionCoordinatorFactory = () => {
     return new DefaultCollisionCoordinator();
 };
@@ -723,7 +721,7 @@ export class WorldScene extends Scene {
         }).bind(this._inputManager)(this, elementToAttachTo);
     }
     public terrainReady: Promise<void>;
-    constructor(engine: Engine | WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private webSocket?: WebSocket) {
+    constructor(engine: Engine | WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private device: GPUDevice, private webSocket?: WebSocket) {
         super(engine as Engine);
         
         blazor.invokeMethod('setProgress', 21);
@@ -820,19 +818,19 @@ export class WorldScene extends Scene {
 
         this.terrainReady = new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
             try {
+                const groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device);
                 let cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
                 if (cachedtexture) {
                     let cacheimg = new Image();
                     cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
-                    let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp');
-                    tres([ground,cacheimg.decode().then(() => {
+                    
+                    tres([await groundP,cacheimg.decode().then(() => {
                         let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
                         let imgctx = imgcanvas.getContext('2d');
                         imgctx.drawImage(cacheimg, 0, 0);
                         //let pixels = imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data;
                         // const padding = pixels.byteLength % 4;
                         //@ts-ignore
-                        let device: GPUDevice = (engine as WebGPUEngine)._device;
                         const [gpuBuffer, arrarBuffer] = device.createBufferMapped({
                             size: cacheimg.width * cacheimg.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT,
                             //@ts-ignore
@@ -846,8 +844,7 @@ export class WorldScene extends Scene {
                 }
                 //progelem.value = 40;
                 blazor.invokeMethod('setProgress', 30);
-
-                let ground = await Terrain.fromHeightMap('/images/tenerife3_75.webp');
+                const ground = await groundP;
                 tres([ground, ground.createTexture(engine as WebGPUEngine)]);
                 let obj = {
                     width: 10000,
@@ -866,12 +863,9 @@ export class WorldScene extends Scene {
         }).then(gt => {
             blazor.invokeMethod('setProgress', 40);
             let [ground, texture] = gt;
-            console.debug('terrain ready');
 
             this.tools['Buildings'] = new BuildingsUI(this);
-            console.log('creating sea');
             let sea = new Sea(this);
-            console.log('sea created');
             DB.then(d => {
                 this.tools['Zones'] = new Zones(ground, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
             })
@@ -882,9 +876,7 @@ export class WorldScene extends Scene {
             ground.isPickable = true;
             // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.getSceneUniformBuffer().update();
-            console.log('creating TerrainTool');
             this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
-            console.log('TerrainTool created');
             blazor.invokeMethod('setProgress', 51);
             shadermateria.setVector3("lightPos", sunlight.position);
             blazor.invokeMethod('setProgress', 52);
@@ -892,9 +884,7 @@ export class WorldScene extends Scene {
 
             // this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
             blazor.invokeMethod('setProgress', 53);
-            console.debug('waiting terrain texture to be ready');
             return texture.then(async gpuBuffer => {
-                console.debug('terrain texture is ready');
                 blazor.invokeMethod('setProgress', 75);
                 
                 //let size = new Float32Array(imgdata as ArrayBuffer, 0, 2);

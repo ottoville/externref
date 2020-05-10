@@ -12,17 +12,14 @@ float width = 10000.0;
 float height = 10000.0;
 
   layout(std430, set = 0, binding = 0) readonly buffer FirstMatrix {
-      vec2 size;
       int numbers[];
   } firstMatrix;
 
   layout(std430, set = 0, binding = 1) readonly buffer SecondMatrix {
-      vec2 size;
       float numbers[];
   } secondMatrix;
 
   layout(std430, set = 0, binding = 2) readonly buffer ThirdMatrix {
-      vec2 size;
       float numbers[];
   } thirdMatrix;
 

@@ -26,12 +26,15 @@ export class Terrain extends TerraMesh {
     public _minZ: number;
     public _maxZ: number;
 
+    public slopeArrGPUBuffer: GPUBuffer;
+    public facet1ArrGPUBuffer: GPUBuffer;
+    public facet2ArrGPUBuffer: GPUBuffer;
 
     public slopeArrBuffer: SharedArrayBuffer;
     public facet1ArrBuffer: SharedArrayBuffer;
     public facet2ArrBuffer: SharedArrayBuffer;
 
-    public slopeArr: Int16Array;
+    public slopeArr: Int32Array;
     public facet1Arr: Float32Array;
     public facet2Arr: Float32Array;
 
@@ -41,9 +44,9 @@ export class Terrain extends TerraMesh {
     public static terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
     public inited: Promise<any>;
-    public static async fromHeightMap(map: string): Promise<Terrain> {
+    public static async fromHeightMap(map: string, device: GPUDevice): Promise<Terrain> {
         let vdata = await Terrain.terrainWorker.message<TerrainMap, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {url: map});
-        return new Terrain(vdata);
+        return new Terrain(vdata, device);
     }
     public createTexture(engine: WebGPUEngine) : Promise<GPUBuffer> {
         return new Promise((tres, trej) => {
@@ -51,56 +54,8 @@ export class Terrain extends TerraMesh {
                 console.log('creating terrain texture')
                 /* WEBGPU START */
                 const computeShaderCode = await (await (fetch('../../shaders/webgpu.comp'))).text();
-                
                 //@ts-ignore
-                //const adapter = await navigator.gpu.requestAdapter();
-               // const device = await adapter.requestDevice();
-
                 const device: GPUDevice = engine._device;
-                // First Matrix
-
-                const slopeArrMatrix = new Int16Array(this.slopeArr.length + 2);
-                slopeArrMatrix[0] = this._subdivisionsY;
-                slopeArrMatrix[1] = this._subdivisionsX;
-                slopeArrMatrix.set(this.slopeArr, 2);
-
-                const facet1ArrMatrix = new Float32Array(this.facet1Arr.length + 2);
-                facet1ArrMatrix[0] = this._subdivisionsY;
-                facet1ArrMatrix[1] = this._subdivisionsX;
-                facet1ArrMatrix.set(this.facet1Arr, 2);
-
-                const facet2ArrMatrix = new Float32Array(this.facet2Arr.length + 2);
-                facet2ArrMatrix[0] = this._subdivisionsY;
-                facet2ArrMatrix[1] = this._subdivisionsX;
-                facet2ArrMatrix.set(this.facet2Arr, 2);
-
-                let slopesAsInt32 = new Int32Array(slopeArrMatrix);
-                const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] = device.createBufferMapped({
-                    size: slopesAsInt32.byteLength,
-                    //@ts-ignore
-                    usage: GPUBufferUsage.STORAGE,
-                });
-                new Int32Array(arrayBufferFirstMatrix).set(slopesAsInt32);
-                gpuBufferFirstMatrix.unmap();
-
-                // Second Matrix
-
-
-                const [gpuBufferSecondMatrix, arrayBufferSecondMatrix] = device.createBufferMapped({
-                    size: facet1ArrMatrix.byteLength,
-                    //@ts-ignore
-                    usage: GPUBufferUsage.STORAGE,
-                });
-                new Float32Array(arrayBufferSecondMatrix).set(facet1ArrMatrix);
-                gpuBufferSecondMatrix.unmap();
-
-                const [gpuBufferThirdMatrix, arrayBufferThirdMatrix] = device.createBufferMapped({
-                    size: facet1ArrMatrix.byteLength,
-                    //@ts-ignore
-                    usage: GPUBufferUsage.STORAGE,
-                });
-                new Float32Array(arrayBufferThirdMatrix).set(facet2ArrMatrix);
-                gpuBufferThirdMatrix.unmap();
 
                 // Result Matrix
 
@@ -111,11 +66,7 @@ export class Terrain extends TerraMesh {
                     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
                 });
                 const glslang = await glslangModule();
-                //@ts-ignore
                 const computePipeline = device.createComputePipeline({
-                    /*   layout: device.createPipelineLayout({
-                           bindGroupLayouts: [bindGroupLayout]
-                       }),*/
                     computeStage: {
                         module: device.createShaderModule({
                             code: glslang.compileGLSL(computeShaderCode, "compute")
@@ -130,19 +81,19 @@ export class Terrain extends TerraMesh {
                         {
                             binding: 0,
                             resource: {
-                                buffer: gpuBufferFirstMatrix
+                                buffer: this.slopeArrGPUBuffer
                             }
                         },
                         {
                             binding: 1,
                             resource: {
-                                buffer: gpuBufferSecondMatrix
+                                buffer: this.facet1ArrGPUBuffer
                             }
                         },
                         {
                             binding: 2,
                             resource: {
-                                buffer: gpuBufferThirdMatrix
+                                buffer: this.facet2ArrGPUBuffer
                             }
                         },
                         {
@@ -183,9 +134,6 @@ export class Terrain extends TerraMesh {
                 device.defaultQueue.submit([gpuCommands]);
                 //resultMatrixBuffer.destroy();
                 tres(resultMatrixBuffer);
-                gpuBufferFirstMatrix.destroy();
-                gpuBufferSecondMatrix.destroy();
-                gpuBufferThirdMatrix.destroy();
 
                 // Read buffer.
                 let arrayBuffer: ArrayBuffer = await gpuReadBuffer.mapReadAsync();
@@ -197,21 +145,18 @@ export class Terrain extends TerraMesh {
         });
     }
     //public ground: BABYLON.GroundMesh;
-    constructor(vdata: TerrainMap) {
+    constructor(vdata: TerrainMap, device: GPUDevice) {
         super('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
-        console.debug('create terrain');
-
+        
         this._subdivisionsX = 250;
         this._subdivisionsY = 250;
 
-        this.slopeArrBuffer = new SharedArrayBuffer(Int16Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY)
+        this.slopeArrBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY)
         this.facet1ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4);
         this.facet2ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this._subdivisionsX * this._subdivisionsY * 4);
-        this.slopeArr = new Int16Array(this.slopeArrBuffer);
+        this.slopeArr = new Int32Array(this.slopeArrBuffer);
         this.facet1Arr = new Float32Array(this.facet1ArrBuffer);
         this.facet2Arr = new Float32Array(this.facet2ArrBuffer);
-
-
 
         this._width = vdata.width;
         this._height = vdata.height;
@@ -234,15 +179,10 @@ export class Terrain extends TerraMesh {
             this.normalsBuffer = normalsb;
             this.normals = new Float32Array(this.normalsBuffer)
             this.normalsView = new DataView(this.normalsBuffer);
-           /* var vertexData = new BABYLON.VertexData();
-            vertexData.uvs = this.uvs;
-            vertexData.normals = this.normals;
-            vertexData.applyToMesh(this, true);*/
-           // this.updateVerticesData(BABYLON.VertexBuffer.UVKind, this.uvs);
             this.setVerticesData(VertexBuffer.NormalKind, this.normals);
 
             let boundingInfo = this.subMeshes[0].getBoundingInfo();
-            return Terrain.terrainWorker.message(WorkerReturn.Promise, 'init',
+            await Terrain.terrainWorker.message(WorkerReturn.Promise, 'init',
                 {
                     positions: this.positionsBuffer,
                     indices: this.indicesBuffer,
@@ -255,6 +195,32 @@ export class Terrain extends TerraMesh {
                     boundingBox: boundingInfo.boundingBox,
                     boundingSphere: boundingInfo.boundingSphere
                 });
+            const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] = device.createBufferMapped({
+                size: this.slopeArr.byteLength,
+                //@ts-ignore
+                usage: GPUBufferUsage.STORAGE,
+            });
+            new Int32Array(arrayBufferFirstMatrix).set(this.slopeArr);
+            gpuBufferFirstMatrix.unmap();
+            this.slopeArrGPUBuffer = gpuBufferFirstMatrix;
+
+            const [gpuBufferFacet1, arrayBufferFacet1] = device.createBufferMapped({
+                size: this.facet1Arr.byteLength,
+                //@ts-ignore
+                usage: GPUBufferUsage.STORAGE,
+            });
+            new Float32Array(arrayBufferFacet1).set(this.facet1Arr);
+            gpuBufferFacet1.unmap();
+            this.facet1ArrGPUBuffer = gpuBufferFacet1;
+
+            const [gpuBufferFacet2, arrayBufferFacet2] = device.createBufferMapped({
+                size: this.facet2Arr.byteLength,
+                //@ts-ignore
+                usage: GPUBufferUsage.STORAGE,
+            });
+            new Float32Array(arrayBufferFacet2).set(this.facet2Arr);
+            gpuBufferFacet2.unmap();
+            this.facet2ArrGPUBuffer = gpuBufferFacet2;
         })
 
         this._setReady(true);

@@ -5,7 +5,7 @@ importScripts("/js/DB.js");
 let terrainPositions: Float32Array;
 let terrainIndices: Uint32Array;
 let terrainNormals: Float32Array;
-let slopeArr: Int16Array;
+let slopeArr: Int32Array;
 let facet1Arr: Float32Array;
 let facet2Arr: Float32Array;
 
@@ -211,11 +211,11 @@ let boundingSphere;
 
 
 let methods2: { [index: string]: (e: WMessage<any>) => void} = {
-    init: (e: WMessage<{ positions: any, indices: any, normals: any, slopeArr: any, facet1Arr: any, facet2Arr: any, subdivisionsX: any, subdivisionsY: any, boundingBox: any, boundingSphere: any }>) => {
+    init: (e: WMessage<{ positions: any, indices: any, normals: any, slopeArr: SharedArrayBuffer, facet1Arr: any, facet2Arr: any, subdivisionsX: any, subdivisionsY: any, boundingBox: any, boundingSphere: any }>) => {
         terrainPositions = new Float32Array(e.data.positions);
         terrainIndices = new Uint32Array(e.data.indices);
         terrainNormals = new Float32Array(e.data.normals);
-        slopeArr = new Int16Array(e.data.slopeArr);
+        slopeArr = new Int32Array(e.data.slopeArr);
         facet1Arr = new Float32Array(e.data.facet1Arr);
         facet2Arr = new Float32Array(e.data.facet2Arr);
         _subdivisionsX = e.data.subdivisionsX;

@@ -218,30 +218,15 @@ export class TerrainTool extends UITAB {
                         binding: 0,
                         resource: {
                             //@ts-ignore
-                            buffer: (this.helper.material as StandardMaterial)._uniformBuffer.getBuffer().underlyingResource //this.myBox._uniformBuffer._buffer.underlyingResource
-                        }
-                    }],
-                }),
-                device.createBindGroup({
-                    layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(2),
-                    entries: [{
-                        binding: 0,
-                        resource: {
-                            //@ts-ignore
                             buffer: effect._pipelineContext.uniformBuffer.getBuffer().underlyingResource, //leftover
                         }
                     }],
                 })
             ];
         });
-        // (this.myBox.material as StandardMaterial)._uniformBuffer.getBuffer().underlyingResource material
-        
 
-        (this.helper.material as StandardMaterial).buildUniformLayout();
         //@ts-ignore
         (this.helper.material as StandardMaterial).bindForSubMesh = function (world: Matrix, mesh: Mesh, subMesh: SubMesh): void {
-            var scene = this.getScene();
-
             var defines = <StandardMaterialDefines>subMesh._materialDefines;
             if (!defines) {
                 return;
@@ -258,23 +243,9 @@ export class TerrainTool extends UITAB {
                  //@ts-ignore
                 (effect as TerraEffect).setMatrix("world", world);
             }
-
-            let mustRebind = this._mustRebind(scene, effect, mesh.visibility);
-
-            let ubo: UniformBuffer = this._uniformBuffer;
-            if (mustRebind) {
-                ubo.bindToEffect(effect, "Material");
-
-                this.bindViewProjection(effect);
-                if (!ubo.useUbo || !this.isFrozen || !ubo.isSync) {
-                    ubo.updateColor3("vEmissiveColor", StandardMaterial.EmissiveTextureEnabled ? this.emissiveColor : Color3.BlackReadOnly);
-                }
-            }
-            ubo.update();
-            this._afterBind(mesh, this._activeEffect);
         };
 
-
+        const verticesBuffer: GPUBuffer = this.helper.geometry.getVertexBuffer(VertexBuffer.PositionKind).getBuffer().underlyingResource;
         this.helper._draw = function (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
            
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
@@ -286,18 +257,14 @@ export class TerrainTool extends UITAB {
             }
             let engine = scene.getEngine() as WebGPUEngine;
 
-            //engine.drawArraysType(7, subMesh.verticesStart, subMesh.verticesCount, instancesCount);
             //@ts-ignore
             engine._currentIndexBuffer = null;
-           // console.log(effect._pipelineContext.vertexInputs);
             //@ts-ignore
-           // engine._setRenderPipeline(7);
-              //@ts-ignore
             const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
 
             renderPass.setPipeline(effect._pipelineContext.renderPipeline);
 
-            renderPass.setVertexBuffer(0, (this as Mesh).geometry.getVertexBuffer(VertexBuffer.PositionKind).getBuffer().underlyingResource);
+            renderPass.setVertexBuffer(0, verticesBuffer);
              //@ts-ignore
             const bindGroups = engine._getBindGroupsToRender();
              //@ts-ignore
@@ -308,17 +275,11 @@ export class TerrainTool extends UITAB {
                 engine._currentRenderPass!.setBlendColor(engine._alphaState._blendConstants as any);
             }
 
-
-
-
-
-
             renderPass.draw(subMesh.verticesCount, 8, subMesh.verticesStart, 0);
             return this;
         }
 
 
-        
 
 
 
@@ -342,44 +303,7 @@ export class TerrainTool extends UITAB {
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
         });*/
         //new Float32Array(vertexBuffer).set(vertices);
-       /* //@ts-ignore
-        this.helper._processRendering = (subMesh: SubMesh, effect: Effect, fillMode: number, batch: any, hardwareInstancedRendering: boolean,
-            onBeforeDraw: (isInstance: boolean, world: Matrix, effectiveMaterial?: Material) => void, effectiveMaterial?: Material): Mesh => {
-
-            // Draw
-            if (onBeforeDraw) {
-                //@ts-ignore
-                onBeforeDraw(false, this.helper._effectiveMesh.getWorldMatrix(), effectiveMaterial);
-            }
-            //@ts-ignore
-            const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
-            //@ts-ignore
-            const pipeline = engine._getRenderPipeline(fillMode);
-            renderPass.setPipeline(pipeline);
-            //@ts-ignore
-            //const vertexInputs = engine._getVertexInputsToRender();
-            //@ts-ignore
-            //engine._bindVertexInputs(vertexInputs);
-            renderPass.setVertexBuffer(0, GPUvertexBuffer);
-            //@ts-ignore
-            const bindGroups = engine._getBindGroupsToRender();
-            //@ts-ignore
-            engine._setRenderBindGroups(bindGroups);
-            renderPass.draw(4, 8, 0, 0);
-            renderPass.setPipeline(pipeline);
-
-            // this.uniformsV2.forEach((value, uniform) => {
-            //gl.uniform2f(uniform, value.x, value.y);
-            // });
-            // this.uniformsV2.clear();
-
-            // engine.applyStates();
-            engine._drawCalls.addCount(1, false);
-            return this.helper;
-
-            //return this;
-
-        }*/
+     
         this.canvas = <any>scene.getEngine().getRenderingCanvas();
         //this.helper.subMeshes[0]._materialEffect = 
 

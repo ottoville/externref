@@ -136,9 +136,13 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         })
         blazor.invokeMethod('setProgress', 12);
         //@ts-ignore
-        engine._adapter = await navigator.gpu!.requestAdapter(engine._options);
+        let adapter = await navigator.gpu!.requestAdapter(engine._options);
         //@ts-ignore
-        engine._device = await engine._adapter.requestDevice(engine._options.deviceDescriptor);
+        engine._adapter = adapter;
+        //@ts-ignore
+        let device = await adapter.requestDevice(engine._options.deviceDescriptor)
+        //@ts-ignore
+        engine._device = device;
         //@ts-ignore
         engine._initializeLimits();
         blazor.invokeMethod('setProgress', 13);
@@ -199,14 +203,14 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 console.log('websocket onopen');
                 blazor.invokeMethod('setProgress', 20);
                 // progelem.value = 30;
-                sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, webSocket));
+                sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, webSocket));
             }
             webSocket.onerror = async () => {
                 console.log('websocket onerror');
                 blazor.invokeMethod('setProgress', 20);
                 try {
                     //blazor.invokeMethod('setProgress', 20);
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas));
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device));
                 } catch (e) {
                     sceneInitedrej(e);
                 }
