@@ -198,7 +198,7 @@ export class Terrain extends TerraMesh {
     }
     //public ground: BABYLON.GroundMesh;
     constructor(vdata: TerrainMap) {
-        super('ground', vdata.indices, vdata.positions, undefined, vdata.uvs);
+        super('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
         console.debug('create terrain');
 
         this._subdivisionsX = 250;

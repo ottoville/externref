@@ -482,7 +482,7 @@
         "signature": "c82888c3ac396f33262ba499ebc16c1c2dfd454e456a1e495c566df3a627a4f0"
       },
       "./lib/babylon/materials/materialdefines.ts": {
-        "version": "398d498560499462ecd75742ed27372bf457994c847793f0056edf0421e50ce4",
+        "version": "a3b0e37982dc54c1732a547126e3acfed2b34492540375c77ecb98a330cd8555",
         "signature": "d2a217abded1cc66ab9cb375d39f944257a06c0a563d02f2397d70219891393b"
       },
       "./lib/babylon/materials/colorcurves.ts": {
@@ -1114,7 +1114,7 @@
         "signature": "9978d29688daff82cd03e573e86949bfad256f27204db859d32622319fe039f5"
       },
       "./terraeffect.ts": {
-        "version": "329c271fd33621a3d6cda130f9b813f459dc8e8c3922c1c3b163ba3261da66c8",
+        "version": "77981002d4db4e2daa140fc08cb9715019f9d7d36e68b5511af28f9b4dc4b4b8",
         "signature": "77b9053b6b97712f32d265be0d9f88acf546ce0753c2a06ea561fa004caa8a93"
       },
       "./workerthread.ts": {
@@ -1122,8 +1122,8 @@
         "signature": "449974bb70c444474f94e428738dca887a8ff3cdf941850ff1100eea515d4355"
       },
       "./terramesh.ts": {
-        "version": "1da980c70a371234bd9d532fb89b06ca2cae9df34f6b9a6895ae9245751a8f19",
-        "signature": "1fe372a2159cf06543e7471595ddcfa2e05d2a6d6fb4d88c8bd26f2fe5d1f6e5"
+        "version": "a78c2cee565cb6fe3215168961296de2d9f892510b327066c03fcc3fbd777fc2",
+        "signature": "4abace55bc14b95699f99e09fe0098e1edc0d0c8dc6f55ae748f26f1db514809"
       },
       "./terraray.ts": {
         "version": "2e8ffd3263938ad9baa94a0371c1d496b805536ace3e8a20f8a3046112e7215e",
@@ -2642,7 +2642,7 @@
         "signature": "5524b38454127f0fa31410de1336d4ded4e6f5af66c56789603aacf2851943b8"
       },
       "./world/terrain.ts": {
-        "version": "9418ac1da54034d45a0dbf0e6253cd8ced0cb64c182b2194c0767f9c6947ca24",
+        "version": "76d7708e69b7cad2a5bf2ca1349672f44eefad782426ae827b0934d21b9d95a0",
         "signature": "9953fdc3eaf32144297251a9d8011ef726441a8bdd5fc5e8f9d27f359e5f5491"
       },
       "./types/interfaces/index.d.ts": {
@@ -2678,15 +2678,15 @@
         "signature": "ff06810a0d45398734968d4c82ffaefe8763aafc402c9e1b74b03c401312dd6d"
       },
       "./tools/buildings.ts": {
-        "version": "4337150e682ab818bf26c6a575eddb3167c25d3effce8034c6b852b98e1a9bb8",
+        "version": "8e179763337f950fe7e5303636d5c8f0b9b7b41c01216a09e6c9f32567cd1587",
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "6e8ba1cf8d2ae5797f61b33fd10fbde878b715f5364bd05b61b7ba629a8ce670",
-        "signature": "865da709bf893dd7b7404280dfbf6bfc32155a3891d3b15443cbf0adcad5e29a"
+        "version": "21d13786a31e93ad23c017c927fcd7c0e3f617daa4865b04eebf234b76423f66",
+        "signature": "5c5ace61b235c544c5a5f6dfd4a5aa6188836a825a4aeb8b127665b5eee31fb3"
       },
       "./world/water.ts": {
-        "version": "18fc814b80b8c628ea275882051299df6e204d20c7435e09841899b1ecea7128",
+        "version": "58ca2148c399b6546df0bd3847302e5f317184fd42bcb97bdc73a420a1c4ba46",
         "signature": "69b97ca99fd38ece03e3d7693a37d0e9d1956f4b2f73cced6a94e477f9ff391f"
       },
       "./world/scene.ts": {
@@ -5245,7 +5245,8 @@
         "./lib/babylon/collisions/pickinginfo.ts",
         "./lib/babylon/meshes/submesh.ts",
         "./lib/babylon/materials/effect.ts",
-        "./lib/babylon/materials/material.ts"
+        "./lib/babylon/materials/material.ts",
+        "./lib/babylon/meshes/geometry.ts"
       ],
       "./uitab.ts": [
         "./lazyeval.ts"
@@ -9560,8 +9561,6 @@
         "./lib/babylon/engines/webgpuengine.ts",
         "./terraeffect.ts",
         "./lib/babylon/materials/standardmaterial.ts",
-        "./lib/babylon/meshes/mesh.vertexdata.ts",
-        "./lib/babylon/meshes/geometry.ts",
         "./lib/babylon/meshes/buffer.ts",
         "./lib/babylon/materials/materialhelper.ts",
         "./lib/babylon/materials/uniformbuffer.ts",
@@ -14549,7 +14548,6 @@
       "./lib/babylon/misc/uniqueidgenerator.ts",
       "./lib/babylon/scene.ts",
       "./lib/babylon/materials/effect.ts",
-      "./terraeffect.ts",
       "./workerthread.ts",
       "./terramesh.ts",
       "./terraray.ts",
@@ -14998,6 +14996,7 @@
       "./rustwasm/hello_wasm_bg.d.ts",
       "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
+      "./terraeffect.ts",
       "./tools/terrain.ts"
     ]
   },

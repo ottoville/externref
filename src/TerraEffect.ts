@@ -812,7 +812,6 @@ export class TerraEffect {
         //super(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, engine, defines, fallbacks, onCompiled, onError, indexParameters, key, sources);
         this.name = baseName;
         this._key = key;
-        console.log('new terraeffect');
         if ((<IEffectCreationOptions>attributesNamesOrOptions).attributes) {
             var options = <IEffectCreationOptions>attributesNamesOrOptions;
             this._engine = <WebGPUEngine>uniformsNamesOrEngine;

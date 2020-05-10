@@ -36,7 +36,7 @@ export class BuildingsUI extends UITAB {
                             (accumulator: Array<number>, currentValue, currentIndex) => accumulator.concat(currentValue * scaleArray[currentIndex % 3]),
                             []
                         );
-                        let building = new TerraMesh('building', indices, new Float32Array(positions),normals)
+                        let building = new TerraMesh('building', new Float32Array(positions),indices,normals)
                         building.checkCollisions = true;
                         building.position.x = pickInfo.pickedPoint.x;
                         building.position.z = pickInfo.pickedPoint.z;

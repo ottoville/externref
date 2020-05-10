@@ -10,6 +10,7 @@ import type { PickingInfo } from "./lib/babylon/Collisions/pickingInfo.js";
 import type { SubMesh } from "./lib/babylon/Meshes/subMesh.js";
 import type { Effect } from "./lib/babylon/Materials/effect.js";
 import { Material } from "./lib/babylon/Materials/material.js";
+import { Geometry } from "./lib/babylon/Meshes/geometry";
 
 
 var getLowestRoot: (a: number, b: number, c: number, maxR: number) => { root: number, found: boolean } =
@@ -56,7 +57,7 @@ export class TerraMesh extends Mesh {
     public lastColliderWorldVertices: SharedArrayBuffer | null = null;
     public lastColliderTransformMatrix: Matrix = Matrix.Zero();
 
-    public indices: Uint32Array;
+    public indices: Uint32Array | null = null;
     public indicesBuffer: SharedArrayBuffer;
 
     public normalsBuffer: SharedArrayBuffer | null = null;
@@ -66,12 +67,15 @@ export class TerraMesh extends Mesh {
     public uvs: SharedArrayBuffer | null = null;
 
     static worker = new ObjectWorkerThread('/webworkers/mesh.js');
-    constructor(name: string, indices: Uint32Array, positions: Float32Array, normals?: Float32Array, uvs?: Float32Array) {
+    constructor(name: string, positions: Float32Array, indices?: Uint32Array, normals?: Float32Array, uvs?: Float32Array) {
         super(name);
-        this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * indices.length);
-        this.indices = new Uint32Array(this.indicesBuffer);
-        this.indices.set(indices);
-        /*  Cannot read property 'length' of undefined */
+        const vertexData = new VertexData();
+        if (typeof (indices) != 'undefined') {
+            this.indicesBuffer = new SharedArrayBuffer(Uint32Array.BYTES_PER_ELEMENT * indices.length);
+            this.indices = new Uint32Array(this.indicesBuffer);
+            this.indices.set(indices);
+            vertexData.indices = this.indices;
+        }
         if (typeof (normals) != 'undefined') {
             this.normalsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * normals.length)
             this.normals = new Float32Array(this.normalsBuffer)
@@ -90,14 +94,15 @@ export class TerraMesh extends Mesh {
         this.positionsView = new DataView(this.positionsBuffer);
 
         TerraMesh.worker.message(this.uniqueId, 'init', [this.indicesBuffer, this.positionsBuffer, this.normalsBuffer]);
-        var vertexData = new VertexData();
-        vertexData.indices = this.indices;
+        
+        
         vertexData.positions = this.positions;
         if (this.uvs)
             vertexData.uvs = new Float32Array(this.uvs)
         if (this.normals)
             vertexData.normals = new Float32Array(this.normalsBuffer)
-        vertexData.applyToMesh(this, true);
+      //  vertexData.applyToMesh(this, true);
+        new Geometry(Geometry.RandomId(), this.getScene(), vertexData, false, this);
     }
     public _testTriangle(collider: {
         _normalizedVelocity: Vector3,

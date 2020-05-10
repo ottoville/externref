@@ -61,7 +61,7 @@ export class Sea extends TerraMesh {
     public _maxZ: number;
 
     constructor(scene: WorldScene) {
-        super('sea', new Uint32Array([3, 1, 0, 2, 3, 0]), new Float32Array([-5000, 0, 5000, 5000, 0, 5000, -5000, 0, -5000, 5000, 0, -5000]), new Float32Array([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]), new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]));
+        super('sea', new Float32Array([-5000, 0, 5000, 5000, 0, 5000, -5000, 0, -5000, 5000, 0, -5000]), new Uint32Array([3, 1, 0, 2, 3, 0]), new Float32Array([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]), new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]));
         /*
          * 
         indices: (6) [3, 1, 0, 2, 3, 0]

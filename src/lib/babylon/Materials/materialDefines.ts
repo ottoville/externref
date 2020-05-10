@@ -60,7 +60,6 @@ export class MaterialDefines {
      * Marks the material to indicate that it needs to be re-calculated
      */
     public markAsUnprocessed() {
-        console.log('dirty 0');
         this._isDirty = true;
     }
 
@@ -68,7 +67,6 @@ export class MaterialDefines {
      * Marks the material to indicate all of its defines need to be re-calculated
      */
     public markAllAsDirty() {
-        console.log('dirty 1');
         this._areTexturesDirty = true;
         this._areAttributesDirty = true;
         this._areLightsDirty = true;
@@ -82,7 +80,6 @@ export class MaterialDefines {
      * Marks the material to indicate that image processing needs to be re-calculated
      */
     public markAsImageProcessingDirty() {
-        console.log('dirty 2');
         this._areImageProcessingDirty = true;
         this._isDirty = true;
     }
@@ -92,7 +89,6 @@ export class MaterialDefines {
      * @param disposed Defines whether the light is dirty due to dispose or not
      */
     public markAsLightDirty(disposed = false) {
-        console.log('dirty 3');
         this._areLightsDirty = true;
         this._areLightsDisposed = this._areLightsDisposed || disposed;
         this._isDirty = true;
@@ -102,7 +98,6 @@ export class MaterialDefines {
      * Marks the attribute state as changed
      */
     public markAsAttributesDirty() {
-        console.log('dirty 4');
         this._areAttributesDirty = true;
         this._isDirty = true;
     }
@@ -111,7 +106,6 @@ export class MaterialDefines {
      * Marks the texture state as changed
      */
     public markAsTexturesDirty() {
-        console.log('dirty 5');
         this._areTexturesDirty = true;
         this._isDirty = true;
     }
@@ -120,7 +114,6 @@ export class MaterialDefines {
      * Marks the fresnel state as changed
      */
     public markAsFresnelDirty() {
-        console.log('dirty 6');
         this._areFresnelDirty = true;
         this._isDirty = true;
     }
@@ -129,7 +122,6 @@ export class MaterialDefines {
      * Marks the misc state as changed
      */
     public markAsMiscDirty() {
-        console.log('dirty 7');
         this._areMiscDirty = true;
         this._isDirty = true;
     }
