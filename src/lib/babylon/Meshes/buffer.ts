@@ -349,6 +349,7 @@ export class VertexBuffer {
      */
     constructor(engine: any, data: DataArray | Buffer, kind: string, updatable: boolean, postponeInternalCreation?: boolean, stride?: number,
         instanced?: boolean, offset?: number, size?: number, type?: number, normalized = false, useBytes = false, divisor = 1) {
+        //debugger;
         if (data instanceof Buffer) {
             this._buffer = data;
             this._ownsBuffer = false;

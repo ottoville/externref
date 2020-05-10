@@ -310,7 +310,7 @@
         "signature": "09f1164f49b8741734a22f222ef8ee0723f499ab2b84ede96e7823dae1136004"
       },
       "./lib/babylon/meshes/buffer.ts": {
-        "version": "256dac0173f6972b1b954e878ea97763bf5972a21c4b1846f33b024d062d7efd",
+        "version": "a5037454762d5f5224f7a7c4ded2c2af6d71a283cb0b48da00fe79471a3c40a8",
         "signature": "b86a5ae76d95531fb136ea4be560c10ddbb342aaf957764cf6e3c664d200c96a"
       },
       "./lib/babylon/collisions/intersectioninfo.ts": {
@@ -2682,7 +2682,7 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "a198f19dbdb65c7cfc94e2c1fe6c89df3a36084d2127d7faf9ff7b618c092400",
+        "version": "6e8ba1cf8d2ae5797f61b33fd10fbde878b715f5364bd05b61b7ba629a8ce670",
         "signature": "865da709bf893dd7b7404280dfbf6bfc32155a3891d3b15443cbf0adcad5e29a"
       },
       "./world/water.ts": {

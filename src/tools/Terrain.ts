@@ -82,7 +82,7 @@ export class TerrainTool extends UITAB {
         //this.myBox.setVerticesData("position", basePositions, false);
         vertexData.set(vertices, "position");
         new Geometry(Geometry.RandomId(), scene, vertexData, false, this.myBox);
-
+        this.myBox.geometry.getVertexBuffer(VertexBuffer.PositionKind).create();
 
         
         //this.myBox = this.helper;
@@ -328,23 +328,28 @@ export class TerrainTool extends UITAB {
             engine._currentIndexBuffer = null;
            // console.log(effect._pipelineContext.vertexInputs);
             //@ts-ignore
-            engine._setRenderPipeline(7);
+           // engine._setRenderPipeline(7);
               //@ts-ignore
             const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
-            
-          /*  renderPass.setPipeline(effect._pipelineContext.renderPipeline);
-           
-            //@ts-ignore
-            const vertexInputs = engine._getVertexInputsToRender();
-            //@ts-ignore
-            engine._bindVertexInputs(vertexInputs);
-            //@ts-ignore
-            engine._setRenderBindGroups(effect._pipelineContext.bindGroups);
+
+            renderPass.setPipeline(effect._pipelineContext.renderPipeline);
+           // const vertexInputs = engine._getVertexInputsToRender();
+            //  engine._bindVertexInputs(vertexInputs);
+            renderPass.setVertexBuffer(0, (this as Mesh).geometry.getVertexBuffer(VertexBuffer.PositionKind).getBuffer().underlyingResource);
+             //@ts-ignore
+            const bindGroups = engine._getBindGroupsToRender();
+             //@ts-ignore
+            engine._setRenderBindGroups(bindGroups);
             if (engine._alphaState.alphaBlend && engine._alphaState._isBlendConstantsDirty) {
                 // TODO WebGPU. should use renderPass.
-                //@ts-ignore
+                 //@ts-ignore
                 engine._currentRenderPass!.setBlendColor(engine._alphaState._blendConstants as any);
-            }*/
+            }
+
+
+
+
+
 
             renderPass.draw(subMesh.verticesCount, 8, subMesh.verticesStart, 0);
             return this;
