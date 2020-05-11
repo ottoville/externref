@@ -196,11 +196,11 @@ export class Terrain extends TerraMesh {
                     boundingSphere: boundingInfo.boundingSphere
                 });
             const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] = device.createBufferMapped({
-                size: this.slopeArr.byteLength,
+                size: this.slopeArrBuffer.byteLength,
                 //@ts-ignore
                 usage: GPUBufferUsage.STORAGE,
             });
-            new Int32Array(arrayBufferFirstMatrix).set(this.slopeArr);
+            new Int32Array(arrayBufferFirstMatrix).set(new Int32Array(this.slopeArrBuffer));
             gpuBufferFirstMatrix.unmap();
             this.slopeArrGPUBuffer = gpuBufferFirstMatrix;
 

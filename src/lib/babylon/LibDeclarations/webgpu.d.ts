@@ -179,17 +179,17 @@ type GPUVertexFormat =
 type GPUTextureAspect = "all" | "stencil-only" | "depth-only";
 
 type GPUBufferUsageFlags = number;
-// const GPUBufferUsage: {
-//   MAP_READ:  0x0001;
-//   MAP_WRITE: 0x0002;
-//   COPY_SRC:  0x0004;
-//   COPY_DST:  0x0008;
-//   INDEX:     0x0010;
-//   VERTEX:    0x0020;
-//   UNIFORM:   0x0040;
-//   STORAGE:   0x0080;
-//   INDIRECT:  0x0100;
-// };
+declare const GPUBufferUsage: {
+   MAP_READ:  0x0001;
+   MAP_WRITE: 0x0002;
+   COPY_SRC:  0x0004;
+   COPY_DST:  0x0008;
+   INDEX:     0x0010;
+   VERTEX:    0x0020;
+   UNIFORM:   0x0040;
+   STORAGE:   0x0080;
+   INDIRECT:  0x0100;
+ };
 
 type GPUColorWriteFlags = number;
 // const GPUColorWrite: {
@@ -264,10 +264,8 @@ interface GPUBufferBinding {
 interface GPUBufferCopyView {
   buffer: GPUBuffer;
   offset?: number;
-    rowPitch?: number;
-    bytesPerRow?: number,
-    imageHeight?: number;
-    rowsPerImage?: number;
+  bytesPerRow: number,
+  rowsPerImage?: number;
 }
 
 interface GPUTextureCopyView {
@@ -334,7 +332,7 @@ interface GPUVertexBufferLayoutDescriptor {
 
 interface GPUVertexStateDescriptor {
   indexFormat?: GPUIndexFormat;
-  vertexBuffers: GPUVertexBufferLayoutDescriptor[];
+  vertexBuffers?: GPUVertexBufferLayoutDescriptor[];
 }
 
 interface GPULimits {

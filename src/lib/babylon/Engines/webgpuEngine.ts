@@ -1037,8 +1037,8 @@ export class WebGPUEngine extends Engine {
             dataBuffer = this._createBuffer(pixels, WebGPUConstants.GPUBufferUsage_TRANSFER_SRC | WebGPUConstants.GPUBufferUsage_TRANSFER_DST);
             const bufferView: GPUBufferCopyView = {
                 buffer: dataBuffer.underlyingResource,
-                rowPitch: rowPitch,
-                imageHeight: height,
+                bytesPerRow: rowPitch,
+                rowsPerImage: height,
                 offset: 0,
             };
             commandEncoder.copyBufferToTexture(bufferView, textureView, textureExtent);
@@ -1059,8 +1059,8 @@ export class WebGPUEngine extends Engine {
             dataBuffer = this._createBuffer(alignedPixels, WebGPUConstants.GPUBufferUsage_TRANSFER_SRC | WebGPUConstants.GPUBufferUsage_TRANSFER_DST);
             const bufferView: GPUBufferCopyView = {
                 buffer: dataBuffer.underlyingResource,
-                rowPitch: rowPitch,
-                imageHeight: height,
+                bytesPerRow: rowPitch,
+                rowsPerImage: height,
                 offset: 0,
             };
             commandEncoder.copyBufferToTexture(bufferView, textureView, textureExtent);

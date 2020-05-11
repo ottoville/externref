@@ -805,10 +805,10 @@ export class TerraEffect {
 
         engine?: ThinEngine, defines: Nullable<string> = null,
         fallbacks: Nullable<IEffectFallbacks> = null, onCompiled: Nullable<(effect: Effect) => void> = null, onError: Nullable<(effect: Effect, errors: string) => void> = null, indexParameters?: any, key: string = "",
-        sources?: {
-            vertex: string
-            fragment: string,
-        }) {
+        sources?: [
+            Promise<string>,
+            Promise<string>,
+        ]) {
         //super(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, engine, defines, fallbacks, onCompiled, onError, indexParameters, key, sources);
         this.name = baseName;
         this._key = key;
@@ -846,16 +846,20 @@ export class TerraEffect {
         this._attributeLocationByName = {};
 
         this.uniqueId = TerraEffect._uniqueIdSeed++;
-        if (sources) {
-            this._fragmentSourceCode = sources.fragment;
-            this._vertexSourceCode = sources.vertex;
-            this._prepareEffect();
-            return;
-        }
 
-        this._processingContext = (engine as WebGPUEngine)!._getShaderProcessingContext();
         if (this._engine.compilingShaders.has(key))
             return;
+        this._engine.compilingShaders.add(key);
+        /*if (sources) {
+            Promise.all(sources).then((r) => {
+                [this._vertexSourceCodeOverride, this._fragmentSourceCodeOverride] = r;
+                this._prepareEffect();
+            });            
+            return;
+        }*/
+
+        this._processingContext = (engine as WebGPUEngine)!._getShaderProcessingContext();
+
 
         var vertexSource: any;
         var fragmentSource: any;
@@ -888,22 +892,21 @@ export class TerraEffect {
             platformName: this._engine.shaderPlatformName,
             processingContext: this._processingContext
         };
-        this._engine.compilingShaders.add(key);
+       
         //@ts-ignore
         if (attributesNamesOrOptions.preprocessed) {
-            Promise.all([
-                this._loadShader2(vertexSource, "Vertex"),
-                this._loadShader2(fragmentSource, "Fragment")
-            ]).then(r => {
+            Promise.all(sources).then(r => {
                 const [migratedVertexCode, migratedFragmentCode] = r;
                 const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
-                this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
+                this._vertexSourceCodeOverride = finalShaders.vertexCode;
+                this._fragmentSourceCodeOverride = finalShaders.fragmentCode;
+                this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, false);
             })
         }
         else {
             Promise.all([
-                this._loadShader2(vertexSource, "Vertex").then(vertexCode => TerraEffect.Process(vertexCode, Object.assign({ isFragment: false }, processorOptions))),
-                this._loadShader2(fragmentSource, "Fragment")
+                TerraEffect._loadShader2(vertexSource, "Vertex").then(vertexCode => TerraEffect.Process(vertexCode, Object.assign({ isFragment: false }, processorOptions))),
+                TerraEffect._loadShader2(fragmentSource, "Fragment")
             ]).then(async (r: [string, string]) => {
                 let [migratedVertexCode, fragmentCode] = r;
                 let migratedFragmentCode = await TerraEffect.Process(fragmentCode, Object.assign({ isFragment: true }, processorOptions));
@@ -1133,10 +1136,7 @@ export class TerraEffect {
             this._compilationError = "";
             this._isReady = true;
             this.#compiledCallBack();
-            // if (this.onCompiled) {
-                //@ts-ignore
-                // this.onCompiled(this);
-            // }
+
             this.onCompileObservable.notifyObservers(this);
             this.onCompileObservable.clear();
 
@@ -1205,7 +1205,7 @@ export class TerraEffect {
             this._allFallbacksProcessed = true;
         }
     }
-    private _loadShader2(shader: any, key: string) : Promise<string> {
+    static _loadShader2(shader: any, key: string) : Promise<string> {
         var shaderUrl = TerraEffect.ShadersRepository + shader;
         let suffix = key;
         if (key == 'Vertex')
