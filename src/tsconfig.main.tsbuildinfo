@@ -2682,15 +2682,15 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "cc4b93fc7b9b8a8e9fe25cd4523d0906f1f7d014327b00c3073c15d74d54b533",
-        "signature": "5c5ace61b235c544c5a5f6dfd4a5aa6188836a825a4aeb8b127665b5eee31fb3"
+        "version": "fd85067b92c50fb1f579e2358feb735ad9c9cef08a99330814f8f41dfd57bd19",
+        "signature": "edff93e596529e45a02a0c393e0f539296eecd7dadb9aa14d9d6ad6ee6c0d32d"
       },
       "./world/water.ts": {
         "version": "58ca2148c399b6546df0bd3847302e5f317184fd42bcb97bdc73a420a1c4ba46",
         "signature": "69b97ca99fd38ece03e3d7693a37d0e9d1956f4b2f73cced6a94e477f9ff391f"
       },
       "./world/scene.ts": {
-        "version": "405b51913b9a56cff70af0d53cd60d1d0be7e7b9a537079658aea173665044ec",
+        "version": "d4b1c38f44169d6874f240eb2ae8df1f3951048ced15e2a86c65a688694a98d0",
         "signature": "47f9c184f41464eaa395caa969ce9bdc7e8f7e3fe7548e7d2f01c7e5ad6aaa07"
       },
       "./code.ts": {
@@ -14942,7 +14942,6 @@
       "./tools/camera.ts",
       "./tools/buildings.ts",
       "./world/water.ts",
-      "./world/scene.ts",
       "./code.ts",
       "./commonmath.ts",
       "./webgl.ts",
@@ -14998,7 +14997,8 @@
       "./rustwasm/hello_wasm_bg.d.ts",
       "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./tools/terrain.ts"
+      "./tools/terrain.ts",
+      "./world/scene.ts"
     ]
   },
   "version": "3.8.1-rc"

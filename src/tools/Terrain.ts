@@ -40,31 +40,34 @@ export class TerrainTool extends UITAB {
     private glTexture3: WebGLTexture | null = null;
     private gl: WebGLRenderingContext;
     private uniformsV2: Map<WebGLUniformLocation, { x: number, y: number }> = new Map();
-    private setTime = () => {
-        this.helpermaterial.setFloat("time", (this.timed - new Date().getTime()) / 1000);
+    private setTime = async () => {
+        let arr = await this.timeBufferStorage.mapWriteAsync();
+        new Float32Array(arr).set([(this.timed - new Date().getTime()) % 100000 / 1000]); // %100000 is to keep float minimal to greater precise
+        this.timeBufferStorage.unmap();
+        this.device.defaultQueue.submit(this.updateTime)
     }
     public canvas: HTMLCanvasElement;
-    // private helperIndices = new Uint16Array([0, 1, 2, 3]);
-    private GPUuniformBuffer: GPUBuffer;
+
     private helper = new TerraMesh("TerrainHelper", new Float32Array([
-        -1.5, 30, 2,
-        -1.5, 30, -2,
-        1.5, 30, 3,
-        1.5, 30, -3,
+        -0.5, 30, 2,
+        -0.5, 30, -2,
+        0.5, 30, 3,
+        0.5, 30, -3,
     ]));
+    timeBufferStorage: GPUBuffer;
+    updateTime: GPUCommandBuffer[];
+
 
 
     constructor(
         private scene: Scene,
         private terrain: Terrain,
         private camera: ArcRotateCamera,
+        private device: GPUDevice
     ) {
         super();
 
-        //this.myBox = MeshBuilder.CreateBox("myBox", { height: 20, width: 20, depth: 20 });
         let engine = scene.getEngine() as WebGPUEngine;
-        //@ts-ignore
-        let device: GPUDevice = (engine as WebGPUEngine)._device;
 
         this.helper.visibility = 0;
         this.helper.isUnIndexed = true;
@@ -200,34 +203,22 @@ export class TerrainTool extends UITAB {
                 length: 0
             })
             effect._pipelineContext.buildUniformLayout();
-            /*effect._pipelineContext.uniformBuffer.update = () => {
-                debugger;
-            }*/
+
             await terrain.inited;
             let timeBuffer = device.createBuffer({
                 size: 4,
                 usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
             });
-            let timeBufferStorage = device.createBuffer({
+            this.timeBufferStorage = device.createBuffer({
                 size: 4,
                 usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
             });
             const commandEncoder = device.createCommandEncoder();
             commandEncoder.copyBufferToBuffer(
-                timeBufferStorage, 0,
+                this.timeBufferStorage, 0,
                 timeBuffer, 0,
                 4);
-            let commands = [commandEncoder.finish()];
-            (async function updateTime() {
-                let arr = await timeBufferStorage.mapWriteAsync();
-                new Int32Array(arr).set([new Date().getTime()]);
-                timeBufferStorage.unmap();
-                device.defaultQueue.submit(commands)
-                setTimeout(updateTime, 20);
-            })();
-
-
-
+            this.updateTime = [commandEncoder.finish()];
 
             effect._pipelineContext.bindGroups = [
                 device.createBindGroup({
@@ -321,32 +312,16 @@ export class TerrainTool extends UITAB {
             return this;
         }
 
-     
         this.canvas = <any>scene.getEngine().getRenderingCanvas();
-        //this.helper.subMeshes[0]._materialEffect = 
 
-        let ctx = new WebGPUShaderProcessingContext();
-        ctx.availableUBOs = {
-            'slopeArr': { setIndex: 0, bindingIndex: 0 },
-            'facet1Arr': { setIndex: 1, bindingIndex: 1 },
-            'facet2Arr': { setIndex: 2, bindingIndex: 2 }
-        }
-        ctx.orderedUBOsAndSamplers = [[{ name: 'slopeArr', isSampler: false }, { name: 'facet1Arr', isSampler: false }, { name: 'facet2Arr', isSampler: false }, { name: 'uniforms', isSampler: false }]]
-      
 
-        this.helpermaterial = new ShaderMaterial("shader", this.scene, "./shaders/helper",
-            {
-                attributes: ["position", "normal", "uv"],
-                uniforms: ["world", "worldView", "worldViewProjection", "view", "projection", "flatPos", "viewProjection"]
-            });
-        this.helpermaterial.fillMode = Material.TriangleFanDrawMode;
-        this.helpermaterial.isReady = () => true;
+
     }
     private direction = 0;
 
     activate = (): void => {
         this.helper._internalAbstractMeshDataInfo._visibility = 1;
-        this.addListener("pointermove", this.mouseListener, { lazy: 15 });
+        this.addListener("pointermove", this.mouseListener, { lazy: 7 });
         this.scene.registerBeforeRender(this.setTime);
 
         Terrain.terrainWorker.subscribe('SubHeights', (v) => {
@@ -383,37 +358,6 @@ export class TerrainTool extends UITAB {
             mainboundingInfo.boundingSphere.radius = v.data.boundingSphereRadius
             mainboundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius
         });
-      //  this.helper.material = this.helpermaterial;
-        let me = this;
-        this.helpermaterial.bindOnlyWorldMatrix = (function (world: Matrix) {
-            var scene = this.getScene();
-
-            if (!this._effect) {
-                return;
-            }
-            if (this._options.uniforms.indexOf("world") !== -1) {
-                let effect = (<Effect>this._effect);
-                this._effect.setMatrix("world", world);
-                me.GPUuniformBuffer.setSubData((2 * 4) + 4 + (16 * 4), world.m as Float32Array);
-                //if (effect._cacheMatrix("world", world)) {
-                //engine.setMatrices(effect.getUniform("world"), world.toArray() as Float32Array);
-                // gl.uniformMatrix4fv(effect.getUniform("world"), false, world.toArray() as Float32Array);
-                // }
-            }
-
-            if (this._options.uniforms.indexOf("worldView") !== -1) {
-                world.multiplyToRef(scene.getViewMatrix(), this._cachedWorldViewMatrix);
-                this._effect.setMatrix("worldView", this._cachedWorldViewMatrix);
-            }
-
-            if (this._options.uniforms.indexOf("worldViewProjection") !== -1) {
-                if (typeof (this._cachedWorldViewProjectionMatrix) == 'undefined')
-                    this._cachedWorldViewProjectionMatrix = new Matrix();
-                world.multiplyToRef(scene.getTransformMatrix(), this._cachedWorldViewProjectionMatrix);
-                this._effect.setMatrix("worldViewProjection", this._cachedWorldViewProjectionMatrix);
-                me.GPUuniformBuffer.setSubData((2 * 4) + 4 + (16 * 4) + (16 * 4), this._cachedWorldViewProjectionMatrix.m as Float32Array);
-            }
-        }).bind(this.helpermaterial);
     };
     private mouseinterval: number = 0;
     pointerdownf = (evt: PointerEvent): void => {

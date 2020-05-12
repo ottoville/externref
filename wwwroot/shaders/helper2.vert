@@ -1,4 +1,5 @@
 ﻿#version 450
+precision lowp float;
 layout(set = 0, binding = 0) uniform Scene {
     mat4 viewProjection;
     mat4 view;
@@ -18,10 +19,8 @@ layout(std430, set = 1, binding = 3) readonly buffer Facet2 {
 } facet2;
 
 layout(set = 2, binding = 0) uniform Terra {
-   int time;
+   float time;
 } terra;
-
-precision highp float;
 //layout(std140, column_major) uniform;
 
 #define CUSTOM_VERTEX_BEGIN
@@ -32,17 +31,12 @@ const float Epsilon = 0.0000001;
 const float angleStep= (PI*2.0)/8.0;
 
 void main(void) {
-    float angle=float(gl_InstanceIndex) * angleStep;
+    float angle= terra.time+float(gl_InstanceIndex) * angleStep;
     float c = cos(angle);
 	float s = sin(angle);
-    
-  //  vec2 rotated=vec2(position.x * c - position.z * s, position.x * s + position.z * c);
-    //vec2 offset = rotated+vec2(10.0*c, 10.0*s);
-    vec2 offset = vec2(10.0*c, 10.0*s);
-
-    mat4 newWorld =  world + mat4(0,0,0,0,0,0,0,0,0,0,0,0,offset.x,0,offset.y,0);
-    vec4 worldPos = newWorld * vec4(position, 1.0);
-   // vec4 worldPos = world * vec4(position, 1.0);
+    vec2 rotated=vec2(position.x * c - position.z * s, position.x * s + position.z * c);
+    vec2 offset = rotated+vec2(10.0*c, 10.0*s);
+    vec4 worldPos = world * vec4(offset.x, 30, offset.y, 1.0);
     gl_Position = viewProjection * worldPos;
     gl_Position.y *= -1.;
 }

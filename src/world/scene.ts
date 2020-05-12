@@ -876,7 +876,7 @@ export class WorldScene extends Scene {
             ground.isPickable = true;
             // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.getSceneUniformBuffer().update();
-            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera);
+            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera, device);
             blazor.invokeMethod('setProgress', 51);
             shadermateria.setVector3("lightPos", sunlight.position);
             blazor.invokeMethod('setProgress', 52);
