@@ -5,20 +5,14 @@ import { Mesh } from "../lib/babylon/Meshes/mesh";
 import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial";
 import type { Scene } from "../lib/babylon/scene";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera";
-import { Material } from "../lib/babylon/Materials/material";
 import type { Effect, IEffectCreationOptions } from "../lib/babylon/Materials/effect";
 import type { SubMesh } from "../lib/babylon/Meshes/subMesh";
 import { TerraMesh } from "../TerraMesh.js";
-import { WebGPUShaderProcessingContext } from "../lib/babylon/Engines/WebGPU/webgpuShaderProcessingContext";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
 import { TerraEffect } from "../TerraEffect.js";
 import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial";
-import { VertexBuffer } from "../lib/babylon/Meshes/buffer";
 import { MaterialHelper } from "../lib/babylon/Materials/materialHelper";
-import { UniformBuffer } from "../lib/babylon/Materials/uniformBuffer";
-import { ImageProcessingConfiguration } from "../lib/babylon/Materials/imageProcessingConfiguration";
-import { Color3 } from "../lib/babylon/Maths/math.color";
-import { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
+import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
 
 
 //@ts-ignore
@@ -27,32 +21,30 @@ export class TerrainTool extends UITAB {
     //private ray = BABYLON.Ray.Zero();
     //private pickinfo: BABYLON.PickingInfo;
     //private vertexData = new BABYLON.VertexData();
-   /* private helper = new TerraMesh("Helper", new Uint32Array([0, 1, 2, 3]), new Float32Array([
-        -10.5, 30, 12,
-        -10.5, 30, -12,
-        10.5, 30, 13,
-        10.5, 30, -13,
-    ]));*/
     private helpermaterial: ShaderMaterial;
     private timed = new Date().getTime();
     private glTexture: WebGLTexture | null = null;
     private glTexture2: WebGLTexture | null = null;
     private glTexture3: WebGLTexture | null = null;
     private gl: WebGLRenderingContext;
-    private uniformsV2: Map<WebGLUniformLocation, { x: number, y: number }> = new Map();
+    private settingTime = false;
     private setTime = async () => {
+        if (this.settingTime)
+            return;
+        this.settingTime = true;
         let arr = await this.timeBufferStorage.mapWriteAsync();
         new Float32Array(arr).set([(this.timed - new Date().getTime()) % 100000 / 1000]); // %100000 is to keep float minimal to greater precise
         this.timeBufferStorage.unmap();
-        this.device.defaultQueue.submit(this.updateTime)
+        this.device.defaultQueue.submit(this.updateTime);
+        this.settingTime = false;
     }
     public canvas: HTMLCanvasElement;
-
+    private engine: WebGPUEngine;
     private helper = new TerraMesh("TerrainHelper", new Float32Array([
-        -0.5, 30, 2,
-        -0.5, 30, -2,
-        0.5, 30, 3,
-        0.5, 30, -3,
+        -0.5, 1.5, 2,
+        -0.5, 1.5, -2,
+        0.5, 1.5, 3,
+        0.5, 1.5, -3,
     ]));
     timeBufferStorage: GPUBuffer;
     updateTime: GPUCommandBuffer[];
@@ -66,15 +58,15 @@ export class TerrainTool extends UITAB {
         private device: GPUDevice
     ) {
         super();
-
-        let engine = scene.getEngine() as WebGPUEngine;
+        const engine = scene.getEngine() as WebGPUEngine;
+        this.engine = engine;
 
         this.helper.visibility = 0;
         this.helper.isUnIndexed = true;
         let options = { height: 20, width: 20, depth: 20, sideOrientation: Mesh._GetDefaultSideOrientation(undefined) };
         this.helper._originalBuilderSideOrientation = options.sideOrientation;
 
-        this.helper.geometry.getVertexBuffer(VertexBuffer.PositionKind).create();
+        this.helper.geometry.getVertexBuffer("position").create();
 
         
         //this.myBox = this.helper;
@@ -84,39 +76,8 @@ export class TerrainTool extends UITAB {
         
         let defines = this.helper.subMeshes[0]._materialDefines as StandardMaterialDefines;
         defines.markAsProcessed();
-        
+        this.helper.alwaysSelectAsActiveMesh = true;
 
-        //Attributes
-        var attribs = [VertexBuffer.PositionKind];
-
-        if (defines.NORMAL) {
-            attribs.push(VertexBuffer.NormalKind);
-        }
-
-        if (defines.UV1) {
-            attribs.push(VertexBuffer.UVKind);
-        }
-
-        if (defines.UV2) {
-            attribs.push(VertexBuffer.UV2Kind);
-        }
-
-        if (defines.VERTEXCOLOR) {
-            attribs.push(VertexBuffer.ColorKind);
-        }
-
-        MaterialHelper.PrepareAttributesForInstances(attribs, defines);
-        MaterialHelper.PrepareAttributesForMorphTargets(attribs, this.helper, defines);
-
-        var uniforms = ["world", "view", "viewProjection", "vEyePosition", "vLightsType", "vAmbientColor", "vDiffuseColor", "vSpecularColor", "vEmissiveColor", "visibility",
-            "vFogInfos", "vFogColor", "pointSize",
-            "vDiffuseInfos", "vAmbientInfos", "vOpacityInfos", "vReflectionInfos", "vEmissiveInfos", "vSpecularInfos", "vBumpInfos", "vLightmapInfos", "vRefractionInfos",
-            "mBones",
-            "vClipPlane", "vClipPlane2", "vClipPlane3", "vClipPlane4", "vClipPlane5", "vClipPlane6", "diffuseMatrix", "ambientMatrix", "opacityMatrix", "reflectionMatrix", "emissiveMatrix", "specularMatrix", "bumpMatrix", "normalMatrix", "lightmapMatrix", "refractionMatrix",
-            "diffuseLeftColor", "diffuseRightColor", "opacityParts", "reflectionLeftColor", "reflectionRightColor", "emissiveLeftColor", "emissiveRightColor", "refractionLeftColor", "refractionRightColor",
-            "vReflectionPosition", "vReflectionSize",
-            "logarithmicDepthConstant", "vTangentSpaceParams", "alphaCutOff", "boneTextureWidth"
-        ];
 
         var samplers = ["diffuseSampler", "ambientSampler", "opacitySampler", "reflectionCubeSampler",
             "reflection2DSampler", "emissiveSampler", "specularSampler", "bumpSampler", "lightmapSampler",
@@ -124,13 +85,9 @@ export class TerrainTool extends UITAB {
 
         var uniformBuffers = ["Material", "Scene"];
 
-        if (ImageProcessingConfiguration) {
-            ImageProcessingConfiguration.PrepareUniforms(uniforms, defines);
-            ImageProcessingConfiguration.PrepareSamplers(samplers, defines);
-        }
         
         MaterialHelper.PrepareUniformsAndSamplersList(<IEffectCreationOptions>{
-            uniformsNames: uniforms,
+            uniformsNames: [],
             uniformBuffersNames: uniformBuffers,
             samplers: samplers,
             defines: defines,
@@ -142,8 +99,8 @@ export class TerrainTool extends UITAB {
 
         let effect = new TerraEffect("helper2", <IEffectCreationOptions>{
             preprocessed: true,
-            attributes: attribs,
-            uniformsNames: uniforms,
+            attributes: [],
+            uniformsNames: [],
             uniformBuffersNames: uniformBuffers,
             samplers: samplers,
             defines: join,
@@ -153,7 +110,7 @@ export class TerrainTool extends UITAB {
             //@ts-ignore
             indexParameters: { maxSimultaneousLights: (this.helper.material as StandardMaterial)._maxSimultaneousLights, maxSimultaneousMorphTargets: defines.NUM_MORPH_INFLUENCERS }
 
-        }, engine, undefined, engine, undefined, undefined, undefined, undefined, undefined, undefined, [
+        }, this.engine, undefined, this.engine, undefined, undefined, undefined, undefined, undefined, undefined, [
                 TerraEffect._loadShader2("helper2", "Vertex"), TerraEffect._loadShader2("helper2", "Fragment")
         ]);
         
@@ -167,7 +124,7 @@ export class TerrainTool extends UITAB {
             const stages = effect._pipelineContext.stages;
             effect._pipelineContext.renderPipeline = device.createRenderPipeline({
                 //@ts-ignore
-                sampleCount: engine._mainPassSampleCount,
+                sampleCount: this.engine._mainPassSampleCount,
                 primitiveTopology: 'triangle-strip',
                 rasterizationState: {
                     cullMode: 'none',
@@ -278,7 +235,7 @@ export class TerrainTool extends UITAB {
 
         };
 
-        const verticesBuffer: GPUBuffer = this.helper.geometry.getVertexBuffer(VertexBuffer.PositionKind).getBuffer().underlyingResource;
+        const verticesBuffer: GPUBuffer = this.helper.geometry.getVertexBuffer("position").getBuffer().underlyingResource;
         this.helper._draw = function (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
            
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
@@ -288,7 +245,6 @@ export class TerrainTool extends UITAB {
             if (this._internalMeshDataInfo._onBeforeDrawObservable) {
                 this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
             }
-            let engine = scene.getEngine() as WebGPUEngine;
 
             //@ts-ignore
             engine._currentIndexBuffer = null;
@@ -312,7 +268,7 @@ export class TerrainTool extends UITAB {
             return this;
         }
 
-        this.canvas = <any>scene.getEngine().getRenderingCanvas();
+        this.canvas = this.engine.getRenderingCanvas();
 
 
 
@@ -321,7 +277,7 @@ export class TerrainTool extends UITAB {
 
     activate = (): void => {
         this.helper._internalAbstractMeshDataInfo._visibility = 1;
-        this.addListener("pointermove", this.mouseListener, { lazy: 7 });
+        this.addListener("pointermove", this.mouseListener, { lazy: 15 });
         this.scene.registerBeforeRender(this.setTime);
 
         Terrain.terrainWorker.subscribe('SubHeights', (v) => {
@@ -385,7 +341,7 @@ export class TerrainTool extends UITAB {
         this.addListener("pointerup", this.pointerupf, { once: true });
         this.camera.detachControl(this.canvas);
         this.mouseinterval = setInterval(() => {
-            let gl = (<WebGL2RenderingContext><any>this.gl);
+         /*   let gl = (<WebGL2RenderingContext><any>this.gl);
             //@ts-ignore
             let normalbuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.NormalKind]._buffer.getBuffer().underlyingResource;
             //@ts-ignore
@@ -400,7 +356,7 @@ export class TerrainTool extends UITAB {
                 let range = <{ min: number, max: number }><any>e;
                 gl.bufferSubData(this.gl.ARRAY_BUFFER, range.min, this.terrain.positionsView, range.min, range.max - range.min);
                 gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
-            });
+            });*/
             //this.elevateFaces(this.pickinfo, 50, 5);
         }, 100);
     }
@@ -425,8 +381,7 @@ export class TerrainTool extends UITAB {
         }).bind(this.helpermaterial)();
     };
     mouseListener = (evt: PointerEvent): void => {
-        let engine = this.scene.getEngine();
-        let viewport = this.camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
+        let viewport = this.camera.viewport.toGlobal(this.engine.getRenderWidth(), this.engine.getRenderHeight());
         let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
         Terrain.terrainWorker.message(WorkerReturn.Promise, 'mousemove',
             {
@@ -440,7 +395,6 @@ export class TerrainTool extends UITAB {
                 //let uniformlocation;
                 this.helper.position.x = flatPos.x;
                 this.helper.position.z = flatPos.y;
-                this.helper.position.y = 40;
                 (this.helper.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.helper.getWorldMatrix());
                 //this.GPUuniformBuffer.setSubData(0, new Float32Array([flatPos.x, flatPos.y]))
                 //let transformmatrix = this.scene.getTransformMatrix();

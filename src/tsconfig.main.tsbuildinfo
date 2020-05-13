@@ -2682,8 +2682,8 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "fd85067b92c50fb1f579e2358feb735ad9c9cef08a99330814f8f41dfd57bd19",
-        "signature": "edff93e596529e45a02a0c393e0f539296eecd7dadb9aa14d9d6ad6ee6c0d32d"
+        "version": "184955933b59e619ad88aa93145877ae5bbb784341626df402168921fa731c74",
+        "signature": "93541833c0696ba441acb501d06dcffcec9ff9f6a4ccdfcdf9db174d15c75706"
       },
       "./world/water.ts": {
         "version": "58ca2148c399b6546df0bd3847302e5f317184fd42bcb97bdc73a420a1c4ba46",
@@ -9553,19 +9553,13 @@
         "./lib/babylon/materials/shadermaterial.ts",
         "./lib/babylon/scene.ts",
         "./lib/babylon/cameras/arcrotatecamera.ts",
-        "./lib/babylon/materials/material.ts",
         "./lib/babylon/materials/effect.ts",
         "./lib/babylon/meshes/submesh.ts",
         "./terramesh.ts",
-        "./lib/babylon/engines/webgpu/webgpushaderprocessingcontext.ts",
         "./lib/babylon/engines/webgpuengine.ts",
         "./terraeffect.ts",
         "./lib/babylon/materials/standardmaterial.ts",
-        "./lib/babylon/meshes/buffer.ts",
         "./lib/babylon/materials/materialhelper.ts",
-        "./lib/babylon/materials/uniformbuffer.ts",
-        "./lib/babylon/materials/imageprocessingconfiguration.ts",
-        "./lib/babylon/maths/math.color.ts",
         "./lib/babylon/engines/webgpu/webgpupipelinecontext.ts"
       ],
       "./world/water.ts": [
