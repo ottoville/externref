@@ -2906,7 +2906,7 @@
         "signature": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86"
       },
       "./rustwasm/hello_wasm.js": {
-        "version": "e1ed2a91845f7240482b6d82b7630668cf951b5df4c97ef281a3d440dcab008b",
+        "version": "6a46400090dd40da2263903087a43a1de57d6db13fe10c05852c18360dc809d4",
         "signature": "ce7196f043e593877984a7c982df828e9f356e408ce4d35a0a2c542aec421000"
       },
       "./node_modules/@types/facebook-js-sdk/index.d.ts": {
@@ -14934,6 +14934,7 @@
       "./tools/zones.ts",
       "./tools/camera.ts",
       "./tools/buildings.ts",
+      "./tools/terrain.ts",
       "./world/water.ts",
       "./world/scene.ts",
       "./code.ts",
@@ -14989,9 +14990,8 @@
       "./plants/grass.ts",
       "./rustwasm/hello_wasm.d.ts",
       "./rustwasm/hello_wasm_bg.d.ts",
-      "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./tools/terrain.ts"
+      "./rustwasm/hello_wasm.js"
     ]
   },
   "version": "3.8.1-rc"
