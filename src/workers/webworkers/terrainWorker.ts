@@ -373,10 +373,12 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
             self.postMessage({ id: e.id, data: { x: pickInfo.pickedPoint.x, y: pickInfo.pickedPoint.z } });
         }
     },
-    elevateFaces: (e: WMessage<{radius:number, height:number, direction: number}>) => {
+    elevateFaces: (e: WMessage<{ radius: number, height: number, direction: number }>) => {
+        //1.5-2 ms
         let radiusPow = Math.pow(e.data.radius, 2);
         // Impact zone
         if (_selectedVertices == null) {
+           // console.time('selecting vertices');
             _selectedVertices = [];
             let sphereCenter = new Vector2(pickInfo.pickedPoint.x, pickInfo.pickedPoint.z);
 
@@ -395,6 +397,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
                     });
                 }
             }
+           // console.timeEnd('selecting vertices');
         }
 
         // Elevate vertices
@@ -404,6 +407,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
         }[] = [];
         let v1v2 = new Vector3();
         let v3v2 = new Vector3();
+       
         _selectedVertices.forEach(sv => {
             //let positiony = this._groundPositions[sv.vertice].y;
             let positiony = terrainPositions[sv.vertice * 3 + 1];
@@ -583,12 +587,14 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
                 facet1Arr.set([norm1[0], norm1[1], norm1[2], d1], (row * _subdivisionsX + col) * 4);
                 facet2Arr.set([norm2[0], norm2[1], norm2[2], d2], (row * _subdivisionsX + col) * 4);
             }
+            const srcOffset = (row * _subdivisionsX + minCol - 1) * 4;
             self.postMessage({
                 type: 'SubHeights', data: {
                     offsetX: minCol - 1,
                     endX: maxCol + 1,
                     offsetY: row,
-                    srcOffset: (row * _subdivisionsX + minCol - 1) * 4
+                    srcOffset: srcOffset,
+                    length: ((row * _subdivisionsX + maxCol + 1) * 4) - srcOffset
                 }
             });
         }

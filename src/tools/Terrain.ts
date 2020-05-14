@@ -11,7 +11,6 @@ import { TerraMesh } from "../TerraMesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
 import { TerraEffect } from "../TerraEffect.js";
 import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial";
-import { MaterialHelper } from "../lib/babylon/Materials/materialHelper";
 import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
 
 
@@ -48,6 +47,8 @@ export class TerrainTool extends UITAB {
     ]));
     timeBufferStorage: GPUBuffer;
     updateTime: GPUCommandBuffer[];
+    tempFacet1Buffer: GPUBuffer = null;
+    tempFacet2Buffer: GPUBuffer = null;
 
 
 
@@ -55,7 +56,8 @@ export class TerrainTool extends UITAB {
         private scene: Scene,
         private terrain: Terrain,
         private camera: ArcRotateCamera,
-        private device: GPUDevice
+        private device: GPUDevice,
+        private glslang: { compileGLSL: (source: string, type: string) => Uint32Array }
     ) {
         super();
         const engine = scene.getEngine() as WebGPUEngine;
@@ -86,12 +88,6 @@ export class TerrainTool extends UITAB {
         var uniformBuffers = ["Material", "Scene"];
 
         
-        MaterialHelper.PrepareUniformsAndSamplersList(<IEffectCreationOptions>{
-            uniformsNames: [],
-            uniformBuffersNames: uniformBuffers,
-            samplers: samplers,
-            defines: defines,
-        });
         
         var join = defines.toString();
         TerraEffect._loadShader2("helper2", "Vertex"),
@@ -270,8 +266,18 @@ export class TerrainTool extends UITAB {
 
         this.canvas = this.engine.getRenderingCanvas();
 
-
-
+        /*(async () => {
+            const computeShaderCode = await (await (fetch('../../shaders/TerrainVertices.comp'))).text();
+            const computePipeline = device.createComputePipeline({
+                computeStage: {
+                    module: device.createShaderModule({
+                        code: glslang.compileGLSL(computeShaderCode, "compute")
+                    }),
+                    entryPoint: "main"
+                }
+            });
+        })();*/
+        
     }
     private direction = 0;
 
@@ -279,8 +285,59 @@ export class TerrainTool extends UITAB {
         this.helper._internalAbstractMeshDataInfo._visibility = 1;
         this.addListener("pointermove", this.mouseListener, { lazy: 15 });
         this.scene.registerBeforeRender(this.setTime);
+        let commandEncoder: GPUCommandEncoder;
+        let updateFacet: GPUCommandBuffer[];
+        let query = [];
+        Terrain.terrainWorker.subscribe('SubHeights', async (v) => {
+            // TODO: Update only partial of data
+            if (!this.tempFacet1Buffer) {
+                this.tempFacet1Buffer = this.device.createBuffer({
+                    size: this.terrain.facet1Arr.byteLength, //v.data.length
+                    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+                });
+                this.tempFacet2Buffer = this.device.createBuffer({
+                    size: this.terrain.facet2Arr.byteLength,
+                    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+                });
+                commandEncoder = this.device.createCommandEncoder();
+                commandEncoder.copyBufferToBuffer(
+                    this.tempFacet1Buffer, 0,
+                    this.terrain.facet1ArrGPUBuffer,
+                    0, // v.data.srcOffset,
+                    this.terrain.facet1Arr.byteLength);
+                commandEncoder.copyBufferToBuffer(
+                    this.tempFacet2Buffer, 0,
+                    this.terrain.facet2ArrGPUBuffer,
+                    0,
+                    this.terrain.facet2Arr.byteLength);
+                updateFacet = [commandEncoder.finish()];
+            }
+            query.push(v.data);
+            if (query.length == 1) {
+                while (query.length) {
+                    try {
+                        await Promise.all([
+                            this.tempFacet1Buffer.mapWriteAsync().then(facet1 => {
+                                //new Float32Array(facet1).set(new Float32Array(this.terrain.facet1ArrBuffer, v.data.srcOffset, v.data.length/4))
+                                new Float32Array(facet1).set(this.terrain.facet1Arr)
+                                this.tempFacet1Buffer.unmap();
+                            }),
+                            this.tempFacet2Buffer.mapWriteAsync().then(facet2 => {
+                                new Float32Array(facet2).set(this.terrain.facet2Arr)
+                                this.tempFacet2Buffer.unmap();
+                            })
+                        ]);
+                        this.device.defaultQueue.submit(updateFacet);
+                        query.shift();
+                    } catch (e) {
+                        console.error(e);
+                        debugger;
+                        query = [];
+                    }
+                }
 
-        Terrain.terrainWorker.subscribe('SubHeights', (v) => {
+            }
+
             /*let width = v.data.endX - v.data.offsetX;
             gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
             (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.offsetX, v.data.offsetY, width, 1, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr, v.data.srcOffset)
@@ -340,23 +397,57 @@ export class TerrainTool extends UITAB {
         }
         this.addListener("pointerup", this.pointerupf, { once: true });
         this.camera.detachControl(this.canvas);
+        const normalbuffer: GPUBuffer = this.terrain._geometry._vertexBuffers["normal"]._buffer.getBuffer().underlyingResource;
+        const vertexbuffer: GPUBuffer = this.terrain._geometry._vertexBuffers["position"]._buffer.getBuffer().underlyingResource;
+
+        const tempNormalBuffer = this.device.createBuffer({
+            size: this.terrain._geometry._vertexBuffers["normal"]._buffer.getBuffer().capacity, // also this.terrain.normals.byteLength
+            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+        });
+        const tempVertexBuffer = this.device.createBuffer({
+            size: this.terrain._geometry._vertexBuffers["position"]._buffer.getBuffer().capacity, // also this.terrain.normals.byteLength
+            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+        });
+        const commandEncoder = this.device.createCommandEncoder();
+        commandEncoder.copyBufferToBuffer(
+            tempNormalBuffer, 0,
+            normalbuffer, 0,
+            this.terrain.normals.byteLength);
+        commandEncoder.copyBufferToBuffer(
+            tempVertexBuffer, 0,
+            vertexbuffer, 0,
+            this.terrain.positions.byteLength);
+        const updateNormals = [commandEncoder.finish()];
+
+
+        let busy = false;
+
         this.mouseinterval = setInterval(() => {
-         /*   let gl = (<WebGL2RenderingContext><any>this.gl);
-            //@ts-ignore
-            let normalbuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.NormalKind]._buffer.getBuffer().underlyingResource;
-            //@ts-ignore
-            let vertexbuffer: WebGLBuffer = this.terrain._geometry._vertexBuffers[BABYLON.VertexBuffer.PositionKind]._buffer.getBuffer().underlyingResource;
-            Terrain.terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(e => {
+            Terrain.terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
+                if (busy)
+                    return;
+                busy = true;
                 let NormalsRange = <{ normalsMin: number, normalsMax: number }><any>e;
-                gl.bindBuffer(gl.ARRAY_BUFFER, normalbuffer);
+                await Promise.all([tempNormalBuffer.mapWriteAsync().then(normalsArrBuffer => {
+                    new Float32Array(normalsArrBuffer).set(this.terrain.normals);
+                    tempNormalBuffer.unmap();
+                }),
+                tempVertexBuffer.mapWriteAsync().then(positionsArrBuffer => {
+                    new Float32Array(positionsArrBuffer).set(this.terrain.positions);
+                    tempVertexBuffer.unmap();
+
+                })]);
+                this.device.defaultQueue.submit(updateNormals);
+                busy = false;
+                /* gl.bindBuffer(gl.ARRAY_BUFFER, normalbuffer);
                 if (this.terrain.normalsView !== null)
                     gl.bufferSubData(gl.ARRAY_BUFFER, NormalsRange.normalsMin, this.terrain.normalsView, NormalsRange.normalsMin, NormalsRange.normalsMax - NormalsRange.normalsMin)
                 gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
                 gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexbuffer);
                 let range = <{ min: number, max: number }><any>e;
                 gl.bufferSubData(this.gl.ARRAY_BUFFER, range.min, this.terrain.positionsView, range.min, range.max - range.min);
-                gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
-            });*/
+               */
+            });
             //this.elevateFaces(this.pickinfo, 50, 5);
         }, 100);
     }
@@ -383,6 +474,12 @@ export class TerrainTool extends UITAB {
     mouseListener = (evt: PointerEvent): void => {
         let viewport = this.camera.viewport.toGlobal(this.engine.getRenderWidth(), this.engine.getRenderHeight());
         let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
+        if (this.tempFacet1Buffer && this.tempFacet2Buffer) {
+          /*  this.tempFacet1Buffer.destroy();
+            this.tempFacet2Buffer.destroy();
+            this.tempFacet1Buffer = null;
+            this.tempFacet2Buffer = null;*/
+        }
         Terrain.terrainWorker.message(WorkerReturn.Promise, 'mousemove',
             {
                 x: evt.clientX,
@@ -396,12 +493,14 @@ export class TerrainTool extends UITAB {
                 this.helper.position.x = flatPos.x;
                 this.helper.position.z = flatPos.y;
                 (this.helper.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.helper.getWorldMatrix());
+
                 //this.GPUuniformBuffer.setSubData(0, new Float32Array([flatPos.x, flatPos.y]))
                 //let transformmatrix = this.scene.getTransformMatrix();
                // this.GPUuniformBuffer.setSubData((2 * 4) + 4, transformmatrix.m as Float32Array);
 
 
             });
+
     }
     raise = (): void => {
         this.direction = 1;

@@ -99,7 +99,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         blazor.invokeMethod('setProgress', 4);
         let EffectModule = await EffectModuleP;
         blazor.invokeMethod('setProgress', 9);
-        let WorldSceneModule = await WorldSceneModuleP;
+        const WorldSceneModule = await WorldSceneModuleP;
 
         blazor.invokeMethod('setProgress', 10);
         /*   } catch (e) {
@@ -116,9 +116,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
         var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: false } as WebGPUEngineOptions);
         //await engine.initAsync();
-
-        //@ts-ignore
-        engine._glslang = await new Promise((res, rej) => {
+        const glslang: { compileGLSL: (source: string, type: string) => Uint32Array } = await new Promise((res, rej) => {
             let glslangOptions = {
                 //@ts-ignore
                 ...EngineModule.WebGPUEngine._glslangDefaultOptions
@@ -133,7 +131,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             script.onerror = rej;
             script.src = glslangOptions.jsPath;
             document.head.appendChild(script);
-        })
+        });
+        //@ts-ignore
+        engine._glslang = glslang;
         blazor.invokeMethod('setProgress', 12);
         //@ts-ignore
         let adapter = await navigator.gpu!.requestAdapter(engine._options);
@@ -203,14 +203,14 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 console.log('websocket onopen');
                 blazor.invokeMethod('setProgress', 20);
                 // progelem.value = 30;
-                sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, webSocket));
+                sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, glslang,  webSocket));
             }
             webSocket.onerror = async () => {
                 console.log('websocket onerror');
                 blazor.invokeMethod('setProgress', 20);
                 try {
                     //blazor.invokeMethod('setProgress', 20);
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device));
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, glslang));
                 } catch (e) {
                     sceneInitedrej(e);
                 }

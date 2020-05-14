@@ -44,9 +44,9 @@ export class Terrain extends TerraMesh {
     public static terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
     public inited: Promise<any>;
-    public static async fromHeightMap(map: string, device: GPUDevice): Promise<Terrain> {
+    public static async fromHeightMap(map: string, device: GPUDevice, glslang: { compileGLSL: (source: string, type: string) => Uint32Array }): Promise<Terrain> {
         let vdata = await Terrain.terrainWorker.message<TerrainMap, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {url: map});
-        return new Terrain(vdata, device);
+        return new Terrain(vdata, device, glslang);
     }
     public createTexture(engine: WebGPUEngine) : Promise<GPUBuffer> {
         return new Promise((tres, trej) => {
@@ -54,29 +54,25 @@ export class Terrain extends TerraMesh {
                 console.log('creating terrain texture')
                 /* WEBGPU START */
                 const computeShaderCode = await (await (fetch('../../shaders/webgpu.comp'))).text();
-                //@ts-ignore
-                const device: GPUDevice = engine._device;
-
                 // Result Matrix
 
                 const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5120 * 5120);
-                const resultMatrixBuffer = device.createBuffer({
+                const resultMatrixBuffer = this.device.createBuffer({
                     size: resultMatrixBufferSize,
                     //@ts-ignore
                     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
                 });
-                const glslang = await glslangModule();
-                const computePipeline = device.createComputePipeline({
+                const computePipeline = this.device.createComputePipeline({
                     computeStage: {
-                        module: device.createShaderModule({
-                            code: glslang.compileGLSL(computeShaderCode, "compute")
+                        module: this.device.createShaderModule({
+                            code: this.glslang.compileGLSL(computeShaderCode, "compute")
                         }),
                         entryPoint: "main"
                     }
                 });
-                const bindGroup = device.createBindGroup({
+                const bindGroup = this.device.createBindGroup({
                     //@ts-ignore
-                    layout: computePipeline.getBindGroupLayout(0 /* index */),
+                    layout: computePipeline.getBindGroupLayout(0),
                     entries: [
                         {
                             binding: 0,
@@ -105,7 +101,7 @@ export class Terrain extends TerraMesh {
                     ]
                 });
                 console.time('Webgpu paint')
-                const commandEncoder = device.createCommandEncoder();
+                const commandEncoder = this.device.createCommandEncoder();
 
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipeline);
@@ -115,7 +111,7 @@ export class Terrain extends TerraMesh {
                 //tres(resultMatrixBuffer);
                 console.timeEnd('Webgpu paint');
                 // Get a GPU buffer for reading in an unmapped state.
-                const gpuReadBuffer = device.createBuffer({
+                const gpuReadBuffer = this.device.createBuffer({
                     size: resultMatrixBufferSize-8,
                     //@ts-ignore
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
@@ -131,7 +127,7 @@ export class Terrain extends TerraMesh {
 
                 // Submit GPU commands.
                 const gpuCommands = commandEncoder.finish();
-                device.defaultQueue.submit([gpuCommands]);
+                this.device.defaultQueue.submit([gpuCommands]);
                 //resultMatrixBuffer.destroy();
                 tres(resultMatrixBuffer);
 
@@ -145,7 +141,7 @@ export class Terrain extends TerraMesh {
         });
     }
     //public ground: BABYLON.GroundMesh;
-    constructor(vdata: TerrainMap, device: GPUDevice) {
+    constructor(vdata: TerrainMap, private device: GPUDevice, private glslang: { compileGLSL: (source: string, type: string) => Uint32Array }) {
         super('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
         
         this._subdivisionsX = 250;
@@ -197,7 +193,6 @@ export class Terrain extends TerraMesh {
                 });
             const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] = device.createBufferMapped({
                 size: this.slopeArrBuffer.byteLength,
-                //@ts-ignore
                 usage: GPUBufferUsage.STORAGE,
             });
             new Int32Array(arrayBufferFirstMatrix).set(new Int32Array(this.slopeArrBuffer));
@@ -206,8 +201,7 @@ export class Terrain extends TerraMesh {
 
             const [gpuBufferFacet1, arrayBufferFacet1] = device.createBufferMapped({
                 size: this.facet1Arr.byteLength,
-                //@ts-ignore
-                usage: GPUBufferUsage.STORAGE,
+                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
             });
             new Float32Array(arrayBufferFacet1).set(this.facet1Arr);
             gpuBufferFacet1.unmap();
@@ -215,8 +209,7 @@ export class Terrain extends TerraMesh {
 
             const [gpuBufferFacet2, arrayBufferFacet2] = device.createBufferMapped({
                 size: this.facet2Arr.byteLength,
-                //@ts-ignore
-                usage: GPUBufferUsage.STORAGE,
+                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
             });
             new Float32Array(arrayBufferFacet2).set(this.facet2Arr);
             gpuBufferFacet2.unmap();

@@ -721,7 +721,7 @@ export class WorldScene extends Scene {
         }).bind(this._inputManager)(this, elementToAttachTo);
     }
     public terrainReady: Promise<void>;
-    constructor(engine: Engine | WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private device: GPUDevice, private webSocket?: WebSocket) {
+    constructor(engine: Engine | WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private device: GPUDevice, glslang: { compileGLSL: (source: string, type: string) => Uint32Array }, private webSocket?: WebSocket) {
         super(engine as Engine);
         
         blazor.invokeMethod('setProgress', 21);
@@ -818,7 +818,7 @@ export class WorldScene extends Scene {
 
         this.terrainReady = new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
             try {
-                const groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device);
+                const groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device, glslang);
                 let cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
                 if (cachedtexture) {
                     let cacheimg = new Image();
@@ -876,7 +876,7 @@ export class WorldScene extends Scene {
             ground.isPickable = true;
             // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.getSceneUniformBuffer().update();
-            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera, device);
+            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera, device, glslang);
             blazor.invokeMethod('setProgress', 51);
             shadermateria.setVector3("lightPos", sunlight.position);
             blazor.invokeMethod('setProgress', 52);
