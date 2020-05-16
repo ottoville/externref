@@ -13,9 +13,12 @@
     <Version>0.1.0</Version>
 	<TypeScriptBuildMode>true</TypeScriptBuildMode>
 	<ApplicationInsightsResourceId>/subscriptions/235f31bd-1e8d-42fa-853a-8610f202e58d/resourcegroups/terrasim-rg/providers/microsoft.insights/components/terrasim</ApplicationInsightsResourceId>
-
+  <BlazorWebAssemblyEnableLinking>false</BlazorWebAssemblyEnableLinking> 
+  <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
   </PropertyGroup>
-
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Remove="EdgeDriverTest1\**" />
     <Compile Remove="EdgeDriverTest2\**" />
@@ -176,6 +179,8 @@
     <None Remove="src\webgl.ts" />
     <None Remove="src\workers\commonMath.d.ts" />
     <None Remove="src\workers\interfaces.ts" />
+    <None Remove="src\workers\service-worker.published.ts" />
+    <None Remove="src\workers\service-worker.ts" />
     <None Remove="src\workers\webgpu.d.ts" />
     <None Remove="src\workers\webworkers\bitmapWorker.ts" />
     <None Remove="src\workers\webworkers\mesh.ts" />
@@ -183,6 +188,7 @@
     <None Remove="src\workers\webworkers\terrainWorker.ts" />
     <None Remove="src\world\terrain.ts" />
     <None Remove="src\world\water.ts" />
+    <None Remove="web.config.disabled" />
   </ItemGroup>
 
   <ItemGroup>
@@ -215,6 +221,7 @@
     <Content Include="src\node_modules\typescript\package.json" />
     <Content Include="src\node_modules\typescript\ThirdPartyNoticeText.txt" />
     <Content Include="src\webgpu\webgpu.comp" />
+    <Content Include="web.config.disabled" />
   </ItemGroup>
 
   <ItemGroup>
@@ -426,10 +433,17 @@
     <Folder Include="src\lib\babylon\Legacy\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <TypeScriptCompile Update="src\workers\service-worker.published.ts">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </TypeScriptCompile>
+  </ItemGroup>
+
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="node .\buildShaders.js&#xD;&#xA;node .\setversion.js&#xD;&#xA;npm run build --prefix ./src" />
+    <Exec Command="node .\buildShaders.js&#xD;&#xA;node .\renameJS.js&#xD;&#xA;npm run build --prefix ./src" />
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

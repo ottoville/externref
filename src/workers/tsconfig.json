@@ -14,7 +14,8 @@
   ],
   "include": [
     "./webworkers/*.ts",
-    "./sw.ts",
+    "./service-worker.ts",
+    "./service-worker.published.ts",
     "commonMath.d.ts",
     "./webgpu.d.ts"
   ]

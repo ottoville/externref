@@ -1,24 +1,21 @@
-﻿import type { Effect } from "./lib/babylon/Materials/effect";
-import type { IEffectCreationOptions } from "./lib/babylon/Materials/effect";
-import type { ThinEngine } from "./lib/babylon/Engines/thinEngine";
-import type { IEffectFallbacks } from "./lib/babylon/Materials/iEffectFallbacks";
-import { Observable } from "./lib/babylon/Misc/observable";
-import type { DataBuffer } from "./lib/babylon/Meshes/dataBuffer";
-import type { IPipelineContext } from "./lib/babylon/Engines/IPipelineContext";
-import type { Engine } from "./lib/babylon/Engines/engine";
-import type { ShaderProcessingContext, ProcessingOptions } from "./lib/babylon/Engines/Processors/shaderProcessingOptions";
-import { ShaderProcessor } from "./lib/babylon/Engines/Processors/shaderProcessor";
-import { Constants } from "./lib/babylon/Engines/constants";
-import type { InternalTexture } from "./lib/babylon/Materials/Textures/internalTexture";
-import type { BaseTexture } from "./lib/babylon/Materials/Textures/baseTexture";
-import type { RenderTargetTexture } from "./lib/babylon/Materials/Textures/renderTargetTexture";
-import type { PostProcess } from "./lib/babylon/PostProcesses/postProcess";
-import type { IColor4Like, IVector4Like, IMatrixLike, IVector2Like, IVector3Like, IColor3Like } from "./lib/babylon/Maths/math.like";
-import type { WebGPUPipelineContext } from "./lib/babylon/Engines/WebGPU/webgpuPipelineContext";
-import { UniformBuffer } from "./lib/babylon/Materials/uniformBuffer";
-import type { WebGPUEngine, compiledShader } from "./lib/babylon/Engines/webgpuEngine";
-import { WebGPUConstants } from "./lib/babylon/Engines/WebGPU/webgpuConstants";
-import { Mesh } from "./lib/babylon/Meshes/mesh.js";
+﻿import type { Effect } from "./lib/babylon/Materials/effect.js";
+import type { IEffectCreationOptions } from "./lib/babylon/Materials/effect.js";
+import type { ThinEngine } from "./lib/babylon/Engines/thinEngine.js";
+import type { IEffectFallbacks } from "./lib/babylon/Materials/iEffectFallbacks.js";
+import { Observable } from "./lib/babylon/Misc/observable.js";
+import type { DataBuffer } from "./lib/babylon/Meshes/dataBuffer.js";
+import type { IPipelineContext } from "./lib/babylon/Engines/IPipelineContext.js";
+import type { Engine } from "./lib/babylon/Engines/engine.js";
+import type { ShaderProcessingContext, ProcessingOptions } from "./lib/babylon/Engines/Processors/shaderProcessingOptions.js";
+import { ShaderProcessor } from "./lib/babylon/Engines/Processors/shaderProcessor.js";
+import type { InternalTexture } from "./lib/babylon/Materials/Textures/internalTexture.js";
+import type { BaseTexture } from "./lib/babylon/Materials/Textures/baseTexture.js";
+import type { RenderTargetTexture } from "./lib/babylon/Materials/Textures/renderTargetTexture.js";
+import type { PostProcess } from "./lib/babylon/PostProcesses/postProcess.js";
+import type { IColor4Like, IVector4Like, IMatrixLike, IVector2Like, IVector3Like, IColor3Like } from "./lib/babylon/Maths/math.like.js";
+import type { WebGPUPipelineContext } from "./lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
+import type { WebGPUEngine, compiledShader } from "./lib/babylon/Engines/webgpuEngine.js";
+import { WebGPUConstants } from "./lib/babylon/Engines/WebGPU/webgpuConstants.js";
 
 //@ts-ignore
 /*ShaderProcessor._FileToolsLoadFile = function (url, onSuccess) {
@@ -905,8 +902,8 @@ export class TerraEffect {
         }
         else {
             Promise.all([
-                TerraEffect._loadShader2(vertexSource, "Vertex").then(vertexCode => TerraEffect.Process(vertexCode, Object.assign({ isFragment: false }, processorOptions))),
-                TerraEffect._loadShader2(fragmentSource, "Fragment")
+                TerraEffect._loadShader2(vertexSource+".vert").then(vertexCode => TerraEffect.Process(vertexCode, Object.assign({ isFragment: false }, processorOptions))),
+                TerraEffect._loadShader2(fragmentSource+".frag")
             ]).then(async (r: [string, string]) => {
                 let [migratedVertexCode, fragmentCode] = r;
                 let migratedFragmentCode = await TerraEffect.Process(fragmentCode, Object.assign({ isFragment: true }, processorOptions));
@@ -1205,18 +1202,12 @@ export class TerraEffect {
             this._allFallbacksProcessed = true;
         }
     }
-    static _loadShader2(shader: any, key: string) : Promise<string> {
+    static _loadShader2(shader: any) : Promise<string> {
         var shaderUrl = TerraEffect.ShadersRepository + shader;
-        let suffix = key;
-        if (key == 'Vertex')
-            suffix = '.vert';
-        if (key == 'Fragment')
-            suffix = '.frag';
-        let url = shaderUrl + suffix;
         // Vertex shader
-        return caches.match(url).then(async response => {
+        return caches.match(shaderUrl).then(async response => {
             if (!response)
-                response = await fetch(url);
+                response = await fetch(shaderUrl);
             return response.text();
         })
     }

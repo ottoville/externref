@@ -1,16 +1,16 @@
 ﻿import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn } from "../WorkerThread.js";
-import { Mesh } from "../lib/babylon/Meshes/mesh";
-import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial";
-import type { Scene } from "../lib/babylon/scene";
-import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera";
-import type { Effect, IEffectCreationOptions } from "../lib/babylon/Materials/effect";
-import type { SubMesh } from "../lib/babylon/Meshes/subMesh";
+import { Mesh } from "../lib/babylon/Meshes/mesh.js";
+import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
+import type { Scene } from "../lib/babylon/scene.js";
+import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
+import type { Effect, IEffectCreationOptions } from "../lib/babylon/Materials/effect.js";
+import type { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
 import { TerraMesh } from "../TerraMesh.js";
-import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
+import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { TerraEffect } from "../TerraEffect.js";
-import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial";
+import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial.js";
 import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
 
 
@@ -90,8 +90,6 @@ export class TerrainTool extends UITAB {
         
         
         var join = defines.toString();
-        TerraEffect._loadShader2("helper2", "Vertex"),
-            TerraEffect._loadShader2("helper2", "Fragment")
 
         let effect = new TerraEffect("helper2", <IEffectCreationOptions>{
             preprocessed: true,
@@ -107,7 +105,7 @@ export class TerrainTool extends UITAB {
             indexParameters: { maxSimultaneousLights: (this.helper.material as StandardMaterial)._maxSimultaneousLights, maxSimultaneousMorphTargets: defines.NUM_MORPH_INFLUENCERS }
 
         }, this.engine, undefined, this.engine, undefined, undefined, undefined, undefined, undefined, undefined, [
-                TerraEffect._loadShader2("helper2", "Vertex"), TerraEffect._loadShader2("helper2", "Fragment")
+                TerraEffect._loadShader2("helper2.vert"), TerraEffect._loadShader2("helper2.frag")
         ]);
         
             //@ts-ignore

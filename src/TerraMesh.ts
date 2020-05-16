@@ -10,7 +10,7 @@ import type { PickingInfo } from "./lib/babylon/Collisions/pickingInfo.js";
 import type { SubMesh } from "./lib/babylon/Meshes/subMesh.js";
 import type { Effect } from "./lib/babylon/Materials/effect.js";
 import { Material } from "./lib/babylon/Materials/material.js";
-import { Geometry } from "./lib/babylon/Meshes/geometry";
+import { Geometry } from "./lib/babylon/Meshes/geometry.js";
 
 
 var getLowestRoot: (a: number, b: number, c: number, maxR: number) => { root: number, found: boolean } =

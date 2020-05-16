@@ -92,6 +92,16 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
     try {
         let [WasmModuleP, EngineModuleP, EffectModuleP, WorldSceneModuleP] = ['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js', './world/scene.js'].map(url => import(url));
+        const CACHE_NAME = 'terrasim-v1';
+        let shadersP: Promise<{ [key: string]: string }> = fetch('/shaders/shaders.json').then(s => s.json());
+
+        const cache= await caches.open(CACHE_NAME)
+        const jsondata = await shadersP
+        const shaderPuts: Promise<void>[] = [];
+        for (var file in jsondata) {
+            shaderPuts.push(cache.put(new Request('/shaders/' + file), new Response(jsondata[file])));
+        }
+        await Promise.all(shaderPuts);
         //try {
         let WasmModule = await WasmModuleP;
         blazor.invokeMethod('setProgress', 2);

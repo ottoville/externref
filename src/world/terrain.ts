@@ -3,8 +3,8 @@ import { TerraMesh } from "../TerraMesh.js";
 //@ts-ignore
 import glslangModule from 'https://unpkg.com/@webgpu/glslang@0.0.8/dist/web-devel/glslang.js';
 import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
-import { WebGPUEngine } from "../lib/babylon/index.js";
-
+import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
+import { TerraEffect } from "../TerraEffect.js";
 
 interface TerrainMap {
     width: number,
@@ -53,7 +53,8 @@ export class Terrain extends TerraMesh {
             this.inited.then(async () => {
                 console.log('creating terrain texture')
                 /* WEBGPU START */
-                const computeShaderCode = await (await (fetch('../../shaders/webgpu.comp'))).text();
+               
+                const computeShaderCode = await TerraEffect._loadShader2('webgpu.comp');
                 // Result Matrix
 
                 const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5120 * 5120);
