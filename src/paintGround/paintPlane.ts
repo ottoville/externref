@@ -26,26 +26,26 @@ export class paintPlane extends paintGround {
     private planeorgpos: Vector3 = Vector3.Zero();
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }> {
         const positions:number[] = [0,40,0, 0,40,1];
-        const indices: number[] = [0,3];
+        const indices: number[] = [0,1];
         let row = 0;
         let backwards = false;
         while (true) {
             if (row != 0) {
                 if (!backwards)
-                    indices.push(positions.push(0, 40, row + 1) - 3)
+                    indices.push((positions.push(0, 40, row + 1) - 3) / 3)
                 else
-                    indices.push(positions.push(width, 40, row + 1) - 3)
+                    indices.push((positions.push(width, 40, row + 1) - 3) / 3)
             }
             for (let i = 1; i <= width; i++) {
                 if (!backwards) {
                     if(row==0)
-                        indices.push(positions.push(i, 40, row) - 3)
+                        indices.push((positions.push(i, 40, row) - 3) / 3)
                     else 
                         indices.push(indices[indices.length - i * 4]);
-                    indices.push(positions.push(i, 40, row + 1) - 3);
+                    indices.push((positions.push(i, 40, row + 1) - 3) / 3);
                 } else {
                     indices.push(indices[indices.length - i * 4]);
-                    indices.push(positions.push(width - i, 40, row + 1) - 3)
+                    indices.push((positions.push(width - i, 40, row + 1) - 3) / 3)
 
                 }
             }
@@ -71,8 +71,14 @@ export class paintPlane extends paintGround {
     #verticesCount: number = 0;
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
         //this.tempplane = MeshBuilder.CreateTiledGround("tgd2", { xmin: -0.5, xmax: 0.5, zmin: -0.5, zmax: 0.5, subdivisions: { w: 10, h: 10 }, precision: { w: 0, h: 0 }, updatable: true });
-        
-        this.tempplane = new TerraMesh("tempplane", new Float32Array([-5000, 50, -5000, 5000, 50, 5000, 5000, 50, -5000]), new Uint32Array([0, 1, 2]));
+        let generator = this.createTiledGround(2);
+
+        for (let i = 0; i < 1; i++) {
+            generator.next();
+        }
+        let values = generator.next().value;
+        this.tempplane = new TerraMesh("tempplane", new Float32Array(values.positions), new Uint32Array(values.indices));
+        //this.tempplane = new TerraMesh("tempplane", new Float32Array([-5000, 50, -5000, 5000, 50, 5000, 5000, 50, -5000]), new Uint32Array([0, 1, 2]));
         this.tempplane._internalAbstractMeshDataInfo._visibility = 0;
         this.tempplane.geometry.getVertexBuffer("position").create();
         this.tempplane.alwaysSelectAsActiveMesh = true;
@@ -99,26 +105,11 @@ export class paintPlane extends paintGround {
         this.tempplane.position.z = 0;
         effect.onCompiled.then(async () => {
 
-            let generator = this.createTiledGround(10);
 
-            for (let i = 0; i < 29; i++) {
-                generator.next();
-            }
-            let values = generator.next().value
 
             //this.tempplane = new TerraMesh("tempplane", new Float32Array([0, 4, 0, 0, 4, 1]), new Uint32Array([0, 3]));
-           
-
-
-            console.log('initalized tempplane');
-           
-            
+                       
             material.bindForSubMesh = (world: Matrix, mesh: Mesh, subMesh: SubMesh): void => {
-                this.tempplane.position.x = 0;
-                this.tempplane.position.y = 100;
-                this.tempplane.position.z = 0;
-                (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
-                console.log(this.tempplane.getWorldMatrix().m);
             };
             
             
@@ -222,7 +213,7 @@ export class paintPlane extends paintGround {
                 }
                 console.log('drawIndexed');
                 //renderPass.draw(3, 1, 0, 0);
-                renderPass.drawIndexed(3,1, 0, 0, 0);
+                renderPass.drawIndexed(values.indices.length,1, 0, 0, 0);
                 return this.tempplane;
             }
         }).catch(e => {
@@ -241,22 +232,24 @@ export class paintPlane extends paintGround {
     }
     
     onMainPointerDown(startingPoint: Vector2) {
-        return;
+       
         this.startingPoint = startingPoint;
         if (!this.tempplane)
             throw (new Error('templane object has not been initalized'))
         this.tempplane.position.x = startingPoint.x - 0.5
         this.tempplane.position.z = startingPoint.y - 1;
-        (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
-        console.log('onMainPointerDown');
+        
+
         console.log(this.tempplane.position);
         
-        this.tempplane.scaling.z = 10;
-        this.tempplane.scaling.x = 10;
-        this.tempplane.rotation.y = Math.PI / 2;
+      //  this.tempplane.scaling.z = 10;
+      //  this.tempplane.scaling.x = 10;
+        //this.tempplane.rotation.y = Math.PI / 2;
 
-        this.tempplane.material = new StandardMaterial("planeMat2", this.scene);
-        //this.tempplane.material.wireframe = true;
+        //this.tempplane.material = new StandardMaterial("planeMat2", this.scene);
+        (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
+        return;
+        this.tempplane.material.wireframe = true;
         if (this.forceSharedVertices) {
             let uvdata: Nullable<FloatArray>;
             if (uvdata = this.tempplane.getVerticesData(VertexBuffer.UVKind)) {
@@ -268,7 +261,6 @@ export class paintPlane extends paintGround {
         }
     }
     onMainPointerUp(end_position: Vector2, height: number): void {
-        return;
         let meshCenter: Vector2 = end_position.subtract(this.startingPoint).divide(new Vector2(2, 2));
         let pos = this.startingPoint.add(meshCenter);
        // if (!this.tempplane)
@@ -302,20 +294,21 @@ export class paintPlane extends paintGround {
         IGPU.unmap()
         */
 
-        this.tempplane.position = new Vector3(pos.x, 0.2, pos.y);
+        //this.tempplane.position = new Vector3(pos.x, 0.2, pos.y);
         this.tempplane.position.y = 30;
-        //this.tempplane.scaling.x = height;
-        //this.tempplane.rotation.y = this.ang360.rad;
+        this.tempplane.scaling.x = height / 2;
+        this.tempplane.rotation.y = this.ang360.rad - Math.PI;
         console.log('onMainPointerUp');
        // console.log(values);
         this.planeorgpos = this.tempplane.position.clone();
+        (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
 
     }
     onAreaDraw(width: number): void {
         if (!this.tempplane)
             throw (new Error('templane object has not been initalized'))
-        return;
-        let brad = Math.PI / 2 - this.ang.rad;
+        
+       /* let brad = Math.PI / 2 - this.ang.rad;
         let halfw = width / 2;
         let addX = Math.cos(brad) * halfw
         let addZ = Math.sin(brad) * halfw;
@@ -324,13 +317,13 @@ export class paintPlane extends paintGround {
             addX = addX * -1
         if (this.ang360.deg > 270 || this.ang360.deg < 90)
             addZ = addZ * -1
-        if (this.forceSharedVertices)
-            this.tempplane.forceSharedVertices();
-        //this.tempplane.scaling.z = width;
-        this.tempplane.position.x = this.planeorgpos.x + addX;
-        this.tempplane.position.z = this.planeorgpos.z + addZ;
-
-        
+        //if (this.forceSharedVertices)
+        //    this.tempplane.forceSharedVertices();*/
+        this.tempplane.scaling.z = width / 2;
+        //this.tempplane.position.x = this.planeorgpos.x + addX;
+        //this.tempplane.position.z = this.planeorgpos.z + addZ;
+        (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
+        return;
         let positions = this.tempplane.getVerticesData(VertexBuffer.PositionKind);
         if (positions == null) {
             throw ('getVerticesData returned null');
