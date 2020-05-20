@@ -17,15 +17,8 @@ import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpu
 //@ts-ignore
 export class TerrainTool extends UITAB {
 
-    //private ray = BABYLON.Ray.Zero();
-    //private pickinfo: BABYLON.PickingInfo;
-    //private vertexData = new BABYLON.VertexData();
     private helpermaterial: ShaderMaterial;
     private timed = new Date().getTime();
-    private glTexture: WebGLTexture | null = null;
-    private glTexture2: WebGLTexture | null = null;
-    private glTexture3: WebGLTexture | null = null;
-    private gl: WebGLRenderingContext;
     private settingTime = false;
     private setTime = async () => {
         if (this.settingTime)
@@ -64,55 +57,44 @@ export class TerrainTool extends UITAB {
         this.engine = engine;
 
         this.helper.visibility = 0;
-        this.helper.isUnIndexed = true;
-        let options = { height: 20, width: 20, depth: 20, sideOrientation: Mesh._GetDefaultSideOrientation(undefined) };
-        this.helper._originalBuilderSideOrientation = options.sideOrientation;
 
         this.helper.geometry.getVertexBuffer("position").create();
-
         
         //this.myBox = this.helper;
         this.helper.material = new StandardMaterial("boxmaterial", scene);
-        this.helper.subMeshes[0].materialDefines = new StandardMaterialDefines();
 
-        
-        let defines = this.helper.subMeshes[0]._materialDefines as StandardMaterialDefines;
-        defines.markAsProcessed();
         this.helper.alwaysSelectAsActiveMesh = true;
-
-
-        var samplers = ["diffuseSampler", "ambientSampler", "opacitySampler", "reflectionCubeSampler",
-            "reflection2DSampler", "emissiveSampler", "specularSampler", "bumpSampler", "lightmapSampler",
-            "refractionCubeSampler", "refraction2DSampler", "boneSampler"];
-
-        var uniformBuffers = ["Material", "Scene"];
-
-        
-        
-        var join = defines.toString();
-
+        this.helper.material.isReadyForSubMesh = () => true;
         let effect = new TerraEffect("helper2", <IEffectCreationOptions>{
             preprocessed: true,
             attributes: [],
             uniformsNames: [],
-            uniformBuffersNames: uniformBuffers,
-            samplers: samplers,
-            defines: join,
+            uniformBuffersNames: [],
+            samplers: [],
+            defines: '',
             fallbacks: null,
             onCompiled: (this.helper.material as StandardMaterial).onCompiled,
-            onError: (this.helper.material as StandardMaterial).onError,
-            //@ts-ignore
-            indexParameters: { maxSimultaneousLights: (this.helper.material as StandardMaterial)._maxSimultaneousLights, maxSimultaneousMorphTargets: defines.NUM_MORPH_INFLUENCERS }
-
-        }, this.engine, undefined, this.engine, undefined, undefined, undefined, undefined, undefined, undefined, [
+            onError: (this.helper.material as StandardMaterial).onError
+        }, this.engine, undefined, this.engine, undefined, undefined, undefined, undefined, undefined, "helper2", [
                 TerraEffect._loadShader2("helper2.vert"), TerraEffect._loadShader2("helper2.frag")
         ]);
         
-            //@ts-ignore
-        (this.helper.material as StandardMaterial)._rebuildInParallel = false;
-            scene.resetCachedMaterial();
-            //@ts-ignore
-        this.helper.subMeshes[0].setEffect(effect as Effect, defines);
+        //@ts-ignore
+        this.helper.subMeshes[0]._materialEffect = effect as Effect;
+        let timeBuffer = device.createBuffer({
+            size: 4,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        this.timeBufferStorage = device.createBuffer({
+            size: 4,
+            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+        });
+        const commandEncoder = device.createCommandEncoder();
+        commandEncoder.copyBufferToBuffer(
+            this.timeBufferStorage, 0,
+            timeBuffer, 0,
+            4);
+        this.updateTime = [commandEncoder.finish()];
 
         effect.onCompiled.then(async () => {
             const stages = effect._pipelineContext.stages;
@@ -156,20 +138,7 @@ export class TerrainTool extends UITAB {
             effect._pipelineContext.buildUniformLayout();
 
             await terrain.inited;
-            let timeBuffer = device.createBuffer({
-                size: 4,
-                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-            });
-            this.timeBufferStorage = device.createBuffer({
-                size: 4,
-                usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
-            });
-            const commandEncoder = device.createCommandEncoder();
-            commandEncoder.copyBufferToBuffer(
-                this.timeBufferStorage, 0,
-                timeBuffer, 0,
-                4);
-            this.updateTime = [commandEncoder.finish()];
+
 
             effect._pipelineContext.bindGroups = [
                 device.createBindGroup({
@@ -460,9 +429,6 @@ export class TerrainTool extends UITAB {
         this.helper._internalAbstractMeshDataInfo._visibility = 0;
         //this.removeListener("pointermove", this.mouseListener);
         this.scene.unregisterBeforeRender(this.setTime);
-        this.gl.deleteTexture(this.glTexture);
-        this.gl.deleteTexture(this.glTexture2);
-        this.gl.deleteTexture(this.glTexture3);
         (function () {
             this._options.samplers = [];
             this._textures = {}

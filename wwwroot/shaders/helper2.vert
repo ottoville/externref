@@ -1,5 +1,5 @@
 ﻿#version 450
-precision highp float;
+precision lowp float;
 layout(set = 0, binding = 0) uniform Scene {
     mat4 viewProjection;
     mat4 view;
@@ -49,7 +49,7 @@ void main(void) {
     float c = cos(angle);
 	float s = sin(angle);
     vec2 rotated=vec2(position.x * c - position.z * s, position.x * s + position.z * c);
-    vec2 offset = rotated+vec2(10.0*c, 10.0*s);
+   vec2 offset = rotated+vec2(10.0*c, 10.0*s);
 
 
     vec4 worldPos = world * vec4(offset.x, position.y, offset.y, 1.0);
@@ -71,6 +71,6 @@ void main(void) {
     worldPos.y += -(facet.x * cx + facet.z * cz + facet.w) / facet.y;
 
 
-    gl_Position = viewProjection * worldPos;
+   gl_Position = viewProjection * worldPos;
     gl_Position.y *= -1.;
 }
