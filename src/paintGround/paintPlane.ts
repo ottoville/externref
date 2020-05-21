@@ -4,8 +4,7 @@ import type { Terrain } from "../world/terrain.js";
 
 import type { PTResultF } from "../types/interfaces/index.js";
 import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
-import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial.js";
-import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
+import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import { Vector2, Vector3 } from "../lib/babylon/Maths/math.vector.js";
@@ -22,30 +21,30 @@ export class paintPlane extends paintGround {
 
     private forceSharedVertices = true;
     private tempplane: TerraMesh | null = null;
-    private startingPoint: Vector2 = Vector2.Zero();
+    #startingPoint: Vector2 = Vector2.Zero();
     private planeorgpos: Vector3 = Vector3.Zero();
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }> {
-        const positions:number[] = [0,40,0, 0,40,1];
+        const positions:number[] = [0,0,0, 0,0,1];
         const indices: number[] = [0,1];
         let row = 0;
         let backwards = false;
         while (true) {
             if (row != 0) {
                 if (!backwards)
-                    indices.push((positions.push(0, 40, row + 1) - 3) / 3)
+                    indices.push((positions.push(0, 0, row + 1) - 3) / 3)
                 else
-                    indices.push((positions.push(width, 40, row + 1) - 3) / 3)
+                    indices.push((positions.push(width, 0, row + 1) - 3) / 3)
             }
             for (let i = 1; i <= width; i++) {
                 if (!backwards) {
                     if(row==0)
-                        indices.push((positions.push(i, 40, row) - 3) / 3)
+                        indices.push((positions.push(i, 0, row) - 3) / 3)
                     else 
                         indices.push(indices[indices.length - i * 4]);
-                    indices.push((positions.push(i, 40, row + 1) - 3) / 3);
+                    indices.push((positions.push(i, 0, row + 1) - 3) / 3);
                 } else {
                     indices.push(indices[indices.length - i * 4]);
-                    indices.push((positions.push(width - i, 40, row + 1) - 3) / 3)
+                    indices.push((positions.push(width - i, 0, row + 1) - 3) / 3)
 
                 }
             }
@@ -68,15 +67,51 @@ export class paintPlane extends paintGround {
     };
     #positionBuffer: GPUBuffer = null;
     #indexBuffer: GPUBuffer = null;
-    #verticesCount: number = 0;
+    #indicesCount: number = 0;
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
-        //this.tempplane = MeshBuilder.CreateTiledGround("tgd2", { xmin: -0.5, xmax: 0.5, zmin: -0.5, zmax: 0.5, subdivisions: { w: 10, h: 10 }, precision: { w: 0, h: 0 }, updatable: true });
-        let generator = this.createTiledGround(2);
+        super.activate(callback, options);
+    }
+    public deactivate() {
+        super.deactivate();
+       // if (this.tempplane)
+       //     this.tempplane.dispose();
+    }
+    
+    onMainPointerDown(startingPoint: Vector2) {
+       
+        this.#startingPoint = startingPoint;
+     
+        
+      //  this.tempplane.scaling.z = 10;
+      //  this.tempplane.scaling.x = 10;
+        //this.tempplane.rotation.y = Math.PI / 2;
 
-        for (let i = 0; i < 1; i++) {
-            generator.next();
+        //this.tempplane.material = new StandardMaterial("planeMat2", this.scene);
+       
+        return;
+        this.tempplane.material.wireframe = true;
+        if (this.forceSharedVertices) {
+            let uvdata: Nullable<FloatArray>;
+            if (uvdata = this.tempplane.getVerticesData(VertexBuffer.UVKind)) {
+                for (let uv = 0; uv < uvdata.length; uv++) {
+                    uvdata[uv] = 0;
+                }
+                this.tempplane.updateVerticesData(VertexBuffer.UVKind, uvdata);
+            }
         }
-        let values = generator.next().value;
+    }
+    #columns = 0;
+    #rows = 1;
+    #rowGenerator: Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }>
+    #effectReady = null;
+    #effectReadyP = new Promise(res =>  this.#effectReady=res   )
+    onMainPointerUp(end_position: Vector2, height: number): void {
+        this.#columns = Math.floor(height / 10);
+        this.#rowGenerator = this.createTiledGround(this.#columns);
+
+
+        let values = this.#rowGenerator.next().value;
+        this.#indicesCount = values.indices.length;
         this.tempplane = new TerraMesh("tempplane", new Float32Array(values.positions), new Uint32Array(values.indices));
         //this.tempplane = new TerraMesh("tempplane", new Float32Array([-5000, 50, -5000, 5000, 50, 5000, 5000, 50, -5000]), new Uint32Array([0, 1, 2]));
         this.tempplane._internalAbstractMeshDataInfo._visibility = 0;
@@ -96,23 +131,14 @@ export class paintPlane extends paintGround {
             onCompiled: null,
             onError: null
         }, this.engine, undefined, this.engine, undefined, undefined, undefined, undefined, undefined, "paintPlane", [
-               TerraEffect._loadShader2("plane.vert"), TerraEffect._loadShader2("plane.frag")
+            TerraEffect._loadShader2("plane.vert"), TerraEffect._loadShader2("plane.frag")
         ]);
         //@ts-ignore
         this.tempplane.subMeshes[0]._materialEffect = effect as Effect;
-        this.tempplane.position.x = 0;
-        this.tempplane.position.y = 100;
-        this.tempplane.position.z = 0;
         effect.onCompiled.then(async () => {
 
-
-
-            //this.tempplane = new TerraMesh("tempplane", new Float32Array([0, 4, 0, 0, 4, 1]), new Uint32Array([0, 3]));
-                       
             material.bindForSubMesh = (world: Matrix, mesh: Mesh, subMesh: SubMesh): void => {
             };
-            
-            
 
             const stages = effect._pipelineContext.stages;
             effect._pipelineContext.renderPipeline = this.device.createRenderPipeline({
@@ -133,6 +159,7 @@ export class paintPlane extends paintGround {
 
                 ...stages,
                 vertexState: {
+                    indexFormat: 'uint16',
                     vertexBuffers:
                         [{
                             arrayStride: 4 * 3,
@@ -175,14 +202,65 @@ export class paintPlane extends paintGround {
                                 //@ts-ignore
                                 buffer: effect._pipelineContext.uniformBuffer.getBuffer().underlyingResource, //leftover
                             }
+                        },
+                        {
+                            binding: 1,
+                            resource: {
+                                buffer: this.ground.slopeArrGPUBuffer
+                            }
+                        },
+                        {
+                            binding: 2,
+                            resource: {
+                                buffer: this.ground.facet1ArrGPUBuffer
+                            }
+                        },
+                        {
+                            binding: 3,
+                            resource: {
+                                buffer: this.ground.facet2ArrGPUBuffer
+                            }
                         }
                     ],
                 })
             ];
             this.tempplane._internalAbstractMeshDataInfo._visibility = 1;
-            this.#positionBuffer = this.tempplane.geometry.getVertexBuffer("position").getBuffer().underlyingResource;
-            this.#indexBuffer = this.tempplane._geometry.getIndexBuffer().underlyingResource
+
+
+            //this.#positionBuffer = this.tempplane.geometry.getVertexBuffer("position").getBuffer().underlyingResource;
+
+
+
+            let [VGPU, VARR] = this.device.createBufferMapped({ size: values.positions.length * 4, usage: GPUBufferUsage.VERTEX });
+            new Float32Array(VARR).set(values.positions);
+            VGPU.unmap()
+
+
+            let [IGPU, IARR] = this.device.createBufferMapped({ size: values.indices.length * Uint16Array.BYTES_PER_ELEMENT, usage: GPUBufferUsage.INDEX });
+            new Uint16Array(IARR).set(values.indices);
+            IGPU.unmap();
+
+
+            this.#positionBuffer = VGPU;
+            this.#indexBuffer = IGPU;
+           // console.log(this.tempplane._geometry.getIndexBuffer());
+            //debugger;
+            //this.#indexBuffer = this.tempplane._geometry.getIndexBuffer().underlyingResource
+
+
+            this.#effectReady();
+
             const engine = this.engine;
+            this.tempplane.position.x = this.#startingPoint.x - 0.5
+            this.tempplane.position.y = 5;
+            this.tempplane.position.z = this.#startingPoint.y - 1;
+
+            this.tempplane.scaling.x = height / this.#columns;
+            this.tempplane.rotation.y = this.ang360.rad - Math.PI;
+
+
+
+            (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
             this.tempplane._draw = (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh => {
 
                 if (!this.tempplane._geometry || !this.tempplane._geometry.getVertexBuffers() || (!this.tempplane._unIndexed && !this.tempplane._geometry.getIndexBuffer()) || !effect._pipelineContext) {
@@ -211,58 +289,14 @@ export class paintPlane extends paintGround {
                     //@ts-ignore
                     engine._currentRenderPass!.setBlendColor(engine._alphaState._blendConstants as any);
                 }
-                console.log('drawIndexed');
                 //renderPass.draw(3, 1, 0, 0);
-                renderPass.drawIndexed(values.indices.length,1, 0, 0, 0);
+                renderPass.drawIndexed(this.#indicesCount, 1, 0, 0, 0);
                 return this.tempplane;
             }
         }).catch(e => {
             console.error(e);
         });
 
-        console.log('activate super paintPlane');
-        super.activate(callback, options);
-        if (typeof (options.forceSharedVertices) !== 'undefined')
-            this.forceSharedVertices = options.forceSharedVertices;
-    }
-    public deactivate() {
-        super.deactivate();
-       // if (this.tempplane)
-       //     this.tempplane.dispose();
-    }
-    
-    onMainPointerDown(startingPoint: Vector2) {
-       
-        this.startingPoint = startingPoint;
-        if (!this.tempplane)
-            throw (new Error('templane object has not been initalized'))
-        this.tempplane.position.x = startingPoint.x - 0.5
-        this.tempplane.position.z = startingPoint.y - 1;
-        
-
-        console.log(this.tempplane.position);
-        
-      //  this.tempplane.scaling.z = 10;
-      //  this.tempplane.scaling.x = 10;
-        //this.tempplane.rotation.y = Math.PI / 2;
-
-        //this.tempplane.material = new StandardMaterial("planeMat2", this.scene);
-        (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
-        return;
-        this.tempplane.material.wireframe = true;
-        if (this.forceSharedVertices) {
-            let uvdata: Nullable<FloatArray>;
-            if (uvdata = this.tempplane.getVerticesData(VertexBuffer.UVKind)) {
-                for (let uv = 0; uv < uvdata.length; uv++) {
-                    uvdata[uv] = 0;
-                }
-                this.tempplane.updateVerticesData(VertexBuffer.UVKind, uvdata);
-            }
-        }
-    }
-    onMainPointerUp(end_position: Vector2, height: number): void {
-        let meshCenter: Vector2 = end_position.subtract(this.startingPoint).divide(new Vector2(2, 2));
-        let pos = this.startingPoint.add(meshCenter);
        // if (!this.tempplane)
          //   throw (new Error('templane object has not been initalized'))
        /* let generator = this.createTiledGround(~~height);
@@ -272,57 +306,60 @@ export class paintPlane extends paintGround {
         }
         let values = generator.next().value
 
-        this.tempplane.positionsBuffer = new SharedArrayBuffer(values.positions.length * 4);
-        this.tempplane.positions = new Float32Array(this.tempplane.positionsBuffer);
-        this.tempplane.positions.set(values.positions)
 
-        this.tempplane.indicesBuffer = new SharedArrayBuffer(values.indices.length * 4);
-        this.tempplane.indices = new Uint32Array(this.tempplane.indicesBuffer);
-        this.tempplane.indices.set(values.indices);
-
-       // this.tempplane.updateVerticesData("position", this.tempplane.positions);
-
-        this.#verticesCount = values.indices.length;
-        let [VGPU, VARR] = this.device.createBufferMapped({ size: values.positions.length * 4, usage: GPUBufferUsage.VERTEX });
-        this.#positionBuffer = VGPU;
-        new Float32Array(VARR).set(values.positions);
-        VGPU.unmap()
-
-        let [IGPU, IARR] = this.device.createBufferMapped({ size: values.indices.length * 4, usage: GPUBufferUsage.INDEX });
-        this.#indexBuffer = IGPU;
-        new Float32Array(IARR).set(values.indices);
-        IGPU.unmap()
         */
 
         //this.tempplane.position = new Vector3(pos.x, 0.2, pos.y);
-        this.tempplane.position.y = 30;
-        this.tempplane.scaling.x = height / 2;
-        this.tempplane.rotation.y = this.ang360.rad - Math.PI;
         console.log('onMainPointerUp');
        // console.log(values);
-        this.planeorgpos = this.tempplane.position.clone();
-        (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
+       // this.planeorgpos = this.tempplane.position.clone();
+       // (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
 
     }
     onAreaDraw(width: number): void {
         if (!this.tempplane)
-            throw (new Error('templane object has not been initalized'))
-        
-       /* let brad = Math.PI / 2 - this.ang.rad;
-        let halfw = width / 2;
-        let addX = Math.cos(brad) * halfw
-        let addZ = Math.sin(brad) * halfw;
+            throw (new Error('templane object has not been initalized'));
+        const newRows = Math.floor(width / 10);
 
-        if (this.ang360.deg < 180)
-            addX = addX * -1
-        if (this.ang360.deg > 270 || this.ang360.deg < 90)
-            addZ = addZ * -1
-        //if (this.forceSharedVertices)
-        //    this.tempplane.forceSharedVertices();*/
-        this.tempplane.scaling.z = width / 2;
+        if (newRows > this.#rows) {
+            let newValues: { positions: number[], indices: number[] }
+            do {
+                newValues = this.#rowGenerator.next().value;
+            } while (++this.#rows < newRows);
+           /* this.tempplane.positionsBuffer = new SharedArrayBuffer(values.positions.length * 4);
+            this.tempplane.positions = new Float32Array(this.tempplane.positionsBuffer);
+            this.tempplane.positions.set(values.positions)
+
+            this.tempplane.indicesBuffer = new SharedArrayBuffer(values.indices.length * 4);
+            this.tempplane.indices = new Uint32Array(this.tempplane.indicesBuffer);
+            this.tempplane.indices.set(values.indices);*/
+
+            // this.tempplane.updateVerticesData("position", this.tempplane.positions);
+
+            console.log(newValues);
+
+            let [VGPU, VARR] = this.device.createBufferMapped({ size: newValues.positions.length * 4, usage: GPUBufferUsage.VERTEX });
+            new Float32Array(VARR).set(newValues.positions);
+            VGPU.unmap()
+           
+            let [IGPU, IARR] = this.device.createBufferMapped({ size: newValues.indices.length * Uint16Array.BYTES_PER_ELEMENT, usage: GPUBufferUsage.INDEX });
+            new Uint16Array(IARR).set(newValues.indices);
+            IGPU.unmap();
+
+            this.#indexBuffer.destroy();
+            this.#indexBuffer = IGPU;
+            this.#positionBuffer.destroy();
+            this.#positionBuffer = VGPU;
+            this.#indicesCount = newValues.indices.length
+            console.log('updated rows to ', this.#rows);
+
+        }
+        this.tempplane.scaling.z = width / this.#rows;
         //this.tempplane.position.x = this.planeorgpos.x + addX;
         //this.tempplane.position.z = this.planeorgpos.z + addZ;
-        (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
+        this.#effectReadyP.then(() => {
+            (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
+        })
         return;
         let positions = this.tempplane.getVerticesData(VertexBuffer.PositionKind);
         if (positions == null) {

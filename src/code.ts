@@ -96,12 +96,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         let shadersP: Promise<{ [key: string]: string }> = fetch('/shaders/shaders.json').then(s => s.json());
 
         const cache= await caches.open(CACHE_NAME)
-        const jsondata = await shadersP
-        const shaderPuts: Promise<void>[] = [];
-        for (var file in jsondata) {
-            shaderPuts.push(cache.put(new Request('/shaders/' + file), new Response(jsondata[file])));
-        }
-        await Promise.all(shaderPuts);
+        const cache2 = await caches.open('compiledShaders');
         //try {
         let WasmModule = await WasmModuleP;
         blazor.invokeMethod('setProgress', 2);
@@ -142,6 +137,26 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             script.src = glslangOptions.jsPath;
             document.head.appendChild(script);
         });
+        const jsondata = await shadersP
+        const shaderPuts: Promise<void>[] = [];
+        const shaderPutsC: Promise<void>[] = [];
+        for (var file in jsondata) {
+            shaderPuts.push(cache.put(new Request('/shaders/' + file), new Response(jsondata[file])));
+            if (jsondata[file].substr(0, 12) == '#version 450') {
+                let type: string = 'vertex';
+                if (file.substr(-5) == '.frag')
+                    type = 'fragment';
+                else if (file.substr(-5) == '.comp')
+                    type = 'compute';
+                const compiled = glslang.compileGLSL(jsondata[file], type);
+                const rsp = new Response(compiled);
+                rsp.headers.set('Content-Type', 'application/octet-stream');
+                rsp.headers.set('Content-Length', compiled.byteLength.toString());
+                shaderPutsC.push(cache2.put(new Request('/shaders/' + file), rsp));
+            }
+        }
+        await Promise.all(shaderPuts);
+        await Promise.all(shaderPutsC);
         //@ts-ignore
         engine._glslang = glslang;
         blazor.invokeMethod('setProgress', 12);
