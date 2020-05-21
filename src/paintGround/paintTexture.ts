@@ -50,7 +50,7 @@ export class paintTexture extends paintGround {
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
         super.activate(callback, options);
     }
-    onAreaDraw(width: number): void {
+    async onAreaDraw(width: number): Promise<void> {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {
             throw ('onAreaDraw non numeric width or height');
         }

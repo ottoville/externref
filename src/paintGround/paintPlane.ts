@@ -22,8 +22,9 @@ export class paintPlane extends paintGround {
     private forceSharedVertices = true;
     private tempplane: TerraMesh | null = null;
     #startingPoint: Vector2 = Vector2.Zero();
-    private planeorgpos: Vector3 = Vector3.Zero();
     #leftoverGPU: GPUBuffer;
+    #worldCopyGPU: GPUBuffer;
+    #updateWorldBuffer: GPUCommandBuffer[];
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }> {
         const positions:number[] = [0,0,0, 0,0,1];
         const indices: number[] = [0,1];
@@ -66,11 +67,22 @@ export class paintPlane extends paintGround {
         private shaderModules: Map<string, GPUShaderModule>
     ) {
         super(canvas, scene, camera, ground, sea, uitab);
+        
     };
     #positionBuffer: GPUBuffer = null;
     #indexBuffer: GPUBuffer = null;
     #indicesCount: number = 0;
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
+        this.#leftoverGPU = this.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+        this.#worldCopyGPU = this.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
+
+        const commandEncoder = this.device.createCommandEncoder();
+        commandEncoder.copyBufferToBuffer(
+            this.#worldCopyGPU, 0,
+            this.#leftoverGPU, 0,
+            16 * 4);
+        this.#updateWorldBuffer = [commandEncoder.finish()];
+
         super.activate(callback, options);
     }
     public deactivate() {
@@ -183,14 +195,7 @@ export class paintPlane extends paintGround {
                 },
                 // layout: pipelineLayout,
             });
-           /* effect._pipelineContext.leftOverUniforms.push({
-                type: 'mat4',
-                name: 'world',
-                length: 0
-            })
-            effect._pipelineContext.buildUniformLayout();
-            */
-        this.#leftoverGPU = this.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+        
 
 
             const bindGroups = [
@@ -238,9 +243,6 @@ export class paintPlane extends paintGround {
             this.tempplane._internalAbstractMeshDataInfo._visibility = 1;
 
 
-            //this.#positionBuffer = this.tempplane.geometry.getVertexBuffer("position").getBuffer().underlyingResource;
-
-
 
             let [VGPU, VARR] = this.device.createBufferMapped({ size: values.positions.length * 4, usage: GPUBufferUsage.VERTEX });
             new Float32Array(VARR).set(values.positions);
@@ -254,11 +256,6 @@ export class paintPlane extends paintGround {
 
             this.#positionBuffer = VGPU;
             this.#indexBuffer = IGPU;
-           // console.log(this.tempplane._geometry.getIndexBuffer());
-            //debugger;
-            //this.#indexBuffer = this.tempplane._geometry.getIndexBuffer().underlyingResource
-
-
             this.#effectReady();
 
             const engine = this.engine;
@@ -320,66 +317,44 @@ export class paintPlane extends paintGround {
 
         //this.tempplane.position = new Vector3(pos.x, 0.2, pos.y);
         console.log('onMainPointerUp');
-       // console.log(values);
-       // this.planeorgpos = this.tempplane.position.clone();
-       // (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
 
     }
-    onAreaDraw(width: number): void {
+
+    async onAreaDraw(width: number): Promise<void> {
         if (!this.tempplane)
             throw (new Error('templane object has not been initalized'));
+        const leftoverARR = await this.#worldCopyGPU.mapWriteAsync();
         const newRows = Math.floor(width / 10);
-
+        
+        
         if (newRows > this.#rows) {
             let newValues: { positions: number[], indices: number[] }
             do {
                 newValues = this.#rowGenerator.next().value;
             } while (++this.#rows < newRows);
-           /* this.tempplane.positionsBuffer = new SharedArrayBuffer(values.positions.length * 4);
-            this.tempplane.positions = new Float32Array(this.tempplane.positionsBuffer);
-            this.tempplane.positions.set(values.positions)
-
-            this.tempplane.indicesBuffer = new SharedArrayBuffer(values.indices.length * 4);
-            this.tempplane.indices = new Uint32Array(this.tempplane.indicesBuffer);
-            this.tempplane.indices.set(values.indices);*/
-
-            // this.tempplane.updateVerticesData("position", this.tempplane.positions);
-
-            console.log(newValues);
 
             let [VGPU, VARR] = this.device.createBufferMapped({ size: newValues.positions.length * 4, usage: GPUBufferUsage.VERTEX });
             new Float32Array(VARR).set(newValues.positions);
             VGPU.unmap()
-           
+
             let [IGPU, IARR] = this.device.createBufferMapped({ size: newValues.indices.length * Uint16Array.BYTES_PER_ELEMENT, usage: GPUBufferUsage.INDEX });
             new Uint16Array(IARR).set(newValues.indices);
             IGPU.unmap();
-
-            this.#indexBuffer.destroy();
-            this.#indexBuffer = IGPU;
-            this.#positionBuffer.destroy();
-            this.#positionBuffer = VGPU;
-            this.#indicesCount = newValues.indices.length
-            console.log('updated rows to ', this.#rows);
-
+            queueMicrotask(() => {
+                this.#indexBuffer.destroy();
+                this.#indexBuffer = IGPU;
+                this.#positionBuffer.destroy();
+                this.#positionBuffer = VGPU;
+                this.#indicesCount = newValues.indices.length
+                console.log('updated rows to ', this.#rows);
+            })
         }
         this.tempplane.scaling.z = width / this.#rows;
-
-        const commandEncoder = this.device.createCommandEncoder();
-        let [leftoverGPU, leftoverARR] = this.device.createBufferMapped({ size: 16*4, usage: GPUBufferUsage.COPY_SRC });
+        
         new Float32Array(leftoverARR).set(this.tempplane.getWorldMatrix().m);
-        leftoverGPU.unmap();
-        commandEncoder.copyBufferToBuffer(
-            leftoverGPU, 0,
-            this.#leftoverGPU, 0,
-            16*4);
-        this.device.defaultQueue.submit([commandEncoder.finish()]);
+        this.#worldCopyGPU.unmap();
+        this.device.defaultQueue.submit(this.#updateWorldBuffer);
 
-        //this.tempplane.position.x = this.planeorgpos.x + addX;
-        //this.tempplane.position.z = this.planeorgpos.z + addZ;
-       /* this.#effectReadyP.then(() => {
-            (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
-        })*/
         return;
         let positions = this.tempplane.getVerticesData(VertexBuffer.PositionKind);
         if (positions == null) {

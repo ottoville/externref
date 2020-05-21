@@ -16,7 +16,7 @@ export class paintLine extends paintGround {
     onMainPointerDown(startingPoint: Vector2): void {
         this.startingPoint = startingPoint;
     }
-    onAreaDraw(width: number): void {
+    async onAreaDraw(width: number): Promise<void> {
     }
     constructor(
         public canvas: HTMLElement,

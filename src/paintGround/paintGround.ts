@@ -39,7 +39,6 @@ export abstract class paintGround {
     };
     public resolve: PTResultF = () => null;
     public activate(callback: PTResultF, options?: any) {
-        console.debug('add mainpointerdown listener');
         this.uitab.addListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
     }
@@ -77,7 +76,12 @@ export abstract class paintGround {
 
     abstract onMainPointerDown(startingPoint: Vector2): void;
     abstract onMainPointerUp(end_position: Vector2, height: number): void;
-    abstract onAreaDraw(width:number): void;
+    abstract onAreaDraw(width: number): Promise<void>;
+
+    #nextDrawWidth: number = 0;
+    #drawqueue: boolean = false;
+    #busy: boolean = false;
+
     private mousemove = (evt: PointerEvent) => {
         let ray = Ray.Zero();
         this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
@@ -105,7 +109,22 @@ export abstract class paintGround {
                 width = Math.abs(width) * -1
 
             //let timed = new Date().getTime();
-            this.onAreaDraw(width);
+
+            this.#nextDrawWidth = width;
+            const me = this;
+            if (!this.#busy) {
+                this.#busy = true
+                queueMicrotask(async function q() {
+                    me.#drawqueue = false;
+                    await me.onAreaDraw(me.#nextDrawWidth);
+                    if (me.#drawqueue)
+                        queueMicrotask(q);
+                    else
+                        me.#busy=false
+                });
+            } else
+                this.#drawqueue = true;
+
             // console.log('onAreaDraw took ', new Date().getTime() - timed);
 
         }
@@ -140,7 +159,7 @@ export abstract class paintGround {
     private testcounter = 0;
 
     private mainPointerDown = async (evt: PointerEvent) => {
-        console.log('mainPointerDown');
+
         if (evt.button !== 0) {
             return;
         }
