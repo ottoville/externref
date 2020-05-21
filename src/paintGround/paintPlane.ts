@@ -23,6 +23,7 @@ export class paintPlane extends paintGround {
     private tempplane: TerraMesh | null = null;
     #startingPoint: Vector2 = Vector2.Zero();
     private planeorgpos: Vector3 = Vector3.Zero();
+    #leftoverGPU: GPUBuffer;
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }> {
         const positions:number[] = [0,0,0, 0,0,1];
         const indices: number[] = [0,1];
@@ -61,7 +62,8 @@ export class paintPlane extends paintGround {
         protected sea: Mesh,
         uitab: UITAB,
         private engine: WebGPUEngine,
-        private device: GPUDevice
+        private device: GPUDevice,
+        private shaderModules: Map<string, GPUShaderModule>
     ) {
         super(canvas, scene, camera, ground, sea, uitab);
     };
@@ -120,7 +122,7 @@ export class paintPlane extends paintGround {
         const material = new StandardMaterial("tempplane", this.scene);
         this.tempplane.material = material;
         material.isReadyForSubMesh = () => true;
-        let effect = new TerraEffect("paintPlane", <IEffectCreationOptions>{
+        /*let effect = new TerraEffect("paintPlane", <IEffectCreationOptions>{
             preprocessed: true,
             attributes: [],
             uniformsNames: [],
@@ -134,14 +136,15 @@ export class paintPlane extends paintGround {
             TerraEffect._loadShader2("plane.vert"), TerraEffect._loadShader2("plane.frag")
         ]);
         //@ts-ignore
-        this.tempplane.subMeshes[0]._materialEffect = effect as Effect;
-        effect.onCompiled.then(async () => {
+        this.tempplane.subMeshes[0]._materialEffect = effect as Effect;*/
+       // effect.onCompiled.then(async () => {
+        //@ts-ignore
+        this.tempplane.subMeshes[0]._materialEffect = {};
 
             material.bindForSubMesh = (world: Matrix, mesh: Mesh, subMesh: SubMesh): void => {
             };
-
-            const stages = effect._pipelineContext.stages;
-            effect._pipelineContext.renderPipeline = this.device.createRenderPipeline({
+            //const stages = effect._pipelineContext.stages;
+        const renderPipeline = this.device.createRenderPipeline({
                 //@ts-ignore
                 sampleCount: this.engine._mainPassSampleCount,
                 primitiveTopology: 'triangle-strip',
@@ -156,8 +159,14 @@ export class paintPlane extends paintGround {
                 colorStates: [{
                     format: "bgra8unorm",
                 }],
-
-                ...stages,
+                vertexStage: {
+                    module: this.shaderModules.get("plane.vert"),
+                    entryPoint: "main",
+                 },
+                fragmentStage: {
+                    module: this.shaderModules.get("plane.frag"),
+                    entryPoint: "main"
+                },
                 vertexState: {
                     indexFormat: 'uint16',
                     vertexBuffers:
@@ -174,17 +183,19 @@ export class paintPlane extends paintGround {
                 },
                 // layout: pipelineLayout,
             });
-            effect._pipelineContext.leftOverUniforms.push({
+           /* effect._pipelineContext.leftOverUniforms.push({
                 type: 'mat4',
                 name: 'world',
                 length: 0
             })
             effect._pipelineContext.buildUniformLayout();
+            */
+        this.#leftoverGPU = this.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
 
 
-            effect._pipelineContext.bindGroups = [
+            const bindGroups = [
                 this.device.createBindGroup({
-                    layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(0),
+                    layout: renderPipeline.getBindGroupLayout(0),
                     entries: [{
                         binding: 0,
                         resource: {
@@ -194,13 +205,13 @@ export class paintPlane extends paintGround {
                     }],
                 }),
                 this.device.createBindGroup({
-                    layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(1),
+                    layout: renderPipeline.getBindGroupLayout(1),
                     entries: [
                         {
                             binding: 0,
                             resource: {
                                 //@ts-ignore
-                                buffer: effect._pipelineContext.uniformBuffer.getBuffer().underlyingResource, //leftover
+                                buffer: this.#leftoverGPU, //leftover
                             }
                         },
                         {
@@ -259,11 +270,10 @@ export class paintPlane extends paintGround {
             this.tempplane.rotation.y = this.ang360.rad - Math.PI;
 
 
-
-            (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
+           // (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
             this.tempplane._draw = (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh => {
-
-                if (!this.tempplane._geometry || !this.tempplane._geometry.getVertexBuffers() || (!this.tempplane._unIndexed && !this.tempplane._geometry.getIndexBuffer()) || !effect._pipelineContext) {
+                if (!this.tempplane._geometry || !this.tempplane._geometry.getVertexBuffers() || (!this.tempplane._unIndexed && !this.tempplane._geometry.getIndexBuffer()) ) {
+                    
                     return this.tempplane;
                 }
                 //@ts-ignore
@@ -277,11 +287,9 @@ export class paintPlane extends paintGround {
                 //@ts-ignore
                 const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
 
-                renderPass.setPipeline(effect._pipelineContext.renderPipeline);
+                renderPass.setPipeline(renderPipeline);
                 renderPass.setIndexBuffer(this.#indexBuffer, 0);
                 renderPass.setVertexBuffer(0, this.#positionBuffer);
-                //@ts-ignore
-                const bindGroups = engine._getBindGroupsToRender();
                 //@ts-ignore
                 engine._setRenderBindGroups(bindGroups);
                 if (engine._alphaState.alphaBlend && engine._alphaState._isBlendConstantsDirty) {
@@ -290,12 +298,13 @@ export class paintPlane extends paintGround {
                     engine._currentRenderPass!.setBlendColor(engine._alphaState._blendConstants as any);
                 }
                 //renderPass.draw(3, 1, 0, 0);
+                console.log('drawIndexed', this.#indicesCount);
                 renderPass.drawIndexed(this.#indicesCount, 1, 0, 0, 0);
                 return this.tempplane;
             }
-        }).catch(e => {
+        /*}).catch(e => {
             console.error(e);
-        });
+        });*/
 
        // if (!this.tempplane)
          //   throw (new Error('templane object has not been initalized'))
@@ -355,11 +364,22 @@ export class paintPlane extends paintGround {
 
         }
         this.tempplane.scaling.z = width / this.#rows;
+
+        const commandEncoder = this.device.createCommandEncoder();
+        let [leftoverGPU, leftoverARR] = this.device.createBufferMapped({ size: 16*4, usage: GPUBufferUsage.COPY_SRC });
+        new Float32Array(leftoverARR).set(this.tempplane.getWorldMatrix().m);
+        leftoverGPU.unmap();
+        commandEncoder.copyBufferToBuffer(
+            leftoverGPU, 0,
+            this.#leftoverGPU, 0,
+            16*4);
+        this.device.defaultQueue.submit([commandEncoder.finish()]);
+
         //this.tempplane.position.x = this.planeorgpos.x + addX;
         //this.tempplane.position.z = this.planeorgpos.z + addZ;
-        this.#effectReadyP.then(() => {
+       /* this.#effectReadyP.then(() => {
             (this.tempplane.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.tempplane.getWorldMatrix());
-        })
+        })*/
         return;
         let positions = this.tempplane.getVerticesData(VertexBuffer.PositionKind);
         if (positions == null) {
