@@ -844,8 +844,9 @@ export class TerraEffect {
 
         this.uniqueId = TerraEffect._uniqueIdSeed++;
 
-        if (this._engine.compilingShaders.has(key))
+        if (this._engine.compilingShaders.has(key)) {
             return;
+        }
         this._engine.compilingShaders.add(key);
         /*if (sources) {
             Promise.all(sources).then((r) => {
@@ -1050,7 +1051,6 @@ export class TerraEffect {
             this._vertexSourceCode = migratedVertexCode;
             this._fragmentSourceCode = migratedFragmentCode;
         }
-
         this._prepareEffect();
     }
     /**

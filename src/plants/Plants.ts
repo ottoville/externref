@@ -17,6 +17,11 @@ import type { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
 import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData.js";
 import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
 import { Buffer } from "../lib/babylon/Meshes/buffer.js";
+import { TerraMesh } from "../TerraMesh.js";
+import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial.js";
+import { TerraEffect } from "../TerraEffect.js";
+import { IEffectCreationOptions } from "../lib/babylon/Materials/effect.js";
+import { WebGPUEngine } from "../lib/babylon/index.js";
 
 const BLADE_SEGS = 2 // # of blade segments
 
@@ -71,6 +76,8 @@ export class Plants {
         private camera: ArcRotateCamera,
         private terrain: Terrain,
     ) {
+        
+        const engine = scene.getEngine() as WebGPUEngine;
         let shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 4 * this.numBlades);
         let noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
 
@@ -79,30 +86,90 @@ export class Plants {
             shape: shapes,
             noises:noises
         });
+        
         this.mat = new ShaderMaterial("shader", scene, "./shaders/grass2",
             {
                 attributes: ["position", "normal", "uv", "shape", "worldPos","noise"],
                 uniforms: ["viewProjection", "view", "projection", "time", "map", "windIntensity", "grassColor", "lightDir", "camDir", "fogColor", "grassFogFar", "fogNear", "fogFar", "lightPos", "BLADESEGS", "BLADEVERTS"]
             });
 
-        var Poaceae = new Mesh("custom", scene);
+        const positions = new Float32Array([
+            0.5, -3, 0,
+            -0.5, -3, 0,
+            0.5, -1, 0,
+            -0.5, -1, 0,
+            0.5, 1, 0,
+            -0.5, 1, 0,
+            0, 3, 0,
+        ]);
+        
+        var normals: number[] = [];
+        VertexData.ComputeNormals(positions, [0, 1, 2, 3, 4, 5, 6], normals);
 
-        //Vertices for babylonjs mesh
-        let vertices=Float32Array.from([
-            1,  0.5,  0,
-            1,  0,  0,
-            0,      0,  0,
-            0,      0.5,  0,
-            0.015625, 1,  0].map(v => v*1));
-        let index=Uint16Array.from([0,1,2,3,4]);
+        const Poaceae = new TerraMesh("Poaceae", positions, undefined, new Float32Array(normals));
+        
+        Poaceae._originalBuilderSideOrientation = Mesh._GetDefaultSideOrientation(undefined);
+
+        Poaceae.geometry.getVertexBuffer("position").create();
+        
+        Poaceae.material = new StandardMaterial("Poaceae", scene);
+        Poaceae.subMeshes[0].materialDefines = new StandardMaterialDefines();
+        
+
+        let defines = Poaceae.subMeshes[0]._materialDefines as StandardMaterialDefines;
+        defines.markAsProcessed();
+        
+        Poaceae.alwaysSelectAsActiveMesh = true;
+
+        var uniformBuffers = ["Material", "Scene"];
+
+        var join = defines.toString();
+        return;
+        let effect = new TerraEffect("plants", <IEffectCreationOptions>{
+            preprocessed: true,
+            attributes: [],
+            uniformsNames: [],
+            uniformBuffersNames: uniformBuffers,
+            samplers: [],
+            defines: join,
+            fallbacks: null,
+            onCompiled: (Poaceae.material as StandardMaterial).onCompiled,
+            onError: (Poaceae.material as StandardMaterial).onError,
+            indexParameters: { }
+
+        }, engine, undefined, engine, undefined, undefined, undefined, undefined, undefined, undefined, [
+            TerraEffect._loadShader2("grass2.vert"), TerraEffect._loadShader2("grass2.frag")
+        ]);
+
+        
+
+
+
+        //continue from here;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         //Empty array to contain calculated values or normals added
-        var normals : number[]= [];
-        VertexData.ComputeNormals(vertices, index, normals);
-        let vertexData = new VertexData()
-        vertexData.positions = vertices;
-        vertexData.indices = index;
-        vertexData.normals = normals
-        vertexData.uvs = vertices.map(v => 0);
+
         this.mat.setTexture("map", new Texture("./images/grass2.jpg", scene));
         this.mat.setColor3("grassColor", new Color3(0.45, 0.46, 0.19));
         this.mat.setColor3("fogColor", new Color3(0.74, 0.77, 0.91));
@@ -128,15 +195,12 @@ export class Plants {
         //depth*2 fix
         this.mat.setFloat("grassFogFar", 1600);
         //this.mat.backFaceCulling = false;
-        vertexData.applyToMesh(Poaceae, true);
+
         Poaceae.material = this.mat;
         Poaceae.alwaysSelectAsActiveMesh = true;
 
-        let engine = scene.getEngine()
 
-        let gl: WebGLRenderingContext = engine._gl
         this.mat.backFaceCulling = false;
-        let me = this;
         Poaceae._draw = function (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
                 return this;
@@ -154,9 +218,9 @@ export class Plants {
                     // Cull
                     if (this._isCullDirty) {
                         if (this.cull) {
-                            gl.enable(gl.CULL_FACE);
+                         //   gl.enable(gl.CULL_FACE);
                         } else {
-                            gl.disable(gl.CULL_FACE);
+                          //  gl.disable(gl.CULL_FACE);
                         }
 
                         this._isCullDirty = false;
@@ -170,33 +234,33 @@ export class Plants {
 
                     // Depth mask
                     if (this._isDepthMaskDirty) {
-                        gl.depthMask(this.depthMask);
+                      //  gl.depthMask(this.depthMask);
                         this._isDepthMaskDirty = false;
                     }
 
                     // Depth test
                     if (this._isDepthTestDirty) {
                         if (this.depthTest) {
-                            gl.enable(gl.DEPTH_TEST);
+                           // gl.enable(gl.DEPTH_TEST);
                         } else {
-                            gl.disable(gl.DEPTH_TEST);
+                          //  gl.disable(gl.DEPTH_TEST);
                         }
                         this._isDepthTestDirty = false;
                     }
 
                     // Depth func
                     if (this._isDepthFuncDirty) {
-                        gl.depthFunc(<number>this.depthFunc);
+                       // gl.depthFunc(<number>this.depthFunc);
                         this._isDepthFuncDirty = false;
                     }
 
                     // zOffset
                     if (this._isZOffsetDirty) {
                         if (this.zOffset) {
-                            gl.enable(gl.POLYGON_OFFSET_FILL);
-                            gl.polygonOffset(this.zOffset, 0);
+                           // gl.enable(gl.POLYGON_OFFSET_FILL);
+                          //  gl.polygonOffset(this.zOffset, 0);
                         } else {
-                            gl.disable(gl.POLYGON_OFFSET_FILL);
+                          //  gl.disable(gl.POLYGON_OFFSET_FILL);
                         }
 
                         this._isZOffsetDirty = false;
@@ -204,26 +268,22 @@ export class Plants {
 
                     // Front face
                     if (this._isFrontFaceDirty) {
-                        gl.frontFace(<number>this.frontFace);
+                       // gl.frontFace(<number>this.frontFace);
                         this._isFrontFaceDirty = false;
                     }
                 }
-
-                this._depthCullingState.apply(gl);
-                this._stencilState.apply(gl);
-                this._alphaState.apply(gl);
+               
             }).bind(engine)();
             // engine.applyStates();
             engine._drawCalls.addCount(1, false);
             let wireframe = false;
-            //gl.enable(gl.CULL_FACE);
-            //gl.cullFace(gl.FRONT_AND_BACK);
-            gl.drawElementsInstanced(wireframe ? gl.LINES : gl.TRIANGLE_FAN, index.length, gl.UNSIGNED_SHORT, 0, me.bladesVisible);
+
+          //  gl.drawElementsInstanced(wireframe ? gl.LINES : gl.TRIANGLE_FAN, index.length, gl.UNSIGNED_SHORT, 0, me.bladesVisible);
             return this;
         }
        // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
 
-        let vbo = gl.createBuffer();
+       /* let vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.offset), gl.DYNAMIC_DRAW);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -240,7 +300,7 @@ export class Plants {
             getIsInstanced:  () => true,
             getInstanceDivisor: () => 1
 
-        };
+        };*/
 
 
         //Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));
@@ -261,13 +321,13 @@ export class Plants {
                 let blade = new Float32Array(this.offset, i << 4, 4);
                 blade[3] = this.terrain.getHeightAtCoordinates(blade[0], blade[1]) // y
             }
-            gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+           /* gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));
             gl.bindBuffer(gl.ARRAY_BUFFER, glsbuffer);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(shapes));
             gl.bindBuffer(gl.ARRAY_BUFFER, glnoisebuffer);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(noises));
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);*/
         });
         let l = new LazyEval(() => {
             this.worker.message(WorkerReturn.Promise, 'get', {

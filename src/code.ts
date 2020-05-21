@@ -96,7 +96,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         let shadersP: Promise<{ [key: string]: string }> = fetch('/shaders/shaders.json').then(s => s.json());
 
         const cache= await caches.open(CACHE_NAME)
-        const cache2 = await caches.open('compiledShaders');
+      //  const cache2 = await caches.open('compiledShaders');
         //try {
         let WasmModule = await WasmModuleP;
         blazor.invokeMethod('setProgress', 2);
@@ -137,9 +137,17 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             script.src = glslangOptions.jsPath;
             document.head.appendChild(script);
         });
+        //@ts-ignore
+        let adapter = await navigator.gpu!.requestAdapter(engine._options);
+        //@ts-ignore
+        engine._adapter = adapter;
+        //@ts-ignore
+        let device = await adapter.requestDevice(engine._options.deviceDescriptor)
+
         const jsondata = await shadersP
         const shaderPuts: Promise<void>[] = [];
-        const shaderPutsC: Promise<void>[] = [];
+       // const shaderPutsC: Promise<void>[] = [];
+        const shaderModules: Map<string, GPUShaderModule> = new Map();
         for (var file in jsondata) {
             shaderPuts.push(cache.put(new Request('/shaders/' + file), new Response(jsondata[file])));
             if (jsondata[file].substr(0, 12) == '#version 450') {
@@ -149,23 +157,22 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 else if (file.substr(-5) == '.comp')
                     type = 'compute';
                 const compiled = glslang.compileGLSL(jsondata[file], type);
-                const rsp = new Response(compiled);
+
+                shaderModules.set(file, device.createShaderModule({
+                    code: compiled,
+                }));
+
+                /*const rsp = new Response(compiled);
                 rsp.headers.set('Content-Type', 'application/octet-stream');
                 rsp.headers.set('Content-Length', compiled.byteLength.toString());
-                shaderPutsC.push(cache2.put(new Request('/shaders/' + file), rsp));
+                shaderPutsC.push(cache2.put(new Request(file), rsp));*/
             }
         }
         await Promise.all(shaderPuts);
-        await Promise.all(shaderPutsC);
+        //await Promise.all(shaderPutsC);
         //@ts-ignore
         engine._glslang = glslang;
         blazor.invokeMethod('setProgress', 12);
-        //@ts-ignore
-        let adapter = await navigator.gpu!.requestAdapter(engine._options);
-        //@ts-ignore
-        engine._adapter = adapter;
-        //@ts-ignore
-        let device = await adapter.requestDevice(engine._options.deviceDescriptor)
         //@ts-ignore
         engine._device = device;
         //@ts-ignore
@@ -228,14 +235,18 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 console.log('websocket onopen');
                 blazor.invokeMethod('setProgress', 20);
                 // progelem.value = 30;
-                sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, glslang,  webSocket));
+                try {
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, glslang, shaderModules, webSocket));
+                } catch (e) {
+                    sceneInitedrej(e);
+                }
             }
             webSocket.onerror = async () => {
                 console.log('websocket onerror');
                 blazor.invokeMethod('setProgress', 20);
                 try {
                     //blazor.invokeMethod('setProgress', 20);
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, glslang));
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, glslang, shaderModules));
                 } catch (e) {
                     sceneInitedrej(e);
                 }

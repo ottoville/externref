@@ -2229,19 +2229,8 @@ export class WebGPUEngine extends Engine {
         const renderPass = this._bundleEncoder || this._currentRenderPass!;
 
         this._currentIndexBuffer = null;
-        if (this._currentEffect!.name == "./shaders/helper") {
-            const renderPass = this._bundleEncoder || this._currentRenderPass!;
-            const pipeline = this._getRenderPipeline(fillMode);
-            renderPass.setPipeline(pipeline);
-            const vertexInputs = this._getVertexInputsToRender();
-            this._bindVertexInputs(vertexInputs);
-            const bindGroups = this._getBindGroupsToRender();
-            this._setRenderBindGroups(bindGroups);
-            renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
-        } else {
-            this._setRenderPipeline(fillMode);
-            renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
-        }
+        this._setRenderPipeline(fillMode);
+        renderPass.draw(verticesCount, instancesCount, verticesStart, 0);
     }
 
     /**

@@ -155,8 +155,8 @@ export class Terrain extends TerraMesh {
         this.facet1Arr = new Float32Array(this.facet1ArrBuffer);
         this.facet2Arr = new Float32Array(this.facet2ArrBuffer);
 
-        this._width = vdata.width;
-        this._height = vdata.height;
+        this._width = 10000;
+        this._height = 10000;
         this._maxX = this._width / 2.0;
         this._maxZ = this._height / 2.0;
         this._minX = -this._maxX;
@@ -234,6 +234,8 @@ export class Terrain extends TerraMesh {
         let facet: Float32Array;
         let col = ((x + this._maxX) * this.ratioX)|0;
         let row = (-(z + this._maxZ) * this.ratioY + this._subdivisionsY) | 0;
+        debugger;
+        console.log(col, row);
         let pos: number = row * this._subdivisionsX + col;
         try {
             if (z < -1 * x + this.slopeArr[pos]) {

@@ -164,6 +164,8 @@
   <ItemGroup>
     <Content Remove="wwwroot\shaders\helper2.frag" />
     <Content Remove="wwwroot\shaders\helper2.vert" />
+    <Content Remove="wwwroot\shaders\plane.frag" />
+    <Content Remove="wwwroot\shaders\plane.vert" />
   </ItemGroup>
 
   <ItemGroup>
@@ -353,6 +355,8 @@
     <None Include="wwwroot\js\WorkerThread.js" />
     <None Include="wwwroot\js\world\scene.js" />
     <None Include="wwwroot\js\world\sun.js" />
+    <None Include="wwwroot\shaders\plane.frag" />
+    <None Include="wwwroot\shaders\plane.vert" />
     <None Include="wwwroot\shaders\helper2.frag" />
     <None Include="wwwroot\shaders\helper2.vert" />
   </ItemGroup>

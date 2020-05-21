@@ -414,7 +414,8 @@ interface GPURenderPipelineDescriptor
   colorStates: GPUColorStateDescriptor[];
   depthStencilState?: GPUDepthStencilStateDescriptor;
   vertexState?: GPUVertexStateDescriptor;
-
+    vertexStage?: GPUProgrammableStageDescriptor;
+    fragmentStage?: GPUProgrammableStageDescriptor;
   sampleCount?: number;
   sampleMask?: number;
   alphaToCoverageEnabled?: boolean;

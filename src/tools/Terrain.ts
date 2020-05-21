@@ -302,7 +302,6 @@ export class TerrainTool extends UITAB {
                         query = [];
                     }
                 }
-
             }
 
             /*let width = v.data.endX - v.data.offsetX;

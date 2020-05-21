@@ -44,19 +44,9 @@ float subdivisionsY = 250.0;
 float width = 10000.0;
 float height = 10000.0;
 
-void main(void) {
-    float angle= terra.time+float(gl_InstanceIndex) * angleStep;
-    float c = cos(angle);
-	float s = sin(angle);
-    vec2 rotated=vec2(position.x * c - position.z * s, position.x * s + position.z * c);
-   vec2 offset = rotated+vec2(10.0*c, 10.0*s);
-
-
-    vec4 worldPos = world * vec4(offset.x, position.y, offset.y, 1.0);
-
-
-    float cx=worldPos.x;
-    float cz=worldPos.z;
+float getHeightAtCoordinates(vec2 xz) {
+    float cx=xz.x;
+    float cz=xz.y;
 
     int col = int(floor((cx+maxX) * subdivisionsX / width));
     int row= int(floor(-(cz+maxZ)*subdivisionsY / height + subdivisionsY));
@@ -67,9 +57,34 @@ void main(void) {
     } else {
         facet=vec4(facet2.numbers[(row * 250 + col)*4], facet2.numbers[(row * 250 + col)*4+1], facet2.numbers[(row * 250 + col)*4+2], facet2.numbers[(row * 250 + col)*4+3]);
     }
+    return -(facet.x * cx + facet.z * cz + facet.w) / facet.y;
+ }
 
-    worldPos.y += -(facet.x * cx + facet.z * cz + facet.w) / facet.y;
+void main(void) {
+    float angle= terra.time+float(gl_InstanceIndex) * angleStep;
+    float c = cos(angle);
+	float s = sin(angle);
+    vec2 rotated=vec2(position.x * c - position.z * s, position.x * s + position.z * c);
+   vec2 offset = rotated+vec2(10.0*c, 10.0*s);
 
+
+    vec4 worldPos = world * vec4(offset.x, position.y, offset.y, 1.0);
+
+   // float cx=worldPos.x;
+   // float cz=worldPos.z;
+
+   // int col = int(floor((cx+maxX) * subdivisionsX / width));
+    //int row= int(floor(-(cz+maxZ)*subdivisionsY / height + subdivisionsY));
+   // int slope = slopes.numbers[row*250 + col];
+    //vec4 facet;
+   // if(cz < -1 * cx + slope) {
+     //   facet=vec4(facet1.numbers[(row * 250 + col)*4], facet1.numbers[(row * 250 + col)*4+1], facet1.numbers[(row * 250 + col)*4+2], facet1.numbers[(row * 250 + col)*4+3]);
+    //} else {
+    //    facet=vec4(facet2.numbers[(row * 250 + col)*4], facet2.numbers[(row * 250 + col)*4+1], facet2.numbers[(row * 250 + col)*4+2], facet2.numbers[(row * 250 + col)*4+3]);
+    //}
+
+    //worldPos.y += -(facet.x * cx + facet.z * cz + facet.w) / facet.y;
+    worldPos.y += getHeightAtCoordinates(vec2(worldPos.x, worldPos.z));
 
    gl_Position = viewProjection * worldPos;
     gl_Position.y *= -1.;

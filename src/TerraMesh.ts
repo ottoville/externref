@@ -75,7 +75,8 @@ export class TerraMesh extends Mesh {
             this.indices = new Uint32Array(this.indicesBuffer);
             this.indices.set(indices);
             vertexData.indices = this.indices;
-        }
+        } else
+            this.isUnIndexed = true;
         if (typeof (normals) != 'undefined') {
             this.normalsBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * normals.length)
             this.normals = new Float32Array(this.normalsBuffer)
@@ -528,15 +529,10 @@ export class TerraMesh extends Mesh {
             //@ts-ignore
             engine.setState(true, this._effectiveMaterial.zOffset, false, reverse);
         }
-        //@ts-ignore
-        if (engine._currentEffect!.name == "./shaders/helper") {
-            //@ts-ignore
-            this._processRendering(subMesh, effect, fillMode, batch, hardwareInstancedRendering, this._onBeforeDraw, this._effectiveMaterial);
-        } else {
             // Draw
             //@ts-ignore
-            this._processRendering(subMesh, effect, fillMode, batch, hardwareInstancedRendering, this._onBeforeDraw, this._effectiveMaterial);
-        }
+         this._processRendering(subMesh, effect, fillMode, batch, hardwareInstancedRendering, this._onBeforeDraw, this._effectiveMaterial);
+        
 
         // Unbind
         //@ts-ignore

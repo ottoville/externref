@@ -3,18 +3,14 @@ import { UITAB } from "../UITAB.js";
 import type { Terrain } from "../world/terrain.js";
 
 import type { PTResultF } from "../types/interfaces/index.js";
-import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
 import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
-import { Vector2, Vector3 } from "../lib/babylon/Maths/math.vector.js";
+import { Vector2 } from "../lib/babylon/Maths/math.vector.js";
 import type { WorldScene } from "../world/scene.js";
 import { TerraMesh } from "../TerraMesh.js";
 import { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
-import { TerraEffect } from "../TerraEffect.js";
-import type { Effect, IEffectCreationOptions } from "../lib/babylon/Materials/effect.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
-import { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
 import { Matrix } from "../lib/babylon/Maths/math.vector";
 
 export class paintPlane extends paintGround {
@@ -26,27 +22,27 @@ export class paintPlane extends paintGround {
     #worldCopyGPU: GPUBuffer;
     #updateWorldBuffer: GPUCommandBuffer[];
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }> {
-        const positions:number[] = [0,0,0, 0,0,1];
+        const positions:number[] = [0,0, 0,1];
         const indices: number[] = [0,1];
         let row = 0;
         let backwards = false;
         while (true) {
             if (row != 0) {
                 if (!backwards)
-                    indices.push((positions.push(0, 0, row + 1) - 3) / 3)
+                    indices.push((positions.push(0, row + 1) - 2) >> 1)
                 else
-                    indices.push((positions.push(width, 0, row + 1) - 3) / 3)
+                    indices.push((positions.push(width, row + 1) - 2) >> 1)
             }
             for (let i = 1; i <= width; i++) {
                 if (!backwards) {
                     if(row==0)
-                        indices.push((positions.push(i, 0, row) - 3) / 3)
+                        indices.push((positions.push(i, row) - 2) >> 1)
                     else 
                         indices.push(indices[indices.length - i * 4]);
-                    indices.push((positions.push(i, 0, row + 1) - 3) / 3);
+                    indices.push((positions.push(i, row + 1) - 2) >> 1);
                 } else {
                     indices.push(indices[indices.length - i * 4]);
-                    indices.push((positions.push(width - i, 0, row + 1) - 3) / 3)
+                    indices.push((positions.push(width - i, row + 1) - 2) >> 1)
 
                 }
             }
@@ -94,31 +90,11 @@ export class paintPlane extends paintGround {
     onMainPointerDown(startingPoint: Vector2) {
        
         this.#startingPoint = startingPoint;
-     
-        
-      //  this.tempplane.scaling.z = 10;
-      //  this.tempplane.scaling.x = 10;
-        //this.tempplane.rotation.y = Math.PI / 2;
-
-        //this.tempplane.material = new StandardMaterial("planeMat2", this.scene);
-       
-        return;
-        this.tempplane.material.wireframe = true;
-        if (this.forceSharedVertices) {
-            let uvdata: Nullable<FloatArray>;
-            if (uvdata = this.tempplane.getVerticesData(VertexBuffer.UVKind)) {
-                for (let uv = 0; uv < uvdata.length; uv++) {
-                    uvdata[uv] = 0;
-                }
-                this.tempplane.updateVerticesData(VertexBuffer.UVKind, uvdata);
-            }
-        }
     }
     #columns = 0;
     #rows = 1;
     #rowGenerator: Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }>
-    #effectReady = null;
-    #effectReadyP = new Promise(res =>  this.#effectReady=res   )
+
     onMainPointerUp(end_position: Vector2, height: number): void {
         this.#columns = Math.floor(height / 10);
         this.#rowGenerator = this.createTiledGround(this.#columns);
@@ -134,22 +110,7 @@ export class paintPlane extends paintGround {
         const material = new StandardMaterial("tempplane", this.scene);
         this.tempplane.material = material;
         material.isReadyForSubMesh = () => true;
-        /*let effect = new TerraEffect("paintPlane", <IEffectCreationOptions>{
-            preprocessed: true,
-            attributes: [],
-            uniformsNames: [],
-            uniformBuffersNames: [],
-            samplers: [],
-            defines: '',
-            fallbacks: null,
-            onCompiled: null,
-            onError: null
-        }, this.engine, undefined, this.engine, undefined, undefined, undefined, undefined, undefined, "paintPlane", [
-            TerraEffect._loadShader2("plane.vert"), TerraEffect._loadShader2("plane.frag")
-        ]);
-        //@ts-ignore
-        this.tempplane.subMeshes[0]._materialEffect = effect as Effect;*/
-       // effect.onCompiled.then(async () => {
+
         //@ts-ignore
         this.tempplane.subMeshes[0]._materialEffect = {};
 
@@ -183,20 +144,17 @@ export class paintPlane extends paintGround {
                     indexFormat: 'uint16',
                     vertexBuffers:
                         [{
-                            arrayStride: 4 * 3,
+                            arrayStride: 4 * 2,
                             stepMode: "vertex" as GPUInputStepMode,
                             attributes: [{
                                 // position
                                 shaderLocation: 0,
                                 offset: 0,
-                                format: "float3" as GPUVertexFormat
+                                format: "float2" as GPUVertexFormat
                             }]
                         }]
                 },
-                // layout: pipelineLayout,
             });
-        
-
 
             const bindGroups = [
                 this.device.createBindGroup({
@@ -256,7 +214,6 @@ export class paintPlane extends paintGround {
 
             this.#positionBuffer = VGPU;
             this.#indexBuffer = IGPU;
-            this.#effectReady();
 
             const engine = this.engine;
             this.tempplane.position.x = this.#startingPoint.x - 0.5
@@ -299,23 +256,6 @@ export class paintPlane extends paintGround {
                 renderPass.drawIndexed(this.#indicesCount, 1, 0, 0, 0);
                 return this.tempplane;
             }
-        /*}).catch(e => {
-            console.error(e);
-        });*/
-
-       // if (!this.tempplane)
-         //   throw (new Error('templane object has not been initalized'))
-       /* let generator = this.createTiledGround(~~height);
-
-        for (let i = 0; i < 29; i++) {
-            generator.next();
-        }
-        let values = generator.next().value
-
-
-        */
-
-        //this.tempplane.position = new Vector3(pos.x, 0.2, pos.y);
         console.log('onMainPointerUp');
 
     }
@@ -354,22 +294,5 @@ export class paintPlane extends paintGround {
         new Float32Array(leftoverARR).set(this.tempplane.getWorldMatrix().m);
         this.#worldCopyGPU.unmap();
         this.device.defaultQueue.submit(this.#updateWorldBuffer);
-
-        return;
-        let positions = this.tempplane.getVerticesData(VertexBuffer.PositionKind);
-        if (positions == null) {
-            throw ('getVerticesData returned null');
-        }
-        var numberOfVertices = positions.length / 3;
-        var rotmax = rotateMatrix(this.ang360.rad, "y");
-        for (var i = 0; i < numberOfVertices; i++) {
-            let posX = (positions[i * 3]) * this.tempplane.scaling.x
-            let posZ = (positions[i * 3 + 2]) * this.tempplane.scaling.z
-            let translated = translate(posX, 0, posZ, rotmax);
-            positions[i * 3 + 1] = this.ground.getHeightAtCoordinates(this.tempplane.position.x + translated.x, this.tempplane.position.z + translated.z)
-            console.log(positions[i * 3 + 1]);
-        }
-        this.tempplane.updateVerticesData(VertexBuffer.PositionKind, positions);
-
     }
 }

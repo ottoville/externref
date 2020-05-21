@@ -1530,10 +1530,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
 
     /** @hidden */
     public _renderWithInstances(subMesh: SubMesh, fillMode: number, batch: _InstancesBatch, effect: Effect, engine: Engine): Mesh {
-        //@ts-ignore
-        if (engine._currentEffect!.name == "./shaders/helper") {
-            debugger;
-        }
         var visibleInstances = batch.visibleInstances[subMesh._id];
         if (!visibleInstances) {
             return this;
@@ -1617,11 +1613,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
         onBeforeDraw: (isInstance: boolean, world: Matrix, effectiveMaterial?: Material) => void, effectiveMaterial?: Material): Mesh {
         var scene = this.getScene();
         var engine = scene.getEngine();
-        //@ts-ignore
-        //@ts-ignore
-        if (engine._currentEffect!.name == "./shaders/helper") {
-            debugger;
-        }
+
         if (hardwareInstancedRendering) {
             this._renderWithInstances(subMesh, fillMode, batch, effect, engine);
         } else {

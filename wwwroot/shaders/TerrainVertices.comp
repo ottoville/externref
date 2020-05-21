@@ -31,14 +31,14 @@ float DistanceSquared( vec2 value1, vec2 value2) {
     position.x = terrain.positions[gl_GlobalInvocationID.x * 3];
     position.y = terrain.positions[gl_GlobalInvocationID.x * 3 + 2];
     float distance = DistanceSquared(position, terra.mouse);
-    if (distance < terra.radiusPow) {
+   // if (distance < terra.radiusPow) {
         
-        _selectedVertices.push({
-            col: 250 / (10000 / (5000 + position.x)) | 0,
-            row: 250 / (10000 / (5000 - position.y)) | 0,
-            vertice: index,
-            distance: Math.sqrt(distance)
-        });
-    }
+    //    _selectedVertices.push({
+     ////       col: 250 / (10000 / (5000 + position.x)) | 0,
+   //         row: 250 / (10000 / (5000 - position.y)) | 0,
+   //         vertice: index,
+    //        distance: Math.sqrt(distance)
+   //     });
+  //  }
 
   }

@@ -721,7 +721,17 @@ export class WorldScene extends Scene {
         }).bind(this._inputManager)(this, elementToAttachTo);
     }
     public terrainReady: Promise<void>;
-    constructor(engine: Engine | WebGPUEngine, userinfo: loginProvider, public blazor: DotNet.BlazorInstance, ticks: number, private canvas: HTMLCanvasElement, private device: GPUDevice, glslang: { compileGLSL: (source: string, type: string) => Uint32Array }, private webSocket?: WebSocket) {
+    constructor(
+        engine: Engine | WebGPUEngine,
+        userinfo: loginProvider,
+        public blazor: DotNet.BlazorInstance,
+        ticks: number,
+        private canvas: HTMLCanvasElement,
+        private device: GPUDevice,
+        glslang: { compileGLSL: (source: string, type: string) => Uint32Array },
+        private shaderModules: Map<string, GPUShaderModule>,
+        private webSocket?: WebSocket
+        ) {
         super(engine as Engine);
         
         blazor.invokeMethod('setProgress', 21);
@@ -874,7 +884,7 @@ export class WorldScene extends Scene {
             ground.checkCollisions = true;
             blazor.invokeMethod('setProgress', 50);
             ground.isPickable = true;
-            // let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
+             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.getSceneUniformBuffer().update();
             this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera, device, glslang);
             blazor.invokeMethod('setProgress', 51);
@@ -882,7 +892,7 @@ export class WorldScene extends Scene {
             blazor.invokeMethod('setProgress', 52);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
 
-            // this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants);
+             this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants, engine as WebGPUEngine, device, shaderModules);
             blazor.invokeMethod('setProgress', 53);
             return texture.then(async gpuBuffer => {
                 blazor.invokeMethod('setProgress', 75);
