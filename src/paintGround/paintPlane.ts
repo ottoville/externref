@@ -83,8 +83,12 @@ export class paintPlane extends paintGround {
     }
     public deactivate() {
         super.deactivate();
-       // if (this.tempplane)
-       //     this.tempplane.dispose();
+        if (this.tempplane)
+            this.tempplane.dispose();
+        this.#leftoverGPU.destroy();
+        this.#worldCopyGPU.destroy();
+        this.#positionBuffer.destroy();
+        this.#indexBuffer.destroy();
     }
     
     onMainPointerDown(startingPoint: Vector2) {
@@ -251,8 +255,6 @@ export class paintPlane extends paintGround {
                     //@ts-ignore
                     engine._currentRenderPass!.setBlendColor(engine._alphaState._blendConstants as any);
                 }
-                //renderPass.draw(3, 1, 0, 0);
-                console.log('drawIndexed', this.#indicesCount);
                 renderPass.drawIndexed(this.#indicesCount, 1, 0, 0, 0);
                 return this.tempplane;
             }
@@ -265,14 +267,21 @@ export class paintPlane extends paintGround {
             throw (new Error('templane object has not been initalized'));
         const leftoverARR = await this.#worldCopyGPU.mapWriteAsync();
         const newRows = Math.floor(width / 10);
-        
-        
+        let newValues: { positions: number[], indices: number[] };
+        let updateIndices = false;
         if (newRows > this.#rows) {
-            let newValues: { positions: number[], indices: number[] }
             do {
                 newValues = this.#rowGenerator.next().value;
             } while (++this.#rows < newRows);
+            updateIndices = true;
 
+        }
+        this.tempplane.scaling.z = width / this.#rows;
+        
+        new Float32Array(leftoverARR).set(this.tempplane.getWorldMatrix().m);
+        this.#worldCopyGPU.unmap();
+        this.device.defaultQueue.submit(this.#updateWorldBuffer);
+        if (updateIndices) {
             let [VGPU, VARR] = this.device.createBufferMapped({ size: newValues.positions.length * 4, usage: GPUBufferUsage.VERTEX });
             new Float32Array(VARR).set(newValues.positions);
             VGPU.unmap()
@@ -286,13 +295,7 @@ export class paintPlane extends paintGround {
                 this.#positionBuffer.destroy();
                 this.#positionBuffer = VGPU;
                 this.#indicesCount = newValues.indices.length
-                console.log('updated rows to ', this.#rows);
             })
         }
-        this.tempplane.scaling.z = width / this.#rows;
-        
-        new Float32Array(leftoverARR).set(this.tempplane.getWorldMatrix().m);
-        this.#worldCopyGPU.unmap();
-        this.device.defaultQueue.submit(this.#updateWorldBuffer);
     }
 }

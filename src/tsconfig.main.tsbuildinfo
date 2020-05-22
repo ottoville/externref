@@ -394,7 +394,7 @@
         "signature": "1594be047b2eb21abda024c3497af57af6dfc16136eac4d2135c6c11f03f8e85"
       },
       "./lib/babylon/engines/webgpuengine.ts": {
-        "version": "63b772700feb9499a07d7f161629034969b74d188cd6435756670c9f4ec6fcc1",
+        "version": "d2facc6e95bf91d2119933d66080fccfec51b7d27326b16e38418db05aba09ca",
         "signature": "74ca6651e9698f204f3adbcfaaa76a790384489dc1da5b8ab69937cf3ddae461"
       },
       "./lib/babylon/misc/iinspectable.ts": {
@@ -946,7 +946,7 @@
         "signature": "5d7f4da23de456d6d23760162ec18ec0062966e912d779b19067a802f135e415"
       },
       "./lib/babylon/meshes/mesh.ts": {
-        "version": "31ee7de5fa08b5db2c5d0a3ad2d662137ffc667c8f42af8e61e245bd6a73ce87",
+        "version": "b3038c53102f67ef5219e1b295cd47cef5be15eff322619d7501492a8c98b4e8",
         "signature": "273bf1659e5e0974cfa287c8353738873f06e8ab17c5c2c5a1268c9cc868f7d6"
       },
       "./lib/babylon/cameras/camera.ts": {
@@ -1114,7 +1114,7 @@
         "signature": "9978d29688daff82cd03e573e86949bfad256f27204db859d32622319fe039f5"
       },
       "./terraeffect.ts": {
-        "version": "f581f8b4413ca10d6fcafd19b3cedd71295bacc73fbf44ab4678bbe5accd08a8",
+        "version": "7140f1742f6955f80815ad9995a84407181cc576268b69e35671ee23e3d008de",
         "signature": "bfac6654ae6d80b390781c72e4ee314ad8407a14abcbb8481dd535da12a0f206"
       },
       "./workerthread.ts": {
@@ -1122,7 +1122,7 @@
         "signature": "449974bb70c444474f94e428738dca887a8ff3cdf941850ff1100eea515d4355"
       },
       "./terramesh.ts": {
-        "version": "0154aa8685639553a06da6cb5244533fbae134367c7ca7cda12d192af0e9ba34",
+        "version": "b5ab21d81a05892341150533b63565c69517759b39e4240087464f750b7228fa",
         "signature": "4abace55bc14b95699f99e09fe0098e1edc0d0c8dc6f55ae748f26f1db514809"
       },
       "./terraray.ts": {
@@ -1138,7 +1138,7 @@
         "signature": "e7fb5c9de06faae672d1c3e4c1640b8ed7cf8602d792f9cb4183b45d35147f41"
       },
       "./world/terrain.ts": {
-        "version": "00819784c5fcc5c4475104a8fee4b39b05de40a4fb4303f408b6d7adcdaf30d1",
+        "version": "335d08a79e229527073855dff1130cee875b976495bc3849bc29d05ad6f4f719",
         "signature": "e0fb4eee8152350147fbd1c2c934b0e9e58404e1d40abeb076296dd39ccc4cf5"
       },
       "./lib/babylon/audio/sound.ts": {
@@ -2650,24 +2650,24 @@
         "signature": "1e00de25393683b41e7b99c0731c24a9c451009f7e5a199e6f03eff73d8ed7b1"
       },
       "./plants/plants.ts": {
-        "version": "e49597594e65e373e90572ef8871429ecf7f8276159c14319ad95f2318220a69",
+        "version": "f7f9042c115ba02130e30665def041bea49d871ca08feff6681f0cc7efaa68c6",
         "signature": "382f27cc4c225e520ac29ce83657c78fff8461127de87b7071921adb33680f27"
       },
       "./paintground/paintground.ts": {
-        "version": "77ae2504b7b89bf94be6f20952c9a1df17b2170233661525d4c87c6445b09fe9",
-        "signature": "e30cf1b19735049887aa6cf0550514f862548e8a73cf2205a171681493bcfa48"
+        "version": "c8f7820141b8e0bcfb9bbae4f60cb839d0e2013e91417075a33848db8ab712a1",
+        "signature": "c5d028e8ff9028ac6be75d0c8f5e288fb996e61e93cb812b307ca9d43a90393f"
       },
       "./paintground/paintplane.ts": {
-        "version": "f289d7f3017eb1879079a9dc54a73e867e10564179cc00e5b84ba635d75b038d",
-        "signature": "9126468eff2ea5402e605c2923b644cbe5a5b3e94bcb563c8b1b1b5462e4e3dc"
+        "version": "4f871db754bdc64e7534f06d39f849554f769a9f022e2a34bc64331afdaf1104",
+        "signature": "0efa777a4e40230df064ebb323b524d91428a64bb649868ce60c281dc6dcb281"
       },
       "./tools/plantsui.ts": {
-        "version": "08a1888548019b8169cf9a503299ee632cf3690f4e7177ab36611662b9487e3b",
-        "signature": "b0fe1880ae30eb2cf451b28d4c12ee1d83af3a1faeac012c5b6d4998cd45b6b0"
+        "version": "c1a53ea7dfd2aac4d675d7c792c5422e459083f1e3becde2f22630e900b7e01a",
+        "signature": "0287291bf324b66a4818651877933ae8b9c5496e55a56f399a1b44e87ba5ebe2"
       },
       "./paintground/painttexture.ts": {
-        "version": "2bc675b28b772abfd42ee73713d1acf1d9ce7f65a19d2627c7ea9565b3f62000",
-        "signature": "9b7149bb73be744ba92b51189ffba11b66928e4ed6ba7bc3bdc71d0377e18349"
+        "version": "99990d2d0c8a4b11ad48d669e4ad2ac47b10b7e9225df6451554fbba683692ab",
+        "signature": "17960e41c1fa3ad3634f6ac9d257339181fccef7f38b3bb4e44958f1c5fd50ca"
       },
       "./tools/zones.ts": {
         "version": "3321bfb43f63d8415209f8d495352a0628ac96bd92379772ad0330eb90e5a1d8",
@@ -2682,19 +2682,19 @@
         "signature": "dbbb778631482c24dc57a68ed676e5327b6f4970804a9031244b10eae1cfdd0e"
       },
       "./tools/terrain.ts": {
-        "version": "5e9bc595de0551b28022cd7db10e8f7875a82fa772c311bfafed2a64217029c4",
-        "signature": "1d4f7b005de3c3746dcfc220d8d4005ec59659e2a265c1cb0770cdd7b5c0f080"
+        "version": "677263e56e35d8ffc7bc73d9dc62e07a29015c1adf1dbd28d06f890aabb79826",
+        "signature": "d0a0796c7e0c5d0e4faa693c9fab5eceff06d7e5eb0cf670a76ee44cd9b73767"
       },
       "./world/water.ts": {
         "version": "58ca2148c399b6546df0bd3847302e5f317184fd42bcb97bdc73a420a1c4ba46",
         "signature": "69b97ca99fd38ece03e3d7693a37d0e9d1956f4b2f73cced6a94e477f9ff391f"
       },
       "./world/scene.ts": {
-        "version": "36de54e19f84276fa837e3821c6b22db3eb90b415624deb1761164816513a746",
-        "signature": "67fcf344c2ace9382377cf21af53d587c9049ab3d4624074005b93d0dd043d30"
+        "version": "34c7045228eeecc5867214454227d60ee8b29d905e3d154705c4edd60e512aed",
+        "signature": "1c58fdf84c90718849fb56280b9b137d7cc752040141eb33fcbbe24f1537f923"
       },
       "./code.ts": {
-        "version": "b08cce631a88c339bceb0e66d12d1debcc6ac344ba1dcc6e18ef7351930b608c",
+        "version": "0829e4784840e7a1a0080549a0c6c9cd2fd2694632d45cb308a5c44e04288eac",
         "signature": "55e264eb1aba9b8548b7ce3d9d65e8b050491cf6b30e55b95690d2a68c840f94"
       },
       "./commonmath.ts": {
@@ -2738,8 +2738,8 @@
         "signature": "69f5ac00da2accfda2a48b0f04ba78deddff5c1eb3a90843f335fd7720fd45ed"
       },
       "./lib/babylon/libdeclarations/webgpu.d.ts": {
-        "version": "6648451a8d6fb05f3385049464790820fd061b571e267a63d400fc3bbacbb111",
-        "signature": "6648451a8d6fb05f3385049464790820fd061b571e267a63d400fc3bbacbb111"
+        "version": "5e4ddb6e67694c85227b7729f105e4de95b149fcb92a99515a4013d725db51a7",
+        "signature": "5e4ddb6e67694c85227b7729f105e4de95b149fcb92a99515a4013d725db51a7"
       },
       "./lib/babylon/libdeclarations/webvr.d.ts": {
         "version": "55ab3c58d63af02efff5f66b787cfed3aa7714baff7436eee007fb0be3bbcf5e",
@@ -2890,8 +2890,8 @@
         "signature": "56b35d6b71fea6e92d98f2ef162767a39886466adbd7560e322b8106d606faa1"
       },
       "./paintground/paintline.ts": {
-        "version": "50eb33a960e44b5dde80acc8248fada389147883103711c0714ed3e214f43f8e",
-        "signature": "836d46900ea38096c55a5a975c751de03e99036e8052da1caabc64a59f4d65d6"
+        "version": "c07931688e0bcb4a579b787adfd26ee4557c21fe51b167a1675ae27a5d7f5971",
+        "signature": "004aadff3e79d4f388bb7b83862fff914cd8292c5117834c42b9b15616b074f6"
       },
       "./plants/grass.ts": {
         "version": "b92b72342285cbcbb2208819749cd8f9ad6211b7b94384e9fed2247f3ce0bce0",
@@ -9471,7 +9471,12 @@
         "./lib/babylon/meshes/geometry.ts",
         "./lib/babylon/meshes/submesh.ts",
         "./lib/babylon/meshes/mesh.vertexdata.ts",
-        "./lib/babylon/materials/textures/texture.ts"
+        "./lib/babylon/materials/textures/texture.ts",
+        "./terramesh.ts",
+        "./lib/babylon/materials/standardmaterial.ts",
+        "./terraeffect.ts",
+        "./lib/babylon/materials/effect.ts",
+        "./lib/babylon/index.ts"
       ],
       "./paintground/paintground.ts": [
         "./uitab.ts",
@@ -9488,13 +9493,14 @@
         "./uitab.ts",
         "./world/terrain.ts",
         "./types/interfaces/index.d.ts",
-        "./lib/babylon/meshes/buffer.ts",
         "./lib/babylon/materials/standardmaterial.ts",
-        "./lib/babylon/meshes/meshbuilder.ts",
         "./lib/babylon/cameras/arcrotatecamera.ts",
         "./lib/babylon/meshes/mesh.ts",
         "./lib/babylon/maths/math.vector.ts",
-        "./world/scene.ts"
+        "./world/scene.ts",
+        "./terramesh.ts",
+        "./lib/babylon/meshes/submesh.ts",
+        "./lib/babylon/engines/webgpuengine.ts"
       ],
       "./tools/plantsui.ts": [
         "./uitab.ts",
@@ -9504,7 +9510,8 @@
         "./types/interfaces/index.d.ts",
         "./lib/babylon/cameras/arcrotatecamera.ts",
         "./lib/babylon/meshes/mesh.ts",
-        "./world/scene.ts"
+        "./world/scene.ts",
+        "./lib/babylon/engines/webgpuengine.ts"
       ],
       "./paintground/painttexture.ts": [
         "./paintground/paintground.ts",
@@ -14032,6 +14039,7 @@
         "./world/terrain.ts",
         "./lib/babylon/meshes/mesh.ts",
         "./uitab.ts",
+        "./lib/babylon/engines/webgpuengine.ts",
         "./types/interfaces/index.d.ts",
         "./lib/babylon/maths/math.vector.ts",
         "./paintground/paintground.ts"
@@ -14042,6 +14050,7 @@
         "./lib/babylon/cameras/arcrotatecamera.ts",
         "./lib/babylon/meshes/mesh.ts",
         "./plants/plants.ts",
+        "./lib/babylon/engines/webgpuengine.ts",
         "./uitab.ts"
       ],
       "./paintground/painttexture.ts": [

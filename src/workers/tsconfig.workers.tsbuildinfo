@@ -177,6 +177,14 @@
         "version": "142d61a6aeb9306ace9acace54216d187583b00f1fbae94535dfe77d291eb601",
         "signature": "77d4d3c8670a02063b55740e11ecd2c4b8e754e72011af0a6f3aea9e4dcce7e5"
       },
+      "./service-worker.ts": {
+        "version": "4dcb4f6557dd87c820a57e0ff7508f2eddfbbae2d09e6d3d4eb11f99528366ed",
+        "signature": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "./service-worker.published.ts": {
+        "version": "3122f19454b03eeb92758dfd7c2f27d9f97172de751a6b7b503d463bc3e58f5c",
+        "signature": "45951f990ec150ce1a72233d10bf207d6e87563624f1cac8333ebae3fa3ba6cb"
+      },
       "./commonmath.d.ts": {
         "version": "32b34ab405c2665817d40519983af4cb76c28678868fb90505531fe022857fe3",
         "signature": "32b34ab405c2665817d40519983af4cb76c28678868fb90505531fe022857fe3"
@@ -212,16 +220,19 @@
     "referencedMap": {},
     "exportedModulesMap": {},
     "semanticDiagnosticsPerFile": [
+      "./service-worker.ts",
       "./webworkers/bitmapworker.ts",
       "./webworkers/grass.ts",
       "./webworkers/interfaces.ts",
       "./webworkers/mesh.ts",
       "./webworkers/ray.ts",
       "./webworkers/terrainworker.ts",
+      "./service-worker.published.ts",
       "./commonmath.d.ts",
       "./webgpu.d.ts",
       "../node_modules/@types/color-name/index.d.ts",
       "../node_modules/@types/facebook-js-sdk/index.d.ts",
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es5.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2016.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2017.d.ts",
@@ -229,7 +240,6 @@
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2019.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.esnext.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es5.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.webworker.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.core.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.collection.d.ts",
