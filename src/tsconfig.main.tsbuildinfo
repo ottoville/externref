@@ -1138,8 +1138,8 @@
         "signature": "e7fb5c9de06faae672d1c3e4c1640b8ed7cf8602d792f9cb4183b45d35147f41"
       },
       "./world/terrain.ts": {
-        "version": "335d08a79e229527073855dff1130cee875b976495bc3849bc29d05ad6f4f719",
-        "signature": "e0fb4eee8152350147fbd1c2c934b0e9e58404e1d40abeb076296dd39ccc4cf5"
+        "version": "42396c54888d9f1a69a8c855f992ee45f7ca3940dd72aa441676d4c91dd42524",
+        "signature": "66f26e3bb99cea9893fe8b2e27780d4bf7ca718e40ac492dbda7f7d1beca4eb2"
       },
       "./lib/babylon/audio/sound.ts": {
         "version": "8e54ab54f77673e30869ae3a3dea0eee4bffff8439d40b6cd72cf31d86bcbd92",
@@ -2650,15 +2650,15 @@
         "signature": "1e00de25393683b41e7b99c0731c24a9c451009f7e5a199e6f03eff73d8ed7b1"
       },
       "./plants/plants.ts": {
-        "version": "f7f9042c115ba02130e30665def041bea49d871ca08feff6681f0cc7efaa68c6",
-        "signature": "382f27cc4c225e520ac29ce83657c78fff8461127de87b7071921adb33680f27"
+        "version": "4a55ae3c6869c792f85b4f0b5cd4d7197fcb9454310ae48a85d8cedca2d0d3ca",
+        "signature": "58e2594d4c78298371ca572959518dc8fe2ecec37dca366901b65575c9229e0b"
       },
       "./paintground/paintground.ts": {
         "version": "c8f7820141b8e0bcfb9bbae4f60cb839d0e2013e91417075a33848db8ab712a1",
         "signature": "c5d028e8ff9028ac6be75d0c8f5e288fb996e61e93cb812b307ca9d43a90393f"
       },
       "./paintground/paintplane.ts": {
-        "version": "4f871db754bdc64e7534f06d39f849554f769a9f022e2a34bc64331afdaf1104",
+        "version": "f4ead983845a4753a00709a8cefc2150ba6fe79cd299f21f47def8049b9f0c6f",
         "signature": "0efa777a4e40230df064ebb323b524d91428a64bb649868ce60c281dc6dcb281"
       },
       "./tools/plantsui.ts": {
@@ -2690,7 +2690,7 @@
         "signature": "69b97ca99fd38ece03e3d7693a37d0e9d1956f4b2f73cced6a94e477f9ff391f"
       },
       "./world/scene.ts": {
-        "version": "34c7045228eeecc5867214454227d60ee8b29d905e3d154705c4edd60e512aed",
+        "version": "b56389643484a26e69d39bc54707c1bca473356db9e4c16519605dae5a3ba722",
         "signature": "1c58fdf84c90718849fb56280b9b137d7cc752040141eb33fcbbe24f1537f923"
       },
       "./code.ts": {
@@ -2738,8 +2738,8 @@
         "signature": "69f5ac00da2accfda2a48b0f04ba78deddff5c1eb3a90843f335fd7720fd45ed"
       },
       "./lib/babylon/libdeclarations/webgpu.d.ts": {
-        "version": "5e4ddb6e67694c85227b7729f105e4de95b149fcb92a99515a4013d725db51a7",
-        "signature": "5e4ddb6e67694c85227b7729f105e4de95b149fcb92a99515a4013d725db51a7"
+        "version": "b9a0a651afc9a7f35baeb89676cdc815687878b98e65f912743541351f2d9462",
+        "signature": "b9a0a651afc9a7f35baeb89676cdc815687878b98e65f912743541351f2d9462"
       },
       "./lib/babylon/libdeclarations/webvr.d.ts": {
         "version": "55ab3c58d63af02efff5f66b787cfed3aa7714baff7436eee007fb0be3bbcf5e",
@@ -2906,7 +2906,7 @@
         "signature": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86"
       },
       "./rustwasm/hello_wasm.js": {
-        "version": "e1ed2a91845f7240482b6d82b7630668cf951b5df4c97ef281a3d440dcab008b",
+        "version": "6a46400090dd40da2263903087a43a1de57d6db13fe10c05852c18360dc809d4",
         "signature": "ce7196f043e593877984a7c982df828e9f356e408ce4d35a0a2c542aec421000"
       },
       "./node_modules/@types/facebook-js-sdk/index.d.ts": {
@@ -9467,15 +9467,11 @@
         "./lib/babylon/meshes/mesh.ts",
         "./lib/babylon/maths/math.color.ts",
         "./lib/babylon/maths/math.vector.ts",
-        "./lib/babylon/meshes/buffer.ts",
-        "./lib/babylon/meshes/geometry.ts",
         "./lib/babylon/meshes/submesh.ts",
         "./lib/babylon/meshes/mesh.vertexdata.ts",
         "./lib/babylon/materials/textures/texture.ts",
         "./terramesh.ts",
         "./lib/babylon/materials/standardmaterial.ts",
-        "./terraeffect.ts",
-        "./lib/babylon/materials/effect.ts",
         "./lib/babylon/index.ts"
       ],
       "./paintground/paintground.ts": [
@@ -14933,7 +14929,6 @@
       "./lib/babylon/misc/index.ts",
       "./lib/babylon/index.ts",
       "./types/interfaces/index.d.ts",
-      "./plants/plants.ts",
       "./paintground/paintground.ts",
       "./paintground/paintplane.ts",
       "./tools/plantsui.ts",
@@ -14997,8 +14992,9 @@
       "./plants/grass.ts",
       "./rustwasm/hello_wasm.d.ts",
       "./rustwasm/hello_wasm_bg.d.ts",
+      "./rustwasm/hello_wasm.js",
       "./node_modules/@types/facebook-js-sdk/index.d.ts",
-      "./rustwasm/hello_wasm.js"
+      "./plants/plants.ts"
     ]
   },
   "version": "3.8.1-rc"

@@ -567,8 +567,10 @@ declare class GPUComputePassEncoder implements GPUProgrammablePassEncoder {
 
   endPass(): void;
 }
-
-declare class GPUComputePipeline implements GPUObjectBase {
+declare class GPUPipelineBase {
+    getBindGroupLayout(index: number): GPUBindGroupLayout
+}
+declare class GPUComputePipeline extends GPUPipelineBase implements GPUObjectBase   {
   label: string | undefined;
 }
 
@@ -803,9 +805,8 @@ interface GPURenderBundleEncoderDescriptor
   sampleCount?: number;
 }
 
-declare class GPURenderPipeline implements GPUObjectBase {
+declare class GPURenderPipeline extends GPUPipelineBase implements GPUObjectBase {
   label: string | undefined;
-  getBindGroupLayout: (number) => GPUBindGroupLayout;
 }
 
 declare class GPUSampler implements GPUObjectBase {

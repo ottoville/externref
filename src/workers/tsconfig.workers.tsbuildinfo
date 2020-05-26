@@ -158,7 +158,7 @@
         "signature": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "./webworkers/grass.ts": {
-        "version": "15ef38ea62a24b56065d366f1780ec353343841192a3a7096c83bf54253b05d6",
+        "version": "54c3c5380713db6a259664bc2d7dd1be048fc85f16c045b5e8db13f020bc39f7",
         "signature": "1287bdfbcc9573aa73ef2640f697475373fdbdb04db5448b2e49c0acb1963aba"
       },
       "./webworkers/interfaces.ts": {
@@ -220,18 +220,6 @@
     "referencedMap": {},
     "exportedModulesMap": {},
     "semanticDiagnosticsPerFile": [
-      "./service-worker.ts",
-      "./webworkers/bitmapworker.ts",
-      "./webworkers/grass.ts",
-      "./webworkers/interfaces.ts",
-      "./webworkers/mesh.ts",
-      "./webworkers/ray.ts",
-      "./webworkers/terrainworker.ts",
-      "./service-worker.published.ts",
-      "./commonmath.d.ts",
-      "./webgpu.d.ts",
-      "../node_modules/@types/color-name/index.d.ts",
-      "../node_modules/@types/facebook-js-sdk/index.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es5.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2015.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2016.d.ts",
@@ -269,7 +257,19 @@
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.promise.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.string.d.ts",
       "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
-      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.esnext.intl.d.ts"
+      "../../../../../../.nuget/packages/microsoft.typescript.msbuild/3.8.1-rc/tools/tsc/lib.esnext.intl.d.ts",
+      "./webworkers/bitmapworker.ts",
+      "./webworkers/interfaces.ts",
+      "./webworkers/mesh.ts",
+      "./webworkers/ray.ts",
+      "./webworkers/terrainworker.ts",
+      "./service-worker.ts",
+      "./service-worker.published.ts",
+      "./commonmath.d.ts",
+      "./webgpu.d.ts",
+      "../node_modules/@types/color-name/index.d.ts",
+      "../node_modules/@types/facebook-js-sdk/index.d.ts",
+      "./webworkers/grass.ts"
     ]
   },
   "version": "3.8.1-rc"

@@ -44,9 +44,9 @@ export class Terrain extends TerraMesh {
     public static terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
     public inited: Promise<any>;
-    public static async fromHeightMap(map: string, device: GPUDevice, glslang: { compileGLSL: (source: string, type: string) => Uint32Array }): Promise<Terrain> {
+    public static async fromHeightMap(map: string, device: GPUDevice, shaderModules: Map<string, GPUShaderModule>): Promise<Terrain> {
         let vdata = await Terrain.terrainWorker.message<TerrainMap, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {url: map});
-        return new Terrain(vdata, device, glslang);
+        return new Terrain(vdata, device, shaderModules);
     }
     public createTexture(engine: WebGPUEngine) : Promise<GPUBuffer> {
         return new Promise((tres, trej) => {
@@ -54,20 +54,16 @@ export class Terrain extends TerraMesh {
                 console.log('creating terrain texture')
                 /* WEBGPU START */
                
-                const computeShaderCode = await TerraEffect._loadShader2('webgpu.comp');
                 // Result Matrix
 
                 const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5120 * 5120);
                 const resultMatrixBuffer = this.device.createBuffer({
                     size: resultMatrixBufferSize,
-                    //@ts-ignore
                     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
                 });
                 const computePipeline = this.device.createComputePipeline({
                     computeStage: {
-                        module: this.device.createShaderModule({
-                            code: this.glslang.compileGLSL(computeShaderCode, "compute")
-                        }),
+                        module: this.shaderModules.get("webgpu.comp"),
                         entryPoint: "main"
                     }
                 });
@@ -142,7 +138,7 @@ export class Terrain extends TerraMesh {
         });
     }
     //public ground: BABYLON.GroundMesh;
-    constructor(vdata: TerrainMap, private device: GPUDevice, private glslang: { compileGLSL: (source: string, type: string) => Uint32Array }) {
+    constructor(vdata: TerrainMap, private device: GPUDevice, private shaderModules: Map<string, GPUShaderModule>) {
         super('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
         
         this._subdivisionsX = 250;

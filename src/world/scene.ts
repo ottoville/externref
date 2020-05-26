@@ -733,7 +733,7 @@ export class WorldScene extends Scene {
         private webSocket?: WebSocket
         ) {
         super(engine as Engine);
-        
+        this.getSceneUniformBuffer().create();
         blazor.invokeMethod('setProgress', 21);
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
@@ -828,7 +828,7 @@ export class WorldScene extends Scene {
 
         this.terrainReady = new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
             try {
-                const groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device, glslang);
+                const groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device, shaderModules);
                 let cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
                 if (cachedtexture) {
                     let cacheimg = new Image();
@@ -884,26 +884,21 @@ export class WorldScene extends Scene {
             ground.checkCollisions = true;
             blazor.invokeMethod('setProgress', 50);
             ground.isPickable = true;
-             let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground);
             this.getSceneUniformBuffer().update();
             this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera, device, glslang);
             blazor.invokeMethod('setProgress', 51);
             shadermateria.setVector3("lightPos", sunlight.position);
             blazor.invokeMethod('setProgress', 52);
             shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
+            let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground, device, shaderModules);
+            this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants, engine as WebGPUEngine, device, shaderModules);
 
-             this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants, engine as WebGPUEngine, device, shaderModules);
             blazor.invokeMethod('setProgress', 53);
             return texture.then(async gpuBuffer => {
                 blazor.invokeMethod('setProgress', 75);
-                
+
                 //let size = new Float32Array(imgdata as ArrayBuffer, 0, 2);
                 let size = [5120, 5120];
-
-
-                //@ts-ignore
-                let device: GPUDevice = (engine as WebGPUEngine)._device;
-
 
                 let internaltex = new InternalTexture(engine, InternalTextureSource.Url);
                 internaltex.width = size[0];
