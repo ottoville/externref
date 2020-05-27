@@ -45,7 +45,7 @@ export class Plants {
     public fillArea(area: PTDresult) {
         var d = new Date().getTime();
         
-        let amount = Math.abs(area.size.h * area.size.w) >> 2 // one per 2*2 grid
+        let amount = ~~Math.abs(area.size.h * area.size.w) * 2 // >> 2 // one per 2*2 grid
         //let amount = 100000
         if (amount === 0)
             return;
@@ -79,7 +79,7 @@ export class Plants {
     ) {
 
         const engine = scene.getEngine() as WebGPUEngine;
-        let shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 4 * this.numBlades);
+        let shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * this.numBlades);
         let noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
 
         this.ready = this.worker.message(WorkerReturn.Promise, 'init', {
@@ -98,13 +98,13 @@ export class Plants {
 
 
         const positions = new Float32Array([
-            0.15,    0,
-            -0.15,   0, 
-            0.10,    2,
-            -0.10,   2,
-            0.05,    4,
-            -0.05,   4, 
-            0,      7, 
+            0.02,    0,
+            -0.02,   0, 
+            0.014,    0.29,
+            -0.014,   0.29,
+            0.007,    0.57,
+            -0.007,   0.57, 
+            0,      1, 
         ]);
 
 
@@ -122,9 +122,9 @@ export class Plants {
         Poaceae.material.bindForSubMesh = (world: Matrix, mesh: Mesh, subMesh: SubMesh): void => { };
 
 
-        let [VGPU, VARR] = this.device.createBufferMapped({ size: positions.length * 4, usage: GPUBufferUsage.VERTEX });
+       /* let [VGPU, VARR] = this.device.createBufferMapped({ size: positions.length * 4, usage: GPUBufferUsage.VERTEX });
         new Float32Array(VARR).set(positions);
-        VGPU.unmap()
+        VGPU.unmap()*/
 
         const renderPipeline = this.device.createRenderPipeline({
             //@ts-ignore
@@ -173,7 +173,7 @@ export class Plants {
                             }
                         ]
                     }
-                        ,
+                      /*  ,
                     {
                         arrayStride: 4 * 2,
                         stepMode: "vertex" as GPUInputStepMode,
@@ -183,7 +183,7 @@ export class Plants {
                             offset: 0,
                             format: "float2" as GPUVertexFormat
                         }]
-                    }]
+                    }*/]
             },
         });
 
@@ -199,14 +199,9 @@ export class Plants {
                 }],
             })
         ];
-        let [positionGPU, positionArr] = device.createBufferMapped({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST })
-        let [shapeGPU, shapeArr] = device.createBufferMapped({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE })
-        this.#positionGPU = positionGPU;
-        this.#shapeGPU = shapeGPU;
-        new Float32Array(positionArr).set(new Float32Array(this.offset));
-        new Float32Array(shapeArr).set(new Float32Array(shapes));
-        positionGPU.unmap();
-        shapeGPU.unmap();
+        this.#positionGPU = device.createBuffer({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+        this.#shapeGPU = device.createBuffer({ size: this.numBlades * 4 * 3, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE });
+
         Poaceae._draw = (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh => {
             if (!Poaceae._geometry || !Poaceae._geometry.getVertexBuffers() || (!Poaceae._unIndexed && !Poaceae._geometry.getIndexBuffer())) {
 
@@ -226,7 +221,7 @@ export class Plants {
             renderPass.setPipeline(renderPipeline);
             renderPass.setVertexBuffer(0, this.#positionGPU);
             renderPass.setVertexBuffer(1, this.#shapeGPU);
-            renderPass.setVertexBuffer(2, VGPU);
+          //  renderPass.setVertexBuffer(2, VGPU);
             //@ts-ignore
             engine._setRenderBindGroups(bindGroups);
             if (engine._alphaState.alphaBlend && engine._alphaState._isBlendConstantsDirty) {
@@ -242,10 +237,6 @@ export class Plants {
         
 
         terrain.inited.then(() => {
-            const resultMatrixBuffer = this.device.createBuffer({
-                size: this.numBlades * 4 * 4,
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
-            });
             const worldSetGPU = this.device.createBuffer({ size: this.numBlades * 2 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
             const worldCopyGPU = this.device.createBuffer({ size: this.numBlades * 2 * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST  });
             const computePipeline = this.device.createComputePipeline({
@@ -284,7 +275,13 @@ export class Plants {
                     {
                         binding: 4,
                         resource: {
-                            buffer: resultMatrixBuffer
+                            buffer: this.#positionGPU
+                        }
+                    },
+                    {
+                        binding: 5,
+                        resource: {
+                            buffer: this.#shapeGPU
                         }
                     }
                 ]
@@ -304,11 +301,6 @@ export class Plants {
             passEncoder.setBindGroup(0, bindGroup);
             passEncoder.dispatch(this.numBlades);
             passEncoder.endPass();
-            commandEncoder.copyBufferToBuffer(
-                resultMatrixBuffer, 0,
-                this.#positionGPU, 0,
-                this.numBlades * 4 * 4);
-
             const updatePositionBuffer = [commandEncoder.finish()];
 
             this.worker.subscribe('updated', async (data: { count: number }) => {

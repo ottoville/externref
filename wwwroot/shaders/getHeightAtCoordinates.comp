@@ -10,26 +10,30 @@ float subdivisionsY = 250.0;
 
 float width = 10000.0;
 float height = 10000.0;
-  layout(std430, set = 0, binding = 0) readonly buffer Positions {
-      float numbers[];
-  } positions;
 
-  layout(std430, set = 0, binding = 1) readonly buffer Slopes {
-      int numbers[];
-  } slopes;
+layout(std430, set = 0, binding = 0) readonly buffer Positions {
+    float numbers[];
+} positions;
 
-  layout(std430, set = 0, binding = 2) readonly buffer Facet1 {
-      float numbers[];
-  } facet1;
+layout(std430, set = 0, binding = 1) readonly buffer Slopes {
+    int numbers[];
+} slopes;
 
-  layout(std430, set = 0, binding = 3) readonly buffer Facet2 {
-      float numbers[];
-  } facet2;
+layout(std430, set = 0, binding = 2) readonly buffer Facet1 {
+    float numbers[];
+} facet1;
 
-  layout(std430, set = 0, binding = 4) buffer ResultMatrix {
-      float numbers[];
-  } resultMatrix;
+layout(std430, set = 0, binding = 3) readonly buffer Facet2 {
+    float numbers[];
+} facet2;
 
+layout(std430, set = 0, binding = 4) buffer PositionAndRotate {
+    float numbers[];
+} positionAndRotate;
+
+layout(std430, set = 0, binding = 5) buffer Shapes {
+    float numbers[];
+} shapes;
 
 //
 // Description : Array and textureless GLSL 2D simplex noise function.
@@ -124,8 +128,12 @@ float getHeightAtCoordinates(vec2 xz) {
   void main() {
     vec2 flatpos=vec2(positions.numbers[gl_GlobalInvocationID.x * 2], positions.numbers[gl_GlobalInvocationID.x * 2 +1]); 
     float y = getHeightAtCoordinates(flatpos);
-    resultMatrix.numbers[gl_GlobalInvocationID.x*4]=flatpos.x;
-    resultMatrix.numbers[gl_GlobalInvocationID.x*4+1]=y;
-    resultMatrix.numbers[gl_GlobalInvocationID.x*4+2]=flatpos.y;
-    resultMatrix.numbers[gl_GlobalInvocationID.x*4+3]=rand(flatpos);
+    positionAndRotate.numbers[gl_GlobalInvocationID.x*4]=flatpos.x;
+    positionAndRotate.numbers[gl_GlobalInvocationID.x*4+1]=y;
+    positionAndRotate.numbers[gl_GlobalInvocationID.x*4+2]=flatpos.y;
+    positionAndRotate.numbers[gl_GlobalInvocationID.x*4+3]=6.3*rand(flatpos);
+
+    shapes.numbers[gl_GlobalInvocationID.x]= rand(vec2(flatpos.yx)); // scale
+    shapes.numbers[gl_GlobalInvocationID.x+2]= rand(vec2(flatpos.xy)); // curve
+
   }
