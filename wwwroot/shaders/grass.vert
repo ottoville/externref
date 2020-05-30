@@ -1,5 +1,5 @@
 #version 450
-precision highp float;
+precision lowp float;
 
 const vec2 vertices[7] = vec2[7](
             vec2(0.02f,    0),
@@ -12,7 +12,7 @@ const vec2 vertices[7] = vec2[7](
            );
 
 const float[7] bending = float[7](0,0,0.2,0.2,0.5,0.5,1.0);
-const int[7] rot = int[7](0,0,1,1,1,1,1);
+const float[7] rot = float[7](0,0,1,1,1,1,1);
 
 //const float[7] color = float[7](0.2,0.3,0.1,0.2,0.4,0.1,0.3);
 
@@ -32,7 +32,7 @@ layout(location = 1) in vec4 shape;  // {x:scale, y:lean, z:curve, w:color} (bla
 
 layout(location = 0) out vec4 color;
 
-
+const float PI=3.141592653589793;
 
 // Rotate by an angle //Todo: move to baking shader?
 vec2 rotate (float x, float y, float r) {
@@ -43,33 +43,31 @@ vec2 rotate (float x, float y, float r) {
 void main(void) {
     vec3 vertice=vec3(vertices[gl_VertexIndex].xy,0);
     float bend=bending[gl_VertexIndex];
-
+    float windRotate=rot[gl_VertexIndex];
 
     //vec2 curved2 = rotate(vertice.y,0, seqment*shape.z);
 
-   // float windIntensivy=cos(terra.time);
-    float windIntensivy=1.0;
-    float windDirection=cos(terra.time*0.5);
+    //How fast wind direction and intensivy change
+    float windDelta=cos(terra.time*0.1)*PI*2;
 
-    // vec2 rotatedXZ= vec2(vertice.x * cos(positions.w), vertice.x * sin(positions.w));
-     vec2 rotatedXZ= vec2(vertice.x * cos(1), vertice.x * sin(1));
-                            // vec2 rotatedXZ=rotate(vertice.x, vertice.z, positions.w);
+
+    float windIntensivy=(cos(windDelta) * sin(windDelta*2)+1)*0.5;
+    float windDirection=cos(windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
+
+     vec2 rotatedXZ= vec2(vertice.x * cos(positions.w), vertice.x * sin(positions.w));
      vec3 rotated=vec3(rotatedXZ.x, vertice.y, rotatedXZ.y);
 
 
-    float angle=bend*shape.z*windIntensivy;
-    //float angle=bend*windIntensivy;
-                                                            //at this point vertice.z is 0
-                    //vec3 curved2 = vec3(vertice.x, vertice.y * cos(angle), vertice.y * sin(angle));
+    float angle=bend*shape.z*windIntensivy*PI*0.5;
     vec2 curvedXY = rotate(rotated.x, rotated.y, angle);
     
     vec3 curved = vec3(curvedXY.x, curvedXY.y, rotated.z);
 
-                    //vec3 windrotate = vec3(curved2.x * cos(windDirection), curved2.y, curved2.z * sin(windDirection));
+    vec2 windrotatedXZ = rotate(curved.x, curved.z, windDirection*windRotate);
+    vec3 windrotated=vec3(windrotatedXZ.x, curved.y, windrotatedXZ.y);
 
-                        //vec3 scaled=vec3(shape.x*vertice.x, shape.x*vertice.y, shape.x*curved);
-    //vec3 scaled=shape.x*curved;
-    vec3 scaled=curved;
+    vec3 scaled=shape.x*windrotated;
+   // vec3 scaled=windrotated*10;
 
     
     vec4 worldPos = vec4(positions.xyz, 1.0) + vec4(scaled.x, scaled.y, scaled.z, 0.0);

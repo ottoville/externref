@@ -3,33 +3,22 @@ import { Terrain } from "../world/terrain.js";
 import { WorkerReturn } from "../WorkerThread.js";
 import { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
-import type { Scene } from "../lib/babylon/scene.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Effect, IEffectCreationOptions } from "../lib/babylon/Materials/effect.js";
 import type { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
 import { TerraMesh } from "../TerraMesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { TerraEffect } from "../TerraEffect.js";
-import { StandardMaterial, StandardMaterialDefines } from "../lib/babylon/Materials/standardMaterial.js";
+import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
+import type { WorldScene } from "../world/scene.js";
 
 
 //@ts-ignore
 export class TerrainTool extends UITAB {
 
     private helpermaterial: ShaderMaterial;
-    private timed = new Date().getTime();
-    private settingTime = false;
-    private setTime = async () => {
-        if (this.settingTime)
-            return;
-        this.settingTime = true;
-        let arr = await this.timeBufferStorage.mapWriteAsync();
-        new Float32Array(arr).set([(this.timed - new Date().getTime()) % 100000 / 1000]); // %100000 is to keep float minimal to greater precise
-        this.timeBufferStorage.unmap();
-        this.device.defaultQueue.submit(this.updateTime);
-        this.settingTime = false;
-    }
+
     public canvas: HTMLCanvasElement;
     private engine: WebGPUEngine;
     private helper = new TerraMesh("TerrainHelper", new Float32Array([
@@ -39,14 +28,13 @@ export class TerrainTool extends UITAB {
         0.5, 1.5, -3,
     ]));
     timeBufferStorage: GPUBuffer;
-    updateTime: GPUCommandBuffer[];
     tempFacet1Buffer: GPUBuffer = null;
     tempFacet2Buffer: GPUBuffer = null;
 
 
 
     constructor(
-        private scene: Scene,
+        private scene: WorldScene,
         private terrain: Terrain,
         private camera: ArcRotateCamera,
         private device: GPUDevice,
@@ -81,20 +69,7 @@ export class TerrainTool extends UITAB {
         
         //@ts-ignore
         this.helper.subMeshes[0]._materialEffect = effect as Effect;
-        let timeBuffer = device.createBuffer({
-            size: 4,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-        this.timeBufferStorage = device.createBuffer({
-            size: 4,
-            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
-        });
-        const commandEncoder = device.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(
-            this.timeBufferStorage, 0,
-            timeBuffer, 0,
-            4);
-        this.updateTime = [commandEncoder.finish()];
+
 
         effect.onCompiled.then(async () => {
             const stages = effect._pipelineContext.stages;
@@ -186,7 +161,7 @@ export class TerrainTool extends UITAB {
                     entries: [{
                         binding: 0,
                         resource: {
-                            buffer: timeBuffer
+                            buffer: scene.timeBuffer
                         }
                     }],
                 })
@@ -251,7 +226,7 @@ export class TerrainTool extends UITAB {
     activate = (): void => {
         this.helper._internalAbstractMeshDataInfo._visibility = 1;
         this.addListener("pointermove", this.mouseListener, { lazy: 15 });
-        this.scene.registerBeforeRender(this.setTime);
+        
         let commandEncoder: GPUCommandEncoder;
         let updateFacet: GPUCommandBuffer[];
         let query = [];
@@ -427,7 +402,6 @@ export class TerrainTool extends UITAB {
         //this.removeListener("pointerdown", this.pointerdownf);
         this.helper._internalAbstractMeshDataInfo._visibility = 0;
         //this.removeListener("pointermove", this.mouseListener);
-        this.scene.unregisterBeforeRender(this.setTime);
         (function () {
             this._options.samplers = [];
             this._textures = {}

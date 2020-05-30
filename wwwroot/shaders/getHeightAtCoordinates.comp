@@ -1,4 +1,6 @@
 #version 450
+precision lowp float;
+
 float minX=-5000.0;
 float minZ=-5000.0;
 
@@ -131,10 +133,11 @@ float getHeightAtCoordinates(vec2 xz) {
     positionAndRotate.numbers[gl_GlobalInvocationID.x*4]=flatpos.x;
     positionAndRotate.numbers[gl_GlobalInvocationID.x*4+1]=y;
     positionAndRotate.numbers[gl_GlobalInvocationID.x*4+2]=flatpos.y;
-    positionAndRotate.numbers[gl_GlobalInvocationID.x*4+3]=3.14*rand(flatpos); //rotate
+    positionAndRotate.numbers[gl_GlobalInvocationID.x*4+3]=3.145*rand(flatpos); //rotate
 
-    shapes.numbers[gl_GlobalInvocationID.x]= 0.4 + 0.6*rand(vec2(flatpos.yx)); // scale
-    shapes.numbers[gl_GlobalInvocationID.x+2]= rand(vec2(flatpos.xy)); // curve
-    shapes.numbers[gl_GlobalInvocationID.x+3]= snoise(vec2(flatpos.xy)); // color
+    shapes.numbers[gl_GlobalInvocationID.x*4]= 0.4 + 0.6*rand(vec2(flatpos.yx)); // x:scale
+    shapes.numbers[gl_GlobalInvocationID.x*4+1]= 0; // lean
+    shapes.numbers[gl_GlobalInvocationID.x*4+2]= rand(vec2(flatpos.xy)); // z:curve
+    shapes.numbers[gl_GlobalInvocationID.x*4+3]= snoise(vec2(flatpos.xy)); //  w:color
 
   }

@@ -6,7 +6,6 @@ import type { Terrain } from "../world/terrain.js";
 
 import type { PTDresult } from "../types/interfaces/index.js";
 import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
-import type { Scene } from "../lib/babylon/scene.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import { Color3 } from "../lib/babylon/Maths/math.color.js";
@@ -18,6 +17,7 @@ import { TerraMesh } from "../TerraMesh.js";
 import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import { WebGPUEngine } from "../lib/babylon/index.js";
 import { Matrix } from "../lib/babylon/Maths/math.vector";
+import type { WorldScene } from "../world/scene.js";
 
 const BLADE_SEGS = 2 // # of blade segments
 
@@ -39,13 +39,12 @@ export class Plants {
     private worker = new WorkerThread('/webworkers/grass.js');
     private ready: Promise<any>;
     private bladesVisible: number = 0;
-    #positionGPU: GPUBuffer;
-    #shapeGPU: GPUBuffer;
-
     public fillArea(area: PTDresult) {
         var d = new Date().getTime();
         
-        let amount = ~~Math.abs(area.size.h * area.size.w) * 2 // >> 2 // one per 2*2 grid
+       // let amount = ~~Math.abs(area.size.h * area.size.w) * 2 // >> 2 // one per 2*2 grid
+        //let amount = ~~Math.abs(area.size.h * area.size.w) * 4 // very aggressive amount on CPU
+        let amount = ~~Math.abs(area.size.h * area.size.w) >> 2
         //let amount = 100000
         if (amount === 0)
             return;
@@ -71,7 +70,7 @@ export class Plants {
 
     }
     constructor(
-        private scene: Scene,
+        private scene: WorldScene,
         private camera: ArcRotateCamera,
         private terrain: Terrain,
         private device: GPUDevice,
@@ -172,18 +171,7 @@ export class Plants {
                                 format: "float4" as GPUVertexFormat
                             }
                         ]
-                    }
-                      /*  ,
-                    {
-                        arrayStride: 4 * 2,
-                        stepMode: "vertex" as GPUInputStepMode,
-                        attributes: [{
-                            // position
-                            shaderLocation: 2,
-                            offset: 0,
-                            format: "float2" as GPUVertexFormat
-                        }]
-                    }*/]
+                    }]
             },
         });
 
@@ -197,10 +185,19 @@ export class Plants {
                         buffer: scene._sceneUbo._buffer.underlyingResource
                     }
                 }],
+            }),
+            device.createBindGroup({
+                layout: renderPipeline.getBindGroupLayout(1),
+                entries: [{
+                    binding: 0,
+                    resource: {
+                        buffer: scene.timeBuffer
+                    }
+                }],
             })
         ];
-        this.#positionGPU = device.createBuffer({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
-        this.#shapeGPU = device.createBuffer({ size: this.numBlades * 4 * 3, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE });
+        const positionGPU = device.createBuffer({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+        const shapeGPU = device.createBuffer({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE });
 
         Poaceae._draw = (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh => {
             if (!Poaceae._geometry || !Poaceae._geometry.getVertexBuffers() || (!Poaceae._unIndexed && !Poaceae._geometry.getIndexBuffer())) {
@@ -219,8 +216,8 @@ export class Plants {
             const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
 
             renderPass.setPipeline(renderPipeline);
-            renderPass.setVertexBuffer(0, this.#positionGPU);
-            renderPass.setVertexBuffer(1, this.#shapeGPU);
+            renderPass.setVertexBuffer(0, positionGPU);
+            renderPass.setVertexBuffer(1, shapeGPU);
           //  renderPass.setVertexBuffer(2, VGPU);
             //@ts-ignore
             engine._setRenderBindGroups(bindGroups);
@@ -275,13 +272,13 @@ export class Plants {
                     {
                         binding: 4,
                         resource: {
-                            buffer: this.#positionGPU
+                            buffer: positionGPU
                         }
                     },
                     {
                         binding: 5,
                         resource: {
-                            buffer: this.#shapeGPU
+                            buffer: shapeGPU
                         }
                     }
                 ]
@@ -306,8 +303,8 @@ export class Plants {
             this.worker.subscribe('updated', async (data: { count: number }) => {
                 console.log(new Float32Array(this.offset));
                 this.bladesVisible = data.count;
-                const worldCopyArr = await worldSetGPU.mapWriteAsync();
-                new Float32Array(worldCopyArr).set(new Float32Array(this.offset));
+                const worldSetArr = await worldSetGPU.mapWriteAsync();
+                new Float32Array(worldSetArr).set(new Float32Array(this.offset));
                 worldSetGPU.unmap();
                 this.device.defaultQueue.submit(updatePositionBuffer);
                 return;

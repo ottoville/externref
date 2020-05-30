@@ -9,7 +9,6 @@ const BLADE_WIDTH: number = 0.0025;
 const BLADE_HEIGHT_MIN = 0.3
 const BLADE_HEIGHT_MAX = 0.8
 let grasspositions: Float32Array;
-let shapes: Float32Array;
 let noises: Float32Array;
 let bladecount: number = 0;
 interface PlantI {
@@ -21,13 +20,11 @@ interface PlantI {
     x: number,
     z: number,
     grid: string,
-    shape: Float32Array,
 }
 let methods = {
     init: (data: WMessage<{ positions: any, shape: any, noises: any }>) => {
         console.log('init plants worker');
         grasspositions = new Float32Array(data.data.positions);
-        shapes = new Float32Array(data.data.shape);
         noises = new Float32Array(data.data.noises);
         this.postMessage({ id: data.id });
     },
@@ -54,20 +51,10 @@ let methods = {
         for (let i = 0; i < amount; ++i) {
             let posX = (Math.random() * data.data.area.size.h * -1);
             let posZ = (Math.random() * data.data.area.size.w * -1);
-            if (isNaN(posX) || isNaN(posZ)) {
-                console.log('posX or posZ is nan');
-                continue;
-            }
 
             let translated = translate(posX, 0, posZ, rotmax);
 
             const [x, z] = [data.data.area.coord.x + translated.x, data.data.area.coord.y + translated.z]
-
-
-            if (isNaN(x) || isNaN(z)) {
-                console.log('x or z is nan');
-                continue;
-            }
 
 
             offsets[i * 2 + 0] = x;
@@ -85,9 +72,7 @@ let methods = {
             maxZ = Math.max(maxZ, offsets[i * 2 + 1]);
             minX = Math.min(minX, offsets[i * 2 + 0]);
             minZ = Math.min(minZ, offsets[i * 2 + 1]);
-            if (isNaN(maxX) || isNaN(maxZ) || isNaN(minX) || isNaN(minZ)) {
-                console.log('maxX or maxZ is nan on p2, i is', i);
-            }
+
         }
         let d2 = new Date().getTime();
 
@@ -103,13 +88,6 @@ let methods = {
                 let blade = [offsets[i * 2], offsets[i * 2 + 1]]
                 let grid = (blade[0] | 1) + ',' + (blade[1] | 1);
                 if (!grids.has(grid)) {
-                    let shape = new Float32Array(3);
-                    //let noise = Math.abs(simplex(blade[0] * 0.03, blade[1] * 0.03));
-                   // noise = noise * noise * noise
-                    shape[0] = BLADE_WIDTH + Math.random() * BLADE_WIDTH * 0.5 // width
-                  //  shape[1] = BLADE_HEIGHT_MIN + Math.pow(Math.random(), 4.0) * (BLADE_HEIGHT_MAX - BLADE_HEIGHT_MIN) + noise // height
-                    shape[1] = 0.0 + Math.random() * 0.3 // lean
-                    shape[2] = 0.05 + Math.random() * 0.3 // curve
                     objs.push({
                         family: 'Poaceae',
                         gridx: blade[0] | 1,
@@ -118,7 +96,6 @@ let methods = {
                         z: blade[1],
                         pos: new Float32Array(blade),
                         grid: grid,
-                        shape: new Float32Array(shape)
                     })
                 }
             }
@@ -126,7 +103,6 @@ let methods = {
             //	console.log('Start to process objs length, ', objs.length, ', took ', new Date().getTime() - d);
             for (let i = 0; i < Math.min(bladecount, objs.length); i++) {
                 grasspositions.set(objs[i].pos, i * 2);
-                shapes.set(objs[i].shape, i * 3);
             }
             console.log('sending grass back from worker, bladecount ', bladecount, 'took ', new Date().getTime() - d);
             this.postMessage({ type: 'updated', count: bladecount });
@@ -173,7 +149,6 @@ let methods = {
             for (let i = 0; i < bladecount; i++) {
                 let r = (<IDBRequest>evt.target).result[i];
                 grasspositions.set(r.pos, i * 2);
-                shapes.set(r.shape, i * 3);
             }
         }
     }

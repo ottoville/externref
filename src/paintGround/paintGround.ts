@@ -1,6 +1,6 @@
 let startingPoint: Vector2;
 //let tempplane: BABYLON.Mesh | null
-let end_position: Vector2
+//let end_position: Vector2
 
 import { UITAB } from "../UITAB.js";
 import type { Terrain } from "../world/terrain.js";
@@ -28,6 +28,7 @@ export enum DrawType {
 export abstract class paintGround {
     protected ang360: Angle = new Angle(0);
     protected ang: Angle = new Angle(0);
+    #end_position: Vector2;
     constructor(
         public canvas: HTMLElement,
         protected scene: WorldScene,
@@ -46,7 +47,7 @@ export abstract class paintGround {
         this.camera.attachControl(this.canvas, true);
     }
 
-    private drawArea = (evt:PointerEvent) => {
+    #drawArea = (evt:PointerEvent) => {
         let engine = this.scene.getEngine();
         engine.resize();
 
@@ -57,20 +58,20 @@ export abstract class paintGround {
 
         let pikked = this.ground.intersects(ray);
         if (pikked.pickedPoint) {
-            end_position = new Vector2(pikked.pickedPoint.x, pikked.pickedPoint.z);
+            this.#end_position = new Vector2(pikked.pickedPoint.x, pikked.pickedPoint.z);
 
-            let width = startingPoint.x - end_position.x;
+            let width = startingPoint.x - this.#end_position.x;
 
-            distance = Math.sqrt(Math.pow(startingPoint.x - end_position.x, 2) + Math.pow(startingPoint.y - end_position.y, 2));
+            distance = Math.sqrt(Math.pow(startingPoint.x - this.#end_position.x, 2) + Math.pow(startingPoint.y - this.#end_position.y, 2));
             height = distance
 
             if (width < 0)
-                rotation = Math.asin((startingPoint.y - end_position.y) / distance);
+                rotation = Math.asin((startingPoint.y - this.#end_position.y) / distance);
             else
-                rotation = Math.asin((startingPoint.y - end_position.y) / distance) * -1;
+                rotation = Math.asin((startingPoint.y - this.#end_position.y) / distance) * -1;
             this.ang = new Angle(Math.abs(rotation));
             //@ts-ignore
-            this.ang360 = this.ang[360](startingPoint, end_position);
+            this.ang360 = this.ang[360](startingPoint, this.#end_position);
         }
     }
 
@@ -82,7 +83,7 @@ export abstract class paintGround {
     #drawqueue: boolean = false;
     #busy: boolean = false;
 
-    private mousemove = (evt: PointerEvent) => {
+    #mousemove = (evt: PointerEvent) => {
         let ray = Ray.Zero();
         this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
         let pikked = this.ground.intersects(ray);
@@ -97,7 +98,7 @@ export abstract class paintGround {
             let dotang = this.ang360.distance(ang2[360](startingPoint, new Vector2(pikked.pickedPoint.x, pikked.pickedPoint.z)).rad);
 
             let v1 = [startingPoint.y - pikked.pickedPoint.z, (startingPoint.x - pikked.pickedPoint.x) * -1]
-            let v2 = [startingPoint.x - end_position.x, startingPoint.y - end_position.y];
+            let v2 = [startingPoint.x - this.#end_position.x, startingPoint.y - this.#end_position.y];
 
             let dotprod = height * distance * Math.cos(dotang.rad);
 
@@ -133,27 +134,31 @@ export abstract class paintGround {
         //this.canvas.addEventListener('click', async () => {
         //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
 
-        this.uitab.removeListener('pointermove', this.mousemove);
+        this.uitab.removeListener('pointermove', this.#mousemove);
         //this.canvas.removeEventListener('pointermove', this.mousemove, false);
 
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
         this.uitab.addListener('pointerdown', this.mainPointerDown, { once: true });
         this.resolve({ coord: startingPoint, rad: this.ang360.rad, size: { h: height, w: width } });
+        this.#end_position = null;
     }
     private mouseMoveRegisterClick = (evt: PointerEvent) => {
         this.uitab.addListener('pointerdown', this.finalClick, { once: true });
     }
-    private pointerUp = (evt:PointerEvent) => {
+    #pointerUp = (evt: PointerEvent) => {
+        this.uitab.removeListener('pointermove', this.#drawArea);
+        this.camera.attachControl(this.canvas, true);
+        //fix race condition
+        if (this.#end_position == null)
+            return;
         try {
-            this.uitab.removeListener('pointermove', this.drawArea);
-            this.onMainPointerUp(end_position, height);
-            this.camera.attachControl(this.canvas, true);
+            this.onMainPointerUp(this.#end_position, height);
         } catch (e) {
             console.log(e);
         } finally {
-            this.uitab.addListener('pointermove', this.mousemove, { lazy: 25 });
-            this.uitab.addListener('pointermove', this.mouseMoveRegisterClick, { once: true })
+            this.uitab.addListener('pointermove', this.#mousemove, { lazy: 25 });
+            this.uitab.addListener('pointermove', this.mouseMoveRegisterClick, { once: true });
         }
     }
     private testcounter = 0;
@@ -186,12 +191,9 @@ export abstract class paintGround {
             this.onMainPointerDown(startingPoint);
             this.camera.detachControl(this.canvas);
 
-            this.uitab.addListener("pointermove", this.drawArea, { lazy: 25 });
+            this.uitab.addListener("pointermove", this.#drawArea, { lazy: 25 });
 
-
-            //There is a race condition. this.drawarea is lazyevaled every 25ms. pointerup event need variables initialized by lazy function. If it is too lazy those variables are undefined.
-
-            this.uitab.addListener("pointerup", this.pointerUp, { once: true });
+            this.uitab.addListener("pointerup", this.#pointerUp, { once: true });
         } else {
             console.debug('no pickinfo pickedpoint');
             console.log(pickInfo);

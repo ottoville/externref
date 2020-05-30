@@ -79,6 +79,7 @@ class _ClickInfo {
 }
 
 export class WorldScene extends Scene {
+    timeBuffer: GPUBuffer;
     createPickingRayToRef(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
 
         var engine = this.getEngine();
@@ -734,6 +735,33 @@ export class WorldScene extends Scene {
         ) {
         super(engine as Engine);
         this.getSceneUniformBuffer().create();
+        this.timeBuffer = device.createBuffer({
+            size: 4,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        const timeBufferStorage = device.createBuffer({
+            size: 4,
+            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+        });
+        const commandEncoder = device.createCommandEncoder();
+        commandEncoder.copyBufferToBuffer(
+            timeBufferStorage, 0,
+            this.timeBuffer, 0,
+            4);
+        const updateTime = [commandEncoder.finish()];
+        let settingTime = false;
+        const timed = new Date().getTime();
+        this.registerBeforeRender(async () => {
+            if (settingTime)
+                return;
+            settingTime = true;
+            let arr = await timeBufferStorage.mapWriteAsync();
+            new Float32Array(arr).set([(timed - new Date().getTime()) % 100000 / 1000]); // %100000 is to keep float minimal to greater precise
+            timeBufferStorage.unmap();
+            this.device.defaultQueue.submit(updateTime);
+            settingTime = false;
+        });
+
         blazor.invokeMethod('setProgress', 21);
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
@@ -792,6 +820,10 @@ export class WorldScene extends Scene {
                 lastStateChangeTime: ticks
             });
         }
+
+
+
+
         this.SunObject = new Sun(this);
 
         /* let gameEngine = new WorkerThread('js/workers/engine.js');
