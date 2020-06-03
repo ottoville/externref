@@ -136,7 +136,7 @@ float getHeightAtCoordinates(vec2 xz) {
     positionAndRotate.numbers[gl_GlobalInvocationID.x*4+3]=3.145*rand(flatpos); //rotate
 
     shapes.numbers[gl_GlobalInvocationID.x*4]= 0.4 + 0.6*rand(vec2(flatpos.yx)); // x:scale
-    shapes.numbers[gl_GlobalInvocationID.x*4+1]= 0; // lean
+    shapes.numbers[gl_GlobalInvocationID.x*4+1]= rand(vec2(flatpos.x, flatpos.y+gl_GlobalInvocationID.x)); // baseAngle
     shapes.numbers[gl_GlobalInvocationID.x*4+2]= rand(vec2(flatpos.xy)); // z:curve
     shapes.numbers[gl_GlobalInvocationID.x*4+3]= snoise(vec2(flatpos.xy)); //  w:color
 

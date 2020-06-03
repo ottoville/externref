@@ -50,6 +50,12 @@
         });
     </script>
     <script defer src="_framework/blazor.webassembly.js"></script>
+    <script>
+        window.blazorCulture = {
+            get: () => window.localStorage['BlazorCulture'],
+            set: (value) => window.localStorage['BlazorCulture'] = value
+        };
+    </script>
     <link href="css/site.css" rel="stylesheet" />
     <link rel="stylesheet" href="css/w3.css">
     <script type="text/javascript">

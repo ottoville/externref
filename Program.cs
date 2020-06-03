@@ -1,6 +1,11 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
+using System;
+using System.Globalization;
+using System.Net.Http;
+using System.Threading.Tasks;
+
 
 namespace TerraSim
 {
@@ -10,10 +15,20 @@ namespace TerraSim
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
-
             //builder.Services.AddApplicationInsightsTelemetry();
-            builder.Services.AddBaseAddressHttpClient();
-            await builder.Build().RunAsync();
+            builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            builder.Services.AddLocalization();
+            var host = builder.Build();
+            var jsInterop = host.Services.GetRequiredService<IJSRuntime>();
+            var result = await jsInterop.InvokeAsync<string>("blazorCulture.get");
+            if (result != null)
+            {
+                var culture = new CultureInfo(result);
+                CultureInfo.DefaultThreadCurrentCulture = culture;
+                CultureInfo.DefaultThreadCurrentUICulture = culture;
+            }
+
+            await host.RunAsync();
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Index> Loc
 
 @inject IJSRuntime JSRuntime;
 @code {
@@ -13,11 +14,18 @@
 }
 
 <div id="loginscreen" class="page">
+
+    @inject NavigationManager NavigationManager
+
+    <h3>Select your language</h3>
+    <CultureSelector />
+
+
     <h3>Log in to play the game</h3>
     <fieldset id="loginmethods">
-        <button @onpointerdown=loginFB>🎮 Login with facebook</button>
+        <button @onpointerdown=loginFB>@Loc["🎮 Login with facebook"]</button>
         <br /><br />
-        <button  @onpointerdown=loginAnom>🎮 Continue without logging in and online features</button>
+              <button @onpointerdown=loginAnom>@Loc["🎮 Continue without logging in and online features"]</button>
 
-    </fieldset>
+</fieldset>
 </div>

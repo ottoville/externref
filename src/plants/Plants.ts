@@ -301,7 +301,6 @@ export class Plants {
             const updatePositionBuffer = [commandEncoder.finish()];
 
             this.worker.subscribe('updated', async (data: { count: number }) => {
-                console.log(new Float32Array(this.offset));
                 this.bladesVisible = data.count;
                 const worldSetArr = await worldSetGPU.mapWriteAsync();
                 new Float32Array(worldSetArr).set(new Float32Array(this.offset));
