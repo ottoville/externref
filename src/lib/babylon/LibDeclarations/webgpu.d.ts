@@ -201,11 +201,11 @@ type GPUColorWriteFlags = number;
 // };
 
 type GPUShaderStageFlags = number;
-// const GPUShaderStage: {
-//   VERTEX:   0x1;
-//   FRAGMENT: 0x2;
-//   COMPUTE:  0x4;
-// };
+declare const GPUShaderStage: {
+   VERTEX:   0x1;
+   FRAGMENT: 0x2;
+   COMPUTE:  0x4;
+ };
 
 type GPUTextureUsageFlags = number;
 // const GPUTextureUsage: {
@@ -238,7 +238,7 @@ interface GPUBindGroupLayoutBinding {
 
 interface GPUBindGroupLayoutDescriptor
   extends GPUObjectDescriptorBase {
-  bindings?: GPUBindGroupLayoutBinding[];
+  entries: GPUBindGroupLayoutBinding[];
 }
 
 interface GPUBlendDescriptor {
@@ -271,8 +271,7 @@ interface GPUBufferCopyView {
 interface GPUTextureCopyView {
   texture: GPUTexture;
   mipLevel?: number;
-  arrayLayer?: number;
-  origin?: GPUOrigin3D;
+  origin: GPUOrigin3D;
 }
 
 interface GPUImageBitmapCopyView {

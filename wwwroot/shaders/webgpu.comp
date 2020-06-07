@@ -23,7 +23,7 @@ float height = 10000.0;
       float numbers[];
   } thirdMatrix;
 
-  layout(std430, set = 0, binding = 3) buffer ResultMatrix {
+  layout(std430, set = 1, binding = 0) buffer ResultMatrix {
       vec2 size;
       int numbers[];
   } resultMatrix;

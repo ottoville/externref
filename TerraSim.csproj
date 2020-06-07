@@ -177,6 +177,7 @@
     <None Remove="src\TerraRay.ts" />
     <None Remove="src\tools\buildings.ts" />
     <None Remove="src\tools\Terrain.ts" />
+    <None Remove="src\UIMesh.ts" />
     <None Remove="src\webgl.ts" />
     <None Remove="src\workers\commonMath.d.ts" />
     <None Remove="src\workers\interfaces.ts" />

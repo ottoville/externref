@@ -2,38 +2,38 @@
 @inject IJSRuntime JSRuntime;
 
 @code {
-    ElementReference canvas;
-    sbyte gameSpeed = 0;
-    long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
-    long lastStateChangeTime = DateTime.Now.Ticks;
-    string currentGameTime;
-    [JSInvokable]
-    public void initGame(System.Text.Json.JsonElement input)
-    {
-        input.GetProperty("lastStateChangeGameTime").TryGetInt64(out lastStateChangeGameTime);
-        input.GetProperty("lastStateChangeTime").TryGetInt64(out lastStateChangeTime);
-        input.GetProperty("gameSpeed").TryGetSByte(out gameSpeed);
-        System.Threading.Timer timer = new System.Threading.Timer((e) =>
+        ElementReference canvas;
+        sbyte gameSpeed = 0;
+        long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
+        long lastStateChangeTime = DateTime.Now.Ticks;
+        string currentGameTime;
+        [JSInvokable]
+        public void initGame(System.Text.Json.JsonElement input)
         {
-            var curDate = new DateTime(getGameTime());
-            currentGameTime = curDate.ToShortDateString() + " " + curDate.ToShortTimeString();
-            StateHasChanged();
-        }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
-    }
-    [JSInvokable]
-    public void setProgress(byte p)
-    {
-        System.Diagnostics.Debug.WriteLine("setProgress " + p);
-        JSRuntime.InvokeVoidAsync("appInsights.trackEvent", new { name = "startprogress_"+p });
-        progress = p;
-        this.StateHasChanged();
-    }
-    [JSInvokable]
-    public void setProgressError(string error = null)
-    {
-        progressError = error;
-        this.StateHasChanged();
-    }
+            input.GetProperty("lastStateChangeGameTime").TryGetInt64(out lastStateChangeGameTime);
+            input.GetProperty("lastStateChangeTime").TryGetInt64(out lastStateChangeTime);
+            input.GetProperty("gameSpeed").TryGetSByte(out gameSpeed);
+            System.Threading.Timer timer = new System.Threading.Timer((e) =>
+            {
+                var curDate = new DateTime(getGameTime());
+                currentGameTime = curDate.ToShortDateString() + " " + curDate.ToShortTimeString();
+                StateHasChanged();
+            }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
+        }
+        [JSInvokable]
+        public void setProgress(byte p)
+        {
+            System.Diagnostics.Debug.WriteLine("setProgress " + p);
+            JSRuntime.InvokeVoidAsync("appInsights.trackEvent", new { name = "startprogress_" + p });
+            progress = p;
+            this.StateHasChanged();
+        }
+        [JSInvokable]
+        public void setProgressError(string error = null)
+        {
+            progressError = error;
+            this.StateHasChanged();
+        }
 
     protected override void OnAfterRender(bool firstrender)
     {
@@ -100,12 +100,12 @@
         translate(ref position, sunm);
         return position;
     }
-    Tuple<string, string, string>[] tools2 = new Tuple<string, string, string>[] {
-        new Tuple<string, string, string>("Zones",      "▧" , "Zones"),
-        new Tuple<string, string, string>("Plants",     "🌲", "Plants"),
-        new Tuple<string, string, string>("Buildings",  "🏠", "Buildings"),
-        new Tuple<string, string, string>("Camera",     "📷", "Camera"),
-        new Tuple<string, string, string>("Terrain",    "🗻", "TerrainTool") };
+    List<string>[] tools2 = new List<string>[] {
+        new List<string>() {"Zones",      "▧" , "Zones"},
+        new List<string>() {"Plants",     "🌲", "Plants" },
+        new List<string>() {"Buildings",  "🏠", "Buildings" },
+        new List<string>() {"Camera",     "📷", "Camera" },
+        new List<string>() {"Terrain",    "🗻", "TerrainTool" } };
     public string showMenu;
     void activateMenu(string tool)
     {
@@ -113,18 +113,18 @@
         {
             showMenu = null;
             JSRuntime.InvokeAsync<string>("scene.tools." + tool + ".deactivate");
+
         }
         else
         {
             showMenu = tool;
-            System.Console.WriteLine("activateMenu " + tool);
-            JSRuntime.InvokeAsync<string>("scene.tools." + tool + ".activate");
+            JSRuntime.InvokeAsync<string>("scene.activateMenu", tool);
 
-            foreach (Tuple<string, string, string> t in tools2)
+            foreach (List<string> t in tools2)
             {
-                if (t.Item3 != tool)
+                if (t[2] != tool)
                 {
-                    JSRuntime.InvokeAsync<string>("scene.tools." + t.Item3 + ".deactivate");
+                    JSRuntime.InvokeAsync<string>("scene.tools." + t[2] + ".deactivate");
                 }
             }
         }
@@ -138,25 +138,25 @@
     @foreach (var tool in tools2)
     {
         <div class="w3-dropdown-click">
-            <button class="w3-bar-item w3-button @(showMenu==tool.Item3?"w3-green":"")" @onclick="@(e => { activateMenu(tool.Item3); })" style="float:none">@tool.Item2</button>
+            <button class="w3-bar-item w3-button @(showMenu==tool[2]?"w3-green":"")" @onclick="@(e => { activateMenu(tool[2]); })" style="float:none">@tool[1]</button>
             <fieldset class="w3-dropdown-content w3-card-4 w3-show">
-                @if (tool.Item1 == "Zones" && showMenu == "Zones")
+                @if (tool[0] == "Zones" && showMenu == "Zones")
                 {
                     <Zones></Zones>
                 }
-                @if (tool.Item1 == "Plants" && showMenu == "Plants")
+                @if (tool[0] == "Plants" && showMenu == "Plants")
                 {
                     <Plants></Plants>
                 }
-                @if (tool.Item1 == "Camera" && showMenu == "Camera")
+                @if (tool[0] == "Camera" && showMenu == "Camera")
                 {
                     <Camera></Camera>
                 }
-                @if (tool.Item1 == "Buildings" && showMenu == "Buildings")
+                @if (tool[0] == "Buildings" && showMenu == "Buildings")
                 {
                     <Buildings></Buildings>
                 }
-                @if (tool.Item1 == "Terrain" && showMenu == "TerrainTool")
+                @if (tool[0] == "Terrain" && showMenu == "TerrainTool")
                 {
                     <Terrain></Terrain>
                 }

@@ -1012,16 +1012,14 @@ export class WebGPUEngine extends Engine {
             pixels.forEach((value, index) => newPixels[index] = value * 255);
             pixels = newPixels;
         }
-        console.log('pixels2', pixels)
         const textureView: GPUTextureCopyView = {
             texture: gpuTexture,
             origin: {
                 x: 0,
                 y: 0,
-                z: 0
+                z: Math.max(face, 0)
             },
             mipLevel: mip,
-            arrayLayer: Math.max(face, 0),
         };
         const textureExtent = {
             width,

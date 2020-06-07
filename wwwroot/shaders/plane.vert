@@ -5,18 +5,19 @@ layout(set = 0, binding = 0) uniform Scene {
     mat4 view;
     vec4 viewPosition;
 };
-layout(set = 1, binding = 0) uniform LeftOver {
-        mat4 world;
-};
-layout(std430, set = 1, binding = 1) readonly buffer Slopes {
+
+layout(std430, set = 1, binding = 0) readonly buffer Slopes {
     int numbers[];
 } slopes;
-layout(std430, set = 1, binding = 2) readonly buffer Facet1 {
+layout(std430, set = 1, binding = 1) readonly buffer Facet1 {
     float numbers[];
 } facet1;
-layout(std430, set = 1, binding = 3) readonly buffer Facet2 {
+layout(std430, set = 1, binding = 2) readonly buffer Facet2 {
     float numbers[];
 } facet2;
+layout(set = 2, binding = 0) uniform LeftOver {
+        mat4 world;
+};
 #define CUSTOM_VERTEX_BEGIN
 
 layout(location = 0) in vec3 position;

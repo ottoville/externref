@@ -35,6 +35,7 @@ import { Sea } from "./water.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { InternalTexture, InternalTextureSource } from "../lib/babylon/Materials/Textures/internalTexture.js";
+import { UIMesh } from "../UIMesh.js";
 
 Scene.CollisionCoordinatorFactory = () => {
     return new DefaultCollisionCoordinator();
@@ -80,6 +81,7 @@ class _ClickInfo {
 
 export class WorldScene extends Scene {
     timeBuffer: GPUBuffer;
+    terrainInited: Promise<[Terrain, Promise<GPUBuffer>]>;
     createPickingRayToRef(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
 
         var engine = this.getEngine();
@@ -265,6 +267,7 @@ export class WorldScene extends Scene {
                     this.updateTransformMatrix();
 
                     renderTarget.render(currentActiveCamera !== this.activeCamera, this.dumpNextRenderTargets);
+
                 }
             }
             //Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
@@ -300,6 +303,12 @@ export class WorldScene extends Scene {
                 }
                 //@ts-ignore
                 this._processSubCameras(this.activeCameras[cameraIndex]);
+                //@ts-ignore
+                const renderPass = (engine as WebGPUEngine)._bundleEncoder || (engine as WebGPUEngine)._currentRenderPass!;
+                renderPass.setBindGroup(0, this.#uniformBindGroup)
+                renderPass.setBindGroup(1, this.#terrain.bindGroup)
+                UIMesh.UIMeshes.forEach((Mesh) => Mesh.draw(renderPass));
+
             }
         } else {
             if (!this.activeCamera) {
@@ -722,6 +731,17 @@ export class WorldScene extends Scene {
         }).bind(this._inputManager)(this, elementToAttachTo);
     }
     public terrainReady: Promise<void>;
+    #terrain: Terrain;
+    public uniformBindGroupLayout = this.device.createBindGroupLayout({
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.VERTEX,
+                type: 'uniform-buffer'
+            }
+        ]
+    })
+    #uniformBindGroup: GPUBindGroup;
     constructor(
         engine: Engine | WebGPUEngine,
         userinfo: loginProvider,
@@ -729,12 +749,37 @@ export class WorldScene extends Scene {
         ticks: number,
         private canvas: HTMLCanvasElement,
         private device: GPUDevice,
-        glslang: { compileGLSL: (source: string, type: string) => Uint32Array },
         private shaderModules: Map<string, GPUShaderModule>,
         private webSocket?: WebSocket
         ) {
         super(engine as Engine);
+
+        UIMesh.device = device;
+        UIMesh.positionLayout = device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.VERTEX,
+                    type: 'uniform-buffer'
+                }
+            ]
+        });
+
         this.getSceneUniformBuffer().create();
+
+        this.#uniformBindGroup=this.device.createBindGroup({
+            layout: this.uniformBindGroupLayout,
+            entries: [{
+                binding: 0,
+                resource: {
+                    //@ts-ignore
+                    buffer: this.getSceneUniformBuffer()._buffer.underlyingResource
+                }
+            }],
+        })
+
+
+
         this.timeBuffer = device.createBuffer({
             size: 4,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
@@ -857,16 +902,16 @@ export class WorldScene extends Scene {
         blazor.invokeMethod('setProgress', data.data.progress, data.data.error);
     });
     */
-
-        this.terrainReady = new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
+        this.terrainInited = new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
             try {
                 const groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device, shaderModules);
+                groundP.then((terrain) => this.#terrain = terrain);
                 let cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
                 if (cachedtexture) {
                     let cacheimg = new Image();
                     cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
-                    
-                    tres([await groundP,cacheimg.decode().then(() => {
+
+                    tres([await groundP, cacheimg.decode().then(() => {
                         let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
                         let imgctx = imgcanvas.getContext('2d');
                         imgctx.drawImage(cacheimg, 0, 0);
@@ -902,7 +947,8 @@ export class WorldScene extends Scene {
             } catch (e) {
                 trej(e);
             }
-        }).then(gt => {
+        });
+        this.terrainReady=this.terrainInited.then(gt => {
             blazor.invokeMethod('setProgress', 40);
             let [ground, texture] = gt;
 
@@ -917,7 +963,7 @@ export class WorldScene extends Scene {
             blazor.invokeMethod('setProgress', 50);
             ground.isPickable = true;
             this.getSceneUniformBuffer().update();
-            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera, device, glslang);
+            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera, device, shaderModules);
             blazor.invokeMethod('setProgress', 51);
             shadermateria.setVector3("lightPos", sunlight.position);
             blazor.invokeMethod('setProgress', 52);
@@ -962,21 +1008,6 @@ export class WorldScene extends Scene {
                     rowsPerImage: 0,
                     offset: 0,
                 };
-               /* if (gpuBuffer.label == 'computed') {
-                    //Workaround for "Copy would overflow the buffer" begin
-                    let arrayBuffer: ArrayBuffer = await gpuBuffer.mapReadAsync();
-                    gpuBuffer.destroy();
-
-                    const [textureDataBuffer, textureDataArrayBuffer] = device.createBufferMapped({
-                        size: arrayBuffer.byteLength,
-                        //@ts-ignore
-                        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
-                    });
-                    new Uint8ClampedArray(textureDataArrayBuffer).set(new Uint8ClampedArray(arrayBuffer));
-                    textureDataBuffer.unmap();
-                    bufferView.buffer = textureDataBuffer
-                    //Workaround end
-                }*/
                 blazor.invokeMethod('setProgress', 90);
 
                 commandEncoder.copyBufferToTexture(bufferView,
@@ -985,10 +1016,9 @@ export class WorldScene extends Scene {
                         origin: {
                             x: 0,
                             y: 0,
-                            z: 0
-                    },
+                            z: Math.max(-1, 0)
+                           },
                     mipLevel: 0,
-                    arrayLayer: Math.max(-1, 0),
                     }, textureExtent);
                 device.defaultQueue.submit([commandEncoder.finish()]); //Copy would overflow the buffer
                 bufferView.buffer.destroy();
@@ -1021,5 +1051,12 @@ export class WorldScene extends Scene {
             console.error(e);
             blazor.invokeMethod('setProgressError', e.name +' '+ e.message);
         })
+    }
+    activateMenu(name: string): void {
+        try {
+            this.tools[name].activate();
+        } catch (e) {
+            console.error(e);
+        }
     }
 }

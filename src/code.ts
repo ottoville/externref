@@ -236,7 +236,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 blazor.invokeMethod('setProgress', 20);
                 // progelem.value = 30;
                 try {
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, glslang, shaderModules, webSocket));
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, shaderModules, webSocket));
                 } catch (e) {
                     sceneInitedrej(e);
                 }
@@ -246,13 +246,15 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 blazor.invokeMethod('setProgress', 20);
                 try {
                     //blazor.invokeMethod('setProgress', 20);
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, glslang, shaderModules));
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, shaderModules));
                 } catch (e) {
                     sceneInitedrej(e);
                 }
             }
         });
+        const [terrain] = await scene.terrainInited;
         await scene.terrainReady;
+        await terrain.initedGPU;
         window.scene = scene;
         scene.collisionsEnabled = true;
         scene.autoClear = false;
@@ -303,10 +305,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 });
 
                 scene.render();
-                // Present
-                //engine.endFrame();
+
+
+
                 //@ts-ignore
-                //engine._endRenderPass();
                 if (engine._currentRenderPass) {
                     //@ts-ignore
                     engine._currentRenderPass.endPass();

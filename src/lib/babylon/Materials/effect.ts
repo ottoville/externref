@@ -339,9 +339,9 @@ export class Effect implements IDisposable {
         for (let i = 0; i < webgpuPipelineContext.orderedUBOsAndSamplers.length; i++) {
             const setDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i];
             if (setDefinition === undefined) {
-                const bindings: GPUBindGroupLayoutBinding[] = [];
+                const entries: GPUBindGroupLayoutBinding[] = [];
                 const uniformsBindGroupLayout = (this._engine as WebGPUEngine).getDevice().createBindGroupLayout({
-                    bindings,
+                    entries,
                 });
                 bindGroupLayouts[i] = uniformsBindGroupLayout;
                 continue;

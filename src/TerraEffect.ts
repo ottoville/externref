@@ -689,9 +689,9 @@ export class TerraEffect {
         for (let i = 0; i < webgpuPipelineContext.orderedUBOsAndSamplers.length; i++) {
             const setDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i];
             if (setDefinition === undefined) {
-                const bindings: GPUBindGroupLayoutBinding[] = [];
+                const entries: GPUBindGroupLayoutBinding[] = [];
                 const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
-                    bindings,
+                    entries,
                 });
                 bindGroupLayouts[i] = uniformsBindGroupLayout;
                 continue;
@@ -731,7 +731,7 @@ export class TerraEffect {
 
             if (bindings.length > 0) {
                 const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
-                    bindings,
+                    entries: bindings,
                 });
                 bindGroupLayouts[i] = uniformsBindGroupLayout;
             }
@@ -749,7 +749,7 @@ export class TerraEffect {
             if (setDefinition === undefined) {
                 const bindings: GPUBindGroupLayoutBinding[] = [];
                 const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
-                    bindings,
+                    entries: bindings,
                 });
                 bindGroupLayouts[i] = uniformsBindGroupLayout;
                 continue;
@@ -789,7 +789,7 @@ export class TerraEffect {
 
             if (bindings.length > 0) {
                 const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
-                    bindings,
+                    entries: bindings,
                 });
                 bindGroupLayouts[i] = uniformsBindGroupLayout;
             }

@@ -28,11 +28,15 @@ layout(set = 1, binding = 0) uniform Terra {
 
 
 layout(location = 0) in vec4 positions;  // {xyz} (blade's position) + rotation
-layout(location = 1) in vec4 shape;  // {x:scale, y:lean, z:curve, w:color} (blade's shape properties)
+layout(location = 1) in vec4 shape;  // {x:scale, y:baseAngle, z:curve, w:color} (blade's shape properties)
 
 layout(location = 0) out vec4 color;
 
 const float PI=3.141592653589793;
+
+float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
 
 // Rotate by an angle //Todo: move to baking shader?
 vec2 rotate (float x, float y, float r) {
@@ -57,8 +61,8 @@ void main(void) {
      vec2 rotatedXZ= vec2(vertice.x * cos(positions.w), vertice.x * sin(positions.w));
      vec3 rotated=vec3(rotatedXZ.x, vertice.y, rotatedXZ.y);
 
-
-    float angle=bend*shape.z*windIntensivy*PI*0.5;
+    float baseAngle=cos(terra.time*6)*shape.y*0.05*bend;
+    float angle=baseAngle+bend*shape.z*windIntensivy*PI*0.5;
     vec2 curvedXY = rotate(rotated.x, rotated.y, angle);
     
     vec3 curved = vec3(curvedXY.x, curvedXY.y, rotated.z);
@@ -67,7 +71,6 @@ void main(void) {
     vec3 windrotated=vec3(windrotatedXZ.x, curved.y, windrotatedXZ.y);
 
     vec3 scaled=shape.x*windrotated;
-   // vec3 scaled=windrotated*10;
 
     
     vec4 worldPos = vec4(positions.xyz, 1.0) + vec4(scaled.x, scaled.y, scaled.z, 0.0);

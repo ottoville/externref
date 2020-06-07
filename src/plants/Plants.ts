@@ -233,7 +233,7 @@ export class Plants {
 
         
 
-        terrain.inited.then(() => {
+        terrain.initedGPU.then(() => {
             const worldSetGPU = this.device.createBuffer({ size: this.numBlades * 2 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
             const worldCopyGPU = this.device.createBuffer({ size: this.numBlades * 2 * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST  });
             const computePipeline = this.device.createComputePipeline({
