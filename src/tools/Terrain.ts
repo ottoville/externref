@@ -1,238 +1,140 @@
-﻿import { UITAB } from "../UITAB.js";
+﻿import { UITAB, UITABClassLike } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn } from "../WorkerThread.js";
-import { Mesh } from "../lib/babylon/Meshes/mesh.js";
-import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import type { Effect, IEffectCreationOptions } from "../lib/babylon/Materials/effect.js";
-import type { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
-import { TerraMesh } from "../TerraMesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
-import { TerraEffect } from "../TerraEffect.js";
-import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
-import type { WebGPUPipelineContext } from "../lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
 import type { WorldScene } from "../world/scene.js";
+import { UIMesh } from "../UIMesh.js";
+import { worldPosition } from "../traits/worldPosition.js";
+import { canvasListener } from "../traits/canvasListener.js";
+import { TraitClass, applyMixins, Traitable, Trait, TraitableClassLike } from "../traits/trait.js";
+
+class GPU {
+    constructor(readonly device: GPUDevice) {
+    }
+}
 
 
-//@ts-ignore
-export class TerrainTool extends UITAB {
 
-    private helpermaterial: ShaderMaterial;
+interface BaseTerrainTool extends worldPosition, canvasListener {
 
-    public canvas: HTMLCanvasElement;
+}
+
+
+class BaseTerrainTool extends Traitable {
+    static traitConstructors: Set<typeof Trait>;
+
+    public static instance: UITAB | null = null;
+
     private engine: WebGPUEngine;
-    private helper = new TerraMesh("TerrainHelper", new Float32Array([
-        -0.5, 1.5, 2,
-        -0.5, 1.5, -2,
-        0.5, 1.5, 3,
-        0.5, 1.5, -3,
-    ]));
-    timeBufferStorage: GPUBuffer;
-    tempFacet1Buffer: GPUBuffer = null;
-    tempFacet2Buffer: GPUBuffer = null;
+    private helper: UIMesh | null = null;
 
+    tempFacet1Buffer: GPUBuffer | null = null;
+    tempFacet2Buffer: GPUBuffer | null = null;
 
+    #shaderModules: Map<string, GPUShaderModule>
 
     constructor(
-        private scene: WorldScene,
-        private terrain: Terrain,
-        private camera: ArcRotateCamera,
-        private device: GPUDevice,
-        private glslang: { compileGLSL: (source: string, type: string) => Uint32Array }
+        public scene: WorldScene,
+        public terrain: Terrain,
+        public camera: ArcRotateCamera,
+        public device: GPUDevice,
+        shaderModules: Map<string, GPUShaderModule>,
+        public canvas: HTMLCanvasElement
     ) {
-        super();
-        const engine = scene.getEngine() as WebGPUEngine;
-        this.engine = engine;
+        super(BaseTerrainTool, scene, terrain, camera, device, shaderModules, canvas);
 
-        this.helper.visibility = 0;
-
-        this.helper.geometry.getVertexBuffer("position").create();
-        
-        //this.myBox = this.helper;
-        this.helper.material = new StandardMaterial("boxmaterial", scene);
-
-        this.helper.alwaysSelectAsActiveMesh = true;
-        this.helper.material.isReadyForSubMesh = () => true;
-        let effect = new TerraEffect("helper2", <IEffectCreationOptions>{
-            preprocessed: true,
-            attributes: [],
-            uniformsNames: [],
-            uniformBuffersNames: [],
-            samplers: [],
-            defines: '',
-            fallbacks: null,
-            onCompiled: (this.helper.material as StandardMaterial).onCompiled,
-            onError: (this.helper.material as StandardMaterial).onError
-        }, this.engine, undefined, this.engine, undefined, undefined, undefined, undefined, undefined, "helper2", [
-                TerraEffect._loadShader2("helper2.vert"), TerraEffect._loadShader2("helper2.frag")
-        ]);
-        
-        //@ts-ignore
-        this.helper.subMeshes[0]._materialEffect = effect as Effect;
+        this.#shaderModules = shaderModules;
+        this.engine = scene.getEngine() as WebGPUEngine;;
 
 
-        effect.onCompiled.then(async () => {
-            const stages = effect._pipelineContext.stages;
-            effect._pipelineContext.renderPipeline = device.createRenderPipeline({
-                //@ts-ignore
-                sampleCount: this.engine._mainPassSampleCount,
-                primitiveTopology: 'triangle-strip',
-                rasterizationState: {
-                    cullMode: 'none',
-                },
-                depthStencilState: {
-                    depthWriteEnabled: false,
-                    depthCompare: "less",
-                    format: "depth24plus-stencil8",
-                },
-                colorStates: [{
-                    format: "bgra8unorm",
-                }],
-
-                ...stages,
-                vertexState: {
-                    vertexBuffers:
-                        [{
-                            arrayStride: 4 * 3,
-                            stepMode: "vertex" as GPUInputStepMode,
-                            attributes: [{
-                                // position
-                                shaderLocation: 0,
-                                offset: 0,
-                                format: "float3" as GPUVertexFormat
-                            }]
-                        }]
-                },
-                // layout: pipelineLayout,
-            });
-            effect._pipelineContext.leftOverUniforms.push({
-                type: 'mat4',
-                name: 'world',
-                length: 0
-            })
-            effect._pipelineContext.buildUniformLayout();
-
-            await terrain.inited;
-
-
-            effect._pipelineContext.bindGroups = [
-                device.createBindGroup({
-                    layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(0),
-                    entries: [{
-                        binding: 0,
-                        resource: {
-                            //@ts-ignore
-                            buffer: scene.getSceneUniformBuffer()._buffer.underlyingResource
-                        }
-                    }],
-                }),
-                device.createBindGroup({
-                    layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(1),
-                    entries: [
-                        {
-                        binding: 0,
-                        resource: {
-                            //@ts-ignore
-                            buffer: effect._pipelineContext.uniformBuffer.getBuffer().underlyingResource, //leftover
-                        }
-                        },
-                        {
-                            binding: 1,
-                            resource: {
-                                buffer: terrain.slopeArrGPUBuffer
-                            }
-                        },
-                        {
-                            binding: 2,
-                            resource: {
-                                buffer: terrain.facet1ArrGPUBuffer
-                            }
-                        },
-                        {
-                            binding: 3,
-                            resource: {
-                                buffer: terrain.facet2ArrGPUBuffer
-                            }
-                        }
-                    ],
-                }),
-                device.createBindGroup({
-                    layout: effect._pipelineContext.renderPipeline.getBindGroupLayout(2),
-                    entries: [{
-                        binding: 0,
-                        resource: {
-                            buffer: scene.timeBuffer
-                        }
-                    }],
-                })
-            ];
-        });
-
-        //@ts-ignore
-        (this.helper.material as StandardMaterial).bindForSubMesh = function (world: Matrix, mesh: Mesh, subMesh: SubMesh): void {
-
-        };
-
-        const verticesBuffer: GPUBuffer = this.helper.geometry.getVertexBuffer("position").getBuffer().underlyingResource;
-        this.helper._draw = function (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
-           
-            if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
-                return this;
-            }
-
-            if (this._internalMeshDataInfo._onBeforeDrawObservable) {
-                this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
-            }
-
-            //@ts-ignore
-            engine._currentIndexBuffer = null;
-            //@ts-ignore
-            const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
-
-            renderPass.setPipeline(effect._pipelineContext.renderPipeline);
-
-            renderPass.setVertexBuffer(0, verticesBuffer);
-             //@ts-ignore
-            const bindGroups = engine._getBindGroupsToRender();
-             //@ts-ignore
-            engine._setRenderBindGroups(bindGroups);
-            if (engine._alphaState.alphaBlend && engine._alphaState._isBlendConstantsDirty) {
-                // TODO WebGPU. should use renderPass.
-                 //@ts-ignore
-                engine._currentRenderPass!.setBlendColor(engine._alphaState._blendConstants as any);
-            }
-
-            renderPass.draw(subMesh.verticesCount, 8, subMesh.verticesStart, 0);
-            return this;
-        }
-
-        this.canvas = this.engine.getRenderingCanvas();
-
-        /*(async () => {
-            const computeShaderCode = await (await (fetch('../../shaders/TerrainVertices.comp'))).text();
-            const computePipeline = device.createComputePipeline({
-                computeStage: {
-                    module: device.createShaderModule({
-                        code: glslang.compileGLSL(computeShaderCode, "compute")
-                    }),
-                    entryPoint: "main"
+        const timeLayout = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.VERTEX,
+                    type: 'uniform-buffer'
                 }
-            });
-        })();*/
-        
-    }
-    private direction = 0;
-
-    activate = (): void => {
-        this.helper._internalAbstractMeshDataInfo._visibility = 1;
+            ]
+        });
+        console.log([this.scene.uniformBindGroupLayout, this.terrain.bindGroupLayout, UIMesh.positionLayout, timeLayout]);
+        this.helper = new UIMesh({
+            layout: this.device.createPipelineLayout({
+                bindGroupLayouts: [this.scene.uniformBindGroupLayout, this.terrain.bindGroupLayout, UIMesh.positionLayout, timeLayout]
+            }),
+            //@ts-ignore
+            sampleCount: this.engine._mainPassSampleCount,
+            primitiveTopology: 'triangle-strip',
+            rasterizationState: {
+                cullMode: 'none',
+            },
+            depthStencilState: {
+                depthWriteEnabled: true,
+                depthCompare: "less",
+                format: "depth24plus-stencil8",
+            },
+            colorStates: [{
+                format: "bgra8unorm",
+            }],
+            vertexStage: {
+                module: this.#shaderModules.get("helper2.vert")!,
+                entryPoint: "main",
+            },
+            fragmentStage: {
+                module: this.#shaderModules.get("helper2.frag")!,
+                entryPoint: "main"
+            },
+            vertexState: {
+                vertexBuffers:
+                    [{
+                        arrayStride: 4 * 3,
+                        stepMode: "vertex" as GPUInputStepMode,
+                        attributes: [{
+                            // position
+                            shaderLocation: 0,
+                            offset: 0,
+                            format: "float3" as GPUVertexFormat
+                        }]
+                    }]
+            },
+            // layout: pipelineLayout,
+        }, new Set([
+            this.device.createBindGroup({
+                layout: UIMesh.positionLayout,
+                entries: [
+                    {
+                        binding: 0,
+                        resource: {
+                            buffer: this.worldPositionGPUBuffer
+                        }
+                    }
+                ],
+            }), this.device.createBindGroup({
+                layout: timeLayout,
+                entries: [{
+                    binding: 0,
+                    resource: {
+                        buffer: this.scene.timeBuffer
+                    }
+                }],
+            })
+        ]), 4, 8);
+        this.helper.setVertexBuffer(0, new Float32Array([
+            -0.5, 10.5, 2,
+            -0.5, 10.5, -2,
+            0.5, 10.5, 3,
+            0.5, 10.5, -3,
+        ]).buffer);
+        // this.helper._internalAbstractMeshDataInfo._visibility = 1;
+        console.log('add pointermove listener');
         this.addListener("pointermove", this.mouseListener, { lazy: 15 });
-        
-        let commandEncoder: GPUCommandEncoder;
+
+        let commandEncoder2: GPUCommandEncoder;
         let updateFacet: GPUCommandBuffer[];
-        let query = [];
+        let query: { data: any }[] = [];
         Terrain.terrainWorker.subscribe('SubHeights', async (v) => {
             // TODO: Update only partial of data
-            if (!this.tempFacet1Buffer) {
+            if (!this.tempFacet1Buffer || !this.tempFacet2Buffer) {
                 this.tempFacet1Buffer = this.device.createBuffer({
                     size: this.terrain.facet1Arr.byteLength, //v.data.length
                     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
@@ -241,18 +143,18 @@ export class TerrainTool extends UITAB {
                     size: this.terrain.facet2Arr.byteLength,
                     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
                 });
-                commandEncoder = this.device.createCommandEncoder();
-                commandEncoder.copyBufferToBuffer(
+                commandEncoder2 = this.device.createCommandEncoder();
+                commandEncoder2.copyBufferToBuffer(
                     this.tempFacet1Buffer, 0,
                     this.terrain.facet1ArrGPUBuffer,
                     0, // v.data.srcOffset,
                     this.terrain.facet1Arr.byteLength);
-                commandEncoder.copyBufferToBuffer(
+                commandEncoder2.copyBufferToBuffer(
                     this.tempFacet2Buffer, 0,
                     this.terrain.facet2ArrGPUBuffer,
                     0,
                     this.terrain.facet2Arr.byteLength);
-                updateFacet = [commandEncoder.finish()];
+                updateFacet = [commandEncoder2.finish()];
             }
             query.push(v.data);
             if (query.length == 1) {
@@ -262,11 +164,11 @@ export class TerrainTool extends UITAB {
                             this.tempFacet1Buffer.mapWriteAsync().then(facet1 => {
                                 //new Float32Array(facet1).set(new Float32Array(this.terrain.facet1ArrBuffer, v.data.srcOffset, v.data.length/4))
                                 new Float32Array(facet1).set(this.terrain.facet1Arr)
-                                this.tempFacet1Buffer.unmap();
+                                this.tempFacet1Buffer!.unmap();
                             }),
                             this.tempFacet2Buffer.mapWriteAsync().then(facet2 => {
                                 new Float32Array(facet2).set(this.terrain.facet2Arr)
-                                this.tempFacet2Buffer.unmap();
+                                this.tempFacet2Buffer!.unmap();
                             })
                         ]);
                         this.device.defaultQueue.submit(updateFacet);
@@ -312,7 +214,10 @@ export class TerrainTool extends UITAB {
             mainboundingInfo.boundingSphere.radius = v.data.boundingSphereRadius
             mainboundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius
         });
-    };
+
+        
+    }
+    private direction = 0;
     private mouseinterval: number = 0;
     pointerdownf = (evt: PointerEvent): void => {
         if (evt.button !== 0) {
@@ -338,22 +243,22 @@ export class TerrainTool extends UITAB {
         }
         this.addListener("pointerup", this.pointerupf, { once: true });
         this.camera.detachControl(this.canvas);
-        const normalbuffer: GPUBuffer = this.terrain._geometry._vertexBuffers["normal"]._buffer.getBuffer().underlyingResource;
-        const vertexbuffer: GPUBuffer = this.terrain._geometry._vertexBuffers["position"]._buffer.getBuffer().underlyingResource;
+        const normalbuffer: GPUBuffer = this.terrain._geometry!._vertexBuffers["normal"]._buffer.getBuffer()!.underlyingResource;
+        const vertexbuffer: GPUBuffer = this.terrain._geometry!._vertexBuffers["position"]._buffer.getBuffer()!.underlyingResource;
 
         const tempNormalBuffer = this.device.createBuffer({
-            size: this.terrain._geometry._vertexBuffers["normal"]._buffer.getBuffer().capacity, // also this.terrain.normals.byteLength
+            size: this.terrain._geometry!._vertexBuffers["normal"]._buffer.getBuffer()!.capacity, // also this.terrain.normals.byteLength
             usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
         });
         const tempVertexBuffer = this.device.createBuffer({
-            size: this.terrain._geometry._vertexBuffers["position"]._buffer.getBuffer().capacity, // also this.terrain.normals.byteLength
+            size: this.terrain._geometry!._vertexBuffers["position"]._buffer.getBuffer()!.capacity, // also this.terrain.normals.byteLength
             usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
         });
         const commandEncoder = this.device.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
             tempNormalBuffer, 0,
             normalbuffer, 0,
-            this.terrain.normals.byteLength);
+            this.terrain.normals!.byteLength);
         commandEncoder.copyBufferToBuffer(
             tempVertexBuffer, 0,
             vertexbuffer, 0,
@@ -370,7 +275,7 @@ export class TerrainTool extends UITAB {
                 busy = true;
                 let NormalsRange = <{ normalsMin: number, normalsMax: number }><any>e;
                 await Promise.all([tempNormalBuffer.mapWriteAsync().then(normalsArrBuffer => {
-                    new Float32Array(normalsArrBuffer).set(this.terrain.normals);
+                    new Float32Array(normalsArrBuffer).set(this.terrain.normals!);
                     tempNormalBuffer.unmap();
                 }),
                 tempVertexBuffer.mapWriteAsync().then(positionsArrBuffer => {
@@ -397,17 +302,20 @@ export class TerrainTool extends UITAB {
         clearInterval(this.mouseinterval);
     }
     deactivate = (): void => {
-        super.deactivate();
+        console.log('call super.deactivate');
+        //super.deactivate();
         Terrain.terrainWorker.unsubscribe('heights');
         //this.removeListener("pointerdown", this.pointerdownf);
-        this.helper._internalAbstractMeshDataInfo._visibility = 0;
+       // this.helper._internalAbstractMeshDataInfo._visibility = 0;
+        this.helper!.destroy();
         //this.removeListener("pointermove", this.mouseListener);
-        (function () {
+      /*  (function () {
             this._options.samplers = [];
             this._textures = {}
             return this;
-        }).bind(this.helpermaterial)();
+        }).bind(this.helpermaterial)();*/
     };
+
     mouseListener = (evt: PointerEvent): void => {
         let viewport = this.camera.viewport.toGlobal(this.engine.getRenderWidth(), this.engine.getRenderHeight());
         let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
@@ -417,7 +325,7 @@ export class TerrainTool extends UITAB {
             this.tempFacet1Buffer = null;
             this.tempFacet2Buffer = null;*/
         }
-        Terrain.terrainWorker.message(WorkerReturn.Promise, 'mousemove',
+        Terrain.terrainWorker.message<{ x: number, y: number }, any>(WorkerReturn.Promise, 'mousemove',
             {
                 x: evt.clientX,
                 y: evt.clientY,
@@ -425,24 +333,19 @@ export class TerrainTool extends UITAB {
                 viewportHeight: viewport.height,
                 view: this.camera.getViewMatrix().toArray(),
                 projection: this.camera.getProjectionMatrix().toArray()
-            }).then((flatPos: { x: number, y: number }) => {
-                //let uniformlocation;
-                this.helper.position.x = flatPos.x;
-                this.helper.position.z = flatPos.y;
-                (this.helper.subMeshes[0].effect._pipelineContext as WebGPUPipelineContext).uniformBuffer.updateMatrix('world', this.helper.getWorldMatrix());
-
-                //this.GPUuniformBuffer.setSubData(0, new Float32Array([flatPos.x, flatPos.y]))
-                //let transformmatrix = this.scene.getTransformMatrix();
-               // this.GPUuniformBuffer.setSubData((2 * 4) + 4, transformmatrix.m as Float32Array);
-
-
+            }).then(async (flatPos) => {
+                this.translation[0] = flatPos.x;
+                this.translation[2] = flatPos.y;
+                this.updatePositionBuffer();
             });
 
     }
     raise = (): void => {
         this.direction = 1;
         //let canvas = this.scene.getEngine().getRenderingCanvas();
+        
         this.removeListener("pointerdown", this.pointerdownf);
+        console.log('add pointerdown listener');
         this.addListener("pointerdown", this.pointerdownf);
 
     }
@@ -450,6 +353,9 @@ export class TerrainTool extends UITAB {
         this.direction = -1;
         //let canvas = this.scene.getEngine().getRenderingCanvas();
         this.removeListener("pointerdown", this.pointerdownf);
+        console.log('add pointerdown listener');
         this.addListener("pointerdown", this.pointerdownf);
     }
 }
+
+export const TerrainTool = applyMixins<typeof BaseTerrainTool>(BaseTerrainTool, [worldPosition, canvasListener]);
