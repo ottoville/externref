@@ -16,12 +16,14 @@ class GPU {
 
 
 
-interface BaseTerrainTool extends worldPosition, canvasListener {
+export interface TerrainTool extends worldPosition, canvasListener {
 
 }
 
 
-class BaseTerrainTool extends Traitable {
+@worldPosition.classDecorator
+@canvasListener.classDecorator
+export class TerrainTool {
     static traitConstructors: Set<typeof Trait>;
 
     public static instance: UITAB | null = null;
@@ -40,9 +42,10 @@ class BaseTerrainTool extends Traitable {
         public camera: ArcRotateCamera,
         public device: GPUDevice,
         shaderModules: Map<string, GPUShaderModule>,
-        public canvas: HTMLCanvasElement
+        public canvas: HTMLCanvasElement,
+        ...traits: Object[]
     ) {
-        super(BaseTerrainTool, scene, terrain, camera, device, shaderModules, canvas);
+        traits.forEach(trait => Object.assign(this, trait) );
 
         this.#shaderModules = shaderModules;
         this.engine = scene.getEngine() as WebGPUEngine;;
@@ -120,10 +123,10 @@ class BaseTerrainTool extends Traitable {
             })
         ]), 4, 8);
         this.helper.setVertexBuffer(0, new Float32Array([
-            -0.5, 10.5, 2,
-            -0.5, 10.5, -2,
-            0.5, 10.5, 3,
-            0.5, 10.5, -3,
+            -0.5, 1.5, 2,
+            -0.5, 1.5, -2,
+            0.5, 1.5, 3,
+            0.5, 1.5, -3,
         ]).buffer);
         // this.helper._internalAbstractMeshDataInfo._visibility = 1;
         console.log('add pointermove listener');
@@ -358,4 +361,5 @@ class BaseTerrainTool extends Traitable {
     }
 }
 
-export const TerrainTool = applyMixins<typeof BaseTerrainTool>(BaseTerrainTool, [worldPosition, canvasListener]);
+//export const TerrainTool = applyMixins<typeof BaseTerrainTool>(BaseTerrainTool, [worldPosition, canvasListener]);
+

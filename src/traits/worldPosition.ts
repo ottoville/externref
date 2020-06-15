@@ -1,19 +1,44 @@
-﻿import { Trait } from "./trait";
+﻿import { Trait, TraitClass, Traitable2 } from "./trait";
+import { WorldScene } from "../world/scene";
+import { Terrain } from "../world/terrain";
+import { ArcRotateCamera } from "../lib/babylon";
 
-export class worldPosition extends Trait {
+export class worldPosition {
     scaling: [number, number, number] = [1, 1, 1];
     rotation: [number, number, number, number] = [0, 0, 0, 0];
     translation: [number, number, number] = [0, 0, 0];
-    worldPositionGPUBuffer: GPUBuffer;
+    worldPositionGPUBuffer!: GPUBuffer;
 
-    private worldCopyGPU: GPUBuffer;
-    private updateWorldBuffer: GPUCommandBuffer[];
+    private worldCopyGPU!: GPUBuffer;
+    private updateWorldBuffer!: GPUCommandBuffer[];
 
-    constructor(public device: GPUDevice) {
-        super();
-        this.worldCopyGPU = device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
-        this.worldPositionGPUBuffer = device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-        const commandEncoder = device.createCommandEncoder();
+    static classDecorator<T extends Traitable2>(constructor: T): T/* & typeof canvasListener*/ {
+         //worldPosition.createTrait<T, typeof worldPosition>(worldPosition, constructor);
+        Object.getOwnPropertyNames(worldPosition.prototype).forEach(name => {
+            if (name != 'destroy')
+                return Object.defineProperty(constructor.prototype, name, Object.getOwnPropertyDescriptor(worldPosition.prototype, name)!);
+        });
+        const newConstructor = constructor// as (T & typeof canvasListener);
+
+        return class extends newConstructor {
+            constructor(...args: any[]) {
+                args.push(new worldPosition(args[0], args[1], args[2], args[3], args[4], args[5]));
+                super(...args);
+            }
+        }
+    }
+
+    constructor(
+        scene: WorldScene,
+        terrain: Terrain,
+        camera: ArcRotateCamera,
+        public device: GPUDevice,
+        shaderModules: Map<string, GPUShaderModule>,
+        canvas: HTMLCanvasElement) {
+
+        this.worldCopyGPU = this.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
+        this.worldPositionGPUBuffer = this.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+        const commandEncoder = this.device.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
             this.worldCopyGPU, 0,
             this.worldPositionGPUBuffer, 0,

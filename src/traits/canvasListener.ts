@@ -1,15 +1,29 @@
 ﻿import { WorldScene } from "../world/scene";
 import { Terrain } from "../world/terrain";
 import { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera";
-import { Trait } from "./trait";
+import { Trait, Traitable2 } from "./trait";
 import { LazyEval } from "../LazyEval";
 
 interface addListenerOptions extends AddEventListenerOptions {
     lazy?: number;
 }
 
-export class canvasListener extends Trait {
+export class canvasListener {
     //abstract deactivate: () => void;
+    static classDecorator<T extends Traitable2>(constructor: T): T/* & typeof canvasListener*/ {
+        Object.getOwnPropertyNames(canvasListener.prototype).forEach(name => {
+            if (name != 'destroy')
+                return Object.defineProperty(constructor.prototype, name, Object.getOwnPropertyDescriptor(canvasListener.prototype, name)!);
+        });
+        const newConstructor = constructor// as (T & typeof canvasListener);
+
+        return class extends newConstructor {
+            constructor(...args: any[]) {
+                args.push(new canvasListener(args[0], args[1], args[2], args[3], args[4], args[5]));
+                super(...args);
+            }
+        }
+    }
     public deactivate() {
         this.listeners.forEach((map, type) => {
             map.forEach((proxy, listener) => {
@@ -19,9 +33,13 @@ export class canvasListener extends Trait {
         });
     }
     constructor(
+        scene: WorldScene,
+        terrain: Terrain,
+        camera: ArcRotateCamera,
+        device: GPUDevice,
+        shaderModules: Map<string, GPUShaderModule>,
         public canvas: HTMLCanvasElement
     ) {
-        super();
     }
     public listeners: Map<
         keyof HTMLElementEventMap,
