@@ -9,19 +9,19 @@ import type { WorldScene } from "../world/scene.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { Matrix } from "../lib/babylon/Maths/math.vector";
 import { UIMesh } from "../UIMesh.js";
+import { worldPosition } from "../traits/worldPosition.js";
+import { canvasListener } from "../traits/canvasListener.js";
+import { addTrait, Trait, Traitable } from "../traits/trait.js";
+import { GPUCanvas } from "../GPUCanvas.js";
 
+
+export interface paintPlane extends worldPosition, Traitable { };
+
+@addTrait(worldPosition)
 export class paintPlane extends paintGround {
-
-    #scaling = new Vector3();
-    #rotation = new Vector3();
-    #position = new Vector3();
-    //private tempplane: TerraMesh | null = null;
     #startingPoint: Vector2 = Vector2.Zero();
-    #leftoverGPU: GPUBuffer;
-    #worldCopyGPU: GPUBuffer;
-    #updateWorldBuffer: GPUCommandBuffer[];
     #templane2: UIMesh;
-    private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }> {
+    private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
         const positions: number[] = [0, 0, 0, 1];
         const indices: number[] = [0, 1];
         let row = 0;
@@ -51,60 +51,21 @@ export class paintPlane extends paintGround {
             yield { positions: positions, indices: indices };
         }
     }
+    traits: Trait[];
     constructor(
-        public canvas: HTMLElement,
         protected scene: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,
-        uitab: UITAB,
+        uitab: canvasListener,
         private engine: WebGPUEngine,
-        private device: GPUDevice,
-        private shaderModules: Map<string, GPUShaderModule>
+        private shaderModules: Map<string, GPUShaderModule>,
+        ...traits: Trait[]
     ) {
-        super(canvas, scene, camera, ground, sea, uitab);
-
-    };
-
-    public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
-        this.#leftoverGPU = this.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-        this.#worldCopyGPU = this.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
-
-        const commandEncoder = this.device.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(
-            this.#worldCopyGPU, 0,
-            this.#leftoverGPU, 0,
-            16 * 4);
-        this.#updateWorldBuffer = [commandEncoder.finish()];
-
-        super.activate(callback, options);
-    }
-    public deactivate() {
-        super.deactivate();
-        this.#leftoverGPU.destroy();
-        this.#worldCopyGPU.destroy();
-        this.#templane2.destroy();
-        this.#columns = 0;
-        this.#rows = 1;
-        this.#rowGenerator.return(null);
-    }
-
-    onMainPointerDown(startingPoint: Vector2) {
-
-        this.#startingPoint = startingPoint;
-    }
-    #columns = 0;
-    #rows = 1;
-    #rowGenerator: Generator<{ positions: number[], indices: number[] }, { positions: number[], indices: number[] }>
-
-    onMainPointerUp(end_position: Vector2, height: number): void {
-        this.#columns = Math.floor(height / 10);
-        this.#rowGenerator = this.createTiledGround(this.#columns);
-
-        let values = this.#rowGenerator.next().value;
-
-        const renderDesc: GPURenderPipelineDescriptor = {
-            layout: this.device.createPipelineLayout({
+        super(scene, camera, ground, sea, uitab);
+		this.traits = this.initTraits(traits);
+        this.#templane2 = new UIMesh({
+            layout: GPUCanvas.device.createPipelineLayout({
                 bindGroupLayouts: [this.scene.uniformBindGroupLayout, this.ground.bindGroupLayout, UIMesh.positionLayout]
             }),
             //@ts-ignore
@@ -113,20 +74,15 @@ export class paintPlane extends paintGround {
             rasterizationState: {
                 cullMode: 'none',
             },
-            depthStencilState: {
-                depthWriteEnabled: false,
-                depthCompare: "less",
-                format: "depth24plus-stencil8",
-            },
             colorStates: [{
                 format: "bgra8unorm",
             }],
             vertexStage: {
-                module: this.shaderModules.get("plane.vert"),
+                module: this.shaderModules.get("plane.vert")!,
                 entryPoint: "main",
             },
             fragmentStage: {
-                module: this.shaderModules.get("plane.frag"),
+                module: this.shaderModules.get("plane.frag")!,
                 entryPoint: "main"
             },
             vertexState: {
@@ -143,57 +99,100 @@ export class paintPlane extends paintGround {
                         }]
                     }]
             },
-        };
-        const renderPipeline = this.device.createRenderPipeline(renderDesc);
-        this.#templane2 = new UIMesh(renderPipeline, new Set([
-           this.device.createBindGroup({
+        }, new Set([
+            GPUCanvas.device.createBindGroup({
                 layout: UIMesh.positionLayout,
                 entries: [
                     {
                         binding: 0,
                         resource: {
-                            buffer: this.#leftoverGPU
+                            buffer: this.worldPositionGPUBuffer
                         }
                     }
                 ],
             })
-        ]), values.indices.length); //new Uint16Array(values.indices), new Map([[0,new Float32Array(values.positions)]])
+        ]), 0);
 
-        this.#templane2.setIndexBuffer(new Uint16Array(values.indices).buffer);
-        this.#templane2.setVertexBuffer(0, new Float32Array(values.positions).buffer);
+    };
 
-        this.#position.x = this.#startingPoint.x - 0.5
-        this.#position.y = 5;
-        this.#position.z = this.#startingPoint.y - 1;
+    public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
+        super.activate(callback, options);
+    }
+    public destroy() {
+        super.destroy();
+        this.#templane2.destroy();
+       // this.#leftoverGPU.destroy();
+       // this.#worldCopyGPU.destroy();
+        this.#columns = 0;
+        this.#rows = 0;
+       // this.#rowGenerator.return(null);
+    }
 
-        this.#scaling.x = height / this.#columns;
-        this.#rotation.y = this.ang360.rad - Math.PI;
+    onMainPointerDown(startingPoint: Vector2) {
+
+        this.#startingPoint = startingPoint;
+    }
+    #columns = 0;
+    #rows = 0;
+    #rowGenerator: Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> | null = null;
+
+    onMainPointerUp(end_position: Vector2, height: number): void {
+        this.#columns = Math.floor(height / 10);
+        //this.#rowGenerator = this.createTiledGround(this.#columns);
+
+       // const values : { positions: number[], indices: number[] } |null = this.#rowGenerator.next().value;
+       // if (!values)
+       //     throw (new Error('unexpected return from generator'));
+
+       // this.#templane2.indexOrVertexCount = values.indices.length;
+
+
+      //  this.#templane2.setIndexBuffer(new Uint16Array(values.indices).buffer);
+       // this.#templane2.setVertexBuffer(0, new Float32Array(values.positions).buffer);
+
+
+        this.translation[0] = this.#startingPoint.x - 0.5
+        this.translation[1] = 5;
+        this.translation[2] = this.#startingPoint.y - 1;
+
+        this.scaling[0] = height / this.#columns;
+        const rotQ = new Vector3(0, this.ang360.rad - Math.PI, 0).toQuaternion();
+        this.rotation = [rotQ.x, rotQ.y, rotQ.z, rotQ.w];
         console.log('onMainPointerUp');
 
     }
 
     async onAreaDraw(width: number): Promise<void> {
-        const leftoverARR = await this.#worldCopyGPU.mapWriteAsync();
-        const newRows = Math.floor(width / 10);
-        let newValues: { positions: number[], indices: number[] };
-        let updateIndices = false;
+        let newValues: { positions: number[], indices: number[] } | null = null;
+        if (!this.#rowGenerator) {
+            console.log('create row generator');
+            this.#rowGenerator = this.createTiledGround(this.#columns);
+           // newValues=  this.#rowGenerator.next().value;
+        }
+        
+        const newRows = Math.max(1,Math.floor(width / 10));
         if (newRows > this.#rows) {
             do {
+                console.log('increase rows from ', this.#rows)
                 newValues = this.#rowGenerator.next().value;
             } while (++this.#rows < newRows);
-            updateIndices = true;
         }
 
-        this.#scaling.z = width / this.#rows;
-        let testM = new Matrix();
+        this.scaling[2] = width / this.#rows;
+    /*    let testM = new Matrix();
+        
         Matrix.ComposeToRef(this.#scaling, this.#rotation.toQuaternion(), this.#position, testM);
+        const leftoverARR = await this.#worldCopyGPU.mapWriteAsync();
         new Float32Array(leftoverARR).set(testM.m);
         this.#worldCopyGPU.unmap();
-        this.device.defaultQueue.submit(this.#updateWorldBuffer);
-        if (updateIndices) {
+        this.device.defaultQueue.submit(this.#updateWorldBuffer);*/
+        this.updatePositionBuffer();
+        if (newValues) {
+            console.log('update plane buffer ', newValues.indices.length);
             this.#templane2.setVertexBuffer(0, new Float32Array(newValues.positions).buffer);
             this.#templane2.setIndexBuffer(new Uint16Array(newValues.indices).buffer);
             this.#templane2.indexOrVertexCount = newValues.indices.length;
         }
     }
 }
+//export const paintPlane = applyMixins<typeof BasePaintPlane>(BasePaintPlane as TraitableClassLike, [worldPosition]);

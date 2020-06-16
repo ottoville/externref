@@ -8,6 +8,11 @@ import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { Texture } from "../lib/babylon/Materials/Textures/texture.js";
 import type { Engine } from "../lib/babylon/Engines/engine.js";
 import type { WorldScene } from "../world/scene.js";
+import { canvasListener } from "../traits/canvasListener.js";
+
+
+
+
 export class paintTexture extends paintGround {
     private subTextureCache: subTexture = { x: 0, z: 0, imageData: null };
     private height: number=0;
@@ -29,7 +34,6 @@ export class paintTexture extends paintGround {
 
     }
     constructor(
-        public canvas: HTMLElement,
         protected scene: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
@@ -37,9 +41,9 @@ export class paintTexture extends paintGround {
         protected zonedt: Texture,
         private textureWidth: number,
         private textureHeight: number,
-        uitab: UITAB,
+        uitab: canvasListener,
     ) {
-        super(canvas, scene, camera, ground, sea, uitab);
+        super(scene, camera, ground, sea, uitab);
         this.centerX = textureWidth / 2;
         this.centerZ = textureHeight / 2;
         if (!zonedt._texture || !zonedt._texture._webGLTexture)

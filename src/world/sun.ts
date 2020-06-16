@@ -51,7 +51,9 @@ export class Sun {
             if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
                 return this;
             }
+            //@ts-ignore
             if (this._internalMeshDataInfo._onBeforeDrawObservable) {
+                //@ts-ignore
                 this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
             }
             let engine = scene.getEngine();

@@ -1,17 +1,27 @@
 ﻿import { UITAB } from "../UITAB.js";
 import { TerraMesh } from "../TerraMesh.js";
 import * as BABYLON from "../lib/babylon/index.js"
+import { canvasListener } from "../traits/canvasListener.js";
+import { addTrait, Trait, Traitable } from "../traits/trait.js";
+import { WorldScene } from "../world/scene.js";
+import { ArcRotateCamera } from "../lib/babylon/index.js";
+import { Terrain } from "../world/terrain.js";
+export interface BuildingsUI extends canvasListener, Traitable {
 
+}
+@addTrait(canvasListener)
 export class BuildingsUI extends UITAB {
     activate: () => void= () => null;
-    deactivate: () => void = () => null;
-    public canvas: HTMLCanvasElement;
-
-    constructor(
-        private scene: BABYLON.Scene
+    destroy: () => void = () => null;
+    traits: Trait[];
+    constructor(scene: WorldScene,
+        terrain: Terrain,
+        camera: ArcRotateCamera,
+        shaderModules: Map<string, GPUShaderModule>,
+        ...traits: Trait[]
     ) {
-        super();
-        this.canvas = <any>this.scene.getEngine().getRenderingCanvas();
+        super(scene, terrain, camera, shaderModules);
+        this.traits = this.initTraits(traits);
     }
     public create = (type: string): void => {
         let scene = this.scene;

@@ -3,7 +3,7 @@
 <legend style="background-color:white">
     Terrain
 </legend>
-<button class="w3-bar-item w3-button" @onclick="@(e => { JSRuntime.InvokeAsync<string>("scene.tools.Plants.activateDraw"); })">Create poaceae</button>
+<button class="w3-bar-item w3-button" @onclick="@(e => { JSRuntime.InvokeAsync<string>("scene.invokeMenu", "Plants", "activateDraw"); })">Create poaceae</button>
 
 @code {
 

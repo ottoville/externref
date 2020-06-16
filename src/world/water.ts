@@ -4,10 +4,10 @@ import type { StandardMaterial } from "../lib/babylon/Materials/standardMaterial
 import { Color3 } from "../lib/babylon/Maths/math.color";
 import { TerraMesh } from "../TerraMesh";
 VertexData.CreateGround = function (options: { width?: number, height?: number, subdivisions?: number, subdivisionsX?: number, subdivisionsY?: number }): VertexData {
-    var indices = [];
-    var positions = [];
-    var normals = [];
-    var uvs = [];
+    var indices: number[]= [];
+    var positions : number[] = [];
+    var normals: number[]= [];
+    var uvs: number[]= [];
     var row: number, col: number;
 
     var width: number = options.width || 1;
@@ -19,7 +19,6 @@ VertexData.CreateGround = function (options: { width?: number, height?: number, 
         for (col = 0; col <= subdivisionsX; col++) {
             var position = new Vector3((col * width) / subdivisionsX - (width / 2.0), 0, ((subdivisionsY - row) * height) / subdivisionsY - (height / 2.0));
             var normal = new Vector3(0, 1.0, 0);
-
             positions.push(position.x, position.y, position.z);
             normals.push(normal.x, normal.y, normal.z);
             uvs.push(col / subdivisionsX, 1.0 - row / subdivisionsY);

@@ -1,44 +1,19 @@
-﻿import { Trait, TraitClass, Traitable2 } from "./trait";
-import { WorldScene } from "../world/scene";
-import { Terrain } from "../world/terrain";
-import { ArcRotateCamera } from "../lib/babylon";
+﻿import { GPUCanvas } from "../GPUCanvas";
 
 export class worldPosition {
     scaling: [number, number, number] = [1, 1, 1];
     rotation: [number, number, number, number] = [0, 0, 0, 0];
     translation: [number, number, number] = [0, 0, 0];
-    worldPositionGPUBuffer!: GPUBuffer;
+    worldPositionGPUBuffer: GPUBuffer;
 
-    private worldCopyGPU!: GPUBuffer;
-    private updateWorldBuffer!: GPUCommandBuffer[];
+    private worldCopyGPU: GPUBuffer;
+    private updateWorldBuffer: GPUCommandBuffer[];
 
-    static classDecorator<T extends Traitable2>(constructor: T): T/* & typeof canvasListener*/ {
-         //worldPosition.createTrait<T, typeof worldPosition>(worldPosition, constructor);
-        Object.getOwnPropertyNames(worldPosition.prototype).forEach(name => {
-            if (name != 'destroy')
-                return Object.defineProperty(constructor.prototype, name, Object.getOwnPropertyDescriptor(worldPosition.prototype, name)!);
-        });
-        const newConstructor = constructor// as (T & typeof canvasListener);
+    constructor() {
 
-        return class extends newConstructor {
-            constructor(...args: any[]) {
-                args.push(new worldPosition(args[0], args[1], args[2], args[3], args[4], args[5]));
-                super(...args);
-            }
-        }
-    }
-
-    constructor(
-        scene: WorldScene,
-        terrain: Terrain,
-        camera: ArcRotateCamera,
-        public device: GPUDevice,
-        shaderModules: Map<string, GPUShaderModule>,
-        canvas: HTMLCanvasElement) {
-
-        this.worldCopyGPU = this.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
-        this.worldPositionGPUBuffer = this.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-        const commandEncoder = this.device.createCommandEncoder();
+        this.worldCopyGPU = GPUCanvas.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
+        this.worldPositionGPUBuffer = GPUCanvas.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+        const commandEncoder = GPUCanvas.device.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
             this.worldCopyGPU, 0,
             this.worldPositionGPUBuffer, 0,
@@ -86,7 +61,7 @@ export class worldPosition {
         const leftoverARR = await this.worldCopyGPU.mapWriteAsync();
         new Float32Array(leftoverARR).set(this.worldMatrix);
         this.worldCopyGPU.unmap();
-        this.device.defaultQueue.submit(this.updateWorldBuffer);
+        GPUCanvas.device.defaultQueue.submit(this.updateWorldBuffer);
         this.busy = false;
     }
 }

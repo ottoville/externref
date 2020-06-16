@@ -10,6 +10,8 @@ import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js"
 import type { Mesh } from "../lib/babylon/Meshes/index.js";
 import { Vector2 } from "../lib/babylon/Maths/math.vector.js";
 import type { WorldScene } from "../world/scene.js";
+import { canvasListener } from "../traits/canvasListener.js";
+import { GPUCanvas } from "../GPUCanvas.js";
 
 //import { rotateMatrix, translate } from "./math.js";
 
@@ -28,14 +30,13 @@ export enum DrawType {
 export abstract class paintGround {
     protected ang360: Angle = new Angle(0);
     protected ang: Angle = new Angle(0);
-    #end_position: Vector2;
+    #end_position: Vector2 | null = null;
     constructor(
-        public canvas: HTMLElement,
         protected scene: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,
-        private uitab: UITAB
+        private uitab: canvasListener
     ) {
     };
     public resolve: PTResultF = () => null;
@@ -43,8 +44,8 @@ export abstract class paintGround {
         this.uitab.addListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
     }
-    public deactivate() {
-        this.camera.attachControl(this.canvas, true);
+    public destroy() {
+        this.camera.attachControl(GPUCanvas.canvas, true);
     }
 
     #drawArea = (evt:PointerEvent) => {
@@ -87,7 +88,7 @@ export abstract class paintGround {
         let ray = Ray.Zero();
         this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
         let pikked = this.ground.intersects(ray);
-        if (pikked.pickedPoint) {
+        if (pikked.pickedPoint && this.#end_position) {
             //Distance from first point
             let distance = Math.sqrt(Math.pow(startingPoint.x - pikked.pickedPoint.x, 2) + Math.pow(startingPoint.y - pikked.pickedPoint.z, 2));
             if (Number.isNaN(distance)) {
@@ -148,7 +149,7 @@ export abstract class paintGround {
     }
     #pointerUp = (evt: PointerEvent) => {
         this.uitab.removeListener('pointermove', this.#drawArea);
-        this.camera.attachControl(this.canvas, true);
+        this.camera.attachControl(GPUCanvas.canvas, true);
         //fix race condition
         if (this.#end_position == null)
             return;
@@ -189,7 +190,7 @@ export abstract class paintGround {
             startingPoint = new Vector2(pickInfo.pickedPoint.x, pickInfo.pickedPoint.z);
             console.debug('Calling child onMainPointerDown');
             this.onMainPointerDown(startingPoint);
-            this.camera.detachControl(this.canvas);
+            this.camera.detachControl(GPUCanvas.canvas);
 
             this.uitab.addListener("pointermove", this.#drawArea, { lazy: 25 });
 

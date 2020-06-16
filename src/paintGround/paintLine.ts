@@ -6,6 +6,7 @@ import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { WorldScene } from "../world/scene.js";
+import { canvasListener } from "../traits/canvasListener.js";
 
 export class paintLine extends paintGround {
     private startingPoint: Vector2 = Vector2.Zero();;
@@ -19,13 +20,12 @@ export class paintLine extends paintGround {
     async onAreaDraw(width: number): Promise<void> {
     }
     constructor(
-        public canvas: HTMLElement,
         protected scene: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,
-        uitab: UITAB
+        uitab: canvasListener
     ) {
-        super(canvas, scene, camera, ground, sea, uitab);
+        super(scene, camera, ground, sea, uitab);
     };
 }

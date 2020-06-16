@@ -72,7 +72,7 @@ export class Plants {
     constructor(
         private scene: WorldScene,
         private camera: ArcRotateCamera,
-        private terrain: Terrain,
+        private terrainP: Promise<Terrain>,
         private device: GPUDevice,
         private shaderModules: Map<string, GPUShaderModule>,
     ) {
@@ -133,7 +133,7 @@ export class Plants {
                 cullMode: 'none',
             },
             depthStencilState: {
-                depthWriteEnabled: false,
+                depthWriteEnabled: true,
                 depthCompare: "less",
                 format: "depth24plus-stencil8",
             },
@@ -141,11 +141,11 @@ export class Plants {
                 format: "bgra8unorm",
             }],
             vertexStage: {
-                module: this.shaderModules.get("grass.vert"),
+                module: this.shaderModules.get("grass.vert")!,
                 entryPoint: "main",
             },
             fragmentStage: {
-                module: this.shaderModules.get("grass.frag"),
+                module: this.shaderModules.get("grass.frag")!,
                 entryPoint: "main"
             },
             vertexState: {
@@ -233,91 +233,93 @@ export class Plants {
 
         
 
-        terrain.initedGPU.then(() => {
-            const worldSetGPU = this.device.createBuffer({ size: this.numBlades * 2 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
-            const worldCopyGPU = this.device.createBuffer({ size: this.numBlades * 2 * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST  });
-            const computePipeline = this.device.createComputePipeline({
-                computeStage: {
-                    module: this.shaderModules.get("getHeightAtCoordinates.comp"),
-                    entryPoint: "main"
-                }
-            });
-            const bindGroup = this.device.createBindGroup({
-                layout: computePipeline.getBindGroupLayout(0),
-                entries: [
-                    {
-                        binding: 0,
-                        resource: {
-                            buffer: worldCopyGPU
-                        }
-                    },
-                    {
-                        binding: 1,
-                        resource: {
-                            buffer: terrain.slopeArrGPUBuffer
-                        }
-                    },
-                    {
-                        binding: 2,
-                        resource: {
-                            buffer: terrain.facet1ArrGPUBuffer
-                        }
-                    },
-                    {
-                        binding: 3,
-                        resource: {
-                            buffer: terrain.facet2ArrGPUBuffer
-                        }
-                    },
-                    {
-                        binding: 4,
-                        resource: {
-                            buffer: positionGPU
-                        }
-                    },
-                    {
-                        binding: 5,
-                        resource: {
-                            buffer: shapeGPU
-                        }
+        terrainP.then((terrain) => {
+            terrain.initedGPU.then(() => {
+                const worldSetGPU = this.device.createBuffer({ size: this.numBlades * 2 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
+                const worldCopyGPU = this.device.createBuffer({ size: this.numBlades * 2 * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+                const computePipeline = this.device.createComputePipeline({
+                    computeStage: {
+                        module: this.shaderModules.get("getHeightAtCoordinates.comp")!,
+                        entryPoint: "main"
                     }
-                ]
-            });
+                });
+                const bindGroup = this.device.createBindGroup({
+                    layout: computePipeline.getBindGroupLayout(0),
+                    entries: [
+                        {
+                            binding: 0,
+                            resource: {
+                                buffer: worldCopyGPU
+                            }
+                        },
+                        {
+                            binding: 1,
+                            resource: {
+                                buffer: terrain.slopeArrGPUBuffer
+                            }
+                        },
+                        {
+                            binding: 2,
+                            resource: {
+                                buffer: terrain.facet1ArrGPUBuffer
+                            }
+                        },
+                        {
+                            binding: 3,
+                            resource: {
+                                buffer: terrain.facet2ArrGPUBuffer
+                            }
+                        },
+                        {
+                            binding: 4,
+                            resource: {
+                                buffer: positionGPU
+                            }
+                        },
+                        {
+                            binding: 5,
+                            resource: {
+                                buffer: shapeGPU
+                            }
+                        }
+                    ]
+                });
 
 
 
 
-            const commandEncoder = this.device.createCommandEncoder();
-            commandEncoder.copyBufferToBuffer(
-                worldSetGPU, 0,
-                worldCopyGPU, 0,
-                this.numBlades * 2 * 4);
+                const commandEncoder = this.device.createCommandEncoder();
+                commandEncoder.copyBufferToBuffer(
+                    worldSetGPU, 0,
+                    worldCopyGPU, 0,
+                    this.numBlades * 2 * 4);
 
-            const passEncoder = commandEncoder.beginComputePass();
-            passEncoder.setPipeline(computePipeline);
-            passEncoder.setBindGroup(0, bindGroup);
-            passEncoder.dispatch(this.numBlades);
-            passEncoder.endPass();
-            const updatePositionBuffer = [commandEncoder.finish()];
+                const passEncoder = commandEncoder.beginComputePass();
+                passEncoder.setPipeline(computePipeline);
+                passEncoder.setBindGroup(0, bindGroup);
+                passEncoder.dispatch(this.numBlades);
+                passEncoder.endPass();
+                const updatePositionBuffer = [commandEncoder.finish()];
+                this.worker.subscribe('updated', async (data: { count: number }) => {
+                    this.bladesVisible = data.count;
+                    const worldSetArr = await worldSetGPU.mapWriteAsync();
+                    new Float32Array(worldSetArr).set(new Float32Array(this.offset));
+                    worldSetGPU.unmap();
+                    this.device.defaultQueue.submit(updatePositionBuffer);
+                    console.log('updated grass buffers');
+                    return;
 
-            this.worker.subscribe('updated', async (data: { count: number }) => {
-                this.bladesVisible = data.count;
-                const worldSetArr = await worldSetGPU.mapWriteAsync();
-                new Float32Array(worldSetArr).set(new Float32Array(this.offset));
-                worldSetGPU.unmap();
-                this.device.defaultQueue.submit(updatePositionBuffer);
-                return;
 
 
-
-                /* gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-                 gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));
-                 gl.bindBuffer(gl.ARRAY_BUFFER, glsbuffer);
-                 gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(shapes));
-                 gl.bindBuffer(gl.ARRAY_BUFFER, glnoisebuffer);
-                 gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(noises));
-                 gl.bindBuffer(gl.ARRAY_BUFFER, null);*/
-            });
+                    /* gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+                     gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));
+                     gl.bindBuffer(gl.ARRAY_BUFFER, glsbuffer);
+                     gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(shapes));
+                     gl.bindBuffer(gl.ARRAY_BUFFER, glnoisebuffer);
+                     gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(noises));
+                     gl.bindBuffer(gl.ARRAY_BUFFER, null);*/
+                });
+            })
         })
 
 
@@ -389,86 +391,7 @@ export class Plants {
 
 
         this.mat.backFaceCulling = false;
-        Poaceae._draw = function (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
-            if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
-                return this;
-            }
-
-            if (this._internalMeshDataInfo._onBeforeDrawObservable) {
-                this._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(this);
-            };
-            // Apply states
-            (function() {
-                this._depthCullingState.apply = function (gl: WebGLRenderingContext) {
-                    if (!this.isDirty) {
-                        return;
-                    }
-                    // Cull
-                    if (this._isCullDirty) {
-                        if (this.cull) {
-                         //   gl.enable(gl.CULL_FACE);
-                        } else {
-                          //  gl.disable(gl.CULL_FACE);
-                        }
-
-                        this._isCullDirty = false;
-                    }
-
-                    // Cull face
-                    if (this._isCullFaceDirty) {
-                        gl.cullFace(<number>this.cullFace);
-                        this._isCullFaceDirty = false;
-                    }
-
-                    // Depth mask
-                    if (this._isDepthMaskDirty) {
-                      //  gl.depthMask(this.depthMask);
-                        this._isDepthMaskDirty = false;
-                    }
-
-                    // Depth test
-                    if (this._isDepthTestDirty) {
-                        if (this.depthTest) {
-                           // gl.enable(gl.DEPTH_TEST);
-                        } else {
-                          //  gl.disable(gl.DEPTH_TEST);
-                        }
-                        this._isDepthTestDirty = false;
-                    }
-
-                    // Depth func
-                    if (this._isDepthFuncDirty) {
-                       // gl.depthFunc(<number>this.depthFunc);
-                        this._isDepthFuncDirty = false;
-                    }
-
-                    // zOffset
-                    if (this._isZOffsetDirty) {
-                        if (this.zOffset) {
-                           // gl.enable(gl.POLYGON_OFFSET_FILL);
-                          //  gl.polygonOffset(this.zOffset, 0);
-                        } else {
-                          //  gl.disable(gl.POLYGON_OFFSET_FILL);
-                        }
-
-                        this._isZOffsetDirty = false;
-                    }
-
-                    // Front face
-                    if (this._isFrontFaceDirty) {
-                       // gl.frontFace(<number>this.frontFace);
-                        this._isFrontFaceDirty = false;
-                    }
-                }
-               
-            }).bind(engine)();
-            // engine.applyStates();
-            engine._drawCalls.addCount(1, false);
-            let wireframe = false;
-
-          //  gl.drawElementsInstanced(wireframe ? gl.LINES : gl.TRIANGLE_FAN, index.length, gl.UNSIGNED_SHORT, 0, me.bladesVisible);
-            return this;
-        }
+ 
        // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
 
        /* let vbo = gl.createBuffer();

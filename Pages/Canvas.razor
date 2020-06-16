@@ -2,38 +2,38 @@
 @inject IJSRuntime JSRuntime;
 
 @code {
-        ElementReference canvas;
-        sbyte gameSpeed = 0;
-        long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
-        long lastStateChangeTime = DateTime.Now.Ticks;
-        string currentGameTime;
-        [JSInvokable]
-        public void initGame(System.Text.Json.JsonElement input)
+    ElementReference canvas;
+    sbyte gameSpeed = 0;
+    long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
+    long lastStateChangeTime = DateTime.Now.Ticks;
+    string currentGameTime;
+    [JSInvokable]
+    public void initGame(System.Text.Json.JsonElement input)
+    {
+        input.GetProperty("lastStateChangeGameTime").TryGetInt64(out lastStateChangeGameTime);
+        input.GetProperty("lastStateChangeTime").TryGetInt64(out lastStateChangeTime);
+        input.GetProperty("gameSpeed").TryGetSByte(out gameSpeed);
+        System.Threading.Timer timer = new System.Threading.Timer((e) =>
         {
-            input.GetProperty("lastStateChangeGameTime").TryGetInt64(out lastStateChangeGameTime);
-            input.GetProperty("lastStateChangeTime").TryGetInt64(out lastStateChangeTime);
-            input.GetProperty("gameSpeed").TryGetSByte(out gameSpeed);
-            System.Threading.Timer timer = new System.Threading.Timer((e) =>
-            {
-                var curDate = new DateTime(getGameTime());
-                currentGameTime = curDate.ToShortDateString() + " " + curDate.ToShortTimeString();
-                StateHasChanged();
-            }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
-        }
-        [JSInvokable]
-        public void setProgress(byte p)
-        {
-            System.Diagnostics.Debug.WriteLine("setProgress " + p);
-            JSRuntime.InvokeVoidAsync("appInsights.trackEvent", new { name = "startprogress_" + p });
-            progress = p;
-            this.StateHasChanged();
-        }
-        [JSInvokable]
-        public void setProgressError(string error = null)
-        {
-            progressError = error;
-            this.StateHasChanged();
-        }
+            var curDate = new DateTime(getGameTime());
+            currentGameTime = curDate.ToShortDateString() + " " + curDate.ToShortTimeString();
+            StateHasChanged();
+        }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(1000));
+    }
+    [JSInvokable]
+    public void setProgress(byte p)
+    {
+        System.Diagnostics.Debug.WriteLine("setProgress " + p);
+        JSRuntime.InvokeVoidAsync("appInsights.trackEvent", new { name = "startprogress_" + p });
+        progress = p;
+        this.StateHasChanged();
+    }
+    [JSInvokable]
+    public void setProgressError(string error = null)
+    {
+        progressError = error;
+        this.StateHasChanged();
+    }
 
     protected override void OnAfterRender(bool firstrender)
     {
@@ -112,7 +112,7 @@
         if (showMenu == tool)
         {
             showMenu = null;
-            JSRuntime.InvokeAsync<string>("scene.tools." + tool + ".deactivate");
+            JSRuntime.InvokeAsync<string>("scene.deActivateMenu", tool);
 
         }
         else
@@ -124,7 +124,7 @@
             {
                 if (t[2] != tool)
                 {
-                    JSRuntime.InvokeAsync<string>("scene.tools." + t[2] + ".deactivate");
+                    JSRuntime.InvokeAsync<string>("scene.deActivateMenu", t[2]);
                 }
             }
         }

@@ -9,31 +9,38 @@ import type { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js"
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WorldScene } from "../world/scene.js";
+import { canvasListener } from "../traits/canvasListener.js";
+import { addTrait, Trait, Traitable } from "../traits/trait.js";
+
+export interface Zones extends canvasListener, Traitable {
+
+}
+
+@addTrait(canvasListener)
 export class Zones extends UITAB {
     private zonemateria: StandardMaterial;
     private PT: paintTexture;
     private zonedt: DynamicTexture
     private size = 10000;
-    public canvas: HTMLCanvasElement;
+    traits: Trait[];
     constructor(
-        private ground: Terrain,
-        private db: IDBDatabase,
-        private groundMaterial: ShaderMaterial,
-        private scene: WorldScene,
-        private camera: ArcRotateCamera,
-        private sea: Mesh
+        public scene: WorldScene,
+        public ground: Terrain,
+        public camera: ArcRotateCamera,
+        shaderModules: Map<string, GPUShaderModule>,
+        ...traits: Trait[]
     ) {
-        super();
-        this.canvas = <any>scene.getEngine().getRenderingCanvas();
+        super(scene, ground, camera, shaderModules);
+        this.traits = this.initTraits(traits);
+
         // let DZ = new drawZone(canvas, scene, camera, ground, sea, DB, DT, groundmateria, grass, terrain);
         this.zonedt = new DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, scene, false);
-
-        this.PT = new paintTexture(this.canvas, this.scene, this.camera, this.ground, this.sea, this.zonedt, 10000, 10000, super.getInstance() );
+       
+        this.PT = new paintTexture(this.scene, this.camera, this.ground, this.scene.sea, this.zonedt, 10000, 10000, this );
         this.zonemateria = new StandardMaterial("zoneMat", scene);
         this.zonemateria.diffuseTexture = this.zonedt;
     }
-    activate = (): void => {
-        this.activated=true;
+    activate = async () => {
         let ctx: CanvasRenderingContext2D = this.zonedt.getContext();
         this.ground.material = this.zonemateria;
         let centerX = this.size / 2
@@ -44,7 +51,7 @@ export class Zones extends UITAB {
        // ctx.stroke();
        // this.zonedt.update()
         let me = this;
-        this.db.transaction("zones").objectStore("zones").getAll().onsuccess = function (evt) {
+        (await this.scene.DBP).transaction("zones").objectStore("zones").getAll().onsuccess = function (evt) {
             console.log(this.result);
             
             (<PTDresult[]>this.result).forEach(z => {
@@ -72,15 +79,16 @@ export class Zones extends UITAB {
             me.zonedt.update();
         }
         this.PT.activate(async (response) => {
-            this.db.transaction("zones", 'readwrite').objectStore("zones").put(response);
+            (await this.scene.DBP).transaction("zones", 'readwrite').objectStore("zones").put(response);
         }, {});
     }
-    deactivate = (): void => {
-        if (this.activated) {
-            super.deactivate();
-            this.PT.deactivate();
-            this.activated=false;
+    destroy = (): void => {
+        //if (this.activated) {
+           // super.deactivate();
+            this.PT.destroy();
+         //   this.activated = false;
+            //@ts-ignore
             this.ground.material = this.groundMaterial;
-        }
+       // }
     }
 }

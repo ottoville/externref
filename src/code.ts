@@ -2,10 +2,12 @@
 import type { WorldScene } from "./world/scene.js";
 //import * as BABYLON from "./lib/babylon/index.js"
 import type { loginProvider, DotNet } from "./types/interfaces/index.js";
-import type { IEffectCreationOptions, Effect } from "./lib/babylon/Materials/effect";
+import type { IEffectCreationOptions, Effect } from "babylonjs/Materials/effect";
 import type { Engine } from "./lib/babylon/Engines/engine";
 import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks";
 import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine";
+import { UIMesh } from "./UIMesh.js";
+import { GPUCanvas } from "./GPUCanvas.js";
 
 //import  DB from "./DB.js";
 
@@ -143,7 +145,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         engine._adapter = adapter;
         //@ts-ignore
         let device = await adapter.requestDevice(engine._options.deviceDescriptor)
-
+        GPUCanvas.device = device;
+        GPUCanvas.canvas = canvas;
         const jsondata = await shadersP
         const shaderPuts: Promise<void>[] = [];
        // const shaderPutsC: Promise<void>[] = [];
@@ -260,66 +263,246 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         scene.autoClear = false;
         scene.autoClearDepthAndStencil = false;
 
+        const uniformBindGroup = device.createBindGroup({
+            layout: scene.uniformBindGroupLayout,
+            entries: [{
+                binding: 0,
+                resource: {
+                    //@ts-ignore
+                    buffer: scene.getSceneUniformBuffer()._buffer.underlyingResource
+                }
+            }],
+        })
+
         let rloop = function () {
-            var shouldRender = true;
 
-            if (shouldRender) {
+            // Start new frame
+            //engine.beginFrame();
+            //@ts-ignore
+            engine._measureFps();
+            //@ts-ignore
+            engine.onBeginFrameObservable.notifyObservers(engine);
+            //@ts-ignore
+            engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
+            // Some PGs are using color3...
+            if (scene.clearColor.a === undefined) {
+                scene.clearColor.a = 1;
+            }
+            //@ts-ignore
+            engine._mainColorAttachments[0].loadValue = scene.clearColor;
+            //@ts-ignore
+            engine._mainDepthAttachment.depthLoadValue = engine._clearDepthValue;
+            //@ts-ignore
+            engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
+            //@ts-ignore
+            //engine._startMainRenderPass();
+            // Resolve in case of MSAA
+            //@ts-ignore
+            if (engine._options.antialiasing) {
+                //@ts-ignore
+                engine._mainColorAttachments[0].resolveTarget = engine._swapChain.getCurrentTexture().createView();
+            }
+            else {
+                //@ts-ignore
+                //engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
+                engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
+            }
+            //@ts-ignore
+            engine._currentRenderPass = engine._renderEncoder.beginRenderPass({
+                //@ts-ignore
+                colorAttachments: engine._mainColorAttachments,
+                //@ts-ignore
+                depthStencilAttachment: engine._mainDepthAttachment
+            });
 
-                // Start new frame
-                //engine.beginFrame();
-                //@ts-ignore
-                engine._measureFps();
-                //@ts-ignore
-                engine.onBeginFrameObservable.notifyObservers(engine);
-                //@ts-ignore
-                engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
-                // Some PGs are using color3...
-                if (scene.clearColor.a === undefined) {
-                    scene.clearColor.a = 1;
+           // scene.render();
+
+
+            //this._frameId++;
+
+            // Register components that have been associated lately to the scene.
+            //this._registerTransientComponents();
+
+            scene._activeParticles.fetchNewFrame();
+            //this._totalVertices.fetchNewFrame();
+            scene._activeIndices.fetchNewFrame();
+            scene._activeBones.fetchNewFrame();
+            //this._meshesForIntersections.reset();
+            scene.resetCachedMaterial();
+
+            scene.onBeforeAnimationsObservable.notifyObservers(scene);
+
+            // Actions
+            //if (this.actionManager) {
+            //    this.actionManager.processTrigger(Constants.ACTION_OnEveryFrameTrigger);
+            //}
+
+            // Animations
+            scene.animate();
+
+            // Before camera update steps
+            for (let step of scene._beforeCameraUpdateStage) {
+                step.action();
+            }
+
+            // Update Cameras
+            if (scene.activeCameras.length > 0) {
+                for (var cameraIndex = 0; cameraIndex < scene.activeCameras.length; cameraIndex++) {
+                    let camera = scene.activeCameras[cameraIndex];
+                    camera.update();
+                    if (camera.cameraRigMode !== 0) {
+                        // rig cameras
+                        for (var index = 0; index < camera._rigCameras.length; index++) {
+                            camera._rigCameras[index].update();
+                        }
+                    }
                 }
-                //@ts-ignore
-                engine._mainColorAttachments[0].loadValue = scene.clearColor;
-                //@ts-ignore
-                engine._mainDepthAttachment.depthLoadValue = engine._clearDepthValue;
-                //@ts-ignore
-                engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
-                //@ts-ignore
-                //engine._startMainRenderPass();
-                // Resolve in case of MSAA
-                //@ts-ignore
-                if (engine._options.antialiasing) {
-                    //@ts-ignore
-                    engine._mainColorAttachments[0].resolveTarget = engine._swapChain.getCurrentTexture().createView();
+            } else if (scene.activeCamera) {
+                scene.activeCamera.update();
+                if (scene.activeCamera.cameraRigMode !== 0) {
+                    // rig cameras
+                    for (var index = 0; index < scene.activeCamera._rigCameras.length; index++) {
+                        scene.activeCamera._rigCameras[index].update();
+                    }
                 }
-                else {
-                    //@ts-ignore
-                    //engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
-                    engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
+            }
+
+            // Before render
+            scene.onBeforeRenderObservable.notifyObservers(scene);
+
+            // Customs render targets
+            scene.onBeforeRenderTargetsRenderObservable.notifyObservers(scene);
+            var currentActiveCamera = scene.activeCamera;
+            if (scene.renderTargetsEnabled) {
+                //Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
+                //this._intermediateRendering = true;
+                for (var customIndex = 0; customIndex < scene.customRenderTargets.length; customIndex++) {
+                    var renderTarget = scene.customRenderTargets[customIndex];
+                    if (renderTarget._shouldRender()) {
+                        //this._renderId++;
+
+                        scene.activeCamera = renderTarget.activeCamera || scene.activeCamera;
+
+                        if (!scene.activeCamera) {
+                            throw new Error("Active camera not set");
+                        }
+
+                        // Viewport
+                        engine.setViewport(scene.activeCamera.viewport);
+
+                        // Camera
+                        scene.updateTransformMatrix();
+
+                        renderTarget.render(currentActiveCamera !== scene.activeCamera, scene.dumpNextRenderTargets);
+
+                    }
                 }
-                //@ts-ignore
-                engine._currentRenderPass = engine._renderEncoder.beginRenderPass({
-                    //@ts-ignore
-                    colorAttachments: engine._mainColorAttachments,
-                    //@ts-ignore
-                    depthStencilAttachment: engine._mainDepthAttachment
-                });
+                //Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
+                //this._intermediateRendering = false;
+                //this._renderId++;
+            }
 
-                scene.render();
+            // Restore back buffer
+            scene.activeCamera = currentActiveCamera;
+            //this._bindFrameBuffer();
+            scene.onAfterRenderTargetsRenderObservable.notifyObservers(scene);
 
+            for (let step of scene._beforeClearStage) {
+                step.action();
+            }
 
+            // Clear
+            if (scene.autoClearDepthAndStencil || scene.autoClear) {
 
-                //@ts-ignore
-                if (engine._currentRenderPass) {
+                engine.clear(scene.clearColor, scene.autoClear || scene.forceWireframe || scene.forcePointsCloud, scene.autoClearDepthAndStencil, scene.autoClearDepthAndStencil);
+            }
+
+            // Collects render targets from external components.
+            // for (let step of this._gatherRenderTargetsStage) {
+            //    step.action(this._renderTargets);
+            //  }
+
+            // Multi-cameras?
+            if (scene.activeCameras.length > 0) {
+                for (var cameraIndex = 0; cameraIndex < scene.activeCameras.length; cameraIndex++) {
+                    if (cameraIndex > 0) {
+                        (engine as Engine).clear(null, false, true, true);
+                    }
                     //@ts-ignore
-                    engine._currentRenderPass.endPass();
+                    scene._processSubCameras(scene.activeCameras[cameraIndex]);
                     //@ts-ignore
-                    engine._currentRenderPass = null;
+                    const renderPass = (engine as WebGPUEngine)._bundleEncoder || (engine as WebGPUEngine)._currentRenderPass!;
+                    renderPass.setBindGroup(0, uniformBindGroup)
+                    renderPass.setBindGroup(1, terrain.bindGroup)
+                    UIMesh.UIMeshes.forEach((Mesh) => Mesh.draw(renderPass));
+
                 }
+            } else {
+                if (!scene.activeCamera) {
+                    throw new Error("No camera defined");
+                }
+
+                //this._processSubCameras(this.activeCamera);
                 //@ts-ignore
-                engine._device.defaultQueue.submit([engine._renderEncoder.finish()]);
-                engine.onEndFrameObservable.notifyObservers(engine);
+                scene._processSubCameras(this.activeCamera)
 
             }
+
+            // Intersection checks
+            //this._checkIntersections();
+
+            // Executes the after render stage actions.
+            for (let step of scene._afterRenderStage) {
+                step.action();
+            }
+
+            // After render
+            if (scene.afterRender) {
+                scene.afterRender();
+            }
+
+            scene.onAfterRenderObservable.notifyObservers(scene);
+
+            // Cleaning
+            if (scene._toBeDisposed.length) {
+                for (var index = 0; index < scene._toBeDisposed.length; index++) {
+                    var data = scene._toBeDisposed[index];
+                    if (data) {
+                        data.dispose();
+                    }
+                }
+
+                scene._toBeDisposed = [];
+            }
+
+            if (scene.dumpNextRenderTargets) {
+                scene.dumpNextRenderTargets = false;
+            }
+
+            scene._activeBones.addCount(0, true);
+            scene._activeIndices.addCount(0, true);
+            scene._activeParticles.addCount(0, true);
+
+
+
+
+
+
+
+            //scene render ends
+
+
+            //@ts-ignore
+            if (engine._currentRenderPass) {
+                //@ts-ignore
+                engine._currentRenderPass.endPass();
+                //@ts-ignore
+                engine._currentRenderPass = null;
+            }
+            //@ts-ignore
+            engine._device.defaultQueue.submit([engine._renderEncoder.finish()]);
+            engine.onEndFrameObservable.notifyObservers(engine);
+
             window.requestAnimationFrame(rloop);
 
         }

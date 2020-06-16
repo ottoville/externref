@@ -1,10 +1,7 @@
 ﻿import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
 import { TerraMesh } from "../TerraMesh.js";
-//@ts-ignore
-import glslangModule from 'https://unpkg.com/@webgpu/glslang@0.0.8/dist/web-devel/glslang.js';
 import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
-import { TerraEffect } from "../TerraEffect.js";
 
 interface TerrainMap {
     width: number,
@@ -43,54 +40,64 @@ export class Terrain extends TerraMesh {
     
     public static terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
-    public inited: Promise<any>;
+    public initedGPU: Promise<any>;
+    bindGroupLayout: GPUBindGroupLayout = this.device.createBindGroupLayout({
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
+                type: "readonly-storage-buffer"
+            },
+            {
+                binding: 1,
+                visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
+                type: "readonly-storage-buffer"
+            },
+            {
+                binding: 2,
+                visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
+                type: "readonly-storage-buffer"
+            }
+        ]
+    })
+    bindGroup: GPUBindGroup;
     public static async fromHeightMap(map: string, device: GPUDevice, shaderModules: Map<string, GPUShaderModule>): Promise<Terrain> {
         let vdata = await Terrain.terrainWorker.message<TerrainMap, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {url: map});
         return new Terrain(vdata, device, shaderModules);
     }
     public createTexture(engine: WebGPUEngine) : Promise<GPUBuffer> {
         return new Promise((tres, trej) => {
-            this.inited.then(async () => {
+            this.initedGPU.then(async () => {
                 console.log('creating terrain texture')
-                /* WEBGPU START */
-               
-                // Result Matrix
 
                 const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5120 * 5120);
                 const resultMatrixBuffer = this.device.createBuffer({
                     size: resultMatrixBufferSize,
                     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
                 });
-                const computePipeline = this.device.createComputePipeline({
-                    computeStage: {
-                        module: this.shaderModules.get("webgpu.comp"),
-                        entryPoint: "main"
-                    }
-                });
-                const bindGroup = this.device.createBindGroup({
-                    //@ts-ignore
-                    layout: computePipeline.getBindGroupLayout(0),
+                const bindGroup1Layout = this.device.createBindGroupLayout({
                     entries: [
                         {
                             binding: 0,
-                            resource: {
-                                buffer: this.slopeArrGPUBuffer
-                            }
-                        },
+                            visibility: GPUShaderStage.COMPUTE,
+                            type: "storage-buffer"
+                        }]
+                })
+                const computePipeline = this.device.createComputePipeline({
+                    layout: this.device.createPipelineLayout({
+                        bindGroupLayouts: [this.bindGroupLayout, bindGroup1Layout]
+                      }),
+                    computeStage: {
+                        module: this.shaderModules.get("webgpu.comp")!,
+                        entryPoint: "main"
+                    }
+                });
+
+                const bindGroup1 = this.device.createBindGroup({
+                    layout: bindGroup1Layout,
+                    entries: [
                         {
-                            binding: 1,
-                            resource: {
-                                buffer: this.facet1ArrGPUBuffer
-                            }
-                        },
-                        {
-                            binding: 2,
-                            resource: {
-                                buffer: this.facet2ArrGPUBuffer
-                            }
-                        },
-                        {
-                            binding: 3,
+                            binding: 0,
                             resource: {
                                 buffer: resultMatrixBuffer
                             }
@@ -102,7 +109,8 @@ export class Terrain extends TerraMesh {
 
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipeline);
-                passEncoder.setBindGroup(0, bindGroup);
+                passEncoder.setBindGroup(0, this.bindGroup);
+                passEncoder.setBindGroup(1, bindGroup1);
                 passEncoder.dispatch(5120 /* x */, 5120 /* y */);
                 passEncoder.endPass();
                 //tres(resultMatrixBuffer);
@@ -165,10 +173,46 @@ export class Terrain extends TerraMesh {
 
         //vertexData.indices = this.indices;
         //vertexData.positions = this.positions;
-        
-        
+        const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] = device.createBufferMapped({
+            size: this.slopeArrBuffer.byteLength,
+            usage: GPUBufferUsage.STORAGE,
+        });
+        const [gpuBufferFacet1, arrayBufferFacet1] = device.createBufferMapped({
+            size: this.facet1Arr.byteLength,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        });
+        const [gpuBufferFacet2, arrayBufferFacet2] = device.createBufferMapped({
+            size: this.facet2Arr.byteLength,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+        });
+        this.facet2ArrGPUBuffer = gpuBufferFacet2;
+        this.slopeArrGPUBuffer = gpuBufferFirstMatrix;
+        this.facet1ArrGPUBuffer = gpuBufferFacet1;
+        this.bindGroup = this.device.createBindGroup({
+            layout: this.bindGroupLayout,
+            entries: [
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: this.slopeArrGPUBuffer
+                    }
+                },
+                {
+                    binding: 1,
+                    resource: {
+                        buffer: this.facet1ArrGPUBuffer
+                    }
+                },
+                {
+                    binding: 2,
+                    resource: {
+                        buffer: this.facet2ArrGPUBuffer
+                    }
+                }
+            ]
+        });
 
-        this.inited = TerraMesh.worker.message<SharedArrayBuffer, PostMessageOptions>(this.uniqueId, 'ComputeNormals').then(async normalsb => {
+        this.initedGPU = TerraMesh.worker.message<SharedArrayBuffer, PostMessageOptions>(this.uniqueId, 'ComputeNormals').then(async normalsb => {
             this.normalsBuffer = normalsb;
             this.normals = new Float32Array(this.normalsBuffer)
             this.normalsView = new DataView(this.normalsBuffer);
@@ -188,33 +232,25 @@ export class Terrain extends TerraMesh {
                     boundingBox: boundingInfo.boundingBox,
                     boundingSphere: boundingInfo.boundingSphere
                 });
-            const [gpuBufferFirstMatrix, arrayBufferFirstMatrix] = device.createBufferMapped({
-                size: this.slopeArrBuffer.byteLength,
-                usage: GPUBufferUsage.STORAGE,
-            });
+
             new Int32Array(arrayBufferFirstMatrix).set(new Int32Array(this.slopeArrBuffer));
             gpuBufferFirstMatrix.unmap();
-            this.slopeArrGPUBuffer = gpuBufferFirstMatrix;
+            
 
-            const [gpuBufferFacet1, arrayBufferFacet1] = device.createBufferMapped({
-                size: this.facet1Arr.byteLength,
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-            });
+            
             new Float32Array(arrayBufferFacet1).set(this.facet1Arr);
             gpuBufferFacet1.unmap();
-            this.facet1ArrGPUBuffer = gpuBufferFacet1;
+           
 
-            const [gpuBufferFacet2, arrayBufferFacet2] = device.createBufferMapped({
-                size: this.facet2Arr.byteLength,
-                usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-            });
+           
             new Float32Array(arrayBufferFacet2).set(this.facet2Arr);
             gpuBufferFacet2.unmap();
-            this.facet2ArrGPUBuffer = gpuBufferFacet2;
+           
+
+
         })
 
         this._setReady(true);
-
         console.log('terrain bounding');
         console.log(this.getBoundingInfo());
 

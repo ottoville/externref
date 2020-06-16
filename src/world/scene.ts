@@ -3,14 +3,13 @@ import { Plants } from "../plants/Plants.js";
 import { PlantsUI } from "../tools/plantsUI.js";
 import { Zones } from "../tools/zones.js";
 import { CameraTAB } from "../tools/camera.js";
-import type { UITAB } from "../UITAB.js";
 import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { Terrain } from "./terrain.js";
 
 import type { TerraMesh } from "../TerraMesh.js";
 
-import type { loginProvider, DotNet } from "../types/interfaces/index.js";
+import type { loginProvider, DotNet, savedCamera } from "../types/interfaces/index.js";
 import { Scene } from "../lib/babylon/scene.js";
 import type { PickingInfo } from "../lib/babylon/Collisions/pickingInfo.js";
 import type { Camera } from "../lib/babylon/Cameras/camera.js";
@@ -36,6 +35,11 @@ import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { InternalTexture, InternalTextureSource } from "../lib/babylon/Materials/Textures/internalTexture.js";
 import { UIMesh } from "../UIMesh.js";
+import { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
+import { LazyEval } from "../LazyEval.js";
+import { canvasListener } from "../traits/canvasListener.js";
+import { UITABClassLike, UITAB } from "../UITAB.js";
+
 
 Scene.CollisionCoordinatorFactory = () => {
     return new DefaultCollisionCoordinator();
@@ -78,10 +82,15 @@ class _ClickInfo {
         this._ignore = b;
     }
 }
-
 export class WorldScene extends Scene {
     timeBuffer: GPUBuffer;
     terrainInited: Promise<[Terrain, Promise<GPUBuffer>]>;
+    camera: ArcRotateCamera;
+    camera2: ArcRotateCamera;
+    sea: Sea;
+    plants: Plants;
+    #groundP: Promise<Terrain>;
+    DBP: Promise<EarthDatabase>;
     createPickingRayToRef(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
 
         var engine = this.getEngine();
@@ -180,228 +189,61 @@ export class WorldScene extends Scene {
         }
         //gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
     };
-    public tools: { [index: string]: UITAB } = {}
-    public render(updateCameras = true, ignoreAnimations = false): void {
-        if (this.isDisposed) {
-            return;
-        }
+    
+    
 
-        //this._frameId++;
+    public tools: Map<string, UITABClassLike> = new Map();
 
-        // Register components that have been associated lately to the scene.
-        //this._registerTransientComponents();
-
-        this._activeParticles.fetchNewFrame();
-        //this._totalVertices.fetchNewFrame();
-        this._activeIndices.fetchNewFrame();
-        this._activeBones.fetchNewFrame();
-        //this._meshesForIntersections.reset();
-        this.resetCachedMaterial();
-
-        this.onBeforeAnimationsObservable.notifyObservers(this);
-
-        // Actions
-        //if (this.actionManager) {
-        //    this.actionManager.processTrigger(Constants.ACTION_OnEveryFrameTrigger);
-        //}
-
-        // Animations
-        if (!ignoreAnimations) {
-            this.animate();
-        }
-
-        // Before camera update steps
-        for (let step of this._beforeCameraUpdateStage) {
-            step.action();
-        }
-
-        // Update Cameras
-        if (updateCameras) {
-            if (this.activeCameras.length > 0) {
-                for (var cameraIndex = 0; cameraIndex < this.activeCameras.length; cameraIndex++) {
-                    let camera = this.activeCameras[cameraIndex];
-                    camera.update();
-                    if (camera.cameraRigMode !== 0) {
-                        // rig cameras
-                        for (var index = 0; index < camera._rigCameras.length; index++) {
-                            camera._rigCameras[index].update();
-                        }
-                    }
-                }
-            } else if (this.activeCamera) {
-                this.activeCamera.update();
-                if (this.activeCamera.cameraRigMode !== 0) {
-                    // rig cameras
-                    for (var index = 0; index < this.activeCamera._rigCameras.length; index++) {
-                        this.activeCamera._rigCameras[index].update();
-                    }
-                }
-            }
-        }
-
-        // Before render
-        this.onBeforeRenderObservable.notifyObservers(this);
-
-        // Customs render targets
-        this.onBeforeRenderTargetsRenderObservable.notifyObservers(this);
-        var engine = this.getEngine();
-        var currentActiveCamera = this.activeCamera;
-        if (this.renderTargetsEnabled) {
-            //Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
-            //this._intermediateRendering = true;
-            for (var customIndex = 0; customIndex < this.customRenderTargets.length; customIndex++) {
-                var renderTarget = this.customRenderTargets[customIndex];
-                if (renderTarget._shouldRender()) {
-                    //this._renderId++;
-
-                    this.activeCamera = renderTarget.activeCamera || this.activeCamera;
-
-                    if (!this.activeCamera) {
-                        throw new Error("Active camera not set");
-                    }
-
-                    // Viewport
-                    engine.setViewport(this.activeCamera.viewport);
-
-                    // Camera
-                    this.updateTransformMatrix();
-
-                    renderTarget.render(currentActiveCamera !== this.activeCamera, this.dumpNextRenderTargets);
-
-                }
-            }
-            //Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
-            //this._intermediateRendering = false;
-            //this._renderId++;
-        }
-
-        // Restore back buffer
-        this.activeCamera = currentActiveCamera;
-        //this._bindFrameBuffer();
-        this.onAfterRenderTargetsRenderObservable.notifyObservers(this);
-
-        for (let step of this._beforeClearStage) {
-            step.action();
-        }
-
-        // Clear
-        if (this.autoClearDepthAndStencil || this.autoClear) {
-
-            engine.clear(this.clearColor, this.autoClear || this.forceWireframe || this.forcePointsCloud, this.autoClearDepthAndStencil, this.autoClearDepthAndStencil);
-        }
-
-        // Collects render targets from external components.
-        // for (let step of this._gatherRenderTargetsStage) {
-        //    step.action(this._renderTargets);
-        //  }
-
-        // Multi-cameras?
-        if (this.activeCameras.length > 0) {
-            for (var cameraIndex = 0; cameraIndex < this.activeCameras.length; cameraIndex++) {
-                if (cameraIndex > 0) {
-                    engine.clear(null, false, true, true);
-                }
-                //@ts-ignore
-                this._processSubCameras(this.activeCameras[cameraIndex]);
-                //@ts-ignore
-                const renderPass = (engine as WebGPUEngine)._bundleEncoder || (engine as WebGPUEngine)._currentRenderPass!;
-                renderPass.setBindGroup(0, this.#uniformBindGroup)
-                renderPass.setBindGroup(1, this.#terrain.bindGroup)
-                UIMesh.UIMeshes.forEach((Mesh) => Mesh.draw(renderPass));
-
-            }
-        } else {
-            if (!this.activeCamera) {
-                throw new Error("No camera defined");
-            }
-
-            //this._processSubCameras(this.activeCamera);
-            (function () {
-                this._processSubCameras(this.activeCamera);
-            }).bind(engine.scenes[0])();
-        }
-
-        // Intersection checks
-        //this._checkIntersections();
-
-        // Executes the after render stage actions.
-        for (let step of this._afterRenderStage) {
-            step.action();
-        }
-
-        // After render
-        if (this.afterRender) {
-            this.afterRender();
-        }
-
-        this.onAfterRenderObservable.notifyObservers(this);
-
-        // Cleaning
-        if (this._toBeDisposed.length) {
-            for (var index = 0; index < this._toBeDisposed.length; index++) {
-                var data = this._toBeDisposed[index];
-                if (data) {
-                    data.dispose();
-                }
-            }
-
-            this._toBeDisposed = [];
-        }
-
-        if (this.dumpNextRenderTargets) {
-            this.dumpNextRenderTargets = false;
-        }
-
-        this._activeBones.addCount(0, true);
-        this._activeIndices.addCount(0, true);
-        this._activeParticles.addCount(0, true);
-    }
     public attachControl(attachUp = true, attachDown = true, attachMove = true, elementToAttachTo: Nullable<HTMLElement> = null): void {
         //this._inputManager.attachControl(attachUp, attachDown, attachMove);
         let DoubleClickDelay = 300;
         let ExclusiveDoubleClickMode = false;
         let engine = this.getEngine();
-        (function (scene: WorldScene, elementToAttachTo: Nullable<HTMLElement> = null) {
+        const scene = this;
+        const inputmanager = this._inputManager;
+        //(function (scene: WorldScene, elementToAttachTo: Nullable<HTMLElement> = null) {
             if (!elementToAttachTo) {
                 elementToAttachTo = engine.getInputElement();
             }
 
             if (!elementToAttachTo) {
                 return;
-            }
-            this._initActionManager = (act: Nullable<AbstractActionManager>, clickInfo: _ClickInfo): Nullable<AbstractActionManager> => {
-                if (!this._meshPickProceed) {
-                    let pickResult = scene.pick(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers);
-                    this._currentPickResult = pickResult;
+        }
+        //@ts-ignore
+        inputmanager._initActionManager = (act: Nullable<AbstractActionManager>, clickInfo: _ClickInfo): Nullable<AbstractActionManager> => {
+            if (!inputmanager._meshPickProceed) {
+                let pickResult = scene.pick(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers);
+                inputmanager._currentPickResult = pickResult;
                     if (pickResult) {
                         act = (pickResult.hit && pickResult.pickedMesh) ? pickResult.pickedMesh._getActionManagerForTrigger() : null;
                     }
-                    this._meshPickProceed = true;
+                inputmanager._meshPickProceed = true;
                 }
                 return act;
-            };
-
-            this._delayedSimpleClick = (btn: number, clickInfo: _ClickInfo, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void) => {
+        };
+        //@ts-ignore
+        inputmanager._delayedSimpleClick = (btn: number, clickInfo: _ClickInfo, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void) => {
                 // double click delay is over and that no double click has been raised since, or the 2 consecutive keys pressed are different
-                if ((Date.now() - this._previousStartingPointerTime > DoubleClickDelay && !this._doubleClickOccured) ||
-                    btn !== this._previousButtonPressed) {
-                    this._doubleClickOccured = false;
+            if ((Date.now() - inputmanager._previousStartingPointerTime > DoubleClickDelay && !inputmanager._doubleClickOccured) ||
+                btn !== inputmanager._previousButtonPressed) {
+                inputmanager._doubleClickOccured = false;
                     clickInfo.singleClick = true;
                     clickInfo.ignore = false;
-                    cb(clickInfo, this._currentPickResult);
+                cb(clickInfo, inputmanager._currentPickResult);
                 }
             };
-
-            this._initClickEvent = (obs1: Observable<PointerInfoPre>, obs2: Observable<PointerInfo>, evt: PointerEvent, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void): void => {
+        //@ts-ignore
+        inputmanager._initClickEvent = (obs1: Observable<PointerInfoPre>, obs2: Observable<PointerInfo>, evt: PointerEvent, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void): void => {
                 let clickInfo = new _ClickInfo();
-                this._currentPickResult = null;
+            inputmanager._currentPickResult = null;
                 let act: Nullable<AbstractActionManager> = null;
 
                 let checkPicking = obs1.hasSpecificMask(PointerEventTypes.POINTERPICK) || obs2.hasSpecificMask(PointerEventTypes.POINTERPICK)
                     || obs1.hasSpecificMask(PointerEventTypes.POINTERTAP) || obs2.hasSpecificMask(PointerEventTypes.POINTERTAP)
                     || obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) || obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
-                if (!checkPicking && AbstractActionManager) {
-                    act = this._initActionManager(act, clickInfo);
+            if (!checkPicking && AbstractActionManager) {
+                    //@ts-ignore
+                    act = inputmanager._initActionManager(act, clickInfo);
                     if (act) {
                         checkPicking = act.hasPickTriggers;
                     }
@@ -411,7 +253,7 @@ export class WorldScene extends Scene {
 
                 if (checkPicking) {
                     let btn = evt.button;
-                    clickInfo.hasSwiped = this._isPointerSwiping();
+                    clickInfo.hasSwiped = inputmanager._isPointerSwiping();
 
                     if (!clickInfo.hasSwiped) {
                         let checkSingleClickImmediately = !ExclusiveDoubleClickMode;
@@ -421,7 +263,8 @@ export class WorldScene extends Scene {
                                 !obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
 
                             if (checkSingleClickImmediately && !AbstractActionManager.HasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger)) {
-                                act = this._initActionManager(act, clickInfo);
+                                //@ts-ignore
+                                act = inputmanager._initActionManager(act, clickInfo);
                                 if (act) {
                                     checkSingleClickImmediately = !act.hasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger);
                                 }
@@ -430,91 +273,93 @@ export class WorldScene extends Scene {
 
                         if (checkSingleClickImmediately) {
                             // single click detected if double click delay is over or two different successive keys pressed without exclusive double click or no double click required
-                            if (Date.now() - this._previousStartingPointerTime > DoubleClickDelay ||
-                                btn !== this._previousButtonPressed) {
+                            if (Date.now() - inputmanager._previousStartingPointerTime > DoubleClickDelay ||
+                                btn !== inputmanager._previousButtonPressed) {
                                 clickInfo.singleClick = true;
-                                cb(clickInfo, this._currentPickResult);
+                                cb(clickInfo, inputmanager._currentPickResult);
                                 needToIgnoreNext = true;
                             }
                         }
                         // at least one double click is required to be check and exclusive double click is enabled
                         else {
                             // wait that no double click has been raised during the double click delay
-                            this._previousDelayedSimpleClickTimeout = this._delayedSimpleClickTimeout;
-                            this._delayedSimpleClickTimeout = window.setTimeout(this._delayedSimpleClick.bind(this, btn, clickInfo, cb), DoubleClickDelay);
+                            inputmanager._previousDelayedSimpleClickTimeout = inputmanager._delayedSimpleClickTimeout;
+                            //@ts-ignore
+                            inputmanager._delayedSimpleClickTimeout = window.setTimeout(inputmanager._delayedSimpleClick.bind(inputmanager, btn, clickInfo, cb), DoubleClickDelay);
                         }
 
                         let checkDoubleClick = obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) ||
                             obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
                         if (!checkDoubleClick && AbstractActionManager.HasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger)) {
-                            act = this._initActionManager(act, clickInfo);
+                            //@ts-ignore
+                            act = inputmanager._initActionManager(act, clickInfo);
                             if (act) {
                                 checkDoubleClick = act.hasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger);
                             }
                         }
                         if (checkDoubleClick) {
                             // two successive keys pressed are equal, double click delay is not over and double click has not just occurred
-                            if (btn === this._previousButtonPressed &&
-                                Date.now() - this._previousStartingPointerTime < DoubleClickDelay &&
-                                !this._doubleClickOccured
+                            if (btn === inputmanager._previousButtonPressed &&
+                                Date.now() - inputmanager._previousStartingPointerTime < DoubleClickDelay &&
+                                !inputmanager._doubleClickOccured
                             ) {
                                 // pointer has not moved for 2 clicks, it's a double click
                                 if (!clickInfo.hasSwiped &&
-                                    !this._isPointerSwiping()) {
-                                    this._previousStartingPointerTime = 0;
-                                    this._doubleClickOccured = true;
+                                    !inputmanager._isPointerSwiping()) {
+                                    inputmanager._previousStartingPointerTime = 0;
+                                    inputmanager._doubleClickOccured = true;
                                     clickInfo.doubleClick = true;
                                     clickInfo.ignore = false;
-                                    if (ExclusiveDoubleClickMode && this._previousDelayedSimpleClickTimeout) {
-                                        clearTimeout(this._previousDelayedSimpleClickTimeout);
+                                    if (ExclusiveDoubleClickMode && inputmanager._previousDelayedSimpleClickTimeout) {
+                                        clearTimeout(inputmanager._previousDelayedSimpleClickTimeout);
                                     }
-                                    this._previousDelayedSimpleClickTimeout = this._delayedSimpleClickTimeout;
-                                    cb(clickInfo, this._currentPickResult);
+                                    inputmanager._previousDelayedSimpleClickTimeout = inputmanager._delayedSimpleClickTimeout;
+                                    cb(clickInfo, inputmanager._currentPickResult);
                                 }
                                 // if the two successive clicks are too far, it's just two simple clicks
                                 else {
-                                    this._doubleClickOccured = false;
-                                    this._previousStartingPointerTime = this._startingPointerTime;
-                                    this._previousStartingPointerPosition.x = this._startingPointerPosition.x;
-                                    this._previousStartingPointerPosition.y = this._startingPointerPosition.y;
-                                    this._previousButtonPressed = btn;
+                                    inputmanager._doubleClickOccured = false;
+                                    inputmanager._previousStartingPointerTime = inputmanager._startingPointerTime;
+                                    inputmanager._previousStartingPointerPosition.x = inputmanager._startingPointerPosition.x;
+                                    inputmanager._previousStartingPointerPosition.y = inputmanager._startingPointerPosition.y;
+                                    inputmanager._previousButtonPressed = btn;
                                     if (ExclusiveDoubleClickMode) {
-                                        if (this._previousDelayedSimpleClickTimeout) {
-                                            clearTimeout(this._previousDelayedSimpleClickTimeout);
+                                        if (inputmanager._previousDelayedSimpleClickTimeout) {
+                                            clearTimeout(inputmanager._previousDelayedSimpleClickTimeout);
                                         }
-                                        this._previousDelayedSimpleClickTimeout = this._delayedSimpleClickTimeout;
+                                        inputmanager._previousDelayedSimpleClickTimeout = inputmanager._delayedSimpleClickTimeout;
 
-                                        cb(clickInfo, this._previousPickResult);
+                                        cb(clickInfo, inputmanager._previousPickResult);
                                     }
                                     else {
-                                        cb(clickInfo, this._currentPickResult);
+                                        cb(clickInfo, inputmanager._currentPickResult);
                                     }
                                 }
                                 needToIgnoreNext = true;
                             }
                             // just the first click of the double has been raised
                             else {
-                                this._doubleClickOccured = false;
-                                this._previousStartingPointerTime = this._startingPointerTime;
-                                this._previousStartingPointerPosition.x = this._startingPointerPosition.x;
-                                this._previousStartingPointerPosition.y = this._startingPointerPosition.y;
-                                this._previousButtonPressed = btn;
+                                inputmanager._doubleClickOccured = false;
+                                inputmanager._previousStartingPointerTime = inputmanager._startingPointerTime;
+                                inputmanager._previousStartingPointerPosition.x = inputmanager._startingPointerPosition.x;
+                                inputmanager._previousStartingPointerPosition.y = inputmanager._startingPointerPosition.y;
+                                inputmanager._previousButtonPressed = btn;
                             }
                         }
                     }
                 }
 
                 if (!needToIgnoreNext) {
-                    cb(clickInfo, this._currentPickResult);
+                    cb(clickInfo, inputmanager._currentPickResult);
                 }
             };
 
-            this._onPointerMove = (evt: PointerEvent) => {
+        inputmanager._onPointerMove = (evt: PointerEvent) => {
 
-                this._updatePointerPosition(evt);
+                inputmanager._updatePointerPosition(evt);
 
                 // PreObservable support
-                if (this._checkPrePointerObservable(null, evt, evt.type === this._wheelEventName ? PointerEventTypes.POINTERWHEEL : PointerEventTypes.POINTERMOVE)) {
+            if (inputmanager._checkPrePointerObservable(null, evt, evt.type === inputmanager._wheelEventName ? PointerEventTypes.POINTERWHEEL : PointerEventTypes.POINTERMOVE)) {
                     return;
                 }
 
@@ -527,29 +372,29 @@ export class WorldScene extends Scene {
                 }
 
                 // Meshes
-                var pickResult = scene.pick(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerMovePredicate, false, scene.cameraToUseForPointers);
+            var pickResult = scene.pick(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY, scene.pointerMovePredicate, false, scene.cameraToUseForPointers);
 
-                this._processPointerMove(pickResult, evt);
+            inputmanager._processPointerMove(pickResult, evt);
             };
 
-            this._onPointerDown = (evt: PointerEvent) => {
-                this._totalPointersPressed++;
-                this._pickedDownMesh = null;
-                this._meshPickProceed = false;
+        inputmanager._onPointerDown = (evt: PointerEvent) => {
+                inputmanager._totalPointersPressed++;
+                inputmanager._pickedDownMesh = null;
+                inputmanager._meshPickProceed = false;
 
-                this._updatePointerPosition(evt);
+            inputmanager._updatePointerPosition(evt);
 
                 if (scene.preventDefaultOnPointerDown && elementToAttachTo) {
                     evt.preventDefault();
                     elementToAttachTo.focus();
                 }
 
-                this._startingPointerPosition.x = this._pointerX;
-                this._startingPointerPosition.y = this._pointerY;
-                this._startingPointerTime = Date.now();
+            inputmanager._startingPointerPosition.x = inputmanager._pointerX;
+            inputmanager._startingPointerPosition.y = inputmanager._pointerY;
+            inputmanager._startingPointerTime = Date.now();
 
                 // PreObservable support
-                if (this._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERDOWN)) {
+            if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERDOWN)) {
                     return;
                 }
 
@@ -557,7 +402,7 @@ export class WorldScene extends Scene {
                     return;
                 }
 
-                this._pointerCaptures[evt.pointerId] = true;
+            inputmanager._pointerCaptures[evt.pointerId] = true;
 
                 if (!scene.pointerDownPredicate) {
                     scene.pointerDownPredicate = (mesh: AbstractMesh): boolean => {
@@ -566,56 +411,56 @@ export class WorldScene extends Scene {
                 }
 
                 // Meshes
-                this._pickedDownMesh = null;
-                scene.pickPromise(this._unTranslatedPointerX, this._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers).then(pickResult => {
+            inputmanager._pickedDownMesh = null;
+            scene.pickPromise(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers).then(pickResult => {
                     if (pickResult)
-                        this._processPointerDown(pickResult, evt);
+                        inputmanager._processPointerDown(pickResult, evt);
                 });
             };
 
-            this._onPointerUp = (evt: PointerEvent) => {
-                if (this._totalPointersPressed === 0) {  // We are attaching the pointer up to windows because of a bug in FF
+        inputmanager._onPointerUp = (evt: PointerEvent) => {
+            if (inputmanager._totalPointersPressed === 0) {  // We are attaching the pointer up to windows because of a bug in FF
                     return;                             // So we need to test it the pointer down was pressed before.
                 }
 
-                this._totalPointersPressed--;
-                this._pickedUpMesh = null;
-                this._meshPickProceed = false;
+            inputmanager._totalPointersPressed--;
+            inputmanager._pickedUpMesh = null;
+            inputmanager._meshPickProceed = false;
 
-                this._updatePointerPosition(evt);
+            inputmanager._updatePointerPosition(evt);
 
                 if (scene.preventDefaultOnPointerUp && elementToAttachTo) {
                     evt.preventDefault();
                     elementToAttachTo.focus();
                 }
-
-                this._initClickEvent(scene.onPrePointerObservable, scene.onPointerObservable, evt, (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => {
+            //@ts-ignore
+            inputmanager._initClickEvent(scene.onPrePointerObservable, scene.onPointerObservable, evt, (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => {
                     // PreObservable support
                     if (scene.onPrePointerObservable.hasObservers()) {
                         if (!clickInfo.ignore) {
                             if (!clickInfo.hasSwiped) {
                                 if (clickInfo.singleClick && scene.onPrePointerObservable.hasSpecificMask(PointerEventTypes.POINTERTAP)) {
-                                    if (this._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERTAP)) {
+                                    if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERTAP)) {
                                         return;
                                     }
                                 }
                                 if (clickInfo.doubleClick && scene.onPrePointerObservable.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP)) {
-                                    if (this._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERDOUBLETAP)) {
+                                    if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERDOUBLETAP)) {
                                         return;
                                     }
                                 }
                             }
-                            if (this._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERUP)) {
+                            if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERUP)) {
                                 return;
                             }
                         }
                     }
 
-                    if (!this._pointerCaptures[evt.pointerId]) {
+                if (!inputmanager._pointerCaptures[evt.pointerId]) {
                         return;
                     }
 
-                    this._pointerCaptures[evt.pointerId] = false;
+                inputmanager._pointerCaptures[evt.pointerId] = false;
                     if (!scene.cameraToUseForPointers && !scene.activeCamera) {
                         return;
                     }
@@ -627,20 +472,21 @@ export class WorldScene extends Scene {
                     }
 
                     // Meshes
-                    if (!this._meshPickProceed && (AbstractActionManager && AbstractActionManager.HasTriggers || scene.onPointerObservable.hasObservers())) {
-                        this._initActionManager(null, clickInfo);
+                if (!inputmanager._meshPickProceed && (AbstractActionManager && AbstractActionManager.HasTriggers || scene.onPointerObservable.hasObservers())) {
+                    //@ts-ignore
+                    inputmanager._initActionManager(null, clickInfo);
                     }
                     if (!pickResult) {
-                        pickResult = this._currentPickResult;
+                        pickResult = inputmanager._currentPickResult;
                     }
+                //@ts-ignore
+                inputmanager._processPointerUp(pickResult, evt, clickInfo);
 
-                    this._processPointerUp(pickResult, evt, clickInfo);
-
-                    this._previousPickResult = this._currentPickResult;
+                inputmanager._previousPickResult = inputmanager._currentPickResult;
                 });
             };
 
-            this._onKeyDown = (evt: KeyboardEvent) => {
+        inputmanager._onKeyDown = (evt: KeyboardEvent) => {
                 let type = KeyboardEventTypes.KEYDOWN;
                 if (scene.onPreKeyboardObservable.hasObservers()) {
                     let pi = new KeyboardInfoPre(type, evt);
@@ -660,7 +506,7 @@ export class WorldScene extends Scene {
                 }
             };
 
-            this._onKeyUp = (evt: KeyboardEvent) => {
+        inputmanager._onKeyUp = (evt: KeyboardEvent) => {
                 let type = KeyboardEventTypes.KEYUP;
                 if (scene.onPreKeyboardObservable.hasObservers()) {
                     let pi = new KeyboardInfoPre(type, evt);
@@ -681,13 +527,13 @@ export class WorldScene extends Scene {
             };
 
             // Keyboard events
-            this._onCanvasFocusObserver = engine.onCanvasFocusObservable.add((() => {
+        inputmanager._onCanvasFocusObserver = engine.onCanvasFocusObservable.add((() => {
                 let fn = () => {
                     if (!elementToAttachTo) {
                         return;
                     }
-                    elementToAttachTo.addEventListener("keydown", this._onKeyDown, false);
-                    elementToAttachTo.addEventListener("keyup", this._onKeyUp, false);
+                    elementToAttachTo.addEventListener("keydown", inputmanager._onKeyDown, false);
+                    elementToAttachTo.addEventListener("keyup", inputmanager._onKeyUp, false);
                 };
                 if (document.activeElement === elementToAttachTo) {
                     fn();
@@ -695,43 +541,41 @@ export class WorldScene extends Scene {
                 return fn;
             })());
 
-            this._onCanvasBlurObserver = engine.onCanvasBlurObservable.add(() => {
+        inputmanager._onCanvasBlurObserver = engine.onCanvasBlurObservable.add(() => {
                 if (!elementToAttachTo) {
                     return;
                 }
-                elementToAttachTo.removeEventListener("keydown", this._onKeyDown);
-                elementToAttachTo.removeEventListener("keyup", this._onKeyUp);
+            elementToAttachTo.removeEventListener("keydown", inputmanager._onKeyDown);
+            elementToAttachTo.removeEventListener("keyup", inputmanager._onKeyUp);
             });
 
             // Pointer events
-            var eventPrefix = "pointer";
 
             if (attachMove) {
-                elementToAttachTo.addEventListener(eventPrefix + "move", <any>this._onPointerMove, false);
+                elementToAttachTo.addEventListener("pointermove", <any>inputmanager._onPointerMove, false);
 
                 // Wheel
-                this._wheelEventName = "onwheel" in document.createElement("div") ? "wheel" :       // Modern browsers support "wheel"
+                inputmanager._wheelEventName = "onwheel" in document.createElement("div") ? "wheel" :       // Modern browsers support "wheel"
                     (<any>document).onmousewheel !== undefined ? "mousewheel" :                     // Webkit and IE support at least "mousewheel"
                         "DOMMouseScroll";                                                           // let's assume that remaining browsers are older Firefox
 
-                elementToAttachTo.addEventListener(this._wheelEventName, <any>this._onPointerMove, false);
+                elementToAttachTo.addEventListener(inputmanager._wheelEventName, <any>inputmanager._onPointerMove, false);
             }
             if (attachDown) {
-                elementToAttachTo.addEventListener(eventPrefix + "down", <any>this._onPointerDown, false);
+                elementToAttachTo.addEventListener("pointerdown", <any>inputmanager._onPointerDown, false);
             }
 
             if (attachUp) {
                 //@ts-ignore
                 let hostWindow = scene.getEngine().getHostWindow();
                 if (hostWindow) {
-                    hostWindow.addEventListener(eventPrefix + "up", <any>this._onPointerUp, false);
+                    hostWindow.addEventListener("pointerup", <any>inputmanager._onPointerUp, false);
                 }
             }
 
-        }).bind(this._inputManager)(this, elementToAttachTo);
+    //    }).bind(this._inputManager)(this, elementToAttachTo);
     }
     public terrainReady: Promise<void>;
-    #terrain: Terrain;
     public uniformBindGroupLayout = this.device.createBindGroupLayout({
         entries: [
             {
@@ -753,7 +597,7 @@ export class WorldScene extends Scene {
         private webSocket?: WebSocket
         ) {
         super(engine as Engine);
-
+        this.DBP = DB;
         UIMesh.device = device;
         UIMesh.positionLayout = device.createBindGroupLayout({
             entries: [
@@ -808,6 +652,7 @@ export class WorldScene extends Scene {
         });
 
         blazor.invokeMethod('setProgress', 21);
+        const scene:Scene = this;
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
             var closeDistance = Engine.CollisionsEpsilon * 10.0;
@@ -821,8 +666,8 @@ export class WorldScene extends Scene {
 
             collider._initialize(position, velocity, closeDistance);
             // Check all meshes
-            for (var index = 0; index < this._scene.meshes.length; index++) {
-                var mesh: TerraMesh = this._scene.meshes[index];
+            for (var index = 0; index < scene.meshes.length; index++) {
+                var mesh: TerraMesh = scene.meshes[index] as TerraMesh;
                 if (mesh.isEnabled() && mesh.checkCollisions && mesh.subMeshes && mesh !== excludedMesh && ((collisionMask & mesh.collisionGroup) !== 0)) {
                     mesh._checkCollision(collider);
                     /* if (mesh.name == 'building') {
@@ -844,6 +689,7 @@ export class WorldScene extends Scene {
                 return;
             }
             collider._retry++;
+            //@ts-ignore
             this._collideWithWorld(position, velocity, collider, maximumRetry, finalPosition, excludedMesh);
         }
         if (webSocket) {
@@ -875,7 +721,72 @@ export class WorldScene extends Scene {
          gameEngine.message(WorkerReturn.noReturn, 'init', {
              gameTime: this.lastStateChangeGameTime
          });*/
-        this.tools['CameraTAB'] = new CameraTAB(this, canvas, DB);
+        this.tools.set('Camera', CameraTAB);
+
+
+        //@ts-ignore
+        this.camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), this);
+        this.activeCameras.push(this.camera);
+        this.camera.maxZ = 1606000;
+        this.camera.panningSensibility = 20;
+
+        this.camera.angularSensibilityX = 1000;
+        this.camera.angularSensibilityY = 2000;
+
+        this.camera.lowerBetaLimit = 0.2;
+        this.camera.upperBetaLimit = (Math.PI / 2) * 0.6;
+
+        this.camera.lowerRadiusLimit = 10;
+         //@ts-ignore
+        this.camera.panningAxis = new Vector3(1, 0, 1)
+        this.camera.checkCollisions = true;
+        //Object.defineProperty(this.camera, 'checkCollisions', { get() { debugger; return true; } })
+        this.camera.attachControl(canvas, true);
+        //@ts-ignore
+        this.camera2 = new ArcRotateCamera("Camera2", 0, 0, 10, new Vector3(500, 20, 0), this);
+        this.camera2.target = this.camera.target;
+        this.camera2.viewport = new Viewport(0, 0, 0.5, 1.0);
+
+        DB.then(DB => {
+            DB.transaction("save").objectStore("save").get(0).onsuccess = (evt) => {
+                if ((<IDBRequest>evt.target).result) {
+                    let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
+                    this.camera.alpha = restored.alpha;
+                    this.camera.beta = restored.beta;
+                    this.camera.radius = restored.radius;
+                     //@ts-ignore
+                    this.camera.target = new Vector3(restored.target.x, restored.target.y, restored.target.z);
+                    this.camera.position = restored.position;
+
+                }
+                let l = new LazyEval(() => {
+                    //console.log(this.camera.position.y);
+
+                    DB.transaction("save", "readwrite").objectStore("save").put(<savedCamera>{
+                        id: 0,
+                        camera: { alpha: this.camera.alpha, beta: this.camera.beta, radius: this.camera.radius, target: this.camera.target, position: this.camera.position }
+                    });
+                    if (this.camera2) {
+                        this.camera2.alpha = 0;
+                        this.camera2.beta = 0;
+                        this.camera2.radius = 60;
+                         //@ts-ignore
+                        this.camera2.target = new Vector3(this.camera.target.x, 1, this.camera.target.z);
+                         //@ts-ignore
+                        this.camera2.position = new Vector3(this.camera.target.x, 1000, this.camera.target.z);
+                    }
+                })
+                this.camera.onProjectionMatrixChangedObservable.add(() => {
+                    l.eval(500);
+                });
+
+            }
+        })
+
+
+
+
+
 
         //let ui = new UI();
         //ui.registerTab(CameraTab);
@@ -902,18 +813,20 @@ export class WorldScene extends Scene {
         blazor.invokeMethod('setProgress', data.data.progress, data.data.error);
     });
     */
+        this.#groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device, shaderModules);
         this.terrainInited = new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
             try {
-                const groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device, shaderModules);
-                groundP.then((terrain) => this.#terrain = terrain);
+                
                 let cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
                 if (cachedtexture) {
                     let cacheimg = new Image();
                     cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
 
-                    tres([await groundP, cacheimg.decode().then(() => {
+                    tres([await this.#groundP, cacheimg.decode().then(() => {
                         let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
                         let imgctx = imgcanvas.getContext('2d');
+                        if (!imgctx)
+                            throw (new Error('Unable to get 2d canvas'));
                         imgctx.drawImage(cacheimg, 0, 0);
                         //let pixels = imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data;
                         // const padding = pixels.byteLength % 4;
@@ -931,12 +844,12 @@ export class WorldScene extends Scene {
                 }
                 //progelem.value = 40;
                 blazor.invokeMethod('setProgress', 30);
-                const ground = await groundP;
+                const ground = await this.#groundP;
                 tres([ground, ground.createTexture(engine as WebGPUEngine)]);
                 let obj = {
                     width: 10000,
                     height: 10000,
-                    indices: new Uint32Array(ground.indices),
+                    indices: new Uint32Array(ground.indices!),
                     positions: new Float32Array(ground.positions),
                     uvs: new Float32Array(ground.uvs || [])
                 };
@@ -948,14 +861,16 @@ export class WorldScene extends Scene {
                 trej(e);
             }
         });
+        this.sea = new Sea(this);
+        this.plants = new Plants(this, this.camera, this.#groundP, device, shaderModules);
         this.terrainReady=this.terrainInited.then(gt => {
             blazor.invokeMethod('setProgress', 40);
             let [ground, texture] = gt;
 
-            this.tools['Buildings'] = new BuildingsUI(this);
-            let sea = new Sea(this);
+            this.tools.set('Buildings', BuildingsUI);
+            
             DB.then(d => {
-                this.tools['Zones'] = new Zones(ground, d, shadermateria, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea);
+                this.tools.set('Zones' , Zones);
             })
 
 
@@ -963,13 +878,14 @@ export class WorldScene extends Scene {
             blazor.invokeMethod('setProgress', 50);
             ground.isPickable = true;
             this.getSceneUniformBuffer().update();
-            this.tools['TerrainTool'] = new TerrainTool(this, ground, (<CameraTAB>this.tools['CameraTAB']).camera, device, shaderModules);
+
+            this.tools.set('TerrainTool', TerrainTool);
             blazor.invokeMethod('setProgress', 51);
             shadermateria.setVector3("lightPos", sunlight.position);
             blazor.invokeMethod('setProgress', 52);
-            shadermateria.setVector3("cameraPosition", (<CameraTAB>this.tools['CameraTAB']).camera.position);
-            let plants = new Plants(this, (<CameraTAB>this.tools['CameraTAB']).camera, ground, device, shaderModules);
-            this.tools['Plants'] = new PlantsUI(ground, canvas, this, (<CameraTAB>this.tools['CameraTAB']).camera, sea, plants, engine as WebGPUEngine, device, shaderModules);
+            shadermateria.setVector3("cameraPosition", this.camera.position);
+
+            this.tools.set('Plants', PlantsUI);
 
             blazor.invokeMethod('setProgress', 53);
             return texture.then(async gpuBuffer => {
@@ -1052,9 +968,40 @@ export class WorldScene extends Scene {
             blazor.invokeMethod('setProgressError', e.name +' '+ e.message);
         })
     }
-    activateMenu(name: string): void {
+    async activateMenu(name: string) {
         try {
-            this.tools[name].activate();
+            let tool: UITABClassLike | undefined;
+            if (tool = this.tools.get(name)) {
+                tool.instance = new tool(this, await this.#groundP, this.camera, this.shaderModules);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    async deActivateMenu(name: string) {
+        try {
+            let tool: UITABClassLike | undefined;
+            if (tool = this.tools.get(name)) {
+                tool.instance?.destroy();
+                tool.instance = null;
+            } else
+                throw(new Error('Tool '+name+' not found'))
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    async invokeMenu(name: string, method: string) {
+        try {
+            let tool: UITABClassLike | undefined;
+            if (tool = this.tools.get(name)) {
+                let instance: UITAB | null;
+                if (instance = tool.instance) {
+                    //@ts-ignore
+                    instance[method]();
+                } else
+                    throw (new Error('Method ' + method + ' was not found from tool ' + name + ''))
+            } else
+                throw (new Error('Tool ' + name + ' not found'))
         } catch (e) {
             console.error(e);
         }

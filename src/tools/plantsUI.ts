@@ -9,45 +9,54 @@ import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js"
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WorldScene } from "../world/scene.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
+import { canvasListener } from "../traits/canvasListener.js";
+import { addTrait, Trait, Traitable } from "../traits/trait.js";
 
 
+
+export interface PlantsUI extends canvasListener, UITAB, Traitable {
+
+}
+@addTrait(canvasListener)
 export class PlantsUI extends UITAB {
 
     public label: string = 'Plants';
-
-    //private PT: paintGround;
-    private PT: paintPlane;
+    public static instance: UITAB | null = null;
+    private PT: paintPlane | null = null;
+    traits: Trait[];
     constructor(
-        private ground: Terrain,
-        public canvas: HTMLCanvasElement,
-        private scene: WorldScene,
-        private camera: ArcRotateCamera,
-        private sea: Mesh,
-        private plantsobj: Plants,
-        private engine: WebGPUEngine,
-        private device: GPUDevice,
-        private shaderModules: Map<string, GPUShaderModule>
+        public scene: WorldScene,
+        public terrain: Terrain,
+        public camera: ArcRotateCamera,
+        public shaderModules: Map<string, GPUShaderModule>,
+        ...traits: Trait[]
     ) {
-        super();
-        //this.PT = new paintGround(this.canvas, this.scene, this.camera, this.ground, this.sea);
-        this.PT = new paintPlane(this.canvas, this.scene, this.camera, this.ground, this.sea, super.getInstance(), engine, device, shaderModules);
-
+        super(scene, terrain, camera, shaderModules);
+        this.traits = this.initTraits(traits);
+        console.log('activate plantsUI');
     }
     activateDraw = () => {
         try {
-            this.PT.activate((response: PTDresult) => {
-                this.PT.deactivate();
-                this.plantsobj.fillArea(response)
+            this.PT = new paintPlane(this.scene, this.camera, this.terrain, this.scene.sea, this, this.scene.getEngine() as WebGPUEngine, this.shaderModules);
+
+          //  this.PT = applyMixins<typeof BaseTerrainTool>(BaseTerrainTool, [worldPosition]);
+
+            
+            this.PT?.activate((response: PTDresult) => {
+                this.PT && this.PT.destroy();
+                this.scene.plants.fillArea(response)
             }, { forceSharedVertices: false });
         } catch (e) {
             console.error(e);
         }
     }
     activate = () => {
-        this.activated=true;
+       // this.activated=true;
     }
-    deactivate = () => {
-        this.PT.deactivate();
-        this.activated=false;
+    destroy = () => {
+        this.traits.forEach(trait => trait.destroy());
+        this.PT?.destroy();
+       // super.deactivate();
+       // this.activated = false;
     }
 }

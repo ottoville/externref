@@ -1,58 +1,72 @@
-﻿export interface Traitable2 {
-   // traitConstructors: Set<TraitClass>;
-    //classDecorator: () => any;
-    new(...args:any[]): {
-
-    }
+﻿export interface Trait {
+    destroy(): void;
 }
-export class Trait {
-    constructor(...args: [any, any, any, any, any, any, Set<Trait>]) {
-
-    }
-    //abstract init(): void;
-  /*  static createTrait<T extends Traitable2, T2 extends typeof Trait>(traitClass: T2, constructor: Traitable2): T & T2 {
-        Object.getOwnPropertyNames(traitClass.prototype).forEach(name => {
-            if (name != 'destroy')
-                return Object.defineProperty(constructor.prototype, name, Object.getOwnPropertyDescriptor(traitClass.prototype, name)!);
-        });
-        const newConstructor = constructor as (T & typeof traitClass);
-        return class extends newConstructor {
-            constructor(...args: any[]) {
-                super(...args);
-                const obj = new traitClass(...args);
+export interface Traitable {
+    traits: Trait[]
+    initTraits(trait:Trait[]): Trait[];
+    destroy(): void;
+}
+export function addTrait<TT>(trait: {
+    new(...args: any[]): Trait
+}) {
+    return function <T extends {
+        new(...args: any[]): Traitable,
+        prototype: Traitable
+    }>(constructor: T): T/* & typeof trait*/ {
+        Object.getOwnPropertyNames(trait.prototype).forEach(name => {
+            if (!constructor.prototype.hasOwnProperty(name)) {
                 //@ts-ignore
-                Object.keys(obj).forEach(k => this[k] = obj[k]);
+                constructor.prototype[name] = function (...args: any[]) {
+                    for (let i = 0; i < this.traits.length; i++) {
+                        if (this.traits[i] instanceof trait) {
+                            //@ts-ignore
+                            return this.traits[i][name](...args);
+                        }
+                    }
+                    throw (new Error('Trait was not found'));
+                }
+            }
+            if (!constructor.prototype.hasOwnProperty('initTraits')) {
+                constructor.prototype.initTraits = function (traits: Trait[]) {
+                    traits.forEach(trait =>
+                        Object.keys(trait).forEach(key => {
+                            if (this.hasOwnProperty(key))
+                                throw new Error('Trait conflicts with key ' + key);
+                            Object.defineProperty(this, key, {
+                                //@ts-ignore
+                                get: function () { return trait[key] },
+                                //@ts-ignore
+                                set: function (v) {  trait[key]=v }
+                            })
+                        })
+                    );
+                    return traits;
+                }
+            }
+        });
+        /*Object.getOwnPropertyNames(trait.prototype).forEach(name => {
+            if (!Object.hasOwnProperty(name))
+                return Object.defineProperty(constructor.prototype, name, Object.getOwnPropertyDescriptor(trait.prototype, name)!);
+        });
+
+        Object.getOwnPropertySymbols(trait.prototype).forEach(symbol => {
+            return Object.defineProperty(constructor.prototype, symbol, Object.getOwnPropertyDescriptor(trait.prototype, symbol)!);
+        });*/
+        return class extends constructor {
+            constructor(...args: any[]) {
+                //const traitSymbol = Symbol();
+               // constructor.traits[traitSymbol] = new trait();
+                args.push(new trait());
+                //try {
+                    super(...args);
+               /* } catch (e) {
+                    if (e instanceof TypeError) {
+                        console.error(e);
+                        console.error('TypeError in traitable constructor. Did you forgot to assign trait properties before using "this"?')
+                    }
+
+                }*/
             }
         }
-
-    }*/
-}
-export type TraitClass = typeof Trait;
-
-type TraitableClass = typeof Traitable;
-export interface TraitableClassLike extends TraitableClass{
-    traitConstructors: Set<TraitClass>;
-};
-export abstract class Traitable {
-   // abstract traitConstructors: Set<TraitClass>;
-    constructor(...args: any[]) {
-        //childClass: TraitableClassLike
-        const childClass: TraitableClassLike = args.shift();
-        childClass.traitConstructors?.forEach(baseCtor => {
-            //@ts-ignore
-            const obj = new baseCtor(...args);
-            //@ts-ignore
-            Object.keys(obj).forEach(k => this[k] = obj[k]);
-        })
     }
-}
-export function applyMixins<T extends TraitableClassLike>(derivedCtor: TraitableClassLike, baseCtors: TraitClass[]): TraitableClassLike {
-    baseCtors.forEach(baseCtor => {
-        Object.getOwnPropertyNames(baseCtor.prototype).forEach(name => {
-            if (name != 'destroy')
-                return Object.defineProperty(derivedCtor.prototype, name, Object.getOwnPropertyDescriptor(baseCtor.prototype, name)!);
-        });
-        derivedCtor.traitConstructors?.add(baseCtor)
-    });
-    return derivedCtor as T;
 }
