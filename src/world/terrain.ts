@@ -2,6 +2,11 @@
 import { TerraMesh } from "../TerraMesh.js";
 import { VertexBuffer } from "../lib/babylon/Meshes/buffer.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
+import { GPUScene } from "../GPUScene.js";
+import { worldPosition } from "../traits/worldPosition.js";
+import { Drawable } from "../drawables/Drawable.js";
+import { Mesh } from "../drawables/Mesh";
+
 
 interface TerrainMap {
     width: number,
@@ -10,6 +15,12 @@ interface TerrainMap {
     positions: Float32Array,
     uvs: Float32Array,
     texture: Blob
+}
+export interface TerrainPipelineLayoutPosition extends GPUPipelineLayout {
+
+}
+export interface TerrainPipelineLayoutPositionTime extends GPUPipelineLayout {
+
 }
 export class Terrain extends TerraMesh {
 
@@ -41,29 +52,240 @@ export class Terrain extends TerraMesh {
     public static terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
     public initedGPU: Promise<any>;
-    bindGroupLayout: GPUBindGroupLayout = this.device.createBindGroupLayout({
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
-                type: "readonly-storage-buffer"
-            },
-            {
-                binding: 1,
-                visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
-                type: "readonly-storage-buffer"
-            },
-            {
-                binding: 2,
-                visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
-                type: "readonly-storage-buffer"
-            }
-        ]
-    })
+    static Layouts: Map<GPUScene, GPUBindGroupLayout> = new Map();
+    static getLayout(scene: GPUScene): GPUBindGroupLayout {
+        let layout: GPUBindGroupLayout | undefined;
+        if (layout = Terrain.Layouts.get(scene)) {
+            return layout;
+        }
+        layout = scene.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
+                    type: "readonly-storage-buffer"
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
+                    type: "readonly-storage-buffer"
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
+                    type: "readonly-storage-buffer"
+                }
+            ]
+        });
+        Terrain.Layouts.set(scene, layout);
+        return layout;
+    }
+
+    PipelineLayoutPosition: [GPUPipelineLayout, Set<Drawable>] = [GPUScene.instance.device.createPipelineLayout({
+        bindGroupLayouts: [GPUScene.instance.uniformBindGroupLayout, Terrain.getLayout(GPUScene.instance), worldPosition.getLayout(GPUScene.instance)]
+    }), new Set()];
+    PipelineLayoutPositionTime: [GPUPipelineLayout, Set<Drawable>] = [GPUScene.instance.device.createPipelineLayout({
+        bindGroupLayouts: [GPUScene.instance.uniformBindGroupLayout, Terrain.getLayout(GPUScene.instance), GPUScene.instance.uniformBindGroupLayout, worldPosition.getLayout(GPUScene.instance)]
+    }),
+        new Set()
+    ]
+
     bindGroup: GPUBindGroup;
-    public static async fromHeightMap(map: string, device: GPUDevice, shaderModules: Map<string, GPUShaderModule>): Promise<Terrain> {
-        let vdata = await Terrain.terrainWorker.message<TerrainMap, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', {url: map});
-        return new Terrain(vdata, device, shaderModules);
+    public static async fromHeightMap(map: string, device: GPUDevice): Promise<Terrain> {
+        let vdata = await Terrain.terrainWorker.message<{ buffer: SharedArrayBuffer, vertexdata: TerrainMap }, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', { url: map });
+
+
+
+
+        const [sourceGPU, sourcearr] = GPUScene.instance.device.createBufferMapped({ size: vdata.buffer.byteLength, usage: GPUBufferUsage.STORAGE });
+
+        new Uint8Array(sourcearr).set(new Uint8Array(vdata.buffer));
+        sourceGPU.unmap();
+
+        const terrainPositionsLength = Float32Array.BYTES_PER_ELEMENT * (250+1) * (250+1) * 3;
+        const terrainUvsLength = Float32Array.BYTES_PER_ELEMENT * (250+1 * 250+1 * 2);
+
+        const terrainPositionAndUvsGPU = GPUScene.instance.device.createBuffer({
+            size: terrainPositionsLength + terrainUvsLength,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+        });
+
+
+        const computePipeline = GPUScene.instance.device.createComputePipeline({
+
+            computeStage: {
+                module: GPUScene.instance.shaderModules.get("CreateGroundFromHeightMap.comp")!,
+                entryPoint: "main"
+            }
+        });
+        const sourceBindGroup = GPUScene.instance.device.createBindGroup({
+            layout: computePipeline.getBindGroupLayout(0),
+            entries: [
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: sourceGPU
+                    }
+                },
+                {
+                    binding: 1,
+                    resource: {
+                        buffer: terrainPositionAndUvsGPU
+                    }
+                }
+            ]
+        });
+        
+
+
+        const computePipelineNormals = GPUScene.instance.device.createComputePipeline({
+
+            computeStage: {
+                module: GPUScene.instance.shaderModules.get("calculatePlaneIndices.comp")!,
+                entryPoint: "main"
+            }
+        });
+        const terrainIndicesLength = Uint32Array.BYTES_PER_ELEMENT * (250 * 250 * 6);
+        const terrainIndicesGPU = GPUScene.instance.device.createBuffer({
+            size: terrainIndicesLength,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+        });
+        const gpuReadBufferIndices = GPUScene.instance.device.createBuffer({
+            size: terrainIndicesLength,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+        });
+        const bindGroupNormals = GPUScene.instance.device.createBindGroup({
+            layout: computePipelineNormals.getBindGroupLayout(0),
+            entries: [
+
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: terrainIndicesGPU
+                    }
+                }
+            ]
+        });
+        const commandEncoder = GPUScene.instance.device.createCommandEncoder();
+
+        const passEncoder = commandEncoder.beginComputePass();
+        passEncoder.setPipeline(computePipeline);
+        passEncoder.setBindGroup(0, sourceBindGroup);
+        passEncoder.dispatch(250 + 1, 250 + 1);
+
+        passEncoder.setPipeline(computePipelineNormals);
+        passEncoder.setBindGroup(0, bindGroupNormals);
+        passEncoder.dispatch(250, 250);
+
+
+        passEncoder.endPass();
+        // Get a GPU buffer for reading in an unmapped state.
+        const gpuReadBufferPositions = GPUScene.instance.device.createBuffer({
+            size: terrainPositionsLength,
+            //@ts-ignore
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+        });
+
+        const gpuReadBufferUvs = GPUScene.instance.device.createBuffer({
+            size: terrainUvsLength,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+        });
+        // Encode commands for copying buffer to buffer.
+        commandEncoder.copyBufferToBuffer(
+            terrainPositionAndUvsGPU, // source buffer
+            0, //source offset
+            gpuReadBufferPositions, //destination buffer
+            0, //destination offset
+            terrainPositionsLength // size
+        );
+        commandEncoder.copyBufferToBuffer(
+            terrainPositionAndUvsGPU,
+            terrainPositionsLength ,
+            gpuReadBufferUvs,
+            0,
+            terrainUvsLength
+        );
+           commandEncoder.copyBufferToBuffer(
+               terrainIndicesGPU,
+               0,
+               gpuReadBufferIndices,
+               0 ,
+               terrainIndicesLength 
+           );
+        // Submit GPU commands.
+        const gpuCommands = commandEncoder.finish();
+
+        GPUScene.instance.device.defaultQueue.submit([gpuCommands]);
+
+
+
+
+        const positions = await gpuReadBufferPositions.mapReadAsync()
+        const uvs = await gpuReadBufferUvs.mapReadAsync()
+        const indices = await gpuReadBufferIndices.mapReadAsync()
+
+
+
+
+
+
+
+
+
+
+
+
+        /*
+
+        const m = new Mesh({
+            sampleCount: GPUScene.instance.sampleCount,
+            primitiveTopology: 'triangle-strip',
+            rasterizationState: {
+                cullMode: 'none',
+            },
+            depthStencilState: {
+                depthWriteEnabled: true,
+                depthCompare: "less",
+                format: "depth24plus-stencil8",
+            },
+            colorStates: [{
+                format: "bgra8unorm",
+            }],
+            vertexStage: {
+                module: GPUScene.instance.shaderModules.get("ground.vert")!,
+                entryPoint: "main",
+            },
+            fragmentStage: {
+                module: GPUScene.instance.shaderModules.get("ground.frag")!,
+                entryPoint: "main"
+            },
+            vertexState: {
+                vertexBuffers:
+                    [{
+                        arrayStride: 4 * 3,
+                        stepMode: "vertex" as GPUInputStepMode,
+                        attributes: [{
+                            // position
+                            shaderLocation: 0,
+                            offset: 0,
+                            format: "float3" as GPUVertexFormat
+                        }]
+                    }]
+            },
+            // layout: pipelineLayout,
+        }, null, vdata.indices.length, 1)
+        
+        m.setVertexBuffer(0, vdata.positions.buffer);
+        m.setIndexBuffer(vdata.indices.buffer);*/
+        const vdata2 = {
+            positions: new Float32Array(positions),
+            uvs: new Float32Array(uvs),
+            indices: new Uint32Array(indices)
+        }
+        vdata.vertexdata.indices = vdata2.indices;
+       // vdata.vertexdata.positions = vdata2.positions;
+        //@ts-ignore
+        return new Terrain(vdata2, device);
     }
     public createTexture(engine: WebGPUEngine) : Promise<GPUBuffer> {
         return new Promise((tres, trej) => {
@@ -85,10 +307,10 @@ export class Terrain extends TerraMesh {
                 })
                 const computePipeline = this.device.createComputePipeline({
                     layout: this.device.createPipelineLayout({
-                        bindGroupLayouts: [this.bindGroupLayout, bindGroup1Layout]
+                        bindGroupLayouts: [Terrain.getLayout(GPUScene.instance), bindGroup1Layout]
                       }),
                     computeStage: {
-                        module: this.shaderModules.get("webgpu.comp")!,
+                        module: GPUScene.instance.shaderModules.get("webgpu.comp")!,
                         entryPoint: "main"
                     }
                 });
@@ -146,7 +368,7 @@ export class Terrain extends TerraMesh {
         });
     }
     //public ground: BABYLON.GroundMesh;
-    constructor(vdata: TerrainMap, private device: GPUDevice, private shaderModules: Map<string, GPUShaderModule>) {
+    constructor(vdata: TerrainMap, private device: GPUDevice) {
         super('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
         
         this._subdivisionsX = 250;
@@ -189,7 +411,7 @@ export class Terrain extends TerraMesh {
         this.slopeArrGPUBuffer = gpuBufferFirstMatrix;
         this.facet1ArrGPUBuffer = gpuBufferFacet1;
         this.bindGroup = this.device.createBindGroup({
-            layout: this.bindGroupLayout,
+            layout: Terrain.getLayout(GPUScene.instance),
             entries: [
                 {
                     binding: 0,
@@ -251,6 +473,7 @@ export class Terrain extends TerraMesh {
         })
 
         this._setReady(true);
+      //  this.visibility = 0;
         console.log('terrain bounding');
         console.log(this.getBoundingInfo());
 
