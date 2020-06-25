@@ -48,7 +48,7 @@ export class Terrain extends TerraMesh {
 
     private ratioX: number;
     private ratioY: number;
-    
+
     public static terrainWorker = new WorkerThread('/webworkers/terrainWorker.js');
 
     public initedGPU: Promise<any>;
@@ -87,23 +87,27 @@ export class Terrain extends TerraMesh {
     PipelineLayoutPositionTime: [GPUPipelineLayout, Set<Drawable>] = [GPUScene.instance.device.createPipelineLayout({
         bindGroupLayouts: [GPUScene.instance.uniformBindGroupLayout, Terrain.getLayout(GPUScene.instance), GPUScene.instance.uniformBindGroupLayout, worldPosition.getLayout(GPUScene.instance)]
     }),
-        new Set()
+    new Set()
     ]
 
     bindGroup: GPUBindGroup;
     public static async fromHeightMap(map: string, device: GPUDevice): Promise<Terrain> {
-        let vdata = await Terrain.terrainWorker.message<{ buffer: SharedArrayBuffer, vertexdata: TerrainMap }, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', { url: map });
+        let vdata = await Terrain.terrainWorker.message<SharedArrayBuffer, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', { url: map });
 
 
 
 
-        const [sourceGPU, sourcearr] = GPUScene.instance.device.createBufferMapped({ size: vdata.buffer.byteLength, usage: GPUBufferUsage.STORAGE });
-
-        new Uint8Array(sourcearr).set(new Uint8Array(vdata.buffer));
+        const [sourceGPU, sourcearr] = GPUScene.instance.device.createBufferMapped({ size: 4 + 4 + 4 + 4 + 4 + 4 + 4 + vdata.byteLength, usage: GPUBufferUsage.STORAGE });
+        new Float32Array(sourcearr).set([10000, 10000]);   // terrain width and height
+        new Uint32Array(sourcearr).set([250, 250,   //buffer width and height
+                                        250,        //subdivisions
+        ],2); 
+        new Int32Array(sourcearr).set([-2, 255],5); //min and max height
+        new Uint32Array(sourcearr).set(new Uint32Array(vdata),7);
         sourceGPU.unmap();
 
-        const terrainPositionsLength = Float32Array.BYTES_PER_ELEMENT * (250+1) * (250+1) * 3;
-        const terrainUvsLength = Float32Array.BYTES_PER_ELEMENT * (250+1 * 250+1 * 2);
+        const terrainPositionsLength = Float32Array.BYTES_PER_ELEMENT * (250 + 1) * (250 + 1) * 3;
+        const terrainUvsLength = Float32Array.BYTES_PER_ELEMENT * (250 + 1) * (250 + 1) * 2;
 
         const terrainPositionAndUvsGPU = GPUScene.instance.device.createBuffer({
             size: terrainPositionsLength + terrainUvsLength,
@@ -135,7 +139,7 @@ export class Terrain extends TerraMesh {
                 }
             ]
         });
-        
+
 
 
         const computePipelineNormals = GPUScene.instance.device.createComputePipeline({
@@ -179,53 +183,32 @@ export class Terrain extends TerraMesh {
 
 
         passEncoder.endPass();
-        // Get a GPU buffer for reading in an unmapped state.
-        const gpuReadBufferPositions = GPUScene.instance.device.createBuffer({
-            size: terrainPositionsLength,
-            //@ts-ignore
+        const gpuReadBufferPositionsAndUvs = GPUScene.instance.device.createBuffer({
+            size: terrainPositionsLength + terrainUvsLength,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
         });
-
-        const gpuReadBufferUvs = GPUScene.instance.device.createBuffer({
-            size: terrainUvsLength,
-            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
-        });
-        // Encode commands for copying buffer to buffer.
         commandEncoder.copyBufferToBuffer(
             terrainPositionAndUvsGPU, // source buffer
             0, //source offset
-            gpuReadBufferPositions, //destination buffer
+            gpuReadBufferPositionsAndUvs, //destination buffer
             0, //destination offset
-            terrainPositionsLength // size
+            terrainPositionsLength + terrainUvsLength // size
         );
         commandEncoder.copyBufferToBuffer(
-            terrainPositionAndUvsGPU,
-            terrainPositionsLength ,
-            gpuReadBufferUvs,
+            terrainIndicesGPU,
             0,
-            terrainUvsLength
+            gpuReadBufferIndices,
+            0,
+            terrainIndicesLength
         );
-           commandEncoder.copyBufferToBuffer(
-               terrainIndicesGPU,
-               0,
-               gpuReadBufferIndices,
-               0 ,
-               terrainIndicesLength 
-           );
-        // Submit GPU commands.
         const gpuCommands = commandEncoder.finish();
 
         GPUScene.instance.device.defaultQueue.submit([gpuCommands]);
 
 
-
-
-        const positions = await gpuReadBufferPositions.mapReadAsync()
-        const uvs = await gpuReadBufferUvs.mapReadAsync()
-        const indices = await gpuReadBufferIndices.mapReadAsync()
-
-
-
+        const positionsAndUvs = await gpuReadBufferPositionsAndUvs.mapReadAsync()
+        // const uvs = await gpuReadBufferUvs.mapReadAsync()
+        const indices = await gpuReadBufferIndices.mapReadAsync();
 
 
 
@@ -278,16 +261,15 @@ export class Terrain extends TerraMesh {
         m.setVertexBuffer(0, vdata.positions.buffer);
         m.setIndexBuffer(vdata.indices.buffer);*/
         const vdata2 = {
-            positions: new Float32Array(positions),
-            uvs: new Float32Array(uvs),
+            positions: new Float32Array(positionsAndUvs, 0, terrainPositionsLength >> 2),
+            uvs: new Float32Array(positionsAndUvs, terrainPositionsLength),
             indices: new Uint32Array(indices)
         }
-        vdata.vertexdata.indices = vdata2.indices;
-       // vdata.vertexdata.positions = vdata2.positions;
+        debugger;
         //@ts-ignore
         return new Terrain(vdata2, device);
     }
-    public createTexture(engine: WebGPUEngine) : Promise<GPUBuffer> {
+    public createTexture(engine: WebGPUEngine): Promise<GPUBuffer> {
         return new Promise((tres, trej) => {
             this.initedGPU.then(async () => {
                 console.log('creating terrain texture')
@@ -308,7 +290,7 @@ export class Terrain extends TerraMesh {
                 const computePipeline = this.device.createComputePipeline({
                     layout: this.device.createPipelineLayout({
                         bindGroupLayouts: [Terrain.getLayout(GPUScene.instance), bindGroup1Layout]
-                      }),
+                    }),
                     computeStage: {
                         module: GPUScene.instance.shaderModules.get("webgpu.comp")!,
                         entryPoint: "main"
@@ -339,7 +321,7 @@ export class Terrain extends TerraMesh {
                 console.timeEnd('Webgpu paint');
                 // Get a GPU buffer for reading in an unmapped state.
                 const gpuReadBuffer = this.device.createBuffer({
-                    size: resultMatrixBufferSize-8,
+                    size: resultMatrixBufferSize - 8,
                     //@ts-ignore
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
                 });
@@ -349,7 +331,7 @@ export class Terrain extends TerraMesh {
                     8 /* source offset */,
                     gpuReadBuffer /* destination buffer */,
                     0 /* destination offset */,
-                    resultMatrixBufferSize-8 /* size */
+                    resultMatrixBufferSize - 8 /* size */
                 );
 
                 // Submit GPU commands.
@@ -361,7 +343,7 @@ export class Terrain extends TerraMesh {
                 // Read buffer.
                 let arrayBuffer: ArrayBuffer = await gpuReadBuffer.mapReadAsync();
                 gpuReadBuffer.label = 'computed';
-                
+
                 Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
                 gpuReadBuffer.destroy()
             })
@@ -370,7 +352,7 @@ export class Terrain extends TerraMesh {
     //public ground: BABYLON.GroundMesh;
     constructor(vdata: TerrainMap, private device: GPUDevice) {
         super('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
-        
+
         this._subdivisionsX = 250;
         this._subdivisionsY = 250;
 
@@ -391,7 +373,7 @@ export class Terrain extends TerraMesh {
         this.ratioX = this._subdivisionsX / this._width;
         this.ratioY = this._subdivisionsY / this._height;
 
-       // var vertexData = new BABYLON.VertexData();
+        // var vertexData = new BABYLON.VertexData();
 
         //vertexData.indices = this.indices;
         //vertexData.positions = this.positions;
@@ -457,28 +439,28 @@ export class Terrain extends TerraMesh {
 
             new Int32Array(arrayBufferFirstMatrix).set(new Int32Array(this.slopeArrBuffer));
             gpuBufferFirstMatrix.unmap();
-            
 
-            
+
+
             new Float32Array(arrayBufferFacet1).set(this.facet1Arr);
             gpuBufferFacet1.unmap();
-           
 
-           
+
+
             new Float32Array(arrayBufferFacet2).set(this.facet2Arr);
             gpuBufferFacet2.unmap();
-           
+
 
 
         })
 
         this._setReady(true);
-      //  this.visibility = 0;
+        //  this.visibility = 0;
         console.log('terrain bounding');
         console.log(this.getBoundingInfo());
 
     }
-  
+
     //BABYLON 4103
     //ARRAY 2800 -> 1897 -> 1720 -> 1708 -> 1631
     //Dataview 6100
@@ -487,7 +469,7 @@ export class Terrain extends TerraMesh {
 
     getHeightAtCoordinates(x: number, z: number): number {
         let facet: Float32Array;
-        let col = ((x + this._maxX) * this.ratioX)|0;
+        let col = ((x + this._maxX) * this.ratioX) | 0;
         let row = (-(z + this._maxZ) * this.ratioY + this._subdivisionsY) | 0;
         debugger;
         console.log(col, row);
@@ -501,8 +483,8 @@ export class Terrain extends TerraMesh {
             }
         } catch (e) {
             if (e instanceof RangeError) {
-                console.warn('Invalid coordinate to getHeightAtCoordinates '+ x+ ' '+z);
-                return this.getHeightAtCoordinates(Math.min(Math.max(x, this._minX+1), this._maxX-1), Math.min(Math.max(z, this._minZ+1), this._maxZ-1))
+                console.warn('Invalid coordinate to getHeightAtCoordinates ' + x + ' ' + z);
+                return this.getHeightAtCoordinates(Math.min(Math.max(x, this._minX + 1), this._maxX - 1), Math.min(Math.max(z, this._minZ + 1), this._maxZ - 1))
             }
             throw (e);
         }
