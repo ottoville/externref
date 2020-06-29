@@ -175,18 +175,20 @@ export class GPUScene {
         Mesh.Meshes.forEach(m => {
             m.draw(renderPass);
         });
-
-        renderPass.setBindGroup(1, terrain.heightsBindGroup);
-        TerrainPositionDrawable.Meshes.forEach(m => {
-            m.draw(renderPass);
-        });
-        if (TerrainTimePositionDrawable.Meshes.size) {
-            this.#time = new Date().getTime();
-            this.updateTime();
-            renderPass.setBindGroup(2, this.#timeBindGroup)
-            TerrainTimePositionDrawable.Meshes.forEach(m => {
+        if (TerrainPositionDrawable.Meshes.size) {
+            renderPass.setBindGroup(1, terrain.heightsBindGroup);
+            TerrainPositionDrawable.Meshes.forEach(m => {
                 m.draw(renderPass);
-            })
+            });
+            if (TerrainTimePositionDrawable.Meshes.size) {
+                this.#time = new Date().getTime();
+                this.updateTime();
+                renderPass.setBindGroup(2, this.#timeBindGroup)
+                TerrainTimePositionDrawable.Meshes.forEach(m => {
+                    m.draw(renderPass);
+                })
+            }
         }
+
     }
 }

@@ -254,7 +254,7 @@ export class Terrain {
     //public ground: BABYLON.GroundMesh;
 
     constructor(buffer: SharedArrayBuffer, private gpuscene: GPUScene) {
-        const [sourceGPU, sourcearr] = GPUScene.instance.device.createBufferMapped({ size: 4 + 4 + 4 + 4 + 4 + 4 + 4 + buffer.byteLength, usage: GPUBufferUsage.STORAGE });
+        const [sourceGPU, sourcearr] = gpuscene.createGPUBufferMapped( 4 + 4 + 4 + 4 + 4 + 4 + 4 + buffer.byteLength, GPUBufferUsage.STORAGE);
         new Float32Array(sourcearr).set([10000, 10000]);   // terrain width and height
         new Uint32Array(sourcearr).set([250, 250,   //buffer width and height
             250,        //subdivisions
@@ -270,9 +270,9 @@ export class Terrain {
             size: terrainPositionsLength + terrainUvsLength,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.VERTEX
         });*/
-        const computePipeline = GPUScene.instance.createComputePipeline('CreateGroundFromHeightMap.comp')
+        const computePipeline = gpuscene.createComputePipeline('CreateGroundFromHeightMap.comp')
 
-        const sourceBindGroup = GPUScene.instance.device.createBindGroup({
+        const sourceBindGroup = gpuscene.device.createBindGroup({
             layout: computePipeline.getBindGroupLayout(0),
             entries: [
                 {
@@ -290,10 +290,10 @@ export class Terrain {
             ]
         });
 
-        const computePipelineNormals = GPUScene.instance.createComputePipeline('calculatePlaneIndices.comp')
+        const computePipelineNormals = gpuscene.createComputePipeline('calculatePlaneIndices.comp')
 
-        const computePlaneHeights = GPUScene.instance.createComputePipeline('calculatePlaneHeights.comp');
-        const bindGroupPositions = GPUScene.instance.device.createBindGroup({
+        const computePlaneHeights = gpuscene.createComputePipeline('calculatePlaneHeights.comp');
+        const bindGroupPositions = gpuscene.device.createBindGroup({
             layout: computePlaneHeights.getBindGroupLayout(0),
             entries: [
                 {
@@ -306,35 +306,16 @@ export class Terrain {
         });
         const bindGroupHeights = GPUScene.instance.device.createBindGroup({
             layout: computePlaneHeights.getBindGroupLayout(1),
-            entries: [
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: this.slopeArrGPUBuffer
-                    }
-                },
-                {
-                    binding: 1,
-                    resource: {
-                        buffer: this.facet1ArrGPUBuffer
-                    }
-                },
-                {
-                    binding: 2,
-                    resource: {
-                        buffer: this.facet2ArrGPUBuffer
-                    }
-                }
-            ]
+            entries: this.heightsBindGroupEntries
         });
 
 
         const terrainIndicesLength = Uint32Array.BYTES_PER_ELEMENT * (250 * 250 * 6);
         const terrainIndicesGPU = gpuscene.createGPUBuffer(terrainIndicesLength,GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC);
-        const gpuReadBufferIndices = gpuscene.device.createBuffer({
+       /* const gpuReadBufferIndices = gpuscene.device.createBuffer({
             size: terrainIndicesLength,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
-        });
+        });*/
         const bindGroupNormals = gpuscene.device.createBindGroup({
             layout: computePipelineNormals.getBindGroupLayout(0),
             entries: [
@@ -347,7 +328,7 @@ export class Terrain {
                 }
             ]
         });
-        const commandEncoder = GPUScene.instance.device.createCommandEncoder();
+        const commandEncoder = gpuscene.device.createCommandEncoder();
 
         const passEncoder = commandEncoder.beginComputePass();
         passEncoder.setPipeline(computePipeline);
@@ -355,20 +336,25 @@ export class Terrain {
         
         passEncoder.dispatch(250 + 1, 250 + 1);
 
-     /*   passEncoder.setPipeline(computePlaneHeights);
-        passEncoder.setBindGroup(0, bindGroupPositions);
-        passEncoder.setBindGroup(1, bindGroupHeights);
-        passEncoder.dispatch(250, 250);*/
+
 
         passEncoder.setPipeline(computePipelineNormals);
         passEncoder.setBindGroup(0, bindGroupNormals);
 
+
+
         passEncoder.dispatch(250, 250);
-
-
         passEncoder.endPass();
+
+        //Todo: Move to same passencoder when browser supports it?
+        const passEncoder2 = commandEncoder.beginComputePass();
+        passEncoder2.setPipeline(computePlaneHeights);
+        passEncoder2.setBindGroup(0, bindGroupPositions);
+        passEncoder2.setBindGroup(1, bindGroupHeights);
+        passEncoder2.dispatch(250, 250)
+        passEncoder2.endPass();
         
-        const gpuReadBufferPositionsAndUvs = gpuscene.device.createBuffer({
+       /* const gpuReadBufferPositionsAndUvs = gpuscene.device.createBuffer({
             size: terrainPositionsLength + terrainUvsLength,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
         });
@@ -385,11 +371,10 @@ export class Terrain {
             gpuReadBufferIndices,
             0,
             terrainIndicesLength
-        );
+        );*/
         const gpuCommands = commandEncoder.finish();
-        
+
         gpuscene.device.defaultQueue.submit([gpuCommands]);
-        debugger;
 
         /*const positionsAndUvs = await gpuReadBufferPositionsAndUvs.mapReadAsync()
         // const uvs = await gpuReadBufferUvs.mapReadAsync()
@@ -451,7 +436,6 @@ export class Terrain {
         // m.setVertexBuffer(0, vdata.positions);
         m.setVertexBuffer(0, terrainPositionAndUvsGPU);
         m.setIndexBuffer(terrainIndicesGPU);
-        debugger;
 
       //  this.terraMesh = new TerraMesh('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
         this.terraMesh = new TerraMesh('ground', new Float32Array([1,2,3,4,5,6,7,8,9]));
@@ -564,7 +548,6 @@ export class Terrain {
         this.terraMesh.visibility = 0;
         console.log('terrain bounding');
         console.log(this.terraMesh.getBoundingInfo());
-
     }
 
     //BABYLON 4103

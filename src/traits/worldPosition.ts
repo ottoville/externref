@@ -1,28 +1,41 @@
-﻿import { GPUCanvas } from "../GPUCanvas";
+﻿import { GPUScene } from "../GPUScene";
 
 export class worldPosition {
     scaling: [number, number, number] = [1, 1, 1];
     rotation: [number, number, number, number] = [0, 0, 0, 0];
     translation: [number, number, number] = [0, 0, 0];
     worldPositionGPUBuffer: GPUBuffer;
+    static Layouts: Map<GPUScene, GPUPipelineLayout> = new Map();
+    static getLayout(scene: GPUScene): GPUBindGroupLayout {
+        return scene.uniformBindGroupLayout
+    }
+    /*static positionLayout = GPUScene.instance.device.createBindGroupLayout({
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.VERTEX,
+                type: 'uniform-buffer'
+            }
+        ]
+    });*/
 
-    private worldCopyGPU: GPUBuffer;
-    private updateWorldBuffer: GPUCommandBuffer[];
+    #worldCopyGPU: GPUBuffer;
+    #updateWorldBuffer: GPUCommandBuffer[];
 
     constructor() {
 
-        this.worldCopyGPU = GPUCanvas.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
-        this.worldPositionGPUBuffer = GPUCanvas.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-        const commandEncoder = GPUCanvas.device.createCommandEncoder();
+        this.#worldCopyGPU = GPUScene.instance.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
+        this.worldPositionGPUBuffer = GPUScene.instance.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+        const commandEncoder = GPUScene.instance.device.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
-            this.worldCopyGPU, 0,
+            this.#worldCopyGPU, 0,
             this.worldPositionGPUBuffer, 0,
             16 * 4);
-        this.updateWorldBuffer = [commandEncoder.finish()];
+        this.#updateWorldBuffer = [commandEncoder.finish()];
 
     }
     destroy() {
-        this.worldCopyGPU.destroy();
+        this.#worldCopyGPU.destroy();
         this.worldPositionGPUBuffer.destroy();
     }
     private updateMatrix(): void {
@@ -58,10 +71,10 @@ export class worldPosition {
         if (this.busy)
             return;
         this.busy = true;
-        const leftoverARR = await this.worldCopyGPU.mapWriteAsync();
+        const leftoverARR = await this.#worldCopyGPU.mapWriteAsync();
         new Float32Array(leftoverARR).set(this.worldMatrix);
-        this.worldCopyGPU.unmap();
-        GPUCanvas.device.defaultQueue.submit(this.updateWorldBuffer);
+        this.#worldCopyGPU.unmap();
+        GPUScene.instance.device.defaultQueue.submit(this.#updateWorldBuffer);
         this.busy = false;
     }
 }

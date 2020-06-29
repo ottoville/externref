@@ -465,8 +465,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         }]
                     ]);
                     */
-                    //@ts-ignore
-                    GPUScene.instance.render(renderPass as GPURenderPassEncoder, terrain);
+                    gpuscene.render(renderPass as GPURenderPassEncoder, terrain);
 
                 }
             } else {
@@ -531,8 +530,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 //@ts-ignore
                 engine._currentRenderPass = null;
             }
-            //@ts-ignore
-            engine._device.defaultQueue.submit([engine._renderEncoder.finish()]);
+             //@ts-ignore
+            gpuscene.device.defaultQueue.submit([engine._renderEncoder.finish()]);
             engine.onEndFrameObservable.notifyObservers(engine);
 
             window.requestAnimationFrame(rloop);
