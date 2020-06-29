@@ -1,33 +1,48 @@
-﻿#version 450
+#version 450
 precision lowp float;
+
+
+const vec2 vertices[4] = vec2[4](
+            vec2(-0.5f, 2.0f),
+            vec2(-0.5f, -2.0f),
+            vec2(0.5f,  3.0f),
+           vec2( 0.5f, -3.0f)
+            );
+
+
 layout(set = 0, binding = 0) uniform Scene {
     mat4 viewProjection;
     mat4 view;
     vec4 viewPosition;
 };
-layout(set = 1, binding = 0) uniform LeftOver {
-        mat4 world;
-};
-layout(std430, set = 1, binding = 1) readonly buffer Slopes {
+
+
+
+layout(std430, set = 1, binding = 0) readonly buffer Slopes {
     int numbers[];
 } slopes;
-layout(std430, set = 1, binding = 2) readonly buffer Facet1 {
+layout(std430, set = 1, binding = 1) readonly buffer Facet1 {
     float numbers[];
 } facet1;
-layout(std430, set = 1, binding = 3) readonly buffer Facet2 {
+layout(std430, set = 1, binding = 2) readonly buffer Facet2 {
     float numbers[];
 } facet2;
 
 layout(set = 2, binding = 0) uniform Terra {
    float time;
 } terra;
+layout(set = 3, binding = 0) uniform LeftOver {
+        mat4 world;
+};
+
+
 
 
 //layout(std140, column_major) uniform;
 
 #define CUSTOM_VERTEX_BEGIN
 
-layout(location = 0) in vec3 position;
+//layout(location = 0) in vec3 position;
 const float PI = 3.1415926535897932384626433832795;
 const float Epsilon = 0.0000001;
 const float angleStep= (PI*2.0)/8.0;
@@ -64,6 +79,7 @@ void main(void) {
     float angle= terra.time+float(gl_InstanceIndex) * angleStep;
     float c = cos(angle);
 	float s = sin(angle);
+    vec3 position=vec3(vertices[gl_VertexIndex].x,1.5f,vertices[gl_VertexIndex].y);
     vec2 rotated=vec2(position.x * c - position.z * s, position.x * s + position.z * c);
    vec2 offset = rotated+vec2(10.0*c, 10.0*s);
 
@@ -84,7 +100,7 @@ void main(void) {
     //}
 
     //worldPos.y += -(facet.x * cx + facet.z * cz + facet.w) / facet.y;
-    worldPos.y += getHeightAtCoordinates(vec2(worldPos.x, worldPos.z));
+    worldPos.y += getHeightAtCoordinates(vec2(worldPos.x, worldPos.z))+20.0;
 
    gl_Position = viewProjection * worldPos;
     gl_Position.y *= -1.;

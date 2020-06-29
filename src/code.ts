@@ -6,8 +6,9 @@ import type { IEffectCreationOptions, Effect } from "babylonjs/Materials/effect"
 import type { Engine } from "./lib/babylon/Engines/engine";
 import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks";
 import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine";
-import { UIMesh } from "./UIMesh.js";
-import { GPUCanvas } from "./GPUCanvas.js";
+import { GPUScene } from "./GPUScene.js";
+import { TerrainPositionDrawable } from "./drawables/TerrainPosition.js";
+import { TerrainTimePositionDrawable } from "./drawables/TerrainTimePosition.js";
 
 //import  DB from "./DB.js";
 
@@ -93,20 +94,33 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
     try {
-        let [WasmModuleP, EngineModuleP, EffectModuleP, WorldSceneModuleP] = ['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js', './world/scene.js'].map(url => import(url));
+        let [WasmModuleP, EngineModuleP, EffectModuleP] = ['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js'].map(url => import(url));
         const CACHE_NAME = 'terrasim-v1';
         let shadersP: Promise<{ [key: string]: string }> = fetch('/shaders/shaders.json').then(s => s.json());
+        if (canvas.dataset.inited === "true")
+            return;
+        canvas.dataset.inited = "true";
+        const cache = await caches.open(CACHE_NAME);
+        
 
-        const cache= await caches.open(CACHE_NAME)
       //  const cache2 = await caches.open('compiledShaders');
         //try {
         let WasmModule = await WasmModuleP;
         blazor.invokeMethod('setProgress', 2);
         let EngineModule = await EngineModuleP;
+        var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: false } as WebGPUEngineOptions);
+        //@ts-ignore
+        let adapter = await navigator.gpu!.requestAdapter(engine._options);
+        //@ts-ignore
+        engine._adapter = adapter;
+        //@ts-ignore
+        let device = await adapter.requestDevice(engine._options.deviceDescriptor);
+        const gpuscene = new GPUScene(device);
+        GPUScene.canvas = canvas;
         blazor.invokeMethod('setProgress', 4);
         let EffectModule = await EffectModuleP;
         blazor.invokeMethod('setProgress', 9);
-        const WorldSceneModule = await WorldSceneModuleP;
+        const WorldSceneModule = await import('./world/scene.js');
 
         blazor.invokeMethod('setProgress', 10);
         /*   } catch (e) {
@@ -116,12 +130,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         WasmModule.default().then(() => window.Wasm = WasmModule);
         //progelem.value = 20;
         // var canvas = document.getElementById("renderCanvas");
-        if (canvas.dataset.inited === "true")
-            return;
-        canvas.dataset.inited = "true";
+
         blazor.invokeMethod('setProgress', 11);
         // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
-        var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: false } as WebGPUEngineOptions);
+        
         //await engine.initAsync();
         const glslang: { compileGLSL: (source: string, type: string) => Uint32Array } = await new Promise((res, rej) => {
             let glslangOptions = {
@@ -139,18 +151,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             script.src = glslangOptions.jsPath;
             document.head.appendChild(script);
         });
-        //@ts-ignore
-        let adapter = await navigator.gpu!.requestAdapter(engine._options);
-        //@ts-ignore
-        engine._adapter = adapter;
-        //@ts-ignore
-        let device = await adapter.requestDevice(engine._options.deviceDescriptor)
-        GPUCanvas.device = device;
-        GPUCanvas.canvas = canvas;
+
         const jsondata = await shadersP
         const shaderPuts: Promise<void>[] = [];
-       // const shaderPutsC: Promise<void>[] = [];
-        const shaderModules: Map<string, GPUShaderModule> = new Map();
+
         for (var file in jsondata) {
             shaderPuts.push(cache.put(new Request('/shaders/' + file), new Response(jsondata[file])));
             if (jsondata[file].substr(0, 12) == '#version 450') {
@@ -160,8 +164,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 else if (file.substr(-5) == '.comp')
                     type = 'compute';
                 const compiled = glslang.compileGLSL(jsondata[file], type);
-
-                shaderModules.set(file, device.createShaderModule({
+                
+                gpuscene.shaderModules.set(file, device.createShaderModule({
                     code: compiled,
                 }));
 
@@ -239,7 +243,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 blazor.invokeMethod('setProgress', 20);
                 // progelem.value = 30;
                 try {
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, shaderModules, webSocket));
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, webSocket));
                 } catch (e) {
                     sceneInitedrej(e);
                 }
@@ -249,7 +253,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 blazor.invokeMethod('setProgress', 20);
                 try {
                     //blazor.invokeMethod('setProgress', 20);
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, shaderModules));
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device));
                 } catch (e) {
                     sceneInitedrej(e);
                 }
@@ -257,22 +261,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         });
         const [terrain] = await scene.terrainInited;
         await scene.terrainReady;
-        await terrain.initedGPU;
+
         window.scene = scene;
         scene.collisionsEnabled = true;
         scene.autoClear = false;
         scene.autoClearDepthAndStencil = false;
 
-        const uniformBindGroup = device.createBindGroup({
-            layout: scene.uniformBindGroupLayout,
-            entries: [{
-                binding: 0,
-                resource: {
-                    //@ts-ignore
-                    buffer: scene.getSceneUniformBuffer()._buffer.underlyingResource
-                }
-            }],
-        })
 
         let rloop = function () {
 
@@ -432,9 +426,47 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     scene._processSubCameras(scene.activeCameras[cameraIndex]);
                     //@ts-ignore
                     const renderPass = (engine as WebGPUEngine)._bundleEncoder || (engine as WebGPUEngine)._currentRenderPass!;
-                    renderPass.setBindGroup(0, uniformBindGroup)
-                    renderPass.setBindGroup(1, terrain.bindGroup)
-                    UIMesh.UIMeshes.forEach((Mesh) => Mesh.draw(renderPass));
+
+                  /*  
+                    const bindGroups: Set<GPUBindGroup> = new Set([uniformBindGroup, gpuscene.timeBindGroup, terrain.bindGroup])
+
+
+                    let combinations = new Set([
+                        bindGroupEnums.Terrain | bindGroupEnums.Position,
+                        bindGroupEnums.Terrain | bindGroupEnums.Position | bindGroupEnums.Time,
+                        bindGroupEnums.Time
+                    ])
+
+                    let i = 1;
+                    bindGroups.forEach(bg => {
+                        renderPass.setBindGroup((i <<= 1), bg);
+                    })
+
+
+
+                    interface PipeLineLayout {
+                        [key: string]: Map<string, PipeLineLayout> | GPUPipelineLayout | GPUBindGroup[]
+                        layout: GPUPipelineLayout,
+                        bindGroups: GPUBindGroup[],
+                    }*/
+
+                    /*const tree:Map<string, PipeLineLayout> = new Map([
+                        ['terrain', {
+                            layout: GPUCanvas.device.createPipelineLayout({
+                                bindGroupLayouts: [terrain.bindGroupLayout]
+                            }),
+                            bindGroups: [terrain.bindGroup],
+                            position: new Map([['position',{
+                                layout: GPUCanvas.device.createPipelineLayout({
+                                    bindGroupLayouts: [terrain.bindGroupLayout]
+                                }),
+                                bindGroups: [terrain.bindGroup]
+                            }]])
+                        }]
+                    ]);
+                    */
+                    //@ts-ignore
+                    GPUScene.instance.render(renderPass as GPURenderPassEncoder, terrain);
 
                 }
             } else {

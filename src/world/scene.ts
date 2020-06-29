@@ -34,11 +34,10 @@ import { Sea } from "./water.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { InternalTexture, InternalTextureSource } from "../lib/babylon/Materials/Textures/internalTexture.js";
-import { UIMesh } from "../UIMesh.js";
 import { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { LazyEval } from "../LazyEval.js";
-import { canvasListener } from "../traits/canvasListener.js";
 import { UITABClassLike, UITAB } from "../UITAB.js";
+import { GPUScene } from "../GPUScene.js";
 
 
 Scene.CollisionCoordinatorFactory = () => {
@@ -83,13 +82,13 @@ class _ClickInfo {
     }
 }
 export class WorldScene extends Scene {
-    timeBuffer: GPUBuffer;
     terrainInited: Promise<[Terrain, Promise<GPUBuffer>]>;
     camera: ArcRotateCamera;
     camera2: ArcRotateCamera;
     sea: Sea;
+    //@ts-ignore
     plants: Plants;
-    #groundP: Promise<Terrain>;
+    #groundP: Promise<SharedArrayBuffer>;
     DBP: Promise<EarthDatabase>;
     createPickingRayToRef(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
 
@@ -593,24 +592,13 @@ export class WorldScene extends Scene {
         ticks: number,
         private canvas: HTMLCanvasElement,
         private device: GPUDevice,
-        private shaderModules: Map<string, GPUShaderModule>,
         private webSocket?: WebSocket
         ) {
         super(engine as Engine);
         this.DBP = DB;
-        UIMesh.device = device;
-        UIMesh.positionLayout = device.createBindGroupLayout({
-            entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX,
-                    type: 'uniform-buffer'
-                }
-            ]
-        });
-
         this.getSceneUniformBuffer().create();
-
+        //@ts-ignore
+        this.getSceneUniformBuffer()._buffer._buffer = GPUScene.instance.uniformBuffer;
         this.#uniformBindGroup=this.device.createBindGroup({
             layout: this.uniformBindGroupLayout,
             entries: [{
@@ -621,35 +609,6 @@ export class WorldScene extends Scene {
                 }
             }],
         })
-
-
-
-        this.timeBuffer = device.createBuffer({
-            size: 4,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-        const timeBufferStorage = device.createBuffer({
-            size: 4,
-            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
-        });
-        const commandEncoder = device.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(
-            timeBufferStorage, 0,
-            this.timeBuffer, 0,
-            4);
-        const updateTime = [commandEncoder.finish()];
-        let settingTime = false;
-        const timed = new Date().getTime();
-        this.registerBeforeRender(async () => {
-            if (settingTime)
-                return;
-            settingTime = true;
-            let arr = await timeBufferStorage.mapWriteAsync();
-            new Float32Array(arr).set([(timed - new Date().getTime()) % 100000 / 1000]); // %100000 is to keep float minimal to greater precise
-            timeBufferStorage.unmap();
-            this.device.defaultQueue.submit(updateTime);
-            settingTime = false;
-        });
 
         blazor.invokeMethod('setProgress', 21);
         const scene:Scene = this;
@@ -813,7 +772,7 @@ export class WorldScene extends Scene {
         blazor.invokeMethod('setProgress', data.data.progress, data.data.error);
     });
     */
-        this.#groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device, shaderModules);
+        this.#groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device);
         this.terrainInited = new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
             try {
                 
@@ -822,7 +781,7 @@ export class WorldScene extends Scene {
                     let cacheimg = new Image();
                     cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
 
-                    tres([await this.#groundP, cacheimg.decode().then(() => {
+                    tres([new Terrain(await this.#groundP, GPUScene.instance), cacheimg.decode().then(() => {
                         let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
                         let imgctx = imgcanvas.getContext('2d');
                         if (!imgctx)
@@ -844,8 +803,9 @@ export class WorldScene extends Scene {
                 }
                 //progelem.value = 40;
                 blazor.invokeMethod('setProgress', 30);
-                const ground = await this.#groundP;
-                tres([ground, ground.createTexture(engine as WebGPUEngine)]);
+                const t = new Terrain(await this.#groundP, GPUScene.instance);
+                const ground = t.terraMesh;
+                tres([t, t.createTexture(engine as WebGPUEngine)]);
                 let obj = {
                     width: 10000,
                     height: 10000,
@@ -862,7 +822,7 @@ export class WorldScene extends Scene {
             }
         });
         this.sea = new Sea(this);
-        this.plants = new Plants(this, this.camera, this.#groundP, device, shaderModules);
+        this.plants = new Plants(this, this.camera, this.terrainInited, device);
         this.terrainReady=this.terrainInited.then(gt => {
             blazor.invokeMethod('setProgress', 40);
             let [ground, texture] = gt;
@@ -874,9 +834,9 @@ export class WorldScene extends Scene {
             })
 
 
-            ground.checkCollisions = true;
+            ground.terraMesh.checkCollisions = true;
             blazor.invokeMethod('setProgress', 50);
-            ground.isPickable = true;
+            ground.terraMesh.isPickable = true;
             this.getSceneUniformBuffer().update();
 
             this.tools.set('TerrainTool', TerrainTool);
@@ -955,7 +915,7 @@ export class WorldScene extends Scene {
                 // grass2.ambientTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
                 grass2.diffuseTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
                 // grass2.diffuseColor = new Color3(0.2, 1, 0.3);
-                ground.material = grass2;
+                ground.terraMesh.material = grass2;
                 blazor.invokeMethod('setProgress', 100);
                 console.debug("Progress 100");
                 
@@ -972,7 +932,7 @@ export class WorldScene extends Scene {
         try {
             let tool: UITABClassLike | undefined;
             if (tool = this.tools.get(name)) {
-                tool.instance = new tool(this, await this.#groundP, this.camera, this.shaderModules);
+                //tool.instance = new tool(this, await this.#groundP, this.camera);
             }
         } catch (e) {
             console.error(e);

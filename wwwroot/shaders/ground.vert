@@ -1,22 +1,16 @@
-#version 300 es
-#ifdef GL_ES
-    precision highp float;
-#endif
+#version 450
+precision lowp float;
 
-in vec3 position;
-in vec2 uv;
-in vec3 normal;
+layout(set = 0, binding = 0) uniform Scene {
+    mat4 viewProjection;
+    mat4 view;
+    vec4 viewPosition;
+};
 
-out vec2 vUV;
-out vec3 vPosition;
-out vec3 vNormal;
-
-uniform mat4 worldViewProjection;
-uniform float time;
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec2 uv;
 
 void main(void) {
-    gl_Position = worldViewProjection * vec4(position, 1.0);
-    vUV = uv;
-    vPosition = position;
-    vNormal = normal;
+   gl_Position = viewProjection*vec4(position.xyz, 1.0);
+   gl_Position.y *= -1.;
 }

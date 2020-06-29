@@ -57,7 +57,7 @@ export class WebGPUPipelineContext implements IPipelineContext {
         fragment: string,
     };
 
-    public stages: Nullable<GPURenderPipelineStageDescriptor>;
+    public stages: Nullable<any>;
 
     public samplers: { [name: string]: Nullable<IWebGPUPipelineContextSamplerCache> } = { };
 
