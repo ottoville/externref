@@ -7,10 +7,9 @@ export class CameraTAB extends UITAB {
     constructor(
         public scene: WorldScene,
         public terrain: Terrain,
-        public camera: ArcRotateCamera,
-        shaderModules: Map<string, GPUShaderModule>,
+        public camera: ArcRotateCamera
     ) {
-        super(scene, terrain, camera, shaderModules);
+        super(scene, terrain, camera);
 
     }
     destroy = (): void => {

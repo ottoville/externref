@@ -100,7 +100,7 @@ export interface WebGPUEngineOptions extends GPURequestAdapterOptions {
 }
 
 export interface compiledShader {
-    stages: GPURenderPipelineStageDescriptor,
+    stages,
     availableAttributes: { [key: string]: number },
     availableUBOs: { [key: string]: { setIndex: number, bindingIndex: number } },
     availableSamplers: { [key: string]: { setIndex: number, bindingIndex: number } },

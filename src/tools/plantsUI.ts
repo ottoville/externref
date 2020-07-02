@@ -28,16 +28,15 @@ export class PlantsUI extends UITAB {
         public scene: WorldScene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
-        public shaderModules: Map<string, GPUShaderModule>,
         ...traits: Trait[]
     ) {
-        super(scene, terrain, camera, shaderModules);
+        super(scene, terrain, camera);
         this.traits = this.initTraits(traits);
         console.log('activate plantsUI');
     }
     activateDraw = () => {
         try {
-            this.PT = new paintPlane(this.scene, this.camera, this.terrain, this.scene.sea, this, this.scene.getEngine() as WebGPUEngine, this.shaderModules);
+            this.PT = new paintPlane(this.scene, this.camera, this.terrain, this.scene.sea, this, this.scene.getEngine() as WebGPUEngine);
 
           //  this.PT = applyMixins<typeof BaseTerrainTool>(BaseTerrainTool, [worldPosition]);
 

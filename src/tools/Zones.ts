@@ -27,10 +27,9 @@ export class Zones extends UITAB {
         public scene: WorldScene,
         public ground: Terrain,
         public camera: ArcRotateCamera,
-        shaderModules: Map<string, GPUShaderModule>,
         ...traits: Trait[]
     ) {
-        super(scene, ground, camera, shaderModules);
+        super(scene, ground, camera);
         this.traits = this.initTraits(traits);
 
         // let DZ = new drawZone(canvas, scene, camera, ground, sea, DB, DT, groundmateria, grass, terrain);
@@ -42,7 +41,7 @@ export class Zones extends UITAB {
     }
     activate = async () => {
         let ctx: CanvasRenderingContext2D = this.zonedt.getContext();
-        this.ground.material = this.zonemateria;
+        this.ground.terraMesh.material = this.zonemateria;
         let centerX = this.size / 2
         let centerZ = this.size / 2
         ctx.beginPath();

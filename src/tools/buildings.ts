@@ -17,10 +17,9 @@ export class BuildingsUI extends UITAB {
     constructor(scene: WorldScene,
         terrain: Terrain,
         camera: ArcRotateCamera,
-        shaderModules: Map<string, GPUShaderModule>,
         ...traits: Trait[]
     ) {
-        super(scene, terrain, camera, shaderModules);
+        super(scene, terrain, camera);
         this.traits = this.initTraits(traits);
     }
     public create = (type: string): void => {

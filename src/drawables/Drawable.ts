@@ -1,4 +1,4 @@
-﻿import { GPUScene, GPUIndexBuffer, GPUVertexBuffer } from "../GPUScene";
+﻿import { GPUScene, GPUIndexBuffer, GPUVertexBuffer, BindGroupDrawable } from "../GPUScene";
 type DrawableLike = typeof Drawable;
 export interface DrawableLikeClass extends DrawableLike {
     Meshes: Set<Drawable>;
@@ -9,6 +9,7 @@ export class Drawable {
 
     static BindedTerrains: Set<Drawable> = new Set();
 
+    useTime = true;
 
     #renderPipeline: GPURenderPipeline;
     #indexBuffer: GPUBuffer | null = null;
@@ -19,7 +20,7 @@ export class Drawable {
         const descriptor = { size: buffer.byteLength, usage: usage }
         if (descriptor.size == 0)
             throw ("Cannot create zero sized GPU buffer");
-        let [BGPU, BARR] = this.gpuscene.device.createBufferMapped(descriptor);
+        let [BGPU, BARR] = this.bindgroupdrawable.gpuscene.device.createBufferMapped(descriptor);
         new Uint8Array(BARR).set(new Uint8Array(buffer));
         BGPU.unmap();
         return BGPU;
@@ -50,16 +51,9 @@ export class Drawable {
         return Tbuffer;
     }
     BindGroupsStart: number = 2;
-    constructor(renderPipeline: GPURenderPipelineDescriptor, bindGroups: GPUBindGroup[] | null, public indexOrVertexCount: number, public instanceCount = 1, public firstInstance = 0, public firstVertexOrIndex = 0, protected gpuscene: GPUScene = GPUScene.instance, private InstanceClass?: DrawableLikeClass ) {
+    constructor(renderPipeline: GPURenderPipelineDescriptor, bindGroups: GPUBindGroup[] | null, public indexOrVertexCount: number, public instanceCount = 1, public firstInstance = 0, public firstVertexOrIndex = 0, private bindgroupdrawable: BindGroupDrawable ) {
         bindGroups && (this.#bindGroups = new Set(bindGroups));
-        if (InstanceClass) {
-            let layout = InstanceClass.Layouts.get(gpuscene)
-            if (!layout) {
-                layout = InstanceClass.createLayout(gpuscene);
-                InstanceClass.Layouts.set(gpuscene, layout);
-            }
-            renderPipeline.layout = layout;
-        }
+        renderPipeline.layout = bindgroupdrawable.layout;
         if (!renderPipeline.depthStencilState) {
             renderPipeline.depthStencilState = {
                 depthWriteEnabled: true,
@@ -67,13 +61,13 @@ export class Drawable {
                 format: "depth24plus-stencil8",
             }
         }
-        this.#renderPipeline = gpuscene.device.createRenderPipeline(renderPipeline);
+        this.#renderPipeline = bindgroupdrawable.gpuscene.device.createRenderPipeline(renderPipeline);
     }
     destroy(preserveIndexBuffer = false, preserveVerticeBuffers: number[] = []): void {
         this.#vertexBuffers.forEach((b, key) => { if (!preserveVerticeBuffers.includes(key)) b.buffer.destroy() });
         if (!preserveIndexBuffer && this.#indexBuffer)
             this.#indexBuffer.destroy();
-        this.InstanceClass && this.InstanceClass.Meshes.delete(this);
+        this.bindgroupdrawable.meshes.delete(this);
     }
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder): void {
         renderPass.setPipeline(this.#renderPipeline);
