@@ -1,5 +1,9 @@
-﻿import { GPUScene, GPUIndexBuffer, GPUVertexBuffer, BindGroupDrawable } from "../GPUScene";
+﻿import type { GPUScene, GPUIndexBuffer, GPUVertexBuffer, BindGroupDrawable } from "../GPUScene";
 type DrawableLike = typeof Drawable;
+interface GPUVertexReadOnlyBuffer extends GPUBuffer {
+    vertex: 'true';
+    storage?: 'false';
+}
 export interface DrawableLikeClass extends DrawableLike {
     Meshes: Set<Drawable>;
     Layouts: Map<GPUScene, GPUPipelineLayout>;
@@ -34,10 +38,10 @@ export class Drawable {
             this.#indexBuffer = this.createGPUBuffer(GPUBufferUsage.INDEX, buffer.buffer);
         return this.#indexBuffer;
     }
-
+    //Todo, support writable vertex buffer
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     setVertexBuffer(index: number, buffer: ArrayBufferView, destroyOld?: boolean): GPUBuffer
-    setVertexBuffer(index: number, buffer: GPUVertexBuffer, destroyOld?: boolean, offset?: number, size?: number): GPUBuffer
+    setVertexBuffer(index: number, buffer: GPUVertexReadOnlyBuffer, destroyOld?: boolean, offset?: number, size?: number): GPUBuffer
     setVertexBuffer(index: number, buffer: ArrayBufferView | GPUVertexBuffer, destroyOld = true, offset?: number, size?: number): GPUBuffer {
         if (destroyOld) {
             let Tbuffer = this.#vertexBuffers.get(index);
@@ -51,7 +55,7 @@ export class Drawable {
         return Tbuffer;
     }
     BindGroupsStart: number = 2;
-    constructor(renderPipeline: GPURenderPipelineDescriptor, bindGroups: GPUBindGroup[] | null, public indexOrVertexCount: number, public instanceCount = 1, public firstInstance = 0, public firstVertexOrIndex = 0, private bindgroupdrawable: BindGroupDrawable ) {
+    constructor(renderPipeline: GPURenderPipelineDescriptor, bindGroups: GPUBindGroup[] | null, public indexOrVertexCount: number, public instanceCount = 1, public firstInstance = 0, public firstVertexOrIndex = 0, private bindgroupdrawable: BindGroupDrawable) {
         bindGroups && (this.#bindGroups = new Set(bindGroups));
         renderPipeline.layout = bindgroupdrawable.layout;
         if (!renderPipeline.depthStencilState) {

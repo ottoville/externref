@@ -7,8 +7,7 @@ import type { Engine } from "./lib/babylon/Engines/engine";
 import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks";
 import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine";
 import { GPUScene } from "./GPUScene.js";
-import { TerrainPositionDrawable } from "./drawables/TerrainPosition.js";
-import { TerrainTimePositionDrawable } from "./drawables/TerrainTimePosition.js";
+import { TerraScene } from "./TerraScene.js";
 
 //import  DB from "./DB.js";
 
@@ -109,13 +108,16 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         blazor.invokeMethod('setProgress', 2);
         let EngineModule = await EngineModuleP;
         var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: false } as WebGPUEngineOptions);
-        //@ts-ignore
-        let adapter = await navigator.gpu!.requestAdapter(engine._options);
+
+
+        const terrascene = new TerraScene(window);
+
+        const adapter = await terrascene.adapter;
+
         //@ts-ignore
         engine._adapter = adapter;
-        //@ts-ignore
-        let device = await adapter.requestDevice(engine._options.deviceDescriptor);
-        const gpuscene = new GPUScene(device);
+        const device = await terrascene.device
+        const gpuscene = await terrascene.gpuscenePromise
         GPUScene.canvas = canvas;
         blazor.invokeMethod('setProgress', 4);
         let EffectModule = await EffectModuleP;
@@ -268,7 +270,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         scene.autoClearDepthAndStencil = false;
 
 
-        let rloop = function () {
+        let rloop = function (time: DOMHighResTimeStamp) {
 
             // Start new frame
             //engine.beginFrame();
@@ -386,7 +388,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                         // Camera
                         scene.updateTransformMatrix();
-
                         renderTarget.render(currentActiveCamera !== scene.activeCamera, scene.dumpNextRenderTargets);
 
                     }
@@ -425,6 +426,11 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //@ts-ignore
                     scene._processSubCameras(scene.activeCameras[cameraIndex]);
                     //@ts-ignore
+                    new Float32Array(TerraScene.instance.viewProjection).set(scene._transformMatrix.m);
+                    new Float32Array(TerraScene.instance.view).set(scene.activeCameras[cameraIndex].getViewMatrix().m);
+                    new Float32Array(TerraScene.instance.projection).set(scene.activeCameras[cameraIndex].getProjectionMatrix().m);
+
+                    //@ts-ignore
                     const renderPass = (engine as WebGPUEngine)._bundleEncoder || (engine as WebGPUEngine)._currentRenderPass!;
 
                   /*  
@@ -444,28 +450,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
 
-                    interface PipeLineLayout {
-                        [key: string]: Map<string, PipeLineLayout> | GPUPipelineLayout | GPUBindGroup[]
-                        layout: GPUPipelineLayout,
-                        bindGroups: GPUBindGroup[],
-                    }*/
-
-                    /*const tree:Map<string, PipeLineLayout> = new Map([
-                        ['terrain', {
-                            layout: GPUCanvas.device.createPipelineLayout({
-                                bindGroupLayouts: [terrain.bindGroupLayout]
-                            }),
-                            bindGroups: [terrain.bindGroup],
-                            position: new Map([['position',{
-                                layout: GPUCanvas.device.createPipelineLayout({
-                                    bindGroupLayouts: [terrain.bindGroupLayout]
-                                }),
-                                bindGroups: [terrain.bindGroup]
-                            }]])
-                        }]
-                    ]);
                     */
-                    gpuscene.render(renderPass as GPURenderPassEncoder, terrain);
+                    gpuscene.render(renderPass as GPURenderPassEncoder, time);
+
 
                 }
             } else {
