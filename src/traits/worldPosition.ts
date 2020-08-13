@@ -1,42 +1,76 @@
-﻿import { GPUScene } from "../GPUScene";
+﻿import type { GPUScene } from "../GPUScene";
+export interface has3DPosition {
+    worldPosition: worldPosition;
+}
+export interface TerraMatrix {
+    readonly length: 16;
+    [n: number]: never
+}
+export class TerraMatrix extends Float32Array {
+    constructor(Arr? :  [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]) {
+        //@ts-ignore
+        super(Arr||16);
+    } //@ts-ignore
+    [0]: number;//@ts-ignore
+    [1]: number;//@ts-ignore
+    [2]: number;//@ts-ignore
+    [3]: number;//@ts-ignore
+    [4]: number;//@ts-ignore
+    [5]: number;//@ts-ignore
+    [6]: number;//@ts-ignore
+    [7]: number;//@ts-ignore
+    [8]: number;//@ts-ignore
+    [9]: number;//@ts-ignore
+    [10]: number;//@ts-ignore
+    [11]: number;//@ts-ignore
+    [12]: number;//@ts-ignore
+    [13]: number;//@ts-ignore
+    [14]: number;//@ts-ignore
+    [15]: number;
+}
 
+/* Todo: make dynamic with treshold values */
+const maxInstances = 10;
+const alignment = 256;
+export class worldPositionScene {
+    instances: Set<worldPosition> = new Set();
+    worldCopyGPU = this.scene.createGPUBuffer(alignment * maxInstances, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC]);
+    matrix = this.scene.createGPUBuffer(alignment * maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
+
+    BindGroupLayout = this.scene.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
+    BindGroup = this.scene.createBindGroup(this.BindGroupLayout,
+        {
+            binding: 0,
+            resource: {
+                buffer: this.matrix,
+                offset: 0,
+                size: 16 * 4
+            }
+        })
+    updateBuffer: GPUCommandBuffer[];
+    constructor(public scene: GPUScene) {
+        const commandEncoder = scene.device.createCommandEncoder();
+        commandEncoder.copyBufferToBuffer(
+            this.worldCopyGPU, 0,
+            this.matrix, 0,
+            alignment * maxInstances);
+        this.updateBuffer = [commandEncoder.finish()]
+    }
+}
 export class worldPosition {
     scaling: [number, number, number] = [1, 1, 1];
     rotation: [number, number, number, number] = [0, 0, 0, 0];
     translation: [number, number, number] = [0, 0, 0];
-    worldPositionGPUBuffer: GPUBuffer;
-    static Layouts: Map<GPUScene, GPUPipelineLayout> = new Map();
-    static getLayout(scene: GPUScene): GPUBindGroupLayout {
-        return scene.uniformBindGroupLayout
-    }
-    /*static positionLayout = GPUScene.instance.device.createBindGroupLayout({
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX,
-                type: 'uniform-buffer'
-            }
-        ]
-    });*/
 
-    #worldCopyGPU: GPUBuffer;
-    #updateWorldBuffer: GPUCommandBuffer[];
+    bufferOffset = this.scene.worldPositionScene.instances.size * alignment;
 
-    constructor() {
 
-        this.#worldCopyGPU = GPUScene.instance.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
-        this.worldPositionGPUBuffer = GPUScene.instance.device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-        const commandEncoder = GPUScene.instance.device.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(
-            this.#worldCopyGPU, 0,
-            this.worldPositionGPUBuffer, 0,
-            16 * 4);
-        this.#updateWorldBuffer = [commandEncoder.finish()];
-
+    constructor(public scene: GPUScene) {
+        this.scene.worldPositionScene.instances.add(this);
     }
     destroy() {
-        this.#worldCopyGPU.destroy();
-        this.worldPositionGPUBuffer.destroy();
+        //this.#worldCopyGPU.destroy();
+      //  this.worldPositionGPUBuffer.destroy();
     }
     private updateMatrix(): void {
         const m = this.worldMatrix;
@@ -47,11 +81,9 @@ export class worldPosition {
         var wx = w * x2, wy = w * y2, wz = w * z2;
 
         var sx = this.scaling[0], sy = this.scaling[1], sz = this.scaling[2];
-
         m[0] = (1 - (yy + zz)) * sx;
         m[1] = (xy + wz) * sx;
         m[2] = (xz - wy) * sx;
-
         m[4] = (xy - wz) * sy;
         m[5] = (1 - (xx + zz)) * sy;
         m[6] = (yz + wx) * sy;
@@ -63,7 +95,7 @@ export class worldPosition {
         [m[12], m[13], m[14]] = this.translation;
         m[15] = 1;
     }
-    worldMatrix: [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    worldMatrix: TerraMatrix = new TerraMatrix();
     busy = false;
 
     async updatePositionBuffer() {
@@ -71,10 +103,10 @@ export class worldPosition {
         if (this.busy)
             return;
         this.busy = true;
-        const leftoverARR = await this.#worldCopyGPU.mapWriteAsync();
-        new Float32Array(leftoverARR).set(this.worldMatrix);
-        this.#worldCopyGPU.unmap();
-        GPUScene.instance.device.defaultQueue.submit(this.#updateWorldBuffer);
+        await this.scene.worldPositionScene.worldCopyGPU.mapAsync(GPUMapMode.WRITE, this.bufferOffset, 4 * 16);
+        new Float32Array(this.scene.worldPositionScene.worldCopyGPU.getMappedRange(this.bufferOffset, 4 * 16)).set(this.worldMatrix);
+        this.scene.worldPositionScene.worldCopyGPU.unmap();
+        this.scene.device.defaultQueue.submit(this.scene.worldPositionScene.updateBuffer);
         this.busy = false;
     }
 }

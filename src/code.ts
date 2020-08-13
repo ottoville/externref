@@ -433,24 +433,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //@ts-ignore
                     const renderPass = (engine as WebGPUEngine)._bundleEncoder || (engine as WebGPUEngine)._currentRenderPass!;
 
-                  /*  
-                    const bindGroups: Set<GPUBindGroup> = new Set([uniformBindGroup, gpuscene.timeBindGroup, terrain.bindGroup])
-
-
-                    let combinations = new Set([
-                        bindGroupEnums.Terrain | bindGroupEnums.Position,
-                        bindGroupEnums.Terrain | bindGroupEnums.Position | bindGroupEnums.Time,
-                        bindGroupEnums.Time
-                    ])
-
-                    let i = 1;
-                    bindGroups.forEach(bg => {
-                        renderPass.setBindGroup((i <<= 1), bg);
-                    })
-
-
-
-                    */
+                
                     gpuscene.render(renderPass as GPURenderPassEncoder, time);
 
 

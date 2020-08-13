@@ -1,4 +1,4 @@
-﻿import type { GPUScene, GPUIndexBuffer, GPUVertexBuffer, BindGroupDrawable } from "../GPUScene";
+﻿import type { GPUScene, GroupDrawable } from "../GPUScene";
 type DrawableLike = typeof Drawable;
 interface GPUVertexReadOnlyBuffer extends GPUBuffer {
     vertex: 'true';
@@ -17,7 +17,8 @@ export class Drawable {
 
     #renderPipeline: GPURenderPipeline;
     #indexBuffer: GPUBuffer | null = null;
-    #bindGroups: Set<GPUBindGroup> |null = null;
+    dynamicBindGroupOffset: number[] = [];
+    bindGroups: Set<GPUBindGroup> | null = null;
     baseVertex: number = 0;
 
     private createGPUBuffer(usage: number, buffer: ArrayBuffer): GPUBuffer {
@@ -54,9 +55,8 @@ export class Drawable {
         this.#vertexBuffers.set(index, {buffer: Tbuffer, offset, size });
         return Tbuffer;
     }
-    BindGroupsStart: number = 2;
-    constructor(renderPipeline: GPURenderPipelineDescriptor, bindGroups: GPUBindGroup[] | null, public indexOrVertexCount: number, public instanceCount = 1, public firstInstance = 0, public firstVertexOrIndex = 0, private bindgroupdrawable: BindGroupDrawable) {
-        bindGroups && (this.#bindGroups = new Set(bindGroups));
+    //BindGroupsStart: number = 2;
+    constructor(renderPipeline: GPURenderPipelineDescriptor, public indexOrVertexCount: number, public instanceCount = 1, public firstInstance = 0, public firstVertexOrIndex = 0, private bindgroupdrawable: GroupDrawable) {
         renderPipeline.layout = bindgroupdrawable.layout;
         if (!renderPipeline.depthStencilState) {
             renderPipeline.depthStencilState = {
@@ -73,12 +73,11 @@ export class Drawable {
             this.#indexBuffer.destroy();
         this.bindgroupdrawable.meshes.delete(this);
     }
-    draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder): void {
+    draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart:number): void {
         renderPass.setPipeline(this.#renderPipeline);
         this.#vertexBuffers.forEach((buffer, index) => renderPass.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
-        if (this.#bindGroups) {
-            let key = this.BindGroupsStart;
-            this.#bindGroups.forEach(bindgroup => renderPass.setBindGroup(key++, bindgroup));
+        if (this.bindGroups) {
+            this.bindGroups.forEach(bindgroup => renderPass.setBindGroup(BindGroupsStart++, bindgroup));
         }
         if (this.#indexBuffer) {
             renderPass.setIndexBuffer(this.#indexBuffer, 0);
