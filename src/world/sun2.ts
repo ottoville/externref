@@ -79,9 +79,6 @@ export class Sun2 implements hasPhysics {
         let sundistance = 149600; //divided by 100000
         let secondsOfDay = ~~((Number(this.scene.physics.gameTime*60) / 1000) % 86400);
         let minutesOfDay = secondsOfDay / 60;
-
-        console.log('minutesOfDay', minutesOfDay);
-
         let sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
         let sunPositionX = sundistance * Math.sin(sunAngle);
         let sunPositionY = sundistance * Math.cos(sunAngle);

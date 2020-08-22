@@ -97,7 +97,9 @@ export class Physics {
         if (value >= 0)
             this.createLoop(0,this.timeUntillTick); //for now psysic is always run on constant speed
     }
-
+    get gameSpeed() {
+        return this.#gameSpeed;
+    }
     constructor(private scene:TerraScene) {
         this.createLoop(0);
     }

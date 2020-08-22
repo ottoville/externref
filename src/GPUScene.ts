@@ -161,14 +161,13 @@ export class GPUScene {
             return this.worldPositionScene.updateGPUBuffer();
         }
         this.baseBindGroup.onRender = (time, delta) => {
-          //  console.log(delta);
           //  this.#currentTime.set([(this.#createdAt - time) % 100000 / 1000]);  // %100000 is to keep float minimal for greater precise
-            if (this.scene.gameSpeed >= 0) {
+            if (delta !== null) {
                 var currentTime = new Float32Array([(this.#createdAt - time) % 100000 / 1000, delta]);
+                console.log([(this.#createdAt - time) % 100000 / 1000, delta]);
                 // this.#currentTime.set([delta],1);  // %100000 is to keep float minimal for greater precise
-            } else {
-                var currentTime = new Float32Array([(this.#createdAt - time) % 100000 / 1000]);
-            }        
+            } else
+                var currentTime = new Float32Array([(this.#createdAt - time) % 100000 / 1000]);        
            // this.#timeDelta.set([delta]);
             return this.updateBuffer(this.#timeBufferStorage, this.timeBuffer, currentTime)
         }
@@ -343,21 +342,18 @@ export class GPUScene {
         return pipeline
     }
     render(renderPass: GPURenderPassEncoder, time: DOMHighResTimeStamp) {
-
-        const physicDelta = (this.scene.physics.physicTime - this.scene.physics.gameTime) / this.scene.tickIntervalMs
-        console.log(physicDelta);
-
-
-       // const timeDelta = time - this.#lastRenderTime;
+        let physicDelta: number | null;
+        if (this.scene.physics.gameSpeed == -1)
+            physicDelta = null;
+        else
+            physicDelta = (this.scene.physics.physicTime - this.scene.physics.gameTime) / (this.scene.tickIntervalMs << this.scene.physics.gameSpeed)
         let index = 0;
         const commandBuffers: Promise<GPUCommandBuffer | null>[] = [];
-        const me = this;
         BindGroupDrawable.instances.forEach(function drawBindGroups(bgt) {
             if (bgt.meshes.size || bgt.subBindGroups.size) {
                 bgt.onRender && commandBuffers.push(bgt.onRender(time, physicDelta));
                 if (bgt.isDynamic) {
                     bgt.meshes.forEach(m => {
-                        //console.log('offset ', m.dynamicBindGroupOffset)
                         renderPass.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset);
                         m.draw(renderPass, index);
                     });
@@ -375,7 +371,6 @@ export class GPUScene {
                 }
             }
         });
-        
         Promise.all(commandBuffers).then((buffers) => {
             const buffersNoNull = buffers.filter<GPUCommandBuffer>(function (buff): buff is GPUCommandBuffer { return buff !== null });
             this.device.defaultQueue.submit(buffersNoNull);
@@ -387,7 +382,7 @@ export class GroupDrawable {
     meshes: Set<Drawable> = new Set();
     subBindGroups: Set<GroupDrawable> = new Set();
     layout: GPUPipelineLayout;
-    onRender: ((time: DOMHighResTimeStamp, timeDelta: number) => Promise<GPUCommandBuffer | null>) | null = null;
+    onRender: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>) | null = null;
     constructor(public gpuscene: GPUScene, public bindGroupLayout: GPUBindGroupLayout, public parent?: GroupDrawable, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout];
         if (parent) {
