@@ -30,7 +30,7 @@ function readFiles(dirname, obj, prefix = "") {
 }
 let obj = {};
 (async () => {
-    await Promise.all([readFiles('wwwroot/shaders/', obj), readFiles('src/lib/babylon/Shaders/', obj), readFiles('src/lib/babylon/Shaders/ShadersInclude/', obj, "ShadersInclude/")]).then(() => {
+    await Promise.all([readFiles('wwwroot/shaders/', obj), readFiles('wwwroot/shaders/terrain/', obj), readFiles('src/lib/babylon/Shaders/', obj), readFiles('src/lib/babylon/Shaders/ShadersInclude/', obj, "ShadersInclude/")]).then(() => {
         fs.writeFile('wwwroot/shaders/shaders.json', JSON.stringify(obj), (err) => {
             if (err) throw err;
             console.log('Shaders optimized');

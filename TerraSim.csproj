@@ -177,8 +177,6 @@
     <None Remove="src\TerraRay.ts" />
     <None Remove="src\tools\buildings.ts" />
     <None Remove="src\tools\Terrain.ts" />
-    <None Remove="src\UIMesh.ts" />
-    <None Remove="src\webgl.ts" />
     <None Remove="src\workers\commonMath.d.ts" />
     <None Remove="src\workers\interfaces.ts" />
     <None Remove="src\workers\service-worker.published.ts" />
@@ -227,11 +225,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.0-preview4.20210.8" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.0-preview4.20210.8" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="3.2.0-preview4.20210.8" />
-    <PackageReference Include="Microsoft.Extensions.Localization" Version="3.1.4" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.8.1-rc">
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.0-preview5.20216.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.0-preview5.20216.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="3.2.0-preview5.20216.8" />
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="3.1.5" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.9.7">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
