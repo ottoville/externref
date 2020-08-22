@@ -58,7 +58,7 @@ export class worldPositionScene {
     constructor(public scene: GPUScene) {
     }
     #busy = false;
-    async updateGPUBuffer(): Promise<GPUCommandBuffer | null > {
+    updateGPUBuffer(): GPUCommandBuffer | null {
         if (this.queue.size === 0 || this.#busy)
             return null;        
         this.#busy = true;

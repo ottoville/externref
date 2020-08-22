@@ -1,4 +1,3 @@
-import { Sun } from "./sun.js";
 import { Plants } from "../plants/Plants.js";
 import { PlantsUI } from "../tools/plantsUI.js";
 import { Zones } from "../tools/zones.js";
@@ -24,7 +23,6 @@ import type { TrianglePickingPredicate } from "../lib/babylon/Culling/ray.js";
 import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
 import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
 import { Engine } from "../lib/babylon/Engines/engine.js";
-import { PointLight } from "../lib/babylon/Lights/pointLight.js";
 import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
 import { Matrix, Frustum } from "../lib/babylon/Maths/math.js";
 import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collisionCoordinator.js';
@@ -262,7 +260,6 @@ export class WorldScene extends Scene {
         });
     }
 
-    public SunObject: Sun;
     public stateChange(data: {
         gameSpeed: number
         lastStateChangeGameTime: number
@@ -741,9 +738,6 @@ export class WorldScene extends Scene {
             });
         }
 
-
-        this.SunObject = new Sun(this);
-
         /* let gameEngine = new WorkerThread('js/workers/engine.js');
          gameEngine.message(WorkerReturn.noReturn, 'init', {
              gameTime: this.lastStateChangeGameTime
@@ -808,10 +802,6 @@ export class WorldScene extends Scene {
 
             }
         })
-
-        //let ui = new UI();
-        //ui.registerTab(CameraTab);
-        var sunlight = new PointLight("Omni", this.SunObject.sunPosition, this);
         interface TerrainMap {
             width: number,
             height: number,
