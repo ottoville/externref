@@ -6,10 +6,14 @@ export interface TerraMatrix {
     readonly length: 16;
     [n: number]: never
 }
+
+
+
+
 export class TerraMatrix extends Float32Array {
     constructor(Arr? :  [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]) {
         //@ts-ignore
-        super(Arr||16);
+        super(Arr || 16);
     } //@ts-ignore
     [0]: number;//@ts-ignore
     [1]: number;//@ts-ignore
@@ -33,9 +37,11 @@ export class TerraMatrix extends Float32Array {
 const maxInstances = 10;
 const alignment = 256;
 export class worldPositionScene {
-    instances: Set<worldPosition> = new Set();
-    worldCopyGPU = this.scene.createGPUBuffer(alignment * maxInstances, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC]);
+    instances: Map<worldPosition, number> = new Map();
+    //worldCopyGPU = this.scene.createGPUBuffer(maxInstances* 4 * 16, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC]);
     matrix = this.scene.createGPUBuffer(alignment * maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
+
+    changed = false;
 
     BindGroupLayout = this.scene.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
     BindGroup = this.scene.createBindGroup(this.BindGroupLayout,
@@ -44,33 +50,102 @@ export class worldPositionScene {
             resource: {
                 buffer: this.matrix,
                 offset: 0,
-                size: 16 * 4
+                size: 16 * 4 + 3 * 4
             }
         })
-    updateBuffer: GPUCommandBuffer[];
+   // updateBuffer: GPUCommandBuffer[];
+    queue: Map<Float32Array, number> = new Map();
     constructor(public scene: GPUScene) {
-        const commandEncoder = scene.device.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(
-            this.worldCopyGPU, 0,
-            this.matrix, 0,
-            alignment * maxInstances);
-        this.updateBuffer = [commandEncoder.finish()]
+    }
+    #busy = false;
+    async updateGPUBuffer(): Promise<GPUCommandBuffer | null > {
+        if (this.queue.size === 0 || this.#busy)
+            return null;        
+        this.#busy = true;
+        const dataSize = 4 * 16 + 3 * 4;
+        const tempSize = (dataSize + 4 ) * this.queue.size;
+        const tempBuffer = this.scene.createGPUBuffer(tempSize, [GPUBufferUsage.COPY_SRC], true);
+        let tempOffset = 0;
+        const commandEncoder = this.scene.device.createCommandEncoder();
+        this.queue.forEach((bufferOffset, matrix) => {
+            new Float32Array(tempBuffer.getMappedRange(tempOffset * (dataSize + 4), dataSize)).set(matrix);
+            commandEncoder.copyBufferToBuffer(
+                tempBuffer, tempOffset++ * (dataSize + 4),
+                this.matrix, bufferOffset,
+                dataSize);
+            //new Float32Array(this.worldCopyGPU.getMappedRange(bufferOffset, 4 * 16)).set(matrix);
+        });
+        tempBuffer.unmap();
+       /* this.scene.GPU2CPU(async (arr) => {
+            await arr.mapAsync(GPUMapMode.READ, 0, tempSize);
+            const arrbuff = arr.getMappedRange(0, tempSize);
+            console.log(new Float32Array(arrbuff));
+            //debugger;
+        }, tempBuffer);*/
+        this.queue.clear();
+       // this.worldCopyGPU.unmap();
+
+        this.#busy = false;
+        return commandEncoder.finish();
+
+
+
     }
 }
 export class worldPosition {
+    data: Float32Array = new Float32Array([
+        //3d matrix start, 64 bytes
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0,
+        //3d matrix end
+        //delta start, 12 bytes
+        0, 0, 0
+        //delta end
+    ]);
+    readonly worldMatrix = new Float32Array(this.data.buffer, 0, 16) as TerraMatrix;
+    readonly translation = new Float32Array(this.data.buffer, 12 * this.data.BYTES_PER_ELEMENT, 3);
+    readonly translationDelta: Float32Array = new Float32Array(this.data.buffer, 16 * this.data.BYTES_PER_ELEMENT, 3);
+
     scaling: [number, number, number] = [1, 1, 1];
     rotation: [number, number, number, number] = [0, 0, 0, 0];
-    translation: [number, number, number] = [0, 0, 0];
 
+
+    SetTranslationDelta(value: [number, number, number] | [number, number] | [number] | Float32Array) {
+       // console.log('set delta',value)
+        this.translationDelta.set(value);
+        this.updatePositionBuffer(false);
+    }
+
+
+    SetTranslation(value: [number, number, number] | [number, number] | [number] | Float32Array) {
+     //   this.#previousTranslation.set(this.#translation);
+        this.translation.set(value);
+        this.updatePositionBuffer(false);
+    }
+    setTranslationX(value:number) {
+        this.translation[0] = value;
+        this.updatePositionBuffer(false);
+    }
+    setTranslationY(value: number) {
+        this.translation[1] = value;
+        this.updatePositionBuffer(false);
+    }
+    setTranslationZ(value: number) {
+        this.translation[2] = value;
+        this.updatePositionBuffer(false);
+    }
+   // bufferOffset = this.scene.worldPositionScene.instances.size * alignment;
+
+   // #busy = false;
     bufferOffset = this.scene.worldPositionScene.instances.size * alignment;
-
-
     constructor(public scene: GPUScene) {
-        this.scene.worldPositionScene.instances.add(this);
+        this.scene.worldPositionScene.instances.set(this, this.scene.worldPositionScene.instances.size * alignment);
+        this.updatePositionBuffer(false);
     }
     destroy() {
-        //this.#worldCopyGPU.destroy();
-      //  this.worldPositionGPUBuffer.destroy();
+        this.scene.worldPositionScene.instances.delete(this);
     }
     private updateMatrix(): void {
         const m = this.worldMatrix;
@@ -91,22 +166,18 @@ export class worldPosition {
         m[8] = (xz + wy) * sz;
         m[9] = (yz - wx) * sz;
         m[10] = (1 - (xx + yy)) * sz;
-
-        [m[12], m[13], m[14]] = this.translation;
-        m[15] = 1;
     }
-    worldMatrix: TerraMatrix = new TerraMatrix();
-    busy = false;
+    
 
-    async updatePositionBuffer() {
-        this.updateMatrix();
-        if (this.busy)
-            return;
-        this.busy = true;
-        await this.scene.worldPositionScene.worldCopyGPU.mapAsync(GPUMapMode.WRITE, this.bufferOffset, 4 * 16);
-        new Float32Array(this.scene.worldPositionScene.worldCopyGPU.getMappedRange(this.bufferOffset, 4 * 16)).set(this.worldMatrix);
-        this.scene.worldPositionScene.worldCopyGPU.unmap();
-        this.scene.device.defaultQueue.submit(this.scene.worldPositionScene.updateBuffer);
-        this.busy = false;
+    async updatePositionBuffer(updateMatrix = true) {
+        if (updateMatrix)
+            this.updateMatrix();
+        const bufferOffset = this.scene.worldPositionScene.instances.get(this);
+        if (bufferOffset === undefined)
+            throw (new Error('offset not found'));
+
+
+        this.scene.worldPositionScene.queue.set(this.data, bufferOffset);
+
     }
 }

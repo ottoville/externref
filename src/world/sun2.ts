@@ -47,9 +47,11 @@ function matrixTranslate(x: number, y: number, z: number, m: Float32Array) {
         w: rw
     }
 }
+const zAngle = Math.cos(Math.PI * 0.2);
+const yAngle = Math.sin(Math.PI * 0.2);
 export class Sun2 implements hasPhysics {
     worldPosition = new worldPosition(GPUScene.instance);
-    mesh = GPUScene.instance.positionBindGroupNoTime.addDrawable({
+    mesh = GPUScene.instance.positionBindGroupTime.addDrawable({
         sampleCount: GPUScene.instance.sampleCount,
         rasterizationState: {
             cullMode: 'none',
@@ -71,18 +73,31 @@ export class Sun2 implements hasPhysics {
     onPhysicTick(delta: number) {
 
         let anglePerMinute = (Math.PI * 2) / 1439;
-        let meridian: number = Math.PI * 0.1;
+        //let meridian: number = Math.PI * 0.1;
+        let meridian: number = Math.PI*0.5;
       //  let sundistance = 1496000; //divided by 100000
         let sundistance = 149600; //divided by 100000
-        let secondsOfDay = ~~((Number(this.scene.gameTime) / 1000) % 86400);
+        let secondsOfDay = ~~((Number(this.scene.physics.gameTime*60) / 1000) % 86400);
         let minutesOfDay = secondsOfDay / 60;
-        
+
+        console.log('minutesOfDay', minutesOfDay);
+
         let sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
         let sunPositionX = sundistance * Math.sin(sunAngle);
         let sunPositionY = sundistance * Math.cos(sunAngle);
-        let sunm = rotateMatrix(Math.PI * 0.2, 'x');
-        let newpos = matrixTranslate(sunPositionX, sunPositionY, 0, sunm);
-        this.worldPosition.translation = [newpos.x, newpos.y, newpos.z];
+
+        let sunPositionZ = sunPositionY * zAngle;
+        sunPositionY = sunPositionY * yAngle;
+        const currentPos = this.worldPosition.translation as Float32Array;
+        this.worldPosition.SetTranslationDelta([sunPositionX - currentPos[0], sunPositionY - currentPos[1], sunPositionZ - currentPos[2]]);
+        
+       // this.worldPosition.translation = [sunPositionX, sunPositionY, sunPositionZ];
+
+
+
+        //let sunm = rotateMatrix(Math.PI * 0.2, 'x');
+       // let newpos = matrixTranslate(sunPositionX, sunPositionY, 0, sunm);
+       // this.worldPosition.translation = [newpos.x, newpos.y, newpos.z];
     }
     constructor(public scene: TerraScene) {
         scene.physics.tickables.add(this);

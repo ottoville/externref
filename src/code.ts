@@ -433,8 +433,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //@ts-ignore
                     const renderPass = (engine as WebGPUEngine)._bundleEncoder || (engine as WebGPUEngine)._currentRenderPass!;
 
-                
-                    gpuscene.render(renderPass as GPURenderPassEncoder, time);
+                    
+                    TerraScene.instance.render(renderPass as GPURenderPassEncoder, time);
 
 
                 }

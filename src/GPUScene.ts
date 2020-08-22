@@ -1,5 +1,6 @@
 ﻿import { Drawable } from "./drawables/Drawable";
 import { worldPosition, worldPositionScene } from "./traits/worldPosition";
+import { TerraScene } from "./TerraScene";
 
 
 export class GPUScene { 
@@ -83,7 +84,7 @@ export class GPUScene {
         }
     );
 
-    timeBuffer = this.createGPUBuffer(4,[GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);  //Todo: set to private
+    timeBuffer = this.createGPUBuffer(4 + 4,[GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);  //Todo: set to private
 
 
     //viewprojection and camera position
@@ -139,35 +140,37 @@ export class GPUScene {
             }
         }
     );
-    #timeBufferStorage = this.createGPUBuffer(4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]); 
+    #timeBufferStorage = this.createGPUBuffer(8, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]); 
     static instance: GPUScene;
     //#bufferUpdateEncoders: WeakMap<GPUMapWriteBuffer, GPUCommandBuffer> = new WeakMap();
     baseBindGroup = this.addBindGroup(this.#uniformBindGroup); 
-    #currentTime: Float32Array = new Float32Array(1);
+   // #currentTime: Float32Array = new Float32Array(2);
+   // #timeDelta: Int32Array = new Int32Array(1);
     #createdAt: number = new Date().getTime();
 
     baseBindGroupNoTime = this.addBindGroup(this.#uniformBindGroupNoTime);
     lightsBindGroup = this.baseBindGroupNoTime.addChildBindGroup(this.#uniformBindGroupLights);
+    positionBindGroupTime = this.baseBindGroup.addChildBindGroup(this.worldPositionScene.BindGroup, true);
     positionBindGroupNoTime = this.baseBindGroupNoTime.addChildBindGroup(this.worldPositionScene.BindGroup, true);
 
-    constructor(public device: GPUDevice) {
+    constructor(private scene:TerraScene, public device: GPUDevice) {
+        this.positionBindGroupTime.onRender = async (time) => {
+            return this.worldPositionScene.updateGPUBuffer();
+        }
         this.positionBindGroupNoTime.onRender = async (time) => {
             return this.worldPositionScene.updateGPUBuffer();
-           /* const changed = await this.worldPositionScene.updateGPUBuffer();
-            if (changed) {
-                const commandEncoder = this.device.createCommandEncoder();
-                commandEncoder.copyBufferToBuffer(
-                    this.worldPositionScene.worldCopyGPU, 0,
-                    this.worldPositionScene.matrix, 0,
-                    256 * 10); //alignment * maxinstances
-                //this.worldPositionScene.changed = false;
-                return commandEncoder.finish();
-            }
-            return null;*/
         }
-        this.baseBindGroup.onRender = (time) => {
-            this.#currentTime.set([(this.#createdAt - time) % 100000 / 1000]);  // %100000 is to keep float minimal for greater precise
-            return this.updateBuffer(this.#timeBufferStorage, this.timeBuffer, this.#currentTime.buffer)
+        this.baseBindGroup.onRender = (time, delta) => {
+          //  console.log(delta);
+          //  this.#currentTime.set([(this.#createdAt - time) % 100000 / 1000]);  // %100000 is to keep float minimal for greater precise
+            if (this.scene.gameSpeed >= 0) {
+                var currentTime = new Float32Array([(this.#createdAt - time) % 100000 / 1000, delta]);
+                // this.#currentTime.set([delta],1);  // %100000 is to keep float minimal for greater precise
+            } else {
+                var currentTime = new Float32Array([(this.#createdAt - time) % 100000 / 1000]);
+            }        
+           // this.#timeDelta.set([delta]);
+            return this.updateBuffer(this.#timeBufferStorage, this.timeBuffer, currentTime)
         }
    /*     this.lightsBindGroup.onRender = async (time) => {
 
@@ -189,17 +192,21 @@ export class GPUScene {
         this.#bufferUpdateEncoders.set(this.#uniformBufferSwap, commandEncoderView.finish());*/
         GPUScene.instance = this;
     }
-    async updateBuffer(buffer: GPUMapWriteBuffer, destination: GPUCopyDSTBuffer, ...data: ArrayBuffer[]): Promise<GPUCommandBuffer | null> {
+    async updateBuffer(buffer: GPUMapWriteBuffer, destination: GPUCopyDSTBuffer, ...data: Float32Array[]): Promise<GPUCommandBuffer | null> {
         if (this.#syncedBuffers.has(buffer))
             return null;
         const size = data.reduce((prev, curr) => prev + curr.byteLength, 0);
         this.#syncedBuffers.add(buffer);
         await buffer.mapAsync(GPUMapMode.WRITE, 0, size);
         let offset = 0;
-        data.forEach(buff => {
-            new Int8Array(buffer.getMappedRange(offset, buff.byteLength)).set(new Int8Array(buff));
-            offset += buff.byteLength;
+        data.forEach(view => {
+            new Int8Array(buffer.getMappedRange(offset, view.byteLength)).set(new Int8Array(view.buffer, 0, view.byteLength));
+            offset += view.byteLength;
         });
+       /* data.forEach(view => {
+            new Float32Array(buffer.getMappedRange(offset, view.byteLength)).set(view);
+            offset += view.byteLength;
+        });*/
         buffer.unmap();
 
 
@@ -217,7 +224,7 @@ export class GPUScene {
         
     }
     async updateView(viewProjection: Float32Array, view: Float32Array, viewPosition: Float32Array, cameraPosition: Float32Array) {
-        const encoder = await this.updateBuffer(this.#uniformBufferSwap, this.uniformBuffer, viewProjection.buffer, view.buffer, viewPosition.buffer, cameraPosition.buffer);
+        const encoder = await this.updateBuffer(this.#uniformBufferSwap, this.uniformBuffer, viewProjection, view, viewPosition, cameraPosition);
         if (encoder)
             this.device.defaultQueue.submit([encoder]);
     }
@@ -335,15 +342,22 @@ export class GPUScene {
         });
         return pipeline
     }
-
     render(renderPass: GPURenderPassEncoder, time: DOMHighResTimeStamp) {
+
+        const physicDelta = (this.scene.physics.physicTime - this.scene.physics.gameTime) / this.scene.tickIntervalMs
+        console.log(physicDelta);
+
+
+       // const timeDelta = time - this.#lastRenderTime;
         let index = 0;
-        const commandBuffers: Promise<GPUCommandBuffer|null>[]= [];
+        const commandBuffers: Promise<GPUCommandBuffer | null>[] = [];
+        const me = this;
         BindGroupDrawable.instances.forEach(function drawBindGroups(bgt) {
             if (bgt.meshes.size || bgt.subBindGroups.size) {
-                bgt.onRender && commandBuffers.push(bgt.onRender(time));
+                bgt.onRender && commandBuffers.push(bgt.onRender(time, physicDelta));
                 if (bgt.isDynamic) {
                     bgt.meshes.forEach(m => {
+                        //console.log('offset ', m.dynamicBindGroupOffset)
                         renderPass.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset);
                         m.draw(renderPass, index);
                     });
@@ -364,11 +378,7 @@ export class GPUScene {
         
         Promise.all(commandBuffers).then((buffers) => {
             const buffersNoNull = buffers.filter<GPUCommandBuffer>(function (buff): buff is GPUCommandBuffer { return buff !== null });
-           // console.log('submit', buffersNoNull);
-          //  this.device.defaultQueue.submit(buffersNoNull);
-            buffersNoNull.forEach(b => {
-                this.device.defaultQueue.submit([b]);
-            })
+            this.device.defaultQueue.submit(buffersNoNull);
         });
     }
 }
@@ -377,7 +387,7 @@ export class GroupDrawable {
     meshes: Set<Drawable> = new Set();
     subBindGroups: Set<GroupDrawable> = new Set();
     layout: GPUPipelineLayout;
-    onRender: ((time: DOMHighResTimeStamp) => Promise<GPUCommandBuffer | null>) | null = null;
+    onRender: ((time: DOMHighResTimeStamp, timeDelta: number) => Promise<GPUCommandBuffer | null>) | null = null;
     constructor(public gpuscene: GPUScene, public bindGroupLayout: GPUBindGroupLayout, public parent?: GroupDrawable, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout];
         if (parent) {

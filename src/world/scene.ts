@@ -25,9 +25,8 @@ import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
 import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
 import { Engine } from "../lib/babylon/Engines/engine.js";
 import { PointLight } from "../lib/babylon/Lights/pointLight.js";
-import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
 import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
-import { Matrix } from "../lib/babylon/Maths/math.js";
+import { Matrix, Frustum } from "../lib/babylon/Maths/math.js";
 import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collisionCoordinator.js';
 import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import { Sea } from "./water.js";
@@ -38,7 +37,40 @@ import { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { LazyEval } from "../LazyEval.js";
 import { UITABClassLike, UITAB } from "../UITAB.js";
 import { GPUScene } from "../GPUScene.js";
+import { TerraScene } from "../TerraScene.js";
+import { Sun2 } from "./sun2.js";
+function matrixMultiply64(m: number[], otherM: number[]): number[] {
+    var tm0 = m[0], tm1 = m[1], tm2 = m[2], tm3 = m[3];
+    var tm4 = m[4], tm5 = m[5], tm6 = m[6], tm7 = m[7];
+    var tm8 = m[8], tm9 = m[9], tm10 = m[10], tm11 = m[11];
+    var tm12 = m[12], tm13 = m[13], tm14 = m[14], tm15 = m[15];
 
+    var om0 = otherM[0], om1 = otherM[1], om2 = otherM[2], om3 = otherM[3];
+    var om4 = otherM[4], om5 = otherM[5], om6 = otherM[6], om7 = otherM[7];
+    var om8 = otherM[8], om9 = otherM[9], om10 = otherM[10], om11 = otherM[11];
+    var om12 = otherM[12], om13 = otherM[13], om14 = otherM[14], om15 = otherM[15];
+    const result: number[] = [];
+    result[0] = tm0 * om0 + tm1 * om4 + tm2 * om8 + tm3 * om12;
+    result[1] = tm0 * om1 + tm1 * om5 + tm2 * om9 + tm3 * om13;
+    result[2] = tm0 * om2 + tm1 * om6 + tm2 * om10 + tm3 * om14;
+    result[3] = tm0 * om3 + tm1 * om7 + tm2 * om11 + tm3 * om15;
+
+    result[4] = tm4 * om0 + tm5 * om4 + tm6 * om8 + tm7 * om12;
+    result[5] = tm4 * om1 + tm5 * om5 + tm6 * om9 + tm7 * om13;
+    result[6] = tm4 * om2 + tm5 * om6 + tm6 * om10 + tm7 * om14;
+    result[7] = tm4 * om3 + tm5 * om7 + tm6 * om11 + tm7 * om15;
+
+    result[8] = tm8 * om0 + tm9 * om4 + tm10 * om8 + tm11 * om12;
+    result[9] = tm8 * om1 + tm9 * om5 + tm10 * om9 + tm11 * om13;
+    result[10] = tm8 * om2 + tm9 * om6 + tm10 * om10 + tm11 * om14;
+    result[11] = tm8 * om3 + tm9 * om7 + tm10 * om11 + tm11 * om15;
+
+    result[12] = tm12 * om0 + tm13 * om4 + tm14 * om8 + tm15 * om12;
+    result[13] = tm12 * om1 + tm13 * om5 + tm14 * om9 + tm15 * om13;
+    result[14] = tm12 * om2 + tm13 * om6 + tm14 * om10 + tm15 * om14;
+    result[15] = tm12 * om3 + tm13 * om7 + tm14 * om11 + tm15 * om15;
+    return result;
+}
 
 Scene.CollisionCoordinatorFactory = () => {
     return new DefaultCollisionCoordinator();
@@ -88,8 +120,61 @@ export class WorldScene extends Scene {
     sea: Sea;
     //@ts-ignore
     plants: Plants;
-    #groundP: Promise<SharedArrayBuffer>;
     DBP: Promise<EarthDatabase>;
+
+    /**
+ * Sets the current transform matrix
+ * @param viewL defines the View matrix to use
+ * @param projectionL defines the Projection matrix to use
+ * @param viewR defines the right View matrix to use (if provided)
+ * @param projectionR defines the right Projection matrix to use (if provided)
+ */
+    public setTransformMatrix(viewL: Matrix, projectionL: Matrix, viewR?: Matrix, projectionR?: Matrix): void {
+        //@ts-ignore
+        if (this._viewUpdateFlag === viewL.updateFlag && this._projectionUpdateFlag === projectionL.updateFlag) {
+            return;
+        }
+        //@ts-ignore
+        this._viewUpdateFlag = viewL.updateFlag;
+        //@ts-ignore
+        this._projectionUpdateFlag = projectionL.updateFlag;
+        this._viewMatrix = viewL;
+        //@ts-ignore
+        this._projectionMatrix = projectionL;
+        //@ts-ignore
+        this._viewMatrix.multiplyToRef(this._projectionMatrix, this._transformMatrix);
+
+        // Update frustum
+        if (!this._frustumPlanes) {
+            //@ts-ignore
+            this._frustumPlanes = Frustum.GetPlanes(this._transformMatrix);
+        } else {
+            //@ts-ignore
+            Frustum.GetPlanesToRef(this._transformMatrix, this._frustumPlanes);
+        }
+        //@ts-ignore
+        this._sceneUbo.updateMatrix("viewProjection", this._transformMatrix);
+        //@ts-ignore
+        this._sceneUbo.updateMatrix("view", this._viewMatrix);
+
+        const eyePosition = this._forcedViewPosition ? this._forcedViewPosition : (this._mirroredCameraPosition ? this._mirroredCameraPosition : (this.activeCamera!).globalPosition);
+        const invertNormal = (this.useRightHandedSystem === (this._mirroredCameraPosition != null));
+        //@ts-ignore
+        this._sceneUbo.updateFloat4("viewPosition",
+            eyePosition.x,
+            eyePosition.y,
+            eyePosition.z,
+            invertNormal ? -1 : 1);
+       //@ts-ignore
+       // this._sceneUbo.update();
+        //@ts-ignore
+        GPUScene.instance.updateView(this._transformMatrix.m, this._viewMatrix.m, new Float32Array([eyePosition.x,
+            eyePosition.y,
+            eyePosition.z,
+            invertNormal ? -1 : 1]), new Float32Array([this.camera.position.x, this.camera.position.y, this.camera.position.z]))
+
+    }
+
     createPickingRayToRef(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
 
         var engine = this.getEngine();
@@ -126,7 +211,8 @@ export class WorldScene extends Scene {
         return new Promise((res: (pi: PickingInfo) => void) => {
             var world = mesh.getWorldMatrix();
             var ray = rayFunction(world);
-            if (typeof ((mesh as TerraMesh).intersectsPromise) !== 'undefined')
+            //@ts-ignore
+            if (typeof ((mesh as TerraMesh).intersectsPromise) !== 'undefined') //@ts-ignore
                 (mesh as TerraMesh).intersectsPromise(ray, fastCheck).then(res);
             else
                 res(mesh.intersects(ray, fastCheck));
@@ -142,17 +228,30 @@ export class WorldScene extends Scene {
                 return this.collissionCheck(rayFunction, ++meshIndex, pickResult);
         });
     }
+
     pickPromise(x: number, y: number, predicate?: (mesh: AbstractMesh) => boolean, fastCheck?: boolean, camera?: Nullable<Camera>,
         trianglePredicate?: TrianglePickingPredicate): Promise<PickingInfo | null> {
-
+        const cwidth = ~~TerraScene.instance.canvas.getAttribute('width')!;
+        const cheight = ~~TerraScene.instance.canvas.getAttribute('height')!;
         let rayFunction = (world: Matrix) => {
             if (!this._tempPickingRay) {
                 this._tempPickingRay = Ray.Zero();
             }
 
             this.createPickingRayToRef(x, y, world, this._tempPickingRay, this.cameraToUseForPointers || null);
-            return this._tempPickingRay;
+
+            const view = Matrix.FromArray(Array.from(new Float32Array(TerraScene.instance.view)));
+            const projection = Matrix.FromArray(Array.from(new Float32Array(TerraScene.instance.projection)));
+           // const viewProjection = view.multiply(projection);
+          //  const viewProjection = matrixMultiply64(Array.from(new Float32Array(TerraScene.instance.view)), Array.from(new Float32Array(TerraScene.instance.projection)));
+            //TODO: reuse picking ray object
+            const pickingRay = TerraScene.instance.createPickingRay(x, y, world.m as Float32Array, cwidth, cheight);
+            return pickingRay;
+
+
+          //  return this._tempPickingRay;
         };
+        //@ts-ignore
         return this.collissionCheck(rayFunction, 0, null, fastCheck, predicate).then((pickResult: PickingInfo | null) => {
             /* _internalPick ends */
             if (pickResult) {
@@ -163,28 +262,16 @@ export class WorldScene extends Scene {
         });
     }
 
-    private gameSpeed = BigInt(0);
-    private lastStateChangeGameTime = BigInt(21600 * 1000); //6 hours
-    private lastStateChangeTime = new Date().getTime();
-    /*public getGameTime(): bigint {
-        if (this.gameSpeed < 0)
-            return this.lastStateChangeGameTime;
-        let interval = new Date().getTime() - this.lastStateChangeTime;
-        return this.lastStateChangeGameTime + (BigInt(interval * 60) << this.gameSpeed);
-    }*/
     public SunObject: Sun;
-    public stateChange(data: number) {
+    public stateChange(data: {
+        gameSpeed: number
+        lastStateChangeGameTime: number
+        lastStateChangeTime: number}) {
+
+        TerraScene.instance.gameSpeed = data.gameSpeed;
         if (this.webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'stateChange', data }))
             return;
-            /* this.lastStateChangeGameTime = this.getGameTime();
-             this.lastStateChangeTime = new Date().getTime();
-             this.gameSpeed = BigInt((<HTMLInputElement>evt.target).value);*/
-            let gameStateEvent = {
-                speed: Number(this.gameSpeed),
-                lastStateChangeGameTime: Number(this.lastStateChangeGameTime),
-                lastStateChangeTime: this.lastStateChangeTime
-            };
         }
         //gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
     };
@@ -411,8 +498,10 @@ export class WorldScene extends Scene {
 
                 // Meshes
             inputmanager._pickedDownMesh = null;
-            scene.pickPromise(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers).then(pickResult => {
-                    if (pickResult)
+                       // scene.pickPromise(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers).then(pickResult => {
+
+            TerraScene.instance.pickPromise(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY).then(pickResult => {
+                if (pickResult) //@ts-ignore
                         inputmanager._processPointerDown(pickResult, evt);
                 });
             };
@@ -575,16 +664,7 @@ export class WorldScene extends Scene {
     //    }).bind(this._inputManager)(this, elementToAttachTo);
     }
     public terrainReady: Promise<void>;
-    public uniformBindGroupLayout = this.device.createBindGroupLayout({
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX,
-                type: 'uniform-buffer'
-            }
-        ]
-    })
-    #uniformBindGroup: GPUBindGroup;
+
     constructor(
         engine: Engine | WebGPUEngine,
         userinfo: loginProvider,
@@ -599,16 +679,6 @@ export class WorldScene extends Scene {
         this.getSceneUniformBuffer().create();
         //@ts-ignore
         this.getSceneUniformBuffer()._buffer._buffer = GPUScene.instance.uniformBuffer;
-        this.#uniformBindGroup=this.device.createBindGroup({
-            layout: this.uniformBindGroupLayout,
-            entries: [{
-                binding: 0,
-                resource: {
-                    //@ts-ignore
-                    buffer: this.getSceneUniformBuffer()._buffer.underlyingResource
-                }
-            }],
-        })
 
         blazor.invokeMethod('setProgress', 21);
         const scene:Scene = this;
@@ -672,8 +742,6 @@ export class WorldScene extends Scene {
         }
 
 
-
-
         this.SunObject = new Sun(this);
 
         /* let gameEngine = new WorkerThread('js/workers/engine.js');
@@ -692,10 +760,10 @@ export class WorldScene extends Scene {
         this.camera.angularSensibilityX = 1000;
         this.camera.angularSensibilityY = 2000;
 
-        this.camera.lowerBetaLimit = 0.2;
-        this.camera.upperBetaLimit = (Math.PI / 2) * 0.6;
+      // this.camera.lowerBetaLimit = 0.2;
+      //  this.camera.upperBetaLimit = (Math.PI / 2) * 0.6;
 
-        this.camera.lowerRadiusLimit = 10;
+       // this.camera.lowerRadiusLimit = 10;
          //@ts-ignore
         this.camera.panningAxis = new Vector3(1, 0, 1)
         this.camera.checkCollisions = true;
@@ -705,7 +773,6 @@ export class WorldScene extends Scene {
         this.camera2 = new ArcRotateCamera("Camera2", 0, 0, 10, new Vector3(500, 20, 0), this);
         this.camera2.target = this.camera.target;
         this.camera2.viewport = new Viewport(0, 0, 0.5, 1.0);
-
         DB.then(DB => {
             DB.transaction("save").objectStore("save").get(0).onsuccess = (evt) => {
                 if ((<IDBRequest>evt.target).result) {
@@ -742,19 +809,9 @@ export class WorldScene extends Scene {
             }
         })
 
-
-
-
-
-
         //let ui = new UI();
         //ui.registerTab(CameraTab);
         var sunlight = new PointLight("Omni", this.SunObject.sunPosition, this);
-        let shadermateria = new ShaderMaterial("shader", this, "./shaders/ground",
-            {
-                attributes: ["position", "normal", "uv"],
-                uniforms: ["world", "worldView", "worldViewProjection", "view", "projection", "lightPos", "cameraPosition"]
-            });
         interface TerrainMap {
             width: number,
             height: number,
@@ -772,16 +829,41 @@ export class WorldScene extends Scene {
         blazor.invokeMethod('setProgress', data.data.progress, data.data.error);
     });
     */
-        this.#groundP = Terrain.fromHeightMap('/images/tenerife3_75.webp', device);
+
+
+        new Sun2(TerraScene.instance);
+        
         this.terrainInited = new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
+            /*
+            const t = await caches.match(new Request('/terrain.webp')).then(async cachedvertices => {
+                if (cachedvertices) {
+                    console.log('cachedvertices');
+                    const buffer = await Terrain.fromSave(cachedvertices, GPUScene.instance);
+                    return new Terrain(buffer, 'CreateGroundFromSave.comp', GPUScene.instance);
+                } else {
+                    const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp', GPUScene.instance);
+                    return new Terrain(buffer, 'CreateGroundFromHeightMap.comp', GPUScene.instance);
+                }
+            })*/
+            const t = await caches.match(new Request('/terrain')).then(async cachedvertices => {
+                if (cachedvertices) {
+                    console.log('cachedvertices');
+                    const buffer = await Terrain.fromSave(cachedvertices);
+                    return new Terrain(buffer, 'CreateGroundFromSave.comp', TerraScene.instance);
+                } else {
+                    const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp', TerraScene.instance.gpuscene);
+                    return new Terrain(buffer, 'CreateGroundFromHeightMap.comp', TerraScene.instance);
+                }
+            })
+            
             try {
                 
-                let cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
+                const cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
                 if (cachedtexture) {
                     let cacheimg = new Image();
                     cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
 
-                    tres([new Terrain(await this.#groundP, GPUScene.instance), cacheimg.decode().then(() => {
+                    tres([t,cacheimg.decode().then(async () => {
                         let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
                         let imgctx = imgcanvas.getContext('2d');
                         if (!imgctx)
@@ -789,13 +871,9 @@ export class WorldScene extends Scene {
                         imgctx.drawImage(cacheimg, 0, 0);
                         //let pixels = imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data;
                         // const padding = pixels.byteLength % 4;
-                        //@ts-ignore
-                        const [gpuBuffer, arrarBuffer] = device.createBufferMapped({
-                            size: cacheimg.width * cacheimg.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT,
-                            //@ts-ignore
-                            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-                        });
-                        new Uint8ClampedArray(arrarBuffer).set(imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data);
+                        const gpuBuffer = GPUScene.instance.createGPUBuffer(cacheimg.width * cacheimg.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], true);
+                        await gpuBuffer.mapAsync(GPUMapMode.WRITE);
+                        new Uint8ClampedArray(gpuBuffer.getMappedRange()).set(imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data);
                         gpuBuffer.unmap();
                         return gpuBuffer;
                     })]);
@@ -803,10 +881,10 @@ export class WorldScene extends Scene {
                 }
                 //progelem.value = 40;
                 blazor.invokeMethod('setProgress', 30);
-                const t = new Terrain(await this.#groundP, GPUScene.instance);
-                const ground = t.terraMesh;
+                
+               // const ground = t.terraMesh;
                 tres([t, t.createTexture(engine as WebGPUEngine)]);
-                let obj = {
+               /* let obj = {
                     width: 10000,
                     height: 10000,
                     indices: new Uint32Array(ground.indices!),
@@ -814,7 +892,7 @@ export class WorldScene extends Scene {
                     uvs: new Float32Array(ground.uvs || [])
                 };
                 let trans2 = (await DB).transaction('maps', 'readwrite');
-                trans2.objectStore('maps').add(obj);
+                trans2.objectStore('maps').add(obj);*/
 
 
             } catch (e) {
@@ -834,16 +912,13 @@ export class WorldScene extends Scene {
             })
 
 
-            ground.terraMesh.checkCollisions = true;
+           // ground.terraMesh.checkCollisions = true;
             blazor.invokeMethod('setProgress', 50);
-            ground.terraMesh.isPickable = true;
+          //  ground.terraMesh.isPickable = true;
             this.getSceneUniformBuffer().update();
-
-            this.tools.set('TerrainTool', TerrainTool);
             blazor.invokeMethod('setProgress', 51);
-            shadermateria.setVector3("lightPos", sunlight.position);
+            this.tools.set('TerrainTool', TerrainTool);
             blazor.invokeMethod('setProgress', 52);
-            shadermateria.setVector3("cameraPosition", this.camera.position);
 
             this.tools.set('Plants', PlantsUI);
 
@@ -914,8 +989,8 @@ export class WorldScene extends Scene {
                 //engine.createTexture("https://playground.babylonjs.com/textures/grass.png", true, true, this);
                 // grass2.ambientTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
                 grass2.diffuseTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
-                // grass2.diffuseColor = new Color3(0.2, 1, 0.3);
-                ground.terraMesh.material = grass2;
+
+              //  ground.terraMesh.material = grass2;
                 blazor.invokeMethod('setProgress', 100);
                 console.debug("Progress 100");
                 
@@ -932,7 +1007,7 @@ export class WorldScene extends Scene {
         try {
             let tool: UITABClassLike | undefined;
             if (tool = this.tools.get(name)) {
-                //tool.instance = new tool(this, await this.#groundP, this.camera);
+                tool.instance = new tool(this, (await this.terrainInited)[0], this.camera);
             }
         } catch (e) {
             console.error(e);

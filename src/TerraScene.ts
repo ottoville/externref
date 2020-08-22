@@ -122,7 +122,7 @@ export class TerraScene {
 
     adapter = this.window.navigator.gpu!.requestAdapter();
     device = this.adapter.then(adapter => adapter.requestDevice());
-    gpuscenePromise = this.device.then(device => new GPUScene(device));
+    gpuscenePromise = this.device.then(device => new GPUScene(this, device));
     view = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
     projection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
 
@@ -131,33 +131,38 @@ export class TerraScene {
 
     viewProjection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
 
-    #gpuscene: GPUScene | undefined;
-    get gpuscene(): GPUScene {
-        if (!this.#gpuscene)
-            throw (new Error('GPUScene has not been initalized'));
-        return this.#gpuscene;
-    }
+    gpuscene!: GPUScene;
+
     static instance: TerraScene;
     canvas = this.window.document.getElementsByTagName('canvas')[0];
 
-    #gameSpeed = 0;
-    #lastStateChangeGameTime = 216000000; //21600 * 1000; //6 hours
-    #lastStateChangeTime = new Date().getTime()
-    physics = new Physics();
+    
+    #lastStateChangeGameTime = BigInt(216000000); //21600 * 1000; //6 hours
+    lastStateChangeTime = new Date().getTime()
+    tickIntervalMs = 1000;
+    physics = new Physics(this);
     constructor(private window: Window) 
     {
         TerraScene.instance = this;
-        this.gpuscenePromise.then(scene => this.#gpuscene = scene);
+        this.gpuscenePromise.then(scene => this.gpuscene = scene);
         
     }
     render(renderPass: GPURenderPassEncoder, time: DOMHighResTimeStamp) {
-
+        this.gpuscene.render(renderPass, time)
+    }
+    set gameSpeed(value: number)
+    {
+        console.log('set gameSpeed',value)
+        this.#lastStateChangeGameTime = this.gameTime;
+        this.lastStateChangeTime = new Date().getTime();
+        
+        this.physics.gameSpeed = Number(value);
     }
     get gameTime() {
-        if (this.#gameSpeed < 0)
+        if (this.physics.gameSpeed < 0)
             return this.#lastStateChangeGameTime;
-        var interval = new Date().getTime() - this.#lastStateChangeTime;
-        return this.#lastStateChangeGameTime + ((interval * 60) << this.#gameSpeed);
+        var interval = new Date().getTime() - this.lastStateChangeTime;
+        return this.#lastStateChangeGameTime + (BigInt((interval * 60) << this.physics.gameSpeed));
     }
     sunPosition: Float32Array = new Float32Array(3);
     async collissionCheck(rayFunction: (mesh: boundable) => any, boundables: IterableIterator<boundable>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: boundable) => boolean): Promise<PickingInfo | null> {
