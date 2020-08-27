@@ -1,12 +1,9 @@
-﻿import type { Drawable } from "../drawables/Drawable.js";
-import { GPUScene, BindGroupDrawable, BindGroupLayoutTwoBinding } from "../GPUScene.js";
+﻿import { GPUScene } from "../GPUScene.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
-import { worldPosition } from "../traits/worldPosition.js";
-import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { TerraScene } from "../TerraScene.js";
 import { boundable, Bounding } from "../traits/Boundable.js";
 import { TerrainTool } from "../tools/Terrain.js";
-import { SetParentAction } from "../lib/babylon/index.js";
+import { worldPosition } from "../traits/worldPosition.js";
 
 
 export interface TerrainPipelineLayoutPosition extends GPUPipelineLayout {
@@ -68,10 +65,10 @@ export class Terrain implements boundable {
     #ratioX = Terrain.subdivisionsX / this.#width;
     #ratioY = Terrain.subdivisionsY / this.#height;
 
-    static heightLayouts: Map<GPUScene, BindGroupLayoutTwoBinding> = new Map();
+    static heightLayouts: Map<GPUScene, BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>> = new Map();
     //terraMesh: TerraMesh;
-    static getHeightsLayout(scene: GPUScene): BindGroupLayoutTwoBinding {
-        let layout: BindGroupLayoutTwoBinding | undefined;
+    static getHeightsLayout(scene: GPUScene): BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> {
+        let layout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | undefined;
         if (layout = Terrain.heightLayouts.get(scene)) {
             return layout;
         }
@@ -107,8 +104,8 @@ export class Terrain implements boundable {
     //TerrainHeightsbindGroupTree = this.scene.gpuscene.baseBindGroup.addChildBindGroup(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene), ...this.heightsBindGroupEntries));
     TerrainHeightsbindGroupTree = this.scene.gpuscene.baseBindGroup.addChildBindGroup(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene), ...this.heightsBindGroupEntries));
 
-   // TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene), ...this.heightsBindGroupEntries), this.scene.gpuscene.singleVertexUniformLayout)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
-    TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildLayout(this.scene.gpuscene.singleVertexUniformLayout)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
+    // TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildLayout(worldPosition.BindGroupLayout)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
+    TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpuscene.worldPositionScene.BindGroup,true)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
 
 
 
@@ -176,6 +173,7 @@ export class Terrain implements boundable {
             return context.getImageData(0, 0, cacheimg.width, cacheimg.height).data.buffer;*/
     }
     public createTexture(engine: WebGPUEngine): Promise<GPUBuffer> {
+        console.log('creating texture');
         return new Promise(async (tres, trej) => {
 
             const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5120 * 5120);
@@ -566,7 +564,7 @@ export class Terrain implements boundable {
             this.serialize();
         })();
 
-        const m = scene.gpuscene.lightsBindGroup.addDrawable({
+        const m = scene.gpuscene.lights.lightsBindGroup.addDrawable({
             sampleCount: GPUScene.instance.sampleCount,
             primitiveTopology: 'triangle-list',
             depthStencilState: {
@@ -605,7 +603,7 @@ export class Terrain implements boundable {
                     }]
             },
             // layout: pipelineLayout,
-        }, null, this.#terrainIndicesLength/4, 1)
+        }, this.#terrainIndicesLength/4, 1)
         m.setVertexBuffer(0, this.#terrainPositionAndUvsAndNormalsGPU);
         m.setIndexBuffer(terrainIndicesGPU);
       //  this.terraMesh = new TerraMesh('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);

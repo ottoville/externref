@@ -1,6 +1,11 @@
 #version 450
 layout(location = 0) out vec4 glFragColor;
 
+
+layout(set = 1, binding = 0) readonly buffer Lights {
+    float matrix[];
+};
+
 //in vec3 vPosition;
 //in vec3 vNormal;
 //in vec2 vUV;
@@ -11,9 +16,26 @@ layout(location = 0) out vec4 glFragColor;
 //uniform vec3 lightPos;
 //uniform vec3 cameraPosition;
 
+//layout(set = 0, binding = 0) uniform Camera {
+//    vec3 cameraPosition;
+//} camera;
+
+const uint alignment=256;
+const uint maxInstances=10;
+const uint i=0;
+
+const uint a = 12;
+const uint b = 13;
+const uint c = 14;
+
+
 void main(void) {
 
-    glFragColor = vec4(0.0,1.0,0.0,1.0);
+    //glFragColor = vec4(0.0,1.0,0.0,1.0);
+
+    vec3 lpos=vec3(matrix[i+12],matrix[i+13],matrix[i+14]);
+
+    glFragColor = vec4(abs(matrix[a])/1495000,abs(matrix[b])/1495000,abs(matrix[c])/1495000,1.0);
 
    // float specularStrength = 0.2;
 

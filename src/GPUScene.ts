@@ -1,6 +1,9 @@
 ﻿import { Drawable } from "./drawables/Drawable";
-import { worldPosition, worldPositionScene } from "./traits/worldPosition";
-import { TerraScene } from "./TerraScene";
+import { worldPositionScene } from "./traits/worldPosition";
+import type { TerraScene } from "./TerraScene";
+import { Light } from "./lights";
+
+
 
 
 export class GPUScene { 
@@ -8,69 +11,8 @@ export class GPUScene {
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     sampleCount: number = 1;
 
-    shaderModules: Map<string, GPUShaderModule> = new Map();
     GPUBindGroupLayouts: WeakMap<GPUBindGroup, GPUBindGroupLayout> = new WeakMap();
-    worldPositionScene = new worldPositionScene(this);
 
-    addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)) {
-        const bglayout = this.GPUBindGroupLayouts.get(bindgroup);
-        if (!bglayout)
-            throw ('Bindgroup layout not found from weakmap');
-        return new BindGroupDrawable(this, bglayout,undefined, bindgroup);
-    }
-
-    get canvas(): HTMLCanvasElement {
-        return GPUScene.canvas;
-    }
-    singleWritableStorageLayout = this.device.createBindGroupLayout({
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.COMPUTE,
-                type: "storage-buffer"
-            }]
-    })
-    singleVertexUniformLayout = this.createBindGroupLayout(
-            {
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX,
-                type: 'uniform-buffer'
-            })
-    
-
-   /* createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutOneBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutTwoBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic, entry3: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutThreeBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic, entry3: GPUBindGroupLayoutEntryNoDynamic, entry4: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutFourBinding*/
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutOneBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutTwoBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry, entry3: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutThreeBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry, entry3: GPUBindGroupLayoutEntry, entry4: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutFourBinding
-    createBindGroupLayout(...entries: GPUBindGroupLayoutEntry[]): GPUBindGroupLayout {
-        return this.device.createBindGroupLayout({ entries })
-    }
-
-    createBindGroup(layout: BindGroupLayoutOneBinding, entry1: GPUBindGroupEntry): BindGroupOneBinding
-    createBindGroup(layout: BindGroupLayoutTwoBinding, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry): BindGroupTwoBinding
-    createBindGroup(layout: BindGroupLayoutThreeBinding, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry, entry3: GPUBindGroupEntry): BindGroupThreeBinding
-    createBindGroup(layout: BindGroupLayoutFourBinding, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry, entry3: GPUBindGroupEntry, entry4: GPUBindGroupEntry): BindGroupFourBinding
-    createBindGroup(layout: GPUBindGroupLayout, ...entries: GPUBindGroupEntry[]): GPUBindGroup {
-        const bindGroup = this.device.createBindGroup({ layout, entries });
-        this.GPUBindGroupLayouts.set(bindGroup, layout);
-        return bindGroup
-    }
-
-    #uniformBindGroupLayout = this.singleVertexUniformLayout;
-    #uniformBindGroupLayoutLights = this.createBindGroupLayout({
-        binding: 0,
-        visibility: GPUShaderStage.VERTEX,
-        type: 'uniform-buffer'
-    }/*,
-            {
-                binding: 1,
-                visibility: GPUShaderStage.FRAGMENT,
-                type: 'uniform-buffer'
-            }*/);
     #uniformBindGroupLayoutWithTime = this.createBindGroupLayout(
         {
             binding: 0,
@@ -83,33 +25,39 @@ export class GPUScene {
             type: 'uniform-buffer'
         }
     );
-
-    timeBuffer = this.createGPUBuffer(4 + 4,[GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);  //Todo: set to private
-
-
+    timeBuffer = this.createGPUBuffer(4 + 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);  //Todo: set to private
     //viewprojection and camera position
     uniformBuffer = this.createGPUBuffer(4 * 16 * 2 + 4 * 4 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
 
+    singleWritableStorageLayout = this.device.createBindGroupLayout({
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.COMPUTE,
+                type: "storage-buffer"
+            }]
+    })
+    singleVertexUniformLayout = this.createBindGroupLayout(
+        {
+            binding: 0,
+            visibility: GPUShaderStage.VERTEX,
+            type: 'uniform-buffer'
+        })
 
-    readonly maxLights = 1;
-
-    /*
-     * Goround shader
-     * 
-     * sun direction: vec3
-     * lights amount: uint32,
-     * 
-     * otherLights[]:
-     * position vec3,
-     * type: uint32 (point, directional, spotlight, ambient)
-     * 
-     * light color vec3
-     * intensity uint32
-     * */
-    #lightsBuffer = this.createGPUBuffer(3 * 4 + 4 + this.maxLights*(3*4+4+3*4+4), [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
-
-
-    #uniformBufferSwap = this.createGPUBuffer(4 * 16 * 2 + 4 * 4 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+    #uniformBindGroup = this.createBindGroup(
+        this.#uniformBindGroupLayoutWithTime,
+        {
+            binding: 0,
+            resource: {
+                buffer: this.uniformBuffer
+            }
+        }, {
+        binding: 1,
+        resource: {
+            buffer: this.timeBuffer
+        }
+    });
+    #uniformBindGroupLayout = this.singleVertexUniformLayout;
     #uniformBindGroupNoTime = this.createBindGroup(
         this.#uniformBindGroupLayout,
         {
@@ -119,56 +67,101 @@ export class GPUScene {
             }
         }
     );
-    #uniformBindGroupLights = this.createBindGroup(this.#uniformBindGroupLayoutLights,
-    {
-        binding: 0,
-        resource: {
-            buffer: this.#lightsBuffer
+
+    baseBindGroup = this.addBindGroup(this.#uniformBindGroup);
+    baseBindGroupNoTime = this.addBindGroup(this.#uniformBindGroupNoTime);
+
+
+    shaderModules: Map<string, GPUShaderModule> = new Map();
+    
+    worldPositionScene = new worldPositionScene(this);
+
+   
+
+    addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)) {
+        const bglayout = this.GPUBindGroupLayouts.get(bindgroup);
+        if (!bglayout)
+            throw ('Bindgroup layout not found from weakmap');
+        return new BindGroupDrawable(this, bglayout,undefined, bindgroup);
+    }
+
+    get canvas(): HTMLCanvasElement {
+        return GPUScene.canvas;
+    }
+
+    
+
+   /* createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutOneBinding
+    createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutTwoBinding
+    createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic, entry3: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutThreeBinding
+    createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic, entry3: GPUBindGroupLayoutEntryNoDynamic, entry4: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutFourBinding*/
+
+    //createBindGroupLayout2<T extends GPUBindGroupLayoutEntry[]>(...entries: [GPUBindGroupLayoutEntryReadStorage, ...GPUBindGroupLayoutEntry[]]): TerraBindGroupLayout<T, GPUStorageBuffer>
+    createBindGroupLayout<T extends GPUBindGroupLayoutEntry>(entry: T): BindGroupLayoutOneBinding<T>
+    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries:T): BindGroupLayoutTwoBinding<T>
+    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries:T): BindGroupLayoutThreeBinding<T>
+    createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(...entries: T): TerraBindGroupLayout<T> {
+        const layout = this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout<T>;
+        layout.createBindGroup = (...entries: GPUBindGroupEntry[]) => {
+            const bindGroup = this.device.createBindGroup({ layout, entries });
+            this.GPUBindGroupLayouts.set(bindGroup, layout);
+            return bindGroup
         }
-    });
-    #uniformBindGroup = this.createBindGroup(
-        this.#uniformBindGroupLayoutWithTime,
-        {
-            binding: 0,
-            resource: {
-                buffer: this.uniformBuffer
-            }
-        }, {
-            binding: 1,
-            resource: {
-                buffer: this.timeBuffer
-            }
-        }
-    );
+        return this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout<T>;
+    }
+
+    //createBindGroupLayout(entry1: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutOneBinding
+  /*  createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutTwoBinding
+    createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry, entry3: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutThreeBinding
+    createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry, entry3: GPUBindGroupLayoutEntry, entry4: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutFourBinding
+    createBindGroupLayout(...entries: GPUBindGroupLayoutEntry[]): GPUBindGroupLayout {
+        return this.device.createBindGroupLayout({ entries });
+    }*/
+
+    //createBindGroup(layout: BindGroupLayoutOneBinding, entry1: GPUBindGroupEntry): BindGroupOneBinding
+    createBindGroup<T extends GPUBindGroupLayout>(layout: T, ...entries: bindings<T>): getBindType<T>
+
+  //  createBindGroup(layout: BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry>, entry1: GPUBindGroupEntry): BindGroupOneBinding
+  //  createBindGroup(layout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry,GPUBindGroupLayoutEntry]>, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry): BindGroupTwoBinding
+   /* createBindGroup(layout: BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry, entry3: GPUBindGroupEntry): BindGroupThreeBinding
+    createBindGroup(layout: BindGroupLayoutFourBinding, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry, entry3: GPUBindGroupEntry, entry4: GPUBindGroupEntry): BindGroupFourBinding*/
+    createBindGroup(layout: GPUBindGroupLayout, ...entries: GPUBindGroupEntry[]): GPUBindGroup {
+        const bindGroup = this.device.createBindGroup({ layout, entries });
+        this.GPUBindGroupLayouts.set(bindGroup, layout);
+        return bindGroup
+    }
+
+    
+
+
+    #uniformBufferSwap = this.createGPUBuffer(4 * 16 * 2 + 4 * 4 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+
+
     #timeBufferStorage = this.createGPUBuffer(8, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]); 
     static instance: GPUScene;
     //#bufferUpdateEncoders: WeakMap<GPUMapWriteBuffer, GPUCommandBuffer> = new WeakMap();
-    baseBindGroup = this.addBindGroup(this.#uniformBindGroup); 
-   // #currentTime: Float32Array = new Float32Array(2);
-   // #timeDelta: Int32Array = new Int32Array(1);
     #createdAt: number = new Date().getTime();
+  
 
-    baseBindGroupNoTime = this.addBindGroup(this.#uniformBindGroupNoTime);
-    lightsBindGroup = this.baseBindGroupNoTime.addChildBindGroup(this.#uniformBindGroupLights);
-    positionBindGroupTime = this.baseBindGroup.addChildBindGroup(this.worldPositionScene.BindGroup, true);
-    positionBindGroupNoTime = this.baseBindGroupNoTime.addChildBindGroup(this.worldPositionScene.BindGroup, true);
 
-    constructor(private scene:TerraScene, public device: GPUDevice) {
-        this.positionBindGroupTime.onRender = async (time) => {
+    lights = new Light(this);
+    positionBindGroupLightsTime = this.lights.lightsBindGroup.addChildBindGroup(this.worldPositionScene.BindGroup, true);
+
+    constructor(private scene: TerraScene, public device: GPUDevice) {
+        this.worldPositionScene.positionBindGroupTime.onRender = async (time) => {
             return this.worldPositionScene.updateGPUBuffer();
         }
-        this.positionBindGroupNoTime.onRender = async (time) => {
+        this.positionBindGroupLightsTime.onRender = async (time) => {
+            return this.worldPositionScene.updateGPUBuffer();
+        }
+        this.worldPositionScene.positionBindGroupNoTime.onRender = async (time) => {
             return this.worldPositionScene.updateGPUBuffer();
         }
         this.baseBindGroup.onRender = (time, delta) => {
-          //  this.#currentTime.set([(this.#createdAt - time) % 100000 / 1000]);  // %100000 is to keep float minimal for greater precise
             if (delta !== null) {
                 var currentTime = new Float32Array([(this.#createdAt - time) % 100000 / 1000, delta]);
-                console.log([(this.#createdAt - time) % 100000 / 1000, delta]);
-                // this.#currentTime.set([delta],1);  // %100000 is to keep float minimal for greater precise
             } else
                 var currentTime = new Float32Array([(this.#createdAt - time) % 100000 / 1000]);        
-           // this.#timeDelta.set([delta]);
             return this.updateBuffer(this.#timeBufferStorage, this.timeBuffer, currentTime)
         }
    /*     this.lightsBindGroup.onRender = async (time) => {
@@ -233,6 +226,7 @@ export class GPUScene {
     #syncedBuffers: WeakSet<GPUMapWriteBuffer | GPUMapReadBuffer> = new WeakSet()
     //uniform
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer
+    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
     //index
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX], mappedAtCreation?: boolean): GPUIndexBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUIndexBuffer & GPUStorageBuffer
@@ -346,7 +340,7 @@ export class GPUScene {
         if (this.scene.physics.gameSpeed == -1)
             physicDelta = null;
         else
-            physicDelta = (this.scene.physics.physicTime - this.scene.physics.gameTime) / (this.scene.tickIntervalMs << this.scene.physics.gameSpeed)
+            physicDelta = (this.scene.physics.physicTime - this.scene.physics.gameTime) / ((this.scene.tickIntervalMs/1000) << this.scene.physics.gameSpeed)
         let index = 0;
         const commandBuffers: Promise<GPUCommandBuffer | null>[] = [];
         BindGroupDrawable.instances.forEach(function drawBindGroups(bgt) {
@@ -396,11 +390,11 @@ export class GroupDrawable {
         this.layout = this.gpuscene.device.createPipelineLayout({ bindGroupLayouts: layoutTree });
 
     }
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutOneBinding): LayoutGroupDrawable<[GPUBindGroup]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutTwoBinding): LayoutGroupDrawable<[GPUBindGroup, GPUBindGroup]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutThreeBinding): LayoutGroupDrawable<[GPUBindGroup, GPUBindGroup, GPUBindGroup]>
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry>): LayoutGroupDrawable<[GPUBindGroup]>
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>): LayoutGroupDrawable<[GPUBindGroup, GPUBindGroup]>
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>): LayoutGroupDrawable<[GPUBindGroup, GPUBindGroup, GPUBindGroup]>
     addChildLayout(meshBindGroupLayout: BindGroupLayoutFourBinding): LayoutGroupDrawable<[GPUBindGroup, GPUBindGroup, GPUBindGroup, GPUBindGroup]>
-    addChildLayout(meshBindGroupLayout: (BindGroupLayoutOneBinding | BindGroupLayoutTwoBinding | BindGroupLayoutThreeBinding | BindGroupLayoutFourBinding)): LayoutGroupDrawable<GPUBindGroup[]> {
+    addChildLayout(meshBindGroupLayout: (BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry> | BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | BindGroupLayoutFourBinding)): LayoutGroupDrawable<GPUBindGroup[]> {
         return new LayoutGroupDrawable(this.gpuscene, meshBindGroupLayout, this, undefined);
     }
     addChildBindGroup(sharedBindgroup: BindGroupOneBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number]>
