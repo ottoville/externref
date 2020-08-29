@@ -38,8 +38,9 @@ const maxInstances = 10;
 const alignment = 256;
 export class worldPositionScene {
     instances: Map<worldPosition, number> = new Map();
-    //worldCopyGPU = this.scene.createGPUBuffer(maxInstances* 4 * 16, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC]);
-    matrix = this.scene.createGPUBuffer(alignment * maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
+
+
+    matrix = this.scene.createGPUBuffer(alignment * maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE]);
 
     changed = false;
 
@@ -52,7 +53,10 @@ export class worldPositionScene {
                 offset: 0,
                 size: 16 * 4 + 3 * 4
             }
-        })
+        });
+    positionBindGroupTime = this.scene.baseBindGroup.addChildBindGroup(this.BindGroup, true);
+    positionBindGroupNoTime = this.scene.baseBindGroupNoTime.addChildBindGroup(this.BindGroup, true);
+
    // updateBuffer: GPUCommandBuffer[];
     queue: Map<Float32Array, number> = new Map();
     constructor(public scene: GPUScene) {
@@ -60,7 +64,7 @@ export class worldPositionScene {
     #busy = false;
     updateGPUBuffer(): GPUCommandBuffer | null {
         if (this.queue.size === 0 || this.#busy)
-            return null;        
+            return null;
         this.#busy = true;
         const dataSize = 4 * 16 + 3 * 4;
         const tempSize = (dataSize + 4 ) * this.queue.size;
@@ -87,9 +91,6 @@ export class worldPositionScene {
 
         this.#busy = false;
         return commandEncoder.finish();
-
-
-
     }
 }
 export class worldPosition {

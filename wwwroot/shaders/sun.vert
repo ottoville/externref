@@ -3,12 +3,6 @@ precision lowp float;
 
 //Sun radius and distance is divided by 100000
 
-//const ivec2 vertices[4] = ivec2[4](
- //           ivec2(-6963,-6963),
- //           ivec2(6963,-6963),
- //           ivec2(-6963,6963),
- //           ivec2(6963,6963)
- //           );
 
  
  const ivec2 vertices[14] = ivec2[14](
@@ -27,6 +21,8 @@ precision lowp float;
             ivec2( 6824, 1557),
             ivec2( 6824, -1557)
 );
+
+const uint sunDistance= 1495000;  //divided by 100000 correct one
 
 layout(set = 0, binding = 0) uniform Scene {
     mat4 viewProjection;
@@ -50,7 +46,7 @@ void main(void) {
     //ivec4 position=ivec4(vertices[gl_VertexIndex].xy,0,1);
     ivec3 position=ivec3(vertices[gl_VertexIndex].xy,0);
 
-    vec3 transform=vec3(world[3][0], world[3][1], world[3][2])+delta*time.delta;
+    vec3 transform=(vec3(world[3][0], world[3][1], world[3][2])+delta*time.delta) *sunDistance;
 
     vec3 CameraRight_worldspace = vec3(scene.view[0][0], scene.view[1][0], scene.view[2][0]);
     vec3 CameraUp_worldspace  = vec3(scene.view[0][1], scene.view[1][1], scene.view[2][1]);

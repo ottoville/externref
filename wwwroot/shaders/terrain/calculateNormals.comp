@@ -1,0 +1,152 @@
+#version 450
+int subdivisions = 250;
+uint facetSize= 250 * 250 * 4;
+
+layout(std430, set = 0, binding = 0) buffer Normals {
+    float normals[];
+};
+
+layout(std430, set = 1, binding = 0) readonly buffer Slopes {
+    int numbers[];
+} slopes;
+
+layout(std430, set = 1, binding = 1) readonly buffer Facet1 {
+    float numbers[];
+} facet12;
+uint stride=8;
+
+void main() {
+    uint index=gl_GlobalInvocationID.x;
+
+    uint i = gl_GlobalInvocationID.y * stride;
+    uint j = gl_GlobalInvocationID.x * (subdivisions + 1) * stride;
+
+
+    vec3 norm1 =vec3(
+        facet12.numbers[(gl_GlobalInvocationID.x * subdivisions +  gl_GlobalInvocationID.y) * 4],
+        facet12.numbers[(gl_GlobalInvocationID.x * subdivisions +  gl_GlobalInvocationID.y) * 4 +1],
+        facet12.numbers[(gl_GlobalInvocationID.x * subdivisions +  gl_GlobalInvocationID.y) * 4 +2]
+    );
+    vec3 norm2 =vec3(
+        facet12.numbers[facetSize +  ((gl_GlobalInvocationID.x * subdivisions +  gl_GlobalInvocationID.y) * 4)],
+        facet12.numbers[facetSize + ((gl_GlobalInvocationID.x * subdivisions +  gl_GlobalInvocationID.y) * 4 +1)],
+        facet12.numbers[facetSize + ((gl_GlobalInvocationID.x * subdivisions +  gl_GlobalInvocationID.y) * 4 +2)]
+    );
+    
+  //  vec3 norm3 =vec3(0,0,0);
+   // norm3.x=facet12.numbers[((gl_GlobalInvocationID.x) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4];
+ //   norm3.y=facet12.numbers[((gl_GlobalInvocationID.x) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4 +1];
+  //  norm3.z=facet12.numbers[((gl_GlobalInvocationID.x) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4 +2];
+
+    vec3 norm4 =vec3(
+        facet12.numbers[facetSize +  (((gl_GlobalInvocationID.x) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4)],
+        facet12.numbers[facetSize + (((gl_GlobalInvocationID.x) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4 +1)],
+        facet12.numbers[facetSize + (((gl_GlobalInvocationID.x) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4 +2)]
+    );
+
+    vec3 norm5 =vec3(
+        facet12.numbers[((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y)) * 4],
+        facet12.numbers[((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y)) * 4 +1],
+        facet12.numbers[((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y)) * 4 +2]
+    );
+  //  vec3 norm6 =vec3(0,0,0);
+  //  norm6.x=facet12.numbers[facetSize +  (((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y)) * 4)];
+ //   norm6.y=facet12.numbers[facetSize + (((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y)) * 4 +1)];
+ //   norm6.z=facet12.numbers[facetSize + (((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y)) * 4 +2)];
+
+
+    vec3 norm7 =vec3(
+       facet12.numbers[((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4],
+       facet12.numbers[((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4 +1],
+       facet12.numbers[((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4 +2]
+    );
+    vec3 norm8 =vec3(
+        facet12.numbers[facetSize +  (((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4)],
+        facet12.numbers[facetSize + (((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4 +1)],
+        facet12.numbers[facetSize + (((gl_GlobalInvocationID.x-1) * subdivisions +  (gl_GlobalInvocationID.y-1)) * 4 +2)]
+    );
+
+    vec3 normalized=normalize(norm1+norm2+norm4+norm5+norm7+norm8);
+    
+    //1 and 2
+    //1 and 3   close   1
+    //1 and 4
+    //1 and 5
+    //1 and 6   close 1
+    //1 and 7   close 1
+    //1 and 8
+    //2 and 3   close 2
+    //2 and 4   close 3
+    //2 and 5   close 1
+    //2 and 6   close 1
+    //2 and 7   close 1
+    //2 and 8   close 1
+    //3 and 4   close 1
+    //3 and 5   close 2
+    //3 and 6   VERY CLOSE
+    //3 and 7   close 1
+    //3 and 8   close 1
+    //4 and 5   close 3
+    //4 and 6   close 1
+    //4 and 7   close 1
+    //4 and 8   close 1
+    //5 and 6   far
+    //5 and 7   close 1
+    //5 and 8   far
+    //6 and 7   far
+    //6 and 8   close 1
+    //7 and 8   far
+    
+
+    normals[j+i+5]=normalized.x;
+    normals[j+i+6]=normalized.y;
+    normals[j+i+7]=normalized.z;
+
+
+    // get the indexes of the coordinates of each vertex of the facet
+  /*  uint v1x = indices.numbers[index * 3] * stride;
+    uint v1y = v1x + 1;
+    uint v1z = v1x + 2;
+    uint v2x = indices.numbers[index * 3 + 1] * stride;
+    uint v2y = v2x + 1;
+    uint v2z = v2x + 2;
+    uint v3x = indices.numbers[index * 3 + 2] * stride;
+    uint v3y = v3x + 1;
+    uint v3z = v3x + 2;
+
+    float p1p2x = positions.numbers[v1x] - positions.numbers[v2x];          // compute two vectors per facet : p1p2 and p3p2
+    float p1p2y = positions.numbers[v1y] - positions.numbers[v2y];
+    float p1p2z = positions.numbers[v1z] - positions.numbers[v2z];
+
+    float p3p2x = positions.numbers[v3x] - positions.numbers[v2x];
+    float p3p2y = positions.numbers[v3y] - positions.numbers[v2y];
+    float p3p2z = positions.numbers[v3z] - positions.numbers[v2z];
+
+    // compute the face normal with the cross product
+    float faceNormalx =  p1p2y * p3p2z - p1p2z * p3p2y;
+    float faceNormaly =  p1p2z * p3p2x - p1p2x * p3p2z;
+    float faceNormalz = p1p2x * p3p2y - p1p2y * p3p2x;
+    // normalize this normal and store it in the array facetData
+    float length = sqrt(faceNormalx * faceNormalx + faceNormaly * faceNormaly + faceNormalz * faceNormalz);
+    if(length==0)
+        length= 1.0;
+   // length = (length === 0) ? 1.0 : length;
+    faceNormalx /= length;
+    faceNormaly /= length;
+    faceNormalz /= length;
+
+    // compute the normals anyway
+
+    //positions[index*stride + 5]=faceNormalx
+
+
+    normals.numbers[v1x] += faceNormalx;                         // accumulate all the normals per face
+    normals.numbers[v1y] += faceNormaly;
+    normals.numbers[v1z] += faceNormalz;
+    normals.numbers[v2x] += faceNormalx;
+    normals.numbers[v2y] += faceNormaly;
+    normals.numbers[v2z] += faceNormalz;
+    normals.numbers[v3x] += faceNormalx;
+    normals.numbers[v3y] += faceNormaly;
+    normals.numbers[v3z] += faceNormalz;*/
+ }

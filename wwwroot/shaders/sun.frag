@@ -1,12 +1,9 @@
-#version 300 es
-#ifdef GL_ES
-    precision highp float;
-#endif
+#version 450
+precision lowp float;
+layout(location = 0) out vec4 glFragColor;
 
-out vec4 outputColor;
-
-uniform vec3 cameraPosition;
+//uniform vec3 cameraPosition;
 
 void main(void) {
-    outputColor=  vec4(1.0,1.0,0.0,1.0);
+    glFragColor=  vec4(1.0,1.0,0.0,1.0);
 }

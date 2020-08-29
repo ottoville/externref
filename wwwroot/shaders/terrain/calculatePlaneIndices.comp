@@ -1,0 +1,22 @@
+#version 450
+int subdivisions = 250;
+
+layout(std430, set = 0, binding = 0) buffer Indices {
+    uint numbers[];
+} indices;
+
+void main() {
+    uint idx1 = (gl_GlobalInvocationID.x + 1 + (gl_GlobalInvocationID.y + 1) * (subdivisions + 1));
+    uint idx2 = (gl_GlobalInvocationID.x + 1 + gl_GlobalInvocationID.y * (subdivisions + 1));
+    uint idx3 = (gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * (subdivisions + 1));
+    uint idx4 = (gl_GlobalInvocationID.x + (gl_GlobalInvocationID.y + 1) * (subdivisions + 1));
+
+    indices.numbers[gl_GlobalInvocationID.y*250*6 + gl_GlobalInvocationID.x*6]=idx1;
+    indices.numbers[gl_GlobalInvocationID.y*250*6 + gl_GlobalInvocationID.x*6+1]=idx2;
+    indices.numbers[gl_GlobalInvocationID.y*250*6 + gl_GlobalInvocationID.x*6+2]=idx3;
+
+    indices.numbers[gl_GlobalInvocationID.y*250*6 + gl_GlobalInvocationID.x*6+3]=idx4;
+    indices.numbers[gl_GlobalInvocationID.y*250*6 + gl_GlobalInvocationID.x*6+4]=idx1;
+    indices.numbers[gl_GlobalInvocationID.y*250*6 + gl_GlobalInvocationID.x*6+5]=idx3;
+
+ }

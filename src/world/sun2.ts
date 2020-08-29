@@ -85,10 +85,14 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
         let secondsOfDay = ~~((Number(this.scene.physics.gameTime*60)) % 86400);
         let minutesOfDay = secondsOfDay / 60;
         let sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
-        let sunPositionX = sundistance * Math.sin(sunAngle);
-        let sunPositionY = sundistance * Math.cos(sunAngle);
+        //let sunPositionX = sundistance * Math.sin(sunAngle);
+       // let sunPositionY = sundistance * Math.cos(sunAngle);
+        let sunPositionX = Math.sin(sunAngle);
+        let sunPositionY =  Math.cos(sunAngle);
 
         let sunPositionZ = sunPositionY * zAngle;
+
+
         sunPositionY = sunPositionY * yAngle;
         const currentPos = this.worldPosition.translation as Float32Array;
        // console.log(currentPos);

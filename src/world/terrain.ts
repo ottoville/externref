@@ -3,7 +3,6 @@ import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
 import { TerraScene } from "../TerraScene.js";
 import { boundable, Bounding } from "../traits/Boundable.js";
 import { TerrainTool } from "../tools/Terrain.js";
-import { worldPosition } from "../traits/worldPosition.js";
 
 
 export interface TerrainPipelineLayoutPosition extends GPUPipelineLayout {
@@ -157,7 +156,6 @@ export class Terrain implements boundable {
 
      //   let vdata = await Terrain.terrainWorker.message<SharedArrayBuffer, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', { url: map });
 
-        //@ts-ignore
         //return new Terrain(vdata, GPUScene.instance);
     }
     public static async fromSave(cachedvertices: Response): Promise<ArrayBuffer> {
@@ -246,7 +244,7 @@ export class Terrain implements boundable {
     readonly #terrainPositionAndUvsAndNormalsCPUSwap = new SharedArrayBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength);
     readonly #terrainPositionAndUvsAndNormalsCPUSwapView = new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap);
     readonly #positionsView: Float32Array[] = [];
-    readonly #normalsView: Float32Array[] = [];
+    readonly #normalsViewGPU: Float32Array[] = [];
 
     readonly verticesPositionBuffer = this.#terrainPositionAndUvsAndNormalsCPUSwap;
     readonly verticesPositionStride = 8;
@@ -254,7 +252,6 @@ export class Terrain implements boundable {
     bounding: Bounding = new Bounding(this.scene, this);
 
     #indices: Uint32Array = new Uint32Array(this.indicesBuffer);
-    
     //#vertices: Float32Array = new Float32Array(this.verticesBuffer);
     //#normals: Float32Array = new Float32Array(this.normalsBuffer);
 
@@ -318,14 +315,11 @@ export class Terrain implements boundable {
             byteStride = 4 * 8;
                 i < verticesAmount; i++) {
             this.#positionsView.push(new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride, 3));
-            this.#normalsView.push(new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride + 5*4, 3));
+            this.#normalsViewGPU.push(new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride + 5*4, 3));
         }
 
 
         this.bounding.boundingBox.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
-
-        const decorator = () =>
-        { }
 
         const sourceGPU = scene.gpuscene.createGPUBuffer(4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + buffer.byteLength, [GPUBufferUsage.STORAGE], true);
         const sourcearr = sourceGPU.getMappedRange();
@@ -367,6 +361,8 @@ export class Terrain implements boundable {
 
         const computePipelineIndices = scene.gpuscene.createComputePipeline('calculatePlaneIndices.comp')
 
+        const computePipelineNormals = scene.gpuscene.createComputePipeline('calculateNormals.comp')
+
         const computePlaneHeights = scene.gpuscene.createComputePipeline('calculatePlaneHeights.comp');
         const bindGroupPositions = computePlaneHeights.createBindGroup(0,
            [
@@ -382,19 +378,32 @@ export class Terrain implements boundable {
             layout: computePlaneHeights.getBindGroupLayout(1),
             entries: this.heightsBindGroupEntries
         });
-
-
-        
-        const terrainIndicesGPU = scene.gpuscene.createGPUBuffer(this.#terrainIndicesLength, [GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-
-        const bindGroupIndices = computePipelineIndices.createBindGroup(0,
-             [
+        const bindGroupPositionsRead = GPUScene.instance.device.createBindGroup({
+            layout: computePipelineNormals.getBindGroupLayout(0),
+            entries: [
                 {
                     binding: 0,
                     resource: {
-                        buffer: terrainIndicesGPU
+                        buffer: terrainPositionAndUvsAndNormalsGPUTemp
                     }
                 }
+            ]
+        });
+        const bindGroupHeightsRead = GPUScene.instance.device.createBindGroup({
+            layout: computePipelineNormals.getBindGroupLayout(1),
+            entries: this.heightsBindGroupEntries
+        });
+
+        //todo: remove unneeded flags
+        const terrainIndicesGPU = scene.gpuscene.createGPUBuffer(this.#terrainIndicesLength, [GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+
+        const bindGroupIndices = computePipelineIndices.createBindGroup(0,
+            [{
+                binding: 0,
+                resource: {
+                    buffer: terrainIndicesGPU
+                }
+            }
             ]
         );
         const commandEncoder = scene.gpuscene.createCommandEncoder();
@@ -408,8 +417,10 @@ export class Terrain implements boundable {
 
         passEncoder.setPipeline(computePipelineIndices);
         passEncoder.setBindGroup(0, bindGroupIndices);
-
         passEncoder.dispatch(250, 250);
+
+
+
         passEncoder.endPass();
 
         //Todo: Move to same passencoder when browser supports it?
@@ -417,14 +428,23 @@ export class Terrain implements boundable {
         passEncoder2.setPipeline(computePlaneHeights);
         passEncoder2.setBindGroup(0, bindGroupPositions);
         passEncoder2.setBindGroup(1, bindGroupHeights);
-        passEncoder2.dispatch(250, 250)
+        passEncoder2.dispatch(250, 250);
+
+
         passEncoder2.endPass();
 
+        const passEncoder3 = commandEncoder.beginComputePass();
+        passEncoder3.setPipeline(computePipelineNormals);
+        passEncoder3.setBindGroup(0, bindGroupPositionsRead)
+        passEncoder3.setBindGroup(1, bindGroupHeightsRead)
+        passEncoder3.dispatch(250 + 1, 250 + 1);
+        passEncoder3.endPass();
 
        /* commandEncoder.finishWithCopy(async (gpuReadBufferPositions, gpuReadBufferIndices) => {
 
         }, gpuBufferPositions, terrainIndicesGPU);*/
         const [gpuReadBufferPositions, gpuReadBufferIndices] = scene.gpuscene.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
+
       /*  commandEncoder.copyBufferToBuffer(
             gpuBufferPositions,
             0,
@@ -443,125 +463,21 @@ export class Terrain implements boundable {
         scene.gpuscene.device.defaultQueue.submit([gpuCommands]);
         terrainPositionAndUvsAndNormalsGPUTemp.destroy();
         (async () => {
-            await gpuReadBufferPositions.readAndDestroy(async (buff) => {
+            gpuReadBufferPositions.readAndDestroy(async (buff) => {
                 this.#terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
+                this.updateSwap();
+                this.serialize();
             });
-            await gpuReadBufferIndices.readAndDestroy(async (buff) => {
+            gpuReadBufferIndices.readAndDestroy(async (buff) => {
                 this.#indices.set(new Uint32Array(buff));
-                let p1p2x = 0.0;                    // p1p2 vector x coordinate
-                let p1p2y = 0.0;                    // p1p2 vector y coordinate
-                let p1p2z = 0.0;                    // p1p2 vector z coordinate
-                let p3p2x = 0.0;                    // p3p2 vector x coordinate
-                let p3p2y = 0.0;                    // p3p2 vector y coordinate
-                let p3p2z = 0.0;                    // p3p2 vector z coordinate
 
-                let faceNormalx = 0.0;              // facet normal x coordinate
-                let faceNormaly = 0.0;              // facet normal y coordinate
-                let faceNormalz = 0.0;              // facet normal z coordinate
-                let length = 0.0;                   // facet normal length before normalization
-                let v1: Float32Array;
-                let v2: Float32Array;
-                let v3: Float32Array;
-                let v1n: Float32Array;
-                let v2n: Float32Array;
-                let v3n: Float32Array;
-
-               /* let v1x = 0;                        // vector1 x index in the positions array
-                let v1y = 0;                        // vector1 y index in the positions array
-                let v1z = 0;                        // vector1 z index in the positions array
-                let v2x = 0;                        // vector2 x index in the positions array
-                let v2y = 0;                        // vector2 y index in the positions array
-                let v2z = 0;                        // vector2 z index in the positions array
-                let v3x = 0;                        // vector3 x index in the positions array
-                let v3y = 0;                        // vector3 y index in the positions array
-                let v3z = 0;                        // vector3 z index in the positions array
-                */
-                let index = 0;
-
-                // Loop : 1 indice triplet = 1 facet
-                var nbFaces = (this.#indices.length / 3) | 0;
-                //todo use simd
-                for (index = 0; index < nbFaces; index++) {
-                    // get the indexes of the coordinates of each vertex of the facet
-                    v1 = this.#positionsView[this.#indices[index * 3]];
-                    v1n = this.#normalsView[this.#indices[index * 3]];
-                   /* v1x = this.#indices[index * 3] * 3;
-                    v1y = v1x + 1;
-                    v1z = v1x + 2;*/
-                     v2 = this.#positionsView[this.#indices[index * 3 + 1]];
-                    v2n = this.#normalsView[this.#indices[index * 3 + 1]];
-                    /*v2x = this.#indices[index * 3 + 1] * 3;
-                    v2y = v2x + 1;
-                    v2z = v2x + 2;*/
-                    v3 = this.#positionsView[this.#indices[index * 3 + 2]];
-                    v3n = this.#normalsView[this.#indices[index * 3 + 2]];
-                    /*
-                    v3x = this.#indices[index * 3 + 2] * 3;
-                    v3y = v3x + 1;
-                    v3z = v3x + 2;*/
-
-                    p1p2x = v1[0] - v2[0];          // compute two vectors per facet : p1p2 and p3p2
-                    p1p2y = v1[1] - v2[1];
-                    p1p2z = v1[2] - v2[2];
-
-                    p3p2x = v3[0] - v2[0];
-                    p3p2y = v3[1] - v2[1];
-                    p3p2z = v3[2] - v2[2];
-
-                    // compute the face normal with the cross product
-                    faceNormalx = p1p2y * p3p2z - p1p2z * p3p2y;
-                    faceNormaly = p1p2z * p3p2x - p1p2x * p3p2z;
-                    faceNormalz = p1p2x * p3p2y - p1p2y * p3p2x;
-                    // normalize this normal and store it in the array facetData
-                    length = Math.sqrt(faceNormalx * faceNormalx + faceNormaly * faceNormaly + faceNormalz * faceNormalz);
-                    length = (length === 0) ? 1.0 : length;
-                    faceNormalx /= length;
-                    faceNormaly /= length;
-                    faceNormalz /= length;
-
-                    // compute the normals anyway
-                    v1n[0] += faceNormalx;                         // accumulate all the normals per face
-                    v1n[1] += faceNormaly;
-                    v1n[2] += faceNormalz;
-                    v2n[0] += faceNormalx;
-                    v2n[1] += faceNormaly;
-                    v2n[2] += faceNormalz;
-                    v3n[0] += faceNormalx;
-                    v3n[1] += faceNormaly;
-                    v3n[2] += faceNormalz;
-                }
-                this.#normalsView.forEach(normal => {
-                    length = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[2] + normal[2] * normal[2]);
-                    length = (length === 0) ? 1.0 : length;
-                    normal[0] /= length;
-                    normal[1] /= length;
-                    normal[2] /= length;
-                })
-              /*  for (index = 0; index < arr.length / 3; index++) {
-                    faceNormalx = arr[index * 3];
-                    faceNormaly = arr[index * 3 + 1];
-                    faceNormalz = arr[index * 3 + 2];
-
-                    length = Math.sqrt(faceNormalx * faceNormalx + faceNormaly * faceNormaly + faceNormalz * faceNormalz);
-                    length = (length === 0) ? 1.0 : length;
-                    faceNormalx /= length;
-                    faceNormaly /= length;
-                    faceNormalz /= length;
-
-                    arr[index * 3] = faceNormalx;
-                    arr[index * 3 + 1] = faceNormaly;
-                    arr[index * 3 + 2] = faceNormalz;
-                }*/
-                
-                this.updateSwap()
-
-            });
+            })
             /*await gpuReadBufferPositions.readAndDestroy(async (buff) => {
                 console.log(new Float32Array(buff));
                 this.#vertices.set(new Float32Array(buff));
                 gpuBufferPositions.destroy();
             });*/
-            this.serialize();
+            
         })();
 
         const m = scene.gpuscene.lights.lightsBindGroup.addDrawable({
@@ -599,6 +515,12 @@ export class Terrain implements boundable {
                             shaderLocation: 1,
                             offset: 4 * 3,
                             format: "float2"
+                        },
+                        {
+                            // normals
+                            shaderLocation: 2,
+                            offset: 4 * 3 + 4 * 2,
+                            format: "float3"
                         }]
                     }]
             },
