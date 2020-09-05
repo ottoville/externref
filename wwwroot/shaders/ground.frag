@@ -1,15 +1,23 @@
 #version 450
+
+layout(location = 0) in vec4 v_Color;
+layout(location = 1) in vec2 v_uv;
 layout(location = 0) out vec4 glFragColor;
 
 
-layout(set = 1, binding = 0) readonly buffer Lights {
-    float matrix[];
-};
+//layout(location = 0) in vec3 normal;
+
+
+//layout(set = 1, binding = 0) readonly buffer Lights {
+ //   float matrix[];
+//};
 
 //in vec3 vPosition;
 //in vec3 vNormal;
 //in vec2 vUV;
 //out vec4 outputColor;
+
+
 
 //uniform sampler2D groundTexture;
 //uniform mat4 world;
@@ -30,12 +38,17 @@ const uint c = 14;
 
 
 void main(void) {
+//glFragColor=vec4(v_Color.xyz*((snoise(v_uv*2)+1)*0.5),v_Color.w);
+glFragColor=v_Color;
 
     //glFragColor = vec4(0.0,1.0,0.0,1.0);
 
-    vec3 lpos=vec3(matrix[i+12],matrix[i+13],matrix[i+14]);
+  //  vec3 lpos=vec3(matrix[i+12],matrix[i+13],matrix[i+14]);
 
-    glFragColor = vec4(abs(matrix[a])/1495000,abs(matrix[b])/1495000,abs(matrix[c])/1495000,1.0);
+
+    //To test sun position change
+  //  glFragColor = vec4(abs(matrix[a])/1495000,abs(matrix[b])/1495000,abs(matrix[c])/1495000,1.0);
+  //  glFragColor = vec4(normal.xyz,1.0);
 
    // float specularStrength = 0.2;
 

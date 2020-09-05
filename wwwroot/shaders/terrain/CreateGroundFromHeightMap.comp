@@ -1,0 +1,85 @@
+#version 450
+precision highp float;
+
+vec3 filt = vec3(0.3, 0.59, 0.11);
+
+layout(std430, set = 0, binding = 0) readonly buffer Image {
+    float width;
+    float height;
+    uint bufferWidth;
+    uint bufferHeight;
+    uint subdivisions;
+    int minHeight;
+    int maxHeight;
+    int maxX;
+    int maxZ;
+    uint pixels[];
+} image;
+
+uint iterations=image.subdivisions+1;
+
+
+uint stride = 8;
+layout(std430, set = 0, binding = 1) buffer PositionsAndUvsAndNormals {
+    float numbers[];
+} positionsAndUvsAndNormals;
+
+//layout(std430, set = 0, binding = 2) buffer PositionsAndUvsAndNormalsStorage {
+//    float numbers[];
+//} positionsStorage;
+
+
+
+  void main() {
+      vec3 position = vec3((gl_GlobalInvocationID.x * image.width) / image.subdivisions - (image.width / 2.0),
+      0,
+      ((image.subdivisions - gl_GlobalInvocationID.y) * image.height) / image.subdivisions - (image.height / 2.0));
+
+    ivec2 heightmap=ivec2(
+        int(((position.x + image.width / 2) / image.width) * (image.bufferWidth - 1)),
+         int((1.0 - (position.z + image.height / 2) / image.height) * (image.bufferHeight - 1))
+    );
+    uint pos = (heightmap.x + heightmap.y * image.bufferWidth);
+
+    uint pixel= image.pixels[pos];
+    vec3 normalized= (vec3(uvec3(pixel, pixel, pixel) >> uvec3(0,8,16) & 0xff)) / 255;
+
+
+    vec3 filtered= normalized * filt;
+    float gradient = filtered.r+filtered.g+filtered.b;
+
+    position.y = image.minHeight + ( image.maxHeight -  image.minHeight) * gradient;
+
+
+
+    positionsAndUvsAndNormals.numbers[ gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride]=position.x;
+    positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+1]=position.y;
+    positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+2]=position.z;
+
+   // positionsStorage.numbers[ gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride]=position.x;
+   // positionsStorage.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+1]=position.y;
+  //  positionsStorage.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+2]=position.z;
+
+
+
+    positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+3] = (position.x+image.maxX) / image.width;
+    positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+4] = (position.z+image.maxZ) / image.height;
+
+    //positionsStorage.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+3] = (position.x+image.maxX) / image.width;
+    //positionsStorage.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+4] = (position.z+image.maxZ) / image.height;
+
+
+    //positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+6] = (position.z+image.maxZ) / image.height;
+    //positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+7] = (position.z+image.maxZ) / image.height;
+
+      
+
+
+
+
+
+
+
+    //positionsAndUvs.numbers[positionoffset + (gl_GlobalInvocationID.y*iterations*2 + gl_GlobalInvocationID.x*2)] = gl_GlobalInvocationID.x / float(image.subdivisions);
+    //positionsAndUvs.numbers[positionoffset + (gl_GlobalInvocationID.y*iterations*2 + gl_GlobalInvocationID.x*2+1)] = 1.0 - gl_GlobalInvocationID.y / float(image.subdivisions);
+  }
