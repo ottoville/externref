@@ -23,7 +23,7 @@ export class BuildingsUI extends UITAB {
         this.traits = this.initTraits(traits);
     }
     public create = (type: string): void => {
-        let scene = this.scene;
+        let scene = this.sceneDeprecated;
 
         if (type == 'house') {
             this.addListener("pointerdown", function doHouse() {

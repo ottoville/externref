@@ -8,6 +8,7 @@ import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks";
 import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine";
 import { GPUScene } from "./GPUScene.js";
 import { TerraScene } from "./TerraScene.js";
+import { Sun2 } from "./world/sun2.js";
 
 //import  DB from "./DB.js";
 
@@ -118,7 +119,11 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         engine._adapter = adapter;
         const device = await terrascene.device
         const gpuscene = await terrascene.gpuscenePromise
+
         GPUScene.canvas = canvas;
+
+        
+
         blazor.invokeMethod('setProgress', 4);
         let EffectModule = await EffectModuleP;
         blazor.invokeMethod('setProgress', 9);
@@ -178,6 +183,11 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             }
         }
         await Promise.all(shaderPuts);
+
+
+        // Initial scene objects here
+        new Sun2(terrascene);
+
         //await Promise.all(shaderPutsC);
         //@ts-ignore
         engine._glslang = glslang;

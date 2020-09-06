@@ -1,8 +1,6 @@
 ﻿import { GPUScene } from "./GPUScene";
-import { TerraMesh } from "./TerraMesh";
-import { Bounding, boundable, PickingInfo } from "./traits/Boundable";
+import type { boundable, PickingInfo } from "./traits/Boundable";
 import { TerraMatrix } from "./traits/worldPosition";
-import { Ray } from "./lib/babylon/Culling/ray";
 import { Matrix,Vector3 } from "./lib/babylon/Maths/math.js";
 import { Physics } from "./physics";
 
@@ -117,7 +115,7 @@ function matrixInvert64(m: Float32Array | Float64Array): void {
 }
 export class TerraScene {
     boundables: Set<boundable> = new Set();
-
+    
 
 
     adapter = this.window.navigator.gpu!.requestAdapter();
@@ -144,7 +142,10 @@ export class TerraScene {
     constructor(private window: Window) 
     {
         TerraScene.instance = this;
-        this.gpuscenePromise.then(scene => this.gpuscene = scene);
+        this.gpuscenePromise.then(scene => {
+            this.gpuscene = scene;
+            this.gameSpeed = 0;
+        });
         
     }
     render(renderPass: GPURenderPassEncoder, time: DOMHighResTimeStamp) {

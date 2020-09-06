@@ -2,6 +2,7 @@
 import { worldPositionScene } from "./traits/worldPosition";
 import type { TerraScene } from "./TerraScene";
 import { Light } from "./lights";
+import { TerraNode } from "./TerraNode";
 
 
 
@@ -9,7 +10,11 @@ import { Light } from "./lights";
 export class GPUScene { 
     static canvas: HTMLCanvasElement;
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
+    #bufferIndexFormats: WeakMap<GPUBuffer, GPUIndexFormat> = new WeakMap();
     sampleCount: number = 1;
+
+
+    NodeInstances: Map<TerraNode, number> = new Map();
 
     GPUBindGroupLayouts: WeakMap<GPUBindGroup, GPUBindGroupLayout> = new WeakMap();
 
@@ -73,7 +78,9 @@ export class GPUScene {
 
 
     shaderModules: Map<string, GPUShaderModule> = new Map();
-    
+
+    GPUData = this.createGPUBuffer(TerraNode.alignment * TerraNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE]);
+
     worldPositionScene = new worldPositionScene(this);
 
    
@@ -147,15 +154,49 @@ export class GPUScene {
     lights = new Light(this);
     positionBindGroupLightsTime = this.lights.lightsBindGroup.addChildBindGroup(this.worldPositionScene.BindGroup, true);
 
+    
+    queue: Map<Float32Array, number> = new Map();
+    #busy = false;
+    updateGPUBuffer(): GPUCommandBuffer | null {
+        if (this.queue.size === 0 || this.#busy)
+            return null;
+        this.#busy = true;
+        const dataSize = TerraNode.GPUDataSize; //4 * 16 + 3 * 4;
+        const tempSize = (dataSize + 4) * this.queue.size;
+        const tempBuffer = this.createGPUBuffer(tempSize, [GPUBufferUsage.COPY_SRC], true);
+        let tempOffset = 0;
+        const commandEncoder = this.device.createCommandEncoder();
+        this.queue.forEach((bufferOffset, matrix) => {
+            new Float32Array(tempBuffer.getMappedRange(tempOffset * (dataSize + 4), dataSize)).set(matrix);
+            commandEncoder.copyBufferToBuffer(
+                tempBuffer, tempOffset++ * (dataSize + 4),
+                this.GPUData, bufferOffset,
+                dataSize);
+            //new Float32Array(this.worldCopyGPU.getMappedRange(bufferOffset, 4 * 16)).set(matrix);
+        });
+        tempBuffer.unmap();
+        /* this.scene.GPU2CPU(async (arr) => {
+             await arr.mapAsync(GPUMapMode.READ, 0, tempSize);
+             const arrbuff = arr.getMappedRange(0, tempSize);
+             console.log(new Float32Array(arrbuff));
+             //debugger;
+         }, tempBuffer);*/
+        this.queue.clear();
+        // this.worldCopyGPU.unmap();
+
+        this.#busy = false;
+        return commandEncoder.finish();
+    }
+
     constructor(private scene: TerraScene, public device: GPUDevice) {
         this.worldPositionScene.positionBindGroupTime.onRender = async (time) => {
-            return this.worldPositionScene.updateGPUBuffer();
+            return this.updateGPUBuffer();
         }
         this.positionBindGroupLightsTime.onRender = async (time) => {
-            return this.worldPositionScene.updateGPUBuffer();
+            return this.updateGPUBuffer();
         }
         this.worldPositionScene.positionBindGroupNoTime.onRender = async (time) => {
-            return this.worldPositionScene.updateGPUBuffer();
+            return this.updateGPUBuffer();
         }
         this.baseBindGroup.onRender = (time, delta) => {
             if (delta !== null) {
@@ -250,7 +291,7 @@ export class GPUScene {
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean): GPUCopySRCBuffer
 
 
-    createGPUBuffer(size: number, usages: number[], mappedAtCreation: boolean=false): GPUBuffer {
+    createGPUBuffer(size: number, usages: number[], mappedAtCreation: boolean = false, GPUIndexFormat?: GPUIndexFormat): GPUBuffer {
         if (size === 0)
             throw (new Error('Cannot create zero sized buffer'));
         const usage = usages.reduce((prev, curr) => prev | curr, 0);
@@ -266,6 +307,10 @@ export class GPUScene {
         }
          else if (usage & GPUBufferUsage.COPY_SRC)
             this.#bufferSizes.set(buff, size);
+
+        if (usage & GPUBufferUsage.INDEX) {
+            this.#bufferIndexFormats.set(buff, GPUIndexFormat!);
+        }
 
         return buff;
     }
@@ -423,19 +468,6 @@ export class BindGroupDrawable extends GroupDrawable {
 }
 export class DynamicBindGroupDrawable<T extends number[]> extends GroupDrawable {
     addDrawable(renderPipeline: GPURenderPipelineDescriptor, offsets: T, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): Drawable {
-        if (!renderPipeline.rasterizationState) {
-            renderPipeline.rasterizationState = {
-                cullMode: 'front',
-            }
-        }
-        if (!renderPipeline.depthStencilState) {
-            renderPipeline.depthStencilState = {
-                depthWriteEnabled: true,
-                depthCompare: "less",
-                format: "depth24plus-stencil8",
-            }
-        }
-
         const d = new Drawable(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this);
         d.dynamicBindGroupOffset = offsets;
         this.meshes.add(d);

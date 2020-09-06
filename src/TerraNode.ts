@@ -5,8 +5,9 @@ import type { worldPosition } from "./traits/worldPosition";
 
 
 
+
 export abstract class TerraNode implements Partial<hasPhysics> {
-    abstract onPhysicTick: (time: number) => void
+    // abstract onPhysicTick?: (time: number) => void
     abstract worldPosition?: worldPosition
 
     hasPhysics(): this is hasPhysics {
@@ -15,7 +16,35 @@ export abstract class TerraNode implements Partial<hasPhysics> {
     isLight(): this is isLight {
         return 'lightType' in this;
     }
+
+    static GPUDataSize = 4 * 16 + 3 * 4 + 3 * 4
+    static alignment = 256;
+    static maxInstances = 10;
+
+    dataBuffer = new ArrayBuffer(TerraNode.GPUDataSize);
+    data: Float32Array = new Float32Array(this.dataBuffer);
+    bufferOffset = this.scene.gpuscene.NodeInstances.size * TerraNode.alignment;
+
+    destroy() {
+        this.scene.gpuscene.NodeInstances.delete(this);
+    }
+
     constructor(public scene: TerraScene) {
+        scene.gpuscene.NodeInstances.set(this, scene.gpuscene.NodeInstances.size * TerraNode.alignment);
+        this.data.set([
+            //3d matrix start, 64 bytes
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+            //3d matrix end
+            //delta start, 12 bytes
+            0, 0, 0,
+            //delta end
+            //custom data start, 12 bytes
+            0, 0, 0
+            //custom data end
+        ])
         queueMicrotask(() => {
             if (this.hasPhysics()) {
                 scene.physics.tickables.add(this);
@@ -24,6 +53,10 @@ export abstract class TerraNode implements Partial<hasPhysics> {
                 scene.gpuscene.lights.add(this);
             }
         });
+
+    }
+    async updateDynamicBuffer() {
+        this.scene.gpuscene.queue.set(this.data, this.bufferOffset);
 
     }
 }

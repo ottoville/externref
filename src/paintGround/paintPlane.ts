@@ -1,5 +1,4 @@
 ﻿import { paintGround } from "./paintGround.js";
-import { UITAB } from "../UITAB.js";
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
@@ -7,20 +6,19 @@ import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import { Vector2, Vector3 } from "../lib/babylon/Maths/math.vector.js";
 import type { WorldScene } from "../world/scene.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
-import { Matrix } from "../lib/babylon/Maths/math.vector";
-import { UIMesh } from "../UIMesh.js";
-import { worldPosition } from "../traits/worldPosition.js";
+import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
-import { addTrait, Trait, Traitable } from "../traits/trait.js";
-import { GPUCanvas } from "../GPUCanvas.js";
+import { GPUScene } from "../GPUScene.js";
+import type { Drawable } from "../drawables/Drawable.js";
+import { TerraNode } from "../TerraNode.js";
 
 
-export interface paintPlane extends worldPosition, Traitable { };
 
-@addTrait(worldPosition)
-export class paintPlane extends paintGround {
+export class paintPlane extends paintGround implements has3DPosition {
+    //@ts-ignore TODO: move mesh to external object or make this inherit from terranode
+    worldPosition = new worldPosition(this as TerraNode);
     #startingPoint: Vector2 = Vector2.Zero();
-    #templane2: UIMesh;
+    #templane2: Drawable;
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
         const positions: number[] = [0, 0, 0, 1];
         const indices: number[] = [0, 1];
@@ -51,23 +49,17 @@ export class paintPlane extends paintGround {
             yield { positions: positions, indices: indices };
         }
     }
-    traits: Trait[];
     constructor(
         protected scene: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,
         uitab: canvasListener,
-        private engine: WebGPUEngine,
-        private shaderModules: Map<string, GPUShaderModule>,
-        ...traits: Trait[]
+        private engine: WebGPUEngine
     ) {
         super(scene, camera, ground, sea, uitab);
-		this.traits = this.initTraits(traits);
-        this.#templane2 = new UIMesh({
-            layout: GPUCanvas.device.createPipelineLayout({
-                bindGroupLayouts: [this.scene.uniformBindGroupLayout, this.ground.bindGroupLayout, UIMesh.positionLayout]
-            }),
+        
+        this.#templane2 = ground.TerrainHeightsbindGroupPositionTree.addDrawable({
             //@ts-ignore
             sampleCount: this.engine._mainPassSampleCount,
             primitiveTopology: 'triangle-strip',
@@ -78,11 +70,11 @@ export class paintPlane extends paintGround {
                 format: "bgra8unorm",
             }],
             vertexStage: {
-                module: this.shaderModules.get("plane.vert")!,
+                module: GPUScene.instance.shaderModules.get("plane.vert")!,
                 entryPoint: "main",
             },
             fragmentStage: {
-                module: this.shaderModules.get("plane.frag")!,
+                module: GPUScene.instance.shaderModules.get("plane.frag")!,
                 entryPoint: "main"
             },
             vertexState: {
@@ -98,21 +90,8 @@ export class paintPlane extends paintGround {
                             format: "float2" as GPUVertexFormat
                         }]
                     }]
-            },
-        }, new Set([
-            GPUCanvas.device.createBindGroup({
-                layout: UIMesh.positionLayout,
-                entries: [
-                    {
-                        binding: 0,
-                        resource: {
-                            buffer: this.worldPositionGPUBuffer
-                        }
-                    }
-                ],
-            })
-        ]), 0);
-
+            }, //@ts-ignore TODO: move mesh to external object or make this inherit from terranode
+        }, [this.worldPosition.bufferOffset], 0, 1, 0, 0);
     };
 
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
@@ -151,13 +130,13 @@ export class paintPlane extends paintGround {
        // this.#templane2.setVertexBuffer(0, new Float32Array(values.positions).buffer);
 
 
-        this.translation[0] = this.#startingPoint.x - 0.5
-        this.translation[1] = 5;
-        this.translation[2] = this.#startingPoint.y - 1;
+        this.worldPosition.translation[0] = this.#startingPoint.x - 0.5
+        this.worldPosition.translation[1] = 5;
+        this.worldPosition.translation[2] = this.#startingPoint.y - 1;
 
-        this.scaling[0] = height / this.#columns;
+        this.worldPosition.scaling[0] = height / this.#columns;
         const rotQ = new Vector3(0, this.ang360.rad - Math.PI, 0).toQuaternion();
-        this.rotation = [rotQ.x, rotQ.y, rotQ.z, rotQ.w];
+        this.worldPosition.rotation = [rotQ.x, rotQ.y, rotQ.z, rotQ.w];
         console.log('onMainPointerUp');
 
     }
@@ -178,7 +157,7 @@ export class paintPlane extends paintGround {
             } while (++this.#rows < newRows);
         }
 
-        this.scaling[2] = width / this.#rows;
+        this.worldPosition.scaling[2] = width / this.#rows;
     /*    let testM = new Matrix();
         
         Matrix.ComposeToRef(this.#scaling, this.#rotation.toQuaternion(), this.#position, testM);
@@ -186,11 +165,12 @@ export class paintPlane extends paintGround {
         new Float32Array(leftoverARR).set(testM.m);
         this.#worldCopyGPU.unmap();
         this.device.defaultQueue.submit(this.#updateWorldBuffer);*/
-        this.updatePositionBuffer();
+         //@ts-ignore TODO: move mesh to external object or make this inherit from terranode
+        this.worldPosition.updatePositionBuffer();
         if (newValues) {
             console.log('update plane buffer ', newValues.indices.length);
-            this.#templane2.setVertexBuffer(0, new Float32Array(newValues.positions).buffer);
-            this.#templane2.setIndexBuffer(new Uint16Array(newValues.indices).buffer);
+            this.#templane2.setVertexBuffer(0, new Float32Array(newValues.positions));
+            this.#templane2.setIndexBuffer(new Uint16Array(newValues.indices));
             this.#templane2.indexOrVertexCount = newValues.indices.length;
         }
     }

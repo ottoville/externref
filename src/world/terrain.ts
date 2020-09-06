@@ -1,5 +1,4 @@
 ﻿import { GPUScene } from "../GPUScene.js";
-import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine";
 import { TerraScene } from "../TerraScene.js";
 import { boundable, Bounding } from "../traits/Boundable.js";
 import { TerrainTool } from "../tools/Terrain.js";
@@ -20,14 +19,14 @@ export class Terrain implements boundable {
 
      * */
 
-    
+
 
     static subdivisionsX: number = 250;
     static subdivisionsY: number = 250;
 
-    #width =10000;
+    #width = 10000;
     #height = 10000;
-   
+
     #maxX = this.#width / 2.0;
     #maxZ = this.#height / 2.0;
     #minZ = -this.#maxZ;
@@ -36,22 +35,22 @@ export class Terrain implements boundable {
     #minY = -2;
     #maxY = 255
 
-   /* public boundingBox = {
-        min: {
-            x: this.#minX,
-            y: this.#minY,
-            z: this.#minZ
-        },
-        max: {
-            x: this.#maxX,
-            y: this.#maxY,
-            z: this.#maxZ
-        }
-    }*/
+    /* public boundingBox = {
+         min: {
+             x: this.#minX,
+             y: this.#minY,
+             z: this.#minZ
+         },
+         max: {
+             x: this.#maxX,
+             y: this.#maxY,
+             z: this.#maxZ
+         }
+     }*/
 
     slopeArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY, [GPUBufferUsage.STORAGE]);
     facet12ArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST]);
-  //  facet2ArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST);
+    //  facet2ArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST);
 
     public slopeArrBuffer: SharedArrayBuffer;
     public facet1ArrBuffer: SharedArrayBuffer;
@@ -72,16 +71,16 @@ export class Terrain implements boundable {
             return layout;
         }
         layout = scene.createBindGroupLayout(
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
-                    type: "readonly-storage-buffer"
-                },
-                {
-                    binding: 1,
-                    visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
-                    type: "readonly-storage-buffer"
-                });
+            {
+                binding: 0,
+                visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
+                type: "readonly-storage-buffer"
+            },
+            {
+                binding: 1,
+                visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
+                type: "readonly-storage-buffer"
+            });
         Terrain.heightLayouts.set(scene, layout);
         return layout;
     }
@@ -104,7 +103,7 @@ export class Terrain implements boundable {
     TerrainHeightsbindGroupTree = this.scene.gpuscene.baseBindGroup.addChildBindGroup(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene), ...this.heightsBindGroupEntries));
 
     // TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildLayout(worldPosition.BindGroupLayout)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
-    TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpuscene.worldPositionScene.BindGroup,true)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
+    TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpuscene.worldPositionScene.BindGroup, true)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
 
 
 
@@ -154,34 +153,34 @@ export class Terrain implements boundable {
 
         return buffer;
 
-     //   let vdata = await Terrain.terrainWorker.message<SharedArrayBuffer, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', { url: map });
+        //   let vdata = await Terrain.terrainWorker.message<SharedArrayBuffer, PostMessageOptions>(WorkerReturn.Promise, 'createHeightMap', { url: map });
 
         //return new Terrain(vdata, GPUScene.instance);
     }
     public static async fromSave(cachedvertices: Response): Promise<ArrayBuffer> {
         return cachedvertices.arrayBuffer();
-           /* const cacheimg = new Image();
-            cacheimg.src = URL.createObjectURL(await cachedvertices.blob());
-            await cacheimg.decode();
-            const canvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
-            const context = canvas.getContext('2d');
-            if (!context)
-                throw (new Error('Unable to get 2D contect of vertices data'));
-            context.drawImage(cacheimg, 0, 0);
-            return context.getImageData(0, 0, cacheimg.width, cacheimg.height).data.buffer;*/
+        /* const cacheimg = new Image();
+         cacheimg.src = URL.createObjectURL(await cachedvertices.blob());
+         await cacheimg.decode();
+         const canvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
+         const context = canvas.getContext('2d');
+         if (!context)
+             throw (new Error('Unable to get 2D contect of vertices data'));
+         context.drawImage(cacheimg, 0, 0);
+         return context.getImageData(0, 0, cacheimg.width, cacheimg.height).data.buffer;*/
     }
-    public createTexture(engine: WebGPUEngine): Promise<GPUBuffer> {
+    public createTexture(): Promise<GPUBuffer> {
         console.log('creating texture');
         return new Promise(async (tres, trej) => {
 
             const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5120 * 5120);
-            const resultMatrixBuffer = this.scene.gpuscene.createGPUBuffer(resultMatrixBufferSize, [GPUBufferUsage.STORAGE , GPUBufferUsage.COPY_SRC]);
-                
-            const computePipeline = GPUScene.instance.createComputePipeline("createTerrainTexture.comp", this.scene.gpuscene.device.createPipelineLayout({
+            const resultMatrixBuffer = this.scene.gpuscene.createGPUBuffer(resultMatrixBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+
+            const createTexturePipeline = GPUScene.instance.createComputePipeline("createTerrainTexture.comp", this.scene.gpuscene.device.createPipelineLayout({
                 bindGroupLayouts: [Terrain.getHeightsLayout(GPUScene.instance), GPUScene.instance.singleWritableStorageLayout]
             }));
 
-            const bindGroup1 = computePipeline.createBindGroup(GPUScene.instance.singleWritableStorageLayout, [
+            const bindGroup1 = createTexturePipeline.createBindGroup(GPUScene.instance.singleWritableStorageLayout, [
                 {
                     binding: 0,
                     resource: {
@@ -193,10 +192,10 @@ export class Terrain implements boundable {
             const commandEncoder = this.scene.gpuscene.createCommandEncoder();
 
             const passEncoder = commandEncoder.beginComputePass();
-            passEncoder.setPipeline(computePipeline);
+            passEncoder.setPipeline(createTexturePipeline);
             passEncoder.setBindGroup(0, this.TerrainHeightsbindGroupTree.sharedBindgroup!);
             passEncoder.setBindGroup(1, bindGroup1);
-            passEncoder.dispatch(5120 , 5120 );
+            passEncoder.dispatch(5120, 5120);
             passEncoder.endPass();
 
             console.timeEnd('Webgpu paint');
@@ -204,11 +203,11 @@ export class Terrain implements boundable {
             const gpuReadBuffer = this.scene.gpuscene.createGPUBuffer(resultMatrixBufferSize - 8, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ]);
             // Encode commands for copying buffer to buffer.
             commandEncoder.copyBufferToBuffer(
-                resultMatrixBuffer ,
-                8 ,
-                gpuReadBuffer ,
-                0 ,
-                resultMatrixBufferSize - 8 
+                resultMatrixBuffer,
+                8,
+                gpuReadBuffer,
+                0,
+                resultMatrixBufferSize - 8
             );
             // Submit GPU commands.
             const gpuCommands = commandEncoder.finish();
@@ -220,7 +219,7 @@ export class Terrain implements boundable {
             // Read buffer.
             let arrayBuffer = gpuReadBuffer.getMappedRange()
             TerrainTool.saveTexture(arrayBuffer);
-          //  Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
+            //  Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
             gpuReadBuffer.destroy()
         });
     }
@@ -230,12 +229,12 @@ export class Terrain implements boundable {
 
     readonly #terrainIndicesLength = Uint32Array.BYTES_PER_ELEMENT * (250 * 250 * 6);
 
-   // readonly verticesBuffer: SharedArrayBuffer = new SharedArrayBuffer(this.#terrainPositionsLength);
+    // readonly verticesBuffer: SharedArrayBuffer = new SharedArrayBuffer(this.#terrainPositionsLength);
     readonly indicesBuffer: SharedArrayBuffer = new SharedArrayBuffer(this.#terrainIndicesLength);
-   // readonly normalsBuffer: SharedArrayBuffer = new SharedArrayBuffer(this.#terrainPositionsLength);
+    // readonly normalsBuffer: SharedArrayBuffer = new SharedArrayBuffer(this.#terrainPositionsLength);
 
-    
-    
+
+
     readonly #terrainUvsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 2;
     readonly #terrainPositionAndUvsAndNormalsGPU = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST])
     readonly #terrainPositionAndUvsAndNormalsGPUSwap = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
@@ -260,7 +259,7 @@ export class Terrain implements boundable {
         await this.#terrainPositionAndUvsAndNormalsGPUSwap.mapAsync(GPUMapMode.WRITE, offset, length);
         const swaparraybuff = this.#terrainPositionAndUvsAndNormalsGPUSwap.getMappedRange();
         const swaparray = new Float32Array(swaparraybuff);
-        swaparray.set(this.#terrainPositionAndUvsAndNormalsCPUSwapView);       
+        swaparray.set(this.#terrainPositionAndUvsAndNormalsCPUSwapView);
         this.#terrainPositionAndUvsAndNormalsGPUSwap.unmap();
         const commandEncoder = this.scene.gpuscene.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
@@ -273,25 +272,90 @@ export class Terrain implements boundable {
     }
 
 
+    static async loadFromTexture(): Promise<[Terrain, Promise<GPUBuffer>]> {
+        /*
+const t = await caches.match(new Request('/terrain.webp')).then(async cachedvertices => {
+    if (cachedvertices) {
+        console.log('cachedvertices');
+        const buffer = await Terrain.fromSave(cachedvertices, GPUScene.instance);
+        return new Terrain(buffer, 'CreateGroundFromSave.comp', GPUScene.instance);
+    } else {
+        const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp', GPUScene.instance);
+        return new Terrain(buffer, 'CreateGroundFromHeightMap.comp', GPUScene.instance);
+    }
+})*/
+        const t = await caches.match(new Request('/terrain')).then(async cachedvertices => {
+            if (cachedvertices) {
+                console.log('cachedvertices');
+                const buffer = await Terrain.fromSave(cachedvertices);
+                return new Terrain(buffer, 'CreateGroundFromSave.comp', TerraScene.instance);
+            } else {
+                const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp', TerraScene.instance.gpuscene);
+                return new Terrain(buffer, 'CreateGroundFromHeightMap.comp', TerraScene.instance);
+            }
+        })
+
+        try {
+
+            const cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
+            if (cachedtexture) {
+                let cacheimg = new Image();
+                cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
+
+                return [t, cacheimg.decode().then(async () => {
+                    let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
+                    let imgctx = imgcanvas.getContext('2d');
+                    if (!imgctx)
+                        throw (new Error('Unable to get 2d canvas'));
+                    imgctx.drawImage(cacheimg, 0, 0);
+                    //let pixels = imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data;
+                    // const padding = pixels.byteLength % 4;
+                    const gpuBuffer = GPUScene.instance.createGPUBuffer(cacheimg.width * cacheimg.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], true);
+                    await gpuBuffer.mapAsync(GPUMapMode.WRITE);
+                    new Uint8ClampedArray(gpuBuffer.getMappedRange()).set(imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data);
+                    gpuBuffer.unmap();
+                    return gpuBuffer;
+                })];
+            }
+            //progelem.value = 40;
+            //  blazor.invokeMethod('setProgress', 30);
+
+            // const ground = t.terraMesh;
+            return [t, t.createTexture()];
+            /* let obj = {
+                 width: 10000,
+                 height: 10000,
+                 indices: new Uint32Array(ground.indices!),
+                 positions: new Float32Array(ground.positions),
+                 uvs: new Float32Array(ground.uvs || [])
+             };
+             let trans2 = (await DB).transaction('maps', 'readwrite');
+             trans2.objectStore('maps').add(obj);*/
+
+
+        } catch (e) {
+            throw(new Error(e));
+        }
+    }
 
     async serialize(compress = false) {
         const cacheP = caches.open('save');
         if (!compress) {
 
             //disabled fow now
-           /* const response = new Response(this.#vertices.buffer);
-            response.headers.set('content-length', this.#vertices.buffer.byteLength.toString());
-            response.headers.set('content-type', 'application/octet-stream');
-            */
+            /* const response = new Response(this.#vertices.buffer);
+             response.headers.set('content-length', this.#vertices.buffer.byteLength.toString());
+             response.headers.set('content-type', 'application/octet-stream');
+             */
 
             /*const response2 = new Response(this.#indices.buffer);
             response2.headers.set('content-length', this.#vertices.buffer.byteLength.toString());
             response2.headers.set('content-type', 'application/octet-stream');
             */
             const cache = await cacheP;
-             //disabled fow now
-          //  cache.put(new Request('/terrain'), response);
-          //  cache.put(new Request('/indices'), response2);
+            //disabled fow now
+            //  cache.put(new Request('/terrain'), response);
+            //  cache.put(new Request('/indices'), response2);
 
         } else {
             let c = new OffscreenCanvas((Terrain.subdivisionsX + 1) * 3, (Terrain.subdivisionsY + 1));
@@ -313,9 +377,9 @@ export class Terrain implements boundable {
             let i = 0,
             verticesAmount = this.#terrainPositionAndUvsAndNormalsCPUSwap.byteLength / (8 * 4),
             byteStride = 4 * 8;
-                i < verticesAmount; i++) {
+            i < verticesAmount; i++) {
             this.#positionsView.push(new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride, 3));
-            this.#normalsViewGPU.push(new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride + 5*4, 3));
+            this.#normalsViewGPU.push(new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride + 5 * 4, 3));
         }
 
 
@@ -332,8 +396,8 @@ export class Terrain implements boundable {
         sourceGPU.unmap();
 
         const terrainPositionAndUvsAndNormalsGPUTemp = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-       // const gpuReadBufferPositions = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength, GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST);
-      //  const gpuReadBufferIndices = this.scene.gpuscene.createGPUBuffer(this.#terrainIndicesLength, GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST);
+        // const gpuReadBufferPositions = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength, GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST);
+        //  const gpuReadBufferIndices = this.scene.gpuscene.createGPUBuffer(this.#terrainIndicesLength, GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST);
 
 
         const computePipeline = scene.gpuscene.createComputePipeline(algorithm)
@@ -365,7 +429,7 @@ export class Terrain implements boundable {
 
         const computePlaneHeights = scene.gpuscene.createComputePipeline('calculatePlaneHeights.comp');
         const bindGroupPositions = computePlaneHeights.createBindGroup(0,
-           [
+            [
                 {
                     binding: 0,
                     resource: {
@@ -411,7 +475,7 @@ export class Terrain implements boundable {
         const passEncoder = commandEncoder.beginComputePass();
         passEncoder.setPipeline(computePipeline);
         passEncoder.setBindGroup(0, sourceBindGroup);
-        
+
         passEncoder.dispatch(250 + 1, 250 + 1);
 
 
@@ -440,25 +504,25 @@ export class Terrain implements boundable {
         passEncoder3.dispatch(250 + 1, 250 + 1);
         passEncoder3.endPass();
 
-       /* commandEncoder.finishWithCopy(async (gpuReadBufferPositions, gpuReadBufferIndices) => {
-
-        }, gpuBufferPositions, terrainIndicesGPU);*/
+        /* commandEncoder.finishWithCopy(async (gpuReadBufferPositions, gpuReadBufferIndices) => {
+ 
+         }, gpuBufferPositions, terrainIndicesGPU);*/
         const [gpuReadBufferPositions, gpuReadBufferIndices] = scene.gpuscene.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
 
-      /*  commandEncoder.copyBufferToBuffer(
-            gpuBufferPositions,
-            0,
-            gpuReadBufferPositions,
-            0,
-            this.#terrainPositionsLength
-        );
-        commandEncoder.copyBufferToBuffer(
-            terrainIndicesGPU,
-            0,
-            gpuReadBufferIndices,
-            0,
-            this.#terrainIndicesLength
-        );*/
+        /*  commandEncoder.copyBufferToBuffer(
+              gpuBufferPositions,
+              0,
+              gpuReadBufferPositions,
+              0,
+              this.#terrainPositionsLength
+          );
+          commandEncoder.copyBufferToBuffer(
+              terrainIndicesGPU,
+              0,
+              gpuReadBufferIndices,
+              0,
+              this.#terrainIndicesLength
+          );*/
         const gpuCommands = commandEncoder.finish();
         scene.gpuscene.device.defaultQueue.submit([gpuCommands]);
         terrainPositionAndUvsAndNormalsGPUTemp.destroy();
@@ -477,7 +541,7 @@ export class Terrain implements boundable {
                 this.#vertices.set(new Float32Array(buff));
                 gpuBufferPositions.destroy();
             });*/
-            
+
         })();
 
         const m = scene.gpuscene.lights.lightsBindGroup.addDrawable({
@@ -525,11 +589,11 @@ export class Terrain implements boundable {
                     }]
             },
             // layout: pipelineLayout,
-        }, this.#terrainIndicesLength/4, 1)
+        }, this.#terrainIndicesLength / 4, 1)
         m.setVertexBuffer(0, this.#terrainPositionAndUvsAndNormalsGPU);
-        m.setIndexBuffer(terrainIndicesGPU);
-      //  this.terraMesh = new TerraMesh('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
-       // this.terraMesh = new TerraMesh('ground', new Float32Array([1,2,3,4,5,6,7,8,9]));
+        m.setIndexBuffer(terrainIndicesGPU, 0, true, 'uint32');
+        //  this.terraMesh = new TerraMesh('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
+        // this.terraMesh = new TerraMesh('ground', new Float32Array([1,2,3,4,5,6,7,8,9]));
 
 
         this.slopeArrBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY)
