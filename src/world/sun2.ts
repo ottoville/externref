@@ -77,7 +77,10 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
         }
     }, [this.bufferOffset], 14);
 
-    
+    clamp(value: number, min: number, max: number) {
+        return Math.min(Math.max(value, min), max);
+    }
+
     onPhysicTick = (delta: number) => {
         let anglePerMinute = (Math.PI * 2) / 1439;
         //let meridian: number = Math.PI * 0.1;
@@ -98,6 +101,16 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
         sunPositionY = sunPositionY * yAngle;
         const currentPos = this.worldPosition.translation as Float32Array;
         this.worldPosition.SetTranslationDelta([sunPositionX - currentPos[0], sunPositionY - currentPos[1], sunPositionZ - currentPos[2]]);
+        //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
+        const ambientR = this.clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
+        const ambientGB = this.clamp((sunPositionY + 0.1) * 0.4 - 0.1, 0.05, 0.3);
+
+
+        //earth shadow
+        const shadow = Math.max(Math.min((sunPositionY << 3) + 1, 1), 0); // <<3 == * 8
+
+        this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
+        this.updateDynamicBuffer();
         
        // this.worldPosition.translation = [sunPositionX, sunPositionY, sunPositionZ];
 

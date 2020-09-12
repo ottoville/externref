@@ -50,7 +50,7 @@ export class Physics {
         me.lastTickTimeMs = timestamp;
         me.gameTime += delta / 1000;
 
-        console.log(delta / me.scene.tickIntervalMs);
+       // console.log(delta / me.scene.tickIntervalMs);
 
         me.tickables.forEach(tickable => {
             tickable.onPhysicTick(delta);

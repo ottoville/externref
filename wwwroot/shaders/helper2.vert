@@ -1,6 +1,7 @@
 #version 450
 precision lowp float;
 
+uint facetSize= 250 * 250 * 4;
 
 const vec2 vertices[4] = vec2[4](
             vec2(-0.5f, 2.0f),
@@ -14,24 +15,21 @@ layout(set = 0, binding = 0) uniform Scene {
     mat4 viewProjection;
     mat4 view;
     vec4 viewPosition;
+    vec3 cameraPosition;
 };
 
-
+layout(set = 0, binding = 1) uniform Time {
+   float time;
+};
 
 layout(std430, set = 1, binding = 0) readonly buffer Slopes {
     int numbers[];
 } slopes;
-layout(std430, set = 1, binding = 1) readonly buffer Facet1 {
+layout(std430, set = 1, binding = 1) readonly buffer Facet12 {
     float numbers[];
-} facet1;
-layout(std430, set = 1, binding = 2) readonly buffer Facet2 {
-    float numbers[];
-} facet2;
+} facet12;
 
-layout(set = 2, binding = 0) uniform Terra {
-   float time;
-} terra;
-layout(set = 3, binding = 0) uniform LeftOver {
+layout(set = 2, binding = 0) uniform LeftOver {
         mat4 world;
 };
 
@@ -68,15 +66,15 @@ float getHeightAtCoordinates(vec2 xz) {
     int slope = slopes.numbers[row*250 + col];
     vec4 facet;
     if(cz < -1 * cx + slope) {
-        facet=vec4(facet1.numbers[(row * 250 + col)*4], facet1.numbers[(row * 250 + col)*4+1], facet1.numbers[(row * 250 + col)*4+2], facet1.numbers[(row * 250 + col)*4+3]);
+        facet=vec4(facet12.numbers[(row * 250 + col)*4], facet12.numbers[(row * 250 + col)*4+1], facet12.numbers[(row * 250 + col)*4+2], facet12.numbers[(row * 250 + col)*4+3]);
     } else {
-        facet=vec4(facet2.numbers[(row * 250 + col)*4], facet2.numbers[(row * 250 + col)*4+1], facet2.numbers[(row * 250 + col)*4+2], facet2.numbers[(row * 250 + col)*4+3]);
+        facet=vec4(facet12.numbers[facetSize + ((row * 250 + col)*4)], facet12.numbers[facetSize + ((row * 250 + col)*4+1)], facet12.numbers[facetSize + ((row * 250 + col)*4+2)], facet12.numbers[facetSize + ((row * 250 + col)*4+3)]);
     }
     return -(facet.x * cx + facet.z * cz + facet.w) / facet.y;
  }
 
 void main(void) {
-    float angle= terra.time+float(gl_InstanceIndex) * angleStep;
+    float angle= time+float(gl_InstanceIndex) * angleStep;
     float c = cos(angle);
 	float s = sin(angle);
     vec3 position=vec3(vertices[gl_VertexIndex].x,1.5f,vertices[gl_VertexIndex].y);

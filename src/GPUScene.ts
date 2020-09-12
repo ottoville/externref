@@ -7,7 +7,7 @@ import { TerraNode } from "./TerraNode";
 
 
 
-export class GPUScene { 
+export class GPUScene {
     static canvas: HTMLCanvasElement;
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     #bufferIndexFormats: WeakMap<GPUBuffer, GPUIndexFormat> = new WeakMap();
@@ -83,30 +83,30 @@ export class GPUScene {
 
     worldPositionScene = new worldPositionScene(this);
 
-   
+
 
     addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)) {
         const bglayout = this.GPUBindGroupLayouts.get(bindgroup);
         if (!bglayout)
             throw ('Bindgroup layout not found from weakmap');
-        return new BindGroupDrawable(this, bglayout,undefined, bindgroup);
+        return new BindGroupDrawable(this, bglayout, undefined, bindgroup);
     }
 
     get canvas(): HTMLCanvasElement {
         return GPUScene.canvas;
     }
 
-    
 
-   /* createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutOneBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutTwoBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic, entry3: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutThreeBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic, entry3: GPUBindGroupLayoutEntryNoDynamic, entry4: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutFourBinding*/
+
+    /* createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutOneBinding
+     createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutTwoBinding
+     createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic, entry3: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutThreeBinding
+     createBindGroupLayout(entry1: GPUBindGroupLayoutEntryNoDynamic, entry2: GPUBindGroupLayoutEntryNoDynamic, entry3: GPUBindGroupLayoutEntryNoDynamic, entry4: GPUBindGroupLayoutEntryNoDynamic): BindGroupLayoutFourBinding*/
 
     //createBindGroupLayout2<T extends GPUBindGroupLayoutEntry[]>(...entries: [GPUBindGroupLayoutEntryReadStorage, ...GPUBindGroupLayoutEntry[]]): TerraBindGroupLayout<T, GPUStorageBuffer>
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry>(entry: T): BindGroupLayoutOneBinding<T>
-    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries:T): BindGroupLayoutTwoBinding<T>
-    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries:T): BindGroupLayoutThreeBinding<T>
+    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries: T): BindGroupLayoutTwoBinding<T>
+    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries: T): BindGroupLayoutThreeBinding<T>
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(...entries: T): TerraBindGroupLayout<T> {
         const layout = this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout<T>;
         layout.createBindGroup = (...entries: GPUBindGroupEntry[]) => {
@@ -118,43 +118,43 @@ export class GPUScene {
     }
 
     //createBindGroupLayout(entry1: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutOneBinding
-  /*  createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutTwoBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry, entry3: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutThreeBinding
-    createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry, entry3: GPUBindGroupLayoutEntry, entry4: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutFourBinding
-    createBindGroupLayout(...entries: GPUBindGroupLayoutEntry[]): GPUBindGroupLayout {
-        return this.device.createBindGroupLayout({ entries });
-    }*/
+    /*  createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutTwoBinding
+      createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry, entry3: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutThreeBinding
+      createBindGroupLayout(entry1: GPUBindGroupLayoutEntry, entry2: GPUBindGroupLayoutEntry, entry3: GPUBindGroupLayoutEntry, entry4: GPUBindGroupLayoutEntry): DynamicBindGroupLayoutFourBinding
+      createBindGroupLayout(...entries: GPUBindGroupLayoutEntry[]): GPUBindGroupLayout {
+          return this.device.createBindGroupLayout({ entries });
+      }*/
 
     //createBindGroup(layout: BindGroupLayoutOneBinding, entry1: GPUBindGroupEntry): BindGroupOneBinding
     createBindGroup<T extends GPUBindGroupLayout>(layout: T, ...entries: bindings<T>): getBindType<T>
 
-  //  createBindGroup(layout: BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry>, entry1: GPUBindGroupEntry): BindGroupOneBinding
-  //  createBindGroup(layout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry,GPUBindGroupLayoutEntry]>, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry): BindGroupTwoBinding
-   /* createBindGroup(layout: BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry, entry3: GPUBindGroupEntry): BindGroupThreeBinding
-    createBindGroup(layout: BindGroupLayoutFourBinding, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry, entry3: GPUBindGroupEntry, entry4: GPUBindGroupEntry): BindGroupFourBinding*/
+    //  createBindGroup(layout: BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry>, entry1: GPUBindGroupEntry): BindGroupOneBinding
+    //  createBindGroup(layout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry,GPUBindGroupLayoutEntry]>, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry): BindGroupTwoBinding
+    /* createBindGroup(layout: BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry, entry3: GPUBindGroupEntry): BindGroupThreeBinding
+     createBindGroup(layout: BindGroupLayoutFourBinding, entry1: GPUBindGroupEntry, entry2: GPUBindGroupEntry, entry3: GPUBindGroupEntry, entry4: GPUBindGroupEntry): BindGroupFourBinding*/
     createBindGroup(layout: GPUBindGroupLayout, ...entries: GPUBindGroupEntry[]): GPUBindGroup {
         const bindGroup = this.device.createBindGroup({ layout, entries });
         this.GPUBindGroupLayouts.set(bindGroup, layout);
         return bindGroup
     }
 
-    
+
 
 
     #uniformBufferSwap = this.createGPUBuffer(4 * 16 * 2 + 4 * 4 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
 
-    #timeBufferStorage = this.createGPUBuffer(8, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]); 
+    #timeBufferStorage = this.createGPUBuffer(8, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
     static instance: GPUScene;
     //#bufferUpdateEncoders: WeakMap<GPUMapWriteBuffer, GPUCommandBuffer> = new WeakMap();
     #createdAt: number = new Date().getTime();
-  
+
 
 
     lights = new Light(this);
     positionBindGroupLightsTime = this.lights.lightsBindGroup.addChildBindGroup(this.worldPositionScene.BindGroup, true);
 
-    
+
     queue: Map<Float32Array, number> = new Map();
     #busy = false;
     updateGPUBuffer(): GPUCommandBuffer | null {
@@ -202,27 +202,9 @@ export class GPUScene {
             if (delta !== null) {
                 var currentTime = new Float32Array([(this.#createdAt - time) % 100000 / 1000, delta]);
             } else
-                var currentTime = new Float32Array([(this.#createdAt - time) % 100000 / 1000]);        
+                var currentTime = new Float32Array([(this.#createdAt - time) % 100000 / 1000]);
             return this.updateBuffer(this.#timeBufferStorage, this.timeBuffer, currentTime)
         }
-   /*     this.lightsBindGroup.onRender = async (time) => {
-
-
-
-        }*/
-       /* const commandEncoder = device.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(
-            this.#timeBufferStorage, 0,
-            this.timeBuffer, 0,
-            4);
-        this.#bufferUpdateEncoders.set(this.#timeBufferStorage, commandEncoder.finish());
-        const commandEncoderView = device.createCommandEncoder();
-        commandEncoderView.copyBufferToBuffer(
-            this.#uniformBufferSwap, 0,
-            this.uniformBuffer, 0,
-            4 * 16 * 2 + 4 * 4 + 3 * 4
-        );
-        this.#bufferUpdateEncoders.set(this.#uniformBufferSwap, commandEncoderView.finish());*/
         GPUScene.instance = this;
     }
     async updateBuffer(buffer: GPUMapWriteBuffer, destination: GPUCopyDSTBuffer, ...data: Float32Array[]): Promise<GPUCommandBuffer | null> {
@@ -236,10 +218,10 @@ export class GPUScene {
             new Int8Array(buffer.getMappedRange(offset, view.byteLength)).set(new Int8Array(view.buffer, 0, view.byteLength));
             offset += view.byteLength;
         });
-       /* data.forEach(view => {
-            new Float32Array(buffer.getMappedRange(offset, view.byteLength)).set(view);
-            offset += view.byteLength;
-        });*/
+        /* data.forEach(view => {
+             new Float32Array(buffer.getMappedRange(offset, view.byteLength)).set(view);
+             offset += view.byteLength;
+         });*/
         buffer.unmap();
 
 
@@ -254,16 +236,16 @@ export class GPUScene {
 
         //Disabled untill command encoders can reuse;
         //this.device.defaultQueue.submit([this.#bufferUpdateEncoders.get(buffer)!])
-        
+
     }
     async updateView(viewProjection: Float32Array, view: Float32Array, viewPosition: Float32Array, cameraPosition: Float32Array) {
         const encoder = await this.updateBuffer(this.#uniformBufferSwap, this.uniformBuffer, viewProjection, view, viewPosition, cameraPosition);
         if (encoder)
             this.device.defaultQueue.submit([encoder]);
     }
-    
 
-    
+
+
     #syncedBuffers: WeakSet<GPUMapWriteBuffer | GPUMapReadBuffer> = new WeakSet()
     //uniform
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer
@@ -296,7 +278,7 @@ export class GPUScene {
             throw (new Error('Cannot create zero sized buffer'));
         const usage = usages.reduce((prev, curr) => prev | curr, 0);
         const buff = this.device.createBuffer({ usage, size, mappedAtCreation });
-       
+
         if (usage & GPUBufferUsage.MAP_READ) {
             (buff as GPUMapReadBuffer).readAndDestroy = (callback: (buff: ArrayBuffer) => Promise<void>): Promise<void> => {
                 return buff.mapAsync(GPUMapMode.READ).then(() => {
@@ -305,7 +287,7 @@ export class GPUScene {
                 });
             }
         }
-         else if (usage & GPUBufferUsage.COPY_SRC)
+        else if (usage & GPUBufferUsage.COPY_SRC)
             this.#bufferSizes.set(buff, size);
 
         if (usage & GPUBufferUsage.INDEX) {
@@ -314,12 +296,12 @@ export class GPUScene {
 
         return buff;
     }
-    createCopy(commandEncoder: GPUCommandEncoder, ...buffers: GPUCopySRCBuffer[]): (GPUMapReadBuffer & GPUCopyDSTBuffer)[]  {
+    createCopy(commandEncoder: GPUCommandEncoder, ...buffers: GPUCopySRCBuffer[]): (GPUMapReadBuffer & GPUCopyDSTBuffer)[] {
         const readBuffers: (GPUMapReadBuffer & GPUCopyDSTBuffer)[] = [];
         buffers.forEach(buffer => {
             let size: number | undefined;
             if (size = this.#bufferSizes.get(buffer)) {
-                const gpuReadBuffer = this.createGPUBuffer(size, [GPUBufferUsage.COPY_DST ,GPUBufferUsage.MAP_READ])
+                const gpuReadBuffer = this.createGPUBuffer(size, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ])
                 readBuffers.push(gpuReadBuffer);
                 commandEncoder.copyBufferToBuffer(
                     buffer, // source buffer
@@ -332,7 +314,7 @@ export class GPUScene {
             else
                 throw (new Error('Buffer size not found from weakmap'));
         });
-        return readBuffers; 
+        return readBuffers;
     }
     createUpdate(buffer: GPUCopyDSTBuffer, data: ArrayBuffer | SharedArrayBuffer): void {
         const commandEncoder = this.device.createCommandEncoder() as TerraGPUCommandEncoder;
@@ -348,11 +330,11 @@ export class GPUScene {
             data.byteLength
         );
     }
-    createCommandEncoder(descriptor?: GPUCommandEncoderDescriptor): TerraGPUCommandEncoder  {
+    createCommandEncoder(descriptor?: GPUCommandEncoderDescriptor): TerraGPUCommandEncoder {
         const commandEncoder = this.device.createCommandEncoder(descriptor) as TerraGPUCommandEncoder;
-     /*   commandEncoder.finishWithCopy = (callback: (...buff: GPUBuffer[]) => Promise<void>, ...buffers: GPUCopySRCBuffer[]) => {
-            this.createCopyBuffers(commandEncoder, buffers, callback);
-        }*/
+        /*   commandEncoder.finishWithCopy = (callback: (...buff: GPUBuffer[]) => Promise<void>, ...buffers: GPUCopySRCBuffer[]) => {
+               this.createCopyBuffers(commandEncoder, buffers, callback);
+           }*/
         return commandEncoder;
     }
     GPU2CPU(callback: (...buff: (GPUMapReadBuffer & GPUCopyDSTBuffer)[]) => Promise<void>, ...buffers: GPUCopySRCBuffer[]): void {
@@ -364,7 +346,7 @@ export class GPUScene {
     createComputePipeline(shader: string, layout?: GPUPipelineLayout, entryPoint = 'main'): TerraGPUComputePipeLine {
         const shaderModule = this.shaderModules.get(shader);
         if (!shaderModule)
-            throw (new Error('Shader ' + shader + ' not found'));        
+            throw (new Error('Shader ' + shader + ' not found'));
         const desc: GPUComputePipelineDescriptor = {
             computeStage: {
                 module: shaderModule,
@@ -385,7 +367,7 @@ export class GPUScene {
         if (this.scene.physics.gameSpeed == -1)
             physicDelta = null;
         else
-            physicDelta = (this.scene.physics.physicTime - this.scene.physics.gameTime) / ((this.scene.tickIntervalMs/1000) << this.scene.physics.gameSpeed)
+            physicDelta = (this.scene.physics.physicTime - this.scene.physics.gameTime) / ((this.scene.tickIntervalMs / 1000) << this.scene.physics.gameSpeed)
         let index = 0;
         const commandBuffers: Promise<GPUCommandBuffer | null>[] = [];
         BindGroupDrawable.instances.forEach(function drawBindGroups(bgt) {
@@ -401,7 +383,7 @@ export class GPUScene {
                     if (bgt.sharedBindgroup) {
                         renderPass.setBindGroup(index, bgt.sharedBindgroup);
                     }
-                    bgt.meshes.forEach(m => m.draw(renderPass, index) );
+                    bgt.meshes.forEach(m => m.draw(renderPass, index));
                 }
                 if (bgt.subBindGroups.size) {
                     index++;
@@ -435,11 +417,11 @@ export class GroupDrawable {
         this.layout = this.gpuscene.device.createPipelineLayout({ bindGroupLayouts: layoutTree });
 
     }
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry>): LayoutGroupDrawable<[GPUBindGroup]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>): LayoutGroupDrawable<[GPUBindGroup, GPUBindGroup]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>): LayoutGroupDrawable<[GPUBindGroup, GPUBindGroup, GPUBindGroup]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutFourBinding): LayoutGroupDrawable<[GPUBindGroup, GPUBindGroup, GPUBindGroup, GPUBindGroup]>
-    addChildLayout(meshBindGroupLayout: (BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry> | BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | BindGroupLayoutFourBinding)): LayoutGroupDrawable<GPUBindGroup[]> {
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry>): LayoutGroupDrawable<[GPUBindGroupEntry]>
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutFourBinding): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    addChildLayout(meshBindGroupLayout: (BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry> | BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | BindGroupLayoutFourBinding)): LayoutGroupDrawable<GPUBindGroupEntry[]> {
         return new LayoutGroupDrawable(this.gpuscene, meshBindGroupLayout, this, undefined);
     }
     addChildBindGroup(sharedBindgroup: BindGroupOneBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number]>
@@ -474,7 +456,7 @@ export class DynamicBindGroupDrawable<T extends number[]> extends GroupDrawable 
         return d;
     }
 }
-export class LayoutGroupDrawable<T extends GPUBindGroup[]> extends GroupDrawable {
+export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends GroupDrawable {
     addDrawable(renderPipeline: GPURenderPipelineDescriptor, bindGroups:T, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): Drawable {
         if (!renderPipeline.rasterizationState) {
             renderPipeline.rasterizationState = {
@@ -482,7 +464,13 @@ export class LayoutGroupDrawable<T extends GPUBindGroup[]> extends GroupDrawable
             }
         }
         const d = new Drawable(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this)
-        d.bindGroups=new Set(bindGroups);
+        const bndGroup = this.gpuscene.device.createBindGroup(
+            {
+                layout: this.bindGroupLayout,
+                entries: bindGroups
+            }
+        );
+        d.bindGroups = new Set([bndGroup]);
         this.meshes.add(d);
         return d;
     }

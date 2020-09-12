@@ -10,7 +10,7 @@ export class Light {
 
 
 
-    
+
 
     /*
      * Goround shader
@@ -27,9 +27,13 @@ export class Light {
      * */
     //#lightsBuffer = this.scene.createGPUBuffer(3 * 4 + 4 + maxLights * (3 * 4 + 4 + 3 * 4 + 4), [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
 
+
+
+
+
     #uniformBindGroupLayoutLights = this.scene.createBindGroupLayout({
         binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
+        visibility: GPUShaderStage.VERTEX,
         type: 'readonly-storage-buffer'
     });
 
@@ -37,17 +41,27 @@ export class Light {
         {
             binding: 0,
             resource: {
-                buffer: this.scene.worldPositionScene.matrix, //this.#lightsBuffer
-                size:256
+                buffer: this.scene.GPUData, //this.#lightsBuffer
+                size: 256
             }
         });
     lightsBindGroup = this.scene.baseBindGroup.addChildBindGroup(this.#uniformBindGroupLights);
+    lightsBindGroupTexture = this.lightsBindGroup.addChildLayout(this.scene.createBindGroupLayout({
+        binding: 0, 
+        visibility: GPUShaderStage.FRAGMENT,
+        type: 'sampler'
+    }, {
+        binding: 1,
+        visibility: GPUShaderStage.FRAGMENT,
+        type: 'sampled-texture'
+    }))
+
     lightsBindGroupNoTime = this.scene.baseBindGroupNoTime.addChildBindGroup(this.#uniformBindGroupLights);
 
     add(light: isLight) {
         this.#instances.add(light);
     }
     constructor(public scene: GPUScene) {
-      //  this.#uniformBindGroupLayoutLights.createBindGroup()
+        //  this.#uniformBindGroupLayoutLights.createBindGroup()
     }
 }

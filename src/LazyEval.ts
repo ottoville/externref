@@ -3,10 +3,10 @@ export class LazyEval {
     private timeoutID: number = 0;
     private runned:boolean=false;
     constructor(
-        private callback: (...args) => void,
+        private callback: (...args: any[]) => void,
         private initial: boolean = false) {
     }
-    eval(timeout: number, ...args) {
+    eval(timeout: number, ...args: any[]) {
         if(this.initial && !this.runned) {
             this.runned=true;
             return this.callback();

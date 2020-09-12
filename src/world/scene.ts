@@ -23,20 +23,17 @@ import type { TrianglePickingPredicate } from "../lib/babylon/Culling/ray.js";
 import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
 import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
 import { Engine } from "../lib/babylon/Engines/engine.js";
-import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
 import { Matrix, Frustum } from "../lib/babylon/Maths/math.js";
 import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collisionCoordinator.js';
-import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
 import { Sea } from "./water.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
-import { InternalTexture, InternalTextureSource } from "../lib/babylon/Materials/Textures/internalTexture.js";
 import { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { LazyEval } from "../LazyEval.js";
 import { UITABClassLike, UITAB } from "../UITAB.js";
 import { GPUScene } from "../GPUScene.js";
 import { TerraScene } from "../TerraScene.js";
-import { Sun2 } from "./sun2.js";
+
 function matrixMultiply64(m: number[], otherM: number[]): number[] {
     var tm0 = m[0], tm1 = m[1], tm2 = m[2], tm3 = m[3];
     var tm4 = m[4], tm5 = m[5], tm6 = m[6], tm7 = m[7];
@@ -821,74 +818,10 @@ export class WorldScene extends Scene {
     */
 
 
-        new Sun2(TerraScene.instance);
         
-        this.terrainInited = new Promise<[Terrain, Promise<GPUBuffer>]>(async (tres, trej) => {
-            /*
-            const t = await caches.match(new Request('/terrain.webp')).then(async cachedvertices => {
-                if (cachedvertices) {
-                    console.log('cachedvertices');
-                    const buffer = await Terrain.fromSave(cachedvertices, GPUScene.instance);
-                    return new Terrain(buffer, 'CreateGroundFromSave.comp', GPUScene.instance);
-                } else {
-                    const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp', GPUScene.instance);
-                    return new Terrain(buffer, 'CreateGroundFromHeightMap.comp', GPUScene.instance);
-                }
-            })*/
-            const t = await caches.match(new Request('/terrain')).then(async cachedvertices => {
-                if (cachedvertices) {
-                    console.log('cachedvertices');
-                    const buffer = await Terrain.fromSave(cachedvertices);
-                    return new Terrain(buffer, 'CreateGroundFromSave.comp', TerraScene.instance);
-                } else {
-                    const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp', TerraScene.instance.gpuscene);
-                    return new Terrain(buffer, 'CreateGroundFromHeightMap.comp', TerraScene.instance);
-                }
-            })
+        
+        this.terrainInited = Terrain.loadFromTexture();
             
-            try {
-                
-                const cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
-                if (cachedtexture) {
-                    let cacheimg = new Image();
-                    cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
-
-                    tres([t,cacheimg.decode().then(async () => {
-                        let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
-                        let imgctx = imgcanvas.getContext('2d');
-                        if (!imgctx)
-                            throw (new Error('Unable to get 2d canvas'));
-                        imgctx.drawImage(cacheimg, 0, 0);
-                        //let pixels = imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data;
-                        // const padding = pixels.byteLength % 4;
-                        const gpuBuffer = GPUScene.instance.createGPUBuffer(cacheimg.width * cacheimg.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], true);
-                        await gpuBuffer.mapAsync(GPUMapMode.WRITE);
-                        new Uint8ClampedArray(gpuBuffer.getMappedRange()).set(imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data);
-                        gpuBuffer.unmap();
-                        return gpuBuffer;
-                    })]);
-                    return;
-                }
-                //progelem.value = 40;
-                blazor.invokeMethod('setProgress', 30);
-                
-               // const ground = t.terraMesh;
-                tres([t, t.createTexture(engine as WebGPUEngine)]);
-               /* let obj = {
-                    width: 10000,
-                    height: 10000,
-                    indices: new Uint32Array(ground.indices!),
-                    positions: new Float32Array(ground.positions),
-                    uvs: new Float32Array(ground.uvs || [])
-                };
-                let trans2 = (await DB).transaction('maps', 'readwrite');
-                trans2.objectStore('maps').add(obj);*/
-
-
-            } catch (e) {
-                trej(e);
-            }
-        });
         this.sea = new Sea(this);
         this.plants = new Plants(this, this.camera, this.terrainInited, device);
         this.terrainReady=this.terrainInited.then(gt => {
@@ -916,78 +849,39 @@ export class WorldScene extends Scene {
             return texture.then(async gpuBuffer => {
                 blazor.invokeMethod('setProgress', 75);
 
-                //let size = new Float32Array(imgdata as ArrayBuffer, 0, 2);
-                let size = [5120, 5120];
-
-                let internaltex = new InternalTexture(engine, InternalTextureSource.Url);
-                internaltex.width = size[0];
-                internaltex.height = size[1];
-                internaltex.baseWidth = size[0];
-                internaltex.baseHeight = size[1];
-                internaltex._isRGBD = internaltex._isRGBD;
-                blazor.invokeMethod('setProgress', 80);
+                
                 //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
-                const textureExtent = {
-                    width: size[0],
-                    height: size[1],
-                    depth: 1,
-                };
-                internaltex._webGPUTexture = device.createTexture({
-                    dimension: '2d',
-                    format: "rgba8unorm",
-                    mipLevelCount: 1,
-                    sampleCount: 1,
-                    size: textureExtent,
-                    //@ts-ignore
-                    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
-                });
                 const commandEncoder = device.createCommandEncoder({});
-                blazor.invokeMethod('setProgress', 85);
+                blazor.invokeMethod('setProgress', 80);
+              
                 let bufferView: GPUBufferCopyView = {
                     buffer: gpuBuffer,
-                    bytesPerRow: size[0] * 4,
+                    bytesPerRow: ground.textureSize[0] * 4,
                     rowsPerImage: 0,
                     offset: 0,
                 };
-                blazor.invokeMethod('setProgress', 90);
-
+                blazor.invokeMethod('setProgress', 85);
+               
+                
                 commandEncoder.copyBufferToTexture(bufferView,
                     {
-                        texture: internaltex._webGPUTexture,
+                        texture: ground.texture,
                         origin: {
                             x: 0,
                             y: 0,
                             z: Math.max(-1, 0)
                            },
                     mipLevel: 0,
-                    }, textureExtent);
+                    }, ground.textureExtent);
+                blazor.invokeMethod('setProgress', 90);
+               
+
                 device.defaultQueue.submit([commandEncoder.finish()]); //Copy would overflow the buffer
-                bufferView.buffer.destroy();
-                internaltex._webGPUTextureView = internaltex._webGPUTexture.createView();
-                internaltex.onLoadedObservable.notifyObservers(internaltex);
-                internaltex.onLoadedObservable.clear();
-                internaltex.url = String("https://playground.babylonjs.com/textures/grass.png");
-                internaltex.generateMipMaps = false;
-                internaltex.invertY = true;
-                internaltex.samplingMode = Texture.TRILINEAR_SAMPLINGMODE;
-                internaltex.isReady = true;
-                (engine as WebGPUEngine)._internalTexturesCache.push(internaltex);
                 blazor.invokeMethod('setProgress', 95);
-
-                var grass2 = new StandardMaterial("grass2", this);
-
-                //engine.createTexture("https://playground.babylonjs.com/textures/grass.png", true, true, this);
-                // grass2.ambientTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
-                grass2.diffuseTexture = new Texture("https://playground.babylonjs.com/textures/grass.png", this, true);
-
-              //  ground.terraMesh.material = grass2;
+                bufferView.buffer.destroy();
                 blazor.invokeMethod('setProgress', 100);
                 console.debug("Progress 100");
-                
             })
-
-            
-
         }).catch(e => {
             console.error(e);
             blazor.invokeMethod('setProgressError', e.name +' '+ e.message);
