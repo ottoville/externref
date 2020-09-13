@@ -103,7 +103,7 @@ export class Terrain implements boundable {
     TerrainHeightsbindGroupTree = this.scene.gpuscene.baseBindGroup.addChildBindGroup(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene), ...this.heightsBindGroupEntries));
 
     // TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildLayout(worldPosition.BindGroupLayout)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
-    TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpuscene.worldPositionScene.BindGroup, true)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
+    TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpuscene.BindGroup, true)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
 
 
 

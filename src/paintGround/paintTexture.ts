@@ -1,14 +1,13 @@
 ﻿import { paintGround } from "./paintGround.js";
-import type { UITAB } from "../UITAB.js";
 import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
-import type { Vector2 } from "../lib/babylon/Maths/math.vector.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { Texture } from "../lib/babylon/Materials/Textures/texture.js";
 import type { Engine } from "../lib/babylon/Engines/engine.js";
 import type { WorldScene } from "../world/scene.js";
 import { canvasListener } from "../traits/canvasListener.js";
+import { TerraScene } from "../TerraScene.js";
 
 
 
@@ -21,20 +20,20 @@ export class paintTexture extends paintGround {
     private m1 = new Matrix();
     private texture: WebGLTexture
     private gl: WebGL2RenderingContext;
-    onMainPointerUp(end_position: Vector2, height: number): void {
+    onMainPointerUp(end_position: Float32Array, height: number): void {
         this.height = height;
         this.subTextureCache = { x: 0, z: 0, imageData: null }
     }
-    onMainPointerDown(startingPoint: Vector2): void {
+    onMainPointerDown(startingPoint: Float32Array): void {
         console.debug('painttexture mainpointerdown');
-        this.m1.setRow(0, new Vector4(1, 0, 0, this.centerX + startingPoint.x));
+        this.m1.setRow(0, new Vector4(1, 0, 0, this.centerX + startingPoint[0]));
         this.m1.setRow(1, new Vector4(0, 1, 0, 0));
-        this.m1.setRow(2, new Vector4(0, 0, 1, this.centerZ + startingPoint.y));
+        this.m1.setRow(2, new Vector4(0, 0, 1, this.centerZ + startingPoint[2]));
         this.m1.setRow(3, new Vector4(0, 0, 0, 1));
 
     }
     constructor(
-        protected scene: WorldScene,
+        protected sceneDeprecated: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,
@@ -43,13 +42,13 @@ export class paintTexture extends paintGround {
         private textureHeight: number,
         uitab: canvasListener,
     ) {
-        super(scene, camera, ground, sea, uitab);
+        super(TerraScene.instance, sceneDeprecated, camera, ground, sea, uitab);
         this.centerX = textureWidth / 2;
         this.centerZ = textureHeight / 2;
         if (!zonedt._texture || !zonedt._texture._webGLTexture)
             throw ('zonedt has no texture');
         this.texture = zonedt._texture._webGLTexture;
-        this.gl = <WebGL2RenderingContext><any>scene.getEngine()._gl;
+        this.gl = <WebGL2RenderingContext><any>sceneDeprecated.getEngine()._gl;
     };
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
         super.activate(callback, options);
@@ -67,7 +66,7 @@ export class paintTexture extends paintGround {
             this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, this.subTextureCache.x, this.subTextureCache.z, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.subTextureCache.imageData);
             this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
         }
-        paintTexture.drawSubImage(width, this.height, this.ang360.rad, this.m1, this.texture, this.scene.getEngine(), this.subTextureCache)
+        paintTexture.drawSubImage(width, this.height, this.ang360.rad, this.m1, this.texture, this.sceneDeprecated.getEngine(), this.subTextureCache)
     }
     static drawSubImage(width: number, height: number, rad: number, m1: Matrix, texture: WebGLTexture, engine: Engine, subTextureCache?: subTexture) {
         let gl: WebGL2RenderingContext = <any>engine._gl;

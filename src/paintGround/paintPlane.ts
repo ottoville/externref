@@ -3,7 +3,6 @@ import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
-import { Vector2, Vector3 } from "../lib/babylon/Maths/math.vector.js";
 import type { WorldScene } from "../world/scene.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
@@ -11,13 +10,20 @@ import { canvasListener } from "../traits/canvasListener.js";
 import { GPUScene } from "../GPUScene.js";
 import type { Drawable } from "../drawables/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
+import { TerraScene } from "../TerraScene.js";
 
 
 
-export class paintPlane extends paintGround implements has3DPosition {
-    //@ts-ignore TODO: move mesh to external object or make this inherit from terranode
-    worldPosition = new worldPosition(this as TerraNode);
-    #startingPoint: Vector2 = Vector2.Zero();
+class PlaneMesh extends TerraNode implements has3DPosition{
+    worldPosition: worldPosition = new worldPosition(this);
+}
+
+
+export class paintPlane extends paintGround {
+
+   // worldPosition = new worldPosition(this as TerraNode);
+    #mesh = new PlaneMesh(this.scene);
+    #startingPoint: Float32Array = new Float32Array(2);
     #templane2: Drawable;
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
         const positions: number[] = [0, 0, 0, 1];
@@ -50,18 +56,18 @@ export class paintPlane extends paintGround implements has3DPosition {
         }
     }
     constructor(
-        protected scene: WorldScene,
+        protected scene: TerraScene,
+        protected sceneDeprecated: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,
         uitab: canvasListener,
         private engine: WebGPUEngine
     ) {
-        super(scene, camera, ground, sea, uitab);
+        super(scene,sceneDeprecated, camera, ground, sea, uitab);
         
         this.#templane2 = ground.TerrainHeightsbindGroupPositionTree.addDrawable({
-            //@ts-ignore
-            sampleCount: this.engine._mainPassSampleCount,
+            sampleCount: this.scene.gpuscene.sampleCount,
             primitiveTopology: 'triangle-strip',
             rasterizationState: {
                 cullMode: 'none',
@@ -78,7 +84,7 @@ export class paintPlane extends paintGround implements has3DPosition {
                 entryPoint: "main"
             },
             vertexState: {
-                indexFormat: 'uint16',
+                indexFormat: 'uint32',
                 vertexBuffers:
                     [{
                         arrayStride: 4 * 2,
@@ -90,8 +96,8 @@ export class paintPlane extends paintGround implements has3DPosition {
                             format: "float2" as GPUVertexFormat
                         }]
                     }]
-            }, //@ts-ignore TODO: move mesh to external object or make this inherit from terranode
-        }, [this.worldPosition.bufferOffset], 0, 1, 0, 0);
+            },
+        }, [this.#mesh.bufferOffset], 0, 1, 0, 0);
     };
 
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
@@ -107,7 +113,7 @@ export class paintPlane extends paintGround implements has3DPosition {
        // this.#rowGenerator.return(null);
     }
 
-    onMainPointerDown(startingPoint: Vector2) {
+    onMainPointerDown(startingPoint: Float32Array) {
 
         this.#startingPoint = startingPoint;
     }
@@ -115,7 +121,7 @@ export class paintPlane extends paintGround implements has3DPosition {
     #rows = 0;
     #rowGenerator: Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> | null = null;
 
-    onMainPointerUp(end_position: Vector2, height: number): void {
+    onMainPointerUp(end_position: Float32Array, height: number): void {
         this.#columns = Math.floor(height / 10);
         //this.#rowGenerator = this.createTiledGround(this.#columns);
 
@@ -130,15 +136,24 @@ export class paintPlane extends paintGround implements has3DPosition {
        // this.#templane2.setVertexBuffer(0, new Float32Array(values.positions).buffer);
 
 
-        this.worldPosition.translation[0] = this.#startingPoint.x - 0.5
-        this.worldPosition.translation[1] = 5;
-        this.worldPosition.translation[2] = this.#startingPoint.y - 1;
+        this.#mesh.worldPosition.translation[0] = this.#startingPoint[0] - 0.5
+        this.#mesh.worldPosition.translation[1] = 5;
+        this.#mesh.worldPosition.translation[2] = this.#startingPoint[1] - 1;
 
-        this.worldPosition.scaling[0] = height / this.#columns;
-        const rotQ = new Vector3(0, this.ang360.rad - Math.PI, 0).toQuaternion();
-        this.worldPosition.rotation = [rotQ.x, rotQ.y, rotQ.z, rotQ.w];
-        console.log('onMainPointerUp');
+        const rotQ = Quaternion.RotationYawPitchRoll(this.ang360.rad - Math.PI, 0, 0)
 
+        this.#mesh.worldPosition.update((scaling, rotation) => {
+            scaling[0] = height / this.#columns;
+            rotation.set([rotQ.x, rotQ.y, rotQ.z, rotQ.w]);
+        })
+
+
+        //this.#mesh.worldPosition.scalingX = height / this.#columns;
+        
+        //const rotQ = new Vector3(0, this.ang360.rad - Math.PI, 0).toQuaternion();
+        //this.#mesh.worldPosition.rotation = [rotQ.x, rotQ.y, rotQ.z, rotQ.w];
+     //   this.#mesh.updateDynamicBuffer();
+        console.log('onMainPointerUp', this.#columns);
     }
 
     async onAreaDraw(width: number): Promise<void> {
@@ -152,12 +167,14 @@ export class paintPlane extends paintGround implements has3DPosition {
         const newRows = Math.max(1,Math.floor(width / 10));
         if (newRows > this.#rows) {
             do {
-                console.log('increase rows from ', this.#rows)
+               // console.log('increase rows from ', this.#rows)
                 newValues = this.#rowGenerator.next().value;
             } while (++this.#rows < newRows);
         }
-
-        this.worldPosition.scaling[2] = width / this.#rows;
+        this.#mesh.worldPosition.update((scaling, rotation) => {
+            scaling[2] = width / this.#rows;
+        })
+      //  this.#mesh.worldPosition.scalingZ = width / this.#rows;
     /*    let testM = new Matrix();
         
         Matrix.ComposeToRef(this.#scaling, this.#rotation.toQuaternion(), this.#position, testM);
@@ -165,12 +182,10 @@ export class paintPlane extends paintGround implements has3DPosition {
         new Float32Array(leftoverARR).set(testM.m);
         this.#worldCopyGPU.unmap();
         this.device.defaultQueue.submit(this.#updateWorldBuffer);*/
-         //@ts-ignore TODO: move mesh to external object or make this inherit from terranode
-        this.worldPosition.updatePositionBuffer();
+
         if (newValues) {
-            console.log('update plane buffer ', newValues.indices.length);
             this.#templane2.setVertexBuffer(0, new Float32Array(newValues.positions));
-            this.#templane2.setIndexBuffer(new Uint16Array(newValues.indices));
+            this.#templane2.setIndexBuffer(new Uint32Array(newValues.indices));
             this.#templane2.indexOrVertexCount = newValues.indices.length;
         }
     }

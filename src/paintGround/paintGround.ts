@@ -1,17 +1,16 @@
-let startingPoint: Vector2;
 //let tempplane: BABYLON.Mesh | null
 //let end_position: Vector2
 
-import { UITAB } from "../UITAB.js";
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import { Ray } from "../lib/babylon/Culling/ray.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/index.js";
-import { Vector2 } from "../lib/babylon/Maths/math.vector.js";
+import { Matrix } from "../lib/babylon/Maths/math.vector.js";
 import type { WorldScene } from "../world/scene.js";
 import { canvasListener } from "../traits/canvasListener.js";
-import { GPUCanvas } from "../GPUCanvas.js";
+import { GPUScene } from "../GPUScene.js";
+import { TerraScene } from "../TerraScene.js";
 
 //import { rotateMatrix, translate } from "./math.js";
 
@@ -30,9 +29,11 @@ export enum DrawType {
 export abstract class paintGround {
     protected ang360: Angle = new Angle(0);
     protected ang: Angle = new Angle(0);
-    #end_position: Vector2 | null = null;
+    #end_position: Float32Array = new Float32Array(2);
+    #start_position: Float32Array = new Float32Array(2);
     constructor(
-        protected scene: WorldScene,
+        protected scene: TerraScene,
+        protected sceneDeprecated: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,
@@ -45,61 +46,59 @@ export abstract class paintGround {
         this.resolve = callback;
     }
     public destroy() {
-        this.camera.attachControl(GPUCanvas.canvas, true);
+        this.camera.attachControl(GPUScene.canvas, true);
     }
 
-    #drawArea = (evt:PointerEvent) => {
-        let engine = this.scene.getEngine();
-        engine.resize();
+    #drawArea = async (evt:PointerEvent) => {
+        //let engine = this.sceneDeprecated.getEngine();
+       // engine.resize();
 
         let ray = Ray.Zero();
-        this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
+        this.sceneDeprecated.createPickingRayToRef(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, Matrix.Identity(), ray, this.camera);
 
         let distance: number;
 
-        let pikked = this.ground.intersects(ray);
+        let pikked = await this.ground.bounding.intersects(ray);
         if (pikked.pickedPoint) {
-            this.#end_position = new Vector2(pikked.pickedPoint.x, pikked.pickedPoint.z);
+            
+            this.#end_position.set([pikked.pickedPoint.x, pikked.pickedPoint.z]);
+            let width = this.#start_position[0] - this.#end_position[0];
 
-            let width = startingPoint.x - this.#end_position.x;
-
-            distance = Math.sqrt(Math.pow(startingPoint.x - this.#end_position.x, 2) + Math.pow(startingPoint.y - this.#end_position.y, 2));
+            distance = Math.sqrt(Math.pow(this.#start_position[0] - this.#end_position[0], 2) + Math.pow(this.#start_position[1] - this.#end_position[1], 2));
             height = distance
 
             if (width < 0)
-                rotation = Math.asin((startingPoint.y - this.#end_position.y) / distance);
+                rotation = Math.asin((this.#start_position[1] - this.#end_position[1]) / distance);
             else
-                rotation = Math.asin((startingPoint.y - this.#end_position.y) / distance) * -1;
+                rotation = Math.asin((this.#start_position[1] - this.#end_position[1]) / distance) * -1;
             this.ang = new Angle(Math.abs(rotation));
-            //@ts-ignore
-            this.ang360 = this.ang[360](startingPoint, this.#end_position);
+            this.ang360 = this.ang[360](this.#start_position, this.#end_position);
         }
     }
 
-    abstract onMainPointerDown(startingPoint: Vector2): void;
-    abstract onMainPointerUp(end_position: Vector2, height: number): void;
+    abstract onMainPointerDown(startingPoint: Float32Array): void;
+    abstract onMainPointerUp(end_position: Float32Array, height: number): void;
     abstract onAreaDraw(width: number): Promise<void>;
 
     #nextDrawWidth: number = 0;
     #drawqueue: boolean = false;
     #busy: boolean = false;
 
-    #mousemove = (evt: PointerEvent) => {
+    #mousemove = async (evt: PointerEvent) => {
         let ray = Ray.Zero();
-        this.scene.createPickingRayToRef(this.scene.pointerX, this.scene.pointerY, this.ground.getWorldMatrix(), ray, this.camera);
-        let pikked = this.ground.intersects(ray);
+        this.sceneDeprecated.createPickingRayToRef(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, Matrix.Identity(), ray, this.camera);
+        let pikked = await this.ground.bounding.intersects(ray);
         if (pikked.pickedPoint && this.#end_position) {
             //Distance from first point
-            let distance = Math.sqrt(Math.pow(startingPoint.x - pikked.pickedPoint.x, 2) + Math.pow(startingPoint.y - pikked.pickedPoint.z, 2));
+            let distance = Math.sqrt(Math.pow(this.#start_position[0] - pikked.pickedPoint.x, 2) + Math.pow(this.#start_position[1] - pikked.pickedPoint.z, 2));
             if (Number.isNaN(distance)) {
                 throw ("distance is not a number");
             }
-            let ang2 = new Angle(Math.acos(Math.abs(pikked.pickedPoint.x - startingPoint.x) / distance))
-            //@ts-ignore
-            let dotang = this.ang360.distance(ang2[360](startingPoint, new Vector2(pikked.pickedPoint.x, pikked.pickedPoint.z)).rad);
+            let ang2 = new Angle(Math.acos(Math.abs(pikked.pickedPoint.x - this.#start_position[0]) / distance))
+            let dotang = this.ang360.distance(ang2[360](this.#start_position, new Float32Array([pikked.pickedPoint.x, pikked.pickedPoint.z])).rad);
 
-            let v1 = [startingPoint.y - pikked.pickedPoint.z, (startingPoint.x - pikked.pickedPoint.x) * -1]
-            let v2 = [startingPoint.x - this.#end_position.x, startingPoint.y - this.#end_position.y];
+            let v1 = [this.#start_position[1] - pikked.pickedPoint.z, (this.#start_position[0] - pikked.pickedPoint.x) * -1]
+            let v2 = [this.#start_position[0] - this.#end_position[0], this.#start_position[1] - this.#end_position[1]];
 
             let dotprod = height * distance * Math.cos(dotang.rad);
 
@@ -141,17 +140,17 @@ export abstract class paintGround {
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
         this.uitab.addListener('pointerdown', this.mainPointerDown, { once: true });
-        this.resolve({ coord: startingPoint, rad: this.ang360.rad, size: { h: height, w: width } });
-        this.#end_position = null;
+        this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
+      //  this.#end_position = null;
     }
     private mouseMoveRegisterClick = (evt: PointerEvent) => {
         this.uitab.addListener('pointerdown', this.finalClick, { once: true });
     }
     #pointerUp = (evt: PointerEvent) => {
         this.uitab.removeListener('pointermove', this.#drawArea);
-        this.camera.attachControl(GPUCanvas.canvas, true);
+        this.camera.attachControl(GPUScene.canvas, true);
         //fix race condition
-        if (this.#end_position == null)
+        if (this.#end_position[0] == 0)
             return;
         try {
             this.onMainPointerUp(this.#end_position, height);
@@ -174,7 +173,7 @@ export abstract class paintGround {
             return mesh === this.ground
         }, false, this.camera);*/
 
-        var pickInfo = await this.scene.pickPromise(this.scene.pointerX, this.scene.pointerY, mesh => { return mesh === this.ground }, false, this.camera);
+        var pickInfo = await this.scene.pickPromise(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, mesh => { return mesh === this.ground }, false);
 
        // console.log(pickInfo);
         if (!pickInfo) {
@@ -183,14 +182,14 @@ export abstract class paintGround {
             return;
         }
         if (pickInfo.hit && pickInfo.pickedPoint != null) {
+            //@ts-ignore
             if (pickInfo.pickedMesh === this.sea) {
                 console.log('hitted sea');
                 return;
             }
-            startingPoint = new Vector2(pickInfo.pickedPoint.x, pickInfo.pickedPoint.z);
-            console.debug('Calling child onMainPointerDown');
-            this.onMainPointerDown(startingPoint);
-            this.camera.detachControl(GPUCanvas.canvas);
+            this.#start_position = new Float32Array([pickInfo.pickedPoint.x, pickInfo.pickedPoint.z]);
+            this.onMainPointerDown(this.#start_position);
+            this.camera.detachControl(GPUScene.canvas);
 
             this.uitab.addListener("pointermove", this.#drawArea, { lazy: 25 });
 

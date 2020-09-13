@@ -1,5 +1,4 @@
 ﻿import { Drawable } from "./drawables/Drawable";
-import { worldPositionScene } from "./traits/worldPosition";
 import type { TerraScene } from "./TerraScene";
 import { Light } from "./lights";
 import { TerraNode } from "./TerraNode";
@@ -81,8 +80,19 @@ export class GPUScene {
 
     GPUData = this.createGPUBuffer(TerraNode.alignment * TerraNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE]);
 
-    worldPositionScene = new worldPositionScene(this);
+    BindGroupLayout = this.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
+    BindGroup = this.createBindGroup(this.BindGroupLayout,
+        {
+            binding: 0,
+            resource: {
+                buffer: this.GPUData,
+                offset: 0,
+                size: TerraNode.GPUDataSize
+            }
+        });
 
+    positionBindGroupTime = this.baseBindGroup.addChildBindGroup(this.BindGroup, true);
+    positionBindGroupNoTime = this.baseBindGroupNoTime.addChildBindGroup(this.BindGroup, true);
 
 
     addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)) {
@@ -152,7 +162,7 @@ export class GPUScene {
 
 
     lights = new Light(this);
-    positionBindGroupLightsTime = this.lights.lightsBindGroup.addChildBindGroup(this.worldPositionScene.BindGroup, true);
+    positionBindGroupLightsTime = this.lights.lightsBindGroup.addChildBindGroup(this.BindGroup, true);
 
 
     queue: Map<Float32Array, number> = new Map();
@@ -162,14 +172,14 @@ export class GPUScene {
             return null;
         this.#busy = true;
         const dataSize = TerraNode.GPUDataSize; //4 * 16 + 3 * 4;
-        const tempSize = (dataSize + 4) * this.queue.size;
+        const tempSize = dataSize * this.queue.size;
         const tempBuffer = this.createGPUBuffer(tempSize, [GPUBufferUsage.COPY_SRC], true);
         let tempOffset = 0;
         const commandEncoder = this.device.createCommandEncoder();
         this.queue.forEach((bufferOffset, matrix) => {
-            new Float32Array(tempBuffer.getMappedRange(tempOffset * (dataSize + 4), dataSize)).set(matrix);
+            new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSize, dataSize)).set(matrix);
             commandEncoder.copyBufferToBuffer(
-                tempBuffer, tempOffset++ * (dataSize + 4),
+                tempBuffer, tempOffset++ * dataSize,
                 this.GPUData, bufferOffset,
                 dataSize);
             //new Float32Array(this.worldCopyGPU.getMappedRange(bufferOffset, 4 * 16)).set(matrix);
@@ -189,13 +199,13 @@ export class GPUScene {
     }
 
     constructor(private scene: TerraScene, public device: GPUDevice) {
-        this.worldPositionScene.positionBindGroupTime.onRender = async (time) => {
+        this.positionBindGroupTime.onRender = async (time) => {
             return this.updateGPUBuffer();
         }
         this.positionBindGroupLightsTime.onRender = async (time) => {
             return this.updateGPUBuffer();
         }
-        this.worldPositionScene.positionBindGroupNoTime.onRender = async (time) => {
+        this.positionBindGroupNoTime.onRender = async (time) => {
             return this.updateGPUBuffer();
         }
         this.baseBindGroup.onRender = (time, delta) => {

@@ -13,7 +13,7 @@ type subTexture = {
 type savedCamera = {id:number, camera: {alpha: number, beta:number, radius:number, target: BABYLON.Vector3, position: BABYLON.Vector3}}
 type PTDresult =
     {
-        coord: {x:number, y:number}, //Vector3,
+        coord: Float32Array, //Vector3,
         rad: number, // Angle,
         size: {
             w: number,
