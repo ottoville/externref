@@ -86,6 +86,7 @@ export class ArcRotateCamera extends TargetCamera {
      * Setting this will copy the given vector to the camera's upVector, and set rotation matrices to and from Y up.
      * DO NOT set the up vector using copyFrom or copyFromFloats, as this bypasses setting the above matrices.
      */
+    //@ts-ignore
     set upVector(vec: Vector3) {
         if (!this._upToYMatrix) {
             this._YToUpMatrix = new Matrix();

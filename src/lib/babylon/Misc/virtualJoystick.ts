@@ -123,7 +123,6 @@ export class VirtualJoystick {
             VirtualJoystick.Canvas.style.top = "0px";
             VirtualJoystick.Canvas.style.left = "0px";
             VirtualJoystick.Canvas.style.zIndex = "5";
-            VirtualJoystick.Canvas.style.msTouchAction = "none";
             // Support for jQuery PEP polyfill
             VirtualJoystick.Canvas.setAttribute("touch-action", "none");
             let context = VirtualJoystick.Canvas.getContext('2d');

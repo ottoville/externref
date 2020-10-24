@@ -32,7 +32,7 @@ layout(set = 0, binding = 0) uniform Scene {
 } scene;
 
 layout(set = 0, binding = 1) uniform Time {
-   float time;
+   uint time;
    float delta; //Since last physic step
 } time;
 

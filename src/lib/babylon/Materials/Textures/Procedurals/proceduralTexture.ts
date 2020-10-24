@@ -101,6 +101,7 @@ export class ProceduralTexture extends Texture {
      * @param generateMipMaps Define if the texture should creates mip maps or not
      * @param isCube Define if the texture is a cube texture or not (this will render each faces of the cube)
      */
+    //@ts-ignore
     constructor(name: string, size: any, fragment: any, scene: Nullable<Scene>, fallbackTexture: Nullable<Texture> = null, generateMipMaps = true, public isCube = false) {
         super(null, scene, !generateMipMaps);
 

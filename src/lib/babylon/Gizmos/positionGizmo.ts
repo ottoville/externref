@@ -116,7 +116,7 @@ export class PositionGizmo extends Gizmo {
     public get planarGizmoEnabled(): boolean {
         return this._planarGizmoEnabled;
     }
-
+    //@ts-ignore
     public set updateGizmoRotationToMatchAttachedMesh(value: boolean) {
         this._updateGizmoRotationToMatchAttachedMesh = value;
         [this.xGizmo, this.yGizmo, this.zGizmo, this.xPlaneGizmo, this.yPlaneGizmo, this.zPlaneGizmo].forEach((gizmo) => {
@@ -147,6 +147,7 @@ export class PositionGizmo extends Gizmo {
     /**
      * Ratio for the scale of the gizmo (Default: 1)
      */
+    //@ts-ignore
     public set scaleRatio(value: number) {
         this._scaleRatio = value;
         [this.xGizmo, this.yGizmo, this.zGizmo, this.xPlaneGizmo, this.yPlaneGizmo, this.zPlaneGizmo].forEach((gizmo) => {

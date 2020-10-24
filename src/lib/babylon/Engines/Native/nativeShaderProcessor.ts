@@ -38,7 +38,7 @@ const lastGenericAttributeLocation = 17;
 export class NativeShaderProcessor extends WebGL2ShaderProcessor {
     private _genericAttributeLocation: number;
     private _varyingLocationCount: number;
-    private _varyingLocationMap: { [name: string]: number };
+    private _varyingLocationMap: { [name: string]: number } = {};
     private _replacements: Array<{ searchValue: RegExp, replaceValue: string }>;
     private _textureCount: number;
     private _uniforms: Array<string>;

@@ -72,7 +72,7 @@ export class RotationGizmo extends Gizmo {
 
         this.attachedMesh = null;
     }
-
+    //@ts-ignore
     public set updateGizmoRotationToMatchAttachedMesh(value: boolean) {
         if (this.xGizmo) {
             this.xGizmo.updateGizmoRotationToMatchAttachedMesh = value;
@@ -101,6 +101,7 @@ export class RotationGizmo extends Gizmo {
     /**
      * Ratio for the scale of the gizmo (Default: 1)
      */
+    //@ts-ignore
     public set scaleRatio(value: number) {
         if (this.xGizmo) {
             this.xGizmo.scaleRatio = value;

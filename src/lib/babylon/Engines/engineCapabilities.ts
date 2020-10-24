@@ -70,8 +70,9 @@ export interface EngineCapabilities {
     depthTextureExtension: boolean;
     /** Defines if float color buffer are supported */
     colorBufferFloat: boolean;
-    /** Gets disjoint timer query extension (null if not supported) */
-    timerQuery?: EXT_disjoint_timer_query;
+/** Gets disjoint timer query extension (null if not supported) */
+    //@ts-ignore
+    timerQuery?;
     /** Defines if timestamp can be used with timer query */
     canUseTimestampForTimerQuery: boolean;
     /** Defines if multiview is supported (https://www.khronos.org/registry/webgl/extensions/WEBGL_multiview/) */

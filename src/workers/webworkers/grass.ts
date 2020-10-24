@@ -12,7 +12,6 @@ let grasspositions: Float32Array;
 let noises: Float32Array;
 let bladecount: number = 0;
 interface PlantI {
-    id?: number,
     family: string,
     pos: Float32Array,
     gridx: number,
@@ -21,6 +20,9 @@ interface PlantI {
     z: number,
     grid: string,
 }
+
+const plantaes: PlantI[] = [];
+
 let methods = {
     init: (data: WMessage<{ positions: any, shape: any, noises: any }>) => {
         console.log('init plants worker');
@@ -28,12 +30,12 @@ let methods = {
         noises = new Float32Array(data.data.noises);
         this.postMessage({ id: data.id });
     },
-    save: async (data: WMessage<{ amount: number, angle: number, area: { size: any, coord: any } }>) => {
+    save: async (data: WMessage<{ amount: number, angle: number, area: { size: any, coord: Float32Array } }>) => {
         console.log('data', data)
-        var d = new Date().getTime();
+       // var d = new Date().getTime();
         let db = await DB;
         let trans = db.transaction("plantae");
-        var objstore = trans.objectStore("plantae");
+      //  var objstore = trans.objectStore("plantae");
         let objs: PlantI[] = [];
         trans.onerror = function (err) {
             console.log(err)
@@ -54,7 +56,7 @@ let methods = {
 
             let translated = translate(posX, 0, posZ, rotmax);
 
-            const [x, z] = [data.data.area.coord.x + translated.x, data.data.area.coord.y + translated.z]
+            const [x, z] = [data.data.area.coord[0] + translated.x, data.data.area.coord[1] + translated.z]
 
 
             offsets[i * 2 + 0] = x;
@@ -67,16 +69,37 @@ let methods = {
                     continue;
                 }
                 continue;
-            }
-            maxX = Math.max(maxX, offsets[i * 2 + 0]);
-            maxZ = Math.max(maxZ, offsets[i * 2 + 1]);
-            minX = Math.min(minX, offsets[i * 2 + 0]);
+            }//@ts-ignore
+            maxX = Math.max(maxX, offsets[i * 2 + 0]);//@ts-ignore
+            maxZ = Math.max(maxZ, offsets[i * 2 + 1]);//@ts-ignore
+            minX = Math.min(minX, offsets[i * 2 + 0]);//@ts-ignore
             minZ = Math.min(minZ, offsets[i * 2 + 1]);
 
         }
-        let d2 = new Date().getTime();
-
-        console.log('min maxx ,', minX, maxX);
+        //let d2 = new Date().getTime();
+        //const grids = new Set(plantaes.filter(v => (v.x > minX && v.x < maxX) && (v.z > minZ && v.z < maxZ)).map(v => v.grid));  //grid check is disabled now
+        for (let i = 0; i < amount; i++) {
+            let blade = [offsets[i * 2], offsets[i * 2 + 1]]
+            let grid = (blade[0]) + ',' + (blade[1]);
+           // if (!grids.has(grid)) { //grid check is disabled now
+                plantaes.push({
+                    family: 'Poaceae',
+                    gridx: blade[0],
+                    gridz: blade[1],
+                    x: blade[0],
+                    z: blade[1],
+                    pos: new Float32Array(blade),
+                    grid: grid,
+                })
+          //  }
+        }
+        bladecount = Math.min(Math.max(bladecount, plantaes.length), grasspositions.length)
+        //	console.log('Start to process objs length, ', objs.length, ', took ', new Date().getTime() - d);
+        for (let i = 0; i < Math.min(bladecount, plantaes.length); i++) {
+            grasspositions.set(plantaes[i].pos, i * 2);
+        }
+        this.postMessage({ type: 'updated', count: bladecount });
+        /*
         objstore.index('x').getAll(IDBKeyRange.bound(minX, maxX)).onsuccess = (ee) => {
             console.log('PROMISE FILLED2, took ', new Date().getTime() - d2);
             //objstore.index('grid').getAll(IDBKeyRange.bound(mingrid, maxgrid)).onsuccess = (ee) => {
@@ -139,7 +162,7 @@ let methods = {
                     methods.get()
                 }
             })(transs);
-        }
+        }*/
     },
     get: async () => {
         let trans = (await DB).transaction(['plantae']);

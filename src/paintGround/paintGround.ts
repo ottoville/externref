@@ -3,11 +3,8 @@
 
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
-import { Ray } from "../lib/babylon/Culling/ray.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/index.js";
-import { Matrix } from "../lib/babylon/Maths/math.vector.js";
-import type { WorldScene } from "../world/scene.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { GPUScene } from "../GPUScene.js";
 import { TerraScene } from "../TerraScene.js";
@@ -33,7 +30,6 @@ export abstract class paintGround {
     #start_position: Float32Array = new Float32Array(2);
     constructor(
         protected scene: TerraScene,
-        protected sceneDeprecated: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Mesh,
@@ -50,14 +46,16 @@ export abstract class paintGround {
     }
 
     #drawArea = async (evt:PointerEvent) => {
-        //let engine = this.sceneDeprecated.getEngine();
-       // engine.resize();
 
+        const ray = this.scene.createPickingRay(evt.clientX, evt.clientY);
+
+      /*  debugger;
         let ray = Ray.Zero();
         this.sceneDeprecated.createPickingRayToRef(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, Matrix.Identity(), ray, this.camera);
-
+        */
         let distance: number;
 
+        
         let pikked = await this.ground.bounding.intersects(ray);
         if (pikked.pickedPoint) {
             
@@ -85,8 +83,9 @@ export abstract class paintGround {
     #busy: boolean = false;
 
     #mousemove = async (evt: PointerEvent) => {
-        let ray = Ray.Zero();
-        this.sceneDeprecated.createPickingRayToRef(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, Matrix.Identity(), ray, this.camera);
+        const ray = this.scene.createPickingRay(evt.clientX, evt.clientY);
+      //  let ray = Ray.Zero();
+       // this.sceneDeprecated.createPickingRayToRef(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, Matrix.Identity(), ray, this.camera);
         let pikked = await this.ground.bounding.intersects(ray);
         if (pikked.pickedPoint && this.#end_position) {
             //Distance from first point
@@ -173,7 +172,7 @@ export abstract class paintGround {
             return mesh === this.ground
         }, false, this.camera);*/
 
-        var pickInfo = await this.scene.pickPromise(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, mesh => { return mesh === this.ground }, false);
+        var pickInfo = await this.scene.pickPromise(evt.clientX, evt.clientY, mesh => { return mesh === this.ground }, false);
 
        // console.log(pickInfo);
         if (!pickInfo) {
@@ -183,10 +182,11 @@ export abstract class paintGround {
         }
         if (pickInfo.hit && pickInfo.pickedPoint != null) {
             //@ts-ignore
-            if (pickInfo.pickedMesh === this.sea) {
+            /*if (pickInfo.pickedMesh === this.sea) {
                 console.log('hitted sea');
+                debugger;
                 return;
-            }
+            }*/
             this.#start_position = new Float32Array([pickInfo.pickedPoint.x, pickInfo.pickedPoint.z]);
             this.onMainPointerDown(this.#start_position);
             this.camera.detachControl(GPUScene.canvas);

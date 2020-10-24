@@ -42,7 +42,7 @@ export class paintTexture extends paintGround {
         private textureHeight: number,
         uitab: canvasListener,
     ) {
-        super(TerraScene.instance, sceneDeprecated, camera, ground, sea, uitab);
+        super(TerraScene.instance, camera, ground, sea, uitab);
         this.centerX = textureWidth / 2;
         this.centerZ = textureHeight / 2;
         if (!zonedt._texture || !zonedt._texture._webGLTexture)

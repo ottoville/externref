@@ -16,7 +16,7 @@ if (typeof globalObject !== "undefined") {
     var BABYLON = (<any>globalObject).BABYLON;
     BABYLON.Debug = BABYLON.Debug || {};
 
-    const keys = [];
+    const keys :string[]= [];
     for (var key in DebugImport) {
         BABYLON.Debug[key] = (<any>DebugImport)[key];
         keys.push(key);

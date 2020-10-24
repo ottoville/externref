@@ -63,7 +63,8 @@ async function handleFile(folder, file) {
     try {
         await Promise.all([
             handleFile("wwwroot/js/lib/babylon/Engines", "webgpuEngine.js"),
-            handleFile("wwwroot/js/world", "scene.js")
+            handleFile("wwwroot/js/world", "scene.js"),
+            handleFile("wwwroot/js", "code.js")
         ]);
     } catch (e) {
         console.error(e);

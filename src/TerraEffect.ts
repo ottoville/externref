@@ -1,6 +1,6 @@
 ﻿import type { Effect } from "./lib/babylon/Materials/effect.js";
-import type { IEffectCreationOptions } from "./lib/babylon/Materials/effect.js";
-import type { ThinEngine } from "./lib/babylon/Engines/thinEngine.js";
+import type { IEffectCreationOptions } from "babylonjs/Materials/effect.js";
+import type { ThinEngine } from "babylonjs/Engines/thinEngine.js";
 import type { IEffectFallbacks } from "./lib/babylon/Materials/iEffectFallbacks.js";
 import { Observable } from "./lib/babylon/Misc/observable.js";
 import type { DataBuffer } from "./lib/babylon/Meshes/dataBuffer.js";
@@ -49,6 +49,7 @@ export class TerraEffect {
      * @hidden
      */
     public _bindTexture(channel: string, texture: Nullable<InternalTexture>): void {
+        //@ts-ignore
         this._engine._bindTexture(this._samplers[channel], texture);
     }
 
@@ -655,7 +656,7 @@ export class TerraEffect {
     private _compilationError = "";
     private _allFallbacksProcessed = false;
     private _attributesNames: string[];
-    private _attributes: number[];
+    private _attributes: number[] = [];
     private _attributeLocationByName: { [name: string]: number };
     private _uniforms: { [key: string]: Nullable<WebGLUniformLocation> } = {};
     /**
@@ -679,27 +680,28 @@ export class TerraEffect {
     public _fragmentSourceCode: string = "";
 
     private static _baseCache: { [key: number]: DataBuffer } = {};
-    private _processingContext: Nullable<ShaderProcessingContext>;
+    private _processingContext: Nullable<ShaderProcessingContext> = null;
 
     public static IncludesShadersStore: { [key: string]: string } = {};
 
     public getPipelineLayout(): GPUPipelineLayout {
         const bindGroupLayouts: GPUBindGroupLayout[] = [];
         const webgpuPipelineContext = this._pipelineContext;
-        for (let i = 0; i < webgpuPipelineContext.orderedUBOsAndSamplers.length; i++) {
-            const setDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i];
+        for (let i = 0; i < webgpuPipelineContext!.orderedUBOsAndSamplers.length; i++) {
+            const setDefinition = webgpuPipelineContext!.orderedUBOsAndSamplers[i];
             if (setDefinition === undefined) {
-                const entries: GPUBindGroupLayoutBinding[] = [];
+ //@ts-ignore
+                const entries: GPUBindGroupLayoutEntry[] = [];
                 const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
                     entries,
                 });
                 bindGroupLayouts[i] = uniformsBindGroupLayout;
                 continue;
             }
-
-            const bindings: GPUBindGroupLayoutBinding[] = [];
+ //@ts-ignore
+            const bindings: GPUBindGroupLayoutEntry[] = [];
             for (let j = 0; j < setDefinition.length; j++) {
-                const bindingDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i][j];
+                const bindingDefinition = webgpuPipelineContext!.orderedUBOsAndSamplers[i][j];
                 if (bindingDefinition === undefined) {
                     continue;
                 }
@@ -710,6 +712,7 @@ export class TerraEffect {
                         binding: j,
                         visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
                         type: WebGPUConstants.GPUBindingType_sampledTexture,
+                        //@ts-ignore
                         textureDimension: bindingDefinition.textureDimension,
                         // TODO WEBGPU. Handle texture component type properly.
                         // textureComponentType?: GPUTextureComponentType,
@@ -737,27 +740,28 @@ export class TerraEffect {
             }
         }
 
-        webgpuPipelineContext.bindGroupLayouts = bindGroupLayouts;
+        webgpuPipelineContext!.bindGroupLayouts = bindGroupLayouts;
         return this._engine.getDevice().createPipelineLayout({ bindGroupLayouts });
     }
 
     public createPipelineLayout(renderPipeline:GPURenderPipeline): GPUPipelineLayout {
         const bindGroupLayouts: GPUBindGroupLayout[] = [];
         const webgpuPipelineContext = this._pipelineContext;
-        for (let i = 0; i < webgpuPipelineContext.orderedUBOsAndSamplers.length; i++) {
-            const setDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i];
+        for (let i = 0; i < webgpuPipelineContext!.orderedUBOsAndSamplers.length; i++) {
+            const setDefinition = webgpuPipelineContext!.orderedUBOsAndSamplers[i];
             if (setDefinition === undefined) {
-                const bindings: GPUBindGroupLayoutBinding[] = [];
+ //@ts-ignore
+                const bindings: GPUBindGroupLayoutEntry[] = [];
                 const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
                     entries: bindings,
                 });
                 bindGroupLayouts[i] = uniformsBindGroupLayout;
                 continue;
             }
-
-            const bindings: GPUBindGroupLayoutBinding[] = [];
+            //@ts-ignore
+            const bindings: GPUBindGroupLayoutEntry[] = [];
             for (let j = 0; j < setDefinition.length; j++) {
-                const bindingDefinition = webgpuPipelineContext.orderedUBOsAndSamplers[i][j];
+                const bindingDefinition = webgpuPipelineContext!.orderedUBOsAndSamplers[i][j];
                 if (bindingDefinition === undefined) {
                     continue;
                 }
@@ -768,6 +772,7 @@ export class TerraEffect {
                         binding: j,
                         visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
                         type: WebGPUConstants.GPUBindingType_sampledTexture,
+                        //@ts-ignore
                         textureDimension: bindingDefinition.textureDimension,
                         // TODO WEBGPU. Handle texture component type properly.
                         // textureComponentType?: GPUTextureComponentType,
@@ -795,7 +800,7 @@ export class TerraEffect {
             }
         }
 
-        webgpuPipelineContext.bindGroupLayouts = bindGroupLayouts;
+        webgpuPipelineContext!.bindGroupLayouts = bindGroupLayouts;
         return this._engine.getDevice().createPipelineLayout({ bindGroupLayouts });
     }
     constructor(baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | ThinEngine, samplers: Nullable<string[]> = null,
@@ -817,6 +822,7 @@ export class TerraEffect {
             this._uniformsNames = options.uniformsNames.concat(options.samplers);
             this._samplerList = options.samplers.slice();
             this.defines = options.defines;
+            //@ts-ignore
             this.onError = options.onError;
             this._fallbacks = options.fallbacks;
             this._indexParameters = options.indexParameters;
@@ -833,7 +839,7 @@ export class TerraEffect {
             this._uniformsNames = (<string[]>uniformsNamesOrEngine).concat(<string[]>samplers);
             this._samplerList = samplers ? <string[]>samplers.slice() : [];
             this._attributesNames = (<string[]>attributesNamesOrOptions);
-
+            //@ts-ignore
             this.onError = onError;
 
             this._indexParameters = indexParameters;
@@ -893,13 +899,13 @@ export class TerraEffect {
        
         //@ts-ignore
         if (attributesNamesOrOptions.preprocessed) {
-            Promise.all(sources).then(r => {
+           /* Promise.all(sources).then(r => {
                 const [migratedVertexCode, migratedFragmentCode] = r;
                 const finalShaders = ShaderProcessor.Finalize(migratedVertexCode, migratedFragmentCode, processorOptions);
                 this._vertexSourceCodeOverride = finalShaders.vertexCode;
                 this._fragmentSourceCodeOverride = finalShaders.fragmentCode;
                 this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, false);
-            })
+            })*/
         }
         else {
             Promise.all([

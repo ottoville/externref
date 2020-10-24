@@ -61,44 +61,44 @@ export class InputManager {
     public static ExclusiveDoubleClickMode = false;
 
     // Pointers
-    private _wheelEventName = "";
-    private _onPointerMove: (evt: PointerEvent) => void;
-    private _onPointerDown: (evt: PointerEvent) => void;
-    private _onPointerUp: (evt: PointerEvent) => void;
+    _wheelEventName = "";
+    _onPointerMove: (evt: PointerEvent) => void;
+    _onPointerDown: (evt: PointerEvent) => void;
+    _onPointerUp: (evt: PointerEvent) => void;
 
-    private _initClickEvent: (obs1: Observable<PointerInfoPre>, obs2: Observable<PointerInfo>, evt: PointerEvent, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void) => void;
-    private _initActionManager: (act: Nullable<AbstractActionManager>, clickInfo: _ClickInfo) => Nullable<AbstractActionManager>;
-    private _delayedSimpleClick: (btn: number, clickInfo: _ClickInfo, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void) => void;
-    private _delayedSimpleClickTimeout: number;
-    private _previousDelayedSimpleClickTimeout: number;
-    private _meshPickProceed = false;
+    _initClickEvent: (obs1: Observable<PointerInfoPre>, obs2: Observable<PointerInfo>, evt: PointerEvent, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void) => void;
+    _initActionManager: (act: Nullable<AbstractActionManager>, clickInfo: _ClickInfo) => Nullable<AbstractActionManager>;
+    _delayedSimpleClick: (btn: number, clickInfo: _ClickInfo, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void) => void;
+    _delayedSimpleClickTimeout: number;
+    _previousDelayedSimpleClickTimeout: number;
+    _meshPickProceed = false;
 
-    private _previousButtonPressed: number;
-    private _currentPickResult: Nullable<PickingInfo> = null;
-    private _previousPickResult: Nullable<PickingInfo> = null;
-    private _totalPointersPressed = 0;
-    private _doubleClickOccured = false;
+    _previousButtonPressed: number;
+    _currentPickResult: Nullable<PickingInfo> = null;
+    _previousPickResult: Nullable<PickingInfo> = null;
+    _totalPointersPressed = 0;
+    _doubleClickOccured = false;
 
     private _pointerOverMesh: Nullable<AbstractMesh>;
 
-    private _pickedDownMesh: Nullable<AbstractMesh>;
-    private _pickedUpMesh: Nullable<AbstractMesh>;
+    _pickedDownMesh: Nullable<AbstractMesh>;
+    _pickedUpMesh: Nullable<AbstractMesh>;
 
-    private _pointerX: number = 0;
-    private _pointerY: number = 0;
-    private _unTranslatedPointerX: number;
-    private _unTranslatedPointerY: number;
-    private _startingPointerPosition = new Vector2(0, 0);
-    private _previousStartingPointerPosition = new Vector2(0, 0);
-    private _startingPointerTime = 0;
-    private _previousStartingPointerTime = 0;
-    private _pointerCaptures: { [pointerId: number]: boolean } = {};
+    _pointerX: number = 0;
+    _pointerY: number = 0;
+    _unTranslatedPointerX: number;
+    _unTranslatedPointerY: number;
+    _startingPointerPosition = new Vector2(0, 0);
+    _previousStartingPointerPosition = new Vector2(0, 0);
+    _startingPointerTime = 0;
+    _previousStartingPointerTime = 0;
+    _pointerCaptures: { [pointerId: number]: boolean } = {};
 
     // Keyboard
-    private _onKeyDown: (evt: KeyboardEvent) => void;
-    private _onKeyUp: (evt: KeyboardEvent) => void;
-    private _onCanvasFocusObserver: Nullable<Observer<Engine>>;
-    private _onCanvasBlurObserver: Nullable<Observer<Engine>>;
+    _onKeyDown: (evt: KeyboardEvent) => void;
+    _onKeyUp: (evt: KeyboardEvent) => void;
+    _onCanvasFocusObserver: Nullable<Observer<Engine>>;
+    _onCanvasBlurObserver: Nullable<Observer<Engine>>;
 
     private _scene: Scene;
 
@@ -146,7 +146,7 @@ export class InputManager {
         this._pointerY = value;
     }
 
-    private _updatePointerPosition(evt: PointerEvent): void {
+    _updatePointerPosition(evt: PointerEvent): void {
         var canvasRect = this._scene.getEngine().getInputElementClientRect();
 
         if (!canvasRect) {
@@ -160,7 +160,7 @@ export class InputManager {
         this._unTranslatedPointerY = this._pointerY;
     }
 
-    private _processPointerMove(pickResult: Nullable<PickingInfo>, evt: PointerEvent) {
+    _processPointerMove(pickResult: Nullable<PickingInfo>, evt: PointerEvent) {
         let scene = this._scene;
         var canvas = scene.getEngine().getInputElement();
 
@@ -221,7 +221,7 @@ export class InputManager {
         }
     }
 
-    private _checkPrePointerObservable(pickResult: Nullable<PickingInfo>, evt: PointerEvent, type: number) {
+    _checkPrePointerObservable(pickResult: Nullable<PickingInfo>, evt: PointerEvent, type: number) {
         let scene = this._scene;
         let pi = new PointerInfoPre(type, evt, this._unTranslatedPointerX, this._unTranslatedPointerY);
         if (pickResult) {
@@ -266,7 +266,7 @@ export class InputManager {
         this._processPointerDown(pickResult, evt);
     }
 
-    private _processPointerDown(pickResult: Nullable<PickingInfo>, evt: PointerEvent): void {
+    _processPointerDown(pickResult: Nullable<PickingInfo>, evt: PointerEvent): void {
         let scene = this._scene;
         if (pickResult && pickResult.hit && pickResult.pickedMesh) {
             this._pickedDownMesh = pickResult.pickedMesh;
@@ -356,7 +356,7 @@ export class InputManager {
         this._processPointerUp(pickResult, evt, clickInfo);
     }
 
-    private _processPointerUp(pickResult: Nullable<PickingInfo>, evt: PointerEvent, clickInfo: _ClickInfo): void {
+    _processPointerUp(pickResult: Nullable<PickingInfo>, evt: PointerEvent, clickInfo: _ClickInfo): void {
         let scene = this._scene;
         if (pickResult && pickResult && pickResult.pickedMesh) {
             this._pickedUpMesh = pickResult.pickedMesh;

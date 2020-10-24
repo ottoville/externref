@@ -37,8 +37,8 @@ async function onFetch(event) {
         const shouldServeIndexHtml = event.request.mode === 'navigate';
         const request = shouldServeIndexHtml ? 'index.html' : event.request;
         const cache = await caches.open(cacheName);
+        //@ts-ignore
         cachedResponse = await cache.match(request);
     }
     return cachedResponse || fetch(event.request);
 }
-//# sourceMappingURL=service-worker.published.js.map

@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-      "experimentalDecorators": true,
+    "experimentalDecorators": true,
     "outDir": "../wwwroot/js",
-   // "strictNullChecks": true,
-   // "strictBindCallApply": true,
-    //"strictFunctionTypes": true,
-    //"strictPropertyInitialization": true,
-    //"noImplicitAny": true,
+     "strictNullChecks": true,
+     "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
     //"strict": true,
     "target": "esnext",
     "module": "ESNext",
@@ -14,8 +15,10 @@
       "dom",
       "esnext"
     ],
+    "typeRoots": [ "./node_modules/@types/", "./node_modules/@webgpu/" ],
     "types": [
-      "facebook-js-sdk"
+      "facebook-js-sdk",
+      "types"
     ],
     "moduleResolution": "node",
     "allowJs": true,
@@ -28,12 +31,14 @@
       ]
     }
   },
-  "include": ["**/*.ts", "**/*.d.ts", "./rustwasm/*.js"],
+  "include": [ "**/*.ts", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*" ],
   "exclude": [
     "node_modules",
-    "workers"
+    "workers",
+    "lib"
   ],
   "references": [
-    { "path": "./workers/tsconfig.json" }
+    { "path": "./workers/tsconfig.json" },
+    { "path": "./lib/tsconfig.babylon.json" }
   ]
 }

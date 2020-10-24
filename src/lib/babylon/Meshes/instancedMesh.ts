@@ -117,6 +117,7 @@ export class InstancedMesh extends AbstractMesh {
     /**
      * Rendering ground id of the source mesh
      */
+    //@ts-ignore
     public get renderingGroupId(): number {
         return this._sourceMesh.renderingGroupId;
     }

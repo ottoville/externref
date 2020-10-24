@@ -19,10 +19,12 @@ interface GPUBindGroupLayoutEntryUniform extends Omit<GPUBindGroupLayoutEntry, '
 }
 type bindings<T> = T extends BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry> ? [GPUBindGroupEntry]
     : T extends BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> ? [GPUBindGroupEntry, GPUBindGroupEntry]
+    : T extends BindGroupLayoutFiveBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> ? [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]
     : never;
 
 type getBindType<T> = T extends BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry> ? BindGroupOneBinding
     : T extends BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> ? BindGroupTwoBinding
+    : T extends BindGroupLayoutFiveBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> ? BindGroupFiveBinding
     : never;
 
 interface GPUUniformBuffer extends GPUBuffer {
@@ -67,6 +69,9 @@ interface BindGroupLayoutThreeBinding<T extends [GPUBindGroupLayoutEntry, GPUBin
 interface BindGroupLayoutFourBinding extends GPUBindGroupLayout {
     numBindings: 'four';
 }
+interface BindGroupLayoutFiveBinding<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> extends GPUBindGroupLayout {
+    numBindings: 'five';
+}
 /*interface DynamicBindGroupLayoutOneBinding<T extends GPUBindGroupLayoutEntry> extends BindGroupLayoutOneBinding<T> {
     dynamic: 'yes';
 }
@@ -93,7 +98,9 @@ interface BindGroupThreeBinding extends GPUBindGroup {
 interface BindGroupFourBinding extends GPUBindGroup {
     numBindings: 'four';
 }
-
+interface BindGroupFiveBinding extends GPUBindGroup {
+    numBindings: 'five';
+}
 interface TerraGPUComputePipeLine extends GPUComputePipeline {
     createBindGroup(layout: number | GPUBindGroupLayout, entries: Iterable<{
         binding: number;

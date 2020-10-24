@@ -281,7 +281,8 @@ interface GPUImageBitmapCopyView {
 
 interface GPUBufferDescriptor extends GPUObjectDescriptorBase {
   size: number;
-  usage: GPUBufferUsageFlags;
+    usage: GPUBufferUsageFlags;
+    mappedAtCreation: boolean;
 }
 
 interface GPUCommandEncoderDescriptor extends GPUObjectDescriptorBase {
@@ -492,7 +493,7 @@ declare class GPUBuffer implements GPUObjectBase {
   //readonly mapping: ArrayBuffer | null;
   destroy(): void;
   unmap(): void;
-
+    getMappedRange(offset?: number, size?: number): ArrayBuffer;
   mapWriteAsync(): Promise<ArrayBuffer>;
   mapReadAsync(): Promise<ArrayBuffer>;
   // TODO: Remove setSubData (#280)

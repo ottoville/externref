@@ -1,25 +1,15 @@
 import { LazyEval } from "../LazyEval.js";
 //import { translate, rotateMatrix } from "../math.js";
 import {WorkerThread, WorkerReturn} from "../WorkerThread.js";
-import type { Terrain } from "../world/terrain.js";
+import { Terrain } from "../world/terrain.js";
 //import simplex from '../simplex.js'
 
 import type { PTDresult } from "../types/interfaces/index.js";
-import { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import { Mesh } from "../lib/babylon/Meshes/mesh.js";
-import { Color3 } from "../lib/babylon/Maths/math.color.js";
-import { Vector3 } from "../lib/babylon/Maths/math.vector.js";
-import type { SubMesh } from "../lib/babylon/Meshes/subMesh.js";
-import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData.js";
-import { Texture } from "../lib/babylon/Materials/Textures/texture.js";
-import { TerraMesh } from "../TerraMesh.js";
-import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
-import { WebGPUEngine } from "../lib/babylon/index.js";
-import { Matrix } from "../lib/babylon/Maths/math.vector";
-import type { WorldScene } from "../world/scene.js";
 
-const BLADE_SEGS = 2 // # of blade segments
+import type { WorldScene } from "../world/scene.js";
+import { GPUScene } from "../GPUScene.js";
+
 
 /**
  * Sets up indices for single blade mesh.
@@ -30,7 +20,6 @@ const BLADE_SEGS = 2 // # of blade segments
  */
 
 export class Plants {
-    private mat: ShaderMaterial;
     public numBlades: number = 4000000;
     public opts = {
         radius: 86
@@ -38,13 +27,12 @@ export class Plants {
     private offset: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 2 * this.numBlades);
     private worker = new WorkerThread('/webworkers/grass.js');
     private ready: Promise<any>;
-    private bladesVisible: number = 0;
     public fillArea(area: PTDresult) {
         var d = new Date().getTime();
         
        // let amount = ~~Math.abs(area.size.h * area.size.w) * 2 // >> 2 // one per 2*2 grid
         //let amount = ~~Math.abs(area.size.h * area.size.w) * 4 // very aggressive amount on CPU
-        let amount = ~~Math.abs(area.size.h * area.size.w) >> 2
+        let amount = Math.abs(area.size.h * area.size.w) << 3
         //let amount = 100000
         if (amount === 0)
             return;
@@ -70,14 +58,70 @@ export class Plants {
 
     }
     constructor(
-        private scene: WorldScene,
-        private camera: ArcRotateCamera,
-        private terrainP: Promise<Terrain>,
-        private device: GPUDevice,
-        private shaderModules: Map<string, GPUShaderModule>,
+        scene: GPUScene,
+        terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
 
-        const engine = scene.getEngine() as WebGPUEngine;
+
+        const drawable = scene.lights.lightsBindGroup.addDrawable({
+            sampleCount: scene.sampleCount,
+            primitiveTopology: 'triangle-strip',
+            rasterizationState: {
+                cullMode: 'none',
+            },
+            depthStencilState: {
+                depthWriteEnabled: true,
+                depthCompare: "less",
+                format: "depth24plus-stencil8",
+            },
+            colorStates: [{
+                format: "bgra8unorm",
+            }],
+            vertexStage: {
+                module: scene.shaderModules.get("grass.vert")!,
+                entryPoint: "main",
+            },
+            fragmentStage: {
+                module: scene.shaderModules.get("grass.frag")!,
+                entryPoint: "main"
+            },
+            vertexState: {
+                indexFormat: 'uint16',
+                vertexBuffers:
+                    [{
+                        arrayStride: 4 * 4,
+                        stepMode: "instance" as GPUInputStepMode,
+                        attributes: [{ // position
+                            shaderLocation: 0,
+                            offset: 0,
+                            format: "float4" as GPUVertexFormat
+                        }
+                        ]
+                    },
+                    {
+                        arrayStride: 4 * 4,
+                        stepMode: "instance" as GPUInputStepMode,
+                        attributes: [
+                            {  // shape
+                                shaderLocation: 1,
+                                offset: 0,
+                                format: "float4" as GPUVertexFormat
+                            }
+                        ]
+                    }]
+            },
+        }, 7, 0);
+        const positionGPU = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] );
+        const shapeGPU = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
+
+
+        const positionGPUSwap = scene.device.createBuffer({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE });
+        const shapeGPUSwap = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE]);
+
+        drawable.setVertexBuffer(0, positionGPU)
+        drawable.setVertexBuffer(1, shapeGPU)
+
+
         let shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * this.numBlades);
         let noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
 
@@ -87,31 +131,14 @@ export class Plants {
             noises: noises
         });
 
-        this.mat = new ShaderMaterial("shader", scene, "./shaders/grass2",
+      /*  this.mat = new ShaderMaterial("shader", scene, "./shaders/grass2",
             {
                 attributes: ["position", "normal", "uv", "shape", "worldPos", "noise"],
                 uniforms: ["viewProjection", "view", "projection", "time", "map", "windIntensity", "grassColor", "lightDir", "camDir", "fogColor", "grassFogFar", "fogNear", "fogFar", "lightPos", "BLADESEGS", "BLADEVERTS"]
             });
+            */
 
-
-
-
-        const positions = new Float32Array([
-            0.02,    0,
-            -0.02,   0, 
-            0.014,    0.29,
-            -0.014,   0.29,
-            0.007,    0.57,
-            -0.007,   0.57, 
-            0,      1, 
-        ]);
-
-
-
-        var normals: number[] = [];
-        VertexData.ComputeNormals(positions, [0, 1, 2, 3, 4, 5, 6], normals);
-
-        const Poaceae = new TerraMesh("Poaceae", positions, undefined, new Float32Array(normals));
+       /* const Poaceae = new TerraMesh("Poaceae", positions, undefined, new Float32Array(normals));
         Poaceae.alwaysSelectAsActiveMesh = true;
         Poaceae.material = new StandardMaterial("Poaceae", scene);
         Poaceae.material.isReadyForSubMesh = () => true;
@@ -119,12 +146,12 @@ export class Plants {
         Poaceae.subMeshes[0]._materialEffect = {};
 
         Poaceae.material.bindForSubMesh = (world: Matrix, mesh: Mesh, subMesh: SubMesh): void => { };
-
+        */
 
        /* let [VGPU, VARR] = this.device.createBufferMapped({ size: positions.length * 4, usage: GPUBufferUsage.VERTEX });
         new Float32Array(VARR).set(positions);
         VGPU.unmap()*/
-
+        /*
         const renderPipeline = this.device.createRenderPipeline({
             //@ts-ignore
             sampleCount: engine._mainPassSampleCount,
@@ -141,11 +168,11 @@ export class Plants {
                 format: "bgra8unorm",
             }],
             vertexStage: {
-                module: this.shaderModules.get("grass.vert")!,
+                module: GPUScene.instance.shaderModules.get("grass.vert")!,
                 entryPoint: "main",
             },
             fragmentStage: {
-                module: this.shaderModules.get("grass.frag")!,
+                module: GPUScene.instance.shaderModules.get("grass.frag")!,
                 entryPoint: "main"
             },
             vertexState: {
@@ -174,7 +201,7 @@ export class Plants {
                     }]
             },
         });
-
+       
         const bindGroups = [
             this.device.createBindGroup({
                 layout: renderPipeline.getBindGroupLayout(0),
@@ -191,14 +218,12 @@ export class Plants {
                 entries: [{
                     binding: 0,
                     resource: {
-                        buffer: scene.timeBuffer
+                        buffer: GPUScene.instance.timeBuffer
                     }
                 }],
             })
         ];
-        const positionGPU = device.createBuffer({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
-        const shapeGPU = device.createBuffer({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.STORAGE });
-
+        
         Poaceae._draw = (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh => {
             if (!Poaceae._geometry || !Poaceae._geometry.getVertexBuffers() || (!Poaceae._unIndexed && !Poaceae._geometry.getIndexBuffer())) {
 
@@ -230,102 +255,100 @@ export class Plants {
             return Poaceae;
         }
 
-
+ */
         
 
-        terrainP.then((terrain) => {
-            terrain.initedGPU.then(() => {
-                const worldSetGPU = this.device.createBuffer({ size: this.numBlades * 2 * 4, usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC });
-                const worldCopyGPU = this.device.createBuffer({ size: this.numBlades * 2 * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
-                const computePipeline = this.device.createComputePipeline({
-                    computeStage: {
-                        module: this.shaderModules.get("getHeightAtCoordinates.comp")!,
-                        entryPoint: "main"
-                    }
-                });
-                const bindGroup = this.device.createBindGroup({
-                    layout: computePipeline.getBindGroupLayout(0),
-                    entries: [
-                        {
-                            binding: 0,
-                            resource: {
-                                buffer: worldCopyGPU
-                            }
-                        },
-                        {
-                            binding: 1,
-                            resource: {
-                                buffer: terrain.slopeArrGPUBuffer
-                            }
-                        },
-                        {
-                            binding: 2,
-                            resource: {
-                                buffer: terrain.facet1ArrGPUBuffer
-                            }
-                        },
-                        {
-                            binding: 3,
-                            resource: {
-                                buffer: terrain.facet2ArrGPUBuffer
-                            }
-                        },
-                        {
-                            binding: 4,
-                            resource: {
-                                buffer: positionGPU
-                            }
-                        },
-                        {
-                            binding: 5,
-                            resource: {
-                                buffer: shapeGPU
-                            }
-                        }
-                    ]
-                });
+        terrainP.then((arr) => {
+            const terrain = arr[0];
+            
+            const computePipeline = scene.device.createComputePipeline({
+                computeStage: {
+                    module: scene.shaderModules.get("getHeightAtCoordinates.comp")!,
+                    entryPoint: "main"
+                }
+            });
+            const layout = computePipeline.getBindGroupLayout(0) as BindGroupLayoutFiveBinding<[GPUBindGroupLayoutEntryReadStorage, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>;
 
 
 
+ 
+            this.worker.subscribe('updated', async (data: { count: number }) => {
+               /* await worldSetGPU.mapAsync(GPUMapMode.WRITE);
+                const worldSetArr = worldSetGPU.getMappedRange();
+                new Float32Array(worldSetArr).set(new Float32Array(this.offset));
+                worldSetGPU.unmap();*/
 
-                const commandEncoder = this.device.createCommandEncoder();
-                commandEncoder.copyBufferToBuffer(
-                    worldSetGPU, 0,
-                    worldCopyGPU, 0,
-                    this.numBlades * 2 * 4);
-
+                const commandEncoder = scene.device.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipeline);
+
+
+                const worldCopyGPU = scene.createGPUBuffer(this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], true);
+                const worldSetArr = worldCopyGPU.getMappedRange();
+                new Float32Array(worldSetArr).set(new Float32Array(this.offset));
+                worldCopyGPU.unmap();
+                const bindGroup = scene.createBindGroup(layout, {
+                    binding: 0,
+                    resource: {
+                        buffer: worldCopyGPU
+                    }
+                },
+                    {
+                        binding: 1,
+                        resource: {
+                            buffer: terrain.slopeArrGPUBuffer
+                        }
+                    },
+                    {
+                        binding: 2,
+                        resource: {
+                            buffer: terrain.facet12ArrGPUBuffer
+                        }
+                    },
+                    {
+                        binding: 4,
+                        resource: {
+                            buffer: positionGPUSwap
+                        }
+                    },
+                    {
+                        binding: 5,
+                        resource: {
+                            buffer: shapeGPUSwap
+                        }
+                    });
                 passEncoder.setBindGroup(0, bindGroup);
                 passEncoder.dispatch(this.numBlades);
                 passEncoder.endPass();
-                const updatePositionBuffer = [commandEncoder.finish()];
-                this.worker.subscribe('updated', async (data: { count: number }) => {
-                    this.bladesVisible = data.count;
-                    const worldSetArr = await worldSetGPU.mapWriteAsync();
-                    new Float32Array(worldSetArr).set(new Float32Array(this.offset));
-                    worldSetGPU.unmap();
-                    this.device.defaultQueue.submit(updatePositionBuffer);
-                    console.log('updated grass buffers');
-                    return;
+                commandEncoder.copyBufferToBuffer(
+                    positionGPUSwap, 0,
+                    positionGPU, 0,
+                    this.numBlades * 4 * 4);
+                commandEncoder.copyBufferToBuffer(
+                    shapeGPUSwap, 0,
+                    shapeGPU, 0,
+                    this.numBlades * 4 * 4);
+                scene.device.defaultQueue.submit([commandEncoder.finish()]);
+                drawable.instanceCount = data.count
+                console.log('updated grass buffers', data.count);
+                return;
 
 
 
-                    /* gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-                     gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));
-                     gl.bindBuffer(gl.ARRAY_BUFFER, glsbuffer);
-                     gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(shapes));
-                     gl.bindBuffer(gl.ARRAY_BUFFER, glnoisebuffer);
-                     gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(noises));
-                     gl.bindBuffer(gl.ARRAY_BUFFER, null);*/
-                });
-            })
+                /* gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+                    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));
+                    gl.bindBuffer(gl.ARRAY_BUFFER, glsbuffer);
+                    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(shapes));
+                    gl.bindBuffer(gl.ARRAY_BUFFER, glnoisebuffer);
+                    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(noises));
+                    gl.bindBuffer(gl.ARRAY_BUFFER, null);*/
+            });
         })
 
 
         return;
 
-        let l = new LazyEval(() => {
+      /*  let l = new LazyEval(() => {
             this.worker.message(WorkerReturn.Promise, 'get', {
                 offset: this.offset,
                 shape: shapes
@@ -337,7 +360,7 @@ export class Plants {
         });
 
         return;
-
+        */
 
         
 
@@ -360,7 +383,7 @@ export class Plants {
 
         //Empty array to contain calculated values or normals added
 
-        this.mat.setTexture("map", new Texture("./images/grass2.jpg", scene));
+     /*   this.mat.setTexture("map", new Texture("./images/grass2.jpg", scene));
         this.mat.setColor3("grassColor", new Color3(0.45, 0.46, 0.19));
         this.mat.setColor3("fogColor", new Color3(0.74, 0.77, 0.91));
         let LIGHT_DIR = new Vector3(1, 0, 0)
@@ -390,7 +413,7 @@ export class Plants {
         Poaceae.alwaysSelectAsActiveMesh = true;
 
 
-        this.mat.backFaceCulling = false;
+        this.mat.backFaceCulling = false;*/
  
        // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
 

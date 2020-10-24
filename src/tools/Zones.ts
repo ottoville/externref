@@ -41,6 +41,7 @@ export class Zones extends UITAB {
     }
     activate = async () => {
         let ctx: CanvasRenderingContext2D = this.zonedt.getContext();
+        //@ts-ignore
         this.ground.terraMesh.material = this.zonemateria;
         let centerX = this.size / 2
         let centerZ = this.size / 2
@@ -66,8 +67,8 @@ export class Zones extends UITAB {
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
                 ctx.lineWidth = 1;
                 ctx.strokeStyle = "blue";
-                ctx.translate(centerX + z.coord.x, centerZ + z.coord.y * -1);
-                console.log('Translate ', centerX + z.coord.x, centerZ + z.coord.y * -1)
+                ctx.translate(centerX + z.coord[0], centerZ + z.coord[1] * -1);
+                console.log('Translate ', centerX + z.coord[0], centerZ + z.coord[1] * -1)
                 ctx.rotate(z.rad);
                 console.log('Rotate: ', z.rad)
                 ctx.fillStyle = "blue";

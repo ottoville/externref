@@ -4,7 +4,6 @@ import type { PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WorldScene } from "../world/scene.js";
-import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { GPUScene } from "../GPUScene.js";
@@ -62,9 +61,8 @@ export class paintPlane extends paintGround {
         protected ground: Terrain,
         protected sea: Mesh,
         uitab: canvasListener,
-        private engine: WebGPUEngine
     ) {
-        super(scene,sceneDeprecated, camera, ground, sea, uitab);
+        super(scene,camera, ground, sea, uitab);
         
         this.#templane2 = ground.TerrainHeightsbindGroupPositionTree.addDrawable({
             sampleCount: this.scene.gpuscene.sampleCount,

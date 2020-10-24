@@ -4171,7 +4171,7 @@ export class Matrix {
         var result = new Matrix();
         Matrix.FromArrayToRef(array, offset, result);
         return result;
-    }
+    }fro
 
     /**
      * Copy the content of an array into a given matrix

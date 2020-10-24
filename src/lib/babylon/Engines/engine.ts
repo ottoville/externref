@@ -1970,7 +1970,6 @@ export class Engine extends ThinEngine {
 
         this._renderingCanvas.setAttribute("touch-action", "none");
         this._renderingCanvas.style.touchAction = "none";
-        this._renderingCanvas.style.msTouchAction = "none";
     }
 
     // Loading screen

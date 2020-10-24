@@ -26,6 +26,6 @@ export class paintLine extends paintGround {
         protected sea: Mesh,
         uitab: canvasListener
     ) {
-        super(TerraScene.instance, sceneDeprecated, camera, ground, sea, uitab);
+        super(TerraScene.instance, camera, ground, sea, uitab);
     };
 }

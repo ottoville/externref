@@ -1,11 +1,3 @@
-import { Plants } from "../plants/Plants.js";
-import { PlantsUI } from "../tools/plantsUI.js";
-import { Zones } from "../tools/zones.js";
-import { CameraTAB } from "../tools/camera.js";
-import { BuildingsUI } from "../tools/buildings.js";
-import { TerrainTool } from "../tools/Terrain.js";
-import { Terrain } from "./terrain.js";
-
 import type { TerraMesh } from "../TerraMesh.js";
 
 import type { loginProvider, DotNet, savedCamera } from "../types/interfaces/index.js";
@@ -30,7 +22,6 @@ import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { LazyEval } from "../LazyEval.js";
-import { UITABClassLike, UITAB } from "../UITAB.js";
 import { GPUScene } from "../GPUScene.js";
 import { TerraScene } from "../TerraScene.js";
 
@@ -109,12 +100,9 @@ class _ClickInfo {
     }
 }
 export class WorldScene extends Scene {
-    terrainInited: Promise<[Terrain, Promise<GPUBuffer>]>;
     camera: ArcRotateCamera;
     camera2: ArcRotateCamera;
     sea: Sea;
-    //@ts-ignore
-    plants: Plants;
     DBP: Promise<EarthDatabase>;
 
     /**
@@ -226,8 +214,6 @@ export class WorldScene extends Scene {
 
     pickPromise(x: number, y: number, predicate?: (mesh: AbstractMesh) => boolean, fastCheck?: boolean, camera?: Nullable<Camera>,
         trianglePredicate?: TrianglePickingPredicate): Promise<PickingInfo | null> {
-        const cwidth = ~~TerraScene.instance.canvas.getAttribute('width')!;
-        const cheight = ~~TerraScene.instance.canvas.getAttribute('height')!;
         let rayFunction = (world: Matrix) => {
             if (!this._tempPickingRay) {
                 this._tempPickingRay = Ray.Zero();
@@ -240,7 +226,7 @@ export class WorldScene extends Scene {
            // const viewProjection = view.multiply(projection);
           //  const viewProjection = matrixMultiply64(Array.from(new Float32Array(TerraScene.instance.view)), Array.from(new Float32Array(TerraScene.instance.projection)));
             //TODO: reuse picking ray object
-            const pickingRay = TerraScene.instance.createPickingRay(x, y, world.m as Float32Array, cwidth, cheight);
+            const pickingRay = TerraScene.instance.createPickingRay(x, y, world.m as Float32Array);
             return pickingRay;
 
 
@@ -270,9 +256,6 @@ export class WorldScene extends Scene {
         //gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
     };
     
-    
-
-    public tools: Map<string, UITABClassLike> = new Map();
 
     public attachControl(attachUp = true, attachDown = true, attachMove = true, elementToAttachTo: Nullable<HTMLElement> = null): void {
         //this._inputManager.attachControl(attachUp, attachDown, attachMove);
@@ -657,7 +640,6 @@ export class WorldScene extends Scene {
 
     //    }).bind(this._inputManager)(this, elementToAttachTo);
     }
-    public terrainReady: Promise<void>;
 
     constructor(
         engine: Engine | WebGPUEngine,
@@ -739,7 +721,7 @@ export class WorldScene extends Scene {
          gameEngine.message(WorkerReturn.noReturn, 'init', {
              gameTime: this.lastStateChangeGameTime
          });*/
-        this.tools.set('Camera', CameraTAB);
+        
 
 
         //@ts-ignore
@@ -820,30 +802,23 @@ export class WorldScene extends Scene {
 
         
         
-        this.terrainInited = Terrain.loadFromTexture();
+
             
         this.sea = new Sea(this);
-        this.plants = new Plants(this, this.camera, this.terrainInited, device);
+      /*  this.getSceneUniformBuffer().update();
         this.terrainReady=this.terrainInited.then(gt => {
             blazor.invokeMethod('setProgress', 40);
             let [ground, texture] = gt;
 
-            this.tools.set('Buildings', BuildingsUI);
-            
-            DB.then(d => {
-                this.tools.set('Zones' , Zones);
-            })
 
 
            // ground.terraMesh.checkCollisions = true;
             blazor.invokeMethod('setProgress', 50);
           //  ground.terraMesh.isPickable = true;
-            this.getSceneUniformBuffer().update();
+            
             blazor.invokeMethod('setProgress', 51);
-            this.tools.set('TerrainTool', TerrainTool);
             blazor.invokeMethod('setProgress', 52);
 
-            this.tools.set('Plants', PlantsUI);
 
             blazor.invokeMethod('setProgress', 53);
             return texture.then(async gpuBuffer => {
@@ -885,44 +860,7 @@ export class WorldScene extends Scene {
         }).catch(e => {
             console.error(e);
             blazor.invokeMethod('setProgressError', e.name +' '+ e.message);
-        })
+        })*/
     }
-    async activateMenu(name: string) {
-        try {
-            let tool: UITABClassLike | undefined;
-            if (tool = this.tools.get(name)) {
-                tool.instance = new tool(this, (await this.terrainInited)[0], this.camera);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-    async deActivateMenu(name: string) {
-        try {
-            let tool: UITABClassLike | undefined;
-            if (tool = this.tools.get(name)) {
-                tool.instance?.destroy();
-                tool.instance = null;
-            } else
-                throw(new Error('Tool '+name+' not found'))
-        } catch (e) {
-            console.error(e);
-        }
-    }
-    async invokeMenu(name: string, method: string) {
-        try {
-            let tool: UITABClassLike | undefined;
-            if (tool = this.tools.get(name)) {
-                let instance: UITAB | null;
-                if (instance = tool.instance) {
-                    //@ts-ignore
-                    instance[method]();
-                } else
-                    throw (new Error('Method ' + method + ' was not found from tool ' + name + ''))
-            } else
-                throw (new Error('Tool ' + name + ' not found'))
-        } catch (e) {
-            console.error(e);
-        }
-    }
+
 }

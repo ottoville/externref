@@ -86,6 +86,7 @@ export class MultiRenderTarget extends RenderTargetTexture {
      * Set the wrapping mode on U of all the textures we are rendering to.
      * Can be any of the Texture. (CLAMP_ADDRESSMODE, MIRROR_ADDRESSMODE or WRAP_ADDRESSMODE)
      */
+    //@ts-ignore
     public set wrapU(wrap: number) {
         if (this._textures) {
             for (var i = 0; i < this._textures.length; i++) {
@@ -98,6 +99,7 @@ export class MultiRenderTarget extends RenderTargetTexture {
      * Set the wrapping mode on V of all the textures we are rendering to.
      * Can be any of the Texture. (CLAMP_ADDRESSMODE, MIRROR_ADDRESSMODE or WRAP_ADDRESSMODE)
      */
+    //@ts-ignore
     public set wrapV(wrap: number) {
         if (this._textures) {
             for (var i = 0; i < this._textures.length; i++) {

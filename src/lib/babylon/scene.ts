@@ -187,6 +187,7 @@ export class Scene extends AbstractScene implements IAnimatable {
      * As in the majority of the scene they are the same (exception for multi room and so on),
      * this is easier to reference from here than from all the materials.
      */
+    //@ts-ignore
     public get environmentTexture(): Nullable<BaseTexture> {
         return this._environmentTexture;
     }

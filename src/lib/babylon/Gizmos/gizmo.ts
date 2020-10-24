@@ -28,7 +28,7 @@ export class Gizmo implements IDisposable {
      * Mesh that the gizmo will be attached to. (eg. on a drag gizmo the mesh that will be dragged)
      * * When set, interactions will be enabled
      */
-    public get attachedMesh() {
+    public get attachedMesh(): Nullable<AbstractMesh> {
         return this._attachedMesh;
     }
     public set attachedMesh(value) {

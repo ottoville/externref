@@ -58,7 +58,7 @@ export class TerraMesh extends Mesh {
     public lastColliderTransformMatrix: Matrix = Matrix.Zero();
 
     public indices: Uint32Array | null = null;
-    public indicesBuffer: SharedArrayBuffer;
+    public indicesBuffer: SharedArrayBuffer | null = null;
 
     public normalsBuffer: SharedArrayBuffer | null = null;
     public normals: Float32Array | null = null;
@@ -66,7 +66,7 @@ export class TerraMesh extends Mesh {
 
     public uvs: SharedArrayBuffer | null = null;
 
-    static worker = new ObjectWorkerThread('/webworkers/mesh.js');
+    //static worker = new ObjectWorkerThread('/webworkers/mesh.js');
     constructor(name: string, positions: Float32Array, indices?: Uint32Array, normals?: Float32Array, uvs?: Float32Array) {
         super(name);
         const vertexData = new VertexData();
@@ -94,13 +94,13 @@ export class TerraMesh extends Mesh {
         this.positions.set(positions);
         this.positionsView = new DataView(this.positionsBuffer);
 
-        TerraMesh.worker.message(this.uniqueId, 'init', [this.indicesBuffer, this.positionsBuffer, this.normalsBuffer]);
+      //  TerraMesh.worker.message(this.uniqueId, 'init', [this.indicesBuffer, this.positionsBuffer, this.normalsBuffer]);
         
         
         vertexData.positions = this.positions;
         if (this.uvs)
             vertexData.uvs = new Float32Array(this.uvs)
-        if (this.normals)
+        if (this.normals && this.normalsBuffer)
             vertexData.normals = new Float32Array(this.normalsBuffer)
       //  vertexData.applyToMesh(this, true);
         new Geometry(Geometry.RandomId(), this.getScene(), vertexData, false, this);
@@ -347,7 +347,7 @@ export class TerraMesh extends Mesh {
                 let pp2 = BABYLON.Vector3.Zero();
                 let pp3 = BABYLON.Vector3.Zero();*/
         //console.log('submesh material?', !!this.subMeshes[0].getMaterial());
-        let lenn = indices.length;
+        let lenn = indices!.length;
       //  let timer = new Date().getTime();
         for (var i = 0; i < lenn; i += 3) {
             /* pp1.x = lastColliderVertices[indices[i * 3 ]];
@@ -363,9 +363,9 @@ export class TerraMesh extends Mesh {
              pp3.z = lastColliderVertices[indices[(i + 2) * 3 + 2]];*/
 
 
-            var pp1 = this.lastColliderWorldVectors[indices[i]];
-            var pp2 = this.lastColliderWorldVectors[indices[i + 1]];
-            var pp3 = this.lastColliderWorldVectors[indices[i + 2]];
+            var pp1 = this.lastColliderWorldVectors[indices![i]];
+            var pp2 = this.lastColliderWorldVectors[indices![i + 1]];
+            var pp3 = this.lastColliderWorldVectors[indices![i + 2]];
 
             //@ts-ignore
             collider._testTriangle(i, this.subMeshes[0]._trianglePlanes, pp3, pp2, pp1, !!this.subMeshes[0].getMaterial(), this);
@@ -393,11 +393,12 @@ export class TerraMesh extends Mesh {
       
         return this;
     }
-    public intersectsPromise(ray: Ray, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): Promise<PickingInfo> {
+    /*public intersectsPromise(ray: Ray, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): Promise<PickingInfo> {
         //console.log('intersectsPromise ', this.name);
         let bounding = this.getBoundingInfo();
+        debugger;
         return TerraMesh.worker.message(this.uniqueId, 'intersects', [bounding.boundingBox, bounding.boundingSphere, ray.origin, ray.direction, fastCheck, trianglePredicate]);
-    }
+    }*/
 
     public render(subMesh: SubMesh, enableAlphaMode: boolean, effectiveMeshReplacement?: AbstractMesh): Mesh {
         if (this._internalAbstractMeshDataInfo._isActiveIntermediate) {
@@ -421,12 +422,12 @@ export class TerraMesh extends Mesh {
         if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
             return this;
         }
-        
-        (function () {
-            if (this._internalMeshDataInfo._onBeforeRenderObservable) {
-                this._internalMeshDataInfo._onBeforeRenderObservable.notifyObservers(this);
-            }
-        }).bind(this)()
+
+        //@ts-ignore
+        if (this._internalMeshDataInfo._onBeforeRenderObservable) {
+            //@ts-ignore
+            this._internalMeshDataInfo._onBeforeRenderObservable.notifyObservers(this);
+        }
 
         var engine = this._scene.getEngine();
         var hardwareInstancedRendering = batch.hardwareInstancedRendering[subMesh._id];

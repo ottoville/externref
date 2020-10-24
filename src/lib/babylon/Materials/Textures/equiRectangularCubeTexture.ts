@@ -33,7 +33,8 @@ export class EquiRectangularCubeTexture extends BaseTexture {
     /** The URL to the image. */
     public url: string;
 
-    /** The texture coordinates mode. As this texture is stored in a cube format, please modify carefully. */
+/** The texture coordinates mode. As this texture is stored in a cube format, please modify carefully. */
+    //@ts-ignore
     public coordinatesMode = Texture.CUBIC_MODE;
 
     /**

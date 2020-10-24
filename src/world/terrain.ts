@@ -52,13 +52,13 @@ export class Terrain implements boundable {
     facet12ArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST]);
     //  facet2ArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST);
 
-    public slopeArrBuffer: SharedArrayBuffer;
-    public facet1ArrBuffer: SharedArrayBuffer;
-    public facet2ArrBuffer: SharedArrayBuffer;
+    public slopeArrBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY);
+    public facet1ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4);
+    public facet2ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4);
 
-    public slopeArr: Int32Array;
-    public facet1Arr: Float32Array;
-    public facet2Arr: Float32Array;
+    public slopeArr = new Int32Array(this.slopeArrBuffer);
+    public facet1Arr = new Float32Array(this.facet1ArrBuffer);
+    public facet2Arr = new Float32Array(this.facet2ArrBuffer);
 
     #ratioX = Terrain.subdivisionsX / this.#width;
     #ratioY = Terrain.subdivisionsY / this.#height;
@@ -107,7 +107,7 @@ export class Terrain implements boundable {
 
 
 
-    public static async fromHeightMap(url: string, gpuscene: GPUScene): Promise<SharedArrayBuffer> {
+    public static async fromHeightMap(url: string): Promise<SharedArrayBuffer> {
         let b = await (await fetch(url)).blob();
 
         let bitmap = await createImageBitmap(b);
@@ -175,11 +175,11 @@ export class Terrain implements boundable {
             const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5120 * 5120);
             const resultMatrixBuffer = this.scene.gpuscene.createGPUBuffer(resultMatrixBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
-            const createTexturePipeline = GPUScene.instance.createComputePipeline("createTerrainTexture.comp", this.scene.gpuscene.device.createPipelineLayout({
-                bindGroupLayouts: [Terrain.getHeightsLayout(GPUScene.instance), GPUScene.instance.singleWritableStorageLayout]
+            const createTexturePipeline = this.scene.gpuscene.createComputePipeline("createTerrainTexture.comp", this.scene.gpuscene.device.createPipelineLayout({
+                bindGroupLayouts: [Terrain.getHeightsLayout(this.scene.gpuscene), this.scene.gpuscene.singleWritableStorageLayout]
             }));
 
-            const bindGroup1 = createTexturePipeline.createBindGroup(GPUScene.instance.singleWritableStorageLayout, [
+            const bindGroup1 = createTexturePipeline.createBindGroup(this.scene.gpuscene.singleWritableStorageLayout, [
                 {
                     binding: 0,
                     resource: {
@@ -271,7 +271,7 @@ export class Terrain implements boundable {
     }
 
 
-    static async loadFromTexture(): Promise<[Terrain, Promise<GPUBuffer>]> {
+    static async loadFromTexture(scene: TerraScene): Promise<[Terrain, Promise<GPUBuffer>]> {
         /*
 const t = await caches.match(new Request('/terrain.webp')).then(async cachedvertices => {
     if (cachedvertices) {
@@ -287,10 +287,10 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             if (cachedvertices) {
                 console.log('cachedvertices');
                 const buffer = await Terrain.fromSave(cachedvertices);
-                return new Terrain(buffer, 'CreateGroundFromSave.comp', TerraScene.instance);
+                return new Terrain(buffer, 'CreateGroundFromSave.comp', scene);
             } else {
-                const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp', TerraScene.instance.gpuscene);
-                return new Terrain(buffer, 'CreateGroundFromHeightMap.comp', TerraScene.instance);
+                const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp');
+                return new Terrain(buffer, 'CreateGroundFromHeightMap.comp', scene);
             }
         })
 
@@ -309,7 +309,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
                     imgctx.drawImage(cacheimg, 0, 0);
                     //let pixels = imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data;
                     // const padding = pixels.byteLength % 4;
-                    const gpuBuffer = GPUScene.instance.createGPUBuffer(cacheimg.width * cacheimg.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], true);
+                    const gpuBuffer = scene.gpuscene.createGPUBuffer(cacheimg.width * cacheimg.height * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], true);
                     new Uint8ClampedArray(gpuBuffer.getMappedRange()).set(imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data);
                     gpuBuffer.unmap();
                     return gpuBuffer;
@@ -563,7 +563,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
 
 
         const m = scene.gpuscene.lights.lightsBindGroupTexture.addDrawable({
-            sampleCount: GPUScene.instance.sampleCount,
+            sampleCount: scene.gpuscene.sampleCount,
             primitiveTopology: 'triangle-list',
             depthStencilState: {
                 depthWriteEnabled: true,
@@ -574,11 +574,11 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
                 format: "bgra8unorm",
             }],
             vertexStage: {
-                module: GPUScene.instance.shaderModules.get("ground.vert")!,
+                module: scene.gpuscene.shaderModules.get("ground.vert")!,
                 entryPoint: "main",
             },
             fragmentStage: {
-                module: GPUScene.instance.shaderModules.get("ground.frag")!,
+                module: scene.gpuscene.shaderModules.get("ground.frag")!,
                 entryPoint: "main"
             },
             vertexState: {
@@ -616,65 +616,57 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
                 binding: 1,
                 resource: this.texture.createView()
             }
-        ],this.#terrainIndicesLength / 4, 1);
+        ], this.#terrainIndicesLength / 4, 1);
 
-      /*  m.bindGroups = new Set([
-            scene.gpuscene.device.createBindGroup({
-                layout: m.renderPipeline.getBindGroupLayout(2),
-                entries: [
-                    {
-                        binding: 0,
-                        resource: sampler
-                    },
-                    {
-                        binding: 1,
-                        resource: texture.createView()
-                    }
-                ]
-            })
-        ])*/
-    m.setVertexBuffer(0, this.#terrainPositionAndUvsAndNormalsGPU);
-    m.setIndexBuffer(terrainIndicesGPU, 0, true, 'uint32');
+        /*  m.bindGroups = new Set([
+              scene.gpuscene.device.createBindGroup({
+                  layout: m.renderPipeline.getBindGroupLayout(2),
+                  entries: [
+                      {
+                          binding: 0,
+                          resource: sampler
+                      },
+                      {
+                          binding: 1,
+                          resource: texture.createView()
+                      }
+                  ]
+              })
+          ])*/
+        m.setVertexBuffer(0, this.#terrainPositionAndUvsAndNormalsGPU);
+        m.setIndexBuffer(terrainIndicesGPU, 0, true, 'uint32');
         //  this.terraMesh = new TerraMesh('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
         // this.terraMesh = new TerraMesh('ground', new Float32Array([1,2,3,4,5,6,7,8,9]));
-
-
-        this.slopeArrBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY)
-this.facet1ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4);
-this.facet2ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4);
-this.slopeArr = new Int32Array(this.slopeArrBuffer);
-this.facet1Arr = new Float32Array(this.facet1ArrBuffer);
-this.facet2Arr = new Float32Array(this.facet2ArrBuffer);
-console.log('terrain bounding');
+        console.log('terrain bounding');
     }
 
-//BABYLON 4103
-//ARRAY 2800 -> 1897 -> 1720 -> 1708 -> 1631
-//Dataview 6100
-//pure array  848 -> 763
+    //BABYLON 4103
+    //ARRAY 2800 -> 1897 -> 1720 -> 1708 -> 1631
+    //Dataview 6100
+    //pure array  848 -> 763
 
 
-getHeightAtCoordinates(x: number, z: number): number {
-    let facet: Float32Array;
-    let col = ((x + this.#maxX) * this.#ratioX) | 0;
-    let row = (-(z + this.#maxZ) * this.#ratioY + Terrain.subdivisionsY) | 0;
-    debugger;
-    console.log(col, row);
-    let pos: number = row * Terrain.subdivisionsX + col;
-    try {
-        if (z < -1 * x + this.slopeArr[pos]) {
-            facet = new Float32Array(this.facet1Arr.buffer, pos << 4, 4) // << 4 =  4 *  Float32Array.BYTES_PER_ELEMENT
+    getHeightAtCoordinates(x: number, z: number): number {
+        let facet: Float32Array;
+        let col = ((x + this.#maxX) * this.#ratioX) | 0;
+        let row = (-(z + this.#maxZ) * this.#ratioY + Terrain.subdivisionsY) | 0;
+        debugger;
+        console.log(col, row);
+        let pos: number = row * Terrain.subdivisionsX + col;
+        try {
+            if (z < -1 * x + this.slopeArr[pos]) {
+                facet = new Float32Array(this.facet1Arr.buffer, pos << 4, 4) // << 4 =  4 *  Float32Array.BYTES_PER_ELEMENT
+            }
+            else {
+                facet = new Float32Array(this.facet2Arr.buffer, pos << 4, 4) // << 4 = 4 *  Float32Array.BYTES_PER_ELEMENT
+            }
+        } catch (e) {
+            if (e instanceof RangeError) {
+                console.warn('Invalid coordinate to getHeightAtCoordinates ' + x + ' ' + z);
+                return this.getHeightAtCoordinates(Math.min(Math.max(x, this.#minX + 1), this.#maxX - 1), Math.min(Math.max(z, this.#minZ + 1), this.#maxZ - 1))
+            }
+            throw (e);
         }
-        else {
-            facet = new Float32Array(this.facet2Arr.buffer, pos << 4, 4) // << 4 = 4 *  Float32Array.BYTES_PER_ELEMENT
-        }
-    } catch (e) {
-        if (e instanceof RangeError) {
-            console.warn('Invalid coordinate to getHeightAtCoordinates ' + x + ' ' + z);
-            return this.getHeightAtCoordinates(Math.min(Math.max(x, this.#minX + 1), this.#maxX - 1), Math.min(Math.max(z, this.#minZ + 1), this.#maxZ - 1))
-        }
-        throw (e);
+        return -(facet[0] * x + facet[2] * z + facet[3]) / facet[1];
     }
-    return -(facet[0] * x + facet[2] * z + facet[3]) / facet[1];
-}
 }

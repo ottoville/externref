@@ -112,19 +112,19 @@
         if (showMenu == tool)
         {
             showMenu = null;
-            JSRuntime.InvokeAsync<string>("scene.deActivateMenu", tool);
+            JSRuntime.InvokeAsync<string>("deActivateMenu", tool);
 
         }
         else
         {
             showMenu = tool;
-            JSRuntime.InvokeAsync<string>("scene.activateMenu", tool);
+            JSRuntime.InvokeAsync<string>("activateMenu", tool);
 
             foreach (List<string> t in tools2)
             {
                 if (t[2] != tool)
                 {
-                    JSRuntime.InvokeAsync<string>("scene.deActivateMenu", t[2]);
+                    JSRuntime.InvokeAsync<string>("deActivateMenu", t[2]);
                 }
             }
         }

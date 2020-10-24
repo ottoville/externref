@@ -94,7 +94,7 @@ export class ScaleGizmo extends Gizmo {
 
         this.attachedMesh = null;
     }
-
+    //@ts-ignore
     public set updateGizmoRotationToMatchAttachedMesh(value: boolean) {
         if (!value) {
             Logger.Warn("Setting updateGizmoRotationToMatchAttachedMesh = false on scaling gizmo is not supported.");
@@ -130,6 +130,7 @@ export class ScaleGizmo extends Gizmo {
     /**
      * Ratio for the scale of the gizmo (Default: 1)
      */
+    //@ts-ignore
     public set scaleRatio(value: number) {
         this._scaleRatio = value;
         [this.xGizmo, this.yGizmo, this.zGizmo, this.uniformScaleGizmo].forEach((gizmo) => {

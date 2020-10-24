@@ -46,6 +46,7 @@ export class HDRCubeTexture extends BaseTexture {
     /**
      * The texture coordinates mode. As this texture is stored in a cube format, please modify carefully.
      */
+    //@ts-ignore
     public coordinatesMode = Texture.CUBIC_MODE;
 
     protected _isBlocking: boolean = true;

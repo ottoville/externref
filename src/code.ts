@@ -2,13 +2,21 @@
 import type { WorldScene } from "./world/scene.js";
 //import * as BABYLON from "./lib/babylon/index.js"
 import type { loginProvider, DotNet } from "./types/interfaces/index.js";
-import type { IEffectCreationOptions, Effect } from "babylonjs/Materials/effect";
 import type { Engine } from "./lib/babylon/Engines/engine";
-import type { EffectFallbacks } from "./lib/babylon/Materials/effectFallbacks";
 import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine";
 import { GPUScene } from "./GPUScene.js";
 import { TerraScene } from "./TerraScene.js";
 import { Sun2 } from "./world/sun2.js";
+import { Plants } from "./plants/Plants.js";
+import { UITAB, UITABClassLike } from "./UITAB.js";
+import { PlantsUI } from "./tools/plantsUI.js";
+import { CameraTAB } from "./tools/camera.js";
+import { BuildingsUI } from "./tools/buildings.js";
+import { TerrainTool } from "./tools/Terrain.js";
+import { Zones } from "./tools/zones.js";
+import { Terrain } from "./world/terrain.js";
+import { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera.js";
+import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 
 //import  DB from "./DB.js";
 
@@ -95,160 +103,434 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
     try {
         let [WasmModuleP, EngineModuleP, EffectModuleP] = ['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js'].map(url => import(url));
-        const CACHE_NAME = 'terrasim-v1';
-        let shadersP: Promise<{ [key: string]: string }> = fetch('/shaders/shaders.json').then(s => s.json());
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
-        const cache = await caches.open(CACHE_NAME);
-        
 
-      //  const cache2 = await caches.open('compiledShaders');
+
+        //  const cache2 = await caches.open('compiledShaders');
         //try {
         let WasmModule = await WasmModuleP;
         blazor.invokeMethod('setProgress', 2);
         let EngineModule = await EngineModuleP;
         var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: false } as WebGPUEngineOptions);
+        let terrascene: TerraScene;
+        const scenePromise = new Promise<WorldScene>(async (sceneInitedred, sceneInitedrej) => {
+            terrascene = new TerraScene(window, async () => {
+                // Initial scene objects here
+
+                const tools: Map<string, UITABClassLike> = new Map();
 
 
-        const terrascene = new TerraScene(window);
+                new Sun2(terrascene);
+                new testPlane(terrascene);
+                new testPlaneNormals(terrascene);
+                const terrainInited = Terrain.loadFromTexture(terrascene);
+                terrainInited.then(async r => {
+                    const ground = r[0];
+                    const gpuBuffer = await r[1];
+                    blazor.invokeMethod('setProgress', 75);
 
-        const adapter = await terrascene.adapter;
 
-        //@ts-ignore
-        engine._adapter = adapter;
-        const device = await terrascene.device
-        const gpuscene = await terrascene.gpuscenePromise
+                    //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
+                    const commandEncoder = device.createCommandEncoder({});
+                    blazor.invokeMethod('setProgress', 80);
 
-        GPUScene.canvas = canvas;
+                    let bufferView: GPUBufferCopyView = {
+                        buffer: gpuBuffer,
+                        bytesPerRow: ground.textureSize[0] * 4,
+                        rowsPerImage: 0,
+                        offset: 0,
+                    };
+                    blazor.invokeMethod('setProgress', 85);
 
-        
 
-        blazor.invokeMethod('setProgress', 4);
-        let EffectModule = await EffectModuleP;
-        blazor.invokeMethod('setProgress', 9);
-        const WorldSceneModule = await import('./world/scene.js');
+                    commandEncoder.copyBufferToTexture(bufferView,
+                        {
+                            texture: ground.texture,
+                            origin: {
+                                x: 0,
+                                y: 0,
+                                z: Math.max(-1, 0)
+                            },
+                            mipLevel: 0,
+                        }, ground.textureExtent);
+                    blazor.invokeMethod('setProgress', 90);
 
-        blazor.invokeMethod('setProgress', 10);
-        /*   } catch (e) {
-               console.log('error');
-               console.error(e);
-           }*/
-        WasmModule.default().then(() => window.Wasm = WasmModule);
-        //progelem.value = 20;
-        // var canvas = document.getElementById("renderCanvas");
 
-        blazor.invokeMethod('setProgress', 11);
-        // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
-        
-        //await engine.initAsync();
-        const glslang: { compileGLSL: (source: string, type: string) => Uint32Array } = await new Promise((res, rej) => {
-            let glslangOptions = {
-                //@ts-ignore
-                ...EngineModule.WebGPUEngine._glslangDefaultOptions
-            };
-            if (glslangOptions.glslang)
-                res(glslangOptions.glslang);
-            if ((window as any).glslang)
-                res((window as any).glslang(glslangOptions!.wasmPath));
+                    device.defaultQueue.submit([commandEncoder.finish()]); //Copy would overflow the buffer
+                    blazor.invokeMethod('setProgress', 95);
+                    bufferView.buffer.destroy();
+                    blazor.invokeMethod('setProgress', 100);
+                    console.debug("Progress 100");
+                })
+                PlantsUI.plantsMesh = new Plants(terrascene.gpuscene, terrainInited);
+                tools.set('Plants', PlantsUI);
+                tools.set('Camera', CameraTAB);
+                tools.set('Buildings', BuildingsUI);
+                tools.set('TerrainTool', TerrainTool);
+                tools.set('Zones', Zones);
 
-            let script = document.createElement('script');
-            script.onload = () => res((window as any).glslang(glslangOptions!.wasmPath));
-            script.onerror = rej;
-            script.src = glslangOptions.jsPath;
-            document.head.appendChild(script);
-        });
+                //@ts-expect-error
+                window.activateMenu = async (name: string) => {
+                    try {
+                        let tool: UITABClassLike | undefined;
+                        if (tool = tools.get(name)) {
+                            tool.instance = new tool(this, (await terrainInited)[0], (await scenePromise).camera);
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+                //@ts-expect-error
+                window.deActivateMenu = async (name: string) => {
+                    try {
+                        let tool: UITABClassLike | undefined;
+                        if (tool = tools.get(name)) {
+                            tool.instance?.destroy();
+                            tool.instance = null;
+                        } else
+                            throw (new Error('Tool ' + name + ' not found'))
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+                //@ts-expect-error
+                window.invokeMenu = async (name: string, method: string) => {
+                    try {
+                        let tool: UITABClassLike | undefined;
+                        if (tool = tools.get(name)) {
+                            let instance: UITAB | null;
+                            if (instance = tool.instance) {
+                                //@ts-ignore
+                                instance[method]();
+                            } else
+                                throw (new Error('Method ' + method + ' was not found from tool ' + name + ''))
+                        } else
+                            throw (new Error('Tool ' + name + ' not found'))
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+            });
+            terrascene.onRenderStart = async () => {
+                const gpuscene = await terrascene.gpuscenePromise
+                const scene = await scenePromise;
+                let rloop = function (time: DOMHighResTimeStamp) {
 
-        const jsondata = await shadersP
-        const shaderPuts: Promise<void>[] = [];
+                    // Start new frame
+                    //engine.beginFrame();
+                    //@ts-ignore
+                    engine._measureFps();
+                    //@ts-ignore
+                    engine.onBeginFrameObservable.notifyObservers(engine);
+                    //@ts-ignore
+                    engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
+                    // Some PGs are using color3...
+                    if (scene.clearColor.a === undefined) {
+                        scene.clearColor.a = 1;
+                    }
+                    //@ts-ignore
+                    engine._mainColorAttachments[0].loadValue = scene.clearColor;
+                    //@ts-ignore
+                    engine._mainDepthAttachment.depthLoadValue = engine._clearDepthValue;
+                    //@ts-ignore
+                    engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
+                    //@ts-ignore
+                    //engine._startMainRenderPass();
+                    // Resolve in case of MSAA
+                    //@ts-ignore
+                    if (engine._options.antialiasing) {
+                        //@ts-ignore
+                        engine._mainColorAttachments[0].resolveTarget = engine._swapChain.getCurrentTexture().createView();
+                    }
+                    else {
+                        //@ts-ignore
+                        //engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
+                        engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
+                    }
+                    //@ts-ignore
+                    engine._currentRenderPass = engine._renderEncoder.beginRenderPass({
+                        //@ts-ignore
+                        colorAttachments: engine._mainColorAttachments,
+                        //@ts-ignore
+                        depthStencilAttachment: engine._mainDepthAttachment
+                    });
 
-        for (var file in jsondata) {
-            shaderPuts.push(cache.put(new Request('/shaders/' + file), new Response(jsondata[file])));
-            if (jsondata[file].substr(0, 12) == '#version 450') {
-                let type: string = 'vertex';
-                if (file.substr(-5) == '.frag')
-                    type = 'fragment';
-                else if (file.substr(-5) == '.comp')
-                    type = 'compute';
-                const compiled = glslang.compileGLSL(jsondata[file], type);
-                
-                gpuscene.shaderModules.set(file, device.createShaderModule({
-                    code: compiled,
-                }));
+                    // scene.render();
 
-                /*const rsp = new Response(compiled);
-                rsp.headers.set('Content-Type', 'application/octet-stream');
-                rsp.headers.set('Content-Length', compiled.byteLength.toString());
-                shaderPutsC.push(cache2.put(new Request(file), rsp));*/
+
+                    //this._frameId++;
+
+                    // Register components that have been associated lately to the scene.
+                    //this._registerTransientComponents();
+
+                    scene._activeParticles.fetchNewFrame();
+                    //this._totalVertices.fetchNewFrame();
+                    scene._activeIndices.fetchNewFrame();
+                    scene._activeBones.fetchNewFrame();
+                    //this._meshesForIntersections.reset();
+                    scene.resetCachedMaterial();
+
+                    scene.onBeforeAnimationsObservable.notifyObservers(scene);
+
+                    // Actions
+                    //if (this.actionManager) {
+                    //    this.actionManager.processTrigger(Constants.ACTION_OnEveryFrameTrigger);
+                    //}
+
+                    // Animations
+                    scene.animate();
+
+                    // Before camera update steps
+                    for (let step of scene._beforeCameraUpdateStage) {
+                        step.action();
+                    }
+
+                    // Update Cameras
+                    if (scene.activeCameras.length > 0) {
+                        for (var cameraIndex = 0; cameraIndex < scene.activeCameras.length; cameraIndex++) {
+                            let camera = scene.activeCameras[cameraIndex];
+                            camera.update();
+                            if (camera.cameraRigMode !== 0) {
+                                // rig cameras
+                                for (var index = 0; index < camera._rigCameras.length; index++) {
+                                    camera._rigCameras[index].update();
+                                }
+                            }
+                        }
+                    } else if (scene.activeCamera) {
+                        scene.activeCamera.update();
+                        if (scene.activeCamera.cameraRigMode !== 0) {
+                            // rig cameras
+                            for (var index = 0; index < scene.activeCamera._rigCameras.length; index++) {
+                                scene.activeCamera._rigCameras[index].update();
+                            }
+                        }
+                    }
+
+                    // Before render
+                    scene.onBeforeRenderObservable.notifyObservers(scene);
+
+                    // Customs render targets
+                    scene.onBeforeRenderTargetsRenderObservable.notifyObservers(scene);
+                    var currentActiveCamera = scene.activeCamera;
+                    if (scene.renderTargetsEnabled) {
+                        //Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
+                        //this._intermediateRendering = true;
+                        for (var customIndex = 0; customIndex < scene.customRenderTargets.length; customIndex++) {
+                            var renderTarget = scene.customRenderTargets[customIndex];
+                            if (renderTarget._shouldRender()) {
+                                //this._renderId++;
+
+                                scene.activeCamera = renderTarget.activeCamera || scene.activeCamera;
+
+                                if (!scene.activeCamera) {
+                                    throw new Error("Active camera not set");
+                                }
+
+                                // Viewport
+                                engine.setViewport(scene.activeCamera.viewport);
+
+                                // Camera
+                                scene.updateTransformMatrix();
+                                renderTarget.render(currentActiveCamera !== scene.activeCamera, scene.dumpNextRenderTargets);
+
+                            }
+                        }
+                        //Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
+                        //this._intermediateRendering = false;
+                        //this._renderId++;
+                    }
+
+                    // Restore back buffer
+                    scene.activeCamera = currentActiveCamera;
+                    //this._bindFrameBuffer();
+                    scene.onAfterRenderTargetsRenderObservable.notifyObservers(scene);
+
+                    for (let step of scene._beforeClearStage) {
+                        step.action();
+                    }
+
+                    // Clear
+                    if (scene.autoClearDepthAndStencil || scene.autoClear) {
+
+                        engine.clear(scene.clearColor, scene.autoClear || scene.forceWireframe || scene.forcePointsCloud, scene.autoClearDepthAndStencil, scene.autoClearDepthAndStencil);
+                    }
+
+                    // Collects render targets from external components.
+                    // for (let step of this._gatherRenderTargetsStage) {
+                    //    step.action(this._renderTargets);
+                    //  }
+
+                    // Multi-cameras?
+                    if (scene.activeCameras.length > 0) {
+                        for (var cameraIndex = 0; cameraIndex < scene.activeCameras.length; cameraIndex++) {
+                            if (cameraIndex > 0) {
+                                (engine as Engine).clear(null, false, true, true);
+                            }
+                            //@ts-ignore
+                            scene._processSubCameras(scene.activeCameras[cameraIndex]);
+                            //@ts-ignore
+                            new Float32Array(TerraScene.instance.viewProjection).set(scene._transformMatrix.m);
+                            new Float32Array(TerraScene.instance.view).set(scene.activeCameras[cameraIndex].getViewMatrix().m);
+                            new Float32Array(TerraScene.instance.projection).set(scene.activeCameras[cameraIndex].getProjectionMatrix().m);
+
+                            //@ts-ignore
+                            const renderPass = (engine as WebGPUEngine)._bundleEncoder || (engine as WebGPUEngine)._currentRenderPass!;
+
+
+                            TerraScene.instance.render(renderPass as GPURenderPassEncoder, time);
+
+
+                        }
+                    } else {
+                        if (!scene.activeCamera) {
+                            throw new Error("No camera defined");
+                        }
+
+                        //this._processSubCameras(this.activeCamera);
+                        //@ts-ignore
+                        scene._processSubCameras(this.activeCamera)
+
+                    }
+
+                    // Intersection checks
+                    //this._checkIntersections();
+
+                    // Executes the after render stage actions.
+                    for (let step of scene._afterRenderStage) {
+                        step.action();
+                    }
+
+                    // After render
+                    if (scene.afterRender) {
+                        scene.afterRender();
+                    }
+
+                    scene.onAfterRenderObservable.notifyObservers(scene);
+
+                    // Cleaning
+                    if (scene._toBeDisposed.length) {
+                        for (var index = 0; index < scene._toBeDisposed.length; index++) {
+                            var data = scene._toBeDisposed[index];
+                            if (data) {
+                                data.dispose();
+                            }
+                        }
+
+                        scene._toBeDisposed = [];
+                    }
+
+                    if (scene.dumpNextRenderTargets) {
+                        scene.dumpNextRenderTargets = false;
+                    }
+
+                    scene._activeBones.addCount(0, true);
+                    scene._activeIndices.addCount(0, true);
+                    scene._activeParticles.addCount(0, true);
+
+
+
+
+
+
+
+                    //scene render ends
+
+
+                    //@ts-ignore
+                    if (engine._currentRenderPass) {
+                        //@ts-ignore
+                        engine._currentRenderPass.endPass();
+                        //@ts-ignore
+                        engine._currentRenderPass = null;
+                    }
+                     //@ts-ignore
+                    gpuscene.device.defaultQueue.submit([engine._renderEncoder.finish()]);
+                    engine.onEndFrameObservable.notifyObservers(engine);
+
+                    window.requestAnimationFrame(rloop);
+
+                }
+                window.requestAnimationFrame(rloop);
             }
-        }
-        await Promise.all(shaderPuts);
+            const adapter = await terrascene.adapter;
 
-
-        // Initial scene objects here
-        new Sun2(terrascene);
-
-        //await Promise.all(shaderPutsC);
-        //@ts-ignore
-        engine._glslang = glslang;
-        blazor.invokeMethod('setProgress', 12);
-        //@ts-ignore
-        engine._device = device;
-        //@ts-ignore
-        engine._initializeLimits();
-        blazor.invokeMethod('setProgress', 13);
-        //@ts-ignore
-        //engine._initializeContextAndSwapChain();
-        engine._context = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
-        /*
-        //@ts-ignore
-        engine._swapChain = engine._context.configureSwapChain({
             //@ts-ignore
-            device: engine._device,
+            engine._adapter = adapter;
+            const device = await terrascene.device
+            
+            GPUScene.canvas = canvas;
+
+
+
+            blazor.invokeMethod('setProgress', 4);
+
+            blazor.invokeMethod('setProgress', 9);
+            const WorldSceneModule = await import('./world/scene.js');
+
+            blazor.invokeMethod('setProgress', 10);
+            /*   } catch (e) {
+                   console.log('error');
+                   console.error(e);
+               }*/
+            WasmModule.default().then(() => window.Wasm = WasmModule);
+            //progelem.value = 20;
+            // var canvas = document.getElementById("renderCanvas");
+
+            blazor.invokeMethod('setProgress', 11);
+            // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
+
+            //await engine.initAsync();
+
+
+
+
+
+            //await Promise.all(shaderPutsC);
             //@ts-ignore
-            format: engine._options.swapChainFormat!,
+            //engine._glslang = glslang;
+            blazor.invokeMethod('setProgress', 12);
             //@ts-ignore
-            usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-        });*/
-
-
-        /*let width = this._renderingCanvas ? this._renderingCanvas.clientWidth : window.innerWidth;
-        let height = this._renderingCanvas ? this._renderingCanvas.clientHeight : window.innerHeight;
-        engine.setSize(width, height)*/
-        //@ts-ignore
-        engine._swapChain = engine._context.configureSwapChain({
+            engine._device = device;
             //@ts-ignore
-            device: engine._device,
-            format: "bgra8unorm"
-        });
-
-        engine.resize();
-
-
-
-        blazor.invokeMethod('setProgress', 15);
-        //@ts-ignore
-        engine.createEffect = function (baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | Engine, samplers?: string[], defines?: string, fallbacks?: EffectFallbacks,
-            onCompiled?: Nullable<(effect: Effect) => void>, onError?: Nullable<(effect: Effect, errors: string) => void>, indexParameters?: any): Effect {
-            const vertex = baseName.vertexElement || baseName.vertex || baseName;
-            const fragment = baseName.fragmentElement || baseName.fragment || baseName;
-
-            const name = vertex + "+" + fragment + "@" + (defines ? defines : (<IEffectCreationOptions>attributesNamesOrOptions).defines);
+            engine._initializeLimits();
+            blazor.invokeMethod('setProgress', 13);
             //@ts-ignore
-            const shader = (this as WebGPUEngine)._compiledShaders[name];
-            if (shader) {
+            //engine._initializeContextAndSwapChain();
+            engine._context = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
+            /*
+            //@ts-ignore
+            engine._swapChain = engine._context.configureSwapChain({
                 //@ts-ignore
-                return new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name, shader.sources) as Effect;
-            }
-            else {
+                device: engine._device,
                 //@ts-ignore
-                return new EffectModule.TerraEffect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name) as Effect;
-            }
-        }
+                format: engine._options.swapChainFormat!,
+                //@ts-ignore
+                usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+            });*/
 
-        //document.getElementById('loading').style.display = 'block';
-        //loadingBar.value = 10;
-        const scene = await new Promise<WorldScene>((sceneInitedred, sceneInitedrej) => {
+
+            /*let width = this._renderingCanvas ? this._renderingCanvas.clientWidth : window.innerWidth;
+            let height = this._renderingCanvas ? this._renderingCanvas.clientHeight : window.innerHeight;
+            engine.setSize(width, height)*/
+            //@ts-ignore
+            engine._swapChain = engine._context.configureSwapChain({
+                //@ts-ignore
+                device: engine._device,
+                format: "bgra8unorm"
+            });
+
+            engine.resize();
+
+
+
+            blazor.invokeMethod('setProgress', 15);
+
+            //document.getElementById('loading').style.display = 'block';
+            //loadingBar.value = 10;
+
             let webSocket = new WebSocket('ws://localhost:8081');
             webSocket.onopen = async () => {
                 console.log('websocket onopen');
@@ -271,253 +553,14 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 }
             }
         });
-        const [terrain] = await scene.terrainInited;
-        await scene.terrainReady;
-
+        const scene = await scenePromise;
         window.scene = scene;
         scene.collisionsEnabled = true;
         scene.autoClear = false;
         scene.autoClearDepthAndStencil = false;
 
 
-        let rloop = function (time: DOMHighResTimeStamp) {
-
-            // Start new frame
-            //engine.beginFrame();
-            //@ts-ignore
-            engine._measureFps();
-            //@ts-ignore
-            engine.onBeginFrameObservable.notifyObservers(engine);
-            //@ts-ignore
-            engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
-            // Some PGs are using color3...
-            if (scene.clearColor.a === undefined) {
-                scene.clearColor.a = 1;
-            }
-            //@ts-ignore
-            engine._mainColorAttachments[0].loadValue = scene.clearColor;
-            //@ts-ignore
-            engine._mainDepthAttachment.depthLoadValue = engine._clearDepthValue;
-            //@ts-ignore
-            engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
-            //@ts-ignore
-            //engine._startMainRenderPass();
-            // Resolve in case of MSAA
-            //@ts-ignore
-            if (engine._options.antialiasing) {
-                //@ts-ignore
-                engine._mainColorAttachments[0].resolveTarget = engine._swapChain.getCurrentTexture().createView();
-            }
-            else {
-                //@ts-ignore
-                //engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
-                engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
-            }
-            //@ts-ignore
-            engine._currentRenderPass = engine._renderEncoder.beginRenderPass({
-                //@ts-ignore
-                colorAttachments: engine._mainColorAttachments,
-                //@ts-ignore
-                depthStencilAttachment: engine._mainDepthAttachment
-            });
-
-           // scene.render();
-
-
-            //this._frameId++;
-
-            // Register components that have been associated lately to the scene.
-            //this._registerTransientComponents();
-
-            scene._activeParticles.fetchNewFrame();
-            //this._totalVertices.fetchNewFrame();
-            scene._activeIndices.fetchNewFrame();
-            scene._activeBones.fetchNewFrame();
-            //this._meshesForIntersections.reset();
-            scene.resetCachedMaterial();
-
-            scene.onBeforeAnimationsObservable.notifyObservers(scene);
-
-            // Actions
-            //if (this.actionManager) {
-            //    this.actionManager.processTrigger(Constants.ACTION_OnEveryFrameTrigger);
-            //}
-
-            // Animations
-            scene.animate();
-
-            // Before camera update steps
-            for (let step of scene._beforeCameraUpdateStage) {
-                step.action();
-            }
-
-            // Update Cameras
-            if (scene.activeCameras.length > 0) {
-                for (var cameraIndex = 0; cameraIndex < scene.activeCameras.length; cameraIndex++) {
-                    let camera = scene.activeCameras[cameraIndex];
-                    camera.update();
-                    if (camera.cameraRigMode !== 0) {
-                        // rig cameras
-                        for (var index = 0; index < camera._rigCameras.length; index++) {
-                            camera._rigCameras[index].update();
-                        }
-                    }
-                }
-            } else if (scene.activeCamera) {
-                scene.activeCamera.update();
-                if (scene.activeCamera.cameraRigMode !== 0) {
-                    // rig cameras
-                    for (var index = 0; index < scene.activeCamera._rigCameras.length; index++) {
-                        scene.activeCamera._rigCameras[index].update();
-                    }
-                }
-            }
-
-            // Before render
-            scene.onBeforeRenderObservable.notifyObservers(scene);
-
-            // Customs render targets
-            scene.onBeforeRenderTargetsRenderObservable.notifyObservers(scene);
-            var currentActiveCamera = scene.activeCamera;
-            if (scene.renderTargetsEnabled) {
-                //Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
-                //this._intermediateRendering = true;
-                for (var customIndex = 0; customIndex < scene.customRenderTargets.length; customIndex++) {
-                    var renderTarget = scene.customRenderTargets[customIndex];
-                    if (renderTarget._shouldRender()) {
-                        //this._renderId++;
-
-                        scene.activeCamera = renderTarget.activeCamera || scene.activeCamera;
-
-                        if (!scene.activeCamera) {
-                            throw new Error("Active camera not set");
-                        }
-
-                        // Viewport
-                        engine.setViewport(scene.activeCamera.viewport);
-
-                        // Camera
-                        scene.updateTransformMatrix();
-                        renderTarget.render(currentActiveCamera !== scene.activeCamera, scene.dumpNextRenderTargets);
-
-                    }
-                }
-                //Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
-                //this._intermediateRendering = false;
-                //this._renderId++;
-            }
-
-            // Restore back buffer
-            scene.activeCamera = currentActiveCamera;
-            //this._bindFrameBuffer();
-            scene.onAfterRenderTargetsRenderObservable.notifyObservers(scene);
-
-            for (let step of scene._beforeClearStage) {
-                step.action();
-            }
-
-            // Clear
-            if (scene.autoClearDepthAndStencil || scene.autoClear) {
-
-                engine.clear(scene.clearColor, scene.autoClear || scene.forceWireframe || scene.forcePointsCloud, scene.autoClearDepthAndStencil, scene.autoClearDepthAndStencil);
-            }
-
-            // Collects render targets from external components.
-            // for (let step of this._gatherRenderTargetsStage) {
-            //    step.action(this._renderTargets);
-            //  }
-
-            // Multi-cameras?
-            if (scene.activeCameras.length > 0) {
-                for (var cameraIndex = 0; cameraIndex < scene.activeCameras.length; cameraIndex++) {
-                    if (cameraIndex > 0) {
-                        (engine as Engine).clear(null, false, true, true);
-                    }
-                    //@ts-ignore
-                    scene._processSubCameras(scene.activeCameras[cameraIndex]);
-                    //@ts-ignore
-                    new Float32Array(TerraScene.instance.viewProjection).set(scene._transformMatrix.m);
-                    new Float32Array(TerraScene.instance.view).set(scene.activeCameras[cameraIndex].getViewMatrix().m);
-                    new Float32Array(TerraScene.instance.projection).set(scene.activeCameras[cameraIndex].getProjectionMatrix().m);
-
-                    //@ts-ignore
-                    const renderPass = (engine as WebGPUEngine)._bundleEncoder || (engine as WebGPUEngine)._currentRenderPass!;
-
-                    
-                    TerraScene.instance.render(renderPass as GPURenderPassEncoder, time);
-
-
-                }
-            } else {
-                if (!scene.activeCamera) {
-                    throw new Error("No camera defined");
-                }
-
-                //this._processSubCameras(this.activeCamera);
-                //@ts-ignore
-                scene._processSubCameras(this.activeCamera)
-
-            }
-
-            // Intersection checks
-            //this._checkIntersections();
-
-            // Executes the after render stage actions.
-            for (let step of scene._afterRenderStage) {
-                step.action();
-            }
-
-            // After render
-            if (scene.afterRender) {
-                scene.afterRender();
-            }
-
-            scene.onAfterRenderObservable.notifyObservers(scene);
-
-            // Cleaning
-            if (scene._toBeDisposed.length) {
-                for (var index = 0; index < scene._toBeDisposed.length; index++) {
-                    var data = scene._toBeDisposed[index];
-                    if (data) {
-                        data.dispose();
-                    }
-                }
-
-                scene._toBeDisposed = [];
-            }
-
-            if (scene.dumpNextRenderTargets) {
-                scene.dumpNextRenderTargets = false;
-            }
-
-            scene._activeBones.addCount(0, true);
-            scene._activeIndices.addCount(0, true);
-            scene._activeParticles.addCount(0, true);
-
-
-
-
-
-
-
-            //scene render ends
-
-
-            //@ts-ignore
-            if (engine._currentRenderPass) {
-                //@ts-ignore
-                engine._currentRenderPass.endPass();
-                //@ts-ignore
-                engine._currentRenderPass = null;
-            }
-             //@ts-ignore
-            gpuscene.device.defaultQueue.submit([engine._renderEncoder.finish()]);
-            engine.onEndFrameObservable.notifyObservers(engine);
-
-            window.requestAnimationFrame(rloop);
-
-        }
-        window.requestAnimationFrame(rloop);
+  
 
 
         // Resize
@@ -534,6 +577,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         blazor.invokeMethod('setProgressError', e.name + ' ' + e.message);
 
     }
- }
+}
 
 let gameControlsUI = document.getElementsByClassName('gameControl');

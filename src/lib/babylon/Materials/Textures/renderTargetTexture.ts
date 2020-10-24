@@ -104,6 +104,7 @@ export class RenderTargetTexture extends Texture {
     /**
      * Override the default coordinates mode to projection for RTT as it is the most common case for rendered textures.
      */
+    //@ts-ignore
     public coordinatesMode = Texture.PROJECTION_MODE;
     /**
      * Define the camera used to render the texture.
@@ -289,6 +290,7 @@ export class RenderTargetTexture extends Texture {
      * @param format The internal format of the buffer in the RTT (RED, RG, RGB, RGBA, ALPHA...)
      * @param delayAllocation if the texture allocation should be delayed (default: false)
      */
+    //@ts-ignore
     constructor(name: string, size: number | { width: number, height: number } | { ratio: number }, scene: Nullable<Scene>, generateMipMaps?: boolean, doNotChangeAspectRatio: boolean = true, type: number = Constants.TEXTURETYPE_UNSIGNED_INT, public isCube = false, samplingMode = Texture.TRILINEAR_SAMPLINGMODE, generateDepthBuffer = true, generateStencilBuffer = false, isMulti = false, format = Constants.TEXTUREFORMAT_RGBA, delayAllocation = false) {
         super(null, scene, !generateMipMaps);
         scene = this.getScene();

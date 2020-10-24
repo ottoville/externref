@@ -21,16 +21,17 @@ vec2 rotate2 (float x, float y, float r) {
 //	return vec2(x * c - y * s, x * s + y * c);
 }
 
-const vec2 vertices[8] = vec2[8](
+const vec2 vertices[7] = vec2[7](
             vec2(0,  0),
             vec2(1,   0) ,
             vec2(0,   1),
             vec2(1,  1),
             vec2(0,  2),
             vec2(1,  2),
-            vec2(0,  3),
-            vec2(1,  3)
+            vec2(0,  3)
            );
+
+const float[7] rot = float[7](0,0,1,1,1,1,1);
 
 const float PI=3.141592653589793;
 vec3 normal = vec3(0,0,sin(PI/2));
@@ -44,52 +45,73 @@ layout(set = 0, binding = 0) uniform Scene {
     vec3 cameraPosition;
 } scene;
 
+layout(set = 0, binding = 1) uniform Terra {
+   uint time;
+   float delta;
+   float windDelta;
+} terra;
+
 layout(set = 1, binding = 0) readonly buffer Lights {
     float matrix[];
 };
 const uint a = 12;
 const uint b = 13;
 const uint c = 14;
+
+const float windDirection=0;
+
 void main(void) {
 
     vec3 sunDirection=vec3(matrix[a],matrix[b],matrix[c]);
 
 
+
     vec3 position=vec3(vertices[gl_VertexIndex].xy,0);
 
+        //How fast wind direction and intensivy change
+  //  float windDelta=cos(terra.time*0.0001)*PI*2;
 
-   
+
+    
+
+    float windRotate=rot[gl_VertexIndex];
+   // float windIntensivy=(cos(terra.windDelta) * sin(terra.windDelta*2)+1)*0.5;
+   // float windIntensivy=cos(terra.time*0.001);
+    //float windDirection=cos(terra.windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
+    //float windDirection=terra.windDelta;    //Wind direction changes most when wind intensity is lowest
+
+   float shapeW=0.5;
 
     //curve
-    float curveAmount=position.y*0.2;
+   // float curveAmount=(position.y/3)*shapeW+ windIntensivy*PI*0.3*(position.y/3);
+    float curveAmount=(position.y/3)*shapeW+ windIntensivy*0.3*(position.y/3);
     float CosCurve=cos(curveAmount);
     float SinCurve=sin(curveAmount);
-    mat2 MCurve = mat2(vec2(CosCurve,-SinCurve),vec2(SinCurve,CosCurve));
+
+    mat3 MCurve = mat3(
+        vec3(1,0,0),
+        vec3(0,CosCurve,-SinCurve),
+        vec3(0,SinCurve,CosCurve)
+    );
 
     //rotate
-    float rotateAmount=PI/2;
-    float c = cos(rotateAmount);
-    float s = sin(rotateAmount);
-    mat2 m = mat2(vec2(c,-s),vec2(s,c));
+    float rotateAmountWind=windDirection*windRotate;
+    //float rotateAmount=PI/2;
+    float rotateAmount=0;
+    float c = cos(rotateAmount+rotateAmountWind);
+    float s = sin(rotateAmount+rotateAmountWind);
+    mat3 m = mat3(
+        vec3(c,0,s),
+        vec3(0,1,0),
+        vec3(-s,0,c)
+    );
 
+    mat3 mulMat=MCurve*m;
 
-    //position=vec3(position.x, position.y*cos(curveAmount),position.y*sin(curveAmount));
-    position.yz*=MCurve;
-    normal.yz*=MCurve;
-   
-   //normal=vec3(normal.x, cos((PI/2+curveAmount)*1.1),sin((PI/2+curveAmount)*1.1));
+    position*=mulMat;
+    normal*=mulMat;
 
-
-
-
-    //position.xz=rotate(position.xz, SinCos);
-   // position.xz=rotate2(position.x,position.z, rotateAmount);
-  //  normal.xz=rotate(normal.xz, SinCos);
-    position.xz*=m;
-    normal.xz*=m;
     position*=200;
-    //on final do not use vertice position but worldposition.
-
 
      vec3 viewDirectionW = normalize(scene.cameraPosition - position);
 

@@ -36,32 +36,37 @@ export class Light {
         visibility: GPUShaderStage.VERTEX,
         type: 'readonly-storage-buffer'
     });
-
-    #uniformBindGroupLights = this.scene.createBindGroup(this.#uniformBindGroupLayoutLights,
-        {
-            binding: 0,
-            resource: {
-                buffer: this.scene.GPUData, //this.#lightsBuffer
-                size: 256
-            }
-        });
-    lightsBindGroup = this.scene.baseBindGroup.addChildBindGroup(this.#uniformBindGroupLights);
-    lightsBindGroupTexture = this.lightsBindGroup.addChildLayout(this.scene.createBindGroupLayout({
-        binding: 0, 
-        visibility: GPUShaderStage.FRAGMENT,
-        type: 'sampler'
-    }, {
-        binding: 1,
-        visibility: GPUShaderStage.FRAGMENT,
-        type: 'sampled-texture'
-    }))
-
-    lightsBindGroupNoTime = this.scene.baseBindGroupNoTime.addChildBindGroup(this.#uniformBindGroupLights);
+    
+    lightsBindGroup;
+    lightsBindGroupTexture;
+    lightsBindGroupNoTime;
 
     add(light: isLight) {
         this.#instances.add(light);
     }
     constructor(public scene: GPUScene) {
+         const uniformBindGroupLights = this.scene.createBindGroup(this.#uniformBindGroupLayoutLights,
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: this.scene.GPUData, //this.#lightsBuffer
+                        size: 256
+                    }
+             });
+        this.lightsBindGroupNoTime = this.scene.baseBindGroupNoTime.addChildBindGroup(uniformBindGroupLights);
+        this.lightsBindGroup = this.scene.baseBindGroup.addChildBindGroup(uniformBindGroupLights);
+        uniformBindGroupLights.label = 'lights'
+
+        this.lightsBindGroupTexture = this.lightsBindGroup.addChildLayout(this.scene.createBindGroupLayout({
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            type: 'sampler'
+        }, {
+            binding: 1,
+            visibility: GPUShaderStage.FRAGMENT,
+            type: 'sampled-texture'
+        }))
+
         //  this.#uniformBindGroupLayoutLights.createBindGroup()
     }
 }

@@ -1450,7 +1450,8 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
             // Triangles as wireframe
             engine.drawElementsType(fillMode, 0, subMesh._linesIndexCount, instancesCount);
         } else {
-            engine.drawElementsType(fillMode, subMesh.indexStart, subMesh.indexCount, instancesCount);
+            //otto disabled this
+           // engine.drawElementsType(fillMode, subMesh.indexStart, subMesh.indexCount, instancesCount);
         }
 
         return this;
@@ -1624,7 +1625,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
                     onBeforeDraw(false, this._effectiveMesh.getWorldMatrix(), effectiveMaterial);
                 }
                 instanceCount++;
-
+                // t‰st‰ menn‰‰ UI:Hin
                 this._draw(subMesh, fillMode, this._instanceDataStorage.overridenInstanceCount);
             }
 

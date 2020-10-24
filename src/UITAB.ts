@@ -23,10 +23,9 @@ export abstract class UITAB {
         });
     }*/
     constructor(
-        public scene: WorldScene,
+        public sceneDeprecated: WorldScene,
         public terrain: Terrain,
-        public camera: ArcRotateCamera,
-        shaderModules: Map<string, GPUShaderModule>,
+        public camera: ArcRotateCamera
     ) {
     }
    /* public listeners: Map<

@@ -2,18 +2,23 @@
 importScripts("/webworkers/ray.js");
 importScripts("/js/DB.js");
 
-let terrainPositions: Float32Array;
+//let terrainPositions: Float32Array;
 let terrainIndices: Uint32Array;
-let terrainNormals: Float32Array;
+const positionsView: Float32Array[] = [];
+const normalsView: Float32Array[] = [];
+
+
+//let terrainNormals: Float32Array;
 let slopeArr: Int32Array;
 let facet1Arr: Float32Array;
 let facet2Arr: Float32Array;
 
 
-function intersects(boundingBox: BoundingBox, boundingSphere: BoundingSphere, ray: Ray, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): PickingInfo {
+function intersects(boundingBox: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number }}, ray: Ray, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): PickingInfo {
     let pickingInfo = new PickingInfo();
     //const boundingInfo = this._boundingInfo;
-    if (!ray.intersectsSphere(boundingSphere, 0) || !ray.intersectsBox(boundingBox, 0)) {
+    if (!ray.intersectsBox(boundingBox, 0)) {
+        console.log('no intersect 1');
         return pickingInfo;
     }
 
@@ -32,7 +37,21 @@ function intersects(boundingBox: BoundingBox, boundingSphere: BoundingSphere, ra
     for (var index = 0; index < terrainIndices.length; index += 3) {
 
 
-        p0.x = terrainPositions[terrainIndices[index] * 3]
+        p0.x = positionsView[terrainIndices[index]][0];
+        p0.y = positionsView[terrainIndices[index]][1];
+        p0.z = positionsView[terrainIndices[index]][2];
+
+        p1.x = positionsView[terrainIndices[index + 1]][0]; 
+        p1.y = positionsView[terrainIndices[index + 1]][1];
+        p1.z = positionsView[terrainIndices[index + 1]][2];
+
+        p2.x = positionsView[terrainIndices[index + 2]][0];
+        p2.y = positionsView[terrainIndices[index + 2]][1];
+        p2.z = positionsView[terrainIndices[index + 2]][2];
+
+
+
+      /*  p0.x = terrainPositions[terrainIndices[index] * 3]
         p0.y = terrainPositions[terrainIndices[index] * 3 + 1]
         p0.z = terrainPositions[terrainIndices[index] * 3 + 2]
 
@@ -43,7 +62,7 @@ function intersects(boundingBox: BoundingBox, boundingSphere: BoundingSphere, ra
         p2.x = terrainPositions[terrainIndices[index + 2] * 3]
         p2.y = terrainPositions[terrainIndices[index + 2] * 3 + 1]
         p2.z = terrainPositions[terrainIndices[index + 2] * 3 + 2]
-
+        */
         if (trianglePredicate && !trianglePredicate(p0, p1, p2, ray)) {
             continue;
         }
@@ -101,48 +120,74 @@ const farScreenSource = new Vector3();
 const nearVec3 = new Vector3();
 const farVec3 = new Vector3();
 
-let boundingBox;
-let boundingSphere;
+let boundingBox = {
+    min: { x: 0, y: 0, z: 0 }, max: { x: 0, y: 0, z: 0 }
+};
 
 
-let methods2: { [index: string]: (e: WMessage<any>) => void} = {
-    init: (e: WMessage<{ positions: any, indices: any, normals: any, slopeArr: SharedArrayBuffer, facet1Arr: any, facet2Arr: any, subdivisionsX: any, subdivisionsY: any, boundingBox: any, boundingSphere: any }>) => {
-        terrainPositions = new Float32Array(e.data.positions);
+let methods2: { [index: string]: (e: WMessage<any>) => void } = {
+    init: (e: WMessage<{ positionsAndNormals: any, indices: any, facet1Arr: any, facet2Arr: any, subdivisionsX: any, subdivisionsY: any, boundingBox: SharedArrayBuffer }>) => {
+        const verticesAmount = e.data.positionsAndNormals.byteLength / (8 * 4);
+        for (
+            let i = 0,
+            byteStride = 4 * 8;
+            i < verticesAmount; i++) {
+
+            positionsView.push(new Float32Array(e.data.positionsAndNormals, i * byteStride, 3));
+            normalsView.push(new Float32Array(e.data.positionsAndNormals, i * byteStride + 5 * 4, 3));
+        }
+       // terrainPositions = new Float32Array(e.data.positions);
         terrainIndices = new Uint32Array(e.data.indices);
-        terrainNormals = new Float32Array(e.data.normals);
-        slopeArr = new Int32Array(e.data.slopeArr);
+       // terrainNormals = new Float32Array(e.data.normals);
+       /* slopeArr = new Int32Array(e.data.slopeArr);
         facet1Arr = new Float32Array(e.data.facet1Arr);
-        facet2Arr = new Float32Array(e.data.facet2Arr);
+        facet2Arr = new Float32Array(e.data.facet2Arr);*/
         _subdivisionsX = e.data.subdivisionsX;
         _subdivisionsY = e.data.subdivisionsY;
-
-        boundingBox = e.data.boundingBox;
-        boundingSphere = e.data.boundingSphere;
+        [boundingBox.min.x, boundingBox.min.y, boundingBox.min.z, boundingBox.max.x, boundingBox.max.y, boundingBox.max.z] = new Float32Array(e.data.boundingBox);
+       // boundingBox = e.data.boundingBox;
         if (_facesOfVertices == null) {
             _facesOfVertices = [];
 
             _groundFacesNormals = [];
             let v1v2 = new Vector3();
             let v3v2 = new Vector3();
-            for (let index = 0; index < terrainIndices.length / 3; index++) {
+
+            let v1: Float32Array;
+            let v2: Float32Array;
+            let v3: Float32Array;
+
+            const nbFaces = (terrainIndices.length / 3) | 0
+            for (let index = 0; index < nbFaces ; index++) {
                 //var faceInfo = this._getFaceVerticesIndex(index);
                 let faceInfo = new Uint32Array(e.data.indices, (index * 3) << 2, 3);
+                v1 = positionsView[faceInfo[0]];
+                v2 = positionsView[faceInfo[1]];
+                v3 = positionsView[faceInfo[2]];
 
-                v1v2.x = terrainPositions[faceInfo[0] * 3] - terrainPositions[faceInfo[1] * 3];
+                v1v2.x=  v1[0] - v2[0]
+                v1v2.y = v1[1] - v2[1]
+                v1v2.z = v1[2] - v2[2]
+
+                v3v2.x = v3[0] - v2[2]
+                v3v2.y = v3[1] - v2[2]
+                v3v2.z = v3[2] - v2[2]
+
+               /* v1v2.x = terrainPositions[faceInfo[0] * 3] - terrainPositions[faceInfo[1] * 3];
                 v1v2.y = terrainPositions[faceInfo[0] * 3 + 1] - terrainPositions[faceInfo[1] * 3 + 1];
                 v1v2.z = terrainPositions[faceInfo[0] * 3 + 2] - terrainPositions[faceInfo[1] * 3 + 2];
 
                 v3v2.x = terrainPositions[faceInfo[2] * 3] - terrainPositions[faceInfo[1] * 3];
                 v3v2.y = terrainPositions[faceInfo[2] * 3 + 1] - terrainPositions[faceInfo[1] * 3 + 1];
-                v3v2.z = terrainPositions[faceInfo[2] * 3 + 2] - terrainPositions[faceInfo[1] * 3 + 2];
+                v3v2.z = terrainPositions[faceInfo[2] * 3 + 2] - terrainPositions[faceInfo[1] * 3 + 2];*/
                 _groundFacesNormals[index] = Vector3.Normalize(Vector3.Cross(v1v2, v3v2));
             }
             //this._getFacesOfVertices();
             _facesOfVertices = [];
             _subdivisionsOfVertices = [];
             var index;
-            let length = terrainPositions.length / 3;
-            for (index = 0; index < length; index++) {
+           // let length = terrainPositions.length / 3;
+            for (index = 0; index < verticesAmount; index++) {
                 _facesOfVertices[index] = [];
                 _subdivisionsOfVertices[index] = [];
             }
@@ -150,11 +195,10 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
                 _facesOfVertices[terrainIndices[index]].push((index / 3) | 0);
             }
         }
-        methods2.createHeights(e);
+       // methods2.createHeights(e);
         this.postMessage({ id: e.id, data: { } });
     },
     saveTexture: async (e: WMessage<ArrayBuffer>) => {
-        //@ts-ignore
         let c = new OffscreenCanvas(5120, 5120);
         let ctx = c.getContext("2d");
         if (!ctx)
@@ -165,63 +209,6 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
         response.headers.set('content-length', blob.size.toString());
         (await caches.open('save')).put(new Request('/terrainTexture.webp'), response);
 
-    },
-    createHeightMap: async (d: { id?: number }) => {
-        try {
-            let img = await fetch('/images/tenerife250.webp');
-            let b = await img.blob();
-
-            let bitmap = await createImageBitmap(b);
-            let totalbufferdata = new SharedArrayBuffer(250 * 250 * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT);
-
-            let align = (250 - bitmap.width) / 2
-
-            let partcount = 2;
-            let readycount = 0;
-            let workers: Worker[] = [];
-            self.postMessage({ type: 'setProgress', data: { progress: 41 } });
-            (function initWorker(bitmap) {
-                let worker = new Worker('bitmapWorker.js');
-                workers.push(worker);
-                /* progress 42 and 43 are reserved for this */
-                self.postMessage({ type: 'setProgress', data: { progress: 41 + (2 * (workers.length / partcount)) } });
-                worker.postMessage({ bitmap: bitmap, buffer: totalbufferdata, partcount: partcount, partnumber: workers.length - 1, align: align }, [bitmap]);
-                worker.onmessage = e => {
-                    try {
-                        if (e.data.type == 'init') {
-                            if (workers.length < partcount) {
-                                bitmap = e.data.bitmap;
-                                initWorker(bitmap);
-                            } else {
-                                self.postMessage({ type: 'setProgress', data: { progress: 45 } });
-                                bitmap.close();
-                                self.postMessage({ type: 'setProgress', data: { progress: 46 } });
-                            }
-                        } else if (e.data.type == 'ready') {
-                            if (++readycount == partcount) {
-                                self.postMessage({ type: 'setProgress', data: { progress: 48 } });
-                                self.postMessage({
-                                    id: d.id, data: totalbufferdata
-                                })
-                                workers.forEach(w => w.terminate());
-                            }
-                        } else if (e.data.type == 'rejected') {
-                            throw (e.data.data);
-                        }
-                    } catch (e) {
-                        if (e instanceof DOMException) {
-                            self.postMessage({ id: d.id, rejected: true, data: e.message });
-                        } else
-                            self.postMessage({ id: d.id, rejected: true, data: e });
-                    }
-                }
-            })(bitmap);
-        } catch (e) {
-            if (e instanceof DOMException) {
-                self.postMessage({ id: d.id, rejected: true, data: e.name + ': ' + e.message });
-            } else
-                self.postMessage({ id: d.id, rejected: true, data: e });
-        }
     },
     mousemove: (e: WMessage<{x:number, y:number, viewportWidth:number, viewportHeight:number, projection: any, view:any}>) => {
         let ray = Ray.Zero();
@@ -253,26 +240,34 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
         ray.direction.normalize();
         /* unprojectRayToRef end */
 
-        pickInfo = intersects(boundingBox, boundingSphere, ray);
+        pickInfo = intersects(boundingBox, ray);
         _selectedVertices = null
         if (pickInfo.pickedPoint) {
             self.postMessage({ id: e.id, data: { x: pickInfo.pickedPoint.x, y: pickInfo.pickedPoint.z } });
+        } else {
+            console.log('no bounding');
+            console.log(boundingBox);
+            console.log(ray)
+
         }
     },
     elevateFaces: (e: WMessage<{ radius: number, height: number, direction: number }>) => {
+        if (!pickInfo.pickedPoint)
+            return;
         //1.5-2 ms
         let radiusPow = Math.pow(e.data.radius, 2);
         // Impact zone
         if (_selectedVertices == null) {
            // console.time('selecting vertices');
             _selectedVertices = [];
+
             let sphereCenter = new Vector2(pickInfo.pickedPoint.x, pickInfo.pickedPoint.z);
 
             let position = new Vector2();
-            let length = terrainPositions.length / 3;
+            let length = positionsView.length;
             for (let index = 0; index < length; index++) {
-                position.x = terrainPositions[index * 3];
-                position.y = terrainPositions[index * 3 + 2];
+                position.x = positionsView[index][0];
+                position.y = positionsView[index][2];
                 let distance = Vector2.DistanceSquared(position, sphereCenter);
                 if (distance < radiusPow) {
                     _selectedVertices.push({
@@ -293,10 +288,10 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
         }[] = [];
         let v1v2 = new Vector3();
         let v3v2 = new Vector3();
-       
+        console.log(_selectedVertices);
         _selectedVertices.forEach(sv => {
             //let positiony = this._groundPositions[sv.vertice].y;
-            let positiony = terrainPositions[sv.vertice * 3 + 1];
+            let positiony = positionsView[sv.vertice][1];
             var fullHeight = e.data.height * e.data.direction;
             if (sv.distance < e.data.radius * 0.3) {
                 positiony += fullHeight;
@@ -308,24 +303,22 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
                 positiony = heightMax;
             else if (positiony < heightMin)
                 positiony = heightMin;
-
-            terrainPositions[sv.vertice * 3 + 1] = positiony;
+            positionsView[sv.vertice][1] = positiony;
 
             //this._updateSubdivisions(sv.vertice);
-
 
             var faceOfVertices = _facesOfVertices[sv.vertice];
             for (let index = 0; index < faceOfVertices.length; index++) {
 
                 let indices = new Uint32Array(terrainIndices.buffer, (faceOfVertices[index] * 3) << 2, 3);
 
-                v1v2.x = terrainPositions[indices[0] * 3] - terrainPositions[indices[1] * 3];
-                v1v2.y = terrainPositions[indices[0] * 3 + 1] - terrainPositions[indices[1] * 3 + 1];
-                v1v2.z = terrainPositions[indices[0] * 3 + 2] - terrainPositions[indices[1] * 3 + 2];
+                v1v2.x = positionsView[indices[0]][0] - positionsView[indices[1]][0];
+                v1v2.y = positionsView[indices[0]][1] - positionsView[indices[1]][1];
+                v1v2.z = positionsView[indices[0]][2] - positionsView[indices[1]][2];
 
-                v3v2.x = terrainPositions[indices[2] * 3] - terrainPositions[indices[1] * 3];
-                v3v2.y = terrainPositions[indices[2] * 3 + 1] - terrainPositions[indices[1] * 3 + 1];
-                v3v2.z = terrainPositions[indices[2] * 3 + 2] - terrainPositions[indices[1] * 3 + 2];
+                v3v2.x = positionsView[indices[2]][0] - positionsView[indices[1]][0];
+                v3v2.y = positionsView[indices[2]][1] - positionsView[indices[1]][1];
+                v3v2.z = positionsView[indices[2]][2] - positionsView[indices[1]][2];
 
                 _groundFacesNormals[faceOfVertices[index]] = Vector3.Normalize(Vector3.Cross(v1v2, v3v2));
 
@@ -353,7 +346,8 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
                     z *= scale;
 
                     // normal = BABYLON.Vector3.Normalize(normal.scale(1.0 / faces.length));
-                    terrainNormals.set([x, y, z], vertexIndex * 3);
+                    normalsView[vertexIndex].set([x, y, z])
+                    //terrainNormals.set([x, y, z], vertexIndex * 3);
                 });
             };
             ((ypos) => {
@@ -363,11 +357,10 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
                     //let boundingBox = e.data.boundingBox;
                     //let boundingSphere = sub.getBoundingInfo().boundingSphere;
 
-                    if (ypos < boundingBox.minimum.y) {
-                        boundingSphere.radius += Math.abs(ypos - boundingBox.minimum.y);
-                        boundingBox.minimum.y = ypos;
-                    } else if (ypos > boundingBox.maximum.y) {
-                        boundingBox.maximum.y = ypos;
+                    if (ypos < boundingBox.min.y) {
+                        boundingBox.min.y = ypos;
+                    } else if (ypos > boundingBox.max.y) {
+                        boundingBox.max.y = ypos;
                     }
                 //}
 
@@ -383,8 +376,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
         });
         self.postMessage({
             type: 'bounding', data: {
-                boundingSphereRadius: boundingSphere.radius,
-                boundingBox: { minY: boundingBox.minimum.y, maxY: boundingBox.maximum.y}
+                boundingBox: { minY: boundingBox.min.y, maxY: boundingBox.max.y}
             }
         });
 
@@ -410,26 +402,26 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
         for (let row = minRow - 1; row <= maxRow + 1; row++) {
             for (let col = minCol - 1; col <= maxCol + 1; col++) {
 
-                let i = col * 3;
-                let j = row * (_subdivisionsX + 1) * 3;
-                let k = (row + 1) * (_subdivisionsX + 1) * 3;
+                let i = col;
+                let j = row * (_subdivisionsX + 1);
+                let k = (row + 1) * (_subdivisionsX + 1);
 
                 let v1arr = [
-                    terrainPositions[j + i],
-                    terrainPositions[j + i + 1],
-                    terrainPositions[j + i + 2],
+                    positionsView[j + i][0],
+                    positionsView[j + i][1],
+                    positionsView[j + i][2],
                 ]
                 let v2arr = [
-                    terrainPositions[j + i + 3],
-                    terrainPositions[j + i + 4],
-                    terrainPositions[j + i + 5],
+                    positionsView[j + i + 1][0],
+                    positionsView[j + i + 1][1],
+                    positionsView[j + i + 1][2],
                 ]
-                v1v3.x = terrainPositions[k + i + 0] - v1arr[0];
-                v1v3.y = terrainPositions[k + i + 1] - v1arr[1];
-                v1v3.z = terrainPositions[k + i + 2] - v1arr[2];
-                v1v4.x = terrainPositions[k + i + 3] - v1arr[0];
-                v1v4.y = terrainPositions[k + i + 4] - v1arr[1];
-                v1v4.z = terrainPositions[k + i + 5] - v1arr[2];
+                v1v3.x = positionsView[k + i][0] - v1arr[0];
+                v1v3.y = positionsView[k + i][1] - v1arr[1];
+                v1v3.z = positionsView[k + i][2] - v1arr[2];
+                v1v4.x = positionsView[k + i + 1][0] - v1arr[0];
+                v1v4.y = positionsView[k + i + 1][1] - v1arr[1];
+                v1v4.z = positionsView[k + i + 1][2] - v1arr[2];
 
                 // facet equations :
                 // we compute each facet normal vector
@@ -470,8 +462,10 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
                 let d1 = -(norm1[0] * v1arr[0] + norm1[1] * v1arr[1] + norm1[2] * v1arr[2]);
                 let d2 = -(norm2[0] * v2arr[0] + norm2[1] * v2arr[1] + norm2[2] * v2arr[2]);
 
-                facet1Arr.set([norm1[0], norm1[1], norm1[2], d1], (row * _subdivisionsX + col) * 4);
-                facet2Arr.set([norm2[0], norm2[1], norm2[2], d2], (row * _subdivisionsX + col) * 4);
+
+                //Disabled for now
+              //  facet1Arr.set([norm1[0], norm1[1], norm1[2], d1], (row * _subdivisionsX + col) * 4);
+               // facet2Arr.set([norm2[0], norm2[1], norm2[2], d2], (row * _subdivisionsX + col) * 4);
             }
             const srcOffset = (row * _subdivisionsX + minCol - 1) * 4;
             self.postMessage({
@@ -488,99 +482,6 @@ let methods2: { [index: string]: (e: WMessage<any>) => void} = {
 
         //this.postMessage({ type: 'heights', data: {} });
         //methods2.createHeights();
-    },
-    createHeights: (e) => {
-        //native: 95
-        //212
-        let v1arr = [];
-        let v2arr = [];
-        let v1v2 = { x: 0, y: 0, z: 0 };
-        let v1v3 = { x: 0, y: 0, z: 0 };
-        let v1v4 = { x: 0, y: 0, z: 0 };
-        let norm1 = new Float32Array(3);
-        let norm2 = new Float32Array(3);
-        let i = 0;
-        let j = 0;
-        let k = 0;
-        let cd = -1;     // 2D slope coefficient : z = cd * x + h
-        let h = 0;
-        let d1 = 0;     // facet plane equation : ax + by + cz + d = 0
-        let d2 = 0;
-
-        for (var row = 0; row < _subdivisionsY; row++) {
-            for (var col = 0; col < _subdivisionsX; col++) {
-                //calculateHeightSquad(row, col);
-                i = col * 3;
-                j = row * (_subdivisionsX + 1) * 3;
-                k = (row + 1) * (_subdivisionsX + 1) * 3;
-
-                v1arr = [
-                    terrainPositions[j + i],
-                    terrainPositions[j + i + 1],
-                    terrainPositions[j + i + 2],
-                ]
-                v2arr = [
-                    terrainPositions[j + i + 3],
-                    terrainPositions[j + i + 4],
-                    terrainPositions[j + i + 5],
-                ]
-                v1v3.x = terrainPositions[k + i + 0] - v1arr[0];
-                v1v3.y = terrainPositions[k + i + 1] - v1arr[1];
-                v1v3.z = terrainPositions[k + i + 2] - v1arr[2];
-                v1v4.x = terrainPositions[k + i + 3] - v1arr[0];
-                v1v4.y = terrainPositions[k + i + 4] - v1arr[1];
-                v1v4.z = terrainPositions[k + i + 5] - v1arr[2];
-
-                //   cd = (terrainPositions[k + i + 2] - v1arr[2]) / (terrainPositions[k + i + 3] - v1arr[0]);
-
-                h = v1arr[2] - cd * v1arr[0];             // v1 belongs to the slope
-
-                // facet equations :
-                // we compute each facet normal vector
-                // the equation of the facet plane is : norm.x * x + norm.y * y + norm.z * z + d = 0
-                // we compute the value d by applying the equation to v1 which belongs to the plane
-                // then we store the facet equation in a Vector4
-
-                v1v2.x = v2arr[0] - v1arr[0];
-                v1v2.y = v2arr[1] - v1arr[1];
-                v1v2.z = v2arr[2] - v1arr[2];
-                // v2.subtractToRef(v1, v1v2);
-                //v3.subtractToRef(v1, v1v3);
-
-                //v4.subtractToRef(v1, v1v4);
-
-                norm1[0] = v1v4.y * v1v3.z - v1v4.z * v1v3.y;
-                norm1[1] = v1v4.z * v1v3.x - v1v4.x * v1v3.z;
-                norm1[2] = v1v4.x * v1v3.y - v1v4.y * v1v3.x;
-
-                //BABYLON.Vector3.CrossToRef(v1v4, v1v3, norm1);  // caution : CrossToRef uses the Tmp class
-
-                norm2[0] = v1v2.y * v1v4.z - v1v2.z * v1v4.y;
-                norm2[1] = v1v2.z * v1v4.x - v1v2.x * v1v4.z;
-                norm2[2] = v1v2.x * v1v4.y - v1v2.y * v1v4.x;
-                // BABYLON.Vector3.CrossToRef(v1v2, v1v4, norm2);
-
-                let norm1length = 1 / Math.sqrt(norm1[0] * norm1[0] + norm1[1] * norm1[1] + norm1[2] * norm1[2]);
-                let norm2length = 1 / Math.sqrt(norm1[0] * norm1[0] + norm1[1] * norm1[1] + norm1[2] * norm1[2]);
-                norm1[0] *= norm1length;
-                norm1[1] *= norm1length;
-                norm1[2] *= norm1length;
-                norm2[0] *= norm2length;
-                norm2[1] *= norm2length;
-                norm2[2] *= norm2length;
-                //norm1.normalize();
-                //norm2.normalize();
-
-                d1 = -(norm1[0] * v1arr[0] + norm1[1] * v1arr[1] + norm1[2] * v1arr[2]);
-                d2 = -(norm2[0] * v2arr[0] + norm2[1] * v2arr[1] + norm2[2] * v2arr[2]);
-
-                slopeArr[row * _subdivisionsX + col] = h;
-                facet1Arr.set([norm1[0], norm1[1], norm1[2], d1], (row * _subdivisionsX + col) * 4)
-                facet2Arr.set([norm2[0], norm2[1], norm2[2], d2], (row * _subdivisionsX + col) * 4);
-
-            }
-        }
-        self.postMessage({ type: 'heights', data: {} });
     }
 }
 onmessage = async (e: WorkerMessage<any>) => {

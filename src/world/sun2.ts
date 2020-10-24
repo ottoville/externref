@@ -107,8 +107,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
 
 
         //earth shadow
-        const shadow = Math.max(Math.min((sunPositionY << 3) + 1, 1), 0); // <<3 == * 8
-
+        const shadow = this.clamp(sunPositionY *8 + 1, 0, 1); // <<3 == * 8
         this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
         this.updateDynamicBuffer();
         

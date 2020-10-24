@@ -13,6 +13,8 @@ export class Drawable {
 
     static BindedTerrains: Set<Drawable> = new Set();
 
+    properties: number = 0;
+
     useTime = true;
 
     renderPipeline: GPURenderPipeline;
@@ -108,6 +110,7 @@ export class Drawable {
         if (this.#indexBuffer) {
             renderPass.setIndexBuffer(this.#indexBuffer, this.#GPUIndexFormat);
             renderPass.drawIndexed(this.indexOrVertexCount, this.instanceCount, this.firstVertexOrIndex, this.baseVertex, this.firstInstance);
+
         }
         else {
             renderPass.draw(this.indexOrVertexCount, this.instanceCount, this.firstVertexOrIndex, this.firstInstance);

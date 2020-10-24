@@ -44,6 +44,7 @@ async function onFetch(event) {
 
         const request = shouldServeIndexHtml ? 'index.html' : event.request;
         const cache = await caches.open(cacheName);
+        //@ts-ignore
         cachedResponse = await cache.match(request);
     }
 
