@@ -28,6 +28,9 @@ layout(set = 0, binding = 0) uniform Scene {
 
 layout(set = 0, binding = 1) uniform Terra {
    uint time;
+   float delta;
+   float windDelta;
+
 } terra;
 
 layout(set = 1, binding = 0) readonly buffer Lights {
@@ -58,6 +61,9 @@ const uint a = 12;
 const uint b = 13;
 const uint c = 14;
 
+const float windDirection=0;
+
+
 void main(void) {
 
    vec3 sunDirection=vec3(matrix[a],matrix[b],matrix[c]);
@@ -73,16 +79,18 @@ void main(void) {
     //vec2 curved2 = rotate(vertice.y,0, seqment*shape.z);
 
     //How fast wind direction and intensivy change
-    float windDelta=cos(terra.time*0.1)*PI*2;
+    //float windDelta=cos(terra.time*0.1)*PI*2;
 
 
-    float windIntensivy=(cos(windDelta) * sin(windDelta*2)+1)*0.5;
-    float windDirection=cos(windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
+   // float windIntensivy=(cos(windDelta) * sin(windDelta*2)+1)*0.5;
+    float windIntensivy=(cos(terra.windDelta+(positions.x*0.5))+0.9)*0.45;
+
+    //float windDirection=cos(windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
 
     float leanAndBaseCurve=shape.y + vertice.y*shape.z;
 
         //curve
-    float curveAmount=leanAndBaseCurve+windIntensivy*PI*0.5;
+    float curveAmount=vertice.y*shape.w + windIntensivy*vertice.y;
     float CosCurve=cos(curveAmount);
     float SinCurve=sin(curveAmount);
 
@@ -95,8 +103,8 @@ void main(void) {
     //rotate
     float rotateAmount=positions.w;
     float rotateAmountWind=windDirection*windRotate;
-    float c = cos(rotateAmount+rotateAmountWind);
-    float s = sin(rotateAmount+rotateAmountWind);
+    float c = cos((rotateAmount+rotateAmountWind)/2);
+    float s = sin((rotateAmount+rotateAmountWind)/2);
     mat3 m = mat3(
         vec3(c,0,s),
         vec3(0,1,0),

@@ -118,7 +118,14 @@ export class TerraScene {
 
 
     adapter = this.window.navigator.gpu!.requestAdapter();
-    device = this.adapter.then(adapter => adapter.requestDevice());
+    device: Promise<GPUDevice> = this.adapter.then(async adapter => {
+        if (!adapter)
+            throw ('No adapter');
+        const device = await adapter.requestDevice();
+        if (!device)
+            throw ('no GPU device');
+        return device;
+    });
     gpuscenePromise = this.device.then(device => new GPUScene(this, device));
     view = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
     projection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);

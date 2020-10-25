@@ -69,10 +69,14 @@ let methods = {
                     continue;
                 }
                 continue;
-            }//@ts-ignore
-            maxX = Math.max(maxX, offsets[i * 2 + 0]);//@ts-ignore
-            maxZ = Math.max(maxZ, offsets[i * 2 + 1]);//@ts-ignore
-            minX = Math.min(minX, offsets[i * 2 + 0]);//@ts-ignore
+            }
+            //@ts-ignore
+            maxX = Math.max(maxX, offsets[i * 2 + 0]);
+            //@ts-ignore
+            maxZ = Math.max(maxZ, offsets[i * 2 + 1]);
+            //@ts-ignore
+            minX = Math.min(minX, offsets[i * 2 + 0]);
+            //@ts-ignore
             minZ = Math.min(minZ, offsets[i * 2 + 1]);
 
         }

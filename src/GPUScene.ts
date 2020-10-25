@@ -191,12 +191,17 @@ export class GPUScene {
             return this.updateGPUBuffer();
         }
         const me = this;
+        let windIntensivy = 0;
         this.baseBindGroup.onRender = function (time, delta) {
+
+           // windIntensivy = Math.min(Math.max(windIntensivy+0.000625-(Math.random()*0.00125),-1),1)
             timeView.set([time]);
             if (me.properties & 1) {
                // console.log('set animation', Math.cos(time * 0.0001) * Math.PI * 2)
                // animationView.set([Math.cos(time * 0.0001) * Math.PI * 2]);
                 animationView.set([Math.cos(time * 0.001)]);
+                //animationView.set([time * 0.001]);
+              //  animationView.set([windIntensivy]);
             }
             if (delta !== null)
                 deltaView.set([delta]);

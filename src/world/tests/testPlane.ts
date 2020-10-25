@@ -50,5 +50,6 @@ export class testPlaneNormals {
         }
     }, 14);
     constructor(private scene: TerraScene) {
+        this.mesh.properties = 1;
     }
 }

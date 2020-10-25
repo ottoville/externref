@@ -81,10 +81,10 @@ void main(void) {
     //float windDirection=terra.windDelta;    //Wind direction changes most when wind intensity is lowest
 
    float shapeW=0.5;
-
+   float windIntensivy=terra.windDelta;
     //curve
    // float curveAmount=(position.y/3)*shapeW+ windIntensivy*PI*0.3*(position.y/3);
-    float curveAmount=(position.y/3)*shapeW+ windIntensivy*0.3*(position.y/3);
+    float curveAmount=(position.y/3)*shapeW+ windIntensivy*(position.y/3);
     float CosCurve=cos(curveAmount);
     float SinCurve=sin(curveAmount);
 

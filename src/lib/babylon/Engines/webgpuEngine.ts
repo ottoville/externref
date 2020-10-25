@@ -208,8 +208,8 @@ export class WebGPUEngine extends Engine {
 
         Logger.Log(`Babylon.js v${Engine.Version} - WebGPU engine`);
         if (!navigator.gpu) {
-            Logger.Error("WebGPU is not supported by your browser.");
-            return;
+           // Logger.Error("WebGPU is not supported by your browser.");
+            //return;
         }
 
         this._isWebGPU = true;

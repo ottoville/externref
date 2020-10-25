@@ -123,8 +123,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
                 new Sun2(terrascene);
-                new testPlane(terrascene);
-                new testPlaneNormals(terrascene);
+                /*new testPlane(terrascene);
+                new testPlaneNormals(terrascene);*/
                 const terrainInited = Terrain.loadFromTexture(terrascene);
                 terrainInited.then(async r => {
                     const ground = r[0];
