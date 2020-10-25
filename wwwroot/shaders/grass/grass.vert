@@ -83,7 +83,7 @@ void main(void) {
 
 
    // float windIntensivy=(cos(windDelta) * sin(windDelta*2)+1)*0.5;
-    float windIntensivy=(cos(terra.windDelta+(positions.x*0.5))+0.9)*0.45;
+    float windIntensivy=(cos((terra.time*0.01 + positions.x)*0.1)+1)*0.5;
 
     //float windDirection=cos(windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
 
@@ -135,6 +135,4 @@ void main(void) {
 
 
     color=vec4(green.rgb,1.0);
-
-
 }
