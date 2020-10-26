@@ -67,6 +67,6 @@ void main(void) {
     vec4 worldPos = vec4(transformbill.xyz,1.0);
 
     gl_Position = scene.viewProjection * worldPos;
-    gl_Position.y *= -1.;
+  //  gl_Position.y *= -1.;
 
 }

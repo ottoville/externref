@@ -36,7 +36,7 @@ const uint c = 14;
 
 void main(void) {
    gl_Position = viewProjection*vec4(position.xyz, 1.0);
-   gl_Position.y *= -1.;
+  // gl_Position.y *= -1.;
 
 
    vec3 sunDirection=vec3(matrix[a],matrix[b],matrix[c]);

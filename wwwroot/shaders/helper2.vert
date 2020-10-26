@@ -101,5 +101,4 @@ void main(void) {
     worldPos.y += getHeightAtCoordinates(vec2(worldPos.x, worldPos.z))+20.0;
 
    gl_Position = viewProjection * worldPos;
-    gl_Position.y *= -1.;
 }

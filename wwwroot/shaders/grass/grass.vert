@@ -129,7 +129,6 @@ void main(void) {
 
 
     gl_Position = viewProjection * worldPos;
-    gl_Position.y *= -1.;
 
     vec3 green=vec3(clamp(shape.w,0,1),1.0,0.0)*diffuse;
 

@@ -102,7 +102,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
     try {
-        let [WasmModuleP, EngineModuleP, EffectModuleP] = ['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js', './TerraEffect.js'].map(url => import(url));
+        let [WasmModuleP, EngineModuleP] = ['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js'].map(url => import(url));
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";

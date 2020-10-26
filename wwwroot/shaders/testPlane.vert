@@ -122,6 +122,5 @@ void main(void) {
     vec4 worldPos = vec4(position.xyz,1.0);
 
     gl_Position = scene.viewProjection * worldPos;
-    gl_Position.y *= -1.;
 
 }

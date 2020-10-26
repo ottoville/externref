@@ -13,7 +13,6 @@ import { ImageProcessingConfiguration } from "../Materials/imageProcessingConfig
 import { Texture } from "../Materials/Textures/texture";
 import { DynamicTexture } from "../Materials/Textures/dynamicTexture";
 import { RawTexture } from "../Materials/Textures/rawTexture";
-import { ProceduralTexture } from "../Materials/Textures/Procedurals/proceduralTexture";
 import { EngineStore } from "../Engines/engineStore";
 import { Scene, IDisposable } from "../scene";
 import { BoxParticleEmitter, IParticleEmitterType, HemisphericParticleEmitter, SphereParticleEmitter, SphereDirectedParticleEmitter, CylinderParticleEmitter, ConeParticleEmitter } from "../Particles/EmitterTypes/index";
@@ -1074,7 +1073,7 @@ export class ParticleSystem extends BaseParticleSystem implements IDisposable, I
                 this.emitter.computeWorldMatrix(true);
             }
 
-            let noiseTextureAsProcedural = this.noiseTexture as ProceduralTexture;
+            let noiseTextureAsProcedural = this.noiseTexture as any;
 
             if (noiseTextureAsProcedural && noiseTextureAsProcedural.onGeneratedObservable) {
                 noiseTextureAsProcedural.onGeneratedObservable.addOnce(() => {
@@ -2500,10 +2499,6 @@ export class ParticleSystem extends BaseParticleSystem implements IDisposable, I
                 particleSystem.addLimitVelocityGradient(limitVelocityGradient.gradient, limitVelocityGradient.factor1 !== undefined ? limitVelocityGradient.factor1 : limitVelocityGradient.factor, limitVelocityGradient.factor2);
             }
             particleSystem.limitVelocityDamping = parsedParticleSystem.limitVelocityDamping;
-        }
-
-        if (parsedParticleSystem.noiseTexture) {
-            particleSystem.noiseTexture = ProceduralTexture.Parse(parsedParticleSystem.noiseTexture, scene, rootUrl);
         }
 
         // Emitter

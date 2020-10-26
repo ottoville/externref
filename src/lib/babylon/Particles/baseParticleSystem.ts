@@ -2,7 +2,6 @@ import { Nullable } from "../types";
 import { Vector2, Vector3 } from "../Maths/math.vector";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { ImageProcessingConfiguration, ImageProcessingConfigurationDefines } from "../Materials/imageProcessingConfiguration";
-import { ProceduralTexture } from "../Materials/Textures/Procedurals/proceduralTexture";
 import { RawTexture } from "../Materials/Textures/rawTexture";
 import { Scene } from "../scene";
 import { ColorGradient, FactorGradient, Color3Gradient, IValueGradient } from "../Misc/gradients";
@@ -177,16 +176,16 @@ export class BaseParticleSystem {
      */
     public preventAutoStart: boolean = false;
 
-    private _noiseTexture: Nullable<ProceduralTexture>;
+    private _noiseTexture: Nullable<any>;
 
     /**
      * Gets or sets a texture used to add random noise to particle positions
      */
-    public get noiseTexture(): Nullable<ProceduralTexture> {
+    public get noiseTexture(): Nullable<any> {
         return this._noiseTexture;
     }
 
-    public set noiseTexture(value: Nullable<ProceduralTexture>) {
+    public set noiseTexture(value: Nullable<any>) {
         if (this._noiseTexture === value) {
             return;
         }

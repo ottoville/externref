@@ -467,7 +467,7 @@ export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends GroupDra
     addDrawable(renderPipeline: GPURenderPipelineDescriptor, bindGroups: T, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): Drawable {
         if (!renderPipeline.rasterizationState) {
             renderPipeline.rasterizationState = {
-                cullMode: 'front',
+                cullMode: 'back',
             }
         }
         const d = new Drawable(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this)
