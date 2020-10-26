@@ -15,7 +15,6 @@ import { ICustomAnimationFrameRequester } from '../Misc/customAnimationFrameRequ
 import { ThinEngine, EngineOptions } from './thinEngine';
 import { Constants } from './constants';
 import { IViewportLike, IColor4Like } from '../Maths/math.like';
-import { RenderTargetTexture } from '../Materials/Textures/renderTargetTexture';
 import { PerformanceMonitor } from '../Misc/performanceMonitor';
 import { DataBuffer } from '../Meshes/dataBuffer';
 import { PerfCounter } from '../Misc/perfCounter';
@@ -1150,7 +1149,7 @@ export class Engine extends ThinEngine {
      * @param uniform The uniform to set
      * @param texture The render target texture containing the depth stencil texture to apply
      */
-    public setDepthStencilTexture(channel: number, uniform: Nullable<WebGLUniformLocation>, texture: Nullable<RenderTargetTexture>): void {
+    public setDepthStencilTexture(channel: number, uniform: Nullable<WebGLUniformLocation>, texture: Nullable<any>): void {
         if (channel === undefined) {
             return;
         }
@@ -1653,7 +1652,7 @@ export class Engine extends ThinEngine {
      * Sets the frame buffer Depth / Stencil attachement of the render target to the defined depth stencil texture.
      * @param renderTarget The render target to set the frame buffer for
      */
-    public setFrameBufferDepthStencilTexture(renderTarget: RenderTargetTexture): void {
+    public setFrameBufferDepthStencilTexture(renderTarget: any): void {
         // Create the framebuffer
         var internalTexture = renderTarget.getInternalTexture();
         if (!internalTexture || !internalTexture._framebuffer || !renderTarget.depthStencilTexture) {

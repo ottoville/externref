@@ -8,7 +8,6 @@ import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { Texture } from "../Materials/Textures/texture";
-import { MirrorTexture } from "../Materials/Textures/mirrorTexture";
 import { CubeTexture } from "../Materials/Textures/cubeTexture";
 import { BackgroundMaterial } from "../Materials/Background/backgroundMaterial";
 import { _TimeToken } from "../Instrumentation/timeToken";
@@ -295,11 +294,11 @@ export class EnvironmentHelper {
         return this._groundTexture;
     }
 
-    private _groundMirror: Nullable<MirrorTexture>;
+    private _groundMirror: Nullable<any>;
     /**
      * Gets the ground mirror created by the helper.
      */
-    public get groundMirror(): Nullable<MirrorTexture> {
+    public get groundMirror(): Nullable<any> {
         return this._groundMirror;
     }
 
@@ -590,39 +589,6 @@ export class EnvironmentHelper {
      * Setup the ground mirror texture according to the specified options.
      */
     private _setupGroundMirrorTexture(sceneSize: ISceneSize): void {
-        let wrapping = Texture.CLAMP_ADDRESSMODE;
-        if (!this._groundMirror) {
-            this._groundMirror = new MirrorTexture("BackgroundPlaneMirrorTexture",
-                { ratio: this._options.groundMirrorSizeRatio },
-                this._scene,
-                false,
-                this._options.groundMirrorTextureType,
-                Texture.BILINEAR_SAMPLINGMODE,
-                true);
-            this._groundMirror.mirrorPlane = new Plane(0, -1, 0, sceneSize.rootPosition.y);
-            this._groundMirror.anisotropicFilteringLevel = 1;
-            this._groundMirror.wrapU = wrapping;
-            this._groundMirror.wrapV = wrapping;
-            this._groundMirror.gammaSpace = false;
-
-            if (this._groundMirror.renderList) {
-                for (let i = 0; i < this._scene.meshes.length; i++) {
-                    const mesh = this._scene.meshes[i];
-                    if (mesh !== this._ground &&
-                        mesh !== this._skybox &&
-                        mesh !== this._rootMesh) {
-                        this._groundMirror.renderList.push(mesh);
-                    }
-                }
-            }
-        }
-
-        this._groundMirror.clearColor = new Color4(
-            this._options.groundColor.r,
-            this._options.groundColor.g,
-            this._options.groundColor.b,
-            1);
-        this._groundMirror.adaptiveBlurKernel = this._options.groundMirrorBlurKernel;
     }
 
     /**

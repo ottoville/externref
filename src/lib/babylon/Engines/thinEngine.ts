@@ -34,7 +34,6 @@ declare type WebRequest = import("../Misc/webRequest").WebRequest;
 declare type LoadFileError = import("../Misc/fileTools").LoadFileError;
 declare type Observer<T> = import("../Misc/observable").Observer<T>;
 declare type VideoTexture = import("../Materials/Textures/videoTexture").VideoTexture;
-declare type RenderTargetTexture = import("../Materials/Textures/renderTargetTexture").RenderTargetTexture;
 declare type Texture = import("../Materials/Textures/texture").Texture;
 
 /**
@@ -3611,7 +3610,7 @@ export class ThinEngine {
 
         let internalTexture: InternalTexture;
         if (depthStencilTexture) {
-            internalTexture = (<RenderTargetTexture>texture).depthStencilTexture!;
+            internalTexture = (<any>texture).depthStencilTexture!;
         }
         else if (texture.isReady()) {
             internalTexture = <InternalTexture>texture.getInternalTexture();

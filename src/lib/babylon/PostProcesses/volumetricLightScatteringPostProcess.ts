@@ -12,7 +12,6 @@ import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
 import { StandardMaterial } from "../Materials/standardMaterial";
 import { Texture } from "../Materials/Textures/texture";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { PostProcess } from "./postProcess";
 import { Constants } from "../Engines/constants";
 import { Scene } from "../scene";
@@ -34,7 +33,7 @@ declare type Engine = import("../Engines/engine").Engine;
 export class VolumetricLightScatteringPostProcess extends PostProcess {
     // Members
     private _volumetricLightScatteringPass: Effect;
-    private _volumetricLightScatteringRTT: RenderTargetTexture;
+    private _volumetricLightScatteringRTT: any;
     private _viewPort: Viewport;
     private _screenCoordinates: Vector2 = Vector2.Zero();
     private _cachedDefines: string;
@@ -259,7 +258,7 @@ export class VolumetricLightScatteringPostProcess extends PostProcess {
      * Returns the render target texture used by the post-process
      * @return the render target texture used by the post-process
      */
-    public getPass(): RenderTargetTexture {
+    public getPass(): any {
         return this._volumetricLightScatteringRTT;
     }
 
@@ -275,19 +274,6 @@ export class VolumetricLightScatteringPostProcess extends PostProcess {
     private _createPass(scene: Scene, ratio: number): void {
         var engine = scene.getEngine();
 
-        this._volumetricLightScatteringRTT = new RenderTargetTexture("volumetricLightScatteringMap", { width: engine.getRenderWidth() * ratio, height: engine.getRenderHeight() * ratio }, scene, false, true, Constants.TEXTURETYPE_UNSIGNED_INT);
-        this._volumetricLightScatteringRTT.wrapU = Texture.CLAMP_ADDRESSMODE;
-        this._volumetricLightScatteringRTT.wrapV = Texture.CLAMP_ADDRESSMODE;
-        this._volumetricLightScatteringRTT.renderList = null;
-        this._volumetricLightScatteringRTT.renderParticles = false;
-        this._volumetricLightScatteringRTT.ignoreCameraViewport = true;
-
-        var camera = this.getCamera();
-        if (camera) {
-            camera.customRenderTargets.push(this._volumetricLightScatteringRTT);
-        } else {
-            scene.customRenderTargets.push(this._volumetricLightScatteringRTT);
-        }
 
         // Custom render function for submeshes
         var renderSubMesh = (subMesh: SubMesh): void => {

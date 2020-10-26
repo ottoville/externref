@@ -5,7 +5,6 @@ import { DepthRenderer } from "./depthRenderer";
 import { Camera } from "../Cameras/camera";
 import { Constants } from "../Engines/constants";
 import { ISceneComponent, SceneComponentConstants } from "../sceneComponent";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 
 declare module "../scene" {
     export interface Scene {
@@ -110,7 +109,7 @@ export class DepthRendererSceneComponent implements ISceneComponent {
         }
     }
 
-    private _gatherRenderTargets(renderTargets: SmartArrayNoDuplicate<RenderTargetTexture>): void {
+    private _gatherRenderTargets(renderTargets: SmartArrayNoDuplicate<any>): void {
         if (this.scene._depthRenderer) {
             for (var key in this.scene._depthRenderer) {
                 let depthRenderer = this.scene._depthRenderer[key];
@@ -121,7 +120,7 @@ export class DepthRendererSceneComponent implements ISceneComponent {
         }
     }
 
-    private _gatherActiveCameraRenderTargets(renderTargets: SmartArrayNoDuplicate<RenderTargetTexture>): void {
+    private _gatherActiveCameraRenderTargets(renderTargets: SmartArrayNoDuplicate<any>): void {
         if (this.scene._depthRenderer) {
             for (var key in this.scene._depthRenderer) {
                 let depthRenderer = this.scene._depthRenderer[key];

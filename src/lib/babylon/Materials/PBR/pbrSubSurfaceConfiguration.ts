@@ -4,7 +4,6 @@ import { SerializationHelper, serialize, serializeAsTexture, expandToProperty, s
 import { Color3 } from '../../Maths/math.color';
 import { SmartArray } from "../../Misc/smartArray";
 import { BaseTexture } from "../../Materials/Textures/baseTexture";
-import { RenderTargetTexture } from "../../Materials/Textures/renderTargetTexture";
 import { Effect } from "../../Materials/effect";
 import { MaterialFlags } from "../materialFlags";
 import { UniformBuffer } from "../../Materials/uniformBuffer";
@@ -388,9 +387,9 @@ export class PBRSubSurfaceConfiguration {
      * Fills the list of render target textures.
      * @param renderTargets the list of render targets to update
      */
-    public fillRenderTargetTextures(renderTargets: SmartArray<RenderTargetTexture>): void {
+    public fillRenderTargetTextures(renderTargets: SmartArray<any>): void {
         if (MaterialFlags.RefractionTextureEnabled && this._refractionTexture && this._refractionTexture.isRenderTarget) {
-            renderTargets.push(<RenderTargetTexture>this._refractionTexture);
+            renderTargets.push(<any>this._refractionTexture);
         }
     }
 

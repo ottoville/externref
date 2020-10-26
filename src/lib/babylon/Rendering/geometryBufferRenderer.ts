@@ -5,7 +5,6 @@ import { Mesh } from "../Meshes/mesh";
 import { Constants } from "../Engines/constants";
 import { SmartArray } from "../Misc/smartArray";
 import { Texture } from "../Materials/Textures/texture";
-import { MultiRenderTarget } from "../Materials/Textures/multiRenderTarget";
 import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
@@ -57,7 +56,7 @@ export class GeometryBufferRenderer {
     public excludedSkinnedMeshesFromVelocity: AbstractMesh[] = [];
 
     private _scene: Scene;
-    private _multiRenderTarget: MultiRenderTarget;
+    private _multiRenderTarget: any;
     private _ratio: number;
     private _enablePosition: boolean = false;
     private _enableVelocity: boolean = false;
@@ -270,7 +269,7 @@ export class GeometryBufferRenderer {
      * Gets the current underlying G Buffer.
      * @returns the buffer
      */
-    public getGBuffer(): MultiRenderTarget {
+    public getGBuffer(): any {
         return this._multiRenderTarget;
     }
 
@@ -309,9 +308,6 @@ export class GeometryBufferRenderer {
             count++;
         }
 
-        this._multiRenderTarget = new MultiRenderTarget("gBuffer",
-            { width: engine.getRenderWidth() * this._ratio, height: engine.getRenderHeight() * this._ratio }, count, this._scene,
-            { generateMipMaps: false, generateDepthTexture: true, defaultType: Constants.TEXTURETYPE_FLOAT });
         if (!this.isSupported) {
             return;
         }

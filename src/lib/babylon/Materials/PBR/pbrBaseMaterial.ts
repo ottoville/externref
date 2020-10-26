@@ -27,7 +27,6 @@ import { MaterialHelper } from "../../Materials/materialHelper";
 
 import { BaseTexture } from "../../Materials/Textures/baseTexture";
 import { Texture } from "../../Materials/Textures/texture";
-import { RenderTargetTexture } from "../../Materials/Textures/renderTargetTexture";
 import { CubeTexture } from "../../Materials/Textures/cubeTexture";
 
 import { MaterialFlags } from "../materialFlags";
@@ -678,7 +677,7 @@ export abstract class PBRBaseMaterial extends PushMaterial {
     /**
      * Stores the available render targets.
      */
-    private _renderTargets = new SmartArray<RenderTargetTexture>(16);
+    private _renderTargets = new SmartArray<any>(16);
 
     /**
      * Sets the global ambient color for the material used in lighting calculations.
@@ -767,11 +766,11 @@ export abstract class PBRBaseMaterial extends PushMaterial {
         // Setup the default processing configuration to the scene.
         this._attachImageProcessingConfiguration(null);
 
-        this.getRenderTargetTextures = (): SmartArray<RenderTargetTexture> => {
+        this.getRenderTargetTextures = (): SmartArray<any> => {
             this._renderTargets.reset();
 
             if (MaterialFlags.ReflectionTextureEnabled && this._reflectionTexture && this._reflectionTexture.isRenderTarget) {
-                this._renderTargets.push(<RenderTargetTexture>this._reflectionTexture);
+                this._renderTargets.push(<any>this._reflectionTexture);
             }
 
             this.subSurface.fillRenderTargetTextures(this._renderTargets);

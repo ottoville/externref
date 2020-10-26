@@ -3,7 +3,6 @@ import { Camera } from "../../../Cameras/camera";
 import { Effect } from "../../../Materials/effect";
 import { Texture } from "../../../Materials/Textures/texture";
 import { DynamicTexture } from "../../../Materials/Textures/dynamicTexture";
-import { RenderTargetTexture } from "../../../Materials/Textures/renderTargetTexture";
 import { PostProcess } from "../../../PostProcesses/postProcess";
 import { PostProcessRenderPipeline } from "../../../PostProcesses/RenderPipeline/postProcessRenderPipeline";
 import { PostProcessRenderEffect } from "../../../PostProcesses/RenderPipeline/postProcessRenderEffect";
@@ -52,7 +51,7 @@ export class LensRenderingPipeline extends PostProcessRenderPipeline {
     public LensDepthOfFieldEffect: string = "LensDepthOfFieldEffect";
 
     private _scene: Scene;
-    private _depthTexture: RenderTargetTexture;
+    private _depthTexture: any;
     private _grainTexture: Texture;
 
     private _chromaticAberrationPostProcess: PostProcess;

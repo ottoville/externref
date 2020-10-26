@@ -2,7 +2,6 @@ import { Nullable } from "../types";
 import { Vector2 } from "../Maths/math.vector";
 import { Camera } from "../Cameras/camera";
 import { Texture } from "../Materials/Textures/texture";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { PostProcess } from "./postProcess";
 import { PostProcessRenderEffect } from "../PostProcesses/RenderPipeline/postProcessRenderEffect";
 import { CircleOfConfusionPostProcess } from "./circleOfConfusionPostProcess";
@@ -88,7 +87,7 @@ export class DepthOfFieldEffect extends PostProcessRenderEffect {
      * @param pipelineTextureType The type of texture to be used when performing the post processing.
      * @param blockCompilation If compilation of the shader should not be done in the constructor. The updateEffect method can be used to compile the shader at a later time. (default: false)
      */
-    constructor(scene: Scene, depthTexture: Nullable<RenderTargetTexture>, blurLevel: DepthOfFieldEffectBlurLevel = DepthOfFieldEffectBlurLevel.Low, pipelineTextureType = 0, blockCompilation = false) {
+    constructor(scene: Scene, depthTexture: Nullable<any>, blurLevel: DepthOfFieldEffectBlurLevel = DepthOfFieldEffectBlurLevel.Low, pipelineTextureType = 0, blockCompilation = false) {
         super(scene.getEngine(), "depth of field", () => {
             return this._effects;
         }, true);
@@ -155,7 +154,7 @@ export class DepthOfFieldEffect extends PostProcessRenderEffect {
     /**
      * Depth texture to be used to compute the circle of confusion. This must be set here or in the constructor in order for the post process to function.
      */
-    public set depthTexture(value: RenderTargetTexture) {
+    public set depthTexture(value: any) {
         this._circleOfConfusion.depthTexture = value;
     }
 

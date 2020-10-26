@@ -22,7 +22,6 @@ import { MaterialHelper } from "./materialHelper";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { Texture } from "../Materials/Textures/texture";
 import { CubeTexture } from "../Materials/Textures/cubeTexture";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { _TypeStore } from "../Misc/typeStore";
 import { MaterialFlags } from "./materialFlags";
 
@@ -665,7 +664,7 @@ export class StandardMaterial extends PushMaterial {
      */
     public customShaderNameResolve: (shaderName: string, uniforms: string[], uniformBuffers: string[], samplers: string[], defines: StandardMaterialDefines) => string;
 
-    protected _renderTargets = new SmartArray<RenderTargetTexture>(16);
+    protected _renderTargets = new SmartArray<any>(16);
     protected _worldViewProjectionMatrix = Matrix.Zero();
     protected _globalAmbientColor = new Color3(0, 0, 0);
     protected _useLogarithmicDepth: boolean;
@@ -685,15 +684,15 @@ export class StandardMaterial extends PushMaterial {
         // Setup the default processing configuration to the scene.
         this._attachImageProcessingConfiguration(null);
 
-        this.getRenderTargetTextures = (): SmartArray<RenderTargetTexture> => {
+        this.getRenderTargetTextures = (): SmartArray<any> => {
             this._renderTargets.reset();
 
             if (StandardMaterial.ReflectionTextureEnabled && this._reflectionTexture && this._reflectionTexture.isRenderTarget) {
-                this._renderTargets.push(<RenderTargetTexture>this._reflectionTexture);
+                this._renderTargets.push(<any>this._reflectionTexture);
             }
 
             if (StandardMaterial.RefractionTextureEnabled && this._refractionTexture && this._refractionTexture.isRenderTarget) {
-                this._renderTargets.push(<RenderTargetTexture>this._refractionTexture);
+                this._renderTargets.push(<any>this._refractionTexture);
             }
 
             return this._renderTargets;

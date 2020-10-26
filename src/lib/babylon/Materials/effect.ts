@@ -18,7 +18,6 @@ import { WebGPUConstants } from "../Engines/WebGPU/webgpuConstants";
 declare type Engine = import("../Engines/engine").Engine;
 declare type InternalTexture = import("../Materials/Textures/internalTexture").InternalTexture;
 declare type BaseTexture = import("../Materials/Textures/baseTexture").BaseTexture;
-declare type RenderTargetTexture = import("../Materials/Textures/renderTargetTexture").RenderTargetTexture;
 declare type PostProcess = import("../PostProcesses/postProcess").PostProcess;
 
 /**
@@ -770,7 +769,7 @@ export class Effect implements IDisposable {
      * @param channel Name of the sampler variable.
      * @param texture Texture to set.
      */
-    public setDepthStencilTexture(channel: string, texture: Nullable<RenderTargetTexture>): void {
+    public setDepthStencilTexture(channel: string, texture: Nullable<any>): void {
         this._engine.setDepthStencilTexture(this._samplers[channel], this._uniforms[channel], texture);
     }
 

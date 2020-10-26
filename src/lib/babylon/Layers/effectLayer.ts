@@ -17,7 +17,6 @@ import { PostProcess } from "../PostProcesses/postProcess";
 import { _TimeToken } from "../Instrumentation/timeToken";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { Texture } from "../Materials/Textures/texture";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
@@ -82,7 +81,7 @@ export abstract class EffectLayer {
     protected _engine: Engine;
     protected _maxSize: number = 0;
     protected _mainTextureDesiredSize: ISize = { width: 0, height: 0 };
-    protected _mainTexture: RenderTargetTexture;
+    protected _mainTexture: any;
     protected _shouldRender = true;
     protected _postProcesses: PostProcess[] = [];
     protected _textures: BaseTexture[] = [];
@@ -321,60 +320,7 @@ export abstract class EffectLayer {
      * Creates the main texture for the effect layer.
      */
     protected _createMainTexture(): void {
-        this._mainTexture = new RenderTargetTexture("HighlightLayerMainRTT",
-            {
-                width: this._mainTextureDesiredSize.width,
-                height: this._mainTextureDesiredSize.height
-            },
-            this._scene,
-            false,
-            true,
-            Constants.TEXTURETYPE_UNSIGNED_INT);
-        this._mainTexture.activeCamera = this._effectLayerOptions.camera;
-        this._mainTexture.wrapU = Texture.CLAMP_ADDRESSMODE;
-        this._mainTexture.wrapV = Texture.CLAMP_ADDRESSMODE;
-        this._mainTexture.anisotropicFilteringLevel = 1;
-        this._mainTexture.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
-        this._mainTexture.renderParticles = false;
-        this._mainTexture.renderList = null;
-        this._mainTexture.ignoreCameraViewport = true;
 
-        // Custom render function
-        this._mainTexture.customRenderFunction = (opaqueSubMeshes: SmartArray<SubMesh>, alphaTestSubMeshes: SmartArray<SubMesh>, transparentSubMeshes: SmartArray<SubMesh>, depthOnlySubMeshes: SmartArray<SubMesh>): void => {
-            this.onBeforeRenderMainTextureObservable.notifyObservers(this);
-
-            var index: number;
-
-            let engine = this._scene.getEngine();
-
-            if (depthOnlySubMeshes.length) {
-                engine.setColorWrite(false);
-                for (index = 0; index < depthOnlySubMeshes.length; index++) {
-                    this._renderSubMesh(depthOnlySubMeshes.data[index]);
-                }
-                engine.setColorWrite(true);
-            }
-
-            for (index = 0; index < opaqueSubMeshes.length; index++) {
-                this._renderSubMesh(opaqueSubMeshes.data[index]);
-            }
-
-            for (index = 0; index < alphaTestSubMeshes.length; index++) {
-                this._renderSubMesh(alphaTestSubMeshes.data[index]);
-            }
-
-            const previousAlphaMode = engine.getAlphaMode();
-
-            for (index = 0; index < transparentSubMeshes.length; index++) {
-                this._renderSubMesh(transparentSubMeshes.data[index], true);
-            }
-
-            engine.setAlphaMode(previousAlphaMode);
-        };
-
-        this._mainTexture.onClearObservable.add((engine: Engine) => {
-            engine.clear(this.neutralColor, true, true, true);
-        });
     }
 
     /**

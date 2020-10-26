@@ -1,27 +1,24 @@
-import { Logger } from "../Misc/logger";
-import { Nullable, DataArray, IndicesArray, FloatArray } from "../types";
-import { Scene } from "../scene";
+import type { Nullable, DataArray, IndicesArray, FloatArray } from "../types";
+import type { Scene } from "../scene";
 import { Color4 } from "../Maths/math";
 import { Scalar } from "../Maths/math.scalar";
 import { Engine } from "../Engines/engine";
-import { InstancingAttributeInfo } from "../Engines/instancingAttributeInfo";
+import type { InstancingAttributeInfo } from "../Engines/instancingAttributeInfo";
 import { RenderTargetCreationOptions } from "../Materials/Textures/renderTargetCreationOptions";
 import { InternalTexture, InternalTextureSource } from "../Materials/Textures/internalTexture";
-import { IEffectCreationOptions, Effect } from "../Materials/effect";
-import { EffectFallbacks } from "../Materials/effectFallbacks";
-import { _TimeToken } from "../Instrumentation/timeToken";
+import type { _TimeToken } from "../Instrumentation/timeToken";
 import { Constants } from "./constants";
 import { WebGPUConstants } from "./WebGPU/webgpuConstants";
 import { VertexBuffer } from "../Meshes/buffer";
 import { WebGPUPipelineContext, IWebGPUPipelineContextVertexInputsCache } from './WebGPU/webgpuPipelineContext';
-import { IPipelineContext } from './IPipelineContext';
-import { DataBuffer } from '../Meshes/dataBuffer';
+import type { IPipelineContext } from './IPipelineContext';
+import type { DataBuffer } from '../Meshes/dataBuffer';
 import { WebGPUDataBuffer } from '../Meshes/WebGPU/webgpuDataBuffer';
-import { IInternalTextureLoader } from "../Materials/Textures/internalTextureLoader";
-import { BaseTexture } from "../Materials/Textures/baseTexture";
-import { IShaderProcessor } from "./Processors/iShaderProcessor";
+import type { IInternalTextureLoader } from "../Materials/Textures/internalTextureLoader";
+import type { BaseTexture } from "../Materials/Textures/baseTexture";
+import type { IShaderProcessor } from "./Processors/iShaderProcessor";
 import { WebGPUShaderProcessor } from "./WebGPU/webgpuShaderProcessors";
-import { ShaderProcessingContext } from "./Processors/shaderProcessingOptions";
+import type { ShaderProcessingContext } from "./Processors/shaderProcessingOptions";
 import { WebGPUShaderProcessingContext } from "./WebGPU/webgpuShaderProcessingContext";
 //import { Tools } from "../Misc/tools";
 
@@ -206,7 +203,6 @@ export class WebGPUEngine extends Engine {
         this._decodeEngine.getCaps().textureHalfFloat = false;
         this._decodeEngine.getCaps().textureHalfFloatRender = false;
 
-        Logger.Log(`Babylon.js v${Engine.Version} - WebGPU engine`);
         if (!navigator.gpu) {
            // Logger.Error("WebGPU is not supported by your browser.");
             //return;
@@ -596,7 +592,7 @@ export class WebGPUEngine extends Engine {
                 byteLength);
             this._device.defaultQueue.submit([commandEncoder.finish()]);
         } catch (e) {
-            Logger.Error(e);
+            console.error(e);
         } finally {
             uploadBuffer.destroy();
         }
@@ -718,7 +714,7 @@ export class WebGPUEngine extends Engine {
         this._setSubData(gpuBuffer, offset, view);
     }
 
-    public bindBuffersDirectly(vertexBuffer: DataBuffer, indexBuffer: DataBuffer, vertexDeclaration: number[], vertexStrideSize: number, effect: Effect): void {
+    public bindBuffersDirectly(vertexBuffer: DataBuffer, indexBuffer: DataBuffer, vertexDeclaration: number[], vertexStrideSize: number, effect: any): void {
         throw "Not implemented on WebGPU so far.";
     }
 
@@ -726,7 +722,7 @@ export class WebGPUEngine extends Engine {
         throw "Not implemented on WebGPU so far.";
     }
 
-    public bindBuffers(vertexBuffers: { [key: string]: Nullable<VertexBuffer> }, indexBuffer: Nullable<DataBuffer>, effect: Effect): void {
+    public bindBuffers(vertexBuffers: { [key: string]: Nullable<VertexBuffer> }, indexBuffer: Nullable<DataBuffer>, effect: any): void {
         this._currentIndexBuffer = indexBuffer;
         this._currentVertexBuffers = vertexBuffers;
     }
@@ -937,7 +933,7 @@ export class WebGPUEngine extends Engine {
         return results;
     }
 
-    public enableEffect(effect: Effect): void {
+    public enableEffect(effect: any): void {
         this._currentEffect = effect;
 
         if (effect.onBind) {
@@ -948,7 +944,7 @@ export class WebGPUEngine extends Engine {
         }
     }
 
-    public _releaseEffect(effect: Effect): void {
+    public _releaseEffect(effect: any): void {
         // Effect gets garbage collected without explicit destroy in WebGPU.
     }
 
@@ -1372,7 +1368,7 @@ export class WebGPUEngine extends Engine {
         }
     }
 
-    public bindSamplers(effect: Effect): void { }
+    public bindSamplers(effect: any): void { }
 
     public _bindTextureDirectly(target: number, texture: InternalTexture): boolean {
         if (this._boundTexturesCache[this._activeChannel] !== texture) {
@@ -2124,7 +2120,7 @@ export class WebGPUEngine extends Engine {
                         });
                     }
                     else {
-                        Logger.Error("Sampler has not been bound: " + bindingDefinition.name);
+                        console.error("Sampler has not been bound: " + bindingDefinition.name);
                     }
                 }
                 else {
@@ -2141,7 +2137,7 @@ export class WebGPUEngine extends Engine {
                         });
                     }
                     else {
-                        Logger.Error("UBO has not been bound: " + bindingDefinition.name);
+                        console.error("UBO has not been bound: " + bindingDefinition.name);
                     }
                 }
             }

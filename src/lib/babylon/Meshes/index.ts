@@ -5,7 +5,6 @@ export * from "./csg";
 export * from "./geometry";
 export * from "./groundMesh";
 export * from "./trailMesh";
-export * from "./instancedMesh";
 export * from "./linesMesh";
 export * from "./mesh";
 export * from "./mesh.vertexData";

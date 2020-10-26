@@ -17,7 +17,6 @@ import { ColorCurves } from "../../Materials/colorCurves";
 import { ImageProcessingConfiguration, IImageProcessingConfigurationDefines } from "../../Materials/imageProcessingConfiguration";
 import { BaseTexture } from "../../Materials/Textures/baseTexture";
 import { Texture } from "../../Materials/Textures/texture";
-import { RenderTargetTexture } from "../../Materials/Textures/renderTargetTexture";
 import { IShadowLight } from "../../Lights/shadowLight";
 import { _TimeToken } from "../../Instrumentation/timeToken";
 import { Constants } from "../../Engines/constants";
@@ -584,7 +583,7 @@ export class BackgroundMaterial extends PushMaterial {
     public switchToBGR: boolean = false;
 
     // Temp values kept as cache in the material.
-    private _renderTargets = new SmartArray<RenderTargetTexture>(16);
+    private _renderTargets = new SmartArray<any>(16);
     private _reflectionControls = Vector4.Zero();
     private _white = Color3.White();
     private _primaryShadowColor = Color3.Black();
@@ -601,15 +600,15 @@ export class BackgroundMaterial extends PushMaterial {
         // Setup the default processing configuration to the scene.
         this._attachImageProcessingConfiguration(null);
 
-        this.getRenderTargetTextures = (): SmartArray<RenderTargetTexture> => {
+        this.getRenderTargetTextures = (): SmartArray<any> => {
             this._renderTargets.reset();
 
             if (this._diffuseTexture && this._diffuseTexture.isRenderTarget) {
-                this._renderTargets.push(this._diffuseTexture as RenderTargetTexture);
+                this._renderTargets.push(this._diffuseTexture as any);
             }
 
             if (this._reflectionTexture && this._reflectionTexture.isRenderTarget) {
-                this._renderTargets.push(this._reflectionTexture as RenderTargetTexture);
+                this._renderTargets.push(this._reflectionTexture as any);
             }
 
             return this._renderTargets;

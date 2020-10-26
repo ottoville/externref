@@ -3,7 +3,6 @@ import { Camera } from "../../../Cameras/camera";
 import { Effect } from "../../../Materials/effect";
 import { Texture } from "../../../Materials/Textures/texture";
 import { DynamicTexture } from "../../../Materials/Textures/dynamicTexture";
-import { RenderTargetTexture } from "../../../Materials/Textures/renderTargetTexture";
 import { PostProcess } from "../../../PostProcesses/postProcess";
 import { PostProcessRenderPipeline } from "../../../PostProcesses/RenderPipeline/postProcessRenderPipeline";
 import { PostProcessRenderEffect } from "../../../PostProcesses/RenderPipeline/postProcessRenderEffect";
@@ -86,7 +85,7 @@ export class SSAORenderingPipeline extends PostProcessRenderPipeline {
     public base: number = 0.5;
 
     private _scene: Scene;
-    private _depthTexture: RenderTargetTexture;
+    private _depthTexture: any;
     private _randomTexture: DynamicTexture;
 
     private _originalColorPostProcess: PassPostProcess;

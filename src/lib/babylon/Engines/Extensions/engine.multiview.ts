@@ -3,10 +3,8 @@ import { Engine } from "../../Engines/engine";
 import { Scene } from "../../scene";
 import { InternalTexture, InternalTextureSource } from '../../Materials/Textures/internalTexture';
 import { Nullable } from '../../types';
-import { RenderTargetTexture } from '../../Materials/Textures/renderTargetTexture';
 import { Matrix, TmpVectors } from '../../Maths/math.vector';
 import { UniformBuffer } from '../../Materials/uniformBuffer';
-import { MultiviewRenderTarget } from '../../Materials/Textures/MultiviewRenderTarget';
 import { Frustum } from '../../Maths/math.frustum';
 
 declare module "../../Engines/engine" {
@@ -80,7 +78,7 @@ declare module "../../Cameras/camera" {
          * @hidden
          * For cameras that cannot use multiview images to display directly. (e.g. webVR camera will render to multiview texture, then copy to each eye texture and go from there)
          */
-        _multiviewTexture: Nullable<RenderTargetTexture>;
+        _multiviewTexture: Nullable<any>;
 
         /**
          * @hidden
@@ -97,12 +95,7 @@ Camera.prototype._useMultiviewToSingleView = false;
 Camera.prototype._multiviewTexture = null;
 
 Camera.prototype._resizeOrCreateMultiviewTexture = function(width: number, height: number) {
-    if (!this._multiviewTexture) {
-        this._multiviewTexture = new MultiviewRenderTarget(this.getScene(), { width: width, height: height });
-    } else if (this._multiviewTexture.getRenderWidth() != width || this._multiviewTexture.getRenderHeight() != height) {
-        this._multiviewTexture.dispose();
-        this._multiviewTexture = new MultiviewRenderTarget(this.getScene(), { width: width, height: height });
-    }
+
 };
 
 declare module "../../scene" {

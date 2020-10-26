@@ -2,7 +2,6 @@ import { Nullable } from "../types";
 import { Engine } from "../Engines/engine";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Effect } from "../Materials/effect";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { Camera } from "../Cameras/camera";
 import { Logger } from "../Misc/logger";
 import { Constants } from "../Engines/constants";
@@ -30,7 +29,7 @@ export class CircleOfConfusionPostProcess extends PostProcess {
      */
     public focalLength = 50;
 
-    private _depthTexture: Nullable<RenderTargetTexture> = null;
+    private _depthTexture: Nullable<any> = null;
     /**
      * Creates a new instance CircleOfConfusionPostProcess
      * @param name The name of the effect.
@@ -43,7 +42,7 @@ export class CircleOfConfusionPostProcess extends PostProcess {
      * @param textureType Type of textures used when performing the post process. (default: 0)
      * @param blockCompilation If compilation of the shader should not be done in the constructor. The updateEffect method can be used to compile the shader at a later time. (default: false)
      */
-    constructor(name: string, depthTexture: Nullable<RenderTargetTexture>, options: number | PostProcessOptions, camera: Nullable<Camera>, samplingMode?: number, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT, blockCompilation = false) {
+    constructor(name: string, depthTexture: Nullable<any>, options: number | PostProcessOptions, camera: Nullable<Camera>, samplingMode?: number, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT, blockCompilation = false) {
         super(name, "circleOfConfusion", ["cameraMinMaxZ", "focusDistance", "cocPrecalculation"], ["depthSampler"], options, camera, samplingMode, engine, reusable, null, textureType, undefined, null, blockCompilation);
         this._depthTexture = depthTexture;
         this.onApplyObservable.add((effect: Effect) => {
@@ -66,7 +65,7 @@ export class CircleOfConfusionPostProcess extends PostProcess {
     /**
      * Depth texture to be used to compute the circle of confusion. This must be set here or in the constructor in order for the post process to function.
      */
-    public set depthTexture(value: RenderTargetTexture) {
+    public set depthTexture(value: any) {
         this._depthTexture = value;
     }
 }

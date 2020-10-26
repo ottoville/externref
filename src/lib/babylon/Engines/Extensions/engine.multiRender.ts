@@ -1,5 +1,4 @@
 import { InternalTexture, InternalTextureSource } from '../../Materials/Textures/internalTexture';
-import { IMultiRenderTargetOptions } from '../../Materials/Textures/multiRenderTarget';
 import { Logger } from '../../Misc/logger';
 import { Nullable } from '../../types';
 import { Constants } from '../constants';
@@ -23,7 +22,7 @@ declare module "../../Engines/thinEngine" {
          * @param options defines the creation options
          * @returns the cube texture as an InternalTexture
          */
-        createMultipleRenderTarget(size: any, options: IMultiRenderTargetOptions): InternalTexture[];
+        createMultipleRenderTarget(size: any, options: any): InternalTexture[];
 
         /**
          * Update the sample count for a given multiple render target texture
@@ -93,7 +92,7 @@ ThinEngine.prototype.unBindMultiColorAttachmentFramebuffer = function(textures: 
     this._bindUnboundFramebuffer(null);
 };
 
-ThinEngine.prototype.createMultipleRenderTarget = function(size: any, options: IMultiRenderTargetOptions): InternalTexture[] {
+ThinEngine.prototype.createMultipleRenderTarget = function (size: any, options: any): InternalTexture[] {
     var generateMipMaps = false;
     var generateDepthBuffer = true;
     var generateStencilBuffer = false;

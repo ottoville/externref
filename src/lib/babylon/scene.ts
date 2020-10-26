@@ -20,7 +20,6 @@ import { Camera } from "./Cameras/camera";
 import { AbstractScene } from "./abstractScene";
 import { BaseTexture } from "./Materials/Textures/baseTexture";
 import { Texture } from "./Materials/Textures/texture";
-import { RenderTargetTexture } from "./Materials/Textures/renderTargetTexture";
 import { Material } from "./Materials/material";
 import { ImageProcessingConfiguration } from "./Materials/imageProcessingConfiguration";
 import { Effect } from "./Materials/effect";
@@ -1054,7 +1053,7 @@ export class Scene extends AbstractScene implements IAnimatable {
     /**
      * The list of user defined render targets added to the scene
      */
-    public customRenderTargets = new Array<RenderTargetTexture>();
+    public customRenderTargets = new Array<any>();
 
     /**
      * Defines if texture loading must be delayed
@@ -1150,7 +1149,7 @@ export class Scene extends AbstractScene implements IAnimatable {
     public dispatchAllSubMeshesOfActiveMeshes: boolean = false;
     private _activeMeshes = new SmartArray<AbstractMesh>(256);
     private _processedMaterials = new SmartArray<Material>(256);
-    private _renderTargets = new SmartArrayNoDuplicate<RenderTargetTexture>(256);
+    private _renderTargets = new SmartArrayNoDuplicate<any>(256);
     /** @hidden */
     public _activeParticleSystems = new SmartArray<IParticleSystem>(256);
     private _activeSkeletons = new SmartArrayNoDuplicate<Skeleton>(32);
@@ -3329,8 +3328,8 @@ export class Scene extends AbstractScene implements IAnimatable {
         if (this.textures) {
             for (let i = 0; i < this.textures.length; i++) {
                 let texture = this.textures[i];
-                if (texture && (<RenderTargetTexture>texture).renderList) {
-                    (<RenderTargetTexture>texture).freeRenderingGroups();
+                if (texture && (<any>texture).renderList) {
+                    (<any>texture).freeRenderingGroups();
                 }
             }
         }

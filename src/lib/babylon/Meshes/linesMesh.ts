@@ -5,7 +5,6 @@ import { Node } from "../node";
 import { VertexBuffer } from "../Meshes/buffer";
 import { SubMesh } from "../Meshes/subMesh";
 import { Mesh } from "../Meshes/mesh";
-import { InstancedMesh } from "../Meshes/instancedMesh";
 import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { ShaderMaterial } from "../Materials/shaderMaterial";
@@ -234,31 +233,6 @@ export class LinesMesh extends Mesh {
      * @param name defines the name of the new instance
      * @returns a new InstancedLinesMesh
      */
-    public createInstance(name: string): InstancedLinesMesh {
-        return new InstancedLinesMesh(name, this);
-    }
-}
-
-/**
- * Creates an instance based on a source LinesMesh
- */
-export class InstancedLinesMesh extends InstancedMesh {
-    /**
-     * The intersection Threshold is the margin applied when intersection a segment of the LinesMesh with a Ray.
-     * This margin is expressed in world space coordinates, so its value may vary.
-     * Initilized with the intersectionThreshold value of the source LinesMesh
-     */
-    public intersectionThreshold: number;
-
-    constructor(name: string, source: LinesMesh) {
-        super(name, source);
-        this.intersectionThreshold = source.intersectionThreshold;
-    }
-
-    /**
-     * Returns the string "InstancedLinesMesh".
-     */
-    public getClassName(): string {
-        return "InstancedLinesMesh";
+    public createInstance(name: string) {
     }
 }

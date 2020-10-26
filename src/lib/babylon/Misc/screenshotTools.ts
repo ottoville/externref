@@ -1,7 +1,6 @@
 import { Nullable } from "../types";
 import { Camera } from "../Cameras/camera";
 import { Texture } from "../Materials/Textures/texture";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { FxaaPostProcess } from "../PostProcesses/fxaaPostProcess";
 import { Constants } from "../Engines/constants";
 import { Logger } from "./logger";
@@ -140,45 +139,7 @@ export class ScreenshotTools {
         engine.setSize(width, height);
         scene.render();
 
-        // At this point size can be a number, or an object (according to engine.prototype.createRenderTargetTexture method)
-        var texture = new RenderTargetTexture("screenShot", targetTextureSize, scene, false, false, Constants.TEXTURETYPE_UNSIGNED_INT, false, Texture.NEAREST_SAMPLINGMODE);
-        texture.renderList = null;
-        texture.samples = samples;
-        texture.onAfterRenderObservable.add(() => {
-            Tools.DumpFramebuffer(width, height, engine, successCallback, mimeType, fileName);
-        });
 
-        const renderToTexture = () => {
-            scene.incrementRenderId();
-            scene.resetCachedMaterial();
-            texture.render(true);
-            texture.dispose();
-
-            if (previousCamera) {
-                scene.activeCamera = previousCamera;
-            }
-            engine.setSize(originalSize.width, originalSize.height);
-            camera.getProjectionMatrix(true); // Force cache refresh;
-        };
-
-        if (antialiasing) {
-            const fxaaPostProcess = new FxaaPostProcess('antialiasing', 1.0, scene.activeCamera);
-            texture.addPostProcess(fxaaPostProcess);
-            // Async Shader Compilation can lead to none ready effects in synchronous code
-            if (!fxaaPostProcess.getEffect().isReady()) {
-                fxaaPostProcess.getEffect().onCompiled = () => {
-                    renderToTexture();
-                };
-            }
-            // The effect is ready we can render
-            else {
-                renderToTexture();
-            }
-        }
-        else {
-            // No need to wait for extra resources to be ready
-            renderToTexture();
-        }
     }
 
     /**

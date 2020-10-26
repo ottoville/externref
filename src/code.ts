@@ -15,7 +15,6 @@ import { BuildingsUI } from "./tools/buildings.js";
 import { TerrainTool } from "./tools/Terrain.js";
 import { Zones } from "./tools/zones.js";
 import { Terrain } from "./world/terrain.js";
-import { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera.js";
 import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 
 //import  DB from "./DB.js";
@@ -315,33 +314,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     // Customs render targets
                     scene.onBeforeRenderTargetsRenderObservable.notifyObservers(scene);
                     var currentActiveCamera = scene.activeCamera;
-                    if (scene.renderTargetsEnabled) {
-                        //Tools.StartPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
-                        //this._intermediateRendering = true;
-                        for (var customIndex = 0; customIndex < scene.customRenderTargets.length; customIndex++) {
-                            var renderTarget = scene.customRenderTargets[customIndex];
-                            if (renderTarget._shouldRender()) {
-                                //this._renderId++;
-
-                                scene.activeCamera = renderTarget.activeCamera || scene.activeCamera;
-
-                                if (!scene.activeCamera) {
-                                    throw new Error("Active camera not set");
-                                }
-
-                                // Viewport
-                                engine.setViewport(scene.activeCamera.viewport);
-
-                                // Camera
-                                scene.updateTransformMatrix();
-                                renderTarget.render(currentActiveCamera !== scene.activeCamera, scene.dumpNextRenderTargets);
-
-                            }
-                        }
-                        //Tools.EndPerformanceCounter("Custom render targets", this.customRenderTargets.length > 0);
-                        //this._intermediateRendering = false;
-                        //this._renderId++;
-                    }
 
                     // Restore back buffer
                     scene.activeCamera = currentActiveCamera;

@@ -1,6 +1,5 @@
 import { SmartArrayNoDuplicate } from "../../Misc/smartArray";
 import { Scene } from "../../scene";
-import { RenderTargetTexture } from "../../Materials/Textures/renderTargetTexture";
 import { ShadowGenerator } from "./shadowGenerator";
 import { SceneComponentConstants, ISceneSerializableComponent } from "../../sceneComponent";
 import { _TimeToken } from "../../Instrumentation/timeToken";
@@ -96,7 +95,7 @@ export class ShadowGeneratorSceneComponent implements ISceneSerializableComponen
         // Nothing To Do Here.
     }
 
-    private _gatherRenderTargets(renderTargets: SmartArrayNoDuplicate<RenderTargetTexture>): void {
+    private _gatherRenderTargets(renderTargets: SmartArrayNoDuplicate<any>): void {
         // Shadows
         var scene = this.scene;
         if (this.scene.shadowsEnabled) {
@@ -105,7 +104,7 @@ export class ShadowGeneratorSceneComponent implements ISceneSerializableComponen
                 var shadowGenerator = light.getShadowGenerator();
 
                 if (light.isEnabled() && light.shadowEnabled && shadowGenerator) {
-                    var shadowMap = <RenderTargetTexture>(shadowGenerator.getShadowMap());
+                    var shadowMap = <any>(shadowGenerator.getShadowMap());
                     if (scene.textures.indexOf(shadowMap) !== -1) {
                         renderTargets.push(shadowMap);
                     }

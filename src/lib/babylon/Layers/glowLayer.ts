@@ -8,7 +8,6 @@ import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Texture } from "../Materials/Textures/texture";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { PostProcess } from "../PostProcesses/postProcess";
@@ -146,8 +145,8 @@ export class GlowLayer extends EffectLayer {
     private _verticalBlurPostprocess1: BlurPostProcess;
     private _horizontalBlurPostprocess2: BlurPostProcess;
     private _verticalBlurPostprocess2: BlurPostProcess;
-    private _blurTexture1: RenderTargetTexture;
-    private _blurTexture2: RenderTargetTexture;
+    private _blurTexture1: any;
+    private _blurTexture2: any;
     private _postProcesses1: PostProcess[];
     private _postProcesses2: PostProcess[];
 
@@ -234,38 +233,6 @@ export class GlowLayer extends EffectLayer {
             textureType = Constants.TEXTURETYPE_UNSIGNED_INT;
         }
 
-        this._blurTexture1 = new RenderTargetTexture("GlowLayerBlurRTT",
-            {
-                width: blurTextureWidth,
-                height: blurTextureHeight
-            },
-            this._scene,
-            false,
-            true,
-            textureType);
-        this._blurTexture1.wrapU = Texture.CLAMP_ADDRESSMODE;
-        this._blurTexture1.wrapV = Texture.CLAMP_ADDRESSMODE;
-        this._blurTexture1.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
-        this._blurTexture1.renderParticles = false;
-        this._blurTexture1.ignoreCameraViewport = true;
-
-        var blurTextureWidth2 = Math.floor(blurTextureWidth / 2);
-        var blurTextureHeight2 = Math.floor(blurTextureHeight / 2);
-
-        this._blurTexture2 = new RenderTargetTexture("GlowLayerBlurRTT2",
-            {
-                width: blurTextureWidth2,
-                height: blurTextureHeight2
-            },
-            this._scene,
-            false,
-            true,
-            textureType);
-        this._blurTexture2.wrapU = Texture.CLAMP_ADDRESSMODE;
-        this._blurTexture2.wrapV = Texture.CLAMP_ADDRESSMODE;
-        this._blurTexture2.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
-        this._blurTexture2.renderParticles = false;
-        this._blurTexture2.ignoreCameraViewport = true;
 
         this._textures = [this._blurTexture1, this._blurTexture2];
 
@@ -280,28 +247,6 @@ export class GlowLayer extends EffectLayer {
             effect.setTexture("textureSampler", this._mainTexture);
         });
 
-        this._verticalBlurPostprocess1 = new BlurPostProcess("GlowLayerVBP1", new Vector2(0, 1.0), this._options.blurKernelSize / 2, {
-            width: blurTextureWidth,
-            height: blurTextureHeight
-        },
-            null, Texture.BILINEAR_SAMPLINGMODE, this._scene.getEngine(), false, textureType);
-
-        this._horizontalBlurPostprocess2 = new BlurPostProcess("GlowLayerHBP2", new Vector2(1.0, 0), this._options.blurKernelSize / 2, {
-            width: blurTextureWidth2,
-            height: blurTextureHeight2
-        },
-            null, Texture.BILINEAR_SAMPLINGMODE, this._scene.getEngine(), false, textureType);
-        this._horizontalBlurPostprocess2.width = blurTextureWidth2;
-        this._horizontalBlurPostprocess2.height = blurTextureHeight2;
-        this._horizontalBlurPostprocess2.onApplyObservable.add((effect) => {
-            effect.setTexture("textureSampler", this._blurTexture1);
-        });
-
-        this._verticalBlurPostprocess2 = new BlurPostProcess("GlowLayerVBP2", new Vector2(0, 1.0), this._options.blurKernelSize / 2, {
-            width: blurTextureWidth2,
-            height: blurTextureHeight2
-        },
-            null, Texture.BILINEAR_SAMPLINGMODE, this._scene.getEngine(), false, textureType);
 
         this._postProcesses = [this._horizontalBlurPostprocess1, this._verticalBlurPostprocess1, this._horizontalBlurPostprocess2, this._verticalBlurPostprocess2];
         this._postProcesses1 = [this._horizontalBlurPostprocess1, this._verticalBlurPostprocess1];

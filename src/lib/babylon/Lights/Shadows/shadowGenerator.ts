@@ -16,7 +16,6 @@ import { MaterialDefines } from "../../Materials/materialDefines";
 import { MaterialHelper } from "../../Materials/materialHelper";
 import { Effect } from "../../Materials/effect";
 import { Texture } from "../../Materials/Textures/texture";
-import { RenderTargetTexture } from "../../Materials/Textures/renderTargetTexture";
 
 import { PostProcess } from "../../PostProcesses/postProcess";
 import { BlurPostProcess } from "../../PostProcesses/blurPostProcess";
@@ -68,12 +67,12 @@ export interface IShadowGenerator {
      * Gets the main RTT containing the shadow map (usually storing depth from the light point of view).
      * @returns The render target texture if present otherwise, null
      */
-    getShadowMap(): Nullable<RenderTargetTexture>;
+    getShadowMap(): Nullable<any>;
     /**
      * Gets the RTT used during rendering (can be a blurred version of the shadow map or the shadow map itself).
      * @returns The render target texture if the shadow map is present otherwise, null
      */
-    getShadowMapForRendering(): Nullable<RenderTargetTexture>;
+    getShadowMapForRendering(): Nullable<any>;
 
     /**
      * Determine wheter the shadow generator is ready or not (mainly all effects and related post processes needs to be ready).
@@ -639,20 +638,20 @@ export class ShadowGenerator implements IShadowGenerator {
         return this;
     }
 
-    private _shadowMap: Nullable<RenderTargetTexture>;
-    private _shadowMap2: Nullable<RenderTargetTexture>;
+    private _shadowMap: Nullable<any>;
+    private _shadowMap2: Nullable<any>;
     /**
      * Gets the main RTT containing the shadow map (usually storing depth from the light point of view).
      * @returns The render target texture if present otherwise, null
      */
-    public getShadowMap(): Nullable<RenderTargetTexture> {
+    public getShadowMap(): Nullable<any> {
         return this._shadowMap;
     }
     /**
      * Gets the RTT used during rendering (can be a blurred version of the shadow map or the shadow map itself).
      * @returns The render target texture if the shadow map is present otherwise, null
      */
-    public getShadowMapForRendering(): Nullable<RenderTargetTexture> {
+    public getShadowMapForRendering(): Nullable<any> {
         if (this._shadowMap2) {
             return this._shadowMap2;
         }
@@ -820,116 +819,11 @@ export class ShadowGenerator implements IShadowGenerator {
     }
 
     private _initializeShadowMap(): void {
-        // Render target
-        let engine = this._scene.getEngine();
-        if (engine.webGLVersion > 1) {
-            this._shadowMap = new RenderTargetTexture(this._light.name + "_shadowMap", this._mapSize, this._scene, false, true, this._textureType, this._light.needCube(), undefined, false, false);
-            this._shadowMap.createDepthStencilTexture(Constants.LESS, true);
-        }
-        else {
-            this._shadowMap = new RenderTargetTexture(this._light.name + "_shadowMap", this._mapSize, this._scene, false, true, this._textureType, this._light.needCube());
-        }
-        this._shadowMap.wrapU = Texture.CLAMP_ADDRESSMODE;
-        this._shadowMap.wrapV = Texture.CLAMP_ADDRESSMODE;
-        this._shadowMap.anisotropicFilteringLevel = 1;
-        this._shadowMap.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
-        this._shadowMap.renderParticles = false;
-        this._shadowMap.ignoreCameraViewport = true;
-        if (this._storedUniqueId) {
-            this._shadowMap.uniqueId = this._storedUniqueId;
-        }
-
-        // Record Face Index before render.
-        this._shadowMap.onBeforeRenderObservable.add((faceIndex: number) => {
-            this._currentFaceIndex = faceIndex;
-            if (this._filter === ShadowGenerator.FILTER_PCF) {
-                engine.setColorWrite(false);
-            }
-        });
-
-        // Custom render function.
-        this._shadowMap.customRenderFunction = this._renderForShadowMap.bind(this);
-
-        // Blur if required afer render.
-        this._shadowMap.onAfterUnbindObservable.add(() => {
-            if (this._filter === ShadowGenerator.FILTER_PCF) {
-                engine.setColorWrite(true);
-            }
-            if (!this.useBlurExponentialShadowMap && !this.useBlurCloseExponentialShadowMap) {
-                return;
-            }
-            let shadowMap = this.getShadowMapForRendering();
-
-            if (shadowMap) {
-                this._scene.postProcessManager.directRender(this._blurPostProcesses, shadowMap.getInternalTexture(), true);
-            }
-        });
-
-        // Clear according to the chosen filter.
-        var clearZero = new Color4(0, 0, 0, 0);
-        var clearOne = new Color4(1.0, 1.0, 1.0, 1.0);
-        this._shadowMap.onClearObservable.add((engine) => {
-            if (this._filter === ShadowGenerator.FILTER_PCF) {
-                engine.clear(clearOne, false, true, false);
-            }
-            else if (this.useExponentialShadowMap || this.useBlurExponentialShadowMap) {
-                engine.clear(clearZero, true, true, false);
-            }
-            else {
-                engine.clear(clearOne, true, true, false);
-            }
-        });
-
-        this._shadowMap.onResizeObservable.add((RTT) => {
-            this._storedUniqueId = this._shadowMap!.uniqueId;
-            this._mapSize = RTT.getRenderSize();
-            this._light._markMeshesAsLightDirty();
-            this.recreateShadowMap();
-        });
+        
     }
 
     private _initializeBlurRTTAndPostProcesses(): void {
-        var engine = this._scene.getEngine();
-        var targetSize = this._mapSize / this.blurScale;
-
-        if (!this.useKernelBlur || this.blurScale !== 1.0) {
-            this._shadowMap2 = new RenderTargetTexture(this._light.name + "_shadowMap2", targetSize, this._scene, false, true, this._textureType);
-            this._shadowMap2.wrapU = Texture.CLAMP_ADDRESSMODE;
-            this._shadowMap2.wrapV = Texture.CLAMP_ADDRESSMODE;
-            this._shadowMap2.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
-        }
-
-        if (this.useKernelBlur) {
-            this._kernelBlurXPostprocess = new BlurPostProcess(this._light.name + "KernelBlurX", new Vector2(1, 0), this.blurKernel, 1.0, null, Texture.BILINEAR_SAMPLINGMODE, engine, false, this._textureType);
-            this._kernelBlurXPostprocess.width = targetSize;
-            this._kernelBlurXPostprocess.height = targetSize;
-            this._kernelBlurXPostprocess.onApplyObservable.add((effect) => {
-                effect.setTexture("textureSampler", this._shadowMap);
-            });
-
-            this._kernelBlurYPostprocess = new BlurPostProcess(this._light.name + "KernelBlurY", new Vector2(0, 1), this.blurKernel, 1.0, null, Texture.BILINEAR_SAMPLINGMODE, engine, false, this._textureType);
-
-            this._kernelBlurXPostprocess.autoClear = false;
-            this._kernelBlurYPostprocess.autoClear = false;
-
-            if (this._textureType === Constants.TEXTURETYPE_UNSIGNED_INT) {
-                (<BlurPostProcess>this._kernelBlurXPostprocess).packedFloat = true;
-                (<BlurPostProcess>this._kernelBlurYPostprocess).packedFloat = true;
-            }
-
-            this._blurPostProcesses = [this._kernelBlurXPostprocess, this._kernelBlurYPostprocess];
-        }
-        else {
-            this._boxBlurPostprocess = new PostProcess(this._light.name + "DepthBoxBlur", "depthBoxBlur", ["screenSize", "boxOffset"], [], 1.0, null, Texture.BILINEAR_SAMPLINGMODE, engine, false, "#define OFFSET " + this._blurBoxOffset, this._textureType);
-            this._boxBlurPostprocess.onApplyObservable.add((effect) => {
-                effect.setFloat2("screenSize", targetSize, targetSize);
-                effect.setTexture("textureSampler", this._shadowMap);
-            });
-
-            this._boxBlurPostprocess.autoClear = false;
-
-            this._blurPostProcesses = [this._boxBlurPostprocess];
-        }
+        
     }
 
     private _renderForShadowMap(opaqueSubMeshes: SmartArray<SubMesh>, alphaTestSubMeshes: SmartArray<SubMesh>, transparentSubMeshes: SmartArray<SubMesh>, depthOnlySubMeshes: SmartArray<SubMesh>): void {

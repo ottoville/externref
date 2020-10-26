@@ -4,7 +4,6 @@ import { Engine } from "../Engines/engine";
 import { SceneComponentConstants, ISceneComponent } from "../sceneComponent";
 import { _TimeToken } from "../Instrumentation/timeToken";
 import { Layer } from "./layer";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { AbstractScene } from '../abstractScene';
 
 declare module "../abstractScene" {
@@ -109,20 +108,20 @@ export class LayerSceneComponent implements ISceneComponent {
         });
     }
 
-    private _drawRenderTargetPredicate(layer: Layer, isBackground: boolean, cameraLayerMask: number, renderTargetTexture: RenderTargetTexture): boolean {
+    private _drawRenderTargetPredicate(layer: Layer, isBackground: boolean, cameraLayerMask: number, renderTargetTexture: any): boolean {
         return (layer.renderTargetTextures.length > 0) &&
             layer.isBackground === isBackground &&
             (layer.renderTargetTextures.indexOf(renderTargetTexture) > -1) &&
             ((layer.layerMask & cameraLayerMask) !== 0);
     }
 
-    private _drawRenderTargetBackground(renderTarget: RenderTargetTexture): void {
+    private _drawRenderTargetBackground(renderTarget: any): void {
         this._draw((layer: Layer) => {
             return this._drawRenderTargetPredicate(layer, true, this.scene.activeCamera!.layerMask, renderTarget);
         });
     }
 
-    private _drawRenderTargetForeground(renderTarget: RenderTargetTexture): void {
+    private _drawRenderTargetForeground(renderTarget: any): void {
         this._draw((layer: Layer) => {
             return this._drawRenderTargetPredicate(layer, false, this.scene.activeCamera!.layerMask, renderTarget);
         });

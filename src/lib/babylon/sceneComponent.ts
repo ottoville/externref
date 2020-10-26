@@ -5,7 +5,6 @@ import { _InstancesBatch } from "./Meshes/mesh";
 import { SmartArrayNoDuplicate } from "./Misc/smartArray";
 import { Nullable } from "./types";
 import { Camera } from "./Cameras/camera";
-import { RenderTargetTexture } from "./Materials/Textures/renderTargetTexture";
 import { PickingInfo } from "./Collisions/pickingInfo";
 import { AbstractScene } from "./abstractScene";
 
@@ -170,7 +169,7 @@ export type CameraStageFrameBufferAction = (camera: Camera) => boolean;
 /**
  * Strong typing of a Render Target related stage step action
  */
-export type RenderTargetStageAction = (renderTarget: RenderTargetTexture) => void;
+export type RenderTargetStageAction = (renderTarget: any) => void;
 
 /**
  * Strong typing of a RenderingGroup related stage step action
@@ -190,7 +189,7 @@ export type SimpleStageAction = () => void;
 /**
  * Strong typing of a render target action.
  */
-export type RenderTargetsStageAction = (renderTargets: SmartArrayNoDuplicate<RenderTargetTexture>) => void;
+export type RenderTargetsStageAction = (renderTargets: SmartArrayNoDuplicate<any>) => void;
 
 /**
  * Strong typing of a pointer move action.

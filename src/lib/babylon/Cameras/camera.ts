@@ -18,7 +18,6 @@ import { Frustum } from '../Maths/math.frustum';
 import { Plane } from '../Maths/math.plane';
 
 declare type PostProcess = import("../PostProcesses/postProcess").PostProcess;
-declare type RenderTargetTexture = import("../Materials/Textures/renderTargetTexture").RenderTargetTexture;
 declare type FreeCamera = import("./freeCamera").FreeCamera;
 declare type TargetCamera = import("./targetCamera").TargetCamera;
 declare type Ray = import("../Culling/ray").Ray;
@@ -237,13 +236,13 @@ export class Camera extends Node {
      *
      * To change the final output target of the camera, camera.outputRenderTarget should be used instead (eg. webXR renders to a render target corrisponding to an HMD)
      */
-    public customRenderTargets = new Array<RenderTargetTexture>();
+    public customRenderTargets = new Array<any>();
     /**
      * When set, the camera will render to this render target instead of the default canvas
      *
      * If the desire is to use the output of a camera as a texture in the scene consider using camera.customRenderTargets instead
      */
-    public outputRenderTarget: Nullable<RenderTargetTexture> = null;
+    public outputRenderTarget: Nullable<any> = null;
 
     /**
      * Observable triggered when the camera view matrix has changed.

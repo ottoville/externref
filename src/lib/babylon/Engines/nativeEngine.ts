@@ -6,7 +6,6 @@ import { IInternalTextureLoader } from "../Materials/Textures/internalTextureLoa
 import { Texture } from "../Materials/Textures/texture";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { VideoTexture } from "../Materials/Textures/videoTexture";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { Effect } from "../Materials/effect";
 import { DataBuffer } from '../Meshes/dataBuffer';
 import { Tools } from "../Misc/tools";
@@ -1787,7 +1786,7 @@ export class NativeEngine extends Engine {
 
         let internalTexture: InternalTexture;
         if (depthStencilTexture) {
-            internalTexture = (<RenderTargetTexture>texture).depthStencilTexture!;
+            internalTexture = (<any>texture).depthStencilTexture!;
         } else if (texture.isReady()) {
             internalTexture = <InternalTexture>texture.getInternalTexture();
         } else if (texture.isCube) {

@@ -14,8 +14,6 @@ import { Plane } from '../../Maths/math.plane';
 import { StringTools } from '../../Misc/stringTools';
 
 declare type CubeTexture = import("../../Materials/Textures/cubeTexture").CubeTexture;
-declare type MirrorTexture = import("../../Materials/Textures/mirrorTexture").MirrorTexture;
-declare type RenderTargetTexture = import("../../Materials/Textures/renderTargetTexture").RenderTargetTexture;
 declare type Scene = import("../../scene").Scene;
 
 /**
@@ -33,11 +31,11 @@ export class Texture extends BaseTexture {
         throw _DevTools.WarnImport("CubeTexture");
     }
     /** @hidden */
-    public static _CreateMirror = (name: string, renderTargetSize: number, scene: Scene, generateMipMaps: boolean): MirrorTexture => {
+    public static _CreateMirror = (name: string, renderTargetSize: number, scene: Scene, generateMipMaps: boolean): any => {
         throw _DevTools.WarnImport("MirrorTexture");
     }
     /** @hidden */
-    public static _CreateRenderTargetTexture = (name: string, renderTargetSize: number, scene: Scene, generateMipMaps: boolean): RenderTargetTexture => {
+    public static _CreateRenderTargetTexture = (name: string, renderTargetSize: number, scene: Scene, generateMipMaps: boolean): any => {
         throw _DevTools.WarnImport("RenderTargetTexture");
     }
 
@@ -681,7 +679,7 @@ export class Texture extends BaseTexture {
 
                 return mirrorTexture;
             } else if (parsedTexture.isRenderTarget) {
-                let renderTargetTexture: Nullable<RenderTargetTexture> = null;
+                let renderTargetTexture: Nullable<any> = null;
                 if (parsedTexture.isCube) {
                     // Search for an existing reflection probe (which contains a cube render target texture)
                     if (scene.reflectionProbes) {

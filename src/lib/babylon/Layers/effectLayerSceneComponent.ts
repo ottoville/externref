@@ -2,7 +2,6 @@ import { Camera } from "../Cameras/camera";
 import { Scene } from "../scene";
 import { Engine } from "../Engines/engine";
 import { AbstractMesh } from "../Meshes/abstractMesh";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { SceneComponentConstants, ISceneSerializableComponent } from "../sceneComponent";
 import { _TimeToken } from "../Instrumentation/timeToken";
 import { EffectLayer } from "./effectLayer";
@@ -206,7 +205,7 @@ export class EffectLayerSceneComponent implements ISceneSerializableComponent {
                     this._renderEffects = true;
                     this._needStencil = this._needStencil || effectLayer.needStencil();
 
-                    let renderTarget = (<RenderTargetTexture>(<any>effectLayer)._mainTexture);
+                    let renderTarget = (<any>(<any>effectLayer)._mainTexture);
                     if (renderTarget._shouldRender()) {
                         this.scene.incrementRenderId();
                         renderTarget.render(false, false);

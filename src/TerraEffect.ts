@@ -10,7 +10,6 @@ import type { ShaderProcessingContext, ProcessingOptions } from "./lib/babylon/E
 import { ShaderProcessor } from "./lib/babylon/Engines/Processors/shaderProcessor.js";
 import type { InternalTexture } from "./lib/babylon/Materials/Textures/internalTexture.js";
 import type { BaseTexture } from "./lib/babylon/Materials/Textures/baseTexture.js";
-import type { RenderTargetTexture } from "./lib/babylon/Materials/Textures/renderTargetTexture.js";
 import type { PostProcess } from "./lib/babylon/PostProcesses/postProcess.js";
 import type { IColor4Like, IVector4Like, IMatrixLike, IVector2Like, IVector3Like, IColor3Like } from "./lib/babylon/Maths/math.like.js";
 import type { WebGPUPipelineContext } from "./lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
@@ -67,7 +66,7 @@ export class TerraEffect {
      * @param channel Name of the sampler variable.
      * @param texture Texture to set.
      */
-    public setDepthStencilTexture(channel: string, texture: Nullable<RenderTargetTexture>): void {
+    public setDepthStencilTexture(channel: string, texture: Nullable<any>): void {
         this._engine.setDepthStencilTexture(this._samplers[channel], this._uniforms[channel], texture);
     }
 

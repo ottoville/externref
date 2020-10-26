@@ -12,7 +12,6 @@ import { Mesh } from "../Meshes/mesh";
 import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { Texture } from "../Materials/Textures/texture";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { PostProcess, PostProcessOptions } from "../PostProcesses/postProcess";
 import { PassPostProcess } from "../PostProcesses/passPostProcess";
 import { BlurPostProcess } from "../PostProcesses/blurPostProcess";
@@ -252,7 +251,7 @@ export class HighlightLayer extends EffectLayer {
     private _downSamplePostprocess: PassPostProcess;
     private _horizontalBlurPostprocess: GlowBlurPostProcess;
     private _verticalBlurPostprocess: GlowBlurPostProcess;
-    private _blurTexture: RenderTargetTexture;
+    private _blurTexture: any;
 
     private _meshes: Nullable<{ [id: string]: Nullable<IHighlightLayerMesh> }> = {};
     private _excludedMeshes: Nullable<{ [id: string]: Nullable<IHighlightLayerExcludedMesh> }> = {};
@@ -323,95 +322,7 @@ export class HighlightLayer extends EffectLayer {
      * Creates the render target textures and post processes used in the highlight layer.
      */
     protected _createTextureAndPostProcesses(): void {
-        var blurTextureWidth = this._mainTextureDesiredSize.width * this._options.blurTextureSizeRatio;
-        var blurTextureHeight = this._mainTextureDesiredSize.height * this._options.blurTextureSizeRatio;
-        blurTextureWidth = this._engine.needPOTTextures ? Engine.GetExponentOfTwo(blurTextureWidth, this._maxSize) : blurTextureWidth;
-        blurTextureHeight = this._engine.needPOTTextures ? Engine.GetExponentOfTwo(blurTextureHeight, this._maxSize) : blurTextureHeight;
-
-        var textureType = 0;
-        if (this._engine.getCaps().textureHalfFloatRender) {
-            textureType = Constants.TEXTURETYPE_HALF_FLOAT;
-        }
-        else {
-            textureType = Constants.TEXTURETYPE_UNSIGNED_INT;
-        }
-
-        this._blurTexture = new RenderTargetTexture("HighlightLayerBlurRTT",
-            {
-                width: blurTextureWidth,
-                height: blurTextureHeight
-            },
-            this._scene,
-            false,
-            true,
-            textureType);
-        this._blurTexture.wrapU = Texture.CLAMP_ADDRESSMODE;
-        this._blurTexture.wrapV = Texture.CLAMP_ADDRESSMODE;
-        this._blurTexture.anisotropicFilteringLevel = 16;
-        this._blurTexture.updateSamplingMode(Texture.TRILINEAR_SAMPLINGMODE);
-        this._blurTexture.renderParticles = false;
-        this._blurTexture.ignoreCameraViewport = true;
-
-        this._textures = [this._blurTexture];
-
-        if (this._options.alphaBlendingMode === Constants.ALPHA_COMBINE) {
-            this._downSamplePostprocess = new PassPostProcess("HighlightLayerPPP", this._options.blurTextureSizeRatio,
-                null, Texture.BILINEAR_SAMPLINGMODE, this._scene.getEngine());
-            this._downSamplePostprocess.onApplyObservable.add((effect) => {
-                effect.setTexture("textureSampler", this._mainTexture);
-            });
-
-            this._horizontalBlurPostprocess = new GlowBlurPostProcess("HighlightLayerHBP", new Vector2(1.0, 0), this._options.blurHorizontalSize, 1,
-                null, Texture.BILINEAR_SAMPLINGMODE, this._scene.getEngine());
-            this._horizontalBlurPostprocess.onApplyObservable.add((effect) => {
-                effect.setFloat2("screenSize", blurTextureWidth, blurTextureHeight);
-            });
-
-            this._verticalBlurPostprocess = new GlowBlurPostProcess("HighlightLayerVBP", new Vector2(0, 1.0), this._options.blurVerticalSize, 1,
-                null, Texture.BILINEAR_SAMPLINGMODE, this._scene.getEngine());
-            this._verticalBlurPostprocess.onApplyObservable.add((effect) => {
-                effect.setFloat2("screenSize", blurTextureWidth, blurTextureHeight);
-            });
-
-            this._postProcesses = [this._downSamplePostprocess, this._horizontalBlurPostprocess, this._verticalBlurPostprocess];
-        }
-        else {
-            this._horizontalBlurPostprocess = new BlurPostProcess("HighlightLayerHBP", new Vector2(1.0, 0), this._options.blurHorizontalSize / 2, {
-                width: blurTextureWidth,
-                height: blurTextureHeight
-            },
-                null, Texture.BILINEAR_SAMPLINGMODE, this._scene.getEngine(), false, textureType);
-            this._horizontalBlurPostprocess.width = blurTextureWidth;
-            this._horizontalBlurPostprocess.height = blurTextureHeight;
-            this._horizontalBlurPostprocess.onApplyObservable.add((effect) => {
-                effect.setTexture("textureSampler", this._mainTexture);
-            });
-
-            this._verticalBlurPostprocess = new BlurPostProcess("HighlightLayerVBP", new Vector2(0, 1.0), this._options.blurVerticalSize / 2, {
-                width: blurTextureWidth,
-                height: blurTextureHeight
-            },
-                null, Texture.BILINEAR_SAMPLINGMODE, this._scene.getEngine(), false, textureType);
-
-            this._postProcesses = [this._horizontalBlurPostprocess, this._verticalBlurPostprocess];
-        }
-
-        this._mainTexture.onAfterUnbindObservable.add(() => {
-            this.onBeforeBlurObservable.notifyObservers(this);
-
-            let internalTexture = this._blurTexture.getInternalTexture();
-            if (internalTexture) {
-                this._scene.postProcessManager.directRender(
-                    this._postProcesses,
-                    internalTexture,
-                    true);
-            }
-
-            this.onAfterBlurObservable.notifyObservers(this);
-        });
-
-        // Prevent autoClear.
-        this._postProcesses.map((pp) => { pp.autoClear = false; });
+       
     }
 
     /**

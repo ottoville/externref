@@ -39,7 +39,6 @@ import type { WebGPUEngine } from "../Engines/webgpuEngine.js";
 import { WebGPUConstants } from "../Engines/WebGPU/webgpuConstants";
 
 declare type LinesMesh = import("./linesMesh").LinesMesh;
-declare type InstancedMesh = import("./instancedMesh").InstancedMesh;
 declare type GroundMesh = import("./groundMesh").GroundMesh;
 declare type IPhysicsEnabledObject = import("../Physics/physicsImpostor").IPhysicsEnabledObject;
 declare type PhysicsImpostor = import("../Physics/physicsImpostor").PhysicsImpostor;
@@ -85,7 +84,7 @@ class _InstanceDataStorage {
  **/
 export class _InstancesBatch {
     public mustReturn = false;
-    public visibleInstances = new Array<Nullable<Array<InstancedMesh>>>();
+    public visibleInstances = new Array<Nullable<Array<any>>>();
     public renderSelf = new Array<boolean>();
     public hardwareInstancedRendering = new Array<boolean>();
 }
@@ -291,7 +290,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * Note also that the order of the InstancedMesh wihin the array is not significant and might change.
      * @see http://doc.babylonjs.com/how_to/how_to_use_instances
      */
-    public instances = new Array<InstancedMesh>();
+    public instances = new Array<any>();
 
     /**
      * Gets the file containing delay loading data for this mesh
@@ -1061,7 +1060,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _registerInstanceForRenderId(instance: InstancedMesh, renderId: number): Mesh {
+    public _registerInstanceForRenderId(instance: any, renderId: number): Mesh {
         if (!this._instanceDataStorage.visibleInstances) {
             this._instanceDataStorage.visibleInstances = {
                 defaultRenderId: renderId,
@@ -1070,7 +1069,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
         }
 
         if (!this._instanceDataStorage.visibleInstances[renderId]) {
-            this._instanceDataStorage.visibleInstances[renderId] = new Array<InstancedMesh>();
+            this._instanceDataStorage.visibleInstances[renderId] = new Array<any>();
         }
 
         this._instanceDataStorage.visibleInstances[renderId].push(instance);
@@ -1605,7 +1604,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _processInstancedBuffers(visibleInstances: InstancedMesh[], renderSelf: boolean) {
+    public _processInstancedBuffers(visibleInstances: any[], renderSelf: boolean) {
         // Do nothing
     }
 
@@ -2798,7 +2797,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
 
     // Instances
     /** @hidden */
-    public static _instancedMeshFactory(name: string, mesh: Mesh): InstancedMesh {
+    public static _instancedMeshFactory(name: string, mesh: Mesh): any {
         throw _DevTools.WarnImport("InstancedMesh");
     }
 
@@ -2813,7 +2812,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @param name defines the name of the new instance
      * @returns a new InstancedMesh
      */
-    public createInstance(name: string): InstancedMesh {
+    public createInstance(name: string): any {
         return Mesh._instancedMeshFactory(name, this);
     }
 
@@ -4160,13 +4159,13 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public addInstance(instance: InstancedMesh) {
+    public addInstance(instance: any) {
         instance._indexInSourceMeshInstanceArray = this.instances.length;
         this.instances.push(instance);
     }
 
     /** @hidden */
-    public removeInstance(instance: InstancedMesh) {
+    public removeInstance(instance: any) {
         // Remove from mesh
         const index = instance._indexInSourceMeshInstanceArray;
         if (index != -1) {

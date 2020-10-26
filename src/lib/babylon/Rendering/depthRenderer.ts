@@ -6,7 +6,6 @@ import { VertexBuffer } from "../Meshes/buffer";
 import { SmartArray } from "../Misc/smartArray";
 import { Scene } from "../scene";
 import { Texture } from "../Materials/Textures/texture";
-import { RenderTargetTexture } from "../Materials/Textures/renderTargetTexture";
 import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
@@ -23,7 +22,7 @@ import { _DevTools } from '../Misc/devTools';
  */
 export class DepthRenderer {
     private _scene: Scene;
-    private _depthMap: RenderTargetTexture;
+    private _depthMap: any;
     private _effect: Effect;
     private readonly _storeNonLinearDepth: boolean;
     private readonly _clearColor: Color4;
@@ -69,26 +68,6 @@ export class DepthRenderer {
         this._camera = camera;
         var engine = scene.getEngine();
 
-        // Render target
-        var format = (this.isPacked || engine.webGLVersion === 1) ? Constants.TEXTUREFORMAT_RGBA : Constants.TEXTUREFORMAT_R;
-        this._depthMap = new RenderTargetTexture("depthMap", { width: engine.getRenderWidth(), height: engine.getRenderHeight() }, this._scene, false, true, type,
-            false, undefined, undefined, undefined, undefined,
-            format);
-        this._depthMap.wrapU = Texture.CLAMP_ADDRESSMODE;
-        this._depthMap.wrapV = Texture.CLAMP_ADDRESSMODE;
-        this._depthMap.refreshRate = 1;
-        this._depthMap.renderParticles = false;
-        this._depthMap.renderList = null;
-
-        // Camera to get depth map from to support multiple concurrent cameras
-        this._depthMap.activeCamera = this._camera;
-        this._depthMap.ignoreCameraViewport = true;
-        this._depthMap.useCameraPostProcesses = false;
-
-        // set default depth value to 1.0 (far away)
-        this._depthMap.onClearObservable.add((engine) => {
-            engine.clear(this._clearColor, true, true, true);
-        });
 
         // Custom render function
         var renderSubMesh = (subMesh: SubMesh): void => {
@@ -262,7 +241,7 @@ export class DepthRenderer {
      * Gets the texture which the depth map will be written to.
      * @returns The depth map texture
      */
-    public getDepthMap(): RenderTargetTexture {
+    public getDepthMap(): any {
         return this._depthMap;
     }
 
