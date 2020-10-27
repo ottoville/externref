@@ -3,7 +3,7 @@
 
 
 export class testPlane {
-    mesh = this.scene.gpuscene.lights.lightsBindGroup.addDrawable({
+    mesh = this.scene.gpuscene.lights.lightsBindGroup.addRenderPipeline({
         sampleCount: this.scene.gpuscene.sampleCount,
         rasterizationState: {
             cullMode: 'none',
@@ -31,7 +31,7 @@ export class testPlane {
 }
 
 export class testPlaneNormals {
-    mesh = this.scene.gpuscene.lights.lightsBindGroup.addDrawable({
+    mesh = this.scene.gpuscene.lights.lightsBindGroup.addRenderPipeline({
         sampleCount: this.scene.gpuscene.sampleCount,
         rasterizationState: {
             cullMode: 'none',

@@ -8,7 +8,7 @@ import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { addTrait, Trait, Traitable } from "../traits/trait.js";
 import { GPUScene } from "../GPUScene.js";
-import type { Drawable } from "../drawables/Drawable.js";
+import type { RenderPipeLine } from "../drawables/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import { TerraScene } from "../TerraScene.js";
 
@@ -24,7 +24,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
     public static instance: UITAB | null = null;
 
     private engine: WebGPUEngine;
-    private helper: Drawable;
+    private helper: RenderPipeLine;
 
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
@@ -57,7 +57,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
 
         this.worldPosition = new worldPosition(this);
 
-        this.helper = terrain.TerrainHeightsbindGroupPositionTree.addDrawable({
+        this.helper = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
             sampleCount: GPUScene.instance.sampleCount,
             primitiveTopology: 'triangle-strip',
             rasterizationState: {

@@ -16,6 +16,7 @@ import { TerrainTool } from "./tools/Terrain.js";
 import { Zones } from "./tools/zones.js";
 import { Terrain } from "./world/terrain.js";
 import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
+import { Camera } from "./lib/babylon/Cameras/camera.js";
 
 //import  DB from "./DB.js";
 
@@ -131,7 +132,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     blazor.invokeMethod('setProgress', 75);
 
 
-                    //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
                     const commandEncoder = device.createCommandEncoder({});
                     blazor.invokeMethod('setProgress', 80);
 
@@ -211,55 +211,47 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         console.error(e);
                     }
                 }
-            });
+            }, canvas);
+
+
             terrascene.onRenderStart = async () => {
                 const gpuscene = await terrascene.gpuscenePromise
+
                 const scene = await scenePromise;
                 let rloop = function (time: DOMHighResTimeStamp) {
 
-                    // Start new frame
-                    //engine.beginFrame();
-                    //@ts-ignore
-                    engine._measureFps();
-                    //@ts-ignore
-                    engine.onBeginFrameObservable.notifyObservers(engine);
-                    //@ts-ignore
-                    engine._renderEncoder = engine._device.createCommandEncoder(engine._renderEncoderDescriptor);
+                    const renderEncoder = gpuscene.device.createCommandEncoder();
                     // Some PGs are using color3...
                     if (scene.clearColor.a === undefined) {
                         scene.clearColor.a = 1;
                     }
                     //@ts-ignore
-                    engine._mainColorAttachments[0].loadValue = scene.clearColor;
+                    //engine._mainColorAttachments[0].loadValue = scene.clearColor;
                     //@ts-ignore
-                    engine._mainDepthAttachment.depthLoadValue = engine._clearDepthValue;
+                    //engine._mainDepthAttachment.depthLoadValue = engine._clearDepthValue;
                     //@ts-ignore
-                    engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
+                    //engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
                     //@ts-ignore
                     //engine._startMainRenderPass();
                     // Resolve in case of MSAA
-                    //@ts-ignore
-                    if (engine._options.antialiasing) {
-                        //@ts-ignore
-                        engine._mainColorAttachments[0].resolveTarget = engine._swapChain.getCurrentTexture().createView();
-                    }
-                    else {
-                        //@ts-ignore
-                        //engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
-                        engine._mainColorAttachments[0].attachment = engine._swapChain.getCurrentTexture().createView();
-                    }
-                    //@ts-ignore
-                    engine._currentRenderPass = engine._renderEncoder.beginRenderPass({
-                        //@ts-ignore
-                        colorAttachments: engine._mainColorAttachments,
-                        //@ts-ignore
-                        depthStencilAttachment: engine._mainDepthAttachment
+                    const colorAttachment: GPURenderPassColorAttachmentDescriptor = terrascene.gpuscene.sampleCount > 1 ? {
+                        attachment: gpuscene.swapAttachment,
+                        resolveTarget: gpuscene.swapChain.getCurrentTexture().createView(),
+                    } : {
+                            attachment: gpuscene.swapChain.getCurrentTexture().createView(),
+                        }
+                    colorAttachment.loadValue = { r: 0.53, g: 0.8, b: 0.92, a: 1.0 } // sky color
+                    const passEncoder = renderEncoder.beginRenderPass({
+                        colorAttachments: [colorAttachment],
+                        depthStencilAttachment: {
+                            attachment: gpuscene.depthAttachment,
+
+                            depthLoadValue: 1,
+                            depthStoreOp: "store",
+                            stencilLoadValue: 0,
+                            stencilStoreOp: "store",
+                        }
                     });
-
-                    // scene.render();
-
-
-                    //this._frameId++;
 
                     // Register components that have been associated lately to the scene.
                     //this._registerTransientComponents();
@@ -341,18 +333,21 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                             if (cameraIndex > 0) {
                                 (engine as Engine).clear(null, false, true, true);
                             }
-                            //@ts-ignore
-                            scene._processSubCameras(scene.activeCameras[cameraIndex]);
+                            let camera = scene.activeCameras[cameraIndex];
+                            //////////////////
+                            scene._renderForCamera(camera);
+                            scene.onAfterRenderCameraObservable.notifyObservers(camera);
+                           
+                            //////////////
+
+
                             //@ts-ignore
                             new Float32Array(TerraScene.instance.viewProjection).set(scene._transformMatrix.m);
                             new Float32Array(TerraScene.instance.view).set(scene.activeCameras[cameraIndex].getViewMatrix().m);
-                            new Float32Array(TerraScene.instance.projection).set(scene.activeCameras[cameraIndex].getProjectionMatrix().m);
-
-                            //@ts-ignore
-                            const renderPass = (engine as WebGPUEngine)._bundleEncoder || (engine as WebGPUEngine)._currentRenderPass!;
+                            new Float32Array(TerraScene.instance.projection).set(scene.activeCameras[cameraIndex]._projectionMatrix.m);
 
 
-                            TerraScene.instance.render(renderPass as GPURenderPassEncoder, time);
+                            TerraScene.instance.render(passEncoder, time);
 
 
                         }
@@ -405,21 +400,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
 
-
-
-
                     //scene render ends
 
-
-                    //@ts-ignore
-                    if (engine._currentRenderPass) {
-                        //@ts-ignore
-                        engine._currentRenderPass.endPass();
-                        //@ts-ignore
-                        engine._currentRenderPass = null;
-                    }
-                     //@ts-ignore
-                    gpuscene.device.defaultQueue.submit([engine._renderEncoder.finish()]);
+                    passEncoder.endPass();
+                    gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
                     engine.onEndFrameObservable.notifyObservers(engine);
 
                     window.requestAnimationFrame(rloop);
@@ -432,8 +416,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             //@ts-ignore
             engine._adapter = adapter;
             const device = await terrascene.device
-            
-            GPUScene.canvas = canvas;
+
+            // GPUScene.canvas = canvas;
 
 
 
@@ -454,10 +438,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             blazor.invokeMethod('setProgress', 11);
             // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
 
-            //await engine.initAsync();
-
-
-
 
 
             //await Promise.all(shaderPutsC);
@@ -469,30 +449,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             //@ts-ignore
             engine._initializeLimits();
             blazor.invokeMethod('setProgress', 13);
-            //@ts-ignore
-            //engine._initializeContextAndSwapChain();
-            engine._context = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
-            /*
-            //@ts-ignore
-            engine._swapChain = engine._context.configureSwapChain({
-                //@ts-ignore
-                device: engine._device,
-                //@ts-ignore
-                format: engine._options.swapChainFormat!,
-                //@ts-ignore
-                usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-            });*/
 
-
-            /*let width = this._renderingCanvas ? this._renderingCanvas.clientWidth : window.innerWidth;
-            let height = this._renderingCanvas ? this._renderingCanvas.clientHeight : window.innerHeight;
-            engine.setSize(width, height)*/
-            //@ts-ignore
-            engine._swapChain = engine._context.configureSwapChain({
-                //@ts-ignore
-                device: engine._device,
-                format: "bgra8unorm"
-            });
 
             engine.resize();
 
@@ -532,7 +489,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         scene.autoClearDepthAndStencil = false;
 
 
-  
+
 
 
         // Resize

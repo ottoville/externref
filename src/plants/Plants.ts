@@ -63,7 +63,7 @@ export class Plants {
     ) {
 
 
-        const drawable = scene.lights.lightsBindGroup.addDrawable({
+        const drawable = scene.lights.lightsBindGroup.addRenderPipeline({
             sampleCount: scene.sampleCount,
             primitiveTopology: 'triangle-strip',
             rasterizationState: {

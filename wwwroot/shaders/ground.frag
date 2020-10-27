@@ -10,8 +10,6 @@ layout(location = 0) out vec4 glFragColor;
 
 
 void main(void) {
-
-
-//glFragColor=v_Color;
-glFragColor =  vec4(ambient,0)+texture(sampler2D(myTexture, mySampler), v_uv) *  vec4(shading,shading,shading,1.0);
+	//glFragColor=v_Color;
+	glFragColor =  vec4(ambient,0)+texture(sampler2D(myTexture, mySampler), v_uv) *  vec4(shading,shading,shading,1.0);
 }

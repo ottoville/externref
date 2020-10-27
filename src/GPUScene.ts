@@ -1,4 +1,4 @@
-﻿import { Drawable } from "./drawables/Drawable";
+﻿import { RenderPipeLine } from "./drawables/Drawable";
 import type { TerraScene } from "./TerraScene";
 import { Light } from "./lights";
 import { TerraNode } from "./TerraNode";
@@ -434,9 +434,12 @@ export class GPUScene {
         });*/
     }
 }
-export class GroupDrawable {
+export abstract class GroupDrawable {
     static instances: Set<GroupDrawable> = new Set();
-    meshes: Set<Drawable> = new Set();
+
+    abstract addRenderPipeline: (...args:any) => RenderPipeLine
+
+    meshes: Set<RenderPipeLine> = new Set();
     properties: number = 0
     propertiesLength: number = 0
     subBindGroups: Set<GroupDrawable> = new Set();
@@ -464,40 +467,37 @@ export class GroupDrawable {
     }
     addChildBindGroup(sharedBindgroup: BindGroupOneBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number]>
     addChildBindGroup(sharedBindgroup: BindGroupTwoBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number]>
-    addChildBindGroup(sharedBindgroup: BindGroupThreeBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number]>
-    addChildBindGroup(sharedBindgroup: BindGroupFourBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number]>
+    addChildBindGroup(sharedBindgroup: BindGroupThreeBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number, number]>
+    addChildBindGroup(sharedBindgroup: BindGroupFourBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number, number, number]>
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupDrawable
-    addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): BindGroupDrawable | DynamicBindGroupDrawable<number[]> {
+    addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): any {
         if (!isDynamic) {
             return new BindGroupDrawable(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
-         }
+        }
+
         return new DynamicBindGroupDrawable(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
     }
 
 }
 export class BindGroupDrawable extends GroupDrawable {
-    addDrawable(renderPipeline: GPURenderPipelineDescriptor, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): Drawable {
-        const d = new Drawable(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this)
+    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): RenderPipeLine => {
+        const d = new RenderPipeLine(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this)
         this.meshes.add(d);
         return d;
     }
 }
 export class DynamicBindGroupDrawable<T extends number[]> extends GroupDrawable {
-    addDrawable(renderPipeline: GPURenderPipelineDescriptor, offsets: T, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): Drawable {
-        const d = new Drawable(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this);
+    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, offsets: T, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): RenderPipeLine => {
+        const d = new RenderPipeLine(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this);
         d.dynamicBindGroupOffset = offsets;
         this.meshes.add(d);
         return d;
     }
 }
 export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends GroupDrawable {
-    addDrawable(renderPipeline: GPURenderPipelineDescriptor, bindGroups: T, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): Drawable {
-        if (!renderPipeline.rasterizationState) {
-            renderPipeline.rasterizationState = {
-                cullMode: 'back',
-            }
-        }
-        const d = new Drawable(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this)
+    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, bindGroups: T, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): RenderPipeLine => {
+
+        const d = new RenderPipeLine(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this)
         const bndGroup = this.gpuscene.device.createBindGroup(
             {
                 layout: this.bindGroupLayout,

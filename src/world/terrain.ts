@@ -562,7 +562,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         });
 
 
-        const m = scene.gpuscene.lights.lightsBindGroupTexture.addDrawable({
+        const m = scene.gpuscene.lights.lightsBindGroupTexture.addRenderPipeline({
             sampleCount: scene.gpuscene.sampleCount,
             primitiveTopology: 'triangle-list',
             depthStencilState: {
@@ -606,7 +606,6 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
                         }]
                     }]
             },
-            // layout: pipelineLayout,
         }, [
             {
                 binding: 0,

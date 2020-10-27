@@ -7,7 +7,7 @@ import type { WorldScene } from "../world/scene.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { GPUScene } from "../GPUScene.js";
-import type { Drawable } from "../drawables/Drawable.js";
+import type { RenderPipeLine } from "../drawables/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import { TerraScene } from "../TerraScene.js";
 
@@ -23,7 +23,7 @@ export class paintPlane extends paintGround {
    // worldPosition = new worldPosition(this as TerraNode);
     #mesh = new PlaneMesh(this.scene);
     #startingPoint: Float32Array = new Float32Array(2);
-    #templane2: Drawable;
+    #templane2: RenderPipeLine;
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
         const positions: number[] = [0, 0, 0, 1];
         const indices: number[] = [0, 1];
@@ -64,7 +64,7 @@ export class paintPlane extends paintGround {
     ) {
         super(scene,camera, ground, sea, uitab);
         
-        this.#templane2 = ground.TerrainHeightsbindGroupPositionTree.addDrawable({
+        this.#templane2 = ground.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
             sampleCount: this.scene.gpuscene.sampleCount,
             primitiveTopology: 'triangle-strip',
             rasterizationState: {

@@ -55,7 +55,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
     
     worldPosition: worldPosition = new worldPosition(this);
     lightType:'point' = 'point';
-    mesh = this.scene.gpuscene.positionBindGroupTime.addDrawable({
+    mesh = this.scene.gpuscene.positionBindGroupTime.addRenderPipeline({
         sampleCount: this.scene.gpuscene.sampleCount,
         rasterizationState: {
             cullMode: 'none',
