@@ -1,5 +1,4 @@
 import { ThinEngine } from "../../Engines/thinEngine";
-import { InternalTexture } from '../../Materials/Textures/internalTexture';
 import { Nullable } from '../../types';
 import { CanvasGenerator } from '../../Misc/canvasGenerator';
 
@@ -11,11 +10,11 @@ declare module "../../Engines/thinEngine" {
          * @param video defines the video element to use
          * @param invertY defines if data must be stored with Y axis inverted
          */
-        updateVideoTexture(texture: Nullable<InternalTexture>, video: HTMLVideoElement, invertY: boolean): void;
+        updateVideoTexture(texture: Nullable<any>, video: HTMLVideoElement, invertY: boolean): void;
     }
 }
 
-ThinEngine.prototype.updateVideoTexture = function(texture: Nullable<InternalTexture>, video: HTMLVideoElement, invertY: boolean): void {
+ThinEngine.prototype.updateVideoTexture = function (texture: Nullable<any>, video: HTMLVideoElement, invertY: boolean): void {
     if (!texture || texture._isDisabled) {
         return;
     }

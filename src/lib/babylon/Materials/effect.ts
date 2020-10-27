@@ -16,7 +16,6 @@ import { WebGPUPipelineContext } from "../Engines/WebGPU/webgpuPipelineContext";
 import { WebGPUConstants } from "../Engines/WebGPU/webgpuConstants";
 
 declare type Engine = import("../Engines/engine").Engine;
-declare type InternalTexture = import("../Materials/Textures/internalTexture").InternalTexture;
 declare type BaseTexture = import("../Materials/Textures/baseTexture").BaseTexture;
 declare type PostProcess = import("../PostProcesses/postProcess").PostProcess;
 
@@ -751,7 +750,7 @@ export class Effect implements IDisposable {
      * @param texture Texture to bind.
      * @hidden
      */
-    public _bindTexture(channel: string, texture: Nullable<InternalTexture>): void {
+    public _bindTexture(channel: string, texture: Nullable<any>): void {
         this._engine._bindTexture(this._samplers[channel], texture);
     }
 

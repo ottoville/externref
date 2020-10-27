@@ -1,7 +1,6 @@
 import { IPipelineContext } from '../IPipelineContext';
 import { Nullable } from '../../types';
 import { WebGPUEngine } from '../webgpuEngine';
-import { InternalTexture } from '../../Materials/Textures/internalTexture';
 import { Effect } from '../../Materials/effect';
 import { WebGPUShaderProcessingContext } from './webgpuShaderProcessingContext';
 import { UniformBuffer } from "../../Materials/uniformBuffer";
@@ -25,7 +24,7 @@ export interface IWebGPUPipelineContextSamplerCache {
 
     samplerBinding: number;
 
-    texture: InternalTexture;
+    texture: any;
 }
 
 /** @hidden */

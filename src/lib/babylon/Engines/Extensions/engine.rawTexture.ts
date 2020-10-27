@@ -1,6 +1,5 @@
 import { Nullable } from "../../types";
 import { _TimeToken } from "../../Instrumentation/timeToken";
-import { InternalTexture, InternalTextureSource } from '../../Materials/Textures/internalTexture';
 import { Logger } from '../../Misc/logger';
 import { Tools } from '../../Misc/tools';
 import { Scene } from '../../scene';
@@ -23,7 +22,7 @@ declare module "../../Engines/engine" {
          * @param type defines the type fo the data (Engine.TEXTURETYPE_UNSIGNED_INT by default)
          * @returns the raw texture inside an InternalTexture
          */
-        createRawTexture(data: Nullable<ArrayBufferView>, width: number, height: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string>, type: number): InternalTexture;
+        createRawTexture(data: Nullable<ArrayBufferView>, width: number, height: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string>, type: number): any;
 
         /**
          * Update a raw texture
@@ -32,7 +31,7 @@ declare module "../../Engines/engine" {
          * @param format defines the format of the data
          * @param invertY defines if data must be stored with Y axis inverted
          */
-        updateRawTexture(texture: Nullable<InternalTexture>, data: Nullable<ArrayBufferView>, format: number, invertY: boolean): void;
+        updateRawTexture(texture: Nullable<any>, data: Nullable<ArrayBufferView>, format: number, invertY: boolean): void;
 
         /**
          * Update a raw texture
@@ -43,7 +42,7 @@ declare module "../../Engines/engine" {
          * @param compression defines the compression used (null by default)
          * @param type defines the type fo the data (Engine.TEXTURETYPE_UNSIGNED_INT by default)
          */
-        updateRawTexture(texture: Nullable<InternalTexture>, data: Nullable<ArrayBufferView>, format: number, invertY: boolean, compression: Nullable<string>, type: number): void;
+        updateRawTexture(texture: Nullable<any>, data: Nullable<ArrayBufferView>, format: number, invertY: boolean, compression: Nullable<string>, type: number): void;
 
         /**
          * Creates a new raw cube texture
@@ -57,7 +56,7 @@ declare module "../../Engines/engine" {
          * @param compression defines the compression used (null by default)
          * @returns the cube texture as an InternalTexture
          */
-        createRawCubeTexture(data: Nullable<ArrayBufferView[]>, size: number, format: number, type: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string>): InternalTexture;
+        createRawCubeTexture(data: Nullable<ArrayBufferView[]>, size: number, format: number, type: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string>): any;
 
         /**
          * Update a raw cube texture
@@ -67,7 +66,7 @@ declare module "../../Engines/engine" {
          * @param type defines the type fo the data (Engine.TEXTURETYPE_UNSIGNED_INT by default)
          * @param invertY defines if data must be stored with Y axis inverted
          */
-        updateRawCubeTexture(texture: InternalTexture, data: ArrayBufferView[], format: number, type: number, invertY: boolean): void;
+        updateRawCubeTexture(texture: any, data: ArrayBufferView[], format: number, type: number, invertY: boolean): void;
 
         /**
          * Update a raw cube texture
@@ -78,7 +77,7 @@ declare module "../../Engines/engine" {
          * @param invertY defines if data must be stored with Y axis inverted
          * @param compression defines the compression used (null by default)
          */
-        updateRawCubeTexture(texture: InternalTexture, data: ArrayBufferView[], format: number, type: number, invertY: boolean, compression: Nullable<string>): void;
+        updateRawCubeTexture(texture: any, data: ArrayBufferView[], format: number, type: number, invertY: boolean, compression: Nullable<string>): void;
 
         /**
          * Update a raw cube texture
@@ -90,7 +89,7 @@ declare module "../../Engines/engine" {
          * @param compression defines the compression used (null by default)
          * @param level defines which level of the texture to update
          */
-        updateRawCubeTexture(texture: InternalTexture, data: ArrayBufferView[], format: number, type: number, invertY: boolean, compression: Nullable<string>, level: number): void;
+        updateRawCubeTexture(texture: any, data: ArrayBufferView[], format: number, type: number, invertY: boolean, compression: Nullable<string>, level: number): void;
 
         /**
          * Creates a new raw cube texture from a specified url
@@ -110,7 +109,7 @@ declare module "../../Engines/engine" {
             callback: (ArrayBuffer: ArrayBuffer) => Nullable<ArrayBufferView[]>,
             mipmapGenerator: Nullable<((faces: ArrayBufferView[]) => ArrayBufferView[][])>,
             onLoad: Nullable<() => void>,
-            onError: Nullable<(message?: string, exception?: any) => void>): InternalTexture;
+            onError: Nullable<(message?: string, exception?: any) => void>): any;
 
         /**
          * Creates a new raw cube texture from a specified url
@@ -134,7 +133,7 @@ declare module "../../Engines/engine" {
             onLoad: Nullable<() => void>,
             onError: Nullable<(message?: string, exception?: any) => void>,
             samplingMode: number,
-            invertY: boolean): InternalTexture;
+            invertY: boolean): any;
 
         /**
          * Creates a new raw 3D texture
@@ -150,7 +149,7 @@ declare module "../../Engines/engine" {
          * @param textureType defines the compressed used (can be null)
          * @returns a new raw 3D texture (stored in an InternalTexture)
          */
-        createRawTexture3D(data: Nullable<ArrayBufferView>, width: number, height: number, depth: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string>, textureType: number): InternalTexture;
+        createRawTexture3D(data: Nullable<ArrayBufferView>, width: number, height: number, depth: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string>, textureType: number): any;
 
         /**
          * Update a raw 3D texture
@@ -159,7 +158,7 @@ declare module "../../Engines/engine" {
          * @param format defines the data format
          * @param invertY defines if data must be stored with Y axis inverted
          */
-        updateRawTexture3D(texture: InternalTexture, data: Nullable<ArrayBufferView>, format: number, invertY: boolean): void;
+        updateRawTexture3D(texture: any, data: Nullable<ArrayBufferView>, format: number, invertY: boolean): void;
 
         /**
          * Update a raw 3D texture
@@ -170,7 +169,7 @@ declare module "../../Engines/engine" {
          * @param compression defines the used compression (can be null)
          * @param textureType defines the texture Type (Engine.TEXTURETYPE_UNSIGNED_INT, Engine.TEXTURETYPE_FLOAT...)
          */
-        updateRawTexture3D(texture: InternalTexture, data: Nullable<ArrayBufferView>, format: number, invertY: boolean, compression: Nullable<string>, textureType: number): void;
+        updateRawTexture3D(texture: any, data: Nullable<ArrayBufferView>, format: number, invertY: boolean, compression: Nullable<string>, textureType: number): void;
 
         /**
          * Creates a new raw 2D array texture
@@ -186,7 +185,7 @@ declare module "../../Engines/engine" {
          * @param textureType defines the compressed used (can be null)
          * @returns a new raw 2D array texture (stored in an InternalTexture)
          */
-        createRawTexture2DArray(data: Nullable<ArrayBufferView>, width: number, height: number, depth: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string>, textureType: number): InternalTexture;
+        createRawTexture2DArray(data: Nullable<ArrayBufferView>, width: number, height: number, depth: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string>, textureType: number): any;
 
         /**
          * Update a raw 2D array texture
@@ -195,7 +194,7 @@ declare module "../../Engines/engine" {
          * @param format defines the data format
          * @param invertY defines if data must be stored with Y axis inverted
          */
-        updateRawTexture2DArray(texture: InternalTexture, data: Nullable<ArrayBufferView>, format: number, invertY: boolean): void;
+        updateRawTexture2DArray(texture: any, data: Nullable<ArrayBufferView>, format: number, invertY: boolean): void;
 
         /**
          * Update a raw 2D array texture
@@ -206,11 +205,11 @@ declare module "../../Engines/engine" {
          * @param compression defines the used compression (can be null)
          * @param textureType defines the texture Type (Engine.TEXTURETYPE_UNSIGNED_INT, Engine.TEXTURETYPE_FLOAT...)
          */
-        updateRawTexture2DArray(texture: InternalTexture, data: Nullable<ArrayBufferView>, format: number, invertY: boolean, compression: Nullable<string>, textureType: number): void;
+        updateRawTexture2DArray(texture: any, data: Nullable<ArrayBufferView>, format: number, invertY: boolean, compression: Nullable<string>, textureType: number): void;
     }
 }
 
-Engine.prototype.updateRawTexture = function(texture: Nullable<InternalTexture>, data: Nullable<ArrayBufferView>, format: number, invertY: boolean, compression: Nullable<string> = null, type: number = Constants.TEXTURETYPE_UNSIGNED_INT): void {
+Engine.prototype.updateRawTexture = function (texture: Nullable<any>, data: Nullable<ArrayBufferView>, format: number, invertY: boolean, compression: Nullable<string> = null, type: number = Constants.TEXTURETYPE_UNSIGNED_INT): void {
     if (!texture) {
         return;
     }
@@ -249,120 +248,17 @@ Engine.prototype.updateRawTexture = function(texture: Nullable<InternalTexture>,
     texture.isReady = true;
 };
 
-Engine.prototype.createRawTexture = function(data: Nullable<ArrayBufferView>, width: number, height: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string> = null, type: number = Constants.TEXTURETYPE_UNSIGNED_INT): InternalTexture {
-    var texture = new InternalTexture(this, InternalTextureSource.Raw);
-    texture.baseWidth = width;
-    texture.baseHeight = height;
-    texture.width = width;
-    texture.height = height;
-    texture.format = format;
-    texture.generateMipMaps = generateMipMaps;
-    texture.samplingMode = samplingMode;
-    texture.invertY = invertY;
-    texture._compression = compression;
-    texture.type = type;
-
-    if (!this._doNotHandleContextLost) {
-        texture._bufferView = data;
-    }
-
-    this.updateRawTexture(texture, data, format, invertY, compression, type);
-    this._bindTextureDirectly(this._gl.TEXTURE_2D, texture, true);
-
-    // Filters
-    var filters = this._getSamplingParameters(samplingMode, generateMipMaps);
-
-    this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, filters.mag);
-    this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, filters.min);
-
-    if (generateMipMaps) {
-        this._gl.generateMipmap(this._gl.TEXTURE_2D);
-    }
-
-    this._bindTextureDirectly(this._gl.TEXTURE_2D, null);
-
-    this._internalTexturesCache.push(texture);
-
-    return texture;
+Engine.prototype.createRawTexture = function (data: Nullable<ArrayBufferView>, width: number, height: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string> = null, type: number = Constants.TEXTURETYPE_UNSIGNED_INT): any {
+    
 };
 
 Engine.prototype.createRawCubeTexture = function(data: Nullable<ArrayBufferView[]>, size: number, format: number, type: number,
     generateMipMaps: boolean, invertY: boolean, samplingMode: number,
-    compression: Nullable<string> = null): InternalTexture {
-    var gl = this._gl;
-    var texture = new InternalTexture(this, InternalTextureSource.CubeRaw);
-    texture.isCube = true;
-    texture.format = format;
-    texture.type = type;
-    if (!this._doNotHandleContextLost) {
-        texture._bufferViewArray = data;
-    }
-
-    var textureType = this._getWebGLTextureType(type);
-    var internalFormat = this._getInternalFormat(format);
-
-    if (internalFormat === gl.RGB) {
-        internalFormat = gl.RGBA;
-    }
-
-    // Mipmap generation needs a sized internal format that is both color-renderable and texture-filterable
-    if (textureType === gl.FLOAT && !this._caps.textureFloatLinearFiltering) {
-        generateMipMaps = false;
-        samplingMode = Constants.TEXTURE_NEAREST_SAMPLINGMODE;
-        Logger.Warn("Float texture filtering is not supported. Mipmap generation and sampling mode are forced to false and TEXTURE_NEAREST_SAMPLINGMODE, respectively.");
-    }
-    else if (textureType === this._gl.HALF_FLOAT_OES && !this._caps.textureHalfFloatLinearFiltering) {
-        generateMipMaps = false;
-        samplingMode = Constants.TEXTURE_NEAREST_SAMPLINGMODE;
-        Logger.Warn("Half float texture filtering is not supported. Mipmap generation and sampling mode are forced to false and TEXTURE_NEAREST_SAMPLINGMODE, respectively.");
-    }
-    else if (textureType === gl.FLOAT && !this._caps.textureFloatRender) {
-        generateMipMaps = false;
-        Logger.Warn("Render to float textures is not supported. Mipmap generation forced to false.");
-    }
-    else if (textureType === gl.HALF_FLOAT && !this._caps.colorBufferFloat) {
-        generateMipMaps = false;
-        Logger.Warn("Render to half float textures is not supported. Mipmap generation forced to false.");
-    }
-
-    var width = size;
-    var height = width;
-
-    texture.width = width;
-    texture.height = height;
-
-    // Double check on POT to generate Mips.
-    var isPot = !this.needPOTTextures || (Tools.IsExponentOfTwo(texture.width) && Tools.IsExponentOfTwo(texture.height));
-    if (!isPot) {
-        generateMipMaps = false;
-    }
-
-    // Upload data if needed. The texture won't be ready until then.
-    if (data) {
-        this.updateRawCubeTexture(texture, data, format, type, invertY, compression);
-    }
-
-    this._bindTextureDirectly(this._gl.TEXTURE_CUBE_MAP, texture, true);
-
-    // Filters
-    if (data && generateMipMaps) {
-        this._gl.generateMipmap(this._gl.TEXTURE_CUBE_MAP);
-    }
-
-    var filters = this._getSamplingParameters(samplingMode, generateMipMaps);
-    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, filters.mag);
-    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, filters.min);
-
-    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    this._bindTextureDirectly(gl.TEXTURE_CUBE_MAP, null);
-
-    texture.generateMipMaps = generateMipMaps;
-
-    return texture;
+    compression: Nullable<string> = null): any {
+   
 };
 
-Engine.prototype.updateRawCubeTexture = function(texture: InternalTexture, data: ArrayBufferView[], format: number, type: number, invertY: boolean, compression: Nullable<string> = null, level: number = 0): void {
+Engine.prototype.updateRawCubeTexture = function (texture: any, data: ArrayBufferView[], format: number, type: number, invertY: boolean, compression: Nullable<string> = null, level: number = 0): void {
     texture._bufferViewArray = data;
     texture.format = format;
     texture.type = type;
@@ -417,7 +313,7 @@ Engine.prototype.createRawCubeTextureFromUrl = function(url: string, scene: Scen
     onLoad: Nullable<() => void> = null,
     onError: Nullable<(message?: string, exception?: any) => void> = null,
     samplingMode: number = Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
-    invertY: boolean = false): InternalTexture {
+    invertY: boolean = false): any {
 
     var gl = this._gl;
     var texture = this.createRawCubeTexture(null, size, format, type, !noMipmap, invertY, samplingMode, null);
@@ -495,52 +391,9 @@ Engine.prototype.createRawCubeTextureFromUrl = function(url: string, scene: Scen
  * @hidden
  */
 function _makeCreateRawTextureFunction(is3D: boolean) {
-    return function(this: Engine, data: Nullable<ArrayBufferView>, width: number, height: number, depth: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string> = null, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT): InternalTexture {
+    return function (this: Engine, data: Nullable<ArrayBufferView>, width: number, height: number, depth: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string> = null, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT): any {
         var target = is3D ? this._gl.TEXTURE_3D : this._gl.TEXTURE_2D_ARRAY;
-        var source = is3D ? InternalTextureSource.Raw3D : InternalTextureSource.Raw2DArray;
-        var texture = new InternalTexture(this, source);
-        texture.baseWidth = width;
-        texture.baseHeight = height;
-        texture.baseDepth = depth;
-        texture.width = width;
-        texture.height = height;
-        texture.depth = depth;
-        texture.format = format;
-        texture.type = textureType;
-        texture.generateMipMaps = generateMipMaps;
-        texture.samplingMode = samplingMode;
-        if (is3D) {
-            texture.is3D = true;
-        } else {
-            texture.is2DArray = true;
-        }
-
-        if (!this._doNotHandleContextLost) {
-            texture._bufferView = data;
-        }
-
-        if (is3D) {
-            this.updateRawTexture3D(texture, data, format, invertY, compression, textureType);
-        } else {
-            this.updateRawTexture2DArray(texture, data, format, invertY, compression, textureType);
-        }
-        this._bindTextureDirectly(target, texture, true);
-
-        // Filters
-        var filters = this._getSamplingParameters(samplingMode, generateMipMaps);
-
-        this._gl.texParameteri(target, this._gl.TEXTURE_MAG_FILTER, filters.mag);
-        this._gl.texParameteri(target, this._gl.TEXTURE_MIN_FILTER, filters.min);
-
-        if (generateMipMaps) {
-            this._gl.generateMipmap(target);
-        }
-
-        this._bindTextureDirectly(target, null);
-
-        this._internalTexturesCache.push(texture);
-
-        return texture;
+        
     };
 }
 
@@ -553,7 +406,7 @@ Engine.prototype.createRawTexture3D = _makeCreateRawTextureFunction(true);
  * @hidden
  */
 function _makeUpdateRawTextureFunction(is3D: boolean) {
-    return function(this: Engine, texture: InternalTexture, data: Nullable<ArrayBufferView>, format: number, invertY: boolean, compression: Nullable<string> = null, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT): void {
+    return function (this: Engine, texture: any, data: Nullable<ArrayBufferView>, format: number, invertY: boolean, compression: Nullable<string> = null, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT): void {
         var target = is3D ? this._gl.TEXTURE_3D : this._gl.TEXTURE_2D_ARRAY;
         var internalType = this._getWebGLTextureType(textureType);
         var internalFormat = this._getInternalFormat(format);

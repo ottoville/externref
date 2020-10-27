@@ -1,4 +1,3 @@
-import { InternalTexture } from "../Materials/Textures/internalTexture";
 import { Texture } from "../Materials/Textures/texture";
 import { PassPostProcess } from "../PostProcesses/passPostProcess";
 import { Constants } from "../Engines/constants";

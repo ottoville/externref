@@ -1,5 +1,4 @@
 import { ThinEngine } from "../../Engines/thinEngine";
-import { InternalTexture, InternalTextureSource } from '../../Materials/Textures/internalTexture';
 import { Nullable } from '../../types';
 
 declare module "../../Engines/thinEngine" {
@@ -12,7 +11,7 @@ declare module "../../Engines/thinEngine" {
          * @param samplingMode defines the required sampling mode (Texture.NEAREST_SAMPLINGMODE by default)
          * @returns the dynamic texture inside an InternalTexture
          */
-        createDynamicTexture(width: number, height: number, generateMipMaps: boolean, samplingMode: number): InternalTexture;
+        createDynamicTexture(width: number, height: number, generateMipMaps: boolean, samplingMode: number): any;
 
         /**
          * Update the content of a dynamic texture
@@ -23,35 +22,15 @@ declare module "../../Engines/thinEngine" {
          * @param format defines the format of the data
          * @param forceBindTexture if the texture should be forced to be bound eg. after a graphics context loss (Default: false)
          */
-        updateDynamicTexture(texture: Nullable<InternalTexture>, canvas: HTMLCanvasElement | OffscreenCanvas, invertY: boolean, premulAlpha?: boolean, format?: number, forceBindTexture?: boolean): void;
+        updateDynamicTexture(texture: Nullable<any>, canvas: HTMLCanvasElement | OffscreenCanvas, invertY: boolean, premulAlpha?: boolean, format?: number, forceBindTexture?: boolean): void;
     }
 }
 
-ThinEngine.prototype.createDynamicTexture = function(width: number, height: number, generateMipMaps: boolean, samplingMode: number): InternalTexture {
-    var texture = new InternalTexture(this, InternalTextureSource.Dynamic);
-    texture.baseWidth = width;
-    texture.baseHeight = height;
-
-    if (generateMipMaps) {
-        width = this.needPOTTextures ? ThinEngine.GetExponentOfTwo(width, this._caps.maxTextureSize) : width;
-        height = this.needPOTTextures ? ThinEngine.GetExponentOfTwo(height, this._caps.maxTextureSize) : height;
-    }
-
-    //  this.resetTextureCache();
-    texture.width = width;
-    texture.height = height;
-    texture.isReady = false;
-    texture.generateMipMaps = generateMipMaps;
-    texture.samplingMode = samplingMode;
-
-    this.updateTextureSamplingMode(samplingMode, texture);
-
-    this._internalTexturesCache.push(texture);
-
-    return texture;
+ThinEngine.prototype.createDynamicTexture = function (width: number, height: number, generateMipMaps: boolean, samplingMode: number): any {
+   
 };
 
-ThinEngine.prototype.updateDynamicTexture = function(texture: Nullable<InternalTexture>, canvas: HTMLCanvasElement, invertY: boolean, premulAlpha: boolean = false, format?: number, forceBindTexture: boolean = false): void {
+ThinEngine.prototype.updateDynamicTexture = function (texture: Nullable<any>, canvas: HTMLCanvasElement, invertY: boolean, premulAlpha: boolean = false, format?: number, forceBindTexture: boolean = false): void {
     if (!texture) {
         return;
     }

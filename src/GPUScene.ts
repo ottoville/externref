@@ -7,10 +7,9 @@ import { TerraNode } from "./TerraNode";
 
 
 export class GPUScene {
-    static canvas: HTMLCanvasElement;
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     #bufferIndexFormats: WeakMap<GPUBuffer, GPUIndexFormat> = new WeakMap();
-    sampleCount: number = 1;
+    sampleCount: number = 4;
 
 
     NodeInstances: Map<TerraNode, number> = new Map();
@@ -84,6 +83,9 @@ export class GPUScene {
     positionBindGroupNoTime = this.baseBindGroupNoTime.addChildBindGroup(this.BindGroup, true);
     lights: Light;
     positionBindGroupLightsTime: DynamicBindGroupDrawable<[number]>;
+    canvas: HTMLCanvasElement;
+    swapAttachment: GPUTextureView;
+    depthAttachment: GPUTextureView;
 
 
     addBindGroup<T>(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), properties?:T) {
@@ -93,9 +95,6 @@ export class GPUScene {
         return new BindGroupDrawable(this, bglayout, undefined, bindgroup);
     }
 
-    get canvas(): HTMLCanvasElement {
-        return GPUScene.canvas;
-    }
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry>(entry: T): BindGroupLayoutOneBinding<T>
     createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries: T): BindGroupLayoutTwoBinding<T>
     createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries: T): BindGroupLayoutThreeBinding<T>
@@ -155,9 +154,43 @@ export class GPUScene {
         this.#busy = false;
         return commandEncoder.finish();
     }
-
-
+    swapChain = this.scene.context.configureSwapChain({
+        device: this.device,
+        format: "bgra8unorm"
+    });
+    createSwapTextures() {
+        const size = {
+            width: this.scene.canvasSize.width,
+            height: this.scene.canvasSize.height,
+            depth: 1,
+        }
+        let swapTexture = this.device.createTexture({
+            size,
+            sampleCount: this.sampleCount,
+            format: "bgra8unorm",
+            usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+        });
+        let depthTexture = this.device.createTexture({
+            size,
+            sampleCount: this.sampleCount,
+            format: "depth24plus-stencil8",
+            usage: GPUTextureUsage.OUTPUT_ATTACHMENT
+        });
+        return [swapTexture.createView(), depthTexture.createView()];
+    }
     constructor(private scene: TerraScene, public device: GPUDevice) {
+        
+        [this.swapAttachment, this.depthAttachment] = this.createSwapTextures();
+        let resizeHandler = 0;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeHandler);
+            resizeHandler = setTimeout(() => {
+                scene.canvasSize.width = scene.canvas.getAttribute('width')! as any | 0;
+                scene.canvasSize.height = scene.canvas.getAttribute('height')! as any | 0;
+                [this.swapAttachment, this.depthAttachment] = this.createSwapTextures();
+            },500)
+        });
+        this.canvas=scene.canvas
         const timeAndDeltaBuffer = new ArrayBuffer(12);
         const timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
         const uniformBindGroup = this.createBindGroup(
@@ -191,7 +224,6 @@ export class GPUScene {
             return this.updateGPUBuffer();
         }
         const me = this;
-        let windIntensivy = 0;
         this.baseBindGroup.onRender = function (time, delta) {
 
            // windIntensivy = Math.min(Math.max(windIntensivy+0.000625-(Math.random()*0.00125),-1),1)
@@ -393,7 +425,7 @@ export class GPUScene {
         Promise.all(this.onRenders.map(r => r(time, physicDelta))).then((buffers) => {
             const buffersNoNull = buffers.filter<GPUCommandBuffer>(function (buff): buff is GPUCommandBuffer { return buff !== null });
             this.device.defaultQueue.submit(buffersNoNull);
-        });;
+        });
         this.properties = 0;
        // console.timeEnd('render bindgroups')
        /* Promise.all(commandBuffers).then((buffers) => {
@@ -445,11 +477,6 @@ export class GroupDrawable {
 }
 export class BindGroupDrawable extends GroupDrawable {
     addDrawable(renderPipeline: GPURenderPipelineDescriptor, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): Drawable {
-        if (!renderPipeline.rasterizationState) {
-            renderPipeline.rasterizationState = {
-                cullMode: 'front',
-            }
-        }
         const d = new Drawable(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this)
         this.meshes.add(d);
         return d;

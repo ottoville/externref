@@ -3,7 +3,6 @@ import { Tools } from "./tools";
 import { Vector3 } from "../Maths/math.vector";
 import { Scalar } from "../Maths/math.scalar";
 import { SphericalPolynomial } from "../Maths/sphericalPolynomial";
-import { InternalTexture, InternalTextureSource } from "../Materials/Textures/internalTexture";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { CubeTexture } from "../Materials/Textures/cubeTexture";
 import { Constants } from "../Engines/constants";
@@ -363,7 +362,7 @@ export class EnvironmentTextureTools {
      * @param info defines the texture info retrieved through the GetEnvInfo method
      * @returns a promise
      */
-    public static UploadEnvLevelsAsync(texture: InternalTexture, arrayBuffer: any, info: EnvironmentTextureInfo): Promise<void> {
+    public static UploadEnvLevelsAsync(texture: any, arrayBuffer: any, info: EnvironmentTextureInfo): Promise<void> {
         if (info.version !== 1) {
             throw new Error(`Unsupported babylon environment map version "${info.version}"`);
         }
@@ -383,7 +382,7 @@ export class EnvironmentTextureTools {
 
     private static _OnImageReadyAsync(image: HTMLImageElement | ImageBitmap, engine: Engine, expandTexture: boolean,
         rgbdPostProcess:  Nullable<PostProcess>, url: string, face: number, i: number, generateNonLODTextures: boolean,
-        lodTextures: Nullable<{ [lod: number]: BaseTexture }>, cubeRtt: Nullable<InternalTexture>, texture: InternalTexture
+        lodTextures: Nullable<{ [lod: number]: BaseTexture }>, cubeRtt: Nullable<any>, texture: any
         ): Promise<void> {
             return new Promise((resolve, reject) => {
                 if (expandTexture) {
@@ -431,7 +430,7 @@ export class EnvironmentTextureTools {
      * @param imageData defines the array buffer views of image data [mipmap][face]
      * @returns a promise
      */
-    public static UploadLevelsAsync(texture: InternalTexture, imageData: ArrayBufferView[][]): Promise<void> {
+    public static UploadLevelsAsync(texture: any, imageData: ArrayBufferView[][]): Promise<void> {
         if (!Tools.IsExponentOfTwo(texture.width)) {
             throw new Error("Texture size must be a power of two");
         }
@@ -443,7 +442,7 @@ export class EnvironmentTextureTools {
         let expandTexture = false;
         let generateNonLODTextures = false;
         let rgbdPostProcess: Nullable<PostProcess> = null;
-        let cubeRtt: Nullable<InternalTexture> = null;
+        let cubeRtt: Nullable<any> = null;
         let lodTextures: Nullable<{ [lod: number]: BaseTexture }> = null;
         let caps = engine.getCaps();
 
@@ -511,16 +510,10 @@ export class EnvironmentTextureTools {
                     let lodIndex = minLODIndex + (maxLODIndex - minLODIndex) * roughness;
                     let mipmapIndex = Math.round(Math.min(Math.max(lodIndex, 0), maxLODIndex));
 
-                    let glTextureFromLod = new InternalTexture(engine, InternalTextureSource.Temp);
-                    glTextureFromLod.isCube = true;
-                    glTextureFromLod.invertY = true;
-                    glTextureFromLod.generateMipMaps = false;
-                    engine.updateTextureSamplingMode(Constants.TEXTURE_LINEAR_LINEAR, glTextureFromLod);
 
                     // Wrap in a base texture for easy binding.
                     let lodTexture = new BaseTexture(null);
                     lodTexture.isCube = true;
-                    lodTexture._texture = glTextureFromLod;
                     lodTextures![mipmapIndex] = lodTexture;
 
                     switch (i) {
@@ -633,7 +626,7 @@ export class EnvironmentTextureTools {
      * @param texture defines the texture we are trying to upload the information to
      * @param info defines the environment texture info retrieved through the GetEnvInfo method
      */
-    public static UploadEnvSpherical(texture: InternalTexture, info: EnvironmentTextureInfo): void {
+    public static UploadEnvSpherical(texture: any, info: EnvironmentTextureInfo): void {
         if (info.version !== 1) {
             Logger.Warn('Unsupported babylon environment map version "' + info.version + '"');
         }
@@ -657,8 +650,7 @@ export class EnvironmentTextureTools {
     }
 
     /** @hidden */
-    public static _UpdateRGBDAsync(internalTexture: InternalTexture, data: ArrayBufferView[][], sphericalPolynomial: Nullable<SphericalPolynomial>, lodScale: number, lodOffset: number): Promise<void> {
-        internalTexture._source = InternalTextureSource.CubeRawRGBD;
+    public static _UpdateRGBDAsync(internalTexture: any, data: ArrayBufferView[][], sphericalPolynomial: Nullable<SphericalPolynomial>, lodScale: number, lodOffset: number): Promise<void> {
         internalTexture._bufferViewArrayArray = data;
         internalTexture._lodGenerationScale = lodScale;
         internalTexture._lodGenerationOffset = lodOffset;
@@ -669,6 +661,3 @@ export class EnvironmentTextureTools {
         });
     }
 }
-
-// References the dependencies.
-InternalTexture._UpdateRGBDAsync = EnvironmentTextureTools._UpdateRGBDAsync;

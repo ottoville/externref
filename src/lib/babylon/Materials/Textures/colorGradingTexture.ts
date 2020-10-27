@@ -2,7 +2,6 @@ import { Nullable } from "../../types";
 import { Scene } from "../../scene";
 import { Matrix } from "../../Maths/math.vector";
 import { Engine } from "../../Engines/engine";
-import { InternalTexture } from "../../Materials/Textures/internalTexture";
 import { BaseTexture } from "../../Materials/Textures/baseTexture";
 import { _TimeToken } from "../../Instrumentation/timeToken";
 import { Constants } from "../../Engines/constants";
@@ -84,7 +83,7 @@ export class ColorGradingTexture extends BaseTexture {
      */
     private load3dlTexture() {
         var engine = this._engine as Engine;
-        var texture: InternalTexture;
+        var texture: any;
         if (engine.webGLVersion === 1) {
             texture = engine.createRawTexture(null, 1, 1, Constants.TEXTUREFORMAT_RGBA, false, false, Constants.TEXTURE_BILINEAR_SAMPLINGMODE, null, Constants.TEXTURETYPE_UNSIGNED_INT);
         }

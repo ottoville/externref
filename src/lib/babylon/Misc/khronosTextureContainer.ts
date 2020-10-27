@@ -1,5 +1,4 @@
 import { Logger } from "../Misc/logger";
-import { InternalTexture } from "../Materials/Textures/internalTexture";
 
 /**
  * for description see https://www.khronos.org/opengles/sdk/tools/KTX/
@@ -146,7 +145,7 @@ export class KhronosTextureContainer {
      * It is assumed that the texture has already been created & is currently bound
      * @hidden
      */
-    public uploadLevels(texture: InternalTexture, loadMipmaps: boolean): void {
+    public uploadLevels(texture: any, loadMipmaps: boolean): void {
         switch (this.loadType) {
             case KhronosTextureContainer.COMPRESSED_2D:
                 this._upload2DCompressedLevels(texture, loadMipmaps);
@@ -158,7 +157,7 @@ export class KhronosTextureContainer {
         }
     }
 
-    private _upload2DCompressedLevels(texture: InternalTexture, loadMipmaps: boolean): void {
+    private _upload2DCompressedLevels(texture: any, loadMipmaps: boolean): void {
         // initialize width & height for level 1
         var dataOffset = KhronosTextureContainer.HEADER_LEN + this.bytesOfKeyValueData;
         var width = this.pixelWidth;

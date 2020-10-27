@@ -1,4 +1,3 @@
-import { InternalTexture } from "../Materials/Textures/internalTexture";
 import { Logger } from "../Misc/logger";
 
 /**
@@ -54,7 +53,7 @@ export class TGATools {
      * Uploads TGA content to a Babylon Texture
      * @hidden
      */
-    public static UploadContent(texture: InternalTexture, data: Uint8Array): void {
+    public static UploadContent(texture: any, data: Uint8Array): void {
         // Not enough data to contain header ?
         if (data.length < 19) {
             Logger.Error("Unable to load TGA file - Not enough data to contain header");

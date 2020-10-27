@@ -1,11 +1,9 @@
 import type { Nullable, DataArray, IndicesArray, FloatArray } from "../types";
 import type { Scene } from "../scene";
 import { Color4 } from "../Maths/math";
-import { Scalar } from "../Maths/math.scalar";
 import { Engine } from "../Engines/engine";
 import type { InstancingAttributeInfo } from "../Engines/instancingAttributeInfo";
 import { RenderTargetCreationOptions } from "../Materials/Textures/renderTargetCreationOptions";
-import { InternalTexture, InternalTextureSource } from "../Materials/Textures/internalTexture";
 import type { _TimeToken } from "../Instrumentation/timeToken";
 import { Constants } from "./constants";
 import { WebGPUConstants } from "./WebGPU/webgpuConstants";
@@ -479,9 +477,9 @@ export class WebGPUEngine extends Engine {
 
         //     this._gl.viewport(x, y, width, height);
         // }
-        if (!this._currentRenderPass) {
-            this._startMainRenderPass();
-        }
+       // if (!this._currentRenderPass) {
+        //    this._startMainRenderPass();
+       // }
         // TODO WEBGPU. Viewport.
         // Use 0 1 like the default webgl values.
         // this._currentRenderPass!.setViewport(x, y, width, height, 0, 1);
@@ -973,13 +971,13 @@ export class WebGPUEngine extends Engine {
     }
 
     /** @hidden */
-    public _releaseTexture(texture: InternalTexture): void {
+    public _releaseTexture(texture: any): void {
         if (texture._webGPUTexture) {
             texture._webGPUTexture.destroy();
         }
     }
 
-    private _uploadMipMapsFromWebglTexture(mipMaps: number, webglEngineTexture: InternalTexture, gpuTexture: GPUTexture, width: number, height: number, face: number) {
+    private _uploadMipMapsFromWebglTexture(mipMaps: number, webglEngineTexture: any, gpuTexture: GPUTexture, width: number, height: number, face: number) {
         this._uploadFromWebglTexture(webglEngineTexture, gpuTexture, width, height, face);
 
         let faceWidth = width;
@@ -993,7 +991,7 @@ export class WebGPUEngine extends Engine {
         }
     }
 
-    private _uploadFromWebglTexture(webglEngineTexture: InternalTexture, gpuTexture: GPUTexture, width: number, height: number, face: number, mip: number = 0): void {
+    private _uploadFromWebglTexture(webglEngineTexture: any, gpuTexture: GPUTexture, width: number, height: number, face: number, mip: number = 0): void {
         let pixels = this._decodeEngine._readTexturePixels(webglEngineTexture, width, height, face, mip);
         if (pixels instanceof Float32Array) {
             const newPixels = new Uint8ClampedArray(pixels.length);
@@ -1057,7 +1055,7 @@ export class WebGPUEngine extends Engine {
         this._releaseBuffer(dataBuffer);
     }
 
-    private _getSamplerFilterDescriptor(internalTexture: InternalTexture): {
+    private _getSamplerFilterDescriptor(internalTexture: any): {
         magFilter: GPUFilterMode,
         minFilter: GPUFilterMode,
         mipmapFilter: GPUFilterMode
@@ -1150,7 +1148,7 @@ export class WebGPUEngine extends Engine {
         return WebGPUConstants.GPUAddressMode_repeat;
     }
 
-    private _getSamplerWrappingDescriptor(internalTexture: InternalTexture): {
+    private _getSamplerWrappingDescriptor(internalTexture: any): {
         addressModeU: GPUAddressMode,
         addressModeV: GPUAddressMode,
         addressModeW: GPUAddressMode
@@ -1162,176 +1160,26 @@ export class WebGPUEngine extends Engine {
         };
     }
 
-    private _getSamplerDescriptor(internalTexture: InternalTexture): GPUSamplerDescriptor {
+    private _getSamplerDescriptor(internalTexture: any): GPUSamplerDescriptor {
         return {
             ...this._getSamplerFilterDescriptor(internalTexture),
             ...this._getSamplerWrappingDescriptor(internalTexture),
         };
     }
 
-    public createTexture(urlArg: string, noMipmap: boolean, invertY: boolean, scene: Scene, samplingMode: number = Constants.TEXTURE_TRILINEAR_SAMPLINGMODE, onLoad: Nullable<() => void> = null, onError: Nullable<(message: string, exception: any) => void> = null, buffer: Nullable<ArrayBuffer | HTMLImageElement> = null, fallBack?: InternalTexture, format?: number): InternalTexture {
-        const texture = new InternalTexture(this, InternalTextureSource.Url);
-        const url = String(urlArg);
+    public createTexture(urlArg: string, noMipmap: boolean, invertY: boolean, scene: Scene, samplingMode: number = Constants.TEXTURE_TRILINEAR_SAMPLINGMODE, onLoad: Nullable<() => void> = null, onError: Nullable<(message: string, exception: any) => void> = null, buffer: Nullable<ArrayBuffer | HTMLImageElement> = null, fallBack?: any, format?: number): any {
 
-        // TODO WEBGPU. Find a better way.
-        // TODO WEBGPU. this._options.textureSize
-
-        texture.url = url;
-        texture.generateMipMaps = !noMipmap;
-        texture.samplingMode = samplingMode;
-        texture.invertY = invertY;
-
-        if (format) {
-            texture.format = format;
-        }
-
-        let webglEngineTexture: InternalTexture;
-        const onLoadInternal = () => {
-            texture.isReady = webglEngineTexture.isReady;
-
-            const width = webglEngineTexture.width;
-            const height = webglEngineTexture.height;
-            texture.width = width;
-            texture.height = height;
-            texture.baseWidth = width;
-            texture.baseHeight = height;
-            texture._isRGBD = texture._isRGBD || webglEngineTexture._isRGBD;
-            texture._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
-
-            let mipMaps = Scalar.Log2(Math.max(width, height));
-            mipMaps = Math.floor(mipMaps);
-
-            const textureExtent = {
-                width,
-                height,
-                depth: 1
-            };
-            const textureDescriptor: GPUTextureDescriptor = {
-                dimension: WebGPUConstants.GPUTextureDimension_2d,
-                format: WebGPUConstants.GPUTextureFormat_rgba8unorm,
-                arrayLayerCount: 1,
-                mipLevelCount: noMipmap ? 1 : mipMaps + 1,
-                sampleCount: 1,
-                size: textureExtent,
-                usage: WebGPUConstants.GPUTextureUsage_COPY_DST | WebGPUConstants.GPUTextureUsage_SAMPLED
-            };
-
-            const gpuTexture = this._device.createTexture(textureDescriptor);
-            texture._webGPUTexture = gpuTexture;
-
-            if (noMipmap) {
-                this._uploadFromWebglTexture(webglEngineTexture, gpuTexture, width, height, -1);
-            }
-            else {
-                this._uploadMipMapsFromWebglTexture(mipMaps, webglEngineTexture, gpuTexture, width, height, -1);
-            }
-
-            texture._webGPUTextureView = gpuTexture.createView();
-
-            webglEngineTexture.dispose();
-
-            texture.onLoadedObservable.notifyObservers(texture);
-            texture.onLoadedObservable.clear();
-
-            if (onLoad) {
-                onLoad();
-            }
-        };
-
-        webglEngineTexture = this._decodeEngine.createTexture(urlArg, noMipmap, invertY, scene, samplingMode,
-            onLoadInternal, onError, buffer, fallBack, format);
-
-        this._internalTexturesCache.push(texture);
-
-        return texture;
     }
 
-    public createCubeTexture(rootUrl: string, scene: Nullable<Scene>, files: Nullable<string[]>, noMipmap?: boolean, onLoad: Nullable<(data?: any) => void> = null, onError: Nullable<(message?: string, exception?: any) => void> = null, format?: number, forcedExtension: any = null, createPolynomials: boolean = false, lodScale: number = 0, lodOffset: number = 0, fallback: Nullable<InternalTexture> = null, excludeLoaders: Array<IInternalTextureLoader> = []): InternalTexture {
-        var texture = fallback ? fallback : new InternalTexture(this, InternalTextureSource.Cube);
-        texture.isCube = true;
-        texture.url = rootUrl;
-        texture.generateMipMaps = !noMipmap;
-        // TODO WEBGPU. Cube Texture Sampling Mode.
-        texture.samplingMode = noMipmap ? Constants.TEXTURE_BILINEAR_SAMPLINGMODE : Constants.TEXTURE_TRILINEAR_SAMPLINGMODE;
-        texture._lodGenerationScale = lodScale;
-        texture._lodGenerationOffset = lodOffset;
-
-        if (!this._doNotHandleContextLost) {
-            texture._extension = forcedExtension;
-            texture._files = files;
-        }
-
-        let webglEngineTexture: InternalTexture;
-        const onLoadInternal = () => {
-            texture.isReady = webglEngineTexture.isReady;
-
-            const width = webglEngineTexture.width;
-            const height = webglEngineTexture.height;
-            const depth = 1;
-            texture.width = width;
-            texture.height = height;
-            texture.baseWidth = width;
-            texture.baseHeight = height;
-            texture.depth = depth;
-            texture.baseDepth = depth;
-            texture._isRGBD = texture._isRGBD || webglEngineTexture._isRGBD;
-            texture._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
-
-            let mipMaps = Scalar.Log2(width);
-            mipMaps = Math.round(mipMaps);
-
-            const textureExtent = {
-                width,
-                height,
-                depth,
-            };
-            const textureDescriptor: GPUTextureDescriptor = {
-                dimension: WebGPUConstants.GPUTextureDimension_2d,
-                format: WebGPUConstants.GPUTextureFormat_rgba8unorm,
-                arrayLayerCount: 6,
-                mipLevelCount: noMipmap ? 1 : mipMaps + 1,
-                sampleCount: 1,
-                size: textureExtent,
-                usage: WebGPUConstants.GPUTextureUsage_COPY_DST | WebGPUConstants.GPUTextureUsage_SAMPLED
-            };
-
-            const gpuTexture = this._device.createTexture(textureDescriptor);
-            texture._webGPUTexture = gpuTexture;
-
-            const faces = [0, 1, 2, 3, 4, 5];
-            for (let face of faces) {
-                if (noMipmap) {
-                    this._uploadFromWebglTexture(webglEngineTexture, gpuTexture, width, height, face);
-                }
-                else {
-                    this._uploadMipMapsFromWebglTexture(mipMaps, webglEngineTexture, gpuTexture, width, height, face);
-                }
-            }
-            texture._webGPUTextureView = gpuTexture.createView({
-                arrayLayerCount: 6,
-                dimension: WebGPUConstants.GPUTextureViewDimension_cube,
-                format: WebGPUConstants.GPUTextureFormat_rgba8unorm,
-                mipLevelCount: noMipmap ? 1 : mipMaps + 1,
-                baseArrayLayer: 0,
-                baseMipLevel: 0,
-                aspect: WebGPUConstants.GPUTextureAspect_all
-            } as any);
-            webglEngineTexture.dispose();
-
-            onLoad && onLoad();
-        };
-        webglEngineTexture = this._decodeEngine.createCubeTexture(rootUrl, scene, files, noMipmap, onLoadInternal, onError, format, forcedExtension, createPolynomials, lodScale, lodOffset, fallback, excludeLoaders);
-
-        this._internalTexturesCache.push(texture);
-
-        return texture;
+    public createCubeTexture(rootUrl: string, scene: Nullable<Scene>, files: Nullable<string[]>, noMipmap?: boolean, onLoad: Nullable<(data?: any) => void> = null, onError: Nullable<(message?: string, exception?: any) => void> = null, format?: number, forcedExtension: any = null, createPolynomials: boolean = false, lodScale: number = 0, lodOffset: number = 0, fallback: Nullable<any> = null, excludeLoaders: Array<IInternalTextureLoader> = []): any {
+       
     }
 
-    public updateTextureSamplingMode(samplingMode: number, texture: InternalTexture): void {
+    public updateTextureSamplingMode(samplingMode: number, texture: any): void {
         texture.samplingMode = samplingMode;
     }
 
-    public updateDynamicTexture(texture: Nullable<InternalTexture>, canvas: HTMLCanvasElement, invertY: boolean, premulAlpha: boolean = false, format?: number): void {
+    public updateDynamicTexture(texture: Nullable<any>, canvas: HTMLCanvasElement, invertY: boolean, premulAlpha: boolean = false, format?: number): void {
         throw "Unimplemented updateDynamicTexture on WebGPU so far";
     }
 
@@ -1370,7 +1218,7 @@ export class WebGPUEngine extends Engine {
 
     public bindSamplers(effect: any): void { }
 
-    public _bindTextureDirectly(target: number, texture: InternalTexture): boolean {
+    public _bindTextureDirectly(target: number, texture: any): boolean {
         if (this._boundTexturesCache[this._activeChannel] !== texture) {
             this._boundTexturesCache[this._activeChannel] = texture;
             return true;
@@ -1379,7 +1227,7 @@ export class WebGPUEngine extends Engine {
     }
 
     /** @hidden */
-    public _bindTexture(channel: number, texture: InternalTexture): void {
+    public _bindTexture(channel: number, texture: any): void {
         if (channel < 0) {
             return;
         }
@@ -1388,26 +1236,26 @@ export class WebGPUEngine extends Engine {
     }
 
     /** @hidden */
-    public _uploadCompressedDataToTextureDirectly(texture: InternalTexture, internalFormat: number, width: number, height: number, data: ArrayBufferView, faceIndex: number = 0, lod: number = 0) {
+    public _uploadCompressedDataToTextureDirectly(texture: any, internalFormat: number, width: number, height: number, data: ArrayBufferView, faceIndex: number = 0, lod: number = 0) {
     }
 
     /** @hidden */
-    public _uploadDataToTextureDirectly(texture: InternalTexture, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
+    public _uploadDataToTextureDirectly(texture: any, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
     }
 
     /** @hidden */
-    public _uploadArrayBufferViewToTexture(texture: InternalTexture, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
+    public _uploadArrayBufferViewToTexture(texture: any, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
     }
 
     /** @hidden */
-    public _uploadImageToTexture(texture: InternalTexture, image: HTMLImageElement, faceIndex: number = 0, lod: number = 0) {
+    public _uploadImageToTexture(texture: any, image: HTMLImageElement, faceIndex: number = 0, lod: number = 0) {
     }
 
     //------------------------------------------------------------------------------
     //                              Render Target Textures
     //------------------------------------------------------------------------------
 
-    public createRenderTargetTexture(size: any, options: boolean | RenderTargetCreationOptions): InternalTexture {
+    public createRenderTargetTexture(size: any, options: boolean | RenderTargetCreationOptions): any {
         let fullOptions = new RenderTargetCreationOptions();
 
         if (options !== undefined && typeof options === "object") {
@@ -1423,28 +1271,7 @@ export class WebGPUEngine extends Engine {
             fullOptions.type = Constants.TEXTURETYPE_UNSIGNED_INT;
             fullOptions.samplingMode = Constants.TEXTURE_TRILINEAR_SAMPLINGMODE;
         }
-        var texture = new InternalTexture(this, InternalTextureSource.RenderTarget);
 
-        var width = size.width || size;
-        var height = size.height || size;
-
-        texture._depthStencilBuffer = {};
-        texture._framebuffer = {};
-        texture.baseWidth = width;
-        texture.baseHeight = height;
-        texture.width = width;
-        texture.height = height;
-        texture.isReady = true;
-        texture.samples = 1;
-        texture.generateMipMaps = fullOptions.generateMipMaps ? true : false;
-        texture.samplingMode = fullOptions.samplingMode;
-        texture.type = fullOptions.type;
-        texture._generateDepthBuffer = fullOptions.generateDepthBuffer;
-        texture._generateStencilBuffer = fullOptions.generateStencilBuffer ? true : false;
-
-        this._internalTexturesCache.push(texture);
-
-        return texture;
     }
 
     //------------------------------------------------------------------------------
@@ -1504,7 +1331,7 @@ export class WebGPUEngine extends Engine {
         }
     }
 
-    public bindFramebuffer(texture: InternalTexture, faceIndex?: number, requiredWidth?: number, requiredHeight?: number, forceFullscreenViewport?: boolean): void {
+    public bindFramebuffer(texture: any, faceIndex?: number, requiredWidth?: number, requiredHeight?: number, forceFullscreenViewport?: boolean): void {
         if (this._currentRenderTarget) {
             this.unBindFramebuffer(this._currentRenderTarget);
         }
@@ -1515,7 +1342,7 @@ export class WebGPUEngine extends Engine {
         }
     }
 
-    public unBindFramebuffer(texture: InternalTexture, disableGenerateMipMaps = false, onBeforeUnbind?: () => void): void {
+    public unBindFramebuffer(texture: any, disableGenerateMipMaps = false, onBeforeUnbind?: () => void): void {
         this._currentRenderTarget = null;
 
         if (onBeforeUnbind) {
@@ -2226,7 +2053,7 @@ export class WebGPUEngine extends Engine {
      */
     public setSize(width: number, height: number): void {
         super.setSize(width, height);
-        this._initializeMainAttachments();
+        //this._initializeMainAttachments();
     }
 
     //------------------------------------------------------------------------------
@@ -2296,7 +2123,6 @@ export class WebGPUEngine extends Engine {
         if (!useScreen && this._currentRenderTarget) {
             return this._currentRenderTarget.width;
         }
-
         return this._canvas.width;
     }
 

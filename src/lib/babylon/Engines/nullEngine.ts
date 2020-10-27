@@ -4,7 +4,6 @@ import { Scene } from "../scene";
 import { Engine } from "../Engines/engine";
 import { RenderTargetCreationOptions } from "../Materials/Textures/renderTargetCreationOptions";
 import { VertexBuffer } from "../Meshes/buffer";
-import { InternalTexture, InternalTextureSource } from "../Materials/Textures/internalTexture";
 import { Effect } from "../Materials/effect";
 import { _TimeToken } from "../Instrumentation/timeToken";
 import { Constants } from "./constants";
@@ -533,7 +532,7 @@ export class NullEngine extends Engine {
     }
 
     /** @hidden */
-    public _releaseTexture(texture: InternalTexture): void {
+    public _releaseTexture(texture: any): void {
     }
 
     /**
@@ -558,31 +557,12 @@ export class NullEngine extends Engine {
      */
     public createTexture(urlArg: string, noMipmap: boolean, invertY: boolean, scene: Scene, samplingMode: number = Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
         onLoad: Nullable<() => void> = null, onError: Nullable<(message: string, exception: any) => void> = null,
-        buffer: Nullable<ArrayBuffer | HTMLImageElement> = null, fallBack?: InternalTexture, format?: number): InternalTexture {
-        var texture = new InternalTexture(this, InternalTextureSource.Url);
-        var url = String(urlArg);
-
-        texture.url = url;
-        texture.generateMipMaps = !noMipmap;
-        texture.samplingMode = samplingMode;
-        texture.invertY = invertY;
-        texture.baseWidth = this._options.textureSize;
-        texture.baseHeight = this._options.textureSize;
-        texture.width = this._options.textureSize;
-        texture.height = this._options.textureSize;
-        if (format) {
-            texture.format = format;
-        }
-
-        texture.isReady = true;
-
+        buffer: Nullable<ArrayBuffer | HTMLImageElement> = null, fallBack?: any, format?: number): any {
+        
         if (onLoad) {
             onLoad();
         }
 
-        this._internalTexturesCache.push(texture);
-
-        return texture;
     }
 
     /**
@@ -591,7 +571,7 @@ export class NullEngine extends Engine {
      * @param options defines the options used to create the texture
      * @returns a new render target texture stored in an InternalTexture
      */
-    public createRenderTargetTexture(size: any, options: boolean | RenderTargetCreationOptions): InternalTexture {
+    public createRenderTargetTexture(size: any, options: boolean | RenderTargetCreationOptions): any {
         let fullOptions = new RenderTargetCreationOptions();
 
         if (options !== undefined && typeof options === "object") {
@@ -607,28 +587,6 @@ export class NullEngine extends Engine {
             fullOptions.type = Constants.TEXTURETYPE_UNSIGNED_INT;
             fullOptions.samplingMode = Constants.TEXTURE_TRILINEAR_SAMPLINGMODE;
         }
-        var texture = new InternalTexture(this, InternalTextureSource.RenderTarget);
-
-        var width = size.width || size;
-        var height = size.height || size;
-
-        texture._depthStencilBuffer = {};
-        texture._framebuffer = {};
-        texture.baseWidth = width;
-        texture.baseHeight = height;
-        texture.width = width;
-        texture.height = height;
-        texture.isReady = true;
-        texture.samples = 1;
-        texture.generateMipMaps = fullOptions.generateMipMaps ? true : false;
-        texture.samplingMode = fullOptions.samplingMode;
-        texture.type = fullOptions.type;
-        texture._generateDepthBuffer = fullOptions.generateDepthBuffer;
-        texture._generateStencilBuffer = fullOptions.generateStencilBuffer ? true : false;
-
-        this._internalTexturesCache.push(texture);
-
-        return texture;
     }
 
     /**
@@ -636,7 +594,7 @@ export class NullEngine extends Engine {
      * @param samplingMode defines the required sampling mode
      * @param texture defines the texture to update
      */
-    public updateTextureSamplingMode(samplingMode: number, texture: InternalTexture): void {
+    public updateTextureSamplingMode(samplingMode: number, texture: any): void {
         texture.samplingMode = samplingMode;
     }
 
@@ -650,7 +608,7 @@ export class NullEngine extends Engine {
      * @param depthStencilTexture The depth stencil texture to use to render
      * @param lodLevel defines le lod level to bind to the frame buffer
      */
-    public bindFramebuffer(texture: InternalTexture, faceIndex?: number, requiredWidth?: number, requiredHeight?: number, forceFullscreenViewport?: boolean): void {
+    public bindFramebuffer(texture: any, faceIndex?: number, requiredWidth?: number, requiredHeight?: number, forceFullscreenViewport?: boolean): void {
         if (this._currentRenderTarget) {
             this.unBindFramebuffer(this._currentRenderTarget);
         }
@@ -667,7 +625,7 @@ export class NullEngine extends Engine {
      * @param disableGenerateMipMaps defines a boolean indicating that mipmaps must not be generated
      * @param onBeforeUnbind defines a function which will be called before the effective unbind
      */
-    public unBindFramebuffer(texture: InternalTexture, disableGenerateMipMaps = false, onBeforeUnbind?: () => void): void {
+    public unBindFramebuffer(texture: any, disableGenerateMipMaps = false, onBeforeUnbind?: () => void): void {
         this._currentRenderTarget = null;
 
         if (onBeforeUnbind) {
@@ -700,7 +658,7 @@ export class NullEngine extends Engine {
      * @param format defines the format of the data
      * @param forceBindTexture if the texture should be forced to be bound eg. after a graphics context loss (Default: false)
      */
-    public updateDynamicTexture(texture: Nullable<InternalTexture>, canvas: HTMLCanvasElement, invertY: boolean, premulAlpha: boolean = false, format?: number): void {
+    public updateDynamicTexture(texture: Nullable<any>, canvas: HTMLCanvasElement, invertY: boolean, premulAlpha: boolean = false, format?: number): void {
 
     }
 
@@ -751,7 +709,7 @@ export class NullEngine extends Engine {
     }
 
     /** @hidden */
-    public _bindTextureDirectly(target: number, texture: InternalTexture): boolean {
+    public _bindTextureDirectly(target: number, texture: any): boolean {
         if (this._boundTexturesCache[this._activeChannel] !== texture) {
             this._boundTexturesCache[this._activeChannel] = texture;
             return true;
@@ -760,7 +718,7 @@ export class NullEngine extends Engine {
     }
 
     /** @hidden */
-    public _bindTexture(channel: number, texture: InternalTexture): void {
+    public _bindTexture(channel: number, texture: any): void {
         if (channel < 0) {
             return;
         }
@@ -784,18 +742,18 @@ export class NullEngine extends Engine {
     }
 
     /** @hidden */
-    public _uploadCompressedDataToTextureDirectly(texture: InternalTexture, internalFormat: number, width: number, height: number, data: ArrayBufferView, faceIndex: number = 0, lod: number = 0) {
+    public _uploadCompressedDataToTextureDirectly(texture: any, internalFormat: number, width: number, height: number, data: ArrayBufferView, faceIndex: number = 0, lod: number = 0) {
     }
 
     /** @hidden */
-    public _uploadDataToTextureDirectly(texture: InternalTexture, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
+    public _uploadDataToTextureDirectly(texture: any, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
     }
 
     /** @hidden */
-    public _uploadArrayBufferViewToTexture(texture: InternalTexture, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
+    public _uploadArrayBufferViewToTexture(texture: any, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
     }
 
     /** @hidden */
-    public _uploadImageToTexture(texture: InternalTexture, image: HTMLImageElement, faceIndex: number = 0, lod: number = 0) {
+    public _uploadImageToTexture(texture: any, image: HTMLImageElement, faceIndex: number = 0, lod: number = 0) {
     }
 }

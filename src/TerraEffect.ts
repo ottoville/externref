@@ -8,7 +8,6 @@ import type { IPipelineContext } from "./lib/babylon/Engines/IPipelineContext.js
 import type { Engine } from "./lib/babylon/Engines/engine.js";
 import type { ShaderProcessingContext, ProcessingOptions } from "./lib/babylon/Engines/Processors/shaderProcessingOptions.js";
 import { ShaderProcessor } from "./lib/babylon/Engines/Processors/shaderProcessor.js";
-import type { InternalTexture } from "./lib/babylon/Materials/Textures/internalTexture.js";
 import type { BaseTexture } from "./lib/babylon/Materials/Textures/baseTexture.js";
 import type { PostProcess } from "./lib/babylon/PostProcesses/postProcess.js";
 import type { IColor4Like, IVector4Like, IMatrixLike, IVector2Like, IVector3Like, IColor3Like } from "./lib/babylon/Maths/math.like.js";
@@ -47,7 +46,7 @@ export class TerraEffect {
      * @param texture Texture to bind.
      * @hidden
      */
-    public _bindTexture(channel: string, texture: Nullable<InternalTexture>): void {
+    public _bindTexture(channel: string, texture: Nullable<any>): void {
         //@ts-ignore
         this._engine._bindTexture(this._samplers[channel], texture);
     }

@@ -4,8 +4,6 @@ export * from "./colorGradingTexture";
 export * from "./cubeTexture";
 export * from "./dynamicTexture";
 export * from "./equiRectangularCubeTexture";
-export * from "./hdrCubeTexture";
-export * from "./internalTexture";
 export * from "./internalTextureLoader";
 export * from "./Loaders/index";
 export * from "./Procedurals/index";

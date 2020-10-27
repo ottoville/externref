@@ -8,7 +8,6 @@ import { Observable } from "./observable";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { Texture } from "../Materials/Textures/texture";
 import { CubeTexture } from "../Materials/Textures/cubeTexture";
-import { HDRCubeTexture } from "../Materials/Textures/hdrCubeTexture";
 import { EquiRectangularCubeTexture } from "../Materials/Textures/equiRectangularCubeTexture";
 import { Logger } from "../Misc/logger";
 import { AnimationGroup } from '../Animations/animationGroup';
@@ -610,11 +609,11 @@ export class CubeTextureAssetTask extends AbstractAssetTask implements ITextureA
 /**
  * Define a task used by AssetsManager to load HDR cube textures
  */
-export class HDRCubeTextureAssetTask extends AbstractAssetTask implements ITextureAssetTask<HDRCubeTexture> {
+export class HDRCubeTextureAssetTask extends AbstractAssetTask implements ITextureAssetTask<any> {
     /**
      * Gets the loaded texture
      */
-    public texture: HDRCubeTexture;
+    public texture: any;
 
     /**
      * Callback called when the task is successful
@@ -683,7 +682,6 @@ export class HDRCubeTextureAssetTask extends AbstractAssetTask implements ITextu
             onError(message, exception);
         };
 
-        this.texture = new HDRCubeTexture(this.url, scene, this.size, this.noMipmap, this.generateHarmonics, this.gammaSpace, this.reserved, onload, onerror);
     }
 }
 

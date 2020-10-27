@@ -4,7 +4,6 @@ import { Nullable } from "../../types";
 import { Scene } from "../../scene";
 import { Matrix } from "../../Maths/math.vector";
 import { EngineStore } from "../../Engines/engineStore";
-import { InternalTexture } from "../../Materials/Textures/internalTexture";
 import { _TimeToken } from "../../Instrumentation/timeToken";
 import { Constants } from "../../Engines/constants";
 import { IAnimatable } from '../../Animations/animatable.interface';
@@ -375,7 +374,7 @@ export class BaseTexture implements IAnimatable {
     private _scene: Nullable<Scene> = null;
 
     /** @hidden */
-    public _texture: Nullable<InternalTexture> = null;
+    public _texture: Nullable<any> = null;
     private _uid: Nullable<string> = null;
 
     /**
@@ -430,7 +429,7 @@ export class BaseTexture implements IAnimatable {
      * Get the underlying lower level texture from Babylon.
      * @returns the insternal texture
      */
-    public getInternalTexture(): Nullable<InternalTexture> {
+    public getInternalTexture(): Nullable<any> {
         return this._texture;
     }
 
@@ -552,7 +551,7 @@ export class BaseTexture implements IAnimatable {
     }
 
     /** @hidden */
-    public _getFromCache(url: Nullable<string>, noMipmap: boolean, sampling?: number, invertY?: boolean): Nullable<InternalTexture> {
+    public _getFromCache(url: Nullable<string>, noMipmap: boolean, sampling?: number, invertY?: boolean): Nullable<any> {
         if (!this._scene) {
             return null;
         }

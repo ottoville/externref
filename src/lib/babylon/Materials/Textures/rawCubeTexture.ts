@@ -3,7 +3,6 @@ import { EnvironmentTextureTools } from "../../Misc/environmentTextureTools";
 import { Nullable } from "../../types";
 import { Scene } from "../../scene";
 import { SphericalPolynomial } from "../../Maths/sphericalPolynomial";
-import { InternalTexture, InternalTextureSource } from "./internalTexture";
 import { CubeTexture } from "./cubeTexture";
 import { Constants } from "../../Engines/constants";
 import "../../Engines/Extensions/engine.rawTexture";
@@ -71,17 +70,13 @@ export class RawCubeTexture extends CubeTexture {
             const texture = new RawCubeTexture(scene, internalTexture._bufferViewArray!, internalTexture.width, internalTexture.format, internalTexture.type,
                 internalTexture.generateMipMaps, internalTexture.invertY, internalTexture.samplingMode, internalTexture._compression);
 
-            if (internalTexture.source === InternalTextureSource.CubeRawRGBD) {
-                texture.updateRGBDAsync(internalTexture._bufferViewArrayArray!, internalTexture._sphericalPolynomial, internalTexture._lodGenerationScale, internalTexture._lodGenerationOffset);
-            }
 
             return texture;
         }, this);
     }
 
     /** @hidden */
-    public static _UpdateRGBDAsync(internalTexture: InternalTexture, data: ArrayBufferView[][], sphericalPolynomial: Nullable<SphericalPolynomial>, lodScale: number, lodOffset: number): Promise<void> {
-        internalTexture._source = InternalTextureSource.CubeRawRGBD;
+    public static _UpdateRGBDAsync(internalTexture: any, data: ArrayBufferView[][], sphericalPolynomial: Nullable<SphericalPolynomial>, lodScale: number, lodOffset: number): Promise<void> {
         internalTexture._bufferViewArrayArray = data;
         internalTexture._lodGenerationScale = lodScale;
         internalTexture._lodGenerationOffset = lodOffset;

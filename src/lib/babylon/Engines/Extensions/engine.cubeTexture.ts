@@ -1,5 +1,4 @@
 import { ThinEngine } from "../../Engines/thinEngine";
-import { InternalTexture, InternalTextureSource } from '../../Materials/Textures/internalTexture';
 import { Logger } from '../../Misc/logger';
 import { Nullable } from '../../types';
 import { Scene } from '../../scene';
@@ -17,7 +16,7 @@ declare module "../../Engines/thinEngine" {
          * @param options The options defining the cube texture.
          * @returns The cube texture
          */
-        _createDepthStencilCubeTexture(size: number, options: DepthTextureCreationOptions): InternalTexture;
+        _createDepthStencilCubeTexture(size: number, options: DepthTextureCreationOptions): any;
 
         /**
          * Creates a cube texture
@@ -38,7 +37,7 @@ declare module "../../Engines/thinEngine" {
          */
         createCubeTexture(rootUrl: string, scene: Nullable<Scene>, files: Nullable<string[]>, noMipmap: boolean | undefined,
             onLoad: Nullable<(data?: any) => void>, onError: Nullable<(message?: string, exception?: any) => void>,
-            format: number | undefined, forcedExtension: any, createPolynomials: boolean, lodScale: number, lodOffset: number, fallback: Nullable<InternalTexture>, excludeLoaders: Array<IInternalTextureLoader>): InternalTexture;
+            format: number | undefined, forcedExtension: any, createPolynomials: boolean, lodScale: number, lodOffset: number, fallback: Nullable<any>, excludeLoaders: Array<IInternalTextureLoader>): any;
 
         /**
          * Creates a cube texture
@@ -54,7 +53,7 @@ declare module "../../Engines/thinEngine" {
          */
         createCubeTexture(rootUrl: string, scene: Nullable<Scene>, files: Nullable<string[]>, noMipmap: boolean,
             onLoad: Nullable<(data?: any) => void>, onError: Nullable<(message?: string, exception?: any) => void>,
-            format: number | undefined, forcedExtension: any): InternalTexture;
+            format: number | undefined, forcedExtension: any): any;
 
         /**
          * Creates a cube texture
@@ -73,7 +72,7 @@ declare module "../../Engines/thinEngine" {
          */
         createCubeTexture(rootUrl: string, scene: Nullable<Scene>, files: Nullable<string[]>, noMipmap: boolean,
             onLoad: Nullable<(data?: any) => void>, onError: Nullable<(message?: string, exception?: any) => void>,
-            format: number | undefined, forcedExtension: any, createPolynomials: boolean, lodScale: number, lodOffset: number): InternalTexture;
+            format: number | undefined, forcedExtension: any, createPolynomials: boolean, lodScale: number, lodOffset: number): any;
 
         /** @hidden */
         _partialLoadFile(url: string, index: number, loadedFiles: (string | ArrayBuffer)[], onfinish: (files: (string | ArrayBuffer)[]) => void, onErrorCallBack: Nullable<(message?: string, exception?: any) => void>): void;
@@ -94,40 +93,8 @@ declare module "../../Engines/thinEngine" {
     }
 }
 
-ThinEngine.prototype._createDepthStencilCubeTexture = function(size: number, options: DepthTextureCreationOptions): InternalTexture {
-    var internalTexture = new InternalTexture(this, InternalTextureSource.Unknown);
-    internalTexture.isCube = true;
-
-    if (this.webGLVersion === 1) {
-        Logger.Error("Depth cube texture is not supported by WebGL 1.");
-        return internalTexture;
-    }
-
-    var internalOptions = {
-        bilinearFiltering: false,
-        comparisonFunction: 0,
-        generateStencil: false,
-        ...options
-    };
-
-    var gl = this._gl;
-    this._bindTextureDirectly(gl.TEXTURE_CUBE_MAP, internalTexture, true);
-
-    this._setupDepthStencilTexture(internalTexture, size, internalOptions.generateStencil, internalOptions.bilinearFiltering, internalOptions.comparisonFunction);
-
-    // Create the depth/stencil buffer
-    for (var face = 0; face < 6; face++) {
-        if (internalOptions.generateStencil) {
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, gl.DEPTH24_STENCIL8, size, size, 0, gl.DEPTH_STENCIL, gl.UNSIGNED_INT_24_8, null);
-        }
-        else {
-            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, gl.DEPTH_COMPONENT24, size, size, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
-        }
-    }
-
-    this._bindTextureDirectly(gl.TEXTURE_CUBE_MAP, null);
-
-    return internalTexture;
+ThinEngine.prototype._createDepthStencilCubeTexture = function (size: number, options: DepthTextureCreationOptions): any {
+   
 };
 
 ThinEngine.prototype._partialLoadFile = function(url: string, index: number, loadedFiles: (string | ArrayBuffer)[],
@@ -216,132 +183,6 @@ ThinEngine.prototype._setCubeMapTextureParams = function(loadMipmap: boolean): v
     this._bindTextureDirectly(gl.TEXTURE_CUBE_MAP, null);
 };
 
-ThinEngine.prototype.createCubeTexture = function(rootUrl: string, scene: Nullable<Scene>, files: Nullable<string[]>, noMipmap?: boolean, onLoad: Nullable<(data?: any) => void> = null, onError: Nullable<(message?: string, exception?: any) => void> = null, format?: number, forcedExtension: any = null, createPolynomials: boolean = false, lodScale: number = 0, lodOffset: number = 0, fallback: Nullable<InternalTexture> = null, excludeLoaders: Array<IInternalTextureLoader> = []): InternalTexture {
-    var gl = this._gl;
-
-    var texture = fallback ? fallback : new InternalTexture(this, InternalTextureSource.Cube);
-    texture.isCube = true;
-    texture.url = rootUrl;
-    texture.generateMipMaps = !noMipmap;
-    texture._lodGenerationScale = lodScale;
-    texture._lodGenerationOffset = lodOffset;
-
-    if (!this._doNotHandleContextLost) {
-        texture._extension = forcedExtension;
-        texture._files = files;
-    }
-
-    var lastDot = rootUrl.lastIndexOf('.');
-    var extension = forcedExtension ? forcedExtension : (lastDot > -1 ? rootUrl.substring(lastDot).toLowerCase() : "");
-    const filteredFormat: Nullable<string> = this.excludedCompressedTextureFormats(rootUrl, this._textureFormatInUse);
-
-    let loader: Nullable<IInternalTextureLoader> = null;
-    for (let availableLoader of ThinEngine._TextureLoaders) {
-        if (excludeLoaders.indexOf(availableLoader) === -1 && availableLoader.canLoad(extension, filteredFormat, fallback, false, false)) {
-            loader = availableLoader;
-            break;
-        }
-    }
-
-    let onInternalError = (request?: IWebRequest, exception?: any) => {
-        if (loader) {
-            const fallbackUrl = loader.getFallbackTextureUrl(texture.url, this._textureFormatInUse);
-            Logger.Warn((loader.constructor as any).name + " failed when trying to load " + texture.url + ", falling back to the next supported loader");
-            if (fallbackUrl) {
-                excludeLoaders.push(loader);
-                this.createCubeTexture(fallbackUrl, scene, files, noMipmap, onLoad, onError, format, extension, createPolynomials, lodScale, lodOffset, texture, excludeLoaders);
-                return;
-            }
-        }
-
-        if (onError && request) {
-            onError(request.status + " " + request.statusText, exception);
-        }
-    };
-
-    if (loader) {
-        rootUrl = loader.transformUrl(rootUrl, filteredFormat);
-
-        const onloaddata = (data: any) => {
-            this._bindTextureDirectly(gl.TEXTURE_CUBE_MAP, texture, true);
-            loader!.loadCubeData(data, texture, createPolynomials, onLoad, onError);
-        };
-        if (files && files.length === 6) {
-            if (loader.supportCascades) {
-                this._cascadeLoadFiles(scene, onloaddata, files, onError);
-            }
-            else {
-                if (onError) {
-                    onError("Textures type does not support cascades.");
-                } else {
-                    Logger.Warn("Texture loader does not support cascades.");
-                }
-            }
-        }
-        else {
-            this._loadFile(rootUrl, onloaddata, undefined, undefined, true, onInternalError);
-        }
-    }
-    else {
-        if (!files) {
-            throw new Error("Cannot load cubemap because files were not defined");
-        }
-
-        this._cascadeLoadImgs(scene, (imgs) => {
-            var width = this.needPOTTextures ? ThinEngine.GetExponentOfTwo(imgs[0].width, this._caps.maxCubemapTextureSize) : imgs[0].width;
-            var height = width;
-
-            var faces = [
-                gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
-                gl.TEXTURE_CUBE_MAP_NEGATIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
-            ];
-
-            this._bindTextureDirectly(gl.TEXTURE_CUBE_MAP, texture, true);
-            this._unpackFlipY(false);
-
-            let internalFormat = format ? this._getInternalFormat(format) : this._gl.RGBA;
-            for (var index = 0; index < faces.length; index++) {
-                if (imgs[index].width !== width || imgs[index].height !== height) {
-
-                    this._prepareWorkingCanvas();
-
-                    if (!this._workingCanvas || !this._workingContext) {
-                        Logger.Warn("Cannot create canvas to resize texture.");
-                        return;
-                    }
-                    this._workingCanvas.width = width;
-                    this._workingCanvas.height = height;
-
-                    this._workingContext.drawImage(imgs[index], 0, 0, imgs[index].width, imgs[index].height, 0, 0, width, height);
-                    gl.texImage2D(faces[index], 0, internalFormat, internalFormat, gl.UNSIGNED_BYTE, this._workingCanvas);
-                } else {
-                    gl.texImage2D(faces[index], 0, internalFormat, internalFormat, gl.UNSIGNED_BYTE, imgs[index]);
-                }
-            }
-
-            if (!noMipmap) {
-                gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
-            }
-
-            this._setCubeMapTextureParams(!noMipmap);
-
-            texture.width = width;
-            texture.height = height;
-            texture.isReady = true;
-            if (format) {
-                texture.format = format;
-            }
-
-            texture.onLoadedObservable.notifyObservers(texture);
-            texture.onLoadedObservable.clear();
-
-            if (onLoad) {
-                onLoad();
-            }
-        }, files, onError);
-    }
-
-    this._internalTexturesCache.push(texture);
-
-    return texture;
+ThinEngine.prototype.createCubeTexture = function (rootUrl: string, scene: Nullable<Scene>, files: Nullable<string[]>, noMipmap?: boolean, onLoad: Nullable<(data?: any) => void> = null, onError: Nullable<(message?: string, exception?: any) => void> = null, format?: number, forcedExtension: any = null, createPolynomials: boolean = false, lodScale: number = 0, lodOffset: number = 0, fallback: Nullable<any> = null, excludeLoaders: Array<IInternalTextureLoader> = []): any {
+   
 };

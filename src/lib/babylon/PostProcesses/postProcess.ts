@@ -13,7 +13,6 @@ import { Color4 } from '../Maths/math.color';
 import "../Engines/Extensions/engine.renderTarget";
 
 declare type Scene = import("../scene").Scene;
-declare type InternalTexture = import("../Materials/Textures/internalTexture").InternalTexture;
 declare type WebVRFreeCamera = import("../Cameras/VR/webVRCamera").WebVRFreeCamera;
 declare type Animation = import("../Animations/animation").Animation;
 
@@ -45,7 +44,7 @@ export class PostProcess {
     * Internal, reference to the location where this postprocess was output to. (Typically the texture on the next postprocess in the chain)
     * @hidden
     */
-    public _outputTexture: Nullable<InternalTexture> = null;
+    public _outputTexture: Nullable<any> = null;
     /**
     * Sampling mode used by the shader
     * See https://doc.babylonjs.com/classes/3.1/texture
@@ -140,7 +139,7 @@ export class PostProcess {
     * Smart array of input and output textures for the post process.
     * @hidden
     */
-    public _textures = new SmartArray<InternalTexture>(2);
+    public _textures = new SmartArray<any>(2);
     /**
     * The index in _textures that corresponds to the output texture.
     * @hidden
@@ -155,7 +154,7 @@ export class PostProcess {
     protected _indexParameters: any;
     private _shareOutputWithPostProcess: Nullable<PostProcess>;
     private _texelSize = Vector2.Zero();
-    private _forcedOutputTexture: InternalTexture;
+    private _forcedOutputTexture: any;
 
     /**
      * Returns the fragment url or shader name used in the post process.
@@ -253,11 +252,11 @@ export class PostProcess {
     * The input texture for this post process and the output texture of the previous post process. When added to a pipeline the previous post process will
     * render it's output into this texture and this texture will be used as textureSampler in the fragment shader of this post process.
     */
-    public get inputTexture(): InternalTexture {
+    public get inputTexture(): any {
         return this._textures.data[this._currentRenderTextureInd];
     }
 
-    public set inputTexture(value: InternalTexture) {
+    public set inputTexture(value: any) {
         this._forcedOutputTexture = value;
     }
 
@@ -384,7 +383,7 @@ export class PostProcess {
      */
     public useOwnOutput() {
         if (this._textures.length == 0) {
-            this._textures = new SmartArray<InternalTexture>(2);
+            this._textures = new SmartArray<any>(2);
         }
 
         this._shareOutputWithPostProcess = null;
@@ -434,7 +433,7 @@ export class PostProcess {
      * @param forceDepthStencil If true, a depth and stencil buffer will be generated. (default: false)
      * @returns The target texture that was bound to be written to.
      */
-    public activate(camera: Nullable<Camera>, sourceTexture: Nullable<InternalTexture> = null, forceDepthStencil?: boolean): InternalTexture {
+    public activate(camera: Nullable<Camera>, sourceTexture: Nullable<any> = null, forceDepthStencil?: boolean): any {
         camera = camera || this._camera;
 
         var scene = camera.getScene();
@@ -516,7 +515,7 @@ export class PostProcess {
             });
         }
 
-        var target: InternalTexture;
+        var target: any;
 
         if (this._shareOutputWithPostProcess) {
             target = this._shareOutputWithPostProcess.inputTexture;
@@ -604,7 +603,7 @@ export class PostProcess {
         }
 
         // Bind the output texture of the preivous post process as the input to this post process.
-        var source: InternalTexture;
+        var source: any;
         if (this._shareOutputWithPostProcess) {
             source = this._shareOutputWithPostProcess.inputTexture;
         } else if (this._forcedOutputTexture) {

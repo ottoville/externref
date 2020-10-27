@@ -42,7 +42,7 @@ export abstract class paintGround {
         this.resolve = callback;
     }
     public destroy() {
-        this.camera.attachControl(GPUScene.canvas, true);
+        this.camera.attachControl(this.scene.gpuscene.canvas, true);
     }
 
     #drawArea = async (evt:PointerEvent) => {
@@ -147,7 +147,7 @@ export abstract class paintGround {
     }
     #pointerUp = (evt: PointerEvent) => {
         this.uitab.removeListener('pointermove', this.#drawArea);
-        this.camera.attachControl(GPUScene.canvas, true);
+        this.camera.attachControl(this.scene.canvas, true);
         //fix race condition
         if (this.#end_position[0] == 0)
             return;
@@ -189,7 +189,7 @@ export abstract class paintGround {
             }*/
             this.#start_position = new Float32Array([pickInfo.pickedPoint.x, pickInfo.pickedPoint.z]);
             this.onMainPointerDown(this.#start_position);
-            this.camera.detachControl(GPUScene.canvas);
+            this.camera.detachControl(this.scene.canvas);
 
             this.uitab.addListener("pointermove", this.#drawArea, { lazy: 25 });
 

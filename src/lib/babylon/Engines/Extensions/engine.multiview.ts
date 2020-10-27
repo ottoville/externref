@@ -1,7 +1,6 @@
 import { Camera } from "../../Cameras/camera";
 import { Engine } from "../../Engines/engine";
 import { Scene } from "../../scene";
-import { InternalTexture, InternalTextureSource } from '../../Materials/Textures/internalTexture';
 import { Nullable } from '../../types';
 import { Matrix, TmpVectors } from '../../Maths/math.vector';
 import { UniformBuffer } from '../../Materials/uniformBuffer';
@@ -15,13 +14,13 @@ declare module "../../Engines/engine" {
          * @param height defines the height of the texture
          * @returns the created multiview texture
          */
-        createMultiviewRenderTargetTexture(width: number, height: number): InternalTexture;
+        createMultiviewRenderTargetTexture(width: number, height: number): any;
 
         /**
          * Binds a multiview framebuffer to be drawn to
          * @param multiviewTexture texture to bind
          */
-        bindMultiviewFramebuffer(multiviewTexture: InternalTexture): void;
+        bindMultiviewFramebuffer(multiviewTexture: any): void;
     }
 }
 
@@ -32,23 +31,9 @@ Engine.prototype.createMultiviewRenderTargetTexture = function(width: number, he
         throw "Multiview is not supported";
     }
 
-    var internalTexture = new InternalTexture(this, InternalTextureSource.Unknown, true);
-    internalTexture.width = width;
-    internalTexture.height = height;
-    internalTexture._framebuffer = gl.createFramebuffer();
-
-    internalTexture._colorTextureArray = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D_ARRAY, internalTexture._colorTextureArray);
-    (gl as any).texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, width, height, 2);
-
-    internalTexture._depthStencilTextureArray = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D_ARRAY, internalTexture._depthStencilTextureArray);
-    (gl as any).texStorage3D(gl.TEXTURE_2D_ARRAY, 1, (gl as any).DEPTH32F_STENCIL8, width, height, 2);
-    internalTexture.isReady = true;
-    return internalTexture;
 };
 
-Engine.prototype.bindMultiviewFramebuffer = function(multiviewTexture: InternalTexture) {
+Engine.prototype.bindMultiviewFramebuffer = function (multiviewTexture: any) {
     var gl: any = this._gl;
     var ext = this.getCaps().oculusMultiview || this.getCaps().multiview;
 

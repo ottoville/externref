@@ -11,7 +11,6 @@ import { TransformNode } from "../../Meshes/transformNode";
 import { Material } from "../../Materials/material";
 import { MultiMaterial } from "../../Materials/multiMaterial";
 import { CubeTexture } from "../../Materials/Textures/cubeTexture";
-import { HDRCubeTexture } from "../../Materials/Textures/hdrCubeTexture";
 import { AnimationGroup } from "../../Animations/animationGroup";
 import { Light } from "../../Lights/light";
 import { SceneComponentConstants } from "../../sceneComponent";
@@ -131,12 +130,7 @@ var loadAssetContainer = (scene: Scene, data: string, rootUrl: string, onError?:
             // PBR needed for both HDR texture (gamma space) & a sky box
             var isPBR = parsedData.isPBR !== undefined ? parsedData.isPBR : true;
             if (parsedData.environmentTextureType && parsedData.environmentTextureType === "BABYLON.HDRCubeTexture") {
-                var hdrSize: number = (parsedData.environmentTextureSize) ? parsedData.environmentTextureSize : 128;
-                var hdrTexture = new HDRCubeTexture((parsedData.environmentTexture.match(/https?:\/\//g) ? "" : rootUrl) + parsedData.environmentTexture, scene, hdrSize, true, !isPBR);
-                if (parsedData.environmentTextureRotationY) {
-                    hdrTexture.rotationY = parsedData.environmentTextureRotationY;
-                }
-                scene.environmentTexture = hdrTexture;
+
             } else {
                 if (StringTools.EndsWith(parsedData.environmentTexture, ".env")) {
                     var compressedTexture = new CubeTexture((parsedData.environmentTexture.match(/https?:\/\//g) ? "" : rootUrl) + parsedData.environmentTexture, scene);
@@ -756,11 +750,7 @@ SceneLoader.RegisterPlugin({
                 var isPBR = parsedData.isPBR !== undefined ? parsedData.isPBR : true;
                 if (parsedData.environmentTextureType && parsedData.environmentTextureType === "BABYLON.HDRCubeTexture") {
                     var hdrSize: number = (parsedData.environmentTextureSize) ? parsedData.environmentTextureSize : 128;
-                    var hdrTexture = new HDRCubeTexture(rootUrl + parsedData.environmentTexture, scene, hdrSize, true, !isPBR);
-                    if (parsedData.environmentTextureRotationY) {
-                        hdrTexture.rotationY = parsedData.environmentTextureRotationY;
-                    }
-                    scene.environmentTexture = hdrTexture;
+
                 } else {
                     if (StringTools.EndsWith(parsedData.environmentTexture, ".env")) {
                         var compressedTexture = new CubeTexture(rootUrl + parsedData.environmentTexture, scene);

@@ -1,6 +1,5 @@
 import { Nullable } from "../../../types";
 import { Engine } from "../../../Engines/engine";
-import { InternalTexture } from "../../../Materials/Textures/internalTexture";
 import { IInternalTextureLoader } from "../../../Materials/Textures/internalTextureLoader";
 import { _TimeToken } from "../../../Instrumentation/timeToken";
 import { BasisTools } from "../../../Misc/basis";
@@ -24,7 +23,7 @@ export class _BasisTextureLoader implements IInternalTextureLoader {
      * @param isBuffer defines whether the texture data are stored as a buffer
      * @returns true if the loader can load the specified file
      */
-    public canLoad(extension: string, textureFormatInUse: Nullable<string>, fallback: Nullable<InternalTexture>, isBase64: boolean, isBuffer: boolean): boolean {
+    public canLoad(extension: string, textureFormatInUse: Nullable<string>, fallback: Nullable<any>, isBase64: boolean, isBuffer: boolean): boolean {
         return extension.indexOf(".basis") === 0;
     }
 
@@ -56,7 +55,7 @@ export class _BasisTextureLoader implements IInternalTextureLoader {
      * @param onLoad defines the callback to trigger once the texture is ready
      * @param onError defines the callback to trigger in case of error
      */
-    public loadCubeData(data: string | ArrayBuffer | (string | ArrayBuffer)[], texture: InternalTexture, createPolynomials: boolean, onLoad: Nullable<(data?: any) => void>, onError: Nullable<(message?: string, exception?: any) => void>): void {
+    public loadCubeData(data: string | ArrayBuffer | (string | ArrayBuffer)[], texture: any, createPolynomials: boolean, onLoad: Nullable<(data?: any) => void>, onError: Nullable<(message?: string, exception?: any) => void>): void {
         if (Array.isArray(data)) {
             return;
         }
@@ -91,7 +90,7 @@ export class _BasisTextureLoader implements IInternalTextureLoader {
      * @param texture defines the BabylonJS internal texture
      * @param callback defines the method to call once ready to upload
      */
-    public loadData(data: ArrayBuffer, texture: InternalTexture,
+    public loadData(data: ArrayBuffer, texture: any,
         callback: (width: number, height: number, loadMipmap: boolean, isCompressed: boolean, done: () => void) => void): void {
         var caps = texture.getEngine().getCaps();
         var transcodeConfig = {

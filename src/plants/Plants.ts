@@ -146,83 +146,8 @@ export class Plants {
         Poaceae.subMeshes[0]._materialEffect = {};
 
         Poaceae.material.bindForSubMesh = (world: Matrix, mesh: Mesh, subMesh: SubMesh): void => { };
-        */
 
-       /* let [VGPU, VARR] = this.device.createBufferMapped({ size: positions.length * 4, usage: GPUBufferUsage.VERTEX });
-        new Float32Array(VARR).set(positions);
-        VGPU.unmap()*/
-        /*
-        const renderPipeline = this.device.createRenderPipeline({
-            //@ts-ignore
-            sampleCount: engine._mainPassSampleCount,
-            primitiveTopology: 'triangle-strip',
-            rasterizationState: {
-                cullMode: 'none',
-            },
-            depthStencilState: {
-                depthWriteEnabled: true,
-                depthCompare: "less",
-                format: "depth24plus-stencil8",
-            },
-            colorStates: [{
-                format: "bgra8unorm",
-            }],
-            vertexStage: {
-                module: GPUScene.instance.shaderModules.get("grass.vert")!,
-                entryPoint: "main",
-            },
-            fragmentStage: {
-                module: GPUScene.instance.shaderModules.get("grass.frag")!,
-                entryPoint: "main"
-            },
-            vertexState: {
-                indexFormat: 'uint16',
-                vertexBuffers:
-                    [{
-                        arrayStride: 4 * 4,
-                        stepMode: "instance" as GPUInputStepMode,
-                        attributes: [{ // position
-                            shaderLocation: 0,
-                            offset: 0,
-                            format: "float4" as GPUVertexFormat
-                        }
-                        ]
-                    },
-                    {
-                        arrayStride: 4 * 4,
-                        stepMode: "instance" as GPUInputStepMode,
-                        attributes: [
-                            {  // shape
-                                shaderLocation: 1,
-                                offset: 0,
-                                format: "float4" as GPUVertexFormat
-                            }
-                        ]
-                    }]
-            },
-        });
-       
-        const bindGroups = [
-            this.device.createBindGroup({
-                layout: renderPipeline.getBindGroupLayout(0),
-                entries: [{
-                    binding: 0,
-                    resource: {
-                        //@ts-ignore
-                        buffer: scene._sceneUbo._buffer.underlyingResource
-                    }
-                }],
-            }),
-            device.createBindGroup({
-                layout: renderPipeline.getBindGroupLayout(1),
-                entries: [{
-                    binding: 0,
-                    resource: {
-                        buffer: GPUScene.instance.timeBuffer
-                    }
-                }],
-            })
-        ];
+
         
         Poaceae._draw = (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh => {
             if (!Poaceae._geometry || !Poaceae._geometry.getVertexBuffers() || (!Poaceae._unIndexed && !Poaceae._geometry.getIndexBuffer())) {

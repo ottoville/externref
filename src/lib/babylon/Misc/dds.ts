@@ -1,7 +1,6 @@
 import { Scalar } from "../Maths/math.scalar";
 import { SphericalPolynomial } from "../Maths/sphericalPolynomial";
 import { Constants } from "../Engines/constants";
-import { InternalTexture, InternalTextureSource } from "../Materials/Textures/internalTexture";
 import { Nullable } from "../types";
 import { Logger } from "../Misc/logger";
 import { CubeMapToSphericalPolynomialTools } from "../Misc/HighDynamicRange/cubemapToSphericalPolynomial";
@@ -445,7 +444,7 @@ export class DDSTools {
      * Uploads DDS Levels to a Babylon Texture
      * @hidden
      */
-    public static UploadDDSLevels(engine: ThinEngine, texture: InternalTexture, arrayBuffer: any, info: DDSInfo, loadMipmaps: boolean, faces: number, lodIndex = -1, currentFace?: number) {
+    public static UploadDDSLevels(engine: ThinEngine, texture: any, arrayBuffer: any, info: DDSInfo, loadMipmaps: boolean, faces: number, lodIndex = -1, currentFace?: number) {
         var sphericalPolynomialFaces: Nullable<Array<ArrayBufferView>> = null;
         if (info.sphericalPolynomial) {
             sphericalPolynomialFaces = new Array<ArrayBufferView>();
@@ -677,10 +676,10 @@ declare module "../Engines/thinEngine" {
          * @returns the cube texture as an InternalTexture
          */
         createPrefilteredCubeTexture(rootUrl: string, scene: Nullable<Scene>, lodScale: number, lodOffset: number,
-            onLoad?: Nullable<(internalTexture: Nullable<InternalTexture>) => void>,
+            onLoad?: Nullable<(internalTexture: Nullable<any>) => void>,
             onError?: Nullable<(message?: string, exception?: any) => void>,
             format?: number, forcedExtension?: any,
-            createPolynomials?: boolean): InternalTexture;
+            createPolynomials?: boolean): any;
     }
 }
 
@@ -698,10 +697,10 @@ declare module "../Engines/thinEngine" {
  * @returns the cube texture as an InternalTexture
  */
 ThinEngine.prototype.createPrefilteredCubeTexture = function(rootUrl: string, scene: Nullable<Scene>, lodScale: number, lodOffset: number,
-    onLoad: Nullable<(internalTexture: Nullable<InternalTexture>) => void> = null,
+    onLoad: Nullable<(internalTexture: Nullable<any>) => void> = null,
     onError: Nullable<(message?: string, exception?: any) => void> = null,
     format?: number, forcedExtension: any = null,
-    createPolynomials: boolean = true): InternalTexture {
+    createPolynomials: boolean = true): any {
     var callback = (loadData: any) => {
         if (!loadData) {
             if (onLoad) {
@@ -710,14 +709,13 @@ ThinEngine.prototype.createPrefilteredCubeTexture = function(rootUrl: string, sc
             return;
         }
 
-        let texture = loadData.texture as InternalTexture;
+        let texture = loadData.texture as any;
         if (!createPolynomials) {
             texture._sphericalPolynomial = new SphericalPolynomial();
         }
         else if (loadData.info.sphericalPolynomial) {
             texture._sphericalPolynomial = loadData.info.sphericalPolynomial;
         }
-        texture._source = InternalTextureSource.CubePrefiltered;
 
         if (this.getCaps().textureLOD) {
             // Do not add extra process if texture lod is supported.
@@ -747,13 +745,6 @@ ThinEngine.prototype.createPrefilteredCubeTexture = function(rootUrl: string, sc
             let lodIndex = minLODIndex + (maxLODIndex - minLODIndex) * roughness;
             let mipmapIndex = Math.round(Math.min(Math.max(lodIndex, 0), maxLODIndex));
 
-            var glTextureFromLod = new InternalTexture(this, InternalTextureSource.Temp);
-            glTextureFromLod.type = texture.type;
-            glTextureFromLod.format = texture.format;
-            glTextureFromLod.width = Math.pow(2, Math.max(Scalar.Log2(width) - mipmapIndex, 0));
-            glTextureFromLod.height = glTextureFromLod.width;
-            glTextureFromLod.isCube = true;
-            this._bindTextureDirectly(gl.TEXTURE_CUBE_MAP, glTextureFromLod, true);
 
             gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -765,7 +756,6 @@ ThinEngine.prototype.createPrefilteredCubeTexture = function(rootUrl: string, sc
                 var data: any = loadData.data;
                 this._unpackFlipY(info.isCompressed);
 
-                DDSTools.UploadDDSLevels(this, glTextureFromLod, data, info, true, 6, mipmapIndex);
             }
             else {
                 Logger.Warn("DDS is the only prefiltered cube map supported so far.");
@@ -776,9 +766,7 @@ ThinEngine.prototype.createPrefilteredCubeTexture = function(rootUrl: string, sc
             // Wrap in a base texture for easy binding.
             const lodTexture = new BaseTexture(scene);
             lodTexture.isCube = true;
-            lodTexture._texture = glTextureFromLod;
 
-            glTextureFromLod.isReady = true;
             textures.push(lodTexture);
         }
 

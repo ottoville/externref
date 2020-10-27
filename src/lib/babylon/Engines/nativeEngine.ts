@@ -1,7 +1,6 @@
 import { Nullable, IndicesArray, DataArray } from "../types";
 import { Engine } from "../Engines/engine";
 import { VertexBuffer } from "../Meshes/buffer";
-import { InternalTexture, InternalTextureSource } from "../Materials/Textures/internalTexture";
 import { IInternalTextureLoader } from "../Materials/Textures/internalTextureLoader";
 import { Texture } from "../Materials/Textures/texture";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
@@ -629,17 +628,6 @@ class NativeAddressMode {
 class NativeTextureFormat {
     public static readonly RGBA8 = 0;
     public static readonly RGBA32F = 1;
-}
-
-/** @hidden */
-class NativeTexture extends InternalTexture {
-    public getInternalTexture(): InternalTexture {
-        return this;
-    }
-
-    public getViewCount(): number {
-        return 1;
-    }
 }
 
 /** @hidden */
@@ -1327,15 +1315,14 @@ export class NativeEngine extends Engine {
         onLoad: Nullable<() => void> = null,
         onError: Nullable<(message: string, exception: any) => void> = null,
         buffer: Nullable<string | ArrayBuffer | Blob> = null,
-        fallback: Nullable<InternalTexture> = null,
+        fallback: Nullable<any> = null,
         format: Nullable<number> = null,
-        forcedExtension: Nullable<string> = null): InternalTexture {
+        forcedExtension: Nullable<string> = null): any {
         var url = String(urlArg); // assign a new string, so that the original is still available in case of fallback
         var fromData = url.substr(0, 5) === "data:";
         var fromBlob = url.substr(0, 5) === "blob:";
         var isBase64 = fromData && url.indexOf("base64") !== -1;
 
-        let texture = fallback ? fallback : new InternalTexture(this, InternalTextureSource.Url);
 
         // establish the file extension, if possible
         var lastDot = url.lastIndexOf('.');
@@ -1356,55 +1343,8 @@ export class NativeEngine extends Engine {
             url = loader.transformUrl(url, textureFormatInUse);
         }
 
-        if (scene) {
-            scene._addPendingData(texture);
-        }
-        texture.url = url;
-        texture.generateMipMaps = !noMipmap;
-        texture.samplingMode = samplingMode;
-        texture.invertY = invertY;
 
-        if (!this.doNotHandleContextLost) {
-            // Keep a link to the buffer only if we plan to handle context lost
-            texture._buffer = buffer;
-        }
-
-        let onLoadObserver: Nullable<Observer<InternalTexture>> = null;
-        if (onLoad && !fallback) {
-            onLoadObserver = texture.onLoadedObservable.add(onLoad);
-        }
-
-        if (!fallback) { this._internalTexturesCache.push(texture); }
-
-        let onInternalError = (message?: string, exception?: any) => {
-            if (scene) {
-                scene._removePendingData(texture);
-            }
-
-            let customFallback = false;
-            if (loader) {
-                const fallbackUrl = loader.getFallbackTextureUrl(url, textureFormatInUse);
-                if (fallbackUrl) {
-                    // Add Back
-                    customFallback = true;
-                    this.createTexture(urlArg, noMipmap, invertY, scene, samplingMode, null, onError, buffer, texture);
-                }
-            }
-
-            if (!customFallback) {
-                if (onLoadObserver) {
-                    texture.onLoadedObservable.remove(onLoadObserver);
-                }
-                if (Tools.UseFallbackTexture) {
-                    this.createTexture(Tools.fallbackTexture, noMipmap, invertY, scene, samplingMode, null, onError, buffer, texture);
-                }
-            }
-
-            if (onError) {
-                onError(message || "Unknown error", exception);
-            }
-        };
-
+       
         // processing for non-image formats
         if (loader) {
             throw new Error("Loading textures from IInternalTextureLoader not yet implemented.");
@@ -1431,63 +1371,9 @@ export class NativeEngine extends Engine {
                     throw new Error("Loading textures from string data not yet implemented.");
                 }
 
-                if (fromBlob && !this.doNotHandleContextLost) {
-                    // We need to store the image if we need to rebuild the texture
-                    // in case of a webgl context lost
-                    texture._buffer = data;
-                }
-
-                let webGLTexture = texture._webGLTexture;
-
-                if (!webGLTexture) {
-                    //  this.resetTextureCache();
-                    if (scene) {
-                        scene._removePendingData(texture);
-                    }
-
-                    return;
-                }
-
-                if (!this._native.loadTexture(webGLTexture, data, !noMipmap, invertY)) {
-                    throw new Error("Could not load a native texture.");
-                }
-
-                texture.baseWidth = this._native.getTextureWidth(webGLTexture);
-                texture.baseHeight = this._native.getTextureHeight(webGLTexture);
-                texture.width = texture.baseWidth;
-                texture.height = texture.baseHeight;
-                texture.isReady = true;
-
-                var filter = this._getSamplingFilter(samplingMode);
-
-                this._native.setTextureSampling(webGLTexture, filter);
-
-                // this.resetTextureCache();
-                if (scene) {
-                    scene._removePendingData(texture);
-                }
-
-                texture.onLoadedObservable.notifyObservers(texture);
-                texture.onLoadedObservable.clear();
             };
 
-            if (buffer instanceof ArrayBuffer) {
-                onload(buffer);
-            } else if (ArrayBuffer.isView(buffer)) {
-                onload(buffer.buffer);
-            } else if (buffer instanceof Blob) {
-                throw new Error("Loading texture from Blob not yet implemented.");
-            } else if (!fromData) {
-                let onLoadFileError = (request?: WebRequest, exception?: any) => {
-                    onInternalError("Failed to retrieve " + url + ".", exception);
-                };
-                Tools.LoadFile(url, onload, undefined, undefined, /*useArrayBuffer*/true, onLoadFileError);
-            } else {
-                onload(Tools.DecodeBase64(buffer as string));
-            }
         }
-
-        return texture;
     }
 
     /**
@@ -1518,19 +1404,10 @@ export class NativeEngine extends Engine {
         createPolynomials = false,
         lodScale: number = 0,
         lodOffset: number = 0,
-        fallback: Nullable<InternalTexture> = null): InternalTexture
+        fallback: Nullable<any> = null): any
     {
-        var texture = fallback ? fallback : new InternalTexture(this, InternalTextureSource.Cube);
-        texture.isCube = true;
-        texture.url = rootUrl;
-        texture.generateMipMaps = !noMipmap;
-        texture._lodGenerationScale = lodScale;
-        texture._lodGenerationOffset = lodOffset;
 
-        if (!this._doNotHandleContextLost) {
-            texture._extension = forcedExtension;
-            texture._files = files;
-        }
+
 
         var lastDot = rootUrl.lastIndexOf('.');
         var extension = forcedExtension ? forcedExtension : (lastDot > -1 ? rootUrl.substring(lastDot).toLowerCase() : "");
@@ -1540,34 +1417,14 @@ export class NativeEngine extends Engine {
                 data = data as ArrayBuffer;
 
                 var info = EnvironmentTextureTools.GetEnvInfo(data)!;
-                texture.width = info.width;
-                texture.height = info.width;
 
-                EnvironmentTextureTools.UploadEnvSpherical(texture, info);
+
 
                 if (info.version !== 1) {
                     throw new Error(`Unsupported babylon environment map version "${info.version}"`);
                 }
 
-                let specularInfo = info.specular as EnvironmentTextureSpecularInfoV1;
-                if (!specularInfo) {
-                    throw new Error(`Nothing else parsed so far`);
-                }
 
-                texture._lodGenerationScale = specularInfo.lodGenerationScale;
-                const imageData = EnvironmentTextureTools.CreateImageDataArrayBufferViews(data, info);
-
-                texture.format = Constants.TEXTUREFORMAT_RGBA;
-                texture.type = Constants.TEXTURETYPE_UNSIGNED_INT;
-                texture.generateMipMaps = true;
-                texture.getEngine().updateTextureSamplingMode(Texture.TRILINEAR_SAMPLINGMODE, texture);
-                texture._isRGBD = true;
-                texture.invertY = true;
-                if (!this._native.loadCubeTexture(texture._webGLTexture!, imageData, true)) {
-                    throw new Error("Could not load a native cube texture.");
-                }
-
-                texture.isReady = true;
                 if (onLoad) {
                     onLoad();
                 }
@@ -1589,9 +1446,6 @@ export class NativeEngine extends Engine {
             throw new Error("Cannot load cubemap: non-ENV format not supported.");
         }
 
-        this._internalTexturesCache.push(texture);
-
-        return texture;
     }
 
     // Returns a NativeFilter.XXXX value.
@@ -1638,7 +1492,7 @@ export class NativeEngine extends Engine {
         }
     }
 
-    public createRenderTargetTexture(size: number | { width: number, height: number }, options: boolean | RenderTargetCreationOptions): NativeTexture {
+    public createRenderTargetTexture(size: number | { width: number, height: number }, options: boolean | RenderTargetCreationOptions): any {
         let fullOptions = new RenderTargetCreationOptions();
 
         if (options !== undefined && typeof options === "object") {
@@ -1665,8 +1519,6 @@ export class NativeEngine extends Engine {
             // if floating point linear (HALF_FLOAT) then force to NEAREST_SAMPLINGMODE
             fullOptions.samplingMode = Constants.TEXTURE_NEAREST_SAMPLINGMODE;
         }
-        var texture = new NativeTexture(this, InternalTextureSource.RenderTarget);
-
         var width = (<{ width: number, height: number }>size).width || <number>size;
         var height = (<{ width: number, height: number }>size).height || <number>size;
 
@@ -1675,36 +1527,10 @@ export class NativeEngine extends Engine {
             Logger.Warn("Float textures are not supported. Render target forced to TEXTURETYPE_UNSIGNED_BYTE type");
         }
 
-        var framebuffer = this._native.createFramebuffer(
-            texture._webGLTexture!,
-            width,
-            height,
-            NativeEngine._GetNativeTextureFormat(fullOptions.format, fullOptions.type),
-            fullOptions.samplingMode!,
-            fullOptions.generateStencilBuffer ? true : false,
-            fullOptions.generateDepthBuffer,
-            fullOptions.generateMipMaps ? true : false);
 
-        texture._framebuffer = framebuffer;
-        texture.baseWidth = width;
-        texture.baseHeight = height;
-        texture.width = width;
-        texture.height = height;
-        texture.isReady = true;
-        texture.samples = 1;
-        texture.generateMipMaps = fullOptions.generateMipMaps ? true : false;
-        texture.samplingMode = fullOptions.samplingMode;
-        texture.type = fullOptions.type;
-        texture.format = fullOptions.format;
-        texture._generateDepthBuffer = fullOptions.generateDepthBuffer;
-        texture._generateStencilBuffer = fullOptions.generateStencilBuffer ? true : false;
-
-        this._internalTexturesCache.push(texture);
-
-        return texture;
     }
 
-    public updateTextureSamplingMode(samplingMode: number, texture: InternalTexture): void {
+    public updateTextureSamplingMode(samplingMode: number, texture: any): void {
         if (texture._webGLTexture) {
             var filter = this._getSamplingFilter(samplingMode);
             this._native.setTextureSampling(texture._webGLTexture, filter);
@@ -1712,7 +1538,7 @@ export class NativeEngine extends Engine {
         texture.samplingMode = samplingMode;
     }
 
-    public bindFramebuffer(texture: InternalTexture, faceIndex?: number, requiredWidth?: number, requiredHeight?: number, forceFullscreenViewport?: boolean): void {
+    public bindFramebuffer(texture: any, faceIndex?: number, requiredWidth?: number, requiredHeight?: number, forceFullscreenViewport?: boolean): void {
         if (faceIndex) {
             throw new Error("Cuboid frame buffers are not yet supported in NativeEngine.");
         }
@@ -1728,7 +1554,7 @@ export class NativeEngine extends Engine {
         this._bindUnboundFramebuffer(texture._framebuffer);
     }
 
-    public unBindFramebuffer(texture: InternalTexture, disableGenerateMipMaps = false, onBeforeUnbind?: () => void): void {
+    public unBindFramebuffer(texture: any, disableGenerateMipMaps = false, onBeforeUnbind?: () => void): void {
         if (disableGenerateMipMaps) {
             Logger.Warn("Disabling mipmap generation not yet supported in NativeEngine. Ignoring.");
         }
@@ -1784,11 +1610,11 @@ export class NativeEngine extends Engine {
             return false;
         }
 
-        let internalTexture: InternalTexture;
+        let internalTexture: any;
         if (depthStencilTexture) {
             internalTexture = (<any>texture).depthStencilTexture!;
         } else if (texture.isReady()) {
-            internalTexture = <InternalTexture>texture.getInternalTexture();
+            internalTexture = <any>texture.getInternalTexture();
         } else if (texture.isCube) {
             internalTexture = this.emptyCubeTexture;
         } else if (texture.is3D) {
@@ -1849,7 +1675,7 @@ export class NativeEngine extends Engine {
     }
 
     /** @hidden */
-    public _bindTexture(channel: number, texture: InternalTexture): void {
+    public _bindTexture(channel: number, texture: any): void {
         throw new Error("_bindTexture not implemented.");
     }
 
@@ -1870,22 +1696,22 @@ export class NativeEngine extends Engine {
     }
 
     /** @hidden */
-    public _uploadCompressedDataToTextureDirectly(texture: InternalTexture, internalFormat: number, width: number, height: number, data: ArrayBufferView, faceIndex: number = 0, lod: number = 0) {
+    public _uploadCompressedDataToTextureDirectly(texture: any, internalFormat: number, width: number, height: number, data: ArrayBufferView, faceIndex: number = 0, lod: number = 0) {
         throw new Error("_uploadCompressedDataToTextureDirectly not implemented.");
     }
 
     /** @hidden */
-    public _uploadDataToTextureDirectly(texture: InternalTexture, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
+    public _uploadDataToTextureDirectly(texture: any, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
         throw new Error("_uploadDataToTextureDirectly not implemented.");
     }
 
     /** @hidden */
-    public _uploadArrayBufferViewToTexture(texture: InternalTexture, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
+    public _uploadArrayBufferViewToTexture(texture: any, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
         throw new Error("_uploadArrayBufferViewToTexture not implemented.");
     }
 
     /** @hidden */
-    public _uploadImageToTexture(texture: InternalTexture, image: HTMLImageElement, faceIndex: number = 0, lod: number = 0) {
+    public _uploadImageToTexture(texture: any, image: HTMLImageElement, faceIndex: number = 0, lod: number = 0) {
         throw new Error("_uploadArrayBufferViewToTexture not implemented.");
     }
 }

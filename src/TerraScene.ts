@@ -138,7 +138,6 @@ export class TerraScene {
     gpuscene!: GPUScene;
 
     static instance: TerraScene;
-    canvas = this.window.document.getElementsByTagName('canvas')[0];
 
 
     #lastStateChangeGameTime = BigInt(216000000); //21600 * 1000; //6 hours
@@ -147,11 +146,9 @@ export class TerraScene {
     physics = new Physics(this);
     onRenderStart?: () => void;
     canvasSize: { width: number, height: number };
-    constructor(private window: Window, onInit: () => Promise<void>) {
-        window.addEventListener('resize', () => {
-            this.canvasSize.width = this.canvas.getAttribute('width')! as any | 0;
-            this.canvasSize.height = this.canvas.getAttribute('height')! as any | 0;
-        });
+    context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
+    constructor(private window: Window, onInit: () => Promise<void>, public canvas: HTMLCanvasElement) {
+
         this.canvasSize = {
             width: window.innerWidth | 0,
             height: window.innerHeight | 0

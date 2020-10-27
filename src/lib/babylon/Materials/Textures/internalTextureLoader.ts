@@ -1,5 +1,4 @@
 import { Nullable } from "../../types";
-import { InternalTexture } from "../../Materials/Textures/internalTexture";
 import { _TimeToken } from "../../Instrumentation/timeToken";
 /**
  * This represents the required contract to create a new type of texture loader.
@@ -19,7 +18,7 @@ export interface IInternalTextureLoader {
      * @param isBuffer defines whether the texture data are stored as a buffer
      * @returns true if the loader can load the specified file
      */
-    canLoad(extension: string, textureFormatInUse: Nullable<string>, fallback: Nullable<InternalTexture>, isBase64: boolean, isBuffer: boolean): boolean;
+    canLoad(extension: string, textureFormatInUse: Nullable<string>, fallback: Nullable<any>, isBase64: boolean, isBuffer: boolean): boolean;
 
     /**
      * Transform the url before loading if required.
@@ -45,7 +44,7 @@ export interface IInternalTextureLoader {
      * @param onLoad defines the callback to trigger once the texture is ready
      * @param onError defines the callback to trigger in case of error
      */
-    loadCubeData(data: string | ArrayBuffer | (string | ArrayBuffer)[], texture: InternalTexture, createPolynomials: boolean, onLoad: Nullable<(data?: any) => void>, onError: Nullable<(message?: string, exception?: any) => void>): void;
+    loadCubeData(data: string | ArrayBuffer | (string | ArrayBuffer)[], texture: any, createPolynomials: boolean, onLoad: Nullable<(data?: any) => void>, onError: Nullable<(message?: string, exception?: any) => void>): void;
 
     /**
      * Uploads the 2D texture data to the WebGl Texture. It has alreday been bound once in the callback.
@@ -53,6 +52,6 @@ export interface IInternalTextureLoader {
      * @param texture defines the BabylonJS internal texture
      * @param callback defines the method to call once ready to upload
      */
-    loadData(data: ArrayBuffer, texture: InternalTexture,
+    loadData(data: ArrayBuffer, texture: any,
         callback: (width: number, height: number, loadMipmap: boolean, isCompressed: boolean, done: () => void, loadFailed?: boolean) => void): void;
 }

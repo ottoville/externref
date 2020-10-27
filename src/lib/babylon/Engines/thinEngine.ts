@@ -12,7 +12,6 @@ import { DepthCullingState } from '../States/depthCullingState';
 import { StencilState } from '../States/stencilState';
 import { AlphaState } from '../States/alphaCullingState';
 import { Constants } from './constants';
-import { InternalTexture, InternalTextureSource } from '../Materials/Textures/internalTexture';
 import { IViewportLike, IColor4Like } from '../Maths/math.like';
 import { DataBuffer } from '../Meshes/dataBuffer';
 import { IFileRequest } from '../Misc/fileRequest';
@@ -346,12 +345,12 @@ export class ThinEngine {
 
     // Cache
     /** @hidden */
-    public _internalTexturesCache = new Array<InternalTexture>();
+    public _internalTexturesCache = new Array<any>();
     /** @hidden */
     protected _activeChannel = 0;
     private _currentTextureChannel = -1;
     /** @hidden */
-    protected _boundTexturesCache: { [key: string]: Nullable<InternalTexture> } = {};
+    protected _boundTexturesCache: { [key: string]: Nullable<any> } = {};
     /** @hidden */
     protected _currentEffect: Nullable<Effect>;
     /** @hidden */
@@ -368,7 +367,7 @@ export class ThinEngine {
     /** @hidden */
     protected _cachedEffectForVertexBuffers: Nullable<Effect>;
     /** @hidden */
-    public _currentRenderTarget: Nullable<InternalTexture>;
+    public _currentRenderTarget: Nullable<any>;
     private _uintIndicesCurrentlySet = false;
     protected _currentBoundBuffer = new Array<Nullable<WebGLBuffer>>();
     /** @hidden */
@@ -389,10 +388,10 @@ export class ThinEngine {
     private _vaoRecordInProgress = false;
     private _mustWipeVertexAttributes = false;
 
-    private _emptyTexture: Nullable<InternalTexture>;
-    private _emptyCubeTexture: Nullable<InternalTexture>;
-    private _emptyTexture3D: Nullable<InternalTexture>;
-    private _emptyTexture2DArray: Nullable<InternalTexture>;
+    private _emptyTexture: Nullable<any>;
+    private _emptyCubeTexture: Nullable<any>;
+    private _emptyTexture3D: Nullable<any>;
+    private _emptyTexture2DArray: Nullable<any>;
 
     /** @hidden */
     public _frameHandler: number;
@@ -436,7 +435,7 @@ export class ThinEngine {
     /**
      * Gets the default empty texture
      */
-    public get emptyTexture(): InternalTexture {
+    public get emptyTexture(): any {
         if (!this._emptyTexture) {
             this._emptyTexture = this.createRawTexture(new Uint8Array(4), 1, 1, Constants.TEXTUREFORMAT_RGBA, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE);
         }
@@ -447,7 +446,7 @@ export class ThinEngine {
     /**
      * Gets the default empty 3D texture
      */
-    public get emptyTexture3D(): InternalTexture {
+    public get emptyTexture3D(): any {
         if (!this._emptyTexture3D) {
             this._emptyTexture3D = this.createRawTexture3D(new Uint8Array(4), 1, 1, 1, Constants.TEXTUREFORMAT_RGBA, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE);
         }
@@ -458,7 +457,7 @@ export class ThinEngine {
     /**
      * Gets the default empty 2D array texture
      */
-    public get emptyTexture2DArray(): InternalTexture {
+    public get emptyTexture2DArray(): any {
         if (!this._emptyTexture2DArray) {
             this._emptyTexture2DArray = this.createRawTexture2DArray(new Uint8Array(4), 1, 1, 1, Constants.TEXTUREFORMAT_RGBA, false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE);
         }
@@ -469,7 +468,7 @@ export class ThinEngine {
     /**
      * Gets the default empty cube texture
      */
-    public get emptyCubeTexture(): InternalTexture {
+    public get emptyCubeTexture(): any {
         if (!this._emptyCubeTexture) {
             var faceData = new Uint8Array(4);
             var cubeData = [faceData, faceData, faceData, faceData, faceData, faceData];
@@ -1082,7 +1081,7 @@ export class ThinEngine {
      * Gets the list of loaded textures
      * @returns an array containing all loaded textures
      */
-    public getLoadedTexturesCache(): InternalTexture[] {
+    public getLoadedTexturesCache(): any[] {
         return this._internalTexturesCache;
     }
 
@@ -1347,7 +1346,7 @@ export class ThinEngine {
      * @param depthStencilTexture The depth stencil texture to use to render
      * @param lodLevel defines le lod level to bind to the frame buffer
      */
-    public bindFramebuffer(texture: InternalTexture, faceIndex?: number, requiredWidth?: number, requiredHeight?: number, forceFullscreenViewport?: boolean, depthStencilTexture?: InternalTexture, lodLevel = 0): void {
+    public bindFramebuffer(texture: any, faceIndex?: number, requiredWidth?: number, requiredHeight?: number, forceFullscreenViewport?: boolean, depthStencilTexture?: any, lodLevel = 0): void {
         if (this._currentRenderTarget) {
             this.unBindFramebuffer(this._currentRenderTarget);
         }
@@ -1406,7 +1405,7 @@ export class ThinEngine {
      * @param disableGenerateMipMaps defines a boolean indicating that mipmaps must not be generated
      * @param onBeforeUnbind defines a function which will be called before the effective unbind
      */
-    public unBindFramebuffer(texture: InternalTexture, disableGenerateMipMaps = false, onBeforeUnbind?: () => void): void {
+    public unBindFramebuffer(texture: any, disableGenerateMipMaps = false, onBeforeUnbind?: () => void): void {
         this._currentRenderTarget = null;
 
         // If MSAA, we need to bitblt back to main texture
@@ -2842,14 +2841,12 @@ export class ThinEngine {
      */
     public createTexture(urlArg: Nullable<string>, noMipmap: boolean, invertY: boolean, scene: Nullable<ISceneLike>, samplingMode: number = Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
         onLoad: Nullable<() => void> = null, onError: Nullable<(message: string, exception: any) => void> = null,
-        buffer: Nullable<string | ArrayBuffer | ArrayBufferView | HTMLImageElement | Blob | ImageBitmap> = null, fallback: Nullable<InternalTexture> = null, format: Nullable<number> = null,
-        forcedExtension: Nullable<string> = null, excludeLoaders: Array<IInternalTextureLoader> = [], mimeType?: string): InternalTexture {
+        buffer: Nullable<string | ArrayBuffer | ArrayBufferView | HTMLImageElement | Blob | ImageBitmap> = null, fallback: Nullable<any> = null, format: Nullable<number> = null,
+        forcedExtension: Nullable<string> = null, excludeLoaders: Array<IInternalTextureLoader> = [], mimeType?: string): any {
         var url = String(urlArg); // assign a new string, so that the original is still available in case of fallback
         var fromData = url.substr(0, 5) === "data:";
         var fromBlob = url.substr(0, 5) === "blob:";
         var isBase64 = fromData && url.indexOf(";base64,") !== -1;
-
-        let texture = fallback ? fallback : new InternalTexture(this, InternalTextureSource.Url);
 
         // establish the file extension, if possible
         var lastDot = url.lastIndexOf('.');
@@ -2868,52 +2865,20 @@ export class ThinEngine {
             url = loader.transformUrl(url, filteredFormat);
         }
 
-        if (scene) {
-            scene._addPendingData(texture);
-        }
-        texture.url = url;
-        texture.generateMipMaps = !noMipmap;
-        texture.samplingMode = samplingMode;
-        texture.invertY = invertY;
 
-        if (!this._doNotHandleContextLost) {
-            // Keep a link to the buffer only if we plan to handle context lost
-            texture._buffer = buffer;
-        }
 
-        let onLoadObserver: Nullable<Observer<InternalTexture>> = null;
-        if (onLoad && !fallback) {
-            onLoadObserver = texture.onLoadedObservable.add(onLoad);
-        }
-
-        if (!fallback) { this._internalTexturesCache.push(texture); }
 
         let onInternalError = (message?: string, exception?: any) => {
-            if (scene) {
-                scene._removePendingData(texture);
-            }
+
 
             let customFallback = false;
             if (loader) {
                 const fallbackUrl = loader.getFallbackTextureUrl(url, this._textureFormatInUse);
                 if (fallbackUrl) {
                     // Add Back
-                    customFallback = true;
-                    excludeLoaders.push(loader);
-                    this.createTexture(urlArg, noMipmap, texture.invertY, scene, samplingMode, null, onError, buffer, texture, undefined, undefined, excludeLoaders);
-                    return;
                 }
             }
 
-            if (!customFallback) {
-                if (onLoadObserver) {
-                    texture.onLoadedObservable.remove(onLoadObserver);
-                }
-                if (EngineStore.UseFallbackTexture) {
-                    this.createTexture(EngineStore.FallbackTexture, noMipmap, texture.invertY, scene, samplingMode, null, onError, buffer, texture);
-                    return;
-                }
-            }
 
             if (onError) {
                 onError(message || "Unknown error", exception);
@@ -2922,27 +2887,13 @@ export class ThinEngine {
 
         // processing for non-image formats
         if (loader) {
-            var callback = (data: string | ArrayBuffer) => {
-                loader!.loadData(data as ArrayBuffer, texture, (width: number, height: number, loadMipmap: boolean, isCompressed: boolean, done: () => void, loadFailed) => {
-                    if (loadFailed) {
-                        onInternalError("TextureLoader failed to load data");
-                    } else {
-                        this._prepareWebGLTexture(texture, scene, width, height, texture.invertY, !loadMipmap, isCompressed, () => {
-                            done();
-                            return false;
-                        }, samplingMode);
-                    }
-                });
-            };
+
 
             if (!buffer) {
-                this._loadFile(url, callback, undefined, scene ? scene.offlineProvider : undefined, true, (request?: IWebRequest, exception?: any) => {
-                    onInternalError("Unable to load " + (request ? request.responseURL : url, exception));
-                });
+
             } else {
                 //callback(buffer as ArrayBuffer);
                 if (buffer instanceof ArrayBuffer) {
-                    callback(buffer);
                 }
                 else {
                     if (onError) {
@@ -2951,75 +2902,10 @@ export class ThinEngine {
                 }
             }
         } else {
-            var onload = (img: HTMLImageElement | ImageBitmap) => {
-                if (fromBlob && !this._doNotHandleContextLost) {
-                    // We need to store the image if we need to rebuild the texture
-                    // in case of a webgl context lost
-                    texture._buffer = img;
-                }
+           
 
-                this._prepareWebGLTexture(texture, scene, img.width, img.height, texture.invertY, noMipmap, false, (potWidth, potHeight, continuationCallback) => {
-                    let gl = this._gl;
-                    var isPot = (img.width === potWidth && img.height === potHeight);
-                    let internalFormat = format ? this._getInternalFormat(format) : ((extension === ".jpg") ? gl.RGB : gl.RGBA);
-
-                    if (isPot) {
-                        gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, internalFormat, gl.UNSIGNED_BYTE, img);
-                        return false;
-                    }
-
-                    let maxTextureSize = this._caps.maxTextureSize;
-
-                    if (img.width > maxTextureSize || img.height > maxTextureSize || !this._supportsHardwareTextureRescaling) {
-                        this._prepareWorkingCanvas();
-                        if (!this._workingCanvas || !this._workingContext) {
-                            return false;
-                        }
-
-                        this._workingCanvas.width = potWidth;
-                        this._workingCanvas.height = potHeight;
-
-                        this._workingContext.drawImage(img, 0, 0, img.width, img.height, 0, 0, potWidth, potHeight);
-                        gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, internalFormat, gl.UNSIGNED_BYTE, this._workingCanvas);
-
-                        texture.width = potWidth;
-                        texture.height = potHeight;
-
-                        return false;
-                    } else {
-                        // Using shaders when possible to rescale because canvas.drawImage is lossy
-                        let source = new InternalTexture(this, InternalTextureSource.Temp);
-                        this._bindTextureDirectly(gl.TEXTURE_2D, source, true);
-                        gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, internalFormat, gl.UNSIGNED_BYTE, img);
-
-                        this._rescaleTexture(source, texture, scene, internalFormat, () => {
-                            this._releaseTexture(source);
-                            this._bindTextureDirectly(gl.TEXTURE_2D, texture, true);
-
-                            continuationCallback();
-                        });
-                    }
-
-                    return true;
-                }, samplingMode);
-            };
-
-            if (!fromData || isBase64) {
-                if (buffer && ((<HTMLImageElement>buffer).decoding || (<ImageBitmap>buffer).close)) {
-                    onload(<HTMLImageElement>buffer);
-                } else {
-                    ThinEngine._FileToolsLoadImage(url, onload, onInternalError, scene ? scene.offlineProvider : null, mimeType);
-                }
-            }
-            else if (typeof buffer === "string" || buffer instanceof ArrayBuffer || ArrayBuffer.isView(buffer) || buffer instanceof Blob) {
-                ThinEngine._FileToolsLoadImage(buffer, onload, onInternalError, scene ? scene.offlineProvider : null, mimeType);
-            }
-            else if (buffer) {
-                onload(<HTMLImageElement>buffer);
-            }
         }
 
-        return texture;
     }
 
     /**
@@ -3039,7 +2925,7 @@ export class ThinEngine {
     /**
      * @hidden
      */
-    public _rescaleTexture(source: InternalTexture, destination: InternalTexture, scene: Nullable<any>, internalFormat: number, onComplete: () => void): void {
+    public _rescaleTexture(source: any, destination: any, scene: Nullable<any>, internalFormat: number, onComplete: () => void): void {
     }
 
     /**
@@ -3055,7 +2941,7 @@ export class ThinEngine {
      * @param type defines the type fo the data (Engine.TEXTURETYPE_UNSIGNED_INT by default)
      * @returns the raw texture inside an InternalTexture
      */
-    public createRawTexture(data: Nullable<ArrayBufferView>, width: number, height: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string> = null, type: number = Constants.TEXTURETYPE_UNSIGNED_INT): InternalTexture {
+    public createRawTexture(data: Nullable<ArrayBufferView>, width: number, height: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string> = null, type: number = Constants.TEXTURETYPE_UNSIGNED_INT): any {
         throw _DevTools.WarnImport("Engine.RawTexture");
     }
 
@@ -3073,7 +2959,7 @@ export class ThinEngine {
      */
     public createRawCubeTexture(data: Nullable<ArrayBufferView[]>, size: number, format: number, type: number,
         generateMipMaps: boolean, invertY: boolean, samplingMode: number,
-        compression: Nullable<string> = null): InternalTexture {
+        compression: Nullable<string> = null): any {
         throw _DevTools.WarnImport("Engine.RawTexture");
     }
 
@@ -3091,7 +2977,7 @@ export class ThinEngine {
      * @param textureType defines the compressed used (can be null)
      * @returns a new raw 3D texture (stored in an InternalTexture)
      */
-    public createRawTexture3D(data: Nullable<ArrayBufferView>, width: number, height: number, depth: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string> = null, textureType = Constants.TEXTURETYPE_UNSIGNED_INT): InternalTexture {
+    public createRawTexture3D(data: Nullable<ArrayBufferView>, width: number, height: number, depth: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string> = null, textureType = Constants.TEXTURETYPE_UNSIGNED_INT): any {
         throw _DevTools.WarnImport("Engine.RawTexture");
     }
 
@@ -3109,7 +2995,7 @@ export class ThinEngine {
      * @param textureType defines the compressed used (can be null)
      * @returns a new raw 2D array texture (stored in an InternalTexture)
      */
-    public createRawTexture2DArray(data: Nullable<ArrayBufferView>, width: number, height: number, depth: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string> = null, textureType = Constants.TEXTURETYPE_UNSIGNED_INT): InternalTexture {
+    public createRawTexture2DArray(data: Nullable<ArrayBufferView>, width: number, height: number, depth: number, format: number, generateMipMaps: boolean, invertY: boolean, samplingMode: number, compression: Nullable<string> = null, textureType = Constants.TEXTURETYPE_UNSIGNED_INT): any {
         throw _DevTools.WarnImport("Engine.RawTexture");
     }
 
@@ -3138,7 +3024,7 @@ export class ThinEngine {
         return this._gl.getParameter(this._gl.UNPACK_ALIGNMENT);
     }
 
-    private _getTextureTarget(texture: InternalTexture): number {
+    private _getTextureTarget(texture: any): number {
         if (texture.isCube) {
             return this._gl.TEXTURE_CUBE_MAP;
         } else if (texture.is3D) {
@@ -3155,7 +3041,7 @@ export class ThinEngine {
      * @param texture defines the texture to update
      * @param generateMipMaps defines whether to generate mipmaps for the texture
      */
-    public updateTextureSamplingMode(samplingMode: number, texture: InternalTexture, generateMipMaps: boolean = false): void {
+    public updateTextureSamplingMode(samplingMode: number, texture: any, generateMipMaps: boolean = false): void {
         const target = this._getTextureTarget(texture);
         var filters = this._getSamplingParameters(samplingMode, texture.generateMipMaps || generateMipMaps);
 
@@ -3179,7 +3065,7 @@ export class ThinEngine {
      * @param wrapV defines the texture wrap mode of the v coordinates
      * @param wrapR defines the texture wrap mode of the r coordinates
      */
-    public updateTextureWrappingMode(texture: InternalTexture, wrapU: Nullable<number>, wrapV: Nullable<number> = null, wrapR: Nullable<number> = null): void {
+    public updateTextureWrappingMode(texture: any, wrapU: Nullable<number>, wrapV: Nullable<number> = null, wrapR: Nullable<number> = null): void {
         const target = this._getTextureTarget(texture);
 
         if (wrapU) {
@@ -3199,7 +3085,7 @@ export class ThinEngine {
     }
 
     /** @hidden */
-    public _setupDepthStencilTexture(internalTexture: InternalTexture, size: number | { width: number, height: number }, generateStencil: boolean, bilinearFiltering: boolean, comparisonFunction: number): void {
+    public _setupDepthStencilTexture(internalTexture: any, size: number | { width: number, height: number }, generateStencil: boolean, bilinearFiltering: boolean, comparisonFunction: number): void {
         var width = (<{ width: number, height: number }>size).width || <number>size;
         var height = (<{ width: number, height: number }>size).height || <number>size;
         internalTexture.baseWidth = width;
@@ -3234,7 +3120,7 @@ export class ThinEngine {
     }
 
     /** @hidden */
-    public _uploadCompressedDataToTextureDirectly(texture: InternalTexture, internalFormat: number, width: number, height: number, data: ArrayBufferView, faceIndex: number = 0, lod: number = 0) {
+    public _uploadCompressedDataToTextureDirectly(texture: any, internalFormat: number, width: number, height: number, data: ArrayBufferView, faceIndex: number = 0, lod: number = 0) {
         var gl = this._gl;
 
         var target = gl.TEXTURE_2D;
@@ -3246,7 +3132,7 @@ export class ThinEngine {
     }
 
     /** @hidden */
-    public _uploadDataToTextureDirectly(texture: InternalTexture, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0, babylonInternalFormat?: number, useTextureWidthAndHeight = false): void {
+    public _uploadDataToTextureDirectly(texture: any, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0, babylonInternalFormat?: number, useTextureWidthAndHeight = false): void {
         var gl = this._gl;
 
         var textureType = this._getWebGLTextureType(texture.type);
@@ -3269,7 +3155,7 @@ export class ThinEngine {
     }
 
     /** @hidden */
-    public _uploadArrayBufferViewToTexture(texture: InternalTexture, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
+    public _uploadArrayBufferViewToTexture(texture: any, imageData: ArrayBufferView, faceIndex: number = 0, lod: number = 0): void {
         var gl = this._gl;
         var bindTarget = texture.isCube ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
 
@@ -3280,7 +3166,7 @@ export class ThinEngine {
         this._bindTextureDirectly(bindTarget, null, true);
     }
 
-    protected _prepareWebGLTextureContinuation(texture: InternalTexture, scene: Nullable<ISceneLike>, noMipmap: boolean, isCompressed: boolean, samplingMode: number): void {
+    protected _prepareWebGLTextureContinuation(texture: any, scene: Nullable<ISceneLike>, noMipmap: boolean, isCompressed: boolean, samplingMode: number): void {
         var gl = this._gl;
         if (!gl) {
             return;
@@ -3306,7 +3192,7 @@ export class ThinEngine {
         texture.onLoadedObservable.clear();
     }
 
-    private _prepareWebGLTexture(texture: InternalTexture, scene: Nullable<ISceneLike>, width: number, height: number, invertY: boolean, noMipmap: boolean, isCompressed: boolean,
+    private _prepareWebGLTexture(texture: any, scene: Nullable<ISceneLike>, width: number, height: number, invertY: boolean, noMipmap: boolean, isCompressed: boolean,
         processFunction: (width: number, height: number, continuationCallback: () => void) => boolean, samplingMode: number = Constants.TEXTURE_TRILINEAR_SAMPLINGMODE): void {
         var maxTextureSize = this.getCaps().maxTextureSize;
         var potWidth = Math.min(maxTextureSize, this.needPOTTextures ? ThinEngine.GetExponentOfTwo(width, maxTextureSize) : width);
@@ -3386,7 +3272,7 @@ export class ThinEngine {
     }
 
     /** @hidden */
-    public _releaseFramebufferObjects(texture: InternalTexture): void {
+    public _releaseFramebufferObjects(texture: any): void {
         var gl = this._gl;
 
         if (texture._framebuffer) {
@@ -3411,7 +3297,7 @@ export class ThinEngine {
     }
 
     /** @hidden */
-    public _releaseTexture(texture: InternalTexture): void {
+    public _releaseTexture(texture: any): void {
         this._releaseFramebufferObjects(texture);
 
         this._deleteTexture(texture._webGLTexture);
@@ -3480,7 +3366,7 @@ export class ThinEngine {
     }
 
     /** @hidden */
-    public _bindTextureDirectly(target: number, texture: Nullable<InternalTexture>, forTextureDataUpdate = false, force = false): boolean {
+    public _bindTextureDirectly(target: number, texture: Nullable<any>, forTextureDataUpdate = false, force = false): boolean {
         var wasPreviouslyBound = false;
         let isTextureForRendering = texture && texture._associatedChannel > -1;
         if (forTextureDataUpdate && isTextureForRendering) {
@@ -3516,7 +3402,7 @@ export class ThinEngine {
     }
 
     /** @hidden */
-    public _bindTexture(channel: number, texture: Nullable<InternalTexture>): void {
+    public _bindTexture(channel: number, texture: Nullable<any>): void {
         if (channel === undefined) {
             return;
         }
@@ -3608,12 +3494,12 @@ export class ThinEngine {
             return false;
         }
 
-        let internalTexture: InternalTexture;
+        let internalTexture: any;
         if (depthStencilTexture) {
             internalTexture = (<any>texture).depthStencilTexture!;
         }
         else if (texture.isReady()) {
-            internalTexture = <InternalTexture>texture.getInternalTexture();
+            internalTexture = <any>texture.getInternalTexture();
         }
         else if (texture.isCube) {
             internalTexture = this.emptyCubeTexture;
@@ -3710,7 +3596,7 @@ export class ThinEngine {
     }
 
     /** @hidden */
-    public _setAnisotropicLevel(target: number, internalTexture: InternalTexture, anisotropicFilteringLevel: number) {
+    public _setAnisotropicLevel(target: number, internalTexture: any, anisotropicFilteringLevel: number) {
         var anisotropicFilterExtension = this._caps.textureAnisotropicFilterExtension;
         if (internalTexture.samplingMode !== Constants.TEXTURE_LINEAR_LINEAR_MIPNEAREST
             && internalTexture.samplingMode !== Constants.TEXTURE_LINEAR_LINEAR_MIPLINEAR
@@ -3724,12 +3610,12 @@ export class ThinEngine {
         }
     }
 
-    private _setTextureParameterFloat(target: number, parameter: number, value: number, texture: InternalTexture): void {
+    private _setTextureParameterFloat(target: number, parameter: number, value: number, texture: any): void {
         this._bindTextureDirectly(target, texture, true, true);
         this._gl.texParameterf(target, parameter, value);
     }
 
-    private _setTextureParameterInteger(target: number, parameter: number, value: number, texture?: InternalTexture) {
+    private _setTextureParameterInteger(target: number, parameter: number, value: number, texture?: any) {
         if (texture) {
             this._bindTextureDirectly(target, texture, true, true);
         }

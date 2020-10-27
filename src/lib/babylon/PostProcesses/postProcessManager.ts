@@ -1,6 +1,5 @@
 import { Nullable } from "../types";
 import { Material } from "../Materials/material";
-import { InternalTexture } from "../Materials/Textures/internalTexture";
 import { PostProcess } from "./postProcess";
 import { VertexBuffer } from "../Meshes/buffer";
 import { Constants } from "../Engines/constants";
@@ -78,7 +77,7 @@ export class PostProcessManager {
      * @returns True if the post processes were able to be run.
      * @hidden
      */
-    public _prepareFrame(sourceTexture: Nullable<InternalTexture> = null, postProcesses: Nullable<PostProcess[]> = null): boolean {
+    public _prepareFrame(sourceTexture: Nullable<any> = null, postProcesses: Nullable<PostProcess[]> = null): boolean {
         let camera = this._scene.activeCamera;
         if (!camera) {
             return false;
@@ -102,7 +101,7 @@ export class PostProcessManager {
      * @param faceIndex defines the face to render to if a cubemap is defined as the target
      * @param lodLevel defines which lod of the texture to render to
      */
-    public directRender(postProcesses: PostProcess[], targetTexture: Nullable<InternalTexture> = null, forceFullscreenViewport = false, faceIndex = 0, lodLevel = 0): void {
+    public directRender(postProcesses: PostProcess[], targetTexture: Nullable<any> = null, forceFullscreenViewport = false, faceIndex = 0, lodLevel = 0): void {
         var engine = this._scene.getEngine();
 
         for (var index = 0; index < postProcesses.length; index++) {
@@ -147,7 +146,7 @@ export class PostProcessManager {
      * @param forceFullscreenViewport force gl.viewport to be full screen eg. 0,0,textureWidth,textureHeight (default: false)
      * @hidden
      */
-    public _finalizeFrame(doNotPresent?: boolean, targetTexture?: InternalTexture, faceIndex?: number, postProcesses?: Array<PostProcess>, forceFullscreenViewport = false): void {
+    public _finalizeFrame(doNotPresent?: boolean, targetTexture?: any, faceIndex?: number, postProcesses?: Array<PostProcess>, forceFullscreenViewport = false): void {
         let camera = this._scene.activeCamera;
 
         if (!camera) {

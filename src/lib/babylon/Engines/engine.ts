@@ -1,7 +1,6 @@
 import { Observable } from "../Misc/observable";
 import { Nullable, IndicesArray, DataArray } from "../types";
 import { Scene } from "../scene";
-import { InternalTexture } from "../Materials/Textures/internalTexture";
 import { _TimeToken } from "../Instrumentation/timeToken";
 import { IAudioEngine } from "../Audio/audioEngine";
 import { IOfflineProvider } from "../Offline/IOfflineProvider";
@@ -686,7 +685,7 @@ export class Engine extends ThinEngine {
      * @param texture defines the render target texture to use
      * @param unbind defines whether or not to unbind the texture after generation. Defaults to true.
      */
-    public generateMipMapsForCubemap(texture: InternalTexture, unbind = true) {
+    public generateMipMapsForCubemap(texture: any, unbind = true) {
         if (texture.generateMipMaps) {
             var gl = this._gl;
             this._bindTextureDirectly(gl.TEXTURE_CUBE_MAP, texture, true);
@@ -1525,7 +1524,7 @@ export class Engine extends ThinEngine {
         return shaderProgram;
     }
 
-    public _releaseTexture(texture: InternalTexture): void {
+    public _releaseTexture(texture: any): void {
         super._releaseTexture(texture);
 
         // Set output texture of post process to null if the texture has been released/disposed
@@ -1556,7 +1555,7 @@ export class Engine extends ThinEngine {
      * @param internalFormat format to use when resizing
      * @param onComplete callback to be called when resize has completed
      */
-    public _rescaleTexture(source: InternalTexture, destination: InternalTexture, scene: Nullable<any>, internalFormat: number, onComplete: () => void): void {
+    public _rescaleTexture(source: any, destination: any, scene: Nullable<any>, internalFormat: number, onComplete: () => void): void {
         this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.LINEAR);
         this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.LINEAR);
         this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_WRAP_S, this._gl.CLAMP_TO_EDGE);
@@ -1627,7 +1626,7 @@ export class Engine extends ThinEngine {
     }
 
     /** @hidden */
-    public _uploadImageToTexture(texture: InternalTexture, image: HTMLImageElement | ImageBitmap, faceIndex: number = 0, lod: number = 0) {
+    public _uploadImageToTexture(texture: any, image: HTMLImageElement | ImageBitmap, faceIndex: number = 0, lod: number = 0) {
         var gl = this._gl;
 
         var textureType = this._getWebGLTextureType(texture.type);
@@ -1712,7 +1711,7 @@ export class Engine extends ThinEngine {
      * @param samples defines the sample count to set
      * @returns the effective sample count (could be 0 if multisample render targets are not supported)
      */
-    public updateRenderTargetTextureSampleCount(texture: Nullable<InternalTexture>, samples: number): number {
+    public updateRenderTargetTextureSampleCount(texture: Nullable<any>, samples: number): number {
         if (this.webGLVersion < 2 || !texture) {
             return 1;
         }
@@ -1783,7 +1782,7 @@ export class Engine extends ThinEngine {
      * @param texture The texture to set the comparison function for
      * @param comparisonFunction The comparison function to set, 0 if no comparison required
      */
-    public updateTextureComparisonFunction(texture: InternalTexture, comparisonFunction: number): void {
+    public updateTextureComparisonFunction(texture: any, comparisonFunction: number): void {
         if (this.webGLVersion === 1) {
             Logger.Error("WebGL 1 does not support texture comparison.");
             return;
@@ -1851,7 +1850,7 @@ export class Engine extends ThinEngine {
     }
 
     /** @hidden */
-    public _readTexturePixels(texture: InternalTexture, width: number, height: number, faceIndex = -1, level = 0, buffer: Nullable<ArrayBufferView> = null): ArrayBufferView {
+    public _readTexturePixels(texture: any, width: number, height: number, faceIndex = -1, level = 0, buffer: Nullable<ArrayBufferView> = null): ArrayBufferView {
         let gl = this._gl;
         if (!this._dummyFramebuffer) {
             let dummy = gl.createFramebuffer();
