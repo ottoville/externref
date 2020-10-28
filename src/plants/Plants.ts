@@ -63,7 +63,7 @@ export class Plants {
     ) {
 
 
-        const drawable = scene.lights.lightsBindGroup.addRenderPipeline({
+        const planstPipeline = scene.lights.lightsBindGroup.addRenderPipeline({
             sampleCount: scene.sampleCount,
             primitiveTopology: 'triangle-strip',
             rasterizationState: {
@@ -110,7 +110,8 @@ export class Plants {
                         ]
                     }]
             },
-        }, 7, 0);
+        });
+        const drawable = planstPipeline.addDrawable(7,0)
         const positionGPU = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] );
         const shapeGPU = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
 
@@ -273,19 +274,6 @@ export class Plants {
 
         return;
 
-      /*  let l = new LazyEval(() => {
-            this.worker.message(WorkerReturn.Promise, 'get', {
-                offset: this.offset,
-                shape: shapes
-            })
-        }, true);
-        l.eval(4000);
-        this.camera.onViewMatrixChangedObservable.add(() => {
-            l.eval(4000);
-        });
-
-        return;
-        */
 
         
 

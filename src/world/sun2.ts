@@ -1,10 +1,9 @@
 ﻿import { worldPosition } from "../traits/worldPosition";
-import { GPUScene } from "../GPUScene";
 import { hasPhysics } from "../physics";
 import { TerraScene } from "../TerraScene";
 import { isLight } from "../lights";
 import { TerraNode } from "../TerraNode";
-const sundistance = 149600000000;
+//const sundistance = 149600000000;
 function rotateMatrix(rad: number, axis: "x" | "y" | "z"): Float32Array {
     // https://www.3dgep.com/3d-math-primer-for-game-programmers-matrices/#Rotation
 
@@ -54,28 +53,9 @@ const yAngle = Math.sin(Math.PI * 0.2);
 export class Sun2 extends TerraNode implements hasPhysics, isLight {
     
     worldPosition: worldPosition = new worldPosition(this);
-    lightType:'point' = 'point';
-    mesh = this.scene.gpuscene.positionBindGroupTime.addRenderPipeline({
-        sampleCount: this.scene.gpuscene.sampleCount,
-        rasterizationState: {
-            cullMode: 'none',
-        },
-        primitiveTopology: 'triangle-strip',
-        colorStates: [{
-            format: "bgra8unorm",
-        }],
-        vertexStage: {
-            module: this.scene.gpuscene.shaderModules.get("sun.vert")!,
-            entryPoint: "main",
-        },
-        fragmentStage: {
-            module: this.scene.gpuscene.shaderModules.get("sun.frag")!,
-            entryPoint: "main"
-        },
-        vertexState: {
-            indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
-        }
-    }, [this.bufferOffset], 14);
+    lightType: 'point' = 'point';
+
+    
 
     clamp(value: number, min: number, max: number) {
         return Math.min(Math.max(value, min), max);
@@ -121,7 +101,28 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
     }
     constructor(scene: TerraScene) {
         super(scene);
-        console.log('sun bufferoffset ', this.bufferOffset);
-       // scene.physics.tickables.add(this);
+        const sunPipeline = this.scene.gpuscene.positionBindGroupTime.addRenderPipeline({
+            sampleCount: this.scene.gpuscene.sampleCount,
+            rasterizationState: {
+                cullMode: 'none',
+            },
+            primitiveTopology: 'triangle-strip',
+            colorStates: [{
+                format: "bgra8unorm",
+            }],
+            vertexStage: {
+                module: this.scene.gpuscene.shaderModules.get("sun.vert")!,
+                entryPoint: "main",
+            },
+            fragmentStage: {
+                module: this.scene.gpuscene.shaderModules.get("sun.frag")!,
+                entryPoint: "main"
+            },
+            vertexState: {
+                indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
+            }
+        }, [this.bufferOffset]);
+
+        sunPipeline.addDrawable(14);
     }
 }

@@ -480,24 +480,24 @@ export abstract class GroupDrawable {
 
 }
 export class BindGroupDrawable extends GroupDrawable {
-    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): RenderPipeLine => {
-        const d = new RenderPipeLine(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this)
+    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor): RenderPipeLine => {
+        const d = new RenderPipeLine(renderPipeline, this)
         this.meshes.add(d);
         return d;
     }
 }
 export class DynamicBindGroupDrawable<T extends number[]> extends GroupDrawable {
-    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, offsets: T, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): RenderPipeLine => {
-        const d = new RenderPipeLine(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this);
+    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, offsets: T): RenderPipeLine => {
+        const d = new RenderPipeLine(renderPipeline, this);
         d.dynamicBindGroupOffset = offsets;
         this.meshes.add(d);
         return d;
     }
 }
 export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends GroupDrawable {
-    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, bindGroups: T, indexOrVertexCount: number, instanceCount = 1, firstInstance = 0, firstVertexOrIndex = 0): RenderPipeLine => {
+    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, bindGroups: T): RenderPipeLine => {
 
-        const d = new RenderPipeLine(renderPipeline, indexOrVertexCount, instanceCount, firstInstance, firstVertexOrIndex, this)
+        const d = new RenderPipeLine(renderPipeline, this)
         const bndGroup = this.gpuscene.device.createBindGroup(
             {
                 layout: this.bindGroupLayout,

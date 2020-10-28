@@ -8,7 +8,7 @@ import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { addTrait, Trait, Traitable } from "../traits/trait.js";
 import { GPUScene } from "../GPUScene.js";
-import type { RenderPipeLine } from "../drawables/Drawable.js";
+import type { Drawable } from "../drawables/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import { TerraScene } from "../TerraScene.js";
 
@@ -24,7 +24,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
     public static instance: UITAB | null = null;
 
     private engine: WebGPUEngine;
-    private helper: RenderPipeLine;
+    private helper: Drawable;
 
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
@@ -57,7 +57,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
 
         this.worldPosition = new worldPosition(this);
 
-        this.helper = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
+        const helperPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
             sampleCount: GPUScene.instance.sampleCount,
             primitiveTopology: 'triangle-strip',
             rasterizationState: {
@@ -79,7 +79,9 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
                 module: GPUScene.instance.shaderModules.get("helper2.frag")!,
                 entryPoint: "main"
             }
-        }, [this.bufferOffset], 4, 8, 0, 0);
+        }, [this.bufferOffset]);
+
+        this.helper = helperPipeline.addDrawable(4, 8, 0, 0)
         /*
          *         this.helper = terrain.TerrainHeightsbindGroupPositionTree.addDrawable({
             sampleCount: GPUScene.instance.sampleCount,
@@ -318,18 +320,9 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
     destroy = (): void => {
         this.traits.forEach(trait => trait.destroy());
         console.log('call super.deactivate');
-        //super.deactivate();
         terrainWorker.unsubscribe('heights');
-        //this.removeListener("pointerdown", this.pointerdownf);
-       // this.helper._internalAbstractMeshDataInfo._visibility = 0;
         this.helper.destroy();
         
-        //this.removeListener("pointermove", this.mouseListener);
-      /*  (function () {
-            this._options.samplers = [];
-            this._textures = {}
-            return this;
-        }).bind(this.helpermaterial)();*/
     };
 
     mouseListener = (evt: PointerEvent): void => {
