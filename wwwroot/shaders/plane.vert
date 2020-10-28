@@ -56,5 +56,4 @@ void main(void) {
     vec4 worldPos = world * vec4(position.x, 0, position.y, 1.0);
     worldPos.y += getHeightAtCoordinates(vec2(worldPos.x, worldPos.z));
     gl_Position = viewProjection * worldPos;
-  //  gl_Position.y *= -1.;
 }

@@ -2,12 +2,12 @@
 import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { Texture } from "../lib/babylon/Materials/Textures/texture.js";
 import type { Engine } from "../lib/babylon/Engines/engine.js";
 import type { WorldScene } from "../world/scene.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { TerraScene } from "../TerraScene.js";
+import { Sea } from "../world/water.js";
 
 
 
@@ -36,7 +36,7 @@ export class paintTexture extends paintGround {
         protected sceneDeprecated: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
-        protected sea: Mesh,
+        protected sea: Sea,
         protected zonedt: Texture,
         private textureWidth: number,
         private textureHeight: number,

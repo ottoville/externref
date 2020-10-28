@@ -30,16 +30,10 @@ layout(location = 1) out float shading;
 layout(location = 2) out vec3 ambient;
 
 
-const uint a = 12;
-const uint b = 13;
-const uint c = 14;
-
 void main(void) {
    gl_Position = viewProjection*vec4(position.xyz, 1.0);
-  // gl_Position.y *= -1.;
 
-
-   vec3 sunDirection=vec3(matrix[a],matrix[b],matrix[c]);
+   vec3 sunDirection=vec3(matrix[12],matrix[13],matrix[14]);
    ambient=vec3(matrix[20],matrix[21],matrix[22]);
    float shadow=matrix[23];
    //vec3 modelViewNormal = vec3(view * vec4(normal, 0.0));

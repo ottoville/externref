@@ -11,6 +11,7 @@ import { GPUScene } from "../GPUScene.js";
 import type { Drawable } from "../drawables/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import { TerraScene } from "../TerraScene.js";
+import { Sea } from "../world/water.js";
 
 const terrainWorker=  new WorkerThread('../webworkers/terrainWorker.js');
 
@@ -36,6 +37,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
         public sceneDeprecated: WorldScene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
+        public sea: Sea,
         ...traits: Trait[]
     ) {
         super(TerraScene.instance);

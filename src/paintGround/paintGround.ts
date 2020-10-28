@@ -4,10 +4,9 @@
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import type { Mesh } from "../lib/babylon/Meshes/index.js";
 import { canvasListener } from "../traits/canvasListener.js";
-import { GPUScene } from "../GPUScene.js";
 import { TerraScene } from "../TerraScene.js";
+import { Sea } from "../world/water.js";
 
 //import { rotateMatrix, translate } from "./math.js";
 
@@ -32,7 +31,7 @@ export abstract class paintGround {
         protected scene: TerraScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
-        protected sea: Mesh,
+        protected sea: Sea,
         private uitab: canvasListener
     ) {
     };

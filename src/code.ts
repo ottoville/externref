@@ -17,6 +17,7 @@ import { Zones } from "./tools/zones.js";
 import { Terrain } from "./world/terrain.js";
 import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 import { Camera } from "./lib/babylon/Cameras/camera.js";
+import { Sea } from "./world/water.js";
 
 //import  DB from "./DB.js";
 
@@ -123,6 +124,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
                 new Sun2(terrascene);
+                const sea = new Sea(terrascene);
                 /*new testPlane(terrascene);
                 new testPlaneNormals(terrascene);*/
                 const terrainInited = Terrain.loadFromTexture(terrascene);
@@ -175,7 +177,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     try {
                         let tool: UITABClassLike | undefined;
                         if (tool = tools.get(name)) {
-                            tool.instance = new tool(this, (await terrainInited)[0], (await scenePromise).camera);
+                            tool.instance = new tool(this, (await terrainInited)[0], (await scenePromise).camera, sea);
                         }
                     } catch (e) {
                         console.error(e);

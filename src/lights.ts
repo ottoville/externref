@@ -28,14 +28,6 @@ export class Light {
     //#lightsBuffer = this.scene.createGPUBuffer(3 * 4 + 4 + maxLights * (3 * 4 + 4 + 3 * 4 + 4), [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
 
 
-
-
-
-    #uniformBindGroupLayoutLights = this.scene.createBindGroupLayout({
-        binding: 0,
-        visibility: GPUShaderStage.VERTEX,
-        type: 'readonly-storage-buffer'
-    });
     
     lightsBindGroup;
     lightsBindGroupTexture;
@@ -45,7 +37,12 @@ export class Light {
         this.#instances.add(light);
     }
     constructor(public scene: GPUScene) {
-         const uniformBindGroupLights = this.scene.createBindGroup(this.#uniformBindGroupLayoutLights,
+        const uniformBindGroupLayoutLights = this.scene.createBindGroupLayout({
+            binding: 0,
+            visibility: GPUShaderStage.VERTEX,
+            type: 'readonly-storage-buffer'
+        });
+         const uniformBindGroupLights = this.scene.createBindGroup(uniformBindGroupLayoutLights,
                 {
                     binding: 0,
                     resource: {

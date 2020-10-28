@@ -6,6 +6,7 @@ import { addTrait, Trait, Traitable } from "../traits/trait.js";
 import { WorldScene } from "../world/scene.js";
 import { ArcRotateCamera } from "../lib/babylon/index.js";
 import { Terrain } from "../world/terrain.js";
+import { Sea } from "../world/water.js";
 export interface BuildingsUI extends canvasListener, Traitable {
 
 }
@@ -17,9 +18,10 @@ export class BuildingsUI extends UITAB {
     constructor(scene: WorldScene,
         terrain: Terrain,
         camera: ArcRotateCamera,
+        sea: Sea,
         ...traits: Trait[]
     ) {
-        super(scene, terrain, camera);
+        super(scene, terrain, camera, sea);
         this.traits = this.initTraits(traits);
     }
     public create = (type: string): void => {

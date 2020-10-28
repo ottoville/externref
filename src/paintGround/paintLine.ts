@@ -7,6 +7,7 @@ import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js"
 import type { WorldScene } from "../world/scene.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { TerraScene } from "../TerraScene.js";
+import { Sea } from "../world/water.js";
 
 export class paintLine extends paintGround {
     private startingPoint!: Float32Array;
@@ -23,7 +24,7 @@ export class paintLine extends paintGround {
         protected sceneDeprecated: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
-        protected sea: Mesh,
+        protected sea: Sea,
         uitab: canvasListener
     ) {
         super(TerraScene.instance, camera, ground, sea, uitab);

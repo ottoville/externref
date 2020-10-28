@@ -9,6 +9,7 @@ import type { WorldScene } from "../world/scene.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { addTrait, Trait, Traitable } from "../traits/trait.js";
 import { TerraScene } from "../TerraScene.js";
+import { Sea } from "../world/water.js";
 
 
 
@@ -27,15 +28,16 @@ export class PlantsUI extends UITAB {
         public scene: WorldScene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
+        sea: Sea,
         ...traits: Trait[]
     ) {
-        super(scene, terrain, camera);
+        super(scene, terrain, camera, sea);
         this.traits = this.initTraits(traits);
         console.log('activate plantsUI');
     }
     activateDraw = () => {
         try {
-            this.PT = new paintPlane(TerraScene.instance,this.scene, this.camera, this.terrain, this.scene.sea, this);
+            this.PT = new paintPlane(TerraScene.instance,this.scene, this.camera, this.terrain, this.sea, this);
 
           //  this.PT = applyMixins<typeof BaseTerrainTool>(BaseTerrainTool, [worldPosition]);
 

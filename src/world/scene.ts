@@ -102,7 +102,6 @@ class _ClickInfo {
 export class WorldScene extends Scene {
     camera: ArcRotateCamera;
     camera2: ArcRotateCamera;
-    sea: Sea;
     DBP: Promise<EarthDatabase>;
 
     /**
@@ -1019,7 +1018,7 @@ export class WorldScene extends Scene {
         
 
             
-        this.sea = new Sea(this);
+     //   this.sea = new Sea(this);
       /*  this.getSceneUniformBuffer().update();
         this.terrainReady=this.terrainInited.then(gt => {
             blazor.invokeMethod('setProgress', 40);

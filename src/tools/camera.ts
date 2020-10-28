@@ -2,14 +2,16 @@ import { UITAB } from "../UITAB.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { WorldScene } from "../world/scene.js";
 import type { Terrain } from "../world/terrain.js";
+import { Sea } from "../world/water.js";
 export class CameraTAB extends UITAB {
     public label = 'Camera';
     constructor(
         public scene: WorldScene,
         public terrain: Terrain,
-        public camera: ArcRotateCamera
+        public camera: ArcRotateCamera,
+        sea: Sea
     ) {
-        super(scene, terrain, camera);
+        super(scene, terrain, camera, sea);
 
     }
     destroy = (): void => {

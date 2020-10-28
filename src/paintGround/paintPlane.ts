@@ -10,6 +10,7 @@ import { GPUScene } from "../GPUScene.js";
 import type { Drawable, RenderPipeLine } from "../drawables/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import { TerraScene } from "../TerraScene.js";
+import { Sea } from "../world/water.js";
 
 
 
@@ -59,7 +60,7 @@ export class paintPlane extends paintGround {
         protected sceneDeprecated: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
-        protected sea: Mesh,
+        protected sea: Sea,
         uitab: canvasListener,
     ) {
         super(scene,camera, ground, sea, uitab);
