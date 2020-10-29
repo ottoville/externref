@@ -17,7 +17,7 @@ layout(std430, set = 1, binding = 1) readonly buffer Facet12 {
 } facet12;
 
 layout(set = 2, binding = 0) uniform LeftOver {
-        mat4 world;
+    mat4 world;
 };
 
 layout(location = 0) in vec3 position;
@@ -51,8 +51,6 @@ float getHeightAtCoordinates(vec2 xz) {
  }
 
 void main(void) {
-
-
     vec4 worldPos = world * vec4(position.x, 0, position.y, 1.0);
     worldPos.y += getHeightAtCoordinates(vec2(worldPos.x, worldPos.z));
     gl_Position = viewProjection * worldPos;

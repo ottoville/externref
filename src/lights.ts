@@ -30,9 +30,9 @@ export class Light {
 
     
     lightsBindGroup;
-    lightsBindGroupTexture;
     lightsBindGroupNoTime;
     lightsBindGroupWGSL;
+    lightsBindGroupTexture;
 
     add(light: isLight) {
         this.#instances.add(light);
@@ -69,7 +69,7 @@ export class Light {
         this.lightsBindGroupWGSL = this.scene.baseBindGroup.addChildBindGroup(uniformBindGroupLightsWGSL);
         uniformBindGroupLights.label = 'lights'
 
-        this.lightsBindGroupTexture = this.lightsBindGroup.addChildLayout(this.scene.createBindGroupLayout({
+        this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.scene.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.FRAGMENT,
             type: 'sampler'

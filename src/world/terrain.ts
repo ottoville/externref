@@ -560,63 +560,68 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             magFilter: "linear",
             minFilter: "linear",
         });
-
-
-        const terrainPipeline = scene.gpuscene.lights.lightsBindGroupTexture.addRenderPipeline({
-            sampleCount: scene.gpuscene.sampleCount,
-            primitiveTopology: 'triangle-list',
-            depthStencilState: {
-                depthWriteEnabled: true,
-                depthCompare: "less",
-                format: "depth24plus-stencil8",
-            },
-            colorStates: [{
-                format: "bgra8unorm",
-            }],
-            vertexStage: {
-                module: scene.gpuscene.shaderModules.get("ground.vert")!,
-                entryPoint: "main",
-            },
-            fragmentStage: {
-                module: scene.gpuscene.shaderModules.get("ground.frag")!,
-                entryPoint: "main"
-            },
-            vertexState: {
-                vertexBuffers:
-                    [{
-                        arrayStride: 4 * 8,
-                        stepMode: "vertex",
-                        attributes: [{
-                            // position
-                            shaderLocation: 0,
-                            offset: 0,
-                            format: "float3"
-                        },
-                        {
-                            // uv
-                            shaderLocation: 1,
-                            offset: 4 * 3,
-                            format: "float2"
-                        },
-                        {
-                            // normals
-                            shaderLocation: 2,
-                            offset: 4 * 3 + 4 * 2,
-                            format: "float3"
+        (async () => {
+            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/ground.vert.wgsl', '/shaders/wgsl/ground.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
+            const terrainPipeline = scene.gpuscene.lights.lightsBindGroupTexture.addRenderPipeline({
+                sampleCount: scene.gpuscene.sampleCount,
+                primitiveTopology: 'triangle-list',
+                depthStencilState: {
+                    depthWriteEnabled: true,
+                    depthCompare: "less",
+                    format: "depth24plus-stencil8",
+                },
+                colorStates: [{
+                    format: "bgra8unorm",
+                }],
+                vertexStage: {
+                    module: vertex,
+                    entryPoint: "main",
+                },
+                fragmentStage: {
+                    module: fragment,
+                    entryPoint: "main"
+                },
+                vertexState: {
+                    vertexBuffers:
+                        [{
+                            arrayStride: 4 * 8,
+                            stepMode: "vertex",
+                            attributes: [{
+                                // position
+                                shaderLocation: 0,
+                                offset: 0,
+                                format: "float3"
+                            },
+                            {
+                                // uv
+                                shaderLocation: 1,
+                                offset: 4 * 3,
+                                format: "float2"
+                            },
+                            {
+                                // normals
+                                shaderLocation: 2,
+                                offset: 4 * 3 + 4 * 2,
+                                format: "float3"
+                            }]
                         }]
-                    }]
-            },
-        }, [
-            {
-                binding: 0,
-                resource: sampler
-            },
-            {
-                binding: 1,
-                resource: this.texture.createView()
-            }
-        ] );
-        const m = terrainPipeline.addDrawable(this.#terrainIndicesLength / 4, 1)
+                },
+            }, [
+                {
+                    binding: 0,
+                    resource: sampler
+                },
+                {
+                    binding: 1,
+                    resource: this.texture.createView()
+                }
+            ]);
+            const m = terrainPipeline.addDrawable(this.#terrainIndicesLength / 4, 1);
+            m.setVertexBuffer(0, this.#terrainPositionAndUvsAndNormalsGPU);
+            m.setIndexBuffer(terrainIndicesGPU, 0, true, 'uint32');
+        })()
+
+
         /*  m.bindGroups = new Set([
               scene.gpuscene.device.createBindGroup({
                   layout: m.renderPipeline.getBindGroupLayout(2),
@@ -632,8 +637,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
                   ]
               })
           ])*/
-        m.setVertexBuffer(0, this.#terrainPositionAndUvsAndNormalsGPU);
-        m.setIndexBuffer(terrainIndicesGPU, 0, true, 'uint32');
+
         //  this.terraMesh = new TerraMesh('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
         // this.terraMesh = new TerraMesh('ground', new Float32Array([1,2,3,4,5,6,7,8,9]));
         console.log('terrain bounding');
