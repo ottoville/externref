@@ -6,7 +6,7 @@ uint facetSize= 250 * 250 * 4;
 layout(set = 0, binding = 0) uniform Scene {
     mat4 viewProjection;
     mat4 view;
-    vec4 viewPosition;
+    vec3 viewPosition;
 };
 
 layout(std430, set = 1, binding = 0) readonly buffer Slopes {

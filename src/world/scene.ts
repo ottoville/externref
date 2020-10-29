@@ -149,12 +149,6 @@ export class WorldScene extends Scene {
             invertNormal ? -1 : 1);
        //@ts-ignore
        // this._sceneUbo.update();
-        //@ts-ignore
-        GPUScene.instance.updateView(this._transformMatrix.m, this._viewMatrix.m, new Float32Array([eyePosition.x,
-            eyePosition.y,
-            eyePosition.z,
-            invertNormal ? -1 : 1]), new Float32Array([this.camera.position.x, this.camera.position.y, this.camera.position.z]))
-
     }
 
     createPickingRayToRef(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
@@ -260,8 +254,8 @@ export class WorldScene extends Scene {
 
             this.createPickingRayToRef(x, y, world, this._tempPickingRay, this.cameraToUseForPointers || null);
 
-            const view = Matrix.FromArray(Array.from(new Float32Array(TerraScene.instance.view)));
-            const projection = Matrix.FromArray(Array.from(new Float32Array(TerraScene.instance.projection)));
+            const view = Matrix.FromArray(Array.from(TerraScene.instance.viewArr));
+            const projection = Matrix.FromArray(Array.from(TerraScene.instance.projectionArr));
            // const viewProjection = view.multiply(projection);
           //  const viewProjection = matrixMultiply64(Array.from(new Float32Array(TerraScene.instance.view)), Array.from(new Float32Array(TerraScene.instance.projection)));
             //TODO: reuse picking ray object

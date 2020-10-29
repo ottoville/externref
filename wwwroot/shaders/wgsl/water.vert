@@ -1,7 +1,7 @@
 [[block]] struct Uniforms {
   [[offset(0)]] modelViewProjectionMatrix : mat4x4<f32>;
   [[offset(64)]] view : mat4x4<f32>;
-  [[offset(128)]] viewPosition : vec4<f32>;
+  [[offset(128)]] viewPosition : vec3<f32>;
 };
 
 [[block]] struct Time {

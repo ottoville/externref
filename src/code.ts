@@ -2,9 +2,7 @@
 import type { WorldScene } from "./world/scene.js";
 //import * as BABYLON from "./lib/babylon/index.js"
 import type { loginProvider, DotNet } from "./types/interfaces/index.js";
-import type { Engine } from "./lib/babylon/Engines/engine";
 import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine";
-import { GPUScene } from "./GPUScene.js";
 import { TerraScene } from "./TerraScene.js";
 import { Sun2 } from "./world/sun2.js";
 import { Plants } from "./plants/Plants.js";
@@ -18,6 +16,7 @@ import { Terrain } from "./world/terrain.js";
 import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 import { Camera } from "./lib/babylon/Cameras/camera.js";
 import { Sea } from "./world/water.js";
+import { Matrix } from "./lib/babylon/Maths/math.vector";
 
 //import  DB from "./DB.js";
 
@@ -220,6 +219,11 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 const gpuscene = await terrascene.gpuscenePromise
 
                 const scene = await scenePromise;
+
+                const transformMatrix = new Matrix();
+
+
+
                 let rloop = function (time: DOMHighResTimeStamp) {
 
                     const renderEncoder = gpuscene.device.createCommandEncoder();
@@ -227,22 +231,16 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     if (scene.clearColor.a === undefined) {
                         scene.clearColor.a = 1;
                     }
-                    //@ts-ignore
-                    //engine._mainColorAttachments[0].loadValue = scene.clearColor;
-                    //@ts-ignore
-                    //engine._mainDepthAttachment.depthLoadValue = engine._clearDepthValue;
-                    //@ts-ignore
-                    //engine._mainDepthAttachment.stencilLoadValue = engine._clearStencilValue;
-                    //@ts-ignore
-                    //engine._startMainRenderPass();
+                    const loadValue = { r: 0.53, g: 0.8, b: 0.92, a: 1.0 } // sky color
                     // Resolve in case of MSAA
                     const colorAttachment: GPURenderPassColorAttachmentDescriptor = terrascene.gpuscene.sampleCount > 1 ? {
                         attachment: gpuscene.swapAttachment,
                         resolveTarget: gpuscene.swapChain.getCurrentTexture().createView(),
+                        loadValue
                     } : {
                             attachment: gpuscene.swapChain.getCurrentTexture().createView(),
+                            loadValue
                         }
-                    colorAttachment.loadValue = { r: 0.53, g: 0.8, b: 0.92, a: 1.0 } // sky color
                     const passEncoder = renderEncoder.beginRenderPass({
                         colorAttachments: [colorAttachment],
                         depthStencilAttachment: {
@@ -255,152 +253,46 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         }
                     });
 
-                    // Register components that have been associated lately to the scene.
-                    //this._registerTransientComponents();
-
-                    scene._activeParticles.fetchNewFrame();
-                    //this._totalVertices.fetchNewFrame();
-                    scene._activeIndices.fetchNewFrame();
-                    scene._activeBones.fetchNewFrame();
-                    //this._meshesForIntersections.reset();
-                    scene.resetCachedMaterial();
-
-                    scene.onBeforeAnimationsObservable.notifyObservers(scene);
-
-                    // Actions
-                    //if (this.actionManager) {
-                    //    this.actionManager.processTrigger(Constants.ACTION_OnEveryFrameTrigger);
-                    //}
-
-                    // Animations
-                    scene.animate();
-
-                    // Before camera update steps
-                    for (let step of scene._beforeCameraUpdateStage) {
-                        step.action();
-                    }
-
                     // Update Cameras
-                    if (scene.activeCameras.length > 0) {
-                        for (var cameraIndex = 0; cameraIndex < scene.activeCameras.length; cameraIndex++) {
-                            let camera = scene.activeCameras[cameraIndex];
-                            camera.update();
-                            if (camera.cameraRigMode !== 0) {
-                                // rig cameras
-                                for (var index = 0; index < camera._rigCameras.length; index++) {
-                                    camera._rigCameras[index].update();
-                                }
-                            }
-                        }
-                    } else if (scene.activeCamera) {
-                        scene.activeCamera.update();
-                        if (scene.activeCamera.cameraRigMode !== 0) {
-                            // rig cameras
-                            for (var index = 0; index < scene.activeCamera._rigCameras.length; index++) {
-                                scene.activeCamera._rigCameras[index].update();
-                            }
-                        }
+                    const camera = scene.activeCameras[0];
+
+                    camera._checkInputs();
+
+                    // Cache
+                    camera._cache.mode = camera.mode;
+                    camera._cache.minZ = camera.minZ;
+                    camera._cache.maxZ = camera.maxZ;
+
+                    // Matrix
+                    //@ts-ignore
+                    camera._refreshFrustumPlanes = true;
+                    camera._cache.fov = camera.fov;
+                    camera._cache.fovMode = camera.fovMode;
+                    const aspectRatio = (TerraScene.instance.canvasSize.width * camera.viewport.width) / (TerraScene.instance.canvasSize.height * camera.viewport.height);
+                    camera._cache.aspectRatio = aspectRatio;
+
+                    if (camera.minZ <= 0) {
+                        camera.minZ = 0.1;
                     }
 
-                    // Before render
-                    scene.onBeforeRenderObservable.notifyObservers(scene);
+                    Matrix.PerspectiveFovLHToRef(camera.fov,
+                        aspectRatio,
+                        camera.minZ,
+                        camera.maxZ,
+                        camera._projectionMatrix,
+                        camera.fovMode === Camera.FOVMODE_VERTICAL_FIXED);
+                    const projectionmatrix = camera._projectionMatrix;
+                    const viewMatrix = camera.getViewMatrix();                    
 
-                    // Customs render targets
-                    scene.onBeforeRenderTargetsRenderObservable.notifyObservers(scene);
-                    var currentActiveCamera = scene.activeCamera;
+                    viewMatrix.multiplyToRef(projectionmatrix, transformMatrix);
 
-                    // Restore back buffer
-                    scene.activeCamera = currentActiveCamera;
-                    //this._bindFrameBuffer();
-                    scene.onAfterRenderTargetsRenderObservable.notifyObservers(scene);
+                    terrascene.viewArr.set(viewMatrix.m);
+                    terrascene.projectionArr.set(transformMatrix.m);
+                    terrascene.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
 
-                    for (let step of scene._beforeClearStage) {
-                        step.action();
-                    }
+                    gpuscene.updateView()
 
-                    // Clear
-                    if (scene.autoClearDepthAndStencil || scene.autoClear) {
-
-                        engine.clear(scene.clearColor, scene.autoClear || scene.forceWireframe || scene.forcePointsCloud, scene.autoClearDepthAndStencil, scene.autoClearDepthAndStencil);
-                    }
-
-                    // Collects render targets from external components.
-                    // for (let step of this._gatherRenderTargetsStage) {
-                    //    step.action(this._renderTargets);
-                    //  }
-
-                    // Multi-cameras?
-                    if (scene.activeCameras.length > 0) {
-                        for (var cameraIndex = 0; cameraIndex < scene.activeCameras.length; cameraIndex++) {
-                            if (cameraIndex > 0) {
-                                (engine as Engine).clear(null, false, true, true);
-                            }
-                            let camera = scene.activeCameras[cameraIndex];
-                            //////////////////
-                            scene._renderForCamera(camera);
-                            scene.onAfterRenderCameraObservable.notifyObservers(camera);
-                           
-                            //////////////
-
-
-                            //@ts-ignore
-                            new Float32Array(TerraScene.instance.viewProjection).set(scene._transformMatrix.m);
-                            new Float32Array(TerraScene.instance.view).set(scene.activeCameras[cameraIndex].getViewMatrix().m);
-                            new Float32Array(TerraScene.instance.projection).set(scene.activeCameras[cameraIndex]._projectionMatrix.m);
-
-
-                            TerraScene.instance.render(passEncoder, time);
-
-
-                        }
-                    } else {
-                        if (!scene.activeCamera) {
-                            throw new Error("No camera defined");
-                        }
-
-                        //this._processSubCameras(this.activeCamera);
-                        //@ts-ignore
-                        scene._processSubCameras(this.activeCamera)
-
-                    }
-
-                    // Intersection checks
-                    //this._checkIntersections();
-
-                    // Executes the after render stage actions.
-                    for (let step of scene._afterRenderStage) {
-                        step.action();
-                    }
-
-                    // After render
-                    if (scene.afterRender) {
-                        scene.afterRender();
-                    }
-
-                    scene.onAfterRenderObservable.notifyObservers(scene);
-
-                    // Cleaning
-                    if (scene._toBeDisposed.length) {
-                        for (var index = 0; index < scene._toBeDisposed.length; index++) {
-                            var data = scene._toBeDisposed[index];
-                            if (data) {
-                                data.dispose();
-                            }
-                        }
-
-                        scene._toBeDisposed = [];
-                    }
-
-                    if (scene.dumpNextRenderTargets) {
-                        scene.dumpNextRenderTargets = false;
-                    }
-
-                    scene._activeBones.addCount(0, true);
-                    scene._activeIndices.addCount(0, true);
-                    scene._activeParticles.addCount(0, true);
-
-
-
+                    TerraScene.instance.render(passEncoder, time);
 
                     //scene render ends
 

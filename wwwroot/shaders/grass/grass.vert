@@ -22,7 +22,6 @@ const float[7] rot = float[7](0,0,1,1,1,1,1);
 layout(set = 0, binding = 0) uniform Scene {
     mat4 viewProjection;
     mat4 view;
-    vec4 viewPosition;
     vec3 cameraPosition;
 };
 

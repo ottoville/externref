@@ -27,7 +27,6 @@ const uint sunDistance= 1495000;  //divided by 100000 correct one
 layout(set = 0, binding = 0) uniform Scene {
     mat4 viewProjection;
     mat4 view;
-    vec4 viewPosition;
     vec3 cameraPosition;
 } scene;
 

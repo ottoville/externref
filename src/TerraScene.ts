@@ -127,13 +127,14 @@ export class TerraScene {
         return device;
     });
     gpuscenePromise = this.device.then(device => new GPUScene(this, device));
-    view = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
-    projection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
 
-    viewArr = new Float32Array(this.view);
-    projectionArr = new Float32Array(this.projection);
+    viewProjectionPositionBuffer = new SharedArrayBuffer(4 * 16 * 2 + 3 * 4);
 
-    viewProjection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
+   // projection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
+
+    projectionArr = new Float32Array(this.viewProjectionPositionBuffer, 0, 16);
+    viewArr = new Float32Array(this.viewProjectionPositionBuffer, 64, 16);
+    cameraArr = new Float32Array(this.viewProjectionPositionBuffer, 128, 3);
 
     gpuscene!: GPUScene;
 
@@ -300,11 +301,11 @@ export class TerraScene {
         if (world) {
             var matrix = Matrix.Zero();
             const worldM = Matrix.FromArray(world);
-            worldM.multiplyToRef(Matrix.FromArray(Array.from(new Float32Array(this.view))), matrix);
+            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.viewArr)), matrix);
         } else {
-            var matrix = Matrix.FromArray(Array.from(new Float32Array(this.view)));
+            var matrix = Matrix.FromArray(Array.from(this.viewArr));
         }
-        matrix.multiplyToRef(Matrix.FromArray(Array.from(new Float32Array(this.projection))), matrix);
+        matrix.multiplyToRef(Matrix.FromArray(Array.from(this.projectionArr)), matrix);
 
         //TODO use matrixMultiply64 and matrixInvert64
 

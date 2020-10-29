@@ -30,7 +30,7 @@ export class GPUScene {
     );
     
     //viewprojection and camera position
-    uniformBuffer = this.createGPUBuffer(4 * 16 * 2 + 4 * 4 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
+    uniformBuffer = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
 
     singleWritableStorageLayout = this.device.createBindGroupLayout({
         entries: [
@@ -114,7 +114,7 @@ export class GPUScene {
         this.GPUBindGroupLayouts.set(bindGroup, layout);
         return bindGroup
     }
-    #uniformBufferSwap = this.createGPUBuffer(4 * 16 * 2 + 4 * 4 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+    #uniformBufferSwap = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     static instance: GPUScene;
 
@@ -273,8 +273,9 @@ export class GPUScene {
         this.#syncedBuffers.delete(buffer);
         return commandEncoder.finish();
     }
-    async updateView(viewProjection: Float32Array, view: Float32Array, viewPosition: Float32Array, cameraPosition: Float32Array) {
-        const encoder = await this.updateBuffer(this.#uniformBufferSwap, this.uniformBuffer, viewProjection, view, viewPosition, cameraPosition);
+    async updateView() {
+        const encoder = await this.updateBufferRaw(this.#uniformBufferSwap, this.uniformBuffer, this.scene.viewProjectionPositionBuffer);
+       // const encoder = await this.updateBuffer(this.#uniformBufferSwap, this.uniformBuffer, viewProjection, view, cameraPosition);
         if (encoder)
             this.device.defaultQueue.submit([encoder]);
     }
