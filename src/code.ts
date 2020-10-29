@@ -282,12 +282,11 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         camera._projectionMatrix,
                         camera.fovMode === Camera.FOVMODE_VERTICAL_FIXED);
                     const projectionmatrix = camera._projectionMatrix;
-                    const viewMatrix = camera.getViewMatrix();                    
-
+                    const viewMatrix = camera.getViewMatrix();
+                    terrascene.projectionArr.set(projectionmatrix.m)
                     viewMatrix.multiplyToRef(projectionmatrix, transformMatrix);
-
+                    terrascene.projectionViewArr.set(transformMatrix.m);
                     terrascene.viewArr.set(viewMatrix.m);
-                    terrascene.projectionArr.set(transformMatrix.m);
                     terrascene.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
 
                     gpuscene.updateView()

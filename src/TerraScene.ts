@@ -132,7 +132,9 @@ export class TerraScene {
 
    // projection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
 
-    projectionArr = new Float32Array(this.viewProjectionPositionBuffer, 0, 16);
+    projection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
+    projectionArr = new Float32Array(this.projection);
+    projectionViewArr = new Float32Array(this.viewProjectionPositionBuffer, 0, 16);
     viewArr = new Float32Array(this.viewProjectionPositionBuffer, 64, 16);
     cameraArr = new Float32Array(this.viewProjectionPositionBuffer, 128, 3);
 
