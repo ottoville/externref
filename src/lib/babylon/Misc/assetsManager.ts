@@ -8,7 +8,6 @@ import { Observable } from "./observable";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { Texture } from "../Materials/Textures/texture";
 import { CubeTexture } from "../Materials/Textures/cubeTexture";
-import { EquiRectangularCubeTexture } from "../Materials/Textures/equiRectangularCubeTexture";
 import { Logger } from "../Misc/logger";
 import { AnimationGroup } from '../Animations/animationGroup';
 
@@ -688,11 +687,11 @@ export class HDRCubeTextureAssetTask extends AbstractAssetTask implements ITextu
 /**
  * Define a task used by AssetsManager to load Equirectangular cube textures
  */
-export class EquiRectangularCubeTextureAssetTask extends AbstractAssetTask implements ITextureAssetTask<EquiRectangularCubeTexture> {
+export class EquiRectangularCubeTextureAssetTask extends AbstractAssetTask implements ITextureAssetTask<any> {
     /**
      * Gets the loaded texture
      */
-    public texture: EquiRectangularCubeTexture;
+    public texture: any;
 
     /**
      * Callback called when the task is successful
@@ -755,7 +754,6 @@ export class EquiRectangularCubeTextureAssetTask extends AbstractAssetTask imple
             onError(message, exception);
         };
 
-        this.texture = new EquiRectangularCubeTexture(this.url, scene, this.size, this.noMipmap, this.gammaSpace, onload, onerror);
     }
 }
 

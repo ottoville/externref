@@ -3,6 +3,8 @@ import type { boundable, PickingInfo } from "./traits/Boundable";
 import { TerraMatrix } from "./traits/worldPosition";
 import { Matrix, Vector3 } from "./lib/babylon/Maths/math.js";
 import { Physics } from "./physics";
+import { ArcRotateCamera } from "../wwwroot/js/lib/babylon/Cameras/arcRotateCamera";
+//import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
 /*interface Ray {
     origin: any,
@@ -147,10 +149,11 @@ export class TerraScene {
     lastStateChangeTime = new Date().getTime()
     tickIntervalMs = 1000;
     physics = new Physics(this);
-    onRenderStart?: () => void;
+    onRenderStart?: () => Promise<ArcRotateCamera>;
     canvasSize: { width: number, height: number };
     context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
-    constructor(private window: Window, onInit: () => Promise<void>, public canvas: HTMLCanvasElement) {
+    camera!: ArcRotateCamera;
+    constructor(private window: Window, public canvas: HTMLCanvasElement) {
 
         this.canvasSize = {
             width: window.innerWidth | 0,
@@ -158,8 +161,8 @@ export class TerraScene {
         };
 
         TerraScene.instance = this;
-        this.gpuscenePromise.then(async scene => {
-            this.gpuscene = scene;
+        this.gpuscenePromise.then(async gpuscene => {
+            this.gpuscene = gpuscene;
             this.gameSpeed = 0;
             const CACHE_NAME = 'terrasim-v1';
             const cache = await caches.open(CACHE_NAME);
@@ -196,17 +199,106 @@ export class TerraScene {
                         type = 'compute';
                     const compiled = glslang.compileGLSL(jsondata[file], type);
 
-                    scene.shaderModules.set(file, scene.device.createShaderModule({
+                    gpuscene.shaderModules.set(file, gpuscene.device.createShaderModule({
                         code: compiled,
                     }));
                 }
             }
             await Promise.all(shaderPuts);
-            onInit().then(() => {
-                this.onRenderStart && this.onRenderStart();
-                //todo: start render loop and physics here
+            this.onRenderStart && (this.camera = await this.onRenderStart());
+            const camera = this.camera;
+            const terraScene = this;
+            const loadValue = { r: 0.53, g: 0.8, b: 0.92, a: 1.0 } // sky color
+            window.requestAnimationFrame(function renderLoop(time: DOMHighResTimeStamp) {
+                const renderEncoder = gpuscene.device.createCommandEncoder();
+                
+                // Resolve in case of MSAA
+                const colorAttachment: GPURenderPassColorAttachmentDescriptor = gpuscene.sampleCount > 1 ? {
+                    attachment: gpuscene.swapAttachment,
+                    resolveTarget: gpuscene.swapChain.getCurrentTexture().createView(),
+                    loadValue
+                } : {
+                        attachment: gpuscene.swapChain.getCurrentTexture().createView(),
+                        loadValue
+                    }
+                const passEncoder = renderEncoder.beginRenderPass({
+                    colorAttachments: [colorAttachment],
+                    depthStencilAttachment: {
+                        attachment: gpuscene.depthAttachment,
 
+                        depthLoadValue: 1,
+                        depthStoreOp: "store",
+                        stencilLoadValue: 0,
+                        stencilStoreOp: "store",
+                    }
+                });
+
+                camera._checkInputs();
+
+                // Cache
+                camera._cache.mode = camera.mode;
+                camera._cache.minZ = camera.minZ;
+                camera._cache.maxZ = camera.maxZ;
+
+                // Matrix
+                //@ts-ignore
+                camera._refreshFrustumPlanes = true;
+                camera._cache.fov = camera.fov;
+                camera._cache.fovMode = camera.fovMode;
+                const aspectRatio = (TerraScene.instance.canvasSize.width * camera.viewport.width) / (TerraScene.instance.canvasSize.height * camera.viewport.height);
+                camera._cache.aspectRatio = aspectRatio;
+
+                if (camera.minZ <= 0) {
+                    camera.minZ = 0.1;
+                }
+
+                Matrix.PerspectiveFovLHToRef(camera.fov,
+                    aspectRatio,
+                    camera.minZ,
+                    camera.maxZ,
+                    camera._projectionMatrix,
+                    false);
+                const projectionmatrix = camera._projectionMatrix;
+                //  const viewMatrix = camera.getViewMatrix();
+                let viewMatrix: Matrix;
+                if (camera._isSynchronizedViewMatrix()) {
+                    viewMatrix = camera._computedViewMatrix;
+                } else {
+                    camera.updateCache();
+                     camera._computedViewMatrix = camera._getViewMatrix();
+
+                    camera._currentRenderId = camera.getScene().getRenderId();
+                    //@ts-ignore
+                    camera._refreshFrustumPlanes = true;
+
+                    camera._computedViewMatrix.invertToRef(camera._worldMatrix);
+
+                    viewMatrix = camera._computedViewMatrix;
+                }
+
+                //TODO: reuse this
+                const transformMatrix = new Matrix();
+
+                ///////////////
+                terraScene.projectionArr.set(projectionmatrix.m)
+                viewMatrix.multiplyToRef(projectionmatrix, transformMatrix);
+                terraScene.projectionViewArr.set(transformMatrix.m);
+                terraScene.viewArr.set(viewMatrix.m);
+                terraScene.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
+
+                terraScene.gpuscene.updateView()
+
+                TerraScene.instance.render(passEncoder, time);
+
+                //scene render ends
+
+                passEncoder.endPass();
+                terraScene.gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
+
+                window.requestAnimationFrame(renderLoop);
             });
+            //todo: start render loop and physics here
+
 
 
         });

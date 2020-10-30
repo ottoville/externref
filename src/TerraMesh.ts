@@ -311,6 +311,7 @@ export class TerraMesh extends Mesh {
     public _trianglePlanes = [];
     public lastColliderWorldVectors: Vector3[] = [];
     public _checkCollision(collider: Collider): AbstractMesh {
+        debugger;
        // console.log('_checkCollision', this.name, this._boundingInfo);
         // Bounding box test
         if (!this._boundingInfo || !collider._canDoCollision(this._boundingInfo.boundingSphere.centerWorld, this._boundingInfo.boundingSphere.radiusWorld, this._boundingInfo.boundingBox.minimumWorld, this._boundingInfo.boundingBox.maximumWorld)) {

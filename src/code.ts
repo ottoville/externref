@@ -1,7 +1,7 @@
 
 import type { WorldScene } from "./world/scene.js";
 //import * as BABYLON from "./lib/babylon/index.js"
-import type { loginProvider, DotNet } from "./types/interfaces/index.js";
+import type { loginProvider, DotNet, savedCamera } from "./types/interfaces/index.js";
 import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine";
 import { TerraScene } from "./TerraScene.js";
 import { Sun2 } from "./world/sun2.js";
@@ -16,7 +16,9 @@ import { Terrain } from "./world/terrain.js";
 import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 import { Camera } from "./lib/babylon/Cameras/camera.js";
 import { Sea } from "./world/water.js";
-import { Matrix } from "./lib/babylon/Maths/math.vector";
+import { Vector3, Matrix } from "./lib/babylon/Maths/math.vector";
+import { ArcRotateCamera } from "./lib/babylon/index.js";
+import { LazyEval } from "./LazyEval.js";
 
 //import  DB from "./DB.js";
 
@@ -116,7 +118,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         var engine: WebGPUEngine = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: false } as WebGPUEngineOptions);
         let terrascene: TerraScene;
         const scenePromise = new Promise<WorldScene>(async (sceneInitedred, sceneInitedrej) => {
-            terrascene = new TerraScene(window, async () => {
+            terrascene = new TerraScene(window, canvas);
+
+
+            terrascene.onRenderStart = async () => {
+
+
                 // Initial scene objects here
 
                 const tools: Map<string, UITABClassLike> = new Map();
@@ -170,13 +177,71 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 tools.set('Buildings', BuildingsUI);
                 tools.set('TerrainTool', TerrainTool);
                 tools.set('Zones', Zones);
+                const scene = await scenePromise;
+
+                ArcRotateCamera.prototype._getViewMatrix = function () {
+                    var cosa = Math.cos(this.alpha);
+                    var sina = Math.sin(this.alpha);
+                    var cosb = Math.cos(this.beta);
+                    var sinb = Math.sin(this.beta);
+
+                    if (sinb === 0) {
+                        sinb = 0.0001;
+                    }
+                    //@ts-ignore
+                    var target = this._getTargetPosition();
+                    //@ts-ignore
+                    this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
+
+                    // Rotate according to up vector
+                    //@ts-ignore
+                    if (this._upVector.x !== 0 || this._upVector.y !== 1.0 || this._upVector.z !== 0) {
+                        //@ts-ignore
+                        Vector3.TransformCoordinatesToRef(this._computationVector, this._YToUpMatrix, this._computationVector);
+                    }
+                    //@ts-ignore
+                    target.addToRef(this._computationVector, this._newPosition);
+                    if (scene.collisionsEnabled && this.checkCollisions) {
+                        const coordinator = this.getScene().collisionCoordinator;
+                        //@ts-ignore
+                        if (!this._collider) {
+                            //@ts-ignore
+                            this._collider = coordinator.createCollider();
+                        }
+                        //@ts-ignore
+                        this._collider._radius = this.collisionRadius;
+                        //@ts-ignore
+                        this._newPosition.subtractToRef(this._position, this._collisionVelocity);
+                        //@ts-ignore
+                        this._collisionTriggered = true;
+                        //@ts-ignore
+                        coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
+                    } else {
+                        //@ts-ignore
+                        this._position.copyFrom(this._newPosition);
+
+                        var up = this.upVector;
+                        if (this.allowUpsideDown && sinb < 0) {
+                            up = up.negate();
+                        }
+                        //@ts-ignore
+                        this._computeViewMatrix(this._position, target, up);
+
+                        this._viewMatrix.addAtIndex(12, this.targetScreenOffset.x);
+                        this._viewMatrix.addAtIndex(13, this.targetScreenOffset.y);
+                    }
+                    this._currentTarget = target;
+                    return this._viewMatrix;
+                }
+
+                const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), scene);
 
                 //@ts-expect-error
                 window.activateMenu = async (name: string) => {
                     try {
                         let tool: UITABClassLike | undefined;
                         if (tool = tools.get(name)) {
-                            tool.instance = new tool(this, (await terrainInited)[0], (await scenePromise).camera, sea);
+                            tool.instance = new tool(this, (await terrainInited)[0], camera, sea);
                         }
                     } catch (e) {
                         console.error(e);
@@ -212,25 +277,55 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         console.error(e);
                     }
                 }
-            }, canvas);
+
+                DB.then(DB => {
+                    DB.transaction("save").objectStore("save").get(0).onsuccess = (evt) => {
+                        if ((<IDBRequest>evt.target).result) {
+                            let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
+                            camera.alpha = restored.alpha;
+                            camera.beta = restored.beta;
+                            camera.radius = restored.radius;
+                            camera.target = new Vector3(restored.target.x, restored.target.y, restored.target.z);
+                            camera.position = restored.position;
+
+                        }
+                        let l = new LazyEval(() => {
+                            //console.log(this.camera.position.y);
+
+                            DB.transaction("save", "readwrite").objectStore("save").put(<savedCamera>{
+                                id: 0,
+                                camera: { alpha: camera.alpha, beta: camera.beta, radius: camera.radius, target: camera.target, position: camera.position }
+                            });
+                        })
+                        camera.onProjectionMatrixChangedObservable.add(() => {
+                            l.eval(500);
+                        });
+
+                    }
+                })
 
 
-            terrascene.onRenderStart = async () => {
                 const gpuscene = await terrascene.gpuscenePromise
 
-                const scene = await scenePromise;
+               
 
                 const transformMatrix = new Matrix();
 
+                
+                scene.activeCameras.push(camera);
+                camera.maxZ = 1606000;
+                camera.panningSensibility = 20;
 
+                camera.angularSensibilityX = 1000;
+                camera.angularSensibilityY = 2000;
+                camera.panningAxis = new Vector3(1, 0, 1)
+                camera.checkCollisions = true;
+                camera.attachControl(canvas, true);
+                return camera;
 
                 let rloop = function (time: DOMHighResTimeStamp) {
 
                     const renderEncoder = gpuscene.device.createCommandEncoder();
-                    // Some PGs are using color3...
-                    if (scene.clearColor.a === undefined) {
-                        scene.clearColor.a = 1;
-                    }
                     const loadValue = { r: 0.53, g: 0.8, b: 0.92, a: 1.0 } // sky color
                     // Resolve in case of MSAA
                     const colorAttachment: GPURenderPassColorAttachmentDescriptor = terrascene.gpuscene.sampleCount > 1 ? {
@@ -254,7 +349,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     });
 
                     // Update Cameras
-                    const camera = scene.activeCameras[0];
+                    const camera = scene.activeCameras[0] as ArcRotateCamera;
 
                     camera._checkInputs();
 
@@ -282,7 +377,82 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         camera._projectionMatrix,
                         camera.fovMode === Camera.FOVMODE_VERTICAL_FIXED);
                     const projectionmatrix = camera._projectionMatrix;
-                    const viewMatrix = camera.getViewMatrix();
+                  //  const viewMatrix = camera.getViewMatrix();
+                    let viewMatrix: Matrix;
+                    if (camera._isSynchronizedViewMatrix()) {
+                        viewMatrix = camera._computedViewMatrix;
+                    } else {
+                        camera.updateCache();
+                       // camera._computedViewMatrix = camera._getViewMatrix();
+
+                        var cosa = Math.cos(camera.alpha);
+                        var sina = Math.sin(camera.alpha);
+                        var cosb = Math.cos(camera.beta);
+                        var sinb = Math.sin(camera.beta);
+
+                        if (sinb === 0) {
+                            sinb = 0.0001;
+                        }
+                        //@ts-ignore
+                        var target = camera._getTargetPosition();
+                        //@ts-ignore
+                        camera._computationVector.copyFromFloats(camera.radius * cosa * sinb, camera.radius * cosb, camera.radius * sina * sinb);
+
+                        // Rotate according to up vector
+                        //@ts-ignore
+                        if (camera._upVector.x !== 0 || camera._upVector.y !== 1.0 || camera._upVector.z !== 0) {
+                            //@ts-ignore
+                            Vector3.TransformCoordinatesToRef(camera._computationVector, camera._YToUpMatrix, camera._computationVector);
+                        }
+                        //@ts-ignore
+                        target.addToRef(camera._computationVector, camera._newPosition);
+                        if (camera.getScene().collisionsEnabled && camera.checkCollisions) {
+                            const coordinator = camera.getScene().collisionCoordinator;
+                            //@ts-ignore
+                            if (!camera._collider) {
+                                //@ts-ignore
+                                camera._collider = coordinator.createCollider();
+                            }
+                            //@ts-ignore
+                            camera._collider._radius = camera.collisionRadius;
+                            //@ts-ignore
+                            camera._newPosition.subtractToRef(camera._position, camera._collisionVelocity);
+                            //@ts-ignore
+                            camera._collisionTriggered = true;
+                            //@ts-ignore
+                            coordinator.getNewPosition(camera._position, camera._collisionVelocity, camera._collider, 3, null, camera._onCollisionPositionChange, camera.uniqueId);
+                        } else {
+                            //@ts-ignore
+                            camera._position.copyFrom(camera._newPosition);
+
+                            var up = camera.upVector;
+                            if (camera.allowUpsideDown && sinb < 0) {
+                                up = up.negate();
+                            }
+                            //@ts-ignore
+                            camera._computeViewMatrix(camera._position, target, up);
+
+                            camera._viewMatrix.addAtIndex(12, camera.targetScreenOffset.x);
+                            camera._viewMatrix.addAtIndex(13, camera.targetScreenOffset.y);
+                        }
+                        camera._currentTarget = target;
+                        camera._computedViewMatrix = camera._viewMatrix;
+
+                        ///
+
+
+
+
+                        camera._currentRenderId = camera.getScene().getRenderId();
+                        //@ts-ignore
+                        camera._refreshFrustumPlanes = true;
+
+                        camera._computedViewMatrix.invertToRef(camera._worldMatrix);
+
+                        viewMatrix= camera._computedViewMatrix;
+                    }
+
+                    ///////////////
                     terrascene.projectionArr.set(projectionmatrix.m)
                     viewMatrix.multiplyToRef(projectionmatrix, transformMatrix);
                     terrascene.projectionViewArr.set(transformMatrix.m);
@@ -297,7 +467,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                     passEncoder.endPass();
                     gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
-                    engine.onEndFrameObservable.notifyObservers(engine);
 
                     window.requestAnimationFrame(rloop);
 

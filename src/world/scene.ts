@@ -100,8 +100,8 @@ class _ClickInfo {
     }
 }
 export class WorldScene extends Scene {
-    camera: ArcRotateCamera;
-    camera2: ArcRotateCamera;
+    //camera: ArcRotateCamera;
+   // camera2: ArcRotateCamera;
     DBP: Promise<EarthDatabase>;
 
     /**
@@ -931,30 +931,28 @@ export class WorldScene extends Scene {
          });*/
         
 
-
-        //@ts-ignore
+        /*
         this.camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), this);
         this.activeCameras.push(this.camera);
         this.camera.maxZ = 1606000;
         this.camera.panningSensibility = 20;
 
         this.camera.angularSensibilityX = 1000;
-        this.camera.angularSensibilityY = 2000;
+        this.camera.angularSensibilityY = 2000;*/
 
       // this.camera.lowerBetaLimit = 0.2;
       //  this.camera.upperBetaLimit = (Math.PI / 2) * 0.6;
 
        // this.camera.lowerRadiusLimit = 10;
-         //@ts-ignore
-        this.camera.panningAxis = new Vector3(1, 0, 1)
+/*      this.camera.panningAxis = new Vector3(1, 0, 1)
         this.camera.checkCollisions = true;
         //Object.defineProperty(this.camera, 'checkCollisions', { get() { debugger; return true; } })
-        this.camera.attachControl(canvas, true);
+        this.camera.attachControl(canvas, true);*/
         //@ts-ignore
-        this.camera2 = new ArcRotateCamera("Camera2", 0, 0, 10, new Vector3(500, 20, 0), this);
-        this.camera2.target = this.camera.target;
-        this.camera2.viewport = new Viewport(0, 0, 0.5, 1.0);
-        DB.then(DB => {
+      //  this.camera2 = new ArcRotateCamera("Camera2", 0, 0, 10, new Vector3(500, 20, 0), this);
+        //this.camera2.target = this.camera.target;
+      //  this.camera2.viewport = new Viewport(0, 0, 0.5, 1.0);
+      /*  DB.then(DB => {
             DB.transaction("save").objectStore("save").get(0).onsuccess = (evt) => {
                 if ((<IDBRequest>evt.target).result) {
                     let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
@@ -988,7 +986,7 @@ export class WorldScene extends Scene {
                 });
 
             }
-        })
+        })*/
         interface TerrainMap {
             width: number,
             height: number,

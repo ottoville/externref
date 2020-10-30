@@ -3,7 +3,6 @@ export * from "./baseTexture.polynomial";
 export * from "./colorGradingTexture";
 export * from "./cubeTexture";
 export * from "./dynamicTexture";
-export * from "./equiRectangularCubeTexture";
 export * from "./internalTextureLoader";
 export * from "./Loaders/index";
 export * from "./Procedurals/index";
