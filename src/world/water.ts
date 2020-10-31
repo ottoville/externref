@@ -5,7 +5,7 @@ export class Sea {
     constructor(scene: TerraScene) {
         (async () => {
 
-            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/water.vert', '/shaders/wgsl/water.frag'].map(async u => scene.gpuscene.device.createShaderModule({ code: await(await fetch(u)).text() } )  ));
+            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/water.vert.wgsl', '/shaders/wgsl/water.frag'].map(async u => scene.gpuscene.device.createShaderModule({ code: await(await fetch(u)).text() } )  ));
 
             const waterPipeline = scene.gpuscene.lights.lightsBindGroupWGSL.addRenderPipeline({
                 sampleCount: scene.gpuscene.sampleCount,

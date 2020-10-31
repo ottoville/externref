@@ -51,11 +51,11 @@ function matrixTranslate(x: number, y: number, z: number, m: Float32Array) {
 const zAngle = Math.cos(Math.PI * 0.2);
 const yAngle = Math.sin(Math.PI * 0.2);
 export class Sun2 extends TerraNode implements hasPhysics, isLight {
-    
+
     worldPosition: worldPosition = new worldPosition(this);
     lightType: 'point' = 'point';
 
-    
+
 
     clamp(value: number, min: number, max: number) {
         return Math.min(Math.max(value, min), max);
@@ -65,15 +65,15 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
         let anglePerMinute = (Math.PI * 2) / 1439;
         //let meridian: number = Math.PI * 0.1;
         let meridian: number = Math.PI * 0.5;
-                        //149597870000
+        //149597870000
 
         //let sundistance = 149600; //divided by 100000
-        let secondsOfDay = ~~((Number(this.scene.physics.gameTime*60)) % 86400);
+        let secondsOfDay = ~~((Number(this.scene.physics.gameTime * 60)) % 86400);
         let minutesOfDay = secondsOfDay / 60;
         let sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
 
         let sunPositionX = Math.sin(sunAngle);
-        let sunPositionY =  Math.cos(sunAngle);
+        let sunPositionY = Math.cos(sunAngle);
 
         let sunPositionZ = sunPositionY * zAngle;
 
@@ -87,42 +87,49 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
 
 
         //earth shadow
-        const shadow = this.clamp(sunPositionY *8 + 1, 0, 1); // <<3 == * 8
+        const shadow = this.clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
         this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
         this.updateDynamicBuffer();
-        
-       // this.worldPosition.translation = [sunPositionX, sunPositionY, sunPositionZ];
+
+        // this.worldPosition.translation = [sunPositionX, sunPositionY, sunPositionZ];
 
 
 
         //let sunm = rotateMatrix(Math.PI * 0.2, 'x');
-       // let newpos = matrixTranslate(sunPositionX, sunPositionY, 0, sunm);
-       // this.worldPosition.translation = [newpos.x, newpos.y, newpos.z];
+        // let newpos = matrixTranslate(sunPositionX, sunPositionY, 0, sunm);
+        // this.worldPosition.translation = [newpos.x, newpos.y, newpos.z];
     }
     constructor(scene: TerraScene) {
         super(scene);
-        const sunPipeline = this.scene.gpuscene.positionBindGroupTime.addRenderPipeline({
-            sampleCount: this.scene.gpuscene.sampleCount,
-            rasterizationState: {
-                cullMode: 'none',
-            },
-            primitiveTopology: 'triangle-strip',
-            colorStates: [{
-                format: "bgra8unorm",
-            }],
-            vertexStage: {
-                module: this.scene.gpuscene.shaderModules.get("sun.vert")!,
-                entryPoint: "main",
-            },
-            fragmentStage: {
-                module: this.scene.gpuscene.shaderModules.get("sun.frag")!,
-                entryPoint: "main"
-            },
-            vertexState: {
-                indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
-            }
-        }, [this.bufferOffset]);
 
-        sunPipeline.addDrawable(14);
+
+        (async () => {
+            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/sun.vert.wgsl', '/shaders/wgsl/sun.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
+            const sunPipeline = this.scene.gpuscene.positionBindGroupTime.addRenderPipeline({
+                sampleCount: this.scene.gpuscene.sampleCount,
+                rasterizationState: {
+                    cullMode: 'none',
+                },
+                primitiveTopology: 'triangle-strip',
+                colorStates: [{
+                    format: "bgra8unorm",
+                }],
+                vertexStage: {
+                    module: vertex,
+                    entryPoint: "main",
+                },
+                fragmentStage: {
+                    module: fragment,
+                    entryPoint: "main"
+                },
+                vertexState: {
+                    indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
+                }
+            }, [this.bufferOffset]);
+
+            sunPipeline.addDrawable(14);
+        })();
+
+
     }
 }
