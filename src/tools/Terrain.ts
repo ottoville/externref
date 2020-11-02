@@ -8,7 +8,7 @@ import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { addTrait, Trait, Traitable } from "../traits/trait.js";
 import { GPUScene } from "../GPUScene.js";
-import type { Drawable } from "../drawables/Drawable.js";
+import type { Drawable } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
@@ -83,7 +83,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
             }
         }, [this.bufferOffset]);
 
-        this.helper = helperPipeline.addDrawable(4, 8, 0, 0)
+        this.helper = helperPipeline.addDrawable(new Set([TerraScene.instance.gpuscene.renderPassScreen]),4, 8, 0, 0)
         /*
          *         this.helper = terrain.TerrainHeightsbindGroupPositionTree.addDrawable({
             sampleCount: GPUScene.instance.sampleCount,

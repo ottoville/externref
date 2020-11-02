@@ -121,7 +121,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             terrascene = new TerraScene(window, canvas);
 
 
-            terrascene.onRenderStart = async () => {
+            terrascene.onRenderStart = async (renderTexture) => {
 
 
                 // Initial scene objects here
@@ -130,7 +130,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
                 new Sun2(terrascene);
-                const sea = new Sea(terrascene);
+                const sea = new Sea(terrascene, renderTexture);
                 /*new testPlane(terrascene);
                 new testPlaneNormals(terrascene);*/
                 const terrainInited = Terrain.loadFromTexture(terrascene);
@@ -322,156 +322,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 camera.checkCollisions = true;
                 camera.attachControl(canvas, true);
                 return camera;
-
-                let rloop = function (time: DOMHighResTimeStamp) {
-
-                    const renderEncoder = gpuscene.device.createCommandEncoder();
-                    const loadValue = { r: 0.53, g: 0.8, b: 0.92, a: 1.0 } // sky color
-                    // Resolve in case of MSAA
-                    const colorAttachment: GPURenderPassColorAttachmentDescriptor = terrascene.gpuscene.sampleCount > 1 ? {
-                        attachment: gpuscene.swapAttachment,
-                        resolveTarget: gpuscene.swapChain.getCurrentTexture().createView(),
-                        loadValue
-                    } : {
-                            attachment: gpuscene.swapChain.getCurrentTexture().createView(),
-                            loadValue
-                        }
-                    const passEncoder = renderEncoder.beginRenderPass({
-                        colorAttachments: [colorAttachment],
-                        depthStencilAttachment: {
-                            attachment: gpuscene.depthAttachment,
-
-                            depthLoadValue: 1,
-                            depthStoreOp: "store",
-                            stencilLoadValue: 0,
-                            stencilStoreOp: "store",
-                        }
-                    });
-
-                    // Update Cameras
-                    const camera = scene.activeCameras[0] as ArcRotateCamera;
-
-                    camera._checkInputs();
-
-                    // Cache
-                    camera._cache.mode = camera.mode;
-                    camera._cache.minZ = camera.minZ;
-                    camera._cache.maxZ = camera.maxZ;
-
-                    // Matrix
-                    //@ts-ignore
-                    camera._refreshFrustumPlanes = true;
-                    camera._cache.fov = camera.fov;
-                    camera._cache.fovMode = camera.fovMode;
-                    const aspectRatio = (TerraScene.instance.canvasSize.width * camera.viewport.width) / (TerraScene.instance.canvasSize.height * camera.viewport.height);
-                    camera._cache.aspectRatio = aspectRatio;
-
-                    if (camera.minZ <= 0) {
-                        camera.minZ = 0.1;
-                    }
-
-                    Matrix.PerspectiveFovLHToRef(camera.fov,
-                        aspectRatio,
-                        camera.minZ,
-                        camera.maxZ,
-                        camera._projectionMatrix,
-                        camera.fovMode === Camera.FOVMODE_VERTICAL_FIXED);
-                    const projectionmatrix = camera._projectionMatrix;
-                  //  const viewMatrix = camera.getViewMatrix();
-                    let viewMatrix: Matrix;
-                    if (camera._isSynchronizedViewMatrix()) {
-                        viewMatrix = camera._computedViewMatrix;
-                    } else {
-                        camera.updateCache();
-                       // camera._computedViewMatrix = camera._getViewMatrix();
-
-                        var cosa = Math.cos(camera.alpha);
-                        var sina = Math.sin(camera.alpha);
-                        var cosb = Math.cos(camera.beta);
-                        var sinb = Math.sin(camera.beta);
-
-                        if (sinb === 0) {
-                            sinb = 0.0001;
-                        }
-                        //@ts-ignore
-                        var target = camera._getTargetPosition();
-                        //@ts-ignore
-                        camera._computationVector.copyFromFloats(camera.radius * cosa * sinb, camera.radius * cosb, camera.radius * sina * sinb);
-
-                        // Rotate according to up vector
-                        //@ts-ignore
-                        if (camera._upVector.x !== 0 || camera._upVector.y !== 1.0 || camera._upVector.z !== 0) {
-                            //@ts-ignore
-                            Vector3.TransformCoordinatesToRef(camera._computationVector, camera._YToUpMatrix, camera._computationVector);
-                        }
-                        //@ts-ignore
-                        target.addToRef(camera._computationVector, camera._newPosition);
-                        if (camera.getScene().collisionsEnabled && camera.checkCollisions) {
-                            const coordinator = camera.getScene().collisionCoordinator;
-                            //@ts-ignore
-                            if (!camera._collider) {
-                                //@ts-ignore
-                                camera._collider = coordinator.createCollider();
-                            }
-                            //@ts-ignore
-                            camera._collider._radius = camera.collisionRadius;
-                            //@ts-ignore
-                            camera._newPosition.subtractToRef(camera._position, camera._collisionVelocity);
-                            //@ts-ignore
-                            camera._collisionTriggered = true;
-                            //@ts-ignore
-                            coordinator.getNewPosition(camera._position, camera._collisionVelocity, camera._collider, 3, null, camera._onCollisionPositionChange, camera.uniqueId);
-                        } else {
-                            //@ts-ignore
-                            camera._position.copyFrom(camera._newPosition);
-
-                            var up = camera.upVector;
-                            if (camera.allowUpsideDown && sinb < 0) {
-                                up = up.negate();
-                            }
-                            //@ts-ignore
-                            camera._computeViewMatrix(camera._position, target, up);
-
-                            camera._viewMatrix.addAtIndex(12, camera.targetScreenOffset.x);
-                            camera._viewMatrix.addAtIndex(13, camera.targetScreenOffset.y);
-                        }
-                        camera._currentTarget = target;
-                        camera._computedViewMatrix = camera._viewMatrix;
-
-                        ///
-
-
-
-
-                        camera._currentRenderId = camera.getScene().getRenderId();
-                        //@ts-ignore
-                        camera._refreshFrustumPlanes = true;
-
-                        camera._computedViewMatrix.invertToRef(camera._worldMatrix);
-
-                        viewMatrix= camera._computedViewMatrix;
-                    }
-
-                    ///////////////
-                    terrascene.projectionArr.set(projectionmatrix.m)
-                    viewMatrix.multiplyToRef(projectionmatrix, transformMatrix);
-                    terrascene.projectionViewArr.set(transformMatrix.m);
-                    terrascene.viewArr.set(viewMatrix.m);
-                    terrascene.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
-
-                    gpuscene.updateView()
-
-                    TerraScene.instance.render(passEncoder, time);
-
-                    //scene render ends
-
-                    passEncoder.endPass();
-                    gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
-
-                    window.requestAnimationFrame(rloop);
-
-                }
-                window.requestAnimationFrame(rloop);
             }
             const adapter = await terrascene.adapter;
 

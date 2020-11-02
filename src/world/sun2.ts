@@ -127,7 +127,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
                 }
             }, [this.bufferOffset]);
 
-            sunPipeline.addDrawable(14);
+            sunPipeline.addDrawable(new Set([scene.gpuscene.renderPassScreen]), 14);
         })();
 
 

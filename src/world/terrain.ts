@@ -616,7 +616,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
                     resource: this.texture.createView()
                 }
             ]);
-            const m = terrainPipeline.addDrawable(this.#terrainIndicesLength / 4, 1);
+            const m = terrainPipeline.addDrawable(new Set([scene.gpuscene.renderPassScreen]),this.#terrainIndicesLength / 4, 1);
             m.setVertexBuffer(0, this.#terrainPositionAndUvsAndNormalsGPU);
             m.setIndexBuffer(terrainIndicesGPU, 0, true, 'uint32');
         })()

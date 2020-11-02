@@ -111,7 +111,7 @@ export class Plants {
                     }]
             },
         });
-        const drawable = planstPipeline.addDrawable(7,0)
+        const drawable = planstPipeline.addDrawable(new Set([scene.renderPassScreen]),7,0)
         const positionGPU = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] );
         const shapeGPU = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
 
@@ -335,19 +335,6 @@ export class Plants {
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.offset), gl.DYNAMIC_DRAW);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-        //@ts-ignore
-        Poaceae._geometry._vertexBuffers['worldPos'] = {
-            type: VertexBuffer.FLOAT,
-            byteStride: 0,
-            byteOffset: 0,
-            normalized: false,
-            //@ts-ignore
-            getBuffer: () => { return { underlyingResource: vbo } },
-            getSize: () => 4,
-            getIsInstanced:  () => true,
-            getInstanceDivisor: () => 1
-
-        };
 
 
         //Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));

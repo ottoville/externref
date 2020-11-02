@@ -1,63 +1,17 @@
-﻿import type { GPUScene, GroupDrawable } from "../GPUScene";
-type DrawableLike = typeof RenderPipeLine;
+﻿import { RenderPipeline } from "./RenderPipeline";
+import type { GPUScene } from "../GPUScene";
+import { RenderPass } from "./RenderPass";
+type DrawableLike = typeof RenderPipeline;
 interface GPUVertexReadOnlyBuffer extends GPUBuffer {
     vertex: 'true';
     storage?: 'false';
 }
 export interface DrawableLikeClass extends DrawableLike {
-    Meshes: Set<RenderPipeLine>;
+    Meshes: Set<RenderPipeline>;
     Layouts: Map<GPUScene, GPUPipelineLayout>;
     createLayout(scene: GPUScene): GPUPipelineLayout;
 };
-export class RenderPipeLine {
-    static BindedTerrains: Set<RenderPipeLine> = new Set();
 
-    properties: number = 0;
-
-    useTime = true;
-
-    renderPipeline: GPURenderPipeline;
-    dynamicBindGroupOffset: number[] = [];
-    bindGroups: Set<GPUBindGroup> | null = null;
-    #GPUIndexFormat: GPUIndexFormat = 'uint16';
-
-    constructor(renderPipeline: GPURenderPipelineDescriptor, public bindgroupdrawable: GroupDrawable) {
-        renderPipeline.layout = bindgroupdrawable.layout;
-        renderPipeline.vertexState && renderPipeline.vertexState.indexFormat && (this.#GPUIndexFormat = renderPipeline.vertexState.indexFormat);
-        if (!renderPipeline.rasterizationState) {
-            renderPipeline.rasterizationState = {
-                cullMode: 'back',
-            }
-        }
-        if (!renderPipeline.depthStencilState) {
-            renderPipeline.depthStencilState = {
-                depthWriteEnabled: true,
-                depthCompare: "less",
-                format: "depth24plus-stencil8",
-            }
-        }
-        this.renderPipeline = bindgroupdrawable.gpuscene.device.createRenderPipeline(renderPipeline);
-    }
-    destroy(): void {
-        this.drawables.forEach(drawable => drawable.destroy());
-        this.bindgroupdrawable.meshes.delete(this);
-    }
-    draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number): void {
-        if (this.drawables.size == 0)
-            return;
-        renderPass.setPipeline(this.renderPipeline);
-        if (this.bindGroups) {
-            this.bindGroups.forEach(bindgroup => renderPass.setBindGroup(BindGroupsStart++, bindgroup));
-        }
-        this.drawables.forEach(drawable => drawable.draw(renderPass));
-    }
-    drawables: Set<Drawable> = new Set();
-    addDrawable(indexOrVertexCount: number, baseVertex: number = 0, instanceCount = 1, firstVertexOrIndex = 0, firstInstance = 0): Drawable {
-        const d = new Drawable(this, indexOrVertexCount, baseVertex, instanceCount, firstVertexOrIndex, firstInstance, this.#GPUIndexFormat);
-        this.drawables.add(d)
-        return d;
-    }
-}
 
 export class Drawable {
     #indexBuffer: GPUIndexBuffer | null = null;
@@ -65,7 +19,8 @@ export class Drawable {
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
 
     constructor(
-        private renderPipeline: RenderPipeLine,
+        private renderPipeline: RenderPipeline,
+        public renderPasses: Set<RenderPass>,
         public indexOrVertexCount: number,
         public baseVertex = 0,
         public instanceCount = 1,
@@ -77,8 +32,7 @@ export class Drawable {
             console.warn('Added drawable with 0 instances, nothing will be drawn')
 
     }
-    draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) {
-        
+    draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) {        
         this.#vertexBuffers.forEach((buffer, index) => renderPass.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
         if (this.#indexBuffer) {
             renderPass.setIndexBuffer(this.#indexBuffer, this.GPUIndexFormat);
@@ -89,7 +43,7 @@ export class Drawable {
         }
     }
     destroy(preserveIndexBuffer = false, preserveVerticeBuffers: number[] = []): void {
-        this.renderPipeline.drawables.delete(this);
+        this.renderPasses.forEach(rp => this.renderPipeline.variants.get(rp)?.drawables.delete(this))
         this.#vertexBuffers.forEach((b, key) => {
             if (!preserveVerticeBuffers.includes(key))
                 b.buffer.destroy()

@@ -7,7 +7,7 @@ import type { WorldScene } from "../world/scene.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { GPUScene } from "../GPUScene.js";
-import type { Drawable, RenderPipeLine } from "../drawables/Drawable.js";
+import type { Drawable } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
@@ -97,7 +97,7 @@ export class paintPlane extends paintGround {
                     }]
             },
         }, [this.#mesh.bufferOffset]);
-        this.#templane2 = planeRenerPipeline.addDrawable(0, 1, 1, 0)
+        this.#templane2 = planeRenerPipeline.addDrawable(new Set([scene.gpuscene.renderPassScreen]), 0, 1, 1, 0)
     };
 
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {

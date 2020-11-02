@@ -4,6 +4,7 @@ import { TerraMatrix } from "./traits/worldPosition";
 import { Matrix, Vector3 } from "./lib/babylon/Maths/math.js";
 import { Physics } from "./physics";
 import { ArcRotateCamera } from "../wwwroot/js/lib/babylon/Cameras/arcRotateCamera";
+import { RenderPass } from "./GPU/RenderPass";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
 /*interface Ray {
@@ -149,17 +150,28 @@ export class TerraScene {
     lastStateChangeTime = new Date().getTime()
     tickIntervalMs = 1000;
     physics = new Physics(this);
-    onRenderStart?: () => Promise<ArcRotateCamera>;
+    onRenderStart?: (renderTexture: GPUTexture) => Promise<ArcRotateCamera>;
     canvasSize: { width: number, height: number };
-    context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
+    //context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
     camera!: ArcRotateCamera;
     constructor(private window: Window, public canvas: HTMLCanvasElement) {
-
+        const renderPasses: Set<RenderPass> = new Set();
         this.canvasSize = {
             width: window.innerWidth | 0,
             height: window.innerHeight | 0
         };
-
+        let resizeHandler = 0;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeHandler);
+            resizeHandler = setTimeout(() => {
+                this.canvasSize.width = this.canvas.getAttribute('width')! as any | 0;
+                this.canvasSize.height = this.canvas.getAttribute('height')! as any | 0;
+                renderPasses.forEach(renderpass => renderpass.onResize(this.canvasSize.width, this.canvasSize.height))
+                /*[this.swapAttachment, this.depthAttachment] = this.createSwapTextures();
+                this.reflectionTexture = this.createReflectionTexture();
+                this.reflectionTextureView = this.reflectionTexture.createView();*/
+            }, 500)
+        });
         TerraScene.instance = this;
         this.gpuscenePromise.then(async gpuscene => {
             this.gpuscene = gpuscene;
@@ -205,33 +217,32 @@ export class TerraScene {
                 }
             }
             await Promise.all(shaderPuts);
-            this.onRenderStart && (this.camera = await this.onRenderStart());
+            const renderTexture = gpuscene.device.createTexture({
+                size: { width: this.canvasSize.width, height: this.canvasSize.height, depth: 1 },
+                format: "bgra8unorm",
+                usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
+            })
+            this.onRenderStart && (this.camera = await this.onRenderStart(renderTexture));
             const camera = this.camera;
             const terraScene = this;
-            const loadValue = { r: 0.53, g: 0.8, b: 0.92, a: 1.0 } // sky color
+            //renderPasses.add(renderPass)
             window.requestAnimationFrame(function renderLoop(time: DOMHighResTimeStamp) {
                 const renderEncoder = gpuscene.device.createCommandEncoder();
                 
                 // Resolve in case of MSAA
-                const colorAttachment: GPURenderPassColorAttachmentDescriptor = gpuscene.sampleCount > 1 ? {
+            /*    const colorAttachment: GPURenderPassColorAttachmentDescriptor = gpuscene.sampleCount > 1 ? {
                     attachment: gpuscene.swapAttachment,
                     resolveTarget: gpuscene.swapChain.getCurrentTexture().createView(),
                     loadValue
                 } : {
                         attachment: gpuscene.swapChain.getCurrentTexture().createView(),
                         loadValue
-                    }
-                const passEncoder = renderEncoder.beginRenderPass({
-                    colorAttachments: [colorAttachment],
-                    depthStencilAttachment: {
-                        attachment: gpuscene.depthAttachment,
-
-                        depthLoadValue: 1,
-                        depthStoreOp: "store",
-                        stencilLoadValue: 0,
-                        stencilStoreOp: "store",
-                    }
-                });
+                    }*/
+                /*const colorAttachment2: GPURenderPassColorAttachmentDescriptor = {
+                    attachment: gpuscene.reflectionTextureView,
+                    loadValue,
+                    storeOp: "store"
+                }*/
 
                 camera._checkInputs();
 
@@ -286,15 +297,32 @@ export class TerraScene {
                 terraScene.viewArr.set(viewMatrix.m);
                 terraScene.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
 
-                terraScene.gpuscene.updateView()
-
-                TerraScene.instance.render(passEncoder, time);
+                terraScene.gpuscene.updateView();
+                gpuscene.renderPassScreen.render(renderEncoder, time);
+               // TerraScene.instance.render(passEncoder, time);
 
                 //scene render ends
 
-                passEncoder.endPass();
+               // passEncoder.endPass();
+              /*  renderEncoder.copyTextureToTexture({
+                    texture: gpuscene.reflectionTexture
+                }, {
+                        texture: renderTexture
+                },
+                    {
+                        width: canvas.width,
+                        height: canvas.height,
+                        depth: 1,
+                    }
+                )*/
+                /*const passEncoder2 = renderEncoder.beginRenderPass({
+                    colorAttachments: [colorAttachment2]
+                });
+                TerraScene.instance.render(passEncoder2, time);
+                passEncoder2.endPass();*/
                 terraScene.gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
 
+ 
                 window.requestAnimationFrame(renderLoop);
             });
             //todo: start render loop and physics here
@@ -302,14 +330,6 @@ export class TerraScene {
 
 
         });
-    }
-    render(renderPass: GPURenderPassEncoder, time: DOMHighResTimeStamp) {
-        try {
-            this.gpuscene.render(renderPass, time)
-        } catch (e) {
-            console.error(e);
-            debugger;
-        }
     }
     set gameSpeed(value: number) {
         console.log('set gameSpeed', value)
