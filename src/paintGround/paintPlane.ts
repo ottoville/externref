@@ -97,7 +97,7 @@ export class paintPlane extends paintGround {
                     }]
             },
         }, [this.#mesh.bufferOffset]);
-        this.#templane2 = planeRenerPipeline.addDrawable(new Set([scene.gpuscene.renderPassScreen]), 0, 1, 1, 0)
+        this.#templane2 = planeRenerPipeline.addDrawable([scene.gpuscene.renderPassScreen], 0, 1, 1, 0)
     };
 
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {

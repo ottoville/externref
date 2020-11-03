@@ -2,7 +2,9 @@
 
 export class RenderPass {
     decoratePipeline(renderPipelineDescriptor: GPURenderPipelineDescriptor): GPURenderPipelineDescriptor {
-        if (this.#depthTexture && !renderPipelineDescriptor.depthStencilState) {
+        if (!this.#depthTexture)
+            renderPipelineDescriptor.depthStencilState = undefined
+        else if (!renderPipelineDescriptor.depthStencilState) {
             renderPipelineDescriptor.depthStencilState = {
                 depthWriteEnabled: true,
                 depthCompare: "less",
@@ -23,7 +25,7 @@ export class RenderPass {
             size: this.size,
             sampleCount: this.sampleCount,
             format,
-            usage: GPUTextureUsage.OUTPUT_ATTACHMENT
+            usage: GPUTextureUsage.OUTPUT_ATTACHMENT | this.usage //: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.SAMPLED
         });
     }
     depthTextureView: GPUTextureView | undefined
@@ -77,7 +79,7 @@ export class RenderPass {
         this.#renderPassDescriptor.colorAttachments = [colorAttachment];
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
-    constructor(private device: GPUDevice, private sampleCount: number = 1, depthStencil = false, private width: number, private height: number, private loadValue: GPULoadOp | GPUColor, private _onResize:(width:number, height:number) => [number, number], canvas?: HTMLCanvasElement) {
+    constructor(private device: GPUDevice, private sampleCount: number = 1, depthStencil = false, private width: number, private height: number, private loadValue: GPULoadOp | GPUColor, private _onResize:(width:number, height:number) => [number, number], private usage: number = 0, canvas?: HTMLCanvasElement) {
         if (canvas) {
             const context: GPUCanvasContext = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
             this.swapChain = context.configureSwapChain({

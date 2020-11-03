@@ -26,7 +26,7 @@ export class testPlane {
                 indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
             }
         });
-        testPlaneRenderpipeline.addDrawable(new Set([scene.gpuscene.renderPassScreen]),7)
+        testPlaneRenderpipeline.addDrawable([scene.gpuscene.renderPassScreen],7)
         testPlaneRenderpipeline.properties = 1;
     }
 }
@@ -52,7 +52,7 @@ export class testPlaneNormals {
                 entryPoint: "main"
             }
         });
-        renderPipeline.addDrawable(new Set([scene.gpuscene.renderPassScreen]),14)
+        renderPipeline.addDrawable([scene.gpuscene.renderPassScreen],14)
         renderPipeline.properties = 1;
     }
 }

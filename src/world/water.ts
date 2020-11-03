@@ -35,10 +35,10 @@ export class Sea {
                 },
                 {
                     binding: 1,
-                    resource: renderTexture.createView()
+                    resource: renderTexture.createView() //scene.gpuscene.renderPassWater.targetTextureView
                 }
             ]);
-            waterPipeline.addDrawable(new Set([scene.gpuscene.renderPassScreen]),4);
+            waterPipeline.addDrawable([scene.gpuscene.renderPassScreen],4);
         })()
     }
 }

@@ -36,8 +36,8 @@ export class RenderPipeline {
         variant.drawables.forEach(drawable => drawable.draw(renderPassEncoder));
     }
     variants: Map<RenderPass, RenderPipelineVariant> = new Map();
-    addDrawable(renderPasses: Set<RenderPass>, indexOrVertexCount: number, baseVertex: number = 0, instanceCount = 1, firstVertexOrIndex = 0, firstInstance = 0): Drawable {
-        const d = new Drawable(this, renderPasses, indexOrVertexCount, baseVertex, instanceCount, firstVertexOrIndex, firstInstance, this.#GPUIndexFormat);
+    addDrawable(renderPasses: RenderPass[], indexOrVertexCount: number, baseVertex: number = 0, instanceCount = 1, firstVertexOrIndex = 0, firstInstance = 0): Drawable {
+        const d = new Drawable(this, new Set(renderPasses), indexOrVertexCount, baseVertex, instanceCount, firstVertexOrIndex, firstInstance, this.#GPUIndexFormat);
         renderPasses.forEach(rp => {
             let variant = this.variants.get(rp);
             if (!variant) {

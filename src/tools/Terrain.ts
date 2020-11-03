@@ -83,7 +83,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
             }
         }, [this.bufferOffset]);
 
-        this.helper = helperPipeline.addDrawable(new Set([TerraScene.instance.gpuscene.renderPassScreen]),4, 8, 0, 0)
+        this.helper = helperPipeline.addDrawable([TerraScene.instance.gpuscene.renderPassScreen],4, 8, 0, 0)
         /*
          *         this.helper = terrain.TerrainHeightsbindGroupPositionTree.addDrawable({
             sampleCount: GPUScene.instance.sampleCount,

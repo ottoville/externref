@@ -111,7 +111,7 @@ export class Plants {
                     }]
             },
         });
-        const drawable = planstPipeline.addDrawable(new Set([scene.renderPassScreen]),7,0)
+        const drawable = planstPipeline.addDrawable([scene.renderPassScreen],7,0)
         const positionGPU = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] );
         const shapeGPU = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
 
