@@ -164,7 +164,7 @@ export class TerraScene {
         TerraScene.instance = this;
         this.gpuscenePromise.then(async gpuscene => {
             let renderFrame: number = 0;
-            const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen]);
+            const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
             let resizeHandler = 0;
 
 
@@ -291,7 +291,8 @@ export class TerraScene {
                 resizeHandler = setTimeout(() => {
                     this.canvasSize.width = this.canvas.getAttribute('width')! as any | 0;
                     this.canvasSize.height = this.canvas.getAttribute('height')! as any | 0;
-                    renderPasses.forEach(renderpass => renderpass.onResize(this.canvasSize.width, this.canvasSize.height))
+                    renderPasses.forEach(renderpass => renderpass.onResize(this.canvasSize.width, this.canvasSize.height));
+                    gpuscene.onResizes.forEach(cb => cb());
                     renderFrame = window.requestAnimationFrame(renderLoop);
                 }, 500)
             });

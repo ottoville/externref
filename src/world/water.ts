@@ -28,16 +28,18 @@ export class Sea {
                 vertexState: {
                     indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
                 }
-            }, [
-                {
-                    binding: 0,
-                    resource: sampler
-                },
-                {
-                    binding: 1,
-                    resource: renderTexture.createView() //scene.gpuscene.renderPassWater.targetTextureView
-                }
-            ]);
+            }, () =>
+                [
+                    {
+                        binding: 0,
+                        resource: sampler
+                    },
+                    {
+                        binding: 1,
+                        resource: scene.gpuscene.renderPassWater.targetTextureView
+                    }
+                ]
+            );
             waterPipeline.addDrawable([scene.gpuscene.renderPassScreen],4);
         })()
     }

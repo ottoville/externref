@@ -1,5 +1,5 @@
-﻿import { Drawable } from "./Drawable";
-import { GroupDrawable } from "../GPUScene";
+﻿import { BindGroupLayout } from "./BindGroupLayout";
+import { Drawable } from "./Drawable";
 import { RenderPass } from "./RenderPass";
 
 export class RenderPipeline {
@@ -12,7 +12,7 @@ export class RenderPipeline {
     bindGroups: Set<GPUBindGroup> | null = null;
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
 
-    constructor(private renderPipelineDescriptor: GPURenderPipelineDescriptor, public bindgroupdrawable: GroupDrawable) {
+    constructor(private renderPipelineDescriptor: GPURenderPipelineDescriptor, public bindgroupdrawable: BindGroupLayout) {
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
         renderPipelineDescriptor.vertexState && renderPipelineDescriptor.vertexState.indexFormat && (this.#GPUIndexFormat = renderPipelineDescriptor.vertexState.indexFormat);
         if (!renderPipelineDescriptor.rasterizationState) {

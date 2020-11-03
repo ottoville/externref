@@ -2,7 +2,7 @@
 import { Light } from "./lights";
 import { TerraNode } from "./TerraNode";
 import { RenderPass } from "./GPU/RenderPass";
-import { RenderPipeline } from "./GPU/RenderPipeline";
+import { BindGroupLayout, DynamicBindGroupDrawable } from "./GPU/BindGroupLayout";
 
 
 
@@ -60,7 +60,7 @@ export class GPUScene {
         }
     );
 
-    baseBindGroup: GroupDrawable;
+    baseBindGroup: BindGroupLayout;
 
     baseBindGroupNoTime = this.addBindGroup(this.#uniformBindGroupNoTime);
 
@@ -86,18 +86,14 @@ export class GPUScene {
     positionBindGroupLightsTime: DynamicBindGroupDrawable<[number]>;
     canvas: HTMLCanvasElement;
     renderPassScreen = new RenderPass(this.device, 4, true, this.scene.canvasSize.width, this.scene.canvasSize.height, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], undefined, this.scene.canvas);
-    //renderPassWater = new RenderPass(this.device, 1, false, this.scene.canvasSize.width, this.scene.canvasSize.height, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED);
-    //swapAttachment: GPUTextureView;
-    //depthAttachment: GPUTextureView;
-    //reflectionTexture: GPUTexture;
-    //reflectionTextureView: GPUTextureView;
+    renderPassWater = new RenderPass(this.device, 1, false, this.scene.canvasSize.width, this.scene.canvasSize.height, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED);
 
 
     addBindGroup<T>(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), properties?:T) {
         const bglayout = this.GPUBindGroupLayouts.get(bindgroup);
         if (!bglayout)
             throw ('Bindgroup layout not found from weakmap');
-        return new GroupDrawable(this, bglayout, undefined, bindgroup);
+        return new BindGroupLayout(this, bglayout, undefined, bindgroup);
     }
 
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry>(entry: T): BindGroupLayoutOneBinding<T>
@@ -125,7 +121,7 @@ export class GPUScene {
 
     
     
-
+    onResizes: Set<() => void> = new Set();
 
     queue: Map<Float32Array, number> = new Map();
     #busy = false;
@@ -410,7 +406,7 @@ export class GPUScene {
         let index = 0;
        // console.time('render bindgroups')
         const me = this;
-        GroupDrawable.instances.forEach(function drawBindGroups(bgt) {
+        BindGroupLayout.instances.forEach(function drawBindGroups(bgt) {
             if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
                 bgt.onRender && me.onRenders.push(bgt.onRender);
 
@@ -448,56 +444,7 @@ export class GPUScene {
         });*/
     }
 }
-export class GroupDrawable {
-    static instances: Set<GroupDrawable> = new Set();
 
-    //abstract addRenderPipeline: (renderPipeline: GPURenderPipelineDescriptor, ...args:any) => RenderPipeLine
-    addRenderPipeline(renderPipeline: GPURenderPipelineDescriptor, ...args: any): RenderPipeline {
-        const d = new RenderPipeline(renderPipeline, this)
-        this.renderPipeLines.add(d);
-        return d;
-    }
-    renderPipeLines: Set<RenderPipeline> = new Set();
-    //renderPipeLines: Map<RenderPass, RenderPipeLine> = new Map();
-    properties: number = 0
-    propertiesLength: number = 0
-    subBindGroups: Set<GroupDrawable> = new Set();
-    layout: GPUPipelineLayout;
-    onRender: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>) | null = null;
-    constructor(public gpuscene: GPUScene, public bindGroupLayout: GPUBindGroupLayout, public parent?: GroupDrawable, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false) {
-        const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout];
-        if (parent) {
-            let curparent: GroupDrawable | undefined = parent;
-            do {
-                layoutTree.unshift(curparent.bindGroupLayout);
-            } while (curparent = curparent.parent)
-            parent.subBindGroups.add(this);
-        } else
-            GroupDrawable.instances.add(this);
-        this.layout = this.gpuscene.device.createPipelineLayout({ bindGroupLayouts: layoutTree });
-
-    }
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry>): LayoutGroupDrawable<[GPUBindGroupEntry]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutFourBinding): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
-    addChildLayout(meshBindGroupLayout: (BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry> | BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | BindGroupLayoutFourBinding)): LayoutGroupDrawable<GPUBindGroupEntry[]> {
-        return new LayoutGroupDrawable(this.gpuscene, meshBindGroupLayout, this, undefined);
-    }
-    addChildBindGroup(sharedBindgroup: BindGroupOneBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number]>
-    addChildBindGroup(sharedBindgroup: BindGroupTwoBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number]>
-    addChildBindGroup(sharedBindgroup: BindGroupThreeBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number, number]>
-    addChildBindGroup(sharedBindgroup: BindGroupFourBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number, number, number]>
-    addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): GroupDrawable
-    addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): any {
-        if (!isDynamic) {
-            return new GroupDrawable(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
-        }
-
-        return new DynamicBindGroupDrawable(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
-    }
-
-}
 /*export class BindGroupDrawable extends GroupDrawable {
     addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor): RenderPipeLine => {
         const d = new RenderPipeLine(renderPipeline, this)
@@ -505,23 +452,3 @@ export class GroupDrawable {
         return d;
     }
 }*/
-export class DynamicBindGroupDrawable<T extends number[]> extends GroupDrawable {
-    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, offsets: T): RenderPipeline => {
-        const d = super.addRenderPipeline(renderPipeline);
-        d.dynamicBindGroupOffset = offsets;
-        return d;
-    }
-}
-export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends GroupDrawable {
-    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, bindGroups: T): RenderPipeline => {
-        const d = super.addRenderPipeline(renderPipeline);
-        const bndGroup = this.gpuscene.device.createBindGroup(
-            {
-                layout: this.bindGroupLayout,
-                entries: bindGroups
-            }
-        );
-        d.bindGroups = new Set([bndGroup]);
-        return d;
-    }
-}
