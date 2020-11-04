@@ -32,6 +32,7 @@ export class GPUScene {
     
     //viewprojection and camera position
     uniformBuffer = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
+    uniformBufferInvertedView = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
 
     singleWritableStorageLayout = this.device.createBindGroupLayout({
         entries: [
@@ -116,6 +117,7 @@ export class GPUScene {
         return bindGroup
     }
     #uniformBufferSwap = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+    #uniformBufferSwap2 = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     static instance: GPUScene;
 
@@ -202,6 +204,12 @@ export class GPUScene {
         this.canvas=scene.canvas
         const timeAndDeltaBuffer = new ArrayBuffer(12);
         const timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
+        const timeGroup = {
+            binding: 1,
+            resource: {
+                buffer: timeBuffer
+            }
+        }
         const uniformBindGroup = this.createBindGroup(
                 this.#uniformBindGroupLayoutWithTime,
                 {
@@ -209,13 +217,17 @@ export class GPUScene {
                     resource: {
                         buffer: this.uniformBuffer
                     }
-                }, {
-                binding: 1,
+            }, timeGroup);
+        const uniformBindGroupInvertedView = this.createBindGroup(
+            this.#uniformBindGroupLayoutWithTime,
+            {
+                binding: 0,
                 resource: {
-                    buffer: timeBuffer
+                    buffer: this.uniformBufferInvertedView
                 }
-            });
+            }, timeGroup);
         this.baseBindGroup = this.addBindGroup(uniformBindGroup, { animate1: false });
+        this.baseBindGroup.sharedBindGroupOverwrites.set(this.renderPassWater, uniformBindGroupInvertedView)
         this.positionBindGroupTime = this.baseBindGroup.addChildBindGroup(this.BindGroup, true);
         this.lights = new Light(this);
         const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
@@ -284,11 +296,14 @@ export class GPUScene {
     }
     async updateView() {
         const encoder = await this.updateBufferRaw(this.#uniformBufferSwap, this.uniformBuffer, this.scene.viewProjectionPositionBuffer);
-       // const encoder = await this.updateBuffer(this.#uniformBufferSwap, this.uniformBuffer, viewProjection, view, cameraPosition);
         if (encoder)
             this.device.defaultQueue.submit([encoder]);
     }
-
+    async updateView2() {
+        const encoder = await this.updateBufferRaw(this.#uniformBufferSwap2, this.uniformBufferInvertedView, this.scene.viewProjectionPositionBuffer2);
+        if (encoder)
+            this.device.defaultQueue.submit([encoder]);
+    }
 
 
     #syncedBuffers: WeakSet<GPUMapWriteBuffer | GPUMapReadBuffer> = new WeakSet()
@@ -406,6 +421,7 @@ export class GPUScene {
         let index = 0;
        // console.time('render bindgroups')
         const me = this;
+        let overwrite: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding) | undefined;
         BindGroupLayout.instances.forEach(function drawBindGroups(bgt) {
             if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
                 bgt.onRender && me.onRenders.push(bgt.onRender);
@@ -418,7 +434,8 @@ export class GPUScene {
                 }
                 else {
                     if (bgt.sharedBindgroup) {
-                        renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup);
+                        overwrite = bgt.sharedBindGroupOverwrites.get(renderPass);
+                        renderPassEncoder.setBindGroup(index, overwrite || bgt.sharedBindgroup);
                     }
                     bgt.renderPipeLines.forEach(m => {
                         me.properties |= m.properties;

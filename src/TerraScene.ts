@@ -13,6 +13,47 @@ import { RenderPass } from "./GPU/RenderPass";
 }*/
 //const _tempPickingRay: Ray = Ray.Zero();
 
+function getViewMatrix(alpha: number, beta: number, radius: number, target: Vector3, computationVector: Vector3, upVector: Vector3, YToUpMatrix: Matrix, newPosition: Vector3, position: Vector3, targetScreenOffset: Vector2) {
+    const viewMatrix: Matrix = Matrix.Zero();
+    var cosa = Math.cos(alpha);
+    var sina = Math.sin(alpha);
+    var cosb = Math.cos(beta);
+    var sinb = Math.sin(beta);
+
+    if (sinb === 0) {
+        sinb = 0.0001;
+    }
+    computationVector.copyFromFloats(radius * cosa * sinb, radius * cosb, radius * sina * sinb);
+
+    // Rotate according to up vector
+    if (upVector.x !== 0 || upVector.y !== 1.0 || upVector.z !== 0) {
+        Vector3.TransformCoordinatesToRef(computationVector, YToUpMatrix, computationVector);
+    }
+    target.addToRef(computationVector, newPosition);
+   /* if (scene.collisionsEnabled && this.checkCollisions) {
+        const coordinator = this.getScene().collisionCoordinator;
+        //@ts-
+        if (!this._collider) {
+            this._collider = coordinator.createCollider();
+        }
+        this._collider._radius = this.collisionRadius;
+        this._newPosition.subtractToRef(this._position, this._collisionVelocity);
+        this._collisionTriggered = true;
+        coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
+    } else {*/
+        position.copyFrom(newPosition);
+
+        var up = upVector;
+      /*  if (this.allowUpsideDown && sinb < 0) {
+            up = up.negate();
+        }*/
+        Matrix.LookAtRHToRef(position, target, up, viewMatrix);
+        viewMatrix.addAtIndex(12, targetScreenOffset.x);
+        viewMatrix.addAtIndex(13, targetScreenOffset.y);
+    //}
+    //this._currentTarget = target;
+    return viewMatrix;
+}
 
 function matrixMultiply64(m: Float32Array | Float64Array, otherM: Float32Array | Float64Array, result: Float64Array): void {
     var tm0 = m[0], tm1 = m[1], tm2 = m[2], tm3 = m[3];
@@ -132,12 +173,14 @@ export class TerraScene {
     gpuscenePromise = this.device.then(device => new GPUScene(this, device));
 
     viewProjectionPositionBuffer = new SharedArrayBuffer(4 * 16 * 2 + 3 * 4);
+    viewProjectionPositionBuffer2 = new SharedArrayBuffer(4 * 16 * 2 + 3 * 4);
 
    // projection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
 
     projection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
     projectionArr = new Float32Array(this.projection);
     projectionViewArr = new Float32Array(this.viewProjectionPositionBuffer, 0, 16);
+    projectionViewArr2 = new Float32Array(this.viewProjectionPositionBuffer2, 0, 16);
     viewArr = new Float32Array(this.viewProjectionPositionBuffer, 64, 16);
     cameraArr = new Float32Array(this.viewProjectionPositionBuffer, 128, 3);
 
@@ -252,34 +295,46 @@ export class TerraScene {
                 const projectionmatrix = camera._projectionMatrix;
                 //  const viewMatrix = camera.getViewMatrix();
                 let viewMatrix: Matrix;
-                if (camera._isSynchronizedViewMatrix()) {
-                    viewMatrix = camera._computedViewMatrix;
-                } else {
-                    camera.updateCache();
-                    camera._computedViewMatrix = camera._getViewMatrix();
-
-                    camera._currentRenderId = camera.getScene().getRenderId();
-                    //@ts-ignore
-                    camera._refreshFrustumPlanes = true;
-
-                    camera._computedViewMatrix.invertToRef(camera._worldMatrix);
-
-                    viewMatrix = camera._computedViewMatrix;
-                }
+                let viewMatrix2: Matrix;
+               // if (!camera._isSynchronizedViewMatrix()) {
+                //    camera.updateCache();
+                //    camera._computedViewMatrix = camera._getViewMatrix();
+               // }
+                 viewMatrix = camera._getViewMatrix();
+                //@ts-ignore
+                //viewMatrix = getViewMatrix(camera.alpha, camera.beta, camera.radius, camera.target, camera._computationVector, camera.upVector, camera._YToUpMatrix, camera._newPosition, camera.position, camera.targetScreenOffset);
+               
+                //viewMatrix2 = camera._getViewMatrix2();
+                 //@ts-ignore
+                const newposition2 = new Vector3(camera._newPosition.x, camera._newPosition.y + 1000, camera._newPosition.x)
+                 //@ts-ignore
+               // viewMatrix2 = getViewMatrix(camera.alpha, camera.beta, camera.radius, camera.target, camera._computationVector, camera.upVector, camera._YToUpMatrix, newposition2, camera.position, camera.targetScreenOffset);
 
                 //TODO: reuse this
-                const transformMatrix = new Matrix();
+                const modelViewProjectionMatrix = new Matrix();
+                const modelViewProjectionMatrix2 = new Matrix();
 
                 ///////////////
                 terraScene.projectionArr.set(projectionmatrix.m)
-                viewMatrix.multiplyToRef(projectionmatrix, transformMatrix);
-                terraScene.projectionViewArr.set(transformMatrix.m);
+                viewMatrix.multiplyToRef(projectionmatrix, modelViewProjectionMatrix);
+                //viewMatrix2.multiplyToRef(projectionmatrix, modelViewProjectionMatrix2);
+                terraScene.projectionViewArr.set(modelViewProjectionMatrix.m);
+                terraScene.projectionViewArr2.set(modelViewProjectionMatrix2.m);
                 terraScene.viewArr.set(viewMatrix.m);
                 terraScene.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
 
                 terraScene.gpuscene.updateView();
+                terraScene.gpuscene.updateView2();
 
                 renderPasses.forEach(rp => rp.render(renderEncoder, time))
+
+                //gpuscene.renderPassScreen.render(renderEncoder, time);
+
+               // terraScene.projectionViewArr.set(transformMatrix.invert().m);
+
+            //    gpuscene.renderPassWater.render(renderEncoder, time);
+
+
 
                 terraScene.gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
 

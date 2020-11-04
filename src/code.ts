@@ -14,7 +14,6 @@ import { TerrainTool } from "./tools/Terrain.js";
 import { Zones } from "./tools/zones.js";
 import { Terrain } from "./world/terrain.js";
 import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
-import { Camera } from "./lib/babylon/Cameras/camera.js";
 import { Sea } from "./world/water.js";
 import { Vector3, Matrix } from "./lib/babylon/Maths/math.vector";
 import { ArcRotateCamera } from "./lib/babylon/index.js";
@@ -178,7 +177,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 tools.set('TerrainTool', TerrainTool);
                 tools.set('Zones', Zones);
                 const scene = await scenePromise;
-
                 ArcRotateCamera.prototype._getViewMatrix = function () {
                     var cosa = Math.cos(this.alpha);
                     var sina = Math.sin(this.alpha);
@@ -189,7 +187,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         sinb = 0.0001;
                     }
                     //@ts-ignore
-                    var target = this._getTargetPosition();
+                    var target = this._target
                     //@ts-ignore
                     this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
 
@@ -225,15 +223,72 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                             up = up.negate();
                         }
                         //@ts-ignore
-                        this._computeViewMatrix(this._position, target, up);
-
+                        //this._computeViewMatrix(this._position, target, up);
+                        Matrix.LookAtRHToRef(this._position, target, up, this._viewMatrix);
                         this._viewMatrix.addAtIndex(12, this.targetScreenOffset.x);
                         this._viewMatrix.addAtIndex(13, this.targetScreenOffset.y);
                     }
                     this._currentTarget = target;
                     return this._viewMatrix;
                 }
+                //@ts-ignore
+                ArcRotateCamera.prototype._getViewMatrix2 = function () {
+                    var cosa = Math.cos(this.alpha);
+                    var sina = Math.sin(this.alpha);
+                    var cosb = Math.cos(this.beta);
+                    var sinb = Math.sin(this.beta);
 
+                    if (sinb === 0) {
+                        sinb = 0.0001;
+                    }
+                    //@ts-ignore
+                    var target = this._target
+                    //@ts-ignore
+                    this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
+
+                    // Rotate according to up vector
+                    //@ts-ignore
+                    if (this._upVector.x !== 0 || this._upVector.y !== 1.0 || this._upVector.z !== 0) {
+                        //@ts-ignore
+                        Vector3.TransformCoordinatesToRef(this._computationVector, this._YToUpMatrix, this._computationVector);
+                    }
+                    
+                    //@ts-ignore
+                    target.addToRef(this._computationVector, this._newPosition);
+                    //@ts-ignore
+                    this._newPosition.y = this._newPosition.y + 1000 //* -1
+                    if (scene.collisionsEnabled && this.checkCollisions) {
+                        const coordinator = this.getScene().collisionCoordinator;
+                        //@ts-ignore
+                        if (!this._collider) {
+                            //@ts-ignore
+                            this._collider = coordinator.createCollider();
+                        }
+                        //@ts-ignore
+                        this._collider._radius = this.collisionRadius;
+                        //@ts-ignore
+                        this._newPosition.subtractToRef(this._position, this._collisionVelocity);
+                        //@ts-ignore
+                        this._collisionTriggered = true;
+                        //@ts-ignore
+                        coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
+                    } else {
+                        //@ts-ignore
+                        this._position.copyFrom(this._newPosition);
+
+                        var up = this.upVector;
+                        if (this.allowUpsideDown && sinb < 0) {
+                            up = up.negate();
+                        }
+                        //@ts-ignore
+                        //this._computeViewMatrix(this._position, target, up);
+                        Matrix.LookAtRHToRef(this._position, target, up, this._viewMatrix);
+                        this._viewMatrix.addAtIndex(12, this.targetScreenOffset.x);
+                        this._viewMatrix.addAtIndex(13, this.targetScreenOffset.y);
+                    }
+                    this._currentTarget = target;
+                    return this._viewMatrix;
+                }
                 const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), scene);
 
                 //@ts-expect-error
