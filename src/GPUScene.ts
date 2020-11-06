@@ -87,7 +87,7 @@ export class GPUScene {
     positionBindGroupLightsTime: DynamicBindGroupDrawable<[number]>;
     canvas: HTMLCanvasElement;
     renderPassScreen = new RenderPass(this.device, 4, true, this.scene.canvasSize.width, this.scene.canvasSize.height, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], undefined, this.scene.canvas);
-    renderPassWater = new RenderPass(this.device, 1, false, this.scene.canvasSize.width, this.scene.canvasSize.height, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED);
+    renderPassWater = new RenderPass(this.device, 1, false, this.scene.canvasSize.width, this.scene.canvasSize.height, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED);
 
 
     addBindGroup<T>(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), properties?:T) {

@@ -182,7 +182,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     var sina = Math.sin(this.alpha);
                     var cosb = Math.cos(this.beta);
                     var sinb = Math.sin(this.beta);
-
                     if (sinb === 0) {
                         sinb = 0.0001;
                     }
@@ -220,11 +219,13 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                         var up = this.upVector;
                         if (this.allowUpsideDown && sinb < 0) {
+                            debugger;
                             up = up.negate();
                         }
                         //@ts-ignore
                         //this._computeViewMatrix(this._position, target, up);
                         Matrix.LookAtRHToRef(this._position, target, up, this._viewMatrix);
+                       // debugger;
                         this._viewMatrix.addAtIndex(12, this.targetScreenOffset.x);
                         this._viewMatrix.addAtIndex(13, this.targetScreenOffset.y);
                     }
@@ -290,7 +291,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     return this._viewMatrix;
                 }
                 const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), scene);
-
+                //@ts-ignore
+                camera.collisionCoordinator = scene.collisionCoordinator
                 //@ts-expect-error
                 window.activateMenu = async (name: string) => {
                     try {

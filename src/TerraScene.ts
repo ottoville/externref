@@ -5,6 +5,8 @@ import { Matrix, Vector3 } from "./lib/babylon/Maths/math.js";
 import { Physics } from "./physics";
 import { ArcRotateCamera } from "../wwwroot/js/lib/babylon/Cameras/arcRotateCamera";
 import { RenderPass } from "./GPU/RenderPass";
+import type { ICollisionCoordinator } from "../wwwroot/js/lib/babylon/Collisions/collisionCoordinator";
+import type { Collider } from "../wwwroot/js/lib/babylon/Collisions/collider";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
 /*interface Ray {
@@ -13,13 +15,16 @@ import { RenderPass } from "./GPU/RenderPass";
 }*/
 //const _tempPickingRay: Ray = Ray.Zero();
 
-function getViewMatrix(alpha: number, beta: number, radius: number, target: Vector3, computationVector: Vector3, upVector: Vector3, YToUpMatrix: Matrix, newPosition: Vector3, position: Vector3, targetScreenOffset: Vector2) {
+
+
+function getViewMatrix(alpha: number, beta: number, radius: number, target: Vector3, computationVector: Vector3, upVector: Vector3, YToUpMatrix: Matrix, position: Vector3, targetScreenOffset: Vector2, checkCollisions: boolean, coordinator: ICollisionCoordinator, collider: Collider, collisionRadius: Vector3, collisionVelocity: Vector3, onCollisionPositionChange: any, uniqueId: number) : [Matrix, boolean] {
+    let collisionTriggered: boolean = false;
     const viewMatrix: Matrix = Matrix.Zero();
+    const newPosition: Vector3 = Vector3.Zero()
     var cosa = Math.cos(alpha);
     var sina = Math.sin(alpha);
     var cosb = Math.cos(beta);
     var sinb = Math.sin(beta);
-
     if (sinb === 0) {
         sinb = 0.0001;
     }
@@ -30,29 +35,35 @@ function getViewMatrix(alpha: number, beta: number, radius: number, target: Vect
         Vector3.TransformCoordinatesToRef(computationVector, YToUpMatrix, computationVector);
     }
     target.addToRef(computationVector, newPosition);
-   /* if (scene.collisionsEnabled && this.checkCollisions) {
-        const coordinator = this.getScene().collisionCoordinator;
-        //@ts-
-        if (!this._collider) {
-            this._collider = coordinator.createCollider();
+    
+    /*if (checkCollisions) {
+        if (!collider) {
+            collider = coordinator.createCollider();
         }
-        this._collider._radius = this.collisionRadius;
-        this._newPosition.subtractToRef(this._position, this._collisionVelocity);
-        this._collisionTriggered = true;
-        coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
+        collider._radius = collisionRadius;
+        newPosition.subtractToRef(position, collisionVelocity);
+        collisionTriggered = true;
+        coordinator.getNewPosition(position, collisionVelocity, collider, 3, null, onCollisionPositionChange, uniqueId);
     } else {*/
+
+
+
+
+
+
         position.copyFrom(newPosition);
 
         var up = upVector;
       /*  if (this.allowUpsideDown && sinb < 0) {
             up = up.negate();
         }*/
-        Matrix.LookAtRHToRef(position, target, up, viewMatrix);
+    Matrix.LookAtRHToRef(position, target, up, viewMatrix);
+    //debugger;
         viewMatrix.addAtIndex(12, targetScreenOffset.x);
         viewMatrix.addAtIndex(13, targetScreenOffset.y);
-    //}
+   // }
     //this._currentTarget = target;
-    return viewMatrix;
+    return [viewMatrix, collisionTriggered];
 }
 
 function matrixMultiply64(m: Float32Array | Float64Array, otherM: Float32Array | Float64Array, result: Float64Array): void {
@@ -293,31 +304,33 @@ export class TerraScene {
                     camera._projectionMatrix,
                     false);
                 const projectionmatrix = camera._projectionMatrix;
-                //  const viewMatrix = camera.getViewMatrix();
+
                 let viewMatrix: Matrix;
-                let viewMatrix2: Matrix;
-               // if (!camera._isSynchronizedViewMatrix()) {
-                //    camera.updateCache();
-                //    camera._computedViewMatrix = camera._getViewMatrix();
-               // }
+                let viewMatrix2: Matrix = Matrix.Zero();
+
                  viewMatrix = camera._getViewMatrix();
                 //@ts-ignore
-                //viewMatrix = getViewMatrix(camera.alpha, camera.beta, camera.radius, camera.target, camera._computationVector, camera.upVector, camera._YToUpMatrix, camera._newPosition, camera.position, camera.targetScreenOffset);
-               
-                //viewMatrix2 = camera._getViewMatrix2();
-                 //@ts-ignore
-                const newposition2 = new Vector3(camera._newPosition.x, camera._newPosition.y + 1000, camera._newPosition.x)
-                 //@ts-ignore
-               // viewMatrix2 = getViewMatrix(camera.alpha, camera.beta, camera.radius, camera.target, camera._computationVector, camera.upVector, camera._YToUpMatrix, newposition2, camera.position, camera.targetScreenOffset);
+                //let foo= getViewMatrix(camera.alpha, camera.beta, camera.radius, camera.target, camera._computationVector, camera.upVector, camera._YToUpMatrix, camera.position, camera.targetScreenOffset, camera.checkCollisions, camera.getScene().collisionCoordinator, camera._collider, camera.collisionRadius, camera._collisionVelocity, camera._onCollisionPositionChange, camera.uniqueId);
 
-                //TODO: reuse this
+
+                let globalPosition = Vector3.Zero();
+                let globalCurrentTarget = Vector3.Zero();
+                let globalCurrentUpVector = Vector3.Zero();
+
+                globalPosition.copyFrom(camera.position);
+                globalPosition.y=(camera.position.y-3)*-1
+                globalCurrentTarget.copyFrom(camera.target);
+                globalCurrentUpVector.copyFrom(camera.upVector);
+
+                Matrix.LookAtLHToRef(globalPosition, globalCurrentTarget, globalCurrentUpVector, viewMatrix2);
+
                 const modelViewProjectionMatrix = new Matrix();
                 const modelViewProjectionMatrix2 = new Matrix();
 
                 ///////////////
                 terraScene.projectionArr.set(projectionmatrix.m)
                 viewMatrix.multiplyToRef(projectionmatrix, modelViewProjectionMatrix);
-                //viewMatrix2.multiplyToRef(projectionmatrix, modelViewProjectionMatrix2);
+                viewMatrix2.multiplyToRef(projectionmatrix, modelViewProjectionMatrix2);
                 terraScene.projectionViewArr.set(modelViewProjectionMatrix.m);
                 terraScene.projectionViewArr2.set(modelViewProjectionMatrix2.m);
                 terraScene.viewArr.set(viewMatrix.m);
