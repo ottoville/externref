@@ -33,7 +33,7 @@ export class RenderPipeline {
         if (this.bindGroups) {
             this.bindGroups.forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
         }
-        variant.drawables.forEach(drawable => drawable.draw(renderPassEncoder));
+        variant.drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart));
     }
     variants: Map<RenderPass, RenderPipelineVariant> = new Map();
     addDrawable(renderPasses: RenderPass[], indexOrVertexCount: number, baseVertex: number = 0, instanceCount = 1, firstVertexOrIndex = 0, firstInstance = 0): Drawable {

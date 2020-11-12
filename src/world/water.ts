@@ -1,8 +1,17 @@
 ﻿import { VertexData } from "../lib/babylon/Meshes/mesh.vertexData";
+import { TerraNode } from "../TerraNode";
 import { TerraScene } from "../TerraScene";
+import { boundable, Bounding } from "../traits/Boundable";
 
-export class Sea {
-    constructor(scene: TerraScene, renderTexture: GPUTexture) {
+export class Sea extends TerraNode implements boundable {
+    bounding: Bounding;
+    verticesPositionBuffer = new SharedArrayBuffer(4 * 4);
+    verticesPositionStride = 4;
+    worldPosition=undefined
+
+    constructor(scene: TerraScene) {
+        super(scene);
+        this.bounding = new Bounding(this);
         (async () => {
 
             const [vertex, fragment] = await Promise.all(['/shaders/wgsl/water.vert.wgsl', '/shaders/wgsl/water.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await(await fetch(u)).text() } )  ));
@@ -12,7 +21,6 @@ export class Sea {
                 minFilter: "linear",
             });
             const waterPipeline = scene.gpuscene.lights.lightsBindGroupTexture.addRenderPipeline({
-                sampleCount: scene.gpuscene.sampleCount,
                 primitiveTopology: 'triangle-strip',
                 colorStates: [{
                     format: "bgra8unorm",

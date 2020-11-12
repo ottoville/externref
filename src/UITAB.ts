@@ -1,8 +1,8 @@
 import { LazyEval } from "./LazyEval.js";
-import { WorldScene } from "./world/scene.js";
 import { Terrain } from "./world/terrain.js";
 import type { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera.js";
-import { Sea } from "./world/water.js";
+import type { Sea } from "./world/water.js";
+import type { TerraScene } from "./TerraScene.js";
 
 interface addListenerOptions extends AddEventListenerOptions {
     lazy?: number;
@@ -24,7 +24,7 @@ export abstract class UITAB {
         });
     }*/
     constructor(
-        public sceneDeprecated: WorldScene,
+        public scene: TerraScene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea

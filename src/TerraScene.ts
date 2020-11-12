@@ -1,4 +1,4 @@
-﻿import { GPUScene } from "./GPUScene";
+﻿import type { GPU } from "./GPU";
 import type { boundable, PickingInfo } from "./traits/Boundable";
 import { TerraMatrix } from "./traits/worldPosition";
 import { Matrix, Vector3 } from "./lib/babylon/Maths/math.js";
@@ -7,6 +7,7 @@ import { ArcRotateCamera } from "../wwwroot/js/lib/babylon/Cameras/arcRotateCame
 import { RenderPass } from "./GPU/RenderPass";
 import type { ICollisionCoordinator } from "../wwwroot/js/lib/babylon/Collisions/collisionCoordinator";
 import type { Collider } from "../wwwroot/js/lib/babylon/Collisions/collider";
+import { TerraCamera } from "./TerraCamera";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
 /*interface Ray {
@@ -170,32 +171,11 @@ function matrixInvert64(m: Float32Array | Float64Array): void {
 }
 export class TerraScene {
     boundables: Set<boundable> = new Set();
+    mousePositionBuffer = new SharedArrayBuffer(4);
+    mousePosition = new Uint16Array(this.mousePositionBuffer);
 
-
-    adapter = this.window.navigator.gpu!.requestAdapter();
-    device: Promise<GPUDevice> = this.adapter.then(async adapter => {
-        if (!adapter)
-            throw ('No adapter');
-        const device = await adapter.requestDevice();
-        if (!device)
-            throw ('no GPU device');
-        return device;
-    });
-    gpuscenePromise = this.device.then(device => new GPUScene(this, device));
-
-    viewProjectionPositionBuffer = new SharedArrayBuffer(4 * 16 * 2 + 3 * 4);
-    viewProjectionPositionBuffer2 = new SharedArrayBuffer(4 * 16 * 2 + 3 * 4);
-
-   // projection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
-
-    projection = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 16);
-    projectionArr = new Float32Array(this.projection);
-    projectionViewArr = new Float32Array(this.viewProjectionPositionBuffer, 0, 16);
-    projectionViewArr2 = new Float32Array(this.viewProjectionPositionBuffer2, 0, 16);
-    viewArr = new Float32Array(this.viewProjectionPositionBuffer, 64, 16);
-    cameraArr = new Float32Array(this.viewProjectionPositionBuffer, 128, 3);
-
-    gpuscene!: GPUScene;
+    mainCamera = new TerraCamera(this.gpuscene.renderPassScreen,this)
+    waterCamera = new TerraCamera(this.gpuscene.renderPassWater,this)
 
     static instance: TerraScene;
 
@@ -204,73 +184,32 @@ export class TerraScene {
     lastStateChangeTime = new Date().getTime()
     tickIntervalMs = 1000;
     physics = new Physics(this);
-    onRenderStart?: (renderTexture: GPUTexture) => Promise<ArcRotateCamera>;
-    canvasSize: { width: number, height: number };
+    canvasSize = {
+        width: this.window.innerWidth | 0,
+        height: this.window.innerHeight | 0
+    };
     //context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
     camera!: ArcRotateCamera;
-    constructor(private window: Window, public canvas: HTMLCanvasElement) {
-        
-        this.canvasSize = {
-            width: window.innerWidth | 0,
-            height: window.innerHeight | 0
-        };
-
+    constructor(private window: Window, public canvas: HTMLCanvasElement, public gpuscene: GPU, onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
         TerraScene.instance = this;
-        this.gpuscenePromise.then(async gpuscene => {
-            let renderFrame: number = 0;
-            const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
-            let resizeHandler = 0;
+
+        canvas.addEventListener('pointermove', (e) => {
+            //this.mousePosition.set([e.clientX, e.clientY]);
+            Atomics.store(this.mousePosition, 0, e.clientX)
+            Atomics.store(this.mousePosition, 1, e.clientY)
+            Atomics.notify(new Int32Array(this.mousePositionBuffer), 0);
+        })
+
+        let renderFrame: number = 0;
+        const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
+        let resizeHandler = 0;
 
 
-            this.gpuscene = gpuscene;
-            this.gameSpeed = 0;
-            const CACHE_NAME = 'terrasim-v1';
-            const cache = await caches.open(CACHE_NAME);
+        this.gpuscene = gpuscene;
+        this.gameSpeed = 0;
 
-            let shadersP: Promise<{ [key: string]: string }> = fetch('/shaders/shaders.json').then(s => s.json());
-            const glslang: { compileGLSL: (source: string, type: string) => Uint32Array } = await new Promise((res, rej) => {
-                let glslangOptions = {
-                    jsPath: "https://preview.babylonjs.com/glslang/glslang.js",
-                    wasmPath: "https://preview.babylonjs.com/glslang/glslang.wasm",
-                    glslang: undefined
-                };
-                if (glslangOptions.glslang)
-                    res(glslangOptions.glslang);
-                if ((window as any).glslang)
-                    res((window as any).glslang(glslangOptions!.wasmPath));
-
-                let script = document.createElement('script');
-                script.onload = () => res((window as any).glslang(glslangOptions!.wasmPath));
-                script.onerror = rej;
-                script.src = glslangOptions.jsPath;
-                document.head.appendChild(script);
-            });
-
-            const jsondata = await shadersP
-            const shaderPuts: Promise<void>[] = [];
-
-            for (var file in jsondata) {
-                shaderPuts.push(cache.put(new Request('/shaders/' + file), new Response(jsondata[file])));
-                if (jsondata[file].substr(0, 12) == '#version 450') {
-                    let type: string = 'vertex';
-                    if (file.substr(-5) == '.frag')
-                        type = 'fragment';
-                    else if (file.substr(-5) == '.comp')
-                        type = 'compute';
-                    const compiled = glslang.compileGLSL(jsondata[file], type);
-
-                    gpuscene.shaderModules.set(file, gpuscene.device.createShaderModule({
-                        code: compiled,
-                    }));
-                }
-            }
-            await Promise.all(shaderPuts);
-            const renderTexture = gpuscene.device.createTexture({
-                size: { width: this.canvasSize.width, height: this.canvasSize.height, depth: 1 },
-                format: "bgra8unorm",
-                usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
-            })
-            this.onRenderStart && (this.camera = await this.onRenderStart(renderTexture));
+        (async () => {
+            onRenderStart && (this.camera = await onRenderStart(this));
             const camera = this.camera;
             const terraScene = this;
             
@@ -318,7 +257,7 @@ export class TerraScene {
                 let globalCurrentUpVector = Vector3.Zero();
 
                 globalPosition.copyFrom(camera.position);
-                globalPosition.y=(camera.position.y-3)*-1
+                globalPosition.y-=(camera.position.y-3)*2
                 globalCurrentTarget.copyFrom(camera.target);
                 globalCurrentUpVector.copyFrom(camera.upVector);
 
@@ -328,32 +267,26 @@ export class TerraScene {
                 const modelViewProjectionMatrix2 = new Matrix();
 
                 ///////////////
-                terraScene.projectionArr.set(projectionmatrix.m)
+                terraScene.mainCamera.projectionArr.set(projectionmatrix.m)
                 viewMatrix.multiplyToRef(projectionmatrix, modelViewProjectionMatrix);
                 viewMatrix2.multiplyToRef(projectionmatrix, modelViewProjectionMatrix2);
-                terraScene.projectionViewArr.set(modelViewProjectionMatrix.m);
-                terraScene.projectionViewArr2.set(modelViewProjectionMatrix2.m);
-                terraScene.viewArr.set(viewMatrix.m);
-                terraScene.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
+                terraScene.mainCamera.projectionViewArr.set(modelViewProjectionMatrix.m);
+                terraScene.waterCamera.projectionViewArr.set(modelViewProjectionMatrix2.m);
+                terraScene.mainCamera.viewArr.set(viewMatrix.m);
+                terraScene.mainCamera.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
 
-                terraScene.gpuscene.updateView();
-                terraScene.gpuscene.updateView2();
+                terraScene.gpuscene.updateView(terraScene.mainCamera.projectionViewArr.buffer);
+
+                terraScene.gpuscene.updateView2(terraScene.waterCamera.projectionViewArr.buffer);
 
                 renderPasses.forEach(rp => rp.render(renderEncoder, time))
-
-                //gpuscene.renderPassScreen.render(renderEncoder, time);
-
-               // terraScene.projectionViewArr.set(transformMatrix.invert().m);
-
-            //    gpuscene.renderPassWater.render(renderEncoder, time);
-
-
 
                 terraScene.gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
 
                 renderFrame = window.requestAnimationFrame(renderLoop);
             }
-            window.addEventListener('resize', () => {
+            //@ts-ignore
+            let ro = new window.ResizeObserver((entries) => {
                 window.cancelAnimationFrame(renderFrame)
                 clearTimeout(resizeHandler);
                 resizeHandler = setTimeout(() => {
@@ -364,9 +297,10 @@ export class TerraScene {
                     renderFrame = window.requestAnimationFrame(renderLoop);
                 }, 500)
             });
+            ro.observe(this.canvas)
             renderFrame=window.requestAnimationFrame(renderLoop);
             //todo: start and physics here
-        });
+        })();
     }
     set gameSpeed(value: number) {
         console.log('set gameSpeed', value)
@@ -404,7 +338,132 @@ export class TerraScene {
         else
             return this.collissionCheck(rayFunction, boundables, pickResult);
     }
-    pickPromise(x: number, y: number, predicate?: (mesh: boundable) => boolean, fastCheck?: boolean): Promise<PickingInfo | null> {
+    pickingRayLayout = this.gpuscene.createBindGroupLayout(
+        {
+            binding: 0,
+            visibility: GPUShaderStage.COMPUTE,
+            type: "readonly-storage-buffer"
+        },
+        {
+            binding: 1,
+            visibility: GPUShaderStage.COMPUTE,
+            type: "readonly-storage-buffer"
+        },
+        {
+            binding: 2,
+            visibility: GPUShaderStage.COMPUTE,
+            type: "storage-buffer"
+        });
+    calculatePickingRaysPipeline = this.gpuscene.createComputePipeline("calculatePickingRays.comp", this.gpuscene.device.createPipelineLayout({
+        bindGroupLayouts: [this.pickingRayLayout]
+    }));
+    bindgrouplayout1 = this.gpuscene.device.createBindGroupLayout({
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.COMPUTE,
+                type: "readonly-storage-buffer"
+            },
+            {
+                binding: 1,
+                visibility: GPUShaderStage.COMPUTE,
+                type: "readonly-storage-buffer"
+            },
+            {
+                binding: 2,
+                visibility: GPUShaderStage.COMPUTE,
+                type: "storage-buffer"
+            }]
+    })
+    async pickPromise(x: number, y: number, predicate?: (mesh: boundable) => boolean, fastCheck?: boolean): Promise<PickingInfo | null> {
+
+        const b1 = this.gpuscene.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
+        const b1arr = b1.getMappedRange()
+        new Float32Array(b1arr).set(this.mainCamera.projectionArr);
+        new Float32Array(b1arr).set(this.mainCamera.viewArr, 16);
+        const sourceX = x / this.gpuscene.renderPassScreen.size.width * 2 - 1;
+        const sourceY = -(y / this.gpuscene.renderPassScreen.size.height * 2 - 1);
+        new Float32Array(b1arr).set([
+            sourceX,
+            sourceY,
+            -1.0,
+            sourceX,
+            sourceY,
+            1.0
+        ]
+            , 32);
+        b1.unmap();
+        //Todo: Size from terranode
+        const resultMatrixBuffer = this.gpuscene.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+        const bindGroup1 = this.calculatePickingRaysPipeline.createBindGroup(this.bindgrouplayout1, [
+            {
+                binding: 0,
+                resource: {
+                    buffer: b1
+                }
+            },
+            {
+                binding: 1,
+                resource: {
+                    buffer: this.gpuscene.GPUData
+                }
+            },
+            {
+                binding: 2,
+                resource: {
+                    buffer: resultMatrixBuffer
+                }
+            }
+        ]);
+        const commandEncoder = this.gpuscene.createCommandEncoder();
+
+        const passEncoder = commandEncoder.beginComputePass();
+        passEncoder.setPipeline(this.calculatePickingRaysPipeline);
+        passEncoder.setBindGroup(0, bindGroup1);
+
+        passEncoder.dispatch(10);
+
+
+
+        passEncoder.endPass();
+        const gpuCommands = commandEncoder.finish();
+        this.gpuscene.device.defaultQueue.submit([gpuCommands]);
+
+        const ray = this.createPickingRay(x, y);
+        const pickingRays: Map<boundable, { origin: Vector3, direction: Vector3 }> = new Map();
+
+        this.boundables.forEach(boundable => {
+            if (!boundable.worldPosition)
+                return pickingRays.set(boundable,ray);
+            const worldM = Matrix.FromArray(boundable.worldPosition.worldMatrix)
+            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.viewArr)), worldM);
+            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.projectionArr)), worldM);
+            pickingRays.set(boundable, this.createPickingRay(x, y, worldM.m as Float32Array));
+        });
+        const results: Promise<PickingInfo>[] = [];
+        pickingRays.forEach((ray,boundable) => {
+             results.push(boundable.bounding.intersects(ray));
+        })
+        
+        console.log(await Promise.all(results));
+
+        this.gpuscene.GPU2CPU(async buff => {
+            await buff.mapAsync(GPUMapMode.READ);
+          //  console.log(new Float32Array(buff.getMappedRange()))
+            await this.gpuscene.GPU2CPU(async buff => {
+                await buff.mapAsync(GPUMapMode.READ);
+                const gpudata = new Float32Array(buff.getMappedRange());
+                //console.log(gpudata);
+                var matrix = Matrix.Zero();
+                const worldM = Matrix.FromArray(gpudata);
+                worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.viewArr)), matrix);
+                matrix.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.projectionArr)), matrix);
+
+                //console.log(matrix);
+               // console.log(this.createPickingRay(x, y, new Float32Array(gpudata, 0, 16)));
+              //  debugger;
+            }, this.gpuscene.GPUData);
+        }, resultMatrixBuffer);
 
         let rayFunction = (boundableMesh: boundable) => {
 
@@ -415,7 +474,6 @@ export class TerraScene {
             if (boundableMesh.worldPosition) {
                 m = boundableMesh.worldPosition.worldMatrix;
             }
-
             return this.createPickingRay(x, y, m);
         };
         return this.collissionCheck(rayFunction, this.boundables.values(), null, fastCheck).then((pickResult: PickingInfo | null) => {
@@ -452,11 +510,11 @@ export class TerraScene {
         if (world) {
             var matrix = Matrix.Zero();
             const worldM = Matrix.FromArray(world);
-            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.viewArr)), matrix);
+            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.viewArr)), matrix);
         } else {
-            var matrix = Matrix.FromArray(Array.from(this.viewArr));
+            var matrix = Matrix.FromArray(Array.from(this.mainCamera.viewArr));
         }
-        matrix.multiplyToRef(Matrix.FromArray(Array.from(this.projectionArr)), matrix);
+        matrix.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.projectionArr)), matrix);
 
         //TODO use matrixMultiply64 and matrixInvert64
 

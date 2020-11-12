@@ -22,7 +22,7 @@ import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { LazyEval } from "../LazyEval.js";
-import { GPUScene } from "../GPUScene.js";
+import { GPU } from "../GPU.js";
 import { TerraScene } from "../TerraScene.js";
 
 function matrixMultiply64(m: number[], otherM: number[]): number[] {
@@ -254,8 +254,8 @@ export class WorldScene extends Scene {
 
             this.createPickingRayToRef(x, y, world, this._tempPickingRay, this.cameraToUseForPointers || null);
 
-            const view = Matrix.FromArray(Array.from(TerraScene.instance.viewArr));
-            const projection = Matrix.FromArray(Array.from(TerraScene.instance.projectionArr));
+            const view = Matrix.FromArray(Array.from(TerraScene.instance.mainCamera.viewArr));
+            const projection = Matrix.FromArray(Array.from(TerraScene.instance.mainCamera.projectionArr));
            // const viewProjection = view.multiply(projection);
           //  const viewProjection = matrixMultiply64(Array.from(new Float32Array(TerraScene.instance.view)), Array.from(new Float32Array(TerraScene.instance.projection)));
             //TODO: reuse picking ray object
@@ -862,9 +862,8 @@ export class WorldScene extends Scene {
         this.DBP = DB;
         this.getSceneUniformBuffer().create();
         //@ts-ignore
-        this.getSceneUniformBuffer()._buffer._buffer = GPUScene.instance.uniformBuffer;
+        this.getSceneUniformBuffer()._buffer._buffer = GPU.instance.uniformBuffer;
 
-        blazor.invokeMethod('setProgress', 21);
         const scene:Scene = this;
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
@@ -910,14 +909,12 @@ export class WorldScene extends Scene {
             webSocket.onmessage = (e) => {
                 let msg = JSON.parse(e.data);
                 if (msg.action == 'init') {
-                    blazor.invokeMethod('setProgress', 22);
                     console.debug('going to init game', msg.currentPlayData)
                     blazor.invokeMethod('initGame', msg.currentPlayData);
                 }
             }
         } else {
             console.debug('initing without websocket connection');
-            blazor.invokeMethod('setProgress', 22);
             blazor.invokeMethod('initGame', {
                 gameSpeed: 0,
                 lastStateChangeGameTime: 216000000000,

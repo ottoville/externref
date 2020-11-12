@@ -3,10 +3,11 @@ import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js"
 import type { WorldScene } from "../world/scene.js";
 import type { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
+import type { TerraScene } from "../TerraScene.js";
 export class CameraTAB extends UITAB {
     public label = 'Camera';
     constructor(
-        public scene: WorldScene,
+        public scene: TerraScene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         sea: Sea

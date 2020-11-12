@@ -6,10 +6,10 @@ import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WorldScene } from "../world/scene.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
-import { GPUScene } from "../GPUScene.js";
+import type { GPU } from "../GPU.js";
 import type { Drawable } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
-import { TerraScene } from "../TerraScene.js";
+import type { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
 
 
@@ -57,7 +57,6 @@ export class paintPlane extends paintGround {
     }
     constructor(
         protected scene: TerraScene,
-        protected sceneDeprecated: WorldScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Sea,
@@ -66,7 +65,6 @@ export class paintPlane extends paintGround {
         super(scene,camera, ground, sea, uitab);
         
         const planeRenerPipeline = ground.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
-            sampleCount: this.scene.gpuscene.sampleCount,
             primitiveTopology: 'triangle-strip',
             rasterizationState: {
                 cullMode: 'none',
@@ -75,11 +73,11 @@ export class paintPlane extends paintGround {
                 format: "bgra8unorm",
             }],
             vertexStage: {
-                module: GPUScene.instance.shaderModules.get("plane.vert")!,
+                module: scene.gpuscene.shaderModules.get("plane.vert")!,
                 entryPoint: "main",
             },
             fragmentStage: {
-                module: GPUScene.instance.shaderModules.get("plane.frag")!,
+                module: scene.gpuscene.shaderModules.get("plane.frag")!,
                 entryPoint: "main"
             },
             vertexState: {

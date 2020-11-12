@@ -1,4 +1,4 @@
-﻿import type { GPUScene } from "./GPUScene";
+﻿import type { GPU } from "./GPU";
 import type { worldPosition } from "./traits/worldPosition";
 export interface isLight {
     lightType: 'point' | 'directional' | 'spot' | 'ambient'
@@ -33,11 +33,13 @@ export class Light {
     lightsBindGroupNoTime;
     lightsBindGroupWGSL;
     lightsBindGroupTexture;
+    lightsBindGroupNoTimeWGSL;
+    uniformBindGroupLightsWGSL: BindGroupOneBinding;
 
     add(light: isLight) {
         this.#instances.add(light);
     }
-    constructor(public scene: GPUScene) {
+    constructor(public scene: GPU) {
         const uniformBindGroupLayoutLights = this.scene.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
@@ -56,7 +58,7 @@ export class Light {
                         size: 256
                     }
              });
-        const uniformBindGroupLightsWGSL = this.scene.createBindGroup(uniformBindGroupLayoutLightsWGSL,
+        this.uniformBindGroupLightsWGSL = this.scene.createBindGroup(uniformBindGroupLayoutLightsWGSL,
             {
                 binding: 0,
                 resource: {
@@ -65,10 +67,11 @@ export class Light {
                 }
             });
         this.lightsBindGroupNoTime = this.scene.baseBindGroupNoTime.addChildBindGroup(uniformBindGroupLights);
-        this.lightsBindGroup = this.scene.baseBindGroup.addChildBindGroup(uniformBindGroupLights);
-        this.lightsBindGroupWGSL = this.scene.baseBindGroup.addChildBindGroup(uniformBindGroupLightsWGSL);
-        uniformBindGroupLights.label = 'lights'
+        this.lightsBindGroupNoTimeWGSL = this.scene.buildBindGroupHierarcy(this.scene.baseBindGroupNoTime,this.uniformBindGroupLightsWGSL);
 
+        this.lightsBindGroup = this.scene.baseBindGroup.addChildBindGroup(uniformBindGroupLights);
+        this.lightsBindGroupWGSL = this.scene.baseBindGroup.addChildBindGroup(this.uniformBindGroupLightsWGSL);
+        uniformBindGroupLights.label = 'lights'
         this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.scene.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.FRAGMENT,

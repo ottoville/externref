@@ -1,21 +1,20 @@
-﻿import type { TerraScene } from "./TerraScene";
-import { Light } from "./lights";
+﻿import { Light } from "./lights";
 import { TerraNode } from "./TerraNode";
-import { RenderPass } from "./GPU/RenderPass";
+import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass";
 import { BindGroupLayout, DynamicBindGroupDrawable } from "./GPU/BindGroupLayout";
 
 
 
 
-export class GPUScene {
+export class GPU {
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     #bufferIndexFormats: WeakMap<GPUBuffer, GPUIndexFormat> = new WeakMap();
-    sampleCount: number = 4;
 
 
     NodeInstances: Map<TerraNode, number> = new Map();
 
     GPUBindGroupLayouts: WeakMap<GPUBindGroup, GPUBindGroupLayout> = new WeakMap();
+    DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
 
     #uniformBindGroupLayoutWithTime = this.createBindGroupLayout(
         {
@@ -67,28 +66,19 @@ export class GPUScene {
 
 
     shaderModules: Map<string, GPUShaderModule> = new Map();
+    //Todo: Remove COPY_SRC
+    GPUData = this.createGPUBuffer(TerraNode.alignment * TerraNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
-    GPUData = this.createGPUBuffer(TerraNode.alignment * TerraNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE]);
 
-    BindGroupLayout = this.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
-    BindGroup = this.createBindGroup(this.BindGroupLayout,
-        {
-            binding: 0,
-            resource: {
-                buffer: this.GPUData,
-                offset: 0,
-                size: TerraNode.GPUDataSize
-            }
-        });
 
     positionBindGroupTime;
-    positionBindGroupNoTime = this.baseBindGroupNoTime.addChildBindGroup(this.BindGroup, true);
+    
     lights: Light;
     positionBindGroupLightsTime: DynamicBindGroupDrawable<[number]>;
-    canvas: HTMLCanvasElement;
-    renderPassScreen = new RenderPass(this.device, 4, true, this.scene.canvasSize.width, this.scene.canvasSize.height, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], undefined, this.scene.canvas);
-    renderPassWater = new RenderPass(this.device, 1, false, this.scene.canvasSize.width, this.scene.canvasSize.height, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED);
-
+    positionBindGroupLightsTimeWGSL: DynamicBindGroupDrawable<[number]>;
+    BindGroup: BindGroupOneBinding;
+    positionBindGroupNoTime: DynamicBindGroupDrawable<[number]>;
+    BindGroupLayout = this.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
 
     addBindGroup<T>(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), properties?:T) {
         const bglayout = this.GPUBindGroupLayouts.get(bindgroup);
@@ -119,7 +109,7 @@ export class GPUScene {
     #uniformBufferSwap = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
     #uniformBufferSwap2 = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
-    static instance: GPUScene;
+    static instance: GPU;
 
     
     
@@ -142,66 +132,38 @@ export class GPUScene {
                 tempBuffer, tempOffset++ * dataSize,
                 this.GPUData, bufferOffset,
                 dataSize);
-            //new Float32Array(this.worldCopyGPU.getMappedRange(bufferOffset, 4 * 16)).set(matrix);
         });
         tempBuffer.unmap();
-        /* this.scene.GPU2CPU(async (arr) => {
-             await arr.mapAsync(GPUMapMode.READ, 0, tempSize);
-             const arrbuff = arr.getMappedRange(0, tempSize);
-             console.log(new Float32Array(arrbuff));
-             //debugger;
-         }, tempBuffer);*/
         this.queue.clear();
-        // this.worldCopyGPU.unmap();
 
         this.#busy = false;
         return commandEncoder.finish();
     }
-   /* swapChain = this.scene.context.configureSwapChain({
-        device: this.device,
-        format: "bgra8unorm",
-        usage: GPUTextureUsage.OUTPUT_ATTACHMENT
-    });*/
-    createReflectionTexture() {
-        const size = {
-            width: this.scene.canvasSize.width,
-            height: this.scene.canvasSize.height,
-            depth: 1,
+    buildBindGroupHierarcy(baseBindGroup: BindGroupLayout, ...bindgroups: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)[]) {
+        let parentBGLayout = baseBindGroup;
+        let childBG: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding) | undefined
+        while (childBG = bindgroups.shift()) {
+            if (this.DynamicBindGroups.has(childBG))
+                parentBGLayout = parentBGLayout.addChildBindGroup(childBG, true);
+            else
+                parentBGLayout = parentBGLayout.addChildBindGroup(childBG);
         }
-        return this.device.createTexture({
-            size,
-            sampleCount: 1,
-            format: "bgra8unorm",
-            usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-        });
+        return parentBGLayout;
     }
-    createSwapTextures() {
-        const size = {
-            width: this.scene.canvasSize.width,
-            height: this.scene.canvasSize.height,
-            depth: 1,
-        }
-        let swapTexture = this.device.createTexture({
-            size,
-            sampleCount: this.sampleCount,
-            format: "bgra8unorm",
-            usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
-        });
+    constructor(public device: GPUDevice, public renderPassScreen: RenderPassCanvas, public renderPassWater: RenderPass) {
 
-        let depthTexture = this.device.createTexture({
-            size,
-            sampleCount: this.sampleCount,
-            format: "depth24plus-stencil8",
-            usage: GPUTextureUsage.OUTPUT_ATTACHMENT
-        });
-        return [swapTexture.createView(), depthTexture.createView()];
-    }
-    constructor(private scene: TerraScene, public device: GPUDevice) {
-        /*this.reflectionTexture = this.createReflectionTexture();
-        this.reflectionTextureView = this.reflectionTexture.createView();
-        [this.swapAttachment, this.depthAttachment, ] = this.createSwapTextures();*/
+        this.BindGroup = this.createBindGroup(this.BindGroupLayout,
+            {
+                binding: 0,
+                resource: {
+                    buffer: this.GPUData,
+                    offset: 0,
+                    size: TerraNode.GPUDataSize
+                }
+            });
+        this.DynamicBindGroups.add(this.BindGroup);
+        this.positionBindGroupNoTime = this.baseBindGroupNoTime.addChildBindGroup(this.BindGroup, true);
 
-        this.canvas=scene.canvas
         const timeAndDeltaBuffer = new ArrayBuffer(12);
         const timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
         const timeGroup = {
@@ -227,8 +189,9 @@ export class GPUScene {
                 }
             }, timeGroup);
         this.baseBindGroup = this.addBindGroup(uniformBindGroup, { animate1: false });
-        this.baseBindGroup.sharedBindGroupOverwrites.set(this.renderPassWater, uniformBindGroupInvertedView)
-        this.positionBindGroupTime = this.baseBindGroup.addChildBindGroup(this.BindGroup, true);
+        this.baseBindGroup.sharedBindGroupOverwrites.set(renderPassWater, uniformBindGroupInvertedView)
+       // this.positionBindGroupTime = this.baseBindGroup.addChildBindGroup(this.BindGroup, true);
+        this.positionBindGroupTime = this.buildBindGroupHierarcy(this.baseBindGroup,this.BindGroup)
         this.lights = new Light(this);
         const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
         const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
@@ -241,6 +204,8 @@ export class GPUScene {
         this.positionBindGroupLightsTime.onRender = async (time) => {
             return this.updateGPUBuffer();
         }
+        this.positionBindGroupLightsTimeWGSL = this.lights.lightsBindGroupWGSL.addChildBindGroup(this.BindGroup, true);
+
         this.positionBindGroupNoTime.onRender = async (time) => {
             return this.updateGPUBuffer();
         }
@@ -261,7 +226,7 @@ export class GPUScene {
             return me.updateBufferRaw(timeBufferStorage, timeBuffer, timeAndDeltaBuffer);
 
         }
-        GPUScene.instance = this;
+        GPU.instance = this;
     }
     async updateBufferRaw(buffer: GPUMapWriteBuffer, destination: GPUCopyDSTBuffer, data: ArrayBuffer): Promise<GPUCommandBuffer | null> {
         if (this.#syncedBuffers.has(buffer))
@@ -294,24 +259,40 @@ export class GPUScene {
         this.#syncedBuffers.delete(buffer);
         return commandEncoder.finish();
     }
-    async updateView() {
-        const encoder = await this.updateBufferRaw(this.#uniformBufferSwap, this.uniformBuffer, this.scene.viewProjectionPositionBuffer);
+    async updateView(viewProjectionPositionBuffer: ArrayBuffer) {
+        const encoder = await this.updateBufferRaw(this.#uniformBufferSwap, this.uniformBuffer, viewProjectionPositionBuffer);
         if (encoder)
             this.device.defaultQueue.submit([encoder]);
     }
-    async updateView2() {
-        const encoder = await this.updateBufferRaw(this.#uniformBufferSwap2, this.uniformBufferInvertedView, this.scene.viewProjectionPositionBuffer2);
+    async updateView2(viewProjectionPositionBuffer: ArrayBuffer) {
+        const encoder = await this.updateBufferRaw(this.#uniformBufferSwap2, this.uniformBufferInvertedView, viewProjectionPositionBuffer);
         if (encoder)
             this.device.defaultQueue.submit([encoder]);
     }
 
-
+    createInputBuffer(usage: typeof GPUBufferUsage.VERTEX, data: Float32Array): [SharedArrayBuffer, GPUVertexBuffer]
+    createInputBuffer(usage: typeof GPUBufferUsage.INDEX, data: (Uint16Array | Uint32Array)): [SharedArrayBuffer, GPUIndexBuffer]
+    createInputBuffer(usage: typeof GPUBufferUsage.VERTEX, data: Float32Array, updatable: boolean): [SharedArrayBuffer, GPUVertexBuffer & GPUCopyDSTBuffer]
+    createInputBuffer(usage: typeof GPUBufferUsage.INDEX, data: Uint16Array | Uint32Array, updatable: boolean): [SharedArrayBuffer, GPUIndexBuffer & GPUCopyDSTBuffer]
+    createInputBuffer(usage: typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.VERTEX, data: Float32Array | Uint16Array | Uint32Array, updatable = false) {
+        const CPUBuffer = new SharedArrayBuffer(data.byteLength);
+        const uintView = new Uint8Array(data.buffer);
+        new Uint8Array(CPUBuffer).set(uintView);
+        if (updatable)
+            usage |= GPUBufferUsage.COPY_DST;
+        const GPUBuffer = this.device.createBuffer({ usage, size: data.byteLength, mappedAtCreation: true });
+        new Uint8Array(GPUBuffer.getMappedRange()).set(uintView);
+        GPUBuffer.unmap();
+        return [CPUBuffer, GPUBuffer]
+    }
     #syncedBuffers: WeakSet<GPUMapWriteBuffer | GPUMapReadBuffer> = new WeakSet()
     //uniform
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
+    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer
     //index
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX], mappedAtCreation?: boolean): GPUIndexBuffer
+    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean): GPUIndexBuffer & GPUCopyDSTBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUIndexBuffer & GPUStorageBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean): GPUIndexBuffer & GPUStorageBuffer & GPUCopySRCBuffer
     //vertex
@@ -412,21 +393,15 @@ export class GPUScene {
     }
     properties = 0
     onRenders: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>)[] = [];
-    render(renderPassEncoder: GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp) {
-        let physicDelta: number | null;
-        if (this.scene.physics.gameSpeed == -1)
-            physicDelta = null;
-        else
-            physicDelta = (this.scene.physics.physicTime - this.scene.physics.gameTime) / ((this.scene.tickIntervalMs / 1000) << this.scene.physics.gameSpeed)
+    render(renderPassEncoder: GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp, physicDelta: number | null) {
         let index = 0;
-       // console.time('render bindgroups')
+        // console.time('render bindgroups')
         const me = this;
-        let overwrite: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding) | undefined;
         BindGroupLayout.instances.forEach(function drawBindGroups(bgt) {
             if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
                 bgt.onRender && me.onRenders.push(bgt.onRender);
-
-                if (bgt.isDynamic) {
+                if (bgt.sharedBindgroup && me.DynamicBindGroups.has(bgt.sharedBindgroup)) {
+                    //if (bgt.isDynamic) {
                     bgt.renderPipeLines.forEach(m => {
                         renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset);
                         m.draw(renderPassEncoder, renderPass, index);
@@ -434,8 +409,7 @@ export class GPUScene {
                 }
                 else {
                     if (bgt.sharedBindgroup) {
-                        overwrite = bgt.sharedBindGroupOverwrites.get(renderPass);
-                        renderPassEncoder.setBindGroup(index, overwrite || bgt.sharedBindgroup);
+                        renderPassEncoder.setBindGroup(index, bgt.sharedBindGroupOverwrites.get(renderPass) || bgt.sharedBindgroup);
                     }
                     bgt.renderPipeLines.forEach(m => {
                         me.properties |= m.properties;

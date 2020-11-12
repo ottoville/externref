@@ -7,10 +7,10 @@ import type { WorldScene } from "../world/scene.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { addTrait, Trait, Traitable } from "../traits/trait.js";
-import { GPUScene } from "../GPUScene.js";
+import type { GPU } from "../GPU.js";
 import type { Drawable } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
-import { TerraScene } from "../TerraScene.js";
+import type { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
 
 const terrainWorker=  new WorkerThread('../webworkers/terrainWorker.js');
@@ -24,7 +24,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
 
     public static instance: UITAB | null = null;
 
-    private engine: WebGPUEngine;
+   // private engine: WebGPUEngine;
     private helper: Drawable;
 
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
@@ -34,13 +34,13 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
 
     traits: Trait[];
     constructor(
-        public sceneDeprecated: WorldScene,
+        public scene: TerraScene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea,
         ...traits: Trait[]
     ) {
-        super(TerraScene.instance);
+        super(scene);
         this.traits = this.initTraits(traits);
 
         terrainWorker.message(WorkerReturn.Promise, 'init',
@@ -55,12 +55,11 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
                 facet2Arr: terrain.facet2ArrBuffer
             });
 
-        this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
+       // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
         this.worldPosition = new worldPosition(this);
 
         const helperPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
-            sampleCount: GPUScene.instance.sampleCount,
             primitiveTopology: 'triangle-strip',
             rasterizationState: {
                 cullMode: 'none',
@@ -74,16 +73,16 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
                 format: "bgra8unorm",
             }],
             vertexStage: {
-                module: GPUScene.instance.shaderModules.get("helper2.vert")!,
+                module: scene.gpuscene.shaderModules.get("helper2.vert")!,
                 entryPoint: "main",
             },
             fragmentStage: {
-                module: GPUScene.instance.shaderModules.get("helper2.frag")!,
+                module: scene.gpuscene.shaderModules.get("helper2.frag")!,
                 entryPoint: "main"
             }
         }, [this.bufferOffset]);
 
-        this.helper = helperPipeline.addDrawable([TerraScene.instance.gpuscene.renderPassScreen],4, 8, 0, 0)
+        this.helper = helperPipeline.addDrawable([scene.gpuscene.renderPassScreen],4,0, 8, 0, 0)
         /*
          *         this.helper = terrain.TerrainHeightsbindGroupPositionTree.addDrawable({
             sampleCount: GPUScene.instance.sampleCount,
@@ -244,7 +243,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
             return;
         }
         this.addListener("pointerup", this.pointerupf, { once: true });
-        this.camera.detachControl(GPUScene.instance.canvas);
+        this.camera.detachControl(this.scene.gpuscene.renderPassScreen.canvas);
        /*  //@ts-ignore
         const normalbuffer: GPUBuffer = this.terrain.terraMesh._geometry!._vertexBuffers["normal"]._buffer.getBuffer()!.underlyingResource;
         //@ts-ignore
@@ -316,7 +315,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
         }, 100);
     }
     pointerupf = (evt: PointerEvent): void => {
-        this.camera.attachControl(GPUScene.instance.canvas, true);
+        this.camera.attachControl(this.scene.gpuscene.renderPassScreen.canvas, true);
         clearInterval(this.mouseinterval);
     }
     destroy = (): void => {
@@ -328,7 +327,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
     };
 
     mouseListener = (evt: PointerEvent): void => {
-        let viewport = this.camera.viewport.toGlobal(this.engine.getRenderWidth(), this.engine.getRenderHeight());
+        let viewport = this.camera.viewport.toGlobal(this.scene.canvasSize.width, this.scene.canvasSize.height);
 
         if (this.tempFacet1Buffer && this.tempFacet2Buffer) {
           /*  this.tempFacet1Buffer.destroy();

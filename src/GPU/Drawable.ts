@@ -1,5 +1,5 @@
 ﻿import { RenderPipeline } from "./RenderPipeline";
-import type { GPUScene } from "../GPUScene";
+import type { GPU } from "../GPU";
 import { RenderPass } from "./RenderPass";
 type DrawableLike = typeof RenderPipeline;
 interface GPUVertexReadOnlyBuffer extends GPUBuffer {
@@ -8,8 +8,8 @@ interface GPUVertexReadOnlyBuffer extends GPUBuffer {
 }
 export interface DrawableLikeClass extends DrawableLike {
     Meshes: Set<RenderPipeline>;
-    Layouts: Map<GPUScene, GPUPipelineLayout>;
-    createLayout(scene: GPUScene): GPUPipelineLayout;
+    Layouts: Map<GPU, GPUPipelineLayout>;
+    createLayout(scene: GPU): GPUPipelineLayout;
 };
 
 
@@ -17,6 +17,8 @@ export class Drawable {
     #indexBuffer: GPUIndexBuffer | null = null;
     //Todo, support writable vertex buffer
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
+    dynamicBuffers: Map<GPUBindGroup, number> = new Map();
+
 
     constructor(
         private renderPipeline: RenderPipeline,
@@ -32,7 +34,8 @@ export class Drawable {
             console.warn('Added drawable with 0 instances, nothing will be drawn')
 
     }
-    draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) {        
+    draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number) {
+        this.dynamicBuffers.forEach((offset, bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset]))
         this.#vertexBuffers.forEach((buffer, index) => renderPass.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
         if (this.#indexBuffer) {
             renderPass.setIndexBuffer(this.#indexBuffer, this.GPUIndexFormat);

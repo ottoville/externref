@@ -16,16 +16,14 @@ const worker = new ObjectWorkerThread('/webworkers/mesh.js');
 export class Bounding  {
     static uniqueID = 0;
     readonly #uniqueID: number = Bounding.uniqueID++;
-    //static worker = new ObjectWorkerThread('/webworkers/mesh.js');
     readonly boundingBoxBuffer: SharedArrayBuffer = new SharedArrayBuffer(4 * 6);
     readonly boundingBox = new Float32Array(this.boundingBoxBuffer);
 
-    constructor(scene: TerraScene, mesh: boundable) {
-        scene.boundables.add(mesh);
-        //TerraMesh.worker.message(this.#uniqueID, 'init', [this.indicesBuffer, this.positionsBuffer, this.normalsBuffer]);
-        if (!mesh.verticesPositionBuffer)
-            throw(new Error('Bounding needs vertices, did you initalize boundable before vertice buffer?'))
-        worker.message(this.#uniqueID, 'init', [mesh.indicesBuffer, mesh.verticesPositionBuffer, mesh.verticesPositionStride, this.boundingBoxBuffer]);
+    constructor(mesh: boundable) {
+        mesh.scene.boundables.add(mesh);
+        queueMicrotask(() =>    //Run this on microtask so the scope who called constuctor has time to add verticesPositionBuffer property.
+            worker.message(this.#uniqueID, 'init', [mesh.indicesBuffer, mesh.verticesPositionBuffer, mesh.verticesPositionStride, this.boundingBoxBuffer])
+        );
     }
     public intersects(ray: Ray): Promise<PickingInfo> {
         //console.log('intersectsPromise ', this.name);
@@ -34,6 +32,7 @@ export class Bounding  {
 }
 
 export interface boundable {
+    scene: TerraScene,
     bounding: Bounding,
     worldPosition?: worldPosition
     indicesBuffer?: SharedArrayBuffer;

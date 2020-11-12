@@ -1,6 +1,8 @@
-﻿import { TerraScene } from "../TerraScene";
+﻿import { TerraCamera } from "../TerraCamera";
+import { TerraScene } from "../TerraScene";
 
 export class RenderPass {
+    cameras: Set<TerraCamera> = new Set();
     decoratePipeline(renderPipelineDescriptor: GPURenderPipelineDescriptor): GPURenderPipelineDescriptor {
         if (!this.#depthTexture)
             renderPipelineDescriptor.depthStencilState = undefined
@@ -35,7 +37,7 @@ export class RenderPass {
 
     onResize(width: number, height: number) {
         [this.size.width, this.size.height]=this._onResize(width, height);
-        
+        this.cameras.forEach(camera => camera.onResize(this.size.width, this.size.height));
         this.targetTexture.destroy();
         this.targetTexture = this.createTexture("bgra8unorm");
         this.targetTextureView = this.targetTexture.createView();
@@ -79,15 +81,18 @@ export class RenderPass {
         this.#renderPassDescriptor.colorAttachments = [colorAttachment];
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
-    constructor(private device: GPUDevice, private sampleCount: number = 1, depthStencil = false, private width: number, private height: number, private loadValue: GPULoadOp | GPUColor, private _onResize:(width:number, height:number) => [number, number], private usage: number = 0, canvas?: HTMLCanvasElement) {
-        if (canvas) {
-            const context: GPUCanvasContext = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
-            this.swapChain = context.configureSwapChain({
-                device: device,
-                format: "bgra8unorm",
-                usage: GPUTextureUsage.OUTPUT_ATTACHMENT
-            });
-        }
+    constructor(
+        private device: GPUDevice,
+        private sampleCount: number = 1,
+        depthStencil = false,
+        private width: number,
+        private height: number,
+        private loadValue: GPULoadOp | GPUColor,
+        private _onResize: (width: number, height: number) => [number, number],
+        private usage: number = 0) {
+
+
+
         if (depthStencil) {
             this.#depthTexture = this.createTexture("depth24plus-stencil8");
             this.depthTextureView = this.#depthTexture.createView();
@@ -95,13 +100,30 @@ export class RenderPass {
     }
     render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp) {
         try {
+            let physicDelta: number | null;
+            if (TerraScene.instance.physics.gameSpeed == -1)
+                physicDelta = null;
+            else
+                physicDelta = (TerraScene.instance.physics.physicTime - TerraScene.instance.physics.gameTime) / ((TerraScene.instance.tickIntervalMs / 1000) << TerraScene.instance.physics.gameSpeed)
+
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
-            TerraScene.instance.gpuscene.render(passEncoder, this, time);
+            TerraScene.instance.gpuscene.render(passEncoder, this, time, physicDelta);
             passEncoder.endPass();
         } catch (e) {
             console.error(e);
             debugger;
         }
     }
+}
 
+export class RenderPassCanvas extends RenderPass {
+    constructor(device: GPUDevice, sampleCount: number = 1, depthStencil = false, width: number, height: number, loadValue: GPULoadOp | GPUColor, _onResize: (width: number, height: number) => [number, number], usage: number = 0, public canvas: HTMLCanvasElement) {
+        super(device, sampleCount, depthStencil, width, height, loadValue, _onResize, usage);
+        const context: GPUCanvasContext = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
+        this.swapChain = context.configureSwapChain({
+            device: device,
+            format: "bgra8unorm",
+            usage: GPUTextureUsage.OUTPUT_ATTACHMENT
+        });
+    }
 }

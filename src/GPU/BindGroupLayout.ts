@@ -1,11 +1,13 @@
-﻿import { GPUScene } from "../GPUScene";
+﻿import type { GPU } from "../GPU";
 import { RenderPass } from "./RenderPass";
 import { RenderPipeline } from "./RenderPipeline";
 
 export class BindGroupLayout {
     static instances: Set<BindGroupLayout> = new Set();
 
-    addRenderPipeline(renderPipeline: GPURenderPipelineDescriptor, ...args: any): RenderPipeline {
+    childBindGroups: Map<GPUBindGroup, BindGroupLayout> = new Map();
+
+    addRenderPipeline(renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>, ...args: any): RenderPipeline {
         const d = new RenderPipeline(renderPipeline, this)
         this.renderPipeLines.add(d);
         return d;
@@ -18,7 +20,7 @@ export class BindGroupLayout {
     layout: GPUPipelineLayout;
     onRender: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>) | null = null;
     sharedBindGroupOverwrites: Map<RenderPass, (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)> = new Map();
-    constructor(public gpuscene: GPUScene, public bindGroupLayout: GPUBindGroupLayout, public parent?: BindGroupLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false) {
+    constructor(public gpuscene: GPU, public bindGroupLayout: GPUBindGroupLayout, public parent?: BindGroupLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout];
         if (parent) {
             let curparent: BindGroupLayout | undefined = parent;
@@ -42,35 +44,44 @@ export class BindGroupLayout {
     addChildBindGroup(sharedBindgroup: BindGroupTwoBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number]>
     addChildBindGroup(sharedBindgroup: BindGroupThreeBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number, number]>
     addChildBindGroup(sharedBindgroup: BindGroupFourBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number, number, number]>
+    addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupDrawable<[number, number, number, number]>
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupLayout
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): any {
-        if (!isDynamic) {
-            return new BindGroupLayout(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
-        }
-        return new DynamicBindGroupDrawable(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
+        const old = this.childBindGroups.get(sharedBindgroup)
+        if (old)
+            return old;
+        let r: BindGroupLayout;
+        if (!isDynamic)
+            r = new BindGroupLayout(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
+         else
+            r = new DynamicBindGroupDrawable(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
+        this.childBindGroups.set(sharedBindgroup, r);
+        return r;
     }
 }
 
 export class DynamicBindGroupDrawable<T extends number[]> extends BindGroupLayout {
-    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, offsets: T): RenderPipeline => {
+    addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>, offsets: T): RenderPipeline => {
         const d = super.addRenderPipeline(renderPipeline);
         d.dynamicBindGroupOffset = offsets;
         return d;
     }
 }
 export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends BindGroupLayout {
-    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor, bindGroups: () => T): RenderPipeline => {
+    addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>, bindGroups?: () => T): RenderPipeline => {
         const d = super.addRenderPipeline(renderPipeline);
-        const createBindGroup = () => {
-            d.bindGroups = new Set([this.gpuscene.device.createBindGroup(
-                {
-                    layout: this.bindGroupLayout,
-                    entries: bindGroups()
-                }
-            )])
+        if (bindGroups) {
+            const createBindGroup = () => {
+                d.bindGroups = new Set([this.gpuscene.device.createBindGroup(
+                    {
+                        layout: this.bindGroupLayout,
+                        entries: bindGroups()
+                    }
+                )])
+            }
+            this.gpuscene.onResizes.add(createBindGroup)
+            createBindGroup();
         }
-        this.gpuscene.onResizes.add(createBindGroup)
-        createBindGroup();
         return d;
     }
 }

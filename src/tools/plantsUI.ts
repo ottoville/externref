@@ -25,7 +25,7 @@ export class PlantsUI extends UITAB {
     private PT: paintPlane | null = null;
     traits: Trait[];
     constructor(
-        public scene: WorldScene,
+        public scene: TerraScene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         sea: Sea,
@@ -37,7 +37,7 @@ export class PlantsUI extends UITAB {
     }
     activateDraw = () => {
         try {
-            this.PT = new paintPlane(TerraScene.instance,this.scene, this.camera, this.terrain, this.sea, this);
+            this.PT = new paintPlane(TerraScene.instance, this.camera, this.terrain, this.sea, this);
 
           //  this.PT = applyMixins<typeof BaseTerrainTool>(BaseTerrainTool, [worldPosition]);
 

@@ -1,4 +1,4 @@
-﻿import { GPUScene } from "../GPUScene.js";
+﻿import type { GPU } from "../GPU.js";
 import { TerraScene } from "../TerraScene.js";
 import { boundable, Bounding } from "../traits/Boundable.js";
 import { TerrainTool } from "../tools/Terrain.js";
@@ -63,9 +63,9 @@ export class Terrain implements boundable {
     #ratioX = Terrain.subdivisionsX / this.#width;
     #ratioY = Terrain.subdivisionsY / this.#height;
 
-    static heightLayouts: Map<GPUScene, BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>> = new Map();
+    static heightLayouts: Map<GPU, BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>> = new Map();
     //terraMesh: TerraMesh;
-    static getHeightsLayout(scene: GPUScene): BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> {
+    static getHeightsLayout(scene: GPU): BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> {
         let layout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | undefined;
         if (layout = Terrain.heightLayouts.get(scene)) {
             return layout;
@@ -247,7 +247,7 @@ export class Terrain implements boundable {
     readonly verticesPositionBuffer = this.#terrainPositionAndUvsAndNormalsCPUSwap;
     readonly verticesPositionStride = 8;
 
-    bounding: Bounding = new Bounding(this.scene, this);
+    bounding: Bounding = new Bounding(this);
 
     #indices: Uint32Array = new Uint32Array(this.indicesBuffer);
     //#vertices: Float32Array = new Float32Array(this.verticesBuffer);
@@ -384,7 +384,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         size: this.textureExtent,
         usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
     });
-    constructor(readonly buffer: ArrayBuffer | SharedArrayBuffer, algorithm: string, private scene: TerraScene) {
+    constructor(readonly buffer: ArrayBuffer | SharedArrayBuffer, algorithm: string, public scene: TerraScene) {
 
         for (
             let i = 0,
@@ -451,11 +451,11 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
                 }
             ]
         );
-        const bindGroupHeights = GPUScene.instance.device.createBindGroup({
+        const bindGroupHeights = scene.gpuscene.device.createBindGroup({
             layout: computePlaneHeights.getBindGroupLayout(1),
             entries: this.heightsBindGroupEntries
         });
-        const bindGroupPositionsRead = GPUScene.instance.device.createBindGroup({
+        const bindGroupPositionsRead = scene.gpuscene.device.createBindGroup({
             layout: computePipelineNormals.getBindGroupLayout(0),
             entries: [
                 {
@@ -466,7 +466,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
                 }
             ]
         });
-        const bindGroupHeightsRead = GPUScene.instance.device.createBindGroup({
+        const bindGroupHeightsRead = scene.gpuscene.device.createBindGroup({
             layout: computePipelineNormals.getBindGroupLayout(1),
             entries: this.heightsBindGroupEntries
         });
@@ -563,7 +563,6 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         (async () => {
             const [vertex, fragment] = await Promise.all(['/shaders/wgsl/ground.vert.wgsl', '/shaders/wgsl/ground.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
             const terrainPipeline = scene.gpuscene.lights.lightsBindGroupTexture.addRenderPipeline({
-                sampleCount: scene.gpuscene.sampleCount,
                 primitiveTopology: 'triangle-list',
                 depthStencilState: {
                     depthWriteEnabled: true,

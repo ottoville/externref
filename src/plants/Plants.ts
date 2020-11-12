@@ -8,7 +8,7 @@ import type { PTDresult } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 
 import type { WorldScene } from "../world/scene.js";
-import { GPUScene } from "../GPUScene.js";
+import type { GPU } from "../GPU.js";
 
 
 /**
@@ -58,13 +58,12 @@ export class Plants {
 
     }
     constructor(
-        scene: GPUScene,
+        scene: GPU,
         terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
 
 
         const planstPipeline = scene.lights.lightsBindGroup.addRenderPipeline({
-            sampleCount: scene.sampleCount,
             primitiveTopology: 'triangle-strip',
             rasterizationState: {
                 cullMode: 'none',

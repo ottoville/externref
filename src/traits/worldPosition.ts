@@ -1,4 +1,4 @@
-﻿import type { GPUScene } from "../GPUScene";
+﻿import type { GPU } from "../GPU";
 import { TerraNode } from "../TerraNode";
 export interface has3DPosition {
     worldPosition: worldPosition;

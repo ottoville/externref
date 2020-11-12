@@ -19,8 +19,8 @@ export abstract class TerraNode implements Partial<hasPhysics> {
 
     static GPUDataSize = 4 * 16 + 4 * 4 + 4 * 4
     static alignment = 256;
-    /* Todo: make dynamic with treshold values */
-    static maxInstances = 10;
+/* Todo: make dynamic with treshold values */
+    static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
 
     readonly dataBuffer = new ArrayBuffer(TerraNode.GPUDataSize);
     readonly data: Float32Array = new Float32Array(this.dataBuffer);
@@ -55,6 +55,7 @@ export abstract class TerraNode implements Partial<hasPhysics> {
                 scene.gpuscene.lights.add(this);
             }
         });
+        this.updateDynamicBuffer();
 
     }
     async updateDynamicBuffer() {

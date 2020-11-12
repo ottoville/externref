@@ -19,7 +19,6 @@ export class paintTexture extends paintGround {
     private centerZ: number;
     private m1 = new Matrix();
     private texture: WebGLTexture
-    private gl: WebGL2RenderingContext;
     onMainPointerUp(end_position: Float32Array, height: number): void {
         this.height = height;
         this.subTextureCache = { x: 0, z: 0, imageData: null }
@@ -33,7 +32,7 @@ export class paintTexture extends paintGround {
 
     }
     constructor(
-        protected sceneDeprecated: WorldScene,
+        protected scene: TerraScene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Sea,
@@ -48,7 +47,6 @@ export class paintTexture extends paintGround {
         if (!zonedt._texture || !zonedt._texture._webGLTexture)
             throw ('zonedt has no texture');
         this.texture = zonedt._texture._webGLTexture;
-        this.gl = <WebGL2RenderingContext><any>sceneDeprecated.getEngine()._gl;
     };
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
         super.activate(callback, options);
@@ -59,13 +57,17 @@ export class paintTexture extends paintGround {
         }
         if (this.ang360.rad < 0) {
             throw ('onAreaDraw negative angle not supported');
-        }
+        }//@ts-ignore
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
         if (this.subTextureCache.imageData != null) {
+            //@ts-ignore
             this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
+            //@ts-ignore
             this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, this.subTextureCache.x, this.subTextureCache.z, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.subTextureCache.imageData);
+            //@ts-ignore
             this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
         }
+        //@ts-ignore
         paintTexture.drawSubImage(width, this.height, this.ang360.rad, this.m1, this.texture, this.sceneDeprecated.getEngine(), this.subTextureCache)
     }
     static drawSubImage(width: number, height: number, rad: number, m1: Matrix, texture: WebGLTexture, engine: Engine, subTextureCache?: subTexture) {

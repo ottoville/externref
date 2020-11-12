@@ -12,6 +12,7 @@ import type { WorldScene } from "../world/scene.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { addTrait, Trait, Traitable } from "../traits/trait.js";
 import { Sea } from "../world/water.js";
+import { TerraScene } from "../TerraScene.js";
 
 export interface Zones extends canvasListener, Traitable {
 
@@ -25,7 +26,7 @@ export class Zones extends UITAB {
     private size = 10000;
     traits: Trait[];
     constructor(
-        public scene: WorldScene,
+        public scene: TerraScene,
         public ground: Terrain,
         public camera: ArcRotateCamera,
         sea: Sea,
@@ -35,9 +36,11 @@ export class Zones extends UITAB {
         this.traits = this.initTraits(traits);
 
         // let DZ = new drawZone(canvas, scene, camera, ground, sea, DB, DT, groundmateria, grass, terrain);
+        //@ts-ignore
         this.zonedt = new DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, scene, false);
 
-        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zonedt, 10000, 10000, this );
+        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zonedt, 10000, 10000, this);
+        //@ts-ignore
         this.zonemateria = new StandardMaterial("zoneMat", scene);
         this.zonemateria.diffuseTexture = this.zonedt;
     }
@@ -53,6 +56,7 @@ export class Zones extends UITAB {
        // ctx.stroke();
        // this.zonedt.update()
         let me = this;
+        //@ts-ignore
         (await this.scene.DBP).transaction("zones").objectStore("zones").getAll().onsuccess = function (evt) {
             console.log(this.result);
             
@@ -81,6 +85,7 @@ export class Zones extends UITAB {
             me.zonedt.update();
         }
         this.PT.activate(async (response) => {
+            //@ts-ignore
             (await this.scene.DBP).transaction("zones", 'readwrite').objectStore("zones").put(response);
         }, {});
     }
