@@ -68,14 +68,11 @@ export class GPU {
     shaderModules: Map<string, GPUShaderModule> = new Map();
     //Todo: Remove COPY_SRC
     GPUData = this.createGPUBuffer(TerraNode.alignment * TerraNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-
-
+    CPUData = new SharedArrayBuffer(TerraNode.alignment * TerraNode.maxInstances);
+    DataSlots: number[] = new Array(TerraNode.maxInstances).fill(TerraNode.alignment).map((v, i) => i * v);
 
     positionBindGroupTime;
     
-    lights: Light;
-    positionBindGroupLightsTime: DynamicBindGroupDrawable<[number]>;
-    positionBindGroupLightsTimeWGSL: DynamicBindGroupDrawable<[number]>;
     BindGroup: BindGroupOneBinding;
     positionBindGroupNoTime: DynamicBindGroupDrawable<[number]>;
     BindGroupLayout = this.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
@@ -121,17 +118,17 @@ export class GPU {
         if (this.queue.size === 0 || this.#busy)
             return null;
         this.#busy = true;
-        const dataSize = TerraNode.GPUDataSize; //4 * 16 + 3 * 4;
-        const tempSize = dataSize * this.queue.size;
+        const dataSizeBytes = TerraNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
+        const tempSize = dataSizeBytes * this.queue.size;
         const tempBuffer = this.createGPUBuffer(tempSize, [GPUBufferUsage.COPY_SRC], true);
         let tempOffset = 0;
         const commandEncoder = this.device.createCommandEncoder();
         this.queue.forEach((bufferOffset, matrix) => {
-            new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSize, dataSize)).set(matrix);
+            new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(matrix);
             commandEncoder.copyBufferToBuffer(
-                tempBuffer, tempOffset++ * dataSize,
+                tempBuffer, tempOffset++ * dataSizeBytes,
                 this.GPUData, bufferOffset,
-                dataSize);
+                dataSizeBytes);
         });
         tempBuffer.unmap();
         this.queue.clear();
@@ -151,14 +148,13 @@ export class GPU {
         return parentBGLayout;
     }
     constructor(public device: GPUDevice, public renderPassScreen: RenderPassCanvas, public renderPassWater: RenderPass) {
-
         this.BindGroup = this.createBindGroup(this.BindGroupLayout,
             {
                 binding: 0,
                 resource: {
                     buffer: this.GPUData,
                     offset: 0,
-                    size: TerraNode.GPUDataSize
+                    size: TerraNode.GPUDataSize*4
                 }
             });
         this.DynamicBindGroups.add(this.BindGroup);
@@ -192,7 +188,7 @@ export class GPU {
         this.baseBindGroup.sharedBindGroupOverwrites.set(renderPassWater, uniformBindGroupInvertedView)
        // this.positionBindGroupTime = this.baseBindGroup.addChildBindGroup(this.BindGroup, true);
         this.positionBindGroupTime = this.buildBindGroupHierarcy(this.baseBindGroup,this.BindGroup)
-        this.lights = new Light(this);
+        
         const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
         const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
         const animationView = new Float32Array(timeAndDeltaBuffer, 8, 1);
@@ -200,11 +196,6 @@ export class GPU {
         this.positionBindGroupTime.onRender = async (time) => {
             return this.updateGPUBuffer();
         }
-        this.positionBindGroupLightsTime = this.lights.lightsBindGroup.addChildBindGroup(this.BindGroup, true);
-        this.positionBindGroupLightsTime.onRender = async (time) => {
-            return this.updateGPUBuffer();
-        }
-        this.positionBindGroupLightsTimeWGSL = this.lights.lightsBindGroupWGSL.addChildBindGroup(this.BindGroup, true);
 
         this.positionBindGroupNoTime.onRender = async (time) => {
             return this.updateGPUBuffer();

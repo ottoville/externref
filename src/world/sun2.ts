@@ -90,7 +90,6 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
         const shadow = this.clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
         this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
         this.updateDynamicBuffer();
-
         // this.worldPosition.translation = [sunPositionX, sunPositionY, sunPositionZ];
 
 
@@ -124,8 +123,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
                 vertexState: {
                     indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
                 }
-            }, [this.bufferOffset]);
-
+            }, [this.bufferOffsetBytes]);
             sunPipeline.addDrawable([scene.gpuscene.renderPassScreen], 14);
         })();
 

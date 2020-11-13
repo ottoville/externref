@@ -36,17 +36,11 @@ export class Physics {
     }
     private tick(me: Physics) {
         const timestamp = new Date().getTime();
-
-
-
         if (me.scene.lastStateChangeTime > me.lastTickTimeMs) {
             var delta = ((timestamp - me.scene.lastStateChangeTime) << me.#gameSpeed) + me.#tickDeltaWhenStateChange
         } else {
             var delta = (timestamp - me.lastTickTimeMs) << me.#gameSpeed; // get the delta time since last tick
         }
-
-        
-
         me.lastTickTimeMs = timestamp;
         me.gameTime += delta / 1000;
 
@@ -54,6 +48,7 @@ export class Physics {
 
         me.tickables.forEach(tickable => {
             tickable.onPhysicTick(delta);
+            
             const currentTranslation = tickable.worldPosition.translation;
             if (tickable.worldPosition.translationDelta[0] !== 0 || tickable.worldPosition.translationDelta[1] !== 0 || tickable.worldPosition.translationDelta[2] !== 0) {
                 tickable.worldPosition.translation.set([

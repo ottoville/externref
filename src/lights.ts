@@ -39,7 +39,7 @@ export class Light {
     add(light: isLight) {
         this.#instances.add(light);
     }
-    constructor(public scene: GPU) {
+    constructor(public scene: GPU, byteoffset:number) {
         const uniformBindGroupLayoutLights = this.scene.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
@@ -55,7 +55,8 @@ export class Light {
                     binding: 0,
                     resource: {
                         buffer: this.scene.GPUData, //this.#lightsBuffer
-                        size: 256
+                        size: 256,
+                        offset: byteoffset
                     }
              });
         this.uniformBindGroupLightsWGSL = this.scene.createBindGroup(uniformBindGroupLayoutLightsWGSL,
@@ -63,7 +64,8 @@ export class Light {
                 binding: 0,
                 resource: {
                     buffer: this.scene.GPUData, //this.#lightsBuffer
-                    size: 256
+                    size: 256,
+                    offset: byteoffset
                 }
             });
         this.lightsBindGroupNoTime = this.scene.baseBindGroupNoTime.addChildBindGroup(uniformBindGroupLights);

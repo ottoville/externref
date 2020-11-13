@@ -562,7 +562,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         });
         (async () => {
             const [vertex, fragment] = await Promise.all(['/shaders/wgsl/ground.vert.wgsl', '/shaders/wgsl/ground.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
-            const terrainPipeline = scene.gpuscene.lights.lightsBindGroupTexture.addRenderPipeline({
+            const terrainPipeline = scene.lights.lightsBindGroupTexture.addRenderPipeline({
                 primitiveTopology: 'triangle-list',
                 depthStencilState: {
                     depthWriteEnabled: true,

@@ -1,13 +1,13 @@
-﻿import type { isLight } from "./lights";
+﻿import { RenderPipeline } from "./GPU/RenderPipeline";
+import type { isLight } from "./lights";
 import type { hasPhysics } from "./physics";
 import type { TerraScene } from "./TerraScene";
+import { boundable, Bounding } from "./traits/Boundable";
 import type { worldPosition } from "./traits/worldPosition";
 
 
 
-
 export abstract class TerraNode implements Partial<hasPhysics> {
-    // abstract onPhysicTick?: (time: number) => void
     abstract worldPosition?: worldPosition
 
     hasPhysics(): this is hasPhysics {
@@ -17,21 +17,30 @@ export abstract class TerraNode implements Partial<hasPhysics> {
         return 'lightType' in this;
     }
 
-    static GPUDataSize = 4 * 16 + 4 * 4 + 4 * 4
+    static GPUDataSize = 16 + 4 + 4
     static alignment = 256;
-/* Todo: make dynamic with treshold values */
+    /* Todo: make dynamic with treshold values */
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
 
-    readonly dataBuffer = new ArrayBuffer(TerraNode.GPUDataSize);
-    readonly data: Float32Array = new Float32Array(this.dataBuffer);
-    readonly customData: Float32Array = new Float32Array(this.dataBuffer,20*4,4);
-    readonly bufferOffset = this.scene.gpuscene.NodeInstances.size * TerraNode.alignment;
+    //readonly dataBuffer = new ArrayBuffer(TerraNode.GPUDataSize);
+    readonly bufferOffsetBytes: number;
+
+    readonly data: Float32Array;
+    readonly customData: Float32Array;
 
     destroy() {
         this.scene.gpuscene.NodeInstances.delete(this);
     }
 
     constructor(public scene: TerraScene) {
+        const bufferOffsetBytes = scene.gpuscene.DataSlots.pop();
+        if (typeof (bufferOffsetBytes) == 'undefined')
+            throw ('Out of memory');
+        this.bufferOffsetBytes = bufferOffsetBytes;
+        this.data = new Float32Array(this.scene.gpuscene.CPUData, bufferOffsetBytes, TerraNode.GPUDataSize);
+        this.customData = new Float32Array(this.scene.gpuscene.CPUData, bufferOffsetBytes + 20 * 4, 4);
+
+        
         scene.gpuscene.NodeInstances.set(this, scene.gpuscene.NodeInstances.size * TerraNode.alignment);
         this.data.set([
             //3d matrix start, 64 bytes
@@ -52,13 +61,21 @@ export abstract class TerraNode implements Partial<hasPhysics> {
                 scene.physics.tickables.add(this);
             }
             if (this.isLight()) {
-                scene.gpuscene.lights.add(this);
+                scene.lights.add(this);
             }
         });
         this.updateDynamicBuffer();
 
     }
+
     async updateDynamicBuffer() {
-        this.scene.gpuscene.queue.set(this.data, this.bufferOffset);
+        this.scene.gpuscene.queue.set(this.data, this.bufferOffsetBytes);
     }
+}
+
+export abstract class BoundableNode extends TerraNode implements boundable {
+    indicesBuffer?: SharedArrayBuffer | undefined;
+    abstract verticesPositionBuffer: SharedArrayBuffer;
+    abstract verticesPositionStride: number;
+    bounding: Bounding = new Bounding(this as boundable);
 }

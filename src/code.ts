@@ -4,7 +4,6 @@ import type { WorldScene } from "./world/scene.js";
 import type { loginProvider, DotNet, savedCamera } from "./types/interfaces/index.js";
 import type { WebGPUEngine, WebGPUEngineOptions } from "./lib/babylon/Engines/webgpuEngine";
 import { TerraScene } from "./TerraScene.js";
-import { Sun2 } from "./world/sun2.js";
 import { Plants } from "./plants/Plants.js";
 import { UITAB, UITABClassLike } from "./UITAB.js";
 import { PlantsUI } from "./tools/plantsUI.js";
@@ -20,7 +19,6 @@ import { ArcRotateCamera } from "./lib/babylon/index.js";
 import { LazyEval } from "./LazyEval.js";
 import { GPU } from "./GPU.js";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
-import { testbox } from "./world/tests/boxes.js";
 
 //import  DB from "./DB.js";
 
@@ -181,11 +179,18 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 // Initial scene objects here
 
                 const tools: Map<string, UITABClassLike> = new Map();
-                new Sun2(terrascene);
+                
                 const sea = new Sea(terrascene);
                 blazor.invokeMethod('setProgress', 75);
                 //new testPlane(terrascene);
-                new testbox(terrascene);
+
+               /* const b = new Box(terrascene);
+                b.worldPosition.update(scale => scale.set([200, 200, 200]));
+
+                const b2 = new Box(terrascene);
+                b2.worldPosition.update(scale => scale.set([200, 200, 200]));
+                b2.worldPosition.setTranslationX(500);*/
+
                 /*new testPlaneNormals(terrascene);*/
                 const terrainInited = Terrain.loadFromTexture(terrascene);
                 terrainInited.then(async r => {
@@ -225,7 +230,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     blazor.invokeMethod('setProgress', 100);
                     console.debug("Progress 100");
                 })
-                PlantsUI.plantsMesh = new Plants(gpuscene, terrainInited);
+                PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
                 tools.set('Plants', PlantsUI);
                 tools.set('Camera', CameraTAB);
                 tools.set('Buildings', BuildingsUI);

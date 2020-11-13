@@ -8,6 +8,8 @@ import { RenderPass } from "./GPU/RenderPass";
 import type { ICollisionCoordinator } from "../wwwroot/js/lib/babylon/Collisions/collisionCoordinator";
 import type { Collider } from "../wwwroot/js/lib/babylon/Collisions/collider";
 import { TerraCamera } from "./TerraCamera";
+import { Light } from "./lights";
+import { Sun2 } from "./world/sun2";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
 /*interface Ray {
@@ -190,6 +192,9 @@ export class TerraScene {
     };
     //context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
     camera!: ArcRotateCamera;
+    lights: Light;
+    positionBindGroupLightsTime;
+    positionBindGroupLightsTimeWGSL;
     constructor(private window: Window, public canvas: HTMLCanvasElement, public gpuscene: GPU, onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
         TerraScene.instance = this;
 
@@ -207,9 +212,17 @@ export class TerraScene {
 
         this.gpuscene = gpuscene;
         this.gameSpeed = 0;
+        const sun = new Sun2(this);
+        this.lights = new Light(this.gpuscene, sun.bufferOffsetBytes);
+        this.positionBindGroupLightsTime = this.lights.lightsBindGroup.addChildBindGroup(this.gpuscene.BindGroup, true);
+        this.positionBindGroupLightsTime.onRender = async (time) => {
+            return this.gpuscene.updateGPUBuffer();
+        }
+        this.positionBindGroupLightsTimeWGSL = this.lights.lightsBindGroupWGSL.addChildBindGroup(this.gpuscene.BindGroup, true);
 
         (async () => {
             onRenderStart && (this.camera = await onRenderStart(this));
+            
             const camera = this.camera;
             const terraScene = this;
             

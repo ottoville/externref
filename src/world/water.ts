@@ -20,7 +20,7 @@ export class Sea extends TerraNode implements boundable {
                 magFilter: "linear",
                 minFilter: "linear",
             });
-            const waterPipeline = scene.gpuscene.lights.lightsBindGroupTexture.addRenderPipeline({
+            const waterPipeline = scene.lights.lightsBindGroupTexture.addRenderPipeline({
                 primitiveTopology: 'triangle-strip',
                 colorStates: [{
                     format: "bgra8unorm",

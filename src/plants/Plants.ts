@@ -9,6 +9,7 @@ import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js"
 
 import type { WorldScene } from "../world/scene.js";
 import type { GPU } from "../GPU.js";
+import { TerraScene } from "../TerraScene.js";
 
 
 /**
@@ -58,7 +59,7 @@ export class Plants {
 
     }
     constructor(
-        scene: GPU,
+        scene: TerraScene,
         terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
 
@@ -77,11 +78,11 @@ export class Plants {
                 format: "bgra8unorm",
             }],
             vertexStage: {
-                module: scene.shaderModules.get("grass.vert")!,
+                module: scene.gpuscene.shaderModules.get("grass.vert")!,
                 entryPoint: "main",
             },
             fragmentStage: {
-                module: scene.shaderModules.get("grass.frag")!,
+                module: scene.gpuscene.shaderModules.get("grass.frag")!,
                 entryPoint: "main"
             },
             vertexState: {
@@ -110,13 +111,13 @@ export class Plants {
                     }]
             },
         });
-        const drawable = planstPipeline.addDrawable([scene.renderPassScreen],7,0)
-        const positionGPU = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] );
-        const shapeGPU = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
+        const drawable = planstPipeline.addDrawable([scene.gpuscene.renderPassScreen],7,0)
+        const positionGPU = scene.gpuscene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] );
+        const shapeGPU = scene.gpuscene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
 
 
-        const positionGPUSwap = scene.device.createBuffer({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE });
-        const shapeGPUSwap = scene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE]);
+        const positionGPUSwap = scene.gpuscene.device.createBuffer({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE });
+        const shapeGPUSwap = scene.gpuscene.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE]);
 
         drawable.setVertexBuffer(0, positionGPU)
         drawable.setVertexBuffer(1, shapeGPU)
@@ -186,9 +187,9 @@ export class Plants {
         terrainP.then((arr) => {
             const terrain = arr[0];
             
-            const computePipeline = scene.device.createComputePipeline({
+            const computePipeline = scene.gpuscene.device.createComputePipeline({
                 computeStage: {
-                    module: scene.shaderModules.get("getHeightAtCoordinates.comp")!,
+                    module: scene.gpuscene.shaderModules.get("getHeightAtCoordinates.comp")!,
                     entryPoint: "main"
                 }
             });
@@ -203,16 +204,16 @@ export class Plants {
                 new Float32Array(worldSetArr).set(new Float32Array(this.offset));
                 worldSetGPU.unmap();*/
 
-                const commandEncoder = scene.device.createCommandEncoder();
+                const commandEncoder = scene.gpuscene.device.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipeline);
 
 
-                const worldCopyGPU = scene.createGPUBuffer(this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], true);
+                const worldCopyGPU = scene.gpuscene.createGPUBuffer(this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], true);
                 const worldSetArr = worldCopyGPU.getMappedRange();
                 new Float32Array(worldSetArr).set(new Float32Array(this.offset));
                 worldCopyGPU.unmap();
-                const bindGroup = scene.createBindGroup(layout, {
+                const bindGroup = scene.gpuscene.createBindGroup(layout, {
                     binding: 0,
                     resource: {
                         buffer: worldCopyGPU
@@ -253,7 +254,7 @@ export class Plants {
                     shapeGPUSwap, 0,
                     shapeGPU, 0,
                     this.numBlades * 4 * 4);
-                scene.device.defaultQueue.submit([commandEncoder.finish()]);
+                scene.gpuscene.device.defaultQueue.submit([commandEncoder.finish()]);
                 drawable.instanceCount = data.count
                 console.log('updated grass buffers', data.count);
                 return;

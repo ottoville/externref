@@ -21,7 +21,6 @@ export interface TerrainTool extends canvasListener, Traitable {
 
 @addTrait(canvasListener)
 export class TerrainTool extends TerraNode implements has3DPosition  {
-
     public static instance: UITAB | null = null;
 
    // private engine: WebGPUEngine;
@@ -80,7 +79,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
                 module: scene.gpuscene.shaderModules.get("helper2.frag")!,
                 entryPoint: "main"
             }
-        }, [this.bufferOffset]);
+        }, [this.bufferOffsetBytes]);
 
         this.helper = helperPipeline.addDrawable([scene.gpuscene.renderPassScreen],4,0, 8, 0, 0)
         /*

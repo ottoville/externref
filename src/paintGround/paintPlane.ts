@@ -94,7 +94,7 @@ export class paintPlane extends paintGround {
                         }]
                     }]
             },
-        }, [this.#mesh.bufferOffset]);
+        }, [this.#mesh.bufferOffsetBytes]);
         this.#templane2 = planeRenerPipeline.addDrawable([scene.gpuscene.renderPassScreen], 0, 1, 1, 0)
     };
 
