@@ -1,5 +1,4 @@
 ﻿import type { GPU } from "./GPU";
-import type { boundable, PickingInfo } from "./traits/Boundable";
 import { TerraMatrix } from "./traits/worldPosition";
 import { Matrix, Vector3 } from "./lib/babylon/Maths/math.js";
 import { Physics } from "./physics";
@@ -10,6 +9,7 @@ import type { Collider } from "../wwwroot/js/lib/babylon/Collisions/collider";
 import { TerraCamera } from "./TerraCamera";
 import { Light } from "./lights";
 import { Sun2 } from "./world/sun2";
+import { BoundableNode, PickingInfo } from "./TerraNode";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
 /*interface Ray {
@@ -172,7 +172,7 @@ function matrixInvert64(m: Float32Array | Float64Array): void {
 
 }
 export class TerraScene {
-    boundables: Set<boundable> = new Set();
+    boundables: Set<BoundableNode> = new Set();
     mousePositionBuffer = new SharedArrayBuffer(4);
     mousePosition = new Uint16Array(this.mousePositionBuffer);
 
@@ -329,8 +329,8 @@ export class TerraScene {
         return this.#lastStateChangeGameTime + (BigInt((interval * 60) << this.physics.gameSpeed));
     }
     sunPosition: Float32Array = new Float32Array(3);
-    async collissionCheck(rayFunction: (mesh: boundable) => any, boundables: IterableIterator<boundable>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: boundable) => boolean): Promise<PickingInfo | null> {
-        let boundableMesh: boundable;
+    async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
+        let boundableMesh: BoundableNode;
         do {
             const boundable = boundables.next();
             if (boundable.done)
@@ -340,7 +340,7 @@ export class TerraScene {
         } while (predicate ? !predicate(boundableMesh) : false);
 
         const ray = rayFunction(boundableMesh);
-        const result = await boundableMesh.bounding.intersects(ray);
+        const result = await boundableMesh.intersects(ray);
         if (!result || !result.hit)
             return this.collissionCheck(rayFunction, boundables, pickResult, fastCheck, predicate);
         if (!fastCheck && pickResult != null && result.distance >= pickResult.distance)
@@ -388,7 +388,7 @@ export class TerraScene {
                 type: "storage-buffer"
             }]
     })
-    async pickPromise(x: number, y: number, predicate?: (mesh: boundable) => boolean, fastCheck?: boolean): Promise<PickingInfo | null> {
+    async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode) => boolean, fastCheck?: boolean): Promise<PickingInfo | null> {
 
         const b1 = this.gpuscene.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
         const b1arr = b1.getMappedRange()
@@ -443,23 +443,32 @@ export class TerraScene {
         this.gpuscene.device.defaultQueue.submit([gpuCommands]);
 
         const ray = this.createPickingRay(x, y);
-        const pickingRays: Map<boundable, { origin: Vector3, direction: Vector3 }> = new Map();
+        const pickingRays: Map<BoundableNode, { origin: Vector3, direction: Vector3 }> = new Map();
 
         this.boundables.forEach(boundable => {
             if (!boundable.worldPosition)
                 return pickingRays.set(boundable,ray);
-            const worldM = Matrix.FromArray(boundable.worldPosition.worldMatrix)
-            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.viewArr)), worldM);
-            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.projectionArr)), worldM);
-            pickingRays.set(boundable, this.createPickingRay(x, y, worldM.m as Float32Array));
+          //  const worldM = Matrix.FromArray(boundable.worldPosition.worldMatrix)
+            //worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.viewArr)), worldM);
+           // worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.projectionArr)), worldM);
+          //  console.log(worldM.m);
+          //  debugger;
+            pickingRays.set(boundable, this.createPickingRay(x, y, boundable.worldPosition.worldMatrix));
         });
         const results: Promise<PickingInfo>[] = [];
-        pickingRays.forEach((ray,boundable) => {
-             results.push(boundable.bounding.intersects(ray));
+        pickingRays.forEach((ray, boundable) => {
+             results.push(boundable.intersects(ray));
         })
-        
-        console.log(await Promise.all(results));
-
+        const pickresults = await Promise.all(results);
+        let minimum: PickingInfo | undefined;;
+        pickresults.forEach(pickresult => {
+            if (pickresult.hit) {
+                if (!minimum || pickresult.distance < minimum.distance)
+                    minimum = pickresult;
+            }
+        })
+        console.log(minimum);
+        return null;
         this.gpuscene.GPU2CPU(async buff => {
             await buff.mapAsync(GPUMapMode.READ);
           //  console.log(new Float32Array(buff.getMappedRange()))
@@ -478,7 +487,7 @@ export class TerraScene {
             }, this.gpuscene.GPUData);
         }, resultMatrixBuffer);
 
-        let rayFunction = (boundableMesh: boundable) => {
+        let rayFunction = (boundableMesh: BoundableNode) => {
 
             let m = new TerraMatrix([1.0, 0.0, 0.0, 0.0,
                 0.0, 1.0, 0.0, 0.0,

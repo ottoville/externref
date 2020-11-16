@@ -14,8 +14,9 @@ interface WorkerMessage<T> extends MessageEvent {
 
 interface WMessageObject<T, O> {
     action: keyof O,
+    action2: O,
     data: T,
-    id: number
+    id?: number
 }
 interface WorkerMessageObject<T, O> extends MessageEvent {
     data: WMessageObject<T, O | 'init'>

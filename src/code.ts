@@ -15,10 +15,11 @@ import { Terrain } from "./world/terrain.js";
 import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 import { Sea } from "./world/water.js";
 import { Vector3, Matrix } from "./lib/babylon/Maths/math.vector";
-import { ArcRotateCamera } from "./lib/babylon/index.js";
 import { LazyEval } from "./LazyEval.js";
 import { GPU } from "./GPU.js";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
+import { Box } from "./GPU/Meshes/Box.js";
+import { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera.js";
 
 //import  DB from "./DB.js";
 
@@ -105,6 +106,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
     try {
         let [WasmModuleP, EngineModuleP] = ['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js'].map(url => import(url));
+
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
@@ -184,12 +186,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 blazor.invokeMethod('setProgress', 75);
                 //new testPlane(terrascene);
 
-               /* const b = new Box(terrascene);
+                const b = new Box(terrascene);
                 b.worldPosition.update(scale => scale.set([200, 200, 200]));
 
                 const b2 = new Box(terrascene);
                 b2.worldPosition.update(scale => scale.set([200, 200, 200]));
-                b2.worldPosition.setTranslationX(500);*/
+                b2.worldPosition.setTranslationX(500);
 
                 /*new testPlaneNormals(terrascene);*/
                 const terrainInited = Terrain.loadFromTexture(terrascene);

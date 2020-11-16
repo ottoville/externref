@@ -24,8 +24,17 @@ class TerraMatrix extends Float32Array {
     [15]: number;
 }
 
-let meshes = new Map();
+let meshes: Map<number, Mesh> = new Map();
+interface pickInfo {
+    faceId?: number;
+    bv?: number;
+    bu?: number;
+    pickedMesh?: number;
+    pickedPoint?: Vector3;
+    distance?: number;
+    hit: boolean;
 
+}
 class Mesh {
 
    /* static async collissionCheck(rayFunction: (mesh: Mesh) => any, boundables: IterableIterator<Mesh>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: Mesh) => boolean): Promise<PickingInfo | null> {
@@ -56,8 +65,9 @@ class Mesh {
     readonly #indicesView: Uint32Array | undefined;
     readonly #boundingBox = new Float32Array(this.boundingBoxBuffer);
     constructor(
-        private readonly indices: SharedArrayBuffer | undefined,
-        private readonly positions: SharedArrayBuffer,
+        public readonly uniqueID: number,
+        readonly indices: SharedArrayBuffer | undefined,
+        readonly positions: SharedArrayBuffer,
         private readonly positionsStride: number,
         private readonly boundingBoxBuffer: SharedArrayBuffer
     ) {
@@ -66,18 +76,19 @@ class Mesh {
         if (indices)
             this.#indicesView = new Uint32Array(indices);
     }
-    intersects(origin: Vector3, direction: Vector3, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): PickingInfo {
+    intersects(origin: Vector3, direction: Vector3, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): pickInfo {
 
         //boundingBox: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number } },
         // let boundingBox = { min: { x: this.boundingBox[0], y: this.boundingBox[1], z: this.boundingBox[2] }, max: { x: this.boundingBox[3], y: this.boundingBox[4], z: this.boundingBox[5] } }
-        let pickingInfo = new PickingInfo();
+        let pickingInfo: pickInfo = {
+            hit: false,
+        };
         //const boundingInfo = this._boundingInfo;
         let ray = new Ray(new Vector3(origin.x, origin.y, origin.z), new Vector3(direction.x, direction.y, direction.z));
-
+        
         if (!ray.intersectsBoxMinMax({ x: this.#boundingBox[0], y: this.#boundingBox[1], z: this.#boundingBox[2] }, { x: this.#boundingBox[3], y: this.#boundingBox[4], z: this.#boundingBox[5] })) {
             return pickingInfo;
         }
-
         var intersectInfo: Nullable<IntersectionInfo> = null;
 
         // Triangles test
@@ -112,7 +123,6 @@ class Mesh {
                 if (fastCheck || !intersectInfo || currentIntersectInfo.distance < intersectInfo.distance) {
                     intersectInfo = currentIntersectInfo;
                     intersectInfo.faceId = index / 3;
-
                     if (fastCheck) {
                         break;
                     }
@@ -130,11 +140,12 @@ class Mesh {
             pickingInfo.hit = true;
             pickingInfo.distance = Vector3.Distance(ray.origin, pickedPoint);
             pickingInfo.pickedPoint = pickedPoint;
-            //pickingInfo.pickedMesh = this;
+            pickingInfo.pickedMesh = this.uniqueID;
             pickingInfo.bu = intersectInfo.bu || 0;
             pickingInfo.bv = intersectInfo.bv || 0;
             pickingInfo.faceId = intersectInfo.faceId;
-            pickingInfo.subMeshId = intersectInfo.subMeshId;
+            //pickingInfo.subMeshId = intersectInfo.subMeshId;
+
             return pickingInfo;
         }
         return pickingInfo;
@@ -377,20 +388,23 @@ class Mesh {
           return this.normals;
       }*/
 }
-onmessage = async (e: WorkerMessageObject<{ meshId?: number, args: any[] }, Mesh>) => {
+onmessage = async (e: WorkerMessageObject<{ objId?: number, args: any[] }, Mesh>) => {
     if (e.data.action == 'init') {
-        meshes.set(e.data.data.meshId, new Mesh(...<[SharedArrayBuffer, SharedArrayBuffer, number, SharedArrayBuffer]>e.data.data.args));
+        meshes.set(e.data.data.objId!, new Mesh(e.data.data.objId!,...<[SharedArrayBuffer, SharedArrayBuffer, number, SharedArrayBuffer]>e.data.data.args));
         //meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));
-    } else if ('meshId' in e.data.data) {
-        let mesh: Mesh;
-        if (mesh = meshes.get(e.data.data.meshId)) {
+    } else if ('objId' in e.data.data) {
+        let mesh: Mesh | undefined;
+        if (mesh = meshes.get(e.data.data.objId!)) {
             //@ts-ignore
             let r = mesh[e.data.action](...e.data.data.args);
-            self.postMessage({ id: e.data.id, data: r });
+            if (typeof (e.data.id) !== 'undefined') {
+                self.postMessage({ id: e.data.id, data: r });
+            }
         }
     } else {
         //@ts-ignore
         let r = Mesh[e.data.action](...e.data.data.args);
-        self.postMessage({ id: e.data.id, data: r });
+        if (typeof (e.data.id) !== 'undefined')
+            self.postMessage({ id: e.data.id, data: r });
     }
 }
