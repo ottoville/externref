@@ -16,7 +16,7 @@ abstract class MainWorker extends Worker {
         (value?: any | PromiseLike<any> | undefined) => void,
         (value?: unknown | PromiseLike<unknown> | undefined) => void,
     ] | null)[] = [];
-    private subscriptions: { [key: string]: (value?: unknown) => void; } = {};
+    #subscriptions: { [key: string]: (value?: unknown) => void; } = {};
     constructor(stringUrl: any, options?: WorkerOptions) {
         super(stringUrl, options);
         this.onmessage = (e) => {
@@ -32,16 +32,16 @@ abstract class MainWorker extends Worker {
                         operation[0](e.data.data);
                 }
                 this.operations[e.data.id] = null;
-            } else if (typeof (this.subscriptions[e.data.type]) !== 'undefined') {
-                this.subscriptions[e.data.type](e.data);
+            } else if (typeof (this.#subscriptions[e.data.type]) !== 'undefined') {
+                this.#subscriptions[e.data.type](e.data);
             }
         };
     }
     subscribe(type: string, callback: (value?: any) => void) {
-        this.subscriptions[type] = callback
+        this.#subscriptions[type] = callback
     }
     unsubscribe(type: string) {
-        delete this.subscriptions[type];
+        delete this.#subscriptions[type];
     }
 }
 export class WorkerThread extends MainWorker {

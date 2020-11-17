@@ -1,5 +1,4 @@
 import { Vector3, Matrix } from "../../Maths/math.vector";
-import { Effect } from "../../Materials/effect";
 import { Particle } from "../../Particles/particle";
 /**
  * Particle emitter represents a volume emitting particles.
@@ -32,7 +31,7 @@ export interface IParticleEmitterType {
      * Called by the GPUParticleSystem to setup the update shader
      * @param effect defines the update shader
      */
-    applyToShader(effect: Effect): void;
+    applyToShader(effect: any): void;
 
     /**
      * Returns a string to use to update the GPU particles update shader

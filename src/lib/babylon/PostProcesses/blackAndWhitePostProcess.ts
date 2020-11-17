@@ -1,6 +1,5 @@
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { Engine } from "../Engines/engine";
 
 //import "../Shaders/blackAndWhite.fragment";
@@ -27,7 +26,7 @@ export class BlackAndWhitePostProcess extends PostProcess {
     constructor(name: string, options: number | PostProcessOptions, camera: Camera, samplingMode?: number, engine?: Engine, reusable?: boolean) {
         super(name, "blackAndWhite", ["degree"], null, options, camera, samplingMode, engine, reusable);
 
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             effect.setFloat("degree", this.degree);
         });
     }

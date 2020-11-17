@@ -1,6 +1,5 @@
 import { IPipelineContext } from '../IPipelineContext';
 import { Nullable } from '../../types';
-import { Effect } from '../../Materials/effect';
 import { IMatrixLike, IVector2Like, IVector3Like, IVector4Like, IColor3Like, IColor4Like } from '../../Maths/math.like';
 import { ThinEngine } from "../thinEngine";
 
@@ -44,7 +43,7 @@ export class WebGLPipelineContext implements IPipelineContext {
         }
     }
 
-    public _fillEffectInformation(effect: Effect, uniformBuffersNames: { [key: string]: number }, uniformsNames: string[], uniforms: { [key: string]: Nullable<WebGLUniformLocation> }, samplerList: string[], samplers: { [key: string]: number }, attributesNames: string[], attributes: number[]) {
+    public _fillEffectInformation(effect: any, uniformBuffersNames: { [key: string]: number }, uniformsNames: string[], uniforms: { [key: string]: Nullable<WebGLUniformLocation> }, samplerList: string[], samplers: { [key: string]: number }, attributesNames: string[], attributes: number[]) {
         const engine = this.engine;
         if (engine.supportsUniformBuffers) {
             for (var name in uniformBuffersNames) {

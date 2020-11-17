@@ -8,7 +8,6 @@ import { Matrix } from "./lib/babylon/Maths/math.js";
 import type { Ray, TrianglePickingPredicate } from "./lib/babylon/Culling/ray.js";
 import type { PickingInfo } from "./lib/babylon/Collisions/pickingInfo.js";
 import type { SubMesh } from "./lib/babylon/Meshes/subMesh.js";
-import type { Effect } from "./lib/babylon/Materials/effect.js";
 import { Material } from "./lib/babylon/Materials/material.js";
 import { Geometry } from "./lib/babylon/Meshes/geometry.js";
 
@@ -463,7 +462,7 @@ export class TerraMesh extends Mesh {
             step.action(this, subMesh, batch);
         }
 
-        var effect: Nullable<Effect>;
+        var effect: Nullable<any>;
         //@ts-ignore
         if (this._effectiveMaterial._storeEffectOnSubMeshes) {
             effect = subMesh.effect;

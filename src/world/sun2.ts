@@ -104,7 +104,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
 
         (async () => {
             const [vertex, fragment] = await Promise.all(['/shaders/wgsl/sun.vert.wgsl', '/shaders/wgsl/sun.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
-            const sunPipeline = this.scene.gpuscene.positionBindGroupTime.addRenderPipeline({
+            const sunPipeline = this.scene.positionBindGroupTime.addRenderPipeline({
                 rasterizationState: {
                     cullMode: 'none',
                 },

@@ -1,6 +1,5 @@
 import { Vector3, Matrix } from "../../Maths/math.vector";
 import { Scalar } from "../../Maths/math.scalar";
-import { Effect } from "../../Materials/effect";
 import { Particle } from "../../Particles/particle";
 import { IParticleEmitterType } from "./IParticleEmitterType";
 import { DeepCopier } from "../../Misc/deepCopier";
@@ -91,7 +90,7 @@ export class CylinderParticleEmitter implements IParticleEmitterType {
      * Called by the GPUParticleSystem to setup the update shader
      * @param effect defines the update shader
      */
-    public applyToShader(effect: Effect): void {
+    public applyToShader(effect: any): void {
         effect.setFloat("radius", this.radius);
         effect.setFloat("height", this.height);
         effect.setFloat("radiusRange", this.radiusRange);
@@ -199,7 +198,7 @@ export class CylinderDirectedParticleEmitter extends CylinderParticleEmitter {
      * Called by the GPUParticleSystem to setup the update shader
      * @param effect defines the update shader
      */
-    public applyToShader(effect: Effect): void {
+    public applyToShader(effect: any): void {
         effect.setFloat("radius", this.radius);
         effect.setFloat("height", this.height);
         effect.setFloat("radiusRange", this.radiusRange);

@@ -7,7 +7,6 @@ import { EngineStore } from "../Engines/engineStore";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { VertexBuffer } from "../Meshes/buffer";
 import { Ray } from "../Culling/ray";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { _TimeToken } from "../Instrumentation/timeToken";
 import { LensFlare } from "./lensFlare";
@@ -61,7 +60,7 @@ export class LensFlareSystem {
     private _emitter: any;
     private _vertexBuffers: { [key: string]: Nullable<VertexBuffer> } = {};
     private _indexBuffer: Nullable<DataBuffer>;
-    private _effect: Effect;
+    private _effect: any;
     private _positionX: number;
     private _positionY: number;
     private _isEnabled = true;

@@ -1,7 +1,6 @@
 import { Nullable } from "../types";
 import { Engine } from "../Engines/engine";
 import { PostProcess, PostProcessOptions } from "./postProcess";
-import { Effect } from "../Materials/effect";
 import { Camera } from "../Cameras/camera";
 import { Logger } from "../Misc/logger";
 import { Constants } from "../Engines/constants";
@@ -45,7 +44,7 @@ export class CircleOfConfusionPostProcess extends PostProcess {
     constructor(name: string, depthTexture: Nullable<any>, options: number | PostProcessOptions, camera: Nullable<Camera>, samplingMode?: number, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT, blockCompilation = false) {
         super(name, "circleOfConfusion", ["cameraMinMaxZ", "focusDistance", "cocPrecalculation"], ["depthSampler"], options, camera, samplingMode, engine, reusable, null, textureType, undefined, null, blockCompilation);
         this._depthTexture = depthTexture;
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             if (!this._depthTexture) {
                 Logger.Warn("No depth texture set on CircleOfConfusionPostProcess");
                 return;

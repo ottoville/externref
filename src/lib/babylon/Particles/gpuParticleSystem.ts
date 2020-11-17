@@ -13,7 +13,6 @@ import { ParticleSystem } from "./particleSystem";
 import { Engine } from "../Engines/engine";
 import { BoxParticleEmitter } from "../Particles/EmitterTypes/boxParticleEmitter";
 import { Scene, IDisposable } from "../scene";
-import { Effect, IEffectCreationOptions } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
 import { ImageProcessingConfiguration } from "../Materials/imageProcessingConfiguration";
@@ -44,8 +43,8 @@ export class GPUParticleSystem extends BaseParticleSystem implements IDisposable
     private _activeCount: number;
     private _currentActiveCount: number;
     private _accumulatedCount = 0;
-    private _renderEffect: Effect;
-    private _updateEffect: Effect;
+    private _renderEffect: any;
+    private _updateEffect: any;
 
     private _buffer0: Buffer;
     private _buffer1: Buffer;
@@ -69,7 +68,7 @@ export class GPUParticleSystem extends BaseParticleSystem implements IDisposable
     private _randomTexture2: RawTexture;
 
     private _attributesStrideSize: number;
-    private _updateEffectOptions: IEffectCreationOptions;
+    private _updateEffectOptions: any;
 
     private _randomTextureSize: number;
     private _actualFrame = 0;
@@ -1010,7 +1009,6 @@ export class GPUParticleSystem extends BaseParticleSystem implements IDisposable
         }
 
         this._updateEffectOptions.defines = defines;
-        this._updateEffect = new Effect("gpuUpdateParticles", this._updateEffectOptions, this._scene.getEngine());
     }
 
     /** @hidden */
@@ -1080,10 +1078,6 @@ export class GPUParticleSystem extends BaseParticleSystem implements IDisposable
             ImageProcessingConfiguration.PrepareSamplers(samplers, this._imageProcessingConfigurationDefines);
         }
 
-        this._renderEffect = new Effect("gpuRenderParticles",
-            ["position", "age", "life", "size", "color", "offset", "uv", "direction", "initialDirection", "angle", "cellIndex"],
-            uniforms,
-            samplers, this._scene.getEngine(), defines);
     }
 
     /**

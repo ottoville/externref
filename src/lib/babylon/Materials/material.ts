@@ -11,7 +11,6 @@ import { BaseSubMesh, SubMesh } from "../Meshes/subMesh";
 import { Geometry } from "../Meshes/geometry";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { UniformBuffer } from "./uniformBuffer";
-import { Effect } from "./effect";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { MaterialDefines } from "./materialDefines";
 import { Constants } from "../Engines/constants";
@@ -229,12 +228,12 @@ export class Material implements IAnimatable {
     /**
      * Callback triggered when the material is compiled
      */
-    public onCompiled: Nullable<(effect: Effect) => void> = null;
+    public onCompiled: Nullable<(effect: any) => void> = null;
 
     /**
      * Callback triggered when an error occurs
      */
-    public onError: Nullable<(effect: Effect, errors: string) => void> = null;
+    public onError: Nullable<(effect: any, errors: string) => void> = null;
 
     /**
      * Callback triggered to get the render target textures
@@ -516,7 +515,7 @@ export class Material implements IAnimatable {
      * @hidden
      * Stores the effects for the material
      */
-    public _effect: Nullable<Effect> = null;
+    public _effect: Nullable<any> = null;
 
     /**
      * Specifies if uniform buffers should be used
@@ -653,7 +652,7 @@ export class Material implements IAnimatable {
      * Returns the material effect
      * @returns the effect associated with the material
      */
-    public getEffect(): Nullable<Effect> {
+    public getEffect(): Nullable<any> {
         return this._effect;
     }
 
@@ -722,7 +721,7 @@ export class Material implements IAnimatable {
     }
 
     /** @hidden */
-    public _preBind(effect?: Effect, overrideOrientation: Nullable<number> = null): boolean {
+    public _preBind(effect?: any, overrideOrientation: Nullable<number> = null): boolean {
         var engine = this._scene.getEngine();
 
         var orientation = (overrideOrientation == null) ? this.sideOrientation : overrideOrientation;
@@ -763,7 +762,7 @@ export class Material implements IAnimatable {
      * @param effect defines the effect to bind to the scene uniform buffer
      * @param sceneUbo defines the uniform buffer storing scene data
      */
-    public bindSceneUniformBuffer(effect: Effect, sceneUbo: UniformBuffer): void {
+    public bindSceneUniformBuffer(effect: any, sceneUbo: UniformBuffer): void {
         sceneUbo.bindToEffect(effect, "Scene");
     }
 
@@ -771,7 +770,7 @@ export class Material implements IAnimatable {
      * Binds the view matrix to the effect
      * @param effect defines the effect to bind the view matrix to
      */
-    public bindView(effect: Effect): void {
+    public bindView(effect: any): void {
         if (!this._useUBO) {
             effect.setMatrix("view", this.getScene().getViewMatrix());
         } else {
@@ -783,7 +782,7 @@ export class Material implements IAnimatable {
      * Binds the view projection matrix to the effect
      * @param effect defines the effect to bind the view projection matrix to
      */
-    public bindViewProjection(effect: Effect): void {
+    public bindViewProjection(effect: any): void {
         if (!this._useUBO) {
             effect.setMatrix("viewProjection", this.getScene().getTransformMatrix());
         } else {

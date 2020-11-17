@@ -1,5 +1,4 @@
-﻿import type { GPU } from "../GPU";
-import { TerraNode } from "../TerraNode";
+﻿import { BoundableNode, TerraNode } from "../TerraNode";
 export interface has3DPosition {
     worldPosition: worldPosition;
 }
@@ -47,7 +46,7 @@ export class worldPosition {
     public update(callback: (scaling: Float32Array, rotation: Float32Array) => void) {
         callback(this.#scaling, this.#rotation);
         this.updateMatrix();
-        this.node.updateDynamicBuffer();
+        this.onUpdate();
     }
 
     SetTranslationDelta(value: [number, number, number] | [number, number] | [number] | Float32Array) {
@@ -58,41 +57,27 @@ export class worldPosition {
     SetTranslation(value: [number, number, number] | [number, number] | [number] | Float32Array) {
      //   this.#previousTranslation.set(this.#translation);
         this.translation.set(value);
-        this.node.updateDynamicBuffer();
+        this.onUpdate();
     }
     setTranslationX(value:number) {
         this.translation[0] = value;
-        this.node.updateDynamicBuffer();
+        this.onUpdate();
     }
     setTranslationY(value: number) {
         this.translation[1] = value;
-        this.node.updateDynamicBuffer();
+        this.onUpdate();
     }
     setTranslationZ(value: number) {
         this.translation[2] = value;
-        this.node.updateDynamicBuffer();
+        this.onUpdate();
     }
-
-  /*  set scalingX(v:number) {
-        this.#scaling[0] = v;
-        this.updateMatrix();
-        this.node.updateDynamicBuffer();
-    }
-    set scalingY(v: number) {
-        this.#scaling[1] = v;
-        this.updateMatrix();
-        this.node.updateDynamicBuffer();
-    }
-    set scalingZ(v: number) {
-        this.#scaling[2] = v;
-        this.updateMatrix();
-        this.node.updateDynamicBuffer();
-    }*/
    // bufferOffset = this.scene.worldPositionScene.instances.size * alignment;
 
    // #busy = false;
    // bufferOffset = this.node.scene.gpuscene.worldPositionScene.instances.size * alignment;
-    constructor(public node: TerraNode) {
+
+    constructor(public node: TerraNode | BoundableNode) {
+
        // node.scene.gpuscene.worldPositionScene.instances.set(this, node.scene.gpuscene.worldPositionScene.instances.size * alignment);
        // this.updatePositionBuffer(false);
         this.node.updateDynamicBuffer();
@@ -118,17 +103,10 @@ export class worldPosition {
         m[9] = (yz - wx) * sz;
         m[10] = (1 - (xx + yy)) * sz;
     }
-    
-    /*
-    async updatePositionBuffer(updateMatrix = true) {
-        if (updateMatrix)
-            this.updateMatrix();
-        const bufferOffset = this.node.scene.gpuscene.worldPositionScene.instances.get(this);
-        if (bufferOffset === undefined)
-            throw (new Error('offset not found'));
-
-
-        this.node.scene.gpuscene.worldPositionScene.queue.set(this.node.data, bufferOffset);
-
-    }*/
+    private onUpdate(): void {
+        if (this.node.isBoundable()) {
+            this.node.updateBoundingBoxByMatrix(this.worldMatrix);
+        }
+        this.node.updateDynamicBuffer();
+    }
 }

@@ -4,7 +4,6 @@ import { Scene } from "../scene";
 import { Matrix, Vector3 } from "../Maths/math.vector";
 import { Node } from "../node";
 import { AbstractMesh } from "../Meshes/abstractMesh";
-import { Effect } from "../Materials/effect";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { Light } from "./light";
 import { ShadowLight } from "./shadowLight";
@@ -328,7 +327,7 @@ export class SpotLight extends ShadowLight {
      * @param lightIndex The index of the light in the effect to update
      * @returns The light
      */
-    public transferTexturesToEffect(effect: Effect, lightIndex: string): Light {
+    public transferTexturesToEffect(effect: any, lightIndex: string): Light {
         if (this.projectionTexture && this.projectionTexture.isReady()) {
             if (this._projectionTextureViewLightDirty) {
                 this._computeProjectionTextureViewLightMatrix();
@@ -351,7 +350,7 @@ export class SpotLight extends ShadowLight {
      * @param lightIndex The index of the light in the effect to update
      * @returns The spot light
      */
-    public transferToEffect(effect: Effect, lightIndex: string): SpotLight {
+    public transferToEffect(effect: any, lightIndex: string): SpotLight {
         var normalizeDirection;
 
         if (this.computeTransformedInformation()) {
@@ -400,7 +399,7 @@ export class SpotLight extends ShadowLight {
         return this;
     }
 
-    public transferToNodeMaterialEffect(effect: Effect, lightDataUniformName: string) {
+    public transferToNodeMaterialEffect(effect: any, lightDataUniformName: string) {
         var normalizeDirection;
 
         if (this.computeTransformedInformation()) {

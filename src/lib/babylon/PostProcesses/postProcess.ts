@@ -3,7 +3,6 @@ import { SmartArray } from "../Misc/smartArray";
 import { Observable, Observer } from "../Misc/observable";
 import { Vector2 } from "../Maths/math.vector";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { Constants } from "../Engines/constants";
 //import "../Shaders/postprocess.vertex";
 import { IInspectable } from '../Misc/iInspectable';
@@ -145,7 +144,7 @@ export class PostProcess {
     * @hidden
     */
     public _currentRenderTextureInd = 0;
-    private _effect: Effect;
+    private _effect: any;
     private _samplers: string[];
     private _fragmentUrl: string;
     private _vertexUrl: string;
@@ -203,13 +202,13 @@ export class PostProcess {
     /**
     * An event triggered when the postprocess applies its effect.
     */
-    public onApplyObservable = new Observable<Effect>();
+    public onApplyObservable = new Observable<any>();
 
-    private _onApplyObserver: Nullable<Observer<Effect>>;
+    private _onApplyObserver: Nullable<Observer<any>>;
     /**
     * A function that is added to the onApplyObservable
     */
-    public set onApply(callback: (effect: Effect) => void) {
+    public set onApply(callback: (effect: any) => void) {
         if (this._onApplyObserver) {
             this.onApplyObservable.remove(this._onApplyObserver);
         }
@@ -219,13 +218,13 @@ export class PostProcess {
     /**
     * An event triggered before rendering the postprocess
     */
-    public onBeforeRenderObservable = new Observable<Effect>();
+    public onBeforeRenderObservable = new Observable<any>();
 
-    private _onBeforeRenderObserver: Nullable<Observer<Effect>>;
+    private _onBeforeRenderObserver: Nullable<Observer<any>>;
     /**
     * A function that is added to the onBeforeRenderObservable
     */
-    public set onBeforeRender(callback: (effect: Effect) => void) {
+    public set onBeforeRender(callback: (effect: any) => void) {
         if (this._onBeforeRenderObserver) {
             this.onBeforeRenderObservable.remove(this._onBeforeRenderObserver);
         }
@@ -235,13 +234,13 @@ export class PostProcess {
     /**
     * An event triggered after rendering the postprocess
     */
-    public onAfterRenderObservable = new Observable<Effect>();
+    public onAfterRenderObservable = new Observable<any>();
 
-    private _onAfterRenderObserver: Nullable<Observer<Effect>>;
+    private _onAfterRenderObserver: Nullable<Observer<any>>;
     /**
     * A function that is added to the onAfterRenderObservable
     */
-    public set onAfterRender(callback: (efect: Effect) => void) {
+    public set onAfterRender(callback: (efect: any) => void) {
         if (this._onAfterRenderObserver) {
             this.onAfterRenderObservable.remove(this._onAfterRenderObserver);
         }
@@ -360,7 +359,7 @@ export class PostProcess {
      * The effect that is created when initializing the post process.
      * @returns The created effect corresponding the the postprocess.
      */
-    public getEffect(): Effect {
+    public getEffect(): any {
         return this._effect;
     }
 
@@ -399,7 +398,7 @@ export class PostProcess {
      * @param onError Called if there is an error when compiling a shader.
      */
     public updateEffect(defines: Nullable<string> = null, uniforms: Nullable<string[]> = null, samplers: Nullable<string[]> = null, indexParameters?: any,
-        onCompiled?: (effect: Effect) => void, onError?: (effect: Effect, errors: string) => void) {
+        onCompiled?: (effect: any) => void, onError?: (effect: any, errors: string) => void) {
         this._effect = this._engine.createEffect({ vertex: this._vertexUrl, fragment: this._fragmentUrl },
             ["position"],
             uniforms || this._parameters,
@@ -584,7 +583,7 @@ export class PostProcess {
      * Binds all textures and uniforms to the shader, this will be run on every pass.
      * @returns the effect corresponding to this post process. Null if not compiled or not ready.
      */
-    public apply(): Nullable<Effect> {
+    public apply(): Nullable<any> {
         // Check
         if (!this._effect || !this._effect.isReady()) {
             return null;

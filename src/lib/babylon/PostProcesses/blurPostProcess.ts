@@ -2,7 +2,6 @@ import { Vector2 } from "../Maths/math.vector";
 import { Nullable } from "../types";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { Texture } from "../Materials/Textures/texture";
 import { Engine } from "../Engines/engine";
 import { Constants } from "../Engines/constants";
@@ -81,7 +80,7 @@ export class BlurPostProcess extends PostProcess {
         kernel: number, options: number | PostProcessOptions, camera: Nullable<Camera>, samplingMode: number = Texture.BILINEAR_SAMPLINGMODE, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT, defines = "", private blockCompilation = false) {
         super(name, "kernelBlur", ["delta", "direction", "cameraMinMaxZ"], ["circleOfConfusionSampler"], options, camera, samplingMode, engine, reusable, null, textureType, "kernelBlur", { varyingCount: 0, depCount: 0 }, true);
         this._staticDefines = defines;
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             if (this._outputTexture) {
                 effect.setFloat2('delta', (1 / this._outputTexture.width) * this.direction.x, (1 / this._outputTexture.height) * this.direction.y);
             } else {
@@ -102,11 +101,11 @@ export class BlurPostProcess extends PostProcess {
      * @param onError Called if there is an error when compiling a shader.
      */
     public updateEffect(defines: Nullable<string> = null, uniforms: Nullable<string[]> = null, samplers: Nullable<string[]> = null, indexParameters?: any,
-        onCompiled?: (effect: Effect) => void, onError?: (effect: Effect, errors: string) => void) {
+        onCompiled?: (effect: any) => void, onError?: (effect: any, errors: string) => void) {
         this._updateParameters(onCompiled, onError);
     }
 
-    protected _updateParameters(onCompiled?: (effect: Effect) => void, onError?: (effect: Effect, errors: string) => void): void {
+    protected _updateParameters(onCompiled?: (effect: any) => void, onError?: (effect: any, errors: string) => void): void {
         // Generate sampling offsets and weights
         let N = this._kernel;
         let centerIndex = (N - 1) / 2;

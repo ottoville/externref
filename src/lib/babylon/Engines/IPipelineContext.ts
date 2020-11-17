@@ -1,5 +1,4 @@
 import { Nullable } from '../types';
-import { Effect } from '../Materials/effect';
 import { IMatrixLike, IVector2Like, IVector3Like, IVector4Like, IColor3Like, IColor4Like } from '../Maths/math.like';
 
 /**
@@ -19,7 +18,7 @@ export interface IPipelineContext {
     _handlesSpectorRebuildCallback(onCompiled: (compiledObject: any) => void): void;
 
     /** @hidden */
-    _fillEffectInformation(effect: Effect, uniformBuffersNames: { [key: string]: number }, uniformsNames: string[], uniforms: { [key: string]: Nullable<WebGLUniformLocation> }, samplerList: string[], samplers: { [key: string]: number }, attributesNames: string[], attributes: number[]): void;
+    _fillEffectInformation(effect: any, uniformBuffersNames: { [key: string]: number }, uniformsNames: string[], uniforms: { [key: string]: Nullable<WebGLUniformLocation> }, samplerList: string[], samplers: { [key: string]: number }, attributesNames: string[], attributes: number[]): void;
 
     /** Releases the resources associated with the pipeline. */
     dispose(): void;

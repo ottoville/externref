@@ -7,7 +7,7 @@ const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 async function Simple(scene: TerraScene) {
     const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
-    const bindGroupLayout = scene.gpuscene.buildBindGroupHierarcy(scene.gpuscene.baseBindGroupNoTime, scene.lights.uniformBindGroupLightsWGSL);
+    const bindGroupLayout = scene.gpuscene.buildBindGroupHierarcy(scene.TerraCameras[0].baseBindGroupNoTime, scene.lights.uniformBindGroupLightsWGSL);
     const renderPipeLine = bindGroupLayout.addChildLayout(scene.gpuscene.BindGroupLayout).addRenderPipeline({
         rasterizationState: {
             cullMode: 'none',

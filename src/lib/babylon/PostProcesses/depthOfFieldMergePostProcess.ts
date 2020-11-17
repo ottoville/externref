@@ -1,6 +1,5 @@
 import { Nullable } from "../types";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
 import { Constants } from "../Engines/constants";
@@ -51,7 +50,7 @@ export class DepthOfFieldMergePostProcess extends PostProcess {
      */
     constructor(name: string, originalFromInput: PostProcess, circleOfConfusion: PostProcess, private blurSteps: Array<PostProcess>, options: number | PostProcessOptions, camera: Nullable<Camera>, samplingMode?: number, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT, blockCompilation = false) {
         super(name, "depthOfFieldMerge", [], ["circleOfConfusionSampler", "blurStep0", "blurStep1", "blurStep2"], options, camera, samplingMode, engine, reusable, null, textureType, undefined, null, true);
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             effect.setTextureFromPostProcess("textureSampler", originalFromInput);
             effect.setTextureFromPostProcessOutput("circleOfConfusionSampler", circleOfConfusion);
             blurSteps.forEach((step, index) => {
@@ -74,7 +73,7 @@ export class DepthOfFieldMergePostProcess extends PostProcess {
      * @param onError Called if there is an error when compiling a shader.
      */
     public updateEffect(defines: Nullable<string> = null, uniforms: Nullable<string[]> = null, samplers: Nullable<string[]> = null, indexParameters?: any,
-        onCompiled?: (effect: Effect) => void, onError?: (effect: Effect, errors: string) => void) {
+        onCompiled?: (effect: any) => void, onError?: (effect: any, errors: string) => void) {
         if (!defines) {
             defines = "";
             defines += "#define BLUR_LEVEL " + (this.blurSteps.length - 1) + "\n";

@@ -5,7 +5,6 @@ import { Vector2 } from "../Maths/math.vector";
 import { Color4 } from '../Maths/math.color';
 import { EngineStore } from "../Engines/engineStore";
 import { VertexBuffer } from "../Meshes/buffer";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { Texture } from "../Materials/Textures/texture";
 import { SceneComponentConstants } from "../sceneComponent";
@@ -79,7 +78,7 @@ export class Layer {
     private _scene: Scene;
     private _vertexBuffers: { [key: string]: Nullable<VertexBuffer> } = {};
     private _indexBuffer: Nullable<DataBuffer>;
-    private _effect: Effect;
+    private _effect: any;
     private _previousDefines: string;
 
     /**

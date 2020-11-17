@@ -1,6 +1,5 @@
 import { Vector2, Vector3, TmpVectors } from "../../../Maths/math.vector";
 import { Camera } from "../../../Cameras/camera";
-import { Effect } from "../../../Materials/effect";
 import { Texture } from "../../../Materials/Textures/texture";
 import { DynamicTexture } from "../../../Materials/Textures/dynamicTexture";
 import { PostProcess } from "../../../PostProcesses/postProcess";
@@ -233,7 +232,7 @@ export class SSAORenderingPipeline extends PostProcessRenderPipeline {
             this._scene.getEngine(), false,
             "#define SAMPLES " + numSamples + "\n#define SSAO");
 
-        this._ssaoPostProcess.onApply = (effect: Effect) => {
+        this._ssaoPostProcess.onApply = (effect: any) => {
             if (this._firstUpdate) {
                 effect.setArray3("sampleSphere", sampleSphere);
                 effect.setFloat("samplesFactor", samplesFactor);
@@ -256,7 +255,7 @@ export class SSAORenderingPipeline extends PostProcessRenderPipeline {
             ratio, null, Texture.BILINEAR_SAMPLINGMODE,
             this._scene.getEngine(), false);
 
-        this._ssaoCombinePostProcess.onApply = (effect: Effect) => {
+        this._ssaoCombinePostProcess.onApply = (effect: any) => {
             effect.setVector4("viewport", TmpVectors.Vector4[0].copyFromFloats(0, 0, 1.0, 1.0));
             effect.setTextureFromPostProcess("originalColor", this._originalColorPostProcess);
         };

@@ -1,6 +1,5 @@
 import { Nullable } from "../types";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { Texture } from "../Materials/Textures/texture";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
@@ -25,7 +24,7 @@ export class FxaaPostProcess extends PostProcess {
         const defines = this._getDefines();
         this.updateEffect(defines);
 
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             var texelSize = this.texelSize;
             effect.setFloat2("texelSize", texelSize.x, texelSize.y);
         });

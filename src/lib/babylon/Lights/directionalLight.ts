@@ -7,7 +7,6 @@ import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Light } from "./light";
 import { ShadowLight } from "./shadowLight";
 import { _TimeToken } from "../Instrumentation/timeToken";
-import { Effect } from "../Materials/effect";
 Node.AddNodeConstructor("Light_Type_1", (name, scene) => {
     return () => new DirectionalLight(name, Vector3.Zero(), scene);
 });
@@ -230,7 +229,7 @@ export class DirectionalLight extends ShadowLight {
      * @param lightIndex The index of the light in the effect to update
      * @returns The directional light
      */
-    public transferToEffect(effect: Effect, lightIndex: string): DirectionalLight {
+    public transferToEffect(effect: any, lightIndex: string): DirectionalLight {
         if (this.computeTransformedInformation()) {
             if (this.getScene().useRightHandedSystem) {
                 this._uniformBuffer.updateFloat4("vLightData", -this.transformedDirection.x, -this.transformedDirection.y, -this.transformedDirection.z, 1, lightIndex);
@@ -248,7 +247,7 @@ export class DirectionalLight extends ShadowLight {
         return this;
     }
 
-    public transferToNodeMaterialEffect(effect: Effect, lightDataUniformName: string): Light {
+    public transferToNodeMaterialEffect(effect: any, lightDataUniformName: string): Light {
         if (this.computeTransformedInformation()) {
             if (this.getScene().useRightHandedSystem) {
                 effect.setFloat3(lightDataUniformName, -this.transformedDirection.x, -this.transformedDirection.y, -this.transformedDirection.z);

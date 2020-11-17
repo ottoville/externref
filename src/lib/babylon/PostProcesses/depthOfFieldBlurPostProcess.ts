@@ -1,7 +1,6 @@
 import { Nullable } from "../types";
 import { Vector2 } from "../Maths/math.vector";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { Texture } from "../Materials/Textures/texture";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { BlurPostProcess } from "./blurPostProcess";
@@ -35,7 +34,7 @@ export class DepthOfFieldBlurPostProcess extends BlurPostProcess {
     constructor(name: string, scene: Scene, public direction: Vector2, kernel: number, options: number | PostProcessOptions, camera: Nullable<Camera>, circleOfConfusion: PostProcess, imageToBlur: Nullable<PostProcess> = null, samplingMode: number = Texture.BILINEAR_SAMPLINGMODE, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT, blockCompilation = false) {
         super(name, direction, kernel, options, camera, samplingMode = Constants.TEXTURE_BILINEAR_SAMPLINGMODE, engine, reusable, textureType = Constants.TEXTURETYPE_UNSIGNED_INT, `#define DOF 1\r\n`, blockCompilation);
 
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             if (imageToBlur != null) {
                 effect.setTextureFromPostProcess("textureSampler", imageToBlur);
             }

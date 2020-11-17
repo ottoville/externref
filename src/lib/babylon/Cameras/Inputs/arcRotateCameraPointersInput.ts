@@ -91,7 +91,7 @@ export class ArcRotateCameraPointersInput extends BaseCameraPointersInput {
      */
     protected onTouch(point: Nullable<PointerTouch>,
                       offsetX: number,
-                      offsetY: number): void {
+        offsetY: number): void {
         if (this.panningSensibility !== 0 &&
           ((this._ctrlKey && this.camera._useCtrlForPanning) || this._isPanClick)) {
             this.camera.inertialPanningX += -offsetX / this.panningSensibility;

@@ -789,6 +789,7 @@ export class ArcRotateCamera extends TargetCamera {
         this.inputs.checkInputs();
         // Inertia
         if (this.inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
+            console.log('Inertia')
             let inertialAlphaOffset = this.inertialAlphaOffset;
             if (this.beta <= 0) { inertialAlphaOffset *= -1; }
             if (this.getScene().useRightHandedSystem) { inertialAlphaOffset *= -1; }
@@ -814,6 +815,7 @@ export class ArcRotateCamera extends TargetCamera {
 
         // Panning inertia
         if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
+            console.log('Panning inertia')
             if (!this._localDirection) {
                 this._localDirection = Vector3.Zero();
                 this._transformedDirection = Vector3.Zero();
@@ -981,6 +983,7 @@ export class ArcRotateCamera extends TargetCamera {
     /** @hidden */
     public _getViewMatrix(): Matrix {
         // Compute
+        debugger;
         var cosa = Math.cos(this.alpha);
         var sina = Math.sin(this.alpha);
         var cosb = Math.cos(this.beta);

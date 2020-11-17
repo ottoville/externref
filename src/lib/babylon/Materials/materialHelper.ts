@@ -10,7 +10,6 @@ import { VertexBuffer } from "../Meshes/buffer";
 import { Light } from "../Lights/light";
 
 import { UniformBuffer } from "./uniformBuffer";
-import { Effect, IEffectCreationOptions } from "./effect";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { WebVRFreeCamera } from '../Cameras/VR/webVRCamera';
 import { MaterialDefines } from "./materialDefines";
@@ -32,7 +31,7 @@ export class MaterialHelper {
      * @param effect The effect to be bound
      * @param scene The scene the eyes position is used from
      */
-    public static BindEyePosition(effect: Effect, scene: Scene): void {
+    public static BindEyePosition(effect: any, scene: Scene): void {
         if (scene._forcedViewPosition) {
             effect.setVector3("vEyePosition", scene._forcedViewPosition);
             return;
@@ -492,12 +491,12 @@ export class MaterialHelper {
      * @param defines The defines helping in the list generation
      * @param maxSimultaneousLights The maximum number of simultanous light allowed in the effect
      */
-    public static PrepareUniformsAndSamplersList(uniformsListOrOptions: string[] | IEffectCreationOptions, samplersList?: string[], defines?: any, maxSimultaneousLights = 4): void {
+    public static PrepareUniformsAndSamplersList(uniformsListOrOptions: string[] | any, samplersList?: string[], defines?: any, maxSimultaneousLights = 4): void {
         let uniformsList: string[];
         let uniformBuffersList: Nullable<string[]> = null;
 
-        if ((<IEffectCreationOptions>uniformsListOrOptions).uniformsNames) {
-            var options = <IEffectCreationOptions>uniformsListOrOptions;
+        if ((<any>uniformsListOrOptions).uniformsNames) {
+            var options = <any>uniformsListOrOptions;
             uniformsList = options.uniformsNames;
             uniformBuffersList = options.uniformBuffersNames;
             samplersList = options.samplers;
@@ -664,7 +663,7 @@ export class MaterialHelper {
      * @param effect The effect we are binding the data to
      * @param lightIndex The light index in the effect used to render
      */
-    public static BindLightProperties(light: Light, effect: Effect, lightIndex: number): void {
+    public static BindLightProperties(light: Light, effect: any, lightIndex: number): void {
         light.transferToEffect(effect, lightIndex + "");
     }
 
@@ -677,7 +676,7 @@ export class MaterialHelper {
      * @param useSpecular Defines if specular is supported
      * @param rebuildInParallel Specifies whether the shader is rebuilding in parallel
      */
-    public static BindLight(light: Light, lightIndex: number, scene: Scene, effect: Effect, useSpecular: boolean, rebuildInParallel = false): void {
+    public static BindLight(light: Light, lightIndex: number, scene: Scene, effect: any, useSpecular: boolean, rebuildInParallel = false): void {
         light._bindLight(lightIndex, scene, effect, useSpecular, rebuildInParallel);
     }
 
@@ -690,7 +689,7 @@ export class MaterialHelper {
      * @param maxSimultaneousLights The maximum number of light that can be bound to the effect
      * @param rebuildInParallel Specifies whether the shader is rebuilding in parallel
      */
-    public static BindLights(scene: Scene, mesh: AbstractMesh, effect: Effect, defines: any, maxSimultaneousLights = 4, rebuildInParallel = false): void {
+    public static BindLights(scene: Scene, mesh: AbstractMesh, effect: any, defines: any, maxSimultaneousLights = 4, rebuildInParallel = false): void {
         let len = Math.min(mesh.lightSources.length, maxSimultaneousLights);
 
         for (var i = 0; i < len; i++) {
@@ -708,7 +707,7 @@ export class MaterialHelper {
      * @param effect The effect we are binding the data to
      * @param linearSpace Defines if the fog effect is applied in linear space
      */
-    public static BindFogParameters(scene: Scene, mesh: AbstractMesh, effect: Effect, linearSpace = false): void {
+    public static BindFogParameters(scene: Scene, mesh: AbstractMesh, effect: any, linearSpace = false): void {
         if (scene.fogEnabled && mesh.applyFog && scene.fogMode !== Scene.FOGMODE_NONE) {
             effect.setFloat4("vFogInfos", scene.fogMode, scene.fogStart, scene.fogEnd, scene.fogDensity);
             // Convert fog color to linear space if used in a linear space computed shader.
@@ -727,7 +726,7 @@ export class MaterialHelper {
      * @param mesh The mesh we are binding the information to render
      * @param effect The effect we are binding the data to
      */
-    public static BindBonesParameters(mesh?: AbstractMesh, effect?: Effect): void {
+    public static BindBonesParameters(mesh?: AbstractMesh, effect?: any): void {
         if (!effect || !mesh) {
             return;
         }
@@ -757,7 +756,7 @@ export class MaterialHelper {
      * @param abstractMesh The mesh we are binding the information to render
      * @param effect The effect we are binding the data to
      */
-    public static BindMorphTargetParameters(abstractMesh: AbstractMesh, effect: Effect): void {
+    public static BindMorphTargetParameters(abstractMesh: AbstractMesh, effect: any): void {
         let manager = (<Mesh>abstractMesh).morphTargetManager;
         if (!abstractMesh || !manager) {
             return;
@@ -772,7 +771,7 @@ export class MaterialHelper {
      * @param effect The effect we are binding the data to
      * @param scene The scene we are willing to render with logarithmic scale for
      */
-    public static BindLogDepth(defines: any, effect: Effect, scene: Scene): void {
+    public static BindLogDepth(defines: any, effect: any, scene: Scene): void {
         if (defines["LOGARITHMICDEPTH"]) {
             effect.setFloat("logarithmicDepthConstant", 2.0 / (Math.log((<Camera>scene.activeCamera).maxZ + 1.0) / Math.LN2));
         }
@@ -783,7 +782,7 @@ export class MaterialHelper {
      * @param scene The scene the clip plane information are extracted from
      * @param effect The effect we are binding the data to
      */
-    public static BindClipPlane(effect: Effect, scene: Scene): void {
+    public static BindClipPlane(effect: any, scene: Scene): void {
         if (scene.clipPlane) {
             let clipPlane = scene.clipPlane;
             effect.setFloat4("vClipPlane", clipPlane.normal.x, clipPlane.normal.y, clipPlane.normal.z, clipPlane.d);

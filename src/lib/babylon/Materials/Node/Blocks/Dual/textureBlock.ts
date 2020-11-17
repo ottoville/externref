@@ -6,7 +6,6 @@ import { NodeMaterialConnectionPoint } from '../../nodeMaterialBlockConnectionPo
 import { AbstractMesh } from '../../../../Meshes/abstractMesh';
 import { NodeMaterial, NodeMaterialDefines } from '../../nodeMaterial';
 import { InputBlock } from '../Input/inputBlock';
-import { Effect } from '../../../effect';
 import { Mesh } from '../../../../Meshes/mesh';
 import { Nullable } from '../../../../types';
 import { _TypeStore } from '../../../../Misc/typeStore';
@@ -215,7 +214,7 @@ export class TextureBlock extends NodeMaterialBlock {
         return true;
     }
 
-    public bind(effect: Effect, nodeMaterial: NodeMaterial, mesh?: Mesh) {
+    public bind(effect: any, nodeMaterial: NodeMaterial, mesh?: Mesh) {
         if (!mesh || !this.texture) {
             return;
         }

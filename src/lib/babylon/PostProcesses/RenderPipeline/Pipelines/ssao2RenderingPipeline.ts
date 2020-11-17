@@ -2,7 +2,6 @@ import { Logger } from "../../../Misc/logger";
 import { serialize, SerializationHelper } from "../../../Misc/decorators";
 import { Vector3, TmpVectors } from "../../../Maths/math.vector";
 import { Camera } from "../../../Cameras/camera";
-import { Effect } from "../../../Materials/effect";
 import { Texture } from "../../../Materials/Textures/texture";
 import { DynamicTexture } from "../../../Materials/Textures/dynamicTexture";
 import { PostProcess } from "../../../PostProcesses/postProcess";
@@ -269,7 +268,7 @@ export class SSAO2RenderingPipeline extends PostProcessRenderPipeline {
         }
 
         this._blurHPostProcess = new PostProcess("BlurH", "ssao2", ["outSize", "samplerOffsets", "near", "far", "radius"], ["depthSampler"], ssaoRatio, null, Texture.TRILINEAR_SAMPLINGMODE, this._scene.getEngine(), false, "#define BILATERAL_BLUR\n#define BILATERAL_BLUR_H\n#define SAMPLES 16\n#define EXPENSIVE " + (expensive ? "1" : "0") + "\n");
-        this._blurHPostProcess.onApply = (effect: Effect) => {
+        this._blurHPostProcess.onApply = (effect: any) => {
             if (!this._scene.activeCamera) {
                 return;
             }
@@ -283,7 +282,7 @@ export class SSAO2RenderingPipeline extends PostProcessRenderPipeline {
         };
 
         this._blurVPostProcess = new PostProcess("BlurV", "ssao2", ["outSize", "samplerOffsets", "near", "far", "radius"], ["depthSampler"], blurRatio, null, Texture.TRILINEAR_SAMPLINGMODE, this._scene.getEngine(), false, "#define BILATERAL_BLUR\n#define BILATERAL_BLUR_V\n#define SAMPLES 16\n#define EXPENSIVE " + (expensive ? "1" : "0") + "\n");
-        this._blurVPostProcess.onApply = (effect: Effect) => {
+        this._blurVPostProcess.onApply = (effect: any) => {
             if (!this._scene.activeCamera) {
                 return;
             }
@@ -368,7 +367,7 @@ export class SSAO2RenderingPipeline extends PostProcessRenderPipeline {
             this._scene.getEngine(), false,
             "#define SAMPLES " + numSamples + "\n#define SSAO");
 
-        this._ssaoPostProcess.onApply = (effect: Effect) => {
+        this._ssaoPostProcess.onApply = (effect: any) => {
             if (!this._scene.activeCamera) {
                 return;
             }
@@ -400,7 +399,7 @@ export class SSAO2RenderingPipeline extends PostProcessRenderPipeline {
             ratio, null, Texture.BILINEAR_SAMPLINGMODE,
             this._scene.getEngine(), false);
 
-        this._ssaoCombinePostProcess.onApply = (effect: Effect) => {
+        this._ssaoCombinePostProcess.onApply = (effect: any) => {
             let viewport = this._scene.activeCamera!.viewport;
             effect.setVector4("viewport", TmpVectors.Vector4[0].copyFromFloats(viewport.x, viewport.y, viewport.width, viewport.height));
             effect.setTextureFromPostProcess("originalColor", this._originalColorPostProcess);

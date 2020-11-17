@@ -1,7 +1,6 @@
 import { DeepCopier } from "../../Misc/deepCopier";
 import { Vector3, Matrix } from "../../Maths/math.vector";
 import { Scalar } from "../../Maths/math.scalar";
-import { Effect } from "../../Materials/effect";
 import { Particle } from "../../Particles/particle";
 import { IParticleEmitterType } from "./IParticleEmitterType";
 /**
@@ -66,7 +65,7 @@ export class PointParticleEmitter implements IParticleEmitterType {
      * Called by the GPUParticleSystem to setup the update shader
      * @param effect defines the update shader
      */
-    public applyToShader(effect: Effect): void {
+    public applyToShader(effect: any): void {
         effect.setVector3("direction1", this.direction1);
         effect.setVector3("direction2", this.direction2);
     }

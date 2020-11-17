@@ -6,7 +6,6 @@ import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Light } from "./light";
 import { ShadowLight } from "./shadowLight";
 import { _TimeToken } from "../Instrumentation/timeToken";
-import { Effect } from "../Materials/effect";
 
 Node.AddNodeConstructor("Light_Type_0", (name, scene) => {
     return () => new PointLight(name, Vector3.Zero(), scene);
@@ -166,7 +165,7 @@ export class PointLight extends ShadowLight {
      * @param lightIndex The index of the light in the effect to update
      * @returns The point light
      */
-    public transferToEffect(effect: Effect, lightIndex: string): PointLight {
+    public transferToEffect(effect: any, lightIndex: string): PointLight {
         if (this.computeTransformedInformation()) {
             this._uniformBuffer.updateFloat4("vLightData",
                 this.transformedPosition.x,
@@ -189,7 +188,7 @@ export class PointLight extends ShadowLight {
         return this;
     }
 
-    public transferToNodeMaterialEffect(effect: Effect, lightDataUniformName: string) {
+    public transferToNodeMaterialEffect(effect: any, lightDataUniformName: string) {
         if (this.computeTransformedInformation()) {
             effect.setFloat3(lightDataUniformName, this.transformedPosition.x, this.transformedPosition.y, this.transformedPosition.z);
         }

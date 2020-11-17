@@ -1,6 +1,5 @@
 import { Color3 } from "../Maths/math.color";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { Texture } from "../Materials/Textures/texture";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
@@ -67,7 +66,7 @@ export class RefractionPostProcess extends PostProcess {
             this._refTexture = this._refTexture || new Texture(refractionTextureUrl, cam.getScene());
         });
 
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             effect.setColor3("baseColor", this.color);
             effect.setFloat("depth", this.depth);
             effect.setFloat("colorLevel", this.colorLevel);

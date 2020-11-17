@@ -1,7 +1,6 @@
 import { Nullable } from "../types";
 import { Matrix } from "../Maths/math.vector";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
 
@@ -32,7 +31,7 @@ export class FilterPostProcess extends PostProcess {
     ) {
         super(name, "filter", ["kernelMatrix"], null, options, camera, samplingMode, engine, reusable);
 
-        this.onApply = (effect: Effect) => {
+        this.onApply = (effect: any) => {
             effect.setMatrix("kernelMatrix", this.kernelMatrix);
         };
     }

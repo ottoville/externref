@@ -19,7 +19,6 @@ import { IMaterialSubSurfaceDefines, PBRSubSurfaceConfiguration } from "./pbrSub
 import { Color3, TmpColors } from '../../Maths/math.color';
 
 import { ImageProcessingConfiguration, IImageProcessingConfigurationDefines } from "../../Materials/imageProcessingConfiguration";
-import { Effect, IEffectCreationOptions } from "../../Materials/effect";
 import { Material, IMaterialCompilationOptions } from "../../Materials/material";
 import { MaterialDefines } from "../../Materials/materialDefines";
 import { PushMaterial } from "../../Materials/pushMaterial";
@@ -1075,7 +1074,7 @@ export abstract class PBRBaseMaterial extends PushMaterial {
         return false;
     }
 
-    private _prepareEffect(mesh: AbstractMesh, defines: PBRMaterialDefines, onCompiled: Nullable<(effect: Effect) => void> = null, onError: Nullable<(effect: Effect, errors: string) => void> = null, useInstances: Nullable<boolean> = null, useClipPlane: Nullable<boolean> = null): Nullable<Effect> {
+    private _prepareEffect(mesh: AbstractMesh, defines: PBRMaterialDefines, onCompiled: Nullable<(effect: any) => void> = null, onError: Nullable<(effect: any, errors: string) => void> = null, useInstances: Nullable<boolean> = null, useClipPlane: Nullable<boolean> = null): Nullable<any> {
         this._prepareDefines(mesh, defines, useInstances, useClipPlane);
         if (!defines.isDirty) {
             return null;
@@ -1243,7 +1242,7 @@ export abstract class PBRBaseMaterial extends PushMaterial {
             ImageProcessingConfiguration.PrepareSamplers(samplers, defines);
         }
 
-        MaterialHelper.PrepareUniformsAndSamplersList(<IEffectCreationOptions>{
+        MaterialHelper.PrepareUniformsAndSamplersList(<any>{
             uniformsNames: uniforms,
             uniformBuffersNames: uniformBuffers,
             samplers: samplers,
@@ -1256,7 +1255,7 @@ export abstract class PBRBaseMaterial extends PushMaterial {
         }
 
         var join = defines.toString();
-        return engine.createEffect(shaderName, <IEffectCreationOptions>{
+        return engine.createEffect(shaderName, <any>{
             attributes: attribs,
             uniformsNames: uniforms,
             uniformBuffersNames: uniformBuffers,

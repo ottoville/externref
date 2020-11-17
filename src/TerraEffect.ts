@@ -1,6 +1,4 @@
-﻿import type { Effect } from "./lib/babylon/Materials/effect.js";
-import type { IEffectCreationOptions } from "babylonjs/Materials/effect.js";
-import type { ThinEngine } from "babylonjs/Engines/thinEngine.js";
+﻿import type { ThinEngine } from "babylonjs/Engines/thinEngine.js";
 import type { IEffectFallbacks } from "./lib/babylon/Materials/iEffectFallbacks.js";
 import { Observable } from "./lib/babylon/Misc/observable.js";
 import type { DataBuffer } from "./lib/babylon/Meshes/dataBuffer.js";
@@ -31,7 +29,7 @@ export class TerraEffect {
         if (this._pipelineContext) {
             this._pipelineContext.dispose();
         }
-        this._engine._releaseEffect(<unknown>this as Effect);
+        this._engine._releaseEffect(<unknown>this as any);
     }
     /**
      * Checks if the effect is supported. (Must be called after compilation)
@@ -600,11 +598,11 @@ export class TerraEffect {
     /**
      * Callback that will be called if an error occurs during shader compilation.
      */
-    public onError: Nullable<(effect: TerraEffect | Effect, errors: string) => void> = null;
+    public onError: Nullable<(effect: TerraEffect | any, errors: string) => void> = null;
     /**
      * Callback that will be called when effect is bound.
      */
-    public onBind: Nullable<(effect: Effect) => void> = null;
+    public onBind: Nullable<(effect: any) => void> = null;
     /**
      * Unique ID of the effect.
      */
@@ -621,7 +619,7 @@ export class TerraEffect {
     public onErrorObservable = new Observable<TerraEffect>();
 
     /** @hidden */
-    public _onBindObservable: Nullable<Observable<Effect>> = null;
+    public _onBindObservable: Nullable<Observable<any>> = null;
 
     /**
      * @hidden
@@ -631,9 +629,9 @@ export class TerraEffect {
     /**
          * Observable that will be called when effect is bound.
          */
-    public get onBindObservable(): Observable<Effect> {
+    public get onBindObservable(): Observable<any> {
         if (!this._onBindObservable) {
-            this._onBindObservable = new Observable<Effect>();
+            this._onBindObservable = new Observable<any>();
         }
 
         return this._onBindObservable;
@@ -801,10 +799,10 @@ export class TerraEffect {
         webgpuPipelineContext!.bindGroupLayouts = bindGroupLayouts;
         return this._engine.getDevice().createPipelineLayout({ bindGroupLayouts });
     }
-    constructor(baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | ThinEngine, samplers: Nullable<string[]> = null,
+    constructor(baseName: any, attributesNamesOrOptions: string[] | any, uniformsNamesOrEngine: string[] | ThinEngine, samplers: Nullable<string[]> = null,
 
         engine?: ThinEngine, defines: Nullable<string> = null,
-        fallbacks: Nullable<IEffectFallbacks> = null, onCompiled: Nullable<(effect: Effect) => void> = null, onError: Nullable<(effect: Effect, errors: string) => void> = null, indexParameters?: any, key: string = "",
+        fallbacks: Nullable<IEffectFallbacks> = null, onCompiled: Nullable<(effect: any) => void> = null, onError: Nullable<(effect: any, errors: string) => void> = null, indexParameters?: any, key: string = "",
         sources?: [
             Promise<string>,
             Promise<string>,
@@ -812,8 +810,8 @@ export class TerraEffect {
         //super(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, engine, defines, fallbacks, onCompiled, onError, indexParameters, key, sources);
         this.name = baseName;
         this._key = key;
-        if ((<IEffectCreationOptions>attributesNamesOrOptions).attributes) {
-            var options = <IEffectCreationOptions>attributesNamesOrOptions;
+        if ((<any>attributesNamesOrOptions).attributes) {
+            var options = <any>attributesNamesOrOptions;
             this._engine = <WebGPUEngine>uniformsNamesOrEngine;
 
             this._attributesNames = options.attributes;
@@ -1187,7 +1185,7 @@ export class TerraEffect {
             if (fallbacks.hasMoreFallbacks) {
                 this._allFallbacksProcessed = false;
                 console.error("Trying next fallback.");
-                this.defines = fallbacks.reduce(this.defines, <unknown>this as Effect);
+                this.defines = fallbacks.reduce(this.defines, <unknown>this as any);
                 this._prepareEffect();
             } else { // Sorry we did everything we can
                 this._allFallbacksProcessed = true;

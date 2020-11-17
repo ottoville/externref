@@ -5,7 +5,6 @@ import { IInternalTextureLoader } from "../Materials/Textures/internalTextureLoa
 import { Texture } from "../Materials/Textures/texture";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { VideoTexture } from "../Materials/Textures/videoTexture";
-import { Effect } from "../Materials/effect";
 import { DataBuffer } from '../Meshes/dataBuffer';
 import { Tools } from "../Misc/tools";
 import { Observer } from "../Misc/observable";
@@ -122,7 +121,7 @@ class NativePipelineContext implements IPipelineContext {
     public onCompiled?: () => void;
     public transformFeedback?: WebGLTransformFeedback | null;
 
-    public _fillEffectInformation(effect: Effect, uniformBuffersNames: { [key: string]: number }, uniformsNames: string[], uniforms: { [key: string]: Nullable<WebGLUniformLocation> }, samplerList: string[], samplers: { [key: string]: number }, attributesNames: string[], attributes: number[]) {
+    public _fillEffectInformation(effect: any, uniformBuffersNames: { [key: string]: number }, uniformsNames: string[], uniforms: { [key: string]: Nullable<WebGLUniformLocation> }, samplerList: string[], samplers: { [key: string]: number }, attributesNames: string[], attributes: number[]) {
         const engine = this.engine;
         if (engine.supportsUniformBuffers) {
             for (var name in uniformBuffersNames) {
@@ -788,7 +787,7 @@ export class NativeEngine extends Engine {
         return buffer;
     }
 
-    public recordVertexArrayObject(vertexBuffers: { [key: string]: VertexBuffer; }, indexBuffer: Nullable<NativeDataBuffer>, effect: Effect): WebGLVertexArrayObject {
+    public recordVertexArrayObject(vertexBuffers: { [key: string]: VertexBuffer; }, indexBuffer: Nullable<NativeDataBuffer>, effect: any): WebGLVertexArrayObject {
         const vertexArray = this._native.createVertexArray();
 
         if (indexBuffer) {
@@ -918,7 +917,7 @@ export class NativeEngine extends Engine {
         }
     }
 
-    public _releaseEffect(effect: Effect): void {
+    public _releaseEffect(effect: any): void {
         // TODO
     }
 
@@ -936,7 +935,7 @@ export class NativeEngine extends Engine {
         throw new Error("Not Implemented");
     }
 
-    public bindSamplers(effect: Effect): void {
+    public bindSamplers(effect: any): void {
         const nativePipelineContext = effect.getPipelineContext() as NativePipelineContext;
         this._setProgram(nativePipelineContext.nativeProgram);
 

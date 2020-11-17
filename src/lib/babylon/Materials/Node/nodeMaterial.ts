@@ -7,7 +7,6 @@ import { Color4 } from '../../Maths/math.color';
 import { Mesh } from '../../Meshes/mesh';
 import { Engine } from '../../Engines/engine';
 import { NodeMaterialBuildState } from './nodeMaterialBuildState';
-import { IEffectCreationOptions } from '../effect';
 import { BaseTexture } from '../../Materials/Textures/baseTexture';
 import { Observable, Observer } from '../../Misc/observable';
 import { NodeMaterialBlockTargets } from './Enums/nodeMaterialBlockTargets';
@@ -781,7 +780,7 @@ export class NodeMaterial extends PushMaterial {
                 fragment: "nodeMaterial" + this._buildId,
                 vertexSource: this._vertexCompilationState.compilationString,
                 fragmentSource: this._fragmentCompilationState.compilationString
-            }, <IEffectCreationOptions>{
+            }, <any>{
                 attributes: this._vertexCompilationState.attributes,
                 uniformsNames: mergedUniforms,
                 uniformBuffersNames: uniformBuffers,

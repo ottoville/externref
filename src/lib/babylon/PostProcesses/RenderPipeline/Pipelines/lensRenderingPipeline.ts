@@ -1,6 +1,5 @@
 
 import { Camera } from "../../../Cameras/camera";
-import { Effect } from "../../../Materials/effect";
 import { Texture } from "../../../Materials/Textures/texture";
 import { DynamicTexture } from "../../../Materials/Textures/dynamicTexture";
 import { PostProcess } from "../../../PostProcesses/postProcess";
@@ -412,7 +411,7 @@ export class LensRenderingPipeline extends PostProcessRenderPipeline {
             ratio, null, Texture.TRILINEAR_SAMPLINGMODE,
             this._scene.getEngine(), false);
 
-        this._chromaticAberrationPostProcess.onApply = (effect: Effect) => {
+        this._chromaticAberrationPostProcess.onApply = (effect: any) => {
             effect.setFloat('chromatic_aberration', this._chromaticAberration);
             effect.setFloat('screen_width', this._scene.getEngine().getRenderWidth());
             effect.setFloat('screen_height', this._scene.getEngine().getRenderHeight());
@@ -431,7 +430,7 @@ export class LensRenderingPipeline extends PostProcessRenderPipeline {
             null, Texture.TRILINEAR_SAMPLINGMODE,
             this._scene.getEngine(), false, this._dofPentagon ? "#define PENTAGON\n" : "");
 
-        this._highlightsPostProcess.onApply = (effect: Effect) => {
+        this._highlightsPostProcess.onApply = (effect: any) => {
             effect.setFloat('gain', this._highlightsGain);
             effect.setFloat('threshold', this._highlightsThreshold);
             effect.setTextureFromPostProcess("textureSampler", this._chromaticAberrationPostProcess);
@@ -451,7 +450,7 @@ export class LensRenderingPipeline extends PostProcessRenderPipeline {
             ratio, null, Texture.TRILINEAR_SAMPLINGMODE,
             this._scene.getEngine(), false);
 
-        this._depthOfFieldPostProcess.onApply = (effect: Effect) => {
+        this._depthOfFieldPostProcess.onApply = (effect: any) => {
 
             effect.setTexture("depthSampler", this._depthTexture);
             effect.setTexture("grainSampler", this._grainTexture);

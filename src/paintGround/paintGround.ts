@@ -41,21 +41,23 @@ export abstract class paintGround {
         this.resolve = callback;
     }
     public destroy() {
-        this.camera.attachControl(this.scene.gpuscene.canvas, true);
+        this.camera.attachControl(this.scene.gpuscene.renderPassScreen.canvas, true);
     }
 
     #drawArea = async (evt:PointerEvent) => {
 
-        const ray = this.scene.createPickingRay(evt.clientX, evt.clientY);
+       // this.scene.mainCamera.updatePickingRay();
+        
 
-      /*  debugger;
-        let ray = Ray.Zero();
-        this.sceneDeprecated.createPickingRayToRef(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, Matrix.Identity(), ray, this.camera);
-        */
+
+        const ray = {
+            origin: new Vector3(this.scene.TerraCameras[0].pickingRay[0], this.scene.TerraCameras[0].pickingRay[1], this.scene.TerraCameras[0].pickingRay[2]),
+            direction: new Vector3(this.scene.TerraCameras[0].pickingRay[3], this.scene.TerraCameras[0].pickingRay[4], this.scene.TerraCameras[0].pickingRay[5])
+         }
         let distance: number;
 
         
-        let pikked = await this.ground.bounding.intersects(ray);
+        let pikked = await this.ground.mesh.intersects(ray);
         if (pikked.pickedPoint) {
             
             this.#end_position.set([pikked.pickedPoint.x, pikked.pickedPoint.z]);
@@ -82,10 +84,15 @@ export abstract class paintGround {
     #busy: boolean = false;
 
     #mousemove = async (evt: PointerEvent) => {
-        const ray = this.scene.createPickingRay(evt.clientX, evt.clientY);
+        //const ray2 = this.scene.createPickingRay(evt.clientX, evt.clientY);
+       // await this.scene.mainCamera.updatePickingRay();
+        const ray = {
+            origin: new Vector3(this.scene.TerraCameras[0].pickingRay[0], this.scene.TerraCameras[0].pickingRay[1], this.scene.TerraCameras[0].pickingRay[2]),
+            direction: new Vector3(this.scene.TerraCameras[0].pickingRay[3], this.scene.TerraCameras[0].pickingRay[4], this.scene.TerraCameras[0].pickingRay[5])
+        }
       //  let ray = Ray.Zero();
        // this.sceneDeprecated.createPickingRayToRef(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, Matrix.Identity(), ray, this.camera);
-        let pikked = await this.ground.bounding.intersects(ray);
+        let pikked = await this.ground.mesh.intersects(ray);
         if (pikked.pickedPoint && this.#end_position) {
             //Distance from first point
             let distance = Math.sqrt(Math.pow(this.#start_position[0] - pikked.pickedPoint.x, 2) + Math.pow(this.#start_position[1] - pikked.pickedPoint.z, 2));
@@ -131,7 +138,7 @@ export abstract class paintGround {
     private finalClick = (evt: PointerEvent) => {
         //this.canvas.addEventListener('click', async () => {
         //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
-
+        this.scene.TerraCameras[0].unSubscribePickingRay();
         this.uitab.removeListener('pointermove', this.#mousemove);
         //this.canvas.removeEventListener('pointermove', this.mousemove, false);
 
@@ -146,6 +153,7 @@ export abstract class paintGround {
     }
     #pointerUp = (evt: PointerEvent) => {
         this.uitab.removeListener('pointermove', this.#drawArea);
+        
         this.camera.attachControl(this.scene.canvas, true);
         //fix race condition
         if (this.#end_position[0] == 0)
@@ -171,7 +179,7 @@ export abstract class paintGround {
             return mesh === this.ground
         }, false, this.camera);*/
 
-        var pickInfo = await this.scene.pickPromise(evt.clientX, evt.clientY, mesh => { return mesh === this.ground }, false);
+        var pickInfo = await this.scene.pickPromise(evt.clientX, evt.clientY, mesh => { return mesh === this.ground.mesh }, false);
 
        // console.log(pickInfo);
         if (!pickInfo) {
@@ -189,7 +197,7 @@ export abstract class paintGround {
             this.#start_position = new Float32Array([pickInfo.pickedPoint.x, pickInfo.pickedPoint.z]);
             this.onMainPointerDown(this.#start_position);
             this.camera.detachControl(this.scene.canvas);
-
+            this.scene.TerraCameras[0].subscribePickingRay();
             this.uitab.addListener("pointermove", this.#drawArea, { lazy: 25 });
 
             this.uitab.addListener("pointerup", this.#pointerUp, { once: true });

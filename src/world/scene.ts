@@ -101,7 +101,7 @@ class _ClickInfo {
 }
 export class WorldScene extends Scene {
     //camera: ArcRotateCamera;
-   // camera2: ArcRotateCamera;
+    // camera2: ArcRotateCamera;
     DBP: Promise<EarthDatabase>;
 
     /**
@@ -147,12 +147,12 @@ export class WorldScene extends Scene {
             eyePosition.y,
             eyePosition.z,
             invertNormal ? -1 : 1);
-       //@ts-ignore
-       // this._sceneUbo.update();
+        //@ts-ignore
+        // this._sceneUbo.update();
     }
 
     createPickingRayToRef(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
-        
+
         var engine = this.getEngine();
         if (!camera) {
             if (!this.activeCamera) {
@@ -166,7 +166,7 @@ export class WorldScene extends Scene {
         // Moving coordinates to local viewport world
         x = x / engine.getHardwareScalingLevel() - viewport.x;
         y = y / engine.getHardwareScalingLevel() - (TerraScene.instance.canvasSize.height - viewport.y - viewport.height);
-       // const projectionmatrix = camera.getProjectionMatrix()
+        // const projectionmatrix = camera.getProjectionMatrix()
         /////
         // Cache
         //@ts-ignore
@@ -181,7 +181,7 @@ export class WorldScene extends Scene {
         camera._refreshFrustumPlanes = true;
         camera._cache.fov = camera.fov;
         camera._cache.fovMode = camera.fovMode;
-       // camera._cache.aspectRatio = engine.getAspectRatio(camera);
+        // camera._cache.aspectRatio = engine.getAspectRatio(camera);
         var viewport = camera.viewport;
         camera._cache.aspectRatio = (TerraScene.instance.canvasSize.width * viewport.width) / (TerraScene.instance.canvasSize.height * viewport.height);
 
@@ -193,7 +193,7 @@ export class WorldScene extends Scene {
         const reverseDepth = engine.useReverseDepthBuffer;
         let getProjectionMatrix: (fov: number, aspect: number, znear: number, zfar: number, result: Matrix, isVerticalFovFixed: boolean) => void;
         getProjectionMatrix = reverseDepth ? Matrix.PerspectiveFovReverseLHToRef : Matrix.PerspectiveFovLHToRef;
-        
+
         var viewport = camera.viewport;
         let aspectRatio = (TerraScene.instance.canvasSize.width * viewport.width) / (TerraScene.instance.canvasSize.height * viewport.height);
 
@@ -254,16 +254,16 @@ export class WorldScene extends Scene {
 
             this.createPickingRayToRef(x, y, world, this._tempPickingRay, this.cameraToUseForPointers || null);
 
-            const view = Matrix.FromArray(Array.from(TerraScene.instance.mainCamera.viewArr));
-            const projection = Matrix.FromArray(Array.from(TerraScene.instance.mainCamera.projectionArr));
-           // const viewProjection = view.multiply(projection);
-          //  const viewProjection = matrixMultiply64(Array.from(new Float32Array(TerraScene.instance.view)), Array.from(new Float32Array(TerraScene.instance.projection)));
+            const view = Matrix.FromArray(Array.from(TerraScene.instance.TerraCameras[0].viewArr));
+            const projection = Matrix.FromArray(Array.from(TerraScene.instance.TerraCameras[0].projectionArr));
+            // const viewProjection = view.multiply(projection);
+            //  const viewProjection = matrixMultiply64(Array.from(new Float32Array(TerraScene.instance.view)), Array.from(new Float32Array(TerraScene.instance.projection)));
             //TODO: reuse picking ray object
             const pickingRay = TerraScene.instance.createPickingRay(x, y, world.m as Float32Array);
             return pickingRay;
 
 
-          //  return this._tempPickingRay;
+            //  return this._tempPickingRay;
         };
         //@ts-ignore
         return this.collissionCheck(rayFunction, 0, null, fastCheck, predicate).then((pickResult: PickingInfo | null) => {
@@ -279,7 +279,8 @@ export class WorldScene extends Scene {
     public stateChange(data: {
         gameSpeed: number
         lastStateChangeGameTime: number
-        lastStateChangeTime: number}) {
+        lastStateChangeTime: number
+    }) {
 
         TerraScene.instance.gameSpeed = data.gameSpeed;
         if (this.webSocket) {
@@ -288,7 +289,7 @@ export class WorldScene extends Scene {
         }
         //gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
     };
-    
+
     public _renderForCamera(camera: Camera, rigParent?: Camera): void {
         if (camera && camera._skipRendering) {
             return;
@@ -473,228 +474,232 @@ export class WorldScene extends Scene {
         const scene = this;
         const inputmanager = this._inputManager;
         //(function (scene: WorldScene, elementToAttachTo: Nullable<HTMLElement> = null) {
-            if (!elementToAttachTo) {
-                elementToAttachTo = engine.getInputElement();
-            }
+        if (!elementToAttachTo) {
+            elementToAttachTo = engine.getInputElement();
+        }
 
-            if (!elementToAttachTo) {
-                return;
+        if (!elementToAttachTo) {
+            return;
         }
         //@ts-ignore
         inputmanager._initActionManager = (act: Nullable<AbstractActionManager>, clickInfo: _ClickInfo): Nullable<AbstractActionManager> => {
             if (!inputmanager._meshPickProceed) {
                 let pickResult = scene.pick(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers);
                 inputmanager._currentPickResult = pickResult;
-                    if (pickResult) {
-                        act = (pickResult.hit && pickResult.pickedMesh) ? pickResult.pickedMesh._getActionManagerForTrigger() : null;
-                    }
-                inputmanager._meshPickProceed = true;
+                if (pickResult) {
+                    act = (pickResult.hit && pickResult.pickedMesh) ? pickResult.pickedMesh._getActionManagerForTrigger() : null;
                 }
-                return act;
+                inputmanager._meshPickProceed = true;
+            }
+            return act;
         };
         //@ts-ignore
         inputmanager._delayedSimpleClick = (btn: number, clickInfo: _ClickInfo, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void) => {
-                // double click delay is over and that no double click has been raised since, or the 2 consecutive keys pressed are different
+            // double click delay is over and that no double click has been raised since, or the 2 consecutive keys pressed are different
             if ((Date.now() - inputmanager._previousStartingPointerTime > DoubleClickDelay && !inputmanager._doubleClickOccured) ||
                 btn !== inputmanager._previousButtonPressed) {
                 inputmanager._doubleClickOccured = false;
-                    clickInfo.singleClick = true;
-                    clickInfo.ignore = false;
+                clickInfo.singleClick = true;
+                clickInfo.ignore = false;
                 cb(clickInfo, inputmanager._currentPickResult);
-                }
-            };
+            }
+        };
         //@ts-ignore
         inputmanager._initClickEvent = (obs1: Observable<PointerInfoPre>, obs2: Observable<PointerInfo>, evt: PointerEvent, cb: (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => void): void => {
-                let clickInfo = new _ClickInfo();
+            let clickInfo = new _ClickInfo();
             inputmanager._currentPickResult = null;
-                let act: Nullable<AbstractActionManager> = null;
+            let act: Nullable<AbstractActionManager> = null;
 
-                let checkPicking = obs1.hasSpecificMask(PointerEventTypes.POINTERPICK) || obs2.hasSpecificMask(PointerEventTypes.POINTERPICK)
-                    || obs1.hasSpecificMask(PointerEventTypes.POINTERTAP) || obs2.hasSpecificMask(PointerEventTypes.POINTERTAP)
-                    || obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) || obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
+            let checkPicking = obs1.hasSpecificMask(PointerEventTypes.POINTERPICK) || obs2.hasSpecificMask(PointerEventTypes.POINTERPICK)
+                || obs1.hasSpecificMask(PointerEventTypes.POINTERTAP) || obs2.hasSpecificMask(PointerEventTypes.POINTERTAP)
+                || obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) || obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
             if (!checkPicking && AbstractActionManager) {
-                    //@ts-ignore
-                    act = inputmanager._initActionManager(act, clickInfo);
-                    if (act) {
-                        checkPicking = act.hasPickTriggers;
-                    }
+                //@ts-ignore
+                act = inputmanager._initActionManager(act, clickInfo);
+                if (act) {
+                    checkPicking = act.hasPickTriggers;
                 }
+            }
 
-                let needToIgnoreNext = false;
+            let needToIgnoreNext = false;
 
-                if (checkPicking) {
-                    let btn = evt.button;
-                    clickInfo.hasSwiped = inputmanager._isPointerSwiping();
+            if (checkPicking) {
+                let btn = evt.button;
+                clickInfo.hasSwiped = inputmanager._isPointerSwiping();
 
-                    if (!clickInfo.hasSwiped) {
-                        let checkSingleClickImmediately = !ExclusiveDoubleClickMode;
+                if (!clickInfo.hasSwiped) {
+                    let checkSingleClickImmediately = !ExclusiveDoubleClickMode;
 
-                        if (!checkSingleClickImmediately) {
-                            checkSingleClickImmediately = !obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) &&
-                                !obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
+                    if (!checkSingleClickImmediately) {
+                        checkSingleClickImmediately = !obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) &&
+                            !obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
 
-                            if (checkSingleClickImmediately && !AbstractActionManager.HasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger)) {
-                                //@ts-ignore
-                                act = inputmanager._initActionManager(act, clickInfo);
-                                if (act) {
-                                    checkSingleClickImmediately = !act.hasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger);
-                                }
-                            }
-                        }
-
-                        if (checkSingleClickImmediately) {
-                            // single click detected if double click delay is over or two different successive keys pressed without exclusive double click or no double click required
-                            if (Date.now() - inputmanager._previousStartingPointerTime > DoubleClickDelay ||
-                                btn !== inputmanager._previousButtonPressed) {
-                                clickInfo.singleClick = true;
-                                cb(clickInfo, inputmanager._currentPickResult);
-                                needToIgnoreNext = true;
-                            }
-                        }
-                        // at least one double click is required to be check and exclusive double click is enabled
-                        else {
-                            // wait that no double click has been raised during the double click delay
-                            inputmanager._previousDelayedSimpleClickTimeout = inputmanager._delayedSimpleClickTimeout;
-                            //@ts-ignore
-                            inputmanager._delayedSimpleClickTimeout = window.setTimeout(inputmanager._delayedSimpleClick.bind(inputmanager, btn, clickInfo, cb), DoubleClickDelay);
-                        }
-
-                        let checkDoubleClick = obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) ||
-                            obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
-                        if (!checkDoubleClick && AbstractActionManager.HasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger)) {
+                        if (checkSingleClickImmediately && !AbstractActionManager.HasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger)) {
                             //@ts-ignore
                             act = inputmanager._initActionManager(act, clickInfo);
                             if (act) {
-                                checkDoubleClick = act.hasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger);
+                                checkSingleClickImmediately = !act.hasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger);
                             }
                         }
-                        if (checkDoubleClick) {
-                            // two successive keys pressed are equal, double click delay is not over and double click has not just occurred
-                            if (btn === inputmanager._previousButtonPressed &&
-                                Date.now() - inputmanager._previousStartingPointerTime < DoubleClickDelay &&
-                                !inputmanager._doubleClickOccured
-                            ) {
-                                // pointer has not moved for 2 clicks, it's a double click
-                                if (!clickInfo.hasSwiped &&
-                                    !inputmanager._isPointerSwiping()) {
-                                    inputmanager._previousStartingPointerTime = 0;
-                                    inputmanager._doubleClickOccured = true;
-                                    clickInfo.doubleClick = true;
-                                    clickInfo.ignore = false;
-                                    if (ExclusiveDoubleClickMode && inputmanager._previousDelayedSimpleClickTimeout) {
-                                        clearTimeout(inputmanager._previousDelayedSimpleClickTimeout);
-                                    }
-                                    inputmanager._previousDelayedSimpleClickTimeout = inputmanager._delayedSimpleClickTimeout;
-                                    cb(clickInfo, inputmanager._currentPickResult);
-                                }
-                                // if the two successive clicks are too far, it's just two simple clicks
-                                else {
-                                    inputmanager._doubleClickOccured = false;
-                                    inputmanager._previousStartingPointerTime = inputmanager._startingPointerTime;
-                                    inputmanager._previousStartingPointerPosition.x = inputmanager._startingPointerPosition.x;
-                                    inputmanager._previousStartingPointerPosition.y = inputmanager._startingPointerPosition.y;
-                                    inputmanager._previousButtonPressed = btn;
-                                    if (ExclusiveDoubleClickMode) {
-                                        if (inputmanager._previousDelayedSimpleClickTimeout) {
-                                            clearTimeout(inputmanager._previousDelayedSimpleClickTimeout);
-                                        }
-                                        inputmanager._previousDelayedSimpleClickTimeout = inputmanager._delayedSimpleClickTimeout;
+                    }
 
-                                        cb(clickInfo, inputmanager._previousPickResult);
-                                    }
-                                    else {
-                                        cb(clickInfo, inputmanager._currentPickResult);
-                                    }
+                    if (checkSingleClickImmediately) {
+                        // single click detected if double click delay is over or two different successive keys pressed without exclusive double click or no double click required
+                        if (Date.now() - inputmanager._previousStartingPointerTime > DoubleClickDelay ||
+                            btn !== inputmanager._previousButtonPressed) {
+                            clickInfo.singleClick = true;
+                            cb(clickInfo, inputmanager._currentPickResult);
+                            needToIgnoreNext = true;
+                        }
+                    }
+                    // at least one double click is required to be check and exclusive double click is enabled
+                    else {
+                        // wait that no double click has been raised during the double click delay
+                        inputmanager._previousDelayedSimpleClickTimeout = inputmanager._delayedSimpleClickTimeout;
+                        //@ts-ignore
+                        inputmanager._delayedSimpleClickTimeout = window.setTimeout(inputmanager._delayedSimpleClick.bind(inputmanager, btn, clickInfo, cb), DoubleClickDelay);
+                    }
+
+                    let checkDoubleClick = obs1.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP) ||
+                        obs2.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP);
+                    if (!checkDoubleClick && AbstractActionManager.HasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger)) {
+                        //@ts-ignore
+                        act = inputmanager._initActionManager(act, clickInfo);
+                        if (act) {
+                            checkDoubleClick = act.hasSpecificTrigger(Constants.ACTION_OnDoublePickTrigger);
+                        }
+                    }
+                    if (checkDoubleClick) {
+                        // two successive keys pressed are equal, double click delay is not over and double click has not just occurred
+                        if (btn === inputmanager._previousButtonPressed &&
+                            Date.now() - inputmanager._previousStartingPointerTime < DoubleClickDelay &&
+                            !inputmanager._doubleClickOccured
+                        ) {
+                            // pointer has not moved for 2 clicks, it's a double click
+                            if (!clickInfo.hasSwiped &&
+                                !inputmanager._isPointerSwiping()) {
+                                inputmanager._previousStartingPointerTime = 0;
+                                inputmanager._doubleClickOccured = true;
+                                clickInfo.doubleClick = true;
+                                clickInfo.ignore = false;
+                                if (ExclusiveDoubleClickMode && inputmanager._previousDelayedSimpleClickTimeout) {
+                                    clearTimeout(inputmanager._previousDelayedSimpleClickTimeout);
                                 }
-                                needToIgnoreNext = true;
+                                inputmanager._previousDelayedSimpleClickTimeout = inputmanager._delayedSimpleClickTimeout;
+                                cb(clickInfo, inputmanager._currentPickResult);
                             }
-                            // just the first click of the double has been raised
+                            // if the two successive clicks are too far, it's just two simple clicks
                             else {
                                 inputmanager._doubleClickOccured = false;
                                 inputmanager._previousStartingPointerTime = inputmanager._startingPointerTime;
                                 inputmanager._previousStartingPointerPosition.x = inputmanager._startingPointerPosition.x;
                                 inputmanager._previousStartingPointerPosition.y = inputmanager._startingPointerPosition.y;
                                 inputmanager._previousButtonPressed = btn;
+                                if (ExclusiveDoubleClickMode) {
+                                    if (inputmanager._previousDelayedSimpleClickTimeout) {
+                                        clearTimeout(inputmanager._previousDelayedSimpleClickTimeout);
+                                    }
+                                    inputmanager._previousDelayedSimpleClickTimeout = inputmanager._delayedSimpleClickTimeout;
+
+                                    cb(clickInfo, inputmanager._previousPickResult);
+                                }
+                                else {
+                                    cb(clickInfo, inputmanager._currentPickResult);
+                                }
                             }
+                            needToIgnoreNext = true;
+                        }
+                        // just the first click of the double has been raised
+                        else {
+                            inputmanager._doubleClickOccured = false;
+                            inputmanager._previousStartingPointerTime = inputmanager._startingPointerTime;
+                            inputmanager._previousStartingPointerPosition.x = inputmanager._startingPointerPosition.x;
+                            inputmanager._previousStartingPointerPosition.y = inputmanager._startingPointerPosition.y;
+                            inputmanager._previousButtonPressed = btn;
                         }
                     }
                 }
+            }
 
-                if (!needToIgnoreNext) {
-                    cb(clickInfo, inputmanager._currentPickResult);
-                }
-            };
+            if (!needToIgnoreNext) {
+                cb(clickInfo, inputmanager._currentPickResult);
+            }
+        };
 
         inputmanager._onPointerMove = (evt: PointerEvent) => {
 
-                inputmanager._updatePointerPosition(evt);
+            inputmanager._updatePointerPosition(evt);
 
-                // PreObservable support
+            // PreObservable support
             if (inputmanager._checkPrePointerObservable(null, evt, evt.type === inputmanager._wheelEventName ? PointerEventTypes.POINTERWHEEL : PointerEventTypes.POINTERMOVE)) {
-                    return;
-                }
+                return;
+            }
 
-                if (!scene.cameraToUseForPointers && !scene.activeCamera) {
-                    return;
-                }
+            if (!scene.cameraToUseForPointers && !scene.activeCamera) {
+                return;
+            }
 
-                if (!scene.pointerMovePredicate) {
-                    scene.pointerMovePredicate = (mesh: AbstractMesh): boolean => (mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (mesh.enablePointerMoveEvents || scene.constantlyUpdateMeshUnderPointer || (mesh._getActionManagerForTrigger() != null)) && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0));
-                }
+            if (!scene.pointerMovePredicate) {
+                scene.pointerMovePredicate = (mesh: AbstractMesh): boolean => (mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (mesh.enablePointerMoveEvents || scene.constantlyUpdateMeshUnderPointer || (mesh._getActionManagerForTrigger() != null)) && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0));
+            }
 
-                // Meshes
+            // Meshes
             var pickResult = scene.pick(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY, scene.pointerMovePredicate, false, scene.cameraToUseForPointers);
 
             inputmanager._processPointerMove(pickResult, evt);
-            };
+        };
 
         inputmanager._onPointerDown = (evt: PointerEvent) => {
-                inputmanager._totalPointersPressed++;
-                inputmanager._pickedDownMesh = null;
-                inputmanager._meshPickProceed = false;
+            inputmanager._totalPointersPressed++;
+            inputmanager._pickedDownMesh = null;
+            inputmanager._meshPickProceed = false;
 
             inputmanager._updatePointerPosition(evt);
 
-                if (scene.preventDefaultOnPointerDown && elementToAttachTo) {
-                    evt.preventDefault();
-                    elementToAttachTo.focus();
-                }
+            if (scene.preventDefaultOnPointerDown && elementToAttachTo) {
+                evt.preventDefault();
+                elementToAttachTo.focus();
+            }
 
             inputmanager._startingPointerPosition.x = inputmanager._pointerX;
             inputmanager._startingPointerPosition.y = inputmanager._pointerY;
             inputmanager._startingPointerTime = Date.now();
 
-                // PreObservable support
+            // PreObservable support
             if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERDOWN)) {
-                    return;
-                }
+                debugger;
+                return;
+            }
 
-                if (!scene.cameraToUseForPointers && !scene.activeCamera) {
-                    return;
-                }
+            if (!scene.cameraToUseForPointers && !scene.activeCamera) {
+                debugger;
+                return;
+            }
 
             inputmanager._pointerCaptures[evt.pointerId] = true;
+            if (!scene.pointerDownPredicate) {
+                scene.pointerDownPredicate = (mesh: AbstractMesh): boolean => {
+                    return mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0);
+                };
+            }
 
-                if (!scene.pointerDownPredicate) {
-                    scene.pointerDownPredicate = (mesh: AbstractMesh): boolean => {
-                        return mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0);
-                    };
-                }
-
-                // Meshes
+            // Meshes
             inputmanager._pickedDownMesh = null;
-                       // scene.pickPromise(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers).then(pickResult => {
+            // scene.pickPromise(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY, scene.pointerDownPredicate, false, scene.cameraToUseForPointers).then(pickResult => {
 
             TerraScene.instance.pickPromise(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY).then(pickResult => {
                 if (pickResult) //@ts-ignore
-                        inputmanager._processPointerDown(pickResult, evt);
-                });
-            };
+                    inputmanager._processPointerDown(pickResult, evt);
+                else {
+                    debugger;
+                }
+            });
+        };
 
         inputmanager._onPointerUp = (evt: PointerEvent) => {
             if (inputmanager._totalPointersPressed === 0) {  // We are attaching the pointer up to windows because of a bug in FF
-                    return;                             // So we need to test it the pointer down was pressed before.
-                }
+                return;                             // So we need to test it the pointer down was pressed before.
+            }
 
             inputmanager._totalPointersPressed--;
             inputmanager._pickedUpMesh = null;
@@ -702,151 +707,151 @@ export class WorldScene extends Scene {
 
             inputmanager._updatePointerPosition(evt);
 
-                if (scene.preventDefaultOnPointerUp && elementToAttachTo) {
-                    evt.preventDefault();
-                    elementToAttachTo.focus();
-                }
+            if (scene.preventDefaultOnPointerUp && elementToAttachTo) {
+                evt.preventDefault();
+                elementToAttachTo.focus();
+            }
             //@ts-ignore
             inputmanager._initClickEvent(scene.onPrePointerObservable, scene.onPointerObservable, evt, (clickInfo: _ClickInfo, pickResult: Nullable<PickingInfo>) => {
-                    // PreObservable support
-                    if (scene.onPrePointerObservable.hasObservers()) {
-                        if (!clickInfo.ignore) {
-                            if (!clickInfo.hasSwiped) {
-                                if (clickInfo.singleClick && scene.onPrePointerObservable.hasSpecificMask(PointerEventTypes.POINTERTAP)) {
-                                    if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERTAP)) {
-                                        return;
-                                    }
-                                }
-                                if (clickInfo.doubleClick && scene.onPrePointerObservable.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP)) {
-                                    if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERDOUBLETAP)) {
-                                        return;
-                                    }
+                // PreObservable support
+                if (scene.onPrePointerObservable.hasObservers()) {
+                    if (!clickInfo.ignore) {
+                        if (!clickInfo.hasSwiped) {
+                            if (clickInfo.singleClick && scene.onPrePointerObservable.hasSpecificMask(PointerEventTypes.POINTERTAP)) {
+                                if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERTAP)) {
+                                    return;
                                 }
                             }
-                            if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERUP)) {
-                                return;
+                            if (clickInfo.doubleClick && scene.onPrePointerObservable.hasSpecificMask(PointerEventTypes.POINTERDOUBLETAP)) {
+                                if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERDOUBLETAP)) {
+                                    return;
+                                }
                             }
                         }
+                        if (inputmanager._checkPrePointerObservable(null, evt, PointerEventTypes.POINTERUP)) {
+                            return;
+                        }
                     }
+                }
 
                 if (!inputmanager._pointerCaptures[evt.pointerId]) {
-                        return;
-                    }
+                    return;
+                }
 
                 inputmanager._pointerCaptures[evt.pointerId] = false;
-                    if (!scene.cameraToUseForPointers && !scene.activeCamera) {
-                        return;
-                    }
+                if (!scene.cameraToUseForPointers && !scene.activeCamera) {
+                    return;
+                }
 
-                    if (!scene.pointerUpPredicate) {
-                        scene.pointerUpPredicate = (mesh: AbstractMesh): boolean => {
-                            return mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0);
-                        };
-                    }
+                if (!scene.pointerUpPredicate) {
+                    scene.pointerUpPredicate = (mesh: AbstractMesh): boolean => {
+                        return mesh.isPickable && mesh.isVisible && mesh.isReady() && mesh.isEnabled() && (!scene.cameraToUseForPointers || (scene.cameraToUseForPointers.layerMask & mesh.layerMask) !== 0);
+                    };
+                }
 
-                    // Meshes
+                // Meshes
                 if (!inputmanager._meshPickProceed && (AbstractActionManager && AbstractActionManager.HasTriggers || scene.onPointerObservable.hasObservers())) {
                     //@ts-ignore
                     inputmanager._initActionManager(null, clickInfo);
-                    }
-                    if (!pickResult) {
-                        pickResult = inputmanager._currentPickResult;
-                    }
+                }
+                if (!pickResult) {
+                    pickResult = inputmanager._currentPickResult;
+                }
                 //@ts-ignore
                 inputmanager._processPointerUp(pickResult, evt, clickInfo);
 
                 inputmanager._previousPickResult = inputmanager._currentPickResult;
-                });
-            };
+            });
+        };
 
         inputmanager._onKeyDown = (evt: KeyboardEvent) => {
-                let type = KeyboardEventTypes.KEYDOWN;
-                if (scene.onPreKeyboardObservable.hasObservers()) {
-                    let pi = new KeyboardInfoPre(type, evt);
-                    scene.onPreKeyboardObservable.notifyObservers(pi, type);
-                    if (pi.skipOnPointerObservable) {
-                        return;
-                    }
+            let type = KeyboardEventTypes.KEYDOWN;
+            if (scene.onPreKeyboardObservable.hasObservers()) {
+                let pi = new KeyboardInfoPre(type, evt);
+                scene.onPreKeyboardObservable.notifyObservers(pi, type);
+                if (pi.skipOnPointerObservable) {
+                    return;
                 }
+            }
 
-                if (scene.onKeyboardObservable.hasObservers()) {
-                    let pi = new KeyboardInfo(type, evt);
-                    scene.onKeyboardObservable.notifyObservers(pi, type);
-                }
+            if (scene.onKeyboardObservable.hasObservers()) {
+                let pi = new KeyboardInfo(type, evt);
+                scene.onKeyboardObservable.notifyObservers(pi, type);
+            }
 
-                if (scene.actionManager) {
-                    scene.actionManager.processTrigger(Constants.ACTION_OnKeyDownTrigger, ActionEvent.CreateNewFromScene(scene, evt));
-                }
-            };
+            if (scene.actionManager) {
+                scene.actionManager.processTrigger(Constants.ACTION_OnKeyDownTrigger, ActionEvent.CreateNewFromScene(scene, evt));
+            }
+        };
 
         inputmanager._onKeyUp = (evt: KeyboardEvent) => {
-                let type = KeyboardEventTypes.KEYUP;
-                if (scene.onPreKeyboardObservable.hasObservers()) {
-                    let pi = new KeyboardInfoPre(type, evt);
-                    scene.onPreKeyboardObservable.notifyObservers(pi, type);
-                    if (pi.skipOnPointerObservable) {
-                        return;
-                    }
+            let type = KeyboardEventTypes.KEYUP;
+            if (scene.onPreKeyboardObservable.hasObservers()) {
+                let pi = new KeyboardInfoPre(type, evt);
+                scene.onPreKeyboardObservable.notifyObservers(pi, type);
+                if (pi.skipOnPointerObservable) {
+                    return;
                 }
+            }
 
-                if (scene.onKeyboardObservable.hasObservers()) {
-                    let pi = new KeyboardInfo(type, evt);
-                    scene.onKeyboardObservable.notifyObservers(pi, type);
-                }
+            if (scene.onKeyboardObservable.hasObservers()) {
+                let pi = new KeyboardInfo(type, evt);
+                scene.onKeyboardObservable.notifyObservers(pi, type);
+            }
 
-                if (scene.actionManager) {
-                    scene.actionManager.processTrigger(Constants.ACTION_OnKeyUpTrigger, ActionEvent.CreateNewFromScene(scene, evt));
-                }
-            };
+            if (scene.actionManager) {
+                scene.actionManager.processTrigger(Constants.ACTION_OnKeyUpTrigger, ActionEvent.CreateNewFromScene(scene, evt));
+            }
+        };
 
-            // Keyboard events
+        // Keyboard events
         inputmanager._onCanvasFocusObserver = engine.onCanvasFocusObservable.add((() => {
-                let fn = () => {
-                    if (!elementToAttachTo) {
-                        return;
-                    }
-                    elementToAttachTo.addEventListener("keydown", inputmanager._onKeyDown, false);
-                    elementToAttachTo.addEventListener("keyup", inputmanager._onKeyUp, false);
-                };
-                if (document.activeElement === elementToAttachTo) {
-                    fn();
-                }
-                return fn;
-            })());
-
-        inputmanager._onCanvasBlurObserver = engine.onCanvasBlurObservable.add(() => {
+            let fn = () => {
                 if (!elementToAttachTo) {
                     return;
                 }
+                elementToAttachTo.addEventListener("keydown", inputmanager._onKeyDown, false);
+                elementToAttachTo.addEventListener("keyup", inputmanager._onKeyUp, false);
+            };
+            if (document.activeElement === elementToAttachTo) {
+                fn();
+            }
+            return fn;
+        })());
+
+        inputmanager._onCanvasBlurObserver = engine.onCanvasBlurObservable.add(() => {
+            if (!elementToAttachTo) {
+                return;
+            }
             elementToAttachTo.removeEventListener("keydown", inputmanager._onKeyDown);
             elementToAttachTo.removeEventListener("keyup", inputmanager._onKeyUp);
-            });
+        });
 
-            // Pointer events
+        // Pointer events
 
-            if (attachMove) {
-                elementToAttachTo.addEventListener("pointermove", <any>inputmanager._onPointerMove, false);
+        if (attachMove) {
+            elementToAttachTo.addEventListener("pointermove", <any>inputmanager._onPointerMove, false);
 
-                // Wheel
-                inputmanager._wheelEventName = "onwheel" in document.createElement("div") ? "wheel" :       // Modern browsers support "wheel"
-                    (<any>document).onmousewheel !== undefined ? "mousewheel" :                     // Webkit and IE support at least "mousewheel"
-                        "DOMMouseScroll";                                                           // let's assume that remaining browsers are older Firefox
+            // Wheel
+            inputmanager._wheelEventName = "onwheel" in document.createElement("div") ? "wheel" :       // Modern browsers support "wheel"
+                (<any>document).onmousewheel !== undefined ? "mousewheel" :                     // Webkit and IE support at least "mousewheel"
+                    "DOMMouseScroll";                                                           // let's assume that remaining browsers are older Firefox
 
-                elementToAttachTo.addEventListener(inputmanager._wheelEventName, <any>inputmanager._onPointerMove, false);
+            elementToAttachTo.addEventListener(inputmanager._wheelEventName, <any>inputmanager._onPointerMove, false);
+        }
+        if (attachDown) {
+            elementToAttachTo.addEventListener("pointerdown", <any>inputmanager._onPointerDown, false);
+        }
+
+        if (attachUp) {
+            //@ts-ignore
+            let hostWindow = scene.getEngine().getHostWindow();
+            if (hostWindow) {
+                hostWindow.addEventListener("pointerup", <any>inputmanager._onPointerUp, false);
             }
-            if (attachDown) {
-                elementToAttachTo.addEventListener("pointerdown", <any>inputmanager._onPointerDown, false);
-            }
+        }
 
-            if (attachUp) {
-                //@ts-ignore
-                let hostWindow = scene.getEngine().getHostWindow();
-                if (hostWindow) {
-                    hostWindow.addEventListener("pointerup", <any>inputmanager._onPointerUp, false);
-                }
-            }
-
-    //    }).bind(this._inputManager)(this, elementToAttachTo);
+        //    }).bind(this._inputManager)(this, elementToAttachTo);
     }
 
     constructor(
@@ -857,14 +862,14 @@ export class WorldScene extends Scene {
         private canvas: HTMLCanvasElement,
         private device: GPUDevice,
         private webSocket?: WebSocket
-        ) {
+    ) {
         super(engine as Engine);
         this.DBP = DB;
         this.getSceneUniformBuffer().create();
         //@ts-ignore
         this.getSceneUniformBuffer()._buffer._buffer = GPU.instance.uniformBuffer;
 
-        const scene:Scene = this;
+        const scene: Scene = this;
         //@ts-ignore
         this.collisionCoordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
             var closeDistance = Engine.CollisionsEpsilon * 10.0;
@@ -888,14 +893,14 @@ export class WorldScene extends Scene {
                 }
             }
             if (!collider.collisionFound) {
-                
+
                 position.addToRef(velocity, finalPosition);
                 return;
             }
             if (velocity.x !== 0 || velocity.y !== 0 || velocity.z !== 0) {
                 collider._getResponse(position, velocity);
             }
-            
+
             if (velocity.length() <= closeDistance) {
                 finalPosition.copyFrom(position);
                 return;
@@ -926,7 +931,7 @@ export class WorldScene extends Scene {
          gameEngine.message(WorkerReturn.noReturn, 'init', {
              gameTime: this.lastStateChangeGameTime
          });*/
-        
+
 
         /*
         this.camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), this);
@@ -937,53 +942,53 @@ export class WorldScene extends Scene {
         this.camera.angularSensibilityX = 1000;
         this.camera.angularSensibilityY = 2000;*/
 
-      // this.camera.lowerBetaLimit = 0.2;
-      //  this.camera.upperBetaLimit = (Math.PI / 2) * 0.6;
+        // this.camera.lowerBetaLimit = 0.2;
+        //  this.camera.upperBetaLimit = (Math.PI / 2) * 0.6;
 
-       // this.camera.lowerRadiusLimit = 10;
-/*      this.camera.panningAxis = new Vector3(1, 0, 1)
-        this.camera.checkCollisions = true;
-        //Object.defineProperty(this.camera, 'checkCollisions', { get() { debugger; return true; } })
-        this.camera.attachControl(canvas, true);*/
+        // this.camera.lowerRadiusLimit = 10;
+        /*      this.camera.panningAxis = new Vector3(1, 0, 1)
+                this.camera.checkCollisions = true;
+                //Object.defineProperty(this.camera, 'checkCollisions', { get() { debugger; return true; } })
+                this.camera.attachControl(canvas, true);*/
         //@ts-ignore
-      //  this.camera2 = new ArcRotateCamera("Camera2", 0, 0, 10, new Vector3(500, 20, 0), this);
+        //  this.camera2 = new ArcRotateCamera("Camera2", 0, 0, 10, new Vector3(500, 20, 0), this);
         //this.camera2.target = this.camera.target;
-      //  this.camera2.viewport = new Viewport(0, 0, 0.5, 1.0);
-      /*  DB.then(DB => {
-            DB.transaction("save").objectStore("save").get(0).onsuccess = (evt) => {
-                if ((<IDBRequest>evt.target).result) {
-                    let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
-                    this.camera.alpha = restored.alpha;
-                    this.camera.beta = restored.beta;
-                    this.camera.radius = restored.radius;
-                     //@ts-ignore
-                    this.camera.target = new Vector3(restored.target.x, restored.target.y, restored.target.z);
-                    this.camera.position = restored.position;
-
-                }
-                let l = new LazyEval(() => {
-                    //console.log(this.camera.position.y);
-
-                    DB.transaction("save", "readwrite").objectStore("save").put(<savedCamera>{
-                        id: 0,
-                        camera: { alpha: this.camera.alpha, beta: this.camera.beta, radius: this.camera.radius, target: this.camera.target, position: this.camera.position }
-                    });
-                    if (this.camera2) {
-                        this.camera2.alpha = 0;
-                        this.camera2.beta = 0;
-                        this.camera2.radius = 60;
-                         //@ts-ignore
-                        this.camera2.target = new Vector3(this.camera.target.x, 1, this.camera.target.z);
-                         //@ts-ignore
-                        this.camera2.position = new Vector3(this.camera.target.x, 1000, this.camera.target.z);
-                    }
-                })
-                this.camera.onProjectionMatrixChangedObservable.add(() => {
-                    l.eval(500);
-                });
-
-            }
-        })*/
+        //  this.camera2.viewport = new Viewport(0, 0, 0.5, 1.0);
+        /*  DB.then(DB => {
+              DB.transaction("save").objectStore("save").get(0).onsuccess = (evt) => {
+                  if ((<IDBRequest>evt.target).result) {
+                      let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
+                      this.camera.alpha = restored.alpha;
+                      this.camera.beta = restored.beta;
+                      this.camera.radius = restored.radius;
+                       //@ts-ignore
+                      this.camera.target = new Vector3(restored.target.x, restored.target.y, restored.target.z);
+                      this.camera.position = restored.position;
+  
+                  }
+                  let l = new LazyEval(() => {
+                      //console.log(this.camera.position.y);
+  
+                      DB.transaction("save", "readwrite").objectStore("save").put(<savedCamera>{
+                          id: 0,
+                          camera: { alpha: this.camera.alpha, beta: this.camera.beta, radius: this.camera.radius, target: this.camera.target, position: this.camera.position }
+                      });
+                      if (this.camera2) {
+                          this.camera2.alpha = 0;
+                          this.camera2.beta = 0;
+                          this.camera2.radius = 60;
+                           //@ts-ignore
+                          this.camera2.target = new Vector3(this.camera.target.x, 1, this.camera.target.z);
+                           //@ts-ignore
+                          this.camera2.position = new Vector3(this.camera.target.x, 1000, this.camera.target.z);
+                      }
+                  })
+                  this.camera.onProjectionMatrixChangedObservable.add(() => {
+                      l.eval(500);
+                  });
+  
+              }
+          })*/
         interface TerrainMap {
             width: number,
             height: number,
@@ -1003,67 +1008,67 @@ export class WorldScene extends Scene {
     */
 
 
-        
-        
-
-            
-     //   this.sea = new Sea(this);
-      /*  this.getSceneUniformBuffer().update();
-        this.terrainReady=this.terrainInited.then(gt => {
-            blazor.invokeMethod('setProgress', 40);
-            let [ground, texture] = gt;
 
 
 
-           // ground.terraMesh.checkCollisions = true;
-            blazor.invokeMethod('setProgress', 50);
-          //  ground.terraMesh.isPickable = true;
-            
-            blazor.invokeMethod('setProgress', 51);
-            blazor.invokeMethod('setProgress', 52);
 
-
-            blazor.invokeMethod('setProgress', 53);
-            return texture.then(async gpuBuffer => {
-                blazor.invokeMethod('setProgress', 75);
-
-                
-                //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
-                const commandEncoder = device.createCommandEncoder({});
-                blazor.invokeMethod('setProgress', 80);
+        //   this.sea = new Sea(this);
+        /*  this.getSceneUniformBuffer().update();
+          this.terrainReady=this.terrainInited.then(gt => {
+              blazor.invokeMethod('setProgress', 40);
+              let [ground, texture] = gt;
+  
+  
+  
+             // ground.terraMesh.checkCollisions = true;
+              blazor.invokeMethod('setProgress', 50);
+            //  ground.terraMesh.isPickable = true;
               
-                let bufferView: GPUBufferCopyView = {
-                    buffer: gpuBuffer,
-                    bytesPerRow: ground.textureSize[0] * 4,
-                    rowsPerImage: 0,
-                    offset: 0,
-                };
-                blazor.invokeMethod('setProgress', 85);
-               
+              blazor.invokeMethod('setProgress', 51);
+              blazor.invokeMethod('setProgress', 52);
+  
+  
+              blazor.invokeMethod('setProgress', 53);
+              return texture.then(async gpuBuffer => {
+                  blazor.invokeMethod('setProgress', 75);
+  
+                  
+                  //internaltex._sphericalPolynomial = webglEngineTexture._sphericalPolynomial;
+                  const commandEncoder = device.createCommandEncoder({});
+                  blazor.invokeMethod('setProgress', 80);
                 
-                commandEncoder.copyBufferToTexture(bufferView,
-                    {
-                        texture: ground.texture,
-                        origin: {
-                            x: 0,
-                            y: 0,
-                            z: Math.max(-1, 0)
-                           },
-                    mipLevel: 0,
-                    }, ground.textureExtent);
-                blazor.invokeMethod('setProgress', 90);
-               
-
-                device.defaultQueue.submit([commandEncoder.finish()]); //Copy would overflow the buffer
-                blazor.invokeMethod('setProgress', 95);
-                bufferView.buffer.destroy();
-                blazor.invokeMethod('setProgress', 100);
-                console.debug("Progress 100");
-            })
-        }).catch(e => {
-            console.error(e);
-            blazor.invokeMethod('setProgressError', e.name +' '+ e.message);
-        })*/
+                  let bufferView: GPUBufferCopyView = {
+                      buffer: gpuBuffer,
+                      bytesPerRow: ground.textureSize[0] * 4,
+                      rowsPerImage: 0,
+                      offset: 0,
+                  };
+                  blazor.invokeMethod('setProgress', 85);
+                 
+                  
+                  commandEncoder.copyBufferToTexture(bufferView,
+                      {
+                          texture: ground.texture,
+                          origin: {
+                              x: 0,
+                              y: 0,
+                              z: Math.max(-1, 0)
+                             },
+                      mipLevel: 0,
+                      }, ground.textureExtent);
+                  blazor.invokeMethod('setProgress', 90);
+                 
+  
+                  device.defaultQueue.submit([commandEncoder.finish()]); //Copy would overflow the buffer
+                  blazor.invokeMethod('setProgress', 95);
+                  bufferView.buffer.destroy();
+                  blazor.invokeMethod('setProgress', 100);
+                  console.debug("Progress 100");
+              })
+          }).catch(e => {
+              console.error(e);
+              blazor.invokeMethod('setProgressError', e.name +' '+ e.message);
+          })*/
     }
 
 }

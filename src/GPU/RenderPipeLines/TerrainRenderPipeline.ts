@@ -11,7 +11,7 @@ async function TerrainRenderPipeline(scene: TerraScene, textureView: GPUTextureV
         minFilter: "linear",
     });
     const [vertex, fragment] = await Promise.all(['/shaders/wgsl/ground.vert.wgsl', '/shaders/wgsl/ground.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
-    const renderPipeLine = scene.lights.lightsBindGroupTexture.addRenderPipeline({
+    const renderPipeLine = scene.lightsBindGroupTexture.addRenderPipeline({
         primitiveTopology: 'triangle-list',
         depthStencilState: {
             depthWriteEnabled: true,
@@ -68,10 +68,7 @@ async function TerrainRenderPipeline(scene: TerraScene, textureView: GPUTextureV
     return renderPipeLine;
 }
 export class TerrainMesh extends BoundableNode {
-    
-    worldPosition: worldPosition = new worldPosition(this);
-    
-    
+    worldPosition?: worldPosition | undefined;
     constructor(
         scene: TerraScene,
         public textureView: GPUTextureView,

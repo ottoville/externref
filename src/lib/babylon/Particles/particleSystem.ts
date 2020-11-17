@@ -8,7 +8,6 @@ import { Buffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
-import { Effect } from "../Materials/effect";
 import { ImageProcessingConfiguration } from "../Materials/imageProcessingConfiguration";
 import { Texture } from "../Materials/Textures/texture";
 import { DynamicTexture } from "../Materials/Textures/dynamicTexture";
@@ -103,8 +102,8 @@ export class ParticleSystem extends BaseParticleSystem implements IDisposable, I
     private _vertexBuffers: { [key: string]: VertexBuffer } = {};
     private _spriteBuffer: Nullable<Buffer>;
     private _indexBuffer: Nullable<DataBuffer>;
-    private _effect: Effect;
-    private _customEffect: Nullable<Effect>;
+    private _effect: any;
+    private _customEffect: Nullable<any>;
     private _cachedDefines: string;
     private _scaledColorStep = new Color4(0, 0, 0, 0);
     private _colorDiff = new Color4(0, 0, 0, 0);
@@ -201,7 +200,7 @@ export class ParticleSystem extends BaseParticleSystem implements IDisposable, I
      * @param isAnimationSheetEnabled Must be true if using a spritesheet to animate the particles texture
      * @param epsilon Offset used to render the particles
      */
-    constructor(name: string, capacity: number, scene: Scene, customEffect: Nullable<Effect> = null, isAnimationSheetEnabled: boolean = false, epsilon: number = 0.01) {
+    constructor(name: string, capacity: number, scene: Scene, customEffect: Nullable<any> = null, isAnimationSheetEnabled: boolean = false, epsilon: number = 0.01) {
         super(name);
 
         this._capacity = capacity;
@@ -1502,7 +1501,7 @@ export class ParticleSystem extends BaseParticleSystem implements IDisposable, I
     }
 
     /** @hidden */
-    private _getEffect(blendMode: number): Effect {
+    private _getEffect(blendMode: number): any {
         if (this._customEffect) {
             return this._customEffect;
         }
@@ -1914,7 +1913,7 @@ export class ParticleSystem extends BaseParticleSystem implements IDisposable, I
      * @returns the cloned particle system
      */
     public clone(name: string, newEmitter: any): ParticleSystem {
-        var custom: Nullable<Effect> = null;
+        var custom: Nullable<any> = null;
         var program: any = null;
         if (this.customShader != null) {
             program = this.customShader;
@@ -2554,7 +2553,7 @@ export class ParticleSystem extends BaseParticleSystem implements IDisposable, I
      */
     public static Parse(parsedParticleSystem: any, scene: Scene, rootUrl: string, doNotStart = false): ParticleSystem {
         var name = parsedParticleSystem.name;
-        var custom: Nullable<Effect> = null;
+        var custom: Nullable<any> = null;
         var program: any = null;
         if (parsedParticleSystem.customShader) {
             program = parsedParticleSystem.customShader;

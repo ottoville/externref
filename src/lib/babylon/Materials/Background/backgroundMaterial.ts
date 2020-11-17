@@ -9,7 +9,6 @@ import { VertexBuffer } from "../../Meshes/buffer";
 import { SubMesh } from "../../Meshes/subMesh";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
 import { Mesh } from "../../Meshes/mesh";
-import { Effect, IEffectCreationOptions } from "../../Materials/effect";
 import { MaterialHelper } from "../../Materials/materialHelper";
 import { MaterialDefines } from "../../Materials/materialDefines";
 import { PushMaterial } from "../../Materials/pushMaterial";
@@ -890,7 +889,7 @@ export class BackgroundMaterial extends PushMaterial {
                 ImageProcessingConfiguration.PrepareSamplers(samplers, defines);
             }
 
-            MaterialHelper.PrepareUniformsAndSamplersList(<IEffectCreationOptions>{
+            MaterialHelper.PrepareUniformsAndSamplersList(<any>{
                 uniformsNames: uniforms,
                 uniformBuffersNames: uniformBuffers,
                 samplers: samplers,
@@ -898,7 +897,7 @@ export class BackgroundMaterial extends PushMaterial {
                 maxSimultaneousLights: this._maxSimultaneousLights
             });
 
-            var onCompiled = (effect: Effect) => {
+            var onCompiled = (effect: any) => {
                 if (this.onCompiled) {
                     this.onCompiled(effect);
                 }
@@ -907,7 +906,7 @@ export class BackgroundMaterial extends PushMaterial {
             };
 
             var join = defines.toString();
-            subMesh.setEffect(scene.getEngine().createEffect("background", <IEffectCreationOptions>{
+            subMesh.setEffect(scene.getEngine().createEffect("background", <any>{
                 attributes: attribs,
                 uniformsNames: uniforms,
                 uniformBuffersNames: uniformBuffers,

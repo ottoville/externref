@@ -29,12 +29,13 @@ export class Light {
 
 
     
-    lightsBindGroup;
+    /*lightsBindGroup;
     lightsBindGroupNoTime;
-    lightsBindGroupWGSL;
-    lightsBindGroupTexture;
-    lightsBindGroupNoTimeWGSL;
+    lightsBindGroupWGSL;*/
+   // lightsBindGroupTexture;
+   // lightsBindGroupNoTimeWGSL;
     uniformBindGroupLightsWGSL: BindGroupOneBinding;
+    uniformBindGroupLights: BindGroupOneBinding;
 
     add(light: isLight) {
         this.#instances.add(light);
@@ -50,7 +51,7 @@ export class Light {
             visibility: GPUShaderStage.VERTEX,
             type: 'uniform-buffer'
         });
-         const uniformBindGroupLights = this.scene.createBindGroup(uniformBindGroupLayoutLights,
+         this.uniformBindGroupLights = this.scene.createBindGroup(uniformBindGroupLayoutLights,
                 {
                     binding: 0,
                     resource: {
@@ -68,13 +69,13 @@ export class Light {
                     offset: byteoffset
                 }
             });
-        this.lightsBindGroupNoTime = this.scene.baseBindGroupNoTime.addChildBindGroup(uniformBindGroupLights);
+      /*  this.lightsBindGroupNoTime = this.scene.baseBindGroupNoTime.addChildBindGroup(uniformBindGroupLights);
         this.lightsBindGroupNoTimeWGSL = this.scene.buildBindGroupHierarcy(this.scene.baseBindGroupNoTime,this.uniformBindGroupLightsWGSL);
 
         this.lightsBindGroup = this.scene.baseBindGroup.addChildBindGroup(uniformBindGroupLights);
-        this.lightsBindGroupWGSL = this.scene.baseBindGroup.addChildBindGroup(this.uniformBindGroupLightsWGSL);
-        uniformBindGroupLights.label = 'lights'
-        this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.scene.createBindGroupLayout({
+        this.lightsBindGroupWGSL = this.scene.baseBindGroup.addChildBindGroup(this.uniformBindGroupLightsWGSL);*/
+       // uniformBindGroupLights.label = 'lights'
+     /*   this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.scene.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.FRAGMENT,
             type: 'sampler'
@@ -82,7 +83,7 @@ export class Light {
             binding: 1,
             visibility: GPUShaderStage.FRAGMENT,
             type: 'sampled-texture'
-        }))
+        }))*/
 
         //  this.#uniformBindGroupLayoutLights.createBindGroup()
     }

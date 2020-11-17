@@ -18,7 +18,6 @@ import { AbstractMesh } from "./abstractMesh";
 import { SubMesh } from "./subMesh";
 import { BoundingInfo } from "../Culling/boundingInfo";
 import { BoundingSphere } from "../Culling/boundingSphere";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MultiMaterial } from "../Materials/multiMaterial";
 import { SceneLoaderFlags } from "../Loading/sceneLoaderFlags";
@@ -1397,7 +1396,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _bind(subMesh: SubMesh, effect: Effect, fillMode: number): Mesh {
+    public _bind(subMesh: SubMesh, effect: any, fillMode: number): Mesh {
         if (!this._geometry) {
             return this;
         }
@@ -1529,7 +1528,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _renderWithInstances(subMesh: SubMesh, fillMode: number, batch: _InstancesBatch, effect: Effect, engine: Engine): Mesh {
+    public _renderWithInstances(subMesh: SubMesh, fillMode: number, batch: _InstancesBatch, effect: any, engine: Engine): Mesh {
         var visibleInstances = batch.visibleInstances[subMesh._id];
         if (!visibleInstances) {
             return this;
@@ -1609,7 +1608,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _processRendering(subMesh: SubMesh, effect: Effect, fillMode: number, batch: _InstancesBatch, hardwareInstancedRendering: boolean,
+    public _processRendering(subMesh: SubMesh, effect: any, fillMode: number, batch: _InstancesBatch, hardwareInstancedRendering: boolean,
         onBeforeDraw: (isInstance: boolean, world: Matrix, effectiveMaterial?: Material) => void, effectiveMaterial?: Material): Mesh {
         var scene = this.getScene();
         var engine = scene.getEngine();
@@ -1751,7 +1750,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
             step.action(this, subMesh, batch);
         }
 
-        var effect: Nullable<Effect>;
+        var effect: Nullable<any>;
         if (this._effectiveMaterial._storeEffectOnSubMeshes) {
             effect = subMesh.effect;
         } else {

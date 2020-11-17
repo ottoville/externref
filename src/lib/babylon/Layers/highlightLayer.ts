@@ -9,7 +9,6 @@ import { VertexBuffer } from "../Meshes/buffer";
 import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { Texture } from "../Materials/Textures/texture";
 import { PostProcess, PostProcessOptions } from "../PostProcesses/postProcess";
@@ -56,7 +55,7 @@ class GlowBlurPostProcess extends PostProcess {
     constructor(name: string, public direction: Vector2, public kernel: number, options: number | PostProcessOptions, camera: Nullable<Camera>, samplingMode: number = Texture.BILINEAR_SAMPLINGMODE, engine?: Engine, reusable?: boolean) {
         super(name, "glowBlurPostProcess", ["screenSize", "direction", "blurWidth"], null, options, camera, samplingMode, engine, reusable);
 
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             effect.setFloat2("screenSize", this.width, this.height);
             effect.setVector2("direction", this.direction);
             effect.setFloat("blurWidth", this.kernel);
@@ -308,7 +307,7 @@ export class HighlightLayer extends EffectLayer {
      * Create the merge effect. This is the shader use to blit the information back
      * to the main canvas at the end of the scene rendering.
      */
-    protected _createMergeEffect(): Effect {
+    protected _createMergeEffect(): any {
         // Effect
         return this._engine.createEffect("glowMapMerge",
             [VertexBuffer.PositionKind],
@@ -360,7 +359,7 @@ export class HighlightLayer extends EffectLayer {
      * Implementation specific of rendering the generating effect on the main canvas.
      * @param effect The effect used to render through
      */
-    protected _internalRender(effect: Effect): void {
+    protected _internalRender(effect: any): void {
         // Texture
         effect.setTexture("textureSampler", this._blurTexture);
 

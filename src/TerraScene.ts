@@ -2,14 +2,15 @@
 import { TerraMatrix } from "./traits/worldPosition";
 import { Matrix, Vector3 } from "./lib/babylon/Maths/math.js";
 import { Physics } from "./physics";
-import { ArcRotateCamera } from "../wwwroot/js/lib/babylon/Cameras/arcRotateCamera";
-import { RenderPass } from "./GPU/RenderPass";
+import type { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera";
+import type { RenderPass } from "./GPU/RenderPass";
 import type { ICollisionCoordinator } from "../wwwroot/js/lib/babylon/Collisions/collisionCoordinator";
 import type { Collider } from "../wwwroot/js/lib/babylon/Collisions/collider";
 import { TerraCamera } from "./TerraCamera";
 import { Light } from "./lights";
 import { Sun2 } from "./world/sun2";
 import { BoundableNode, PickingInfo } from "./TerraNode";
+import { BindGroupLayout } from "./GPU/BindGroupLayout";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
 /*interface Ray {
@@ -173,11 +174,6 @@ function matrixInvert64(m: Float32Array | Float64Array): void {
 }
 export class TerraScene {
     boundables: Set<BoundableNode> = new Set();
-    mousePositionBuffer = new SharedArrayBuffer(4);
-    mousePosition = new Uint16Array(this.mousePositionBuffer);
-
-    mainCamera = new TerraCamera(this.gpuscene.renderPassScreen,this)
-    waterCamera = new TerraCamera(this.gpuscene.renderPassWater,this)
 
     static instance: TerraScene;
 
@@ -195,15 +191,18 @@ export class TerraScene {
     lights: Light;
     positionBindGroupLightsTime;
     positionBindGroupLightsTimeWGSL;
-    constructor(private window: Window, public canvas: HTMLCanvasElement, public gpuscene: GPU, onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
+    lightsBindGroupNoTime: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").BindGroupLayout;
+    lightsBindGroupNoTimeWGSL: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").BindGroupLayout;
+    lightsBindGroupWGSL: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").BindGroupLayout;
+    lightsBindGroup: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").BindGroupLayout;
+    lightsBindGroupTexture: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
+    render(time: DOMHighResTimeStamp, renderEncoder: GPUCommandEncoder) {
+
+    }
+    constructor(private window: Window, public canvas: HTMLCanvasElement, public gpuscene: GPU, public TerraCameras: TerraCamera[], public positionBindGroupTime:BindGroupLayout, onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
         TerraScene.instance = this;
 
-        canvas.addEventListener('pointermove', (e) => {
-            //this.mousePosition.set([e.clientX, e.clientY]);
-            Atomics.store(this.mousePosition, 0, e.clientX)
-            Atomics.store(this.mousePosition, 1, e.clientY)
-            Atomics.notify(new Int32Array(this.mousePositionBuffer), 0);
-        })
+
 
         let renderFrame: number = 0;
         const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
@@ -214,12 +213,27 @@ export class TerraScene {
         this.gameSpeed = 0;
         const sun = new Sun2(this);
         this.lights = new Light(this.gpuscene, sun.bufferOffsetBytes);
-        this.positionBindGroupLightsTime = this.lights.lightsBindGroup.addChildBindGroup(this.gpuscene.BindGroup, true);
-        this.positionBindGroupLightsTime.onRender = async (time) => {
+        this.lightsBindGroupNoTime = this.TerraCameras[0].baseBindGroupNoTime.addChildBindGroup(this.lights.uniformBindGroupLights);
+        this.lightsBindGroupNoTimeWGSL = this.gpuscene.buildBindGroupHierarcy(this.TerraCameras[0].baseBindGroupNoTime, this.lights.uniformBindGroupLightsWGSL);
+
+        this.lightsBindGroup = this.TerraCameras[0].baseBindGroup.addChildBindGroup(this.lights.uniformBindGroupLights);
+        this.lightsBindGroupWGSL = this.TerraCameras[0].baseBindGroup.addChildBindGroup(this.lights.uniformBindGroupLightsWGSL);
+
+        this.positionBindGroupLightsTime = this.lightsBindGroup.addChildBindGroup(this.gpuscene.BindGroup, true);
+        this.positionBindGroupLightsTime.onRender = async () => {
             return this.gpuscene.updateGPUBuffer();
         }
-        this.positionBindGroupLightsTimeWGSL = this.lights.lightsBindGroupWGSL.addChildBindGroup(this.gpuscene.BindGroup, true);
+        this.positionBindGroupLightsTimeWGSL = this.lightsBindGroupWGSL.addChildBindGroup(this.gpuscene.BindGroup, true);
 
+        this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.gpuscene.createBindGroupLayout({
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            type: 'sampler'
+        }, {
+            binding: 1,
+            visibility: GPUShaderStage.FRAGMENT,
+            type: 'sampled-texture'
+        }));
         (async () => {
             onRenderStart && (this.camera = await onRenderStart(this));
             
@@ -230,10 +244,10 @@ export class TerraScene {
 
                 const renderEncoder = gpuscene.device.createCommandEncoder();
 
-                camera._checkInputs();
+               // camera._checkInputs();
 
                 // Cache
-                camera._cache.mode = camera.mode;
+             /*   camera._cache.mode = camera.mode;
                 camera._cache.minZ = camera.minZ;
                 camera._cache.maxZ = camera.maxZ;
 
@@ -261,8 +275,7 @@ export class TerraScene {
                 let viewMatrix2: Matrix = Matrix.Zero();
 
                  viewMatrix = camera._getViewMatrix();
-                //@ts-ignore
-                //let foo= getViewMatrix(camera.alpha, camera.beta, camera.radius, camera.target, camera._computationVector, camera.upVector, camera._YToUpMatrix, camera.position, camera.targetScreenOffset, camera.checkCollisions, camera.getScene().collisionCoordinator, camera._collider, camera.collisionRadius, camera._collisionVelocity, camera._onCollisionPositionChange, camera.uniqueId);
+
 
 
                 let globalPosition = Vector3.Zero();
@@ -291,7 +304,7 @@ export class TerraScene {
                 terraScene.gpuscene.updateView(terraScene.mainCamera.projectionViewArr.buffer);
 
                 terraScene.gpuscene.updateView2(terraScene.waterCamera.projectionViewArr.buffer);
-
+                */
                 renderPasses.forEach(rp => rp.render(renderEncoder, time))
 
                 terraScene.gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
@@ -392,8 +405,8 @@ export class TerraScene {
 
         const b1 = this.gpuscene.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
         const b1arr = b1.getMappedRange()
-        new Float32Array(b1arr).set(this.mainCamera.projectionArr);
-        new Float32Array(b1arr).set(this.mainCamera.viewArr, 16);
+        new Float32Array(b1arr).set(this.TerraCameras[0].projectionArr);
+        new Float32Array(b1arr).set(this.TerraCameras[0].viewArr, 16);
         const sourceX = x / this.gpuscene.renderPassScreen.size.width * 2 - 1;
         const sourceY = -(y / this.gpuscene.renderPassScreen.size.height * 2 - 1);
         new Float32Array(b1arr).set([
@@ -444,7 +457,7 @@ export class TerraScene {
 
         const ray = this.createPickingRay(x, y);
         const pickingRays: Map<BoundableNode, { origin: Vector3, direction: Vector3 }> = new Map();
-
+        console.log(this.boundables);
         this.boundables.forEach(boundable => {
             if (!boundable.worldPosition)
                 return pickingRays.set(boundable,ray);
@@ -460,7 +473,7 @@ export class TerraScene {
              results.push(boundable.intersects(ray));
         })
         const pickresults = await Promise.all(results);
-        let minimum: PickingInfo | undefined;;
+        let minimum: PickingInfo | null = null;;
         pickresults.forEach(pickresult => {
             if (pickresult.hit) {
                 if (!minimum || pickresult.distance < minimum.distance)
@@ -468,6 +481,7 @@ export class TerraScene {
             }
         })
         console.log(minimum);
+        return minimum;
         return null;
         this.gpuscene.GPU2CPU(async buff => {
             await buff.mapAsync(GPUMapMode.READ);
@@ -478,8 +492,8 @@ export class TerraScene {
                 //console.log(gpudata);
                 var matrix = Matrix.Zero();
                 const worldM = Matrix.FromArray(gpudata);
-                worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.viewArr)), matrix);
-                matrix.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.projectionArr)), matrix);
+                worldM.multiplyToRef(Matrix.FromArray(Array.from(this.TerraCameras[0].viewArr)), matrix);
+                matrix.multiplyToRef(Matrix.FromArray(Array.from(this.TerraCameras[0].projectionArr)), matrix);
 
                 //console.log(matrix);
                // console.log(this.createPickingRay(x, y, new Float32Array(gpudata, 0, 16)));
@@ -518,7 +532,7 @@ export class TerraScene {
         // Moving coordinates to local viewport world
         x = x - viewport.x;
         y = y - (this.canvasSize.height - viewport.y - viewport.height);
-
+        
         //Todo, reuse matrix and vector
 
         //const matrix = world.multiply(viewProjection);
@@ -532,12 +546,11 @@ export class TerraScene {
         if (world) {
             var matrix = Matrix.Zero();
             const worldM = Matrix.FromArray(world);
-            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.viewArr)), matrix);
+            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.TerraCameras[0].viewArr)), matrix);
         } else {
-            var matrix = Matrix.FromArray(Array.from(this.mainCamera.viewArr));
+            var matrix = Matrix.FromArray(Array.from(this.TerraCameras[0].viewArr));
         }
-        matrix.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.projectionArr)), matrix);
-
+        matrix.multiplyToRef(Matrix.FromArray(Array.from(this.TerraCameras[0].projectionArr)), matrix);
         //TODO use matrixMultiply64 and matrixInvert64
 
         // matrixInvert64(matrix);

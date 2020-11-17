@@ -5,7 +5,6 @@ import { Scene } from "../scene";
 import { Engine } from "../Engines/engine";
 import { Constants } from "../Engines/constants";
 import { ISceneComponent, SceneComponentConstants } from "../sceneComponent";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
 
@@ -111,7 +110,7 @@ export class OutlineRenderer implements ISceneComponent {
     public zOffset = 1;
 
     private _engine: Engine;
-    private _effect: Effect;
+    private _effect: any;
     private _cachedDefines: string;
     private _savedDepthWrite: boolean;
 

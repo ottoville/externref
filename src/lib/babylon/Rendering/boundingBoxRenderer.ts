@@ -8,7 +8,6 @@ import { SmartArray } from "../Misc/smartArray";
 import { Nullable, FloatArray, IndicesArray } from "../types";
 import { ISceneComponent, SceneComponentConstants } from "../sceneComponent";
 import { BoundingBox } from "../Culling/boundingBox";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { ShaderMaterial } from "../Materials/shaderMaterial";
 
@@ -247,7 +246,7 @@ export class BoundingBoxRenderer implements ISceneComponent {
                 .multiply(boundingBox.getWorldMatrix());
 
             // VBOs
-            engine.bindBuffers(this._vertexBuffers, this._indexBuffer, <Effect>this._colorShader.getEffect());
+            engine.bindBuffers(this._vertexBuffers, this._indexBuffer, <any>this._colorShader.getEffect());
 
             if (this.showBackLines) {
                 // Back
@@ -305,7 +304,7 @@ export class BoundingBoxRenderer implements ISceneComponent {
             .multiply(Matrix.Translation(median.x, median.y, median.z))
             .multiply(boundingBox.getWorldMatrix());
 
-        engine.bindBuffers(this._vertexBuffers, this._fillIndexBuffer, <Effect>this._colorShader.getEffect());
+        engine.bindBuffers(this._vertexBuffers, this._fillIndexBuffer, <any>this._colorShader.getEffect());
 
         engine.setDepthFunctionToLess();
         this.scene.resetCachedMaterial();

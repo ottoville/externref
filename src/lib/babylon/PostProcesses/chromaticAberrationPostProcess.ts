@@ -1,7 +1,6 @@
 import { Vector2 } from "../Maths/math.vector";
 import { Nullable } from "../types";
 import { PostProcess, PostProcessOptions } from "./postProcess";
-import { Effect } from "../Materials/effect";
 import { Camera } from "../Cameras/camera";
 import { Engine } from "../Engines/engine";
 import { Constants } from "../Engines/constants";
@@ -47,7 +46,7 @@ export class ChromaticAberrationPostProcess extends PostProcess {
      */
     constructor(name: string, screenWidth: number, screenHeight: number, options: number | PostProcessOptions, camera: Nullable<Camera>, samplingMode?: number, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT, blockCompilation = false) {
         super(name, "chromaticAberration", ["chromatic_aberration", "screen_width", "screen_height", "direction", "radialIntensity", "centerPosition"], [], options, camera, samplingMode, engine, reusable, null, textureType, undefined, null, blockCompilation);
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             effect.setFloat('chromatic_aberration', this.aberrationAmount);
             effect.setFloat('screen_width', screenWidth);
             effect.setFloat('screen_height', screenHeight);

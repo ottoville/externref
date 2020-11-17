@@ -2,7 +2,6 @@ import { Nullable } from "../types";
 import { Logger } from "../Misc/logger";
 import { Vector2 } from "../Maths/math.vector";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Constants } from "../Engines/constants";
 import { GeometryBufferRenderer } from "../Rendering/geometryBufferRenderer";
@@ -79,7 +78,7 @@ export class MotionBlurPostProcess extends PostProcess {
             // Geometry buffer renderer is supported.
             this._geometryBufferRenderer.enableVelocity = true;
 
-            this.onApply = (effect: Effect) => {
+            this.onApply = (effect: any) => {
                 effect.setVector2("screenSize", new Vector2(this.width, this.height));
 
                 effect.setFloat("motionScale", scene.getAnimationRatio());

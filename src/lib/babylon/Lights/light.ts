@@ -5,7 +5,6 @@ import { Vector3 } from "../Maths/math.vector";
 import { Color3, TmpColors } from "../Maths/math.color";
 import { Node } from "../node";
 import { AbstractMesh } from "../Meshes/abstractMesh";
-import { Effect } from "../Materials/effect";
 import { UniformBuffer } from "../Materials/uniformBuffer";
 import { IShadowGenerator } from "./Shadows/shadowGenerator";
 import { _TypeStore } from '../Misc/typeStore';
@@ -362,7 +361,7 @@ export abstract class Light extends Node {
      * @param lightIndex The index of the light in the effect to update
      * @returns The light
      */
-    public abstract transferToEffect(effect: Effect, lightIndex: string): Light;
+    public abstract transferToEffect(effect: any, lightIndex: string): Light;
 
     /**
      * Sets the passed Effect "effect" with the Light textures.
@@ -370,7 +369,7 @@ export abstract class Light extends Node {
      * @param lightIndex The index of the light in the effect to update
      * @returns The light
      */
-    public transferTexturesToEffect(effect: Effect, lightIndex: string): Light {
+    public transferTexturesToEffect(effect: any, lightIndex: string): Light {
         // Do nothing by default.
         return this;
     }
@@ -383,7 +382,7 @@ export abstract class Light extends Node {
      * @param useSpecular Defines if specular is supported
      * @param rebuildInParallel Specifies whether the shader is rebuilding in parallel
      */
-    public _bindLight(lightIndex: number, scene: Scene, effect: Effect, useSpecular: boolean, rebuildInParallel = false): void {
+    public _bindLight(lightIndex: number, scene: Scene, effect: any, useSpecular: boolean, rebuildInParallel = false): void {
         let iAsString = lightIndex.toString();
         let needUpdate = false;
 
@@ -432,7 +431,7 @@ export abstract class Light extends Node {
      * @param lightDataUniformName The uniform used to store light data (position or direction)
      * @returns The light
      */
-    public abstract transferToNodeMaterialEffect(effect: Effect, lightDataUniformName: string): Light;
+    public abstract transferToNodeMaterialEffect(effect: any, lightDataUniformName: string): Light;
 
     /**
      * Returns the string "Light".

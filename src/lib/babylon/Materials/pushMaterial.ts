@@ -4,14 +4,13 @@ import { Matrix } from "../Maths/math.vector";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Material } from "../Materials/material";
-import { Effect } from "../Materials/effect";
 /**
  * Base class of materials working in push mode in babylon JS
  * @hidden
  */
 export class PushMaterial extends Material {
 
-    protected _activeEffect: Effect;
+    protected _activeEffect: any;
 
     protected _normalMatrix: Matrix = new Matrix();
 
@@ -27,7 +26,7 @@ export class PushMaterial extends Material {
         this._storeEffectOnSubMeshes = true;
     }
 
-    public getEffect(): Effect {
+    public getEffect(): any {
         return this._activeEffect;
     }
 
@@ -69,12 +68,12 @@ export class PushMaterial extends Material {
         this.bindForSubMesh(world, mesh, mesh.subMeshes[0]);
     }
 
-    protected _afterBind(mesh: Mesh, effect: Nullable<Effect> = null): void {
+    protected _afterBind(mesh: Mesh, effect: Nullable<any> = null): void {
         super._afterBind(mesh);
         this.getScene()._cachedEffect = effect;
     }
 
-    protected _mustRebind(scene: Scene, effect: Effect, visibility: number = 1) {
+    protected _mustRebind(scene: Scene, effect: any, visibility: number = 1) {
         return scene.isCachedMaterialInvalid(this, effect, visibility);
     }
 }

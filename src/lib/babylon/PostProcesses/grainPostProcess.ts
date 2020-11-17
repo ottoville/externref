@@ -1,6 +1,5 @@
 import { Nullable } from "../types";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Engine } from "../Engines/engine";
 import { Constants } from "../Engines/constants";
@@ -33,7 +32,7 @@ export class GrainPostProcess extends PostProcess {
      */
     constructor(name: string, options: number | PostProcessOptions, camera: Nullable<Camera>, samplingMode?: number, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT, blockCompilation = false) {
         super(name, "grain", ["intensity", "animatedSeed"], [], options, camera, samplingMode, engine, reusable, null, textureType, undefined, null, blockCompilation);
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             effect.setFloat('intensity', this.intensity);
             effect.setFloat('animatedSeed', this.animated ? Math.random() + 1 : 1);
         });

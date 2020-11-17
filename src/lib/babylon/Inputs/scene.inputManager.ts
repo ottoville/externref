@@ -619,6 +619,7 @@ export class InputManager {
         };
 
         this._onPointerDown = (evt: PointerEvent) => {
+            debugger;
             this._totalPointersPressed++;
             this._pickedDownMesh = null;
             this._meshPickProceed = false;

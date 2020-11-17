@@ -5,7 +5,6 @@ import { Node } from "../node";
 import { VertexBuffer } from "../Meshes/buffer";
 import { SubMesh } from "../Meshes/subMesh";
 import { Mesh } from "../Meshes/mesh";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { ShaderMaterial } from "../Materials/shaderMaterial";
 import { MaterialHelper } from '../Materials/materialHelper';
@@ -170,7 +169,7 @@ export class LinesMesh extends Mesh {
     }
 
     /** @hidden */
-    public _bind(subMesh: SubMesh, effect: Effect, fillMode: number): Mesh {
+    public _bind(subMesh: SubMesh, effect: any, fillMode: number): Mesh {
         if (!this._geometry) {
             return this;
         }

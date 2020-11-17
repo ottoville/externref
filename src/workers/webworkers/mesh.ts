@@ -26,6 +26,7 @@ class TerraMatrix extends Float32Array {
 
 let meshes: Map<number, Mesh> = new Map();
 interface pickInfo {
+    pickMesh?: number;
     faceId?: number;
     bv?: number;
     bu?: number;
@@ -96,7 +97,8 @@ class Mesh {
         let p1 = new Vector3();
         let p2 = new Vector3();
         if (!this.#indicesView) {
-            throw (new Error('Intersection with non indexed mesh not coded'));
+            console.error('Intersection with non indexed mesh not coded');
+            return pickingInfo;
         }
         for (var index = 0; index < this.#indicesView.length; index += 3) {
             p0.x = this.#positionsView[this.#indicesView[index] * this.positionsStride]
@@ -140,7 +142,7 @@ class Mesh {
             pickingInfo.hit = true;
             pickingInfo.distance = Vector3.Distance(ray.origin, pickedPoint);
             pickingInfo.pickedPoint = pickedPoint;
-            pickingInfo.pickedMesh = this.uniqueID;
+            pickingInfo.pickMesh = this.uniqueID;
             pickingInfo.bu = intersectInfo.bu || 0;
             pickingInfo.bv = intersectInfo.bv || 0;
             pickingInfo.faceId = intersectInfo.faceId;

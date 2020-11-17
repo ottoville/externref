@@ -130,7 +130,6 @@ export abstract class BoundableNode extends TerraNode {
     indicesBuffer?: SharedArrayBuffer | undefined;
     abstract verticesPositionBuffer: SharedArrayBuffer;
     abstract verticesPositionStride: number;
-    //bounding: Bounding = new Bounding(this as boundable);
     readonly boundingBoxBuffer: SharedArrayBuffer = new SharedArrayBuffer(4 * 6);
     readonly boundingBox = new Float32Array(this.boundingBoxBuffer);
     readonly boundingBoxMin = new Float32Array(this.boundingBoxBuffer,0,3);

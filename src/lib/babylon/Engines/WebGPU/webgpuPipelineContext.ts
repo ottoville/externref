@@ -1,7 +1,6 @@
 import { IPipelineContext } from '../IPipelineContext';
 import { Nullable } from '../../types';
 import { WebGPUEngine } from '../webgpuEngine';
-import { Effect } from '../../Materials/effect';
 import { WebGPUShaderProcessingContext } from './webgpuShaderProcessingContext';
 import { UniformBuffer } from "../../Materials/uniformBuffer";
 import { IMatrixLike, IVector2Like, IVector3Like, IVector4Like, IColor3Like, IColor4Like } from '../../Maths/math.like';
@@ -104,7 +103,7 @@ export class WebGPUPipelineContext implements IPipelineContext {
         // Nothing to do yet for spector.
     }
 
-    public _fillEffectInformation(effect: Effect, uniformBuffersNames: { [key: string]: number }, uniformsNames: string[], uniforms: { [key: string]: Nullable<WebGLUniformLocation> }, samplerList: string[], samplers: { [key: string]: number }, attributesNames: string[], attributes: number[]) {
+    public _fillEffectInformation(effect: any, uniformBuffersNames: { [key: string]: number }, uniformsNames: string[], uniforms: { [key: string]: Nullable<WebGLUniformLocation> }, samplerList: string[], samplers: { [key: string]: number }, attributesNames: string[], attributes: number[]) {
         const engine = this.engine;
 
         // TODO WEBGPU. Cleanup SEB on this entire function. Should not need anything in here or almost.

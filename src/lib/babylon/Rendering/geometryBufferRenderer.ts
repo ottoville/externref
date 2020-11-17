@@ -5,7 +5,6 @@ import { Mesh } from "../Meshes/mesh";
 import { Constants } from "../Engines/constants";
 import { SmartArray } from "../Misc/smartArray";
 import { Texture } from "../Materials/Textures/texture";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
 import { Scene } from "../scene";
@@ -64,7 +63,7 @@ export class GeometryBufferRenderer {
     private _positionIndex: number = -1;
     private _velocityIndex: number = -1;
 
-    protected _effect: Effect;
+    protected _effect: any;
     protected _cachedDefines: string;
 
     /**

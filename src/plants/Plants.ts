@@ -64,7 +64,7 @@ export class Plants {
     ) {
 
 
-        const planstPipeline = scene.lights.lightsBindGroup.addRenderPipeline({
+        const planstPipeline = scene.lightsBindGroup.addRenderPipeline({
             primitiveTopology: 'triangle-strip',
             rasterizationState: {
                 cullMode: 'none',

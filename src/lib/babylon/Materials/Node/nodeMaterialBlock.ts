@@ -3,7 +3,6 @@ import { NodeMaterialBuildState } from './nodeMaterialBuildState';
 import { Nullable } from '../../types';
 import { NodeMaterialConnectionPoint, NodeMaterialConnectionPointDirection } from './nodeMaterialBlockConnectionPoint';
 import { NodeMaterialBlockTargets } from './Enums/nodeMaterialBlockTargets';
-import { Effect } from '../effect';
 import { AbstractMesh } from '../../Meshes/abstractMesh';
 import { Mesh } from '../../Meshes/mesh';
 import { NodeMaterial, NodeMaterialDefines } from './nodeMaterial';
@@ -169,7 +168,7 @@ export class NodeMaterialBlock {
      * @param nodeMaterial defines the hosting NodeMaterial
      * @param mesh defines the mesh that will be rendered
      */
-    public bind(effect: Effect, nodeMaterial: NodeMaterial, mesh?: Mesh) {
+    public bind(effect: any, nodeMaterial: NodeMaterial, mesh?: Mesh) {
         // Do nothing
     }
 

@@ -2,7 +2,6 @@ import { Logger } from "../Misc/logger";
 import { Nullable, FloatArray } from "../types";
 import { Matrix, Vector3, Vector4 } from "../Maths/math.vector";
 import { Engine } from "../Engines/engine";
-import { Effect } from "./effect";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { DataBuffer } from '../Meshes/dataBuffer';
 import { Color3 } from '../Maths/math.color';
@@ -33,7 +32,7 @@ export class UniformBuffer {
     private _uniformLocationPointer: number;
     private _needSync: boolean;
     private _noUBO: boolean;
-    private _currentEffect: Effect;
+    private _currentEffect: any;
 
     /** @hidden */
     public _alreadyBound = false;
@@ -738,7 +737,7 @@ export class UniformBuffer {
      * @param effect Define the effect to bind the buffer to
      * @param name Name of the uniform block in the shader.
      */
-    public bindToEffect(effect: Effect, name: string): void {
+    public bindToEffect(effect: any, name: string): void {
         this._currentEffect = effect;
 
         if (this._noUBO || !this._buffer) {

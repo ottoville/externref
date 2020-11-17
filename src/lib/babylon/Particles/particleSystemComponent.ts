@@ -2,7 +2,6 @@ import { Mesh } from "../Meshes/mesh";
 import { IParticleSystem } from "./IParticleSystem";
 import { GPUParticleSystem } from "./gpuParticleSystem";
 import { AbstractScene } from "../abstractScene";
-import { Effect } from "../Materials/effect";
 import { Engine } from "../Engines/engine";
 import { ParticleSystem } from "./particleSystem";
 import { Scene } from "../scene";
@@ -55,12 +54,12 @@ declare module "../Engines/engine" {
          * @returns the new Effect
          */
         createEffectForParticles(fragmentName: string, uniformsNames: string[], samplers: string[], defines: string, fallbacks?: EffectFallbacks,
-            onCompiled?: (effect: Effect) => void, onError?: (effect: Effect, errors: string) => void): Effect;
+            onCompiled?: (effect: any) => void, onError?: (effect: any, errors: string) => void): any;
     }
 }
 
 Engine.prototype.createEffectForParticles = function(fragmentName: string, uniformsNames: string[] = [], samplers: string[] = [], defines = "", fallbacks?: EffectFallbacks,
-    onCompiled?: (effect: Effect) => void, onError?: (effect: Effect, errors: string) => void): Effect {
+    onCompiled?: (effect: any) => void, onError?: (effect: any, errors: string) => void): any {
 
     var attributesNamesOrOptions = ParticleSystem._GetAttributeNamesOrOptions();
     var effectCreationOption = ParticleSystem._GetEffectCreationOptions();

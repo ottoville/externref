@@ -2,7 +2,6 @@ import { Nullable } from "../types";
 import { Engine } from "../Engines/engine";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 
 //import "../Shaders/anaglyph.fragment";
 
@@ -25,7 +24,7 @@ export class AnaglyphPostProcess extends PostProcess {
         super(name, "anaglyph", null, ["leftSampler"], options, rigCameras[1], samplingMode, engine, reusable);
         this._passedProcess = rigCameras[0]._rigPostProcess;
 
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             effect.setTextureFromPostProcess("leftSampler", this._passedProcess);
         });
     }

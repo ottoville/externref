@@ -6,7 +6,6 @@ import { VertexBuffer } from "../Meshes/buffer";
 import { SmartArray } from "../Misc/smartArray";
 import { Scene } from "../scene";
 import { Texture } from "../Materials/Textures/texture";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
 import { Camera } from "../Cameras/camera";
@@ -23,7 +22,7 @@ import { _DevTools } from '../Misc/devTools';
 export class DepthRenderer {
     private _scene: Scene;
     private _depthMap: any;
-    private _effect: Effect;
+    private _effect: any;
     private readonly _storeNonLinearDepth: boolean;
     private readonly _clearColor: Color4;
 

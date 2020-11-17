@@ -3,7 +3,6 @@ import { NodeMaterialBlockConnectionPointTypes } from '../../Enums/nodeMaterialB
 import { NodeMaterialBlockConnectionPointMode } from '../../Enums/nodeMaterialBlockConnectionPointMode';
 import { NodeMaterialSystemValues } from '../../Enums/nodeMaterialSystemValues';
 import { Nullable } from '../../../../types';
-import { Effect } from '../../../../Materials/effect';
 import { Matrix, Vector2, Vector3, Vector4 } from '../../../../Maths/math.vector';
 import { Scene } from '../../../../scene';
 import { NodeMaterialConnectionPoint } from '../../nodeMaterialBlockConnectionPoint';
@@ -443,7 +442,7 @@ export class InputBlock extends NodeMaterialBlock {
     }
 
     /** @hidden */
-    public _transmitWorld(effect: Effect, world: Matrix, worldView: Matrix, worldViewProjection: Matrix) {
+    public _transmitWorld(effect: any, world: Matrix, worldView: Matrix, worldViewProjection: Matrix) {
         if (!this._systemValue) {
             return;
         }
@@ -463,7 +462,7 @@ export class InputBlock extends NodeMaterialBlock {
     }
 
     /** @hidden */
-    public _transmit(effect: Effect, scene: Scene) {
+    public _transmit(effect: any, scene: Scene) {
         if (this.isAttribute) {
             return;
         }

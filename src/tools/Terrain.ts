@@ -48,7 +48,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
                 indices: terrain.indicesBuffer,
                 subdivisionsX: Terrain.subdivisionsX,
                 subdivisionsY: Terrain.subdivisionsY,
-                boundingBox: terrain.bounding.boundingBox,
+                boundingBox: terrain.mesh.boundingBox,
                 slopeArr: terrain.slopeArrBuffer,
                 facet1Arr: terrain.facet1ArrBuffer,
                 facet2Arr: terrain.facet2ArrBuffer
@@ -180,7 +180,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
             (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.offsetX, v.data.offsetY, width, 1, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr, v.data.srcOffset)
             gl.bindTexture(gl.TEXTURE_2D, null);*/
         });
-        let boundingBox = this.terrain.bounding.boundingBox;
+        //let boundingBox = this.terrain.bounding.boundingBox;
         // let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
         terrainWorker.subscribe('bounding', (v) => {
 

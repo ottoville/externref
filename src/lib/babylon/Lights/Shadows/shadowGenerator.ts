@@ -14,7 +14,6 @@ import { Light } from "../../Lights/light";
 import { Material } from "../../Materials/material";
 import { MaterialDefines } from "../../Materials/materialDefines";
 import { MaterialHelper } from "../../Materials/materialHelper";
-import { Effect } from "../../Materials/effect";
 import { Texture } from "../../Materials/Textures/texture";
 
 import { PostProcess } from "../../PostProcesses/postProcess";
@@ -95,7 +94,7 @@ export interface IShadowGenerator {
      * @param lightIndex Index of the light in the enabled light list of the material owning the effect
      * @param effect The effect we are binfing the information for
      */
-    bindShadowLight(lightIndex: string, effect: Effect): void;
+    bindShadowLight(lightIndex: string, effect: any): void;
     /**
      * Gets the transformation matrix used to project the meshes into the map from the light point of view.
      * (eq to shadow prjection matrix * light transform matrix)
@@ -219,12 +218,12 @@ export class ShadowGenerator implements IShadowGenerator {
     /**
      * Observable triggered before the shadow is rendered. Can be used to update internal effect state
      */
-    public onBeforeShadowMapRenderObservable = new Observable<Effect>();
+    public onBeforeShadowMapRenderObservable = new Observable<any>();
 
     /**
      * Observable triggered after the shadow is rendered. Can be used to restore internal effect state
      */
-    public onAfterShadowMapRenderObservable = new Observable<Effect>();
+    public onAfterShadowMapRenderObservable = new Observable<any>();
 
     /**
      * Observable triggered before a mesh is rendered in the shadow map.
@@ -742,7 +741,7 @@ export class ShadowGenerator implements IShadowGenerator {
     private _scene: Scene;
     private _lightDirection = Vector3.Zero();
 
-    private _effect: Effect;
+    private _effect: any;
 
     private _viewMatrix = Matrix.Zero();
     private _projectionMatrix = Matrix.Zero();
@@ -1267,7 +1266,7 @@ export class ShadowGenerator implements IShadowGenerator {
      * @param lightIndex Index of the light in the enabled light list of the material owning the effect
      * @param effect The effect we are binfing the information for
      */
-    public bindShadowLight(lightIndex: string, effect: Effect): void {
+    public bindShadowLight(lightIndex: string, effect: any): void {
         var light = this._light;
         var scene = this._scene;
 

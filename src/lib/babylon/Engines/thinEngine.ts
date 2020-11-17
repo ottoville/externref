@@ -1,6 +1,5 @@
 import { EngineStore } from './engineStore';
 import { IInternalTextureLoader } from '../Materials/Textures/internalTextureLoader';
-import { Effect, IEffectCreationOptions } from '../Materials/effect';
 import { _DevTools } from '../Misc/devTools';
 import { IShaderProcessor } from './Processors/iShaderProcessor';
 import { ShaderProcessingContext } from "./Processors/shaderProcessingOptions";
@@ -165,10 +164,10 @@ export class ThinEngine {
      * Gets or sets the relative url used to load shaders if using the engine in non-minified mode
      */
     public static get ShadersRepository(): string {
-        return Effect.ShadersRepository;
+        return 'dasdsad';
     }
     public static set ShadersRepository(value: string) {
-        Effect.ShadersRepository = value;
+        
     }
 
     /**
@@ -352,10 +351,10 @@ export class ThinEngine {
     /** @hidden */
     protected _boundTexturesCache: { [key: string]: Nullable<any> } = {};
     /** @hidden */
-    protected _currentEffect: Nullable<Effect>;
+    protected _currentEffect: Nullable<any>;
     /** @hidden */
     protected _currentProgram: Nullable<WebGLProgram>;
-    private _compiledEffects: { [key: string]: Effect } = {};
+    private _compiledEffects: { [key: string]: any } = {};
     private _vertexAttribArraysEnabled: boolean[] = [];
     /** @hidden */
     protected _cachedViewport: Nullable<IViewportLike>;
@@ -365,7 +364,7 @@ export class ThinEngine {
     /** @hidden */
     protected _cachedIndexBuffer: Nullable<DataBuffer>;
     /** @hidden */
-    protected _cachedEffectForVertexBuffers: Nullable<Effect>;
+    protected _cachedEffectForVertexBuffers: Nullable<any>;
     /** @hidden */
     public _currentRenderTarget: Nullable<any>;
     private _uintIndicesCurrentlySet = false;
@@ -762,12 +761,11 @@ export class ThinEngine {
 
     private _rebuildEffects(): void {
         for (var key in this._compiledEffects) {
-            let effect = <Effect>this._compiledEffects[key];
+            let effect = <any>this._compiledEffects[key];
 
             effect._prepareEffect();
         }
 
-        Effect.ResetCache();
     }
 
     /**
@@ -776,7 +774,7 @@ export class ThinEngine {
      */
     public areAllEffectsReady(): boolean {
         for (var key in this._compiledEffects) {
-            let effect = <Effect>this._compiledEffects[key];
+            let effect = <any>this._compiledEffects[key];
 
             if (!effect.isReady()) {
                 return false;
@@ -1648,7 +1646,7 @@ export class ThinEngine {
         }
     }
 
-    private _bindVertexBuffersAttributes(vertexBuffers: { [key: string]: Nullable<VertexBuffer> }, effect: Effect): void {
+    private _bindVertexBuffersAttributes(vertexBuffers: { [key: string]: Nullable<VertexBuffer> }, effect: any): void {
         var attributes = effect.getAttributesNames();
 
         if (!this._vaoRecordInProgress) {
@@ -1696,7 +1694,7 @@ export class ThinEngine {
      * @param effect defines the effect to store
      * @returns the new vertex array object
      */
-    public recordVertexArrayObject(vertexBuffers: { [key: string]: VertexBuffer; }, indexBuffer: Nullable<DataBuffer>, effect: Effect): WebGLVertexArrayObject {
+    public recordVertexArrayObject(vertexBuffers: { [key: string]: VertexBuffer; }, indexBuffer: Nullable<DataBuffer>, effect: any): WebGLVertexArrayObject {
         var vao = this._gl.createVertexArray();
 
         this._vaoRecordInProgress = true;
@@ -1741,7 +1739,7 @@ export class ThinEngine {
      * @param vertexStrideSize defines the vertex stride of the vertex buffer
      * @param effect defines the effect associated with the vertex buffer
      */
-    public bindBuffersDirectly(vertexBuffer: DataBuffer, indexBuffer: DataBuffer, vertexDeclaration: number[], vertexStrideSize: number, effect: Effect): void {
+    public bindBuffersDirectly(vertexBuffer: DataBuffer, indexBuffer: DataBuffer, vertexDeclaration: number[], vertexStrideSize: number, effect: any): void {
         if (this._cachedVertexBuffers !== vertexBuffer || this._cachedEffectForVertexBuffers !== effect) {
             this._cachedVertexBuffers = vertexBuffer;
             this._cachedEffectForVertexBuffers = effect;
@@ -1787,7 +1785,7 @@ export class ThinEngine {
      * @param indexBuffer defines the index buffer to bind
      * @param effect defines the effect associated with the vertex buffers
      */
-    public bindBuffers(vertexBuffers: { [key: string]: Nullable<VertexBuffer> }, indexBuffer: Nullable<DataBuffer>, effect: Effect): void {
+    public bindBuffers(vertexBuffers: { [key: string]: Nullable<VertexBuffer> }, indexBuffer: Nullable<DataBuffer>, effect: any): void {
         if (this._cachedVertexBuffers !== vertexBuffers || this._cachedEffectForVertexBuffers !== effect) {
             this._cachedVertexBuffers = vertexBuffers;
             this._cachedEffectForVertexBuffers = effect;
@@ -2063,7 +2061,7 @@ export class ThinEngine {
     // Shaders
 
     /** @hidden */
-    public _releaseEffect(effect: Effect): void {
+    public _releaseEffect(effect: any): void {
         if (this._compiledEffects[effect._key]) {
             delete this._compiledEffects[effect._key];
 
@@ -2094,25 +2092,21 @@ export class ThinEngine {
      * @param indexParameters defines an object containing the index values to use to compile shaders (like the maximum number of simultaneous lights)
      * @returns the new Effect
      */
-    public createEffect(baseName: any, attributesNamesOrOptions: string[] | IEffectCreationOptions, uniformsNamesOrEngine: string[] | ThinEngine, samplers?: string[], defines?: string,
+    public createEffect(baseName: any, attributesNamesOrOptions: string[] | any, uniformsNamesOrEngine: string[] | ThinEngine, samplers?: string[], defines?: string,
         fallbacks?: IEffectFallbacks,
-        onCompiled?: Nullable<(effect: Effect) => void>, onError?: Nullable<(effect: Effect, errors: string) => void>, indexParameters?: any): Effect {
+        onCompiled?: Nullable<(effect: any) => void>, onError?: Nullable<(effect: any, errors: string) => void>, indexParameters?: any): any {
         var vertex = baseName.vertexElement || baseName.vertex || baseName;
         var fragment = baseName.fragmentElement || baseName.fragment || baseName;
 
-        var name = vertex + "+" + fragment + "@" + (defines ? defines : (<IEffectCreationOptions>attributesNamesOrOptions).defines);
+        var name = vertex + "+" + fragment + "@" + (defines ? defines : (<any>attributesNamesOrOptions).defines);
         if (this._compiledEffects[name]) {
-            var compiledEffect = <Effect>this._compiledEffects[name];
+            var compiledEffect = <any>this._compiledEffects[name];
             if (onCompiled && compiledEffect.isReady()) {
                 onCompiled(compiledEffect);
             }
 
             return compiledEffect;
         }
-        var effect = new Effect(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, this, defines, fallbacks, onCompiled, onError, indexParameters, name);
-        this._compiledEffects[name] = effect;
-
-        return effect;
     }
 
     protected static _ConcatenateShader(source: string, defines: Nullable<string>, shaderVersion: string = ""): string {
@@ -2364,7 +2358,7 @@ export class ThinEngine {
      * Activates an effect, mkaing it the current one (ie. the one used for rendering)
      * @param effect defines the effect to activate
      */
-    public enableEffect(effect: Nullable<Effect>): void {
+    public enableEffect(effect: Nullable<any>): void {
         if (!effect || effect === this._currentEffect) {
             return;
         }
@@ -3344,7 +3338,7 @@ export class ThinEngine {
      * Binds an effect to the webGL context
      * @param effect defines the effect to bind
      */
-    public bindSamplers(effect: Effect): void {
+    public bindSamplers(effect: any): void {
         let webGLPipelineContext = effect.getPipelineContext() as WebGLPipelineContext;
         this._setProgram(webGLPipelineContext.program!);
         var samplers = effect.getSamplers();
@@ -3701,7 +3695,6 @@ export class ThinEngine {
         this._currentProgram = null;
         this._boundRenderFunction = null;
 
-        Effect.ResetCache();
 
         // Abort active requests
         for (let request of this._activeRequests) {

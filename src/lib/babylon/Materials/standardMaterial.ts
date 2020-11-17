@@ -29,7 +29,6 @@ import { MaterialFlags } from "./materialFlags";
 //import "../Shaders/default.vertex";
 import { Constants } from "../Engines/constants";
 import { EffectFallbacks } from './effectFallbacks';
-import { IEffectCreationOptions } from './effect';
 
 /** @hidden */
 export class StandardMaterialDefines extends MaterialDefines implements IImageProcessingConfigurationDefines {
@@ -1140,7 +1139,7 @@ export class StandardMaterial extends PushMaterial {
                 ImageProcessingConfiguration.PrepareSamplers(samplers, defines);
             }
 
-            MaterialHelper.PrepareUniformsAndSamplersList(<IEffectCreationOptions>{
+            MaterialHelper.PrepareUniformsAndSamplersList(<any>{
                 uniformsNames: uniforms,
                 uniformBuffersNames: uniformBuffers,
                 samplers: samplers,
@@ -1155,7 +1154,7 @@ export class StandardMaterial extends PushMaterial {
             var join = defines.toString();
 
             let previousEffect = subMesh.effect;
-            let effect = scene.getEngine().createEffect(shaderName, <IEffectCreationOptions>{
+            let effect = scene.getEngine().createEffect(shaderName, <any>{
                 attributes: attribs,
                 uniformsNames: uniforms,
                 uniformBuffersNames: uniformBuffers,

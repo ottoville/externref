@@ -1,5 +1,4 @@
 import { PostProcess, PostProcessOptions } from "./postProcess";
-import { Effect } from "../Materials/effect";
 import { Texture } from "../Materials/Textures/texture";
 import { Engine } from "../Engines/engine";
 import { Camera } from "../Cameras/camera";
@@ -33,7 +32,7 @@ export class ColorCorrectionPostProcess extends PostProcess {
         this._colorTableTexture.wrapU = Texture.CLAMP_ADDRESSMODE;
         this._colorTableTexture.wrapV = Texture.CLAMP_ADDRESSMODE;
 
-        this.onApply = (effect: Effect) => {
+        this.onApply = (effect: any) => {
             effect.setTexture("colorTable", this._colorTableTexture);
         };
     }

@@ -1,6 +1,5 @@
 import { SerializationHelper, serialize } from "../Misc/decorators";
 import { Color4 } from '../Maths/math.color';
-import { Effect } from "../Materials/effect";
 
 /**
  * The color grading curves provide additional color adjustmnent that is applied after any color grading transform (3D LUT).
@@ -332,7 +331,7 @@ export class ColorCurves {
      * @param neutralUniform The neutral uniform shader parameter
      * @param negativeUniform The negative uniform shader parameter
      */
-    public static Bind(colorCurves: ColorCurves, effect: Effect, positiveUniform = "vCameraColorCurvePositive", neutralUniform = "vCameraColorCurveNeutral", negativeUniform = "vCameraColorCurveNegative"): void {
+    public static Bind(colorCurves: ColorCurves, effect: any, positiveUniform = "vCameraColorCurvePositive", neutralUniform = "vCameraColorCurveNeutral", negativeUniform = "vCameraColorCurveNegative"): void {
         if (colorCurves._dirty) {
             colorCurves._dirty = false;
 

@@ -1,6 +1,5 @@
 import { Vector3, Matrix } from "../../Maths/math.vector";
 import { Scalar } from "../../Maths/math.scalar";
-import { Effect } from "../../Materials/effect";
 import { Particle } from "../../Particles/particle";
 import { IParticleEmitterType } from "./IParticleEmitterType";
 import { DeepCopier } from "../../Misc/deepCopier";
@@ -82,7 +81,7 @@ export class SphereParticleEmitter implements IParticleEmitterType {
      * Called by the GPUParticleSystem to setup the update shader
      * @param effect defines the update shader
      */
-    public applyToShader(effect: Effect): void {
+    public applyToShader(effect: any): void {
         effect.setFloat("radius", this.radius);
         effect.setFloat("radiusRange", this.radiusRange);
         effect.setFloat("directionRandomizer", this.directionRandomizer);
@@ -182,7 +181,7 @@ export class SphereDirectedParticleEmitter extends SphereParticleEmitter {
      * Called by the GPUParticleSystem to setup the update shader
      * @param effect defines the update shader
      */
-    public applyToShader(effect: Effect): void {
+    public applyToShader(effect: any): void {
         effect.setFloat("radius", this.radius);
         effect.setFloat("radiusRange", this.radiusRange);
         effect.setVector3("direction1", this.direction1);

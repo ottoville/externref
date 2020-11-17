@@ -9,7 +9,6 @@ import { SpriteSceneComponent } from "./spriteSceneComponent";
 import { PickingInfo } from "../Collisions/pickingInfo";
 import { Camera } from "../Cameras/camera";
 import { Texture } from "../Materials/Textures/texture";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { SceneComponentConstants } from "../sceneComponent";
 import { Constants } from "../Engines/constants";
@@ -126,8 +125,8 @@ export class SpriteManager implements ISpriteManager {
     private _buffer: Buffer;
     private _vertexBuffers: { [key: string]: VertexBuffer } = {};
     private _indexBuffer: DataBuffer;
-    private _effectBase: Effect;
-    private _effectFog: Effect;
+    private _effectBase: any;
+    private _effectFog: any;
 
     /**
      * Gets or sets the spritesheet texture

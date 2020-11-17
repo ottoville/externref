@@ -76,7 +76,6 @@ export abstract class BaseCameraPointersInput implements ICameraInput<Camera> {
             this._metaKey = evt.metaKey;
             this._shiftKey = evt.shiftKey;
             this._buttonsPressed = evt.buttons;
-
             if (engine.isPointerLock) {
                 var offsetX = evt.movementX ||
                               evt.mozMovementX ||
@@ -93,6 +92,7 @@ export abstract class BaseCameraPointersInput implements ICameraInput<Camera> {
                 this.pointA = null;
                 this.pointB = null;
             } else if (p.type === PointerEventTypes.POINTERDOWN && srcElement) {
+                
                 try {
                     srcElement.setPointerCapture(evt.pointerId);
                 } catch (e) {

@@ -1,5 +1,4 @@
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { Texture } from "../Materials/Textures/texture";
 import { PostProcess } from "./postProcess";
 
@@ -22,7 +21,7 @@ export class VRMultiviewToSingleviewPostProcess extends PostProcess {
 
         this.onSizeChangedObservable.add(() => {
         });
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             if (camera._scene.activeCamera && camera._scene.activeCamera.isLeftCamera) {
                 effect.setInt("imageIndex", 0);
             }else {

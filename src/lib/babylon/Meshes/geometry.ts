@@ -7,7 +7,6 @@ import { IGetSetVerticesData, VertexData } from "../Meshes/mesh.vertexData";
 import { VertexBuffer } from "../Meshes/buffer";
 import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
-import { Effect } from "../Materials/effect";
 import { SceneLoaderFlags } from "../Loading/sceneLoaderFlags";
 import { BoundingInfo } from "../Culling/boundingInfo";
 import { Constants } from "../Engines/constants";
@@ -352,7 +351,7 @@ export class Geometry implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _bind(effect: Nullable<Effect>, indexToBind?: Nullable<DataBuffer>): void {
+    public _bind(effect: Nullable<any>, indexToBind?: Nullable<DataBuffer>): void {
         if (!effect) {
             return;
         }
@@ -625,7 +624,7 @@ export class Geometry implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _releaseVertexArrayObject(effect: Nullable<Effect> = null) {
+    public _releaseVertexArrayObject(effect: Nullable<any> = null) {
         if (!effect || !this._vertexArrayObjects) {
             return;
         }

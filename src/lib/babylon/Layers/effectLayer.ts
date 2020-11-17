@@ -17,7 +17,6 @@ import { PostProcess } from "../PostProcesses/postProcess";
 import { _TimeToken } from "../Instrumentation/timeToken";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { Texture } from "../Materials/Textures/texture";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
 import { Constants } from "../Engines/constants";
@@ -73,9 +72,9 @@ export abstract class EffectLayer {
     private _vertexBuffers: { [key: string]: Nullable<VertexBuffer> } = {};
     private _indexBuffer: Nullable<DataBuffer>;
     private _cachedDefines: string;
-    private _effectLayerMapGenerationEffect: Effect;
+    private _effectLayerMapGenerationEffect: any;
     private _effectLayerOptions: IEffectLayerOptions;
-    private _mergeEffect: Effect;
+    private _mergeEffect: any;
 
     protected _scene: Scene;
     protected _engine: Engine;
@@ -212,7 +211,7 @@ export abstract class EffectLayer {
      * to the main canvas at the end of the scene rendering.
      * @returns The effect containing the shader used to merge the effect on the  main canvas
      */
-    protected abstract _createMergeEffect(): Effect;
+    protected abstract _createMergeEffect(): any;
 
     /**
      * Creates the render target textures and post processes used in the effect layer.
@@ -223,7 +222,7 @@ export abstract class EffectLayer {
      * Implementation specific of rendering the generating effect on the main canvas.
      * @param effect The effect used to render through
      */
-    protected abstract _internalRender(effect: Effect): void;
+    protected abstract _internalRender(effect: any): void;
 
     /**
      * Sets the required values for both the emissive texture and and the main color.

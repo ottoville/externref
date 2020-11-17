@@ -4,7 +4,6 @@ import { Tools } from "../Misc/tools";
 import { Nullable } from "../types";
 import { Color4 } from "../Maths/math.color";
 import { MaterialDefines } from "../Materials/materialDefines";
-import { Effect } from "../Materials/effect";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { ColorCurves } from "../Materials/colorCurves";
 
@@ -496,7 +495,7 @@ export class ImageProcessingConfiguration {
      * @param effect The effect to bind to
      * @param overrideAspectRatio Override the aspect ratio of the effect
      */
-    public bind(effect: Effect, overrideAspectRatio?: number): void {
+    public bind(effect: any, overrideAspectRatio?: number): void {
         // Color Curves
         if (this._colorCurvesEnabled && this.colorCurves) {
             ColorCurves.Bind(this.colorCurves, effect);

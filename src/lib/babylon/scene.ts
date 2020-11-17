@@ -22,7 +22,6 @@ import { BaseTexture } from "./Materials/Textures/baseTexture";
 import { Texture } from "./Materials/Textures/texture";
 import { Material } from "./Materials/material";
 import { ImageProcessingConfiguration } from "./Materials/imageProcessingConfiguration";
-import { Effect } from "./Materials/effect";
 import { UniformBuffer } from "./Materials/uniformBuffer";
 import { MultiMaterial } from "./Materials/multiMaterial";
 import { Light } from "./Lights/light";
@@ -181,28 +180,6 @@ export class Scene extends AbstractScene implements IAnimatable {
 
     /** @hidden */
     protected _environmentTexture: Nullable<BaseTexture>;
-    /**
-     * Texture used in all pbr material as the reflection texture.
-     * As in the majority of the scene they are the same (exception for multi room and so on),
-     * this is easier to reference from here than from all the materials.
-     */
-    //@ts-ignore
-    public get environmentTexture(): Nullable<BaseTexture> {
-        return this._environmentTexture;
-    }
-    /**
-     * Texture used in all pbr material as the reflection texture.
-     * As in the majority of the scene they are the same (exception for multi room and so on),
-     * this is easier to set here than in all the materials.
-     */
-    public set environmentTexture(value: Nullable<BaseTexture>) {
-        if (this._environmentTexture === value) {
-            return;
-        }
-
-        this._environmentTexture = value;
-        this.markAllMaterialsAsDirty(Constants.MATERIAL_TextureDirtyFlag);
-    }
 
     /** @hidden */
     protected _environmentIntensity: number = 1;
@@ -1122,7 +1099,7 @@ export class Scene extends AbstractScene implements IAnimatable {
     /** @hidden */
     public _cachedMaterial: Nullable<Material>;
     /** @hidden */
-    public _cachedEffect: Nullable<Effect>;
+    public _cachedEffect: Nullable<any>;
     /** @hidden */
     public _cachedVisibility: Nullable<number>;
 
@@ -1513,7 +1490,7 @@ export class Scene extends AbstractScene implements IAnimatable {
      * Gets the cached effect (ie. the latest rendered one)
      * @returns the cached effect
      */
-    public getCachedEffect(): Nullable<Effect> {
+    public getCachedEffect(): Nullable<any> {
         return this._cachedEffect;
     }
 
@@ -1532,7 +1509,7 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param visibility defines the current visibility state
      * @returns true if one parameter is not cached
      */
-    public isCachedMaterialInvalid(material: Material, effect: Effect, visibility: number = 1) {
+    public isCachedMaterialInvalid(material: Material, effect: any, visibility: number = 1) {
         return this._cachedEffect !== effect || this._cachedMaterial !== material || this._cachedVisibility !== visibility;
     }
 

@@ -5,7 +5,6 @@ import { NodeMaterialSystemValues } from '../../Enums/nodeMaterialSystemValues';
 import { NodeMaterialBlockTargets } from '../../Enums/nodeMaterialBlockTargets';
 import { AbstractMesh } from '../../../../Meshes/abstractMesh';
 import { Mesh } from '../../../../Meshes/mesh';
-import { Effect } from '../../../effect';
 import { MaterialHelper } from '../../../materialHelper';
 import { NodeMaterialConnectionPoint } from '../../nodeMaterialBlockConnectionPoint';
 import { NodeMaterial, NodeMaterialDefines } from '../../nodeMaterial';
@@ -133,7 +132,7 @@ export class BonesBlock extends NodeMaterialBlock {
         }
     }
 
-    public bind(effect: Effect, nodeMaterial: NodeMaterial, mesh?: Mesh) {
+    public bind(effect: any, nodeMaterial: NodeMaterial, mesh?: Mesh) {
         MaterialHelper.BindBonesParameters(mesh, effect);
     }
 

@@ -1,7 +1,6 @@
 import { Vector2 } from "../Maths/math.vector";
 import { Camera } from "../Cameras/camera";
 import { VRCameraMetrics } from "../Cameras/VR/vrCameraMetrics";
-import { Effect } from "../Materials/effect";
 import { Texture } from "../Materials/Textures/texture";
 import { PostProcess } from "./postProcess";
 
@@ -45,7 +44,7 @@ export class VRDistortionCorrectionPostProcess extends PostProcess {
             this._scaleFactor = new Vector2(.5 * (1 / this._postProcessScaleFactor), .5 * (1 / this._postProcessScaleFactor) * this.aspectRatio);
             this._lensCenter = new Vector2(this._isRightEye ? 0.5 - this._lensCenterOffset * 0.5 : 0.5 + this._lensCenterOffset * 0.5, 0.5);
         });
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             effect.setFloat2("LensCenter", this._lensCenter.x, this._lensCenter.y);
             effect.setFloat2("Scale", this._scaleFactor.x, this._scaleFactor.y);
             effect.setFloat2("ScaleIn", this._scaleIn.x, this._scaleIn.y);

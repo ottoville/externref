@@ -1,7 +1,6 @@
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Nullable } from "../types";
 import { Engine } from "../Engines/engine";
-import { Effect } from "../Materials/effect";
 import { Camera } from "../Cameras/camera";
 import { Constants } from "../Engines/constants";
 
@@ -31,7 +30,7 @@ export class BloomMergePostProcess extends PostProcess {
         options: number | PostProcessOptions,
         camera: Nullable<Camera>, samplingMode?: number, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT, blockCompilation = false) {
         super(name, "bloomMerge", ["bloomWeight"], ["circleOfConfusionSampler", "blurStep0", "blurStep1", "blurStep2", "bloomBlur"], options, camera, samplingMode, engine, reusable, null, textureType, undefined, null, true);
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             effect.setTextureFromPostProcess("textureSampler", originalFromInput);
             effect.setTextureFromPostProcessOutput("bloomBlur", blurred);
             effect.setFloat("bloomWeight", this.weight);

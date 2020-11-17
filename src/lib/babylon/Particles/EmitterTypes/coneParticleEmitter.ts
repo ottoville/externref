@@ -1,7 +1,6 @@
 import { DeepCopier } from "../../Misc/deepCopier";
 import { Vector3, Matrix } from "../../Maths/math.vector";
 import { Scalar } from "../../Maths/math.scalar";
-import { Effect } from "../../Materials/effect";
 import { Particle } from "../../Particles/particle";
 import { IParticleEmitterType } from "./IParticleEmitterType";
 /**
@@ -143,7 +142,7 @@ export class ConeParticleEmitter implements IParticleEmitterType {
      * Called by the GPUParticleSystem to setup the update shader
      * @param effect defines the update shader
      */
-    public applyToShader(effect: Effect): void {
+    public applyToShader(effect: any): void {
         effect.setFloat2("radius", this._radius, this.radiusRange);
         effect.setFloat("coneAngle", this._angle);
         effect.setFloat2("height", this._height, this.heightRange);

@@ -16,7 +16,7 @@ export class GPU {
     GPUBindGroupLayouts: WeakMap<GPUBindGroup, GPUBindGroupLayout> = new WeakMap();
     DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
 
-    #uniformBindGroupLayoutWithTime = this.createBindGroupLayout(
+    uniformBindGroupLayoutWithTime = this.createBindGroupLayout(
         {
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
@@ -30,7 +30,7 @@ export class GPU {
     );
     
     //viewprojection and camera position
-    uniformBuffer = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
+    //uniformBuffer = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
     uniformBufferInvertedView = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
 
     singleWritableStorageLayout = this.device.createBindGroupLayout({
@@ -49,8 +49,8 @@ export class GPU {
         })
 
 
-    #uniformBindGroupLayout = this.singleVertexUniformLayout;
-    #uniformBindGroupNoTime = this.createBindGroup(
+    uniformBindGroupLayout = this.singleVertexUniformLayout;
+   /* #uniformBindGroupNoTime = this.createBindGroup(
         this.#uniformBindGroupLayout,
         {
             binding: 0,
@@ -58,11 +58,11 @@ export class GPU {
                 buffer: this.uniformBuffer
             }
         }
-    );
+    );*/
 
-    baseBindGroup: BindGroupLayout;
+   // baseBindGroup: BindGroupLayout;
 
-    baseBindGroupNoTime = this.addBindGroup(this.#uniformBindGroupNoTime);
+    //baseBindGroupNoTime = this.addBindGroup(this.#uniformBindGroupNoTime);
 
 
     shaderModules: Map<string, GPUShaderModule> = new Map();
@@ -71,11 +71,13 @@ export class GPU {
     CPUData = new SharedArrayBuffer(TerraNode.alignment * TerraNode.maxInstances);
     DataSlots: number[] = new Array(TerraNode.maxInstances).fill(TerraNode.alignment).map((v, i) => i * v);
 
-    positionBindGroupTime;
+    //positionBindGroupTime;
     
     BindGroup: BindGroupOneBinding;
-    positionBindGroupNoTime: DynamicBindGroupDrawable<[number]>;
+    //positionBindGroupNoTime: DynamicBindGroupDrawable<[number]>;
     BindGroupLayout = this.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
+    timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
+    timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
     addBindGroup<T>(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), properties?:T) {
         const bglayout = this.GPUBindGroupLayouts.get(bindgroup);
@@ -158,50 +160,50 @@ export class GPU {
                 }
             });
         this.DynamicBindGroups.add(this.BindGroup);
-        this.positionBindGroupNoTime = this.baseBindGroupNoTime.addChildBindGroup(this.BindGroup, true);
+        //this.positionBindGroupNoTime = this.baseBindGroupNoTime.addChildBindGroup(this.BindGroup, true);
 
         const timeAndDeltaBuffer = new ArrayBuffer(12);
-        const timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
-        const timeGroup = {
+        this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
+        this.timeGroup = {
             binding: 1,
             resource: {
-                buffer: timeBuffer
+                buffer: this.timeBuffer
             }
         }
-        const uniformBindGroup = this.createBindGroup(
-                this.#uniformBindGroupLayoutWithTime,
+        /*const uniformBindGroup = this.createBindGroup(
+                this.uniformBindGroupLayoutWithTime,
                 {
                     binding: 0,
                     resource: {
                         buffer: this.uniformBuffer
                     }
-            }, timeGroup);
-        const uniformBindGroupInvertedView = this.createBindGroup(
-            this.#uniformBindGroupLayoutWithTime,
+            }, timeGroup);*/
+      /*  const uniformBindGroupInvertedView = this.createBindGroup(
+            this.uniformBindGroupLayoutWithTime,
             {
                 binding: 0,
                 resource: {
                     buffer: this.uniformBufferInvertedView
                 }
-            }, timeGroup);
-        this.baseBindGroup = this.addBindGroup(uniformBindGroup, { animate1: false });
-        this.baseBindGroup.sharedBindGroupOverwrites.set(renderPassWater, uniformBindGroupInvertedView)
+            }, timeGroup);*/
+        //this.baseBindGroup = this.addBindGroup(uniformBindGroup, { animate1: false });
+        //this.baseBindGroup.sharedBindGroupOverwrites.set(renderPassWater, uniformBindGroupInvertedView)
        // this.positionBindGroupTime = this.baseBindGroup.addChildBindGroup(this.BindGroup, true);
-        this.positionBindGroupTime = this.buildBindGroupHierarcy(this.baseBindGroup,this.BindGroup)
+       // this.positionBindGroupTime = this.buildBindGroupHierarcy(this.baseBindGroup,this.BindGroup)
         
-        const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
-        const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
+       // const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
+      /*  const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
         const animationView = new Float32Array(timeAndDeltaBuffer, 8, 1);
-        const timeBufferStorage = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-        this.positionBindGroupTime.onRender = async (time) => {
+        const timeBufferStorage = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);*/
+      /*  this.positionBindGroupTime.onRender = async (time) => {
             return this.updateGPUBuffer();
         }
-
-        this.positionBindGroupNoTime.onRender = async (time) => {
+        */
+       /* this.positionBindGroupNoTime.onRender = async (time) => {
             return this.updateGPUBuffer();
-        }
+        }*/
         const me = this;
-        this.baseBindGroup.onRender = function (time, delta) {
+      /*  this.baseBindGroup.onRender = function (time, delta) {
 
            // windIntensivy = Math.min(Math.max(windIntensivy+0.000625-(Math.random()*0.00125),-1),1)
             timeView.set([time]);
@@ -216,7 +218,7 @@ export class GPU {
                 deltaView.set([delta]);
             return me.updateBufferRaw(timeBufferStorage, timeBuffer, timeAndDeltaBuffer);
 
-        }
+        }*/
         GPU.instance = this;
     }
     async updateBufferRaw(buffer: GPUMapWriteBuffer, destination: GPUCopyDSTBuffer, data: ArrayBuffer): Promise<GPUCommandBuffer | null> {
@@ -250,7 +252,7 @@ export class GPU {
         this.#syncedBuffers.delete(buffer);
         return commandEncoder.finish();
     }
-    async updateView(viewProjectionPositionBuffer: ArrayBuffer) {
+  /*  async updateView(viewProjectionPositionBuffer: ArrayBuffer) {
         const encoder = await this.updateBufferRaw(this.#uniformBufferSwap, this.uniformBuffer, viewProjectionPositionBuffer);
         if (encoder)
             this.device.defaultQueue.submit([encoder]);
@@ -259,7 +261,7 @@ export class GPU {
         const encoder = await this.updateBufferRaw(this.#uniformBufferSwap2, this.uniformBufferInvertedView, viewProjectionPositionBuffer);
         if (encoder)
             this.device.defaultQueue.submit([encoder]);
-    }
+    }*/
 
     createInputBuffer(usage: typeof GPUBufferUsage.VERTEX, data: Float32Array): [SharedArrayBuffer, GPUVertexBuffer]
     createInputBuffer(usage: typeof GPUBufferUsage.INDEX, data: (Uint16Array | Uint32Array)): [SharedArrayBuffer, GPUIndexBuffer]

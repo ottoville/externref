@@ -7,7 +7,6 @@ import { AbstractMesh } from "../Meshes/abstractMesh";
 import { SubMesh } from "../Meshes/subMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
 import { StandardMaterial } from "../Materials/standardMaterial";
@@ -32,7 +31,7 @@ declare type Engine = import("../Engines/engine").Engine;
  */
 export class VolumetricLightScatteringPostProcess extends PostProcess {
     // Members
-    private _volumetricLightScatteringPass: Effect;
+    private _volumetricLightScatteringPass: any;
     private _volumetricLightScatteringRTT: any;
     private _viewPort: Viewport;
     private _screenCoordinates: Vector2 = Vector2.Zero();
@@ -143,7 +142,7 @@ export class VolumetricLightScatteringPostProcess extends PostProcess {
             this.onActivate = null;
         };
 
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             this._updateMeshScreenCoordinates(<Scene>scene);
 
             effect.setTexture("lightScatteringSampler", this._volumetricLightScatteringRTT);
@@ -306,12 +305,12 @@ export class VolumetricLightScatteringPostProcess extends PostProcess {
             var hardwareInstancedRendering = (engine.getCaps().instancedArrays) && (batch.visibleInstances[subMesh._id] !== null);
 
             if (this._isReady(subMesh, hardwareInstancedRendering)) {
-                var effect: Effect = this._volumetricLightScatteringPass;
+                var effect: any = this._volumetricLightScatteringPass;
                 if (mesh === this.mesh) {
                     if (subMesh.effect) {
                         effect = subMesh.effect;
                     } else {
-                        effect = <Effect>material.getEffect();
+                        effect = <any>material.getEffect();
                     }
                 }
 

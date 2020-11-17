@@ -4,7 +4,6 @@ import { SerializationHelper, serialize, serializeAsTexture, expandToProperty, s
 import { Color3 } from '../../Maths/math.color';
 import { SmartArray } from "../../Misc/smartArray";
 import { BaseTexture } from "../../Materials/Textures/baseTexture";
-import { Effect } from "../../Materials/effect";
 import { MaterialFlags } from "../materialFlags";
 import { UniformBuffer } from "../../Materials/uniformBuffer";
 import { MaterialHelper } from "../../Materials/materialHelper";
@@ -349,7 +348,7 @@ export class PBRSubSurfaceConfiguration {
      * @param activeEffect defines the effect that should be unbound from.
      * @returns true if unbound, otherwise false
      */
-    public unbind(activeEffect: Effect): boolean {
+    public unbind(activeEffect: any): boolean {
         if (this._refractionTexture && this._refractionTexture.isRenderTarget) {
             activeEffect.setTexture("refractionSampler", null);
             return true;

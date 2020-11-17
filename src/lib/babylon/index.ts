@@ -11,7 +11,6 @@ export * from "./Culling/index";
 export * from "./Engines/index";
 export * from "./Events/index";
 export * from "./Gamepads/index";
-export * from "./Gizmos/index";
 export * from "./Helpers/index";
 export * from "./Instrumentation/index";
 export * from "./Layers/index";

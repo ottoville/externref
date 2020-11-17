@@ -8,7 +8,6 @@ import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Texture } from "../Materials/Textures/texture";
-import { Effect } from "../Materials/effect";
 import { Material } from "../Materials/material";
 import { PostProcess } from "../PostProcesses/postProcess";
 import { BlurPostProcess } from "../PostProcesses/blurPostProcess";
@@ -206,7 +205,7 @@ export class GlowLayer extends EffectLayer {
      * Create the merge effect. This is the shader use to blit the information back
      * to the main canvas at the end of the scene rendering.
      */
-    protected _createMergeEffect(): Effect {
+    protected _createMergeEffect(): any {
         // Effect
         return this._engine.createEffect("glowMapMerge",
             [VertexBuffer.PositionKind],
@@ -315,7 +314,7 @@ export class GlowLayer extends EffectLayer {
      * Implementation specific of rendering the generating effect on the main canvas.
      * @param effect The effect used to render through
      */
-    protected _internalRender(effect: Effect): void {
+    protected _internalRender(effect: any): void {
         // Texture
         effect.setTexture("textureSampler", this._blurTexture1);
         effect.setTexture("textureSampler2", this._blurTexture2);

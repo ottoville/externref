@@ -1,7 +1,6 @@
 import { NodeMaterialBlockConnectionPointTypes } from './Enums/nodeMaterialBlockConnectionPointTypes';
 import { NodeMaterialBlockTargets } from './Enums/nodeMaterialBlockTargets';
 import { NodeMaterialBuildStateSharedData } from './nodeMaterialBuildStateSharedData';
-import { Effect } from '../effect';
 import { StringTools } from '../../Misc/stringTools';
 
 /**
@@ -222,24 +221,8 @@ export class NodeMaterialBuildState {
             return `#include<${includeName}>[0..${options.repeatKey}]\r\n`;
         }
 
-        let code = Effect.IncludesShadersStore[includeName] + "\r\n";
 
-        if (this.sharedData.emitComments) {
-            code = comments + `\r\n` + code;
-        }
-
-        if (!options) {
-            return code;
-        }
-
-        if (options.replaceStrings) {
-            for (var index = 0; index < options.replaceStrings.length; index++) {
-                let replaceString = options.replaceStrings[index];
-                code = code.replace(replaceString.search, replaceString.replace);
-            }
-        }
-
-        return code;
+        return "";
     }
 
     /** @hidden */
@@ -271,7 +254,7 @@ export class NodeMaterialBuildState {
             return;
         }
 
-        this.functions[key] = Effect.IncludesShadersStore[includeName];
+
 
         if (this.sharedData.emitComments) {
             this.functions[key] = comments + `\r\n` + this.functions[key];

@@ -4,7 +4,6 @@ import { Engine } from "../Engines/engine";
 import { VertexBuffer } from "./buffer";
 import { IntersectionInfo } from "../Collisions/intersectionInfo";
 import { ICullable, BoundingInfo } from "../Culling/boundingInfo";
-import { Effect } from "../Materials/effect";
 import { Constants } from "../Engines/constants";
 import { DataBuffer } from './dataBuffer';
 import { extractMinAndMaxIndexed } from '../Maths/math.functions';
@@ -28,7 +27,7 @@ export class BaseSubMesh {
     /** @hidden */
     public _materialDefines: Nullable<MaterialDefines> = null;
     /** @hidden */
-    public _materialEffect: Nullable<Effect> = null;
+    public _materialEffect: Nullable<any> = null;
 
     /**
      * Gets material defines used by the effect associated to the sub mesh
@@ -47,7 +46,7 @@ export class BaseSubMesh {
     /**
      * Gets associated effect
      */
-    public get effect(): Nullable<Effect> {
+    public get effect(): Nullable<any> {
         return this._materialEffect;
     }
 
@@ -56,7 +55,7 @@ export class BaseSubMesh {
      * @param effect defines the effect to associate with
      * @param defines defines the set of defines used to compile this effect
      */
-    public setEffect(effect: Nullable<Effect>, defines: Nullable<MaterialDefines> = null) {
+    public setEffect(effect: Nullable<any>, defines: Nullable<MaterialDefines> = null) {
         if (this._materialEffect === effect) {
             if (!effect) {
                 this._materialDefines = null;

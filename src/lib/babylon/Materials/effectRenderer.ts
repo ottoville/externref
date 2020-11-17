@@ -5,7 +5,6 @@ import { VertexBuffer } from '../Meshes/buffer';
 import { Viewport } from '../Maths/math.viewport';
 import { Constants } from '../Engines/constants';
 import { Observable } from '../Misc/observable';
-import { Effect } from './effect';
 import { DataBuffer } from '../Meshes/dataBuffer';
 
 import "../Engines/Extensions/engine.renderTarget";
@@ -105,7 +104,7 @@ export class EffectRenderer {
      * Binds the embedded attributes buffer to the effect.
      * @param effect Defines the effect to bind the attributes for
      */
-    public bindBuffers(effect: Effect): void {
+    public bindBuffers(effect: any): void {
         this.engine.bindBuffers(this._vertexBuffers, this._indexBuffer, effect);
     }
 
@@ -246,7 +245,7 @@ export class EffectWrapper {
     /**
      * The underlying effect
      */
-    public effect: Effect;
+    public effect: any;
 
     /**
      * Creates an effect to be renderer
@@ -278,11 +277,6 @@ export class EffectWrapper {
             });
         }
 
-        this.effect = new Effect(effectCreationOptions,
-            creationOptions.attributeNames || ["position"],
-            uniformNames,
-            creationOptions.samplerNames,
-            creationOptions.engine);
     }
 
     /**

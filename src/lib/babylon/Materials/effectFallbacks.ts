@@ -1,7 +1,6 @@
 import { Nullable } from '../types';
 import { IEffectFallbacks } from './iEffectFallbacks';
 
-declare type Effect = import("./effect").Effect;
 declare type AbstractMesh = import("../Meshes/abstractMesh").AbstractMesh;
 
 /**
@@ -73,7 +72,7 @@ export class EffectFallbacks implements IEffectFallbacks {
      * @param effect defines the current effect we try to compile
      * @returns The resulting defines with defines of the current rank removed.
      */
-    public reduce(currentDefines: string, effect: Effect): string {
+    public reduce(currentDefines: string, effect: any): string {
         // First we try to switch to CPU skinning
         if (this._mesh && this._mesh.computeBonesUsingShaders && this._mesh.numBoneInfluencers > 0) {
             this._mesh.computeBonesUsingShaders = false;

@@ -4,7 +4,6 @@ import { serialize } from "../Misc/decorators";
 import { Color4 } from "../Maths/math.color";
 import { Camera } from "../Cameras/camera";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
-import { Effect } from "../Materials/effect";
 import { ColorCurves } from "../Materials/colorCurves";
 import { ImageProcessingConfiguration, IImageProcessingConfigurationDefines } from "../Materials/imageProcessingConfiguration";
 import { PostProcess, PostProcessOptions } from "./postProcess";
@@ -370,7 +369,7 @@ export class ImageProcessingPostProcess extends PostProcess {
             this.imageProcessingConfiguration.applyByPostProcess = true;
         }
 
-        this.onApply = (effect: Effect) => {
+        this.onApply = (effect: any) => {
             this.imageProcessingConfiguration.bind(effect, this.aspectRatio);
         };
     }

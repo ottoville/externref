@@ -6,7 +6,6 @@ import { NodeMaterialBlockTargets } from '../../Enums/nodeMaterialBlockTargets';
 import { _TypeStore } from '../../../../Misc/typeStore';
 import { Nullable } from '../../../../types';
 import { Scene } from '../../../../scene';
-import { Effect } from '../../../effect';
 import { NodeMaterial, NodeMaterialDefines } from '../../nodeMaterial';
 import { Mesh } from '../../../../Meshes/mesh';
 import { Light } from '../../../../Lights/light';
@@ -74,7 +73,7 @@ export class LightInformationBlock extends NodeMaterialBlock {
         return this._outputs[2];
     }
 
-    public bind(effect: Effect, nodeMaterial: NodeMaterial, mesh?: Mesh) {
+    public bind(effect: any, nodeMaterial: NodeMaterial, mesh?: Mesh) {
         if (!mesh) {
             return;
         }

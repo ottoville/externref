@@ -1,6 +1,5 @@
 import { Nullable } from "../types";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Constants } from "../Engines/constants";
 
@@ -34,7 +33,7 @@ export class SharpenPostProcess extends PostProcess {
     constructor(name: string, options: number | PostProcessOptions, camera: Nullable<Camera>, samplingMode?: number, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT, blockCompilation = false) {
         super(name, "sharpen", ["sharpnessAmounts", "screenSize"], null, options, camera, samplingMode, engine, reusable, null, textureType, undefined, null, blockCompilation);
 
-        this.onApply = (effect: Effect) => {
+        this.onApply = (effect: any) => {
             effect.setFloat2("screenSize", this.width, this.height);
             effect.setFloat2("sharpnessAmounts", this.edgeAmount, this.colorAmount);
         };

@@ -5,7 +5,6 @@ import { NodeMaterialBlockTargets } from '../../Enums/nodeMaterialBlockTargets';
 import { NodeMaterialConnectionPoint } from '../../nodeMaterialBlockConnectionPoint';
 import { AbstractMesh } from '../../../../Meshes/abstractMesh';
 import { NodeMaterial, NodeMaterialDefines } from '../../nodeMaterial';
-import { Effect } from '../../../effect';
 import { Mesh } from '../../../../Meshes/mesh';
 import { MaterialHelper } from '../../../materialHelper';
 import { VertexBuffer } from '../../../../Meshes/buffer';
@@ -153,7 +152,7 @@ export class MorphTargetsBlock extends NodeMaterialBlock {
         MaterialHelper.PrepareDefinesForMorphTargets(mesh, defines);
     }
 
-    public bind(effect: Effect, nodeMaterial: NodeMaterial, mesh?: Mesh) {
+    public bind(effect: any, nodeMaterial: NodeMaterial, mesh?: Mesh) {
         if (mesh && this._repeatebleContentGenerated) {
             MaterialHelper.BindMorphTargetParameters(mesh, effect);
         }

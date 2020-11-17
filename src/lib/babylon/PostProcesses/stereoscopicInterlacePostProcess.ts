@@ -1,7 +1,6 @@
 import { Nullable } from "../types";
 import { Vector2 } from "../Maths/math.vector";
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { PostProcess } from "./postProcess";
 import { Engine } from "../Engines/engine";
 
@@ -32,7 +31,7 @@ export class StereoscopicInterlacePostProcess extends PostProcess {
         this.onSizeChangedObservable.add(() => {
             this._stepSize = new Vector2(1 / this.width, 1 / this.height);
         });
-        this.onApplyObservable.add((effect: Effect) => {
+        this.onApplyObservable.add((effect: any) => {
             effect.setTextureFromPostProcess("camASampler", this._passedProcess);
             effect.setFloat2("stepSize", this._stepSize.x, this._stepSize.y);
         });

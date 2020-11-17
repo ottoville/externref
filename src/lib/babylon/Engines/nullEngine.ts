@@ -4,7 +4,6 @@ import { Scene } from "../scene";
 import { Engine } from "../Engines/engine";
 import { RenderTargetCreationOptions } from "../Materials/Textures/renderTargetCreationOptions";
 import { VertexBuffer } from "../Meshes/buffer";
-import { Effect } from "../Materials/effect";
 import { _TimeToken } from "../Instrumentation/timeToken";
 import { Constants } from "./constants";
 import { IPipelineContext } from './IPipelineContext';
@@ -246,7 +245,7 @@ export class NullEngine extends Engine {
      * Binds an effect to the webGL context
      * @param effect defines the effect to bind
      */
-    public bindSamplers(effect: Effect): void {
+    public bindSamplers(effect: any): void {
         this._currentEffect = null;
     }
 
@@ -254,7 +253,7 @@ export class NullEngine extends Engine {
      * Activates an effect, mkaing it the current one (ie. the one used for rendering)
      * @param effect defines the effect to activate
      */
-    public enableEffect(effect: Effect): void {
+    public enableEffect(effect: any): void {
         this._currentEffect = effect;
 
         if (effect.onBind) {
@@ -468,7 +467,7 @@ export class NullEngine extends Engine {
      * @param vertexStrideSize defines the vertex stride of the vertex buffer
      * @param effect defines the effect associated with the vertex buffer
      */
-    public bindBuffers(vertexBuffers: { [key: string]: VertexBuffer; }, indexBuffer: DataBuffer, effect: Effect): void {
+    public bindBuffers(vertexBuffers: { [key: string]: VertexBuffer; }, indexBuffer: DataBuffer, effect: any): void {
     }
 
     /**

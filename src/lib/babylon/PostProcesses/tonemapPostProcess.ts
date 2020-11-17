@@ -1,5 +1,4 @@
 import { Camera } from "../Cameras/camera";
-import { Effect } from "../Materials/effect";
 import { PostProcess } from "./postProcess";
 import { Constants } from "../Engines/constants";
 
@@ -57,7 +56,7 @@ export class TonemapPostProcess extends PostProcess {
         //sadly a second call to create the effect.
         this.updateEffect(defines);
 
-        this.onApply = (effect: Effect) => {
+        this.onApply = (effect: any) => {
             effect.setFloat("_ExposureAdjustment", this.exposureAdjustment);
         };
     }

@@ -2,7 +2,6 @@ import { PostProcess, PostProcessOptions } from "./postProcess";
 import { Nullable } from "../types";
 import { Camera } from "../Cameras/camera";
 import { Engine } from "../Engines/engine";
-import { Effect } from "../Materials/effect";
 import { Constants } from "../Engines/constants";
 
 //import "../Shaders/convolution.fragment";
@@ -30,7 +29,7 @@ export class ConvolutionPostProcess extends PostProcess {
         options: number | PostProcessOptions, camera: Nullable<Camera>, samplingMode?: number, engine?: Engine, reusable?: boolean, textureType: number = Constants.TEXTURETYPE_UNSIGNED_INT) {
         super(name, "convolution", ["kernel", "screenSize"], null, options, camera, samplingMode, engine, reusable, null, textureType);
 
-        this.onApply = (effect: Effect) => {
+        this.onApply = (effect: any) => {
             effect.setFloat2("screenSize", this.width, this.height);
             effect.setArray("kernel", this.kernel);
         };

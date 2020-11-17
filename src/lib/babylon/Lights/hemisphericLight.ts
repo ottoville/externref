@@ -4,7 +4,6 @@ import { Scene } from "../scene";
 import { Matrix, Vector3 } from "../Maths/math.vector";
 import { Color3 } from "../Maths/math.color";
 import { Node } from "../node";
-import { Effect } from "../Materials/effect";
 import { Light } from "./light";
 import { IShadowGenerator } from "./Shadows/shadowGenerator";
 import { _TimeToken } from "../Instrumentation/timeToken";
@@ -88,7 +87,7 @@ export class HemisphericLight extends Light {
      * @param lightIndex The index of the light in the effect to update
      * @returns The hemispheric light
      */
-    public transferToEffect(effect: Effect, lightIndex: string): HemisphericLight {
+    public transferToEffect(effect: any, lightIndex: string): HemisphericLight {
         var normalizeDirection = Vector3.Normalize(this.direction);
         this._uniformBuffer.updateFloat4("vLightData",
             normalizeDirection.x,
@@ -100,7 +99,7 @@ export class HemisphericLight extends Light {
         return this;
     }
 
-    public transferToNodeMaterialEffect(effect: Effect, lightDataUniformName: string) {
+    public transferToNodeMaterialEffect(effect: any, lightDataUniformName: string) {
         var normalizeDirection = Vector3.Normalize(this.direction);
         effect.setFloat3(lightDataUniformName, normalizeDirection.x, normalizeDirection.y, normalizeDirection.z);
         return this;
