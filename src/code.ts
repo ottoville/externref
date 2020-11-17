@@ -226,7 +226,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 this._currentTarget = target;
                 return this._viewMatrix;
             }
-            const projectionmatrixBuffer = new ArrayBuffer(16 * 4);
+            const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
             const projectionmatrix = new Float32Array(projectionmatrixBuffer);
 
            // const scene2 = await scenePromise;
@@ -277,7 +277,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
             const mainCamera = new TerraCamera(gpuscene.renderPassScreen, mousePositionBuffer, projectionmatrixBuffer, gpuscene)
-            const waterCamera = new TerraCamera(gpuscene.renderPassWater, mousePositionBuffer, projectionmatrixBuffer, gpuscene)
+            const waterCamera = new TerraCamera(gpuscene.renderPassWater, mousePositionBuffer, projectionmatrixBuffer, gpuscene, false)
 
             const timeAndDeltaBuffer = new ArrayBuffer(12);
             const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);

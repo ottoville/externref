@@ -142,9 +142,8 @@ export abstract class BoundableNode extends TerraNode {
         }
         );
     }
-    public intersects(ray: Ray): Promise<PickingInfo> {
-        console.log('send intersect to worker', this.uniqueID)
-        return worker.message(this.uniqueID, 'intersects', [ray.origin, ray.direction]);
+    public intersects(ray: Float32Array): Promise<PickingInfo> {
+        return worker.message(this.uniqueID, 'intersects', [ray.buffer]);
     }
     public updateBoundingBoxByMatrix(m: Float32Array) {
         //TODO: Use SIMD

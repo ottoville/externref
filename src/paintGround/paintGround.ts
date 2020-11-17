@@ -48,16 +48,10 @@ export abstract class paintGround {
 
        // this.scene.mainCamera.updatePickingRay();
         
-
-
-        const ray = {
-            origin: new Vector3(this.scene.TerraCameras[0].pickingRay[0], this.scene.TerraCameras[0].pickingRay[1], this.scene.TerraCameras[0].pickingRay[2]),
-            direction: new Vector3(this.scene.TerraCameras[0].pickingRay[3], this.scene.TerraCameras[0].pickingRay[4], this.scene.TerraCameras[0].pickingRay[5])
-         }
         let distance: number;
 
         
-        let pikked = await this.ground.mesh.intersects(ray);
+        let pikked = await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
         if (pikked.pickedPoint) {
             
             this.#end_position.set([pikked.pickedPoint.x, pikked.pickedPoint.z]);
@@ -86,13 +80,10 @@ export abstract class paintGround {
     #mousemove = async (evt: PointerEvent) => {
         //const ray2 = this.scene.createPickingRay(evt.clientX, evt.clientY);
        // await this.scene.mainCamera.updatePickingRay();
-        const ray = {
-            origin: new Vector3(this.scene.TerraCameras[0].pickingRay[0], this.scene.TerraCameras[0].pickingRay[1], this.scene.TerraCameras[0].pickingRay[2]),
-            direction: new Vector3(this.scene.TerraCameras[0].pickingRay[3], this.scene.TerraCameras[0].pickingRay[4], this.scene.TerraCameras[0].pickingRay[5])
-        }
+
       //  let ray = Ray.Zero();
        // this.sceneDeprecated.createPickingRayToRef(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, Matrix.Identity(), ray, this.camera);
-        let pikked = await this.ground.mesh.intersects(ray);
+        let pikked = await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
         if (pikked.pickedPoint && this.#end_position) {
             //Distance from first point
             let distance = Math.sqrt(Math.pow(this.#start_position[0] - pikked.pickedPoint.x, 2) + Math.pow(this.#start_position[1] - pikked.pickedPoint.z, 2));

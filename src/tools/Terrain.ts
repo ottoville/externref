@@ -41,7 +41,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
     ) {
         super(scene);
         this.traits = this.initTraits(traits);
-
+        this.scene.TerraCameras[0].subscribePickingRay();
         terrainWorker.message(WorkerReturn.Promise, 'init',
             {
                 positionsAndNormals: terrain.verticesPositionBuffer,
@@ -78,9 +78,11 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
             fragmentStage: {
                 module: scene.gpuscene.shaderModules.get("helper2.frag")!,
                 entryPoint: "main"
+            },
+            vertexState: {
+                indexFormat: 'uint32'
             }
         }, [this.bufferOffsetBytes]);
-
         this.helper = helperPipeline.addDrawable([scene.gpuscene.renderPassScreen],4,0, 8, 0, 0)
         /*
          *         this.helper = terrain.TerrainHeightsbindGroupPositionTree.addDrawable({
@@ -322,20 +324,25 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
         console.log('call super.deactivate');
         terrainWorker.unsubscribe('heights');
         this.helper.destroy();
-        
+        this.scene.TerraCameras[0].unSubscribePickingRay();
     };
 
     mouseListener = (evt: PointerEvent): void => {
-        let viewport = this.camera.viewport.toGlobal(this.scene.canvasSize.width, this.scene.canvasSize.height);
 
-        if (this.tempFacet1Buffer && this.tempFacet2Buffer) {
-          /*  this.tempFacet1Buffer.destroy();
-            this.tempFacet2Buffer.destroy();
-            this.tempFacet1Buffer = null;
-            this.tempFacet2Buffer = null;*/
-        }
-      //  console.log('send', evt.clientX, evt.clientY);
-        terrainWorker.message<{ x: number, y: number }, any>(WorkerReturn.Promise, 'mousemove',
+     /*   const ray = {
+            origin: new Vector3(this.scene.TerraCameras[0].pickingRay[0], this.scene.TerraCameras[0].pickingRay[1], this.scene.TerraCameras[0].pickingRay[2]),
+            direction: new Vector3(this.scene.TerraCameras[0].pickingRay[3], this.scene.TerraCameras[0].pickingRay[4], this.scene.TerraCameras[0].pickingRay[5])
+        }*/
+        this.terrain.mesh.intersects(this.scene.TerraCameras[0].pickingRay).then(pickinfo => {
+            this.worldPosition.setTranslationX(pickinfo.pickedPoint.x)
+            this.worldPosition.setTranslationZ(pickinfo.pickedPoint.z)
+        })
+
+
+       // let viewport = this.camera.viewport.toGlobal(this.scene.canvasSize.width, this.scene.canvasSize.height);
+
+
+       /* terrainWorker.message<{ x: number, y: number }, any>(WorkerReturn.Promise, 'mousemove',
             {
                 x: evt.clientX,
                 y: evt.clientY,
@@ -346,10 +353,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
             }).then(async (flatPos) => {
                 this.worldPosition.setTranslationX(flatPos.x)
                 this.worldPosition.setTranslationZ(flatPos.y)
-                //this.worldPosition.translation[0] = flatPos.x;
-               // this.worldPosition.translation[2] = flatPos.y;
-               // this.worldPosition.updatePositionBuffer();
-            });
+            });*/
     }
     raise = (): void => {
         this.direction = 1;

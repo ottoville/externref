@@ -456,17 +456,19 @@ export class TerraScene {
         this.gpuscene.device.defaultQueue.submit([gpuCommands]);
 
         const ray = this.createPickingRay(x, y);
-        const pickingRays: Map<BoundableNode, { origin: Vector3, direction: Vector3 }> = new Map();
+        const rayArr = new Float32Array([ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z])
+        const pickingRays: Map<BoundableNode, Float32Array> = new Map();
         console.log(this.boundables);
         this.boundables.forEach(boundable => {
             if (!boundable.worldPosition)
-                return pickingRays.set(boundable,ray);
+                return pickingRays.set(boundable, rayArr);
           //  const worldM = Matrix.FromArray(boundable.worldPosition.worldMatrix)
             //worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.viewArr)), worldM);
            // worldM.multiplyToRef(Matrix.FromArray(Array.from(this.mainCamera.projectionArr)), worldM);
           //  console.log(worldM.m);
           //  debugger;
-            pickingRays.set(boundable, this.createPickingRay(x, y, boundable.worldPosition.worldMatrix));
+            const ray = this.createPickingRay(x, y, boundable.worldPosition.worldMatrix);
+            pickingRays.set(boundable, new Float32Array([ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z]));
         });
         const results: Promise<PickingInfo>[] = [];
         pickingRays.forEach((ray, boundable) => {

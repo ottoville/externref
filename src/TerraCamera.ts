@@ -6,6 +6,39 @@ import type { GPU } from "./GPU";
 const worker = new ObjectWorkerThread('/webworkers/cameraWorker.js');
 let uniqueID = 0;
 
+function matrixMultiplyToRef(m: ArrayLike<number>, otherM: ArrayLike<number>, result: Float32Array) {
+    var tm0 = m[0], tm1 = m[1], tm2 = m[2], tm3 = m[3];
+    var tm4 = m[4], tm5 = m[5], tm6 = m[6], tm7 = m[7];
+    var tm8 = m[8], tm9 = m[9], tm10 = m[10], tm11 = m[11];
+    var tm12 = m[12], tm13 = m[13], tm14 = m[14], tm15 = m[15];
+
+    var om0 = otherM[0], om1 = otherM[1], om2 = otherM[2], om3 = otherM[3];
+    var om4 = otherM[4], om5 = otherM[5], om6 = otherM[6], om7 = otherM[7];
+    var om8 = otherM[8], om9 = otherM[9], om10 = otherM[10], om11 = otherM[11];
+    var om12 = otherM[12], om13 = otherM[13], om14 = otherM[14], om15 = otherM[15];
+    result[0] = tm0 * om0 + tm1 * om4 + tm2 * om8 + tm3 * om12;
+    result[1] = tm0 * om1 + tm1 * om5 + tm2 * om9 + tm3 * om13;
+    result[2] = tm0 * om2 + tm1 * om6 + tm2 * om10 + tm3 * om14;
+    result[3] = tm0 * om3 + tm1 * om7 + tm2 * om11 + tm3 * om15;
+
+    result[4] = tm4 * om0 + tm5 * om4 + tm6 * om8 + tm7 * om12;
+    result[5] = tm4 * om1 + tm5 * om5 + tm6 * om9 + tm7 * om13;
+    result[6] = tm4 * om2 + tm5 * om6 + tm6 * om10 + tm7 * om14;
+    result[7] = tm4 * om3 + tm5 * om7 + tm6 * om11 + tm7 * om15;
+
+    result[8] = tm8 * om0 + tm9 * om4 + tm10 * om8 + tm11 * om12;
+    result[9] = tm8 * om1 + tm9 * om5 + tm10 * om9 + tm11 * om13;
+    result[10] = tm8 * om2 + tm9 * om6 + tm10 * om10 + tm11 * om14;
+    result[11] = tm8 * om3 + tm9 * om7 + tm10 * om11 + tm11 * om15;
+
+    result[12] = tm12 * om0 + tm13 * om4 + tm14 * om8 + tm15 * om12;
+    result[13] = tm12 * om1 + tm13 * om5 + tm14 * om9 + tm15 * om13;
+    result[14] = tm12 * om2 + tm13 * om6 + tm14 * om10 + tm15 * om14;
+    result[15] = tm12 * om3 + tm13 * om7 + tm14 * om11 + tm15 * om15;
+    return result;
+}
+
+
 export class TerraCamera {
     readonly #uniqueID: number = uniqueID++;
     target = new Float32Array([0, 0, 0]);
@@ -41,19 +74,60 @@ export class TerraCamera {
     );
     baseBindGroup = this.gpuscene.addBindGroup(this.uniformBindGroup, { animate1: false });
     baseBindGroupNoTime = this.gpuscene.addBindGroup(this.uniformBindGroupNoTime);
-    constructor(private renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection:ArrayBuffer, private gpuscene: GPU) {
+    constructor(private renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection:SharedArrayBuffer, private gpuscene: GPU, main:boolean=true) {
         renderPass.cameras.add(this);
-        worker.message(this.#uniqueID, 'init', [this.viewProjectionPositionBuffer, this.projection, this.pickingRayBuffer, mousePositionBuffer, renderPass.size]);
+        if(main)
+            worker.message(this.#uniqueID, 'init', [this.viewProjectionPositionBuffer, this.projection, this.pickingRayBuffer, mousePositionBuffer, renderPass.size]);
     }
     render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp) {
         const viewMatrix = Matrix.FromArray(this.viewArr);
-        Matrix.LookAtLHToRef(new Vector3(...this.cameraArr), new Vector3(...this.target), new Vector3(...this.#upVector), viewMatrix);
+       // Matrix.LookAtLHToRef(new Vector3(...this.cameraArr), new Vector3(...this.target), new Vector3(...this.#upVector), viewMatrix);
+        const eye = new Vector3(...this.cameraArr);
+        //const target = new Vector3(...this.target);
+        const up = new Vector3(...this.#upVector);
+        const xAxis = Vector3.Zero();
+        const yAxis = Vector3.Zero();
+       // const zAxis = Vector3.Zero();
 
-        const modelViewProjectionMatrix = Matrix.Zero();
+        // Z axis
+       // target.subtractToRef(eye, zAxis);
+        //TODO: use SIMD
+        const zAxis = new Vector3(this.target[0] - this.cameraArr[0], this.target[1] - this.cameraArr[1], this.target[2] - this.cameraArr[2])
+        zAxis.normalize();
 
-        viewMatrix.multiplyToRef(Matrix.FromArray(this.projectionArr), modelViewProjectionMatrix);
-        this.projectionViewArr.set(modelViewProjectionMatrix.m);
+        // X axis
+        Vector3.CrossToRef(up, zAxis, xAxis);
+
+        const xSquareLength = xAxis.lengthSquared();
+        if (xSquareLength === 0) {
+            xAxis.x = 1.0;
+        } else {
+            xAxis.normalizeFromLength(Math.sqrt(xSquareLength));
+        }
+
+        // Y axis
+        Vector3.CrossToRef(zAxis, xAxis, yAxis);
+        yAxis.normalize();
+
+        // Eye angles
+        var ex = -Vector3.Dot(xAxis, eye);
+        var ey = -Vector3.Dot(yAxis, eye);
+        var ez = -Vector3.Dot(zAxis, eye);
+
+        Matrix.FromValuesToRef(
+            xAxis.x, yAxis.x, zAxis.x, 0.0,
+            xAxis.y, yAxis.y, zAxis.y, 0.0,
+            xAxis.z, yAxis.z, zAxis.z, 0.0,
+            ex, ey, ez, 1.0,
+            viewMatrix
+        );
+
+
+
         this.viewArr.set(viewMatrix.m)
+        matrixMultiplyToRef(this.viewArr, this.projectionArr, this.projectionViewArr)
+
+        
         this.gpuscene.updateBufferRaw(this.#uniformBufferSwap, this.uniformBuffer, this.viewProjectionPositionBuffer).then(encoder => {
             if(encoder)
                 this.gpuscene.device.defaultQueue.submit([encoder]);

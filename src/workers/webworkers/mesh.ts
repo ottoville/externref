@@ -77,7 +77,7 @@ class Mesh {
         if (indices)
             this.#indicesView = new Uint32Array(indices);
     }
-    intersects(origin: Vector3, direction: Vector3, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): pickInfo {
+    intersects(rayArrBuff:ArrayBuffer, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): pickInfo {
 
         //boundingBox: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number } },
         // let boundingBox = { min: { x: this.boundingBox[0], y: this.boundingBox[1], z: this.boundingBox[2] }, max: { x: this.boundingBox[3], y: this.boundingBox[4], z: this.boundingBox[5] } }
@@ -85,7 +85,7 @@ class Mesh {
             hit: false,
         };
         //const boundingInfo = this._boundingInfo;
-        let ray = new Ray(new Vector3(origin.x, origin.y, origin.z), new Vector3(direction.x, direction.y, direction.z));
+        let ray = new Ray(Vector3.FromArray(new Float32Array(rayArrBuff, 0, 3)), Vector3.FromArray(new Float32Array(rayArrBuff, 3*4)));
         
         if (!ray.intersectsBoxMinMax({ x: this.#boundingBox[0], y: this.#boundingBox[1], z: this.#boundingBox[2] }, { x: this.#boundingBox[3], y: this.#boundingBox[4], z: this.#boundingBox[5] })) {
             return pickingInfo;
