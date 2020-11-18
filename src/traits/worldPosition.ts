@@ -55,7 +55,6 @@ export class worldPosition {
     }
 
     SetTranslation(value: [number, number, number] | [number, number] | [number] | Float32Array) {
-     //   this.#previousTranslation.set(this.#translation);
         this.translation.set(value);
         this.onUpdate();
     }

@@ -65,30 +65,40 @@ class Mesh {
     readonly #positionsView: Float32Array;
     readonly #indicesView: Uint32Array | undefined;
     readonly #boundingBox = new Float32Array(this.boundingBoxBuffer);
+    #pickingPoint: Float32Array;
+    #pickingDistance: Float32Array;
     constructor(
         public readonly uniqueID: number,
         readonly indices: SharedArrayBuffer | undefined,
         readonly positions: SharedArrayBuffer,
         private readonly positionsStride: number,
-        private readonly boundingBoxBuffer: SharedArrayBuffer
+        private readonly boundingBoxBuffer: SharedArrayBuffer,
+        readonly pickingBuffer: SharedArrayBuffer
     ) {
 
         this.#positionsView = new Float32Array(positions);
+        this.#pickingPoint = new Float32Array(pickingBuffer, 0, 3);
+        this.#pickingDistance = new Float32Array(pickingBuffer, 3 * 4, 1);
+
         if (indices)
             this.#indicesView = new Uint32Array(indices);
     }
-    intersects(rayArrBuff:ArrayBuffer, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): pickInfo {
+    intersects(rayArrBuff:ArrayBuffer, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): void {
 
         //boundingBox: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number } },
         // let boundingBox = { min: { x: this.boundingBox[0], y: this.boundingBox[1], z: this.boundingBox[2] }, max: { x: this.boundingBox[3], y: this.boundingBox[4], z: this.boundingBox[5] } }
-        let pickingInfo: pickInfo = {
+        /*let pickingInfo: pickInfo = {
             hit: false,
-        };
+        };*/
+        this.#pickingPoint.set([NaN, NaN, NaN]);
+        this.#pickingDistance.set([NaN]);
+
+
         //const boundingInfo = this._boundingInfo;
         let ray = new Ray(Vector3.FromArray(new Float32Array(rayArrBuff, 0, 3)), Vector3.FromArray(new Float32Array(rayArrBuff, 3*4)));
         
         if (!ray.intersectsBoxMinMax({ x: this.#boundingBox[0], y: this.#boundingBox[1], z: this.#boundingBox[2] }, { x: this.#boundingBox[3], y: this.#boundingBox[4], z: this.#boundingBox[5] })) {
-            return pickingInfo;
+            return; // pickingInfo;
         }
         var intersectInfo: Nullable<IntersectionInfo> = null;
 
@@ -98,7 +108,7 @@ class Mesh {
         let p2 = new Vector3();
         if (!this.#indicesView) {
             console.error('Intersection with non indexed mesh not coded');
-            return pickingInfo;
+            return; // pickingInfo;
         }
         for (var index = 0; index < this.#indicesView.length; index += 3) {
             p0.x = this.#positionsView[this.#indicesView[index] * this.positionsStride]
@@ -139,18 +149,20 @@ class Mesh {
             //const worldDirection = Vector3.TransformNormal(direction, world);
             const pickedPoint = direction.addInPlace(ray.origin);
             // Return result
-            pickingInfo.hit = true;
+            this.#pickingPoint.set([pickedPoint.x, pickedPoint.y, pickedPoint.z]);
+            this.#pickingDistance.set([Vector3.Distance(ray.origin, pickedPoint)]);
+           /* pickingInfo.hit = true;
             pickingInfo.distance = Vector3.Distance(ray.origin, pickedPoint);
             pickingInfo.pickedPoint = pickedPoint;
             pickingInfo.pickMesh = this.uniqueID;
             pickingInfo.bu = intersectInfo.bu || 0;
             pickingInfo.bv = intersectInfo.bv || 0;
-            pickingInfo.faceId = intersectInfo.faceId;
+            pickingInfo.faceId = intersectInfo.faceId;*/
             //pickingInfo.subMeshId = intersectInfo.subMeshId;
 
-            return pickingInfo;
+            return; //pickingInfo;
         }
-        return pickingInfo;
+        return; //pickingInfo;
     }
     /**
  * Compute normals for given positions and indices
@@ -392,7 +404,7 @@ class Mesh {
 }
 onmessage = async (e: WorkerMessageObject<{ objId?: number, args: any[] }, Mesh>) => {
     if (e.data.action == 'init') {
-        meshes.set(e.data.data.objId!, new Mesh(e.data.data.objId!,...<[SharedArrayBuffer, SharedArrayBuffer, number, SharedArrayBuffer]>e.data.data.args));
+        meshes.set(e.data.data.objId!, new Mesh(e.data.data.objId!, ...<[SharedArrayBuffer, SharedArrayBuffer, number, SharedArrayBuffer, SharedArrayBuffer]>e.data.data.args));
         //meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));
     } else if ('objId' in e.data.data) {
         let mesh: Mesh | undefined;

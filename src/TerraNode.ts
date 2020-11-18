@@ -121,33 +121,43 @@ export interface PickingInfo {
     pickedMesh: BoundableNode,
     distance: number
 }
-interface Ray {
-    origin: any,
-    direction: any,
-}
 const worker = new ObjectWorkerThread('/webworkers/mesh.js');
+
+class pickInfo {
+    buffer = new SharedArrayBuffer(6 * 4);
+    point = new Float32Array(this.buffer, 0, 3);
+    distance = new Float32Array(this.buffer, 3*4, 1);
+}
+class boundingBox {
+    buffer = new SharedArrayBuffer(4 * 6);
+    box = new Float32Array(this.buffer);
+    min = new Float32Array(this.buffer, 0, 3);
+    max = new Float32Array(this.buffer, 4 * 3, 3);
+}
+
+
 export abstract class BoundableNode extends TerraNode {
     indicesBuffer?: SharedArrayBuffer | undefined;
     abstract verticesPositionBuffer: SharedArrayBuffer;
     abstract verticesPositionStride: number;
-    readonly boundingBoxBuffer: SharedArrayBuffer = new SharedArrayBuffer(4 * 6);
-    readonly boundingBox = new Float32Array(this.boundingBoxBuffer);
-    readonly boundingBoxMin = new Float32Array(this.boundingBoxBuffer,0,3);
-    readonly boundingBoxMax = new Float32Array(this.boundingBoxBuffer, 4*3, 3);
+    readonly boundingBox = new boundingBox()
+
+    readonly pickInfo = new pickInfo();
+
     constructor(scene: TerraScene) {
         super(scene);
         scene.boundables.add(this);
         queueMicrotask(() => {    //Run this on microtask so the scope who called constuctor has time to add verticesPositionBuffer property.
-            worker.message(this.uniqueID, 'init', [this.indicesBuffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBoxBuffer])
+            worker.message(this.uniqueID, 'init', [this.indicesBuffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
         }
         );
     }
-    public intersects(ray: Float32Array): Promise<PickingInfo> {
+    public intersects(ray: Float32Array): Promise<void> {
         return worker.message(this.uniqueID, 'intersects', [ray.buffer]);
     }
     public updateBoundingBoxByMatrix(m: Float32Array) {
         //TODO: Use SIMD
-        Vector3Multiply(this.boundingBoxMin, m);
-        Vector3Multiply(this.boundingBoxMax, m);
+        Vector3Multiply(this.boundingBox.min, m);
+        Vector3Multiply(this.boundingBox.max, m);
     }
 }

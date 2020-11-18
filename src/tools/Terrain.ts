@@ -51,7 +51,8 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
                 boundingBox: terrain.mesh.boundingBox,
                 slopeArr: terrain.slopeArrBuffer,
                 facet1Arr: terrain.facet1ArrBuffer,
-                facet2Arr: terrain.facet2ArrBuffer
+                facet2Arr: terrain.facet2ArrBuffer,
+                pickInfo: terrain.mesh.pickInfo.buffer
             });
 
        // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
@@ -223,24 +224,6 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
     private mouseinterval: number = 0;
     pointerdownf = (evt: PointerEvent): void => {
         if (evt.button !== 0) {
-            /*let avarages = {
-                test1: [],
-                test2: []
-            };
-            let timed;
-            for (let i = 0; i < 20; i++) {
-                timed = new Date().getTime();
-                this.terrain.intersects(this.ray);
-                avarages['test1'].push(new Date().getTime() - timed)
-                timed = new Date().getTime();
-                this.terrain.intersects2(this.ray);
-                avarages['test2'].push(new Date().getTime() - timed)
-            }
-            console.log(avarages);
-            for (let key in avarages) {
-                avarages[key].shift(); avarages[key].shift(); avarages[key].shift();
-                console.log(key, avarages[key].reduce((a, b) => a + b, 0) / 17)
-            }*/
             return;
         }
         this.addListener("pointerup", this.pointerupf, { once: true });
@@ -297,8 +280,8 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
                 GPUScene.instance.device.defaultQueue.submit(updateNormals);*/
                 busy = false;
                 let range = <{ min: number, max: number }><any>e;
-                console.log('update normals ', NormalsRange.normalsMin, NormalsRange.normalsMax - NormalsRange.normalsMin);
-                console.log('update normals ', range.min, range.max - range.min);
+                //console.log('update normals ', NormalsRange.normalsMin, NormalsRange.normalsMax - NormalsRange.normalsMin);
+                //console.log('update normals ', range.min, range.max - range.min);
                 this.terrain.updateSwap();
 
 
@@ -329,17 +312,10 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
 
     mouseListener = (evt: PointerEvent): void => {
 
-     /*   const ray = {
-            origin: new Vector3(this.scene.TerraCameras[0].pickingRay[0], this.scene.TerraCameras[0].pickingRay[1], this.scene.TerraCameras[0].pickingRay[2]),
-            direction: new Vector3(this.scene.TerraCameras[0].pickingRay[3], this.scene.TerraCameras[0].pickingRay[4], this.scene.TerraCameras[0].pickingRay[5])
-        }*/
-        this.terrain.mesh.intersects(this.scene.TerraCameras[0].pickingRay).then(pickinfo => {
-            this.worldPosition.setTranslationX(pickinfo.pickedPoint.x)
-            this.worldPosition.setTranslationZ(pickinfo.pickedPoint.z)
+        this.terrain.mesh.intersects(this.scene.TerraCameras[0].pickingRay).then(() => {
+            this.worldPosition.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
         })
 
-
-       // let viewport = this.camera.viewport.toGlobal(this.scene.canvasSize.width, this.scene.canvasSize.height);
 
 
        /* terrainWorker.message<{ x: number, y: number }, any>(WorkerReturn.Promise, 'mousemove',
@@ -356,9 +332,7 @@ export class TerrainTool extends TerraNode implements has3DPosition  {
             });*/
     }
     raise = (): void => {
-        this.direction = 1;
-        //let canvas = this.scene.getEngine().getRenderingCanvas();
-        
+        this.direction = 1;        
         this.removeListener("pointerdown", this.pointerdownf);
         console.log('add pointerdown listener');
         this.addListener("pointerdown", this.pointerdownf);

@@ -51,13 +51,13 @@ export abstract class paintGround {
         let distance: number;
 
         
-        let pikked = await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
-        if (pikked.pickedPoint) {
-            
-            this.#end_position.set([pikked.pickedPoint.x, pikked.pickedPoint.z]);
+        await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
+        if (this.ground.mesh.pickInfo.distance[0]) {
+            this.#end_position.set([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
             let width = this.#start_position[0] - this.#end_position[0];
 
-            distance = Math.sqrt(Math.pow(this.#start_position[0] - this.#end_position[0], 2) + Math.pow(this.#start_position[1] - this.#end_position[1], 2));
+            //distance = Math.sqrt(Math.pow(this.#start_position[0] - this.#end_position[0], 2) + Math.pow(this.#start_position[1] - this.#end_position[1], 2));
+            distance = Math.hypot(this.#start_position[0] - this.#end_position[0], this.#start_position[1] - this.#end_position[1]);
             height = distance
 
             if (width < 0)
@@ -83,17 +83,19 @@ export abstract class paintGround {
 
       //  let ray = Ray.Zero();
        // this.sceneDeprecated.createPickingRayToRef(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, Matrix.Identity(), ray, this.camera);
-        let pikked = await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
-        if (pikked.pickedPoint && this.#end_position) {
+        await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
+        if(this.ground.mesh.pickInfo.distance[0] && this.#end_position) {
+        //if (pikked.pickedPoint && this.#end_position) {
             //Distance from first point
-            let distance = Math.sqrt(Math.pow(this.#start_position[0] - pikked.pickedPoint.x, 2) + Math.pow(this.#start_position[1] - pikked.pickedPoint.z, 2));
+            //let distance = Math.sqrt(Math.pow(this.#start_position[0] - this.ground.mesh.pickInfo.point[0], 2) + Math.pow(this.#start_position[1] - this.ground.mesh.pickInfo.point[2], 2));
+            let distance = Math.hypot(this.#start_position[0] - this.ground.mesh.pickInfo.point[0], this.#start_position[1] - this.ground.mesh.pickInfo.point[2])
             if (Number.isNaN(distance)) {
                 throw ("distance is not a number");
             }
-            let ang2 = new Angle(Math.acos(Math.abs(pikked.pickedPoint.x - this.#start_position[0]) / distance))
-            let dotang = this.ang360.distance(ang2[360](this.#start_position, new Float32Array([pikked.pickedPoint.x, pikked.pickedPoint.z])).rad);
+            let ang2 = new Angle(Math.acos(Math.abs(this.ground.mesh.pickInfo.point[0] - this.#start_position[0]) / distance))
+            let dotang = this.ang360.distance(ang2[360](this.#start_position, new Float32Array([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]])).rad);
 
-            let v1 = [this.#start_position[1] - pikked.pickedPoint.z, (this.#start_position[0] - pikked.pickedPoint.x) * -1]
+            let v1 = [this.#start_position[1] - this.ground.mesh.pickInfo.point[2], (this.#start_position[0] - this.ground.mesh.pickInfo.point[0]) * -1]
             let v2 = [this.#start_position[0] - this.#end_position[0], this.#start_position[1] - this.#end_position[1]];
 
             let dotprod = height * distance * Math.cos(dotang.rad);
@@ -173,19 +175,20 @@ export abstract class paintGround {
         var pickInfo = await this.scene.pickPromise(evt.clientX, evt.clientY, mesh => { return mesh === this.ground.mesh }, false);
 
        // console.log(pickInfo);
-        if (!pickInfo) {
+        /*if (!pickInfo) {
             console.log('pick did not hit');
             console.log(pickInfo);
             return;
-        }
-        if (pickInfo.hit && pickInfo.pickedPoint != null) {
+        }*/
+        if (this.ground.mesh.pickInfo.distance[0]) {
+        //if (pickInfo.hit && pickInfo.pickedPoint != null) {
             //@ts-ignore
             /*if (pickInfo.pickedMesh === this.sea) {
                 console.log('hitted sea');
                 debugger;
                 return;
             }*/
-            this.#start_position = new Float32Array([pickInfo.pickedPoint.x, pickInfo.pickedPoint.z]);
+            this.#start_position = new Float32Array([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
             this.onMainPointerDown(this.#start_position);
             this.camera.detachControl(this.scene.canvas);
             this.scene.TerraCameras[0].subscribePickingRay();

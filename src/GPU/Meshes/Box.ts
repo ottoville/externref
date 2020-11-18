@@ -51,6 +51,6 @@ export class Box extends SimpleMesh {
             16, 17, 18, 16, 18, 19,   // right
             20, 21, 22, 20, 22, 23,   // left
         ]));
-        this.boundingBox.set([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0])
+        this.boundingBox.box.set([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0])
     }
 }

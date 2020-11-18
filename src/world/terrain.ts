@@ -559,7 +559,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             minFilter: "linear",
         });*/
         this.mesh = new TerrainMesh(scene, this.texture.createView(), this.#terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.#terrainPositionAndUvsAndNormalsCPUSwap, this.indicesBuffer, 8, this.#terrainIndicesLength / 4);
-        this.mesh.boundingBox.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
+        this.mesh.boundingBox.box.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
         (async () => {
            /* const [vertex, fragment] = await Promise.all(['/shaders/wgsl/ground.vert.wgsl', '/shaders/wgsl/ground.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
             const terrainPipeline = scene.lights.lightsBindGroupTexture.addRenderPipeline({
