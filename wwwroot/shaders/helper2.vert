@@ -1,6 +1,8 @@
 #version 450
 precision lowp float;
 
+layout(location = 0) out vec3 color;
+
 uint facetSize= 250 * 250 * 4;
 
 const vec2 vertices[4] = vec2[4](
@@ -100,4 +102,5 @@ void main(void) {
     worldPos.y += getHeightAtCoordinates(vec2(worldPos.x, worldPos.z))+20.0;
 
    gl_Position = viewProjection * worldPos;
+   color=vec3(1.0,1.0,1.0);
 }

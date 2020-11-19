@@ -24,7 +24,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     public static instance: UITAB | null = null;
 
     // private engine: WebGPUEngine;
-    private helper: Drawable;
+    private helper!: Drawable;
 
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
@@ -61,33 +61,37 @@ export class TerrainTool extends TerraNode implements has3DPosition {
         // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
         this.worldPosition = new worldPosition(this);
+        (async () => {
+            const [fragment] = await Promise.all(['/shaders/wgsl/color.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
+            const helperPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
+                primitiveTopology: 'triangle-strip',
+                rasterizationState: {
+                    cullMode: 'none',
+                },
+                depthStencilState: {
+                    depthWriteEnabled: true,
+                    depthCompare: "less",
+                    format: "depth24plus-stencil8",
+                },
+                colorStates: [{
+                    format: "bgra8unorm",
+                }],
+                vertexStage: {
+                    module: scene.gpuscene.shaderModules.get("helper2.vert")!,
+                    entryPoint: "main",
+                },
+                fragmentStage: {
+                    module: fragment,
+                    entryPoint: "main"
+                },
+                vertexState: {
+                    indexFormat: 'uint32'
+                }
+            }, [this.bufferOffsetBytes]);
+            this.helper = helperPipeline.addDrawable([scene.gpuscene.renderPassScreen], 4, 0, 8, 0, 0)
+        })();
 
-        const helperPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
-            primitiveTopology: 'triangle-strip',
-            rasterizationState: {
-                cullMode: 'none',
-            },
-            depthStencilState: {
-                depthWriteEnabled: true,
-                depthCompare: "less",
-                format: "depth24plus-stencil8",
-            },
-            colorStates: [{
-                format: "bgra8unorm",
-            }],
-            vertexStage: {
-                module: scene.gpuscene.shaderModules.get("helper2.vert")!,
-                entryPoint: "main",
-            },
-            fragmentStage: {
-                module: scene.gpuscene.shaderModules.get("helper2.frag")!,
-                entryPoint: "main"
-            },
-            vertexState: {
-                indexFormat: 'uint32'
-            }
-        }, [this.bufferOffsetBytes]);
-        this.helper = helperPipeline.addDrawable([scene.gpuscene.renderPassScreen], 4, 0, 8, 0, 0)
+        
 
 
         this.addListener("pointermove", this.mouseListener, { lazy: 15 });
