@@ -4,7 +4,6 @@ import { Camera } from "../Cameras/camera";
 import { Scene } from "../scene";
 import { Vector2 } from "../Maths/math.vector";
 import { VertexBuffer } from "../Meshes/buffer";
-import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Texture } from "../Materials/Textures/texture";
@@ -156,11 +155,11 @@ export class GlowLayer extends EffectLayer {
     /**
      * Callback used to let the user override the color selection on a per mesh basis
      */
-    public customEmissiveColorSelector: (mesh: Mesh, subMesh: SubMesh, material: Material, result: Color4) => void;
+    public customEmissiveColorSelector: (mesh: Mesh, subMesh: any, material: Material, result: Color4) => void;
     /**
      * Callback used to let the user override the texture selection on a per mesh basis
      */
-    public customEmissiveTextureSelector: (mesh: Mesh, subMesh: SubMesh, material: Material) => Texture;
+    public customEmissiveTextureSelector: (mesh: Mesh, subMesh: any, material: Material) => Texture;
 
     /**
      * Instantiates a new glow Layer and references it to the scene.
@@ -281,7 +280,7 @@ export class GlowLayer extends EffectLayer {
      * @param emissiveTexture the associated emissive texture used to generate the glow
      * @return true if ready otherwise, false
      */
-    public isReady(subMesh: SubMesh, useInstances: boolean): boolean {
+    public isReady(subMesh: any, useInstances: boolean): boolean {
         let material = subMesh.getMaterial();
         let mesh = subMesh.getRenderingMesh();
 
@@ -336,7 +335,7 @@ export class GlowLayer extends EffectLayer {
     /**
      * Sets the required values for both the emissive texture and and the main color.
      */
-    protected _setEmissiveTextureAndColor(mesh: Mesh, subMesh: SubMesh, material: Material): void {
+    protected _setEmissiveTextureAndColor(mesh: Mesh, subMesh: any, material: Material): void {
         var textureLevel = 1.0;
 
         if (this.customEmissiveTextureSelector) {

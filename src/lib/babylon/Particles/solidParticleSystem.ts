@@ -11,7 +11,6 @@ import { DepthSortedParticle, SolidParticle, ModelShape } from "./solidParticle"
 import { TargetCamera } from "../Cameras/targetCamera";
 import { BoundingInfo } from "../Culling/boundingInfo";
 import { Axis } from '../Maths/math.axis';
-import { SubMesh } from '../Meshes/subMesh';
 import { Material } from '../Materials/material';
 import { StandardMaterial } from '../Materials/standardMaterial';
 import { MultiMaterial } from '../Materials/multiMaterial';
@@ -1379,7 +1378,6 @@ export class SolidParticleSystem implements IDisposable {
             let start = indicesByMaterial[m];
             let count = indicesByMaterial[m + 1] - start;
             let matIndex = materialIndexes[m];
-            new SubMesh(matIndex, 0, vcount, start, count, mesh);
         }
         return this;
     }

@@ -15,7 +15,6 @@ import { VertexData, IGetSetVerticesData } from "./mesh.vertexData";
 import { Buffer } from "./buffer";
 import { Geometry } from "./geometry";
 import { AbstractMesh } from "./abstractMesh";
-import { SubMesh } from "./subMesh";
 import { BoundingInfo } from "../Culling/boundingInfo";
 import { BoundingSphere } from "../Culling/boundingSphere";
 import { Material } from "../Materials/material";
@@ -1092,7 +1091,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _createGlobalSubMesh(force: boolean): Nullable<SubMesh> {
+    public _createGlobalSubMesh(force: boolean): Nullable<any> {
         var totalVertices = this.getTotalVertices();
         if (!totalVertices || !this.getIndices()) {
             return null;
@@ -1131,7 +1130,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
         }
 
         this.releaseSubMeshes();
-        return new SubMesh(0, 0, totalVertices, 0, this.getTotalIndices(), this);
     }
 
     /**
@@ -1158,7 +1156,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
                 break;
             }
 
-            SubMesh.CreateFromIndices(0, offset, Math.min(subdivisionSize, totalIndices - offset), this);
 
             offset += subdivisionSize;
         }
@@ -1396,7 +1393,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _bind(subMesh: SubMesh, effect: any, fillMode: number): Mesh {
+    public _bind(subMesh: any, effect: any, fillMode: number): Mesh {
         if (!this._geometry) {
             return this;
         }
@@ -1429,7 +1426,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _draw(subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
+    public _draw(subMesh: any, fillMode: number, instancesCount?: number): Mesh {
         if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
             return this;
         }
@@ -1528,7 +1525,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _renderWithInstances(subMesh: SubMesh, fillMode: number, batch: _InstancesBatch, effect: any, engine: Engine): Mesh {
+    public _renderWithInstances(subMesh: any, fillMode: number, batch: _InstancesBatch, effect: any, engine: Engine): Mesh {
         var visibleInstances = batch.visibleInstances[subMesh._id];
         if (!visibleInstances) {
             return this;
@@ -1608,7 +1605,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     }
 
     /** @hidden */
-    public _processRendering(subMesh: SubMesh, effect: any, fillMode: number, batch: _InstancesBatch, hardwareInstancedRendering: boolean,
+    public _processRendering(subMesh: any, effect: any, fillMode: number, batch: _InstancesBatch, hardwareInstancedRendering: boolean,
         onBeforeDraw: (isInstance: boolean, world: Matrix, effectiveMaterial?: Material) => void, effectiveMaterial?: Material): Mesh {
         var scene = this.getScene();
         var engine = scene.getEngine();
@@ -1691,7 +1688,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @param effectiveMeshReplacement defines an optional mesh used to provide info for the rendering
      * @returns the current mesh
      */
-    public render(subMesh: SubMesh, enableAlphaMode: boolean, effectiveMeshReplacement?: AbstractMesh): Mesh {
+    public render(subMesh: any, enableAlphaMode: boolean, effectiveMeshReplacement?: AbstractMesh): Mesh {
         var scene = this.getScene();
 
         if (this._internalAbstractMeshDataInfo._isActiveIntermediate) {
@@ -2469,7 +2466,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
         this.releaseSubMeshes();
         for (var submeshIndex = 0; submeshIndex < previousSubmeshes.length; submeshIndex++) {
             var previousOne = previousSubmeshes[submeshIndex];
-            SubMesh.AddToMesh(previousOne.materialIndex, previousOne.indexStart, previousOne.indexCount, previousOne.indexStart, previousOne.indexCount, this);
         }
 
         this.synchronizeInstances();
@@ -2537,7 +2533,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
         this.releaseSubMeshes();
         for (var submeshIndex = 0; submeshIndex < previousSubmeshes.length; submeshIndex++) {
             var previousOne = previousSubmeshes[submeshIndex];
-            SubMesh.AddToMesh(previousOne.materialIndex, previousOne.indexStart, previousOne.indexCount, previousOne.indexStart, previousOne.indexCount, this);
         }
 
         this._unIndexed = true;
@@ -4137,7 +4132,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
 
             //-- apply subdivision according to index table
             while (index < indiceArray.length) {
-                SubMesh.CreateFromIndices(0, offset, indiceArray[index], meshSubclass);
                 offset += indiceArray[index];
                 index++;
             }

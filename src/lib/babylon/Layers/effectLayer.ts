@@ -10,7 +10,6 @@ import { Color4 } from '../Maths/math.color';
 import { Engine } from "../Engines/engine";
 import { EngineStore } from "../Engines/engineStore";
 import { VertexBuffer } from "../Meshes/buffer";
-import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { PostProcess } from "../PostProcesses/postProcess";
@@ -198,7 +197,7 @@ export abstract class EffectLayer {
      * @param useInstances specify wether or not to use instances to render the mesh
      * @return true if ready otherwise, false
      */
-    public abstract isReady(subMesh: SubMesh, useInstances: boolean): boolean;
+    public abstract isReady(subMesh: any, useInstances: boolean): boolean;
 
     /**
      * Returns wether or nood the layer needs stencil enabled during the mesh rendering.
@@ -227,7 +226,7 @@ export abstract class EffectLayer {
     /**
      * Sets the required values for both the emissive texture and and the main color.
      */
-    protected abstract _setEmissiveTextureAndColor(mesh: Mesh, subMesh: SubMesh, material: Material): void;
+    protected abstract _setEmissiveTextureAndColor(mesh: Mesh, subMesh: any, material: Material): void;
 
     /**
      * Free any resources and references associated to a mesh.
@@ -337,7 +336,7 @@ export abstract class EffectLayer {
      * @param emissiveTexture the associated emissive texture used to generate the glow
      * @return true if ready otherwise, false
      */
-    protected _isReady(subMesh: SubMesh, useInstances: boolean, emissiveTexture: Nullable<BaseTexture>): boolean {
+    protected _isReady(subMesh: any, useInstances: boolean, emissiveTexture: Nullable<BaseTexture>): boolean {
         let material = subMesh.getMaterial();
 
         if (!material) {
@@ -593,7 +592,7 @@ export abstract class EffectLayer {
     /**
      * Renders the submesh passed in parameter to the generation map.
      */
-    protected _renderSubMesh(subMesh: SubMesh, enableAlphaMode: boolean = false): void {
+    protected _renderSubMesh(subMesh: any, enableAlphaMode: boolean = false): void {
         if (!this.shouldRender()) {
             return;
         }

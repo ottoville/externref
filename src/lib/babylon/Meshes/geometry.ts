@@ -5,7 +5,6 @@ import { Color4 } from '../Maths/math.color';
 import { Engine } from "../Engines/engine";
 import { IGetSetVerticesData, VertexData } from "../Meshes/mesh.vertexData";
 import { VertexBuffer } from "../Meshes/buffer";
-import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { SceneLoaderFlags } from "../Loading/sceneLoaderFlags";
 import { BoundingInfo } from "../Culling/boundingInfo";
@@ -1223,7 +1222,6 @@ export class Geometry implements IGetSetVerticesData {
                     var indexStart = subMeshesData[(i * 5) + 3];
                     var indexCount = subMeshesData[(i * 5) + 4];
 
-                    SubMesh.AddToMesh(materialIndex, verticesStart, verticesCount, indexStart, indexCount, <AbstractMesh>mesh);
                 }
             }
         } else if (parsedGeometry.positions && parsedGeometry.normals && parsedGeometry.indices) {
@@ -1321,7 +1319,6 @@ export class Geometry implements IGetSetVerticesData {
             for (var subIndex = 0; subIndex < parsedGeometry.subMeshes.length; subIndex++) {
                 var parsedSubMesh = parsedGeometry.subMeshes[subIndex];
 
-                SubMesh.AddToMesh(parsedSubMesh.materialIndex, parsedSubMesh.verticesStart, parsedSubMesh.verticesCount, parsedSubMesh.indexStart, parsedSubMesh.indexCount, <AbstractMesh>mesh);
             }
         }
 

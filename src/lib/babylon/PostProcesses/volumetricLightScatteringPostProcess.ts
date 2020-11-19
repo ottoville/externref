@@ -4,7 +4,6 @@ import { Logger } from "../Misc/logger";
 import { Vector2, Vector3, Matrix } from "../Maths/math.vector";
 import { VertexBuffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
-import { SubMesh } from "../Meshes/subMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Camera } from "../Cameras/camera";
 import { Material } from "../Materials/material";
@@ -162,7 +161,7 @@ export class VolumetricLightScatteringPostProcess extends PostProcess {
         return "VolumetricLightScatteringPostProcess";
     }
 
-    private _isReady(subMesh: SubMesh, useInstances: boolean): boolean {
+    private _isReady(subMesh: any, useInstances: boolean): boolean {
         var mesh = subMesh.getMesh();
 
         // Render this.mesh as default
@@ -275,7 +274,7 @@ export class VolumetricLightScatteringPostProcess extends PostProcess {
 
 
         // Custom render function for submeshes
-        var renderSubMesh = (subMesh: SubMesh): void => {
+        var renderSubMesh = (subMesh: any): void => {
             var mesh = subMesh.getRenderingMesh();
             if (this._meshExcluded(mesh)) {
                 return;
@@ -359,7 +358,7 @@ export class VolumetricLightScatteringPostProcess extends PostProcess {
             scene.clearColor = savedSceneClearColor;
         });
 
-        this._volumetricLightScatteringRTT.customRenderFunction = (opaqueSubMeshes: SmartArray<SubMesh>, alphaTestSubMeshes: SmartArray<SubMesh>, transparentSubMeshes: SmartArray<SubMesh>, depthOnlySubMeshes: SmartArray<SubMesh>): void => {
+        this._volumetricLightScatteringRTT.customRenderFunction = (opaqueSubMeshes: SmartArray<any>, alphaTestSubMeshes: SmartArray<any>, transparentSubMeshes: SmartArray<any>, depthOnlySubMeshes: SmartArray<any>): void => {
             var engine = scene.getEngine();
             var index: number;
 

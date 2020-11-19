@@ -3,7 +3,6 @@ import { Scene } from "../scene";
 import { Color3, Color4 } from "../Maths/math.color";
 import { Node } from "../node";
 import { VertexBuffer } from "../Meshes/buffer";
-import { SubMesh } from "../Meshes/subMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Material } from "../Materials/material";
 import { ShaderMaterial } from "../Materials/shaderMaterial";
@@ -169,7 +168,7 @@ export class LinesMesh extends Mesh {
     }
 
     /** @hidden */
-    public _bind(subMesh: SubMesh, effect: any, fillMode: number): Mesh {
+    public _bind(subMesh: any, effect: any, fillMode: number): Mesh {
         if (!this._geometry) {
             return this;
         }
@@ -192,7 +191,7 @@ export class LinesMesh extends Mesh {
     }
 
     /** @hidden */
-    public _draw(subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh {
+    public _draw(subMesh: any, fillMode: number, instancesCount?: number): Mesh {
         if (!this._geometry || !this._geometry.getVertexBuffers() || (!this._unIndexed && !this._geometry.getIndexBuffer())) {
             return this;
         }

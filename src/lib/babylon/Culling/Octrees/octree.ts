@@ -1,6 +1,5 @@
 import { SmartArray, SmartArrayNoDuplicate } from "../../Misc/smartArray";
 import { Vector3 } from "../../Maths/math.vector";
-import { SubMesh } from "../../Meshes/subMesh";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
 import { Ray } from "../../Culling/ray";
 import { OctreeBlock } from "./octreeBlock";
@@ -154,7 +153,7 @@ export class Octree<T> {
     /**
      * Adds a submesh into the octree block if it intersects the block
      */
-    public static CreationFuncForSubMeshes = (entry: SubMesh, block: OctreeBlock<SubMesh>): void => {
+    public static CreationFuncForSubMeshes = (entry: any, block: OctreeBlock<any>): void => {
         let boundingInfo = entry.getBoundingInfo();
         if (boundingInfo.boundingBox.intersectsMinMax(block.minPoint, block.maxPoint)) {
             block.entries.push(entry);

@@ -1,7 +1,6 @@
 import { ISmartArrayLike } from "../../Misc/smartArray";
 import { Scene } from "../../scene";
 import { Vector3 } from "../../Maths/math.vector";
-import { SubMesh } from "../../Meshes/subMesh";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
 import { Ray } from "../../Culling/ray";
 import { SceneComponentConstants } from "../../sceneComponent";
@@ -68,7 +67,7 @@ declare module "../../Meshes/abstractMesh" {
          * @hidden
          * Backing Field
          */
-        _submeshesOctree: Octree<SubMesh>;
+        _submeshesOctree: Octree<any>;
 
         /**
          * This function will create an octree to help to select the right submeshes for rendering, picking and collision computations.
@@ -79,7 +78,7 @@ declare module "../../Meshes/abstractMesh" {
          * @see https://www.babylonjs-playground.com/#NA4OQ#12
          * @see http://doc.babylonjs.com/how_to/optimizing_your_scene_with_octrees
          */
-        createOrUpdateSubmeshesOctree(maxCapacity?: number, maxDepth?: number): Octree<SubMesh>;
+        createOrUpdateSubmeshesOctree(maxCapacity?: number, maxDepth?: number): Octree<any>;
     }
 }
 
@@ -92,7 +91,7 @@ declare module "../../Meshes/abstractMesh" {
  * @see https://www.babylonjs-playground.com/#NA4OQ#12
  * @see http://doc.babylonjs.com/how_to/optimizing_your_scene_with_octrees
  */
-AbstractMesh.prototype.createOrUpdateSubmeshesOctree = function(maxCapacity = 64, maxDepth = 2): Octree<SubMesh> {
+AbstractMesh.prototype.createOrUpdateSubmeshesOctree = function (maxCapacity = 64, maxDepth = 2): Octree<any> {
     const scene = this.getScene();
     let component = scene._getComponent(SceneComponentConstants.NAME_OCTREE);
     if (!component) {
@@ -101,7 +100,7 @@ AbstractMesh.prototype.createOrUpdateSubmeshesOctree = function(maxCapacity = 64
     }
 
     if (!this._submeshesOctree) {
-        this._submeshesOctree = new Octree<SubMesh>(Octree.CreationFuncForSubMeshes, maxCapacity, maxDepth);
+        this._submeshesOctree = new Octree<any>(Octree.CreationFuncForSubMeshes, maxCapacity, maxDepth);
     }
 
     this.computeWorldMatrix(true);
@@ -189,7 +188,7 @@ export class OctreeSceneComponent {
      * @param mesh The mesh to get the candidates sub meshes from
      * @returns the list of active sub meshes
      */
-    public getActiveSubMeshCandidates(mesh: AbstractMesh): ISmartArrayLike<SubMesh> {
+    public getActiveSubMeshCandidates(mesh: AbstractMesh): ISmartArrayLike<any> {
         if (mesh._submeshesOctree && mesh.useOctreeForRenderingSelection) {
             var intersections = mesh._submeshesOctree.select(this.scene.frustumPlanes);
             return intersections;
@@ -204,7 +203,7 @@ export class OctreeSceneComponent {
      * @param localRay defines the ray in local space
      * @returns the list of intersecting sub meshes
      */
-    public getIntersectingSubMeshCandidates(mesh: AbstractMesh, localRay: Ray): ISmartArrayLike<SubMesh> {
+    public getIntersectingSubMeshCandidates(mesh: AbstractMesh, localRay: Ray): ISmartArrayLike<any> {
         if (mesh._submeshesOctree && mesh.useOctreeForPicking) {
             Ray.TransformToRef(localRay, mesh.getWorldMatrix(), this._tempRay);
             var intersections = mesh._submeshesOctree.intersectsRay(this._tempRay);
@@ -220,7 +219,7 @@ export class OctreeSceneComponent {
      * @param collider defines the collider to evaluate the collision against
      * @returns the list of colliding sub meshes
      */
-    public getCollidingSubMeshCandidates(mesh: AbstractMesh, collider: Collider): ISmartArrayLike<SubMesh> {
+    public getCollidingSubMeshCandidates(mesh: AbstractMesh, collider: Collider): ISmartArrayLike<any> {
         if (mesh._submeshesOctree && mesh.useOctreeForCollisions) {
             var radius = collider._velocityWorldLength + Math.max(collider._radius.x, collider._radius.y, collider._radius.z);
             var intersections = mesh._submeshesOctree.intersects(collider._basePointWorld, radius);

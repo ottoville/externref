@@ -8,7 +8,6 @@ import { Scene } from "../scene";
 import { Matrix } from "../Maths/math.vector";
 import { Color3 } from '../Maths/math.color';
 import { VertexBuffer } from "../Meshes/buffer";
-import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 
@@ -774,7 +773,7 @@ export class StandardMaterial extends PushMaterial {
      * @param useInstances specifies that instances should be used
      * @returns a boolean indicating that the submesh is ready or not
      */
-    public isReadyForSubMesh(mesh: AbstractMesh, subMesh: SubMesh, useInstances: boolean = false): boolean {
+    public isReadyForSubMesh(mesh: AbstractMesh, subMesh: any, useInstances: boolean = false): boolean {
         if (subMesh.effect && this.isFrozen) {
             if (subMesh.effect._wasPreviouslyReady) {
                 return true;
@@ -1275,7 +1274,7 @@ export class StandardMaterial extends PushMaterial {
      * @param mesh defines the mesh containing the submesh
      * @param subMesh defines the submesh to bind the material to
      */
-    public bindForSubMesh(world: Matrix, mesh: Mesh, subMesh: SubMesh): void {
+    public bindForSubMesh(world: Matrix, mesh: Mesh, subMesh: any): void {
         var scene = this.getScene();
 
         var defines = <StandardMaterialDefines>subMesh._materialDefines;

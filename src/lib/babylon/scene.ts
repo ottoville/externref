@@ -9,7 +9,6 @@ import { Tags } from "./Misc/tags";
 import { Vector2, Vector3, Matrix } from "./Maths/math.vector";
 import { Geometry } from "./Meshes/geometry";
 import { TransformNode } from "./Meshes/transformNode";
-import { SubMesh } from "./Meshes/subMesh";
 import { AbstractMesh } from "./Meshes/abstractMesh";
 import { Mesh } from "./Meshes/mesh";
 import { IParticleSystem } from "./Particles/IParticleSystem";
@@ -1422,7 +1421,7 @@ export class Scene extends AbstractScene implements IAnimatable {
         return this._defaultMeshCandidates;
     }
 
-    private _defaultSubMeshCandidates: ISmartArrayLike<SubMesh> = {
+    private _defaultSubMeshCandidates: ISmartArrayLike<any> = {
         data: [],
         length: 0
     };
@@ -1430,7 +1429,7 @@ export class Scene extends AbstractScene implements IAnimatable {
     /**
      * @hidden
      */
-    public _getDefaultSubMeshCandidates(mesh: AbstractMesh): ISmartArrayLike<SubMesh> {
+    public _getDefaultSubMeshCandidates(mesh: AbstractMesh): ISmartArrayLike<any> {
         this._defaultSubMeshCandidates.data = mesh.subMeshes;
         this._defaultSubMeshCandidates.length = mesh.subMeshes.length;
         return this._defaultSubMeshCandidates;
@@ -3215,7 +3214,7 @@ export class Scene extends AbstractScene implements IAnimatable {
         return this._externalData.remove(key);
     }
 
-    private _evaluateSubMesh(subMesh: SubMesh, mesh: AbstractMesh, initialMesh: AbstractMesh): void {
+    private _evaluateSubMesh(subMesh: any, mesh: AbstractMesh, initialMesh: AbstractMesh): void {
         if (initialMesh.hasInstances || initialMesh.isAnInstance || this.dispatchAllSubMeshesOfActiveMeshes || this._skipFrustumClipping || mesh.alwaysSelectAsActiveMesh || mesh.subMeshes.length === 1 || subMesh.isInFrustum(this._frustumPlanes)) {
             for (let step of this._evaluateSubMeshStage) {
                 step.action(mesh, subMesh);
@@ -3325,17 +3324,17 @@ export class Scene extends AbstractScene implements IAnimatable {
     /**
      * Lambda returning the list of potentially active sub meshes.
      */
-    public getActiveSubMeshCandidates: (mesh: AbstractMesh) => ISmartArrayLike<SubMesh>;
+    public getActiveSubMeshCandidates: (mesh: AbstractMesh) => ISmartArrayLike<any>;
 
     /**
      * Lambda returning the list of potentially intersecting sub meshes.
      */
-    public getIntersectingSubMeshCandidates: (mesh: AbstractMesh, localRay: Ray) => ISmartArrayLike<SubMesh>;
+    public getIntersectingSubMeshCandidates: (mesh: AbstractMesh, localRay: Ray) => ISmartArrayLike<any>;
 
     /**
      * Lambda returning the list of potentially colliding sub meshes.
      */
-    public getCollidingSubMeshCandidates: (mesh: AbstractMesh, collider: Collider) => ISmartArrayLike<SubMesh>;
+    public getCollidingSubMeshCandidates: (mesh: AbstractMesh, collider: Collider) => ISmartArrayLike<any>;
 
     private _activeMeshesFrozen = false;
     private _skipEvaluateActiveMeshesCompletely = false;
@@ -4553,9 +4552,9 @@ export class Scene extends AbstractScene implements IAnimatable {
      * @param transparentSortCompareFn The transparent queue comparison function use to sort.
      */
     public setRenderingOrder(renderingGroupId: number,
-        opaqueSortCompareFn: Nullable<(a: SubMesh, b: SubMesh) => number> = null,
-        alphaTestSortCompareFn: Nullable<(a: SubMesh, b: SubMesh) => number> = null,
-        transparentSortCompareFn: Nullable<(a: SubMesh, b: SubMesh) => number> = null): void {
+        opaqueSortCompareFn: Nullable<(a: any, b: any) => number> = null,
+        alphaTestSortCompareFn: Nullable<(a: any, b: any) => number> = null,
+        transparentSortCompareFn: Nullable<(a: any, b: any) => number> = null): void {
 
         this._renderingManager.setRenderingOrder(renderingGroupId,
             opaqueSortCompareFn,

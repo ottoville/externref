@@ -1,7 +1,6 @@
 import { IndicesArray } from "../types";
 import { Vector3 } from "../Maths/math.vector";
 import { VertexBuffer } from "../Meshes/buffer";
-import { SubMesh } from "../Meshes/subMesh";
 import { Mesh } from "../Meshes/mesh";
 import { AsyncLoop } from "../Misc/tools";
 import { Epsilon } from '../Maths/math.constants';
@@ -624,9 +623,7 @@ class QuadraticErrorSimplification implements ISimplifier {
         if (submeshIndex > 0) {
             this._reconstructedMesh.subMeshes = [];
             submeshesArray.forEach((submesh) => {
-                SubMesh.AddToMesh(submesh.materialIndex, submesh.verticesStart, submesh.verticesCount, /* 0, newPositionData.length/3, */submesh.indexStart, submesh.indexCount, submesh.getMesh());
             });
-            SubMesh.AddToMesh(originalSubmesh.materialIndex, startingVertex, vertexCount, /* 0, newPositionData.length / 3, */startingIndex, newTriangles.length * 3, this._reconstructedMesh);
         }
     }
 

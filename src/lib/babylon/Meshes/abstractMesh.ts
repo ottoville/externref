@@ -9,7 +9,6 @@ import { Node } from "../node";
 import { VertexBuffer } from "../Meshes/buffer";
 import { VertexData, IGetSetVerticesData } from "../Meshes/mesh.vertexData";
 import { TransformNode } from "../Meshes/transformNode";
-import { SubMesh } from "../Meshes/subMesh";
 import { PickingInfo } from "../Collisions/pickingInfo";
 import { IntersectionInfo } from "../Collisions/intersectionInfo";
 import { ICullable, BoundingInfo } from "../Culling/boundingInfo";
@@ -585,7 +584,7 @@ export class AbstractMesh extends TransformNode implements IDisposable, ICullabl
      * Gets or sets the list of subMeshes
      * @see http://doc.babylonjs.com/how_to/multi_materials
      */
-    public subMeshes: SubMesh[];
+    public subMeshes: any[];
 
     /** @hidden */
     public _intersectionsInProgress = new Array<AbstractMesh>();
@@ -1436,7 +1435,7 @@ export class AbstractMesh extends TransformNode implements IDisposable, ICullabl
 
     // Collisions
     /** @hidden */
-    public _collideForSubMesh(subMesh: SubMesh, transformMatrix: Matrix, collider: Collider): AbstractMesh {
+    public _collideForSubMesh(subMesh: any, transformMatrix: Matrix, collider: Collider): AbstractMesh {
         this._generatePointsArray();
 
         if (!this._positions) {
@@ -1594,7 +1593,7 @@ export class AbstractMesh extends TransformNode implements IDisposable, ICullabl
                 this.subMeshes[0].dispose();
             }
         } else {
-            this.subMeshes = new Array<SubMesh>();
+            this.subMeshes = new Array<any>();
         }
         return this;
     }

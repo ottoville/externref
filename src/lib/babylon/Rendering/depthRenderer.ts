@@ -1,7 +1,6 @@
 import { Nullable } from "../types";
 import { Color4 } from "../Maths/math.color";
 import { Mesh } from "../Meshes/mesh";
-import { SubMesh } from "../Meshes/subMesh";
 import { VertexBuffer } from "../Meshes/buffer";
 import { SmartArray } from "../Misc/smartArray";
 import { Scene } from "../scene";
@@ -69,7 +68,7 @@ export class DepthRenderer {
 
 
         // Custom render function
-        var renderSubMesh = (subMesh: SubMesh): void => {
+        var renderSubMesh = (subMesh: any): void => {
             var mesh = subMesh.getRenderingMesh();
             var scene = this._scene;
             var engine = scene.getEngine();
@@ -126,7 +125,7 @@ export class DepthRenderer {
             }
         };
 
-        this._depthMap.customRenderFunction = (opaqueSubMeshes: SmartArray<SubMesh>, alphaTestSubMeshes: SmartArray<SubMesh>, transparentSubMeshes: SmartArray<SubMesh>, depthOnlySubMeshes: SmartArray<SubMesh>): void => {
+        this._depthMap.customRenderFunction = (opaqueSubMeshes: SmartArray<any>, alphaTestSubMeshes: SmartArray<any>, transparentSubMeshes: SmartArray<any>, depthOnlySubMeshes: SmartArray<any>): void => {
             var index;
 
             if (depthOnlySubMeshes.length) {
@@ -153,7 +152,7 @@ export class DepthRenderer {
      * @param useInstances If multiple world instances should be used
      * @returns if the depth renderer is ready to render the depth map
      */
-    public isReady(subMesh: SubMesh, useInstances: boolean): boolean {
+    public isReady(subMesh: any, useInstances: boolean): boolean {
         var material: any = subMesh.getMaterial();
         if (material.disableDepthWrite) {
             return false;

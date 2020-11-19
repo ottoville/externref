@@ -47,7 +47,9 @@ export class Terrain {
      }*/
 
     slopeArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY, [GPUBufferUsage.STORAGE]);
-    facet12ArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST]);
+    //TODO: Remove copy_src
+    facet12ArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC]);
+    facet12ArrCPUBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2);
     //  facet2ArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST);
 
     public slopeArrBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY);
@@ -98,12 +100,9 @@ export class Terrain {
         }
     ];
 
-    //TerrainHeightsbindGroupTree = this.scene.gpuscene.baseBindGroup.addChildBindGroup(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene), ...this.heightsBindGroupEntries));
     TerrainHeightsbindGroupTree = this.scene.TerraCameras[0].baseBindGroup.addChildBindGroup(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene), ...this.heightsBindGroupEntries));
 
-    // TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildLayout(worldPosition.BindGroupLayout)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
-    TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpuscene.BindGroup, true)//new BindGroupDrawable(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene),...this.heightsBindGroupEntries),        this.TerrainHeightsbindGroupTree);
-
+    TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpuscene.BindGroup, true)
 
 
     public static async fromHeightMap(url: string): Promise<SharedArrayBuffer> {
@@ -238,12 +237,11 @@ export class Terrain {
     readonly #terrainPositionAndUvsAndNormalsGPUSwap = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
 
-    readonly #terrainPositionAndUvsAndNormalsCPUSwap = new SharedArrayBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength);
-    readonly #terrainPositionAndUvsAndNormalsCPUSwapView = new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap);
+    readonly terrainPositionAndUvsAndNormalsCPUSwap = new SharedArrayBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength);
+    readonly #terrainPositionAndUvsAndNormalsCPUSwapView = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap);
     readonly #positionsView: Float32Array[] = [];
     readonly #normalsViewGPU: Float32Array[] = [];
 
-    readonly verticesPositionBuffer = this.#terrainPositionAndUvsAndNormalsCPUSwap;
     readonly verticesPositionStride = 8;
 
 
@@ -386,11 +384,11 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
 
         for (
             let i = 0,
-            verticesAmount = this.#terrainPositionAndUvsAndNormalsCPUSwap.byteLength / (8 * 4),
+            verticesAmount = this.terrainPositionAndUvsAndNormalsCPUSwap.byteLength / (8 * 4),
             byteStride = 4 * 8;
             i < verticesAmount; i++) {
-            this.#positionsView.push(new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride, 3));
-            this.#normalsViewGPU.push(new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride + 5 * 4, 3));
+            this.#positionsView.push(new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride, 3));
+            this.#normalsViewGPU.push(new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride + 5 * 4, 3));
         }
 
 
@@ -520,22 +518,16 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
          }, gpuBufferPositions, terrainIndicesGPU);*/
         const [gpuReadBufferPositions, gpuReadBufferIndices] = scene.gpuscene.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
 
-        /*  commandEncoder.copyBufferToBuffer(
-              gpuBufferPositions,
-              0,
-              gpuReadBufferPositions,
-              0,
-              this.#terrainPositionsLength
-          );
-          commandEncoder.copyBufferToBuffer(
-              terrainIndicesGPU,
-              0,
-              gpuReadBufferIndices,
-              0,
-              this.#terrainIndicesLength
-          );*/
         const gpuCommands = commandEncoder.finish();
         scene.gpuscene.device.defaultQueue.submit([gpuCommands]);
+
+
+        scene.gpuscene.GPU2CPU(async (buff) => {
+            await buff.mapAsync(GPUMapMode.READ);
+            new Float32Array(this.facet12ArrCPUBuffer).set(new Float32Array(buff.getMappedRange()));
+        }, this.facet12ArrGPUBuffer)
+
+
         terrainPositionAndUvsAndNormalsGPUTemp.destroy();
         (async () => {
             gpuReadBufferPositions.readAndDestroy(async (buff) => {
@@ -547,99 +539,14 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
                 this.#indices.set(new Uint32Array(buff));
 
             })
-            /*await gpuReadBufferPositions.readAndDestroy(async (buff) => {
-                console.log(new Float32Array(buff));
-                this.#vertices.set(new Float32Array(buff));
-                gpuBufferPositions.destroy();
-            });*/
 
         })();
        /* const sampler = scene.gpuscene.device.createSampler({
             magFilter: "linear",
             minFilter: "linear",
         });*/
-        this.mesh = new TerrainMesh(scene, this.texture.createView(), this.#terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.#terrainPositionAndUvsAndNormalsCPUSwap, this.indicesBuffer, 8, this.#terrainIndicesLength / 4);
+        this.mesh = new TerrainMesh(scene, this.texture.createView(), this.#terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, this.indicesBuffer, 8, this.#terrainIndicesLength / 4);
         this.mesh.boundingBox.box.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
-        (async () => {
-           /* const [vertex, fragment] = await Promise.all(['/shaders/wgsl/ground.vert.wgsl', '/shaders/wgsl/ground.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
-            const terrainPipeline = scene.lights.lightsBindGroupTexture.addRenderPipeline({
-                primitiveTopology: 'triangle-list',
-                depthStencilState: {
-                    depthWriteEnabled: true,
-                    depthCompare: "less",
-                    format: "depth24plus-stencil8",
-                },
-                colorStates: [{
-                    format: "bgra8unorm",
-                }],
-                vertexStage: {
-                    module: vertex,
-                    entryPoint: "main",
-                },
-                fragmentStage: {
-                    module: fragment,
-                    entryPoint: "main"
-                },
-                vertexState: {
-                    vertexBuffers:
-                        [{
-                            arrayStride: 4 * 8,
-                            stepMode: "vertex",
-                            attributes: [{
-                                // position
-                                shaderLocation: 0,
-                                offset: 0,
-                                format: "float3"
-                            },
-                            {
-                                // uv
-                                shaderLocation: 1,
-                                offset: 4 * 3,
-                                format: "float2"
-                            },
-                            {
-                                // normals
-                                shaderLocation: 2,
-                                offset: 4 * 3 + 4 * 2,
-                                format: "float3"
-                            }]
-                        }]
-                },
-            }, () => [
-                {
-                    binding: 0,
-                    resource: sampler
-                },
-                {
-                    binding: 1,
-                    resource: this.texture.createView()
-                }
-            ]);*/
-           /* const m = terrainPipeline.addDrawable([scene.gpuscene.renderPassScreen, scene.gpuscene.renderPassWater],this.#terrainIndicesLength / 4, 1);
-            m.setVertexBuffer(0, this.#terrainPositionAndUvsAndNormalsGPU);
-            m.setIndexBuffer(terrainIndicesGPU, 0, true, 'uint32');*/
-        })()
-
-
-        /*  m.bindGroups = new Set([
-              scene.gpuscene.device.createBindGroup({
-                  layout: m.renderPipeline.getBindGroupLayout(2),
-                  entries: [
-                      {
-                          binding: 0,
-                          resource: sampler
-                      },
-                      {
-                          binding: 1,
-                          resource: texture.createView()
-                      }
-                  ]
-              })
-          ])*/
-
-        //  this.terraMesh = new TerraMesh('ground', vdata.positions, vdata.indices, undefined, vdata.uvs);
-        // this.terraMesh = new TerraMesh('ground', new Float32Array([1,2,3,4,5,6,7,8,9]));
-        console.log('terrain bounding');
     }
 
     //BABYLON 4103

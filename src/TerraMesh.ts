@@ -7,7 +7,6 @@ import { Vector3 } from "./lib/babylon/Maths/math.vector.js";
 import { Matrix } from "./lib/babylon/Maths/math.js";
 import type { Ray, TrianglePickingPredicate } from "./lib/babylon/Culling/ray.js";
 import type { PickingInfo } from "./lib/babylon/Collisions/pickingInfo.js";
-import type { SubMesh } from "./lib/babylon/Meshes/subMesh.js";
 import { Material } from "./lib/babylon/Materials/material.js";
 import { Geometry } from "./lib/babylon/Meshes/geometry.js";
 
@@ -400,7 +399,7 @@ export class TerraMesh extends Mesh {
         return TerraMesh.worker.message(this.uniqueId, 'intersects', [bounding.boundingBox, bounding.boundingSphere, ray.origin, ray.direction, fastCheck, trianglePredicate]);
     }*/
 
-    public render(subMesh: SubMesh, enableAlphaMode: boolean, effectiveMeshReplacement?: AbstractMesh): Mesh {
+    public render(subMesh: any, enableAlphaMode: boolean, effectiveMeshReplacement?: AbstractMesh): Mesh {
         if (this._internalAbstractMeshDataInfo._isActiveIntermediate) {
             this._internalAbstractMeshDataInfo._isActiveIntermediate = false;
         } else {

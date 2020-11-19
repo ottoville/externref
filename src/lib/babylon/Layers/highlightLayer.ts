@@ -6,7 +6,6 @@ import { Scene } from "../scene";
 import { Vector2 } from "../Maths/math.vector";
 import { Engine } from "../Engines/engine";
 import { VertexBuffer } from "../Meshes/buffer";
-import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Material } from "../Materials/material";
@@ -338,7 +337,7 @@ export class HighlightLayer extends EffectLayer {
      * @param emissiveTexture the associated emissive texture used to generate the glow
      * @return true if ready otherwise, false
      */
-    public isReady(subMesh: SubMesh, useInstances: boolean): boolean {
+    public isReady(subMesh: any, useInstances: boolean): boolean {
         let material = subMesh.getMaterial();
         let mesh = subMesh.getRenderingMesh();
 
@@ -425,7 +424,7 @@ export class HighlightLayer extends EffectLayer {
     /**
      * Sets the required values for both the emissive texture and and the main color.
      */
-    protected _setEmissiveTextureAndColor(mesh: Mesh, subMesh: SubMesh, material: Material): void {
+    protected _setEmissiveTextureAndColor(mesh: Mesh, subMesh: any, material: Material): void {
         var highlightLayerMesh = this._meshes![mesh.uniqueId];
         if (highlightLayerMesh) {
             this._emissiveTextureAndColor.color.set(

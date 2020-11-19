@@ -7,7 +7,6 @@ import { Nullable } from "../../types";
 import { Scene } from "../../scene";
 import { Matrix, Vector4 } from "../../Maths/math.vector";
 import { VertexBuffer } from "../../Meshes/buffer";
-import { SubMesh } from "../../Meshes/subMesh";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
 import { Mesh } from "../../Meshes/mesh";
 import { _TimeToken } from "../../Instrumentation/timeToken";
@@ -912,7 +911,7 @@ export abstract class PBRBaseMaterial extends PushMaterial {
      * @param useInstances - Specifies that instances should be used.
      * @returns - boolean indicating that the submesh is ready or not.
      */
-    public isReadyForSubMesh(mesh: AbstractMesh, subMesh: SubMesh, useInstances?: boolean): boolean {
+    public isReadyForSubMesh(mesh: AbstractMesh, subMesh: any, useInstances?: boolean): boolean {
         if (subMesh.effect && this.isFrozen) {
             if (subMesh.effect._wasPreviouslyReady) {
                 return true;
@@ -1673,7 +1672,7 @@ export abstract class PBRBaseMaterial extends PushMaterial {
      * @param mesh - The BJS mesh.
      * @param subMesh - A submesh of the BJS mesh.
      */
-    public bindForSubMesh(world: Matrix, mesh: Mesh, subMesh: SubMesh): void {
+    public bindForSubMesh(world: Matrix, mesh: Mesh, subMesh: any): void {
         var scene = this.getScene();
 
         var defines = <PBRMaterialDefines>subMesh._materialDefines;

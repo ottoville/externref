@@ -1,6 +1,5 @@
 import { Nullable } from "../types";
 import { AbstractMesh } from "../Meshes/abstractMesh";
-import { SubMesh } from "../Meshes/subMesh";
 import { SmartArray } from "../Misc/smartArray";
 import { ISpriteManager } from "../Sprites/spriteManager";
 import { IParticleSystem } from "../Particles/IParticleSystem";
@@ -80,9 +79,9 @@ export class RenderingManager {
     private _depthStencilBufferAlreadyCleaned: boolean;
 
     private _autoClearDepthStencil: { [id: number]: IRenderingManagerAutoClearSetup } = {};
-    private _customOpaqueSortCompareFn: { [id: number]: Nullable<(a: SubMesh, b: SubMesh) => number> } = {};
-    private _customAlphaTestSortCompareFn: { [id: number]: Nullable<(a: SubMesh, b: SubMesh) => number> } = {};
-    private _customTransparentSortCompareFn: { [id: number]: Nullable<(a: SubMesh, b: SubMesh) => number> } = {};
+    private _customOpaqueSortCompareFn: { [id: number]: Nullable<(a: any, b: any) => number> } = {};
+    private _customAlphaTestSortCompareFn: { [id: number]: Nullable<(a: any, b: any) => number> } = {};
+    private _customTransparentSortCompareFn: { [id: number]: Nullable<(a: any, b: any) => number> } = {};
     private _renderingGroupInfo: Nullable<RenderingGroupInfo> = new RenderingGroupInfo();
 
     /**
@@ -110,7 +109,7 @@ export class RenderingManager {
      * Renders the entire managed groups. This is used by the scene or the different rennder targets.
      * @hidden
      */
-    public render(customRenderFunction: Nullable<(opaqueSubMeshes: SmartArray<SubMesh>, transparentSubMeshes: SmartArray<SubMesh>, alphaTestSubMeshes: SmartArray<SubMesh>, depthOnlySubMeshes: SmartArray<SubMesh>) => void>,
+    public render(customRenderFunction: Nullable<(opaqueSubMeshes: SmartArray<any>, transparentSubMeshes: SmartArray<any>, alphaTestSubMeshes: SmartArray<any>, depthOnlySubMeshes: SmartArray<any>) => void>,
         activeMeshes: Nullable<AbstractMesh[]>, renderParticles: boolean, renderSprites: boolean): void {
 
         // Update the observable context (not null as it only goes away on dispose)
@@ -240,7 +239,7 @@ export class RenderingManager {
      * @param mesh Optional reference to the submeshes's mesh. Provide if you have an exiting reference to improve performance.
      * @param material Optional reference to the submeshes's material. Provide if you have an exiting reference to improve performance.
      */
-    public dispatch(subMesh: SubMesh, mesh?: AbstractMesh, material?: Nullable<Material>): void {
+    public dispatch(subMesh: any, mesh?: AbstractMesh, material?: Nullable<Material>): void {
         if (mesh === undefined) {
             mesh = subMesh.getMesh();
         }
@@ -261,9 +260,9 @@ export class RenderingManager {
      * @param transparentSortCompareFn The transparent queue comparison function use to sort.
      */
     public setRenderingOrder(renderingGroupId: number,
-        opaqueSortCompareFn: Nullable<(a: SubMesh, b: SubMesh) => number> = null,
-        alphaTestSortCompareFn: Nullable<(a: SubMesh, b: SubMesh) => number> = null,
-        transparentSortCompareFn: Nullable<(a: SubMesh, b: SubMesh) => number> = null) {
+        opaqueSortCompareFn: Nullable<(a: any, b: any) => number> = null,
+        alphaTestSortCompareFn: Nullable<(a: any, b: any) => number> = null,
+        transparentSortCompareFn: Nullable<(a: any, b: any) => number> = null) {
 
         this._customOpaqueSortCompareFn[renderingGroupId] = opaqueSortCompareFn;
         this._customAlphaTestSortCompareFn[renderingGroupId] = alphaTestSortCompareFn;

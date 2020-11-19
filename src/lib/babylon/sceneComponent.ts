@@ -1,6 +1,5 @@
 import { Scene } from "./scene";
 import { AbstractMesh } from "./Meshes/abstractMesh";
-import { SubMesh, } from "./Meshes/subMesh";
 import { _InstancesBatch } from "./Meshes/mesh";
 import { SmartArrayNoDuplicate } from "./Misc/smartArray";
 import { Nullable } from "./types";
@@ -149,7 +148,7 @@ export type MeshStageAction = (mesh: AbstractMesh, hardwareInstancedRendering: b
 /**
  * Strong typing of a Evaluate Sub Mesh related stage step action
  */
-export type EvaluateSubMeshStageAction = (mesh: AbstractMesh, subMesh: SubMesh) => void;
+export type EvaluateSubMeshStageAction = (mesh: AbstractMesh, subMesh: any) => void;
 
 /**
  * Strong typing of a Active Mesh related stage step action
@@ -179,7 +178,7 @@ export type RenderingGroupStageAction = (renderingGroupId: number) => void;
 /**
  * Strong typing of a Mesh Render related stage step action
  */
-export type RenderingMeshStageAction = (mesh: Mesh, subMesh: SubMesh, batch: _InstancesBatch) => void;
+export type RenderingMeshStageAction = (mesh: Mesh, subMesh: any, batch: _InstancesBatch) => void;
 
 /**
  * Strong typing of a simple stage step action

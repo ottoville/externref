@@ -7,7 +7,6 @@ import { Nullable } from "../types";
 import { Scene } from "../scene";
 import { Matrix } from "../Maths/math.vector";
 import { EngineStore } from "../Engines/engineStore";
-import { BaseSubMesh, SubMesh } from "../Meshes/subMesh";
 import { Geometry } from "../Meshes/geometry";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { UniformBuffer } from "./uniformBuffer";
@@ -644,7 +643,7 @@ export class Material implements IAnimatable {
      * @param useInstances specifies that instances should be used
      * @returns a boolean indicating that the submesh is ready or not
      */
-    public isReadyForSubMesh(mesh: AbstractMesh, subMesh: BaseSubMesh, useInstances?: boolean): boolean {
+    public isReadyForSubMesh(mesh: AbstractMesh, subMesh: any, useInstances?: boolean): boolean {
         return false;
     }
 
@@ -747,7 +746,7 @@ export class Material implements IAnimatable {
      * @param mesh defines the mesh containing the submesh
      * @param subMesh defines the submesh to bind the material to
      */
-    public bindForSubMesh(world: Matrix, mesh: Mesh, subMesh: SubMesh): void {
+    public bindForSubMesh(world: Matrix, mesh: Mesh, subMesh: any): void {
     }
 
     /**
@@ -907,16 +906,11 @@ export class Material implements IAnimatable {
             ...options
         };
 
-        var subMesh = new BaseSubMesh();
         var scene = this.getScene();
 
         var checkReady = () => {
             if (!this._scene || !this._scene.getEngine()) {
                 return;
-            }
-
-            if (subMesh._materialDefines) {
-                subMesh._materialDefines._renderId = -1;
             }
 
             var clipPlaneState = scene.clipPlane;
@@ -926,20 +920,7 @@ export class Material implements IAnimatable {
             }
 
             if (this._storeEffectOnSubMeshes) {
-                if (this.isReadyForSubMesh(mesh, subMesh, localOptions.useInstances)) {
-                    if (onCompiled) {
-                        onCompiled(this);
-                    }
-                }
-                else {
-                    if (subMesh.effect && subMesh.effect.getCompilationError() && subMesh.effect.allFallbacksProcessed()) {
-                        if (onError) {
-                            onError(subMesh.effect.getCompilationError());
-                        }
-                    } else {
-                        setTimeout(checkReady, 16);
-                    }
-                }
+
             } else {
                 if (this.isReady()) {
                     if (onCompiled) {

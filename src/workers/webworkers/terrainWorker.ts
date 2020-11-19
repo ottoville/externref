@@ -106,8 +106,8 @@ function intersects(boundingBox: { min: { x: number, y: number, z: number }, max
 }
 
 
-let _facesOfVertices: any[];
-let _groundFacesNormals: Vector3[];
+let _facesOfVertices: number[][];
+let _groundFacesNormals: Float32Array[];
 let _subdivisionsOfVertices: any[];
 let heightMax = 500;
 let heightMin = -500;
@@ -133,7 +133,16 @@ let pickInfo: {
 const mousePosition: [number, number] = [0, 0]
 
 let methods2: { [index: string]: (e: WMessage<any>) => void } = {
-    init: (e: WMessage<{ positionsAndNormals: any, indices: any, facet1Arr: any, facet2Arr: any, subdivisionsX: any, subdivisionsY: any, boundingBox: SharedArrayBuffer, pickInfo: SharedArrayBuffer }>) => {
+    init: (e: WMessage<{ positionsAndNormals: any, indices: any, facet1Arr: any, facet2Arr: any, subdivisionsX: any, subdivisionsY: any, boundingBox: SharedArrayBuffer, pickInfo: SharedArrayBuffer, _groundFacesNormalsBuffer: SharedArrayBuffer }>) => {
+        const faceCount = e.data._groundFacesNormalsBuffer.byteLength / 4 / 4;
+        const normals: Float32Array[] = [];
+        positionsView.length = 0;
+        normalsView.length = 0;
+        for (let i = 0; i < faceCount; i++) {
+            normals.push(new Float32Array(e.data._groundFacesNormalsBuffer, i << 4, 3))
+        }
+        _groundFacesNormals = normals;
+
         const verticesAmount = e.data.positionsAndNormals.byteLength / (8 * 4);
         for (
             let i = 0,
@@ -143,12 +152,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
             positionsView.push(new Float32Array(e.data.positionsAndNormals, i * byteStride, 3));
             normalsView.push(new Float32Array(e.data.positionsAndNormals, i * byteStride + 5 * 4, 3));
         }
-        // terrainPositions = new Float32Array(e.data.positions);
         terrainIndices = new Uint32Array(e.data.indices);
-        // terrainNormals = new Float32Array(e.data.normals);
-        /* slopeArr = new Int32Array(e.data.slopeArr);
-         facet1Arr = new Float32Array(e.data.facet1Arr);
-         facet2Arr = new Float32Array(e.data.facet2Arr);*/
         _subdivisionsX = e.data.subdivisionsX;
         _subdivisionsY = e.data.subdivisionsY;
 
@@ -159,59 +163,19 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         pickInfo.point = new Float32Array(e.data.pickInfo, 0, 3);
         pickInfo.distance = new Float32Array(e.data.pickInfo, 3 * 4, 1);
 
+        _facesOfVertices = [];
 
-
-        // boundingBox = e.data.boundingBox;
-        if (_facesOfVertices == null) {
-            _facesOfVertices = [];
-
-            _groundFacesNormals = [];
-            let v1v2 = new Vector3();
-            let v3v2 = new Vector3();
-
-            let v1: Float32Array;
-            let v2: Float32Array;
-            let v3: Float32Array;
-
-            const nbFaces = (terrainIndices.length / 3) | 0
-            for (let index = 0; index < nbFaces; index++) {
-                //var faceInfo = this._getFaceVerticesIndex(index);
-                let faceInfo = new Uint32Array(e.data.indices, (index * 3) << 2, 3);
-                v1 = positionsView[faceInfo[0]];
-                v2 = positionsView[faceInfo[1]];
-                v3 = positionsView[faceInfo[2]];
-
-                v1v2.x = v1[0] - v2[0]
-                v1v2.y = v1[1] - v2[1]
-                v1v2.z = v1[2] - v2[2]
-
-                v3v2.x = v3[0] - v2[2]
-                v3v2.y = v3[1] - v2[2]
-                v3v2.z = v3[2] - v2[2]
-
-                /* v1v2.x = terrainPositions[faceInfo[0] * 3] - terrainPositions[faceInfo[1] * 3];
-                 v1v2.y = terrainPositions[faceInfo[0] * 3 + 1] - terrainPositions[faceInfo[1] * 3 + 1];
-                 v1v2.z = terrainPositions[faceInfo[0] * 3 + 2] - terrainPositions[faceInfo[1] * 3 + 2];
- 
-                 v3v2.x = terrainPositions[faceInfo[2] * 3] - terrainPositions[faceInfo[1] * 3];
-                 v3v2.y = terrainPositions[faceInfo[2] * 3 + 1] - terrainPositions[faceInfo[1] * 3 + 1];
-                 v3v2.z = terrainPositions[faceInfo[2] * 3 + 2] - terrainPositions[faceInfo[1] * 3 + 2];*/
-                _groundFacesNormals[index] = Vector3.Normalize(Vector3.Cross(v1v2, v3v2));
-            }
-            //this._getFacesOfVertices();
-            _facesOfVertices = [];
-            _subdivisionsOfVertices = [];
-            var index;
-            // let length = terrainPositions.length / 3;
-            for (index = 0; index < verticesAmount; index++) {
-                _facesOfVertices[index] = [];
-                _subdivisionsOfVertices[index] = [];
-            }
-            for (index = 0; index < terrainIndices.length; index++) {
-                _facesOfVertices[terrainIndices[index]].push((index / 3) | 0);
-            }
+        _subdivisionsOfVertices = [];
+        var index;
+        for (index = 0; index < verticesAmount; index++) {
+            _facesOfVertices[index] = [];
+            _subdivisionsOfVertices[index] = [];
         }
-        // methods2.createHeights(e);
+        for (index = 0; index < terrainIndices.length; index++) {
+            _facesOfVertices[terrainIndices[index]].push((index / 3) | 0);
+        }
+        console.log('_facesOfVertices');
+        console.log(_facesOfVertices);
         this.postMessage({ id: e.id, data: {} });
     },
     saveTexture: async (e: WMessage<ArrayBuffer>) => {
@@ -226,40 +190,6 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         (await caches.open('save')).put(new Request('/terrainTexture.webp'), response);
 
     },
-    /* mousemove: (e: WMessage<{x:number, y:number, viewportWidth:number, viewportHeight:number, projection: any, view:any}>) => {
-         let ray = Ray.Zero();
- 
- 
-         let view = Matrix.FromArray(e.data.view);
-         view.multiplyToRef(Matrix.FromArray(e.data.projection), <Matrix>view);
-         //view.multiply(Matrix.FromArray(e.data.projection));
-         view.invert();
-         nearScreenSource.x = e.data.x / e.data.viewportWidth * 2 - 1;
-         nearScreenSource.y = -(e.data.y / e.data.viewportHeight * 2 - 1);
-         nearScreenSource.z = -1.0;
-         //var farScreenSource = new Vector3().copyFromFloats(nearScreenSource.x, nearScreenSource.y, 1.0);
-         farScreenSource.x = nearScreenSource.x;
-         farScreenSource.y = nearScreenSource.y;
-         farScreenSource.z = 1.0;
- 
-         Vector3._UnprojectFromInvertedMatrixToRef(nearScreenSource, view, nearVec3);
-         Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, view, farVec3);
- 
-         ray.origin.copyFrom(nearVec3);
-         farVec3.subtractToRef(nearVec3, ray.direction);
-         ray.direction.normalize();
- 
-         pickInfo = intersects(boundingBox, ray);
-         _selectedVertices = null
-         if (pickInfo.pickedPoint) {
-             self.postMessage({ id: e.id, data: { x: pickInfo.pickedPoint.x, y: pickInfo.pickedPoint.z } });
-         } else {
-             console.log('no bounding');
-             console.log(boundingBox);
-             console.log(ray)
- 
-         }
-     },*/
     elevateFaces: (e: WMessage<{ radius: number, height: number, direction: number }>) => {
         if (pickInfo.distance[0] = NaN)
             return;
@@ -297,7 +227,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         }[] = [];
         let v1v2 = new Vector3();
         let v3v2 = new Vector3();
-        //  console.log(_selectedVertices);
+        let faceOfVertices:number[]=[]
         _selectedVertices.forEach(sv => {
             //let positiony = this._groundPositions[sv.vertice].y;
             let positiony = positionsView[sv.vertice][1];
@@ -316,7 +246,8 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
 
             //this._updateSubdivisions(sv.vertice);
 
-            var faceOfVertices = _facesOfVertices[sv.vertice];
+            faceOfVertices = _facesOfVertices[sv.vertice];
+            const half = faces.length >> 1;
             for (let index = 0; index < faceOfVertices.length; index++) {
 
                 let indices = new Uint32Array(terrainIndices.buffer, (faceOfVertices[index] * 3) << 2, 3);
@@ -329,7 +260,15 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 v3v2.y = positionsView[indices[2]][1] - positionsView[indices[1]][1];
                 v3v2.z = positionsView[indices[2]][2] - positionsView[indices[1]][2];
 
-                _groundFacesNormals[faceOfVertices[index]] = Vector3.Normalize(Vector3.Cross(v1v2, v3v2));
+                //_groundFacesNormals[faceOfVertices[index]] = Vector3.Normalize(Vector3.Cross(v1v2, v3v2));
+                const normalized = Vector3.Normalize(Vector3.Cross(v1v2, v3v2))
+                //_groundFacesNormals[faceOfVertices[index]].set([normalized.x, normalized.y, normalized.z])
+                if (faceOfVertices[index] % 2 == 0) {
+                    _groundFacesNormals[faceOfVertices[index] >> 1].set([normalized.x, normalized.y, normalized.z])
+                } else {
+                    _groundFacesNormals[half + faceOfVertices[index] >> 1].set([normalized.x, normalized.y, normalized.z])
+                }
+
 
                 indices.forEach(vertexIndex => {
                     var faces = _facesOfVertices[vertexIndex];
@@ -337,11 +276,21 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                     let x = 0;
                     let y = 0;
                     let z = 0;
+
+                    
                     for (var index = 0; index < faces.length; index++) {
-                        let facenormal = _groundFacesNormals[faces[index]];
-                        x += facenormal.x;
-                        y += facenormal.y;
-                        z += facenormal.z;
+                       // let facenormal = _groundFacesNormals[faces[index]];
+
+                        if (faces[index] % 2 == 0) {
+                            var facenormal = _groundFacesNormals[faces[index] >> 1];
+                        } else {
+                            var facenormal = _groundFacesNormals[half + faces[index] >> 1];
+                        }
+
+                       // let facenormal = _groundFacesNormals[faces[index]];
+                        x += facenormal[0];
+                        y += facenormal[1];
+                        z += facenormal[2];
                         //normal = normal.add(this._groundFacesNormals[faces[index]]);
                     }
                     let fc = 1.0 / faces.length;
@@ -355,7 +304,8 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                     z *= scale;
 
                     // normal = BABYLON.Vector3.Normalize(normal.scale(1.0 / faces.length));
-                    normalsView[vertexIndex].set([x, y, z])
+                       normalsView[vertexIndex].set([x, y, z])
+                    //console.log([x, y, z]);
                     //terrainNormals.set([x, y, z], vertexIndex * 3);
                 });
             };
@@ -407,7 +357,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         let v1v4 = new Vector3();
         let norm1 = new Float32Array(3);
         let norm2 = new Float32Array(3);
-
+        
         for (let row = minRow - 1; row <= maxRow + 1; row++) {
             for (let col = minCol - 1; col <= maxCol + 1; col++) {
 

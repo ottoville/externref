@@ -6,7 +6,6 @@ import { Nullable, int, float } from "../../types";
 import { Scene } from "../../scene";
 import { Matrix, Vector3, Vector4 } from "../../Maths/math.vector";
 import { VertexBuffer } from "../../Meshes/buffer";
-import { SubMesh } from "../../Meshes/subMesh";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
 import { Mesh } from "../../Meshes/mesh";
 import { MaterialHelper } from "../../Materials/materialHelper";
@@ -652,7 +651,7 @@ export class BackgroundMaterial extends PushMaterial {
      * @param useInstances Specify wether or not the material is used with instances
      * @returns true if all the dependencies are ready (Textures, Effects...)
      */
-    public isReadyForSubMesh(mesh: AbstractMesh, subMesh: SubMesh, useInstances: boolean = false): boolean {
+    public isReadyForSubMesh(mesh: AbstractMesh, subMesh: any, useInstances: boolean = false): boolean {
         if (subMesh.effect && this.isFrozen) {
             if (subMesh.effect._wasPreviouslyReady) {
                 return true;
@@ -1021,7 +1020,7 @@ export class BackgroundMaterial extends PushMaterial {
      * @param world The world matrix to bind.
      * @param subMesh The submesh to bind for.
      */
-    public bindForSubMesh(world: Matrix, mesh: Mesh, subMesh: SubMesh): void {
+    public bindForSubMesh(world: Matrix, mesh: Mesh, subMesh: any): void {
         var scene = this.getScene();
 
         var defines = <BackgroundMaterialDefines>subMesh._materialDefines;

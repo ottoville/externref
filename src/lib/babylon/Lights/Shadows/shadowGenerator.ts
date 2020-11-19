@@ -4,7 +4,6 @@ import { Scene } from "../../scene";
 import { Matrix, Vector3, Vector2 } from "../../Maths/math.vector";
 import { Color4 } from "../../Maths/math.color";
 import { VertexBuffer } from "../../Meshes/buffer";
-import { SubMesh } from "../../Meshes/subMesh";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
 import { Mesh } from "../../Meshes/mesh";
 
@@ -79,7 +78,7 @@ export interface IShadowGenerator {
      * @param useInstances Defines wether will draw in the map using instances
      * @returns true if ready otherwise, false
      */
-    isReady(subMesh: SubMesh, useInstances: boolean): boolean;
+    isReady(subMesh: any, useInstances: boolean): boolean;
 
     /**
      * Prepare all the defines in a material relying on a shadow map at the specified light index.
@@ -825,7 +824,7 @@ export class ShadowGenerator implements IShadowGenerator {
         
     }
 
-    private _renderForShadowMap(opaqueSubMeshes: SmartArray<SubMesh>, alphaTestSubMeshes: SmartArray<SubMesh>, transparentSubMeshes: SmartArray<SubMesh>, depthOnlySubMeshes: SmartArray<SubMesh>): void {
+    private _renderForShadowMap(opaqueSubMeshes: SmartArray<any>, alphaTestSubMeshes: SmartArray<any>, transparentSubMeshes: SmartArray<any>, depthOnlySubMeshes: SmartArray<any>): void {
         var index: number;
         let engine = this._scene.getEngine();
 
@@ -852,7 +851,7 @@ export class ShadowGenerator implements IShadowGenerator {
         }
     }
 
-    private _renderSubMeshForShadowMap(subMesh: SubMesh): void {
+    private _renderSubMeshForShadowMap(subMesh: any): void {
         var mesh = subMesh.getRenderingMesh();
         var scene = this._scene;
         var engine = scene.getEngine();
@@ -989,7 +988,7 @@ export class ShadowGenerator implements IShadowGenerator {
             return;
         }
 
-        var subMeshes = new Array<SubMesh>();
+        var subMeshes = new Array<any>();
         for (var mesh of renderList) {
             subMeshes.push(...mesh.subMeshes);
         }
@@ -1041,7 +1040,7 @@ export class ShadowGenerator implements IShadowGenerator {
      * @param useInstances Defines wether will draw in the map using instances
      * @returns true if ready otherwise, false
      */
-    public isReady(subMesh: SubMesh, useInstances: boolean): boolean {
+    public isReady(subMesh: any, useInstances: boolean): boolean {
         var defines = [];
 
         if (this._textureType !== Constants.TEXTURETYPE_UNSIGNED_INT) {

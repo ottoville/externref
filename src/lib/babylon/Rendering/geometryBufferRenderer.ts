@@ -1,6 +1,5 @@
 import { Matrix } from "../Maths/math.vector";
 import { VertexBuffer } from "../Meshes/buffer";
-import { SubMesh } from "../Meshes/subMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Constants } from "../Engines/constants";
 import { SmartArray } from "../Misc/smartArray";
@@ -172,7 +171,7 @@ export class GeometryBufferRenderer {
      * @param useInstances is the mesh drawn using instance or not
      * @returns true if ready otherwise false
      */
-    public isReady(subMesh: SubMesh, useInstances: boolean): boolean {
+    public isReady(subMesh: any, useInstances: boolean): boolean {
         var material: any = subMesh.getMaterial();
 
         if (material && material.disableDepthWrite) {
@@ -322,7 +321,7 @@ export class GeometryBufferRenderer {
         });
 
         // Custom render function
-        var renderSubMesh = (subMesh: SubMesh): void => {
+        var renderSubMesh = (subMesh: any): void => {
             var mesh = subMesh.getRenderingMesh();
             var scene = this._scene;
             var engine = scene.getEngine();
@@ -408,7 +407,7 @@ export class GeometryBufferRenderer {
             }
         };
 
-        this._multiRenderTarget.customRenderFunction = (opaqueSubMeshes: SmartArray<SubMesh>, alphaTestSubMeshes: SmartArray<SubMesh>, transparentSubMeshes: SmartArray<SubMesh>, depthOnlySubMeshes: SmartArray<SubMesh>): void => {
+        this._multiRenderTarget.customRenderFunction = (opaqueSubMeshes: SmartArray<any>, alphaTestSubMeshes: SmartArray<any>, transparentSubMeshes: SmartArray<any>, depthOnlySubMeshes: SmartArray<any>): void => {
             var index;
 
             if (depthOnlySubMeshes.length) {

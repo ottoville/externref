@@ -11,7 +11,6 @@ import { BaseTexture } from '../../Materials/Textures/baseTexture';
 import { Observable, Observer } from '../../Misc/observable';
 import { NodeMaterialBlockTargets } from './Enums/nodeMaterialBlockTargets';
 import { NodeMaterialBuildStateSharedData } from './nodeMaterialBuildStateSharedData';
-import { SubMesh } from '../../Meshes/subMesh';
 import { MaterialDefines } from '../../Materials/materialDefines';
 import { NodeMaterialOptimizer } from './Optimizers/nodeMaterialOptimizer';
 import { ImageProcessingConfiguration, IImageProcessingConfigurationDefines } from '../imageProcessingConfiguration';
@@ -674,7 +673,7 @@ export class NodeMaterial extends PushMaterial {
       * @param useInstances specifies that instances should be used
       * @returns a boolean indicating that the submesh is ready or not
       */
-    public isReadyForSubMesh(mesh: AbstractMesh, subMesh: SubMesh, useInstances: boolean = false): boolean {
+    public isReadyForSubMesh(mesh: AbstractMesh, subMesh: any, useInstances: boolean = false): boolean {
         if (!this._buildWasSuccessful) {
             return false;
         }
@@ -854,7 +853,7 @@ export class NodeMaterial extends PushMaterial {
      * @param mesh defines the mesh containing the submesh
      * @param subMesh defines the submesh to bind the material to
      */
-    public bindForSubMesh(world: Matrix, mesh: Mesh, subMesh: SubMesh): void {
+    public bindForSubMesh(world: Matrix, mesh: Mesh, subMesh: any): void {
         let scene = this.getScene();
         var effect = subMesh.effect;
         if (!effect) {

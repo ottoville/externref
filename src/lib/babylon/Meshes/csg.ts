@@ -3,7 +3,6 @@ import { Scene } from "../scene";
 import { Quaternion, Matrix, Vector3, Vector2 } from "../Maths/math.vector";
 import { VertexBuffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
-import { SubMesh } from "../Meshes/subMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Material } from "../Materials/material";
 /**
@@ -750,13 +749,12 @@ export class CSG {
             var materialIndexOffset = 0,
                 materialMaxIndex;
 
-            mesh.subMeshes = new Array<SubMesh>();
+            mesh.subMeshes = new Array<any>();
 
             for (var m in subMesh_dict) {
                 materialMaxIndex = -1;
                 for (var sm in (<any>subMesh_dict)[m]) {
                     subMesh_obj = (<any>subMesh_dict)[m][sm];
-                    SubMesh.CreateFromIndices(subMesh_obj.materialIndex + materialIndexOffset, subMesh_obj.indexStart, subMesh_obj.indexEnd - subMesh_obj.indexStart + 1, <AbstractMesh>mesh);
                     materialMaxIndex = Math.max(subMesh_obj.materialIndex, materialMaxIndex);
                 }
                 materialIndexOffset += ++materialMaxIndex;

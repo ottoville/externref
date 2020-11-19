@@ -1,5 +1,4 @@
 import { VertexBuffer } from "../Meshes/buffer";
-import { SubMesh } from "../Meshes/subMesh";
 import { _InstancesBatch, Mesh } from "../Meshes/mesh";
 import { Scene } from "../scene";
 import { Engine } from "../Engines/engine";
@@ -153,7 +152,7 @@ export class OutlineRenderer implements ISceneComponent {
      * @param batch Defines the batch of meshes in case of instances
      * @param useOverlay Defines if the rendering is for the overlay or the outline
      */
-    public render(subMesh: SubMesh, batch: _InstancesBatch, useOverlay: boolean = false): void {
+    public render(subMesh: any, batch: _InstancesBatch, useOverlay: boolean = false): void {
         var scene = this.scene;
         var engine = scene.getEngine();
 
@@ -215,7 +214,7 @@ export class OutlineRenderer implements ISceneComponent {
      * @param useInstances Defines wheter wee are trying to render instances or not
      * @returns true if ready otherwise false
      */
-    public isReady(subMesh: SubMesh, useInstances: boolean): boolean {
+    public isReady(subMesh: any, useInstances: boolean): boolean {
         var defines = [];
         var attribs = [VertexBuffer.PositionKind, VertexBuffer.NormalKind];
 
@@ -289,7 +288,7 @@ export class OutlineRenderer implements ISceneComponent {
         return this._effect.isReady();
     }
 
-    private _beforeRenderingMesh(mesh: Mesh, subMesh: SubMesh, batch: _InstancesBatch): void {
+    private _beforeRenderingMesh(mesh: Mesh, subMesh: any, batch: _InstancesBatch): void {
         // Outline - step 1
         this._savedDepthWrite = this._engine.getDepthWrite();
         if (mesh.renderOutline) {
@@ -322,7 +321,7 @@ export class OutlineRenderer implements ISceneComponent {
         }
     }
 
-    private _afterRenderingMesh(mesh: Mesh, subMesh: SubMesh, batch: _InstancesBatch): void {
+    private _afterRenderingMesh(mesh: Mesh, subMesh: any, batch: _InstancesBatch): void {
         // Overlay
         if (mesh.renderOverlay) {
             var currentMode = this._engine.getAlphaMode();

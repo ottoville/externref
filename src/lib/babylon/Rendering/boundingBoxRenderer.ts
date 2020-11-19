@@ -1,6 +1,5 @@
 import { Scene } from "../scene";
 import { VertexBuffer } from "../Meshes/buffer";
-import { SubMesh } from "../Meshes/subMesh";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { VertexData } from "../Meshes/mesh.vertexData";
 import { Matrix } from "../Maths/math.vector";
@@ -150,7 +149,7 @@ export class BoundingBoxRenderer implements ISceneComponent {
         this.scene._afterRenderingGroupDrawStage.registerStep(SceneComponentConstants.STEP_AFTERRENDERINGGROUPDRAW_BOUNDINGBOXRENDERER, this, this.render);
     }
 
-    private _evaluateSubMesh(mesh: AbstractMesh, subMesh: SubMesh): void {
+    private _evaluateSubMesh(mesh: AbstractMesh, subMesh: any): void {
         if (mesh.showSubMeshesBoundingBox) {
             const boundingInfo = subMesh.getBoundingInfo();
             if (boundingInfo !== null && boundingInfo !== undefined) {
