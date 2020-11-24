@@ -4,107 +4,16 @@ importScripts("/js/DB.js");
 
 //let terrainPositions: Float32Array;
 let terrainIndices: Uint32Array;
-const positionsView: Float32Array[] = [];
-const normalsView: Float32Array[] = [];
 
+const normalsView: Float32Array[] = [];
+const positionsView: Float32Array[] = [];
 
 //let terrainNormals: Float32Array;
 let slopeArr: Int32Array;
 let facet1Arr: Float32Array;
 let facet2Arr: Float32Array;
 
-
-function intersects(boundingBox: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number } }, ray: Ray, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): PickingInfo {
-    let pickingInfo = new PickingInfo();
-    //const boundingInfo = this._boundingInfo;
-    if (!ray.intersectsBox(boundingBox, 0)) {
-        console.log('no intersect 1');
-        return pickingInfo;
-    }
-
-    var intersectInfo: Nullable<IntersectionInfo> = null;
-
-    if (!ray.intersectsBox(boundingBox)) {
-        return pickingInfo;
-    }
-
-
-    // Triangles test
-    let p0 = new Vector3();
-    let p1 = new Vector3();
-    let p2 = new Vector3();
-
-    for (var index = 0; index < terrainIndices.length; index += 3) {
-
-
-        p0.x = positionsView[terrainIndices[index]][0];
-        p0.y = positionsView[terrainIndices[index]][1];
-        p0.z = positionsView[terrainIndices[index]][2];
-
-        p1.x = positionsView[terrainIndices[index + 1]][0];
-        p1.y = positionsView[terrainIndices[index + 1]][1];
-        p1.z = positionsView[terrainIndices[index + 1]][2];
-
-        p2.x = positionsView[terrainIndices[index + 2]][0];
-        p2.y = positionsView[terrainIndices[index + 2]][1];
-        p2.z = positionsView[terrainIndices[index + 2]][2];
-
-
-
-        /*  p0.x = terrainPositions[terrainIndices[index] * 3]
-          p0.y = terrainPositions[terrainIndices[index] * 3 + 1]
-          p0.z = terrainPositions[terrainIndices[index] * 3 + 2]
-  
-          p1.x = terrainPositions[terrainIndices[index + 1] * 3]
-          p1.y = terrainPositions[terrainIndices[index + 1] * 3 + 1]
-          p1.z = terrainPositions[terrainIndices[index + 1] * 3 + 2]
-  
-          p2.x = terrainPositions[terrainIndices[index + 2] * 3]
-          p2.y = terrainPositions[terrainIndices[index + 2] * 3 + 1]
-          p2.z = terrainPositions[terrainIndices[index + 2] * 3 + 2]
-          */
-        if (trianglePredicate && !trianglePredicate(p0, p1, p2, ray)) {
-            continue;
-        }
-
-        var currentIntersectInfo = ray.intersectsTriangle(p0, p1, p2);
-
-        if (currentIntersectInfo) {
-            if (currentIntersectInfo.distance < 0) {
-                continue;
-            }
-
-            if (fastCheck || !intersectInfo || currentIntersectInfo.distance < intersectInfo.distance) {
-                intersectInfo = currentIntersectInfo;
-                intersectInfo.faceId = index / 3;
-
-                if (fastCheck) {
-                    break;
-                }
-            }
-        }
-    }
-    if (intersectInfo) {
-        // Get picked point
-        const direction = new Vector3();
-        ray.direction.scaleToRef(intersectInfo.distance, direction);
-        //const worldDirection = Vector3.TransformNormal(direction, world);
-        const pickedPoint = direction.addInPlace(ray.origin);
-
-        // Return result
-        pickingInfo.hit = true;
-        pickingInfo.distance = Vector3.Distance(ray.origin, pickedPoint);
-        pickingInfo.pickedPoint = pickedPoint;
-        //pickingInfo.pickedMesh = this;
-        pickingInfo.bu = intersectInfo.bu || 0;
-        pickingInfo.bv = intersectInfo.bv || 0;
-        pickingInfo.faceId = intersectInfo.faceId;
-        pickingInfo.subMeshId = intersectInfo.subMeshId;
-        return pickingInfo;
-    }
-    return pickingInfo;
-}
-
+const facetSize = 250 * 250 * 4;
 
 let _facesOfVertices: number[][];
 let _groundFacesNormals: Float32Array[];
@@ -129,28 +38,28 @@ let pickInfo: {
     point: Float32Array,
     distance: Float32Array
 } = {};
-
+const debugs: Map<number, any> = new Map();
 const mousePosition: [number, number] = [0, 0]
-
+let _groundFacesNormalsView: Float32Array;
+const byteStride = 4 * 8;
+let terrainPositionAndUvsAndNormalsCPUSwap: Float32Array;
 let methods2: { [index: string]: (e: WMessage<any>) => void } = {
-    init: (e: WMessage<{ positionsAndNormals: any, indices: any, facet1Arr: any, facet2Arr: any, subdivisionsX: any, subdivisionsY: any, boundingBox: SharedArrayBuffer, pickInfo: SharedArrayBuffer, _groundFacesNormalsBuffer: SharedArrayBuffer }>) => {
+    init: (e: WMessage<{ positionsAndNormals: any, indices: any, subdivisionsX: any, subdivisionsY: any, boundingBox: SharedArrayBuffer, pickInfo: SharedArrayBuffer, _groundFacesNormalsBuffer: SharedArrayBuffer }>) => {
+
+        terrainPositionAndUvsAndNormalsCPUSwap = new Float32Array(e.data.positionsAndNormals);
         const faceCount = e.data._groundFacesNormalsBuffer.byteLength / 4 / 4;
-        const normals: Float32Array[] = [];
-        positionsView.length = 0;
-        normalsView.length = 0;
+        _groundFacesNormals = [];
+
+        _groundFacesNormalsView = new Float32Array(e.data._groundFacesNormalsBuffer);
         for (let i = 0; i < faceCount; i++) {
-            normals.push(new Float32Array(e.data._groundFacesNormalsBuffer, i << 4, 3))
+            _groundFacesNormals.push(new Float32Array(e.data._groundFacesNormalsBuffer, i << 4,4))
         }
-        _groundFacesNormals = normals;
-
         const verticesAmount = e.data.positionsAndNormals.byteLength / (8 * 4);
-        for (
-            let i = 0,
-            byteStride = 4 * 8;
-            i < verticesAmount; i++) {
-
-            positionsView.push(new Float32Array(e.data.positionsAndNormals, i * byteStride, 3));
-            normalsView.push(new Float32Array(e.data.positionsAndNormals, i * byteStride + 5 * 4, 3));
+        if (normalsView.length == 0) {
+            for (let i = 0; i < verticesAmount; i++) {
+                positionsView.push(new Float32Array(e.data.positionsAndNormals, i * byteStride, 3));
+                normalsView.push(new Float32Array(e.data.positionsAndNormals, i * byteStride + 5 * 4, 3));
+            }
         }
         terrainIndices = new Uint32Array(e.data.indices);
         _subdivisionsX = e.data.subdivisionsX;
@@ -203,21 +112,18 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
             // console.time('selecting vertices');
             _selectedVertices = [];
 
-            let length = positionsView.length;
-            for (let index = 0; index < length; index++) {
-
-                let distance = Math.pow(positionsView[index][0] - pickInfo.point[0], 2) + Math.pow(positionsView[index][2] - pickInfo.point[2], 2)
-                
+            let length = terrainPositionAndUvsAndNormalsCPUSwap.length;
+            for (let index = 0; index < length; index += 8) {
+                let distance = Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index] - pickInfo.point[0], 2) + Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index+2] - pickInfo.point[2], 2)
                 if (distance < radiusPow) {
                     _selectedVertices.push({
-                        col: 250 / (10000 / (5000 + positionsView[index][0])) | 0,
-                        row: 250 / (10000 / (5000 - positionsView[index][2])) | 0,
+                        col: 250 / (10000 / (5000 + terrainPositionAndUvsAndNormalsCPUSwap[index])) | 0,
+                        row: 250 / (10000 / (5000 - terrainPositionAndUvsAndNormalsCPUSwap[index+2])) | 0,
                         vertice: index,
                         distance: Math.sqrt(distance)
                     });
                 }
             }
-            // console.timeEnd('selecting vertices');
         }
 
         // Elevate vertices
@@ -227,11 +133,19 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         }[] = [];
         let v1v2 = new Vector3();
         let v3v2 = new Vector3();
-        let faceOfVertices:number[]=[]
+        let faceOfVertices: number[] = [];
+        console.log('half from', _groundFacesNormals.length)
+        const half = _groundFacesNormals.length >> 1;
+        let v1: Float32Array
+        let v2: Float32Array
+        let v3: Float32Array
+
+        
+
         _selectedVertices.forEach(sv => {
-            //let positiony = this._groundPositions[sv.vertice].y;
-            let positiony = positionsView[sv.vertice][1];
+            let positiony = terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice+1];
             var fullHeight = e.data.height * e.data.direction;
+
             if (sv.distance < e.data.radius * 0.3) {
                 positiony += fullHeight;
             } else {
@@ -242,33 +156,15 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 positiony = heightMax;
             else if (positiony < heightMin)
                 positiony = heightMin;
-            positionsView[sv.vertice][1] = positiony;
+            terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
 
             //this._updateSubdivisions(sv.vertice);
 
-            faceOfVertices = _facesOfVertices[sv.vertice];
-            const half = faces.length >> 1;
+            faceOfVertices = _facesOfVertices[sv.vertice/8];
+            
+            
             for (let index = 0; index < faceOfVertices.length; index++) {
-
                 let indices = new Uint32Array(terrainIndices.buffer, (faceOfVertices[index] * 3) << 2, 3);
-
-                v1v2.x = positionsView[indices[0]][0] - positionsView[indices[1]][0];
-                v1v2.y = positionsView[indices[0]][1] - positionsView[indices[1]][1];
-                v1v2.z = positionsView[indices[0]][2] - positionsView[indices[1]][2];
-
-                v3v2.x = positionsView[indices[2]][0] - positionsView[indices[1]][0];
-                v3v2.y = positionsView[indices[2]][1] - positionsView[indices[1]][1];
-                v3v2.z = positionsView[indices[2]][2] - positionsView[indices[1]][2];
-
-                //_groundFacesNormals[faceOfVertices[index]] = Vector3.Normalize(Vector3.Cross(v1v2, v3v2));
-                const normalized = Vector3.Normalize(Vector3.Cross(v1v2, v3v2))
-                //_groundFacesNormals[faceOfVertices[index]].set([normalized.x, normalized.y, normalized.z])
-                if (faceOfVertices[index] % 2 == 0) {
-                    _groundFacesNormals[faceOfVertices[index] >> 1].set([normalized.x, normalized.y, normalized.z])
-                } else {
-                    _groundFacesNormals[half + faceOfVertices[index] >> 1].set([normalized.x, normalized.y, normalized.z])
-                }
-
 
                 indices.forEach(vertexIndex => {
                     var faces = _facesOfVertices[vertexIndex];
@@ -277,17 +173,17 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                     let y = 0;
                     let z = 0;
 
-                    
+
                     for (var index = 0; index < faces.length; index++) {
-                       // let facenormal = _groundFacesNormals[faces[index]];
+                        // let facenormal = _groundFacesNormals[faces[index]];
 
                         if (faces[index] % 2 == 0) {
                             var facenormal = _groundFacesNormals[faces[index] >> 1];
                         } else {
-                            var facenormal = _groundFacesNormals[half + faces[index] >> 1];
+                            var facenormal = _groundFacesNormals[half + (faces[index] >> 1)];
                         }
 
-                       // let facenormal = _groundFacesNormals[faces[index]];
+                        // let facenormal = _groundFacesNormals[faces[index]];
                         x += facenormal[0];
                         y += facenormal[1];
                         z += facenormal[2];
@@ -304,8 +200,12 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                     z *= scale;
 
                     // normal = BABYLON.Vector3.Normalize(normal.scale(1.0 / faces.length));
-                       normalsView[vertexIndex].set([x, y, z])
-                    //console.log([x, y, z]);
+
+
+
+                    normalsView[vertexIndex].set([x, y, z])
+
+
                     //terrainNormals.set([x, y, z], vertexIndex * 3);
                 });
             };
@@ -333,6 +233,64 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 }*/
             })(positiony);
         });
+
+        //TODO; move after Y update
+        _selectedVertices.forEach(sv => {
+            faceOfVertices = _facesOfVertices[sv.vertice / 8];
+            for (let index = 0; index < faceOfVertices.length; index++) {
+                /* if (faceOfVertices[index] % 2 == 0) {
+                     var indices = new Uint32Array(terrainIndices.buffer, ((faceOfVertices[index] * 3) - 6) << 2, 3);
+                 }
+                 else*/
+                var indices = new Uint32Array(terrainIndices.buffer, (faceOfVertices[index] * 3) << 2, 3);
+
+                v1 = positionsView[indices[0]];
+                v2 = positionsView[indices[1]];
+                v3 = positionsView[indices[2]];
+
+                //console.log(v1, v2, v3)
+
+                v1v2.x = v1[0] - v2[0];
+                v1v2.y = v1[1] - v2[1];
+                v1v2.z = v1[2] - v2[2];
+
+                v3v2.x = v3[0] - v2[0];
+                v3v2.y = v3[1] - v2[1];
+                v3v2.z = v3[2] - v2[2];
+
+                const normalized = Vector3.Normalize(Vector3.Cross(v1v2, v3v2));
+
+                let d1 = -(normalized.x * v2[0] + normalized.y * v2[1] + normalized.z * v2[2]);
+
+                if (faceOfVertices[index] % 2 == 0) {
+                   // console.log('half', half)
+                    //This is wrong
+                    _groundFacesNormals[half + (faceOfVertices[index] >> 1)].set([normalized.x, normalized.y, normalized.z, d1]);
+
+
+                   // debugs.set(((faceOfVertices[index] - 1) >> 1) * 4, [normalized.x, normalized.y, normalized.z, d1, indices, new Uint32Array(terrainIndices.buffer, ((faceOfVertices[index] * 3) - 6) << 2, 3)]);
+
+
+
+                    // _groundFacesNormalsView.set([normalized.x, normalized.y, normalized.z, d1], (half + ((faceOfVertices[index] - 1) >> 1)) * 4)
+                    // _groundFacesNormals[(faceOfVertices[index] >> 1)].set([0, 0, 0, 0]);
+                } else {
+                    //works
+                    _groundFacesNormals[faceOfVertices[index] >> 1].set([normalized.x, normalized.y, normalized.z, d1]);
+                    //_groundFacesNormals[half + (faceOfVertices[index] >> 1)].set([0, 0, 0, 0]);
+                    console.log(d1)
+                }
+            }
+        })
+
+    /* console.log('_selectedVertices', _selectedVertices);
+_selectedVertices.forEach(sv => {
+ faceOfVertices = _facesOfVertices[sv.vertice / 8];
+ console.log('faceOfVertices', faceOfVertices)
+})
+debugger;*/
+        //console.log('faces:');
+        
         self.postMessage({
             type: 'bounding', data: {
                 boundingBox: { minY: boundingBox.min[1], maxY: boundingBox.max[1] }
@@ -343,8 +301,8 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         let normalsMin = Math.min(...faces.map(f => Math.min(...f.indices))) * 3;
         let normalsMax = Math.max(...faces.map(f => Math.max(...f.indices))) * 3;
         let subvertices = _selectedVertices.map(sv => sv.vertice);
-        let min = Math.min(...subvertices) * 3;
-        let max = Math.max(...subvertices) * 3;
+        let min = Math.min(...subvertices)*4;
+        let max = Math.max(...subvertices)*4+byteStride;
 
 
         let minCol = Math.min(..._selectedVertices.map(v => v.col));
@@ -357,7 +315,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         let v1v4 = new Vector3();
         let norm1 = new Float32Array(3);
         let norm2 = new Float32Array(3);
-        
+
         for (let row = minRow - 1; row <= maxRow + 1; row++) {
             for (let col = minCol - 1; col <= maxCol + 1; col++) {
 
@@ -365,22 +323,34 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 let j = row * (_subdivisionsX + 1);
                 let k = (row + 1) * (_subdivisionsX + 1);
 
+                const indices = [
+                    j + i,
+                    j + i + 1,
+                    k + i,
+                    k + i + 1
+                ]
+
+
                 let v1arr = [
-                    positionsView[j + i][0],
-                    positionsView[j + i][1],
-                    positionsView[j + i][2],
+                    positionsView[indices[0]][0],
+                    positionsView[indices[0]][1],
+                    positionsView[indices[0]][2],
                 ]
                 let v2arr = [
-                    positionsView[j + i + 1][0],
-                    positionsView[j + i + 1][1],
-                    positionsView[j + i + 1][2],
+                    positionsView[indices[1]][0],
+                    positionsView[indices[1]][1],
+                    positionsView[indices[1]][2],
                 ]
-                v1v3.x = positionsView[k + i][0] - v1arr[0];
-                v1v3.y = positionsView[k + i][1] - v1arr[1];
-                v1v3.z = positionsView[k + i][2] - v1arr[2];
-                v1v4.x = positionsView[k + i + 1][0] - v1arr[0];
-                v1v4.y = positionsView[k + i + 1][1] - v1arr[1];
-                v1v4.z = positionsView[k + i + 1][2] - v1arr[2];
+                //indices0: 0, 2, 3
+                //indices1: 0,1,3
+                v1v3.x = positionsView[indices[2]][0] - v1arr[0];
+                v1v3.y = positionsView[indices[2]][1] - v1arr[1];
+                v1v3.z = positionsView[indices[2]][2] - v1arr[2];
+                v1v4.x = positionsView[indices[3]][0] - v1arr[0];
+                v1v4.y = positionsView[indices[3]][1] - v1arr[1];
+                v1v4.z = positionsView[indices[3]][2] - v1arr[2];
+
+
 
                 // facet equations :
                 // we compute each facet normal vector
@@ -407,11 +377,15 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 norm2[2] = v1v2.x * v1v4.y - v1v2.y * v1v4.x;
                 // BABYLON.Vector3.CrossToRef(v1v2, v1v4, norm2);
 
-                let norm1length = 1 / Math.sqrt(norm1[0] * norm1[0] + norm1[1] * norm1[1] + norm1[2] * norm1[2]);
-                let norm2length = 1 / Math.sqrt(norm1[0] * norm1[0] + norm1[1] * norm1[1] + norm1[2] * norm1[2]);
+               // let norm1length = 1 / Math.sqrt(norm1[0] * norm1[0] + norm1[1] * norm1[1] + norm1[2] * norm1[2]);
+               // let norm2length = 1 / Math.sqrt(norm2[0] * norm2[0] + norm2[1] * norm2[1] + norm2[2] * norm2[2]);
+                let norm1length = 1 / Math.hypot(norm1[0], norm1[1], norm1[2])
+                let norm2length = 1 / Math.hypot(norm2[0], norm2[1], norm2[2]);
+
                 norm1[0] *= norm1length;
                 norm1[1] *= norm1length;
                 norm1[2] *= norm1length;
+
                 norm2[0] *= norm2length;
                 norm2[1] *= norm2length;
                 norm2[2] *= norm2length;
@@ -421,10 +395,26 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 let d1 = -(norm1[0] * v1arr[0] + norm1[1] * v1arr[1] + norm1[2] * v1arr[2]);
                 let d2 = -(norm2[0] * v2arr[0] + norm2[1] * v2arr[1] + norm2[2] * v2arr[2]);
 
+                if (debugs.has((row * _subdivisionsX + col) * 4)) {
+                    console.log(debugs.get((row * _subdivisionsX + col) * 4))
+                    console.log((row * _subdivisionsX + col) * 4);
+                    //debugger;
+                }
+                if (debugs.has(facetSize + (row * _subdivisionsX + col) * 4)) {
+                    console.log(debugs.get(facetSize + (row * _subdivisionsX + col) * 4));
+                    console.log(facetSize + (row * _subdivisionsX + col) * 4);
+                    //debugger;
+                }
+
+                //_groundFacesNormalsView.set([norm1[0], norm1[1], norm1[2], d1], (row * _subdivisionsX + col) * 4)
+               // _groundFacesNormalsView.set([norm2[0], norm2[1], norm2[2], d2], facetSize+(row * _subdivisionsX + col) * 4)
+
 
                 //Disabled for now
                 //  facet1Arr.set([norm1[0], norm1[1], norm1[2], d1], (row * _subdivisionsX + col) * 4);
                 // facet2Arr.set([norm2[0], norm2[1], norm2[2], d2], (row * _subdivisionsX + col) * 4);
+
+
             }
             const srcOffset = (row * _subdivisionsX + minCol - 1) * 4;
             self.postMessage({
@@ -437,7 +427,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 }
             });
         }
-        self.postMessage({ id: e.id, data: { min: min << 2, max: max << 2, normalsMin: normalsMin << 2, normalsMax: normalsMax << 2 } });
+        self.postMessage({ id: e.id, data: { min: min, max: max, normalsMin: normalsMin << 2, normalsMax: normalsMax << 2 } });
 
         //this.postMessage({ type: 'heights', data: {} });
         //methods2.createHeights();
