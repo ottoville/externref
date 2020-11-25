@@ -30,6 +30,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
 
     worldPosition: worldPosition;
+    facet12ArrGPUBufferSwap = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     traits: Trait[];
     constructor(
@@ -51,8 +52,6 @@ export class TerrainTool extends TerraNode implements has3DPosition {
                 subdivisionsY: Terrain.subdivisionsY,
                 boundingBox: terrain.mesh.boundingBox,
                 slopeArr: terrain.slopeArrBuffer,
-                facet1Arr: terrain.facet1ArrBuffer,
-                facet2Arr: terrain.facet2ArrBuffer,
                 pickInfo: terrain.mesh.pickInfo.buffer,
                 _groundFacesNormalsBuffer: terrain.facet12ArrCPUBuffer
             });
@@ -91,101 +90,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
             this.helper = helperPipeline.addDrawable([scene.gpuscene.renderPassScreen], 4, 0, 8, 0, 0)
         })();
 
-        
-
-
         this.addListener("pointermove", this.mouseListener, { lazy: 15 });
-
-        let commandEncoder2: TerraGPUCommandEncoder;
-        let updateFacet: GPUCommandBuffer[];
-        let query: { data: any }[] = [];
-        terrainWorker.subscribe('SubHeights', async (v) => {
-            // TODO: Update only partial of data
-            //disabled for now
-            /* if (!this.tempFacet1Buffer || !this.tempFacet2Buffer) {
-                 this.tempFacet1Buffer = GPUScene.instance.createGPUBuffer(this.terrain.facet1Arr.byteLength, //v.data.length
-                     GPUBufferUsage.COPY_SRC ,GPUBufferUsage.MAP_WRITE);
-                 this.tempFacet2Buffer = GPUScene.instance.createGPUBuffer(this.terrain.facet2Arr.byteLength,GPUBufferUsage.COPY_SRC , GPUBufferUsage.MAP_WRITE);
-                 commandEncoder2 = GPUScene.instance.createCommandEncoder();
-                 commandEncoder2.copyBufferToBuffer(
-                     this.tempFacet1Buffer, 0,
-                     this.terrain.facet1ArrGPUBuffer,
-                     0, // v.data.srcOffset,
-                     this.terrain.facet1Arr.byteLength);
-                 commandEncoder2.copyBufferToBuffer(
-                     this.tempFacet2Buffer, 0,
-                     this.terrain.facet2ArrGPUBuffer,
-                     0,
-                     this.terrain.facet2Arr.byteLength);
-                 updateFacet = [commandEncoder2.finish()];
-             }
-             query.push(v.data);
-             if (query.length == 1) {
-                 while (query.length) {
-                     try {
-                         await Promise.all([
-                             this.tempFacet1Buffer.mapWriteAsync().then(facet1 => {
-                                 //new Float32Array(facet1).set(new Float32Array(this.terrain.facet1ArrBuffer, v.data.srcOffset, v.data.length/4))
-                                 new Float32Array(facet1).set(this.terrain.facet1Arr)
-                                 this.tempFacet1Buffer!.unmap();
-                             }),
-                             this.tempFacet2Buffer.mapWriteAsync().then(facet2 => {
-                                 new Float32Array(facet2).set(this.terrain.facet2Arr)
-                                 this.tempFacet2Buffer!.unmap();
-                             })
-                         ]);
-                         GPUScene.instance.device.defaultQueue.submit(updateFacet);
-                         query.shift();
-                     } catch (e) {
-                         console.error(e);
-                         debugger;
-                         query = [];
-                     }
-                 }
-             }*/
-
-
-
-            /*let width = v.data.endX - v.data.offsetX;
-            gl.bindTexture(gl.TEXTURE_2D, this.glTexture2);
-            (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.offsetX, v.data.offsetY, width, 1, gl.RGBA, gl.FLOAT, this.terrain.facet1Arr, v.data.srcOffset)
-
-            gl.bindTexture(gl.TEXTURE_2D, this.glTexture3);
-            (<WebGL2RenderingContext><any>gl).texSubImage2D(gl.TEXTURE_2D, 0, v.data.offsetX, v.data.offsetY, width, 1, gl.RGBA, gl.FLOAT, this.terrain.facet2Arr, v.data.srcOffset)
-            gl.bindTexture(gl.TEXTURE_2D, null);*/
-        });
-        //let boundingBox = this.terrain.bounding.boundingBox;
-        // let boundingInfo = this.terrain.subMeshes[0].getBoundingInfo();
-        terrainWorker.subscribe('bounding', (v) => {
-
-
-            // this.terrain.terraMesh.lastColliderWorldVertices = null;
-
-
-            /*  this.terrain.subMeshes[0]._lastColliderWorldVertices = null;
-              boundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
-              boundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
-              boundingInfo.boundingBox.minimumWorld.y = v.data.boundingBox.minY
-              boundingInfo.boundingBox.maximumWorld.y = v.data.boundingBox.maxY
-  
-              boundingInfo.boundingSphere.radius = v.data.boundingSphereRadius
-              boundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius*/
-            //disabled for now;
-            /*
-            //@ts-ignore
-            mainboundingInfo.boundingBox.minimum.y = v.data.boundingBox.minY
-             //@ts-ignore
-            mainboundingInfo.boundingBox.maximum.y = v.data.boundingBox.maxY
-             //@ts-ignore
-            mainboundingInfo.boundingBox.minimumWorld.y = v.data.boundingBox.minY;
-             //@ts-ignore
-            mainboundingInfo.boundingBox.maximumWorld.y = v.data.boundingBox.maxY;
-             //@ts-ignore
-            mainboundingInfo.boundingSphere.radius = v.data.boundingSphereRadius
-             //@ts-ignore
-            mainboundingInfo.boundingSphere.radiusWorld = v.data.boundingSphereRadius*/
-        });
-
 
     }
     static saveTexture(arrayBuffer: ArrayBuffer) {
@@ -193,82 +98,46 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     }
     private direction = 0;
     private mouseinterval: number = 0;
+    updateSwap2(offset = 0, length: number) {
+        const b1 = this.scene.gpuscene.createGPUBuffer(length, [GPUBufferUsage.COPY_SRC], true);
+        new Float32Array(b1.getMappedRange()).set(new Float32Array(this.terrain.terrainPositionAndUvsAndNormalsCPUSwap, offset, length / 4))
+        b1.unmap();
+        const b2 = this.scene.gpuscene.createGPUBuffer(this.terrain.facet12ArrCPUBuffer.byteLength, [GPUBufferUsage.COPY_SRC], true);
+        new Float32Array(b2.getMappedRange()).set(this.terrain.facet12ArrCPUBufferView)
+        b2.unmap();
+        const commandEncoder = this.scene.gpuscene.createCommandEncoder();
+        commandEncoder.copyBufferToBuffer(
+            b1, // source buffer
+            0, //source offset
+            this.terrain.terrainPositionAndUvsAndNormalsGPU, //destination buffer
+            offset, //destination offset
+            length);
+        commandEncoder.copyBufferToBuffer(
+            b2, // source buffer
+            0, //source offset
+            this.terrain.facet12ArrGPUBuffer, //destination buffer
+            0, //destination offset
+            this.terrain.facet12ArrCPUBuffer.byteLength);
+        this.scene.gpuscene.device.defaultQueue.submit([commandEncoder.finish()]);
+        b1.destroy();
+        b2.destroy();
+    }
     pointerdownf = (evt: PointerEvent): void => {
         if (evt.button !== 0) {
             return;
         }
         this.addListener("pointerup", this.pointerupf, { once: true });
         this.camera.detachControl(this.scene.gpuscene.renderPassScreen.canvas);
-        /*  //@ts-ignore
-         const normalbuffer: GPUBuffer = this.terrain.terraMesh._geometry!._vertexBuffers["normal"]._buffer.getBuffer()!.underlyingResource;
-         //@ts-ignore
-         const vertexbuffer: GPUBuffer = this.terrain.terraMesh._geometry!._vertexBuffers["position"]._buffer.getBuffer()!.underlyingResource;
- 
-         const tempNormalBuffer = GPUScene.instance.device.createBuffer({
-             //@ts-ignore
-             size: this.terrain.terraMesh._geometry!._vertexBuffers["normal"]._buffer.getBuffer()!.capacity, // also this.terrain.normals.byteLength
-             usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
-         });
-         const tempVertexBuffer = GPUScene.instance.device.createBuffer({
-             //@ts-ignore
-             size: this.terrain.terraMesh._geometry!._vertexBuffers["position"]._buffer.getBuffer()!.capacity, // also this.terrain.normals.byteLength
-             usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
-         });
-         const commandEncoder = GPUScene.instance.device.createCommandEncoder();
-         commandEncoder.copyBufferToBuffer(
-             tempNormalBuffer, 0,
-             normalbuffer, 0,
-             //@ts-ignore
-             this.terrain.terraMesh.normals!.byteLength);
-         commandEncoder.copyBufferToBuffer(
-             tempVertexBuffer, 0,
-             vertexbuffer, 0,
-             //@ts-ignore
-             this.terrain.terraMesh.positions.byteLength);
-         const updateNormals = [commandEncoder.finish()];
-         */
-
-        let busy = false;
-
+       
         this.mouseinterval = setInterval(() => {
             terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
-                if (busy)
-                    return;
-                busy = true;
-                let NormalsRange = <{ normalsMin: number, normalsMax: number }><any>e;
-
-                /*await Promise.all([tempNormalBuffer.mapWriteAsync().then(normalsArrBuffer => {
-                    //@ts-ignore
-                    new Float32Array(normalsArrBuffer).set(this.terrain.terraMesh.normals!);
-                    tempNormalBuffer.unmap();
-                }),
-                    tempVertexBuffer.mapWriteAsync().then(positionsArrBuffer => {
-                    //@ts-ignore
-                    new Float32Array(positionsArrBuffer).set(this.terrain.terraMesh.positions);
-                    tempVertexBuffer.unmap();
-
-                })]);
-                GPUScene.instance.device.defaultQueue.submit(updateNormals);*/
-                busy = false;
                 let range = <{ min: number, max: number }><any>e;
-                //console.log('update normals ', NormalsRange.normalsMin, NormalsRange.normalsMax - NormalsRange.normalsMin);
-                //console.log('update normals ', range.min, range.max - range.min);
+                console.log('range', range)
+                const length = range.max - range.min;
 
-                this.terrain.updateSwap();
-
-
-
-                /* gl.bindBuffer(gl.ARRAY_BUFFER, normalbuffer);
-                if (this.terrain.normalsView !== null)
-                    gl.bufferSubData(gl.ARRAY_BUFFER, NormalsRange.normalsMin, this.terrain.normalsView, NormalsRange.normalsMin, NormalsRange.normalsMax - NormalsRange.normalsMin)
-                gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
-                gl.bindBuffer(this.gl.ARRAY_BUFFER, vertexbuffer);
-                let range = <{ min: number, max: number }><any>e;
-                gl.bufferSubData(this.gl.ARRAY_BUFFER, range.min, this.terrain.positionsView, range.min, range.max - range.min);
-               */
+                this.updateSwap2(range.min, length)
             });
-            //this.elevateFaces(this.pickinfo, 50, 5);
-        }, 100);
+        }, 17);
     }
     pointerupf = (evt: PointerEvent): void => {
         this.camera.attachControl(this.scene.gpuscene.renderPassScreen.canvas, true);
@@ -280,28 +149,13 @@ export class TerrainTool extends TerraNode implements has3DPosition {
         terrainWorker.unsubscribe('heights');
         this.helper.destroy();
         this.scene.TerraCameras[0].unSubscribePickingRay();
+        this.facet12ArrGPUBufferSwap.destroy();
     };
 
     mouseListener = (evt: PointerEvent): void => {
-
         this.terrain.mesh.intersects(this.scene.TerraCameras[0].pickingRay).then(() => {
             this.worldPosition.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
-        })
-
-
-
-        /* terrainWorker.message<{ x: number, y: number }, any>(WorkerReturn.Promise, 'mousemove',
-             {
-                 x: evt.clientX,
-                 y: evt.clientY,
-                 viewportWidth: viewport.width,
-                 viewportHeight: viewport.height,
-                 view: this.camera.getViewMatrix().toArray(),
-                 projection: this.camera.getProjectionMatrix().toArray()
-             }).then(async (flatPos) => {
-                 this.worldPosition.setTranslationX(flatPos.x)
-                 this.worldPosition.setTranslationZ(flatPos.y)
-             });*/
+        });
     }
     raise = (): void => {
         this.direction = 1;
@@ -312,12 +166,8 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     }
     lower = (): void => {
         this.direction = -1;
-        //let canvas = this.scene.getEngine().getRenderingCanvas();
         this.removeListener("pointerdown", this.pointerdownf);
         console.log('add pointerdown listener');
         this.addListener("pointerdown", this.pointerdownf);
     }
 }
-
-//export const TerrainTool = applyMixins<typeof BaseTerrainTool>(BaseTerrainTool, [worldPosition, canvasListener]);
-
