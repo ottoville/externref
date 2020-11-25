@@ -13,6 +13,7 @@ import { Sea } from "../world/water.js";
 
 
 export class paintTexture extends paintGround {
+    onEnd() { }
     private subTextureCache: subTexture = { x: 0, z: 0, imageData: null };
     private height: number=0;
     private centerX: number;

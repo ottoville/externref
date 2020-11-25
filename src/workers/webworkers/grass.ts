@@ -31,7 +31,6 @@ let methods = {
         this.postMessage({ id: data.id });
     },
     save: async (data: WMessage<{ amount: number, angle: number, area: { size: any, coord: Float32Array } }>) => {
-        console.log('data', data)
        // var d = new Date().getTime();
         let db = await DB;
         let trans = db.transaction("plantae");
@@ -41,7 +40,7 @@ let methods = {
             console.log(err)
         }
         let amount = data.data.amount;
-        console.log('creating grass, amount', amount, data)
+        //console.log('creating grass, amount', amount, data)
 
         //let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
         let offsets = new Float32Array(amount * 2);

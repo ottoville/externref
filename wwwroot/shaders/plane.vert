@@ -1,6 +1,9 @@
 #version 450
 precision lowp float;
 
+layout(location = 0) out vec3 color;
+
+
 uint facetSize= 250 * 250 * 4;
 
 layout(set = 0, binding = 0) uniform Scene {
@@ -54,4 +57,5 @@ void main(void) {
     vec4 worldPos = world * vec4(position.x, 0, position.y, 1.0);
     worldPos.y += getHeightAtCoordinates(vec2(worldPos.x, worldPos.z));
     gl_Position = viewProjection * worldPos;
+    color=vec3(1.0,1.0,1.0);
 }

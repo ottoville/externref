@@ -239,8 +239,6 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                     boundingBox: { minY: boundingBox.min[1], maxY: boundingBox.max[1] }
                 }
             });
-            let normalsMin = Math.min(...faces.map(f => Math.min(...f.indices))) * 3;
-            let normalsMax = Math.max(...faces.map(f => Math.max(...f.indices))) * 3;
             let subvertices = _selectedVertices.map(sv => sv.vertice);
             let min = Math.min(...subvertices) * 4;
             let max = Math.max(...subvertices) * 4 + byteStride;

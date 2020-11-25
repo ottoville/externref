@@ -33,32 +33,18 @@ export class Terrain {
     #minY = -2;
     #maxY = 255
 
-    /* public boundingBox = {
-         min: {
-             x: this.#minX,
-             y: this.#minY,
-             z: this.#minZ
-         },
-         max: {
-             x: this.#maxX,
-             y: this.#maxY,
-             z: this.#maxZ
-         }
-     }*/
-
     slopeArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY, [GPUBufferUsage.STORAGE]);
     //TODO: Remove copy_src
     facet12ArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC]);
+    facet12ArrGPUBufferSwap = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC]);
+
     facet12ArrCPUBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2);
-    //  facet2ArrGPUBuffer = this.scene.gpuscene.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST);
+    facet12ArrCPUBufferView = new Float32Array(this.facet12ArrCPUBuffer);
+
 
     public slopeArrBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY);
-    public facet1ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4);
-    public facet2ArrBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4);
 
     public slopeArr = new Int32Array(this.slopeArrBuffer);
-    public facet1Arr = new Float32Array(this.facet1ArrBuffer);
-    public facet2Arr = new Float32Array(this.facet2ArrBuffer);
 
     #ratioX = Terrain.subdivisionsX / this.#width;
     #ratioY = Terrain.subdivisionsY / this.#height;
@@ -233,12 +219,12 @@ export class Terrain {
 
 
     readonly #terrainUvsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 2;
-    readonly #terrainPositionAndUvsAndNormalsGPU = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST])
-    readonly #terrainPositionAndUvsAndNormalsGPUSwap = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+    readonly terrainPositionAndUvsAndNormalsGPU = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST])
+    readonly terrainPositionAndUvsAndNormalsGPUSwap = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
 
     readonly terrainPositionAndUvsAndNormalsCPUSwap = new SharedArrayBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength);
-    readonly #terrainPositionAndUvsAndNormalsCPUSwapView = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap);
+    readonly terrainPositionAndUvsAndNormalsCPUSwapView = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap);
     readonly #positionsView: Float32Array[] = [];
     readonly #normalsViewGPU: Float32Array[] = [];
 
@@ -249,23 +235,30 @@ export class Terrain {
     //#vertices: Float32Array = new Float32Array(this.verticesBuffer);
     //#normals: Float32Array = new Float32Array(this.normalsBuffer);
 
-
+    
     async updateSwap(offset = 0, length?: number) {
-        await this.#terrainPositionAndUvsAndNormalsGPUSwap.mapAsync(GPUMapMode.WRITE, offset, length);
-        const swaparraybuff = this.#terrainPositionAndUvsAndNormalsGPUSwap.getMappedRange();
-        const swaparray = new Float32Array(swaparraybuff);
-        swaparray.set(this.#terrainPositionAndUvsAndNormalsCPUSwapView);
-        this.#terrainPositionAndUvsAndNormalsGPUSwap.unmap();
+        if (offset || length) {
+            if (length)
+                var view = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap, offset, length / 4)
+            else
+                var view = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap, offset)
+        } else
+            var view = this.terrainPositionAndUvsAndNormalsCPUSwapView;
+
+        await this.terrainPositionAndUvsAndNormalsGPUSwap.mapAsync(GPUMapMode.WRITE, offset, length);
+        const swaparraybuff = this.terrainPositionAndUvsAndNormalsGPUSwap.getMappedRange(offset, length);
+        new Float32Array(swaparraybuff).set(view);
+        this.terrainPositionAndUvsAndNormalsGPUSwap.unmap();
         const commandEncoder = this.scene.gpuscene.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
-            this.#terrainPositionAndUvsAndNormalsGPUSwap, // source buffer
+            this.terrainPositionAndUvsAndNormalsGPUSwap, // source buffer
             offset, //source offset
-            this.#terrainPositionAndUvsAndNormalsGPU, //destination buffer
-            0, //destination offset
-            length || this.#terrainPositionAndUvsAndNormalsCPUSwapView.byteLength);
+            this.terrainPositionAndUvsAndNormalsGPU, //destination buffer
+            offset, //destination offset
+            length || this.terrainPositionAndUvsAndNormalsCPUSwapView.byteLength - offset);
         this.scene.gpuscene.device.defaultQueue.submit([commandEncoder.finish()]);
     }
-
+    
 
     static async loadFromTexture(scene: TerraScene): Promise<[Terrain, Promise<GPUBuffer>]> {
         /*
@@ -531,7 +524,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         terrainPositionAndUvsAndNormalsGPUTemp.destroy();
         (async () => {
             gpuReadBufferPositions.readAndDestroy(async (buff) => {
-                this.#terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
+                this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
                 this.updateSwap();
                 this.serialize();
             });
@@ -545,7 +538,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             magFilter: "linear",
             minFilter: "linear",
         });*/
-        this.mesh = new TerrainMesh(scene, this.texture.createView(), this.#terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, this.indicesBuffer, 8, this.#terrainIndicesLength / 4);
+        this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, this.indicesBuffer, 8, this.#terrainIndicesLength / 4);
         this.mesh.boundingBox.box.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
     }
 
@@ -563,10 +556,17 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         console.log(col, row);
         let pos: number = row * Terrain.subdivisionsX + col;
         try {
+            /*
+             HOX!  this.facet1Arr and this.facet2Arr has now been combinet to this.facet12ArrCPUBuffer,
+             look and example from terrainWorker how to access its indices.
+
+             * */
             if (z < -1 * x + this.slopeArr[pos]) {
+                //@ts-ignore
                 facet = new Float32Array(this.facet1Arr.buffer, pos << 4, 4) // << 4 =  4 *  Float32Array.BYTES_PER_ELEMENT
             }
             else {
+                //@ts-ignore
                 facet = new Float32Array(this.facet2Arr.buffer, pos << 4, 4) // << 4 = 4 *  Float32Array.BYTES_PER_ELEMENT
             }
         } catch (e) {

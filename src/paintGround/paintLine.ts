@@ -10,6 +10,7 @@ import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
 
 export class paintLine extends paintGround {
+    onEnd() { }
     private startingPoint!: Float32Array;
     onMainPointerUp(end_position: Float32Array, height: number): void {
         //Todo, fix Y;

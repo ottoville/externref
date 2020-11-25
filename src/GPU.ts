@@ -110,16 +110,28 @@ export class GPU {
 
     static instance: GPU;
 
-    
+
+    async getShaderModule(url: string) {
+        let module = this.shaderModules.get(url);
+        if (module)
+            return module
+        module = this.device.createShaderModule({
+            code: await (await fetch(url)).text()
+        });
+        this.shaderModules.set(url, module);
+        return module;
+    }
+
+
     
     onResizes: Set<() => void> = new Set();
 
     queue: Map<Float32Array, number> = new Map();
     #busy = false;
     updateGPUBuffer(): GPUCommandBuffer | null {
-        if (this.queue.size === 0 || this.#busy)
+        if (this.queue.size === 0)
             return null;
-        this.#busy = true;
+       // this.#busy = true;
         const dataSizeBytes = TerraNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
         const tempSize = dataSizeBytes * this.queue.size;
         const tempBuffer = this.createGPUBuffer(tempSize, [GPUBufferUsage.COPY_SRC], true);
@@ -135,7 +147,7 @@ export class GPU {
         tempBuffer.unmap();
         this.queue.clear();
 
-        this.#busy = false;
+       // this.#busy = false;
         return commandEncoder.finish();
     }
     buildBindGroupHierarcy(baseBindGroup: BindGroupLayout, ...bindgroups: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)[]) {

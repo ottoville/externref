@@ -20,7 +20,7 @@ layout(set = 0, binding = 0) uniform Scene {
 };
 
 layout(set = 0, binding = 1) uniform Time {
-   float time;
+   uint time;
 };
 
 layout(std430, set = 1, binding = 0) readonly buffer Slopes {
@@ -75,7 +75,7 @@ float getHeightAtCoordinates(vec2 xz) {
  }
 
 void main(void) {
-    float angle= time+float(gl_InstanceIndex) * angleStep;
+    float angle= (time*0.001)+float(gl_InstanceIndex) * angleStep;
     float c = cos(angle);
 	float s = sin(angle);
     vec3 position=vec3(vertices[gl_VertexIndex].x,1.5f,vertices[gl_VertexIndex].y);
@@ -99,7 +99,7 @@ void main(void) {
     //}
 
     //worldPos.y += -(facet.x * cx + facet.z * cz + facet.w) / facet.y;
-    worldPos.y += getHeightAtCoordinates(vec2(worldPos.x, worldPos.z))+20.0;
+    worldPos.y += getHeightAtCoordinates(vec2(worldPos.x, worldPos.z))+3.0;
 
    gl_Position = viewProjection * worldPos;
    color=vec3(1.0,1.0,1.0);

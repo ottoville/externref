@@ -37,17 +37,9 @@ export class Plants {
         //let amount = 100000
         if (amount === 0)
             return;
-        
-        /*
-         * 
-         * old: 0:x,    1:y,    2:z,    3:r
-         * new: 0:x,    1:z,    2:r
-         * 
-         * 
-         * 
-         * */
+
         this.ready.then(() => { 
-            console.log('sending grass to worker, took ', new Date().getTime() - d);
+           // console.log('sending grass to worker, took ', new Date().getTime() - d);
             this.worker.message(WorkerReturn.noReturn, 'save',
             {
                 area: area,
@@ -256,7 +248,6 @@ export class Plants {
                     this.numBlades * 4 * 4);
                 scene.gpuscene.device.defaultQueue.submit([commandEncoder.finish()]);
                 drawable.instanceCount = data.count
-                console.log('updated grass buffers', data.count);
                 return;
 
 

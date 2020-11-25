@@ -46,18 +46,12 @@ export abstract class paintGround {
 
     #drawArea = async (evt:PointerEvent) => {
 
-       // this.scene.mainCamera.updatePickingRay();
-        
-        let distance: number;
-
-        
         await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
         if (this.ground.mesh.pickInfo.distance[0]) {
             this.#end_position.set([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
             let width = this.#start_position[0] - this.#end_position[0];
 
-            //distance = Math.sqrt(Math.pow(this.#start_position[0] - this.#end_position[0], 2) + Math.pow(this.#start_position[1] - this.#end_position[1], 2));
-            distance = Math.hypot(this.#start_position[0] - this.#end_position[0], this.#start_position[1] - this.#end_position[1]);
+            const distance = Math.hypot(this.#start_position[0] - this.#end_position[0], this.#start_position[1] - this.#end_position[1]);
             height = distance
 
             if (width < 0)
@@ -72,17 +66,13 @@ export abstract class paintGround {
     abstract onMainPointerDown(startingPoint: Float32Array): void;
     abstract onMainPointerUp(end_position: Float32Array, height: number): void;
     abstract onAreaDraw(width: number): Promise<void>;
-
+    abstract onEnd(): void;
     #nextDrawWidth: number = 0;
     #drawqueue: boolean = false;
     #busy: boolean = false;
 
     #mousemove = async (evt: PointerEvent) => {
-        //const ray2 = this.scene.createPickingRay(evt.clientX, evt.clientY);
-       // await this.scene.mainCamera.updatePickingRay();
 
-      //  let ray = Ray.Zero();
-       // this.sceneDeprecated.createPickingRayToRef(this.sceneDeprecated.pointerX, this.sceneDeprecated.pointerY, Matrix.Identity(), ray, this.camera);
         await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
         if(this.ground.mesh.pickInfo.distance[0] && this.#end_position) {
         //if (pikked.pickedPoint && this.#end_position) {
@@ -139,12 +129,13 @@ export abstract class paintGround {
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
         this.uitab.addListener('pointerdown', this.mainPointerDown, { once: true });
         this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
-      //  this.#end_position = null;
+        this.onEnd();
     }
     private mouseMoveRegisterClick = (evt: PointerEvent) => {
         this.uitab.addListener('pointerdown', this.finalClick, { once: true });
     }
     #pointerUp = (evt: PointerEvent) => {
+
         this.uitab.removeListener('pointermove', this.#drawArea);
         
         this.camera.attachControl(this.scene.canvas, true);
@@ -160,7 +151,6 @@ export abstract class paintGround {
             this.uitab.addListener('pointermove', this.mouseMoveRegisterClick, { once: true });
         }
     }
-    private testcounter = 0;
 
     private mainPointerDown = async (evt: PointerEvent) => {
 
