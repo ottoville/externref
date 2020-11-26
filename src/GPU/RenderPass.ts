@@ -36,7 +36,7 @@ export class RenderPass {
     targetTextureView = this.targetTexture.createView();
 
     onResize(width: number, height: number) {
-        [this.size.width, this.size.height]=this._onResize(width, height);
+        [this.size.width, this.size.height] = this._onResize(width, height);
         this.cameras.forEach(camera => camera.onResize(this.size.width, this.size.height));
         this.targetTexture.destroy();
         this.targetTexture = this.createTexture("bgra8unorm");
@@ -98,15 +98,10 @@ export class RenderPass {
             this.depthTextureView = this.#depthTexture.createView();
         }
     }
-    render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp) {
+    render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp, physicDelta: number | null, cameraBindGroup:GPUBindGroup) {
         try {
-            let physicDelta: number | null;
-            if (TerraScene.instance.physics.gameSpeed == -1)
-                physicDelta = null;
-            else
-                physicDelta = (TerraScene.instance.physics.physicTime - TerraScene.instance.physics.gameTime) / ((TerraScene.instance.tickIntervalMs / 1000) << TerraScene.instance.physics.gameSpeed)
-
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
+            passEncoder.setBindGroup(0, cameraBindGroup);
             TerraScene.instance.gpuscene.render(passEncoder, this, time, physicDelta);
             passEncoder.endPass();
         } catch (e) {

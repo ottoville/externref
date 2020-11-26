@@ -7,7 +7,6 @@
 [[block]] struct Time {
   [[offset(0)]] time : u32;
   [[offset(4)]] delta : f32;
-  [[offset(8)]] windDelta : f32;
 };
 
 [[block]] struct Lights {

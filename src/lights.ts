@@ -28,12 +28,7 @@ export class Light {
     //#lightsBuffer = this.scene.createGPUBuffer(3 * 4 + 4 + maxLights * (3 * 4 + 4 + 3 * 4 + 4), [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
 
 
-    
-    /*lightsBindGroup;
-    lightsBindGroupNoTime;
-    lightsBindGroupWGSL;*/
-   // lightsBindGroupTexture;
-   // lightsBindGroupNoTimeWGSL;
+   
     uniformBindGroupLightsWGSL: BindGroupOneBinding;
     uniformBindGroupLights: BindGroupOneBinding;
 

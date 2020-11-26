@@ -28,8 +28,10 @@ export class BindGroupLayout {
                 layoutTree.unshift(curparent.bindGroupLayout);
             } while (curparent = curparent.parent)
             parent.subBindGroups.add(this);
-        } else
+        } else {
             BindGroupLayout.instances.add(this);
+        }
+        layoutTree.unshift(gpuscene.cameraAndTimeBindGroupLayout);
         this.layout = this.gpuscene.device.createPipelineLayout({ bindGroupLayouts: layoutTree });
 
     }
@@ -40,11 +42,11 @@ export class BindGroupLayout {
     addChildLayout(meshBindGroupLayout: (BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry> | BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | BindGroupLayoutThreeBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | BindGroupLayoutFourBinding)): LayoutGroupDrawable<GPUBindGroupEntry[]> {
         return new LayoutGroupDrawable(this.gpuscene, meshBindGroupLayout, this, undefined);
     }
-    addChildBindGroup(sharedBindgroup: BindGroupOneBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number]>
-    addChildBindGroup(sharedBindgroup: BindGroupTwoBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number]>
-    addChildBindGroup(sharedBindgroup: BindGroupThreeBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number, number]>
-    addChildBindGroup(sharedBindgroup: BindGroupFourBinding, isDynamic: boolean): DynamicBindGroupDrawable<[number, number, number, number]>
-    addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupDrawable<[number, number, number, number]>
+    addChildBindGroup(sharedBindgroup: BindGroupOneBinding, isDynamic: boolean): DynamicBindGroupLayout<[number]>
+    addChildBindGroup(sharedBindgroup: BindGroupTwoBinding, isDynamic: boolean): DynamicBindGroupLayout<[number, number]>
+    addChildBindGroup(sharedBindgroup: BindGroupThreeBinding, isDynamic: boolean): DynamicBindGroupLayout<[number, number, number]>
+    addChildBindGroup(sharedBindgroup: BindGroupFourBinding, isDynamic: boolean): DynamicBindGroupLayout<[number, number, number, number]>
+    addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number, number]>
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupLayout
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): any {
         const old = this.childBindGroups.get(sharedBindgroup)
@@ -54,13 +56,13 @@ export class BindGroupLayout {
         if (!isDynamic)
             r = new BindGroupLayout(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
          else
-            r = new DynamicBindGroupDrawable(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
+            r = new DynamicBindGroupLayout(this.gpuscene, this.gpuscene.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
         this.childBindGroups.set(sharedBindgroup, r);
         return r;
     }
 }
 
-export class DynamicBindGroupDrawable<T extends number[]> extends BindGroupLayout {
+export class DynamicBindGroupLayout<T extends number[]> extends BindGroupLayout {
     addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>, offsets: T): RenderPipeline => {
         const d = super.addRenderPipeline(renderPipeline);
         d.dynamicBindGroupOffset = offsets;

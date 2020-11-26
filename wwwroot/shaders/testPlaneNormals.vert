@@ -33,8 +33,6 @@ layout(set = 0, binding = 0) uniform Scene {
 layout(set = 0, binding = 1) uniform Terra {
    uint time;
    float delta;
-   float windDelta;
-
 } terra;
 
 layout(set = 1, binding = 0) readonly buffer Lights {
@@ -55,7 +53,8 @@ void main(void) {
 
     float windRotate=rot[gl_VertexIndex];
     //float windIntensivy=(cos(windDelta) * sin(windDelta*2)+1)*0.5;
-    float windIntensivy=terra.windDelta;
+    //float windIntensivy=terra.windDelta;
+    float windIntensivy=0;
    // float windDirection=cos(windDelta*0.1)*PI*2;    //Wind direction changes most when wind intensity is lowest
 
     float shapeW=0.5;

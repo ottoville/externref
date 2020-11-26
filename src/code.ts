@@ -177,7 +177,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             blazor.invokeMethod('setProgress', 8);
             await Promise.all(shaderPuts);
             blazor.invokeMethod('setProgress', 9);
-            
+
             blazor.invokeMethod('setProgress', 10);
 
             const mousePositionBuffer = new SharedArrayBuffer(4);
@@ -228,9 +228,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             }
             const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
             const projectionmatrix = new Float32Array(projectionmatrixBuffer);
-
-           // const scene2 = await scenePromise;
-            const cameraReady=scenePromise.then((scene) => {
+            blazor.invokeMethod('setProgress', 11);
+            // const scene2 = await scenePromise;
+            const cameraReady = scenePromise.then((scene) => {
+                
                 //@ts-ignore
                 /*const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), {
                     getUniqueId: () => 1,
@@ -272,19 +273,18 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 camera.attachControl(canvas, true);
                 return camera;
             })
-           
+            blazor.invokeMethod('setProgress', 12);
 
 
 
             const mainCamera = new TerraCamera(gpuscene.renderPassScreen, mousePositionBuffer, projectionmatrixBuffer, gpuscene)
             const waterCamera = new TerraCamera(gpuscene.renderPassWater, mousePositionBuffer, projectionmatrixBuffer, gpuscene, false)
-
-            const timeAndDeltaBuffer = new ArrayBuffer(12);
+            const TerraCameras = [mainCamera, waterCamera]
+            const timeAndDeltaBuffer = new ArrayBuffer(8);
             const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
             const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
-            const animationView = new Float32Array(timeAndDeltaBuffer, 8, 1);
             const timeBufferStorage = gpuscene.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-
+/*
             mainCamera.baseBindGroup.onRender = function (time, delta) {
                 // windIntensivy = Math.min(Math.max(windIntensivy+0.000625-(Math.random()*0.00125),-1),1)
                 timeView.set([time]);
@@ -295,9 +295,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     deltaView.set([delta]);
                 return gpuscene.updateBufferRaw(timeBufferStorage, gpuscene.timeBuffer, timeAndDeltaBuffer);
 
-            }
-
-            const positionBindGroupTime = gpuscene.buildBindGroupHierarcy(mainCamera.baseBindGroup, gpuscene.BindGroup);
+            }*/
+            blazor.invokeMethod('setProgress', 13);
+            const positionBindGroupTime = gpuscene.addBindGroup(gpuscene.BindGroup, true);
             positionBindGroupTime.onRender = async (time) => {
                 return gpuscene.updateGPUBuffer();
             }
@@ -306,24 +306,24 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 // Initial scene objects here
 
                 const tools: Map<string, UITABClassLike> = new Map();
-                
+
                 const sea = new Sea(terrascene);
                 blazor.invokeMethod('setProgress', 75);
                 //new testPlane(terrascene);
-
+               
                 const b = new Box(terrascene);
                 b.worldPosition.update(scale => scale.set([200, 200, 200]));
 
                 const b2 = new Box(terrascene);
                 b2.worldPosition.update(scale => scale.set([200, 200, 200]));
                 b2.worldPosition.setTranslationX(500);
-
+                
                 /*new testPlaneNormals(terrascene);*/
                 const terrainInited = Terrain.loadFromTexture(terrascene);
                 terrainInited.then(async r => {
                     const ground = r[0];
                     const gpuBuffer = await r[1];
-                    blazor.invokeMethod('setProgress', 75);
+                    blazor.invokeMethod('setProgress', 76);
 
 
                     const commandEncoder = device.createCommandEncoder({});
@@ -363,13 +363,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 tools.set('Buildings', BuildingsUI);
                 tools.set('TerrainTool', TerrainTool);
                 tools.set('Zones', Zones);
-                
-                
+
+
                 scenePromise.then((scene) => {
-                  
+
                 })
 
-                
                 //@ts-expect-error
                 window.activateMenu = async (name: string) => {
                     try {
@@ -417,7 +416,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         const camera = await cameraReady;
                         if ((<IDBRequest>evt.target).result) {
                             let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
-                            
+
                             camera.alpha = restored.alpha;
                             camera.beta = restored.beta;
                             camera.radius = restored.radius;
@@ -439,7 +438,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }
                 })
 
-                const camera=await cameraReady
+                const camera = await cameraReady
                 camera.maxZ = 1606000;
                 camera.panningSensibility = 20;
 
@@ -452,33 +451,43 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             });
             const debugscene = new DebugScene(window, canvas, gpuscene, [mainCamera], positionBindGroupTime, async (terrascene: DebugScene) => { return await cameraReady });
 
-            
-
 
             const scenes = new Set([terrascene, debugscene])
             let renderFrame: number = 0;
             let resizeHandler = 0;
             cameraReady.then(camera => {
-
                 function renderLoop(time: DOMHighResTimeStamp) {
                     camera._checkInputs();
                     camera._getViewMatrix();
                     mainCamera.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
                     mainCamera.target.set([camera.target.x, camera.target.y, camera.target.z]);
                     waterCamera.cameraArr.set([camera.position.x, camera.position.y - (camera.position.y - 3) * 2, camera.position.z]);
-                
-                const renderEncoder = gpuscene.device.createCommandEncoder();
-                //@ts-ignore
-                scenes.forEach(scene => scene.TerraCameras.forEach(camera => camera.render(renderEncoder, time)))
-                gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
-                renderFrame = window.requestAnimationFrame(renderLoop);
+
+                    const renderEncoder = gpuscene.device.createCommandEncoder();
+                    timeView.set([time]);
+                    let physicDelta: number | null;
+                    if (TerraScene.instance.physics.gameSpeed == -1)
+                        physicDelta = null;
+                    else
+                        physicDelta = (TerraScene.instance.physics.physicTime - TerraScene.instance.physics.gameTime) / ((TerraScene.instance.tickIntervalMs / 1000) << TerraScene.instance.physics.gameSpeed)
+
+                    if (physicDelta !== null)
+                        deltaView.set([physicDelta]);
+
+                    gpuscene.device.defaultQueue.writeBuffer(gpuscene.timeBuffer, 0, timeAndDeltaBuffer)
+
+                    TerraCameras.forEach(camera => {
+                        camera.render(renderEncoder, time, physicDelta)
+                    })
+                    gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
+                    renderFrame = window.requestAnimationFrame(renderLoop);
                 }
-            
+
                 const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
                 const canvasSize: {
                     width: number,
                     height: number
-                } = {width:0, height:0}
+                } = { width: 0, height: 0 }
                 //@ts-ignore
                 let ro = new window.ResizeObserver((entries) => {
                     window.cancelAnimationFrame(renderFrame)
@@ -516,22 +525,14 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             engine._adapter = adapter;
 
             const WorldSceneModule = await import('./world/scene.js');
-
+            blazor.invokeMethod('setProgress', 15);
             /*   } catch (e) {
                    console.log('error');
                    console.error(e);
                }*/
             WasmModule.default().then(() => window.Wasm = WasmModule);
-            //progelem.value = 20;
-            // var canvas = document.getElementById("renderCanvas");
-
-            // var engine = new EngineModule.Engine(<HTMLCanvasElement>canvas, true, { preserveDrawingBuffer: true, stencil: true });
 
 
-
-            //await Promise.all(shaderPutsC);
-            //@ts-ignore
-            //engine._glslang = glslang;
             //@ts-ignore
             engine._device = device;
             //@ts-ignore
@@ -541,10 +542,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             engine.resize();
 
 
-
-
-            //document.getElementById('loading').style.display = 'block';
-            //loadingBar.value = 10;
 
             let webSocket = new WebSocket('ws://localhost:8081');
             webSocket.onopen = async () => {
@@ -567,7 +564,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             }
         });
         const scene = await scenePromise;
-       
+
         window.scene = scene;
         scene.collisionsEnabled = true;
         scene.autoClear = false;

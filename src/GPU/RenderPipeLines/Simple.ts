@@ -7,7 +7,7 @@ const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 async function Simple(scene: TerraScene) {
     const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
-    const bindGroupLayout = scene.gpuscene.buildBindGroupHierarcy(scene.TerraCameras[0].baseBindGroupNoTime, scene.lights.uniformBindGroupLightsWGSL);
+    const bindGroupLayout = scene.gpuscene.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
     const renderPipeLine = bindGroupLayout.addChildLayout(scene.gpuscene.BindGroupLayout).addRenderPipeline({
         rasterizationState: {
             cullMode: 'none',
@@ -25,7 +25,6 @@ async function Simple(scene: TerraScene) {
             entryPoint: "main"
         },
         vertexState: {
-            indexFormat: 'uint32',
             vertexBuffers:
                 [{
                     arrayStride: 3 * 4,
@@ -50,7 +49,7 @@ export abstract class SimpleMesh extends BoundableNode {
     abstract vBuffer: GPUVertexBuffer;
     abstract iBuffer: GPUIndexBuffer;
     verticesPositionStride = 3;
-    constructor(scene: TerraScene) {
+    constructor(scene: TerraScene, indexFormat: GPUIndexFormat='uint32') {
         super(scene);
         
         (async () => {
@@ -58,7 +57,7 @@ export abstract class SimpleMesh extends BoundableNode {
             const m = renderPipeline.addDrawable([scene.gpuscene.renderPassScreen], 36);
             m.dynamicBuffers.set(scene.gpuscene.BindGroup, this.bufferOffsetBytes);
             m.setVertexBuffer(0, this.vBuffer);
-            m.setIndexBuffer(this.iBuffer);
+            m.setIndexBuffer(this.iBuffer, undefined, undefined, indexFormat);
 
         })()
     }

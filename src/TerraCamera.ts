@@ -55,7 +55,7 @@ export class TerraCamera {
     pickingRay = new Float32Array(this.pickingRayBuffer);
     #uniformBufferSwap = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
     uniformBuffer = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
-    uniformBindGroup = this.gpuscene.createBindGroup(
+    uniformBindGroup = this.gpuscene.createBindGroup (
         this.gpuscene.uniformBindGroupLayoutWithTime,
         {
             binding: 0,
@@ -72,14 +72,14 @@ export class TerraCamera {
             }
         }
     );
-    baseBindGroup = this.gpuscene.addBindGroup(this.uniformBindGroup, { animate1: false });
-    baseBindGroupNoTime = this.gpuscene.addBindGroup(this.uniformBindGroupNoTime);
+    //baseBindGroup = this.gpuscene.addBindGroup(this.uniformBindGroup, { animate1: false });
+    //baseBindGroupNoTime = this.gpuscene.addBindGroup(this.uniformBindGroupNoTime);
     constructor(private renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection:SharedArrayBuffer, private gpuscene: GPU, main:boolean=true) {
         renderPass.cameras.add(this);
         if(main)
             worker.message(this.#uniqueID, 'init', [this.viewProjectionPositionBuffer, this.projection, this.pickingRayBuffer, mousePositionBuffer, renderPass.size]);
     }
-    render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp) {
+    render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp, delta:number|null) {
         const viewMatrix = Matrix.FromArray(this.viewArr);
        // Matrix.LookAtLHToRef(new Vector3(...this.cameraArr), new Vector3(...this.target), new Vector3(...this.#upVector), viewMatrix);
         const eye = new Vector3(...this.cameraArr);
@@ -125,16 +125,14 @@ export class TerraCamera {
 
 
         this.viewArr.set(viewMatrix.m)
-        matrixMultiplyToRef(this.viewArr, this.projectionArr, this.projectionViewArr)
-
+        matrixMultiplyToRef(this.viewArr, this.projectionArr, this.projectionViewArr);
         
         this.gpuscene.updateBufferRaw(this.#uniformBufferSwap, this.uniformBuffer, this.viewProjectionPositionBuffer).then(encoder => {
-            if(encoder)
+            if (encoder)
                 this.gpuscene.device.defaultQueue.submit([encoder]);
-        })
+        });
 
-
-        this.renderPass.render(renderEncoder, time);
+        this.renderPass.render(renderEncoder, time, delta, this.uniformBindGroup);
     }
     subscribePickingRay() {
         return worker.signal(this.#uniqueID, 'subscribePickingRay');

@@ -6,7 +6,7 @@ export class Box extends SimpleMesh {
     verticesPositionBuffer: SharedArrayBuffer
     vBuffer: GPUVertexBuffer;
     constructor(scene: TerraScene) {
-        super(scene);
+        super(scene, 'uint32');
         [this.verticesPositionBuffer, this.vBuffer] = scene.gpuscene.createInputBuffer(GPUBufferUsage.VERTEX, new Float32Array([
             -1.0, -1.0, 1.0,
             1.0, -1.0, 1.0,

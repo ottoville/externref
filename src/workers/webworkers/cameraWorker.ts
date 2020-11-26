@@ -58,6 +58,7 @@ class CameraWorker {
             worldM.multiplyToRef(Matrix.FromArray(Array.from(this.viewArr)), matrix);
         } else
             var matrix = Matrix.FromArray(Array.from(this.viewArr));
+        
         matrix.multiplyToRef(Matrix.FromArray(Array.from(this.projectionArr)), matrix);
 
         //TODO use matrixMultiply64 and matrixInvert64

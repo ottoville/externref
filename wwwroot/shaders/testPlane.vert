@@ -47,7 +47,6 @@ layout(set = 0, binding = 0) uniform Scene {
 layout(set = 0, binding = 1) uniform Terra {
    uint time;
    float delta;
-   float windDelta;
 } terra;
 
 layout(set = 1, binding = 0) readonly buffer Lights {
@@ -80,7 +79,8 @@ void main(void) {
     //float windDirection=terra.windDelta;    //Wind direction changes most when wind intensity is lowest
 
    float shapeW=0.5;
-   float windIntensivy=terra.windDelta;
+   //float windIntensivy=terra.windDelta;
+   float windIntensivy=0;
     //curve
    // float curveAmount=(position.y/3)*shapeW+ windIntensivy*PI*0.3*(position.y/3);
     float curveAmount=(position.y/3)*shapeW+ windIntensivy*(position.y/3);

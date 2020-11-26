@@ -10,7 +10,7 @@ import { TerraCamera } from "./TerraCamera";
 import { Light } from "./lights";
 import { Sun2 } from "./world/sun2";
 import { BoundableNode, PickingInfo } from "./TerraNode";
-import { BindGroupLayout } from "./GPU/BindGroupLayout";
+import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
 /*interface Ray {
@@ -191,20 +191,15 @@ export class TerraScene {
     lights: Light;
     positionBindGroupLightsTime;
     positionBindGroupLightsTimeWGSL;
-    lightsBindGroupNoTime: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").BindGroupLayout;
-    lightsBindGroupNoTimeWGSL: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").BindGroupLayout;
-    lightsBindGroupWGSL: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").BindGroupLayout;
-    lightsBindGroup: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").BindGroupLayout;
+    lightsBindGroupWGSL: BindGroupLayout;
+    lightsBindGroup: BindGroupLayout;
     lightsBindGroupTexture: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
     render(time: DOMHighResTimeStamp, renderEncoder: GPUCommandEncoder) {
 
     }
-    constructor(private window: Window, public canvas: HTMLCanvasElement, public gpuscene: GPU, public TerraCameras: TerraCamera[], public positionBindGroupTime:BindGroupLayout, onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
+    constructor(private window: Window, public canvas: HTMLCanvasElement, public gpuscene: GPU, public TerraCameras: TerraCamera[], public positionBindGroupTime:DynamicBindGroupLayout<[number]>, onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
         TerraScene.instance = this;
 
-
-
-        let renderFrame: number = 0;
         const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
         let resizeHandler = 0;
 
@@ -213,11 +208,9 @@ export class TerraScene {
         this.gameSpeed = 0;
         const sun = new Sun2(this);
         this.lights = new Light(this.gpuscene, sun.bufferOffsetBytes);
-        this.lightsBindGroupNoTime = this.TerraCameras[0].baseBindGroupNoTime.addChildBindGroup(this.lights.uniformBindGroupLights);
-        this.lightsBindGroupNoTimeWGSL = this.gpuscene.buildBindGroupHierarcy(this.TerraCameras[0].baseBindGroupNoTime, this.lights.uniformBindGroupLightsWGSL);
 
-        this.lightsBindGroup = this.TerraCameras[0].baseBindGroup.addChildBindGroup(this.lights.uniformBindGroupLights);
-        this.lightsBindGroupWGSL = this.TerraCameras[0].baseBindGroup.addChildBindGroup(this.lights.uniformBindGroupLightsWGSL);
+        this.lightsBindGroup = this.gpuscene.addBindGroup(this.lights.uniformBindGroupLights);
+        this.lightsBindGroupWGSL = this.gpuscene.addBindGroup(this.lights.uniformBindGroupLightsWGSL);
 
         this.positionBindGroupLightsTime = this.lightsBindGroup.addChildBindGroup(this.gpuscene.BindGroup, true);
         this.positionBindGroupLightsTime.onRender = async () => {
@@ -237,95 +230,7 @@ export class TerraScene {
         (async () => {
             onRenderStart && (this.camera = await onRenderStart(this));
             
-            const camera = this.camera;
-            const terraScene = this;
             
-            const renderLoop = function (time: DOMHighResTimeStamp) {
-
-                const renderEncoder = gpuscene.device.createCommandEncoder();
-
-               // camera._checkInputs();
-
-                // Cache
-             /*   camera._cache.mode = camera.mode;
-                camera._cache.minZ = camera.minZ;
-                camera._cache.maxZ = camera.maxZ;
-
-                // Matrix
-                //@ts-ignore
-                camera._refreshFrustumPlanes = true;
-                camera._cache.fov = camera.fov;
-                camera._cache.fovMode = camera.fovMode;
-                const aspectRatio = (TerraScene.instance.canvasSize.width * camera.viewport.width) / (TerraScene.instance.canvasSize.height * camera.viewport.height);
-                camera._cache.aspectRatio = aspectRatio;
-
-                if (camera.minZ <= 0) {
-                    camera.minZ = 0.1;
-                }
-
-                Matrix.PerspectiveFovLHToRef(camera.fov,
-                    aspectRatio,
-                    camera.minZ,
-                    camera.maxZ,
-                    camera._projectionMatrix,
-                    false);
-                const projectionmatrix = camera._projectionMatrix;
-
-                let viewMatrix: Matrix;
-                let viewMatrix2: Matrix = Matrix.Zero();
-
-                 viewMatrix = camera._getViewMatrix();
-
-
-
-                let globalPosition = Vector3.Zero();
-                let globalCurrentTarget = Vector3.Zero();
-                let globalCurrentUpVector = Vector3.Zero();
-
-                globalPosition.copyFrom(camera.position);
-                globalPosition.y-=(camera.position.y-3)*2
-                globalCurrentTarget.copyFrom(camera.target);
-                globalCurrentUpVector.copyFrom(camera.upVector);
-
-                Matrix.LookAtLHToRef(globalPosition, globalCurrentTarget, globalCurrentUpVector, viewMatrix2);
-
-                const modelViewProjectionMatrix = new Matrix();
-                const modelViewProjectionMatrix2 = new Matrix();
-
-                ///////////////
-                terraScene.mainCamera.projectionArr.set(projectionmatrix.m)
-                viewMatrix.multiplyToRef(projectionmatrix, modelViewProjectionMatrix);
-                viewMatrix2.multiplyToRef(projectionmatrix, modelViewProjectionMatrix2);
-                terraScene.mainCamera.projectionViewArr.set(modelViewProjectionMatrix.m);
-                terraScene.waterCamera.projectionViewArr.set(modelViewProjectionMatrix2.m);
-                terraScene.mainCamera.viewArr.set(viewMatrix.m);
-                terraScene.mainCamera.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
-
-                terraScene.gpuscene.updateView(terraScene.mainCamera.projectionViewArr.buffer);
-
-                terraScene.gpuscene.updateView2(terraScene.waterCamera.projectionViewArr.buffer);
-                */
-                renderPasses.forEach(rp => rp.render(renderEncoder, time))
-
-                terraScene.gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
-
-                renderFrame = window.requestAnimationFrame(renderLoop);
-            }
-            //@ts-ignore
-            let ro = new window.ResizeObserver((entries) => {
-                window.cancelAnimationFrame(renderFrame)
-                clearTimeout(resizeHandler);
-                resizeHandler = setTimeout(() => {
-                    this.canvasSize.width = this.canvas.getAttribute('width')! as any | 0;
-                    this.canvasSize.height = this.canvas.getAttribute('height')! as any | 0;
-                    renderPasses.forEach(renderpass => renderpass.onResize(this.canvasSize.width, this.canvasSize.height));
-                    gpuscene.onResizes.forEach(cb => cb());
-                    renderFrame = window.requestAnimationFrame(renderLoop);
-                }, 500)
-            });
-            ro.observe(this.canvas)
-            renderFrame=window.requestAnimationFrame(renderLoop);
-            //todo: start and physics here
         })();
     }
     set gameSpeed(value: number) {

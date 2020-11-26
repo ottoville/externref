@@ -1,7 +1,7 @@
 ﻿import { Light } from "./lights";
 import { TerraNode } from "./TerraNode";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass";
-import { BindGroupLayout, DynamicBindGroupDrawable } from "./GPU/BindGroupLayout";
+import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
 
 
 
@@ -79,11 +79,33 @@ export class GPU {
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
-    addBindGroup<T>(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), properties?:T) {
+    cameraBindGroupLayout: GPUBindGroupLayout;
+    cameraAndTimeBindGroupLayout = this.device.createBindGroupLayout({
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.VERTEX,
+                type: 'uniform-buffer'
+            },
+            {
+                binding: 1,
+                visibility: GPUShaderStage.VERTEX,
+                type: 'uniform-buffer'
+            }]
+    });
+
+    addBindGroup<T>(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupLayout
+    addBindGroup<T>(bindgroup: (BindGroupOneBinding), isDynamic: boolean): DynamicBindGroupLayout<[number]>
+    addBindGroup<T>(bindgroup: (BindGroupTwoBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number]>
+    addBindGroup<T>(bindgroup: (BindGroupThreeBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number]>
+    addBindGroup<T>(bindgroup: (BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number, number]>
+    addBindGroup<T>(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): BindGroupLayout | DynamicBindGroupLayout<number[]>{
         const bglayout = this.GPUBindGroupLayouts.get(bindgroup);
         if (!bglayout)
             throw ('Bindgroup layout not found from weakmap');
-        return new BindGroupLayout(this, bglayout, undefined, bindgroup);
+        if(!isDynamic)
+            return new BindGroupLayout(this, bglayout, undefined, bindgroup);
+        return new DynamicBindGroupLayout(this, bglayout, undefined, bindgroup, isDynamic);
     }
 
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry>(entry: T): BindGroupLayoutOneBinding<T>
@@ -162,6 +184,30 @@ export class GPU {
         return parentBGLayout;
     }
     constructor(public device: GPUDevice, public renderPassScreen: RenderPassCanvas, public renderPassWater: RenderPass) {
+        this.cameraBindGroupLayout = device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.VERTEX,
+                    type: 'uniform-buffer'
+                }]
+        });
+        /*
+        const timeBuffer = device.createBuffer({ size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+      
+        this.timeBindGroup = device.createBindGroup({
+            layout: layout,
+            entries: [{
+                binding: 0,
+                resource: {
+                    buffer: timeBuffer
+                },
+            }]
+        })*/
+
+
+
+
         this.BindGroup = this.createBindGroup(this.BindGroupLayout,
             {
                 binding: 0,
@@ -174,7 +220,7 @@ export class GPU {
         this.DynamicBindGroups.add(this.BindGroup);
         //this.positionBindGroupNoTime = this.baseBindGroupNoTime.addChildBindGroup(this.BindGroup, true);
 
-        const timeAndDeltaBuffer = new ArrayBuffer(12);
+        const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
         this.timeGroup = {
             binding: 1,
@@ -400,7 +446,7 @@ export class GPU {
     properties = 0
     onRenders: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>)[] = [];
     render(renderPassEncoder: GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp, physicDelta: number | null) {
-        let index = 0;
+        let index = 1;
         // console.time('render bindgroups')
         const me = this;
         BindGroupLayout.instances.forEach(function drawBindGroups(bgt) {

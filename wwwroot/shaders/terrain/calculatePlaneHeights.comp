@@ -72,7 +72,6 @@ void main() {
 
     vec3 norm2 = normalize(cross(v1v2, v1v4));
 
-
     float d1= dot(norm1,v1arr)*-1.0;
     float d2 = dot(norm2,v2arr)*-1.0;
 

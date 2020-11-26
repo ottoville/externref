@@ -28,7 +28,7 @@ layout(set = 0, binding = 0) uniform Scene {
 layout(set = 0, binding = 1) uniform Terra {
    uint time;
    float delta;
-   float windDelta;
+  // float windDelta;
 
 } terra;
 
