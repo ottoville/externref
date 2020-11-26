@@ -63,17 +63,6 @@ export class TerraCamera {
                 buffer: this.uniformBuffer
             }
         }, this.gpuscene.timeGroup);
-    uniformBindGroupNoTime = this.gpuscene.createBindGroup(
-        this.gpuscene.uniformBindGroupLayout,
-        {
-            binding: 0,
-            resource: {
-                buffer: this.uniformBuffer
-            }
-        }
-    );
-    //baseBindGroup = this.gpuscene.addBindGroup(this.uniformBindGroup, { animate1: false });
-    //baseBindGroupNoTime = this.gpuscene.addBindGroup(this.uniformBindGroupNoTime);
     constructor(private renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection:SharedArrayBuffer, private gpuscene: GPU, main:boolean=true) {
         renderPass.cameras.add(this);
         if(main)

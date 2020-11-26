@@ -10,7 +10,6 @@ export class GPU {
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     #bufferIndexFormats: WeakMap<GPUBuffer, GPUIndexFormat> = new WeakMap();
 
-
     NodeInstances: Map<TerraNode, number> = new Map();
 
     GPUBindGroupLayouts: WeakMap<GPUBindGroup, GPUBindGroupLayout> = new WeakMap();
@@ -30,8 +29,6 @@ export class GPU {
     );
     
     //viewprojection and camera position
-    //uniformBuffer = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
-    uniformBufferInvertedView = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
 
     singleWritableStorageLayout = this.device.createBindGroupLayout({
         entries: [
@@ -41,45 +38,18 @@ export class GPU {
                 type: "storage-buffer"
             }]
     })
-    singleVertexUniformLayout = this.createBindGroupLayout(
-        {
-            binding: 0,
-            visibility: GPUShaderStage.VERTEX,
-            type: 'uniform-buffer'
-        })
-
-
-    uniformBindGroupLayout = this.singleVertexUniformLayout;
-   /* #uniformBindGroupNoTime = this.createBindGroup(
-        this.#uniformBindGroupLayout,
-        {
-            binding: 0,
-            resource: {
-                buffer: this.uniformBuffer
-            }
-        }
-    );*/
-
-   // baseBindGroup: BindGroupLayout;
-
-    //baseBindGroupNoTime = this.addBindGroup(this.#uniformBindGroupNoTime);
-
 
     shaderModules: Map<string, GPUShaderModule> = new Map();
     //Todo: Remove COPY_SRC
     GPUData = this.createGPUBuffer(TerraNode.alignment * TerraNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
     CPUData = new SharedArrayBuffer(TerraNode.alignment * TerraNode.maxInstances);
     DataSlots: number[] = new Array(TerraNode.maxInstances).fill(TerraNode.alignment).map((v, i) => i * v);
-
-    //positionBindGroupTime;
     
     BindGroup: BindGroupOneBinding;
-    //positionBindGroupNoTime: DynamicBindGroupDrawable<[number]>;
     BindGroupLayout = this.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
-    cameraBindGroupLayout: GPUBindGroupLayout;
     cameraAndTimeBindGroupLayout = this.device.createBindGroupLayout({
         entries: [
             {
@@ -127,8 +97,6 @@ export class GPU {
         this.GPUBindGroupLayouts.set(bindGroup, layout);
         return bindGroup
     }
-    #uniformBufferSwap = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-    #uniformBufferSwap2 = this.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     static instance: GPU;
 
@@ -149,11 +117,9 @@ export class GPU {
     onResizes: Set<() => void> = new Set();
 
     queue: Map<Float32Array, number> = new Map();
-    #busy = false;
     updateGPUBuffer(): GPUCommandBuffer | null {
         if (this.queue.size === 0)
             return null;
-       // this.#busy = true;
         const dataSizeBytes = TerraNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
         const tempSize = dataSizeBytes * this.queue.size;
         const tempBuffer = this.createGPUBuffer(tempSize, [GPUBufferUsage.COPY_SRC], true);
@@ -169,7 +135,6 @@ export class GPU {
         tempBuffer.unmap();
         this.queue.clear();
 
-       // this.#busy = false;
         return commandEncoder.finish();
     }
     buildBindGroupHierarcy(baseBindGroup: BindGroupLayout, ...bindgroups: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)[]) {
@@ -184,30 +149,6 @@ export class GPU {
         return parentBGLayout;
     }
     constructor(public device: GPUDevice, public renderPassScreen: RenderPassCanvas, public renderPassWater: RenderPass) {
-        this.cameraBindGroupLayout = device.createBindGroupLayout({
-            entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX,
-                    type: 'uniform-buffer'
-                }]
-        });
-        /*
-        const timeBuffer = device.createBuffer({ size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-      
-        this.timeBindGroup = device.createBindGroup({
-            layout: layout,
-            entries: [{
-                binding: 0,
-                resource: {
-                    buffer: timeBuffer
-                },
-            }]
-        })*/
-
-
-
-
         this.BindGroup = this.createBindGroup(this.BindGroupLayout,
             {
                 binding: 0,
@@ -218,7 +159,6 @@ export class GPU {
                 }
             });
         this.DynamicBindGroups.add(this.BindGroup);
-        //this.positionBindGroupNoTime = this.baseBindGroupNoTime.addChildBindGroup(this.BindGroup, true);
 
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
@@ -228,39 +168,6 @@ export class GPU {
                 buffer: this.timeBuffer
             }
         }
-        /*const uniformBindGroup = this.createBindGroup(
-                this.uniformBindGroupLayoutWithTime,
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: this.uniformBuffer
-                    }
-            }, timeGroup);*/
-      /*  const uniformBindGroupInvertedView = this.createBindGroup(
-            this.uniformBindGroupLayoutWithTime,
-            {
-                binding: 0,
-                resource: {
-                    buffer: this.uniformBufferInvertedView
-                }
-            }, timeGroup);*/
-        //this.baseBindGroup = this.addBindGroup(uniformBindGroup, { animate1: false });
-        //this.baseBindGroup.sharedBindGroupOverwrites.set(renderPassWater, uniformBindGroupInvertedView)
-       // this.positionBindGroupTime = this.baseBindGroup.addChildBindGroup(this.BindGroup, true);
-       // this.positionBindGroupTime = this.buildBindGroupHierarcy(this.baseBindGroup,this.BindGroup)
-        
-       // const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
-      /*  const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
-        const animationView = new Float32Array(timeAndDeltaBuffer, 8, 1);
-        const timeBufferStorage = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);*/
-      /*  this.positionBindGroupTime.onRender = async (time) => {
-            return this.updateGPUBuffer();
-        }
-        */
-       /* this.positionBindGroupNoTime.onRender = async (time) => {
-            return this.updateGPUBuffer();
-        }*/
-        const me = this;
       /*  this.baseBindGroup.onRender = function (time, delta) {
 
            // windIntensivy = Math.min(Math.max(windIntensivy+0.000625-(Math.random()*0.00125),-1),1)
@@ -310,16 +217,6 @@ export class GPU {
         this.#syncedBuffers.delete(buffer);
         return commandEncoder.finish();
     }
-  /*  async updateView(viewProjectionPositionBuffer: ArrayBuffer) {
-        const encoder = await this.updateBufferRaw(this.#uniformBufferSwap, this.uniformBuffer, viewProjectionPositionBuffer);
-        if (encoder)
-            this.device.defaultQueue.submit([encoder]);
-    }
-    async updateView2(viewProjectionPositionBuffer: ArrayBuffer) {
-        const encoder = await this.updateBufferRaw(this.#uniformBufferSwap2, this.uniformBufferInvertedView, viewProjectionPositionBuffer);
-        if (encoder)
-            this.device.defaultQueue.submit([encoder]);
-    }*/
 
     createInputBuffer(usage: typeof GPUBufferUsage.VERTEX, data: Float32Array): [SharedArrayBuffer, GPUVertexBuffer]
     createInputBuffer(usage: typeof GPUBufferUsage.INDEX, data: (Uint16Array | Uint32Array)): [SharedArrayBuffer, GPUIndexBuffer]
@@ -487,11 +384,3 @@ export class GPU {
         });*/
     }
 }
-
-/*export class BindGroupDrawable extends GroupDrawable {
-    addRenderPipeline = (renderPipeline: GPURenderPipelineDescriptor): RenderPipeLine => {
-        const d = new RenderPipeLine(renderPipeline, this)
-        this.renderPipeLines.add(d);
-        return d;
-    }
-}*/
