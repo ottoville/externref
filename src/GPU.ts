@@ -358,7 +358,7 @@ export class GPU {
                 }
                 else {
                     if (bgt.sharedBindgroup) {
-                        renderPassEncoder.setBindGroup(index, bgt.sharedBindGroupOverwrites.get(renderPass) || bgt.sharedBindgroup);
+                        renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup);
                     }
                     bgt.renderPipeLines.forEach(m => {
                         me.properties |= m.properties;

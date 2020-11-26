@@ -356,8 +356,6 @@ export class TerraScene {
 
         passEncoder.dispatch(10);
 
-
-
         passEncoder.endPass();
         const gpuCommands = commandEncoder.finish();
         this.gpuscene.device.defaultQueue.submit([gpuCommands]);

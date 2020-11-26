@@ -83,7 +83,7 @@ export class TerrainMesh extends BoundableNode {
         
         (async () => {
             const renderPipeline = renderPipelines.get(scene.gpuscene) || (await TerrainRenderPipeline(scene, textureView));
-            const m = renderPipeline.addDrawable([scene.gpuscene.renderPassScreen], indexCount,1);
+            const m = renderPipeline.addDrawable([scene.gpuscene.renderPassScreen, scene.gpuscene.renderPassWater], indexCount, 1);
             m.setVertexBuffer(0, this.vBuffer);
             m.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
 

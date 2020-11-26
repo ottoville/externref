@@ -25,12 +25,7 @@ const pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
     vec3<f32>(-50000.0,     3.0,   50000.0),
     vec3<f32>(50000.0,      3.0,   50000.0)
     );
-const uv : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
-    vec2<f32>(-1.0,   -1.0),
-    vec2<f32>(1.0,    -1.0),
-    vec2<f32>(-1.0,   1.0),
-    vec2<f32>(1.0,    1.0)
-    );
+
 [[builtin(position)]] var<out> Position : vec4<f32>;
 
 [[builtin(vertex_idx)]] var<in> VertexIndex : i32;

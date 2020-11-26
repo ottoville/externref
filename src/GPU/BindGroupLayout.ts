@@ -19,7 +19,6 @@ export class BindGroupLayout {
     subBindGroups: Set<BindGroupLayout> = new Set();
     layout: GPUPipelineLayout;
     onRender: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>) | null = null;
-    sharedBindGroupOverwrites: Map<RenderPass, (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)> = new Map();
     constructor(public gpuscene: GPU, public bindGroupLayout: GPUBindGroupLayout, public parent?: BindGroupLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout];
         if (parent) {

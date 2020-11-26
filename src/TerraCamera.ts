@@ -111,8 +111,6 @@ export class TerraCamera {
             viewMatrix
         );
 
-
-
         this.viewArr.set(viewMatrix.m)
         matrixMultiplyToRef(this.viewArr, this.projectionArr, this.projectionViewArr);
         

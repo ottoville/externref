@@ -462,6 +462,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     mainCamera.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
                     mainCamera.target.set([camera.target.x, camera.target.y, camera.target.z]);
                     waterCamera.cameraArr.set([camera.position.x, camera.position.y - (camera.position.y - 3) * 2, camera.position.z]);
+                    waterCamera.target.set([camera.target.x, camera.target.y, camera.target.z]);
 
                     const renderEncoder = gpuscene.device.createCommandEncoder();
                     timeView.set([time]);
@@ -475,7 +476,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         deltaView.set([physicDelta]);
 
                     gpuscene.device.defaultQueue.writeBuffer(gpuscene.timeBuffer, 0, timeAndDeltaBuffer)
-
                     TerraCameras.forEach(camera => {
                         camera.render(renderEncoder, time, physicDelta)
                     })
