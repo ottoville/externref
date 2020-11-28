@@ -72,19 +72,19 @@ export abstract class TerraNode implements Partial<hasPhysics> {
     readonly customData: Float32Array;
 
     destroy() {
-        this.scene.gpuscene.NodeInstances.delete(this);
+        this.scene.gpu.NodeInstances.delete(this);
     }
 
     constructor(public scene: TerraScene) {
-        const bufferOffsetBytes = scene.gpuscene.DataSlots.pop();
+        const bufferOffsetBytes = scene.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
         this.bufferOffsetBytes = bufferOffsetBytes;
-        this.data = new Float32Array(this.scene.gpuscene.CPUData, bufferOffsetBytes, TerraNode.GPUDataSize);
-        this.customData = new Float32Array(this.scene.gpuscene.CPUData, bufferOffsetBytes + 20 * 4, 4);
+        this.data = new Float32Array(this.scene.gpu.CPUData, bufferOffsetBytes, TerraNode.GPUDataSize);
+        this.customData = new Float32Array(this.scene.gpu.CPUData, bufferOffsetBytes + 20 * 4, 4);
 
         
-        scene.gpuscene.NodeInstances.set(this, scene.gpuscene.NodeInstances.size * TerraNode.alignment);
+        scene.gpu.NodeInstances.set(this, scene.gpu.NodeInstances.size * TerraNode.alignment);
         this.data.set([
             //3d matrix start, 64 bytes
             1.0, 0.0, 0.0, 0.0,
@@ -101,7 +101,7 @@ export abstract class TerraNode implements Partial<hasPhysics> {
         ])
         queueMicrotask(() => {
             if (this.hasPhysics()) {
-                scene.physics.tickables.add(this);
+                scene.engine.physics.tickables.add(this);
             }
             if (this.isLight()) {
                 scene.lights.add(this);
@@ -112,7 +112,7 @@ export abstract class TerraNode implements Partial<hasPhysics> {
     }
 
     async updateDynamicBuffer() {
-        this.scene.gpuscene.queue.set(this.data, this.bufferOffsetBytes);
+        this.scene.gpu.queue.set(this.data, this.bufferOffsetBytes);
     }
 }
 export interface PickingInfo {

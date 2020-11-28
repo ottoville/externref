@@ -21,6 +21,7 @@ import { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera.js";
 import { DebugScene } from "./DebugScene.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { TerraScene } from "./TerraScene.js";
+import { Engine } from "./engine.js";
 
 //import  DB from "./DB.js";
 
@@ -301,7 +302,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             positionBindGroupTime.onRender = async (time) => {
                 return gpuscene.updateGPUBuffer();
             }
-            const terrascene = new TerraScene(window, canvas, gpuscene, [mainCamera, waterCamera], positionBindGroupTime, async (terrascene: TerraScene) => {
+            const terraEngine = new Engine();
+            const terrascene = new TerraScene(terraEngine, window, canvas, gpuscene, [mainCamera, waterCamera], positionBindGroupTime, async (terrascene: TerraScene) => {
 
                 // Initial scene objects here
 
@@ -455,6 +457,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const scenes = new Set([terrascene, debugscene])
             let renderFrame: number = 0;
             let resizeHandler = 0;
+            
             cameraReady.then(camera => {
                 function renderLoop(time: DOMHighResTimeStamp) {
                     camera._checkInputs();
@@ -467,10 +470,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     const renderEncoder = gpuscene.device.createCommandEncoder();
                     timeView.set([time]);
                     let physicDelta: number | null;
-                    if (TerraScene.instance.physics.gameSpeed == -1)
+                    if (terraEngine.physics.gameSpeed == -1)
                         physicDelta = null;
                     else
-                        physicDelta = (TerraScene.instance.physics.physicTime - TerraScene.instance.physics.gameTime) / ((TerraScene.instance.tickIntervalMs / 1000) << TerraScene.instance.physics.gameSpeed)
+                        physicDelta = (terraEngine.physics.physicTime - terraEngine.physics.tickTime) / ((terraEngine.physics.tickIntervalMs / 1000) << terraEngine.physics.gameSpeed)
 
                     if (physicDelta !== null)
                         deltaView.set([physicDelta]);

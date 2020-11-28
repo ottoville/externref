@@ -282,7 +282,7 @@ export class WorldScene extends Scene {
         lastStateChangeTime: number
     }) {
 
-        TerraScene.instance.gameSpeed = data.gameSpeed;
+        TerraScene.instance.engine.physics.gameSpeed = data.gameSpeed;
         if (this.webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'stateChange', data }))
             return;

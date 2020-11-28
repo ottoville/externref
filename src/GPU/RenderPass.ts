@@ -102,7 +102,7 @@ export class RenderPass {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             passEncoder.setBindGroup(0, cameraBindGroup);
-            TerraScene.instance.gpuscene.render(passEncoder, this, time, physicDelta);
+            TerraScene.instance.gpu.render(passEncoder, this, time, physicDelta);
             passEncoder.endPass();
         } catch (e) {
             console.error(e);

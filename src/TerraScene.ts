@@ -11,6 +11,7 @@ import { Light } from "./lights";
 import { Sun2 } from "./world/sun2";
 import { BoundableNode, PickingInfo } from "./TerraNode";
 import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
+import { Engine } from "./engine";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
 /*interface Ray {
@@ -178,10 +179,9 @@ export class TerraScene {
     static instance: TerraScene;
 
 
-    #lastStateChangeGameTime = BigInt(216000000); //21600 * 1000; //6 hours
-    lastStateChangeTime = new Date().getTime()
-    tickIntervalMs = 1000;
-    physics = new Physics(this);
+    
+    
+    
     canvasSize = {
         width: this.window.innerWidth | 0,
         height: this.window.innerHeight | 0
@@ -197,28 +197,25 @@ export class TerraScene {
     render(time: DOMHighResTimeStamp, renderEncoder: GPUCommandEncoder) {
 
     }
-    constructor(private window: Window, public canvas: HTMLCanvasElement, public gpuscene: GPU, public TerraCameras: TerraCamera[], public positionBindGroupTime:DynamicBindGroupLayout<[number]>, onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
+    constructor(public engine: Engine, private window: Window, public canvas: HTMLCanvasElement, public gpu: GPU, public TerraCameras: TerraCamera[], public positionBindGroupTime:DynamicBindGroupLayout<[number]>, onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
         TerraScene.instance = this;
 
-        const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
-        let resizeHandler = 0;
+        const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen, gpu.renderPassWater]);
 
-
-        this.gpuscene = gpuscene;
-        this.gameSpeed = 0;
+        engine.physics.gameSpeed = 0;
         const sun = new Sun2(this);
-        this.lights = new Light(this.gpuscene, sun.bufferOffsetBytes);
+        this.lights = new Light(this.gpu, sun.bufferOffsetBytes);
 
-        this.lightsBindGroup = this.gpuscene.addBindGroup(this.lights.uniformBindGroupLights);
-        this.lightsBindGroupWGSL = this.gpuscene.addBindGroup(this.lights.uniformBindGroupLightsWGSL);
+        this.lightsBindGroup = this.gpu.addBindGroup(this.lights.uniformBindGroupLights);
+        this.lightsBindGroupWGSL = this.gpu.addBindGroup(this.lights.uniformBindGroupLightsWGSL);
 
-        this.positionBindGroupLightsTime = this.lightsBindGroup.addChildBindGroup(this.gpuscene.BindGroup, true);
+        this.positionBindGroupLightsTime = this.lightsBindGroup.addChildBindGroup(this.gpu.BindGroup, true);
         this.positionBindGroupLightsTime.onRender = async () => {
-            return this.gpuscene.updateGPUBuffer();
+            return this.gpu.updateGPUBuffer();
         }
-        this.positionBindGroupLightsTimeWGSL = this.lightsBindGroupWGSL.addChildBindGroup(this.gpuscene.BindGroup, true);
+        this.positionBindGroupLightsTimeWGSL = this.lightsBindGroupWGSL.addChildBindGroup(this.gpu.BindGroup, true);
 
-        this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.gpuscene.createBindGroupLayout({
+        this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.gpu.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.FRAGMENT,
             type: 'sampler'
@@ -233,19 +230,7 @@ export class TerraScene {
             
         })();
     }
-    set gameSpeed(value: number) {
-        console.log('set gameSpeed', value)
-        this.#lastStateChangeGameTime = this.gameTime;
-        this.lastStateChangeTime = new Date().getTime();
 
-        this.physics.gameSpeed = Number(value);
-    }
-    get gameTime() {
-        if (this.physics.gameSpeed < 0)
-            return this.#lastStateChangeGameTime;
-        var interval = new Date().getTime() - this.lastStateChangeTime;
-        return this.#lastStateChangeGameTime + (BigInt((interval * 60) << this.physics.gameSpeed));
-    }
     sunPosition: Float32Array = new Float32Array(3);
     async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
         let boundableMesh: BoundableNode;
@@ -271,7 +256,7 @@ export class TerraScene {
         else
             return this.collissionCheck(rayFunction, boundables, pickResult);*/
     }
-    pickingRayLayout = this.gpuscene.createBindGroupLayout(
+    pickingRayLayout = this.gpu.createBindGroupLayout(
         {
             binding: 0,
             visibility: GPUShaderStage.COMPUTE,
@@ -287,10 +272,10 @@ export class TerraScene {
             visibility: GPUShaderStage.COMPUTE,
             type: "storage-buffer"
         });
-    calculatePickingRaysPipeline = this.gpuscene.createComputePipeline("calculatePickingRays.comp", this.gpuscene.device.createPipelineLayout({
+    calculatePickingRaysPipeline = this.gpu.createComputePipeline("calculatePickingRays.comp", this.gpu.device.createPipelineLayout({
         bindGroupLayouts: [this.pickingRayLayout]
     }));
-    bindgrouplayout1 = this.gpuscene.device.createBindGroupLayout({
+    bindgrouplayout1 = this.gpu.device.createBindGroupLayout({
         entries: [
             {
                 binding: 0,
@@ -310,12 +295,12 @@ export class TerraScene {
     })
     async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode) => boolean, fastCheck?: boolean): Promise<BoundableNode | null> {
 
-        const b1 = this.gpuscene.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
+        const b1 = this.gpu.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
         const b1arr = b1.getMappedRange()
         new Float32Array(b1arr).set(this.TerraCameras[0].projectionArr);
         new Float32Array(b1arr).set(this.TerraCameras[0].viewArr, 16);
-        const sourceX = x / this.gpuscene.renderPassScreen.size.width * 2 - 1;
-        const sourceY = -(y / this.gpuscene.renderPassScreen.size.height * 2 - 1);
+        const sourceX = x / this.gpu.renderPassScreen.size.width * 2 - 1;
+        const sourceY = -(y / this.gpu.renderPassScreen.size.height * 2 - 1);
         new Float32Array(b1arr).set([
             sourceX,
             sourceY,
@@ -327,7 +312,7 @@ export class TerraScene {
             , 32);
         b1.unmap();
         //Todo: Size from terranode
-        const resultMatrixBuffer = this.gpuscene.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+        const resultMatrixBuffer = this.gpu.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
         const bindGroup1 = this.calculatePickingRaysPipeline.createBindGroup(this.bindgrouplayout1, [
             {
                 binding: 0,
@@ -338,7 +323,7 @@ export class TerraScene {
             {
                 binding: 1,
                 resource: {
-                    buffer: this.gpuscene.GPUData
+                    buffer: this.gpu.GPUData
                 }
             },
             {
@@ -348,7 +333,7 @@ export class TerraScene {
                 }
             }
         ]);
-        const commandEncoder = this.gpuscene.createCommandEncoder();
+        const commandEncoder = this.gpu.createCommandEncoder();
 
         const passEncoder = commandEncoder.beginComputePass();
         passEncoder.setPipeline(this.calculatePickingRaysPipeline);
@@ -358,7 +343,7 @@ export class TerraScene {
 
         passEncoder.endPass();
         const gpuCommands = commandEncoder.finish();
-        this.gpuscene.device.defaultQueue.submit([gpuCommands]);
+        this.gpu.device.defaultQueue.submit([gpuCommands]);
 
         const ray = this.createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z])
@@ -391,10 +376,10 @@ export class TerraScene {
         console.log(minimum);*/
         return minimum;
 
-        this.gpuscene.GPU2CPU(async buff => {
+        this.gpu.GPU2CPU(async buff => {
             await buff.mapAsync(GPUMapMode.READ);
           //  console.log(new Float32Array(buff.getMappedRange()))
-            await this.gpuscene.GPU2CPU(async buff => {
+            await this.gpu.GPU2CPU(async buff => {
                 await buff.mapAsync(GPUMapMode.READ);
                 const gpudata = new Float32Array(buff.getMappedRange());
                 //console.log(gpudata);
@@ -406,7 +391,7 @@ export class TerraScene {
                 //console.log(matrix);
                // console.log(this.createPickingRay(x, y, new Float32Array(gpudata, 0, 16)));
               //  debugger;
-            }, this.gpuscene.GPUData);
+            }, this.gpu.GPUData);
         }, resultMatrixBuffer);
 
         let rayFunction = (boundableMesh: BoundableNode) => {

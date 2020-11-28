@@ -41,7 +41,7 @@ export abstract class paintGround {
         this.resolve = callback;
     }
     public destroy() {
-        this.camera.attachControl(this.scene.gpuscene.renderPassScreen.canvas, true);
+        this.camera.attachControl(this.scene.gpu.renderPassScreen.canvas, true);
     }
 
     #drawArea = async (evt:PointerEvent) => {

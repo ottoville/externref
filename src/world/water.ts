@@ -10,9 +10,9 @@ export class Sea extends BoundableNode {
         super(scene);
         (async () => {
 
-            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/water.vert.wgsl', '/shaders/wgsl/water.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await(await fetch(u)).text() } )  ));
+            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/water.vert.wgsl', '/shaders/wgsl/water.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await(await fetch(u)).text() } )  ));
             //TODO: Reuse sampler with terrain.ts?
-            const sampler = scene.gpuscene.device.createSampler({
+            const sampler = scene.gpu.device.createSampler({
                 magFilter: "linear",
                 minFilter: "linear",
             });
@@ -40,11 +40,11 @@ export class Sea extends BoundableNode {
                     },
                     {
                         binding: 1,
-                        resource: scene.gpuscene.renderPassWater.targetTextureView
+                        resource: scene.gpu.renderPassWater.targetTextureView
                     }
                 ]
             );
-            waterPipeline.addDrawable([scene.gpuscene.renderPassScreen],4);
+            waterPipeline.addDrawable([scene.gpu.renderPassScreen],4);
         })()
     }
 }

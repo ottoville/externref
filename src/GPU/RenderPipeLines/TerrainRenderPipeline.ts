@@ -6,11 +6,11 @@ import { RenderPipeline } from "../RenderPipeline";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 async function TerrainRenderPipeline(scene: TerraScene, textureView: GPUTextureView) {
-    const sampler = scene.gpuscene.device.createSampler({
+    const sampler = scene.gpu.device.createSampler({
         magFilter: "linear",
         minFilter: "linear",
     });
-    const [vertex, fragment] = await Promise.all(['/shaders/wgsl/ground.vert.wgsl', '/shaders/wgsl/ground.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
+    const [vertex, fragment] = await Promise.all(['/shaders/wgsl/ground.vert.wgsl', '/shaders/wgsl/ground.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
     const renderPipeLine = scene.lightsBindGroupTexture.addRenderPipeline({
         primitiveTopology: 'triangle-list',
         depthStencilState: {
@@ -64,7 +64,7 @@ async function TerrainRenderPipeline(scene: TerraScene, textureView: GPUTextureV
             resource: textureView //this.texture.createView()
         }
     ]);;
-    renderPipelines.set(scene.gpuscene, renderPipeLine);
+    renderPipelines.set(scene.gpu, renderPipeLine);
     return renderPipeLine;
 }
 export class TerrainMesh extends BoundableNode {
@@ -82,8 +82,8 @@ export class TerrainMesh extends BoundableNode {
         super(scene);
         
         (async () => {
-            const renderPipeline = renderPipelines.get(scene.gpuscene) || (await TerrainRenderPipeline(scene, textureView));
-            const m = renderPipeline.addDrawable([scene.gpuscene.renderPassScreen, scene.gpuscene.renderPassWater], indexCount, 1);
+            const renderPipeline = renderPipelines.get(scene.gpu) || (await TerrainRenderPipeline(scene, textureView));
+            const m = renderPipeline.addDrawable([scene.gpu.renderPassScreen, scene.gpu.renderPassWater], indexCount, 1);
             m.setVertexBuffer(0, this.vBuffer);
             m.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
 

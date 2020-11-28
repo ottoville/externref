@@ -1,5 +1,5 @@
 ﻿import type { worldPosition } from "./traits/worldPosition";
-import type { TerraScene } from "./TerraScene";
+import type { Engine } from "./engine";
 
 export interface hasPhysics {
     onPhysicTick: (time: number) => void
@@ -17,32 +17,33 @@ export class Physics {
     tickables: Set<hasPhysics> = new Set();
     lastTickTimeMs: number = new Date().getTime();
     #gameSpeed = 0;
-    gameTime = 21600;  //6 hours
+    tickTime = 21600;  //6 hours
     #interval: number = 0;
+    tickIntervalMs = 1000;
 
     get physicTime() {
         if (this.#gameSpeed >= 0) {
             const timestamp = new Date().getTime();
-            if (this.scene.lastStateChangeTime > this.lastTickTimeMs) {
-                var delta = (timestamp - this.scene.lastStateChangeTime << this.#gameSpeed)+ this.#tickDeltaWhenStateChange
+            if (this.lastStateChangeTime > this.lastTickTimeMs) {
+                var delta = (timestamp - this.lastStateChangeTime << this.#gameSpeed)+ this.#tickDeltaWhenStateChange
             } else {
                 var delta = (timestamp - this.lastTickTimeMs) << this.#gameSpeed // get the delta time since last tick
             }
         }
         else
-            var delta = (this.scene.lastStateChangeTime - this.scene.physics.lastTickTimeMs) << this.#gameSpeed;
+            var delta = (this.lastStateChangeTime - this.lastTickTimeMs) << this.#gameSpeed;
 
-        return (this.gameTime + (delta/1000));
+        return (this.tickTime + (delta/1000));
     }
     private tick(me: Physics) {
         const timestamp = new Date().getTime();
-        if (me.scene.lastStateChangeTime > me.lastTickTimeMs) {
-            var delta = ((timestamp - me.scene.lastStateChangeTime) << me.#gameSpeed) + me.#tickDeltaWhenStateChange
+        if (me.lastStateChangeTime > me.lastTickTimeMs) {
+            var delta = ((timestamp - me.lastStateChangeTime) << me.#gameSpeed) + me.#tickDeltaWhenStateChange
         } else {
             var delta = (timestamp - me.lastTickTimeMs) << me.#gameSpeed; // get the delta time since last tick
         }
         me.lastTickTimeMs = timestamp;
-        me.gameTime += delta / 1000;
+        me.tickTime += delta / 1000;
 
        // console.log(delta / me.scene.tickIntervalMs);
 
@@ -60,24 +61,36 @@ export class Physics {
         });
     }
 
-    private createLoop(speed: number, timeToFirstTick = this.scene.tickIntervalMs) {
-        if (timeToFirstTick != this.scene.tickIntervalMs) {
+    private createLoop(speed: number, timeToFirstTick = this.tickIntervalMs) {
+        if (timeToFirstTick != this.tickIntervalMs) {
             const firstTickMs = timeToFirstTick >> speed;
             setTimeout(() => {
                 this.tick(this);
-                this.#interval=setInterval(this.tick, this.scene.tickIntervalMs >> speed, this)
+                this.#interval = setInterval(this.tick, this.tickIntervalMs >> speed, this)
             }, firstTickMs);
         }
         else
             this.#interval = setInterval(this.tick , timeToFirstTick >> speed, this);
     }
+    #lastStateChangeGameTime = BigInt(216000000); //21600 * 1000; //6 hours
+    get gameTime() {
+        if (this.gameSpeed < 0)
+            return this.#lastStateChangeGameTime;
+        var interval = new Date().getTime() - this.lastStateChangeTime;
+        return this.#lastStateChangeGameTime + (BigInt((interval * 60) << this.gameSpeed));
+    }
+    lastStateChangeTime = new Date().getTime()
     timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
     set gameSpeed(value: number) {
+        console.log('set gameSpeed', value)
+        this.#lastStateChangeGameTime = this.gameTime;
+        this.lastStateChangeTime = new Date().getTime();
+
         clearInterval(this.#interval);
-        this.timeUntillTick = this.scene.tickIntervalMs - this.#tickDeltaWhenStateChange;
+        this.timeUntillTick = this.tickIntervalMs - this.#tickDeltaWhenStateChange;
         if (this.#gameSpeed >= 0) {
-            this.#tickDeltaWhenStateChange = (new Date().getTime() - this.scene.physics.lastTickTimeMs) << this.#gameSpeed
+            this.#tickDeltaWhenStateChange = (new Date().getTime() - this.lastTickTimeMs) << this.#gameSpeed
         }
         this.#gameSpeed = value;
         if (value >= 0)
@@ -86,7 +99,8 @@ export class Physics {
     get gameSpeed() {
         return this.#gameSpeed;
     }
-    constructor(private scene:TerraScene) {
+    constructor(private engine:Engine) {
         //this.createLoop(0);
     }
+
 }

@@ -66,9 +66,8 @@ export class paintPlane extends paintGround {
         uitab: canvasListener,
     ) {
         super(scene, camera, ground, sea, uitab);
-
         (async () => {
-            const [fragment] = await Promise.all([scene.gpuscene.getShaderModule('/shaders/wgsl/color.frag.wgsl')])
+            const [fragment] = await Promise.all([scene.gpu.getShaderModule('/shaders/wgsl/color.frag.wgsl')])
 
             const planeRenerPipeline = ground.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
                 primitiveTopology: 'triangle-strip',
@@ -79,7 +78,7 @@ export class paintPlane extends paintGround {
                     format: "bgra8unorm",
                 }],
                 vertexStage: {
-                    module: scene.gpuscene.shaderModules.get("plane.vert")!,
+                    module: scene.gpu.shaderModules.get("plane.vert")!,
                     entryPoint: "main",
                 },
                 fragmentStage: {
@@ -101,7 +100,7 @@ export class paintPlane extends paintGround {
                         }]
                 },
             }, [this.#mesh.bufferOffsetBytes]);
-            this.#templane2 = planeRenerPipeline.addDrawable([scene.gpuscene.renderPassScreen], 0, 1, 1, 0)
+            this.#templane2 = planeRenerPipeline.addDrawable([scene.gpu.renderPassScreen], 0, 1, 1, 0)
         })()
        
     };
@@ -110,7 +109,6 @@ export class paintPlane extends paintGround {
         super.activate(callback, options);
     }
     public destroy() {
-        debugger;
         super.destroy();
         this.#templane2.destroy();
         this.#columns = 0;

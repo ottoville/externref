@@ -6,9 +6,9 @@ import { RenderPipeline } from "../RenderPipeline";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 async function Simple(scene: TerraScene) {
-    const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
-    const bindGroupLayout = scene.gpuscene.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
-    const renderPipeLine = bindGroupLayout.addChildLayout(scene.gpuscene.BindGroupLayout).addRenderPipeline({
+    const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
+    const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
+    const renderPipeLine = bindGroupLayout.addChildLayout(scene.gpu.BindGroupLayout).addRenderPipeline({
         rasterizationState: {
             cullMode: 'none',
         },
@@ -38,7 +38,7 @@ async function Simple(scene: TerraScene) {
                 }]
         }
     });
-    renderPipelines.set(scene.gpuscene, renderPipeLine);
+    renderPipelines.set(scene.gpu, renderPipeLine);
     return renderPipeLine;
 }
 export abstract class SimpleMesh extends BoundableNode {
@@ -53,9 +53,9 @@ export abstract class SimpleMesh extends BoundableNode {
         super(scene);
         
         (async () => {
-            const renderPipeline = renderPipelines.get(scene.gpuscene) || (await Simple(scene));
-            const m = renderPipeline.addDrawable([scene.gpuscene.renderPassScreen], 36);
-            m.dynamicBuffers.set(scene.gpuscene.BindGroup, this.bufferOffsetBytes);
+            const renderPipeline = renderPipelines.get(scene.gpu) || (await Simple(scene));
+            const m = renderPipeline.addDrawable([scene.gpu.renderPassScreen], 36);
+            m.dynamicBuffers.set(scene.gpu.BindGroup, this.bufferOffsetBytes);
             m.setVertexBuffer(0, this.vBuffer);
             m.setIndexBuffer(this.iBuffer, undefined, undefined, indexFormat);
 

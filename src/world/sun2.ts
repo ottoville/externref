@@ -68,7 +68,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
         //149597870000
 
         //let sundistance = 149600; //divided by 100000
-        let secondsOfDay = ~~((Number(this.scene.physics.gameTime * 60)) % 86400);
+        let secondsOfDay = ~~((Number(this.scene.engine.physics.tickTime * 60)) % 86400);
         let minutesOfDay = secondsOfDay / 60;
         let sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
 
@@ -103,7 +103,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
 
 
         (async () => {
-            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/sun.vert.wgsl', '/shaders/wgsl/sun.frag.wgsl'].map(async u => scene.gpuscene.device.createShaderModule({ code: await (await fetch(u)).text() })));
+            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/sun.vert.wgsl', '/shaders/wgsl/sun.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
             const sunPipeline = this.scene.positionBindGroupTime.addRenderPipeline({
                 rasterizationState: {
                     cullMode: 'none',
@@ -124,7 +124,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
                     indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
                 }
             }, [this.bufferOffsetBytes]);
-            sunPipeline.addDrawable([scene.gpuscene.renderPassScreen], 14);
+            sunPipeline.addDrawable([scene.gpu.renderPassScreen], 14);
         })();
 
 
