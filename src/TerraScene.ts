@@ -178,14 +178,6 @@ export class TerraScene extends Scene {
 
     static instance: TerraScene;
 
-
-    
-    
-    
-    canvasSize = {
-        width: this.window.innerWidth | 0,
-        height: this.window.innerHeight | 0
-    };
     //context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
     camera!: ArcRotateCamera;
     lights: Light;

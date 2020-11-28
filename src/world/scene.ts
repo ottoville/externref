@@ -10,7 +10,7 @@ import type { PointerInfoPre, PointerInfo } from "../lib/babylon/Events/pointerE
 import { PointerEventTypes } from "../lib/babylon/Events/pointerEvents.js";
 import { Constants } from "../lib/babylon/Engines/constants.js";
 import type { AbstractMesh } from "../lib/babylon/Meshes/abstractMesh.js";
-import { Ray } from "../lib/babylon/Culling/ray.js";
+import "../lib/babylon/Culling/ray.js";
 import type { TrianglePickingPredicate } from "../lib/babylon/Culling/ray.js";
 import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
 import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
@@ -151,8 +151,7 @@ export class WorldScene extends Scene {
         // this._sceneUbo.update();
     }
 
-    createPickingRayToRef(x: number, y: number, world: Matrix, result: Ray, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
-
+    createPickingRayToRef(x: number, y: number, world: Matrix, result: any, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
         var engine = this.getEngine();
         if (!camera) {
             if (!this.activeCamera) {
@@ -161,11 +160,11 @@ export class WorldScene extends Scene {
             camera = this.activeCamera;
         }
         var cameraViewport = camera.viewport;
-        var viewport = cameraViewport.toGlobal(TerraScene.instance.canvasSize.width, TerraScene.instance.canvasSize.height);
+        var viewport = cameraViewport.toGlobal(TerraScene.instance.TerraCameras[0].renderPass.width, TerraScene.instance.TerraCameras[0].renderPass.height);
 
         // Moving coordinates to local viewport world
         x = x / engine.getHardwareScalingLevel() - viewport.x;
-        y = y / engine.getHardwareScalingLevel() - (TerraScene.instance.canvasSize.height - viewport.y - viewport.height);
+        y = y / engine.getHardwareScalingLevel() - (TerraScene.instance.TerraCameras[0].renderPass.height - viewport.y - viewport.height);
         // const projectionmatrix = camera.getProjectionMatrix()
         /////
         // Cache
@@ -183,7 +182,7 @@ export class WorldScene extends Scene {
         camera._cache.fovMode = camera.fovMode;
         // camera._cache.aspectRatio = engine.getAspectRatio(camera);
         var viewport = camera.viewport;
-        camera._cache.aspectRatio = (TerraScene.instance.canvasSize.width * viewport.width) / (TerraScene.instance.canvasSize.height * viewport.height);
+        camera._cache.aspectRatio = (TerraScene.instance.TerraCameras[0].renderPass.width * viewport.width) / (TerraScene.instance.TerraCameras[0].renderPass.height * viewport.height);
 
 
         if (camera.minZ <= 0) {
@@ -195,7 +194,7 @@ export class WorldScene extends Scene {
         getProjectionMatrix = reverseDepth ? Matrix.PerspectiveFovReverseLHToRef : Matrix.PerspectiveFovLHToRef;
 
         var viewport = camera.viewport;
-        let aspectRatio = (TerraScene.instance.canvasSize.width * viewport.width) / (TerraScene.instance.canvasSize.height * viewport.height);
+        let aspectRatio = (TerraScene.instance.TerraCameras[0].renderPass.width * viewport.width) / (TerraScene.instance.TerraCameras[0].renderPass.height * viewport.height);
 
         getProjectionMatrix(camera.fov,
             aspectRatio,
@@ -214,7 +213,7 @@ export class WorldScene extends Scene {
         return this;
     }
     /* This is same as babylonjs _internalPick but with promise */
-    collissionCheck(rayFunction: (world: Matrix) => Ray, meshIndex: number, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: AbstractMesh) => boolean): Promise<PickingInfo | null> {
+    collissionCheck(rayFunction: (world: Matrix) => any /* any = Ray */, meshIndex: number, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: AbstractMesh) => boolean): Promise<PickingInfo | null> {
         if (meshIndex > this.meshes.length - 1)
             return new Promise(res => res(pickResult));
         let mesh = this.meshes[meshIndex] as TerraMesh | Mesh;
@@ -245,37 +244,6 @@ export class WorldScene extends Scene {
         });
     }
 
-    pickPromise(x: number, y: number, predicate?: (mesh: AbstractMesh) => boolean, fastCheck?: boolean, camera?: Nullable<Camera>,
-        trianglePredicate?: TrianglePickingPredicate): Promise<PickingInfo | null> {
-        let rayFunction = (world: Matrix) => {
-            if (!this._tempPickingRay) {
-                this._tempPickingRay = Ray.Zero();
-            }
-
-            this.createPickingRayToRef(x, y, world, this._tempPickingRay, this.cameraToUseForPointers || null);
-
-            const view = Matrix.FromArray(Array.from(TerraScene.instance.TerraCameras[0].viewArr));
-            const projection = Matrix.FromArray(Array.from(TerraScene.instance.TerraCameras[0].projectionArr));
-            // const viewProjection = view.multiply(projection);
-            //  const viewProjection = matrixMultiply64(Array.from(new Float32Array(TerraScene.instance.view)), Array.from(new Float32Array(TerraScene.instance.projection)));
-            //TODO: reuse picking ray object
-            const pickingRay = TerraScene.instance.TerraCameras[0].createPickingRay(x, y, world.m as Float32Array);
-            return pickingRay;
-
-
-            //  return this._tempPickingRay;
-        };
-        //@ts-ignore
-        return this.collissionCheck(rayFunction, 0, null, fastCheck, predicate).then((pickResult: PickingInfo | null) => {
-            /* _internalPick ends */
-            if (pickResult) {
-                pickResult.ray = Ray.Zero();
-                this.createPickingRayToRef(x, y, Matrix.Identity(), pickResult.ray, this.cameraToUseForPointers || null, false)
-            }
-            return pickResult;
-        });
-    }
-
     public stateChange(data: {
         gameSpeed: number
         lastStateChangeGameTime: number
@@ -289,183 +257,6 @@ export class WorldScene extends Scene {
         }
         //gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
     };
-
-    public _renderForCamera(camera: Camera, rigParent?: Camera): void {
-        if (camera && camera._skipRendering) {
-            return;
-        }
-        //@ts-ignore
-        var engine = this._engine;
-
-        // Use _activeCamera instead of activeCamera to avoid onActiveCameraChanged
-        this._activeCamera = camera;
-
-        if (!this.activeCamera) {
-            throw new Error("Active camera not set");
-        }
-
-        // Viewport
-        // engine.setViewport(this.activeCamera.viewport);
-        var width = TerraScene.instance.canvasSize.width
-        var height = TerraScene.instance.canvasSize.width
-        var x = this.activeCamera.viewport.x || 0;
-        var y = this.activeCamera.viewport.y || 0;
-        //@ts-ignore
-        engine._cachedViewport = this.activeCamera.viewport;
-
-        engine._viewport(x * width, y * height, width * this.activeCamera.viewport.width, height * this.activeCamera.viewport.height);
-
-
-
-
-        // Camera
-        this.resetCachedMaterial(); //@ts-ignore
-        this._renderId++;
-        //this.updateTransformMatrix();
-
-        // Cache
-        this.activeCamera._cache.mode = this.activeCamera.mode;
-        this.activeCamera._cache.minZ = this.activeCamera.minZ;
-        this.activeCamera._cache.maxZ = this.activeCamera.maxZ;
-
-        // Matrix
-        //@ts-ignore
-        this.activeCamera._refreshFrustumPlanes = true;
-        this.activeCamera._cache.fov = this.activeCamera.fov;
-        this.activeCamera._cache.fovMode = this.activeCamera.fovMode;
-        //this.activeCamera._cache.aspectRatio = engine.getAspectRatio(this.activeCamera);
-        var viewport = this.activeCamera.viewport;
-        this.activeCamera._cache.aspectRatio = (TerraScene.instance.canvasSize.width * viewport.width) / (TerraScene.instance.canvasSize.height * viewport.height);
-
-
-        if (this.activeCamera.minZ <= 0) {
-            this.activeCamera.minZ = 0.1;
-        }
-
-        const reverseDepth = engine.useReverseDepthBuffer;
-        let getProjectionMatrix: (fov: number, aspect: number, znear: number, zfar: number, result: Matrix, isVerticalFovFixed: boolean) => void;
-        if (this.useRightHandedSystem) {
-            getProjectionMatrix = reverseDepth ? Matrix.PerspectiveFovReverseRHToRef : Matrix.PerspectiveFovRHToRef;
-        } else {
-            getProjectionMatrix = reverseDepth ? Matrix.PerspectiveFovReverseLHToRef : Matrix.PerspectiveFovLHToRef;
-        }
-
-        var viewport = this.activeCamera.viewport;
-        let aspectRatio = (TerraScene.instance.canvasSize.width * viewport.width) / (TerraScene.instance.canvasSize.height * viewport.height);
-
-        getProjectionMatrix(this.activeCamera.fov,
-            aspectRatio,
-            this.activeCamera.minZ,
-            this.activeCamera.maxZ,
-            this.activeCamera._projectionMatrix,
-            this.activeCamera.fovMode === Camera.FOVMODE_VERTICAL_FIXED);
-
-
-        this.activeCamera.onProjectionMatrixChangedObservable.notifyObservers(this.activeCamera);
-
-        const projectionmatrix = this.activeCamera._projectionMatrix;
-
-        this.setTransformMatrix(this.activeCamera.getViewMatrix(), projectionmatrix);
-
-        this.onBeforeCameraRenderObservable.notifyObservers(this.activeCamera);
-
-        // Meshes
-        //@ts-ignore
-        this._evaluateActiveMeshes();
-
-
-        // Render targets
-        this.onBeforeRenderTargetsRenderObservable.notifyObservers(this);
-
-        if (camera.customRenderTargets && camera.customRenderTargets.length > 0) { //@ts-ignore
-            this._renderTargets.concatWithNoDuplicate(camera.customRenderTargets);
-        }
-
-        if (rigParent && rigParent.customRenderTargets && rigParent.customRenderTargets.length > 0) { //@ts-ignore
-            this._renderTargets.concatWithNoDuplicate(rigParent.customRenderTargets);
-        }
-
-        // Collects render targets from external components.
-        for (let step of this._gatherActiveCameraRenderTargetsStage) { //@ts-ignore
-            step.action(this._renderTargets);
-        }
-
-        if (this.renderTargetsEnabled) { //@ts-ignore
-            this._intermediateRendering = true;
-            let needRebind = false;
-            //@ts-ignore
-            if (this._renderTargets.length > 0) {
-                //@ts-ignore
-                Tools.StartPerformanceCounter("Render targets", this._renderTargets.length > 0);
-                //@ts-ignore
-                for (var renderIndex = 0; renderIndex < this._renderTargets.length; renderIndex++) {
-                    //@ts-ignore
-                    let renderTarget = this._renderTargets.data[renderIndex];
-                    if (renderTarget._shouldRender()) {
-                        //@ts-ignore
-                        this._renderId++;
-                        var hasSpecialRenderTargetCamera = renderTarget.activeCamera && renderTarget.activeCamera !== this.activeCamera;
-                        renderTarget.render((<boolean>hasSpecialRenderTargetCamera), this.dumpNextRenderTargets);
-                        needRebind = true;
-                    }
-                } //@ts-ignore
-                Tools.EndPerformanceCounter("Render targets", this._renderTargets.length > 0);
-                //@ts-ignore
-                this._renderId++;
-            }
-
-            for (let step of this._cameraDrawRenderTargetStage) {
-                needRebind = step.action(this.activeCamera) || needRebind;
-            }
-            //@ts-ignore
-            this._intermediateRendering = false;
-
-            // Need to bind if sub-camera has an outputRenderTarget eg. for webXR
-            if (this.activeCamera && this.activeCamera.outputRenderTarget) {
-                needRebind = true;
-            }
-
-            // Restore framebuffer after rendering to targets
-            if (needRebind) { //@ts-ignore
-                this._bindFrameBuffer();
-            }
-
-        }
-
-        this.onAfterRenderTargetsRenderObservable.notifyObservers(this);
-
-        // Prepare Frame
-        if (this.postProcessManager && !camera._multiviewTexture) {
-            this.postProcessManager._prepareFrame();
-        }
-
-        // Before Camera Draw
-        for (let step of this._beforeCameraDrawStage) {
-            step.action(this.activeCamera);
-        }
-
-        // Render
-        this.onBeforeDrawPhaseObservable.notifyObservers(this);
-        //@ts-ignore
-        this._renderingManager.render(null, null, true, true);
-        this.onAfterDrawPhaseObservable.notifyObservers(this);
-
-        // After Camera Draw
-        for (let step of this._afterCameraDrawStage) {
-            step.action(this.activeCamera);
-        }
-
-        // Finalize frame
-        if (this.postProcessManager && !camera._multiviewTexture) {
-            this.postProcessManager._finalizeFrame(camera.isIntermediate);
-        }
-
-        // Reset some special arrays
-        //@ts-ignore
-        this._renderTargets.reset();
-
-        this.onAfterCameraRenderObservable.notifyObservers(this.activeCamera);
-    }
     public attachControl(attachUp = true, attachDown = true, attachMove = true, elementToAttachTo: Nullable<HTMLElement> = null): void {
         //this._inputManager.attachControl(attachUp, attachDown, attachMove);
         let DoubleClickDelay = 300;
@@ -1070,5 +861,4 @@ export class WorldScene extends Scene {
               blazor.invokeMethod('setProgressError', e.name +' '+ e.message);
           })*/
     }
-
 }

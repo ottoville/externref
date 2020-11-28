@@ -40,33 +40,33 @@ function matrixMultiplyToRef(m: ArrayLike<number>, otherM: ArrayLike<number>, re
 
 
 export class TerraCamera {
-    readonly #uniqueID: number = uniqueID++;
-    target = new Float32Array([0, 0, 0]);
+    readonly #uniqueID: number = uniqueID++;    
     #upVector = new Float32Array([0, 1, 0]);
+    #uniformBufferSwap = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
-    viewProjectionPositionBuffer = new SharedArrayBuffer(4 * 16 * 2 + 3 * 4)
+    target = new Float32Array([0, 0, 0]);
+    #viewProjectionPositionBuffer = new SharedArrayBuffer(4 * 16 * 2 + 3 * 4)
 
-    projectionViewArr = new Float32Array(this.viewProjectionPositionBuffer, 0, 16);
-    viewArr = new Float32Array(this.viewProjectionPositionBuffer, 64, 16);
-    cameraArr = new Float32Array(this.viewProjectionPositionBuffer, 128, 3);
+    #projectionViewArr = new Float32Array(this.#viewProjectionPositionBuffer, 0, 16);
+    viewArr = new Float32Array(this.#viewProjectionPositionBuffer, 64, 16);
+    cameraArr = new Float32Array(this.#viewProjectionPositionBuffer, 128, 3);
     projectionArr = new Float32Array(this.projection);
 
-    pickingRayBuffer = new SharedArrayBuffer(6 * 4); // origin: vec3, direction: vec3
-    pickingRay = new Float32Array(this.pickingRayBuffer);
-    #uniformBufferSwap = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-    uniformBuffer = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
-    uniformBindGroup = this.gpuscene.createBindGroup (
+    #pickingRayBuffer = new SharedArrayBuffer(6 * 4); // origin: vec3, direction: vec3
+    pickingRay = new Float32Array(this.#pickingRayBuffer);
+    #uniformBuffer = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
+    #uniformBindGroup = this.gpuscene.createBindGroup (
         this.gpuscene.uniformBindGroupLayoutWithTime,
         {
             binding: 0,
             resource: {
-                buffer: this.uniformBuffer
+                buffer: this.#uniformBuffer
             }
         }, this.gpuscene.timeGroup);
-    constructor(private renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection:SharedArrayBuffer, private gpuscene: GPU, main:boolean=true) {
+    constructor(public renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection:SharedArrayBuffer, private gpuscene: GPU, main:boolean=true) {
         renderPass.cameras.add(this);
         if(main)
-            worker.message(this.#uniqueID, 'init', [this.viewProjectionPositionBuffer, this.projection, this.pickingRayBuffer, mousePositionBuffer, renderPass.size]);
+            worker.message(this.#uniqueID, 'init', [this.#viewProjectionPositionBuffer, this.projection, this.#pickingRayBuffer, mousePositionBuffer, renderPass.size]);
     }
     render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp, delta:number|null) {
         const viewMatrix = Matrix.FromArray(this.viewArr);
@@ -112,14 +112,14 @@ export class TerraCamera {
         );
 
         this.viewArr.set(viewMatrix.m)
-        matrixMultiplyToRef(this.viewArr, this.projectionArr, this.projectionViewArr);
+        matrixMultiplyToRef(this.viewArr, this.projectionArr, this.#projectionViewArr);
         
-        this.gpuscene.updateBufferRaw(this.#uniformBufferSwap, this.uniformBuffer, this.viewProjectionPositionBuffer).then(encoder => {
+        this.gpuscene.updateBufferRaw(this.#uniformBufferSwap, this.#uniformBuffer, this.#viewProjectionPositionBuffer).then(encoder => {
             if (encoder)
                 this.gpuscene.device.defaultQueue.submit([encoder]);
         });
 
-        this.renderPass.render(renderEncoder, time, delta, this.uniformBindGroup);
+        this.renderPass.render(renderEncoder, time, delta, this.#uniformBindGroup);
     }
     createPickingRay(x: number, y: number, world?: Float32Array) {
         const viewport = {

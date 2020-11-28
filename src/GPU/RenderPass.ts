@@ -85,8 +85,8 @@ export class RenderPass {
         private device: GPUDevice,
         private sampleCount: number = 1,
         depthStencil = false,
-        private width: number,
-        private height: number,
+        public width: number,
+        public height: number,
         private loadValue: GPULoadOp | GPUColor,
         private _onResize: (width: number, height: number) => [number, number],
         private usage: number = 0) {
