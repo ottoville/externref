@@ -12,6 +12,7 @@ import { Sun2 } from "./world/sun2";
 import { BoundableNode, PickingInfo } from "./TerraNode";
 import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
 import { Engine } from "./engine";
+import { Scene } from "./Scene";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
 /*interface Ray {
@@ -173,8 +174,7 @@ function matrixInvert64(m: Float32Array | Float64Array): void {
     m[15] = cofact_33 * detInv;
 
 }
-export class TerraScene {
-    boundables: Set<BoundableNode> = new Set();
+export class TerraScene extends Scene {
 
     static instance: TerraScene;
 
@@ -198,6 +198,7 @@ export class TerraScene {
 
     }
     constructor(public engine: Engine, private window: Window, public canvas: HTMLCanvasElement, public gpu: GPU, public TerraCameras: TerraCamera[], public positionBindGroupTime:DynamicBindGroupLayout<[number]>, onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
+        super();
         TerraScene.instance = this;
 
         const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen, gpu.renderPassWater]);
@@ -345,14 +346,14 @@ export class TerraScene {
         const gpuCommands = commandEncoder.finish();
         this.gpu.device.defaultQueue.submit([gpuCommands]);
 
-        const ray = this.createPickingRay(x, y);
+        const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z])
         const pickingRays: Map<BoundableNode, Float32Array> = new Map();
         console.log(this.boundables);
         this.boundables.forEach(boundable => {
             if (!boundable.worldPosition)
                 return pickingRays.set(boundable, rayArr);
-            const ray = this.createPickingRay(x, y, boundable.worldPosition.worldMatrix);
+            const ray = this.TerraCameras[0].createPickingRay(x, y, boundable.worldPosition.worldMatrix);
             pickingRays.set(boundable, new Float32Array([ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z]));
         });
         const results: Promise<void>[] = [];
@@ -403,7 +404,7 @@ export class TerraScene {
             if (boundableMesh.worldPosition) {
                 m = boundableMesh.worldPosition.worldMatrix;
             }
-            return this.createPickingRay(x, y, m);
+            return this.TerraCameras[0].createPickingRay(x, y, m);
         };
         //TODO
         //@ts-ignore
@@ -416,60 +417,5 @@ export class TerraScene {
         });
     }
     static tempM1 = new Float64Array(16);
-    createPickingRay(x: number, y: number, world?: Float32Array) {
-        const viewport = {
-            x: 0,
-            y: 0,
-            width: this.canvasSize.width,
-            height: this.canvasSize.height
-        }
-
-        // Moving coordinates to local viewport world
-        x = x - viewport.x;
-        y = y - (this.canvasSize.height - viewport.y - viewport.height);
-        
-        //Todo, reuse matrix and vector
-
-        //const matrix = world.multiply(viewProjection);
-
-        /*const matrix = TerraScene.tempM1;
-        matrixMultiply64(world, this.viewArr, matrix);
-        matrixMultiply64(matrix, this.projectionArr, matrix);
-        */
-
-
-        if (world) {
-            var matrix = Matrix.Zero();
-            const worldM = Matrix.FromArray(world);
-            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.TerraCameras[0].viewArr)), matrix);
-        } else {
-            var matrix = Matrix.FromArray(Array.from(this.TerraCameras[0].viewArr));
-        }
-        matrix.multiplyToRef(Matrix.FromArray(Array.from(this.TerraCameras[0].projectionArr)), matrix);
-        //TODO use matrixMultiply64 and matrixInvert64
-
-        // matrixInvert64(matrix);
-        // const inverted = Matrix.FromArray(matrix);
-        //const inverted = Matrix.FromArray(matrix).invert();
-        const inverted = matrix.invert();
-        var nearScreenSource = Vector3.Zero()
-        nearScreenSource.x = x / viewport.width * 2 - 1;
-        nearScreenSource.y = -(y / viewport.height * 2 - 1);
-        nearScreenSource.z = -1.0;
-        var farScreenSource = (new Vector3()).copyFromFloats(nearScreenSource.x, nearScreenSource.y, 1.0);
-        const nearVec3 = new Vector3();
-        const farVec3 = new Vector3();
-        Vector3._UnprojectFromInvertedMatrixToRef(nearScreenSource, inverted, nearVec3);
-        Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, inverted, farVec3);
-        const origin = (new Vector3()).copyFrom(nearVec3);
-        const direction = new Vector3();
-        farVec3.subtractToRef(nearVec3, direction);
-        direction.normalize();
-        return {
-            origin,
-            direction
-        }
-        // result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : camera.getViewMatrix(), camera.getProjectionMatrix());
-
-    }
+  
 }

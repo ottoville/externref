@@ -121,15 +121,72 @@ export class TerraCamera {
 
         this.renderPass.render(renderEncoder, time, delta, this.uniformBindGroup);
     }
+    createPickingRay(x: number, y: number, world?: Float32Array) {
+        const viewport = {
+            x: 0,
+            y: 0,
+            width: this.renderPass.size.width,
+            height: this.renderPass.size.height
+        }
+
+        // Moving coordinates to local viewport world
+        x = x - viewport.x;
+        y = y - (this.renderPass.size.height - viewport.y - viewport.height);
+
+        //Todo, reuse matrix and vector
+
+        //const matrix = world.multiply(viewProjection);
+
+        /*const matrix = TerraScene.tempM1;
+        matrixMultiply64(world, this.viewArr, matrix);
+        matrixMultiply64(matrix, this.projectionArr, matrix);
+        */
+
+
+        if (world) {
+            var matrix = Matrix.Zero();
+            const worldM = Matrix.FromArray(world);
+            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.viewArr)), matrix);
+        } else {
+            var matrix = Matrix.FromArray(Array.from(this.viewArr));
+        }
+        matrix.multiplyToRef(Matrix.FromArray(Array.from(this.projectionArr)), matrix);
+        //TODO use matrixMultiply64 and matrixInvert64
+
+        // matrixInvert64(matrix);
+        // const inverted = Matrix.FromArray(matrix);
+        //const inverted = Matrix.FromArray(matrix).invert();
+        const inverted = matrix.invert();
+        var nearScreenSource = Vector3.Zero()
+        nearScreenSource.x = x / viewport.width * 2 - 1;
+        nearScreenSource.y = -(y / viewport.height * 2 - 1);
+        nearScreenSource.z = -1.0;
+        var farScreenSource = (new Vector3()).copyFromFloats(nearScreenSource.x, nearScreenSource.y, 1.0);
+        const nearVec3 = new Vector3();
+        const farVec3 = new Vector3();
+        Vector3._UnprojectFromInvertedMatrixToRef(nearScreenSource, inverted, nearVec3);
+        Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, inverted, farVec3);
+        const origin = (new Vector3()).copyFrom(nearVec3);
+        const direction = new Vector3();
+        farVec3.subtractToRef(nearVec3, direction);
+        direction.normalize();
+        return {
+            origin,
+            direction
+        }
+        // result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : camera.getViewMatrix(), camera.getProjectionMatrix());
+    }
+
+
     subscribePickingRay() {
         return worker.signal(this.#uniqueID, 'subscribePickingRay');
     }
     unSubscribePickingRay() {
         return worker.signal(this.#uniqueID, 'unSubscribePickingRay');
     }
-    createPickingRay(worldPosition: SharedArrayBuffer) {
+    /*createPickingRay(worldPosition: SharedArrayBuffer) {
         return worker.message(this.#uniqueID, 'createPickingRay', [worldPosition]);
-    }
+    }*/
     updatePickingRay() {
         return worker.message(this.#uniqueID, 'updatePickingRay');
     }

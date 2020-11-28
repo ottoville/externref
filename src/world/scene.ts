@@ -259,7 +259,7 @@ export class WorldScene extends Scene {
             // const viewProjection = view.multiply(projection);
             //  const viewProjection = matrixMultiply64(Array.from(new Float32Array(TerraScene.instance.view)), Array.from(new Float32Array(TerraScene.instance.projection)));
             //TODO: reuse picking ray object
-            const pickingRay = TerraScene.instance.createPickingRay(x, y, world.m as Float32Array);
+            const pickingRay = TerraScene.instance.TerraCameras[0].createPickingRay(x, y, world.m as Float32Array);
             return pickingRay;
 
 
