@@ -7,7 +7,7 @@ import { TerraCamera } from "./TerraCamera";
 export class DebugScene {
     camera!: ArcRotateCamera;
 
-    constructor(private window: Window, public canvas: HTMLCanvasElement, public gpuscene: GPU, public TerraCameras: TerraCamera[], public positionBindGroupTime:BindGroupLayout, onRenderStart?: (scene: DebugScene) => Promise<ArcRotateCamera>) {
+    constructor(private window: Window, public canvas: HTMLCanvasElement, public gpuscene: GPU, public TerraCameras: TerraCamera[], onRenderStart?: (scene: DebugScene) => Promise<ArcRotateCamera>) {
         const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen]);
         (async () => {
             onRenderStart && (this.camera = await onRenderStart(this));

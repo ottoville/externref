@@ -1,6 +1,6 @@
 ﻿import { worldPosition } from "../traits/worldPosition";
 import { hasPhysics } from "../physics";
-import { TerraScene } from "../TerraScene";
+import { Scene } from "../Scene";
 import { isLight } from "../lights";
 import { TerraNode } from "../TerraNode";
 //const sundistance = 149600000000;
@@ -98,13 +98,13 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
         // let newpos = matrixTranslate(sunPositionX, sunPositionY, 0, sunm);
         // this.worldPosition.translation = [newpos.x, newpos.y, newpos.z];
     }
-    constructor(scene: TerraScene) {
+    constructor(scene: Scene) {
         super(scene);
 
 
         (async () => {
             const [vertex, fragment] = await Promise.all(['/shaders/wgsl/sun.vert.wgsl', '/shaders/wgsl/sun.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
-            const sunPipeline = this.scene.positionBindGroupTime.addRenderPipeline({
+            const sunPipeline = this.scene.engine.positionBindGroupTime.addRenderPipeline({
                 rasterizationState: {
                     cullMode: 'none',
                 },

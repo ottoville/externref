@@ -298,12 +298,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
             }*/
             blazor.invokeMethod('setProgress', 13);
-            const positionBindGroupTime = gpuscene.addBindGroup(gpuscene.BindGroup, true);
-            positionBindGroupTime.onRender = async (time) => {
-                return gpuscene.updateGPUBuffer();
-            }
-            const terraEngine = new Engine();
-            const terrascene = new TerraScene(terraEngine, window, canvas, gpuscene, [mainCamera, waterCamera], positionBindGroupTime, async (terrascene: TerraScene) => {
+
+
+            const terraEngine = new Engine(gpuscene);
+            const terrascene = new TerraScene(terraEngine, window, canvas, gpuscene, [mainCamera, waterCamera], async (terrascene: TerraScene) => {
 
                 // Initial scene objects here
 
@@ -451,7 +449,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 
                 return camera;
             });
-            const debugscene = new DebugScene(window, canvas, gpuscene, [mainCamera], positionBindGroupTime, async (terrascene: DebugScene) => { return await cameraReady });
+            const debugscene = new DebugScene(window, canvas, gpuscene, [mainCamera], async (terrascene: DebugScene) => { return await cameraReady });
 
 
             const scenes = new Set([terrascene, debugscene])

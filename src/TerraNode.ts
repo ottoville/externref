@@ -1,6 +1,6 @@
 ﻿import type { isLight } from "./lights";
 import type { hasPhysics } from "./physics";
-import type { TerraScene } from "./TerraScene";
+import type { Scene } from "./Scene";
 import type { worldPosition } from "./traits/worldPosition";
 import { ObjectWorkerThread } from "./WorkerThread";
 
@@ -75,7 +75,7 @@ export abstract class TerraNode implements Partial<hasPhysics> {
         this.scene.gpu.NodeInstances.delete(this);
     }
 
-    constructor(public scene: TerraScene) {
+    constructor(public scene: Scene) {
         const bufferOffsetBytes = scene.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
@@ -144,7 +144,7 @@ export abstract class BoundableNode extends TerraNode {
 
     readonly pickInfo = new pickInfo();
 
-    constructor(scene: TerraScene) {
+    constructor(scene: Scene) {
         super(scene);
         scene.boundables.add(this);
         queueMicrotask(() => {    //Run this on microtask so the scope who called constuctor has time to add verticesPositionBuffer property.

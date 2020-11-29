@@ -180,27 +180,20 @@ export class TerraScene extends Scene {
 
     //context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
     camera!: ArcRotateCamera;
-    lights: Light;
     positionBindGroupLightsTime;
     positionBindGroupLightsTimeWGSL;
-    lightsBindGroupWGSL: BindGroupLayout;
-    lightsBindGroup: BindGroupLayout;
     lightsBindGroupTexture: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
     render(time: DOMHighResTimeStamp, renderEncoder: GPUCommandEncoder) {
 
     }
-    constructor(public engine: Engine, private window: Window, public canvas: HTMLCanvasElement, public gpu: GPU, public TerraCameras: TerraCamera[], public positionBindGroupTime:DynamicBindGroupLayout<[number]>, onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
-        super();
+    constructor(engine: Engine, private window: Window, public canvas: HTMLCanvasElement, gpu: GPU, public TerraCameras: TerraCamera[], onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
+        super(gpu, engine);
         TerraScene.instance = this;
 
         const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen, gpu.renderPassWater]);
 
         engine.physics.gameSpeed = 0;
-        const sun = new Sun2(this);
-        this.lights = new Light(this.gpu, sun.bufferOffsetBytes);
 
-        this.lightsBindGroup = this.gpu.addBindGroup(this.lights.uniformBindGroupLights);
-        this.lightsBindGroupWGSL = this.gpu.addBindGroup(this.lights.uniformBindGroupLightsWGSL);
 
         this.positionBindGroupLightsTime = this.lightsBindGroup.addChildBindGroup(this.gpu.BindGroup, true);
         this.positionBindGroupLightsTime.onRender = async () => {
