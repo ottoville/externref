@@ -6,6 +6,7 @@ import type { Engine } from "./engine";
 import type { BindGroupLayout, LayoutGroupDrawable } from "./GPU/BindGroupLayout";
 import { TerraMatrix } from "./traits/worldPosition";
 import type { TerraCamera } from "./TerraCamera";
+import type { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera";
 
 export abstract class Scene {
     boundables: Set<BoundableNode> = new Set();
@@ -15,10 +16,11 @@ export abstract class Scene {
     positionBindGroupLightsTime;
     positionBindGroupLightsTimeWGSL;
     lightsBindGroupTexture: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
-
-    constructor(public gpu: GPU, public engine: Engine, public TerraCameras: TerraCamera[]) {
-        const sun = new Sun2(this);
-        this.lights = new Light(gpu, sun.bufferOffsetBytes);
+    constructor(public gpu: GPU, public engine: Engine, public TerraCameras: TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes:number) => void ) {
+        const sunBufferOffsetBytes = gpu.DataSlots.pop();
+        if (typeof (sunBufferOffsetBytes) == 'undefined')
+            throw ('Out of memory');
+        this.lights = new Light(gpu, sunBufferOffsetBytes);
         this.lightsBindGroup = gpu.addBindGroup(this.lights.uniformBindGroupLights);
         this.lightsBindGroupWGSL = gpu.addBindGroup(this.lights.uniformBindGroupLightsWGSL);
         this.positionBindGroupLightsTime = this.lightsBindGroup.addChildBindGroup(this.gpu.BindGroup, true);
@@ -35,6 +37,7 @@ export abstract class Scene {
             visibility: GPUShaderStage.FRAGMENT,
             type: 'sampled-texture'
         }));
+        onRenderStart(this, sunBufferOffsetBytes)
     }
     async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
         let boundableMesh: BoundableNode;

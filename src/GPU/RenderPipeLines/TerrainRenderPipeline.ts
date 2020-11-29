@@ -1,11 +1,11 @@
 ﻿import { GPU } from "../../GPU";
 import { BoundableNode } from "../../TerraNode";
-import { TerraScene } from "../../TerraScene";
+import { Scene } from "../../Scene";
 import { worldPosition } from "../../traits/worldPosition";
 import { RenderPipeline } from "../RenderPipeline";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-async function TerrainRenderPipeline(scene: TerraScene, textureView: GPUTextureView) {
+async function TerrainRenderPipeline(scene: Scene, textureView: GPUTextureView) {
     const sampler = scene.gpu.device.createSampler({
         magFilter: "linear",
         minFilter: "linear",
@@ -70,7 +70,7 @@ async function TerrainRenderPipeline(scene: TerraScene, textureView: GPUTextureV
 export class TerrainMesh extends BoundableNode {
     worldPosition?: worldPosition | undefined;
     constructor(
-        scene: TerraScene,
+        scene: Scene,
         public textureView: GPUTextureView,
         public vBuffer: GPUVertexBuffer,
         public iBuffer: GPUIndexBuffer,

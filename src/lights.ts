@@ -35,31 +35,31 @@ export class Light {
     add(light: isLight) {
         this.#instances.add(light);
     }
-    constructor(public scene: GPU, byteoffset:number) {
-        const uniformBindGroupLayoutLights = this.scene.createBindGroupLayout({
+    constructor(public gpu: GPU, byteoffset:number) {
+        const uniformBindGroupLayoutLights = this.gpu.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
             type: 'readonly-storage-buffer'
         });
-        const uniformBindGroupLayoutLightsWGSL = this.scene.createBindGroupLayout({
+        const uniformBindGroupLayoutLightsWGSL = this.gpu.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
             type: 'uniform-buffer'
         });
-         this.uniformBindGroupLights = this.scene.createBindGroup(uniformBindGroupLayoutLights,
+        this.uniformBindGroupLights = this.gpu.createBindGroup(uniformBindGroupLayoutLights,
                 {
                     binding: 0,
                     resource: {
-                        buffer: this.scene.GPUData, //this.#lightsBuffer
+                        buffer: this.gpu.GPUData, //this.#lightsBuffer
                         size: 256,
                         offset: byteoffset
                     }
              });
-        this.uniformBindGroupLightsWGSL = this.scene.createBindGroup(uniformBindGroupLayoutLightsWGSL,
+        this.uniformBindGroupLightsWGSL = this.gpu.createBindGroup(uniformBindGroupLayoutLightsWGSL,
             {
                 binding: 0,
                 resource: {
-                    buffer: this.scene.GPUData, //this.#lightsBuffer
+                    buffer: this.gpu.GPUData, //this.#lightsBuffer
                     size: 256,
                     offset: byteoffset
                 }

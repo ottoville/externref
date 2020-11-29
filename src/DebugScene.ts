@@ -1,20 +1,17 @@
-﻿import type { GPU } from "./GPU";
+﻿import { Engine } from "./engine";
+import type { GPU } from "./GPU";
 import { BindGroupLayout } from "./GPU/BindGroupLayout";
 import type { RenderPass } from "./GPU/RenderPass";
 import type { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera";
+import { Scene } from "./Scene";
 import { TerraCamera } from "./TerraCamera";
 
-export class DebugScene {
+export class DebugScene extends Scene {
     camera!: ArcRotateCamera;
 
-    constructor(private window: Window, public canvas: HTMLCanvasElement, public gpuscene: GPU, public TerraCameras: TerraCamera[], onRenderStart?: (scene: DebugScene) => Promise<ArcRotateCamera>) {
-        const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen]);
-        (async () => {
-            onRenderStart && (this.camera = await onRenderStart(this));
-            const renderLoop = function (time: DOMHighResTimeStamp) {
-
-            }
-        })
+    constructor(engine: Engine, public canvas: HTMLCanvasElement, gpu: GPU, TerraCameras: TerraCamera[], onRenderStart: (scene: Scene) => void) {
+        super(gpu, engine, TerraCameras, onRenderStart)
+        const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen]);
     }
     render(time: DOMHighResTimeStamp, renderEncoder:GPUCommandEncoder) {
 

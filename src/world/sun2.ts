@@ -98,8 +98,8 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
         // let newpos = matrixTranslate(sunPositionX, sunPositionY, 0, sunm);
         // this.worldPosition.translation = [newpos.x, newpos.y, newpos.z];
     }
-    constructor(scene: Scene) {
-        super(scene);
+    constructor(scene: Scene, sunBufferOffsetBytes: number) {
+        super(scene, sunBufferOffsetBytes);
 
 
         (async () => {

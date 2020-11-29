@@ -75,8 +75,8 @@ export abstract class TerraNode implements Partial<hasPhysics> {
         this.scene.gpu.NodeInstances.delete(this);
     }
 
-    constructor(public scene: Scene) {
-        const bufferOffsetBytes = scene.gpu.DataSlots.pop();
+    constructor(public scene: Scene, bufferOffsetBytes?:number) {
+        bufferOffsetBytes = typeof (bufferOffsetBytes) == "number" ? bufferOffsetBytes : scene.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
         this.bufferOffsetBytes = bufferOffsetBytes;
@@ -104,7 +104,7 @@ export abstract class TerraNode implements Partial<hasPhysics> {
                 scene.engine.physics.tickables.add(this);
             }
             if (this.isLight()) {
-                scene.lights.add(this);
+                //scene.lights.add(this);
             }
         });
         this.updateDynamicBuffer();

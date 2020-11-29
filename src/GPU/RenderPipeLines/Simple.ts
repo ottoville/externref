@@ -1,11 +1,11 @@
 ﻿import { GPU } from "../../GPU";
 import { BoundableNode } from "../../TerraNode";
-import { TerraScene } from "../../TerraScene";
+import { Scene } from "../../Scene";
 import { worldPosition } from "../../traits/worldPosition";
 import { RenderPipeline } from "../RenderPipeline";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-async function Simple(scene: TerraScene) {
+async function Simple(scene: Scene) {
     const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
     const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
     const renderPipeLine = bindGroupLayout.addChildLayout(scene.gpu.BindGroupLayout).addRenderPipeline({
@@ -49,7 +49,7 @@ export abstract class SimpleMesh extends BoundableNode {
     abstract vBuffer: GPUVertexBuffer;
     abstract iBuffer: GPUIndexBuffer;
     verticesPositionStride = 3;
-    constructor(scene: TerraScene, indexFormat: GPUIndexFormat='uint32') {
+    constructor(scene: Scene, indexFormat: GPUIndexFormat='uint32') {
         super(scene);
         
         (async () => {

@@ -22,6 +22,8 @@ import { DebugScene } from "./DebugScene.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { TerraScene } from "./TerraScene.js";
 import { Engine } from "./engine.js";
+import { Sun2 } from "./world/sun2.js";
+import { Scene } from "./Scene.js";
 
 //import  DB from "./DB.js";
 
@@ -301,8 +303,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
             const terraEngine = new Engine(gpuscene);
-            const terrascene = new TerraScene(terraEngine, window, canvas, gpuscene, [mainCamera, waterCamera], async (terrascene: TerraScene) => {
-
+            const terrascene = new TerraScene(terraEngine, canvas, gpuscene, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
+                const sun = new Sun2(terrascene, sunBufferOffsetBytes);
                 // Initial scene objects here
 
                 const tools: Map<string, UITABClassLike> = new Map();
@@ -313,10 +315,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                
                 const b = new Box(terrascene);
                 b.worldPosition.update(scale => scale.set([200, 200, 200]));
-
-                const b2 = new Box(terrascene);
-                b2.worldPosition.update(scale => scale.set([200, 200, 200]));
-                b2.worldPosition.setTranslationX(500);
                 
                 /*new testPlaneNormals(terrascene);*/
                 const terrainInited = Terrain.loadFromTexture(terrascene);
@@ -356,7 +354,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     bufferView.buffer.destroy();
                     blazor.invokeMethod('setProgress', 100);
                     console.debug("Progress 100");
-                })
+                });
                 PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
                 tools.set('Plants', PlantsUI);
                 tools.set('Camera', CameraTAB);
@@ -437,20 +435,22 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                     }
                 })
+                cameraReady.then(camera => {
+                    camera.maxZ = 1606000;
+                    camera.panningSensibility = 20;
 
-                const camera = await cameraReady
-                camera.maxZ = 1606000;
-                camera.panningSensibility = 20;
+                    camera.angularSensibilityX = 1000;
+                    camera.angularSensibilityY = 2000;
+                    camera.panningAxis = new Vector3(1, 0, 1)
+                    camera.checkCollisions = true;
 
-                camera.angularSensibilityX = 1000;
-                camera.angularSensibilityY = 2000;
-                camera.panningAxis = new Vector3(1, 0, 1)
-                camera.checkCollisions = true;
-                
-                return camera;
+                })
             });
-            const debugscene = new DebugScene(window, canvas, gpuscene, [mainCamera], async (terrascene: DebugScene) => { return await cameraReady });
+            const debugscene = new DebugScene(terraEngine, canvas, gpuscene, [mainCamera], (terrascene: Scene) => {  });
 
+            const b2 = new Box(debugscene);
+            b2.worldPosition.update(scale => scale.set([200, 200, 200]));
+            b2.worldPosition.setTranslationX(500);
 
             const scenes = new Set([terrascene, debugscene])
             let renderFrame: number = 0;

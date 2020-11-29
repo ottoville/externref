@@ -9,7 +9,7 @@ import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js"
 
 import type { WorldScene } from "../world/scene.js";
 import type { GPU } from "../GPU.js";
-import { TerraScene } from "../TerraScene.js";
+import { Scene } from "../Scene.js";
 
 
 /**
@@ -51,7 +51,7 @@ export class Plants {
 
     }
     constructor(
-        scene: TerraScene,
+        scene: Scene,
         terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
 

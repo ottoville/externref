@@ -1,5 +1,5 @@
 ﻿import type { GPU } from "../GPU.js";
-import { TerraScene } from "../TerraScene.js";
+import { Scene } from "../Scene.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { TerrainMesh } from "../GPU/RenderPipeLines/TerrainRenderPipeline.js";
 
@@ -261,7 +261,7 @@ export class Terrain {
     }
     
 
-    static async loadFromTexture(scene: TerraScene): Promise<[Terrain, Promise<GPUBuffer>]> {
+    static async loadFromTexture(scene: Scene): Promise<[Terrain, Promise<GPUBuffer>]> {
         /*
 const t = await caches.match(new Request('/terrain.webp')).then(async cachedvertices => {
     if (cachedvertices) {
@@ -374,7 +374,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         size: this.textureExtent,
         usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
     });
-    constructor(readonly buffer: ArrayBuffer | SharedArrayBuffer, algorithm: string, public scene: TerraScene) {
+    constructor(readonly buffer: ArrayBuffer | SharedArrayBuffer, algorithm: string, public scene: Scene) {
 
         for (
             let i = 0,

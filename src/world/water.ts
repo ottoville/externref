@@ -1,12 +1,12 @@
 ﻿import { BoundableNode } from "../TerraNode";
-import type { TerraScene } from "../TerraScene";
+import type { Scene } from "../Scene";
 
 export class Sea extends BoundableNode {
     verticesPositionBuffer = new SharedArrayBuffer(4 * 4);
     verticesPositionStride = 4;
     worldPosition=undefined
 
-    constructor(scene: TerraScene) {
+    constructor(scene: Scene) {
         super(scene);
         (async () => {
 

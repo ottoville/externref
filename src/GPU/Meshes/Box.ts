@@ -1,11 +1,11 @@
-﻿import { TerraScene } from "../../TerraScene";
+﻿import { Scene } from "../../Scene";
 import { SimpleMesh } from "../RenderPipeLines/Simple";
 
 export class Box extends SimpleMesh {
     iBuffer: GPUIndexBuffer;
     verticesPositionBuffer: SharedArrayBuffer
     vBuffer: GPUVertexBuffer;
-    constructor(scene: TerraScene) {
+    constructor(scene: Scene) {
         super(scene, 'uint32');
         [this.verticesPositionBuffer, this.vBuffer] = scene.gpu.createInputBuffer(GPUBufferUsage.VERTEX, new Float32Array([
             -1.0, -1.0, 1.0,

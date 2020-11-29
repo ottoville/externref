@@ -175,27 +175,17 @@ export class TerraScene extends Scene {
     static instance: TerraScene;
 
     //context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
-    camera!: ArcRotateCamera;
     
     render(time: DOMHighResTimeStamp, renderEncoder: GPUCommandEncoder) {
 
     }
-    constructor(engine: Engine, private window: Window, public canvas: HTMLCanvasElement, gpu: GPU, TerraCameras: TerraCamera[], onRenderStart?: (scene: TerraScene) => Promise<ArcRotateCamera>) {
-        super(gpu, engine, TerraCameras);
+    constructor(engine: Engine, public canvas: HTMLCanvasElement, gpu: GPU, TerraCameras: TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes:number) => void) {
+        super(gpu, engine, TerraCameras, onRenderStart);
         TerraScene.instance = this;
 
         const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen, gpu.renderPassWater]);
 
         engine.physics.gameSpeed = 0;
-
-
-
-
-        (async () => {
-            onRenderStart && (this.camera = await onRenderStart(this));
-            
-            
-        })();
     }
 
     
