@@ -1,16 +1,12 @@
 ﻿import type { GPU } from "./GPU";
 import { TerraMatrix } from "./traits/worldPosition";
 import { Matrix, Vector3 } from "./lib/babylon/Maths/math.js";
-import { Physics } from "./physics";
 import type { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera";
 import type { RenderPass } from "./GPU/RenderPass";
 import type { ICollisionCoordinator } from "../wwwroot/js/lib/babylon/Collisions/collisionCoordinator";
 import type { Collider } from "../wwwroot/js/lib/babylon/Collisions/collider";
 import { TerraCamera } from "./TerraCamera";
-import { Light } from "./lights";
-import { Sun2 } from "./world/sun2";
 import { BoundableNode, PickingInfo } from "./TerraNode";
-import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
 import { Engine } from "./engine";
 import { Scene } from "./Scene";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
@@ -180,9 +176,7 @@ export class TerraScene extends Scene {
 
     //context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
     camera!: ArcRotateCamera;
-    positionBindGroupLightsTime;
-    positionBindGroupLightsTimeWGSL;
-    lightsBindGroupTexture: import("C:/Users/ottov/source/repos/terrasim/src/GPU/BindGroupLayout").LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
+    
     render(time: DOMHighResTimeStamp, renderEncoder: GPUCommandEncoder) {
 
     }
@@ -195,21 +189,8 @@ export class TerraScene extends Scene {
         engine.physics.gameSpeed = 0;
 
 
-        this.positionBindGroupLightsTime = this.lightsBindGroup.addChildBindGroup(this.gpu.BindGroup, true);
-        this.positionBindGroupLightsTime.onRender = async () => {
-            return this.gpu.updateGPUBuffer();
-        }
-        this.positionBindGroupLightsTimeWGSL = this.lightsBindGroupWGSL.addChildBindGroup(this.gpu.BindGroup, true);
 
-        this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.gpu.createBindGroupLayout({
-            binding: 0,
-            visibility: GPUShaderStage.FRAGMENT,
-            type: 'sampler'
-        }, {
-            binding: 1,
-            visibility: GPUShaderStage.FRAGMENT,
-            type: 'sampled-texture'
-        }));
+
         (async () => {
             onRenderStart && (this.camera = await onRenderStart(this));
             
