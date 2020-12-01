@@ -44,7 +44,7 @@ export class Sea extends BoundableNode {
                     }
                 ]
             );
-            waterPipeline.addDrawable([scene.gpu.renderPassScreen],4);
+            waterPipeline.addDrawable(scene, [scene.gpu.renderPassScreen],4);
         })()
     }
 }

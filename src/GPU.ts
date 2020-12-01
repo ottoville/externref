@@ -1,7 +1,7 @@
-﻿import { Light } from "./lights";
-import { TerraNode } from "./TerraNode";
+﻿import { TerraNode } from "./TerraNode";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass";
 import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
+import { Scene } from "./Scene";
 
 
 
@@ -49,7 +49,13 @@ export class GPU {
     BindGroupLayout = this.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
-
+    uniformBindGroupLayoutLightsWGSL = this.device.createBindGroupLayout({
+        entries: [{
+            binding: 0,
+            visibility: GPUShaderStage.VERTEX,
+            type: 'uniform-buffer'
+        }]
+    });
     cameraAndTimeBindGroupLayout = this.device.createBindGroupLayout({
         entries: [
             {
@@ -342,8 +348,8 @@ export class GPU {
     }
     properties = 0
     onRenders: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>)[] = [];
-    render(renderPassEncoder: GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp, physicDelta: number | null) {
-        let index = 1;
+    render(scene: Scene, renderPassEncoder: GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp, physicDelta: number | null) {
+        let index = 2;
         // console.time('render bindgroups')
         const me = this;
         BindGroupLayout.instances.forEach(function drawBindGroups(bgt) {
@@ -353,7 +359,7 @@ export class GPU {
                     //if (bgt.isDynamic) {
                     bgt.renderPipeLines.forEach(m => {
                         renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset);
-                        m.draw(renderPassEncoder, renderPass, index);
+                        m.draw(scene, renderPassEncoder, renderPass, index);
                     });
                 }
                 else {
@@ -362,7 +368,7 @@ export class GPU {
                     }
                     bgt.renderPipeLines.forEach(m => {
                         me.properties |= m.properties;
-                        m.draw(renderPassEncoder, renderPass, index)
+                        m.draw(scene, renderPassEncoder, renderPass, index)
                     });
                 }
                 if (bgt.subBindGroups.size) {
@@ -378,9 +384,5 @@ export class GPU {
         });
         this.properties = 0;
        // console.timeEnd('render bindgroups')
-       /* Promise.all(commandBuffers).then((buffers) => {
-            const buffersNoNull = buffers.filter<GPUCommandBuffer>(function (buff): buff is GPUCommandBuffer { return buff !== null });
-            this.device.defaultQueue.submit(buffersNoNull);
-        });*/
     }
 }

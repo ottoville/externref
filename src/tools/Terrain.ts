@@ -87,7 +87,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
                     indexFormat: 'uint32'
                 }
             }, [this.bufferOffsetBytes]);
-            this.helper = helperPipeline.addDrawable([scene.gpu.renderPassScreen], 4, 0, 8, 0, 0)
+            this.helper = helperPipeline.addDrawable(scene, [scene.gpu.renderPassScreen], 4, 0, 8, 0, 0)
         })();
 
         this.addListener("pointermove", this.mouseListener, { lazy: 15 });

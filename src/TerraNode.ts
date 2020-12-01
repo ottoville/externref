@@ -1,7 +1,7 @@
 ﻿import type { isLight } from "./lights";
 import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
-import type { worldPosition } from "./traits/worldPosition";
+import { worldPosition } from "./traits/worldPosition";
 import { ObjectWorkerThread } from "./WorkerThread";
 
 function matrixMultiply(m: ArrayLike<number>, otherM: ArrayLike<number>): number[] {
@@ -108,7 +108,6 @@ export abstract class TerraNode implements Partial<hasPhysics> {
             }
         });
         this.updateDynamicBuffer();
-
     }
 
     async updateDynamicBuffer() {
@@ -159,5 +158,11 @@ export abstract class BoundableNode extends TerraNode {
         //TODO: Use SIMD
         Vector3Multiply(this.boundingBox.min, m);
         Vector3Multiply(this.boundingBox.max, m);
+    }
+}
+export class PositionNode extends TerraNode {
+    worldPosition: worldPosition = new worldPosition(this);
+    constructor(scene: Scene, bufferOffsetBytes?: number) {
+        super(scene, bufferOffsetBytes);
     }
 }

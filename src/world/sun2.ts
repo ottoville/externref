@@ -123,8 +123,8 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
                 vertexState: {
                     indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
                 }
-            }, [this.bufferOffsetBytes]);
-            sunPipeline.addDrawable([scene.gpu.renderPassScreen], 14);
+            },[this.bufferOffsetBytes]);
+            sunPipeline.addDrawable(scene, [scene.gpu.renderPassScreen], 14);
         })();
 
 

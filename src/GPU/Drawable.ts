@@ -46,7 +46,7 @@ export class Drawable {
         }
     }
     destroy(preserveIndexBuffer = false, preserveVerticeBuffers: number[] = []): void {
-        this.renderPasses.forEach(rp => this.renderPipeline.variants.get(rp)?.drawables.delete(this))
+        this.renderPasses.forEach(rp => this.renderPipeline.variants.get(rp)?.drawables.forEach(scene => scene.delete(this)));
         this.#vertexBuffers.forEach((b, key) => {
             if (!preserveVerticeBuffers.includes(key))
                 b.buffer.destroy()

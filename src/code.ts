@@ -24,6 +24,7 @@ import { TerraScene } from "./TerraScene.js";
 import { Engine } from "./engine.js";
 import { Sun2 } from "./world/sun2.js";
 import { Scene } from "./Scene.js";
+import { PositionNode } from "./TerraNode.js";
 
 //import  DB from "./DB.js";
 
@@ -304,7 +305,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
             const terraEngine = new Engine(gpuscene);
             const terrascene = new TerraScene(terraEngine, canvas, gpuscene, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
-                const sun = new Sun2(terrascene, sunBufferOffsetBytes);
+                new Sun2(terrascene, sunBufferOffsetBytes);
                 // Initial scene objects here
 
                 const tools: Map<string, UITABClassLike> = new Map();
@@ -446,12 +447,16 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                 })
             });
-            const debugscene = new DebugScene(terraEngine, canvas, gpuscene, [mainCamera], (terrascene: Scene) => {  });
+            const debugscene = new DebugScene(terraEngine, canvas, gpuscene, [mainCamera], (scene, sunBufferOffsetBytes) => {
+                const sun = new PositionNode(scene, sunBufferOffsetBytes);
+                sun.worldPosition.translation.set([0, 1, 0]);
+                sun.customData.set([0,0,0,1]) //shadow to 1 (no shadow)
+            });
 
             const b2 = new Box(debugscene);
             b2.worldPosition.update(scale => scale.set([200, 200, 200]));
             b2.worldPosition.setTranslationX(500);
-
+            
             const scenes = new Set([terrascene, debugscene])
             let renderFrame: number = 0;
             let resizeHandler = 0;
@@ -541,7 +546,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
             engine.resize();
-
 
 
             let webSocket = new WebSocket('ws://localhost:8081');

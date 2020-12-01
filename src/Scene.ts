@@ -3,32 +3,58 @@ import type { BoundableNode, PickingInfo } from "./TerraNode";
 import type { GPU } from "./GPU";
 import { Sun2 } from "./world/sun2";
 import type { Engine } from "./engine";
-import type { BindGroupLayout, LayoutGroupDrawable } from "./GPU/BindGroupLayout";
+import { BindGroupLayout, DynamicBindGroupLayout, LayoutGroupDrawable } from "./GPU/BindGroupLayout";
 import { TerraMatrix } from "./traits/worldPosition";
 import type { TerraCamera } from "./TerraCamera";
 import type { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera";
+import { RenderPass } from "./GPU/RenderPass";
+import { RenderPipeline } from "./GPU/RenderPipeline";
 
 export abstract class Scene {
     boundables: Set<BoundableNode> = new Set();
     lights;
-    lightsBindGroup: BindGroupLayout;
-    lightsBindGroupWGSL: BindGroupLayout;
-    positionBindGroupLightsTime;
-    positionBindGroupLightsTimeWGSL;
+    //lightsBindGroup: BindGroupLayout;
+    lightsBindGroupWGSL: BindGroupOneBinding;
+    positionBindGroupLightsTime: DynamicBindGroupLayout<[number]>;
+    positionBindGroupLightsTimeWGSL: LayoutGroupDrawable<[GPUBindGroupEntry]>;
     lightsBindGroupTexture: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
-    constructor(public gpu: GPU, public engine: Engine, public TerraCameras: TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes:number) => void ) {
+    rootRenderLayout: BindGroupLayout;
+    constructor(public gpu: GPU, public engine: Engine, public TerraCameras: TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes: number) => void) {
+
+        TerraCameras.forEach(camera =>
+            camera.renderPass.scenes.add(this)
+        )
+
         const sunBufferOffsetBytes = gpu.DataSlots.pop();
         if (typeof (sunBufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
         this.lights = new Light(gpu, sunBufferOffsetBytes);
-        this.lightsBindGroup = gpu.addBindGroup(this.lights.uniformBindGroupLights);
-        this.lightsBindGroupWGSL = gpu.addBindGroup(this.lights.uniformBindGroupLightsWGSL);
-        this.positionBindGroupLightsTime = this.lightsBindGroup.addChildBindGroup(this.gpu.BindGroup, true);
+
+        this.rootRenderLayout = new BindGroupLayout(this.gpu, this.lights.uniformBindGroupLayoutLightsWGSL, undefined,undefined,false,true)
+        
+        //this.lightsBindGroup = gpu.addBindGroup(this.lights.uniformBindGroupLights);
+        //this.lightsBindGroupWGSL = gpu.addBindGroup(this.lights.uniformBindGroupLightsWGSL);
+
+
+        this.lightsBindGroupWGSL = gpu.createBindGroup(
+            this.lights.uniformBindGroupLayoutLightsWGSL,
+            {
+                binding: 0,
+                resource: {
+                    buffer: this.gpu.GPUData, //this.#lightsBuffer
+                    size: 256,
+                    offset: sunBufferOffsetBytes
+                }
+            });
+        this.positionBindGroupLightsTime = gpu.addBindGroup(this.gpu.BindGroup, true);
         this.positionBindGroupLightsTime.onRender = async () => {
             return this.gpu.updateGPUBuffer();
         }
-        this.positionBindGroupLightsTimeWGSL = this.lightsBindGroupWGSL.addChildBindGroup(this.gpu.BindGroup, true);
-        this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.gpu.createBindGroupLayout({
+
+        this.positionBindGroupLightsTimeWGSL = new LayoutGroupDrawable(gpu, gpu.BindGroupLayout)
+        
+
+        const layout = this.gpu.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.FRAGMENT,
             type: 'sampler'
@@ -36,8 +62,27 @@ export abstract class Scene {
             binding: 1,
             visibility: GPUShaderStage.FRAGMENT,
             type: 'sampled-texture'
-        }));
+        });
+        this.lightsBindGroupTexture = new LayoutGroupDrawable(gpu, layout);
+       /* this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.gpu.createBindGroupLayout({
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            type: 'sampler'
+        }, {
+            binding: 1,
+            visibility: GPUShaderStage.FRAGMENT,
+            type: 'sampled-texture'
+        }));*/
         onRenderStart(this, sunBufferOffsetBytes)
+    }
+    rootRenderPipeLines: Set<RenderPipeline> = new Set();
+    
+    render(renderPassEncoder: GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp, physicDelta: number | null) {
+        renderPassEncoder.setBindGroup(1, this.lights.uniformBindGroupLightsWGSL);
+        this.rootRenderPipeLines.forEach(rp => {
+            rp.draw(this, renderPassEncoder, renderPass, 2);
+        });
+        this.gpu.render(this, renderPassEncoder, renderPass, time, physicDelta);
     }
     async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
         let boundableMesh: BoundableNode;

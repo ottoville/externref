@@ -5,11 +5,9 @@ import { Terrain } from "../world/terrain.js";
 //import simplex from '../simplex.js'
 
 import type { PTDresult } from "../types/interfaces/index.js";
-import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 
-import type { WorldScene } from "../world/scene.js";
-import type { GPU } from "../GPU.js";
-import { Scene } from "../Scene.js";
+import type { Scene } from "../Scene.js";
+
 
 
 /**
@@ -54,9 +52,7 @@ export class Plants {
         scene: Scene,
         terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
-
-
-        const planstPipeline = scene.lightsBindGroup.addRenderPipeline({
+        const planstPipeline = scene.rootRenderLayout.addRenderPipeline({
             primitiveTopology: 'triangle-strip',
             rasterizationState: {
                 cullMode: 'none',
@@ -103,7 +99,7 @@ export class Plants {
                     }]
             },
         });
-        const drawable = planstPipeline.addDrawable([scene.gpu.renderPassScreen],7,0)
+        const drawable = planstPipeline.addDrawable(scene,[scene.gpu.renderPassScreen],7,0)
         const positionGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] );
         const shapeGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
 

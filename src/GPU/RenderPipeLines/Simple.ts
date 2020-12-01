@@ -7,8 +7,9 @@ const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 async function Simple(scene: Scene) {
     const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
-    const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
-    const renderPipeLine = bindGroupLayout.addChildLayout(scene.gpu.BindGroupLayout).addRenderPipeline({
+    //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
+
+    const renderPipeLine = scene.positionBindGroupLightsTimeWGSL.addRenderPipeline({
         rasterizationState: {
             cullMode: 'none',
         },
@@ -54,7 +55,7 @@ export abstract class SimpleMesh extends BoundableNode {
         
         (async () => {
             const renderPipeline = renderPipelines.get(scene.gpu) || (await Simple(scene));
-            const m = renderPipeline.addDrawable([scene.gpu.renderPassScreen], 36);
+            const m = renderPipeline.addDrawable(scene, [scene.gpu.renderPassScreen], 36);
             m.dynamicBuffers.set(scene.gpu.BindGroup, this.bufferOffsetBytes);
             m.setVertexBuffer(0, this.vBuffer);
             m.setIndexBuffer(this.iBuffer, undefined, undefined, indexFormat);

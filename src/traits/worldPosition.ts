@@ -35,7 +35,6 @@ export class TerraMatrix extends Float32Array {
 
 
 export class worldPosition {
-
     readonly worldMatrix = new Float32Array(this.node.data.buffer, this.node.bufferOffsetBytes, 16) as TerraMatrix;
     readonly translation = new Float32Array(this.node.data.buffer, this.node.bufferOffsetBytes+ 12 * this.node.data.BYTES_PER_ELEMENT, 3);
     readonly translationDelta: Float32Array = new Float32Array(this.node.data.buffer, this.node.bufferOffsetBytes + 16 * this.node.data.BYTES_PER_ELEMENT, 3);

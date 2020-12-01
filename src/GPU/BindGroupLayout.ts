@@ -7,7 +7,7 @@ export class BindGroupLayout {
 
     childBindGroups: Map<GPUBindGroup, BindGroupLayout> = new Map();
 
-    addRenderPipeline(renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>, ...args: any): RenderPipeline {
+    addRenderPipeline(renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>,...args: any): RenderPipeline {
         const d = new RenderPipeline(renderPipeline, this)
         this.renderPipeLines.add(d);
         return d;
@@ -19,20 +19,24 @@ export class BindGroupLayout {
     subBindGroups: Set<BindGroupLayout> = new Set();
     layout: GPUPipelineLayout;
     onRender: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>) | null = null;
-    constructor(public gpuscene: GPU, public bindGroupLayout: GPUBindGroupLayout, public parent?: BindGroupLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false) {
+    constructor(public gpuscene: GPU, public bindGroupLayout: GPUBindGroupLayout, public parent?: BindGroupLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false, isScene = false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout];
-        if (parent) {
-            let curparent: BindGroupLayout | undefined = parent;
-            do {
-                layoutTree.unshift(curparent.bindGroupLayout);
-            } while (curparent = curparent.parent)
-            parent.subBindGroups.add(this);
+        if (isScene) {
+            layoutTree.unshift(gpuscene.cameraAndTimeBindGroupLayout);
         } else {
-            BindGroupLayout.instances.add(this);
+            if (parent) {
+                let curparent: BindGroupLayout | undefined = parent;
+                do {
+                    layoutTree.unshift(curparent.bindGroupLayout);
+                } while (curparent = curparent.parent)
+                parent.subBindGroups.add(this);
+            } else {
+                BindGroupLayout.instances.add(this);
+            }
+            layoutTree.unshift(gpuscene.uniformBindGroupLayoutLightsWGSL);
+            layoutTree.unshift(gpuscene.cameraAndTimeBindGroupLayout);
         }
-        layoutTree.unshift(gpuscene.cameraAndTimeBindGroupLayout);
         this.layout = this.gpuscene.device.createPipelineLayout({ bindGroupLayouts: layoutTree });
-
     }
     addChildLayout(meshBindGroupLayout: BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry>): LayoutGroupDrawable<[GPUBindGroupEntry]>
     addChildLayout(meshBindGroupLayout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>

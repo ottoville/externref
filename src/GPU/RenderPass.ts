@@ -1,4 +1,5 @@
-﻿import { TerraCamera } from "../TerraCamera";
+﻿import { Scene } from "../Scene";
+import { TerraCamera } from "../TerraCamera";
 import { TerraScene } from "../TerraScene";
 
 export class RenderPass {
@@ -29,7 +30,8 @@ export class RenderPass {
             format,
             usage: GPUTextureUsage.OUTPUT_ATTACHMENT | this.usage //: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.SAMPLED
         });
-    }
+    };
+    scenes: Set<Scene> = new Set();
     depthTextureView: GPUTextureView | undefined
     #depthTexture: GPUTexture | undefined
     targetTexture = this.createTexture("bgra8unorm");
@@ -102,7 +104,11 @@ export class RenderPass {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             passEncoder.setBindGroup(0, cameraBindGroup);
-            TerraScene.instance.gpu.render(passEncoder, this, time, physicDelta);
+
+            this.scenes.forEach(scene =>
+                scene.render(passEncoder, this, time, physicDelta)
+            )
+            //TerraScene.instance.gpu.render(passEncoder, this, time, physicDelta);
             passEncoder.endPass();
         } catch (e) {
             console.error(e);
@@ -112,7 +118,16 @@ export class RenderPass {
 }
 
 export class RenderPassCanvas extends RenderPass {
-    constructor(device: GPUDevice, sampleCount: number = 1, depthStencil = false, width: number, height: number, loadValue: GPULoadOp | GPUColor, _onResize: (width: number, height: number) => [number, number], usage: number = 0, public canvas: HTMLCanvasElement) {
+    constructor(
+        device: GPUDevice,
+        sampleCount: number = 1,
+        depthStencil = false,
+        width: number,
+        height: number,
+        loadValue: GPULoadOp | GPUColor,
+        _onResize: (width: number, height: number) => [number, number],
+        usage: number = 0,
+        public canvas: HTMLCanvasElement) {
         super(device, sampleCount, depthStencil, width, height, loadValue, _onResize, usage);
         const context: GPUCanvasContext = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
         this.swapChain = context.configureSwapChain({

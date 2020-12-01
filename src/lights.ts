@@ -31,6 +31,7 @@ export class Light {
    
     uniformBindGroupLightsWGSL: BindGroupOneBinding;
     uniformBindGroupLights: BindGroupOneBinding;
+    uniformBindGroupLayoutLightsWGSL: BindGroupLayoutOneBinding<{ binding: number; visibility: 1; type: "uniform-buffer"; }>;
 
     add(light: isLight) {
         this.#instances.add(light);
@@ -41,11 +42,14 @@ export class Light {
             visibility: GPUShaderStage.VERTEX,
             type: 'readonly-storage-buffer'
         });
-        const uniformBindGroupLayoutLightsWGSL = this.gpu.createBindGroupLayout({
+
+        this.uniformBindGroupLayoutLightsWGSL = this.gpu.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
             type: 'uniform-buffer'
         });
+        
+
         this.uniformBindGroupLights = this.gpu.createBindGroup(uniformBindGroupLayoutLights,
                 {
                     binding: 0,
@@ -55,7 +59,7 @@ export class Light {
                         offset: byteoffset
                     }
              });
-        this.uniformBindGroupLightsWGSL = this.gpu.createBindGroup(uniformBindGroupLayoutLightsWGSL,
+        this.uniformBindGroupLightsWGSL = this.gpu.createBindGroup(this.uniformBindGroupLayoutLightsWGSL,
             {
                 binding: 0,
                 resource: {
