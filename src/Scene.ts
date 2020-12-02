@@ -1,25 +1,18 @@
 ﻿import { Light } from "./lights";
 import type { BoundableNode, PickingInfo } from "./TerraNode";
 import type { GPU } from "./GPU";
-import { Sun2 } from "./world/sun2";
 import type { Engine } from "./engine";
-import { BindGroupLayout, DynamicBindGroupLayout, LayoutGroupDrawable } from "./GPU/BindGroupLayout";
+import { LayoutGroupDrawable } from "./GPU/BindGroupLayout";
 import { TerraMatrix } from "./traits/worldPosition";
 import type { TerraCamera } from "./TerraCamera";
-import type { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera";
 import { RenderPass } from "./GPU/RenderPass";
-import { RenderPipeline } from "./GPU/RenderPipeline";
 
 export abstract class Scene {
     boundables: Set<BoundableNode> = new Set();
     lights;
-    //lightsBindGroup: BindGroupLayout;
-    lightsBindGroupWGSL: BindGroupOneBinding;
-    positionBindGroupLightsTime: DynamicBindGroupLayout<[number]>;
     positionBindGroupLightsTimeWGSL: LayoutGroupDrawable<[GPUBindGroupEntry]>;
     lightsBindGroupTexture: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
-   // rootRenderLayout: BindGroupLayout;
-    //rootlayout: BindGroupLayout;
+
     constructor(public gpu: GPU, public engine: Engine, public TerraCameras: TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes: number) => void) {
 
         TerraCameras.forEach(camera =>
@@ -31,33 +24,8 @@ export abstract class Scene {
             throw ('Out of memory');
         this.lights = new Light(gpu, sunBufferOffsetBytes);
 
-       // this.rootRenderLayout = new BindGroupLayout(this.gpu, gpu.uniformBindGroupLayoutLightsWGSL2,gpu.rootlayout,undefined,false)
-        
-        //this.lightsBindGroup = gpu.addBindGroup(this.lights.uniformBindGroupLights);
-        //this.lightsBindGroupWGSL = gpu.addBindGroup(this.lights.uniformBindGroupLightsWGSL);
-
-
-        this.lightsBindGroupWGSL = gpu.createBindGroup(
-            gpu.uniformBindGroupLayoutLightsWGSL2,
-            {
-                binding: 0,
-                resource: {
-                    buffer: this.gpu.GPUData, //this.#lightsBuffer
-                    size: 256,
-                    offset: sunBufferOffsetBytes
-                }
-            });
-        //this.rootlayout = new BindGroupLayout(this.gpu, this.lights.uniformBindGroupLayoutLightsWGSL, undefined, this.lightsBindGroupWGSL, false, true)
-
-        this.positionBindGroupLightsTime = gpu.addBindGroup(this.gpu.BindGroup, true);
-        this.positionBindGroupLightsTime.onRender = async () => {
-            return this.gpu.updateGPUBuffer();
-        }
-
         this.positionBindGroupLightsTimeWGSL = this.gpu.rootSceneLayout.addChildLayout(gpu.BindGroupLayout);
-        
-
-        const layout = this.gpu.createBindGroupLayout({
+        this.lightsBindGroupTexture = gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.FRAGMENT,
             type: 'sampler'
@@ -65,21 +33,9 @@ export abstract class Scene {
             binding: 1,
             visibility: GPUShaderStage.FRAGMENT,
             type: 'sampled-texture'
-        });
-       // this.lightsBindGroupTexture = new LayoutGroupDrawable(gpu, layout);
-        this.lightsBindGroupTexture = gpu.rootSceneLayout.addChildLayout(layout);
-       /* this.lightsBindGroupTexture = this.lightsBindGroupWGSL.addChildLayout(this.gpu.createBindGroupLayout({
-            binding: 0,
-            visibility: GPUShaderStage.FRAGMENT,
-            type: 'sampler'
-        }, {
-            binding: 1,
-            visibility: GPUShaderStage.FRAGMENT,
-            type: 'sampled-texture'
-        }));*/
+        }));
         onRenderStart(this, sunBufferOffsetBytes)
     }
-    rootRenderPipeLines: Set<RenderPipeline> = new Set();
     
     render(renderPassEncoder: GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp, physicDelta: number | null) {
         renderPassEncoder.setBindGroup(1, this.lights.uniformBindGroupLightsWGSL);

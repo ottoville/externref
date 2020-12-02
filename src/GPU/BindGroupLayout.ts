@@ -1,5 +1,4 @@
 ﻿import type { GPU } from "../GPU";
-import { RenderPass } from "./RenderPass";
 import { RenderPipeline } from "./RenderPipeline";
 
 export class BindGroupLayout {
@@ -48,7 +47,6 @@ export class BindGroupLayout {
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number, number]>
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupLayout
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): any {
-        //TODO: repkace with subBindGroups
         const old = this.childBindGroups.get(sharedBindgroup)
         if (old)
             return old;
