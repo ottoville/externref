@@ -32,9 +32,18 @@ layout(set = 0, binding = 1) uniform Terra {
 
 } terra;
 
-layout(set = 1, binding = 0) readonly buffer Lights {
-    float matrix[];
-};
+layout(set = 1, binding = 0) uniform Lights {
+      mat3 t0; //36
+      vec3 t1; //36+12=48
+      vec3 sunDirection; //48+12=60
+      mat3 t2; //60+12=72
+      vec2 t3; //72+4=80
+      vec3 ambientIN; //80+12=92
+      float shadow;
+      bool isDirectional;
+      vec3 intensity;
+      float attenuation;
+} lights;
 
 layout(location = 0) in vec4 positions;  // {xyz} (blade's position) + rotation
 layout(location = 1) in vec4 shape;  // {x:scale, y:baseAngle, z:curve, w:color} (blade's shape properties)
@@ -65,10 +74,9 @@ const float windDirection=0;
 
 void main(void) {
 
-   vec3 sunDirection=vec3(matrix[a],matrix[b],matrix[c]);
-   ambient=vec3(matrix[20],matrix[21],matrix[22]);
-   float shadow=matrix[23];
-
+   vec3 sunDirection=lights.sunDirection;
+   ambient=lights.ambientIN;
+   float shadow=lights.shadow;
 
 
     vec3 vertice=vec3(vertices[gl_VertexIndex].xy,0);
@@ -124,8 +132,6 @@ void main(void) {
     normal*=sign(dot(viewDirectionW, normal));
 
     float diffuse = dot(normal, sunDirection)*shadow;
-
-
 
     gl_Position = viewProjection * worldPos;
 

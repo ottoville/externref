@@ -25,7 +25,7 @@ export class paintPlane extends paintGround {
     }
 
    // worldPosition = new worldPosition(this as TerraNode);
-    #mesh = new PlaneMesh(this.scene);
+    #mesh = new PlaneMesh(this.scene.engine);
     #startingPoint: Float32Array = new Float32Array(2);
     #templane2!: Drawable;
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {

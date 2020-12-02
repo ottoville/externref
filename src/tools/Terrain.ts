@@ -1,9 +1,7 @@
-﻿import { UITAB, UITABClassLike } from "../UITAB.js";
+﻿import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
-import type { WorldScene } from "../world/scene.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { addTrait, Trait, Traitable } from "../traits/trait.js";
@@ -30,19 +28,19 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
 
     worldPosition: worldPosition;
-    facet12ArrGPUBufferSwap = this.scene.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+    facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     traits: Trait[];
     constructor(
-        public scene: TerraScene,
+        public scene:TerraScene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea,
         ...traits: Trait[]
     ) {
-        super(scene);
+        super(scene.engine);
         this.traits = this.initTraits(traits);
-        this.scene.TerraCameras[0].subscribePickingRay();
+        scene.TerraCameras[0].subscribePickingRay();
 
         terrainWorker.message(WorkerReturn.Promise, 'init',
             {
@@ -87,7 +85,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
                     indexFormat: 'uint32'
                 }
             }, [this.bufferOffsetBytes]);
-            this.helper = helperPipeline.addDrawable(scene, [scene.gpu.renderPassScreen], 4, 0, 8, 0, 0)
+            this.helper = helperPipeline.addDrawable(undefined, [scene.gpu.renderPassScreen], 4, 0, 8, 0, 0)
         })();
 
         this.addListener("pointermove", this.mouseListener, { lazy: 15 });
@@ -99,13 +97,13 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     private direction = 0;
     private mouseinterval: number = 0;
     updateSwap2(offset = 0, length: number) {
-        const b1 = this.scene.gpu.createGPUBuffer(length, [GPUBufferUsage.COPY_SRC], true);
+        const b1 = this.engine.gpu.createGPUBuffer(length, [GPUBufferUsage.COPY_SRC], true);
         new Float32Array(b1.getMappedRange()).set(new Float32Array(this.terrain.terrainPositionAndUvsAndNormalsCPUSwap, offset, length / 4))
         b1.unmap();
-        const b2 = this.scene.gpu.createGPUBuffer(this.terrain.facet12ArrCPUBuffer.byteLength, [GPUBufferUsage.COPY_SRC], true);
+        const b2 = this.engine.gpu.createGPUBuffer(this.terrain.facet12ArrCPUBuffer.byteLength, [GPUBufferUsage.COPY_SRC], true);
         new Float32Array(b2.getMappedRange()).set(this.terrain.facet12ArrCPUBufferView)
         b2.unmap();
-        const commandEncoder = this.scene.gpu.createCommandEncoder();
+        const commandEncoder = this.engine.gpu.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
             b1, // source buffer
             0, //source offset
@@ -118,7 +116,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
             this.terrain.facet12ArrGPUBuffer, //destination buffer
             0, //destination offset
             this.terrain.facet12ArrCPUBuffer.byteLength);
-        this.scene.gpu.device.defaultQueue.submit([commandEncoder.finish()]);
+        this.engine.gpu.device.defaultQueue.submit([commandEncoder.finish()]);
         b1.destroy();
         b2.destroy();
     }
@@ -127,7 +125,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
             return;
         }
         this.addListener("pointerup", this.pointerupf, { once: true });
-        this.camera.detachControl(this.scene.gpu.renderPassScreen.canvas);
+        this.camera.detachControl(this.engine.gpu.renderPassScreen.canvas);
        
         this.mouseinterval = setInterval(() => {
             terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
@@ -140,7 +138,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
         }, 17);
     }
     pointerupf = (evt: PointerEvent): void => {
-        this.camera.attachControl(this.scene.gpu.renderPassScreen.canvas, true);
+        this.camera.attachControl(this.engine.gpu.renderPassScreen.canvas, true);
         clearInterval(this.mouseinterval);
     }
     destroy = (): void => {

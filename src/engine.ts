@@ -8,7 +8,7 @@ export class Engine {
     calculatePickingRaysPipeline: TerraGPUComputePipeLine;
     bindgrouplayout1: GPUBindGroupLayout;
 
-    constructor(gpu: GPU) {
+    constructor(public gpu: GPU) {
         this.positionBindGroupTime = gpu.rootSceneLayout.addChildBindGroup(gpu.BindGroup, true);
         this.positionBindGroupTime.onRender = async (time) => {
             return gpu.updateGPUBuffer();

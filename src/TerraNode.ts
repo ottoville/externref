@@ -1,4 +1,5 @@
-﻿import type { isLight } from "./lights";
+﻿import { Engine } from "./engine";
+import type { isLight } from "./lights";
 import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
 import { worldPosition } from "./traits/worldPosition";
@@ -72,19 +73,19 @@ export abstract class TerraNode implements Partial<hasPhysics> {
     readonly customData: Float32Array;
 
     destroy() {
-        this.scene.gpu.NodeInstances.delete(this);
+        this.engine.gpu.NodeInstances.delete(this);
     }
 
-    constructor(public scene: Scene, bufferOffsetBytes?:number) {
-        bufferOffsetBytes = typeof (bufferOffsetBytes) == "number" ? bufferOffsetBytes : scene.gpu.DataSlots.pop();
+    constructor(public engine: Engine, bufferOffsetBytes?:number) {
+        bufferOffsetBytes = typeof (bufferOffsetBytes) == "number" ? bufferOffsetBytes : engine.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
         this.bufferOffsetBytes = bufferOffsetBytes;
-        this.data = new Float32Array(this.scene.gpu.CPUData, bufferOffsetBytes, TerraNode.GPUDataSize);
-        this.customData = new Float32Array(this.scene.gpu.CPUData, bufferOffsetBytes + 20 * 4, 4);
+        this.data = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes, TerraNode.GPUDataSize);
+        this.customData = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 20 * 4, 4);
 
         
-        scene.gpu.NodeInstances.set(this, scene.gpu.NodeInstances.size * TerraNode.alignment);
+        engine.gpu.NodeInstances.set(this, engine.gpu.NodeInstances.size * TerraNode.alignment);
         this.data.set([
             //3d matrix start, 64 bytes
             1.0, 0.0, 0.0, 0.0,
@@ -101,7 +102,7 @@ export abstract class TerraNode implements Partial<hasPhysics> {
         ])
         queueMicrotask(() => {
             if (this.hasPhysics()) {
-                scene.engine.physics.tickables.add(this);
+                engine.physics.tickables.add(this);
             }
             if (this.isLight()) {
                 //scene.lights.add(this);
@@ -111,7 +112,7 @@ export abstract class TerraNode implements Partial<hasPhysics> {
     }
 
     async updateDynamicBuffer() {
-        this.scene.gpu.queue.set(this.data, this.bufferOffsetBytes);
+        this.engine.gpu.queue.set(this.data, this.bufferOffsetBytes);
     }
 }
 export interface PickingInfo {
@@ -144,7 +145,7 @@ export abstract class BoundableNode extends TerraNode {
     readonly pickInfo = new pickInfo();
 
     constructor(scene: Scene) {
-        super(scene);
+        super(scene.engine);
         scene.boundables.add(this);
         queueMicrotask(() => {    //Run this on microtask so the scope who called constuctor has time to add verticesPositionBuffer property.
             worker.message(this.uniqueID, 'init', [this.indicesBuffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
@@ -162,7 +163,7 @@ export abstract class BoundableNode extends TerraNode {
 }
 export class PositionNode extends TerraNode {
     worldPosition: worldPosition = new worldPosition(this);
-    constructor(scene: Scene, bufferOffsetBytes?: number) {
-        super(scene, bufferOffsetBytes);
+    constructor(engine: Engine, bufferOffsetBytes?: number) {
+        super(engine, bufferOffsetBytes);
     }
 }

@@ -445,7 +445,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 })
             });
             const debugscene = new DebugScene(terraEngine, canvas, gpuscene, [mainCamera], (scene, sunBufferOffsetBytes) => {
-                const sun = new PositionNode(scene, sunBufferOffsetBytes);
+                const sun = new PositionNode(scene.engine, sunBufferOffsetBytes);
                 sun.worldPosition.translation.set([0, 1, 0]);
                 sun.customData.set([0,0,0,1]) //shadow to 1 (no shadow)
             });

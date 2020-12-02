@@ -406,7 +406,6 @@ export class GPU {
 
             bgt.onRender && this.onRenders.push(bgt.onRender);
             if (bgt.sharedBindgroup && this.DynamicBindGroups.has(bgt.sharedBindgroup)) {
-
                 //if (bgt.isDynamic) {
                 bgt.renderPipeLines.forEach(m => {
                     renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset);
