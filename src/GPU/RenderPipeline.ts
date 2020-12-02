@@ -13,7 +13,7 @@ export class RenderPipeline {
     bindGroups: Set<GPUBindGroup> | null = null;
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
 
-    constructor(private renderPipelineDescriptor: GPURenderPipelineDescriptor, public bindgroupdrawable: BindGroupLayout) {
+    constructor(public renderPipelineDescriptor: GPURenderPipelineDescriptor, public bindgroupdrawable: BindGroupLayout) {
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
         renderPipelineDescriptor.vertexState && renderPipelineDescriptor.vertexState.indexFormat && (this.#GPUIndexFormat = renderPipelineDescriptor.vertexState.indexFormat);
         if (!renderPipelineDescriptor.rasterizationState) {
@@ -44,34 +44,10 @@ export class RenderPipeline {
         }
         drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart));
     }
+
     variants: Map<RenderPass, RenderPipelineVariant> = new Map();
     addDrawable(scene: Scene | undefined, renderPasses: RenderPass[], indexOrVertexCount: number, baseVertex: number = 0, instanceCount = 1, firstVertexOrIndex = 0, firstInstance = 0): Drawable {
-        const d = new Drawable(this, new Set(renderPasses), indexOrVertexCount, baseVertex, instanceCount, firstVertexOrIndex, firstInstance, this.#GPUIndexFormat);
-        renderPasses.forEach(rp => {
-            let variant = this.variants.get(rp);
-            if (!variant) {
-                const renderpipeline = this.bindgroupdrawable.gpuscene.device.createRenderPipeline(rp.decoratePipeline(this.renderPipelineDescriptor));
-                variant = {
-                    renderPass: rp,
-                    renderpipeline: renderpipeline,
-                    drawables: new Map(),
-                    rootDrawables: new Set()
-                }
-                this.variants.set(rp, variant)
-            }
-            if (scene) {
-                let sceneDrawables = variant.drawables.get(scene);
-                if (!sceneDrawables) {
-                    sceneDrawables = new Set()
-                    variant.drawables.set(scene, sceneDrawables);
-                }
-                sceneDrawables.add(d);
-            } else {
-                console.log('add rootDrawable');
-                variant.rootDrawables.add(d);
-            }
-        });
-        return d;
+        return new Drawable(this, new Set(renderPasses), indexOrVertexCount, scene, baseVertex, instanceCount, firstVertexOrIndex, firstInstance, this.#GPUIndexFormat);
     }
 }
 interface RenderPipelineVariant {

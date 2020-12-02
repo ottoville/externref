@@ -1,6 +1,7 @@
 ﻿import { RenderPipeline } from "./RenderPipeline";
 import type { GPU } from "../GPU";
 import { RenderPass } from "./RenderPass";
+import { Scene } from "../Scene";
 type DrawableLike = typeof RenderPipeline;
 interface GPUVertexReadOnlyBuffer extends GPUBuffer {
     vertex: 'true';
@@ -18,21 +19,49 @@ export class Drawable {
     //Todo, support writable vertex buffer
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     dynamicBuffers: Map<GPUBindGroup, number> = new Map();
-
-
+    #renderList: Map<RenderPass, Set<Drawable>> = new Map();
+    #scene?: Scene;
+    set scene(scene: Scene | undefined) {
+        if (this.#scene) {
+            this.#renderList.forEach(Drawables => Drawables.delete(this));
+        }
+        this.#scene = scene;
+        this.renderPasses.forEach(rp => {
+            let variant = this.renderPipeline.variants.get(rp);
+            if (!variant) {
+                const renderpipeline = this.renderPipeline.bindgroupdrawable.gpuscene.device.createRenderPipeline(rp.decoratePipeline(this.renderPipeline.renderPipelineDescriptor));
+                variant = {
+                    renderPass: rp,
+                    renderpipeline: renderpipeline,
+                    drawables: new Map(),
+                    rootDrawables: new Set()
+                }
+                this.renderPipeline.variants.set(rp, variant)
+            }
+            if (scene) {
+                let sceneDrawables = variant.drawables.get(scene);
+                if (!sceneDrawables) {
+                    sceneDrawables = new Set()
+                    variant.drawables.set(scene, sceneDrawables);
+                }
+                this.#renderList.set(rp, sceneDrawables.add(this));
+            } else
+                this.#renderList.set(rp, variant.rootDrawables.add(this));
+        });
+    }
     constructor(
         private renderPipeline: RenderPipeline,
         public renderPasses: Set<RenderPass>,
         public indexOrVertexCount: number,
+        scene?: Scene,
         public baseVertex = 0,
         public instanceCount = 1,
         public firstVertexOrIndex = 0,
         public firstInstance = 0,
         private GPUIndexFormat: GPUIndexFormat = 'uint16') {
-
-        if (instanceCount == 0)
-            console.warn('Added drawable with 0 instances, nothing will be drawn')
-
+            if (instanceCount == 0)
+                console.warn('Added drawable with 0 instances, nothing will be drawn');
+            this.scene = scene;
     }
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number) {
         this.dynamicBuffers.forEach((offset, bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset]))
