@@ -13,7 +13,13 @@ export class RenderPipeline {
     bindGroups: Set<GPUBindGroup> | null = null;
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
 
-    constructor(public renderPipelineDescriptor: GPURenderPipelineDescriptor, public bindgroupdrawable: BindGroupLayout) {
+    constructor(public renderPipelineDescriptor: GPURenderPipelineDescriptor, public bindgroupdrawable: BindGroupLayout, createBindGroup?: (rp: RenderPipeline) => void) {
+        if (createBindGroup) {
+            createBindGroup(this);
+            bindgroupdrawable.gpuscene.onResizes.add(() => {
+                createBindGroup(this);
+            })
+        }
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
         renderPipelineDescriptor.vertexState && renderPipelineDescriptor.vertexState.indexFormat && (this.#GPUIndexFormat = renderPipelineDescriptor.vertexState.indexFormat);
         if (!renderPipelineDescriptor.rasterizationState) {

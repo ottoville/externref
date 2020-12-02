@@ -15,10 +15,25 @@ export interface DrawableLikeClass extends DrawableLike {
 
 
 export class Drawable {
+    setStaticBuffer(setBuffers: () => GPUBindGroupEntry[]) {
+        const setBuffer = () => {
+            this.staticBuffers = new Set([this.renderPipeline.bindgroupdrawable.gpuscene.device.createBindGroup(
+                {
+                    layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout,
+                    entries: setBuffers()
+                }
+            )]);
+        }
+        this.renderPipeline.bindgroupdrawable.gpuscene.onResizes.add(() => {
+            setBuffer()
+        });
+        setBuffer();
+    }
     #indexBuffer: GPUIndexBuffer | null = null;
     //Todo, support writable vertex buffer
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     dynamicBuffers: Map<GPUBindGroup, number> = new Map();
+    staticBuffers: Set<GPUBindGroup>=new Set()
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
     #scene?: Scene;
     set scene(scene: Scene | undefined) {
@@ -64,6 +79,7 @@ export class Drawable {
             this.scene = scene;
     }
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number) {
+        this.staticBuffers.forEach((bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup));
         this.dynamicBuffers.forEach((offset, bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset]))
         this.#vertexBuffers.forEach((buffer, index) => renderPass.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
         if (this.#indexBuffer) {

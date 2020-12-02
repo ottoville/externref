@@ -7,7 +7,7 @@ export class BindGroupLayout {
     childBindGroups: Map<GPUBindGroup, BindGroupLayout> = new Map();
 
     addRenderPipeline(renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>,...args: any): RenderPipeline {
-        const d = new RenderPipeline(renderPipeline, this)
+        const d = new RenderPipeline(renderPipeline, this, ...args)
         this.renderPipeLines.add(d);
         return d;
     }
@@ -69,9 +69,21 @@ export class DynamicBindGroupLayout<T extends number[]> extends BindGroupLayout 
 }
 export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends BindGroupLayout {
     addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>, bindGroups?: () => T): RenderPipeline => {
-        const d = super.addRenderPipeline(renderPipeline);
-        if (bindGroups) {
+        return super.addRenderPipeline(renderPipeline, (rp:RenderPipeline) => {
+            if (!bindGroups)
+                return;
+            rp.bindGroups = new Set([this.gpuscene.device.createBindGroup(
+                {
+                    layout: this.bindGroupLayout,
+                    entries: bindGroups()
+                }
+            )])
+        });
+
+        /*if (bindGroups) {
             const createBindGroup = () => {
+                if (!bindGroups)
+                    return;
                 d.bindGroups = new Set([this.gpuscene.device.createBindGroup(
                     {
                         layout: this.bindGroupLayout,
@@ -81,7 +93,6 @@ export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends BindGrou
             }
             this.gpuscene.onResizes.add(createBindGroup)
             createBindGroup();
-        }
-        return d;
+        }*/
     }
 }

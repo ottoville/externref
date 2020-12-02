@@ -55,7 +55,7 @@ async function TerrainRenderPipeline(scene: Scene, textureView: GPUTextureView) 
                     }]
                 }]
         },
-    }, () => [
+    }/*, () => [
         {
             binding: 0,
             resource: sampler
@@ -64,7 +64,7 @@ async function TerrainRenderPipeline(scene: Scene, textureView: GPUTextureView) 
             binding: 1,
             resource: textureView //this.texture.createView()
         }
-    ]);;
+    ]*/);
     renderPipelines.set(scene.gpu, renderPipeLine);
     return renderPipeLine;
 }
@@ -83,8 +83,22 @@ export class TerrainMesh extends BoundableNode {
     ) {
         super(scene);
         this.drawable = (async () => {
+            const sampler = scene.gpu.device.createSampler({
+                magFilter: "linear",
+                minFilter: "linear",
+            });
             const renderPipeline = renderPipelines.get(scene.gpu) || (await TerrainRenderPipeline(scene, textureView));
             const m = renderPipeline.addDrawable(scene, [scene.gpu.renderPassScreen, scene.gpu.renderPassWater], indexCount, 1);
+            m.setStaticBuffer(() => [
+                {
+                    binding: 0,
+                    resource: sampler
+                },
+                {
+                    binding: 1,
+                    resource: textureView //this.texture.createView()
+                }
+            ])
             m.setVertexBuffer(0, this.vBuffer);
             m.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
             return m;
