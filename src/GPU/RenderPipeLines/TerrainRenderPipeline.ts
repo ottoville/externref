@@ -6,7 +6,7 @@ import { RenderPipeline } from "../RenderPipeline";
 import { Drawable } from "../Drawable";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-async function TerrainRenderPipeline(scene: Scene, textureView: GPUTextureView) {
+async function TerrainRenderPipeline(scene: Scene) {
     const sampler = scene.gpu.device.createSampler({
         magFilter: "linear",
         minFilter: "linear",
@@ -71,9 +71,31 @@ async function TerrainRenderPipeline(scene: Scene, textureView: GPUTextureView) 
 export class TerrainMesh extends BoundableNode {
     worldPosition?: worldPosition | undefined;
     drawable: Promise<Drawable>;
+    #textureview: GPUTextureView
+    sampler: GPUSampler;
+    set textureView(textureview: GPUTextureView) {
+        this.#textureview = textureview;
+        this.drawable.then(d => d.setStaticBuffer(() => {
+            return [
+                {
+                    binding: 0,
+                    resource: this.sampler
+                },
+                {
+                    binding: 1,
+                    resource: this.#textureview
+                }
+            ]
+        }));
+    }
+    set scene(scene: Scene) {
+        this.drawable.then(d => {
+            d.scene = scene;
+        });
+    }
     constructor(
         scene: Scene,
-        public textureView: GPUTextureView,
+        initialTexture: GPUTextureView,
         public vBuffer: GPUVertexBuffer,
         public iBuffer: GPUIndexBuffer,
         public verticesPositionBuffer: SharedArrayBuffer,
@@ -82,23 +104,15 @@ export class TerrainMesh extends BoundableNode {
         indexCount:number
     ) {
         super(scene);
+        this.sampler = scene.gpu.device.createSampler({
+            magFilter: "linear",
+            minFilter: "linear",
+        });
+        this.#textureview = initialTexture;
         this.drawable = (async () => {
-            const sampler = scene.gpu.device.createSampler({
-                magFilter: "linear",
-                minFilter: "linear",
-            });
-            const renderPipeline = renderPipelines.get(scene.gpu) || (await TerrainRenderPipeline(scene, textureView));
+            const renderPipeline = renderPipelines.get(scene.gpu) || (await TerrainRenderPipeline(scene));
             const m = renderPipeline.addDrawable(scene, [scene.gpu.renderPassScreen, scene.gpu.renderPassWater], indexCount, 1);
-            m.setStaticBuffer(() => [
-                {
-                    binding: 0,
-                    resource: sampler
-                },
-                {
-                    binding: 1,
-                    resource: textureView //this.texture.createView()
-                }
-            ])
+            this.textureView=initialTexture;
             m.setVertexBuffer(0, this.vBuffer);
             m.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
             return m;

@@ -23,6 +23,7 @@ export class Zones extends UITAB {
     //@ts-ignore
     private zonedt: DynamicTexture
     private size = 10000;
+    zoneTexture: GPUTexture;
     constructor(
         public scene: TerraScene,
         public ground: Terrain,
@@ -31,7 +32,24 @@ export class Zones extends UITAB {
         debugScene: DebugScene
     ) {
         super(scene, ground, camera, sea);
-        console.log('activate zones');
+
+        const texture = new OffscreenCanvas(5120, 5120);
+        const ctx = texture.getContext('2d');
+        if (!ctx)
+            throw ('getting 2d context failed');
+        ctx.beginPath();
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(0, 0, 5120, 5120);
+        ctx.stroke();
+        const bitmap = texture.transferToImageBitmap();
+
+        this.zoneTexture = scene.gpu.device.createTexture({
+            size: [5120, 5120, 1],
+            format: "rgba8unorm",
+            usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST,
+        });
+        scene.gpu.device.defaultQueue.copyImageBitmapToTexture({ imageBitmap: bitmap }, { texture: this.zoneTexture }, [5120, 5120, 1]);
+        ground.mesh.textureView = this.zoneTexture.createView();
         ground.mesh.drawable.then(d => {
             d.scene = debugScene;
         })
@@ -90,9 +108,9 @@ export class Zones extends UITAB {
         }, {});
     }
     destroy = (): void => {
-        this.ground.mesh.drawable.then(d => {
-            d.scene = this.scene;
-        })
+        this.ground.mesh.scene = this.scene;
+        this.ground.mesh.textureView = this.ground.texture.createView();
+        this.zoneTexture.destroy();
         //if (this.activated) {
            // super.deactivate();
            // this.PT.destroy();
