@@ -194,61 +194,62 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 Atomics.store(mousePosition, 1, e.clientY)
                 Atomics.notify(new Int32Array(mousePositionBuffer), 0);
             });
-            ArcRotateCamera.prototype._getViewMatrix = function () {
-                var cosa = Math.cos(this.alpha);
-                var sina = Math.sin(this.alpha);
-                var cosb = Math.cos(this.beta);
-                var sinb = Math.sin(this.beta);
-                if (sinb === 0) {
-                    sinb = 0.0001;
-                }
-                //@ts-ignore
-                var target = this._target
-                //@ts-ignore
-                this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
-
-                // Rotate according to up vector
-                //@ts-ignore
-                if (this._upVector.x !== 0 || this._upVector.y !== 1.0 || this._upVector.z !== 0) {
-                    //@ts-ignore
-                    Vector3.TransformCoordinatesToRef(this._computationVector, this._YToUpMatrix, this._computationVector);
-                }
-                //@ts-ignore
-                target.addToRef(this._computationVector, this._newPosition);
-                const coordinator = this.getScene().collisionCoordinator;
-                //@ts-ignore
-                if (!this._collider) {
-                    //@ts-ignore
-                    this._collider = coordinator.createCollider();
-                }
-                //@ts-ignore
-                this._collider._radius = this.collisionRadius;
-                //@ts-ignore
-                this._newPosition.subtractToRef(this._position, this._collisionVelocity);
-                //@ts-ignore
-                this._collisionTriggered = true;
-                //@ts-ignore
-                coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
-
-                this._currentTarget = target;
-                return this._viewMatrix;
-            }
+            
             const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
             const projectionmatrix = new Float32Array(projectionmatrixBuffer);
             blazor.invokeMethod('setProgress', 11);
             // const scene2 = await scenePromise;
             const cameraReady = scenePromise.then((scene) => {
-                
+                ArcRotateCamera.prototype._getViewMatrix = function () {
+                    var cosa = Math.cos(this.alpha);
+                    var sina = Math.sin(this.alpha);
+                    var cosb = Math.cos(this.beta);
+                    var sinb = Math.sin(this.beta);
+                    if (sinb === 0) {
+                        sinb = 0.0001;
+                    }
+                    //@ts-ignore
+                    var target = this._target
+                    //@ts-ignore
+                    this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
+
+                    // Rotate according to up vector
+                    //@ts-ignore
+                    if (this._upVector.x !== 0 || this._upVector.y !== 1.0 || this._upVector.z !== 0) {
+                        //@ts-ignore
+                        Vector3.TransformCoordinatesToRef(this._computationVector, this._YToUpMatrix, this._computationVector);
+                    }
+                    //@ts-ignore
+                    target.addToRef(this._computationVector, this._newPosition);
+                    const coordinator = scene.collisionCoordinator;
+                    //@ts-ignore
+                    if (!this._collider) {
+                        //@ts-ignore
+                        this._collider = coordinator.createCollider();
+                    }
+                    //@ts-ignore
+                    this._collider._radius = this.collisionRadius;
+                    //@ts-ignore
+                    this._newPosition.subtractToRef(this._position, this._collisionVelocity);
+                    //@ts-ignore
+                    this._collisionTriggered = true;
+                    //@ts-ignore
+                    coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
+
+                    this._currentTarget = target;
+                    return this._viewMatrix;
+                }
                 //@ts-ignore
-                /*const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), {
+                const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), {
                     getUniqueId: () => 1,
                     addCamera: (c) => {
-                        scenePromise.then(scene => { c._scene = scene; scene.addCamera(c) })
+                        c._scene = scene;
+                        scene.addCamera(c)
                     },
                     getRenderId: () => 1,
-                    getEngine: () => engine
-                });*/
-                const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), scene);
+                    getEngine: () => engine,
+                    onKeyboardObservable: scene.onKeyboardObservable
+                });
                 camera._cache.mode = camera.mode;
                 camera._cache.minZ = camera.minZ;
                 camera._cache.maxZ = camera.maxZ;
@@ -290,19 +291,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const timeAndDeltaBuffer = new ArrayBuffer(8);
             const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
             const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
-            const timeBufferStorage = gpuscene.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-/*
-            mainCamera.baseBindGroup.onRender = function (time, delta) {
-                // windIntensivy = Math.min(Math.max(windIntensivy+0.000625-(Math.random()*0.00125),-1),1)
-                timeView.set([time]);
-                if (gpuscene.properties & 1) {
-                    animationView.set([Math.cos(time * 0.001)]);
-                }
-                if (delta !== null)
-                    deltaView.set([delta]);
-                return gpuscene.updateBufferRaw(timeBufferStorage, gpuscene.timeBuffer, timeAndDeltaBuffer);
 
-            }*/
             blazor.invokeMethod('setProgress', 13);
 
 

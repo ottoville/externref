@@ -2,7 +2,6 @@
 import { Matrix, Vector3 } from "./lib/babylon/Maths/math.vector";
 import { ObjectWorkerThread } from "./WorkerThread";
 import type { GPU } from "./GPU";
-import { BindGroupLayout } from "./GPU/BindGroupLayout";
 
 const worker = new ObjectWorkerThread('/webworkers/cameraWorker.js');
 let uniqueID = 0;
