@@ -31,7 +31,7 @@ export class Light {
    
     uniformBindGroupLightsWGSL: BindGroupOneBinding;
     uniformBindGroupLights: BindGroupOneBinding;
-    uniformBindGroupLayoutLightsWGSL: BindGroupLayoutOneBinding<{ binding: number; visibility: 1; type: "uniform-buffer"; }>;
+    //uniformBindGroupLayoutLightsWGSL: BindGroupLayoutOneBinding<{ binding: number; visibility: 1; type: "uniform-buffer"; }>;
 
     add(light: isLight) {
         this.#instances.add(light);
@@ -43,11 +43,11 @@ export class Light {
             type: 'readonly-storage-buffer'
         });
 
-        this.uniformBindGroupLayoutLightsWGSL = this.gpu.createBindGroupLayout({
+       /* this.uniformBindGroupLayoutLightsWGSL = this.gpu.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
             type: 'uniform-buffer'
-        });
+        });*/
         
 
         this.uniformBindGroupLights = this.gpu.createBindGroup(uniformBindGroupLayoutLights,
@@ -59,7 +59,7 @@ export class Light {
                         offset: byteoffset
                     }
              });
-        this.uniformBindGroupLightsWGSL = this.gpu.createBindGroup(this.uniformBindGroupLayoutLightsWGSL,
+        this.uniformBindGroupLightsWGSL = this.gpu.createBindGroup(this.gpu.uniformBindGroupLayoutLightsWGSL2,
             {
                 binding: 0,
                 resource: {

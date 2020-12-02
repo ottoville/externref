@@ -27,7 +27,21 @@ export class GPU {
             type: 'uniform-buffer'
         }
     );
-    
+    uniformBindGroupLayoutLightsWGSL2 = this.createBindGroupLayout({
+        binding: 0,
+        visibility: GPUShaderStage.VERTEX,
+        type: 'uniform-buffer'
+    });
+    uniformBindGroupLayoutLightsWGSL = this.device.createBindGroupLayout({
+        entries: [{
+            binding: 0,
+            visibility: GPUShaderStage.VERTEX,
+            type: 'uniform-buffer'
+        }]
+    });
+    rootlayout = new BindGroupLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
+    rootSceneLayout = new BindGroupLayout(this, this.uniformBindGroupLayoutLightsWGSL2, this.rootlayout, undefined, false);
+
     //viewprojection and camera position
 
     singleWritableStorageLayout = this.device.createBindGroupLayout({
@@ -49,13 +63,7 @@ export class GPU {
     BindGroupLayout = this.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
-    uniformBindGroupLayoutLightsWGSL = this.device.createBindGroupLayout({
-        entries: [{
-            binding: 0,
-            visibility: GPUShaderStage.VERTEX,
-            type: 'uniform-buffer'
-        }]
-    });
+
     cameraAndTimeBindGroupLayout = this.device.createBindGroupLayout({
         entries: [
             {
@@ -154,7 +162,14 @@ export class GPU {
         }
         return parentBGLayout;
     }
-    constructor(public device: GPUDevice, public renderPassScreen: RenderPassCanvas, public renderPassWater: RenderPass) {
+    renderPassScreen: RenderPassCanvas
+    renderPassWater: RenderPass
+    constructor(public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPassCanvas, RenderPass]) {
+
+        //Scene layoyt is iterated manually so remove it not to iterate it twise.
+        this.rootlayout.subBindGroups.delete(this.rootSceneLayout);
+
+        [this.renderPassScreen, this.renderPassWater] = createRenderPasses(this)
         this.BindGroup = this.createBindGroup(this.BindGroupLayout,
             {
                 binding: 0,
@@ -165,7 +180,6 @@ export class GPU {
                 }
             });
         this.DynamicBindGroups.add(this.BindGroup);
-
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
         this.timeGroup = {
@@ -359,7 +373,7 @@ export class GPU {
                     //if (bgt.isDynamic) {
                     bgt.renderPipeLines.forEach(m => {
                         renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset);
-                        m.draw(scene, renderPassEncoder, renderPass, index);
+                        m.draw(renderPassEncoder, renderPass, index, scene);
                     });
                 }
                 else {
@@ -368,7 +382,7 @@ export class GPU {
                     }
                     bgt.renderPipeLines.forEach(m => {
                         me.properties |= m.properties;
-                        m.draw(scene, renderPassEncoder, renderPass, index)
+                        m.draw(renderPassEncoder, renderPass, index, scene)
                     });
                 }
                 if (bgt.subBindGroups.size) {
@@ -384,5 +398,37 @@ export class GPU {
         });
         this.properties = 0;
        // console.timeEnd('render bindgroups')
+    }
+    drawBindGroups(renderPassEncoder: GPURenderPassEncoder, bgt: BindGroupLayout, renderPass: RenderPass, index: number, scene?: Scene) {
+        if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
+          //  if (!scene)
+           //     console.log('drawBindGroups', index);
+
+            bgt.onRender && this.onRenders.push(bgt.onRender);
+            if (bgt.sharedBindgroup && this.DynamicBindGroups.has(bgt.sharedBindgroup)) {
+
+                //if (bgt.isDynamic) {
+                bgt.renderPipeLines.forEach(m => {
+                    renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset);
+                    m.draw(renderPassEncoder, renderPass, index, scene);
+                });
+            }
+            else {
+                if (bgt.sharedBindgroup) {
+
+                   // bgt.sharedBindgroup.label && console.log('Set bind group ', bgt.sharedBindgroup.label);
+                    renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup);
+                }
+                bgt.renderPipeLines.forEach(m => {
+                    this.properties |= m.properties;
+                    m.draw(renderPassEncoder, renderPass, index, scene)
+                });
+            }
+            if (bgt.subBindGroups.size) {
+                //if (!scene)
+                //    console.log('subBindGroups', index);
+                bgt.subBindGroups.forEach((bgt) => this.drawBindGroups(renderPassEncoder, bgt, renderPass, ++index, scene));
+            }
+        }
     }
 }

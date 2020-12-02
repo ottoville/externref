@@ -9,11 +9,8 @@ import { TerraCamera } from "./TerraCamera";
 export class DebugScene extends Scene {
     camera!: ArcRotateCamera;
 
-    constructor(engine: Engine, public canvas: HTMLCanvasElement, gpu: GPU, TerraCameras: TerraCamera[], onRenderStart: (scene: Scene) => void) {
+    constructor(engine: Engine, public canvas: HTMLCanvasElement, gpu: GPU, TerraCameras: TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes: number) => void) {
         super(gpu, engine, TerraCameras, onRenderStart)
         const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen]);
-    }
-    render(time: DOMHighResTimeStamp, renderEncoder:GPUCommandEncoder) {
-
     }
 }

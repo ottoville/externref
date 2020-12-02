@@ -100,7 +100,8 @@ export class paintPlane extends paintGround {
                         }]
                 },
             }, [this.#mesh.bufferOffsetBytes]);
-            this.#templane2 = planeRenerPipeline.addDrawable(scene, [scene.gpu.renderPassScreen], 0, 1, 1, 0)
+            this.#templane2 = planeRenerPipeline.addDrawable(undefined, [scene.gpu.renderPassScreen], 0, 1, 1, 0);
+            this.#templane2.setVertexBuffer(0, new Float32Array([0,0,0]));
         })()
        
     };

@@ -1,6 +1,6 @@
-﻿import { Scene } from "../Scene";
-import { TerraCamera } from "../TerraCamera";
-import { TerraScene } from "../TerraScene";
+﻿import type { Scene } from "../Scene";
+import type { TerraCamera } from "../TerraCamera";
+import type { GPU } from "../GPU";
 
 export class RenderPass {
     cameras: Set<TerraCamera> = new Set();
@@ -24,7 +24,7 @@ export class RenderPass {
         depth: 1,
     };
     createTexture(format: GPUTextureFormat) {
-        return this.device.createTexture({
+        return this.gpu.device.createTexture({
             size: this.size,
             sampleCount: this.sampleCount,
             format,
@@ -84,7 +84,7 @@ export class RenderPass {
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
     constructor(
-        private device: GPUDevice,
+        private gpu: GPU,
         private sampleCount: number = 1,
         depthStencil = false,
         public width: number,
@@ -104,7 +104,15 @@ export class RenderPass {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             passEncoder.setBindGroup(0, cameraBindGroup);
-
+            this.gpu.rootlayout.renderPipeLines.forEach(rp => {
+                rp.draw(passEncoder,this, 1);
+            });
+            if (this.gpu.rootlayout.subBindGroups.size) {
+                //console.log('this.gpu.rootlayout.subBindGroups.size', this.gpu.rootlayout.subBindGroups.size)
+                this.gpu.rootlayout.subBindGroups.forEach(bgt =>
+                    this.gpu.drawBindGroups(passEncoder, bgt, this, 1)
+                )
+            };
             this.scenes.forEach(scene =>
                 scene.render(passEncoder, this, time, physicDelta)
             )
@@ -119,7 +127,7 @@ export class RenderPass {
 
 export class RenderPassCanvas extends RenderPass {
     constructor(
-        device: GPUDevice,
+        gpu: GPU,
         sampleCount: number = 1,
         depthStencil = false,
         width: number,
@@ -128,10 +136,10 @@ export class RenderPassCanvas extends RenderPass {
         _onResize: (width: number, height: number) => [number, number],
         usage: number = 0,
         public canvas: HTMLCanvasElement) {
-        super(device, sampleCount, depthStencil, width, height, loadValue, _onResize, usage);
+        super(gpu, sampleCount, depthStencil, width, height, loadValue, _onResize, usage);
         const context: GPUCanvasContext = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
         this.swapChain = context.configureSwapChain({
-            device: device,
+            device: gpu.device,
             format: "bgra8unorm",
             usage: GPUTextureUsage.OUTPUT_ATTACHMENT
         });

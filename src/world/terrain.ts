@@ -87,7 +87,7 @@ export class Terrain {
     ];
 
     //TerrainHeightsbindGroupTree = this.scene.TerraCameras[0].baseBindGroup.addChildBindGroup(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene), ...this.heightsBindGroupEntries));
-    TerrainHeightsbindGroupTree = this.scene.gpu.addBindGroup(this.scene.gpu.createBindGroup(Terrain.getHeightsLayout(this.scene.gpu), ...this.heightsBindGroupEntries));
+    TerrainHeightsbindGroupTree = this.scene.gpu.rootlayout.addChildBindGroup(this.scene.gpu.createBindGroup(Terrain.getHeightsLayout(this.scene.gpu), ...this.heightsBindGroupEntries));
     
     TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpu.BindGroup, true)
 
@@ -375,7 +375,6 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
     });
     constructor(readonly buffer: ArrayBuffer | SharedArrayBuffer, algorithm: string, public scene: Scene) {
-
         for (
             let i = 0,
             verticesAmount = this.terrainPositionAndUvsAndNormalsCPUSwap.byteLength / (8 * 4),

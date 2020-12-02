@@ -52,7 +52,7 @@ export class Plants {
         scene: Scene,
         terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
-        const planstPipeline = scene.rootRenderLayout.addRenderPipeline({
+        const planstPipeline = scene.gpu.rootSceneLayout.addRenderPipeline({
             primitiveTopology: 'triangle-strip',
             rasterizationState: {
                 cullMode: 'none',

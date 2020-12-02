@@ -9,7 +9,7 @@ async function Simple(scene: Scene) {
     const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
     //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
 
-    const renderPipeLine = scene.positionBindGroupLightsTimeWGSL.addRenderPipeline({
+    const renderPipeLine =  scene.positionBindGroupLightsTimeWGSL.addRenderPipeline({
         rasterizationState: {
             cullMode: 'none',
         },

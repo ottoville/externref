@@ -132,9 +132,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             if (!device)
                 throw ('no GPU device');
             console.log('canvas size', canvas.width, canvas.height,)
-            const renderPassScreen = new RenderPassCanvas(device, 4, true, canvas.width, canvas.height, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], undefined, canvas);
-            const renderPassWater = new RenderPass(device, 1, false, canvas.width, canvas.height, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED);
-            const gpuscene = new GPU(device, renderPassScreen, renderPassWater)
+            const gpuscene = new GPU(device, (gpu) => {
+                return [
+                    new RenderPassCanvas(gpu, 4, true, canvas.width, canvas.height, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], undefined, canvas),
+                    new RenderPass(gpu, 1, false, canvas.width, canvas.height, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
+                ]
+            });
             blazor.invokeMethod('setProgress', 6);
 
             const CACHE_NAME = 'terrasim-v1';
@@ -362,12 +365,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 tools.set('Buildings', BuildingsUI);
                 tools.set('TerrainTool', TerrainTool);
                 tools.set('Zones', Zones);
-
-
-                scenePromise.then((scene) => {
-
-                })
-
                 //@ts-expect-error
                 window.activateMenu = async (name: string) => {
                     try {

@@ -12,7 +12,7 @@ export class Engine {
 
 
     constructor(gpu: GPU) {
-        this.positionBindGroupTime = gpu.addBindGroup(gpu.BindGroup, true);
+        this.positionBindGroupTime = gpu.rootSceneLayout.addChildBindGroup(gpu.BindGroup, true);
         this.positionBindGroupTime.onRender = async (time) => {
             return gpu.updateGPUBuffer();
         }

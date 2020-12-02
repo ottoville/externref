@@ -26,13 +26,18 @@ export class RenderPipeline {
         this.variants.forEach(rp => rp.drawables.forEach(scene => scene.forEach(drawable => drawable.destroy())));
         this.bindgroupdrawable.renderPipeLines.delete(this);
     }
-    draw(scene: Scene, renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass, BindGroupsStart: number): void {
+    draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass, BindGroupsStart: number, scene?: Scene): void {
         const variant = this.variants.get(renderPass)
-        if (!variant || variant.drawables.size == 0)
+        if (!variant)
             return;
-        const drawables = variant.drawables.get(scene);
+        if (scene) {
+            var drawables = variant.drawables.get(scene);
+        } else { //@ts-ignore
+            var drawables = variant.rootDrawables;
+        }
         if (!drawables || drawables.size == 0)
             return;
+
         renderPassEncoder.setPipeline(variant.renderpipeline);
         if (this.bindGroups) {
             this.bindGroups.forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
@@ -40,7 +45,7 @@ export class RenderPipeline {
         drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart));
     }
     variants: Map<RenderPass, RenderPipelineVariant> = new Map();
-    addDrawable(scene: Scene, renderPasses: RenderPass[], indexOrVertexCount: number, baseVertex: number = 0, instanceCount = 1, firstVertexOrIndex = 0, firstInstance = 0): Drawable {
+    addDrawable(scene: Scene | undefined, renderPasses: RenderPass[], indexOrVertexCount: number, baseVertex: number = 0, instanceCount = 1, firstVertexOrIndex = 0, firstInstance = 0): Drawable {
         const d = new Drawable(this, new Set(renderPasses), indexOrVertexCount, baseVertex, instanceCount, firstVertexOrIndex, firstInstance, this.#GPUIndexFormat);
         renderPasses.forEach(rp => {
             let variant = this.variants.get(rp);
@@ -49,16 +54,22 @@ export class RenderPipeline {
                 variant = {
                     renderPass: rp,
                     renderpipeline: renderpipeline,
-                    drawables: new Map()
+                    drawables: new Map(),
+                    rootDrawables: new Set()
                 }
                 this.variants.set(rp, variant)
             }
-            let sceneDrawables = variant.drawables.get(scene);
-            if (!sceneDrawables) {
-                sceneDrawables = new Set()
-                variant.drawables.set(scene, sceneDrawables);
+            if (scene) {
+                let sceneDrawables = variant.drawables.get(scene);
+                if (!sceneDrawables) {
+                    sceneDrawables = new Set()
+                    variant.drawables.set(scene, sceneDrawables);
+                }
+                sceneDrawables.add(d);
+            } else {
+                console.log('add rootDrawable');
+                variant.rootDrawables.add(d);
             }
-            sceneDrawables.add(d);
         });
         return d;
     }
@@ -67,4 +78,5 @@ interface RenderPipelineVariant {
     renderPass: RenderPass;
     renderpipeline: GPURenderPipeline;
     drawables: Map<Scene, Set<Drawable>>
+    rootDrawables: Set<Drawable>
 }

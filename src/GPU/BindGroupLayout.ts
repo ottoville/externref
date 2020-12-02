@@ -19,11 +19,9 @@ export class BindGroupLayout {
     subBindGroups: Set<BindGroupLayout> = new Set();
     layout: GPUPipelineLayout;
     onRender: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>) | null = null;
-    constructor(public gpuscene: GPU, public bindGroupLayout: GPUBindGroupLayout, public parent?: BindGroupLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false, isScene = false) {
+    constructor(public gpuscene: GPU, public bindGroupLayout: GPUBindGroupLayout, public parent?: BindGroupLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false, isRoot = false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout];
-        if (isScene) {
-            layoutTree.unshift(gpuscene.cameraAndTimeBindGroupLayout);
-        } else {
+        if (!isRoot){
             if (parent) {
                 let curparent: BindGroupLayout | undefined = parent;
                 do {
@@ -33,8 +31,6 @@ export class BindGroupLayout {
             } else {
                 BindGroupLayout.instances.add(this);
             }
-            layoutTree.unshift(gpuscene.uniformBindGroupLayoutLightsWGSL);
-            layoutTree.unshift(gpuscene.cameraAndTimeBindGroupLayout);
         }
         this.layout = this.gpuscene.device.createPipelineLayout({ bindGroupLayouts: layoutTree });
     }
@@ -52,6 +48,7 @@ export class BindGroupLayout {
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number, number]>
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupLayout
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): any {
+        //TODO: repkace with subBindGroups
         const old = this.childBindGroups.get(sharedBindgroup)
         if (old)
             return old;
