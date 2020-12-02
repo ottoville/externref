@@ -51,7 +51,7 @@ export class Drawable {
     }
     constructor(
         private renderPipeline: RenderPipeline,
-        public renderPasses: Set<RenderPass>,
+        private renderPasses: Set<RenderPass>,
         public indexOrVertexCount: number,
         scene?: Scene,
         public baseVertex = 0,
@@ -75,13 +75,7 @@ export class Drawable {
         }
     }
     destroy(preserveIndexBuffer = false, preserveVerticeBuffers: number[] = []): void {
-        this.renderPasses.forEach(rp => {
-            const variant = this.renderPipeline.variants.get(rp);
-            if (variant) {
-                variant.drawables.forEach(scene => scene.delete(this));
-                variant.rootDrawables.delete(this);
-            }
-        });
+        this.#renderList.forEach(Drawables => Drawables.delete(this));
         this.#vertexBuffers.forEach((b, key) => {
             if (!preserveVerticeBuffers.includes(key))
                 b.buffer.destroy()

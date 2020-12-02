@@ -2,7 +2,7 @@
 import type { BoundableNode, PickingInfo } from "./TerraNode";
 import type { GPU } from "./GPU";
 import type { Engine } from "./engine";
-import { LayoutGroupDrawable } from "./GPU/BindGroupLayout";
+import { BindGroupLayout, LayoutGroupDrawable } from "./GPU/BindGroupLayout";
 import { TerraMatrix } from "./traits/worldPosition";
 import type { TerraCamera } from "./TerraCamera";
 import { RenderPass } from "./GPU/RenderPass";
@@ -47,7 +47,11 @@ export abstract class Scene {
                 this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass,2,this)
             )
         };
-        this.gpu.render(this, renderPassEncoder, renderPass, time, physicDelta);
+        BindGroupLayout.instances.forEach((bgt) => this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 2, this));
+        Promise.all(this.gpu.onRenders.map(r => r(time, physicDelta))).then((buffers) => {
+            const buffersNoNull = buffers.filter<GPUCommandBuffer>(function (buff): buff is GPUCommandBuffer { return buff !== null });
+            this.gpu.device.defaultQueue.submit(buffersNoNull);
+        });
     }
     async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
         let boundableMesh: BoundableNode;

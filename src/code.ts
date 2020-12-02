@@ -370,7 +370,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     try {
                         let tool: UITABClassLike | undefined;
                         if (tool = tools.get(name)) {
-                            tool.instance = new tool(TerraScene.instance, (await terrainInited)[0], await cameraReady, sea);
+                            tool.instance = new tool(TerraScene.instance, (await terrainInited)[0], await cameraReady, sea, debugscene);
                         }
                     } catch (e) {
                         console.error(e);

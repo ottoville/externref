@@ -13,36 +13,36 @@ import { canvasListener } from "../traits/canvasListener.js";
 import { addTrait, Trait, Traitable } from "../traits/trait.js";
 import { Sea } from "../world/water.js";
 import { TerraScene } from "../TerraScene.js";
+import { DebugScene } from "../DebugScene.js";
 
-export interface Zones extends canvasListener, Traitable {
-
-}
-
-@addTrait(canvasListener)
 export class Zones extends UITAB {
-    private zonemateria: StandardMaterial;
+    private canvasListener = new canvasListener();
+    //private zonemateria: StandardMaterial;
+    //@ts-ignore
     private PT: paintTexture;
+    //@ts-ignore
     private zonedt: DynamicTexture
     private size = 10000;
-    traits: Trait[];
     constructor(
         public scene: TerraScene,
         public ground: Terrain,
         public camera: ArcRotateCamera,
         sea: Sea,
-        ...traits: Trait[]
+        debugScene: DebugScene
     ) {
         super(scene, ground, camera, sea);
-        this.traits = this.initTraits(traits);
-
+        console.log('activate zones');
+        ground.mesh.drawable.then(d => {
+            d.scene = debugScene;
+        })
         // let DZ = new drawZone(canvas, scene, camera, ground, sea, DB, DT, groundmateria, grass, terrain);
         //@ts-ignore
-        this.zonedt = new DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, scene, false);
+        //this.zonedt = new DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, scene, false);
 
-        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zonedt, 10000, 10000, this);
+        //this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zonedt, 10000, 10000, this);
         //@ts-ignore
-        this.zonemateria = new StandardMaterial("zoneMat", scene);
-        this.zonemateria.diffuseTexture = this.zonedt;
+       // this.zonemateria = new StandardMaterial("zoneMat", scene);
+       // this.zonemateria.diffuseTexture = this.zonedt;
     }
     activate = async () => {
         let ctx: CanvasRenderingContext2D = this.zonedt.getContext();
@@ -90,12 +90,15 @@ export class Zones extends UITAB {
         }, {});
     }
     destroy = (): void => {
+        this.ground.mesh.drawable.then(d => {
+            d.scene = this.scene;
+        })
         //if (this.activated) {
            // super.deactivate();
-            this.PT.destroy();
+           // this.PT.destroy();
          //   this.activated = false;
             //@ts-ignore
-            this.ground.material = this.groundMaterial;
+          //  this.ground.material = this.groundMaterial;
        // }
     }
 }

@@ -4,8 +4,6 @@ import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
-import { addTrait, Trait, Traitable } from "../traits/trait.js";
-import type { GPU } from "../GPU.js";
 import type { Drawable } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import type { TerraScene } from "../TerraScene.js";
@@ -13,14 +11,9 @@ import { Sea } from "../world/water.js";
 
 const terrainWorker = new WorkerThread('../webworkers/terrainWorker.js');
 
-export interface TerrainTool extends canvasListener, Traitable {
-
-}
-
-@addTrait(canvasListener)
 export class TerrainTool extends TerraNode implements has3DPosition {
     public static instance: UITAB | null = null;
-
+    #canvasListener = new canvasListener();
     // private engine: WebGPUEngine;
     private helper!: Drawable;
 
@@ -30,16 +23,13 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     worldPosition: worldPosition;
     facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
-    traits: Trait[];
     constructor(
         public scene:TerraScene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea,
-        ...traits: Trait[]
     ) {
         super(scene.engine);
-        this.traits = this.initTraits(traits);
         scene.TerraCameras[0].subscribePickingRay();
 
         terrainWorker.message(WorkerReturn.Promise, 'init',
@@ -88,7 +78,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
             this.helper = helperPipeline.addDrawable(undefined, [scene.gpu.renderPassScreen], 4, 0, 8, 0, 0)
         })();
 
-        this.addListener("pointermove", this.mouseListener, { lazy: 15 });
+        this.#canvasListener.addListener("pointermove", this.mouseListener, { lazy: 15 });
 
     }
     static saveTexture(arrayBuffer: ArrayBuffer) {
@@ -124,7 +114,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
         if (evt.button !== 0) {
             return;
         }
-        this.addListener("pointerup", this.pointerupf, { once: true });
+        this.#canvasListener.addListener("pointerup", this.pointerupf, { once: true });
         this.camera.detachControl(this.engine.gpu.renderPassScreen.canvas);
        
         this.mouseinterval = setInterval(() => {
@@ -142,7 +132,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
         clearInterval(this.mouseinterval);
     }
     destroy = (): void => {
-        this.traits.forEach(trait => trait.destroy());
+        this.#canvasListener.destroy()
         console.log('call super.deactivate');
         terrainWorker.unsubscribe('heights');
         this.helper.destroy();
@@ -157,15 +147,15 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     }
     raise = (): void => {
         this.direction = 1;
-        this.removeListener("pointerdown", this.pointerdownf);
+        this.#canvasListener.removeListener("pointerdown", this.pointerdownf);
         console.log('add pointerdown listener');
-        this.addListener("pointerdown", this.pointerdownf);
+        this.#canvasListener.addListener("pointerdown", this.pointerdownf);
 
     }
     lower = (): void => {
         this.direction = -1;
-        this.removeListener("pointerdown", this.pointerdownf);
+        this.#canvasListener.removeListener("pointerdown", this.pointerdownf);
         console.log('add pointerdown listener');
-        this.addListener("pointerdown", this.pointerdownf);
+        this.#canvasListener.addListener("pointerdown", this.pointerdownf);
     }
 }

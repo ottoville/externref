@@ -362,43 +362,6 @@ export class GPU {
     }
     properties = 0
     onRenders: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>)[] = [];
-    render(scene: Scene, renderPassEncoder: GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp, physicDelta: number | null) {
-        let index = 2;
-        // console.time('render bindgroups')
-        const me = this;
-        BindGroupLayout.instances.forEach(function drawBindGroups(bgt) {
-            if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
-                bgt.onRender && me.onRenders.push(bgt.onRender);
-                if (bgt.sharedBindgroup && me.DynamicBindGroups.has(bgt.sharedBindgroup)) {
-                    //if (bgt.isDynamic) {
-                    bgt.renderPipeLines.forEach(m => {
-                        renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset);
-                        m.draw(renderPassEncoder, renderPass, index, scene);
-                    });
-                }
-                else {
-                    if (bgt.sharedBindgroup) {
-                        renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup);
-                    }
-                    bgt.renderPipeLines.forEach(m => {
-                        me.properties |= m.properties;
-                        m.draw(renderPassEncoder, renderPass, index, scene)
-                    });
-                }
-                if (bgt.subBindGroups.size) {
-                    index++;
-                    bgt.subBindGroups.forEach(drawBindGroups);
-                    index--;
-                }
-            }
-        });
-        Promise.all(this.onRenders.map(r => r(time, physicDelta))).then((buffers) => {
-            const buffersNoNull = buffers.filter<GPUCommandBuffer>(function (buff): buff is GPUCommandBuffer { return buff !== null });
-            this.device.defaultQueue.submit(buffersNoNull);
-        });
-        this.properties = 0;
-       // console.timeEnd('render bindgroups')
-    }
     drawBindGroups(renderPassEncoder: GPURenderPassEncoder, bgt: BindGroupLayout, renderPass: RenderPass, index: number, scene?: Scene) {
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
           //  if (!scene)
