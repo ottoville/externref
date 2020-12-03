@@ -129,6 +129,8 @@ export class paintTexture extends paintGround {
             imageData.data.set(pixels);
             ctx.save();
             ctx.putImageData(imageData, 0, 0);
+
+            const width = maxX - minX
             ctx.translate(0, c.height);
             ctx.scale(1, -1);
             ctx.drawImage(c, 0, 0);
@@ -140,12 +142,13 @@ export class paintTexture extends paintGround {
                 subTextureCache.imageData = imageData;
             }
             ctx.restore();
+            ctx.translate(minX, 0);
             ctx.beginPath();
             let absDimensions: { w: number; h: number } = { w: Math.abs(w), h: Math.abs(h) }
-            ctx.translate(c.width / 2, c.height / 2);
-            ctx.rotate(rad);
-            ctx.translate(c.width / -2, c.height / -2);
-            ctx.translate((c.width - absDimensions.w) / 2, (c.height - absDimensions.h) / 2);
+            ctx.translate(width / 2, c.height / 2);
+            ctx.rotate(rad*-1);
+            ctx.translate(width / -2, c.height / -2);
+            ctx.translate(((width - absDimensions.w) / 2), (c.height - absDimensions.h) / 2);
             ctx.fillStyle = "red";
             ctx.rect(0, 0, absDimensions.w, absDimensions.h);
 
