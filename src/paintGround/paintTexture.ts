@@ -96,7 +96,7 @@ export class paintTexture extends paintGround {
         //c.width = maxX - minX;
         //c.height = maxZ - minZ;
         //let c = new OffscreenCanvas(maxX - minX, maxZ - minZ);
-        let c = new OffscreenCanvas(maxX - minX, maxZ - minZ);
+        let c = new OffscreenCanvas(5120, maxZ - minZ);
         let pixels: Uint8Array = new Uint8Array(4 * c.width * c.height);
         /*
         (function (gl: WebGL2RenderingContext) {
@@ -123,6 +123,9 @@ export class paintTexture extends paintGround {
         let ctx: OffscreenCanvasRenderingContext2D | null;
         if (ctx = c.getContext("2d")) {
             let imageData = ctx.createImageData(c.width, c.height);
+
+            pixels.fill(255);
+
             imageData.data.set(pixels);
             ctx.save();
             ctx.putImageData(imageData, 0, 0);
@@ -167,8 +170,8 @@ export class paintTexture extends paintGround {
 
        // const range = gpubuffer.getMappedRange(offset, c.width * c.height * 4);
         const range = gpubuffer.getMappedRange(offset, c.height * 4 * 5120);
-        //@ts-ignore;
-        new Uint8ClampedArray(range, padding).fill(255);
+        
+        new Uint8ClampedArray(range, padding).set(new Uint8ClampedArray(buffer))
         gpubuffer.unmap();
 
         const encoder=this.scene.gpu.device.createCommandEncoder()
