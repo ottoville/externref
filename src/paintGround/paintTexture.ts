@@ -67,7 +67,7 @@ export class paintTexture extends paintGround {
 
         this.drawSubImage(width, this.height, this.ang360.rad, this.m1, this.subTextureCache)
     }
-    drawSubImage(width: number, height: number, rad: number, m1: Matrix, subTextureCache?: subTexture) {
+    async drawSubImage(width: number, height: number, rad: number, m1: Matrix, subTextureCache?: subTexture) {
         width /= this.ratio;
         height /= this.ratio;
         let h = width * -1
@@ -95,44 +95,63 @@ export class paintTexture extends paintGround {
 
         //c.width = maxX - minX;
         //c.height = maxZ - minZ;
-        let c = new OffscreenCanvas(maxX - minX, maxZ - minZ);
-        //let c = new OffscreenCanvas(5120, maxZ - minZ);
-        let pixels: Uint8Array = new Uint8Array(4 * c.width * c.height);
-        /*
-        (function (gl: WebGL2RenderingContext) {
-            //@ts-ignore
-            if (!this._dummyFramebuffer) {
-                let dummy = gl.createFramebuffer();
+        const cwidth = maxX - minX;
+        const missAlignment = (cwidth * 4) % 256;
+        const alignment = missAlignment ? 256 - missAlignment : 0
+        let c = new OffscreenCanvas(cwidth+alignment/4, maxZ - minZ);
 
-                if (!dummy) {
-                    throw new Error("Unable to create dummy framebuffer");
-                }
-                //@ts-ignore
-                this._dummyFramebuffer = dummy;
+        
+        /*const tempTexture = this.scene.gpu.device.createTexture({
+            size: [c.width, c.height,1],
+            format: "rgba8unorm",
+            usage: GPUTextureUsage.COPY_DST
+        });*/
+
+        
+        const buffersize = c.width * c.height * 4
+        const tempBuffer = this.scene.gpu.device.createBuffer({
+            size: buffersize,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+        });
+        let pixels: Uint8Array = new Uint8Array(buffersize);
+        const encoder = this.scene.gpu.device.createCommandEncoder();
+        encoder.copyTextureToBuffer({
+            texture: this.zonedt,
+            origin: {
+                x: minX,
+                y: minZ
             }
-            //@ts-ignore
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this._dummyFramebuffer);
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+        }, { buffer: tempBuffer, bytesPerRow: (c.width * 4)}, [c.width, c.height, 1]);
+
+        this.scene.gpu.device.defaultQueue.submit([encoder.finish()]);
+        await tempBuffer.mapAsync(GPUMapMode.READ);
+        pixels.set(new Uint8Array(tempBuffer.getMappedRange()));
+        tempBuffer.unmap();
+
+        /*encoder.copyTextureToTexture({
+            texture: this.zonedt,
+            origin: {
+                x: minX,
+                y: minZ
+            }
+        }, { texture: tempTexture }, [c.width, c.height, 1]);*/
+            /*gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
             gl.readPixels(minX, minZ, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-            //@ts-ignore
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this._currentFramebuffer);
-            //@ts-ignore
-        }).bind(engine)(gl);
-        */
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this._currentFramebuffer);*/
+
+
         let ctx: OffscreenCanvasRenderingContext2D | null;
         if (ctx = c.getContext("2d")) {
             let imageData = ctx.createImageData(c.width, c.height);
-
-            pixels.fill(255);
-
             imageData.data.set(pixels);
+            //imageData.data.fill(255);
             ctx.save();
             ctx.putImageData(imageData, 0, 0);
 
             //const width = maxX - minX
             ctx.translate(0, c.height);
-            ctx.scale(1, -1);
+            //ctx.scale(1, -1);
             ctx.drawImage(c, 0, 0);
             if (typeof (subTextureCache) !== 'undefined') {
                 console.log('paint subTextureCache');
@@ -142,13 +161,13 @@ export class paintTexture extends paintGround {
                 subTextureCache.imageData = imageData;
             }
             ctx.restore();
-            //ctx.translate(minX, 0);
+            //ctx.translate(alignment / 4, 0);
             ctx.beginPath();
             let absDimensions: { w: number; h: number } = { w: Math.abs(w), h: Math.abs(h) }
-            ctx.translate(c.width / 2, c.height / 2);
+            ctx.translate(cwidth / 2, c.height / 2);
             ctx.rotate(rad*-1);
-            ctx.translate(c.width / -2, c.height / -2);
-            ctx.translate(((c.width - absDimensions.w) / 2), (c.height - absDimensions.h) / 2);
+            ctx.translate(cwidth / -2, c.height / -2);
+            ctx.translate(((cwidth - absDimensions.w) / 2), (c.height - absDimensions.h) / 2);
             ctx.fillStyle = "red";
             ctx.rect(0, 0, absDimensions.w, absDimensions.h);
 
