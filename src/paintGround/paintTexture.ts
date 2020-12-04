@@ -95,8 +95,8 @@ export class paintTexture extends paintGround {
 
         //c.width = maxX - minX;
         //c.height = maxZ - minZ;
-        //let c = new OffscreenCanvas(maxX - minX, maxZ - minZ);
-        let c = new OffscreenCanvas(5120, maxZ - minZ);
+        let c = new OffscreenCanvas(maxX - minX, maxZ - minZ);
+        //let c = new OffscreenCanvas(5120, maxZ - minZ);
         let pixels: Uint8Array = new Uint8Array(4 * c.width * c.height);
         /*
         (function (gl: WebGL2RenderingContext) {
@@ -130,7 +130,7 @@ export class paintTexture extends paintGround {
             ctx.save();
             ctx.putImageData(imageData, 0, 0);
 
-            const width = maxX - minX
+            //const width = maxX - minX
             ctx.translate(0, c.height);
             ctx.scale(1, -1);
             ctx.drawImage(c, 0, 0);
@@ -142,13 +142,13 @@ export class paintTexture extends paintGround {
                 subTextureCache.imageData = imageData;
             }
             ctx.restore();
-            ctx.translate(minX, 0);
+            //ctx.translate(minX, 0);
             ctx.beginPath();
             let absDimensions: { w: number; h: number } = { w: Math.abs(w), h: Math.abs(h) }
-            ctx.translate(width / 2, c.height / 2);
+            ctx.translate(c.width / 2, c.height / 2);
             ctx.rotate(rad*-1);
-            ctx.translate(width / -2, c.height / -2);
-            ctx.translate(((width - absDimensions.w) / 2), (c.height - absDimensions.h) / 2);
+            ctx.translate(c.width / -2, c.height / -2);
+            ctx.translate(((c.width - absDimensions.w) / 2), (c.height - absDimensions.h) / 2);
             ctx.fillStyle = "red";
             ctx.rect(0, 0, absDimensions.w, absDimensions.h);
 
@@ -159,31 +159,16 @@ export class paintTexture extends paintGround {
         var imageData = ctx.getImageData(0, 0, c.width, c.height);
         var buffer = imageData.data.buffer;  // ArrayBuffer
 
-        const gpubuffer = this.scene.gpu.device.createBuffer({
-            size: 5120 * 5120 * 4,
-            usage: GPUBufferUsage.COPY_SRC,
-            mappedAtCreation: true
-        });
-        console.log('minX', minX | 0, 'minZ', minZ | 0);
-        //let offset = (minX | 0) * 4 * 5120 + (minZ | 0) * 4;
-        let offset = (minZ | 0) * 4 * 5120;
-        const padding = offset % 8
-        offset -= padding;
-        console.log('size', 5120 * 5120 * 4, 'offset', offset, 'size2', c.width * c.height * 4)
-
-       // const range = gpubuffer.getMappedRange(offset, c.width * c.height * 4);
-        const range = gpubuffer.getMappedRange(offset, c.height * 4 * 5120);
-        
-        new Uint8ClampedArray(range, padding).set(new Uint8ClampedArray(buffer))
-        gpubuffer.unmap();
-
-        const encoder=this.scene.gpu.device.createCommandEncoder()
-        encoder.copyBufferToTexture({ buffer: gpubuffer, bytesPerRow: 5120 * 4 }, { texture: this.zonedt }, { width: 5120, height: 5120, depth: 1 });
-        this.scene.gpu.device.defaultQueue.submit([encoder.finish()]);
-        /* this.scene.gpu.device.defaultQueue.writeTexture({ texture: this.zonedt }, buffer, {
-            offset: minX * 4 * 5120 + minZ*4,
+        this.scene.gpu.device.defaultQueue.writeTexture({
+            texture: this.zonedt,
+            origin: {
+                x: minX,
+                y: minZ
+            }
+        }, buffer, {
+            offset: 0,
             bytesPerRow: c.width*4,
-        }, { width: c.width, height: c.height, depth:1 });*/
+        }, { width: c.width, height: c.height, depth:1 });
         //@ts-ignore
         //gl.texSubImage2D(gl.TEXTURE_2D, 0, minX, minZ, gl.RGBA, gl.UNSIGNED_BYTE, c);
     }
