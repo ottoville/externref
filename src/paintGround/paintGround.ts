@@ -1,12 +1,14 @@
 //let tempplane: BABYLON.Mesh | null
 //let end_position: Vector2
+const fullRad = Math.PI * 2
 
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import { canvasListener } from "../traits/canvasListener.js";
+import { canvasListener, hasCanvasListener } from "../traits/canvasListener.js";
 import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
+import { UITAB } from "../UITAB.js";
 
 //import { rotateMatrix, translate } from "./math.js";
 
@@ -24,7 +26,6 @@ export enum DrawType {
 //type test = keyof HTMLElementEventMap;
 export abstract class paintGround {
     protected ang360: Angle = new Angle(0);
-    protected ang: Angle = new Angle(0);
     #end_position: Float32Array = new Float32Array(2);
     #start_position: Float32Array = new Float32Array(2);
     constructor(
@@ -32,34 +33,43 @@ export abstract class paintGround {
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Sea,
-        private uitab: canvasListener
+        private uitab: hasCanvasListener
     ) {
     };
     public resolve: PTResultF = () => null;
     public activate(callback: PTResultF, options?: any) {
-        this.uitab.addListener("pointerdown", this.mainPointerDown, { once: true });
+        this.uitab.canvasListener.addListener("pointerdown", this.mainPointerDown, { once: true });
         this.resolve = callback;
     }
     public destroy() {
         this.camera.attachControl(this.scene.gpu.renderPassScreen.canvas, true);
     }
 
-    #drawArea = async (evt:PointerEvent) => {
+    #drawVector = new Float32Array(2);
 
+    #drawArea = async (evt:PointerEvent) => {
         await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
         if (this.ground.mesh.pickInfo.distance[0]) {
             this.#end_position.set([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
-            let width = this.#start_position[0] - this.#end_position[0];
 
-            const distance = Math.hypot(this.#start_position[0] - this.#end_position[0], this.#start_position[1] - this.#end_position[1]);
+            this.#drawVector.set([this.#start_position[0] - this.#end_position[0], this.#start_position[1] - this.#end_position[1]])
+            const distance = Math.hypot(this.#drawVector[0], this.#drawVector[1]);
             height = distance
 
-            if (width < 0)
-                rotation = Math.asin((this.#start_position[1] - this.#end_position[1]) / distance);
+            if (this.#drawVector[0] < 0)
+                rotation = Math.asin((this.#drawVector[1]) / distance);
             else
-                rotation = Math.asin((this.#start_position[1] - this.#end_position[1]) / distance) * -1;
-            this.ang = new Angle(Math.abs(rotation));
-            this.ang360 = this.ang[360](this.#start_position, this.#end_position);
+                rotation = Math.asin((this.#drawVector[1]) / distance) * -1;
+            const rad = Math.abs(rotation);
+            if (this.#drawVector[1] > 0) {
+                if (this.#drawVector[0] > 0)
+                    this.ang360 = new Angle(fullRad - rad);
+                else
+                    this.ang360 = new Angle(Math.PI + rad);
+            } else if (this.#drawVector[0] < 0)
+                this.ang360 = new Angle(Math.PI - rad);
+             else
+                this.ang360 = new Angle(rad);
         }
     }
 
@@ -74,30 +84,38 @@ export abstract class paintGround {
     #mousemove = async (evt: PointerEvent) => {
 
         await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
-        if(this.ground.mesh.pickInfo.distance[0] && this.#end_position) {
-        //if (pikked.pickedPoint && this.#end_position) {
+        if (this.ground.mesh.pickInfo.distance[0] && this.#end_position) {
+            //if (pikked.pickedPoint && this.#end_position) {
             //Distance from first point
-            //let distance = Math.sqrt(Math.pow(this.#start_position[0] - this.ground.mesh.pickInfo.point[0], 2) + Math.pow(this.#start_position[1] - this.ground.mesh.pickInfo.point[2], 2));
-            let distance = Math.hypot(this.#start_position[0] - this.ground.mesh.pickInfo.point[0], this.#start_position[1] - this.ground.mesh.pickInfo.point[2])
+
+            const p0 = this.#start_position[0] - this.ground.mesh.pickInfo.point[0];
+            const p1 = this.#start_position[1] - this.ground.mesh.pickInfo.point[2];
+
+            let distance = Math.hypot(p0, p1);
             if (Number.isNaN(distance)) {
                 throw ("distance is not a number");
             }
-            let ang2 = new Angle(Math.acos(Math.abs(this.ground.mesh.pickInfo.point[0] - this.#start_position[0]) / distance))
-            let dotang = this.ang360.distance(ang2[360](this.#start_position, new Float32Array([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]])).rad);
 
-            let v1 = [this.#start_position[1] - this.ground.mesh.pickInfo.point[2], (this.#start_position[0] - this.ground.mesh.pickInfo.point[0]) * -1]
-            let v2 = [this.#start_position[0] - this.#end_position[0], this.#start_position[1] - this.#end_position[1]];
+            let rad = Math.acos(Math.abs(p0) / distance);
+            if (p1 > 0) {
+                if (p0 > 0)
+                    rad = fullRad - rad;
+                else
+                    rad += Math.PI;
+            }
+            else if (p0 < 0)
+                rad = Math.PI - rad;
 
-            let dotprod = height * distance * Math.cos(dotang.rad);
+            let dotang = this.ang360.distance(rad);
+            
+           /* let dotprod = height * distance * Math.cos(dotang.rad);
+            let shadow = dotprod / height;
+            width = Math.sqrt(Math.pow(distance, 2) - Math.pow(shadow, 2));*/
 
-            let fulldotprod = height * height;
-            let shadow = height * (dotprod / fulldotprod);
+            width = Math.sqrt(Math.pow(distance, 2) - Math.pow(distance, 2) * Math.pow(Math.cos(dotang.rad), 2));
 
-            width = Math.abs(Math.sqrt(Math.pow(Math.abs(distance), 2) - Math.pow(shadow, 2)));
-            if (v1[0] * v2[0] + v1[1] * v2[1] < 0)  //Dot product
-                width = Math.abs(width) * -1
-
-            //let timed = new Date().getTime();
+            if (p1 * this.#drawVector[0] + (p0 * -1) * this.#drawVector[1] < 0)  //Dot product
+                width *= -1;
 
             this.#nextDrawWidth = width;
             const me = this;
@@ -122,21 +140,21 @@ export abstract class paintGround {
         //this.canvas.addEventListener('click', async () => {
         //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
         this.scene.TerraCameras[0].unSubscribePickingRay();
-        this.uitab.removeListener('pointermove', this.#mousemove);
+        this.uitab.canvasListener.removeListener('pointermove', this.#mousemove);
         //this.canvas.removeEventListener('pointermove', this.mousemove, false);
 
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
-        this.uitab.addListener('pointerdown', this.mainPointerDown, { once: true });
+        this.uitab.canvasListener.addListener('pointerdown', this.mainPointerDown, { once: true });
         this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
         this.onEnd();
     }
     private mouseMoveRegisterClick = (evt: PointerEvent) => {
-        this.uitab.addListener('pointerdown', this.finalClick, { once: true });
+        this.uitab.canvasListener.addListener('pointerdown', this.finalClick, { once: true });
     }
     #pointerUp = (evt: PointerEvent) => {
 
-        this.uitab.removeListener('pointermove', this.#drawArea);
+        this.uitab.canvasListener.removeListener('pointermove', this.#drawArea);
         
         this.camera.attachControl(this.scene.canvas, true);
         //fix race condition
@@ -147,13 +165,12 @@ export abstract class paintGround {
         } catch (e) {
             console.log(e);
         } finally {
-            this.uitab.addListener('pointermove', this.#mousemove, { lazy: 25 });
-            this.uitab.addListener('pointermove', this.mouseMoveRegisterClick, { once: true });
+            this.uitab.canvasListener.addListener('pointermove', this.#mousemove, { lazy: 25 });
+            this.uitab.canvasListener.addListener('pointermove', this.mouseMoveRegisterClick, { once: true });
         }
     }
 
     private mainPointerDown = async (evt: PointerEvent) => {
-
         if (evt.button !== 0) {
             return;
         }
@@ -182,9 +199,9 @@ export abstract class paintGround {
             this.onMainPointerDown(this.#start_position);
             this.camera.detachControl(this.scene.canvas);
             this.scene.TerraCameras[0].subscribePickingRay();
-            this.uitab.addListener("pointermove", this.#drawArea, { lazy: 25 });
+            this.uitab.canvasListener.addListener("pointermove", this.#drawArea, { lazy: 25 });
 
-            this.uitab.addListener("pointerup", this.#pointerUp, { once: true });
+            this.uitab.canvasListener.addListener("pointerup", this.#pointerUp, { once: true });
         } else {
             console.debug('no pickinfo pickedpoint');
             console.log(pickInfo);
