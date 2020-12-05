@@ -52,7 +52,7 @@ export abstract class paintGround {
         if (this.ground.mesh.pickInfo.distance[0]) {
             this.#end_position.set([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
 
-            this.#drawVector.set([this.#start_position[0] - this.#end_position[0], this.#start_position[1] - this.#end_position[1]])
+            this.#drawVector.set([this.#start_position[0] - this.#end_position[0], (this.#start_position[1] - this.#end_position[1]) * -1])
             const distance = Math.hypot(this.#drawVector[0], this.#drawVector[1]);
             height = distance
 
@@ -61,7 +61,7 @@ export abstract class paintGround {
             else
                 rotation = Math.asin((this.#drawVector[1]) / distance) * -1;
             const rad = Math.abs(rotation);
-            if (this.#drawVector[1] > 0) {
+            if (this.#drawVector[1] < 0) {
                 if (this.#drawVector[0] > 0)
                     this.ang360 = new Angle(fullRad - rad);
                 else
@@ -85,18 +85,15 @@ export abstract class paintGround {
 
         await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
         if (this.ground.mesh.pickInfo.distance[0] && this.#end_position) {
-            //if (pikked.pickedPoint && this.#end_position) {
             //Distance from first point
-
             const p0 = this.#start_position[0] - this.ground.mesh.pickInfo.point[0];
             const p1 = this.#start_position[1] - this.ground.mesh.pickInfo.point[2];
 
-            let distance = Math.hypot(p0, p1);
-            if (Number.isNaN(distance)) {
+            const distanceSquared = p0 * p0 + p1 * p1;
+            if (Number.isNaN(distanceSquared))
                 throw ("distance is not a number");
-            }
 
-            let rad = Math.acos(Math.abs(p0) / distance);
+            let rad = Math.acos(Math.abs(p0) / Math.sqrt(distanceSquared));
             if (p1 > 0) {
                 if (p0 > 0)
                     rad = fullRad - rad;
@@ -107,14 +104,13 @@ export abstract class paintGround {
                 rad = Math.PI - rad;
 
             let dotang = this.ang360.distance(rad);
-            
+
            /* let dotprod = height * distance * Math.cos(dotang.rad);
             let shadow = dotprod / height;
             width = Math.sqrt(Math.pow(distance, 2) - Math.pow(shadow, 2));*/
+            width = Math.sqrt(distanceSquared - distanceSquared * Math.pow(Math.cos(dotang.rad), 2));
 
-            width = Math.sqrt(Math.pow(distance, 2) - Math.pow(distance, 2) * Math.pow(Math.cos(dotang.rad), 2));
-
-            if (p1 * this.#drawVector[0] + (p0 * -1) * this.#drawVector[1] < 0)  //Dot product
+            if (p1 * this.#drawVector[0] + p0 * this.#drawVector[1] < 0)  //Dot product
                 width *= -1;
 
             this.#nextDrawWidth = width;
