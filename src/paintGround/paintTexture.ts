@@ -16,18 +16,16 @@ import { UITAB } from "../UITAB.js";
 export class paintTexture extends paintGround {
     ratio: number;
     onEnd() { }
-    private subTextureCache: subTexture = { x: 0, z: 0, imageData: null };
+    private subTextureCache: subTexture = { x: 0, z: 0, width:0, height:0, imageData: null };
     private height: number=0;
     private centerX: number;
     private centerZ: number;
     private m1 = new Matrix();
     onMainPointerUp(end_position: Float32Array, height: number): void {
         this.height = height;
-        this.subTextureCache = { x: 0, z: 0, imageData: null }
+        this.subTextureCache = { x: 0, z: 0, width:0, height:0,imageData: null }
     }
     onMainPointerDown(startingPoint: Float32Array): void {
-        //console.log('painttexture mainpointerdown', startingPoint[0], startingPoint[1] );
-
         this.m1.setRow(0, new Vector4(1, 0, 0, this.centerX + startingPoint[0]/this.ratio));
         this.m1.setRow(1, new Vector4(0, 1, 0, 0));
         this.m1.setRow(2, new Vector4(0, 0, 1, this.centerZ + startingPoint[1]/this.ratio));
@@ -62,6 +60,15 @@ export class paintTexture extends paintGround {
         }
 
         if (this.subTextureCache.imageData != null) {
+
+            this.subTextureCache.encoder = this.scene.gpu.device.createCommandEncoder();
+            this.subTextureCache.encoder.copyTextureToTexture({ texture: this.subTextureCache.imageData },
+                { texture: this.zonedt, origin: { x: this.subTextureCache.x, y: this.subTextureCache.z } },
+                [this.subTextureCache.width, this.subTextureCache.height, 1]);
+
+             //this.scene.gpu.device.defaultQueue.submit([encoder.finish()]);
+
+
            // this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, this.subTextureCache.x, this.subTextureCache.z, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.subTextureCache.imageData);
         }
 
@@ -100,68 +107,57 @@ export class paintTexture extends paintGround {
         const alignment = missAlignment ? 256 - missAlignment : 0
         let c = new OffscreenCanvas(cwidth+alignment/4, maxZ - minZ);
 
-        
-        /*const tempTexture = this.scene.gpu.device.createTexture({
-            size: [c.width, c.height,1],
-            format: "rgba8unorm",
-            usage: GPUTextureUsage.COPY_DST
-        });*/
-
-        
-        const buffersize = c.width * c.height * 4
-        const tempBuffer = this.scene.gpu.device.createBuffer({
-            size: buffersize,
-            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
-        });
-        let pixels: Uint8Array = new Uint8Array(buffersize);
-        const encoder = this.scene.gpu.device.createCommandEncoder();
-        encoder.copyTextureToBuffer({
-            texture: this.zonedt,
-            origin: {
-                x: minX,
-                y: minZ
-            }
-        }, { buffer: tempBuffer, bytesPerRow: (c.width * 4)}, [c.width, c.height, 1]);
-
-        this.scene.gpu.device.defaultQueue.submit([encoder.finish()]);
-        await tempBuffer.mapAsync(GPUMapMode.READ);
-        pixels.set(new Uint8Array(tempBuffer.getMappedRange()));
-        tempBuffer.unmap();
-
-        /*encoder.copyTextureToTexture({
-            texture: this.zonedt,
-            origin: {
-                x: minX,
-                y: minZ
-            }
-        }, { texture: tempTexture }, [c.width, c.height, 1]);*/
-            /*gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-
-            gl.readPixels(minX, minZ, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this._currentFramebuffer);*/
-
-
         let ctx: OffscreenCanvasRenderingContext2D | null;
         if (ctx = c.getContext("2d")) {
             let imageData = ctx.createImageData(c.width, c.height);
-            imageData.data.set(pixels);
-            //imageData.data.fill(255);
+
+            const buffersize = c.width * c.height * 4
+            const tempBuffer = this.scene.gpu.device.createBuffer({
+                size: buffersize,
+                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+            });
+            const tempTexture = this.scene.gpu.device.createTexture({
+                size: { width: c.width, height: c.height, depth: 1 },
+                format: "rgba8unorm",
+                usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC
+            });
+            const encoder = subTextureCache?.encoder || this.scene.gpu.device.createCommandEncoder();
+
+            encoder.copyTextureToTexture({
+                texture: this.zonedt,
+                origin: {
+                    x: minX,
+                    y: minZ
+                }
+            }, { texture: tempTexture }, [c.width, c.height, 1])
+
+            encoder.copyTextureToBuffer({
+                texture: this.zonedt,
+                origin: {
+                    x: minX,
+                    y: minZ
+                }
+            }, { buffer: tempBuffer, bytesPerRow: (c.width * 4) }, [c.width, c.height, 1]);
+            this.scene.gpu.device.defaultQueue.submit([encoder.finish()]);
+            await tempBuffer.mapAsync(GPUMapMode.READ);
+            imageData.data.set(new Uint8ClampedArray(tempBuffer.getMappedRange()));
+            tempBuffer.unmap();
+            
             ctx.save();
             ctx.putImageData(imageData, 0, 0);
 
             //const width = maxX - minX
             ctx.translate(0, c.height);
-            //ctx.scale(1, -1);
-            ctx.drawImage(c, 0, 0);
             if (typeof (subTextureCache) !== 'undefined') {
                 console.log('paint subTextureCache');
                 //subTextureCache = { x: minX, z: minZ, imageData: imageData };
                 subTextureCache.x = minX;
                 subTextureCache.z = minZ;
-                subTextureCache.imageData = imageData;
+                subTextureCache.width = c.width;
+                subTextureCache.height = c.height;
+                subTextureCache.imageData = tempTexture;
             }
             ctx.restore();
-            //ctx.translate(alignment / 4, 0);
             ctx.beginPath();
             let absDimensions: { w: number; h: number } = { w: Math.abs(w), h: Math.abs(h) }
             ctx.translate(cwidth / 2, c.height / 2);
@@ -176,7 +172,6 @@ export class paintTexture extends paintGround {
             throw ('cannot get 2D context');
         }
         var imageData = ctx.getImageData(0, 0, c.width, c.height);
-        var buffer = imageData.data.buffer;  // ArrayBuffer
 
         this.scene.gpu.device.defaultQueue.writeTexture({
             texture: this.zonedt,
@@ -184,7 +179,7 @@ export class paintTexture extends paintGround {
                 x: minX,
                 y: minZ
             }
-        }, buffer, {
+        }, imageData.data.buffer, {
             offset: 0,
             bytesPerRow: c.width*4,
         }, { width: c.width, height: c.height, depth:1 });
