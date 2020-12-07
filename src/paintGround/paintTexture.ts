@@ -65,7 +65,6 @@ export class paintTexture extends paintGround {
         height /= this.ratio;
         let h = width * -1
         let w = height * -1
-
         let coords: { x: number, z: number }[] = [
             { x: 0, z: 0 },
             { x: 0, z: h },
@@ -79,7 +78,6 @@ export class paintTexture extends paintGround {
         let translated = translated0.map(coord => {
             return translate(coord.x, 0, coord.z, m1)
         });
-        //let c = document.createElement('canvas');
 
         const minX = Math.min(...translated.map(t => t.x)) | 0;
         const minZ = Math.min(...translated.map(t => t.z)) | 0;
@@ -115,56 +113,40 @@ export class paintTexture extends paintGround {
             { texture: this.zonedt, origin: { x: minX, y: minZ } },
             { texture: tempTexture },
             [c.width, c.height, 1]);
-        if (this.subTextureCache.imageData) {
-            /*encoder.copyTextureToTexture(
-                { texture: this.subTextureCache.imageData },
-                { texture: this.zonedt, origin: { x: this.subTextureCache.x, y: this.subTextureCache.z } },
-                [this.subTextureCache.width, this.subTextureCache.height, 1]);
-                */
-
-            const rect1 = { x: this.subTextureCache.x, y: this.subTextureCache.z, width: this.subTextureCache.width, height: this.subTextureCache.height };
-            const rect2 = { x: minX, y: minZ, width: c.width, height: c.height };
-
-            const leftX = Math.max(rect1.x, rect2.x);
-            const rightX = Math.min(rect1.x + rect1.width, rect2.x + rect2.width);
-            const topY = Math.max(rect1.y, rect2.y);
-            const bottomY = Math.min(rect1.y + rect1.height, rect2.y + rect2.height);
+        if (width && this.subTextureCache.imageData) {
+            const leftX = Math.max(this.subTextureCache.x, minX);
+            const rightX = Math.min(this.subTextureCache.x + this.subTextureCache.width, minX + c.width);
+            const topY = Math.max(this.subTextureCache.z, minZ);
+            const bottomY = Math.min(this.subTextureCache.z + this.subTextureCache.height, minZ + c.height);
 
             if (leftX < rightX && topY < bottomY) {
-                //intersectionRect = new Rectangle(leftX, topY, rightX - leftX, bottomY - topY);
-                //console.log('intersectionRect', leftX, topY, rightX - leftX, bottomY - topY);
-
                 const intersectionoffsetSourceX = leftX - this.subTextureCache.x
                 const intersectionoffsetSourceY = topY - this.subTextureCache.z;
 
-
                 const intersectionoffsetDestinationX = leftX - minX
                 const intersectionoffsetDestinationY = topY - minZ;
-
-                //console.log('intersectionoffsetX', intersectionoffsetSourceX, 'intersectionoffsetY', intersectionoffsetSourceY)
                 encoder.copyTextureToTexture(
                     { texture: this.subTextureCache.imageData, origin: { x: intersectionoffsetSourceX, y: intersectionoffsetSourceY } }, //origin: [subX, subZ, 1] 
                     { texture: tempTexture, origin: { x: intersectionoffsetDestinationX, y: intersectionoffsetDestinationY } },
                     [rightX - leftX, bottomY - topY, 1]);
 
-                encoder.copyTextureToBuffer({ texture: tempTexture }, { buffer: tempBuffer, bytesPerRow: (c.width * 4) }, [c.width, c.height, 1]);
 
             } else {
                 console.log('Rectangles do not overlap, or overlap has an area of zero (edge/corner overlap)')
             }
         }
-           
+        encoder.copyTextureToBuffer({ texture: tempTexture }, { buffer: tempBuffer, bytesPerRow: (c.width * 4) }, [c.width, c.height, 1]);
+
         this.scene.gpu.device.defaultQueue.submit([encoder.finish()]);
         const encoder2 = this.scene.gpu.device.createCommandEncoder();
-        if (this.subTextureCache.imageData) {
+        const cacheImage = this.subTextureCache.imageData;
+        if (cacheImage) {
             encoder2.copyTextureToTexture(
-                { texture: this.subTextureCache.imageData },
+                { texture: cacheImage },
                 { texture: this.zonedt, origin: { x: this.subTextureCache.x, y: this.subTextureCache.z } },
                 [this.subTextureCache.width, this.subTextureCache.height, 1]);
         }
         if (typeof (this.subTextureCache) !== 'undefined') {
-            console.log('paint subTextureCache');
-            //subTextureCache = { x: minX, z: minZ, imageData: imageData };
             this.subTextureCache.x = minX;
             this.subTextureCache.z = minZ;
             this.subTextureCache.width = c.width;
@@ -174,7 +156,7 @@ export class paintTexture extends paintGround {
         await tempBuffer.mapAsync(GPUMapMode.READ);
         imageData.data.set(new Uint8ClampedArray(tempBuffer.getMappedRange()));
         tempBuffer.unmap();
-
+        tempBuffer.destroy();
         ctx.save();
         ctx.putImageData(imageData, 0, 0);
 
@@ -210,18 +192,7 @@ export class paintTexture extends paintGround {
             }
         }, { width: c.width, height: c.height, depth: 1 });
         this.scene.gpu.device.defaultQueue.submit([encoder2.finish()]);
-
-        /* this.scene.gpu.device.defaultQueue.writeTexture({
-             texture: this.zonedt,
-             origin: {
-                 x: minX,
-                 y: minZ
-             }
-         }, imageData.data.buffer, {
-             offset: 0,
-             bytesPerRow: c.width*4,
-         }, { width: c.width, height: c.height, depth:1 });*/
-        //@ts-ignore
-        //gl.texSubImage2D(gl.TEXTURE_2D, 0, minX, minZ, gl.RGBA, gl.UNSIGNED_BYTE, c);
+        if (cacheImage)
+            cacheImage.destroy();
     }
 }
