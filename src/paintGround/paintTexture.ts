@@ -2,16 +2,10 @@
 import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import type { Texture } from "../lib/babylon/Materials/Textures/texture.js";
-import type { Engine } from "../lib/babylon/Engines/engine.js";
 import type { WorldScene } from "../world/scene.js";
 import { canvasListener, hasCanvasListener } from "../traits/canvasListener.js";
 import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
-import { UITAB } from "../UITAB.js";
-
-
-
 
 export class paintTexture extends paintGround {
     ratio: number;
@@ -20,16 +14,15 @@ export class paintTexture extends paintGround {
     private height: number = 0;
     private centerX: number;
     private centerZ: number;
-    private m1 = new Matrix();
     onMainPointerUp(end_position: Float32Array, height: number): void {
         this.height = height;
         this.subTextureCache = { x: 0, z: 0, width: 0, height: 0, imageData: null }
     }
+    #offsetX: number = 0;
+    #offsetY: number = 0;
     onMainPointerDown(startingPoint: Float32Array): void {
-        this.m1.setRow(0, new Vector4(1, 0, 0, this.centerX + startingPoint[0] / this.ratio));
-        this.m1.setRow(1, new Vector4(0, 1, 0, 0));
-        this.m1.setRow(2, new Vector4(0, 0, 1, this.centerZ + startingPoint[1] / this.ratio));
-        this.m1.setRow(3, new Vector4(0, 0, 0, 1));
+        this.#offsetX = this.centerX + startingPoint[0] / this.ratio;
+        this.#offsetY = this.centerZ + startingPoint[1] / this.ratio;
     }
     constructor(
         protected scene: TerraScene,
@@ -58,9 +51,9 @@ export class paintTexture extends paintGround {
         if (this.ang360.rad < 0) {
             throw ('onAreaDraw negative angle not supported');
         }
-        this.drawSubImage(width, this.height, this.ang360.rad, this.m1)
+        this.drawSubImage(width, this.height, this.ang360.rad)
     }
-    async drawSubImage(width: number, height: number, rad: number, m1: Matrix) {
+    async drawSubImage(width: number, height: number, rad: number) {
         width /= this.ratio;
         height /= this.ratio;
         let h = width * -1
@@ -71,18 +64,31 @@ export class paintTexture extends paintGround {
             { x: w, z: 0 },
             { x: w, z: h }
         ]
-        let my = rotateMatrix(rad, "y");
-        let translated0 = coords.map(coord => {
-            return translate(coord.x, 0, coord.z, my)
-        })
-        let translated = translated0.map(coord => {
-            return translate(coord.x, 0, coord.z, m1)
+       // let my = rotateMatrix(rad, "y");
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const rotateMatrix = [
+            cos, -sin,
+            sin, cos
+        ]
+
+        let translated0 = coords.map<[x:number, y:number]>(coord => {
+
+            return [coord.x * rotateMatrix[0] + coord.z * rotateMatrix[2],
+                coord.x * rotateMatrix[1] + coord.z * rotateMatrix[3]];
+
         });
 
-        const minX = Math.min(...translated.map(t => t.x)) | 0;
-        const minZ = Math.min(...translated.map(t => t.z)) | 0;
-        const maxX = Math.max(...translated.map(t => t.x)) | 0;
-        const maxZ = Math.max(...translated.map(t => t.z)) | 0;
+        let translated = translated0.map(coord => {
+            return [coord[0]+this.#offsetX,coord[1]+this.#offsetY]
+        });
+
+
+        console.log(translated)
+        const minX = Math.min(...translated.map(t => t[0])) | 0;
+        const minZ = Math.min(...translated.map(t => t[1])) | 0;
+        const maxX = Math.max(...translated.map(t => t[0])) | 0;
+        const maxZ = Math.max(...translated.map(t => t[1])) | 0;
 
         //c.width = maxX - minX;
         //c.height = maxZ - minZ;
@@ -129,8 +135,6 @@ export class paintTexture extends paintGround {
                     { texture: this.subTextureCache.imageData, origin: { x: intersectionoffsetSourceX, y: intersectionoffsetSourceY } }, //origin: [subX, subZ, 1] 
                     { texture: tempTexture, origin: { x: intersectionoffsetDestinationX, y: intersectionoffsetDestinationY } },
                     [rightX - leftX, bottomY - topY, 1]);
-
-
             } else {
                 console.log('Rectangles do not overlap, or overlap has an area of zero (edge/corner overlap)')
             }
@@ -174,6 +178,14 @@ export class paintTexture extends paintGround {
         ctx.rect(0, 0, absDimensions.w, absDimensions.h);
 
         ctx.fill();
+
+        const matrix = ctx.getTransform();
+        
+
+        let translated1 = coords.map(coord => {
+            return Vector2.Transform(Vector2.FromArray([coord.x, coord.z]), Matrix.FromArray(matrix.toFloat32Array()));
+        })
+        console.log(translated1);
 
         imageData = ctx.getImageData(0, 0, c.width, c.height);
         const tempBuffer2 = this.scene.gpu.device.createBuffer({
