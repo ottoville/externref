@@ -2,8 +2,7 @@
 import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import type { WorldScene } from "../world/scene.js";
-import { canvasListener, hasCanvasListener } from "../traits/canvasListener.js";
+import { hasCanvasListener } from "../traits/canvasListener.js";
 import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
 
@@ -39,7 +38,6 @@ export class paintTexture extends paintGround {
         this.centerZ = textureHeight / 2;
 
         this.ratio = 10000 / textureWidth //texture coordinates
-        //this.texture = zonedt._texture._webGLTexture;
     };
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
         super.activate(callback, options);
@@ -56,42 +54,25 @@ export class paintTexture extends paintGround {
     async drawSubImage(width: number, height: number, rad: number) {
         width /= this.ratio;
         height /= this.ratio;
-        let h = width * -1
-        let w = height * -1
-        let coords: { x: number, z: number }[] = [
-            { x: 0, z: 0 },
-            { x: 0, z: h },
-            { x: w, z: 0 },
-            { x: w, z: h }
+        let coords: { x: number, y: number }[] = [
+            { x: 0, y: 0 },
+            { x: 0, y: -width },
+            { x: -height, y: 0 },
+            { x: -height, y: -width }
         ]
-       // let my = rotateMatrix(rad, "y");
         const cos = Math.cos(rad);
         const sin = Math.sin(rad);
-        const rotateMatrix = [
-            cos, -sin,
-            sin, cos
-        ]
 
-        let translated0 = coords.map<[x:number, y:number]>(coord => {
-
-            return [coord.x * rotateMatrix[0] + coord.z * rotateMatrix[2],
-                coord.x * rotateMatrix[1] + coord.z * rotateMatrix[3]];
-
+        const translated = coords.map<[x:number, y:number]>(coord => {
+            return [coord.x * cos + coord.y * sin + this.#offsetX,
+                coord.x * -sin + coord.y * cos + this.#offsetY];
         });
 
-        let translated = translated0.map(coord => {
-            return [coord[0]+this.#offsetX,coord[1]+this.#offsetY]
-        });
-
-
-        console.log(translated)
         const minX = Math.min(...translated.map(t => t[0])) | 0;
         const minZ = Math.min(...translated.map(t => t[1])) | 0;
         const maxX = Math.max(...translated.map(t => t[0])) | 0;
         const maxZ = Math.max(...translated.map(t => t[1])) | 0;
 
-        //c.width = maxX - minX;
-        //c.height = maxZ - minZ;
         const cwidth = maxX - minX;
         const missAlignment = (cwidth * 4) % 256;
         const alignment = missAlignment ? 256 - missAlignment : 0
@@ -163,13 +144,11 @@ export class paintTexture extends paintGround {
         tempBuffer.destroy();
         ctx.save();
         ctx.putImageData(imageData, 0, 0);
-
-        //const width = maxX - minX
         ctx.translate(0, c.height);
 
         ctx.restore();
         ctx.beginPath();
-        let absDimensions: { w: number; h: number } = { w: Math.abs(w), h: Math.abs(h) }
+        const absDimensions: { w: number; h: number } = { w: Math.abs(height), h: Math.abs(width) }
         ctx.translate(cwidth / 2, c.height / 2);
         ctx.rotate(rad * -1);
         ctx.translate(cwidth / -2, c.height / -2);
@@ -178,15 +157,6 @@ export class paintTexture extends paintGround {
         ctx.rect(0, 0, absDimensions.w, absDimensions.h);
 
         ctx.fill();
-
-        const matrix = ctx.getTransform();
-        
-
-        let translated1 = coords.map(coord => {
-            return Vector2.Transform(Vector2.FromArray([coord.x, coord.z]), Matrix.FromArray(matrix.toFloat32Array()));
-        })
-        console.log(translated1);
-
         imageData = ctx.getImageData(0, 0, c.width, c.height);
         const tempBuffer2 = this.scene.gpu.device.createBuffer({
             size: buffersize,

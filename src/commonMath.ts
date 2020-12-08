@@ -58,8 +58,8 @@ interface DeepImmutableArray<T> extends ReadonlyArray<DeepImmutable<T>> { }
 /* interface DeepImmutableMap<K, V> extends ReadonlyMap<DeepImmutable<K>, DeepImmutable<V>> {} // es2015+ only */
 /** @hidden */
 type DeepImmutableObject<T> = { readonly [K in keyof T]: DeepImmutable<T[K]> };
+const fullRad = Math.PI * 2
 class Angle {
-    private fullRad=Math.PI*2;
     constructor(private _rad: number, private _deg?: number) { }
     get deg(): number {
         if (typeof (this._deg) === 'number')
@@ -79,7 +79,7 @@ class Angle {
     360(p1: Float32Array, p2: Float32Array): Angle {
         if (p2[1] - p1[1] < 0) {
             if (p2[0] - p1[0] < 0)
-                return new Angle(Math.PI * 2 - this.rad);
+                return new Angle(fullRad - this.rad);
             return new Angle(Math.PI + this.rad);
         }
         else if (p2[0] - p1[0] > 0)
@@ -87,61 +87,23 @@ class Angle {
         return new Angle(this.rad);
     }
     sum(ang: Angle): Angle {
-        return new Angle(this.rad % ang.rad % Math.PI * 2)
+        return new Angle(this.rad % ang.rad % fullRad)
     }
     add(deg: number): number {
         return this.deg + deg % 360
     }
     sub(rad: number): number {
-        if(rad < this.fullRad && rad > this.rad)
-            return this.fullRad+(this.rad-rad);
+        if(rad < fullRad && rad > this.rad)
+            return fullRad+(this.rad-rad);
         else
             return this.rad - rad % 360
     }
     distance(rad: number): Angle {
-        let phi = (rad - this.rad) % (Math.PI * 2);       // This is either the distance or 360 - distance
-        let distance = phi > Math.PI ? Math.PI * 2 - phi : phi;
+        let phi = (rad - this.rad) % fullRad;       // This is either the distance or 360 - distance
+        let distance = phi > Math.PI ? fullRad - phi : phi;
         return new Angle(distance);
     }
 }
-function rotateMatrix(rad: number, axis: "x" | "y" | "z"): Matrix {
-    // https://www.3dgep.com/3d-math-primer-for-game-programmers-matrices/#Rotation
-
-    let m = new Matrix();
-    if (axis == "x") {
-        m.setRow(0, new Vector4(1, 0, 0, 0));
-        m.setRow(1, new Vector4(0, Math.cos(rad), Math.sin(rad) * -1, 0));
-        m.setRow(2, new Vector4(0, Math.sin(rad), Math.cos(rad), 0));
-        m.setRow(3, new Vector4(0, 0, 0, 1));
-    } else if (axis == "y") {
-        m.setRow(0, new Vector4(Math.cos(rad), 0, Math.sin(rad), 0));
-        m.setRow(1, new Vector4(0, 1, 0, 0));
-        m.setRow(2, new Vector4(Math.sin(rad) * -1, 0, Math.cos(rad), 0));
-        m.setRow(3, new Vector4(0, 0, 0, 1));
-    } else {
-        m.setRow(0, new Vector4(Math.cos(rad), Math.sin(rad * -1), 0, 0));
-        m.setRow(1, new Vector4(Math.sin(rad), Math.cos(rad), 0, 0));
-        m.setRow(2, new Vector4(0, 0, 1, 0));
-        m.setRow(3, new Vector4(0, 0, 0, 1))
-    }
-    return m;
-}
-function translate(x: number, y: number, z: number, transformation: Matrix) {
-    if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z))
-        throw('Non numeric input passed to translate()');
-    const m = transformation.m;
-    var rx = x * m[0] + y * m[1] + z * m[2] + m[3];
-    var ry = x * m[4] + y * m[5] + z * m[6] + m[7];
-    var rz = x * m[8] + y * m[9] + z * m[10] + m[11];
-    var rw = x * m[12] + y * m[13] + z * m[14] + m[15];
-    return {
-        x: rx,
-        y: ry,
-        z: rz,
-        w: rw
-    }
-}
-
 
 /*
  * Constant used to convert a value to gamma space
