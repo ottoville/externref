@@ -238,6 +238,152 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     this._currentTarget = target;
                     return this._viewMatrix;
                 }
+                ArcRotateCamera.prototype._checkInputs = function (): void {
+                    //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
+                    //@ts-ignore
+                    if (this._collisionTriggered) {
+                        return;
+                    }
+
+                    this.inputs.checkInputs();
+                    // Inertia
+                    if (this.inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
+                        console.log('Inertia')
+                        let inertialAlphaOffset = this.inertialAlphaOffset;
+                        if (this.beta <= 0) { inertialAlphaOffset *= -1; }
+                        if (this.getScene().useRightHandedSystem) { inertialAlphaOffset *= -1; }
+                        if (this.parent && this.parent._getWorldMatrixDeterminant() < 0) { inertialAlphaOffset *= -1; }
+                        this.alpha += inertialAlphaOffset;
+
+                        this.beta += this.inertialBetaOffset;
+
+                        this.radius -= this.inertialRadiusOffset;
+                        this.inertialAlphaOffset *= this.inertia;
+                        this.inertialBetaOffset *= this.inertia;
+                        this.inertialRadiusOffset *= this.inertia;
+                        if (Math.abs(this.inertialAlphaOffset) < Epsilon) {
+                            this.inertialAlphaOffset = 0;
+                        }
+                        if (Math.abs(this.inertialBetaOffset) < Epsilon) {
+                            this.inertialBetaOffset = 0;
+                        }
+                        if (Math.abs(this.inertialRadiusOffset) < this.speed * Epsilon) {
+                            this.inertialRadiusOffset = 0;
+                        }
+                    }
+
+                    // Panning inertia
+                    if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
+                        console.log('Panning inertia')
+                        //@ts-ignore
+                        if (!this._localDirection) {
+                            //@ts-ignore
+                            this._localDirection = Vector3.Zero();
+                            //@ts-ignore
+                            this._transformedDirection = Vector3.Zero();
+                        }
+                        //@ts-ignore
+                        this._localDirection.copyFromFloats(this.inertialPanningX, this.inertialPanningY, this.inertialPanningY);
+                        //@ts-ignore
+                        this._localDirection.multiplyInPlace(this.panningAxis);
+                        this._viewMatrix.invertToRef(this._cameraTransformMatrix);
+                        //@ts-ignore
+                        Vector3.TransformNormalToRef(this._localDirection, this._cameraTransformMatrix, this._transformedDirection);
+                        //Eliminate y if map panning is enabled (panningAxis == 1,0,1)
+                        if (!this.panningAxis.y) {
+                            //@ts-ignore
+                            this._transformedDirection.y = 0;
+                        }
+                        //@ts-ignore
+                        if (!this._targetHost) {
+                            if (this.panningDistanceLimit) {//@ts-ignore
+                                this._transformedDirection.addInPlace(this._target);//@ts-ignore
+                                var distanceSquared = Vector3.DistanceSquared(this._transformedDirection, this.panningOriginTarget);
+                                if (distanceSquared <= (this.panningDistanceLimit * this.panningDistanceLimit)) {//@ts-ignore
+                                    this._target.copyFrom(this._transformedDirection);
+                                }
+                            }
+                            else {//@ts-ignore
+                                this._target.addInPlace(this._transformedDirection);
+                            }
+                        }
+
+                        this.inertialPanningX *= this.panningInertia;
+                        this.inertialPanningY *= this.panningInertia;
+
+                        if (Math.abs(this.inertialPanningX) < this.speed * Epsilon) {
+                            this.inertialPanningX = 0;
+                        }
+                        if (Math.abs(this.inertialPanningY) < this.speed * Epsilon) {
+                            this.inertialPanningY = 0;
+                        }
+                    }
+
+                    // Limits
+                    //@ts-ignore
+                    this._checkLimits();
+                    //super
+                    //Object.getPrototypeOf(this.constructor.prototype)._checkInputs();
+                    var needToMove = this._decideIfNeedsToMove();
+                    var needToRotate = Math.abs(this.cameraRotation.x) > 0 || Math.abs(this.cameraRotation.y) > 0;
+
+                    // Move
+                    if (needToMove) {
+                        this._updatePosition();
+                    }
+
+                    // Rotate
+                    if (needToRotate) {
+                        this.rotation.x += this.cameraRotation.x;
+                        this.rotation.y += this.cameraRotation.y;
+
+                        //rotate, if quaternion is set and rotation was used
+                        if (this.rotationQuaternion) {
+                            var len = this.rotation.lengthSquared();
+                            if (len) {
+                                Quaternion.RotationYawPitchRollToRef(this.rotation.y, this.rotation.x, this.rotation.z, this.rotationQuaternion);
+                            }
+                        }
+
+                        if (!this.noRotationConstraint) {
+                            var limit = 1.570796;
+
+                            if (this.rotation.x > limit) {
+                                this.rotation.x = limit;
+                            }
+                            if (this.rotation.x < -limit) {
+                                this.rotation.x = -limit;
+                            }
+                        }
+                    }
+
+                    // Inertia
+                    if (needToMove) {
+                        if (Math.abs(this.cameraDirection.x) < this.speed * Epsilon) {
+                            this.cameraDirection.x = 0;
+                        }
+
+                        if (Math.abs(this.cameraDirection.y) < this.speed * Epsilon) {
+                            this.cameraDirection.y = 0;
+                        }
+
+                        if (Math.abs(this.cameraDirection.z) < this.speed * Epsilon) {
+                            this.cameraDirection.z = 0;
+                        }
+
+                        this.cameraDirection.scaleInPlace(this.inertia);
+                    }
+                    if (needToRotate) {
+                        if (Math.abs(this.cameraRotation.x) < this.speed * Epsilon) {
+                            this.cameraRotation.x = 0;
+                        }
+
+                        if (Math.abs(this.cameraRotation.y) < this.speed * Epsilon) {
+                            this.cameraRotation.y = 0;
+                        }
+                        this.cameraRotation.scaleInPlace(this.inertia);
+                    }
+                }
                 //@ts-ignore
                 const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), {
                     getUniqueId: () => 1,
@@ -282,153 +428,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             });
 
 
-            ArcRotateCamera.prototype._checkInputs = function (): void {
-                //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
-                //@ts-ignore
-                if (this._collisionTriggered) {
-                    return;
-                }
 
-                this.inputs.checkInputs();
-                // Inertia
-                if (this.inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
-                    console.log('Inertia')
-                    let inertialAlphaOffset = this.inertialAlphaOffset;
-                    if (this.beta <= 0) { inertialAlphaOffset *= -1; }
-                    if (this.getScene().useRightHandedSystem) { inertialAlphaOffset *= -1; }
-                    if (this.parent && this.parent._getWorldMatrixDeterminant() < 0) { inertialAlphaOffset *= -1; }
-                    this.alpha += inertialAlphaOffset;
-
-                    this.beta += this.inertialBetaOffset;
-
-                    this.radius -= this.inertialRadiusOffset;
-                    this.inertialAlphaOffset *= this.inertia;
-                    this.inertialBetaOffset *= this.inertia;
-                    this.inertialRadiusOffset *= this.inertia;
-                    if (Math.abs(this.inertialAlphaOffset) < Epsilon) {
-                        this.inertialAlphaOffset = 0;
-                    }
-                    if (Math.abs(this.inertialBetaOffset) < Epsilon) {
-                        this.inertialBetaOffset = 0;
-                    }
-                    if (Math.abs(this.inertialRadiusOffset) < this.speed * Epsilon) {
-                        this.inertialRadiusOffset = 0;
-                    }
-                }
-
-                // Panning inertia
-                if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
-                    console.log('Panning inertia')
-                    //@ts-ignore
-                    if (!this._localDirection) {
-                        debugger;
-                        //@ts-ignore
-                        this._localDirection = Vector3.Zero();
-                        //@ts-ignore
-                        this._transformedDirection = Vector3.Zero();
-                    }
-                    //@ts-ignore
-                    this._localDirection.copyFromFloats(this.inertialPanningX, this.inertialPanningY, this.inertialPanningY);
-                    //@ts-ignore
-                    this._localDirection.multiplyInPlace(this.panningAxis);
-                    this._viewMatrix.invertToRef(this._cameraTransformMatrix);
-                    //@ts-ignore
-                    Vector3.TransformNormalToRef(this._localDirection, this._cameraTransformMatrix, this._transformedDirection);
-                    //Eliminate y if map panning is enabled (panningAxis == 1,0,1)
-                    if (!this.panningAxis.y) {
-                        //@ts-ignore
-                        this._transformedDirection.y = 0;
-                    }
-                    //@ts-ignore
-                    if (!this._targetHost) {
-                        if (this.panningDistanceLimit) {//@ts-ignore
-                            this._transformedDirection.addInPlace(this._target);//@ts-ignore
-                            var distanceSquared = Vector3.DistanceSquared(this._transformedDirection, this.panningOriginTarget);
-                            if (distanceSquared <= (this.panningDistanceLimit * this.panningDistanceLimit)) {//@ts-ignore
-                                this._target.copyFrom(this._transformedDirection);
-                            }
-                        }
-                        else {//@ts-ignore
-                            this._target.addInPlace(this._transformedDirection);
-                        }
-                    }
-
-                    this.inertialPanningX *= this.panningInertia;
-                    this.inertialPanningY *= this.panningInertia;
-
-                    if (Math.abs(this.inertialPanningX) < this.speed * Epsilon) {
-                        this.inertialPanningX = 0;
-                    }
-                    if (Math.abs(this.inertialPanningY) < this.speed * Epsilon) {
-                        this.inertialPanningY = 0;
-                    }
-                }
-
-                // Limits
-                //@ts-ignore
-                this._checkLimits();
-                //super
-                //Object.getPrototypeOf(this.constructor.prototype)._checkInputs();
-                var needToMove = this._decideIfNeedsToMove();
-                var needToRotate = Math.abs(this.cameraRotation.x) > 0 || Math.abs(this.cameraRotation.y) > 0;
-
-                // Move
-                if (needToMove) {
-                    this._updatePosition();
-                }
-
-                // Rotate
-                if (needToRotate) {
-                    this.rotation.x += this.cameraRotation.x;
-                    this.rotation.y += this.cameraRotation.y;
-
-                    //rotate, if quaternion is set and rotation was used
-                    if (this.rotationQuaternion) {
-                        var len = this.rotation.lengthSquared();
-                        if (len) {
-                            Quaternion.RotationYawPitchRollToRef(this.rotation.y, this.rotation.x, this.rotation.z, this.rotationQuaternion);
-                        }
-                    }
-
-                    if (!this.noRotationConstraint) {
-                        var limit = 1.570796;
-
-                        if (this.rotation.x > limit) {
-                            this.rotation.x = limit;
-                        }
-                        if (this.rotation.x < -limit) {
-                            this.rotation.x = -limit;
-                        }
-                    }
-                }
-
-                // Inertia
-                if (needToMove) {
-                    if (Math.abs(this.cameraDirection.x) < this.speed * Epsilon) {
-                        this.cameraDirection.x = 0;
-                    }
-
-                    if (Math.abs(this.cameraDirection.y) < this.speed * Epsilon) {
-                        this.cameraDirection.y = 0;
-                    }
-
-                    if (Math.abs(this.cameraDirection.z) < this.speed * Epsilon) {
-                        this.cameraDirection.z = 0;
-                    }
-
-                    this.cameraDirection.scaleInPlace(this.inertia);
-                }
-                if (needToRotate) {
-                    if (Math.abs(this.cameraRotation.x) < this.speed * Epsilon) {
-                        this.cameraRotation.x = 0;
-                    }
-
-                    if (Math.abs(this.cameraRotation.y) < this.speed * Epsilon) {
-                        this.cameraRotation.y = 0;
-                    }
-                    this.cameraRotation.scaleInPlace(this.inertia);
-                }
-            }
 
 
 
