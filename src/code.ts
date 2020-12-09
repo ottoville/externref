@@ -12,7 +12,7 @@ import { Zones } from "./tools/zones.js";
 import { Terrain } from "./world/terrain.js";
 import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 import { Sea } from "./world/water.js";
-import { Vector3, Matrix } from "./lib/babylon/Maths/math.vector";
+import { Vector3, Matrix, Quaternion } from "./lib/babylon/Maths/math.vector";
 import { LazyEval } from "./LazyEval.js";
 import { GPU } from "./GPU.js";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
@@ -23,7 +23,6 @@ import { TerraCamera } from "./TerraCamera.js";
 import { TerraScene } from "./TerraScene.js";
 import { Engine } from "./engine.js";
 import { Sun2 } from "./world/sun2.js";
-import { Scene } from "./Scene.js";
 import { PositionNode } from "./TerraNode.js";
 
 //import  DB from "./DB.js";
@@ -194,7 +193,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 Atomics.store(mousePosition, 1, e.clientY)
                 Atomics.notify(new Int32Array(mousePositionBuffer), 0);
             });
-            
+
             const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
             const projectionmatrix = new Float32Array(projectionmatrixBuffer);
             blazor.invokeMethod('setProgress', 11);
@@ -280,7 +279,171 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 scene.activeCameras.push(camera);
                 camera.attachControl(canvas, true);
                 return camera;
-            })
+            });
+
+
+            ArcRotateCamera.prototype._checkInputs = function (): void {
+                //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
+                //@ts-ignore
+                if (this._collisionTriggered) {
+                    return;
+                }
+
+                this.inputs.checkInputs();
+                // Inertia
+                if (this.inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
+                    console.log('Inertia')
+                    let inertialAlphaOffset = this.inertialAlphaOffset;
+                    if (this.beta <= 0) { inertialAlphaOffset *= -1; }
+                    if (this.getScene().useRightHandedSystem) { inertialAlphaOffset *= -1; }
+                    if (this.parent && this.parent._getWorldMatrixDeterminant() < 0) { inertialAlphaOffset *= -1; }
+                    this.alpha += inertialAlphaOffset;
+
+                    this.beta += this.inertialBetaOffset;
+
+                    this.radius -= this.inertialRadiusOffset;
+                    this.inertialAlphaOffset *= this.inertia;
+                    this.inertialBetaOffset *= this.inertia;
+                    this.inertialRadiusOffset *= this.inertia;
+                    if (Math.abs(this.inertialAlphaOffset) < Epsilon) {
+                        this.inertialAlphaOffset = 0;
+                    }
+                    if (Math.abs(this.inertialBetaOffset) < Epsilon) {
+                        this.inertialBetaOffset = 0;
+                    }
+                    if (Math.abs(this.inertialRadiusOffset) < this.speed * Epsilon) {
+                        this.inertialRadiusOffset = 0;
+                    }
+                }
+
+                // Panning inertia
+                if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
+                    console.log('Panning inertia')
+                    //@ts-ignore
+                    if (!this._localDirection) {
+                        debugger;
+                        //@ts-ignore
+                        this._localDirection = Vector3.Zero();
+                        //@ts-ignore
+                        this._transformedDirection = Vector3.Zero();
+                    }
+                    //@ts-ignore
+                    this._localDirection.copyFromFloats(this.inertialPanningX, this.inertialPanningY, this.inertialPanningY);
+                    //@ts-ignore
+                    this._localDirection.multiplyInPlace(this.panningAxis);
+                    this._viewMatrix.invertToRef(this._cameraTransformMatrix);
+                    //@ts-ignore
+                    Vector3.TransformNormalToRef(this._localDirection, this._cameraTransformMatrix, this._transformedDirection);
+                    //Eliminate y if map panning is enabled (panningAxis == 1,0,1)
+                    if (!this.panningAxis.y) {
+                        //@ts-ignore
+                        this._transformedDirection.y = 0;
+                    }
+                    //@ts-ignore
+                    if (!this._targetHost) {
+                        if (this.panningDistanceLimit) {//@ts-ignore
+                            this._transformedDirection.addInPlace(this._target);//@ts-ignore
+                            var distanceSquared = Vector3.DistanceSquared(this._transformedDirection, this.panningOriginTarget);
+                            if (distanceSquared <= (this.panningDistanceLimit * this.panningDistanceLimit)) {//@ts-ignore
+                                this._target.copyFrom(this._transformedDirection);
+                            }
+                        }
+                        else {//@ts-ignore
+                            this._target.addInPlace(this._transformedDirection);
+                        }
+                    }
+
+                    this.inertialPanningX *= this.panningInertia;
+                    this.inertialPanningY *= this.panningInertia;
+
+                    if (Math.abs(this.inertialPanningX) < this.speed * Epsilon) {
+                        this.inertialPanningX = 0;
+                    }
+                    if (Math.abs(this.inertialPanningY) < this.speed * Epsilon) {
+                        this.inertialPanningY = 0;
+                    }
+                }
+
+                // Limits
+                //@ts-ignore
+                this._checkLimits();
+                //super
+                //Object.getPrototypeOf(this.constructor.prototype)._checkInputs();
+                var needToMove = this._decideIfNeedsToMove();
+                var needToRotate = Math.abs(this.cameraRotation.x) > 0 || Math.abs(this.cameraRotation.y) > 0;
+
+                // Move
+                if (needToMove) {
+                    this._updatePosition();
+                }
+
+                // Rotate
+                if (needToRotate) {
+                    this.rotation.x += this.cameraRotation.x;
+                    this.rotation.y += this.cameraRotation.y;
+
+                    //rotate, if quaternion is set and rotation was used
+                    if (this.rotationQuaternion) {
+                        var len = this.rotation.lengthSquared();
+                        if (len) {
+                            Quaternion.RotationYawPitchRollToRef(this.rotation.y, this.rotation.x, this.rotation.z, this.rotationQuaternion);
+                        }
+                    }
+
+                    if (!this.noRotationConstraint) {
+                        var limit = 1.570796;
+
+                        if (this.rotation.x > limit) {
+                            this.rotation.x = limit;
+                        }
+                        if (this.rotation.x < -limit) {
+                            this.rotation.x = -limit;
+                        }
+                    }
+                }
+
+                // Inertia
+                if (needToMove) {
+                    if (Math.abs(this.cameraDirection.x) < this.speed * Epsilon) {
+                        this.cameraDirection.x = 0;
+                    }
+
+                    if (Math.abs(this.cameraDirection.y) < this.speed * Epsilon) {
+                        this.cameraDirection.y = 0;
+                    }
+
+                    if (Math.abs(this.cameraDirection.z) < this.speed * Epsilon) {
+                        this.cameraDirection.z = 0;
+                    }
+
+                    this.cameraDirection.scaleInPlace(this.inertia);
+                }
+                if (needToRotate) {
+                    if (Math.abs(this.cameraRotation.x) < this.speed * Epsilon) {
+                        this.cameraRotation.x = 0;
+                    }
+
+                    if (Math.abs(this.cameraRotation.y) < this.speed * Epsilon) {
+                        this.cameraRotation.y = 0;
+                    }
+                    this.cameraRotation.scaleInPlace(this.inertia);
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             blazor.invokeMethod('setProgress', 12);
 
 
@@ -295,7 +458,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             blazor.invokeMethod('setProgress', 13);
 
 
-            const terraEngine = new Engine(gpuscene);
+            const terraEngine = new Engine(gpuscene, DB);
             const terrascene = new TerraScene(terraEngine, canvas, gpuscene, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
                 new Sun2(terrascene, sunBufferOffsetBytes);
                 // Initial scene objects here
@@ -305,10 +468,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 const sea = new Sea(terrascene);
                 blazor.invokeMethod('setProgress', 75);
                 //new testPlane(terrascene);
-               
+
                 const b = new Box(terrascene);
                 b.worldPosition.update(scale => scale.set([200, 200, 200]));
-                
+
                 /*new testPlaneNormals(terrascene);*/
                 const terrainInited = Terrain.loadFromTexture(terrascene);
                 terrainInited.then(async r => {
@@ -342,7 +505,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     blazor.invokeMethod('setProgress', 90);
 
 
-                    device.defaultQueue.submit([commandEncoder.finish()]); //Copy would overflow the buffer
+                    device.defaultQueue.submit([commandEncoder.finish()]);
                     blazor.invokeMethod('setProgress', 95);
                     bufferView.buffer.destroy();
                     blazor.invokeMethod('setProgress', 100);
@@ -436,17 +599,17 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const debugscene = new DebugScene(terraEngine, canvas, gpuscene, [mainCamera], (scene, sunBufferOffsetBytes) => {
                 const sun = new PositionNode(scene.engine, sunBufferOffsetBytes);
                 sun.worldPosition.translation.set([0, 1, 0]);
-                sun.customData.set([0,0,0,1]) //shadow to 1 (no shadow)
+                sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
             });
 
             const b2 = new Box(debugscene);
             b2.worldPosition.update(scale => scale.set([200, 200, 200]));
             b2.worldPosition.setTranslationX(500);
-            
+
             const scenes = new Set([terrascene, debugscene])
             let renderFrame: number = 0;
             let resizeHandler = 0;
-            
+
             cameraReady.then(camera => {
                 function renderLoop(time: DOMHighResTimeStamp) {
                     camera._checkInputs();
