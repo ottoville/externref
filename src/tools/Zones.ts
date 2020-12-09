@@ -16,12 +16,9 @@ import { TerraScene } from "../TerraScene.js";
 import { DebugScene } from "../DebugScene.js";
 
 export class Zones extends UITAB {
-    private canvasListener = new canvasListener();
+    public canvasListener = new canvasListener();
     //private zonemateria: StandardMaterial;
-    //@ts-ignore
     private PT: paintTexture;
-    //@ts-ignore
-    private zonedt: DynamicTexture
     private size = 10000;
     zoneTexture: GPUTexture;
     constructor(
@@ -46,23 +43,30 @@ export class Zones extends UITAB {
         this.zoneTexture = scene.gpu.device.createTexture({
             size: [5120, 5120, 1],
             format: "rgba8unorm",
-            usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST,
+            usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
         });
         scene.gpu.device.defaultQueue.copyImageBitmapToTexture({ imageBitmap: bitmap }, { texture: this.zoneTexture }, [5120, 5120, 1]);
+        
         ground.mesh.textureView = this.zoneTexture.createView();
         ground.mesh.drawable.then(d => {
             d.scene = debugScene;
         })
         // let DZ = new drawZone(canvas, scene, camera, ground, sea, DB, DT, groundmateria, grass, terrain);
-        //@ts-ignore
+
         //this.zonedt = new DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, scene, false);
 
-        //this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zonedt, 10000, 10000, this);
+        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zoneTexture, 5120, 5120, this);
+        this.PT.activate(async (response) => {
+            (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
+        }, {});
+
         //@ts-ignore
        // this.zonemateria = new StandardMaterial("zoneMat", scene);
        // this.zonemateria.diffuseTexture = this.zonedt;
     }
     activate = async () => {
+        return;
+        //@ts-ignore
         let ctx: CanvasRenderingContext2D = this.zonedt.getContext();
         //@ts-ignore
         this.ground.terraMesh.material = this.zonemateria;
@@ -100,6 +104,7 @@ export class Zones extends UITAB {
                 console.log('fillRect', 0, 0, z.size.h * -1, z.size.w)
             });
             ctx.stroke();
+            //@ts-ignore
             me.zonedt.update();
         }
         this.PT.activate(async (response) => {

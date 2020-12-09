@@ -12,27 +12,22 @@ import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
 
 
-
-export interface PlantsUI extends canvasListener, UITAB, Traitable {
-
-}
-@addTrait(canvasListener)
 export class PlantsUI extends UITAB {
 
     public label: string = 'Plants';
     public static instance: UITAB | null = null;
     static plantsMesh: Plants;
     private PT: paintPlane | null = null;
-    traits: Trait[];
+    canvasListener = new canvasListener();
+
+
     constructor(
         public scene: TerraScene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         sea: Sea,
-        ...traits: Trait[]
     ) {
         super(scene, terrain, camera, sea);
-        this.traits = this.initTraits(traits);
         console.log('activate plantsUI');
     }
     activateDraw = () => {
@@ -54,7 +49,7 @@ export class PlantsUI extends UITAB {
        // this.activated=true;
     }
     destroy = () => {
-        this.traits.forEach(trait => trait.destroy());
+        this.canvasListener.destroy();
         this.PT?.destroy();
        // super.deactivate();
        // this.activated = false;

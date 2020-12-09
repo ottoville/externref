@@ -5,7 +5,7 @@ import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { WorldScene } from "../world/scene.js";
-import { canvasListener } from "../traits/canvasListener.js";
+import { canvasListener, hasCanvasListener } from "../traits/canvasListener.js";
 import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
 
@@ -26,7 +26,7 @@ export class paintLine extends paintGround {
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Sea,
-        uitab: canvasListener
+        uitab: hasCanvasListener
     ) {
         super(TerraScene.instance, camera, ground, sea, uitab);
     };

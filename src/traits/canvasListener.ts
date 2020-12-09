@@ -1,8 +1,13 @@
 ﻿import { LazyEval } from "../LazyEval";
 import { GPU } from "../GPU";
+import { UITAB } from "../UITAB";
 
 interface addListenerOptions extends AddEventListenerOptions {
     lazy?: number;
+}
+
+export interface hasCanvasListener extends UITAB {
+    canvasListener: canvasListener;
 }
 
 export class canvasListener {
