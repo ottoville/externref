@@ -24,6 +24,7 @@ import { TerraScene } from "./TerraScene.js";
 import { Engine } from "./engine.js";
 import { Sun2 } from "./world/sun2.js";
 import { PositionNode } from "./TerraNode.js";
+import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
 
 //import  DB from "./DB.js";
 
@@ -220,20 +221,39 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }
                     //@ts-ignore
                     target.addToRef(this._computationVector, this._newPosition);
-                    const coordinator = scene.collisionCoordinator;
+                    const coordinator: DefaultCollisionCoordinator = scene.collisionCoordinator as DefaultCollisionCoordinator;
                     //@ts-ignore
                     if (!this._collider) {
                         //@ts-ignore
                         this._collider = coordinator.createCollider();
                     }
                     //@ts-ignore
-                    this._collider._radius = this.collisionRadius;
+                    const collider = this._collider;
+
+                    collider._radius = this.collisionRadius;
                     //@ts-ignore
                     this._newPosition.subtractToRef(this._position, this._collisionVelocity);
                     //@ts-ignore
                     this._collisionTriggered = true;
+
+                   // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
                     //@ts-ignore
-                    coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
+                    this._position.divideToRef(collider._radius, coordinator._scaledPosition);
+                    //@ts-ignore
+                    this._collisionVelocity.divideToRef(collider._radius, coordinator._scaledVelocity);
+                    collider.collidedMesh = null;
+                    collider._retry = 0;
+                    //@ts-ignore
+                    collider._initialVelocity = coordinator._scaledVelocity;
+                    //@ts-ignore
+                    collider._initialPosition = coordinator._scaledPosition;
+                    //@ts-ignore
+                    coordinator._collideWithWorld(coordinator._scaledPosition, coordinator._scaledVelocity, collider, 3, coordinator._finalPosition, null);
+                    //@ts-ignore
+                    coordinator._finalPosition.multiplyInPlace(collider._radius);
+                    //run the callback
+                    //@ts-ignore
+                    this._onCollisionPositionChange(this.uniqueId, coordinator._finalPosition, collider.collidedMesh);
 
                     this._currentTarget = target;
                     return this._viewMatrix;
@@ -248,7 +268,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     this.inputs.checkInputs();
                     // Inertia
                     if (this.inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
-                        console.log('Inertia')
                         let inertialAlphaOffset = this.inertialAlphaOffset;
                         if (this.beta <= 0) { inertialAlphaOffset *= -1; }
                         if (this.getScene().useRightHandedSystem) { inertialAlphaOffset *= -1; }
@@ -274,7 +293,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                     // Panning inertia
                     if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
-                        console.log('Panning inertia')
                         //@ts-ignore
                         if (!this._localDirection) {
                             //@ts-ignore
@@ -322,10 +340,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     // Limits
                     //@ts-ignore
                     this._checkLimits();
-                    //super
-                    //Object.getPrototypeOf(this.constructor.prototype)._checkInputs();
-                    var needToMove = this._decideIfNeedsToMove();
-                    var needToRotate = Math.abs(this.cameraRotation.x) > 0 || Math.abs(this.cameraRotation.y) > 0;
+
+                    const needToMove = this._decideIfNeedsToMove();
+                    const needToRotate = Math.abs(this.cameraRotation.x) > 0 || Math.abs(this.cameraRotation.y) > 0;
 
                     // Move
                     if (needToMove) {
@@ -334,6 +351,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                     // Rotate
                     if (needToRotate) {
+                        console.log('needToRotate');
                         this.rotation.x += this.cameraRotation.x;
                         this.rotation.y += this.cameraRotation.y;
 
@@ -359,6 +377,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                     // Inertia
                     if (needToMove) {
+                        console.log('needToMove');
                         if (Math.abs(this.cameraDirection.x) < this.speed * Epsilon) {
                             this.cameraDirection.x = 0;
                         }
