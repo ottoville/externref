@@ -7,18 +7,18 @@ import type { PTDresult } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { WorldScene } from "../world/scene.js";
 import { canvasListener } from "../traits/canvasListener.js";
-import { addTrait, Trait, Traitable } from "../traits/trait.js";
+import { Trait, Traitable } from "../traits/trait.js";
 import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
 
 
 export class PlantsUI extends UITAB {
-
+    traits: Set<Trait> = new Set();
     public label: string = 'Plants';
     public static instance: UITAB | null = null;
     static plantsMesh: Plants;
     private PT: paintPlane | null = null;
-    canvasListener = new canvasListener();
+    canvasListener = new canvasListener(this);
 
 
     constructor(
@@ -49,9 +49,7 @@ export class PlantsUI extends UITAB {
        // this.activated=true;
     }
     destroy = () => {
-        this.canvasListener.destroy();
         this.PT?.destroy();
-       // super.deactivate();
-       // this.activated = false;
+        this.traits.forEach(trait => trait.destroy());
     }
 }

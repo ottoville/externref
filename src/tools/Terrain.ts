@@ -8,12 +8,14 @@ import type { Drawable } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import type { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
+import type { Trait } from "../traits/trait.js";
 
 const terrainWorker = new WorkerThread('../webworkers/terrainWorker.js');
 
 export class TerrainTool extends TerraNode implements has3DPosition {
     public static instance: UITAB | null = null;
-    #canvasListener = new canvasListener();
+    traits:Set<Trait> = new Set();
+    #canvasListener = new canvasListener(this);
     // private engine: WebGPUEngine;
     private helper!: Drawable;
 
@@ -132,12 +134,11 @@ export class TerrainTool extends TerraNode implements has3DPosition {
         clearInterval(this.mouseinterval);
     }
     destroy = (): void => {
-        this.#canvasListener.destroy()
-        console.log('call super.deactivate');
         terrainWorker.unsubscribe('heights');
         this.helper.destroy();
         this.scene.TerraCameras[0].unSubscribePickingRay();
         this.facet12ArrGPUBufferSwap.destroy();
+        this.traits.forEach(trait => trait.destroy());
     };
 
     mouseListener = (evt: PointerEvent): void => {

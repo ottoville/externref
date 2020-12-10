@@ -1,6 +1,7 @@
 ﻿import { LazyEval } from "../LazyEval";
 import { GPU } from "../GPU";
 import { UITAB } from "../UITAB";
+import { Trait } from "./trait";
 
 interface addListenerOptions extends AddEventListenerOptions {
     lazy?: number;
@@ -10,7 +11,7 @@ export interface hasCanvasListener extends UITAB {
     canvasListener: canvasListener;
 }
 
-export class canvasListener {
+export class canvasListener extends Trait {
     //abstract deactivate: () => void;
     public destroy() {
         this.#listeners.forEach((map, type) => {
@@ -19,8 +20,6 @@ export class canvasListener {
             });
             map.clear();
         });
-    }
-    constructor() {
     }
     #listeners: Map<
         keyof HTMLElementEventMap,

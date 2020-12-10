@@ -2,34 +2,33 @@
 import { TerraMesh } from "../TerraMesh.js";
 import * as BABYLON from "../lib/babylon/index.js"
 import { canvasListener } from "../traits/canvasListener.js";
-import { addTrait, Trait, Traitable } from "../traits/trait.js";
+import { Trait, Traitable } from "../traits/trait.js";
 import { ArcRotateCamera } from "../lib/babylon/index.js";
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
 import type { TerraScene } from "../TerraScene.js";
 
-export interface BuildingsUI extends canvasListener, Traitable {
 
-}
-@addTrait(canvasListener)
 export class BuildingsUI extends UITAB {
     activate: () => void= () => null;
-    destroy: () => void = () => null;
-    traits: Trait[];
+    destroy: () => void = () => {
+        this.traits.forEach(trait => trait.destroy());
+    };
+    traits: Set<Trait> = new Set();
+    #canvasListener = new canvasListener(this);
     constructor(scene: TerraScene,
         terrain: Terrain,
         camera: ArcRotateCamera,
         sea: Sea,
-        ...traits: Trait[]
     ) {
         super(scene, terrain, camera, sea);
-        this.traits = this.initTraits(traits);
+
     }
     public create = (type: string): void => {
         let scene = this.scene;
 
         if (type == 'house') {
-            this.addListener("pointerdown", function doHouse() {
+            this.#canvasListener.addListener("pointerdown", function doHouse() {
                 let pickInfo: BABYLON.PickingInfo | null;
                 //@ts-ignore
                 if (pickInfo = scene.pick(scene.pointerX, scene.pointerY, (m) => {

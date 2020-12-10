@@ -3,24 +3,27 @@ import { paintTexture } from "../paintGround/paintTexture.js";
 import type { Terrain } from "../world/terrain.js";
 //import * as BABYLON from "../lib/babylon/index.js"
 import type { PTDresult } from "../types/interfaces/index.js";
-import { StandardMaterial } from "../lib/babylon/Materials/standardMaterial.js";
-import { DynamicTexture } from "../lib/babylon/Materials/Textures/dynamicTexture.js";
-import type { ShaderMaterial } from "../lib/babylon/Materials/shaderMaterial.js";
+
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
-import type { WorldScene } from "../world/scene.js";
+
 import { canvasListener } from "../traits/canvasListener.js";
-import { addTrait, Trait, Traitable } from "../traits/trait.js";
+
 import { Sea } from "../world/water.js";
 import { TerraScene } from "../TerraScene.js";
 import { DebugScene } from "../DebugScene.js";
+import type { Trait } from "../traits/trait.js";
 
 export class Zones extends UITAB {
-    public canvasListener = new canvasListener();
+    traits: Set<Trait> = new Set();
+    public canvasListener = new canvasListener(this);
     //private zonemateria: StandardMaterial;
     private PT: paintTexture;
-    private size = 10000;
-    zoneTexture: GPUTexture;
+    #size = 5120;
+    zoneTexture = this.scene.gpu.device.createTexture({
+        size: [5120, 5120, 1],
+        format: "rgba8unorm",
+        usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+    });
     constructor(
         public scene: TerraScene,
         public ground: Terrain,
@@ -37,15 +40,30 @@ export class Zones extends UITAB {
         ctx.beginPath();
         ctx.fillStyle = "yellow";
         ctx.fillRect(0, 0, 5120, 5120);
-        ctx.stroke();
-        const bitmap = texture.transferToImageBitmap();
+        let centerX = this.#size / 2;
+        let centerZ = this.#size / 2;
 
-        this.zoneTexture = scene.gpu.device.createTexture({
-            size: [5120, 5120, 1],
-            format: "rgba8unorm",
-            usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
-        });
-        scene.gpu.device.defaultQueue.copyImageBitmapToTexture({ imageBitmap: bitmap }, { texture: this.zoneTexture }, [5120, 5120, 1]);
+        (async () => {
+            (await this.scene.engine.DB).transaction("zones").objectStore("zones").getAll().onsuccess = (evt) => {
+                //@ts-ignore
+                (<PTDresult[]>evt.target.result).forEach(z => {
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = "blue";
+                    ctx.translate(centerX + z.coord[0], centerZ + z.coord[1] * -1);
+                   // console.log('Translate ', centerX + z.coord[0], centerZ + z.coord[1] * -1)
+                    ctx.rotate(z.rad);
+                   // console.log('Rotate: ', z.rad)
+                    ctx.fillStyle = "blue";
+                    ctx.fillRect(0, 0, z.size.h * -1, z.size.w);
+                   // console.log('fillRect', 0, 0, z.size.h * -1, z.size.w)
+                });
+                ctx.stroke();
+                const bitmap = texture.transferToImageBitmap();
+                scene.gpu.device.defaultQueue.copyImageBitmapToTexture({ imageBitmap: bitmap }, { texture: this.zoneTexture }, [5120, 5120, 1]);
+                bitmap.close();
+            }
+        })();
         
         ground.mesh.textureView = this.zoneTexture.createView();
         ground.mesh.drawable.then(d => {
@@ -70,11 +88,11 @@ export class Zones extends UITAB {
         let ctx: CanvasRenderingContext2D = this.zonedt.getContext();
         //@ts-ignore
         this.ground.terraMesh.material = this.zonemateria;
-        let centerX = this.size / 2
-        let centerZ = this.size / 2
+        let centerX = this.#size / 2
+        let centerZ = this.#size / 2
         ctx.beginPath();
         ctx.fillStyle = "yellow";
-        ctx.fillRect(0, 0, this.size, this.size);
+        ctx.fillRect(0, 0, this.#size, this.#size);
        // ctx.stroke();
        // this.zonedt.update()
         let me = this;
@@ -116,12 +134,8 @@ export class Zones extends UITAB {
         this.ground.mesh.scene = this.scene;
         this.ground.mesh.textureView = this.ground.texture.createView();
         this.zoneTexture.destroy();
-        //if (this.activated) {
-           // super.deactivate();
-           // this.PT.destroy();
-         //   this.activated = false;
-            //@ts-ignore
-          //  this.ground.material = this.groundMaterial;
-       // }
+        this.PT.destroy();
+      //  this.canvasListener.destroy();
+        this.traits.forEach(trait => trait.destroy());
     }
 }

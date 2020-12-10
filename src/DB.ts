@@ -45,7 +45,6 @@ globalThis.DB = new Promise<EarthDatabase>(function (res, rej) {
         console.log('IDBVersionChangeEvent',e);
         // Save the IDBDatabase interface 
         var db: EarthDatabase = this.result;
-
         
 
         (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach((objstore) => {

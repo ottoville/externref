@@ -43,6 +43,7 @@ export abstract class paintGround {
     }
     public destroy() {
         this.camera.attachControl(this.scene.gpu.renderPassScreen.canvas, true);
+        this.uitab.canvasListener.destroy();
     }
 
     #drawVector = new Float32Array(2);
