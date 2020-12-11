@@ -362,7 +362,7 @@ export class GPU {
     }
     properties = 0
     onRenders: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>)[] = [];
-    drawBindGroups(renderPassEncoder: GPURenderPassEncoder, bgt: BindGroupLayout, renderPass: RenderPass, index: number, scene?: Scene) {
+    drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: BindGroupLayout, renderPass: RenderPass, index: number, scene?: Scene) {
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
           //  if (!scene)
            //     console.log('drawBindGroups', index);

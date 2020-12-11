@@ -76,7 +76,9 @@ export class Drawable {
         private GPUIndexFormat: GPUIndexFormat = 'uint16') {
             if (instanceCount == 0)
                 console.warn('Added drawable with 0 instances, nothing will be drawn');
-            this.scene = scene;
+        this.scene = scene;
+        console.log('add drawable');
+        renderPasses.forEach(rp => rp.bundles.length = 0);
     }
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number) {
         this.staticBuffers.forEach((bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup));

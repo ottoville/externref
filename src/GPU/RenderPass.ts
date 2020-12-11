@@ -38,6 +38,7 @@ export class RenderPass {
     targetTextureView = this.targetTexture.createView();
 
     onResize(width: number, height: number) {
+        this.bundles.length = 0;
         [this.size.width, this.size.height] = this._onResize(width, height);
         this.cameras.forEach(camera => camera.onResize(this.size.width, this.size.height));
         this.targetTexture.destroy();
@@ -100,28 +101,41 @@ export class RenderPass {
             this.depthTextureView = this.#depthTexture.createView();
         }
     }
+    bundles: GPURenderBundle[] = [];
     render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp, physicDelta: number | null, cameraBindGroup:GPUBindGroup) {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
-            passEncoder.setBindGroup(0, cameraBindGroup);
-            this.gpu.rootlayout.renderPipeLines.forEach(rp => {
-                rp.draw(passEncoder,this, 1);
-            });
-            if (this.gpu.rootlayout.subBindGroups.size) {
-                //console.log('this.gpu.rootlayout.subBindGroups.size', this.gpu.rootlayout.subBindGroups.size)
-                this.gpu.rootlayout.subBindGroups.forEach(bgt =>
-                    this.gpu.drawBindGroups(passEncoder, bgt, this, 1)
-                )
-            };
-            this.scenes.forEach(scene =>
-                scene.render(passEncoder, this, time, physicDelta)
-            )
-            //TerraScene.instance.gpu.render(passEncoder, this, time, physicDelta);
+            if (!this.bundles.length) {
+                console.log('record bundle');
+                const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder({
+                    colorFormats: ['bgra8unorm'],
+                    sampleCount: this.sampleCount,
+                    depthStencilFormat: this.#depthTexture?'depth24plus-stencil8':undefined
+                });
+                this.recordRenderPass(renderBundleEncoder, time, physicDelta, cameraBindGroup);
+                this.bundles.push(renderBundleEncoder.finish());
+            }
+            passEncoder.executeBundles(this.bundles);
             passEncoder.endPass();
         } catch (e) {
             console.error(e);
             debugger;
         }
+    }
+    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, time: DOMHighResTimeStamp, physicDelta: number | null, cameraBindGroup: GPUBindGroup) {
+        passEncoder.setBindGroup(0, cameraBindGroup);
+        this.gpu.rootlayout.renderPipeLines.forEach(rp => {
+            rp.draw(passEncoder, this, 1);
+        });
+        if (this.gpu.rootlayout.subBindGroups.size) {
+            //console.log('this.gpu.rootlayout.subBindGroups.size', this.gpu.rootlayout.subBindGroups.size)
+            this.gpu.rootlayout.subBindGroups.forEach(bgt =>
+                this.gpu.drawBindGroups(passEncoder, bgt, this, 1)
+            )
+        };
+        this.scenes.forEach(scene =>
+            scene.render(passEncoder, this, time, physicDelta)
+        )
     }
 }
 

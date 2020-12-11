@@ -180,7 +180,7 @@ export class TerraScene extends Scene {
         super(gpu, engine, TerraCameras, onRenderStart);
         TerraScene.instance = this;
 
-        const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen, gpu.renderPassWater]);
+       // const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen, gpu.renderPassWater]);
 
         engine.physics.gameSpeed = 0;
     }

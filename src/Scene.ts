@@ -37,7 +37,7 @@ export abstract class Scene {
         onRenderStart(this, sunBufferOffsetBytes)
     }
     
-    render(renderPassEncoder: GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp, physicDelta: number | null) {
+    render(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp, physicDelta: number | null) {
         renderPassEncoder.setBindGroup(1, this.lights.uniformBindGroupLightsWGSL);
         this.gpu.rootSceneLayout.renderPipeLines.forEach(rp => {
             rp.draw(renderPassEncoder, renderPass, 2, this);
