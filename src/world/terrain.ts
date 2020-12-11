@@ -22,11 +22,11 @@ export class Terrain {
     static subdivisionsX: number = 250;
     static subdivisionsY: number = 250;
 
-    #width = 10000;
-    #height = 10000;
+    width = 10000;
+    height = 10000;
 
-    #maxX = this.#width / 2.0;
-    #maxZ = this.#height / 2.0;
+    #maxX = this.width / 2.0;
+    #maxZ = this.height / 2.0;
     #minZ = -this.#maxZ;
     #minX = -this.#maxX;
 
@@ -46,8 +46,8 @@ export class Terrain {
 
     public slopeArr = new Int32Array(this.slopeArrBuffer);
 
-    #ratioX = Terrain.subdivisionsX / this.#width;
-    #ratioY = Terrain.subdivisionsY / this.#height;
+    #ratioX = Terrain.subdivisionsX / this.width;
+    #ratioY = Terrain.subdivisionsY / this.height;
 
     static heightLayouts: Map<GPU, BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>> = new Map();
     mesh: TerrainMesh;
