@@ -19,6 +19,7 @@ export class Zones extends UITAB {
     //private zonemateria: StandardMaterial;
     private PT: paintTexture;
     #size = 5120;
+    #ratio = this.ground.width / this.#size //texture coordinates
     zoneTexture = this.scene.gpu.device.createTexture({
         size: [5120, 5120, 1],
         format: "rgba8unorm",
@@ -50,13 +51,10 @@ export class Zones extends UITAB {
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
                     ctx.lineWidth = 1;
                     ctx.strokeStyle = "blue";
-                    ctx.translate(centerX + z.coord[0], centerZ + z.coord[1] * -1);
-                   // console.log('Translate ', centerX + z.coord[0], centerZ + z.coord[1] * -1)
-                    ctx.rotate(z.rad);
-                   // console.log('Rotate: ', z.rad)
+                    ctx.translate(centerX + z.coord[0] / this.#ratio, centerZ + z.coord[1] / this.#ratio );
+                    ctx.rotate(-z.rad);
                     ctx.fillStyle = "blue";
-                    ctx.fillRect(0, 0, z.size.h * -1, z.size.w);
-                   // console.log('fillRect', 0, 0, z.size.h * -1, z.size.w)
+                    ctx.fillRect(0, 0, -(z.size.h / this.#ratio), -(z.size.w / this.#ratio));
                 });
                 ctx.stroke();
                 const bitmap = texture.transferToImageBitmap();
@@ -73,7 +71,7 @@ export class Zones extends UITAB {
 
         //this.zonedt = new DynamicTexture("dynamic texture", { width: 10000, height: 10000 }, scene, false);
 
-        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zoneTexture, 5120, 5120, this);
+        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zoneTexture, 5120, 5120, this, this.#ratio);
         this.PT.activate(async (response) => {
             (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
         }, {});

@@ -143,7 +143,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const CACHE_NAME = 'terrasim-v1';
             let shadersP: Promise<{ [key: string]: string }> = fetch('/shaders/shaders.json').then(s => s.json());
             const cache = await caches.open(CACHE_NAME);
-
+            blazor.invokeMethod('setProgress', 7);
 
             const glslang: { compileGLSL: (source: string, type: string) => Uint32Array } = await new Promise((res, rej) => {
                 let glslangOptions = {
@@ -162,7 +162,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 script.src = glslangOptions.jsPath;
                 document.head.appendChild(script);
             });
-            blazor.invokeMethod('setProgress', 7);
+            blazor.invokeMethod('setProgress', 8);
             const jsondata = await shadersP
             const shaderPuts: Promise<void>[] = [];
 
@@ -181,11 +181,11 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }));
                 }
             }
-            blazor.invokeMethod('setProgress', 8);
-            await Promise.all(shaderPuts);
             blazor.invokeMethod('setProgress', 9);
-
+            await Promise.all(shaderPuts);
             blazor.invokeMethod('setProgress', 10);
+
+            blazor.invokeMethod('setProgress', 11);
 
             const mousePositionBuffer = new SharedArrayBuffer(4);
             const mousePosition = new Uint16Array(mousePositionBuffer);
@@ -197,7 +197,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
             const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
             const projectionmatrix = new Float32Array(projectionmatrixBuffer);
-            blazor.invokeMethod('setProgress', 11);
+            blazor.invokeMethod('setProgress', 12);
             // const scene2 = await scenePromise;
             const cameraReady = scenePromise.then((scene) => {
                 ArcRotateCamera.prototype._getViewMatrix = function () {
@@ -463,7 +463,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
 
-            blazor.invokeMethod('setProgress', 12);
+            blazor.invokeMethod('setProgress', 13);
 
 
 
@@ -474,7 +474,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
             const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
 
-            blazor.invokeMethod('setProgress', 13);
+            blazor.invokeMethod('setProgress', 14);
 
 
             const terraEngine = new Engine(gpuscene, DB);
@@ -485,7 +485,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 const tools: Map<string, UITABClassLike> = new Map();
 
                 const sea = new Sea(terrascene);
-                blazor.invokeMethod('setProgress', 75);
                 //new testPlane(terrascene);
 
                 const b = new Box(terrascene);

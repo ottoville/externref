@@ -7,7 +7,6 @@ import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
 
 export class paintTexture extends paintGround {
-    ratio: number;
     onEnd() { }
     private subTextureCache: subTexture = { x: 0, z: 0, width: 0, height: 0, imageData: null };
     private height: number = 0;
@@ -32,12 +31,13 @@ export class paintTexture extends paintGround {
         private textureWidth: number,
         private textureHeight: number,
         uitab: hasCanvasListener,
+        private ratio:number
     ) {
         super(TerraScene.instance, camera, ground, sea, uitab);
         this.centerX = textureWidth / 2;
         this.centerZ = textureHeight / 2;
 
-        this.ratio = 10000 / textureWidth //texture coordinates
+        
     };
     public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
         super.activate(callback, options);
