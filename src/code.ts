@@ -25,6 +25,8 @@ import { Engine } from "./engine.js";
 import { Sun2 } from "./world/sun2.js";
 import { PositionNode } from "./TerraNode.js";
 import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
+import { Collider } from "./lib/babylon/Collisions/collider.js";
+import { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
 
 //import  DB from "./DB.js";
 
@@ -200,6 +202,51 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             blazor.invokeMethod('setProgress', 12);
             // const scene2 = await scenePromise;
             const cameraReady = scenePromise.then((scene) => {
+                const CollisionsEpsilon = 0.001;
+                const coordinator: DefaultCollisionCoordinator = scene.collisionCoordinator as DefaultCollisionCoordinator;
+                //@ts-ignore
+                coordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
+                    //TODO: Call only when camera position change
+                    var closeDistance = CollisionsEpsilon * 10.0;
+                    if (collider._retry >= maximumRetry) {
+                        finalPosition.copyFrom(position);
+                        return;
+                    }
+
+                    // Check if this is a mesh else camera or -1
+                    var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
+
+                    collider._initialize(position, velocity, closeDistance);
+                    // Check all meshes
+                    for (var index = 0; index < scene.meshes.length; index++) {
+                        //@ts-ignore
+                        var mesh: TerraMesh = scene.meshes[index] as TerraMesh;
+                        if (mesh.isEnabled() && mesh.checkCollisions && mesh.subMeshes && mesh !== excludedMesh && ((collisionMask & mesh.collisionGroup) !== 0)) {
+                            mesh._checkCollision(collider);
+                            /* if (mesh.name == 'building') {
+                                 console.log('collides? ', collider.collisionFound);
+                             }*/
+                        }
+                    }
+                    if (!collider.collisionFound) {
+
+                        position.addToRef(velocity, finalPosition);
+                        return;
+                    }
+                    if (velocity.x !== 0 || velocity.y !== 0 || velocity.z !== 0) {
+                        collider._getResponse(position, velocity);
+                    }
+
+                    if (velocity.length() <= closeDistance) {
+                        finalPosition.copyFrom(position);
+                        return;
+                    }
+                    collider._retry++;
+                    //@ts-ignore
+                    this._collideWithWorld(position, velocity, collider, maximumRetry, finalPosition, excludedMesh);
+                }
+                const collider = coordinator.createCollider();
+
                 ArcRotateCamera.prototype._getViewMatrix = function () {
                     var cosa = Math.cos(this.alpha);
                     var sina = Math.sin(this.alpha);
@@ -221,14 +268,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }
                     //@ts-ignore
                     target.addToRef(this._computationVector, this._newPosition);
-                    const coordinator: DefaultCollisionCoordinator = scene.collisionCoordinator as DefaultCollisionCoordinator;
-                    //@ts-ignore
-                    if (!this._collider) {
-                        //@ts-ignore
-                        this._collider = coordinator.createCollider();
-                    }
-                    //@ts-ignore
-                    const collider = this._collider;
 
                     collider._radius = this.collisionRadius;
                     //@ts-ignore
@@ -445,22 +484,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 camera.attachControl(canvas, true);
                 return camera;
             });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
             blazor.invokeMethod('setProgress', 13);
