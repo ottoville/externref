@@ -35,7 +35,7 @@ export abstract class paintGround {
     };
     public resolve: PTResultF = () => null;
     public activate(callback: PTResultF, options?: any) {
-        this.uitab.canvasListener.addListener("pointerdown", this.mainPointerDown, { once: true });
+        this.uitab.canvasListener.addListener("pointerdown", this.#mainPointerDown, { once: true });
         this.resolve = callback;
     }
     public destroy() {
@@ -139,7 +139,7 @@ export abstract class paintGround {
 
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
-        this.uitab.canvasListener.addListener('pointerdown', this.mainPointerDown, { once: true });
+        this.uitab.canvasListener.addListener('pointerdown', this.#mainPointerDown, { once: true });
         this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
         this.onEnd();
     }
@@ -164,7 +164,7 @@ export abstract class paintGround {
         }
     }
 
-    private mainPointerDown = async (evt: PointerEvent) => {
+    #mainPointerDown = async (evt: PointerEvent) => {
         if (evt.button !== 0) {
             return;
         }

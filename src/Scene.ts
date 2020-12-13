@@ -141,7 +141,7 @@ export abstract class Scene {
         pickingRays.forEach((ray, boundable) => {
             results.push(boundable.intersects(ray));
         })
-        //const pickresults = await Promise.all(results);
+        /*const pickresults = */await Promise.all(results);
         let minimum: BoundableNode | null = null;
 
         this.boundables.forEach(boundable => {
