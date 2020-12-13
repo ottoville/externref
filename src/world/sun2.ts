@@ -4,36 +4,8 @@ import { Scene } from "../Scene";
 import { isLight } from "../lights";
 import { TerraNode } from "../TerraNode";
 //const sundistance = 149600000000;
-function rotateMatrix(rad: number, axis: "x" | "y" | "z"): Float32Array {
-    // https://www.3dgep.com/3d-math-primer-for-game-programmers-matrices/#Rotation
 
-    // let m = new Matrix();
-    //  if (axis == "x") {
-    const s = Math.sin(rad);
-    const c = Math.cos(rad);
-    return new Float32Array([
-        1, 0, 0, 0,
-        0, c, s * -1, 0,
-        0, s, c, 0,
-        0, 0, 0, 1
-    ]);
-    /*     m.setRow(0, new Vector4(1, 0, 0, 0));
-         m.setRow(1, new Vector4(0, Math.cos(rad), Math.sin(rad) * -1, 0));
-         m.setRow(2, new Vector4(0, Math.sin(rad), Math.cos(rad), 0));
-         m.setRow(3, new Vector4(0, 0, 0, 1));*/
-    //  } else if (axis == "y") {
-    /* m.setRow(0, new Vector4(Math.cos(rad), 0, Math.sin(rad), 0));
-     m.setRow(1, new Vector4(0, 1, 0, 0));
-     m.setRow(2, new Vector4(Math.sin(rad) * -1, 0, Math.cos(rad), 0));
-     m.setRow(3, new Vector4(0, 0, 0, 1));*/
-    // } else {
-    /*  m.setRow(0, new Vector4(Math.cos(rad), Math.sin(rad * -1), 0, 0));
-      m.setRow(1, new Vector4(Math.sin(rad), Math.cos(rad), 0, 0));
-      m.setRow(2, new Vector4(0, 0, 1, 0));
-      m.setRow(3, new Vector4(0, 0, 0, 1))*/
-    //  }
-    //return m;
-}
+/*
 function matrixTranslate(x: number, y: number, z: number, m: Float32Array) {
     if (Number.isNaN(x) || Number.isNaN(y) || Number.isNaN(z))
         throw ('Non numeric input passed to translate()');
@@ -47,7 +19,7 @@ function matrixTranslate(x: number, y: number, z: number, m: Float32Array) {
         z: rz,
         w: rw
     }
-}
+}*/
 const zAngle = Math.cos(Math.PI * 0.2);
 const yAngle = Math.sin(Math.PI * 0.2);
 export class Sun2 extends TerraNode implements hasPhysics, isLight {

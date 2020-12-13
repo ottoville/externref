@@ -4,7 +4,7 @@ import type { DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
 import { TerraNode } from "./TerraNode";
 
 export class Engine {
-    physics = new Physics(this);
+    physics = new Physics();
     positionBindGroupTime: DynamicBindGroupLayout<[number]>;
     calculatePickingRaysPipeline: TerraGPUComputePipeLine;
     bindgrouplayout1: GPUBindGroupLayout;

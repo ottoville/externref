@@ -3,12 +3,11 @@ import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
-import { canvasListener, hasCanvasListener } from "../traits/canvasListener.js";
+import { hasCanvasListener } from "../traits/canvasListener.js";
 import type { Drawable } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import type { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
-import { UITAB } from "../UITAB.js";
 
 
 

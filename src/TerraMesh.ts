@@ -1,12 +1,9 @@
-﻿import { ObjectWorkerThread, WorkerReturn } from "./WorkerThread.js";
-import { Mesh } from "./lib/babylon/Meshes/mesh.js";
+﻿import { Mesh } from "./lib/babylon/Meshes/mesh.js";
 import { VertexData } from "./lib/babylon/Meshes/mesh.vertexData.js";
 import type { Collider } from "./lib/babylon/Collisions/collider.js";
 import type { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
 import { Vector3 } from "./lib/babylon/Maths/math.vector.js";
 import { Matrix } from "./lib/babylon/Maths/math.js";
-import type { Ray, TrianglePickingPredicate } from "./lib/babylon/Culling/ray.js";
-import type { PickingInfo } from "./lib/babylon/Collisions/pickingInfo.js";
 import { Material } from "./lib/babylon/Materials/material.js";
 import { Geometry } from "./lib/babylon/Meshes/geometry.js";
 

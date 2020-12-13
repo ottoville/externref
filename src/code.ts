@@ -10,7 +10,7 @@ import { BuildingsUI } from "./tools/buildings.js";
 import { TerrainTool } from "./tools/Terrain.js";
 import { Zones } from "./tools/zones.js";
 import { Terrain } from "./world/terrain.js";
-import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
+//import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 import { Sea } from "./world/water.js";
 import { Vector3, Matrix, Quaternion } from "./lib/babylon/Maths/math.vector";
 import { LazyEval } from "./LazyEval.js";
@@ -499,7 +499,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
             const terraEngine = new Engine(gpuscene, DB);
-            const terrascene = new TerraScene(terraEngine, canvas, gpuscene, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
+            new TerraScene(terraEngine, canvas, gpuscene, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
                 new Sun2(terrascene, sunBufferOffsetBytes);
                 // Initial scene objects here
 
@@ -645,7 +645,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             b2.worldPosition.update(scale => scale.set([200, 200, 200]));
             b2.worldPosition.setTranslationX(500);
 
-            const scenes = new Set([terrascene, debugscene])
             let renderFrame: number = 0;
             let resizeHandler = 0;
 

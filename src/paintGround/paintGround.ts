@@ -5,19 +5,16 @@ const fullRad = Math.PI * 2
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import { canvasListener, hasCanvasListener } from "../traits/canvasListener.js";
+import { hasCanvasListener } from "../traits/canvasListener.js";
 import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
-import { UITAB } from "../UITAB.js";
 
 //import { rotateMatrix, translate } from "./math.js";
 
 let width: number;
 let height: number;
 let rotation: number;
-interface addListenerOptions extends AddEventListenerOptions {
-    lazy?: number;
-}
+
 export enum DrawType {
     plane = 1,
     texture = 2,
@@ -38,7 +35,7 @@ export abstract class paintGround {
     };
     public resolve: PTResultF = () => null;
     public activate(callback: PTResultF, options?: any) {
-        this.uitab.canvasListener.addListener("pointerdown", this.mainPointerDown, { once: true });
+        this.uitab.canvasListener.addListener("pointerdown", this.#mainPointerDown, { once: true });
         this.resolve = callback;
     }
     public destroy() {
@@ -142,7 +139,7 @@ export abstract class paintGround {
 
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
-        this.uitab.canvasListener.addListener('pointerdown', this.mainPointerDown, { once: true });
+        this.uitab.canvasListener.addListener('pointerdown', this.#mainPointerDown, { once: true });
         this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
         this.onEnd();
     }
@@ -167,7 +164,7 @@ export abstract class paintGround {
         }
     }
 
-    private mainPointerDown = async (evt: PointerEvent) => {
+    #mainPointerDown = async (evt: PointerEvent) => {
         if (evt.button !== 0) {
             return;
         }

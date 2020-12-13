@@ -1,7 +1,6 @@
 ﻿import type { worldPosition } from "./traits/worldPosition";
-import type { Engine } from "./engine";
 
-let Epsilon = 0.001;
+//let Epsilon = 0.001;
 
 
 
@@ -104,7 +103,7 @@ export class Physics {
     get gameSpeed() {
         return this.#gameSpeed;
     }
-    constructor(private engine:Engine) {
+    constructor() {
         //this.createLoop(0);
     }
 

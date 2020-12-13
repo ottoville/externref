@@ -8,9 +8,6 @@ interface WMessage {
     data: any,
     id?: number
 }
-interface WorkerMessage extends MessageEvent {
-    data: WMessage
-}
 abstract class MainWorker extends Worker {
     protected operations: ([
         (value?: any | PromiseLike<any> | undefined) => void,
