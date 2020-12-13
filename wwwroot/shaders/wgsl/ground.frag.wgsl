@@ -10,5 +10,6 @@
 [[stage(fragment)]]
 fn main() -> void {
   outColor = vec4<f32>(ambient,0.0)+textureSample(myTexture, mySampler, v_uv) *  vec4<f32>(shading,shading,shading,1.0);
+  outColor.w=1.0;
   return;
 }

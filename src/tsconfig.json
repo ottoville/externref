@@ -9,7 +9,7 @@
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     //"strict": true,
     "target": "esnext",
     "module": "ESNext",
