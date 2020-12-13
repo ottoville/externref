@@ -120,7 +120,7 @@ export class TerraCamera {
                 this.gpuscene.device.defaultQueue.submit([encoder]);
         });
 
-        this.renderPass.render(renderEncoder, time, delta, this.#uniformBindGroup);
+        this.renderPass.render(renderEncoder, this.#uniformBindGroup);
     }
     createPickingRay(x: number, y: number, world?: Float32Array) {
         const viewport = {

@@ -32,23 +32,25 @@ export class RenderPipeline {
         this.variants.forEach(rp => rp.drawables.forEach(scene => scene.forEach(drawable => drawable.destroy())));
         this.bindgroupdrawable.renderPipeLines.delete(this);
     }
-    draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass, BindGroupsStart: number, scene?: Scene): void {
+    draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass, BindGroupsStart: number, scene?: Scene): number {
         const variant = this.variants.get(renderPass)
         if (!variant)
-            return;
+            return 0;
         if (scene) {
             var drawables = variant.drawables.get(scene);
         } else { //@ts-ignore
             var drawables = variant.rootDrawables;
         }
         if (!drawables || drawables.size == 0)
-            return;
+            return 0;
 
         renderPassEncoder.setPipeline(variant.renderpipeline);
+        variant.renderpipeline.label && console.log('set Pipeline ', variant.renderpipeline.label)
         if (this.bindGroups) {
             this.bindGroups.forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
         }
         drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart));
+        return drawables.size;
     }
 
     variants: Map<RenderPass, RenderPipelineVariant> = new Map();

@@ -23,9 +23,10 @@ export class Drawable {
                     entries: setBuffers()
                 }
             )]);
+            this.renderPasses.forEach(rp => rp.bundles.length = 0);
         }
         this.renderPipeline.bindgroupdrawable.gpuscene.onResizes.add(() => {
-            setBuffer()
+            setBuffer();
         });
         setBuffer();
     }
@@ -63,6 +64,7 @@ export class Drawable {
             } else
                 this.#renderList.set(rp, variant.rootDrawables.add(this));
         });
+        this.renderPasses.forEach(rp => rp.bundles.length = 0);
     }
     constructor(
         private renderPipeline: RenderPipeline,
@@ -77,12 +79,13 @@ export class Drawable {
             if (instanceCount == 0)
                 console.warn('Added drawable with 0 instances, nothing will be drawn');
         this.scene = scene;
-        console.log('add drawable');
         renderPasses.forEach(rp => rp.bundles.length = 0);
     }
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number) {
         this.staticBuffers.forEach((bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup));
-        this.dynamicBuffers.forEach((offset, bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset]))
+        this.dynamicBuffers.forEach((offset, bindgroup) => {
+            renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset]);
+        })
         this.#vertexBuffers.forEach((buffer, index) => renderPass.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
         if (this.#indexBuffer) {
             renderPass.setIndexBuffer(this.#indexBuffer, this.GPUIndexFormat);
@@ -94,6 +97,7 @@ export class Drawable {
     }
     destroy(preserveIndexBuffer = false, preserveVerticeBuffers: number[] = []): void {
         this.#renderList.forEach(Drawables => Drawables.delete(this));
+        this.renderPasses.forEach(rp => rp.bundles.length = 0);
         this.#vertexBuffers.forEach((b, key) => {
             if (!preserveVerticeBuffers.includes(key))
                 b.buffer.destroy()

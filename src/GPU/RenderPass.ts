@@ -102,7 +102,7 @@ export class RenderPass {
         }
     }
     bundles: GPURenderBundle[] = [];
-    render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp, physicDelta: number | null, cameraBindGroup:GPUBindGroup) {
+    render(renderEncoder: GPUCommandEncoder, cameraBindGroup:GPUBindGroup) {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             if (!this.bundles.length) {
@@ -112,7 +112,7 @@ export class RenderPass {
                     sampleCount: this.sampleCount,
                     depthStencilFormat: this.#depthTexture?'depth24plus-stencil8':undefined
                 });
-                this.recordRenderPass(renderBundleEncoder, time, physicDelta, cameraBindGroup);
+                this.recordRenderPass(renderBundleEncoder, cameraBindGroup);
                 this.bundles.push(renderBundleEncoder.finish());
             }
             passEncoder.executeBundles(this.bundles);
@@ -122,20 +122,23 @@ export class RenderPass {
             debugger;
         }
     }
-    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, time: DOMHighResTimeStamp, physicDelta: number | null, cameraBindGroup: GPUBindGroup) {
+    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, cameraBindGroup: GPUBindGroup) {
+        let drawedMeshes = 0;
         passEncoder.setBindGroup(0, cameraBindGroup);
         this.gpu.rootlayout.renderPipeLines.forEach(rp => {
-            rp.draw(passEncoder, this, 1);
+            drawedMeshes+=rp.draw(passEncoder, this, 1);
         });
         if (this.gpu.rootlayout.subBindGroups.size) {
-            //console.log('this.gpu.rootlayout.subBindGroups.size', this.gpu.rootlayout.subBindGroups.size)
+           // console.log('this.gpu.rootlayout.subBindGroups.size', this.gpu.rootlayout.subBindGroups.size)
             this.gpu.rootlayout.subBindGroups.forEach(bgt =>
-                this.gpu.drawBindGroups(passEncoder, bgt, this, 1)
+                drawedMeshes +=this.gpu.drawBindGroups(passEncoder, bgt, this, 1)
             )
         };
+        
         this.scenes.forEach(scene =>
-            scene.render(passEncoder, this, time, physicDelta)
-        )
+            drawedMeshes += scene.render(passEncoder, this)
+        );
+        console.log('scenes ', this.scenes.size, 'meshes', drawedMeshes);
     }
 }
 

@@ -17,7 +17,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     traits:Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
     // private engine: WebGPUEngine;
-    private helper!: Drawable;
+    #helper!: Drawable;
 
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
@@ -77,10 +77,10 @@ export class TerrainTool extends TerraNode implements has3DPosition {
                     indexFormat: 'uint32'
                 }
             }, [this.bufferOffsetBytes]);
-            this.helper = helperPipeline.addDrawable(undefined, [scene.gpu.renderPassScreen], 4, 0, 8, 0, 0)
+            this.#helper = helperPipeline.addDrawable(undefined, [scene.gpu.renderPassScreen], 4, 0, 8, 0, 0)
         })();
 
-        this.#canvasListener.addListener("pointermove", this.mouseListener, { lazy: 15 });
+        this.#canvasListener.addListener("pointermove", this.#mouseListener, { lazy: 15 });
 
     }
     static saveTexture(arrayBuffer: ArrayBuffer) {
@@ -135,13 +135,13 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     }
     destroy = (): void => {
         terrainWorker.unsubscribe('heights');
-        this.helper.destroy();
+        this.#helper.destroy();
         this.scene.TerraCameras[0].unSubscribePickingRay();
         this.facet12ArrGPUBufferSwap.destroy();
         this.traits.forEach(trait => trait.destroy());
     };
 
-    mouseListener = (evt: PointerEvent): void => {
+    #mouseListener = (evt: PointerEvent): void => {
         this.terrain.mesh.intersects(this.scene.TerraCameras[0].pickingRay).then(() => {
             this.worldPosition.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
         });

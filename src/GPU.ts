@@ -125,32 +125,8 @@ export class GPU {
         this.shaderModules.set(url, module);
         return module;
     }
-
-
-    
     onResizes: Set<() => void> = new Set();
-
     queue: Map<Float32Array, number> = new Map();
-    updateGPUBuffer(): GPUCommandBuffer | null {
-        if (this.queue.size === 0)
-            return null;
-        const dataSizeBytes = TerraNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
-        const tempSize = dataSizeBytes * this.queue.size;
-        const tempBuffer = this.createGPUBuffer(tempSize, [GPUBufferUsage.COPY_SRC], true);
-        let tempOffset = 0;
-        const commandEncoder = this.device.createCommandEncoder();
-        this.queue.forEach((bufferOffset, matrix) => {
-            new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(matrix);
-            commandEncoder.copyBufferToBuffer(
-                tempBuffer, tempOffset++ * dataSizeBytes,
-                this.GPUData, bufferOffset,
-                dataSizeBytes);
-        });
-        tempBuffer.unmap();
-        this.queue.clear();
-
-        return commandEncoder.finish();
-    }
     buildBindGroupHierarcy(baseBindGroup: BindGroupLayout, ...bindgroups: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)[]) {
         let parentBGLayout = baseBindGroup;
         let childBG: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding) | undefined
@@ -361,36 +337,30 @@ export class GPU {
         return pipeline
     }
     properties = 0
-    onRenders: ((time: DOMHighResTimeStamp, timeDelta: number | null) => Promise<GPUCommandBuffer | null>)[] = [];
+    readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
+    pendingCommandBuffers: GPUCommandBuffer[] = [];
     drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: BindGroupLayout, renderPass: RenderPass, index: number, scene?: Scene) {
+        let drawedMeshes = 0;
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
-          //  if (!scene)
-           //     console.log('drawBindGroups', index);
-
-            bgt.onRender && this.onRenders.push(bgt.onRender);
             if (bgt.sharedBindgroup && this.DynamicBindGroups.has(bgt.sharedBindgroup)) {
-                //if (bgt.isDynamic) {
                 bgt.renderPipeLines.forEach(m => {
                     renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset);
-                    m.draw(renderPassEncoder, renderPass, index, scene);
+                    drawedMeshes+=m.draw(renderPassEncoder, renderPass, index, scene);
                 });
             }
             else {
                 if (bgt.sharedBindgroup) {
-
-                   // bgt.sharedBindgroup.label && console.log('Set bind group ', bgt.sharedBindgroup.label);
                     renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup);
                 }
                 bgt.renderPipeLines.forEach(m => {
                     this.properties |= m.properties;
-                    m.draw(renderPassEncoder, renderPass, index, scene)
+                    drawedMeshes+=m.draw(renderPassEncoder, renderPass, index, scene)
                 });
             }
             if (bgt.subBindGroups.size) {
-                //if (!scene)
-                //    console.log('subBindGroups', index);
-                bgt.subBindGroups.forEach((bgt) => this.drawBindGroups(renderPassEncoder, bgt, renderPass, ++index, scene));
+                bgt.subBindGroups.forEach((bgt) => { drawedMeshes += this.drawBindGroups(renderPassEncoder, bgt, renderPass, ++index, scene)});
             }
         }
+        return drawedMeshes;
     }
 }

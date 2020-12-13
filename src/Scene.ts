@@ -37,21 +37,19 @@ export abstract class Scene {
         onRenderStart(this, sunBufferOffsetBytes)
     }
     
-    render(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass, time: DOMHighResTimeStamp, physicDelta: number | null) {
+    render(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass) {
+        let drawedMeshes = 0;
         renderPassEncoder.setBindGroup(1, this.lights.uniformBindGroupLightsWGSL);
         this.gpu.rootSceneLayout.renderPipeLines.forEach(rp => {
-            rp.draw(renderPassEncoder, renderPass, 2, this);
+            drawedMeshes+=rp.draw(renderPassEncoder, renderPass, 2, this);
         });
         if (this.gpu.rootSceneLayout.subBindGroups.size) {
             this.gpu.rootSceneLayout.subBindGroups.forEach(bgt => 
-                this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass,2,this)
+                drawedMeshes+=this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass,2,this)
             )
         };
-        BindGroupLayout.instances.forEach((bgt) => this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 2, this));
-        Promise.all(this.gpu.onRenders.map(r => r(time, physicDelta))).then((buffers) => {
-            const buffersNoNull = buffers.filter<GPUCommandBuffer>(function (buff): buff is GPUCommandBuffer { return buff !== null });
-            this.gpu.device.defaultQueue.submit(buffersNoNull);
-        });
+        BindGroupLayout.instances.forEach((bgt) => { drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 2, this) });
+        return drawedMeshes;
     }
     async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
         let boundableMesh: BoundableNode;

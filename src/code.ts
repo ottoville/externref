@@ -652,7 +652,18 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             let resizeHandler = 0;
 
             cameraReady.then(camera => {
+                const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
+                const canvasSize: {
+                    width: number,
+                    height: number
+                } = { width: 0, height: 0 }
+
                 function renderLoop(time: DOMHighResTimeStamp) {
+                    gpuscene.onRenders2.forEach(or => {
+                        let buff = or();
+                        if (buff)
+                            gpuscene.pendingCommandBuffers.push(buff);
+                    });
                     camera._checkInputs();
                     camera._getViewMatrix();
                     mainCamera.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
@@ -674,16 +685,13 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     gpuscene.device.defaultQueue.writeBuffer(gpuscene.timeBuffer, 0, timeAndDeltaBuffer)
                     TerraCameras.forEach(camera => {
                         camera.render(renderEncoder, time, physicDelta)
-                    })
-                    gpuscene.device.defaultQueue.submit([renderEncoder.finish()]);
+                    });
+                    gpuscene.device.defaultQueue.submit([renderEncoder.finish()].concat(gpuscene.pendingCommandBuffers));
+                    gpuscene.pendingCommandBuffers.length = 0;
                     renderFrame = window.requestAnimationFrame(renderLoop);
                 }
 
-                const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
-                const canvasSize: {
-                    width: number,
-                    height: number
-                } = { width: 0, height: 0 }
+
                 //@ts-ignore
                 let ro = new window.ResizeObserver((entries) => {
                     window.cancelAnimationFrame(renderFrame)
@@ -713,7 +721,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }, 500)
                 });
                 ro.observe(canvas)
-                renderFrame = window.requestAnimationFrame(renderLoop);
+                //renderFrame = window.requestAnimationFrame(renderLoop);
             })
             //const adapter = await terrascene.adapter;
 

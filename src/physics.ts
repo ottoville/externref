@@ -1,6 +1,10 @@
 ﻿import type { worldPosition } from "./traits/worldPosition";
 import type { Engine } from "./engine";
 
+let Epsilon = 0.001;
+
+
+
 export interface hasPhysics {
     onPhysicTick: (time: number) => void
     worldPosition: worldPosition

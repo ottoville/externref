@@ -13,6 +13,7 @@ async function TerrainRenderPipeline(scene: Scene) {
     });
     const [vertex, fragment] = await Promise.all(['/shaders/wgsl/ground.vert.wgsl', '/shaders/wgsl/ground.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
     const renderPipeLine = scene.lightsBindGroupTexture.addRenderPipeline({
+        label: 'terrain',
         primitiveTopology: 'triangle-list',
         depthStencilState: {
             depthWriteEnabled: true,
