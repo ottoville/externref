@@ -1,7 +1,6 @@
 import { Nullable, FloatArray, IndicesArray } from "../types";
 import { Scene } from "../scene";
 import { Quaternion, Matrix, Vector3, Vector2 } from "../Maths/math.vector";
-import { VertexBuffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Material } from "../Materials/material";
@@ -436,36 +435,11 @@ export class CSG {
             throw 'BABYLON.CSG: Wrong Mesh type, must be BABYLON.Mesh';
         }
 
-        var indices = <IndicesArray>mesh.getIndices(),
-            positions = <FloatArray>mesh.getVerticesData(VertexBuffer.PositionKind),
-            normals = <FloatArray>mesh.getVerticesData(VertexBuffer.NormalKind),
-            uvs = <FloatArray>mesh.getVerticesData(VertexBuffer.UVKind);
+        var indices = <IndicesArray>mesh.getIndices()
 
         var subMeshes = mesh.subMeshes;
 
-        for (var sm = 0, sml = subMeshes.length; sm < sml; sm++) {
-            for (var i = subMeshes[sm].indexStart, il = subMeshes[sm].indexCount + subMeshes[sm].indexStart; i < il; i += 3) {
-                vertices = [];
-                for (var j = 0; j < 3; j++) {
-                    var sourceNormal = new Vector3(normals[indices[i + j] * 3], normals[indices[i + j] * 3 + 1], normals[indices[i + j] * 3 + 2]);
-                    uv = new Vector2(uvs[indices[i + j] * 2], uvs[indices[i + j] * 2 + 1]);
-                    var sourcePosition = new Vector3(positions[indices[i + j] * 3], positions[indices[i + j] * 3 + 1], positions[indices[i + j] * 3 + 2]);
-                    position = Vector3.TransformCoordinates(sourcePosition, matrix);
-                    normal = Vector3.TransformNormal(sourceNormal, matrix);
-
-                    vertex = new Vertex(position, normal, uv);
-                    vertices.push(vertex);
-                }
-
-                polygon = new Polygon(vertices, { subMeshId: sm, meshId: currentCSGMeshId, materialIndex: subMeshes[sm].materialIndex });
-
-                // To handle the case of degenerated triangle
-                // polygon.plane == null <=> the polygon does not represent 1 single plane <=> the triangle is degenerated
-                if (polygon.plane) {
-                    polygons.push(polygon);
-                }
-            }
-        }
+        
 
         var csg = CSG.FromPolygons(polygons);
         csg.matrix = matrix;
@@ -739,9 +713,6 @@ export class CSG {
 
         }
 
-        mesh.setVerticesData(VertexBuffer.PositionKind, vertices);
-        mesh.setVerticesData(VertexBuffer.NormalKind, normals);
-        mesh.setVerticesData(VertexBuffer.UVKind, uvs);
         mesh.setIndices(indices, null);
 
         if (keepSubMeshes) {

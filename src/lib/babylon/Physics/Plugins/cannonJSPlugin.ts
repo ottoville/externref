@@ -1,7 +1,6 @@
 import { Nullable, FloatArray } from "../../types";
 import { Logger } from "../../Misc/logger";
 import { Vector3, Matrix, Quaternion } from "../../Maths/math.vector";
-import { VertexBuffer } from "../../Meshes/buffer";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from "../../Physics/IPhysicsEngine";
 import { PhysicsImpostor, IPhysicsEnabledObject } from "../../Physics/physicsImpostor";
@@ -317,36 +316,7 @@ export class CannonJSPlugin implements IPhysicsEnginePlugin {
                 Logger.Warn("Attention, PlaneImposter might not behave as you expect. Consider using BoxImposter instead");
                 returnValue = new this.BJSCANNON.Plane();
                 break;
-            case PhysicsImpostor.MeshImpostor:
-                // should transform the vertex data to world coordinates!!
-                var rawVerts = object.getVerticesData ? object.getVerticesData(VertexBuffer.PositionKind) : [];
-                var rawFaces = object.getIndices ? object.getIndices() : [];
-                if (!rawVerts) { return; }
-                // get only scale! so the object could transform correctly.
-                let oldPosition = object.position.clone();
-                let oldRotation = object.rotation && object.rotation.clone();
-                let oldQuaternion = object.rotationQuaternion && object.rotationQuaternion.clone();
-                object.position.copyFromFloats(0, 0, 0);
-                object.rotation && object.rotation.copyFromFloats(0, 0, 0);
-                object.rotationQuaternion && object.rotationQuaternion.copyFrom(impostor.getParentsRotation());
-
-                object.rotationQuaternion && object.parent && object.rotationQuaternion.conjugateInPlace();
-
-                let transform = object.computeWorldMatrix(true);
-                // convert rawVerts to object space
-                var temp = new Array<number>();
-                var index: number;
-                for (index = 0; index < rawVerts.length; index += 3) {
-                    Vector3.TransformCoordinates(Vector3.FromArray(rawVerts, index), transform).toArray(temp, index);
-                }
-
-                Logger.Warn("MeshImpostor only collides against spheres.");
-                returnValue = new this.BJSCANNON.Trimesh(temp, <number[]>rawFaces);
-                //now set back the transformation!
-                object.position.copyFrom(oldPosition);
-                oldRotation && object.rotation && object.rotation.copyFrom(oldRotation);
-                oldQuaternion && object.rotationQuaternion && object.rotationQuaternion.copyFrom(oldQuaternion);
-                break;
+            
             case PhysicsImpostor.HeightmapImpostor:
                 let oldPosition2 = object.position.clone();
                 let oldRotation2 = object.rotation && object.rotation.clone();
@@ -374,70 +344,23 @@ export class CannonJSPlugin implements IPhysicsEnginePlugin {
         return returnValue;
     }
 
-    private _createHeightmap(object: IPhysicsEnabledObject, pointDepth?: number) {
-        var pos = <FloatArray>(object.getVerticesData(VertexBuffer.PositionKind));
+    private _createHeightmap(object: IPhysicsEnabledObject, pointDepth?: number):any {
+
         let transform = object.computeWorldMatrix(true);
         // convert rawVerts to object space
         var temp = new Array<number>();
         var index: number;
-        for (index = 0; index < pos.length; index += 3) {
-            Vector3.TransformCoordinates(Vector3.FromArray(pos, index), transform).toArray(temp, index);
-        }
-        pos = temp;
+
         var matrix = new Array<Array<any>>();
 
         //For now pointDepth will not be used and will be automatically calculated.
         //Future reference - try and find the best place to add a reference to the pointDepth variable.
-        var arraySize = pointDepth || ~~(Math.sqrt(pos.length / 3) - 1);
+
         let boundingInfo = object.getBoundingInfo();
         var dim = Math.min(boundingInfo.boundingBox.extendSizeWorld.x, boundingInfo.boundingBox.extendSizeWorld.y);
         var minY = boundingInfo.boundingBox.extendSizeWorld.z;
 
-        var elementSize = dim * 2 / arraySize;
-
-        for (var i = 0; i < pos.length; i = i + 3) {
-            var x = Math.round((pos[i + 0]) / elementSize + arraySize / 2);
-            var z = Math.round(((pos[i + 1]) / elementSize - arraySize / 2) * -1);
-            var y = -pos[i + 2] + minY;
-            if (!matrix[x]) {
-                matrix[x] = [];
-            }
-            if (!matrix[x][z]) {
-                matrix[x][z] = y;
-            }
-            matrix[x][z] = Math.max(y, matrix[x][z]);
-        }
-
-        for (var x = 0; x <= arraySize; ++x) {
-            if (!matrix[x]) {
-                var loc = 1;
-                while (!matrix[(x + loc) % arraySize]) {
-                    loc++;
-                }
-                matrix[x] = matrix[(x + loc) % arraySize].slice();
-                //console.log("missing x", x);
-            }
-            for (var z = 0; z <= arraySize; ++z) {
-                if (!matrix[x][z]) {
-                    var loc = 1;
-                    var newValue;
-                    while (newValue === undefined) {
-                        newValue = matrix[x][(z + loc++) % arraySize];
-                    }
-                    matrix[x][z] = newValue;
-
-                }
-            }
-        }
-
-        var shape = new this.BJSCANNON.Heightfield(matrix, {
-            elementSize: elementSize
-        });
-
-        //For future reference, needed for body transformation
-        shape.minY = minY;
-
-        return shape;
+        return;
     }
 
     private _minus90X = new Quaternion(-0.7071067811865475, 0, 0, 0.7071067811865475);

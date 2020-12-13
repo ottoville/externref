@@ -9,7 +9,6 @@ import { ISize } from "../Maths/math.size";
 import { Color4 } from '../Maths/math.color';
 import { Engine } from "../Engines/engine";
 import { EngineStore } from "../Engines/engineStore";
-import { VertexBuffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { PostProcess } from "../PostProcesses/postProcess";
@@ -68,7 +67,7 @@ export interface IEffectLayerOptions {
  */
 export abstract class EffectLayer {
 
-    private _vertexBuffers: { [key: string]: Nullable<VertexBuffer> } = {};
+    private _vertexBuffers: { [key: string]: Nullable<any> } = {};
     private _indexBuffer: Nullable<DataBuffer>;
     private _cachedDefines: string;
     private _effectLayerMapGenerationEffect: any;
@@ -288,9 +287,6 @@ export abstract class EffectLayer {
         vertices.push(-1, 1);
         vertices.push(-1, -1);
         vertices.push(1, -1);
-
-        var vertexBuffer = new VertexBuffer(this._engine, vertices, VertexBuffer.PositionKind, false, false, 2);
-        this._vertexBuffers[VertexBuffer.PositionKind] = vertexBuffer;
     }
 
     /**
@@ -349,7 +345,7 @@ export abstract class EffectLayer {
 
         var defines: string[] = [];
 
-        var attribs = [VertexBuffer.PositionKind];
+        var attribs = [];
 
         var mesh = subMesh.getMesh();
         var uv1 = false;
@@ -365,16 +361,7 @@ export abstract class EffectLayer {
 
             if (diffuseTexture && (needAlphaTest || needAlphaBlendFromDiffuse)) {
                 defines.push("#define DIFFUSE");
-                if (mesh.isVerticesDataPresent(VertexBuffer.UV2Kind) &&
-                    diffuseTexture.coordinatesIndex === 1) {
-                    defines.push("#define DIFFUSEUV2");
-                    uv2 = true;
-                }
-                else if (mesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
-                    defines.push("#define DIFFUSEUV1");
-                    uv1 = true;
-                }
-
+               
                 if (needAlphaTest) {
                     defines.push("#define ALPHATEST");
                     defines.push("#define ALPHATESTVALUE 0.4");
@@ -384,72 +371,19 @@ export abstract class EffectLayer {
             var opacityTexture = (material as any).opacityTexture;
             if (opacityTexture) {
                 defines.push("#define OPACITY");
-                if (mesh.isVerticesDataPresent(VertexBuffer.UV2Kind) &&
-                    opacityTexture.coordinatesIndex === 1) {
-                    defines.push("#define OPACITYUV2");
-                    uv2 = true;
-                }
-                else if (mesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
-                    defines.push("#define OPACITYUV1");
-                    uv1 = true;
-                }
+
             }
         }
 
         // Emissive
         if (emissiveTexture) {
-            defines.push("#define EMISSIVE");
-            if (mesh.isVerticesDataPresent(VertexBuffer.UV2Kind) &&
-                emissiveTexture.coordinatesIndex === 1) {
-                defines.push("#define EMISSIVEUV2");
-                uv2 = true;
-            }
-            else if (mesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
-                defines.push("#define EMISSIVEUV1");
-                uv1 = true;
-            }
+
         }
 
-        // Vertex
-        if (mesh.isVerticesDataPresent(VertexBuffer.ColorKind) && mesh.hasVertexAlpha) {
-            attribs.push(VertexBuffer.ColorKind);
-            defines.push("#define VERTEXALPHA");
-        }
-
-        if (uv1) {
-            attribs.push(VertexBuffer.UVKind);
-            defines.push("#define UV1");
-        }
-        if (uv2) {
-            attribs.push(VertexBuffer.UV2Kind);
-            defines.push("#define UV2");
-        }
-
+       
         // Bones
         const fallbacks = new EffectFallbacks();
-        if (mesh.useBones && mesh.computeBonesUsingShaders) {
-            attribs.push(VertexBuffer.MatricesIndicesKind);
-            attribs.push(VertexBuffer.MatricesWeightsKind);
-            if (mesh.numBoneInfluencers > 4) {
-                attribs.push(VertexBuffer.MatricesIndicesExtraKind);
-                attribs.push(VertexBuffer.MatricesWeightsExtraKind);
-            }
-
-            defines.push("#define NUM_BONE_INFLUENCERS " + mesh.numBoneInfluencers);
-
-            let skeleton = mesh.skeleton;
-            if (skeleton && skeleton.isUsingTextureForMatrices) {
-                defines.push("#define BONETEXTURE");
-            } else {
-                defines.push("#define BonesPerMesh " + (skeleton ? (skeleton.bones.length + 1) : 0));
-            }
-
-            if (mesh.numBoneInfluencers > 0) {
-                fallbacks.addCPUSkinningFallback(0, mesh);
-            }
-        } else {
-            defines.push("#define NUM_BONE_INFLUENCERS 0");
-        }
+  
 
         // Morph targets
         var manager = (<Mesh>mesh).morphTargetManager;
@@ -728,12 +662,7 @@ export abstract class EffectLayer {
      * @hidden Internal use only.
      */
     public _rebuild(): void {
-        let vb = this._vertexBuffers[VertexBuffer.PositionKind];
-
-        if (vb) {
-            vb._rebuild();
-        }
-
+       
         this._generateIndexBuffer();
     }
 
@@ -762,36 +691,7 @@ export abstract class EffectLayer {
      * Dispose the highlight layer and free resources.
      */
     public dispose(): void {
-        var vertexBuffer = this._vertexBuffers[VertexBuffer.PositionKind];
-        if (vertexBuffer) {
-            vertexBuffer.dispose();
-            this._vertexBuffers[VertexBuffer.PositionKind] = null;
-        }
-
-        if (this._indexBuffer) {
-            this._scene.getEngine()._releaseBuffer(this._indexBuffer);
-            this._indexBuffer = null;
-        }
-
-        // Clean textures and post processes
-        this._disposeTextureAndPostProcesses();
-
-        // Remove from scene
-        var index = this._scene.effectLayers.indexOf(this, 0);
-        if (index > -1) {
-            this._scene.effectLayers.splice(index, 1);
-        }
-
-        // Callback
-        this.onDisposeObservable.notifyObservers(this);
-
-        this.onDisposeObservable.clear();
-        this.onBeforeRenderMainTextureObservable.clear();
-        this.onBeforeComposeObservable.clear();
-        this.onBeforeRenderMeshToEffect.clear();
-        this.onAfterRenderMeshToEffect.clear();
-        this.onAfterComposeObservable.clear();
-        this.onSizeChangedObservable.clear();
+        
     }
 
     /**

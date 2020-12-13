@@ -1,7 +1,6 @@
 import { Nullable } from "../types";
 import { Material } from "../Materials/material";
 import { PostProcess } from "./postProcess";
-import { VertexBuffer } from "../Meshes/buffer";
 import { Constants } from "../Engines/constants";
 import { DataBuffer } from '../Meshes/dataBuffer';
 
@@ -14,7 +13,7 @@ declare type Scene = import("../scene").Scene;
 export class PostProcessManager {
     private _scene: Scene;
     private _indexBuffer: Nullable<DataBuffer>;
-    private _vertexBuffers: { [key: string]: Nullable<VertexBuffer> } = {};
+    private _vertexBuffers: { [key: string]: Nullable<any> } = {};
 
     /**
      * Creates a new instance PostProcess
@@ -25,20 +24,7 @@ export class PostProcessManager {
     }
 
     private _prepareBuffers(): void {
-        if (this._vertexBuffers[VertexBuffer.PositionKind]) {
-            return;
-        }
-
-        // VBO
-        var vertices = [];
-        vertices.push(1, 1);
-        vertices.push(-1, 1);
-        vertices.push(-1, -1);
-        vertices.push(1, -1);
-
-        this._vertexBuffers[VertexBuffer.PositionKind] = new VertexBuffer(this._scene.getEngine(), vertices, VertexBuffer.PositionKind, false, false, 2);
-
-        this._buildIndexBuffer();
+       
     }
 
     private _buildIndexBuffer(): void {
@@ -60,13 +46,7 @@ export class PostProcessManager {
      * @hidden
      */
     public _rebuild(): void {
-        let vb = this._vertexBuffers[VertexBuffer.PositionKind];
-
-        if (!vb) {
-            return;
-        }
-        vb._rebuild();
-        this._buildIndexBuffer();
+       
     }
 
     // Methods
@@ -204,15 +184,6 @@ export class PostProcessManager {
      * Disposes of the post process manager.
      */
     public dispose(): void {
-        var buffer = this._vertexBuffers[VertexBuffer.PositionKind];
-        if (buffer) {
-            buffer.dispose();
-            this._vertexBuffers[VertexBuffer.PositionKind] = null;
-        }
-
-        if (this._indexBuffer) {
-            this._scene.getEngine()._releaseBuffer(this._indexBuffer);
-            this._indexBuffer = null;
-        }
+      
     }
 }

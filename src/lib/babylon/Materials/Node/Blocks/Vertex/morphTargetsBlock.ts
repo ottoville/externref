@@ -7,7 +7,6 @@ import { AbstractMesh } from '../../../../Meshes/abstractMesh';
 import { NodeMaterial, NodeMaterialDefines } from '../../nodeMaterial';
 import { Mesh } from '../../../../Meshes/mesh';
 import { MaterialHelper } from '../../../materialHelper';
-import { VertexBuffer } from '../../../../Meshes/buffer';
 import { InputBlock } from '../Input/inputBlock';
 import { _TypeStore } from '../../../../Misc/typeStore';
 
@@ -205,19 +204,6 @@ export class MorphTargetsBlock extends NodeMaterialBlock {
 
         state.compilationString = state.compilationString.replace(this._repeatableContentAnchor, injectionCode);
 
-        if (repeatCount > 0) {
-            for (var index = 0; index < repeatCount; index++) {
-                state.attributes.push(VertexBuffer.PositionKind + index);
-
-                if (hasNormals) {
-                    state.attributes.push(VertexBuffer.NormalKind + index);
-                }
-
-                if (hasTangents) {
-                    state.attributes.push(VertexBuffer.TangentKind + index);
-                }
-            }
-        }
     }
 
     protected _buildBlock(state: NodeMaterialBuildState) {

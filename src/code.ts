@@ -148,13 +148,11 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             blazor.invokeMethod('setProgress', 7);
 
             const glslang: { compileGLSL: (source: string, type: string) => Uint32Array } = await new Promise((res, rej) => {
-                let glslangOptions = {
+                const glslangOptions = {
                     jsPath: "https://preview.babylonjs.com/glslang/glslang.js",
                     wasmPath: "https://preview.babylonjs.com/glslang/glslang.wasm",
                     glslang: undefined
                 };
-                if (glslangOptions.glslang)
-                    res(glslangOptions.glslang);
                 if ((window as any).glslang)
                     res((window as any).glslang(glslangOptions!.wasmPath));
 

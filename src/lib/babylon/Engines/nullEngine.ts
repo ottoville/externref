@@ -3,7 +3,6 @@ import { Nullable, FloatArray, IndicesArray } from "../types";
 import { Scene } from "../scene";
 import { Engine } from "../Engines/engine";
 import { RenderTargetCreationOptions } from "../Materials/Textures/renderTargetCreationOptions";
-import { VertexBuffer } from "../Meshes/buffer";
 import { _TimeToken } from "../Instrumentation/timeToken";
 import { Constants } from "./constants";
 import { IPipelineContext } from './IPipelineContext';
@@ -467,7 +466,7 @@ export class NullEngine extends Engine {
      * @param vertexStrideSize defines the vertex stride of the vertex buffer
      * @param effect defines the effect associated with the vertex buffer
      */
-    public bindBuffers(vertexBuffers: { [key: string]: VertexBuffer; }, indexBuffer: DataBuffer, effect: any): void {
+    public bindBuffers(vertexBuffers: { [key: string]: any; }, indexBuffer: DataBuffer, effect: any): void {
     }
 
     /**

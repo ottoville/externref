@@ -3,7 +3,6 @@ import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from "../../Physics/IPhysi
 import { Logger } from "../../Misc/logger";
 import { PhysicsImpostor, IPhysicsEnabledObject } from "../../Physics/physicsImpostor";
 import { PhysicsJoint, IMotorEnabledJoint, DistanceJointData } from "../../Physics/physicsJoint";
-import { VertexBuffer } from "../../Meshes/buffer";
 import { VertexData } from "../../Meshes/mesh.vertexData";
 import { Nullable } from "../../types";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
@@ -278,54 +277,7 @@ export class AmmoJSPlugin implements IPhysicsEnginePlugin {
      * @param impostor imposter to match
      */
     private _softbodyOrClothStep(impostor: PhysicsImpostor): void {
-        var normalDirection = (impostor.type === PhysicsImpostor.ClothImpostor) ? 1 : -1;
-        var object = impostor.object;
-        var vertexPositions = object.getVerticesData(VertexBuffer.PositionKind);
-        if (!vertexPositions) {
-            vertexPositions = [];
-        }
-        var vertexNormals = object.getVerticesData(VertexBuffer.NormalKind);
-        if (!vertexNormals) {
-            vertexNormals = [];
-        }
-
-        var nbVertices = vertexPositions.length / 3;
-        var bodyVertices = impostor.physicsBody.get_m_nodes();
-        var node: any;
-        var nodePositions: any;
-        var nodeNormals: any;
-        var x, y, z: number;
-        var nx, ny, nz: number;
-        for (var n = 0; n < nbVertices; n++) {
-            node = bodyVertices.at(n);
-            nodePositions = node.get_m_x();
-            x = nodePositions.x();
-            y = nodePositions.y();
-            z = nodePositions.z() * normalDirection;
-            var nodeNormals = node.get_m_n();
-            nx = nodeNormals.x();
-            ny = nodeNormals.y();
-            nz = nodeNormals.z() * normalDirection;
-
-            vertexPositions[3 * n] = x;
-            vertexPositions[3 * n + 1] = y;
-            vertexPositions[3 * n + 2] = z;
-            vertexNormals[3 * n] = nx;
-            vertexNormals[3 * n + 1] = ny;
-            vertexNormals[3 * n + 2] = nz;
-        }
-
-        var vertex_data = new VertexData();
-
-        vertex_data.positions = vertexPositions;
-        vertex_data.normals = vertexNormals;
-        vertex_data.uvs = object.getVerticesData(VertexBuffer.UVKind);
-        vertex_data.colors = object.getVerticesData(VertexBuffer.ColorKind);
-        if (object && object.getIndices) {
-            vertex_data.indices = object.getIndices();
-        }
-
-        vertex_data.applyToMesh(<Mesh>object);
+       
     }
 
     private _tmpVector = new Vector3();
@@ -552,36 +504,9 @@ export class AmmoJSPlugin implements IPhysicsEnginePlugin {
             if (!indices) {
                 indices = [];
             }
-            var vertexPositions = object.getVerticesData(VertexBuffer.PositionKind);
-            if (!vertexPositions) {
-                vertexPositions = [];
-            }
             object.computeWorldMatrix(false);
             var faceCount = indices.length / 3;
-            for (var i = 0; i < faceCount; i++) {
-                var triPoints = [];
-                for (var point = 0; point < 3; point++) {
-                    var v = new Vector3(vertexPositions[(indices[(i * 3) + point] * 3) + 0], vertexPositions[(indices[(i * 3) + point] * 3) + 1], vertexPositions[(indices[(i * 3) + point] * 3) + 2]);
-
-                    // Adjust for initial scaling
-                    Matrix.ScalingToRef(object.scaling.x, object.scaling.y, object.scaling.z, this._tmpMatrix);
-                    v = Vector3.TransformCoordinates(v, this._tmpMatrix);
-
-                    var vec: any;
-                    if (point == 0) {
-                        vec = this._tmpAmmoVectorA;
-                    } else if (point == 1) {
-                        vec = this._tmpAmmoVectorB;
-                    } else {
-                        vec = this._tmpAmmoVectorC;
-                    }
-                    vec.setValue(v.x, v.y, v.z);
-
-                    triPoints.push(vec);
-                }
-                btTriangleMesh.addTriangle(triPoints[0], triPoints[1], triPoints[2]);
-                triangleCount++;
-            }
+            
 
             object.getChildMeshes().forEach((m) => {
                 triangleCount += this._addMeshVerts(btTriangleMesh, topLevelObject, m);
@@ -603,32 +528,15 @@ export class AmmoJSPlugin implements IPhysicsEnginePlugin {
             if (!indices) {
                 indices = [];
             }
-            var vertexPositions = object.getVerticesData(VertexBuffer.PositionKind);
-            if (!vertexPositions) {
-                vertexPositions = [];
-            }
-            var vertexNormals = object.getVerticesData(VertexBuffer.NormalKind);
-            if (!vertexNormals) {
-                vertexNormals = [];
-            }
             object.computeWorldMatrix(false);
             var newPoints = [];
             var newNorms = [];
-            for (var i = 0; i < vertexPositions.length; i += 3) {
-                var v = new Vector3(vertexPositions[i], vertexPositions[i + 1], vertexPositions[i + 2]);
-                var n = new Vector3(vertexNormals[i], vertexNormals[i + 1], vertexNormals[i + 2]);
-                v = Vector3.TransformCoordinates(v, object.getWorldMatrix());
-                n = Vector3.TransformNormal(n, object.getWorldMatrix());
-                newPoints.push(v.x, v.y, v.z);
-                newNorms.push(n.x, n.y, n.z);
-            }
+
 
             var vertex_data = new VertexData();
 
             vertex_data.positions = newPoints;
             vertex_data.normals = newNorms;
-            vertex_data.uvs = object.getVerticesData(VertexBuffer.UVKind);
-            vertex_data.colors = object.getVerticesData(VertexBuffer.ColorKind);
             if (object && object.getIndices) {
                 vertex_data.indices = object.getIndices();
             }
@@ -830,38 +738,9 @@ export class AmmoJSPlugin implements IPhysicsEnginePlugin {
             if (!indices) {
                 indices = [];
             }
-            var vertexPositions = object.getVerticesData(VertexBuffer.PositionKind);
-            if (!vertexPositions) {
-                vertexPositions = [];
-            }
             object.computeWorldMatrix(false);
             var faceCount = indices.length / 3;
-            for (var i = 0; i < faceCount; i++) {
-                var triPoints = [];
-                for (var point = 0; point < 3; point++) {
-                    var v = new Vector3(vertexPositions[(indices[(i * 3) + point] * 3) + 0], vertexPositions[(indices[(i * 3) + point] * 3) + 1], vertexPositions[(indices[(i * 3) + point] * 3) + 2]);
-
-                    // Adjust for initial scaling
-                    Matrix.ScalingToRef(object.scaling.x, object.scaling.y, object.scaling.z, this._tmpMatrix);
-                    v = Vector3.TransformCoordinates(v, this._tmpMatrix);
-
-                    var vec: any;
-                    if (point == 0) {
-                        vec = this._tmpAmmoVectorA;
-                    } else if (point == 1) {
-                        vec = this._tmpAmmoVectorB;
-                    } else {
-                        vec = this._tmpAmmoVectorC;
-                    }
-                    vec.setValue(v.x, v.y, v.z);
-
-                    triPoints.push(vec);
-                }
-                btConvexHullShape.addPoint(triPoints[0], true);
-                btConvexHullShape.addPoint(triPoints[1], true);
-                btConvexHullShape.addPoint(triPoints[2], true);
-                triangleCount++;
-            }
+            
 
             object.getChildMeshes().forEach((m) => {
                 triangleCount += this._addHullVerts(btConvexHullShape, topLevelObject, m);

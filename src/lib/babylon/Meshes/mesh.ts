@@ -10,9 +10,7 @@ import { Quaternion, Matrix, Vector3, Vector2, Vector4 } from "../Maths/math.vec
 import { Color3, Color4 } from '../Maths/math.color';
 import { Engine } from "../Engines/engine";
 import { Node } from "../node";
-import { VertexBuffer } from "./buffer";
 import { VertexData, IGetSetVerticesData } from "./mesh.vertexData";
-import { Buffer } from "./buffer";
 import { Geometry } from "./geometry";
 import { AbstractMesh } from "./abstractMesh";
 import { BoundingInfo } from "../Culling/boundingInfo";
@@ -67,7 +65,7 @@ class _InstanceDataStorage {
     public visibleInstances: any = {};
     public batchCache = new _InstancesBatch();
     public instancesBufferSize = 32 * 16 * 4; // let's start with a maximum of 32 instances
-    public instancesBuffer: Nullable<Buffer>;
+    public instancesBuffer: Nullable<any>;
     public instancesData: Float32Array;
     public overridenInstanceCount: number;
     public isFrozen: boolean;
@@ -574,11 +572,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
 
             if (this._geometry) {
                 let ib = this.getIndices();
-                let vb = this.getVerticesData(VertexBuffer.PositionKind);
-
-                if (vb && ib) {
-                    ret += ", flat shading: " + (vb.length / 3 === ib.length ? "YES" : "NO");
-                }
             } else {
                 ret += ", flat shading: UNKNOWN";
             }
@@ -804,7 +797,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * - VertexBuffer.MatricesWeightsExtraKind
      * @returns a FloatArray or null if the mesh has no vertex buffer for this kind.
      */
-    public getVertexBuffer(kind: string): Nullable<VertexBuffer> {
+    public getVertexBuffer(kind: string): Nullable<any> {
         if (!this._geometry) {
             return null;
         }
@@ -1254,7 +1247,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @param buffer defines the buffer to use
      * @returns the current mesh
      */
-    public setVerticesBuffer(buffer: VertexBuffer): Mesh {
+    public setVerticesBuffer(buffer: any): Mesh {
         if (!this._geometry) {
             this._geometry = Geometry.CreateGeometryForMesh(this);
         }
@@ -1305,25 +1298,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @returns the current mesh
      */
     public updateMeshPositions(positionFunction: (data: FloatArray) => void, computeNormals: boolean = true): Mesh {
-        var positions = this.getVerticesData(VertexBuffer.PositionKind);
-        if (!positions) {
-            return this;
-        }
-
-        positionFunction(positions);
-        this.updateVerticesData(VertexBuffer.PositionKind, positions, false, false);
-
-        if (computeNormals) {
-            var indices = this.getIndices();
-            var normals = this.getVerticesData(VertexBuffer.NormalKind);
-
-            if (!normals) {
-                return this;
-            }
-
-            VertexData.ComputeNormals(positions, indices, normals);
-            this.updateVerticesData(VertexBuffer.NormalKind, normals, false, false);
-        }
         return this;
     }
 
@@ -1526,76 +1500,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
 
     /** @hidden */
     public _renderWithInstances(subMesh: any, fillMode: number, batch: _InstancesBatch, effect: any, engine: Engine): Mesh {
-        var visibleInstances = batch.visibleInstances[subMesh._id];
-        if (!visibleInstances) {
-            return this;
-        }
-
-        let instanceStorage = this._instanceDataStorage;
-        var currentInstancesBufferSize = instanceStorage.instancesBufferSize;
-        var instancesBuffer = instanceStorage.instancesBuffer;
-        var matricesCount = visibleInstances.length + 1;
-        var bufferSize = matricesCount * 16 * 4;
-
-        while (instanceStorage.instancesBufferSize < bufferSize) {
-            instanceStorage.instancesBufferSize *= 2;
-        }
-
-        if (!instanceStorage.instancesData || currentInstancesBufferSize != instanceStorage.instancesBufferSize) {
-            instanceStorage.instancesData = new Float32Array(instanceStorage.instancesBufferSize / 4);
-        }
-
-        var offset = 0;
-        var instancesCount = 0;
-
-        let renderSelf = batch.renderSelf[subMesh._id];
-
-        if (!this._instanceDataStorage.manualUpdate) {
-            var world = this._effectiveMesh.getWorldMatrix();
-            if (renderSelf) {
-                world.copyToArray(instanceStorage.instancesData, offset);
-                offset += 16;
-                instancesCount++;
-            }
-
-            if (visibleInstances) {
-                for (var instanceIndex = 0; instanceIndex < visibleInstances.length; instanceIndex++) {
-                    var instance = visibleInstances[instanceIndex];
-                    instance.getWorldMatrix().copyToArray(instanceStorage.instancesData, offset);
-                    offset += 16;
-                    instancesCount++;
-                }
-            }
-        } else {
-            instancesCount = (renderSelf ? 1 : 0) + visibleInstances.length;
-        }
-
-        if (!instancesBuffer || currentInstancesBufferSize != instanceStorage.instancesBufferSize) {
-            if (instancesBuffer) {
-                instancesBuffer.dispose();
-            }
-
-            instancesBuffer = new Buffer(engine, instanceStorage.instancesData, true, 16, false, true);
-            instanceStorage.instancesBuffer = instancesBuffer;
-
-            this.setVerticesBuffer(instancesBuffer.createVertexBuffer("world0", 0, 4));
-            this.setVerticesBuffer(instancesBuffer.createVertexBuffer("world1", 4, 4));
-            this.setVerticesBuffer(instancesBuffer.createVertexBuffer("world2", 8, 4));
-            this.setVerticesBuffer(instancesBuffer.createVertexBuffer("world3", 12, 4));
-        } else {
-            instancesBuffer!.updateDirectly(instanceStorage.instancesData, 0, instancesCount);
-        }
-
-        this._processInstancedBuffers(visibleInstances, renderSelf);
-
-        // Stats
-        this.getScene()._activeIndices.addCount(subMesh.indexCount * instancesCount, false);
-
-        // Draw
-        this._bind(subMesh, effect, fillMode);
-        this._draw(subMesh, fillMode, instancesCount);
-
-        engine.unbindInstanceAttributes();
         return this;
     }
 
@@ -1836,69 +1740,15 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      */
     public cleanMatrixWeights(): void {
 
-        if (this.isVerticesDataPresent(VertexBuffer.MatricesWeightsKind)) {
-            if (this.isVerticesDataPresent(VertexBuffer.MatricesWeightsExtraKind)) {
-                this.normalizeSkinWeightsAndExtra();
-            }
-            else {
-                this.normalizeSkinFourWeights();
-            }
-        }
     }
 
     // faster 4 weight version.
     private normalizeSkinFourWeights(): void {
 
-        let matricesWeights = (<FloatArray>this.getVerticesData(VertexBuffer.MatricesWeightsKind));
-        let numWeights = matricesWeights.length;
-
-        for (var a = 0; a < numWeights; a += 4) {
-            // accumulate weights
-            var t = matricesWeights[a] + matricesWeights[a + 1] + matricesWeights[a + 2] + matricesWeights[a + 3];
-            // check for invalid weight and just set it to 1.
-            if (t === 0) { matricesWeights[a] = 1; }
-            else {
-                // renormalize so everything adds to 1 use reciprical
-                let recip = 1 / t;
-                matricesWeights[a] *= recip;
-                matricesWeights[a + 1] *= recip;
-                matricesWeights[a + 2] *= recip;
-                matricesWeights[a + 3] *= recip;
-            }
-
-        }
-        this.setVerticesData(VertexBuffer.MatricesWeightsKind, matricesWeights);
     }
     // handle special case of extra verts.  (in theory gltf can handle 12 influences)
     private normalizeSkinWeightsAndExtra(): void {
 
-        let matricesWeightsExtra = (<FloatArray>this.getVerticesData(VertexBuffer.MatricesWeightsExtraKind));
-        let matricesWeights = (<FloatArray>this.getVerticesData(VertexBuffer.MatricesWeightsKind));
-        let numWeights = matricesWeights.length;
-
-        for (var a = 0; a < numWeights; a += 4) {
-            // accumulate weights
-            var t = matricesWeights[a] + matricesWeights[a + 1] + matricesWeights[a + 2] + matricesWeights[a + 3];
-            t += matricesWeightsExtra[a] + matricesWeightsExtra[a + 1] + matricesWeightsExtra[a + 2] + matricesWeightsExtra[a + 3];
-            // check for invalid weight and just set it to 1.
-            if (t === 0) { matricesWeights[a] = 1; }
-            else {
-                // renormalize so everything adds to 1 use reciprical
-                let recip = 1 / t;
-                matricesWeights[a] *= recip;
-                matricesWeights[a + 1] *= recip;
-                matricesWeights[a + 2] *= recip;
-                matricesWeights[a + 3] *= recip;
-                // same goes for extras
-                matricesWeightsExtra[a] *= recip;
-                matricesWeightsExtra[a + 1] *= recip;
-                matricesWeightsExtra[a + 2] *= recip;
-                matricesWeightsExtra[a + 3] *= recip;
-            }
-
-        }
-        this.setVerticesData(VertexBuffer.MatricesWeightsKind, matricesWeights);
-        this.setVerticesData(VertexBuffer.MatricesWeightsKind, matricesWeightsExtra);
     }
 
     /**
@@ -1908,84 +1758,8 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @returns a validation object with skinned, valid and report string
      */
     public validateSkinning(): { skinned: boolean, valid: boolean, report: string } {
-
-        let matricesWeightsExtra = (<FloatArray>this.getVerticesData(VertexBuffer.MatricesWeightsExtraKind));
-        let matricesWeights = (<FloatArray>this.getVerticesData(VertexBuffer.MatricesWeightsKind));
-        if (matricesWeights === null || this.skeleton == null) {
-            return { skinned: false, valid: true, report: "not skinned" };
-        }
-
-        let numWeights = matricesWeights.length;
-        let numberNotSorted: number = 0;
-        let missingWeights: number = 0;
-        let maxUsedWeights: number = 0;
-        let numberNotNormalized: number = 0;
-        let numInfluences: number = matricesWeightsExtra === null ? 4 : 8;
-        var usedWeightCounts = new Array<number>();
-        for (var a = 0; a <= numInfluences; a++) {
-            usedWeightCounts[a] = 0;
-        }
-        const toleranceEpsilon: number = 0.001;
-
-        for (var a = 0; a < numWeights; a += 4) {
-
-            let lastWeight: number = matricesWeights[a];
-            var t = lastWeight;
-            let usedWeights: number = t === 0 ? 0 : 1;
-
-            for (var b = 1; b < numInfluences; b++) {
-                var d = b < 4 ? matricesWeights[a + b] : matricesWeightsExtra[a + b - 4];
-                if (d > lastWeight) { numberNotSorted++; }
-                if (d !== 0) { usedWeights++; }
-                t += d;
-                lastWeight = d;
-            }
-            // count the buffer weights usage
-            usedWeightCounts[usedWeights]++;
-
-            // max influences
-            if (usedWeights > maxUsedWeights) { maxUsedWeights = usedWeights; }
-
-            // check for invalid weight and just set it to 1.
-            if (t === 0) {
-                missingWeights++;
-            }
-            else {
-                // renormalize so everything adds to 1 use reciprical
-                let recip = 1 / t;
-                let tolerance = 0;
-                for (b = 0; b < numInfluences; b++) {
-                    if (b < 4) {
-                        tolerance += Math.abs(matricesWeights[a + b] - (matricesWeights[a + b] * recip));
-                    }
-                    else {
-                        tolerance += Math.abs(matricesWeightsExtra[a + b - 4] - (matricesWeightsExtra[a + b - 4] * recip));
-                    }
-                }
-                // arbitary epsilon value for dicdating not normalized
-                if (tolerance > toleranceEpsilon) { numberNotNormalized++; }
-            }
-        }
-
-        // validate bone indices are in range of the skeleton
-        let numBones: number = this.skeleton.bones.length;
-        let matricesIndices = (<FloatArray>this.getVerticesData(VertexBuffer.MatricesIndicesKind));
-        let matricesIndicesExtra = (<FloatArray>this.getVerticesData(VertexBuffer.MatricesIndicesExtraKind));
-        let numBadBoneIndices: number = 0;
-        for (var a = 0; a < numWeights; a++) {
-            for (var b = 0; b < numInfluences; b++) {
-                let index = b < 4 ? matricesIndices[b] : matricesIndicesExtra[b - 4];
-                if (index >= numBones || index < 0) { numBadBoneIndices++; }
-            }
-        }
-
-        // log mesh stats
-        var output = "Number of Weights = " + numWeights / 4 + "\nMaximum influences = " + maxUsedWeights +
-            "\nMissing Weights = " + missingWeights + "\nNot Sorted = " + numberNotSorted +
-            "\nNot Normalized = " + numberNotNormalized + "\nWeightCounts = [" + usedWeightCounts + "]" +
-            "\nNumber of bones = " + numBones + "\nBad Bone Indices = " + numBadBoneIndices;
-
-        return { skinned: true, valid: missingWeights === 0 && numberNotNormalized === 0 && numBadBoneIndices === 0, report: output };
+        return { skinned: false, valid: true, report: "not skinned" };
+       
     }
 
     /** @hidden */
@@ -2101,41 +1875,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @returns the current mesh
      */
     public bakeTransformIntoVertices(transform: Matrix): Mesh {
-        // Position
-        if (!this.isVerticesDataPresent(VertexBuffer.PositionKind)) {
-            return this;
-        }
-
-        var submeshes = this.subMeshes.splice(0);
-
-        this._resetPointsArrayCache();
-
-        var data = <FloatArray>this.getVerticesData(VertexBuffer.PositionKind);
-
-        var temp = new Array<number>();
-        var index: number;
-        for (index = 0; index < data.length; index += 3) {
-            Vector3.TransformCoordinates(Vector3.FromArray(data, index), transform).toArray(temp, index);
-        }
-
-        this.setVerticesData(VertexBuffer.PositionKind, temp, (<VertexBuffer>this.getVertexBuffer(VertexBuffer.PositionKind)).isUpdatable());
-
-        // Normals
-        if (this.isVerticesDataPresent(VertexBuffer.NormalKind)) {
-            data = <FloatArray>this.getVerticesData(VertexBuffer.NormalKind);
-            temp = [];
-            for (index = 0; index < data.length; index += 3) {
-                Vector3.TransformNormal(Vector3.FromArray(data, index), transform).normalize().toArray(temp, index);
-            }
-            this.setVerticesData(VertexBuffer.NormalKind, temp, (<VertexBuffer>this.getVertexBuffer(VertexBuffer.NormalKind)).isUpdatable());
-        }
-
-        // flip faces?
-        if (transform.m[0] * transform.m[5] * transform.m[10] < 0) { this.flipFaces(); }
-
-        // Restore submeshes
-        this.releaseSubMeshes();
-        this.subMeshes = submeshes;
+        
         return this;
     }
 
@@ -2324,56 +2064,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @returns the Mesh.
      */
     public applyDisplacementMapFromBuffer(buffer: Uint8Array, heightMapWidth: number, heightMapHeight: number, minHeight: number, maxHeight: number, uvOffset?: Vector2, uvScale?: Vector2, forceUpdate = false): Mesh {
-        if (!this.isVerticesDataPresent(VertexBuffer.PositionKind)
-            || !this.isVerticesDataPresent(VertexBuffer.NormalKind)
-            || !this.isVerticesDataPresent(VertexBuffer.UVKind)) {
-            Logger.Warn("Cannot call applyDisplacementMap: Given mesh is not complete. Position, Normal or UV are missing");
-            return this;
-        }
-
-        var positions = <FloatArray>this.getVerticesData(VertexBuffer.PositionKind, true, true);
-        var normals = <FloatArray>this.getVerticesData(VertexBuffer.NormalKind);
-        var uvs = <number[]>this.getVerticesData(VertexBuffer.UVKind);
-        var position = Vector3.Zero();
-        var normal = Vector3.Zero();
-        var uv = Vector2.Zero();
-
-        uvOffset = uvOffset || Vector2.Zero();
-        uvScale = uvScale || new Vector2(1, 1);
-
-        for (var index = 0; index < positions.length; index += 3) {
-            Vector3.FromArrayToRef(positions, index, position);
-            Vector3.FromArrayToRef(normals, index, normal);
-            Vector2.FromArrayToRef(uvs, (index / 3) * 2, uv);
-
-            // Compute height
-            var u = ((Math.abs(uv.x * uvScale.x + uvOffset.x) * heightMapWidth) % heightMapWidth) | 0;
-            var v = ((Math.abs(uv.y * uvScale.y + uvOffset.y) * heightMapHeight) % heightMapHeight) | 0;
-
-            var pos = (u + v * heightMapWidth) * 4;
-            var r = buffer[pos] / 255.0;
-            var g = buffer[pos + 1] / 255.0;
-            var b = buffer[pos + 2] / 255.0;
-
-            var gradient = r * 0.3 + g * 0.59 + b * 0.11;
-
-            normal.normalize();
-            normal.scaleInPlace(minHeight + (maxHeight - minHeight) * gradient);
-            position = position.add(normal);
-
-            position.toArray(positions, index);
-        }
-
-        VertexData.ComputeNormals(positions, this.getIndices(), normals);
-
-        if (forceUpdate) {
-            this.setVerticesData(VertexBuffer.PositionKind, positions);
-            this.setVerticesData(VertexBuffer.NormalKind, normals);
-        }
-        else {
-            this.updateVerticesData(VertexBuffer.PositionKind, positions);
-            this.updateVerticesData(VertexBuffer.NormalKind, normals);
-        }
         return this;
     }
 
@@ -2384,91 +2074,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @returns current mesh
      */
     public convertToFlatShadedMesh(): Mesh {
-        var kinds = this.getVerticesDataKinds();
-        var vbs: { [key: string]: VertexBuffer } = {};
-        var data: { [key: string]: FloatArray } = {};
-        var newdata: { [key: string]: Array<number> } = {};
-        var updatableNormals = false;
-        var kindIndex: number;
-        var kind: string;
-        for (kindIndex = 0; kindIndex < kinds.length; kindIndex++) {
-            kind = kinds[kindIndex];
-            var vertexBuffer = <VertexBuffer>this.getVertexBuffer(kind);
-
-            if (kind === VertexBuffer.NormalKind) {
-                updatableNormals = vertexBuffer.isUpdatable();
-                kinds.splice(kindIndex, 1);
-                kindIndex--;
-                continue;
-            }
-
-            vbs[kind] = vertexBuffer;
-            data[kind] = <FloatArray>vbs[kind].getData();
-            newdata[kind] = [];
-        }
-
-        // Save previous submeshes
-        var previousSubmeshes = this.subMeshes.slice(0);
-
-        var indices = <IndicesArray>this.getIndices();
-        var totalIndices = this.getTotalIndices();
-
-        // Generating unique vertices per face
-        var index: number;
-        for (index = 0; index < totalIndices; index++) {
-            var vertexIndex = indices[index];
-
-            for (kindIndex = 0; kindIndex < kinds.length; kindIndex++) {
-                kind = kinds[kindIndex];
-                var stride = vbs[kind].getStrideSize();
-
-                for (var offset = 0; offset < stride; offset++) {
-                    newdata[kind].push(data[kind][vertexIndex * stride + offset]);
-                }
-            }
-        }
-
-        // Updating faces & normal
-        var normals = [];
-        var positions = newdata[VertexBuffer.PositionKind];
-        for (index = 0; index < totalIndices; index += 3) {
-            indices[index] = index;
-            indices[index + 1] = index + 1;
-            indices[index + 2] = index + 2;
-
-            var p1 = Vector3.FromArray(positions, index * 3);
-            var p2 = Vector3.FromArray(positions, (index + 1) * 3);
-            var p3 = Vector3.FromArray(positions, (index + 2) * 3);
-
-            var p1p2 = p1.subtract(p2);
-            var p3p2 = p3.subtract(p2);
-
-            var normal = Vector3.Normalize(Vector3.Cross(p1p2, p3p2));
-
-            // Store same normals for every vertex
-            for (var localIndex = 0; localIndex < 3; localIndex++) {
-                normals.push(normal.x);
-                normals.push(normal.y);
-                normals.push(normal.z);
-            }
-        }
-
-        this.setIndices(indices);
-        this.setVerticesData(VertexBuffer.NormalKind, normals, updatableNormals);
-
-        // Updating vertex buffers
-        for (kindIndex = 0; kindIndex < kinds.length; kindIndex++) {
-            kind = kinds[kindIndex];
-            this.setVerticesData(kind, newdata[kind], vbs[kind].isUpdatable());
-        }
-
-        // Updating submeshes
-        this.releaseSubMeshes();
-        for (var submeshIndex = 0; submeshIndex < previousSubmeshes.length; submeshIndex++) {
-            var previousOne = previousSubmeshes[submeshIndex];
-        }
-
-        this.synchronizeInstances();
         return this;
     }
 
@@ -2479,65 +2084,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @returns current mesh
      */
     public convertToUnIndexedMesh(): Mesh {
-        var kinds = this.getVerticesDataKinds();
-        var vbs: { [key: string]: VertexBuffer } = {};
-        var data: { [key: string]: FloatArray } = {};
-        var newdata: { [key: string]: Array<number> } = {};
-        var kindIndex: number;
-        var kind: string;
-        for (kindIndex = 0; kindIndex < kinds.length; kindIndex++) {
-            kind = kinds[kindIndex];
-            var vertexBuffer = <VertexBuffer>this.getVertexBuffer(kind);
-            vbs[kind] = vertexBuffer;
-            data[kind] = <FloatArray>vbs[kind].getData();
-            newdata[kind] = [];
-        }
-
-        // Save previous submeshes
-        var previousSubmeshes = this.subMeshes.slice(0);
-
-        var indices = <IndicesArray>this.getIndices();
-        var totalIndices = this.getTotalIndices();
-
-        // Generating unique vertices per face
-        var index: number;
-        for (index = 0; index < totalIndices; index++) {
-            var vertexIndex = indices[index];
-
-            for (kindIndex = 0; kindIndex < kinds.length; kindIndex++) {
-                kind = kinds[kindIndex];
-                var stride = vbs[kind].getStrideSize();
-
-                for (var offset = 0; offset < stride; offset++) {
-                    newdata[kind].push(data[kind][vertexIndex * stride + offset]);
-                }
-            }
-        }
-
-        // Updating indices
-        for (index = 0; index < totalIndices; index += 3) {
-            indices[index] = index;
-            indices[index + 1] = index + 1;
-            indices[index + 2] = index + 2;
-        }
-
-        this.setIndices(indices);
-
-        // Updating vertex buffers
-        for (kindIndex = 0; kindIndex < kinds.length; kindIndex++) {
-            kind = kinds[kindIndex];
-            this.setVerticesData(kind, newdata[kind], vbs[kind].isUpdatable());
-        }
-
-        // Updating submeshes
-        this.releaseSubMeshes();
-        for (var submeshIndex = 0; submeshIndex < previousSubmeshes.length; submeshIndex++) {
-            var previousOne = previousSubmeshes[submeshIndex];
-        }
-
-        this._unIndexed = true;
-
-        this.synchronizeInstances();
         return this;
     }
 
@@ -2548,25 +2094,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @returns current mesh
      */
     public flipFaces(flipNormals: boolean = false): Mesh {
-        var vertex_data = VertexData.ExtractFromMesh(this);
-        var i: number;
-        if (flipNormals && this.isVerticesDataPresent(VertexBuffer.NormalKind) && vertex_data.normals) {
-            for (i = 0; i < vertex_data.normals.length; i++) {
-                vertex_data.normals[i] *= -1;
-            }
-        }
-
-        if (vertex_data.indices) {
-            var temp;
-            for (i = 0; i < vertex_data.indices.length; i += 3) {
-                // reassign indices
-                temp = vertex_data.indices[i + 1];
-                vertex_data.indices[i + 1] = vertex_data.indices[i + 2];
-                vertex_data.indices[i + 2] = temp;
-            }
-        }
-
-        vertex_data.applyToMesh(this, this.isVertexBufferUpdatable(VertexBuffer.PositionKind));
         return this;
     }
 
@@ -2694,7 +2221,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
             }
 
             vertex_data.indices = indices;
-            vertex_data.applyToMesh(this, this.isVertexBufferUpdatable(VertexBuffer.PositionKind));
         }
     }
 
@@ -2784,8 +2310,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
             if (currentColors !== null && currentColors !== void 0) {
                 vertex_data.colors = colors;
             }
-
-            vertex_data.applyToMesh(this, this.isVertexBufferUpdatable(VertexBuffer.PositionKind));
         }
     }
 
@@ -2831,42 +2355,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @returns the current mesh
      */
     public optimizeIndices(successCallback?: (mesh?: Mesh) => void): Mesh {
-        var indices = <IndicesArray>this.getIndices();
-        var positions = this.getVerticesData(VertexBuffer.PositionKind);
-
-        if (!positions || !indices) {
-            return this;
-        }
-
-        var vectorPositions = new Array<Vector3>();
-        for (var pos = 0; pos < positions.length; pos = pos + 3) {
-            vectorPositions.push(Vector3.FromArray(positions, pos));
-        }
-        var dupes = new Array<number>();
-
-        AsyncLoop.SyncAsyncForLoop(vectorPositions.length, 40, (iteration) => {
-            var realPos = vectorPositions.length - 1 - iteration;
-            var testedPosition = vectorPositions[realPos];
-            for (var j = 0; j < realPos; ++j) {
-                var againstPosition = vectorPositions[j];
-                if (testedPosition.equals(againstPosition)) {
-                    dupes[realPos] = j;
-                    break;
-                }
-            }
-        }, () => {
-            for (var i = 0; i < indices.length; ++i) {
-                indices[i] = dupes[indices[i]] || indices[i];
-            }
-
-            //indices are now reordered
-            var originalSubMeshes = this.subMeshes.slice(0);
-            this.setIndices(indices);
-            this.subMeshes = originalSubMeshes;
-            if (successCallback) {
-                successCallback(this);
-            }
-        });
         return this;
     }
 
@@ -3049,50 +2537,10 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
                 return;
             }
 
-            for (var index = 0; index < morphTargetManager.numInfluencers; index++) {
-                var morphTarget = morphTargetManager.getActiveTarget(index);
-
-                const positions = morphTarget.getPositions();
-                if (!positions) {
-                    Logger.Error("Invalid morph target. Target must have positions.");
-                    return;
-                }
-
-                this.geometry.setVerticesData(VertexBuffer.PositionKind + index, positions, false, 3);
-
-                const normals = morphTarget.getNormals();
-                if (normals) {
-                    this.geometry.setVerticesData(VertexBuffer.NormalKind + index, normals, false, 3);
-                }
-
-                const tangents = morphTarget.getTangents();
-                if (tangents) {
-                    this.geometry.setVerticesData(VertexBuffer.TangentKind + index, tangents, false, 3);
-                }
-
-                const uvs = morphTarget.getUVs();
-                if (uvs) {
-                    this.geometry.setVerticesData(VertexBuffer.UVKind + "_" + index, uvs, false, 2);
-                }
-            }
+            
         } else {
             var index = 0;
 
-            // Positions
-            while (this.geometry.isVerticesDataPresent(VertexBuffer.PositionKind + index)) {
-                this.geometry.removeVerticesData(VertexBuffer.PositionKind + index);
-
-                if (this.geometry.isVerticesDataPresent(VertexBuffer.NormalKind + index)) {
-                    this.geometry.removeVerticesData(VertexBuffer.NormalKind + index);
-                }
-                if (this.geometry.isVerticesDataPresent(VertexBuffer.TangentKind + index)) {
-                    this.geometry.removeVerticesData(VertexBuffer.TangentKind + index);
-                }
-                if (this.geometry.isVerticesDataPresent(VertexBuffer.UVKind + index)) {
-                    this.geometry.removeVerticesData(VertexBuffer.UVKind + "_" + index);
-                }
-                index++;
-            }
         }
     }
 
@@ -3221,42 +2669,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
             }
 
             mesh._delayInfo = [];
-            if (parsedMesh.hasUVs) {
-                mesh._delayInfo.push(VertexBuffer.UVKind);
-            }
-
-            if (parsedMesh.hasUVs2) {
-                mesh._delayInfo.push(VertexBuffer.UV2Kind);
-            }
-
-            if (parsedMesh.hasUVs3) {
-                mesh._delayInfo.push(VertexBuffer.UV3Kind);
-            }
-
-            if (parsedMesh.hasUVs4) {
-                mesh._delayInfo.push(VertexBuffer.UV4Kind);
-            }
-
-            if (parsedMesh.hasUVs5) {
-                mesh._delayInfo.push(VertexBuffer.UV5Kind);
-            }
-
-            if (parsedMesh.hasUVs6) {
-                mesh._delayInfo.push(VertexBuffer.UV6Kind);
-            }
-
-            if (parsedMesh.hasColors) {
-                mesh._delayInfo.push(VertexBuffer.ColorKind);
-            }
-
-            if (parsedMesh.hasMatricesIndices) {
-                mesh._delayInfo.push(VertexBuffer.MatricesIndicesKind);
-            }
-
-            if (parsedMesh.hasMatricesWeights) {
-                mesh._delayInfo.push(VertexBuffer.MatricesWeightsKind);
-            }
-
+            
             mesh._delayLoadingFunction = Geometry._ImportGeometry;
 
             if (SceneLoaderFlags.ForceFullSceneLoadingForIncremental) {
@@ -3808,18 +3221,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      */
     public setPositionsForCPUSkinning(): Float32Array {
         let internalDataInfo = this._internalMeshDataInfo;
-        if (!internalDataInfo._sourcePositions) {
-            let source = this.getVerticesData(VertexBuffer.PositionKind);
-            if (!source) {
-                return internalDataInfo._sourcePositions;
-            }
-
-            internalDataInfo._sourcePositions = new Float32Array(<any>source);
-
-            if (!this.isVertexBufferUpdatable(VertexBuffer.PositionKind)) {
-                this.setVerticesData(VertexBuffer.PositionKind, source, true);
-            }
-        }
         return internalDataInfo._sourcePositions;
     }
 
@@ -3830,19 +3231,6 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
     public setNormalsForCPUSkinning(): Float32Array {
         let internalDataInfo = this._internalMeshDataInfo;
 
-        if (!internalDataInfo._sourceNormals) {
-            let source = this.getVerticesData(VertexBuffer.NormalKind);
-
-            if (!source) {
-                return internalDataInfo._sourceNormals;
-            }
-
-            internalDataInfo._sourceNormals = new Float32Array(<any>source);
-
-            if (!this.isVertexBufferUpdatable(VertexBuffer.NormalKind)) {
-                this.setVerticesData(VertexBuffer.NormalKind, source, true);
-            }
-        }
         return internalDataInfo._sourceNormals;
     }
 
@@ -3852,113 +3240,7 @@ export class Mesh extends AbstractMesh implements IGetSetVerticesData {
      * @returns the current mesh
      */
     public applySkeleton(skeleton: Skeleton): Mesh {
-        if (!this.geometry) {
-            return this;
-        }
-
-        if (this.geometry._softwareSkinningFrameId == this.getScene().getFrameId()) {
-            return this;
-        }
-
-        this.geometry._softwareSkinningFrameId = this.getScene().getFrameId();
-
-        if (!this.isVerticesDataPresent(VertexBuffer.PositionKind)) {
-            return this;
-        }
-        if (!this.isVerticesDataPresent(VertexBuffer.NormalKind)) {
-            return this;
-        }
-        if (!this.isVerticesDataPresent(VertexBuffer.MatricesIndicesKind)) {
-            return this;
-        }
-        if (!this.isVerticesDataPresent(VertexBuffer.MatricesWeightsKind)) {
-            return this;
-        }
-
-        let internalDataInfo = this._internalMeshDataInfo;
-
-        if (!internalDataInfo._sourcePositions) {
-            var submeshes = this.subMeshes.slice();
-            this.setPositionsForCPUSkinning();
-            this.subMeshes = submeshes;
-        }
-
-        if (!internalDataInfo._sourceNormals) {
-            this.setNormalsForCPUSkinning();
-        }
-
-        // positionsData checks for not being Float32Array will only pass at most once
-        var positionsData = this.getVerticesData(VertexBuffer.PositionKind);
-
-        if (!positionsData) {
-            return this;
-        }
-
-        if (!(positionsData instanceof Float32Array)) {
-            positionsData = new Float32Array(positionsData);
-        }
-
-        // normalsData checks for not being Float32Array will only pass at most once
-        var normalsData = this.getVerticesData(VertexBuffer.NormalKind);
-
-        if (!normalsData) {
-            return this;
-        }
-
-        if (!(normalsData instanceof Float32Array)) {
-            normalsData = new Float32Array(normalsData);
-        }
-
-        var matricesIndicesData = this.getVerticesData(VertexBuffer.MatricesIndicesKind);
-        var matricesWeightsData = this.getVerticesData(VertexBuffer.MatricesWeightsKind);
-
-        if (!matricesWeightsData || !matricesIndicesData) {
-            return this;
-        }
-
-        var needExtras = this.numBoneInfluencers > 4;
-        var matricesIndicesExtraData = needExtras ? this.getVerticesData(VertexBuffer.MatricesIndicesExtraKind) : null;
-        var matricesWeightsExtraData = needExtras ? this.getVerticesData(VertexBuffer.MatricesWeightsExtraKind) : null;
-
-        var skeletonMatrices = skeleton.getTransformMatrices(this);
-
-        var tempVector3 = Vector3.Zero();
-        var finalMatrix = new Matrix();
-        var tempMatrix = new Matrix();
-
-        var matWeightIdx = 0;
-        var inf: number;
-        for (var index = 0; index < positionsData.length; index += 3, matWeightIdx += 4) {
-            var weight: number;
-            for (inf = 0; inf < 4; inf++) {
-                weight = matricesWeightsData[matWeightIdx + inf];
-                if (weight > 0) {
-                    Matrix.FromFloat32ArrayToRefScaled(skeletonMatrices, Math.floor(matricesIndicesData[matWeightIdx + inf] * 16), weight, tempMatrix);
-                    finalMatrix.addToSelf(tempMatrix);
-                }
-            }
-            if (needExtras) {
-                for (inf = 0; inf < 4; inf++) {
-                    weight = matricesWeightsExtraData![matWeightIdx + inf];
-                    if (weight > 0) {
-                        Matrix.FromFloat32ArrayToRefScaled(skeletonMatrices, Math.floor(matricesIndicesExtraData![matWeightIdx + inf] * 16), weight, tempMatrix);
-                        finalMatrix.addToSelf(tempMatrix);
-                    }
-                }
-            }
-
-            Vector3.TransformCoordinatesFromFloatsToRef(internalDataInfo._sourcePositions[index], internalDataInfo._sourcePositions[index + 1], internalDataInfo._sourcePositions[index + 2], finalMatrix, tempVector3);
-            tempVector3.toArray(positionsData, index);
-
-            Vector3.TransformNormalFromFloatsToRef(internalDataInfo._sourceNormals[index], internalDataInfo._sourceNormals[index + 1], internalDataInfo._sourceNormals[index + 2], finalMatrix, tempVector3);
-            tempVector3.toArray(normalsData, index);
-
-            finalMatrix.reset();
-        }
-
-        this.updateVerticesData(VertexBuffer.PositionKind, positionsData);
-        this.updateVerticesData(VertexBuffer.NormalKind, normalsData);
-
+        
         return this;
     }
 

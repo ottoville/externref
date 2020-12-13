@@ -7,7 +7,6 @@ import { RenderTargetCreationOptions } from "../Materials/Textures/renderTargetC
 import type { _TimeToken } from "../Instrumentation/timeToken";
 import { Constants } from "./constants";
 import { WebGPUConstants } from "./WebGPU/webgpuConstants";
-import { VertexBuffer } from "../Meshes/buffer";
 import { WebGPUPipelineContext, IWebGPUPipelineContextVertexInputsCache } from './WebGPU/webgpuPipelineContext';
 import type { IPipelineContext } from './IPipelineContext';
 import type { DataBuffer } from '../Meshes/dataBuffer';
@@ -156,7 +155,7 @@ export class WebGPUEngine extends Engine {
     // DrawCall Life Cycle
     // Effect is on the parent class
     // protected _currentEffect: Nullable<Effect> = null;
-    private _currentVertexBuffers: Nullable<{ [key: string]: Nullable<VertexBuffer> }> = null;
+    private _currentVertexBuffers: Nullable<{ [key: string]: Nullable<any> }> = null;
     private _currentIndexBuffer: Nullable<DataBuffer> = null;
     public getCurrentIndexBuffer() {
         return this._currentIndexBuffer;
@@ -720,7 +719,7 @@ export class WebGPUEngine extends Engine {
         throw "Not implemented on WebGPU so far.";
     }
 
-    public bindBuffers(vertexBuffers: { [key: string]: Nullable<VertexBuffer> }, indexBuffer: Nullable<DataBuffer>, effect: any): void {
+    public bindBuffers(vertexBuffers: { [key: string]: Nullable<any> }, indexBuffer: Nullable<DataBuffer>, effect: any): void {
         this._currentIndexBuffer = indexBuffer;
         this._currentVertexBuffers = vertexBuffers;
     }
@@ -1687,77 +1686,12 @@ export class WebGPUEngine extends Engine {
         return gpuPipeline.stages!;
     }
 
-    private _getVertexInputDescriptorFormat(vertexBuffer: VertexBuffer): GPUVertexFormat {
+    private _getVertexInputDescriptorFormat(vertexBuffer: any): any {
         const kind = vertexBuffer.getKind();
         const type = vertexBuffer.type;
         const normalized = vertexBuffer.normalized;
         const size = vertexBuffer.getSize();
 
-        switch (type) {
-            case VertexBuffer.BYTE:
-                switch (size) {
-                    case 2:
-                        return normalized ? WebGPUConstants.GPUVertexFormat_char2norm : WebGPUConstants.GPUVertexFormat_char2;
-                    case 4:
-                        return normalized ? WebGPUConstants.GPUVertexFormat_char4norm : WebGPUConstants.GPUVertexFormat_char4;
-                }
-            case VertexBuffer.UNSIGNED_BYTE:
-                switch (size) {
-                    case 2:
-                        return normalized ? WebGPUConstants.GPUVertexFormat_uchar2norm : WebGPUConstants.GPUVertexFormat_uchar2;
-                    case 4:
-                        return normalized ? WebGPUConstants.GPUVertexFormat_uchar4norm : WebGPUConstants.GPUVertexFormat_uchar4;
-                }
-            case VertexBuffer.SHORT:
-                switch (size) {
-                    case 2:
-                        return normalized ? WebGPUConstants.GPUVertexFormat_short2norm : WebGPUConstants.GPUVertexFormat_short2;
-                    case 4:
-                        return normalized ? WebGPUConstants.GPUVertexFormat_short4norm : WebGPUConstants.GPUVertexFormat_short4;
-                }
-            case VertexBuffer.UNSIGNED_SHORT:
-                switch (size) {
-                    case 2:
-                        return normalized ? WebGPUConstants.GPUVertexFormat_ushort2norm : WebGPUConstants.GPUVertexFormat_ushort2;
-                    case 4:
-                        return normalized ? WebGPUConstants.GPUVertexFormat_ushort4norm : WebGPUConstants.GPUVertexFormat_ushort4;
-                }
-            case VertexBuffer.INT:
-                switch (size) {
-                    case 1:
-                        return WebGPUConstants.GPUVertexFormat_int;
-                    case 2:
-                        return WebGPUConstants.GPUVertexFormat_int2;
-                    case 3:
-                        return WebGPUConstants.GPUVertexFormat_int3;
-                    case 4:
-                        return WebGPUConstants.GPUVertexFormat_int4;
-                }
-            case VertexBuffer.UNSIGNED_INT:
-                switch (size) {
-                    case 1:
-                        return WebGPUConstants.GPUVertexFormat_uint;
-                    case 2:
-                        return WebGPUConstants.GPUVertexFormat_uint2;
-                    case 3:
-                        return WebGPUConstants.GPUVertexFormat_uint3;
-                    case 4:
-                        return WebGPUConstants.GPUVertexFormat_uint4;
-                }
-            case VertexBuffer.FLOAT:
-                switch (size) {
-                    case 1:
-                        return WebGPUConstants.GPUVertexFormat_float;
-                    case 2:
-                        return WebGPUConstants.GPUVertexFormat_float2;
-                    case 3:
-                        return WebGPUConstants.GPUVertexFormat_float3;
-                    case 4:
-                        return WebGPUConstants.GPUVertexFormat_float4;
-                }
-        }
-
-        throw new Error("Invalid Format '" + kind + "'");
     }
 
     private _getVertexInputDescriptor(): GPUVertexStateDescriptor {

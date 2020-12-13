@@ -3,8 +3,6 @@ import { FactorGradient, ColorGradient, Color3Gradient, GradientHelper } from ".
 import { Observable, Observer } from "../Misc/observable";
 import { Vector3, Matrix, TmpVectors, Vector4 } from "../Maths/math.vector";
 import { Scalar } from "../Maths/math.scalar";
-import { VertexBuffer } from "../Meshes/buffer";
-import { Buffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Material } from "../Materials/material";
 import { MaterialHelper } from "../Materials/materialHelper";
@@ -98,9 +96,9 @@ export class ParticleSystem extends BaseParticleSystem implements IDisposable, I
     private _stockParticles = new Array<Particle>();
     private _newPartsExcess = 0;
     private _vertexData: Float32Array;
-    private _vertexBuffer: Nullable<Buffer>;
-    private _vertexBuffers: { [key: string]: VertexBuffer } = {};
-    private _spriteBuffer: Nullable<Buffer>;
+    private _vertexBuffer: Nullable<any>;
+    private _vertexBuffers: { [key: string]: any } = {};
+    private _spriteBuffer: Nullable<any>;
     private _indexBuffer: Nullable<DataBuffer>;
     private _effect: any;
     private _customEffect: Nullable<any>;
@@ -912,53 +910,8 @@ export class ParticleSystem extends BaseParticleSystem implements IDisposable, I
 
         let engine = this._scene.getEngine();
         this._vertexData = new Float32Array(this._capacity * this._vertexBufferSize * (this._useInstancing ? 1 : 4));
-        this._vertexBuffer = new Buffer(engine, this._vertexData, true, this._vertexBufferSize);
 
-        let dataOffset = 0;
-        var positions = this._vertexBuffer.createVertexBuffer(VertexBuffer.PositionKind, dataOffset, 3, this._vertexBufferSize, this._useInstancing);
-        this._vertexBuffers[VertexBuffer.PositionKind] = positions;
-        dataOffset += 3;
 
-        var colors = this._vertexBuffer.createVertexBuffer(VertexBuffer.ColorKind, dataOffset, 4, this._vertexBufferSize, this._useInstancing);
-        this._vertexBuffers[VertexBuffer.ColorKind] = colors;
-        dataOffset += 4;
-
-        var options = this._vertexBuffer.createVertexBuffer("angle", dataOffset, 1, this._vertexBufferSize, this._useInstancing);
-        this._vertexBuffers["angle"] = options;
-        dataOffset += 1;
-
-        var size = this._vertexBuffer.createVertexBuffer("size", dataOffset, 2, this._vertexBufferSize, this._useInstancing);
-        this._vertexBuffers["size"] = size;
-        dataOffset += 2;
-
-        if (this._isAnimationSheetEnabled) {
-            var cellIndexBuffer = this._vertexBuffer.createVertexBuffer("cellIndex", dataOffset, 1, this._vertexBufferSize, this._useInstancing);
-            this._vertexBuffers["cellIndex"] = cellIndexBuffer;
-            dataOffset += 1;
-        }
-
-        if (!this._isBillboardBased || this.billboardMode === ParticleSystem.BILLBOARDMODE_STRETCHED) {
-            var directionBuffer = this._vertexBuffer.createVertexBuffer("direction", dataOffset, 3, this._vertexBufferSize, this._useInstancing);
-            this._vertexBuffers["direction"] = directionBuffer;
-            dataOffset += 3;
-        }
-
-        if (this._useRampGradients) {
-            var rampDataBuffer = this._vertexBuffer.createVertexBuffer("remapData", dataOffset, 4, this._vertexBufferSize, this._useInstancing);
-            this._vertexBuffers["remapData"] = rampDataBuffer;
-            dataOffset += 4;
-        }
-
-        var offsets: VertexBuffer;
-        if (this._useInstancing) {
-            var spriteData = new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]);
-            this._spriteBuffer = new Buffer(engine, spriteData, false, 2);
-            offsets = this._spriteBuffer.createVertexBuffer("offset", 0, 2);
-        } else {
-            offsets = this._vertexBuffer.createVertexBuffer("offset", dataOffset, 2, this._vertexBufferSize, this._useInstancing);
-            dataOffset += 2;
-        }
-        this._vertexBuffers["offset"] = offsets;
 
     }
 
@@ -1472,21 +1425,8 @@ export class ParticleSystem extends BaseParticleSystem implements IDisposable, I
 
     /** @hidden */
     public static _GetAttributeNamesOrOptions(isAnimationSheetEnabled = false, isBillboardBased = false, useRampGradients = false): string[] {
-        var attributeNamesOrOptions = [VertexBuffer.PositionKind, VertexBuffer.ColorKind, "angle", "offset", "size"];
 
-        if (isAnimationSheetEnabled) {
-            attributeNamesOrOptions.push("cellIndex");
-        }
-
-        if (!isBillboardBased) {
-            attributeNamesOrOptions.push("direction");
-        }
-
-        if (useRampGradients) {
-            attributeNamesOrOptions.push("remapData");
-        }
-
-        return attributeNamesOrOptions;
+        return [""];
     }
 
     /** @hidden */

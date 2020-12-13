@@ -5,7 +5,6 @@ import { Logger } from "../../Misc/logger";
 import { Nullable, int, float } from "../../types";
 import { Scene } from "../../scene";
 import { Matrix, Vector3, Vector4 } from "../../Maths/math.vector";
-import { VertexBuffer } from "../../Meshes/buffer";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
 import { Mesh } from "../../Meshes/mesh";
 import { MaterialHelper } from "../../Materials/materialHelper";
@@ -820,10 +819,6 @@ export class BackgroundMaterial extends PushMaterial {
         // Attribs
         if (MaterialHelper.PrepareDefinesForAttributes(mesh, defines, false, true, false)) {
             if (mesh) {
-                if (!scene.getEngine().getCaps().standardDerivatives && !mesh.isVerticesDataPresent(VertexBuffer.NormalKind)) {
-                    mesh.createNormals(true);
-                    Logger.Warn("BackgroundMaterial: Normals have been created for the mesh: " + mesh.name);
-                }
             }
         }
 
@@ -847,24 +842,6 @@ export class BackgroundMaterial extends PushMaterial {
             }
 
             MaterialHelper.HandleFallbacksForShadows(defines, fallbacks, this._maxSimultaneousLights);
-
-            //Attributes
-            var attribs = [VertexBuffer.PositionKind];
-
-            if (defines.NORMAL) {
-                attribs.push(VertexBuffer.NormalKind);
-            }
-
-            if (defines.UV1) {
-                attribs.push(VertexBuffer.UVKind);
-            }
-
-            if (defines.UV2) {
-                attribs.push(VertexBuffer.UV2Kind);
-            }
-
-            MaterialHelper.PrepareAttributesForBones(attribs, mesh, defines, fallbacks);
-            MaterialHelper.PrepareAttributesForInstances(attribs, defines);
 
             var uniforms = ["world", "view", "viewProjection", "vEyePosition", "vLightsType",
                 "vFogInfos", "vFogColor", "pointSize",
@@ -905,17 +882,6 @@ export class BackgroundMaterial extends PushMaterial {
             };
 
             var join = defines.toString();
-            subMesh.setEffect(scene.getEngine().createEffect("background", <any>{
-                attributes: attribs,
-                uniformsNames: uniforms,
-                uniformBuffersNames: uniformBuffers,
-                samplers: samplers,
-                defines: join,
-                fallbacks: fallbacks,
-                onCompiled: onCompiled,
-                onError: this.onError,
-                indexParameters: { maxSimultaneousLights: this._maxSimultaneousLights }
-            }, engine), defines);
 
             this.buildUniformLayout();
         }

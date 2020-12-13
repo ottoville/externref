@@ -1,5 +1,4 @@
 import { Nullable } from "../types";
-import { VertexBuffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { LinesMesh, InstancedLinesMesh } from "../Meshes/linesMesh";
 import { Vector3, TmpVectors } from "../Maths/math.vector";
@@ -134,7 +133,7 @@ export class EdgesRenderer implements IEdgesRenderer {
 
     protected _lineShader: ShaderMaterial;
     protected _ib: DataBuffer;
-    protected _buffers: { [key: string]: Nullable<VertexBuffer> } = {};
+    protected _buffers: { [key: string]: Nullable<any> } = {};
     protected _checkVerticesInsteadOfIndices = false;
 
     private _meshRebuildObserver: Nullable<Observer<AbstractMesh>>;
@@ -188,43 +187,14 @@ export class EdgesRenderer implements IEdgesRenderer {
 
     /** @hidden */
     public _rebuild(): void {
-        var buffer = this._buffers[VertexBuffer.PositionKind];
-        if (buffer) {
-            buffer._rebuild();
-        }
-
-        buffer = this._buffers[VertexBuffer.NormalKind];
-        if (buffer) {
-            buffer._rebuild();
-        }
-
-        var scene = this._source.getScene();
-        var engine = scene.getEngine();
-        this._ib = engine.createIndexBuffer(this._linesIndices);
+       
     }
 
     /**
      * Releases the required resources for the edges renderer
      */
     public dispose(): void {
-        this._source.onRebuildObservable.remove(this._meshRebuildObserver);
-        this._source.onDisposeObservable.remove(this._meshDisposeObserver);
-
-        var buffer = this._buffers[VertexBuffer.PositionKind];
-        if (buffer) {
-            buffer.dispose();
-            this._buffers[VertexBuffer.PositionKind] = null;
-        }
-        buffer = this._buffers[VertexBuffer.NormalKind];
-        if (buffer) {
-            buffer.dispose();
-            this._buffers[VertexBuffer.NormalKind] = null;
-        }
-
-        if (this._ib) {
-            this._source.getScene().getEngine()._releaseBuffer(this._ib);
-        }
-        this._lineShader.dispose();
+       
     }
 
     protected _processEdgeForAdjacencies(pa: number, pb: number, p0: number, p1: number, p2: number): number {
@@ -317,123 +287,7 @@ export class EdgesRenderer implements IEdgesRenderer {
      * @private
      */
     _generateEdgesLines(): void {
-        var positions = this._source.getVerticesData(VertexBuffer.PositionKind);
-        var indices = this._source.getIndices();
-
-        if (!indices || !positions) {
-            return;
-        }
-
-        // First let's find adjacencies
-        var adjacencies = new Array<FaceAdjacencies>();
-        var faceNormals = new Array<Vector3>();
-        var index: number;
-        var faceAdjacencies: FaceAdjacencies;
-
-        // Prepare faces
-        for (index = 0; index < indices.length; index += 3) {
-            faceAdjacencies = new FaceAdjacencies();
-            var p0Index = indices[index];
-            var p1Index = indices[index + 1];
-            var p2Index = indices[index + 2];
-
-            faceAdjacencies.p0 = new Vector3(positions[p0Index * 3], positions[p0Index * 3 + 1], positions[p0Index * 3 + 2]);
-            faceAdjacencies.p1 = new Vector3(positions[p1Index * 3], positions[p1Index * 3 + 1], positions[p1Index * 3 + 2]);
-            faceAdjacencies.p2 = new Vector3(positions[p2Index * 3], positions[p2Index * 3 + 1], positions[p2Index * 3 + 2]);
-            var faceNormal = Vector3.Cross(faceAdjacencies.p1.subtract(faceAdjacencies.p0), faceAdjacencies.p2.subtract(faceAdjacencies.p1));
-
-            faceNormal.normalize();
-
-            faceNormals.push(faceNormal);
-            adjacencies.push(faceAdjacencies);
-        }
-
-        // Scan
-        for (index = 0; index < adjacencies.length; index++) {
-            faceAdjacencies = adjacencies[index];
-
-            for (var otherIndex = index + 1; otherIndex < adjacencies.length; otherIndex++) {
-                var otherFaceAdjacencies = adjacencies[otherIndex];
-
-                if (faceAdjacencies.edgesConnectedCount === 3) { // Full
-                    break;
-                }
-
-                if (otherFaceAdjacencies.edgesConnectedCount === 3) { // Full
-                    continue;
-                }
-
-                var otherP0 = indices[otherIndex * 3];
-                var otherP1 = indices[otherIndex * 3 + 1];
-                var otherP2 = indices[otherIndex * 3 + 2];
-
-                for (var edgeIndex = 0; edgeIndex < 3; edgeIndex++) {
-                    var otherEdgeIndex: number = 0;
-
-                    if (faceAdjacencies.edges[edgeIndex] !== undefined) {
-                        continue;
-                    }
-
-                    switch (edgeIndex) {
-                        case 0:
-                            if (this._checkVerticesInsteadOfIndices) {
-                                otherEdgeIndex = this._processEdgeForAdjacenciesWithVertices(faceAdjacencies.p0, faceAdjacencies.p1, otherFaceAdjacencies.p0, otherFaceAdjacencies.p1, otherFaceAdjacencies.p2);
-                            } else {
-                                otherEdgeIndex = this._processEdgeForAdjacencies(indices[index * 3], indices[index * 3 + 1], otherP0, otherP1, otherP2);
-                            }
-                            break;
-                        case 1:
-                            if (this._checkVerticesInsteadOfIndices) {
-                                otherEdgeIndex = this._processEdgeForAdjacenciesWithVertices(faceAdjacencies.p1, faceAdjacencies.p2, otherFaceAdjacencies.p0, otherFaceAdjacencies.p1, otherFaceAdjacencies.p2);
-                            } else {
-                                otherEdgeIndex = this._processEdgeForAdjacencies(indices[index * 3 + 1], indices[index * 3 + 2], otherP0, otherP1, otherP2);
-                            }
-                            break;
-                        case 2:
-                            if (this._checkVerticesInsteadOfIndices) {
-                                otherEdgeIndex = this._processEdgeForAdjacenciesWithVertices(faceAdjacencies.p2, faceAdjacencies.p0, otherFaceAdjacencies.p0, otherFaceAdjacencies.p1, otherFaceAdjacencies.p2);
-                            } else {
-                                otherEdgeIndex = this._processEdgeForAdjacencies(indices[index * 3 + 2], indices[index * 3], otherP0, otherP1, otherP2);
-                            }
-                            break;
-                    }
-
-                    if (otherEdgeIndex === -1) {
-                        continue;
-                    }
-
-                    faceAdjacencies.edges[edgeIndex] = otherIndex;
-                    otherFaceAdjacencies.edges[otherEdgeIndex] = index;
-
-                    faceAdjacencies.edgesConnectedCount++;
-                    otherFaceAdjacencies.edgesConnectedCount++;
-
-                    if (faceAdjacencies.edgesConnectedCount === 3) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Create lines
-        for (index = 0; index < adjacencies.length; index++) {
-            // We need a line when a face has no adjacency on a specific edge or if all the adjacencies has an angle greater than epsilon
-            var current = adjacencies[index];
-
-            this._checkEdge(index, current.edges[0], faceNormals, current.p0, current.p1);
-            this._checkEdge(index, current.edges[1], faceNormals, current.p1, current.p2);
-            this._checkEdge(index, current.edges[2], faceNormals, current.p2, current.p0);
-        }
-
-        // Merge into a single mesh
-        var engine = this._source.getScene().getEngine();
-
-        this._buffers[VertexBuffer.PositionKind] = new VertexBuffer(engine, this._linesPositions, VertexBuffer.PositionKind, false);
-        this._buffers[VertexBuffer.NormalKind] = new VertexBuffer(engine, this._linesNormals, VertexBuffer.NormalKind, false, false, 4);
-
-        this._ib = engine.createIndexBuffer(this._linesIndices);
-
-        this._indicesCount = this._linesIndices.length;
+        
     }
 
     /**
@@ -504,30 +358,6 @@ export class LineEdgesRenderer extends EdgesRenderer {
      * Generate edges for each line in LinesMesh. Every Line should be rendered as edge.
      */
     _generateEdgesLines(): void {
-        var positions = this._source.getVerticesData(VertexBuffer.PositionKind);
-        var indices = this._source.getIndices();
-
-        if (!indices || !positions) {
-            return;
-        }
-
-        const p0 = TmpVectors.Vector3[0];
-        const p1 = TmpVectors.Vector3[1];
-        const len = indices.length - 1;
-        for (let i = 0, offset = 0; i < len; i += 2, offset += 4) {
-            Vector3.FromArrayToRef(positions, 3 * indices[i], p0);
-            Vector3.FromArrayToRef(positions, 3 * indices[i + 1], p1);
-            this.createLine(p0, p1, offset);
-        }
-
-        // Merge into a single mesh
-        var engine = this._source.getScene().getEngine();
-
-        this._buffers[VertexBuffer.PositionKind] = new VertexBuffer(engine, this._linesPositions, VertexBuffer.PositionKind, false);
-        this._buffers[VertexBuffer.NormalKind] = new VertexBuffer(engine, this._linesNormals, VertexBuffer.NormalKind, false, false, 4);
-
-        this._ib = engine.createIndexBuffer(this._linesIndices);
-
-        this._indicesCount = this._linesIndices.length;
+       
     }
 }

@@ -3,7 +3,6 @@ import { Scene } from "../scene";
 import { Matrix, Vector3, Vector2, Vector4 } from "../Maths/math.vector";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
-import { VertexBuffer } from "../Meshes/buffer";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
 import { Texture } from "../Materials/Textures/texture";
 import { MaterialHelper } from "./materialHelper";
@@ -511,51 +510,11 @@ export class ShaderMaterial extends Material {
             attribs.push(this._options.attributes[index]);
         }
 
-        if (mesh && mesh.isVerticesDataPresent(VertexBuffer.ColorKind)) {
-            attribs.push(VertexBuffer.ColorKind);
-            defines.push("#define VERTEXCOLOR");
-        }
-
         if (useInstances) {
             defines.push("#define INSTANCES");
             MaterialHelper.PushAttributesForInstances(attribs);
         }
 
-        // Bones
-        if (mesh && mesh.useBones && mesh.computeBonesUsingShaders && mesh.skeleton) {
-            attribs.push(VertexBuffer.MatricesIndicesKind);
-            attribs.push(VertexBuffer.MatricesWeightsKind);
-            if (mesh.numBoneInfluencers > 4) {
-                attribs.push(VertexBuffer.MatricesIndicesExtraKind);
-                attribs.push(VertexBuffer.MatricesWeightsExtraKind);
-            }
-
-            const skeleton = mesh.skeleton;
-
-            defines.push("#define NUM_BONE_INFLUENCERS " + mesh.numBoneInfluencers);
-            fallbacks.addCPUSkinningFallback(0, mesh);
-
-            if (skeleton.isUsingTextureForMatrices) {
-                defines.push("#define BONETEXTURE");
-
-                if (this._options.uniforms.indexOf("boneTextureWidth") === -1) {
-                    this._options.uniforms.push("boneTextureWidth");
-                }
-
-                if (this._options.samplers.indexOf("boneSampler") === -1) {
-                    this._options.samplers.push("boneSampler");
-                }
-            } else {
-                defines.push("#define BonesPerMesh " + (skeleton.bones.length + 1));
-
-                if (this._options.uniforms.indexOf("mBones") === -1) {
-                    this._options.uniforms.push("mBones");
-                }
-            }
-
-        } else {
-            defines.push("#define NUM_BONE_INFLUENCERS 0");
-        }
 
         // Textures
         for (var name in this._textures) {

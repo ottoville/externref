@@ -6,7 +6,6 @@ import { BRDFTextureTools } from "../../Misc/brdfTextureTools";
 import { Nullable } from "../../types";
 import { Scene } from "../../scene";
 import { Matrix, Vector4 } from "../../Maths/math.vector";
-import { VertexBuffer } from "../../Meshes/buffer";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
 import { Mesh } from "../../Meshes/mesh";
 import { _TimeToken } from "../../Instrumentation/timeToken";
@@ -1022,10 +1021,6 @@ export abstract class PBRBaseMaterial extends PushMaterial {
             }
         }
 
-        if (!engine.getCaps().standardDerivatives && !mesh.isVerticesDataPresent(VertexBuffer.NormalKind)) {
-            mesh.createNormals(true);
-            Logger.Warn("PBRMaterial: Normals have been created for the mesh: " + mesh.name);
-        }
 
         const previousEffect = subMesh.effect;
         const lightDisposed = defines._areLightsDisposed;
@@ -1169,32 +1164,6 @@ export abstract class PBRBaseMaterial extends PushMaterial {
             fallbacks.addFallback(0, "MULTIVIEW");
         }
 
-        //Attributes
-        var attribs = [VertexBuffer.PositionKind];
-
-        if (defines.NORMAL) {
-            attribs.push(VertexBuffer.NormalKind);
-        }
-
-        if (defines.TANGENT) {
-            attribs.push(VertexBuffer.TangentKind);
-        }
-
-        if (defines.UV1) {
-            attribs.push(VertexBuffer.UVKind);
-        }
-
-        if (defines.UV2) {
-            attribs.push(VertexBuffer.UV2Kind);
-        }
-
-        if (defines.VERTEXCOLOR) {
-            attribs.push(VertexBuffer.ColorKind);
-        }
-
-        MaterialHelper.PrepareAttributesForBones(attribs, mesh, defines, fallbacks);
-        MaterialHelper.PrepareAttributesForInstances(attribs, defines);
-        MaterialHelper.PrepareAttributesForMorphTargets(attribs, mesh, defines);
 
         var shaderName = "pbr";
 
@@ -1255,7 +1224,6 @@ export abstract class PBRBaseMaterial extends PushMaterial {
 
         var join = defines.toString();
         return engine.createEffect(shaderName, <any>{
-            attributes: attribs,
             uniformsNames: uniforms,
             uniformBuffersNames: uniformBuffers,
             samplers: samplers,
@@ -1528,12 +1496,6 @@ export abstract class PBRBaseMaterial extends PushMaterial {
 
         defines.HORIZONOCCLUSION = this._useHorizonOcclusion;
 
-        // Misc.
-        if (defines._areMiscDirty) {
-            MaterialHelper.PrepareDefinesForMisc(mesh, scene, this._useLogarithmicDepth, this.pointsCloud, this.fogEnabled, this._shouldTurnAlphaTestOn(mesh) || this._forceAlphaTest, defines);
-            defines.UNLIT = this._unlit || ((this.pointsCloud || this.wireframe) && !mesh.isVerticesDataPresent(VertexBuffer.NormalKind));
-            defines.DEBUGMODE = this._debugMode;
-        }
 
         // External config
         this.subSurface.prepareDefines(defines, scene);

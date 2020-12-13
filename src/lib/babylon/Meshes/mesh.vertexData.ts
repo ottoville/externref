@@ -1,6 +1,5 @@
 import { Nullable, FloatArray, IndicesArray } from "../types";
 import { Matrix, Vector3, Vector2, Vector4 } from "../Maths/math.vector";
-import { VertexBuffer } from "../Meshes/buffer";
 import { _DevTools } from '../Misc/devTools';
 import { Color4, Color3 } from '../Maths/math.color';
 
@@ -171,50 +170,7 @@ export class VertexData {
      * @param kind the type of data that is being set, eg positions, colors etc
      */
     public set(data: FloatArray, kind: string) {
-        switch (kind) {
-            case VertexBuffer.PositionKind:
-                this.positions = data;
-                break;
-            case VertexBuffer.NormalKind:
-                this.normals = data;
-                break;
-            case VertexBuffer.TangentKind:
-                this.tangents = data;
-                break;
-            case VertexBuffer.UVKind:
-                this.uvs = data;
-                break;
-            case VertexBuffer.UV2Kind:
-                this.uvs2 = data;
-                break;
-            case VertexBuffer.UV3Kind:
-                this.uvs3 = data;
-                break;
-            case VertexBuffer.UV4Kind:
-                this.uvs4 = data;
-                break;
-            case VertexBuffer.UV5Kind:
-                this.uvs5 = data;
-                break;
-            case VertexBuffer.UV6Kind:
-                this.uvs6 = data;
-                break;
-            case VertexBuffer.ColorKind:
-                this.colors = data;
-                break;
-            case VertexBuffer.MatricesIndicesKind:
-                this.matricesIndices = data;
-                break;
-            case VertexBuffer.MatricesWeightsKind:
-                this.matricesWeights = data;
-                break;
-            case VertexBuffer.MatricesIndicesExtraKind:
-                this.matricesIndicesExtra = data;
-                break;
-            case VertexBuffer.MatricesWeightsExtraKind:
-                this.matricesWeightsExtra = data;
-                break;
-        }
+        
     }
 
     /**
@@ -266,131 +222,12 @@ export class VertexData {
     }
 
     private _applyTo(meshOrGeometry: IGetSetVerticesData, updatable: boolean = false): VertexData {
-        if (this.positions) {
-            meshOrGeometry.setVerticesData(VertexBuffer.PositionKind, this.positions, updatable);
-        }
-
-        if (this.normals) {
-            meshOrGeometry.setVerticesData(VertexBuffer.NormalKind, this.normals, updatable);
-        }
-
-        if (this.tangents) {
-            meshOrGeometry.setVerticesData(VertexBuffer.TangentKind, this.tangents, updatable);
-        }
-
-        if (this.uvs) {
-            meshOrGeometry.setVerticesData(VertexBuffer.UVKind, this.uvs, updatable);
-        }
-
-        if (this.uvs2) {
-            meshOrGeometry.setVerticesData(VertexBuffer.UV2Kind, this.uvs2, updatable);
-        }
-
-        if (this.uvs3) {
-            meshOrGeometry.setVerticesData(VertexBuffer.UV3Kind, this.uvs3, updatable);
-        }
-
-        if (this.uvs4) {
-            meshOrGeometry.setVerticesData(VertexBuffer.UV4Kind, this.uvs4, updatable);
-        }
-
-        if (this.uvs5) {
-            meshOrGeometry.setVerticesData(VertexBuffer.UV5Kind, this.uvs5, updatable);
-        }
-
-        if (this.uvs6) {
-            meshOrGeometry.setVerticesData(VertexBuffer.UV6Kind, this.uvs6, updatable);
-        }
-
-        if (this.colors) {
-            meshOrGeometry.setVerticesData(VertexBuffer.ColorKind, this.colors, updatable);
-        }
-
-        if (this.matricesIndices) {
-            meshOrGeometry.setVerticesData(VertexBuffer.MatricesIndicesKind, this.matricesIndices, updatable);
-        }
-
-        if (this.matricesWeights) {
-            meshOrGeometry.setVerticesData(VertexBuffer.MatricesWeightsKind, this.matricesWeights, updatable);
-        }
-
-        if (this.matricesIndicesExtra) {
-            meshOrGeometry.setVerticesData(VertexBuffer.MatricesIndicesExtraKind, this.matricesIndicesExtra, updatable);
-        }
-
-        if (this.matricesWeightsExtra) {
-            meshOrGeometry.setVerticesData(VertexBuffer.MatricesWeightsExtraKind, this.matricesWeightsExtra, updatable);
-        }
-
-        if (this.indices) {
-            meshOrGeometry.setIndices(this.indices, null, updatable);
-        } else {
-            meshOrGeometry.setIndices([], null);
-        }
-
+        
         return this;
     }
 
     private _update(meshOrGeometry: IGetSetVerticesData, updateExtends?: boolean, makeItUnique?: boolean): VertexData {
-        if (this.positions) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.PositionKind, this.positions, updateExtends, makeItUnique);
-        }
-
-        if (this.normals) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.NormalKind, this.normals, updateExtends, makeItUnique);
-        }
-
-        if (this.tangents) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.TangentKind, this.tangents, updateExtends, makeItUnique);
-        }
-
-        if (this.uvs) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.UVKind, this.uvs, updateExtends, makeItUnique);
-        }
-
-        if (this.uvs2) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.UV2Kind, this.uvs2, updateExtends, makeItUnique);
-        }
-
-        if (this.uvs3) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.UV3Kind, this.uvs3, updateExtends, makeItUnique);
-        }
-
-        if (this.uvs4) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.UV4Kind, this.uvs4, updateExtends, makeItUnique);
-        }
-
-        if (this.uvs5) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.UV5Kind, this.uvs5, updateExtends, makeItUnique);
-        }
-
-        if (this.uvs6) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.UV6Kind, this.uvs6, updateExtends, makeItUnique);
-        }
-
-        if (this.colors) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.ColorKind, this.colors, updateExtends, makeItUnique);
-        }
-
-        if (this.matricesIndices) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.MatricesIndicesKind, this.matricesIndices, updateExtends, makeItUnique);
-        }
-
-        if (this.matricesWeights) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.MatricesWeightsKind, this.matricesWeights, updateExtends, makeItUnique);
-        }
-
-        if (this.matricesIndicesExtra) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.MatricesIndicesExtraKind, this.matricesIndicesExtra, updateExtends, makeItUnique);
-        }
-
-        if (this.matricesWeightsExtra) {
-            meshOrGeometry.updateVerticesData(VertexBuffer.MatricesWeightsExtraKind, this.matricesWeightsExtra, updateExtends, makeItUnique);
-        }
-
-        if (this.indices) {
-            meshOrGeometry.setIndices(this.indices, null);
-        }
+        
         return this;
     }
 
@@ -560,41 +397,7 @@ export class VertexData {
     }
 
     private _validate(): void {
-        if (!this.positions) {
-            throw new Error("Positions are required");
-        }
-
-        const getElementCount = (kind: string, values: FloatArray) => {
-            const stride = VertexBuffer.DeduceStride(kind);
-            if ((values.length % stride) !== 0) {
-                throw new Error("The " + kind + "s array count must be a multiple of " + stride);
-            }
-
-            return values.length / stride;
-        };
-
-        const positionsElementCount = getElementCount(VertexBuffer.PositionKind, this.positions);
-
-        const validateElementCount = (kind: string, values: FloatArray) => {
-            const elementCount = getElementCount(kind, values);
-            if (elementCount !== positionsElementCount) {
-                throw new Error("The " + kind + "s element count (" + elementCount + ") does not match the positions count (" + positionsElementCount + ")");
-            }
-        };
-
-        if (this.normals) { validateElementCount(VertexBuffer.NormalKind, this.normals); }
-        if (this.tangents) { validateElementCount(VertexBuffer.TangentKind, this.tangents); }
-        if (this.uvs) { validateElementCount(VertexBuffer.UVKind, this.uvs); }
-        if (this.uvs2) { validateElementCount(VertexBuffer.UV2Kind, this.uvs2); }
-        if (this.uvs3) { validateElementCount(VertexBuffer.UV3Kind, this.uvs3); }
-        if (this.uvs4) { validateElementCount(VertexBuffer.UV4Kind, this.uvs4); }
-        if (this.uvs5) { validateElementCount(VertexBuffer.UV5Kind, this.uvs5); }
-        if (this.uvs6) { validateElementCount(VertexBuffer.UV6Kind, this.uvs6); }
-        if (this.colors) { validateElementCount(VertexBuffer.ColorKind, this.colors); }
-        if (this.matricesIndices) { validateElementCount(VertexBuffer.MatricesIndicesKind, this.matricesIndices); }
-        if (this.matricesWeights) { validateElementCount(VertexBuffer.MatricesWeightsKind, this.matricesWeights); }
-        if (this.matricesIndicesExtra) { validateElementCount(VertexBuffer.MatricesIndicesExtraKind, this.matricesIndicesExtra); }
-        if (this.matricesWeightsExtra) { validateElementCount(VertexBuffer.MatricesWeightsExtraKind, this.matricesWeightsExtra); }
+        
     }
 
     /**
@@ -692,64 +495,6 @@ export class VertexData {
 
     private static _ExtractFrom(meshOrGeometry: IGetSetVerticesData, copyWhenShared?: boolean, forceCopy?: boolean): VertexData {
         var result = new VertexData();
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.PositionKind)) {
-            result.positions = meshOrGeometry.getVerticesData(VertexBuffer.PositionKind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.NormalKind)) {
-            result.normals = meshOrGeometry.getVerticesData(VertexBuffer.NormalKind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.TangentKind)) {
-            result.tangents = meshOrGeometry.getVerticesData(VertexBuffer.TangentKind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.UVKind)) {
-            result.uvs = meshOrGeometry.getVerticesData(VertexBuffer.UVKind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.UV2Kind)) {
-            result.uvs2 = meshOrGeometry.getVerticesData(VertexBuffer.UV2Kind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.UV3Kind)) {
-            result.uvs3 = meshOrGeometry.getVerticesData(VertexBuffer.UV3Kind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.UV4Kind)) {
-            result.uvs4 = meshOrGeometry.getVerticesData(VertexBuffer.UV4Kind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.UV5Kind)) {
-            result.uvs5 = meshOrGeometry.getVerticesData(VertexBuffer.UV5Kind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.UV6Kind)) {
-            result.uvs6 = meshOrGeometry.getVerticesData(VertexBuffer.UV6Kind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.ColorKind)) {
-            result.colors = meshOrGeometry.getVerticesData(VertexBuffer.ColorKind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.MatricesIndicesKind)) {
-            result.matricesIndices = meshOrGeometry.getVerticesData(VertexBuffer.MatricesIndicesKind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.MatricesWeightsKind)) {
-            result.matricesWeights = meshOrGeometry.getVerticesData(VertexBuffer.MatricesWeightsKind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.MatricesIndicesExtraKind)) {
-            result.matricesIndicesExtra = meshOrGeometry.getVerticesData(VertexBuffer.MatricesIndicesExtraKind, copyWhenShared, forceCopy);
-        }
-
-        if (meshOrGeometry.isVerticesDataPresent(VertexBuffer.MatricesWeightsExtraKind)) {
-            result.matricesWeightsExtra = meshOrGeometry.getVerticesData(VertexBuffer.MatricesWeightsExtraKind, copyWhenShared, forceCopy);
-        }
-
-        result.indices = meshOrGeometry.getIndices(copyWhenShared, forceCopy);
 
         return result;
     }
@@ -1358,75 +1103,51 @@ export class VertexData {
 
         // positions
         var positions = parsedVertexData.positions;
-        if (positions) {
-            vertexData.set(positions, VertexBuffer.PositionKind);
-        }
+
 
         // normals
         var normals = parsedVertexData.normals;
-        if (normals) {
-            vertexData.set(normals, VertexBuffer.NormalKind);
-        }
+
 
         // tangents
         var tangents = parsedVertexData.tangents;
-        if (tangents) {
-            vertexData.set(tangents, VertexBuffer.TangentKind);
-        }
+
 
         // uvs
         var uvs = parsedVertexData.uvs;
-        if (uvs) {
-            vertexData.set(uvs, VertexBuffer.UVKind);
-        }
+
 
         // uv2s
         var uv2s = parsedVertexData.uv2s;
-        if (uv2s) {
-            vertexData.set(uv2s, VertexBuffer.UV2Kind);
-        }
+
 
         // uv3s
         var uv3s = parsedVertexData.uv3s;
-        if (uv3s) {
-            vertexData.set(uv3s, VertexBuffer.UV3Kind);
-        }
+
 
         // uv4s
         var uv4s = parsedVertexData.uv4s;
-        if (uv4s) {
-            vertexData.set(uv4s, VertexBuffer.UV4Kind);
-        }
+
 
         // uv5s
         var uv5s = parsedVertexData.uv5s;
-        if (uv5s) {
-            vertexData.set(uv5s, VertexBuffer.UV5Kind);
-        }
+
 
         // uv6s
         var uv6s = parsedVertexData.uv6s;
-        if (uv6s) {
-            vertexData.set(uv6s, VertexBuffer.UV6Kind);
-        }
+
 
         // colors
         var colors = parsedVertexData.colors;
-        if (colors) {
-            vertexData.set(Color4.CheckColors4(colors, positions.length / 3), VertexBuffer.ColorKind);
-        }
+
 
         // matricesIndices
         var matricesIndices = parsedVertexData.matricesIndices;
-        if (matricesIndices) {
-            vertexData.set(matricesIndices, VertexBuffer.MatricesIndicesKind);
-        }
+
 
         // matricesWeights
         var matricesWeights = parsedVertexData.matricesWeights;
-        if (matricesWeights) {
-            vertexData.set(matricesWeights, VertexBuffer.MatricesWeightsKind);
-        }
+
 
         // indices
         var indices = parsedVertexData.indices;

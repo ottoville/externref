@@ -1,32 +1,6 @@
 import { WebGL2ShaderProcessor } from "../WebGL/webGL2ShaderProcessors";
-import { VertexBuffer } from "../../Meshes/buffer";
 
-// These numbers must match the values for bgfx::Attrib::Enum
-const attributeLocations: { [kind: string]: number } = {
-    [VertexBuffer.PositionKind]: 0,
-    [VertexBuffer.NormalKind]: 1,
-    [VertexBuffer.TangentKind]: 2,
-    [VertexBuffer.UVKind]: 10,
-    [VertexBuffer.UV2Kind]: 11,
-    [VertexBuffer.UV3Kind]: 12,
-    [VertexBuffer.UV4Kind]: 13,
-    [VertexBuffer.ColorKind]: 4,
-    [VertexBuffer.MatricesIndicesKind]: 8,
-    [VertexBuffer.MatricesWeightsKind]: 9,
-};
-// Remap BJS names to bgfx names
-const attributeBGFXName: { [kind: string]: string } = {
-    [VertexBuffer.PositionKind]: "a_position",
-    [VertexBuffer.NormalKind]: "a_normal",
-    [VertexBuffer.TangentKind]: "a_tangent",
-    [VertexBuffer.UVKind]: "a_texcoord0",
-    [VertexBuffer.UV2Kind]: "a_texcoord1",
-    [VertexBuffer.UV3Kind]: "a_texcoord2",
-    [VertexBuffer.UV4Kind]: "a_texcoord3",
-    [VertexBuffer.ColorKind]: "a_color0",
-    [VertexBuffer.MatricesIndicesKind]: "a_indices",
-    [VertexBuffer.MatricesWeightsKind]: "a_weight",
-};
+
 
 // Must match bgfx::Attrib::TexCoord0
 const firstGenericAttributeLocation = 10;
@@ -52,23 +26,7 @@ export class NativeShaderProcessor extends WebGL2ShaderProcessor {
     }
 
     public attributeProcessor(attribute: string): string {
-        const match = attribute.match(/attribute\s+[^\s]+\s+([^\s]+)\s*(?:\[.+\])?\s*;/)!;
-        const name = match[1];
-
-        let location = attributeLocations[name];
-        if (location === undefined) {
-            location = this._genericAttributeLocation++;
-            if (location > lastGenericAttributeLocation) {
-                throw new Error("Exceeded maximum custom attributes");
-            }
-        }
-        let newName = attributeBGFXName[name];
-        if (newName === undefined) {
-            throw new Error("Can't find bgfx name mapping");
-        }
-        attribute = attribute.replace(name, newName);
-        this._replacements.push({ searchValue: new RegExp(`\\b${name}\\b`, 'g'), replaceValue: `${newName}` });
-        return `layout(location=${location}) ${super.attributeProcessor(attribute)}`;
+        return "";
     }
 
     public varyingProcessor(varying: string, isFragment: boolean): string {

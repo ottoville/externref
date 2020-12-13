@@ -1,6 +1,5 @@
 import { Nullable, IndicesArray, DataArray } from "../types";
 import { Engine } from "../Engines/engine";
-import { VertexBuffer } from "../Meshes/buffer";
 import { IInternalTextureLoader } from "../Materials/Textures/internalTextureLoader";
 import { Texture } from "../Materials/Textures/texture";
 import { BaseTexture } from "../Materials/Textures/baseTexture";
@@ -787,7 +786,7 @@ export class NativeEngine extends Engine {
         return buffer;
     }
 
-    public recordVertexArrayObject(vertexBuffers: { [key: string]: VertexBuffer; }, indexBuffer: Nullable<NativeDataBuffer>, effect: any): WebGLVertexArrayObject {
+    public recordVertexArrayObject(vertexBuffers: { [key: string]: any; }, indexBuffer: Nullable<NativeDataBuffer>, effect: any): WebGLVertexArrayObject {
         const vertexArray = this._native.createVertexArray();
 
         if (indexBuffer) {

@@ -2,7 +2,6 @@ import { serializeAsVector3, serialize, serializeAsMeshReference } from "../Misc
 import { SmartArray } from "../Misc/smartArray";
 import { Logger } from "../Misc/logger";
 import { Vector2, Vector3, Matrix } from "../Maths/math.vector";
-import { VertexBuffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Camera } from "../Cameras/camera";
@@ -162,64 +161,7 @@ export class VolumetricLightScatteringPostProcess extends PostProcess {
     }
 
     private _isReady(subMesh: any, useInstances: boolean): boolean {
-        var mesh = subMesh.getMesh();
-
-        // Render this.mesh as default
-        if (mesh === this.mesh && mesh.material) {
-            return mesh.material.isReady(mesh);
-        }
-
-        var defines = [];
-        var attribs = [VertexBuffer.PositionKind];
-        var material: any = subMesh.getMaterial();
-
-        // Alpha test
-        if (material) {
-            if (material.needAlphaTesting()) {
-                defines.push("#define ALPHATEST");
-            }
-
-            if (mesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
-                attribs.push(VertexBuffer.UVKind);
-                defines.push("#define UV1");
-            }
-            if (mesh.isVerticesDataPresent(VertexBuffer.UV2Kind)) {
-                attribs.push(VertexBuffer.UV2Kind);
-                defines.push("#define UV2");
-            }
-        }
-
-        // Bones
-        if (mesh.useBones && mesh.computeBonesUsingShaders) {
-            attribs.push(VertexBuffer.MatricesIndicesKind);
-            attribs.push(VertexBuffer.MatricesWeightsKind);
-            defines.push("#define NUM_BONE_INFLUENCERS " + mesh.numBoneInfluencers);
-            defines.push("#define BonesPerMesh " + (mesh.skeleton ? (mesh.skeleton.bones.length + 1) : 0));
-        } else {
-            defines.push("#define NUM_BONE_INFLUENCERS 0");
-        }
-
-        // Instances
-        if (useInstances) {
-            defines.push("#define INSTANCES");
-            MaterialHelper.PushAttributesForInstances(attribs);
-        }
-
-        // Get correct effect
-        var join = defines.join("\n");
-        if (this._cachedDefines !== join) {
-            this._cachedDefines = join;
-            this._volumetricLightScatteringPass = mesh.getScene().getEngine().createEffect(
-                "volumetricLightScatteringPass",
-                attribs,
-                ["world", "mBones", "viewProjection", "diffuseMatrix"],
-                ["diffuseSampler"],
-                join,
-                undefined, undefined, undefined,
-                { maxSimultaneousMorphTargets: mesh.numBoneInfluencers }
-            );
-        }
-
+        
         return this._volumetricLightScatteringPass.isReady();
     }
 

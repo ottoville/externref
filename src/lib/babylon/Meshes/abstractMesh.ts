@@ -6,7 +6,6 @@ import { Scene, IDisposable } from "../scene";
 import { Quaternion, Matrix, Vector3, TmpVectors, Vector2 } from "../Maths/math.vector";
 import { Engine } from "../Engines/engine";
 import { Node } from "../node";
-import { VertexBuffer } from "../Meshes/buffer";
 import { VertexData, IGetSetVerticesData } from "../Meshes/mesh.vertexData";
 import { TransformNode } from "../Meshes/transformNode";
 import { PickingInfo } from "../Collisions/pickingInfo";
@@ -1050,7 +1049,7 @@ export class AbstractMesh extends TransformNode implements IDisposable, ICullabl
 
     /** Gets a boolean indicating if this mesh has skinning data and an attached skeleton */
     public get useBones(): boolean {
-        return (<boolean>(this.skeleton && this.getScene().skeletonsEnabled && this.isVerticesDataPresent(VertexBuffer.MatricesIndicesKind) && this.isVerticesDataPresent(VertexBuffer.MatricesWeightsKind)));
+        return false
     }
 
     /** @hidden */
@@ -1217,60 +1216,7 @@ export class AbstractMesh extends TransformNode implements IDisposable, ICullabl
 
     /** @hidden */
     public _getPositionData(applySkeleton: boolean): Nullable<FloatArray> {
-        var data = this.getVerticesData(VertexBuffer.PositionKind);
-
-        if (data && applySkeleton && this.skeleton) {
-            data = Tools.Slice(data);
-            this._generatePointsArray();
-
-            var matricesIndicesData = this.getVerticesData(VertexBuffer.MatricesIndicesKind);
-            var matricesWeightsData = this.getVerticesData(VertexBuffer.MatricesWeightsKind);
-            if (matricesWeightsData && matricesIndicesData) {
-                var needExtras = this.numBoneInfluencers > 4;
-                var matricesIndicesExtraData = needExtras ? this.getVerticesData(VertexBuffer.MatricesIndicesExtraKind) : null;
-                var matricesWeightsExtraData = needExtras ? this.getVerticesData(VertexBuffer.MatricesWeightsExtraKind) : null;
-
-                this.skeleton.prepare();
-                var skeletonMatrices = this.skeleton.getTransformMatrices(this);
-
-                var tempVector = TmpVectors.Vector3[0];
-                var finalMatrix = TmpVectors.Matrix[0];
-                var tempMatrix = TmpVectors.Matrix[1];
-
-                var matWeightIdx = 0;
-                for (var index = 0; index < data.length; index += 3, matWeightIdx += 4) {
-                    finalMatrix.reset();
-
-                    var inf: number;
-                    var weight: number;
-                    for (inf = 0; inf < 4; inf++) {
-                        weight = matricesWeightsData[matWeightIdx + inf];
-                        if (weight > 0) {
-                            Matrix.FromFloat32ArrayToRefScaled(skeletonMatrices, Math.floor(matricesIndicesData[matWeightIdx + inf] * 16), weight, tempMatrix);
-                            finalMatrix.addToSelf(tempMatrix);
-                        }
-                    }
-                    if (needExtras) {
-                        for (inf = 0; inf < 4; inf++) {
-                            weight = matricesWeightsExtraData![matWeightIdx + inf];
-                            if (weight > 0) {
-                                Matrix.FromFloat32ArrayToRefScaled(skeletonMatrices, Math.floor(matricesIndicesExtraData![matWeightIdx + inf] * 16), weight, tempMatrix);
-                                finalMatrix.addToSelf(tempMatrix);
-                            }
-                        }
-                    }
-
-                    Vector3.TransformCoordinatesFromFloatsToRef(data[index], data[index + 1], data[index + 2], finalMatrix, tempVector);
-                    tempVector.toArray(data, index);
-
-                    if (this._positions) {
-                        this._positions[index / 3].copyFrom(tempVector);
-                    }
-                }
-            }
-        }
-
-        return data;
+        return null
     }
 
     /** @hidden */
@@ -1781,50 +1727,9 @@ export class AbstractMesh extends TransformNode implements IDisposable, ICullabl
         if (!data.facetDataEnabled) {
             this._initFacetData();
         }
-        var positions = this.getVerticesData(VertexBuffer.PositionKind);
         var indices = this.getIndices();
-        var normals = this.getVerticesData(VertexBuffer.NormalKind);
         var bInfo = this.getBoundingInfo();
 
-        if (data.facetDepthSort && !data.facetDepthSortEnabled) {
-            // init arrays, matrix and sort function on first call
-            data.facetDepthSortEnabled = true;
-            if (indices instanceof Uint16Array) {
-                data.depthSortedIndices = new Uint16Array(indices!);
-            }
-            else if (indices instanceof Uint32Array) {
-                data.depthSortedIndices = new Uint32Array(indices!);
-            }
-            else {
-                var needs32bits = false;
-                for (var i = 0; i < indices!.length; i++) {
-                    if (indices![i] > 65535) {
-                        needs32bits = true;
-                        break;
-                    }
-                }
-                if (needs32bits) {
-                    data.depthSortedIndices = new Uint32Array(indices!);
-                }
-                else {
-                    data.depthSortedIndices = new Uint16Array(indices!);
-                }
-            }
-            data.facetDepthSortFunction = function(f1, f2) {
-                return (f2.sqDistance - f1.sqDistance);
-            };
-            if (!data.facetDepthSortFrom) {
-                var camera = this.getScene().activeCamera;
-                data.facetDepthSortFrom = (camera) ? camera.position : Vector3.Zero();
-            }
-            data.depthSortedFacets = [];
-            for (var f = 0; f < data.facetNb; f++) {
-                var depthSortedFacet = { ind: f * 3, sqDistance: 0.0 };
-                data.depthSortedFacets.push(depthSortedFacet);
-            }
-            data.invertedMatrix = Matrix.Identity();
-            data.facetDepthSortOrigin = Vector3.Zero();
-        }
 
         data.bbSize.x = (bInfo.maximum.x - bInfo.minimum.x > Epsilon) ? bInfo.maximum.x - bInfo.minimum.x : Epsilon;
         data.bbSize.y = (bInfo.maximum.y - bInfo.minimum.y > Epsilon) ? bInfo.maximum.y - bInfo.minimum.y : Epsilon;
@@ -1854,7 +1759,7 @@ export class AbstractMesh extends TransformNode implements IDisposable, ICullabl
             data.facetParameters.distanceTo = data.facetDepthSortOrigin;
         }
         data.facetParameters.depthSortedFacets = data.depthSortedFacets;
-        VertexData.ComputeNormals(positions, indices, normals, data.facetParameters);
+
 
         if (data.facetDepthSort && data.facetDepthSortEnabled) {
             data.depthSortedFacets.sort(data.facetDepthSortFunction);
@@ -2123,18 +2028,6 @@ export class AbstractMesh extends TransformNode implements IDisposable, ICullabl
      * @returns the current mesh
      */
     public createNormals(updatable: boolean): AbstractMesh {
-        var positions = this.getVerticesData(VertexBuffer.PositionKind);
-        var indices = this.getIndices();
-        var normals: FloatArray;
-
-        if (this.isVerticesDataPresent(VertexBuffer.NormalKind)) {
-            normals = (<FloatArray>this.getVerticesData(VertexBuffer.NormalKind));
-        } else {
-            normals = [];
-        }
-
-        VertexData.ComputeNormals(positions, indices, normals, { useRightHandedSystem: this.getScene().useRightHandedSystem });
-        this.setVerticesData(VertexBuffer.NormalKind, normals, updatable);
         return this;
     }
 

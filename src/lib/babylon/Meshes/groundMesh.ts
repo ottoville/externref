@@ -1,6 +1,5 @@
 import { Scene } from "../scene";
 import { Vector3, Vector2, TmpVectors, Vector4 } from "../Maths/math.vector";
-import { VertexBuffer } from "../Meshes/buffer";
 import { Mesh } from "../Meshes/mesh";
 
 Mesh._GroundMeshParser = (parsedMesh: any, scene: Scene): Mesh => {
@@ -209,75 +208,6 @@ export class GroundMesh extends Mesh {
     // facet2 :  Vector4(a, b, c, d) = second facet 3D plane equation : ax + by + cz + d = 0
     // Returns the GroundMesh.
     private _computeHeightQuads(): GroundMesh {
-        var positions = this.getVerticesData(VertexBuffer.PositionKind);
-
-        if (!positions) {
-            return this;
-        }
-
-        var v1 = TmpVectors.Vector3[3];
-        var v2 = TmpVectors.Vector3[2];
-        var v3 = TmpVectors.Vector3[1];
-        var v4 = TmpVectors.Vector3[0];
-        var v1v2 = TmpVectors.Vector3[4];
-        var v1v3 = TmpVectors.Vector3[5];
-        var v1v4 = TmpVectors.Vector3[6];
-        var norm1 = TmpVectors.Vector3[7];
-        var norm2 = TmpVectors.Vector3[8];
-        var i = 0;
-        var j = 0;
-        var k = 0;
-        var cd = 0;     // 2D slope coefficient : z = cd * x + h
-        var h = 0;
-        var d1 = 0;     // facet plane equation : ax + by + cz + d = 0
-        var d2 = 0;
-
-        var subdivisionsX = this._subdivisionsX;
-        var subdivisionsY = this._subdivisionsY;
-
-        for (var row = 0; row < subdivisionsY; row++) {
-            for (var col = 0; col < subdivisionsX; col++) {
-                i = col * 3;
-                j = row * (subdivisionsX + 1) * 3;
-                k = (row + 1) * (subdivisionsX + 1) * 3;
-                v1.x = positions[j + i];
-                v1.y = positions[j + i + 1];
-                v1.z = positions[j + i + 2];
-                v2.x = positions[j + i + 3];
-                v2.y = positions[j + i + 4];
-                v2.z = positions[j + i + 5];
-                v3.x = positions[k + i];
-                v3.y = positions[k + i + 1];
-                v3.z = positions[k + i + 2];
-                v4.x = positions[k + i + 3];
-                v4.y = positions[k + i + 4];
-                v4.z = positions[k + i + 5];
-
-                // 2D slope V1V4
-                cd = (v4.z - v1.z) / (v4.x - v1.x);
-                h = v1.z - cd * v1.x;             // v1 belongs to the slope
-
-                // facet equations :
-                // we compute each facet normal vector
-                // the equation of the facet plane is : norm.x * x + norm.y * y + norm.z * z + d = 0
-                // we compute the value d by applying the equation to v1 which belongs to the plane
-                // then we store the facet equation in a Vector4
-                v2.subtractToRef(v1, v1v2);
-                v3.subtractToRef(v1, v1v3);
-                v4.subtractToRef(v1, v1v4);
-                Vector3.CrossToRef(v1v4, v1v3, norm1);  // caution : CrossToRef uses the Tmp class
-                Vector3.CrossToRef(v1v2, v1v4, norm2);
-                norm1.normalize();
-                norm2.normalize();
-                d1 = -(norm1.x * v1.x + norm1.y * v1.y + norm1.z * v1.z);
-                d2 = -(norm2.x * v2.x + norm2.y * v2.y + norm2.z * v2.z);
-
-                var quad = this._heightQuads[row * subdivisionsX + col];
-                quad.slope.copyFromFloats(cd, h);
-                quad.facet1.copyFromFloats(norm1.x, norm1.y, norm1.z, d1);
-                quad.facet2.copyFromFloats(norm2.x, norm2.y, norm2.z, d2);
-            }
-        }
         return this;
     }
 

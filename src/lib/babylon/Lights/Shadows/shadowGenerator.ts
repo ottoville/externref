@@ -3,7 +3,6 @@ import { Nullable } from "../../types";
 import { Scene } from "../../scene";
 import { Matrix, Vector3, Vector2 } from "../../Maths/math.vector";
 import { Color4 } from "../../Maths/math.color";
-import { VertexBuffer } from "../../Meshes/buffer";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
 import { Mesh } from "../../Meshes/mesh";
 
@@ -1054,83 +1053,21 @@ export class ShadowGenerator implements IShadowGenerator {
             defines.push("#define DEPTHTEXTURE");
         }
 
-        var attribs = [VertexBuffer.PositionKind];
 
         var mesh = subMesh.getMesh();
         var material = subMesh.getMaterial();
 
-        // Normal bias.
-        if (this.normalBias && mesh.isVerticesDataPresent(VertexBuffer.NormalKind)) {
-            attribs.push(VertexBuffer.NormalKind);
-            defines.push("#define NORMAL");
-            if (mesh.nonUniformScaling) {
-                defines.push("#define NONUNIFORMSCALING");
-            }
-            if (this.getLight().getTypeID() === Light.LIGHTTYPEID_DIRECTIONALLIGHT) {
-                defines.push("#define DIRECTIONINLIGHTDATA");
-            }
-        }
 
-        // Alpha test
-        if (material && material.needAlphaTesting()) {
-            var alphaTexture = material.getAlphaTestTexture();
-            if (alphaTexture) {
-                defines.push("#define ALPHATEST");
-                if (mesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
-                    attribs.push(VertexBuffer.UVKind);
-                    defines.push("#define UV1");
-                }
-                if (mesh.isVerticesDataPresent(VertexBuffer.UV2Kind)) {
-                    if (alphaTexture.coordinatesIndex === 1) {
-                        attribs.push(VertexBuffer.UV2Kind);
-                        defines.push("#define UV2");
-                    }
-                }
-            }
-        }
+
 
         // Bones
         const fallbacks = new EffectFallbacks();
-        if (mesh.useBones && mesh.computeBonesUsingShaders && mesh.skeleton) {
-            attribs.push(VertexBuffer.MatricesIndicesKind);
-            attribs.push(VertexBuffer.MatricesWeightsKind);
-            if (mesh.numBoneInfluencers > 4) {
-                attribs.push(VertexBuffer.MatricesIndicesExtraKind);
-                attribs.push(VertexBuffer.MatricesWeightsExtraKind);
-            }
-            const skeleton = mesh.skeleton;
-            defines.push("#define NUM_BONE_INFLUENCERS " + mesh.numBoneInfluencers);
-            if (mesh.numBoneInfluencers > 0) {
-                fallbacks.addCPUSkinningFallback(0, mesh);
-            }
-
-            if (skeleton.isUsingTextureForMatrices) {
-                defines.push("#define BONETEXTURE");
-            } else {
-                defines.push("#define BonesPerMesh " + (skeleton.bones.length + 1));
-            }
-
-        } else {
-            defines.push("#define NUM_BONE_INFLUENCERS 0");
-        }
+       
 
         // Morph targets
         var manager = (<Mesh>mesh).morphTargetManager;
         let morphInfluencers = 0;
-        if (manager) {
-            if (manager.numInfluencers > 0) {
-                defines.push("#define MORPHTARGETS");
-                morphInfluencers = manager.numInfluencers;
-                defines.push("#define NUM_MORPH_INFLUENCERS " + morphInfluencers);
-                MaterialHelper.PrepareAttributesForMorphTargetsInfluencers(attribs, mesh, morphInfluencers);
-            }
-        }
 
-        // Instances
-        if (useInstances) {
-            defines.push("#define INSTANCES");
-            MaterialHelper.PushAttributesForInstances(attribs);
-        }
 
         if (this.customShaderOptions) {
             if (this.customShaderOptions.defines) {
@@ -1155,13 +1092,6 @@ export class ShadowGenerator implements IShadowGenerator {
             if (this.customShaderOptions) {
                 shaderName = this.customShaderOptions.shaderName;
 
-                if (this.customShaderOptions.attributes) {
-                    for (var attrib of this.customShaderOptions.attributes) {
-                        if (attribs.indexOf(attrib) === -1) {
-                            attribs.push(attrib);
-                        }
-                    }
-                }
 
                 if (this.customShaderOptions.uniforms) {
                     for (var uniform of this.customShaderOptions.uniforms) {
@@ -1179,11 +1109,6 @@ export class ShadowGenerator implements IShadowGenerator {
                     }
                 }
             }
-
-            this._effect = this._scene.getEngine().createEffect(shaderName,
-                attribs, uniforms,
-                samplers, join,
-                fallbacks, undefined, undefined, { maxSimultaneousMorphTargets: morphInfluencers });
         }
 
         if (!this._effect.isReady()) {

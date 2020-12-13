@@ -1,7 +1,6 @@
 import { Nullable, IndicesArray } from "../../types";
 import { Vector3, Matrix } from "../../Maths/math.vector";
 import { Mesh, _CreationDataStorage } from "../mesh";
-import { VertexBuffer } from "../buffer";
 import { VertexData } from "../mesh.vertexData";
 import { AbstractMesh } from "../abstractMesh";
 import { Camera } from "../../Cameras/camera";
@@ -38,8 +37,6 @@ export class DecalBuilder {
      */
     public static CreateDecal(name: string, sourceMesh: AbstractMesh, options: { position?: Vector3, normal?: Vector3, size?: Vector3, angle?: number }): Mesh {
         var indices = <IndicesArray>sourceMesh.getIndices();
-        var positions = sourceMesh.getVerticesData(VertexBuffer.PositionKind);
-        var normals = sourceMesh.getVerticesData(VertexBuffer.NormalKind);
         var position = options.position || Vector3.Zero();
         var normal = options.normal || Vector3.Up();
         var size = options.size || Vector3.One();
@@ -71,25 +68,6 @@ export class DecalBuilder {
         vertexData.uvs = [];
 
         var currentVertexDataIndex = 0;
-
-        var extractDecalVector3 = (indexId: number): PositionNormalVertex => {
-            var result = new PositionNormalVertex();
-            if (!indices || !positions || !normals) {
-                return result;
-            }
-
-            var vertexId = indices[indexId];
-            result.position = new Vector3(positions[vertexId * 3], positions[vertexId * 3 + 1], positions[vertexId * 3 + 2]);
-
-            // Send vector to decal local world
-            result.position = Vector3.TransformCoordinates(result.position, transformMatrix);
-
-            // Get normal
-            result.normal = new Vector3(normals[vertexId * 3], normals[vertexId * 3 + 1], normals[vertexId * 3 + 2]);
-            result.normal = Vector3.TransformNormal(result.normal, transformMatrix);
-
-            return result;
-        }; // Inspired by https://github.com/mrdoob/three.js/blob/eee231960882f6f3b6113405f524956145148146/examples/js/geometries/DecalGeometry.js
         var clip = (vertices: PositionNormalVertex[], axis: Vector3): PositionNormalVertex[] => {
             if (vertices.length === 0) {
                 return vertices;
@@ -209,10 +187,6 @@ export class DecalBuilder {
         };
         for (var index = 0; index < indices.length; index += 3) {
             var faceVertices = new Array<PositionNormalVertex>();
-
-            faceVertices.push(extractDecalVector3(index));
-            faceVertices.push(extractDecalVector3(index + 1));
-            faceVertices.push(extractDecalVector3(index + 2));
 
             // Clip
             faceVertices = clip(faceVertices, new Vector3(1, 0, 0));

@@ -1,7 +1,6 @@
 import { SerializationHelper, serialize, expandToProperty, serializeAsVector2, serializeAsTexture } from "../../Misc/decorators";
 import { UniformBuffer } from "../../Materials/uniformBuffer";
 import { AbstractMesh } from "../../Meshes/abstractMesh";
-import { VertexBuffer } from "../../Meshes/buffer";
 import { Vector2 } from "../../Maths/math.vector";
 import { Scene } from "../../scene";
 import { MaterialFlags } from "../../Materials/materialFlags";
@@ -103,27 +102,7 @@ export class PBRAnisotropicConfiguration {
      * @param scene defines the scene the material belongs to.
      */
     public prepareDefines(defines: IMaterialAnisotropicDefines, mesh: AbstractMesh, scene: Scene): void {
-        if (this._isEnabled) {
-            defines.ANISOTROPIC = this._isEnabled;
-            if (this._isEnabled && !mesh.isVerticesDataPresent(VertexBuffer.TangentKind)) {
-                defines._needUVs = true;
-                defines.MAINUV1 = true;
-            }
 
-            if (defines._areTexturesDirty) {
-                if (scene.texturesEnabled) {
-                    if (this._texture && MaterialFlags.AnisotropicTextureEnabled) {
-                        MaterialHelper.PrepareDefinesForMergedUV(this._texture, defines, "ANISOTROPIC_TEXTURE");
-                    } else {
-                        defines.ANISOTROPIC_TEXTURE = false;
-                    }
-                }
-            }
-        }
-        else {
-            defines.ANISOTROPIC = false;
-            defines.ANISOTROPIC_TEXTURE = false;
-        }
     }
 
     /**

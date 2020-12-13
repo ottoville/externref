@@ -1,5 +1,4 @@
 import { Matrix } from "../Maths/math.vector";
-import { VertexBuffer } from "../Meshes/buffer";
 import { Mesh } from "../Meshes/mesh";
 import { Constants } from "../Engines/constants";
 import { SmartArray } from "../Misc/smartArray";
@@ -172,94 +171,6 @@ export class GeometryBufferRenderer {
      * @returns true if ready otherwise false
      */
     public isReady(subMesh: any, useInstances: boolean): boolean {
-        var material: any = subMesh.getMaterial();
-
-        if (material && material.disableDepthWrite) {
-            return false;
-        }
-
-        var defines = [];
-
-        var attribs = [VertexBuffer.PositionKind, VertexBuffer.NormalKind];
-
-        var mesh = subMesh.getMesh();
-
-        // Alpha test
-        if (material && material.needAlphaTesting()) {
-            defines.push("#define ALPHATEST");
-            if (mesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
-                attribs.push(VertexBuffer.UVKind);
-                defines.push("#define UV1");
-            }
-            if (mesh.isVerticesDataPresent(VertexBuffer.UV2Kind)) {
-                attribs.push(VertexBuffer.UV2Kind);
-                defines.push("#define UV2");
-            }
-        }
-
-        // Buffers
-        if (this._enablePosition) {
-            defines.push("#define POSITION");
-            defines.push("#define POSITION_INDEX " + this._positionIndex);
-        }
-
-        if (this._enableVelocity) {
-            defines.push("#define VELOCITY");
-            defines.push("#define VELOCITY_INDEX " + this._velocityIndex);
-            if (this.excludedSkinnedMeshesFromVelocity.indexOf(mesh) === -1) {
-                defines.push("#define BONES_VELOCITY_ENABLED");
-            }
-        }
-
-        // Bones
-        if (mesh.useBones && mesh.computeBonesUsingShaders) {
-            attribs.push(VertexBuffer.MatricesIndicesKind);
-            attribs.push(VertexBuffer.MatricesWeightsKind);
-            if (mesh.numBoneInfluencers > 4) {
-                attribs.push(VertexBuffer.MatricesIndicesExtraKind);
-                attribs.push(VertexBuffer.MatricesWeightsExtraKind);
-            }
-            defines.push("#define NUM_BONE_INFLUENCERS " + mesh.numBoneInfluencers);
-            defines.push("#define BonesPerMesh " + (mesh.skeleton ? mesh.skeleton.bones.length + 1 : 0));
-        } else {
-            defines.push("#define NUM_BONE_INFLUENCERS 0");
-        }
-
-        // Morph targets
-        const morphTargetManager = (mesh as Mesh).morphTargetManager;
-        let numMorphInfluencers = 0;
-        if (morphTargetManager) {
-            if (morphTargetManager.numInfluencers > 0) {
-                numMorphInfluencers = morphTargetManager.numInfluencers;
-
-                defines.push("#define MORPHTARGETS");
-                defines.push("#define NUM_MORPH_INFLUENCERS " + numMorphInfluencers);
-
-                MaterialHelper.PrepareAttributesForMorphTargetsInfluencers(attribs, mesh, numMorphInfluencers);
-            }
-        }
-
-        // Instances
-        if (useInstances) {
-            defines.push("#define INSTANCES");
-            MaterialHelper.PushAttributesForInstances(attribs);
-        }
-
-        // Setup textures count
-        defines.push("#define RENDER_TARGET_COUNT " + this._multiRenderTarget.textures.length);
-
-        // Get correct effect
-        var join = defines.join("\n");
-        if (this._cachedDefines !== join) {
-            this._cachedDefines = join;
-            this._effect = this._scene.getEngine().createEffect("geometry",
-                attribs,
-                ["world", "mBones", "viewProjection", "diffuseMatrix", "view", "previousWorld", "previousViewProjection", "mPreviousBones", "morphTargetInfluences"],
-                ["diffuseSampler"], join,
-                undefined, undefined, undefined,
-                { buffersCount: this._enablePosition ? 3 : 2, maxSimultaneousMorphTargets: numMorphInfluencers });
-        }
-
         return this._effect.isReady();
     }
 

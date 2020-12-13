@@ -1,7 +1,6 @@
 import { Nullable, IndicesArray, FloatArray } from "../types";
 import { Vector3, Matrix, TmpVectors, Quaternion } from "../Maths/math.vector";
 import { Color4 } from '../Maths/math.color';
-import { VertexBuffer } from "../Meshes/buffer";
 import { VertexData } from "../Meshes/mesh.vertexData";
 import { Mesh } from "../Meshes/mesh";
 import { DiscBuilder } from "../Meshes/Builders/discBuilder";
@@ -186,70 +185,7 @@ export class SolidParticleSystem implements IDisposable {
      * @returns the created mesh
      */
     public buildMesh(): Mesh {
-        if (!this._isNotBuilt && this.mesh) {
-            return this.mesh;
-        }
-        if (this.nbParticles === 0 && !this.mesh) {
-            var triangle = DiscBuilder.CreateDisc("", { radius: 1, tessellation: 3 }, this._scene);
-            this.addShape(triangle, 1);
-            triangle.dispose();
-        }
-        this._indices32 = (this._needs32Bits) ? new Uint32Array(this._indices) : new Uint16Array(this._indices);
-        this._positions32 = new Float32Array(this._positions);
-        this._uvs32 = new Float32Array(this._uvs);
-        this._colors32 = new Float32Array(this._colors);
-
-        if (!this.mesh) {       // in case it's already expanded
-            var mesh = new Mesh(this.name, this._scene);
-            this.mesh = mesh;
-        }
-        if (!this._updatable && this._multimaterialEnabled) {
-            this._sortParticlesByMaterial();    // this may reorder the indices32
-        }
-        if (this.recomputeNormals) {
-            VertexData.ComputeNormals(this._positions32, this._indices32, this._normals);
-        }
-
-        this._normals32 = new Float32Array(this._normals);
-        this._fixedNormal32 = new Float32Array(this._normals);
-        if (this._mustUnrotateFixedNormals) {  // the particles could be created already rotated in the mesh with a positionFunction
-            this._unrotateFixedNormals();
-        }
-        var vertexData = new VertexData();
-        vertexData.indices = (this._depthSort) ? this._indices : this._indices32;
-        vertexData.set(this._positions32, VertexBuffer.PositionKind);
-        vertexData.set(this._normals32, VertexBuffer.NormalKind);
-
-        if (this._uvs32.length > 0) {
-            vertexData.set(this._uvs32, VertexBuffer.UVKind);
-        }
-        if (this._colors32.length > 0) {
-            vertexData.set(this._colors32, VertexBuffer.ColorKind);
-        }
-
-        vertexData.applyToMesh(this.mesh, this._updatable);
-        this.mesh.isPickable = this._pickable;
-
-        if (this._multimaterialEnabled) {
-            this.setMultiMaterial(this._materials);
-        }
-
-        if (!this._expandable) {
-            // free memory
-            if (!this._depthSort && !this._multimaterialEnabled) {
-                (<any>this._indices) = null;
-            }
-            (<any>this._positions) = null;
-            (<any>this._normals) = null;
-            (<any>this._uvs) = null;
-            (<any>this._colors) = null;
-
-            if (!this._updatable) {
-                this.particles.length = 0;
-            }
-        }
-        this._isNotBuilt = false;
-        this.recomputeNormals = false;
+        
         return this.mesh;
     }
 
@@ -268,11 +204,9 @@ export class SolidParticleSystem implements IDisposable {
         var size: number = (options && options.facetNb) || 1;
         var number: number = (options && options.number) || 0;
         var delta: number = (options && options.delta) || 0;
-        var meshPos = <FloatArray>mesh.getVerticesData(VertexBuffer.PositionKind);
+
         var meshInd = <IndicesArray>mesh.getIndices();
-        var meshUV = <FloatArray>mesh.getVerticesData(VertexBuffer.UVKind);
-        var meshCol = <FloatArray>mesh.getVerticesData(VertexBuffer.ColorKind);
-        var meshNor = <FloatArray>mesh.getVerticesData(VertexBuffer.NormalKind);
+
         var storage = (options && options.storage) ? options.storage : null;
 
         var f: number = 0;                              // facet counter
@@ -308,22 +242,7 @@ export class SolidParticleSystem implements IDisposable {
 
             // iterate over "size" facets
             var fi: number = 0;
-            for (var j = f * 3; j < (f + size) * 3; j++) {
-                facetInd.push(fi);
-                var i: number = meshInd[j];
-                var i3: number = i * 3;
-                facetPos.push(meshPos[i3], meshPos[i3 + 1], meshPos[i3 + 2]);
-                facetNor.push(meshNor[i3], meshNor[i3 + 1], meshNor[i3 + 2]);
-                if (meshUV) {
-                    var i2: number = i * 2;
-                    facetUV.push(meshUV[i2], meshUV[i2 + 1]);
-                }
-                if (meshCol) {
-                    var i4: number = i * 4;
-                    facetCol.push(meshCol[i4], meshCol[i4 + 1], meshCol[i4 + 2], meshCol[i4 + 3]);
-                }
-                fi++;
-            }
+
 
             // create a model shape for each single particle
             var idx: number = this.nbParticles;
@@ -629,23 +548,17 @@ export class SolidParticleSystem implements IDisposable {
      * @returns the number of shapes in the system
      */
     public addShape(mesh: Mesh, nb: number, options?: { positionFunction?: any; vertexFunction?: any; storage?: [] }): number {
-        var meshPos = <FloatArray>mesh.getVerticesData(VertexBuffer.PositionKind);
         var meshInd = <IndicesArray>mesh.getIndices();
-        var meshUV = <FloatArray>mesh.getVerticesData(VertexBuffer.UVKind);
-        var meshCol = <FloatArray>mesh.getVerticesData(VertexBuffer.ColorKind);
-        var meshNor = <FloatArray>mesh.getVerticesData(VertexBuffer.NormalKind);
-        this.recomputeNormals = (meshNor) ? false : true;
+
         var indices = Array.from(meshInd);
-        var shapeNormals = Array.from(meshNor);
-        var shapeColors = (meshCol) ? Array.from(meshCol) : [];
+
         var storage = (options && options.storage) ? options.storage : null;
         var bbInfo: Nullable<BoundingInfo> = null;
         if (this._particlesIntersect) {
             bbInfo = mesh.getBoundingInfo();
         }
 
-        var shape = this._posToShape(meshPos);
-        var shapeUV = this._uvsToShapeUV(meshUV);
+
 
         var posfunc = options ? options.positionFunction : null;
         var vtxfunc = options ? options.vertexFunction : null;
@@ -653,12 +566,8 @@ export class SolidParticleSystem implements IDisposable {
         if (this._useModelMaterial) {
             material = (mesh.material) ? mesh.material : this._setDefaultMaterial();
         }
-        var modelShape = new ModelShape(this._shapeCounter, shape, indices, shapeNormals, shapeColors, shapeUV, posfunc, vtxfunc, material);
 
-        // particles
-        for (var i = 0; i < nb; i++) {
-            this._insertNewParticle(this.nbParticles, i, modelShape, shape, meshInd, meshUV, meshCol, meshNor, bbInfo, storage, options);
-        }
+
         this._shapeCounter++;
         this._isNotBuilt = true;        // buildMesh() call is now expected for setParticles() to work
         return this._shapeCounter - 1;
@@ -722,10 +631,6 @@ export class SolidParticleSystem implements IDisposable {
      * @returns the SPS.
      */
     public rebuildMesh(reset: boolean = false): SolidParticleSystem {
-        for (var p = 0; p < this.particles.length; p++) {
-            this._rebuildParticle(this.particles[p], reset);
-        }
-        this.mesh.updateVerticesData(VertexBuffer.PositionKind, this._positions32, false, false);
         return this;
     }
 
@@ -1219,43 +1124,7 @@ export class SolidParticleSystem implements IDisposable {
         }
 
         // if the VBO must be updated
-        if (update) {
-            if (this._computeParticleColor) {
-                mesh.updateVerticesData(VertexBuffer.ColorKind, colors32, false, false);
-            }
-            if (this._computeParticleTexture) {
-                mesh.updateVerticesData(VertexBuffer.UVKind, uvs32, false, false);
-            }
-            mesh.updateVerticesData(VertexBuffer.PositionKind, positions32, false, false);
-            if (!mesh.areNormalsFrozen || mesh.isFacetDataEnabled) {
-                if (this._computeParticleVertex || mesh.isFacetDataEnabled) {
-                    // recompute the normals only if the particles can be morphed, update then also the normal reference array _fixedNormal32[]
-                    var params = mesh.isFacetDataEnabled ? mesh.getFacetDataParameters() : null;
-                    VertexData.ComputeNormals(positions32, indices32, normals32, params);
-                    for (var i = 0; i < normals32.length; i++) {
-                        fixedNormal32[i] = normals32[i];
-                    }
-                }
-                if (!mesh.areNormalsFrozen) {
-                    mesh.updateVerticesData(VertexBuffer.NormalKind, normals32, false, false);
-                }
-            }
-            if (this._depthSort && this._depthSortParticles) {
-                const depthSortedParticles = this.depthSortedParticles;
-                depthSortedParticles.sort(this._depthSortFunction);
-                const dspl = depthSortedParticles.length;
-                let sid = 0;
-                for (let sorted = 0; sorted < dspl; sorted++) {
-                    const lind = depthSortedParticles[sorted].indicesLength;
-                    const sind = depthSortedParticles[sorted].ind;
-                    for (var i = 0; i < lind; i++) {
-                        indices32[sid] = indices[sind + i];
-                        sid++;
-                    }
-                }
-                mesh.updateIndices(indices32);
-            }
-        }
+        
         if (this._computeBoundingBox) {
             if (mesh._boundingInfo) {
                 mesh._boundingInfo.reConstruct(minimum, maximum, mesh._worldMatrix);

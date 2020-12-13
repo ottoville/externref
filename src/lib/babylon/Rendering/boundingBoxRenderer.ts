@@ -1,5 +1,4 @@
 import { Scene } from "../scene";
-import { VertexBuffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { VertexData } from "../Meshes/mesh.vertexData";
 import { Matrix } from "../Maths/math.vector";
@@ -122,7 +121,7 @@ export class BoundingBoxRenderer implements ISceneComponent {
     public renderList = new SmartArray<BoundingBox>(32);
 
     private _colorShader: ShaderMaterial;
-    private _vertexBuffers: { [key: string]: Nullable<VertexBuffer> } = {};
+    private _vertexBuffers: { [key: string]: Nullable<any> } = {};
     private _indexBuffer: DataBuffer;
     private _fillIndexBuffer: Nullable<DataBuffer> = null;
     private _fillIndexData: Nullable<IndicesArray> = null;
@@ -168,24 +167,7 @@ export class BoundingBoxRenderer implements ISceneComponent {
     }
 
     private _prepareRessources(): void {
-        if (this._colorShader) {
-            return;
-        }
-
-        this._colorShader = new ShaderMaterial("colorShader", this.scene, "color",
-            {
-                attributes: [VertexBuffer.PositionKind],
-                uniforms: ["world", "viewProjection", "color"]
-            });
-
-        this._colorShader.reservedDataStore = {
-            hidden: true
-        };
-        var engine = this.scene.getEngine();
-        var boxdata = VertexData.CreateBox({ size: 1.0 });
-        this._vertexBuffers[VertexBuffer.PositionKind] = new VertexBuffer(engine, <FloatArray>boxdata.positions, VertexBuffer.PositionKind, false);
-        this._createIndexBuffer();
-        this._fillIndexData = boxdata.indices;
+       
     }
 
     private _createIndexBuffer(): void {
@@ -198,11 +180,6 @@ export class BoundingBoxRenderer implements ISceneComponent {
      * context lost for instance.
      */
     public rebuild(): void {
-        let vb = this._vertexBuffers[VertexBuffer.PositionKind];
-        if (vb) {
-            vb._rebuild();
-        }
-        this._createIndexBuffer();
     }
 
     /**
@@ -321,24 +298,6 @@ export class BoundingBoxRenderer implements ISceneComponent {
      * Dispose and release the resources attached to this renderer.
      */
     public dispose(): void {
-        if (!this._colorShader) {
-            return;
-        }
-
-        this.renderList.dispose();
-
-        this._colorShader.dispose();
-
-        var buffer = this._vertexBuffers[VertexBuffer.PositionKind];
-        if (buffer) {
-            buffer.dispose();
-            this._vertexBuffers[VertexBuffer.PositionKind] = null;
-        }
-        this.scene.getEngine()._releaseBuffer(this._indexBuffer);
-
-        if (this._fillIndexBuffer) {
-            this.scene.getEngine()._releaseBuffer(this._fillIndexBuffer);
-            this._fillIndexBuffer = null;
-        }
+       
     }
 }

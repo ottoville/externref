@@ -1,8 +1,6 @@
 import { IDisposable, Scene } from "../scene";
 import { Nullable } from "../types";
 import { Observable, Observer } from "../Misc/observable";
-import { Buffer } from "../Meshes/buffer";
-import { VertexBuffer } from "../Meshes/buffer";
 import { Vector3, TmpVectors } from "../Maths/math.vector";
 import { Sprite } from "./sprite";
 import { SpriteSceneComponent } from "./spriteSceneComponent";
@@ -122,8 +120,8 @@ export class SpriteManager implements ISpriteManager {
     private _scene: Scene;
 
     private _vertexData: Float32Array;
-    private _buffer: Buffer;
-    private _vertexBuffers: { [key: string]: VertexBuffer } = {};
+    private _buffer: any;
+    private _vertexBuffers: { [key: string]: any } = {};
     private _indexBuffer: DataBuffer;
     private _effectBase: any;
     private _effectFog: any;
@@ -195,30 +193,14 @@ export class SpriteManager implements ISpriteManager {
         // VBO
         // 18 floats per sprite (x, y, z, angle, sizeX, sizeY, offsetX, offsetY, invertU, invertV, cellLeft, cellTop, cellWidth, cellHeight, color r, color g, color b, color a)
         this._vertexData = new Float32Array(capacity * 18 * 4);
-        this._buffer = new Buffer(scene.getEngine(), this._vertexData, true, 18);
 
-        var positions = this._buffer.createVertexBuffer(VertexBuffer.PositionKind, 0, 4);
         var options = this._buffer.createVertexBuffer("options", 4, 4);
         var inverts = this._buffer.createVertexBuffer("inverts", 8, 2);
         var cellInfo = this._buffer.createVertexBuffer("cellInfo", 10, 4);
-        var colors = this._buffer.createVertexBuffer(VertexBuffer.ColorKind, 14, 4);
 
-        this._vertexBuffers[VertexBuffer.PositionKind] = positions;
         this._vertexBuffers["options"] = options;
         this._vertexBuffers["inverts"] = inverts;
         this._vertexBuffers["cellInfo"] = cellInfo;
-        this._vertexBuffers[VertexBuffer.ColorKind] = colors;
-
-        // Effects
-        this._effectBase = this._scene.getEngine().createEffect("sprites",
-            [VertexBuffer.PositionKind, "options", "inverts", "cellInfo", VertexBuffer.ColorKind],
-            ["view", "projection", "textureInfos", "alphaTest"],
-            ["diffuseSampler"], "");
-
-        this._effectFog = this._scene.getEngine().createEffect("sprites",
-            [VertexBuffer.PositionKind, "options", "inverts", "cellInfo", VertexBuffer.ColorKind],
-            ["view", "projection", "textureInfos", "alphaTest", "vFogInfos", "vFogColor"],
-            ["diffuseSampler"], "#define FOG");
 
         if (this._fromPacked) {
             this._makePacked(imgUrl, spriteJSON);

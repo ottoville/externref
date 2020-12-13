@@ -7,7 +7,6 @@ import { Nullable } from "../types";
 import { Scene } from "../scene";
 import { Matrix } from "../Maths/math.vector";
 import { Color3 } from '../Maths/math.color';
-import { VertexBuffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 
@@ -1092,28 +1091,6 @@ export class StandardMaterial extends PushMaterial {
                 fallbacks.addFallback(0, "MULTIVIEW");
             }
 
-            //Attributes
-            var attribs = [VertexBuffer.PositionKind];
-
-            if (defines.NORMAL) {
-                attribs.push(VertexBuffer.NormalKind);
-            }
-
-            if (defines.UV1) {
-                attribs.push(VertexBuffer.UVKind);
-            }
-
-            if (defines.UV2) {
-                attribs.push(VertexBuffer.UV2Kind);
-            }
-
-            if (defines.VERTEXCOLOR) {
-                attribs.push(VertexBuffer.ColorKind);
-            }
-
-            MaterialHelper.PrepareAttributesForBones(attribs, mesh, defines, fallbacks);
-            MaterialHelper.PrepareAttributesForInstances(attribs, defines);
-            MaterialHelper.PrepareAttributesForMorphTargets(attribs, mesh, defines);
 
             var shaderName = "default";
 
@@ -1154,7 +1131,6 @@ export class StandardMaterial extends PushMaterial {
 
             let previousEffect = subMesh.effect;
             let effect = scene.getEngine().createEffect(shaderName, <any>{
-                attributes: attribs,
                 uniformsNames: uniforms,
                 uniformBuffersNames: uniformBuffers,
                 samplers: samplers,

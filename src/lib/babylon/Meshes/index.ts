@@ -1,5 +1,4 @@
 export * from "./abstractMesh";
-export * from "./buffer";
 export * from "./Compression/index";
 export * from "./csg";
 export * from "./geometry";

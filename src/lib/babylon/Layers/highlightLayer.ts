@@ -5,7 +5,6 @@ import { Camera } from "../Cameras/camera";
 import { Scene } from "../scene";
 import { Vector2 } from "../Maths/math.vector";
 import { Engine } from "../Engines/engine";
-import { VertexBuffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Material } from "../Materials/material";
@@ -307,12 +306,6 @@ export class HighlightLayer extends EffectLayer {
      * to the main canvas at the end of the scene rendering.
      */
     protected _createMergeEffect(): any {
-        // Effect
-        return this._engine.createEffect("glowMapMerge",
-            [VertexBuffer.PositionKind],
-            ["offset"],
-            ["textureSampler"],
-            this._options.isStroke ? "#define STROKE \n" : undefined);
 
     }
 

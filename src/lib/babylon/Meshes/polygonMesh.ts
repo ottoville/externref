@@ -1,7 +1,6 @@
 import { Logger } from "../Misc/logger";
 import { Scene } from "../scene";
 import { Vector3, Vector2 } from "../Maths/math.vector";
-import { VertexBuffer } from "../Meshes/buffer";
 import { Mesh } from "../Meshes/mesh";
 import { VertexData } from "../Meshes/mesh.vertexData";
 import { Engine } from "../Engines/engine";
@@ -228,12 +227,6 @@ export class PolygonMeshBuilder {
     build(updatable: boolean = false, depth: number = 0): Mesh {
         var result = new Mesh(this._name, this._scene);
 
-        var vertexData = this.buildVertexData(depth);
-
-        result.setVerticesData(VertexBuffer.PositionKind, <number[]>vertexData.positions, updatable);
-        result.setVerticesData(VertexBuffer.NormalKind, <number[]>vertexData.normals, updatable);
-        result.setVerticesData(VertexBuffer.UVKind, <number[]>vertexData.uvs, updatable);
-        result.setIndices(<number[]>vertexData.indices);
 
         return result;
     }

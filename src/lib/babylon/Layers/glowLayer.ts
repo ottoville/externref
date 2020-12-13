@@ -3,7 +3,6 @@ import { Nullable } from "../types";
 import { Camera } from "../Cameras/camera";
 import { Scene } from "../scene";
 import { Vector2 } from "../Maths/math.vector";
-import { VertexBuffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
 import { Texture } from "../Materials/Textures/texture";
@@ -205,12 +204,6 @@ export class GlowLayer extends EffectLayer {
      * to the main canvas at the end of the scene rendering.
      */
     protected _createMergeEffect(): any {
-        // Effect
-        return this._engine.createEffect("glowMapMerge",
-            [VertexBuffer.PositionKind],
-            ["offset"],
-            ["textureSampler", "textureSampler2"],
-            "#define EMISSIVE \n");
 
     }
 

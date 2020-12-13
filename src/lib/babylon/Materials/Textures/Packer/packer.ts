@@ -1,6 +1,5 @@
 import { Engine } from "../../../Engines/engine";
 import { AbstractMesh } from "../../../Meshes/abstractMesh";
-import { VertexBuffer } from "../../../Meshes/buffer";
 import { Scene } from "../../../scene";
 import { Material } from "../../material";
 import { Texture } from "../texture";
@@ -187,8 +186,6 @@ export class TexturePacker{
                 'specularTexture'
             ];
 
-        this.options.uvsIn = this.options.uvsIn || VertexBuffer.UVKind;
-        this.options.uvsOut = this.options.uvsOut || VertexBuffer.UVKind;
         this.options.layout = this.options.layout || TexturePacker.LAYOUT_STRIP;
 
         if (this.options.layout === TexturePacker.LAYOUT_COLNUM) {
@@ -566,7 +563,7 @@ export class TexturePacker{
     */
     private _updateMeshUV(mesh: AbstractMesh, frameID: number): void {
         let frame: TexturePackerFrame = (this.frames as any)[frameID];
-        let uvIn = mesh.getVerticesData(this.options.uvsIn || VertexBuffer.UVKind);
+        let uvIn = mesh.getVerticesData(this.options.uvsIn);
         let uvOut = [];
         let toCount = 0;
 
@@ -581,7 +578,7 @@ export class TexturePacker{
             );
         }
 
-        mesh.setVerticesData(this.options.uvsOut || VertexBuffer.UVKind, uvOut);
+        mesh.setVerticesData(this.options.uvsOut, uvOut);
     }
 
     /**

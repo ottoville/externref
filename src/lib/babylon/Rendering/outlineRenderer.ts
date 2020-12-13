@@ -1,4 +1,3 @@
-import { VertexBuffer } from "../Meshes/buffer";
 import { _InstancesBatch, Mesh } from "../Meshes/mesh";
 import { Scene } from "../scene";
 import { Engine } from "../Engines/engine";
@@ -215,76 +214,6 @@ export class OutlineRenderer implements ISceneComponent {
      * @returns true if ready otherwise false
      */
     public isReady(subMesh: any, useInstances: boolean): boolean {
-        var defines = [];
-        var attribs = [VertexBuffer.PositionKind, VertexBuffer.NormalKind];
-
-        var mesh = subMesh.getMesh();
-        var material = subMesh.getMaterial();
-
-        if (material) {
-            // Alpha test
-            if (material.needAlphaTesting()) {
-                defines.push("#define ALPHATEST");
-                if (mesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
-                    attribs.push(VertexBuffer.UVKind);
-                    defines.push("#define UV1");
-                }
-                if (mesh.isVerticesDataPresent(VertexBuffer.UV2Kind)) {
-                    attribs.push(VertexBuffer.UV2Kind);
-                    defines.push("#define UV2");
-                }
-            }
-            //Logarithmic depth
-            if ((<any>material).useLogarithmicDepth) {
-                defines.push("#define LOGARITHMICDEPTH");
-            }
-        }
-        // Bones
-        if (mesh.useBones && mesh.computeBonesUsingShaders) {
-            attribs.push(VertexBuffer.MatricesIndicesKind);
-            attribs.push(VertexBuffer.MatricesWeightsKind);
-            if (mesh.numBoneInfluencers > 4) {
-                attribs.push(VertexBuffer.MatricesIndicesExtraKind);
-                attribs.push(VertexBuffer.MatricesWeightsExtraKind);
-            }
-            defines.push("#define NUM_BONE_INFLUENCERS " + mesh.numBoneInfluencers);
-            defines.push("#define BonesPerMesh " + (mesh.skeleton ? mesh.skeleton.bones.length + 1 : 0));
-        } else {
-            defines.push("#define NUM_BONE_INFLUENCERS 0");
-        }
-
-        // Morph targets
-        const morphTargetManager = (mesh as Mesh).morphTargetManager;
-        let numMorphInfluencers = 0;
-        if (morphTargetManager) {
-            if (morphTargetManager.numInfluencers > 0) {
-                numMorphInfluencers = morphTargetManager.numInfluencers;
-
-                defines.push("#define MORPHTARGETS");
-                defines.push("#define NUM_MORPH_INFLUENCERS " + numMorphInfluencers);
-
-                MaterialHelper.PrepareAttributesForMorphTargetsInfluencers(attribs, mesh, numMorphInfluencers);
-            }
-        }
-
-        // Instances
-        if (useInstances) {
-            defines.push("#define INSTANCES");
-            MaterialHelper.PushAttributesForInstances(attribs);
-        }
-
-        // Get correct effect
-        var join = defines.join("\n");
-        if (this._cachedDefines !== join) {
-            this._cachedDefines = join;
-            this._effect = this.scene.getEngine().createEffect("outline",
-                attribs,
-                ["world", "mBones", "viewProjection", "diffuseMatrix", "offset", "color", "logarithmicDepthConstant", "morphTargetInfluences"],
-                ["diffuseSampler"], join,
-                undefined, undefined, undefined,
-                { maxSimultaneousMorphTargets: numMorphInfluencers });
-        }
-
         return this._effect.isReady();
     }
 

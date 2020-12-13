@@ -3,7 +3,6 @@ import { Scene } from "../../scene";
 import { Vector3, Vector2, TmpVectors, Vector4 } from "../../Maths/math.vector";
 import { Color4 } from '../../Maths/math.color';
 import { Mesh, _CreationDataStorage } from "../mesh";
-import { VertexBuffer } from "../buffer";
 import { VertexData } from "../mesh.vertexData";
 import { BoundingInfo } from "../../Culling/boundingInfo";
 
@@ -226,9 +225,7 @@ VertexData.CreateRibbon = function(options: { pathArray: Vector3[][], closeArray
     vertexData.positions = positions32;
     vertexData.normals = normals32;
     vertexData.uvs = uvs32;
-    if (colors) {
-        vertexData.set(colors, VertexBuffer.ColorKind);
-    }
+
 
     if (closePath) {
         (<any>vertexData)._idx = idx;
@@ -284,101 +281,7 @@ export class RibbonBuilder {
         var instance = options.instance;
         var updatable = options.updatable;
 
-        if (instance) {   // existing ribbon instance update
-            // positionFunction : ribbon case
-            // only pathArray and sideOrientation parameters are taken into account for positions update
-            const minimum = TmpVectors.Vector3[0].setAll(Number.MAX_VALUE);
-            const maximum = TmpVectors.Vector3[1].setAll(-Number.MAX_VALUE);
-            var positionFunction = (positions: FloatArray) => {
-                var minlg = pathArray[0].length;
-                var mesh = (<Mesh>instance);
-                var i = 0;
-                var ns = (mesh._originalBuilderSideOrientation === Mesh.DOUBLESIDE) ? 2 : 1;
-                for (var si = 1; si <= ns; ++si) {
-                    for (var p = 0; p < pathArray.length; ++p) {
-                        var path = pathArray[p];
-                        var l = path.length;
-                        minlg = (minlg < l) ? minlg : l;
-                        for (let j = 0; j < minlg; ++j) {
-                            const pathPoint = path[j];
-                            positions[i] = pathPoint.x;
-                            positions[i + 1] = pathPoint.y;
-                            positions[i + 2] = pathPoint.z;
-                            minimum.minimizeInPlaceFromFloats(pathPoint.x, pathPoint.y, pathPoint.z);
-                            maximum.maximizeInPlaceFromFloats(pathPoint.x, pathPoint.y, pathPoint.z);
-                            i += 3;
-                        }
-                        if (mesh._creationDataStorage && mesh._creationDataStorage.closePath) {
-                            const pathPoint = path[0];
-                            positions[i] = pathPoint.x;
-                            positions[i + 1] = pathPoint.y;
-                            positions[i + 2] = pathPoint.z;
-                            i += 3;
-                        }
-                    }
-                }
-            };
-            var positions = <FloatArray>instance.getVerticesData(VertexBuffer.PositionKind);
-            positionFunction(positions);
-            if (instance._boundingInfo) {
-                instance._boundingInfo.reConstruct(minimum, maximum, instance._worldMatrix);
-            }
-            else {
-                instance._boundingInfo = new BoundingInfo(minimum, maximum, instance._worldMatrix);
-            }
-            instance.updateVerticesData(VertexBuffer.PositionKind, positions, false, false);
-            if (options.colors) {
-                var colors = <FloatArray>instance.getVerticesData(VertexBuffer.ColorKind);
-                for (var c = 0, colorIndex = 0; c < options.colors.length; c++ , colorIndex += 4) {
-                    const color = options.colors[c];
-                    colors[colorIndex] = color.r;
-                    colors[colorIndex + 1] = color.g;
-                    colors[colorIndex + 2] = color.b;
-                    colors[colorIndex + 3] = color.a;
-                }
-                instance.updateVerticesData(VertexBuffer.ColorKind, colors, false, false);
-            }
-            if (options.uvs) {
-                var uvs = <FloatArray>instance.getVerticesData(VertexBuffer.UVKind);
-                for (var i = 0; i < options.uvs.length; i++) {
-                    uvs[i * 2] = options.uvs[i].x;
-                    uvs[i * 2 + 1] = options.uvs[i].y;
-                }
-                instance.updateVerticesData(VertexBuffer.UVKind, uvs, false, false);
-            }
-            if (!instance.areNormalsFrozen || instance.isFacetDataEnabled) {
-                var indices = instance.getIndices();
-                var normals = <FloatArray>instance.getVerticesData(VertexBuffer.NormalKind);
-                var params = instance.isFacetDataEnabled ? instance.getFacetDataParameters() : null;
-                VertexData.ComputeNormals(positions, indices, normals, params);
-
-                if (instance._creationDataStorage && instance._creationDataStorage.closePath) {
-                    var indexFirst: number = 0;
-                    var indexLast: number = 0;
-                    for (var p = 0; p < pathArray.length; p++) {
-                        indexFirst = instance._creationDataStorage!.idx[p] * 3;
-                        if (p + 1 < pathArray.length) {
-                            indexLast = (instance._creationDataStorage!.idx[p + 1] - 1) * 3;
-                        }
-                        else {
-                            indexLast = normals.length - 3;
-                        }
-                        normals[indexFirst] = (normals[indexFirst] + normals[indexLast]) * 0.5;
-                        normals[indexFirst + 1] = (normals[indexFirst + 1] + normals[indexLast + 1]) * 0.5;
-                        normals[indexFirst + 2] = (normals[indexFirst + 2] + normals[indexLast + 2]) * 0.5;
-                        normals[indexLast] = normals[indexFirst];
-                        normals[indexLast + 1] = normals[indexFirst + 1];
-                        normals[indexLast + 2] = normals[indexFirst + 2];
-                    }
-                }
-                if (!(instance.areNormalsFrozen)) {
-                    instance.updateVerticesData(VertexBuffer.NormalKind, normals, false, false);
-                }
-            }
-
-            return instance;
-        }
-        else {  // new ribbon creation
+        
 
             var ribbon = new Mesh(name, scene);
             ribbon._originalBuilderSideOrientation = sideOrientation;
@@ -394,6 +297,6 @@ export class RibbonBuilder {
             vertexData.applyToMesh(ribbon, updatable);
 
             return ribbon;
-        }
+        
     }
 }

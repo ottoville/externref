@@ -5,7 +5,6 @@ import { VertexData } from "../mesh.vertexData";
 import { FloatArray, Nullable } from "../../types";
 import { LinesMesh } from "../../Meshes/linesMesh";
 import { Scene } from "../../scene";
-import { VertexBuffer } from "../../Meshes/buffer";
 
 VertexData.CreateLineSystem = function(options: { lines: Vector3[][], colors?: Nullable<Color4[][]> }): VertexData {
     var indices = [];
@@ -130,38 +129,6 @@ export class LinesBuilder {
         var lines = options.lines;
         var colors = options.colors;
 
-        if (instance) { // lines update
-            var positions = instance.getVerticesData(VertexBuffer.PositionKind)!;
-            var vertexColor;
-            var lineColors;
-            if (colors) {
-                vertexColor = instance.getVerticesData(VertexBuffer.ColorKind)!;
-            }
-            var i = 0;
-            var c = 0;
-            for (var l = 0; l < lines.length; l++) {
-                var points = lines[l];
-                for (var p = 0; p < points.length; p++) {
-                    positions[i] = points[p].x;
-                    positions[i + 1] = points[p].y;
-                    positions[i + 2] = points[p].z;
-                    if (colors && vertexColor) {
-                        lineColors = colors[l];
-                        vertexColor[c] = lineColors[p].r;
-                        vertexColor[c + 1] = lineColors[p].g;
-                        vertexColor[c + 2] = lineColors[p].b;
-                        vertexColor[c + 3] = lineColors[p].a;
-                        c += 4;
-                    }
-                    i += 3;
-                }
-            }
-            instance.updateVerticesData(VertexBuffer.PositionKind, positions, false, false);
-            if (colors && vertexColor) {
-                instance.updateVerticesData(VertexBuffer.ColorKind, vertexColor, false, false);
-            }
-            return instance;
-        }
 
         // line system creation
         var useVertexColor = (colors) ? true : false;

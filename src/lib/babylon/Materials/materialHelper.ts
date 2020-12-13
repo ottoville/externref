@@ -6,7 +6,6 @@ import { Engine } from "../Engines/engine";
 import { EngineStore } from "../Engines/engineStore";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Mesh } from "../Meshes/mesh";
-import { VertexBuffer } from "../Meshes/buffer";
 import { Light } from "../Lights/light";
 
 import { UniformBuffer } from "./uniformBuffer";
@@ -240,25 +239,6 @@ export class MaterialHelper {
         defines._normals = defines._needNormals;
         defines._uvs = defines._needUVs;
 
-        defines["NORMAL"] = (defines._needNormals && mesh.isVerticesDataPresent(VertexBuffer.NormalKind));
-
-        if (defines._needNormals && mesh.isVerticesDataPresent(VertexBuffer.TangentKind)) {
-            defines["TANGENT"] = true;
-        }
-
-        if (defines._needUVs) {
-            defines["UV1"] = mesh.isVerticesDataPresent(VertexBuffer.UVKind);
-            defines["UV2"] = mesh.isVerticesDataPresent(VertexBuffer.UV2Kind);
-        } else {
-            defines["UV1"] = false;
-            defines["UV2"] = false;
-        }
-
-        if (useVertexColor) {
-            var hasVertexColors = mesh.useVertexColors && mesh.isVerticesDataPresent(VertexBuffer.ColorKind);
-            defines["VERTEXCOLOR"] = hasVertexColors;
-            defines["VERTEXALPHA"] = mesh.hasVertexAlpha && hasVertexColors && useVertexAlpha;
-        }
 
         if (useBones) {
             this.PrepareDefinesForBones(mesh, defines);
@@ -585,34 +565,7 @@ export class MaterialHelper {
      * @param defines The current Defines of the effect
      */
     public static PrepareAttributesForMorphTargets(attribs: string[], mesh: AbstractMesh, defines: any): void {
-        var influencers = defines["NUM_MORPH_INFLUENCERS"];
-
-        if (influencers > 0 && EngineStore.LastCreatedEngine) {
-            var maxAttributesCount = EngineStore.LastCreatedEngine.getCaps().maxVertexAttribs;
-            var manager = (<Mesh>mesh).morphTargetManager;
-            var normal = manager && manager.supportsNormals && defines["NORMAL"];
-            var tangent = manager && manager.supportsTangents && defines["TANGENT"];
-            var uv = manager && manager.supportsUVs && defines["UV1"];
-            for (var index = 0; index < influencers; index++) {
-                attribs.push(VertexBuffer.PositionKind + index);
-
-                if (normal) {
-                    attribs.push(VertexBuffer.NormalKind + index);
-                }
-
-                if (tangent) {
-                    attribs.push(VertexBuffer.TangentKind + index);
-                }
-
-                if (uv) {
-                    attribs.push(VertexBuffer.UVKind + "_" + index);
-                }
-
-                if (attribs.length > maxAttributesCount) {
-                    Logger.Error("Cannot add more vertex attributes for mesh " + mesh.name);
-                }
-            }
-        }
+     
     }
 
     /**
@@ -623,16 +576,7 @@ export class MaterialHelper {
      * @param fallbacks The current efffect fallback strategy
      */
     public static PrepareAttributesForBones(attribs: string[], mesh: AbstractMesh, defines: any, fallbacks: EffectFallbacks): void {
-        if (defines["NUM_BONE_INFLUENCERS"] > 0) {
-            fallbacks.addCPUSkinningFallback(0, mesh);
 
-            attribs.push(VertexBuffer.MatricesIndicesKind);
-            attribs.push(VertexBuffer.MatricesWeightsKind);
-            if (defines["NUM_BONE_INFLUENCERS"] > 4) {
-                attribs.push(VertexBuffer.MatricesIndicesExtraKind);
-                attribs.push(VertexBuffer.MatricesWeightsExtraKind);
-            }
-        }
     }
 
     /**

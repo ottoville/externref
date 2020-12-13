@@ -15,7 +15,6 @@ import { MaterialDefines } from '../../Materials/materialDefines';
 import { NodeMaterialOptimizer } from './Optimizers/nodeMaterialOptimizer';
 import { ImageProcessingConfiguration, IImageProcessingConfigurationDefines } from '../imageProcessingConfiguration';
 import { Nullable } from '../../types';
-import { VertexBuffer } from '../../Meshes/buffer';
 import { Tools } from '../../Misc/tools';
 import { TransformBlock } from './Blocks/transformBlock';
 import { VertexOutputBlock } from './Blocks/Vertex/vertexOutputBlock';
@@ -657,12 +656,6 @@ export class NodeMaterial extends PushMaterial {
         if (!defines._areAttributesDirty) {
             return;
         }
-
-        defines["NORMAL"] = mesh.isVerticesDataPresent(VertexBuffer.NormalKind);
-
-        defines["TANGENT"] = mesh.isVerticesDataPresent(VertexBuffer.TangentKind);
-
-        defines["UV1"] = mesh.isVerticesDataPresent(VertexBuffer.UVKind);
     }
 
     /**

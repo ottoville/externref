@@ -2,7 +2,6 @@ import { IndicesArray, FloatArray } from "../types";
 import { Color4, Color3 } from "../Maths/math";
 import { Vector2, Vector3, Vector4, TmpVectors, Matrix } from "../Maths/math.vector";
 import { Logger } from "../Misc/logger";
-import { VertexBuffer } from "../Meshes/buffer";
 import { VertexData } from "../Meshes/mesh.vertexData";
 import { Mesh } from "../Meshes/mesh";
 import { EngineStore } from "../Engines/engineStore";
@@ -134,16 +133,9 @@ export class PointsCloudSystem implements IDisposable {
         this._colors32 = new Float32Array(this._colors);
 
         var vertexData = new VertexData();
-        vertexData.set(this._positions32, VertexBuffer.PositionKind);
 
-        if (this._uvs32.length > 0) {
-            vertexData.set(this._uvs32, VertexBuffer.UVKind);
-        }
         var ec = 0; //emissive color value 0 for UVs, 1 for color
-        if (this._colors32.length > 0) {
-            ec = 1;
-            vertexData.set(this._colors32, VertexBuffer.ColorKind);
-        }
+
         var mesh = new Mesh(this.name, this._scene);
         vertexData.applyToMesh(mesh, this._updatable);
         this.mesh = mesh;
@@ -202,22 +194,12 @@ export class PointsCloudSystem implements IDisposable {
         var boundInfo = mesh.getBoundingInfo();
         var diameter = 2 * boundInfo.boundingSphere.radius;
 
-        var meshPos = <FloatArray>mesh.getVerticesData(VertexBuffer.PositionKind);
         var meshInd = <IndicesArray>mesh.getIndices();
-        var meshUV = <FloatArray>mesh.getVerticesData(VertexBuffer.UVKind);
-        var meshCol = <FloatArray>mesh.getVerticesData(VertexBuffer.ColorKind);
 
         var place = Vector3.Zero();
         mesh.computeWorldMatrix();
         var meshMatrix: Matrix = mesh.getWorldMatrix();
-        if (!meshMatrix.isIdentity()) {
-            for (var p = 0; p < meshPos.length / 3; p++) {
-                Vector3.TransformCoordinatesFromFloatsToRef(meshPos[3 * p], meshPos[3 * p + 1], meshPos[3 * p + 2], meshMatrix, place);
-                meshPos[3 * p] = place.x;
-                meshPos[3 * p + 1] = place.y;
-                meshPos[3 * p + 2] = place.z;
-            }
-        }
+
 
         var idxPoints: number = 0;
 
@@ -290,163 +272,6 @@ export class PointsCloudSystem implements IDisposable {
         var pickInfo: PickingInfo;
         var direction = Vector3.Zero();
 
-        for (var index = 0; index < meshInd.length / 3; index++) {
-            id0 = meshInd[3 * index];
-            id1 = meshInd[3 * index + 1];
-            id2 = meshInd[3 * index + 2];
-            v0X = meshPos[3 * id0];
-            v0Y = meshPos[3 * id0 + 1];
-            v0Z = meshPos[3 * id0 + 2];
-            v1X = meshPos[3 * id1];
-            v1Y = meshPos[3 * id1 + 1];
-            v1Z = meshPos[3 * id1 + 2];
-            v2X = meshPos[3 * id2];
-            v2Y = meshPos[3 * id2 + 1];
-            v2Z = meshPos[3 * id2 + 2];
-            vertex0.set(v0X, v0Y, v0Z);
-            vertex1.set(v1X, v1Y, v1Z);
-            vertex2.set(v2X, v2Y, v2Z);
-            vertex1.subtractToRef(vertex0, vec0);
-            vertex2.subtractToRef(vertex1, vec1);
-
-            if (meshUV) {
-                uv0X = meshUV[2 * id0];
-                uv0Y = meshUV[2 * id0 + 1];
-                uv1X = meshUV[2 * id1];
-                uv1Y = meshUV[2 * id1 + 1];
-                uv2X = meshUV[2 * id2];
-                uv2Y = meshUV[2 * id2 + 1];
-                uv0.set(uv0X, uv0Y);
-                uv1.set(uv1X, uv1Y);
-                uv2.set(uv2X, uv2Y);
-                uv1.subtractToRef(uv0, uvec0);
-                uv2.subtractToRef(uv1, uvec1);
-            }
-
-            if (meshCol && colorFromTexture) {
-                col0X = meshCol[4 * id0];
-                col0Y = meshCol[4 * id0 + 1];
-                col0Z = meshCol[4 * id0 + 2];
-                col0A = meshCol[4 * id0 + 3];
-                col1X = meshCol[4 * id1];
-                col1Y = meshCol[4 * id1 + 1];
-                col1Z = meshCol[4 * id1 + 2];
-                col1A = meshCol[4 * id1 + 3];
-                col2X = meshCol[4 * id2];
-                col2Y = meshCol[4 * id2 + 1];
-                col2Z = meshCol[4 * id2 + 2];
-                col2A = meshCol[4 * id2 + 3];
-                col0.set(col0X, col0Y, col0Z, col0A);
-                col1.set(col1X, col1Y, col1Z, col1A);
-                col2.set(col2X, col2Y, col2Z, col2A);
-                col1.subtractToRef(col0, colvec0);
-                col2.subtractToRef(col1, colvec1);
-            }
-
-            var width: number;
-            var height: number;
-            var deltaS: number;
-            var deltaV: number;
-            var h: number;
-            var s: number;
-            var v: number;
-            var hsvCol: Color3;
-            var statedColor: Color3 = new Color3(0, 0, 0);
-            var colPoint3: Color3 = new Color3(0, 0, 0);
-            var pointColors: Color4;
-            var particle: CloudPoint;
-
-            for (var i = 0; i < pointsGroup._groupDensity[index]; i++) {
-                idxPoints = this.particles.length;
-                this._addParticle(idxPoints, pointsGroup, this._groupCounter, index + i);
-                particle = this.particles[idxPoints];
-                //form a point inside the facet v0, v1, v2;
-                lamda = Scalar.RandomRange(0, 1);
-                mu = Scalar.RandomRange(0, 1);
-                facetPoint = vertex0.add(vec0.scale(lamda)).add(vec1.scale(lamda * mu));
-                if (isVolume) {
-                    norm = mesh.getFacetNormal(index).normalize().scale(-1);
-                    tang = vec0.clone().normalize();
-                    biNorm = Vector3.Cross(norm, tang);
-                    angle = Scalar.RandomRange(0, 2 * Math.PI);
-                    facetPlaneVec = tang.scale(Math.cos(angle)).add(biNorm.scale(Math.sin(angle)));
-                    angle = Scalar.RandomRange(0.1, Math.PI / 2);
-                    direction = facetPlaneVec.scale(Math.cos(angle)).add(norm.scale(Math.sin(angle)));
-
-                    ray.origin = facetPoint.add(direction.scale(0.00001));
-                    ray.direction = direction;
-                    ray.length = diameter;
-                    pickInfo = ray.intersectsMesh(mesh);
-                    if (pickInfo.hit) {
-                        distance = pickInfo.pickedPoint!.subtract(facetPoint).length();
-                        gap = Scalar.RandomRange(0, 1) * distance;
-                        facetPoint.addInPlace(direction.scale(gap));
-                    }
-                }
-                particle.position = facetPoint.clone();
-                this._positions.push(particle.position.x, particle.position.y, particle.position.z);
-                if (colorFromTexture !== undefined) {
-                    if (meshUV) {
-                        uvPoint = uv0.add(uvec0.scale(lamda)).add(uvec1.scale(lamda * mu));
-                        if (colorFromTexture) { //Set particle color to texture color
-                            if (hasTexture && pointsGroup._groupImageData !== null) {
-                                width = pointsGroup._groupImgWidth;
-                                height = pointsGroup._groupImgHeight;
-                                pointColors = this._getColorIndicesForCoord(pointsGroup, Math.round(uvPoint.x * width), Math.round(uvPoint.y * height), width);
-                                particle.color = pointColors;
-                                this._colors.push(pointColors.r, pointColors.g, pointColors.b, pointColors.a);
-                            }
-                            else {
-                                if (meshCol) { //failure in texture and colors available
-                                    colPoint = col0.add(colvec0.scale(lamda)).add(colvec1.scale(lamda * mu));
-                                    particle.color = new Color4(colPoint.x, colPoint.y, colPoint.z, colPoint.w);
-                                    this._colors.push(colPoint.x, colPoint.y, colPoint.z, colPoint.w);
-                                }
-                                else {
-                                    colPoint = col0.set(Math.random(), Math.random(), Math.random(), 1);
-                                    particle.color = new Color4(colPoint.x, colPoint.y, colPoint.z, colPoint.w);
-                                    this._colors.push(colPoint.x, colPoint.y, colPoint.z, colPoint.w);
-                                }
-                            }
-                        }
-                        else { //Set particle uv based on a mesh uv
-                            particle.uv = uvPoint.clone();
-                            this._uvs.push(particle.uv.x, particle.uv.y);
-                        }
-                    }
-                }
-                else {
-                    if (color) {
-                        statedColor.set(color.r, color.g, color.b);
-                        deltaS = Scalar.RandomRange(-range, range);
-                        deltaV = Scalar.RandomRange(-range, range);
-                        hsvCol = statedColor.toHSV();
-                        h = hsvCol.r;
-                        s = hsvCol.g + deltaS;
-                        v = hsvCol.b + deltaV;
-                        if (s < 0) {
-                            s = 0;
-                        }
-                        if (s > 1) {
-                            s = 1;
-                        }
-                        if (v < 0) {
-                            v = 0;
-                        }
-                        if (v > 1) {
-                            v = 1;
-                        }
-                        Color3.HSVtoRGBToRef(h, s, v, colPoint3);
-                        colPoint.set(colPoint3.r, colPoint3.g, colPoint3.b, 1);
-                    }
-                    else {
-                        colPoint = col0.set(Math.random(), Math.random(), Math.random(), 1);
-                    }
-                    particle.color = new Color4(colPoint.x, colPoint.y, colPoint.z, colPoint.w);
-                    this._colors.push(colPoint.x, colPoint.y, colPoint.z, colPoint.w);
-                }
-            }
-        }
     }
 
     // stores mesh texture in dynamic texture for color pixel retrieval
@@ -470,23 +295,6 @@ export class PointsCloudSystem implements IDisposable {
 
         var clone = <Mesh>mesh.clone();
         clone.setEnabled(false);
-        this._promises.push(new Promise((resolve) => {
-            BaseTexture.WhenAllReady(textureList, () => {
-                let n = pointsGroup._textureNb;
-                if (n < 0) {
-                    n = 0;
-                }
-                if (n > textureList.length - 1) {
-                    n =  textureList.length - 1;
-                }
-                pointsGroup._groupImageData = textureList[n].readPixels();
-                pointsGroup._groupImgWidth = textureList[n].getSize().width;
-                pointsGroup._groupImgHeight = textureList[n].getSize().height;
-                this._setPointsColorOrUV(clone, pointsGroup, isVolume, true, true);
-                clone.dispose();
-                return resolve();
-            });
-        }));
     }
 
     // calculates the point density per facet of a mesh for surface points
@@ -617,13 +425,13 @@ export class PointsCloudSystem implements IDisposable {
             colored = PointColor.Random ;
         }
 
-        var meshPos = <FloatArray>mesh.getVerticesData(VertexBuffer.PositionKind);
+
         var meshInd = <IndicesArray>mesh.getIndices();
 
         this._groups.push(this._groupCounter);
         var pointsGroup = new PointsGroup(this._groupCounter, null);
 
-        pointsGroup._groupDensity = this._calculateDensity(nb, meshPos, meshInd as FloatArray);
+
         if (colored === PointColor.Color) {
             pointsGroup._textureNb = <number>color ? <number>color : 0;
         }
@@ -664,13 +472,13 @@ export class PointsCloudSystem implements IDisposable {
             colored = PointColor.Random;
         }
 
-        var meshPos = <FloatArray>mesh.getVerticesData(VertexBuffer.PositionKind);
+
         var meshInd = <IndicesArray>mesh.getIndices();
 
         this._groups.push(this._groupCounter);
         var pointsGroup = new PointsGroup(this._groupCounter, null);
 
-        pointsGroup._groupDensity = this._calculateDensity(nb, meshPos, meshInd as FloatArray);
+
         if (colored === PointColor.Color) {
             pointsGroup._textureNb = <number>color ? <number>color : 0;
         }
@@ -863,16 +671,7 @@ export class PointsCloudSystem implements IDisposable {
 
         }
 
-        // if the VBO must be updated
-        if (update) {
-            if (this._computeParticleColor) {
-                mesh.updateVerticesData(VertexBuffer.ColorKind, colors32, false, false);
-            }
-            if (this._computeParticleTexture) {
-                mesh.updateVerticesData(VertexBuffer.UVKind, uvs32, false, false);
-            }
-            mesh.updateVerticesData(VertexBuffer.PositionKind, positions32, false, false);
-        }
+
 
         if (this._computeBoundingBox) {
             if (mesh._boundingInfo) {

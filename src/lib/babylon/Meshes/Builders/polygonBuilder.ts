@@ -5,7 +5,6 @@ import { Mesh, _CreationDataStorage } from "../mesh";
 import { VertexData } from "../mesh.vertexData";
 import { PolygonMeshBuilder } from "../polygonMesh";
 import { FloatArray, IndicesArray, Nullable } from "../../types";
-import { VertexBuffer } from "../../Meshes/buffer";
 import { EngineStore } from '../../Engines/engineStore';
 
 declare var earcut: any;
@@ -24,50 +23,17 @@ VertexData.CreatePolygon = function(polygon: Mesh, sideOrientation: number, fUV?
             faceColors[f] = new Color4(1, 1, 1, 1);
         }
     }
-
-    var positions = <FloatArray>polygon.getVerticesData(VertexBuffer.PositionKind);
-    var normals = <FloatArray>polygon.getVerticesData(VertexBuffer.NormalKind);
-    var uvs = <FloatArray>polygon.getVerticesData(VertexBuffer.UVKind);
     var indices = <IndicesArray>polygon.getIndices();
 
     // set face colours and textures
     var idx: number = 0;
     var face: number = 0;
-    for (var index = 0; index < normals.length; index += 3) {
-        //Edge Face  no. 1
-        if (Math.abs(normals[index + 1]) < 0.001) {
-            face = 1;
-        }
-        //Top Face  no. 0
-        if (Math.abs(normals[index + 1] - 1) < 0.001) {
-            face = 0;
-        }
-        //Bottom Face  no. 2
-        if (Math.abs(normals[index + 1] + 1) < 0.001) {
-            face = 2;
-        }
-        idx = index / 3;
-        uvs[2 * idx] = (1 - uvs[2 * idx]) * faceUV[face].x + uvs[2 * idx] * faceUV[face].z;
-        uvs[2 * idx + 1] = (1 - uvs[2 * idx + 1]) * faceUV[face].y + uvs[2 * idx + 1] * faceUV[face].w;
-        if (faceColors) {
-            colors.push(faceColors[face].r, faceColors[face].g, faceColors[face].b, faceColors[face].a);
-        }
-    }
+    
 
     // sides
-    VertexData._ComputeSides(sideOrientation, positions, indices as FloatArray, normals, uvs, frontUVs, backUVs);
 
     // Result
     var vertexData = new VertexData();
-    vertexData.indices = indices;
-    vertexData.positions = positions;
-    vertexData.normals = normals;
-    vertexData.uvs = uvs;
-
-    if (faceColors) {
-        var totalColors = (sideOrientation === VertexData.DOUBLESIDE) ? colors.concat(colors) : colors;
-        vertexData.colors = totalColors;
-    }
 
     return vertexData;
 };

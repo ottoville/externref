@@ -5,7 +5,6 @@ import { Matrix, Vector3 } from "../Maths/math.vector";
 import { Scalar } from "../Maths/math.scalar";
 import { EngineStore } from "../Engines/engineStore";
 import { AbstractMesh } from "../Meshes/abstractMesh";
-import { VertexBuffer } from "../Meshes/buffer";
 import { Ray } from "../Culling/ray";
 import { Material } from "../Materials/material";
 import { _TimeToken } from "../Instrumentation/timeToken";
@@ -58,7 +57,7 @@ export class LensFlareSystem {
 
     private _scene: Scene;
     private _emitter: any;
-    private _vertexBuffers: { [key: string]: Nullable<VertexBuffer> } = {};
+    private _vertexBuffers: { [key: string]: Nullable<any> } = {};
     private _indexBuffer: Nullable<DataBuffer>;
     private _effect: any;
     private _positionX: number;
@@ -105,7 +104,7 @@ export class LensFlareSystem {
         vertices.push(-1, -1);
         vertices.push(1, -1);
 
-        this._vertexBuffers[VertexBuffer.PositionKind] = new VertexBuffer(engine, vertices, VertexBuffer.PositionKind, false, false, 2);
+
 
         // Indices
         var indices = [];
@@ -119,11 +118,6 @@ export class LensFlareSystem {
 
         this._indexBuffer = engine.createIndexBuffer(indices);
 
-        // Effects
-        this._effect = engine.createEffect("lensFlare",
-            [VertexBuffer.PositionKind],
-            ["color", "viewportMatrix"],
-            ["textureSampler"], "");
     }
 
     /**
@@ -352,24 +346,7 @@ export class LensFlareSystem {
      * Dispose and release the lens flare with its associated resources.
      */
     public dispose(): void {
-        var vertexBuffer = this._vertexBuffers[VertexBuffer.PositionKind];
-        if (vertexBuffer) {
-            vertexBuffer.dispose();
-            this._vertexBuffers[VertexBuffer.PositionKind] = null;
-        }
 
-        if (this._indexBuffer) {
-            this._scene.getEngine()._releaseBuffer(this._indexBuffer);
-            this._indexBuffer = null;
-        }
-
-        while (this.lensFlares.length) {
-            this.lensFlares[0].dispose();
-        }
-
-        // Remove from scene
-        var index = this._scene.lensFlareSystems.indexOf(this);
-        this._scene.lensFlareSystems.splice(index, 1);
     }
 
     /**

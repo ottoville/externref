@@ -2,7 +2,6 @@ import { Nullable } from "../types";
 import { Scene } from "../scene";
 import { Color3, Color4 } from "../Maths/math.color";
 import { Node } from "../node";
-import { VertexBuffer } from "../Meshes/buffer";
 import { Mesh } from "../Meshes/mesh";
 import { Material } from "../Materials/material";
 import { ShaderMaterial } from "../Materials/shaderMaterial";
@@ -77,7 +76,7 @@ export class LinesMesh extends Mesh {
 
         var defines: string[] = [];
         var options = {
-            attributes: [VertexBuffer.PositionKind, "world0", "world1", "world2", "world3"],
+            attributes: ["world0", "world1", "world2", "world3"],
             uniforms: ["vClipPlane", "vClipPlane2", "vClipPlane3", "vClipPlane4", "vClipPlane5", "vClipPlane6", "world", "viewProjection"],
             needAlphaBlending: true,
             defines: defines
@@ -93,7 +92,6 @@ export class LinesMesh extends Mesh {
         }
         else {
             options.defines.push("#define VERTEXCOLOR");
-            options.attributes.push(VertexBuffer.ColorKind);
         }
 
         this._colorShader = new ShaderMaterial("colorShader", this.getScene(), "color", options);

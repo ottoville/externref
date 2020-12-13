@@ -4,7 +4,6 @@ import { Nullable, FloatArray } from "../types";
 import { Scene } from "../scene";
 import { EngineStore } from "../Engines/engineStore";
 import { AbstractMesh } from "../Meshes/abstractMesh";
-import { VertexBuffer } from "../Meshes/buffer";
 import { AnimationPropertiesOverride } from "../Animations/animationPropertiesOverride";
 import { serialize, SerializationHelper } from "../Misc/decorators";
 import { _TypeStore } from '../Misc/typeStore';
@@ -324,18 +323,6 @@ export class MorphTarget implements IAnimatable {
         }
 
         var result = new MorphTarget(name, influence, mesh.getScene());
-
-        result.setPositions(<FloatArray>mesh.getVerticesData(VertexBuffer.PositionKind));
-
-        if (mesh.isVerticesDataPresent(VertexBuffer.NormalKind)) {
-            result.setNormals(<FloatArray>mesh.getVerticesData(VertexBuffer.NormalKind));
-        }
-        if (mesh.isVerticesDataPresent(VertexBuffer.TangentKind)) {
-            result.setTangents(<FloatArray>mesh.getVerticesData(VertexBuffer.TangentKind));
-        }
-        if (mesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
-            result.setUVs(<FloatArray>mesh.getVerticesData(VertexBuffer.UVKind));
-        }
 
         return result;
     }

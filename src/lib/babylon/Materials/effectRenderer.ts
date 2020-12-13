@@ -1,7 +1,6 @@
 import { Nullable } from '../types';
 import { Texture } from '../Materials/Textures/texture';
 import { ThinEngine } from '../Engines/thinEngine';
-import { VertexBuffer } from '../Meshes/buffer';
 import { Viewport } from '../Maths/math.viewport';
 import { Constants } from '../Engines/constants';
 import { Observable } from '../Misc/observable';
@@ -36,7 +35,7 @@ export class EffectRenderer {
         indices: [0, 1, 2, 0, 2, 3]
     };
 
-    private _vertexBuffers: {[key: string]: VertexBuffer};
+    private _vertexBuffers: {[key: string]: any};
     private _indexBuffer: DataBuffer;
 
     private _ringBufferIndex = 0;
@@ -83,7 +82,7 @@ export class EffectRenderer {
         };
 
         this._vertexBuffers = {
-            [VertexBuffer.PositionKind]: new VertexBuffer(engine, options.positions!, VertexBuffer.PositionKind, false, false, 2),
+            
         };
         this._indexBuffer = engine.createIndexBuffer(options.indices!);
 
@@ -181,22 +180,7 @@ export class EffectRenderer {
      * Disposes of the effect renderer
      */
     dispose() {
-        if (this._ringScreenBuffer) {
-            this._ringScreenBuffer.forEach((b) => {
-                b.dispose();
-            });
-            this._ringScreenBuffer = null;
-        }
 
-        var vertexBuffer = this._vertexBuffers[VertexBuffer.PositionKind];
-        if (vertexBuffer) {
-            vertexBuffer.dispose();
-            delete this._vertexBuffers[VertexBuffer.PositionKind];
-        }
-
-        if (this._indexBuffer) {
-            this.engine._releaseBuffer(this._indexBuffer);
-        }
     }
 }
 

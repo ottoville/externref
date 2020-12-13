@@ -62,7 +62,6 @@ export class FreeCameraDeviceOrientationInput implements ICameraInput<FreeCamera
             var eventHandler = () => {
                 window.removeEventListener("deviceorientation", eventHandler);
                 gotValue = true;
-                res();
             };
 
             // If timeout is populated reject the promise

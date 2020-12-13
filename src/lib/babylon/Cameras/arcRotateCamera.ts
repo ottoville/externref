@@ -781,6 +781,7 @@ export class ArcRotateCamera extends TargetCamera {
 
     /** @hidden */
     public _checkInputs(): void {
+        debugger;
         //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
         if (this._collisionTriggered) {
             return;

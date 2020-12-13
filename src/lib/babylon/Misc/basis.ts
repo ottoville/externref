@@ -248,7 +248,6 @@ function workerFunc(): void {
                 transcoderModulePromise = new Promise((res) => {
                     Module.onRuntimeInitialized = () => {
                         Module.initializeBasis();
-                        res();
                     };
                 });
             }

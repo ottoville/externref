@@ -4,8 +4,6 @@ import { Observable } from "../Misc/observable";
 import { Vector3, Matrix } from "../Maths/math.vector";
 import { Color4, Color3, TmpColors } from '../Maths/math.color';
 import { Scalar } from "../Maths/math.scalar";
-import { VertexBuffer } from "../Meshes/buffer";
-import { Buffer } from "../Meshes/buffer";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { IParticleSystem } from "./IParticleSystem";
 import { BaseParticleSystem } from "./baseParticleSystem";
@@ -46,15 +44,15 @@ export class GPUParticleSystem extends BaseParticleSystem implements IDisposable
     private _renderEffect: any;
     private _updateEffect: any;
 
-    private _buffer0: Buffer;
-    private _buffer1: Buffer;
-    private _spriteBuffer: Buffer;
+    private _buffer0: any;
+    private _buffer1: any;
+    private _spriteBuffer: any;
     private _updateVAO: Array<WebGLVertexArrayObject>;
     private _renderVAO: Array<WebGLVertexArrayObject>;
 
     private _targetIndex = 0;
-    private _sourceBuffer: Buffer;
-    private _targetBuffer: Buffer;
+    private _sourceBuffer: any;
+    private _targetBuffer: any;
 
     private _engine: Engine;
 
@@ -701,8 +699,8 @@ export class GPUParticleSystem extends BaseParticleSystem implements IDisposable
         this._releaseBuffers();
     }
 
-    private _createUpdateVAO(source: Buffer): WebGLVertexArrayObject {
-        let updateVertexBuffers: { [key: string]: VertexBuffer } = {};
+    private _createUpdateVAO(source: any): WebGLVertexArrayObject {
+        let updateVertexBuffers: { [key: string]: any } = {};
         updateVertexBuffers["position"] = source.createVertexBuffer("position", 0, 3);
         updateVertexBuffers["age"] = source.createVertexBuffer("age", 3, 1);
         updateVertexBuffers["life"] = source.createVertexBuffer("life", 4, 1);
@@ -753,8 +751,8 @@ export class GPUParticleSystem extends BaseParticleSystem implements IDisposable
         return vao;
     }
 
-    private _createRenderVAO(source: Buffer, spriteSource: Buffer): WebGLVertexArrayObject {
-        let renderVertexBuffers: { [key: string]: VertexBuffer } = {};
+    private _createRenderVAO(source: any, spriteSource: any): WebGLVertexArrayObject {
+        let renderVertexBuffers: { [key: string]: any } = {};
         renderVertexBuffers["position"] = source.createVertexBuffer("position", 0, 3, this._attributesStrideSize, true);
         renderVertexBuffers["age"] = source.createVertexBuffer("age", 3, 1, this._attributesStrideSize, true);
         renderVertexBuffers["life"] = source.createVertexBuffer("life", 4, 1, this._attributesStrideSize, true);
@@ -915,9 +913,6 @@ export class GPUParticleSystem extends BaseParticleSystem implements IDisposable
             0.5, -0.5, 1, 0]);
 
         // Buffers
-        this._buffer0 = new Buffer(engine, data, false, this._attributesStrideSize);
-        this._buffer1 = new Buffer(engine, data, false, this._attributesStrideSize);
-        this._spriteBuffer = new Buffer(engine, spriteData, false, 4);
 
         // Update VAO
         this._updateVAO = [];

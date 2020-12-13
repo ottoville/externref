@@ -1,6 +1,5 @@
 import { IndicesArray } from "../types";
 import { Vector3 } from "../Maths/math.vector";
-import { VertexBuffer } from "../Meshes/buffer";
 import { Mesh } from "../Meshes/mesh";
 import { AsyncLoop } from "../Misc/tools";
 import { Epsilon } from '../Maths/math.constants';
@@ -445,7 +444,6 @@ class QuadraticErrorSimplification implements ISimplifier {
         this.vertices = [];
         this.triangles = [];
 
-        var positionData = this._mesh.getVerticesData(VertexBuffer.PositionKind);
 
         var indices = this._mesh.getIndices();
         var submesh = this._mesh.subMeshes[submeshIndex];
@@ -464,19 +462,7 @@ class QuadraticErrorSimplification implements ISimplifier {
         var vertexReferences: Array<number> = [];
 
         var vertexInit = (i: number) => {
-            if (!positionData) {
-                return;
-            }
-
-            var offset = i + submesh.verticesStart;
-            var position = Vector3.FromArray(positionData, offset * 3);
-
-            var vertex = findInVertices(position) || new DecimationVertex(position, this.vertices.length);
-            vertex.originalOffsets.push(offset);
-            if (vertex.id === this.vertices.length) {
-                this.vertices.push(vertex);
-            }
-            vertexReferences.push(vertex.id);
+            return
         };
         //var totalVertices = mesh.getTotalVertices();
         var totalVertices = submesh.verticesCount;
@@ -547,46 +533,9 @@ class QuadraticErrorSimplification implements ISimplifier {
             }
         }
 
-        var newPositionData = <number[]>(this._reconstructedMesh.getVerticesData(VertexBuffer.PositionKind) || []);
-        var newNormalData = <number[]>(this._reconstructedMesh.getVerticesData(VertexBuffer.NormalKind) || []);
-        var newUVsData = <number[]>(this._reconstructedMesh.getVerticesData(VertexBuffer.UVKind) || []);
-        var newColorsData = <number[]>(this._reconstructedMesh.getVerticesData(VertexBuffer.ColorKind) || []);
-
-        var normalData = this._mesh.getVerticesData(VertexBuffer.NormalKind);
-        var uvs = this._mesh.getVerticesData(VertexBuffer.UVKind);
-        var colorsData = this._mesh.getVerticesData(VertexBuffer.ColorKind);
 
         var vertexCount = 0;
-        for (i = 0; i < this.vertices.length; ++i) {
-            var vertex = this.vertices[i];
-            vertex.id = vertexCount;
-            if (vertex.triangleCount) {
-                vertex.originalOffsets.forEach((originalOffset) => {
-                    if (!normalData) {
-                        return;
-                    }
-
-                    newPositionData.push(vertex.position.x);
-                    newPositionData.push(vertex.position.y);
-                    newPositionData.push(vertex.position.z);
-                    newNormalData.push(normalData[originalOffset * 3]);
-                    newNormalData.push(normalData[(originalOffset * 3) + 1]);
-                    newNormalData.push(normalData[(originalOffset * 3) + 2]);
-                    if (uvs && uvs.length) {
-                        newUVsData.push(uvs[(originalOffset * 2)]);
-                        newUVsData.push(uvs[(originalOffset * 2) + 1]);
-                    }
-
-                    if (colorsData && colorsData.length) {
-                        newColorsData.push(colorsData[(originalOffset * 4)]);
-                        newColorsData.push(colorsData[(originalOffset * 4) + 1]);
-                        newColorsData.push(colorsData[(originalOffset * 4) + 2]);
-                        newColorsData.push(colorsData[(originalOffset * 4) + 3]);
-                    }
-                    ++vertexCount;
-                });
-            }
-        }
+        
 
         var startingIndex = this._reconstructedMesh.getTotalIndices();
         var startingVertex = this._reconstructedMesh.getTotalVertices();
@@ -609,14 +558,7 @@ class QuadraticErrorSimplification implements ISimplifier {
         //overwriting the old vertex buffers and indices.
 
         this._reconstructedMesh.setIndices(newIndicesArray);
-        this._reconstructedMesh.setVerticesData(VertexBuffer.PositionKind, newPositionData);
-        this._reconstructedMesh.setVerticesData(VertexBuffer.NormalKind, newNormalData);
-        if (newUVsData.length > 0) {
-            this._reconstructedMesh.setVerticesData(VertexBuffer.UVKind, newUVsData);
-        }
-        if (newColorsData.length > 0) {
-            this._reconstructedMesh.setVerticesData(VertexBuffer.ColorKind, newColorsData);
-        }
+
 
         //create submesh
         var originalSubmesh = this._mesh.subMeshes[submeshIndex];

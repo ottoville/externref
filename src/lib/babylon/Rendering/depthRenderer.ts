@@ -1,7 +1,6 @@
 import { Nullable } from "../types";
 import { Color4 } from "../Maths/math.color";
 import { Mesh } from "../Meshes/mesh";
-import { VertexBuffer } from "../Meshes/buffer";
 import { SmartArray } from "../Misc/smartArray";
 import { Scene } from "../scene";
 import { Texture } from "../Materials/Textures/texture";
@@ -153,85 +152,6 @@ export class DepthRenderer {
      * @returns if the depth renderer is ready to render the depth map
      */
     public isReady(subMesh: any, useInstances: boolean): boolean {
-        var material: any = subMesh.getMaterial();
-        if (material.disableDepthWrite) {
-            return false;
-        }
-
-        var defines = [];
-
-        var attribs = [VertexBuffer.PositionKind];
-
-        var mesh = subMesh.getMesh();
-
-        // Alpha test
-        if (material && material.needAlphaTesting() && material.getAlphaTestTexture()) {
-            defines.push("#define ALPHATEST");
-            if (mesh.isVerticesDataPresent(VertexBuffer.UVKind)) {
-                attribs.push(VertexBuffer.UVKind);
-                defines.push("#define UV1");
-            }
-            if (mesh.isVerticesDataPresent(VertexBuffer.UV2Kind)) {
-                attribs.push(VertexBuffer.UV2Kind);
-                defines.push("#define UV2");
-            }
-        }
-
-        // Bones
-        if (mesh.useBones && mesh.computeBonesUsingShaders) {
-            attribs.push(VertexBuffer.MatricesIndicesKind);
-            attribs.push(VertexBuffer.MatricesWeightsKind);
-            if (mesh.numBoneInfluencers > 4) {
-                attribs.push(VertexBuffer.MatricesIndicesExtraKind);
-                attribs.push(VertexBuffer.MatricesWeightsExtraKind);
-            }
-            defines.push("#define NUM_BONE_INFLUENCERS " + mesh.numBoneInfluencers);
-            defines.push("#define BonesPerMesh " + (mesh.skeleton ? mesh.skeleton.bones.length + 1 : 0));
-        } else {
-            defines.push("#define NUM_BONE_INFLUENCERS 0");
-        }
-
-        // Morph targets
-        const morphTargetManager = (mesh as Mesh).morphTargetManager;
-        let numMorphInfluencers = 0;
-        if (morphTargetManager) {
-            if (morphTargetManager.numInfluencers > 0) {
-                numMorphInfluencers = morphTargetManager.numInfluencers;
-
-                defines.push("#define MORPHTARGETS");
-                defines.push("#define NUM_MORPH_INFLUENCERS " + numMorphInfluencers);
-
-                MaterialHelper.PrepareAttributesForMorphTargetsInfluencers(attribs, mesh, numMorphInfluencers);
-            }
-        }
-
-        // Instances
-        if (useInstances) {
-            defines.push("#define INSTANCES");
-            MaterialHelper.PushAttributesForInstances(attribs);
-        }
-
-        // None linear depth
-        if (this._storeNonLinearDepth) {
-            defines.push("#define NONLINEARDEPTH");
-        }
-
-        // Float Mode
-        if (this.isPacked) {
-            defines.push("#define PACKED");
-        }
-
-        // Get correct effect
-        var join = defines.join("\n");
-        if (this._cachedDefines !== join) {
-            this._cachedDefines = join;
-            this._effect = this._scene.getEngine().createEffect("depth",
-                attribs,
-                ["world", "mBones", "viewProjection", "diffuseMatrix", "depthValues", "morphTargetInfluences"],
-                ["diffuseSampler"], join,
-                undefined, undefined, undefined, { maxSimultaneousMorphTargets: numMorphInfluencers });
-        }
-
         return this._effect.isReady();
     }
 

@@ -4,7 +4,6 @@ import { Nullable } from "../types";
 import { Observer } from "../Misc/observable";
 import { Scene } from "../scene";
 import { Vector3 } from "../Maths/math.vector";
-import { VertexBuffer } from "../Meshes/buffer";
 import { VertexData } from "../Meshes/mesh.vertexData";
 
 /**
@@ -140,43 +139,7 @@ export class TrailMesh extends Mesh {
      * Update trailing mesh geometry.
      */
     public update(): void {
-        let positions = this.getVerticesData(VertexBuffer.PositionKind);
-        let normals = this.getVerticesData(VertexBuffer.NormalKind);
-        let wm = this._generator.getWorldMatrix();
-        if (positions && normals) {
-            for (let i: number = 3 * this._sectionPolygonPointsCount; i < positions.length; i++) {
-                positions[i - 3 * this._sectionPolygonPointsCount] = positions[i] - normals[i] / this._length * this._diameter;
-            }
-            for (let i: number = 3 * this._sectionPolygonPointsCount; i < normals.length; i++) {
-                normals[i - 3 * this._sectionPolygonPointsCount] = normals[i];
-            }
-            let l: number = positions.length - 3 * this._sectionPolygonPointsCount;
-            let alpha: number = 2 * Math.PI / this._sectionPolygonPointsCount;
-            for (let i: number = 0; i < this._sectionPolygonPointsCount; i++) {
-                this._sectionVectors[i].copyFromFloats(
-                    Math.cos(i * alpha) * this._diameter,
-                    Math.sin(i * alpha) * this._diameter,
-                    0
-                );
-                this._sectionNormalVectors[i].copyFromFloats(
-                    Math.cos(i * alpha),
-                    Math.sin(i * alpha),
-                    0
-                );
-                Vector3.TransformCoordinatesToRef(this._sectionVectors[i], wm, this._sectionVectors[i]);
-                Vector3.TransformNormalToRef(this._sectionNormalVectors[i], wm, this._sectionNormalVectors[i]);
-            }
-            for (let i: number = 0; i < this._sectionPolygonPointsCount; i++) {
-                positions[l + 3 * i] = this._sectionVectors[i].x;
-                positions[l + 3 * i + 1] = this._sectionVectors[i].y;
-                positions[l + 3 * i + 2] = this._sectionVectors[i].z;
-                normals[l + 3 * i] = this._sectionNormalVectors[i].x;
-                normals[l + 3 * i + 1] = this._sectionNormalVectors[i].y;
-                normals[l + 3 * i + 2] = this._sectionNormalVectors[i].z;
-            }
-            this.updateVerticesData(VertexBuffer.PositionKind, positions, true, false);
-            this.updateVerticesData(VertexBuffer.NormalKind, normals, true, false);
-        }
+        
     }
 
     /**

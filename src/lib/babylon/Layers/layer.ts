@@ -4,7 +4,6 @@ import { Scene } from "../scene";
 import { Vector2 } from "../Maths/math.vector";
 import { Color4 } from '../Maths/math.color';
 import { EngineStore } from "../Engines/engineStore";
-import { VertexBuffer } from "../Meshes/buffer";
 import { Material } from "../Materials/material";
 import { Texture } from "../Materials/Textures/texture";
 import { SceneComponentConstants } from "../sceneComponent";
@@ -76,7 +75,7 @@ export class Layer {
     public renderOnlyInRenderTargetTextures = false;
 
     private _scene: Scene;
-    private _vertexBuffers: { [key: string]: Nullable<VertexBuffer> } = {};
+    private _vertexBuffers: { [key: string]: Nullable<any> } = {};
     private _indexBuffer: Nullable<DataBuffer>;
     private _effect: any;
     private _previousDefines: string;
@@ -173,9 +172,6 @@ export class Layer {
         vertices.push(-1, -1);
         vertices.push(1, -1);
 
-        var vertexBuffer = new VertexBuffer(engine, vertices, VertexBuffer.PositionKind, false, false, 2);
-        this._vertexBuffers[VertexBuffer.PositionKind] = vertexBuffer;
-
         this._createIndexBuffer();
     }
 
@@ -197,13 +193,6 @@ export class Layer {
 
     /** @hidden */
     public _rebuild(): void {
-        let vb = this._vertexBuffers[VertexBuffer.PositionKind];
-
-        if (vb) {
-            vb._rebuild();
-        }
-
-        this._createIndexBuffer();
     }
 
     /**
@@ -223,13 +212,6 @@ export class Layer {
             defines += "\r\n#define LINEAR";
         }
 
-        if (this._previousDefines !== defines) {
-            this._previousDefines = defines;
-            this._effect = engine.createEffect("layer",
-                [VertexBuffer.PositionKind],
-                ["textureMatrix", "color", "scale", "offset"],
-                ["textureSampler"], defines);
-        }
         var currentEffect = this._effect;
 
         // Check
@@ -276,34 +258,6 @@ export class Layer {
      * Disposes and releases the associated ressources.
      */
     public dispose(): void {
-        var vertexBuffer = this._vertexBuffers[VertexBuffer.PositionKind];
-        if (vertexBuffer) {
-            vertexBuffer.dispose();
-            this._vertexBuffers[VertexBuffer.PositionKind] = null;
-        }
-
-        if (this._indexBuffer) {
-            this._scene.getEngine()._releaseBuffer(this._indexBuffer);
-            this._indexBuffer = null;
-        }
-
-        if (this.texture) {
-            this.texture.dispose();
-            this.texture = null;
-        }
-
-        // Clean RTT list
-        this.renderTargetTextures = [];
-
-        // Remove from scene
-        var index = this._scene.layers.indexOf(this);
-        this._scene.layers.splice(index, 1);
-
-        // Callback
-        this.onDisposeObservable.notifyObservers(this);
-
-        this.onDisposeObservable.clear();
-        this.onAfterRenderObservable.clear();
-        this.onBeforeRenderObservable.clear();
+        
     }
 }
