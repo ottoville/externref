@@ -44,7 +44,10 @@ let methods = {
 
         //let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
         let offsets = new Float32Array(amount * 2);
-        var rotmax = rotateMatrix(data.data.angle, "y");
+
+        const cos = Math.cos(data.data.angle);
+        const sin = Math.sin(data.data.angle);
+
         let minX: number;
         let minZ: number;
         let maxX: number;
@@ -53,13 +56,8 @@ let methods = {
             let posX = (Math.random() * data.data.area.size.h * -1);
             let posZ = (Math.random() * data.data.area.size.w * -1);
 
-            let translated = translate(posX, 0, posZ, rotmax);
-
-            const [x, z] = [data.data.area.coord[0] + translated.x, data.data.area.coord[1] + translated.z]
-
-
-            offsets[i * 2 + 0] = x;
-            offsets[i * 2 + 1] = z;
+            offsets[i * 2 + 0] = data.data.area.coord[0] + posX * cos + posZ * sin;
+            offsets[i * 2 + 1] = data.data.area.coord[1] + posX * -sin + posZ * cos;
             if (i == 0) {
                 maxX = minX = offsets[i * 2 + 0];
                 maxZ = minZ = offsets[i * 2 + 1];

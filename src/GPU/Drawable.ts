@@ -110,7 +110,10 @@ export class Drawable {
     setVertexBuffer(index: number, buffer: ArrayBufferView | GPUVertexBuffer, destroyOld = true, offset?: number, size?: number): GPUBuffer {
         if (destroyOld) {
             let Tbuffer = this.#vertexBuffers.get(index);
-            Tbuffer && Tbuffer.buffer.destroy();
+            if (Tbuffer) {
+                Tbuffer.buffer.destroy();
+                this.renderPasses.forEach(rp => rp.bundles.length = 0);
+            }
         }
         if (buffer instanceof GPUBuffer)
             var Tbuffer = buffer;
@@ -126,7 +129,10 @@ export class Drawable {
     setIndexBuffer(buffer: Uint16Array | Uint32Array, baseVertex?: number, destroyOld?: boolean): GPUBuffer
     setIndexBuffer(buffer: Uint16Array | Uint32Array | GPUIndexBuffer, baseVertex = 0, destroyOld = true, GPUIndexFormat?: GPUIndexFormat): GPUBuffer {
         this.baseVertex = baseVertex;
-        destroyOld && this.#indexBuffer && this.#indexBuffer.destroy();
+        if (destroyOld && this.#indexBuffer) {
+            this.#indexBuffer.destroy();
+            this.renderPasses.forEach(rp => rp.bundles.length = 0);
+        }
         if (buffer instanceof GPUBuffer) {
             this.#indexBuffer = buffer;
             GPUIndexFormat && (this.GPUIndexFormat = GPUIndexFormat);

@@ -57,13 +57,7 @@ declare class Angle {
     sub(rad: number): number;
     distance(rad: number): Angle;
 }
-declare function rotateMatrix(rad: number, axis: "x" | "y" | "z"): Matrix;
-declare function translate(x: number, y: number, z: number, transformation: Matrix): {
-    x: number;
-    y: number;
-    z: number;
-    w: number;
-};
+
 declare const ToGammaSpace: number;
 /**
  * Constant used to convert a value to linear space
