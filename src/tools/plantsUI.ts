@@ -5,9 +5,9 @@ import type { Terrain } from "../world/terrain.js";
 
 import type { PTDresult } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import type { WorldScene } from "../world/scene.js";
+
 import { canvasListener } from "../traits/canvasListener.js";
-import { Trait, Traitable } from "../traits/trait.js";
+import { Trait } from "../traits/trait.js";
 import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
 

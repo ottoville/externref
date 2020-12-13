@@ -28,8 +28,8 @@ export class paintTexture extends paintGround {
         protected ground: Terrain,
         protected sea: Sea,
         protected zonedt: GPUTexture,
-        private textureWidth: number,
-        private textureHeight: number,
+        textureWidth: number,
+        textureHeight: number,
         uitab: hasCanvasListener,
         private ratio:number
     ) {

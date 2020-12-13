@@ -1,6 +1,5 @@
 import { UITAB } from "../UITAB.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import type { WorldScene } from "../world/scene.js";
 import type { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
 import type { TerraScene } from "../TerraScene.js";

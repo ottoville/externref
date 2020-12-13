@@ -1,6 +1,6 @@
 import type { TerraMesh } from "../TerraMesh.js";
 
-import type { loginProvider, DotNet, savedCamera } from "../types/interfaces/index.js";
+import type { loginProvider, DotNet } from "../types/interfaces/index.js";
 import { Scene } from "../lib/babylon/scene.js";
 import type { PickingInfo } from "../lib/babylon/Collisions/pickingInfo.js";
 import { Camera } from "../lib/babylon/Cameras/camera.js";
@@ -11,20 +11,17 @@ import { PointerEventTypes } from "../lib/babylon/Events/pointerEvents.js";
 import { Constants } from "../lib/babylon/Engines/constants.js";
 import type { AbstractMesh } from "../lib/babylon/Meshes/abstractMesh.js";
 import "../lib/babylon/Culling/ray.js";
-import type { TrianglePickingPredicate } from "../lib/babylon/Culling/ray.js";
 import { ActionEvent } from "../lib/babylon/Actions/actionEvent.js";
 import { KeyboardInfo, KeyboardEventTypes, KeyboardInfoPre } from "../lib/babylon/Events/keyboardEvents.js";
 import { Engine } from "../lib/babylon/Engines/engine.js";
 import { Matrix, Frustum } from "../lib/babylon/Maths/math.js";
 import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collisionCoordinator.js';
-import { Sea } from "./water.js";
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
-import { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import { LazyEval } from "../LazyEval.js";
 import { GPU } from "../GPU.js";
 import { TerraScene } from "../TerraScene.js";
 
+/*
 function matrixMultiply64(m: number[], otherM: number[]): number[] {
     var tm0 = m[0], tm1 = m[1], tm2 = m[2], tm3 = m[3];
     var tm4 = m[4], tm5 = m[5], tm6 = m[6], tm7 = m[7];
@@ -57,7 +54,7 @@ function matrixMultiply64(m: number[], otherM: number[]): number[] {
     result[15] = tm12 * om3 + tm13 * om7 + tm14 * om11 + tm15 * om15;
     return result;
 }
-
+*/
 Scene.CollisionCoordinatorFactory = () => {
     return new DefaultCollisionCoordinator();
 };
@@ -650,8 +647,8 @@ export class WorldScene extends Scene {
         userinfo: loginProvider,
         public blazor: DotNet.BlazorInstance,
         ticks: number,
-        private canvas: HTMLCanvasElement,
-        private device: GPUDevice,
+        canvas: HTMLCanvasElement,
+        device: GPUDevice,
         private webSocket?: WebSocket
     ) {
         super(engine as Engine);
@@ -780,16 +777,6 @@ export class WorldScene extends Scene {
   
               }
           })*/
-        interface TerrainMap {
-            width: number,
-            height: number,
-            indices: Uint32Array,
-            normals: Float32Array,
-            positions: Float32Array,
-            uvs: Float32Array,
-            texture: Blob
-        }
-        //let sea: Mesh;
 
         /*
          *         this.worker.subscribe('setProgress', (data) => {

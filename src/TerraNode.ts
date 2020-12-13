@@ -4,7 +4,7 @@ import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
 import { worldPosition } from "./traits/worldPosition";
 import { ObjectWorkerThread } from "./WorkerThread";
-
+/*
 function matrixMultiply(m: ArrayLike<number>, otherM: ArrayLike<number>): number[] {
     var tm0 = m[0], tm1 = m[1], tm2 = m[2], tm3 = m[3];
     var tm4 = m[4], tm5 = m[5], tm6 = m[6], tm7 = m[7];
@@ -36,7 +36,7 @@ function matrixMultiply(m: ArrayLike<number>, otherM: ArrayLike<number>): number
     result[14] = tm12 * om2 + tm13 * om6 + tm14 * om10 + tm15 * om14;
     result[15] = tm12 * om3 + tm13 * om7 + tm14 * om11 + tm15 * om15;
     return result;
-}
+}*/
 function Vector3Multiply(vector: Float32Array | Float64Array, m: ArrayLike<number>): void {
     var rx = vector[0] * m[0] + vector[1] * m[4] + vector[2] * m[8] + m[12];
     var ry = vector[0] * m[1] + vector[1] * m[5] + vector[2] * m[9] + m[13];

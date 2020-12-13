@@ -62,7 +62,7 @@ export abstract class Scene {
         } while (predicate ? !predicate(boundableMesh) : false);
 
         const ray = rayFunction(boundableMesh);
-        const result = await boundableMesh.intersects(ray);
+        /*const result =*/ await boundableMesh.intersects(ray);
         //TODO
         return null;
         /*if (!result || !result.hit)
@@ -141,7 +141,7 @@ export abstract class Scene {
         pickingRays.forEach((ray, boundable) => {
             results.push(boundable.intersects(ray));
         })
-        const pickresults = await Promise.all(results);
+        //const pickresults = await Promise.all(results);
         let minimum: BoundableNode | null = null;
 
         this.boundables.forEach(boundable => {

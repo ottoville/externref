@@ -4,7 +4,6 @@ export interface isLight {
     lightType: 'point' | 'directional' | 'spot' | 'ambient'
     worldPosition: worldPosition
 }
-const maxLights = 1;
 export class Light {
 /*
 * Goround shader

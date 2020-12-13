@@ -10,7 +10,7 @@ import type { BaseTexture } from "./lib/babylon/Materials/Textures/baseTexture.j
 import type { PostProcess } from "./lib/babylon/PostProcesses/postProcess.js";
 import type { IColor4Like, IVector4Like, IMatrixLike, IVector2Like, IVector3Like, IColor3Like } from "./lib/babylon/Maths/math.like.js";
 import type { WebGPUPipelineContext } from "./lib/babylon/Engines/WebGPU/webgpuPipelineContext.js";
-import type { WebGPUEngine, compiledShader } from "./lib/babylon/Engines/webgpuEngine.js";
+import type { WebGPUEngine } from "./lib/babylon/Engines/webgpuEngine.js";
 import { WebGPUConstants } from "./lib/babylon/Engines/WebGPU/webgpuConstants.js";
 
 //@ts-ignore

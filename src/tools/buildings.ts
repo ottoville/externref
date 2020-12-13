@@ -2,7 +2,7 @@
 import { TerraMesh } from "../TerraMesh.js";
 import * as BABYLON from "../lib/babylon/index.js"
 import { canvasListener } from "../traits/canvasListener.js";
-import { Trait, Traitable } from "../traits/trait.js";
+import { Trait } from "../traits/trait.js";
 import { ArcRotateCamera } from "../lib/babylon/index.js";
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";

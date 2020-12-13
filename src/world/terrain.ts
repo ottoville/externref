@@ -328,7 +328,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
     }
 
     async serialize(compress = false) {
-        const cacheP = caches.open('save');
+        //const cacheP = caches.open('save');
         if (!compress) {
 
             //disabled fow now
@@ -341,7 +341,9 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             response2.headers.set('content-length', this.#vertices.buffer.byteLength.toString());
             response2.headers.set('content-type', 'application/octet-stream');
             */
-            const cache = await cacheP;
+
+            //const cache = await cacheP;
+
             //disabled fow now
             //  cache.put(new Request('/terrain'), response);
             //  cache.put(new Request('/indices'), response2);

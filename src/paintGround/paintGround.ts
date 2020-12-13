@@ -5,19 +5,16 @@ const fullRad = Math.PI * 2
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import { canvasListener, hasCanvasListener } from "../traits/canvasListener.js";
+import { hasCanvasListener } from "../traits/canvasListener.js";
 import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
-import { UITAB } from "../UITAB.js";
 
 //import { rotateMatrix, translate } from "./math.js";
 
 let width: number;
 let height: number;
 let rotation: number;
-interface addListenerOptions extends AddEventListenerOptions {
-    lazy?: number;
-}
+
 export enum DrawType {
     plane = 1,
     texture = 2,

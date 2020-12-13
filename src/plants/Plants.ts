@@ -1,4 +1,3 @@
-import { LazyEval } from "../LazyEval.js";
 //import { translate, rotateMatrix } from "../math.js";
 import {WorkerThread, WorkerReturn} from "../WorkerThread.js";
 import { Terrain } from "../world/terrain.js";
@@ -27,7 +26,7 @@ export class Plants {
     private worker = new WorkerThread('/webworkers/grass.js');
     private ready: Promise<any>;
     public fillArea(area: PTDresult) {
-        var d = new Date().getTime();
+
         
        // let amount = ~~Math.abs(area.size.h * area.size.w) * 2 // >> 2 // one per 2*2 grid
         //let amount = ~~Math.abs(area.size.h * area.size.w) * 4 // very aggressive amount on CPU

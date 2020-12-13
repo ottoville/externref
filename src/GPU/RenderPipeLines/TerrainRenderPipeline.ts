@@ -7,10 +7,7 @@ import { Drawable } from "../Drawable";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 async function TerrainRenderPipeline(scene: Scene) {
-    const sampler = scene.gpu.device.createSampler({
-        magFilter: "linear",
-        minFilter: "linear",
-    });
+
     const [vertex, fragment] = await Promise.all(['/shaders/wgsl/ground.vert.wgsl', '/shaders/wgsl/ground.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
     const renderPipeLine = scene.lightsBindGroupTexture.addRenderPipeline({
         label: 'terrain',
