@@ -8,25 +8,27 @@ export class Engine {
     positionBindGroupTime: DynamicBindGroupLayout<[number]>;
     calculatePickingRaysPipeline: TerraGPUComputePipeLine;
     bindgrouplayout1: GPUBindGroupLayout;
-
+    #tempBuffer?: GPUCopySRCBuffer;
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>) {
         this.positionBindGroupTime = gpu.rootSceneLayout.addChildBindGroup(gpu.BindGroup, true);
         
         gpu.onRenders2.push(() => {
             if (gpu.queue.size === 0)
                 return null
+            if (this.#tempBuffer)
+                this.#tempBuffer.destroy();
             const dataSizeBytes = TerraNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
-            const tempBuffer = gpu.createGPUBuffer(dataSizeBytes * gpu.queue.size, [GPUBufferUsage.COPY_SRC], true);
+            this.#tempBuffer = gpu.createGPUBuffer(dataSizeBytes * gpu.queue.size, [GPUBufferUsage.COPY_SRC], true);
             let tempOffset = 0;
             const commandEncoder = gpu.device.createCommandEncoder();
             gpu.queue.forEach((bufferOffset, matrix) => {
-                new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(matrix);
+                new Float32Array(this.#tempBuffer!.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(matrix);
                 commandEncoder.copyBufferToBuffer(
-                    tempBuffer, tempOffset++ * dataSizeBytes,
+                    this.#tempBuffer!, tempOffset++ * dataSizeBytes,
                     gpu.GPUData, bufferOffset,
                     dataSizeBytes);
             });
-            tempBuffer.unmap();
+            this.#tempBuffer.unmap();
             gpu.queue.clear();
             return commandEncoder.finish();
         })
