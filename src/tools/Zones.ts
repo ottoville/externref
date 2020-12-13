@@ -9,9 +9,8 @@ import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js"
 import { canvasListener } from "../traits/canvasListener.js";
 
 import { Sea } from "../world/water.js";
-import { TerraScene } from "../TerraScene.js";
-import { DebugScene } from "../DebugScene.js";
 import type { Trait } from "../traits/trait.js";
+import type { Scene } from "../Scene.js";
 
 export class Zones extends UITAB {
     traits: Set<Trait> = new Set();
@@ -25,11 +24,11 @@ export class Zones extends UITAB {
         usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
     });
     constructor(
-        public scene: TerraScene,
+        public scene: Scene,
         public ground: Terrain,
         public camera: ArcRotateCamera,
         sea: Sea,
-        debugScene: DebugScene
+        debugScene: Scene
     ) {
         super(scene, ground, camera, sea);
 

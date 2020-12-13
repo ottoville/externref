@@ -4,10 +4,9 @@ import { Vector3 } from "../lib/babylon/Maths/math.vector.js";
 import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
 
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-import type { WorldScene } from "../world/scene.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
-import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
+import type { Scene } from "../Scene.js";
 
 export class paintLine extends paintGround {
     onEnd() { }
@@ -22,12 +21,12 @@ export class paintLine extends paintGround {
     async onAreaDraw(width: number): Promise<void> {
     }
     constructor(
-        protected sceneDeprecated: WorldScene,
+        protected scene: Scene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Sea,
         uitab: hasCanvasListener
     ) {
-        super(TerraScene.instance, camera, ground, sea, uitab);
+        super(scene, camera, ground, sea, uitab);
     };
 }

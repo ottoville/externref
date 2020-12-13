@@ -6,8 +6,8 @@ import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
-import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
+import type { Scene } from "../Scene.js";
 
 //import { rotateMatrix, translate } from "./math.js";
 
@@ -26,7 +26,7 @@ export abstract class paintGround {
     #end_position: Float32Array = new Float32Array(2);
     #start_position: Float32Array = new Float32Array(2);
     constructor(
-        protected scene: TerraScene,
+        protected scene: Scene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Sea,
@@ -149,8 +149,8 @@ export abstract class paintGround {
     #pointerUp = (evt: PointerEvent) => {
 
         this.uitab.canvasListener.removeListener('pointermove', this.#drawArea);
-        
-        this.camera.attachControl(this.scene.canvas, true);
+
+        this.camera.attachControl(this.scene.engine.gpu.renderPassScreen.canvas, true);
         //fix race condition
         if (this.#end_position[0] == 0)
             return;
@@ -191,7 +191,7 @@ export abstract class paintGround {
             }*/
             this.#start_position = new Float32Array([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
             this.onMainPointerDown(this.#start_position);
-            this.camera.detachControl(this.scene.canvas);
+            this.camera.detachControl(this.scene.engine.gpu.renderPassScreen.canvas);
             this.scene.TerraCameras[0].subscribePickingRay();
             this.uitab.canvasListener.addListener("pointermove", this.#drawArea, { lazy: 25 });
 

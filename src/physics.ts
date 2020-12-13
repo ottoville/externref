@@ -104,7 +104,7 @@ export class Physics {
         return this.#gameSpeed;
     }
     constructor() {
-        //this.createLoop(0);
+        this.gameSpeed = 0;
     }
 
 }

@@ -6,7 +6,7 @@ import { Trait } from "../traits/trait.js";
 import { ArcRotateCamera } from "../lib/babylon/index.js";
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
-import type { TerraScene } from "../TerraScene.js";
+import type { Scene } from "../Scene.js";
 
 
 export class BuildingsUI extends UITAB {
@@ -16,7 +16,7 @@ export class BuildingsUI extends UITAB {
     };
     traits: Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
-    constructor(scene: TerraScene,
+    constructor(scene: Scene,
         terrain: Terrain,
         camera: ArcRotateCamera,
         sea: Sea,

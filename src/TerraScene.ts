@@ -90,13 +90,9 @@ export class TerraScene extends Scene {
 
     //context: GPUCanvasContext = this.canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
     
-    constructor(engine: Engine, public canvas: HTMLCanvasElement, gpu: GPU, TerraCameras: TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes:number) => void) {
+    constructor(engine: Engine, gpu: GPU, TerraCameras: TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes:number) => void) {
         super(gpu, engine, TerraCameras, onRenderStart);
-        TerraScene.instance = this;
-
-       // const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen, gpu.renderPassWater]);
-
-        engine.physics.gameSpeed = 0;
+       // TerraScene.instance = this;
     }
 
     

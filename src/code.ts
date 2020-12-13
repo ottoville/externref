@@ -18,7 +18,6 @@ import { GPU } from "./GPU.js";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
 import { Box } from "./GPU/Meshes/Box.js";
 import { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera.js";
-import { DebugScene } from "./DebugScene.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { TerraScene } from "./TerraScene.js";
 import { Engine } from "./engine.js";
@@ -27,6 +26,7 @@ import { PositionNode } from "./TerraNode.js";
 import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
 import { Collider } from "./lib/babylon/Collisions/collider.js";
 import { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
+import { Scene } from "./Scene.js";
 
 //import  DB from "./DB.js";
 
@@ -499,7 +499,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
             const terraEngine = new Engine(gpuscene, DB);
-            new TerraScene(terraEngine, canvas, gpuscene, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
+            TerraScene.instance = new Scene(gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
                 new Sun2(terrascene, sunBufferOffsetBytes);
                 // Initial scene objects here
 
@@ -561,7 +561,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     try {
                         let tool: UITABClassLike | undefined;
                         if (tool = tools.get(name)) {
-                            tool.instance = new tool(TerraScene.instance, (await terrainInited)[0], await cameraReady, sea, debugscene);
+                            tool.instance = new tool(terrascene, (await terrainInited)[0], await cameraReady, sea, debugscene);
                         }
                     } catch (e) {
                         console.error(e);
@@ -635,7 +635,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                 })
             });
-            const debugscene = new DebugScene(terraEngine, canvas, gpuscene, [mainCamera], (scene, sunBufferOffsetBytes) => {
+            const debugscene = new Scene(gpuscene, terraEngine, [mainCamera], (scene, sunBufferOffsetBytes) => {
                 const sun = new PositionNode(scene.engine, sunBufferOffsetBytes);
                 sun.worldPosition.translation.set([0, 1, 0]);
                 sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)

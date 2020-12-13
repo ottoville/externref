@@ -8,8 +8,8 @@ import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js"
 
 import { canvasListener } from "../traits/canvasListener.js";
 import { Trait } from "../traits/trait.js";
-import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
+import type { Scene } from "../Scene.js";
 
 
 export class PlantsUI extends UITAB {
@@ -22,7 +22,7 @@ export class PlantsUI extends UITAB {
 
 
     constructor(
-        public scene: TerraScene,
+        public scene: Scene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         sea: Sea,
@@ -32,7 +32,7 @@ export class PlantsUI extends UITAB {
     }
     activateDraw = () => {
         try {
-            this.PT = new paintPlane(TerraScene.instance, this.camera, this.terrain, this.sea, this);
+            this.PT = new paintPlane(this.scene, this.camera, this.terrain, this.sea, this);
 
           //  this.PT = applyMixins<typeof BaseTerrainTool>(BaseTerrainTool, [worldPosition]);
 

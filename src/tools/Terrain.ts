@@ -6,9 +6,9 @@ import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import type { Drawable } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
-import type { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
+import type { Scene } from "../Scene.js";
 
 const terrainWorker = new WorkerThread('../webworkers/terrainWorker.js');
 
@@ -26,7 +26,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     constructor(
-        public scene:TerraScene,
+        public scene:Scene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea,

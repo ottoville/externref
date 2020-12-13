@@ -7,7 +7,7 @@ import { TerraMatrix } from "./traits/worldPosition";
 import type { TerraCamera } from "./TerraCamera";
 import { RenderPass } from "./GPU/RenderPass";
 
-export abstract class Scene {
+export class Scene {
     boundables: Set<BoundableNode> = new Set();
     lights;
     positionBindGroupLightsTimeWGSL: LayoutGroupDrawable<[GPUBindGroupEntry]>;

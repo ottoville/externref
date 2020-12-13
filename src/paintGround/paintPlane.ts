@@ -6,8 +6,8 @@ import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
 import type { Drawable } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
-import type { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
+import type { Scene } from "../Scene.js";
 
 
 
@@ -59,7 +59,7 @@ export class paintPlane extends paintGround {
         }
     }
     constructor(
-        protected scene: TerraScene,
+        protected scene: Scene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Sea,

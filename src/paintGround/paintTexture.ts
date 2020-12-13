@@ -3,8 +3,8 @@ import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
-import { TerraScene } from "../TerraScene.js";
 import { Sea } from "../world/water.js";
+import type { Scene } from "../Scene.js";
 
 export class paintTexture extends paintGround {
     onEnd() { }
@@ -23,7 +23,7 @@ export class paintTexture extends paintGround {
         this.#offsetY = this.centerZ + startingPoint[1] / this.ratio;
     }
     constructor(
-        protected scene: TerraScene,
+        protected scene: Scene,
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Sea,
@@ -33,7 +33,7 @@ export class paintTexture extends paintGround {
         uitab: hasCanvasListener,
         private ratio:number
     ) {
-        super(TerraScene.instance, camera, ground, sea, uitab);
+        super(scene, camera, ground, sea, uitab);
         this.centerX = textureWidth / 2;
         this.centerZ = textureHeight / 2;
 
