@@ -8,13 +8,18 @@ import type { TerraCamera } from "./TerraCamera";
 import { RenderPass } from "./GPU/RenderPass";
 
 export class Scene {
+
+    static instances: Set<Scene> = new Set();
+
+
+
     boundables: Set<BoundableNode> = new Set();
     lights;
     positionBindGroupLightsTimeWGSL: LayoutGroupDrawable<[GPUBindGroupEntry]>;
     lightsBindGroupTexture: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
 
     constructor(public gpu: GPU, public engine: Engine, public TerraCameras: TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes: number) => void) {
-
+        Scene.instances.add(this);
         TerraCameras.forEach(camera =>
             camera.renderPass.scenes.add(this)
         )
@@ -62,7 +67,7 @@ export class Scene {
         } while (predicate ? !predicate(boundableMesh) : false);
 
         const ray = rayFunction(boundableMesh);
-        /*const result =*/ await boundableMesh.intersects(ray);
+        /*const result =*/ await boundableMesh.intersectsRay(ray);
         //TODO
         return null;
         /*if (!result || !result.hit)
@@ -139,7 +144,7 @@ export class Scene {
         });
         const results: Promise<void>[] = [];
         pickingRays.forEach((ray, boundable) => {
-            results.push(boundable.intersects(ray));
+            results.push(boundable.intersectsRay(ray));
         })
         /*const pickresults = */await Promise.all(results);
         let minimum: BoundableNode | null = null;

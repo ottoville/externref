@@ -212,20 +212,31 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }
 
                     // Check if this is a mesh else camera or -1
-                    var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
+                    //var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
 
                     collider._initialize(position, velocity, closeDistance);
+
+                    Scene.instances.forEach(scene => {
+                        scene.boundables.forEach(mesh => {
+                            try {
+                                mesh.checkCollision(collider);
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        })
+                    })
+
                     // Check all meshes
-                    for (var index = 0; index < scene.meshes.length; index++) {
+                    /*for (var index = 0; index < scene.meshes.length; index++) {
+
+
+
                         //@ts-ignore
                         var mesh: TerraMesh = scene.meshes[index] as TerraMesh;
                         if (mesh.isEnabled() && mesh.checkCollisions && mesh.subMeshes && mesh !== excludedMesh && ((collisionMask & mesh.collisionGroup) !== 0)) {
                             mesh._checkCollision(collider);
-                            /* if (mesh.name == 'building') {
-                                 console.log('collides? ', collider.collisionFound);
-                             }*/
                         }
-                    }
+                    }*/
                     if (!collider.collisionFound) {
 
                         position.addToRef(velocity, finalPosition);

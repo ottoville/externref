@@ -46,7 +46,7 @@ export abstract class paintGround {
     #drawVector = new Float32Array(2);
 
     #drawArea = async (evt:PointerEvent) => {
-        await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
+        await this.ground.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay);
         if (this.ground.mesh.pickInfo.distance[0]) {
             this.#end_position.set([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
 
@@ -81,7 +81,7 @@ export abstract class paintGround {
 
     #mousemove = async (evt: PointerEvent) => {
 
-        await this.ground.mesh.intersects(this.scene.TerraCameras[0].pickingRay);
+        await this.ground.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay);
         if (this.ground.mesh.pickInfo.distance[0] && this.#end_position) {
             //Distance from first point
             const p0 = this.#start_position[0] - this.ground.mesh.pickInfo.point[0];

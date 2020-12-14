@@ -142,7 +142,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     };
 
     #mouseListener = (evt: PointerEvent): void => {
-        this.terrain.mesh.intersects(this.scene.TerraCameras[0].pickingRay).then(() => {
+        this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
             this.worldPosition.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
         });
     }

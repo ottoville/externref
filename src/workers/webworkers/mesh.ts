@@ -83,7 +83,7 @@ class Mesh {
         if (indices)
             this.#indicesView = new Uint32Array(indices);
     }
-    intersects(rayArrBuff:ArrayBuffer, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): void {
+    intersectsRay(rayArrBuff:ArrayBuffer, fastCheck?: boolean, trianglePredicate?: TrianglePickingPredicate): void {
 
         //boundingBox: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number } },
         // let boundingBox = { min: { x: this.boundingBox[0], y: this.boundingBox[1], z: this.boundingBox[2] }, max: { x: this.boundingBox[3], y: this.boundingBox[4], z: this.boundingBox[5] } }

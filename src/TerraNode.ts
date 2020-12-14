@@ -1,4 +1,5 @@
 ﻿import { Engine } from "./engine";
+import { Collider } from "./lib/babylon/Collisions/collider";
 import type { isLight } from "./lights";
 import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
@@ -134,8 +135,6 @@ class boundingBox {
     min = new Float32Array(this.buffer, 0, 3);
     max = new Float32Array(this.buffer, 4 * 3, 3);
 }
-
-
 export abstract class BoundableNode extends TerraNode {
     indicesBuffer?: SharedArrayBuffer | undefined;
     abstract verticesPositionBuffer: SharedArrayBuffer;
@@ -152,13 +151,116 @@ export abstract class BoundableNode extends TerraNode {
         }
         );
     }
-    public intersects(ray: Float32Array): Promise<void> {
-        return worker.message(this.uniqueID, 'intersects', [ray.buffer]);
+    public intersectsRay(ray: Float32Array): Promise<void> {
+        return worker.message(this.uniqueID, 'intersectsRay', [ray.buffer]);
     }
     public updateBoundingBoxByMatrix(m: Float32Array) {
         //TODO: Use SIMD
         Vector3Multiply(this.boundingBox.min, m);
         Vector3Multiply(this.boundingBox.max, m);
+    }
+
+    lastColliderWorldVertices: SharedArrayBuffer | null = null;
+    lastColliderTransformMatrix: Matrix = Matrix.Zero();
+    _trianglePlanes = [];
+    lastColliderWorldVectors: Vector3[] = [];
+
+    public checkCollision(collider: Collider) {
+        //TODO: Bounding box test
+
+        // Transformation matrix
+        const collisionsScalingMatrix = new Matrix();
+        const collisionsTransformMatrix = new Matrix();
+        Matrix.ScalingToRef(1.0 / collider._radius.x, 1.0 / collider._radius.y, 1.0 / collider._radius.z, collisionsScalingMatrix);
+        if (this.worldPosition)
+            Matrix.FromArray(this.worldPosition.worldMatrix).multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
+        else
+            Matrix.Identity().multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
+        
+        if (!this.lastColliderWorldVertices || !this.lastColliderTransformMatrix.equals(collisionsTransformMatrix)) {
+            console.log('recalculating collision vertices ');
+
+
+            this.lastColliderTransformMatrix = collisionsTransformMatrix.clone();
+            this.lastColliderWorldVertices = new SharedArrayBuffer(this.verticesPositionBuffer.byteLength);
+            //@ts-ignore
+            let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
+            this._trianglePlanes = [];
+            this.lastColliderWorldVectors = [];
+            //this.subMeshes[0]._trianglePlanes = [];
+          //  console.log(new Float32Array(this.verticesPositionBuffer), collisionsTransformMatrix.m);
+            //lastColliderVertices.set(window.Wasm.calculatelastcolliderworldvertices(new Float32Array(this.verticesPositionBuffer), collisionsTransformMatrix.m as Float32Array));
+            const positions = new Float32Array(this.verticesPositionBuffer);
+            const tmpVec = Vector3.Zero();
+            for (let i = 0; i < lastColliderVertices.length / 3; i++) {
+                tmpVec.x = positions[i * this.verticesPositionStride];
+                tmpVec.y = positions[i * this.verticesPositionStride+1];
+                tmpVec.z = positions[i * this.verticesPositionStride+2];
+                this.lastColliderWorldVectors.push(Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix));
+               // this.lastColliderWorldVectors.push(new Vector3(lastColliderVertices[i * 3], lastColliderVertices[i * 3 + 1], lastColliderVertices[i * 3 + 2]));
+            }
+
+        }
+
+        if (!this.indicesBuffer)
+            return
+        //let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
+        //@ts-ignore
+        let indices = new Uint32Array(this.indicesBuffer);
+        /*let pp1 = BABYLON.Vector3.Zero();
+                let pp2 = BABYLON.Vector3.Zero();
+                let pp3 = BABYLON.Vector3.Zero();*/
+        //console.log('submesh material?', !!this.subMeshes[0].getMaterial());
+        let lenn = indices.length;
+        if (lenn < 100)
+            return
+       // console.log(indices);
+        //console.log(this.lastColliderWorldVectors);
+        const trianglePlaneArray:[] = [];
+        //  let timer = new Date().getTime();
+        for (var i = 0; i < lenn; i += 3) {
+            /* pp1.x = lastColliderVertices[indices[i * 3 ]];
+             pp1.y = lastColliderVertices[indices[i * 3 + 1 ]];
+             pp1.z = lastColliderVertices[indices[i * 3 + 2] ];
+ 
+             pp2.x = lastColliderVertices[indices[(i + 1) * 3 ]];
+             pp2.y = lastColliderVertices[indices[(i + 1) * 3 + 1 ]];
+             pp2.z = lastColliderVertices[indices[(i + 1) * 3 + 2 ]];
+ 
+             pp3.x = lastColliderVertices[indices[(i + 2) * 3 ]];
+             pp3.y = lastColliderVertices[indices[(i + 2) * 3 + 1]];
+             pp3.z = lastColliderVertices[indices[(i + 2) * 3 + 2]];*/
+
+
+            var pp1 = this.lastColliderWorldVectors[indices[i]];
+            var pp2 = this.lastColliderWorldVectors[indices[i + 1]];
+            var pp3 = this.lastColliderWorldVectors[indices[i + 2]];
+            //console.log('pp', pp3, pp2, pp1)
+
+            //@ts-ignore
+            collider._testTriangle(i, trianglePlaneArray, pp3, pp2, pp1, false, this);
+            /* this._testTriangle({
+                 //@ts-ignore
+                 _normalizedVelocity: collider._normalizedVelocity,
+                 //@ts-ignore
+                 _basePoint: collider._basePoint,
+                 //@ts-ignore
+                 _velocity: collider._velocity,
+                 //@ts-ignore
+                 _collisionPoint: collider._collisionPoint,
+                 //@ts-ignore
+                 _planeIntersectionPoint: collider._planeIntersectionPoint,
+                 //@ts-ignore
+                 _tempVector: collider._tempVector,
+                 BabylonCollider: collider,
+                 //@ts-ignore
+                 _edge: collider._edge,
+                 //@ts-ignore
+                 _baseToVertex: collider._baseToVertex,
+             }, i, this._trianglePlanes, pp3, pp2, pp1, !!this.subMeshes[0].getMaterial(), this)*/
+        }
+        // console.log('collider check one took ', new Date().getTime() - timer, 'length ', lenn, 'collides?', collider.collisionFound)
+
     }
 }
 export class PositionNode extends TerraNode {

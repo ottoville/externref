@@ -2,7 +2,7 @@
 import type { Scene } from "../Scene";
 
 export class Sea extends BoundableNode {
-    verticesPositionBuffer = new SharedArrayBuffer(4 * 4);
+    verticesPositionBuffer = new SharedArrayBuffer(4 * 4 * 3);
     verticesPositionStride = 4;
     worldPosition=undefined
 
