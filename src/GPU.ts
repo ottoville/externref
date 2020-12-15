@@ -214,19 +214,28 @@ export class GPU {
         return commandEncoder.finish();
     }
 
+    createInputBuffer(usage: typeof GPUBufferUsage.VERTEX, data: SharedArrayBuffer): GPUVertexBuffer
     createInputBuffer(usage: typeof GPUBufferUsage.VERTEX, data: Float32Array): [SharedArrayBuffer, GPUVertexBuffer]
     createInputBuffer(usage: typeof GPUBufferUsage.INDEX, data: (Uint16Array | Uint32Array)): [SharedArrayBuffer, GPUIndexBuffer]
     createInputBuffer(usage: typeof GPUBufferUsage.VERTEX, data: Float32Array, updatable: boolean): [SharedArrayBuffer, GPUVertexBuffer & GPUCopyDSTBuffer]
     createInputBuffer(usage: typeof GPUBufferUsage.INDEX, data: Uint16Array | Uint32Array, updatable: boolean): [SharedArrayBuffer, GPUIndexBuffer & GPUCopyDSTBuffer]
-    createInputBuffer(usage: typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.VERTEX, data: Float32Array | Uint16Array | Uint32Array, updatable = false) {
-        const CPUBuffer = new SharedArrayBuffer(data.byteLength);
-        const uintView = new Uint8Array(data.buffer);
-        new Uint8Array(CPUBuffer).set(uintView);
+    createInputBuffer(usage: typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.VERTEX, data: Float32Array | Uint16Array | Uint32Array | SharedArrayBuffer, updatable = false) {
+        if (data instanceof SharedArrayBuffer) {
+            var CPUBuffer = data;
+            var uintView = new Uint8Array(CPUBuffer);
+        }
+        else {
+            var CPUBuffer = new SharedArrayBuffer(data.byteLength);
+            var uintView = new Uint8Array(CPUBuffer);
+            new Uint8Array(CPUBuffer).set(uintView);
+        }
         if (updatable)
             usage |= GPUBufferUsage.COPY_DST;
         const GPUBuffer = this.device.createBuffer({ usage, size: data.byteLength, mappedAtCreation: true });
         new Uint8Array(GPUBuffer.getMappedRange()).set(uintView);
         GPUBuffer.unmap();
+        if (data instanceof SharedArrayBuffer)
+            return GPUBuffer;
         return [CPUBuffer, GPUBuffer]
     }
     #syncedBuffers: WeakSet<GPUMapWriteBuffer | GPUMapReadBuffer> = new WeakSet()

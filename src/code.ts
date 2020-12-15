@@ -284,7 +284,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //@ts-ignore
                     this._collisionTriggered = true;
 
-                   // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
+                    // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
                     //@ts-ignore
                     this._position.divideToRef(collider._radius, coordinator._scaledPosition);
                     //@ts-ignore
@@ -300,8 +300,72 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //@ts-ignore
                     coordinator._finalPosition.multiplyInPlace(collider._radius);
                     //run the callback
+
+                    //this._onCollisionPositionChange(this.uniqueId, coordinator._finalPosition, collider.collidedMesh);
+
+                    //  protected _onCollisionPositionChange = (collisionId: number, newPosition: Vector3, collidedMesh: Nullable<AbstractMesh> = null) => {
+
+                    if (!collider.collidedMesh) {
+                        //@ts-ignore
+                        this._previousPosition.copyFrom(this._position);
+                    } else {
+                        //@ts-ignore
+                        this.setPosition(coordinator._finalPosition);
+
+                        if (this.onCollide) {
+                            this.onCollide(collider.collidedMesh);
+                        }
+                    }
+
+
+
+                    // Recompute because of constraints
+                    var cosa = Math.cos(this.alpha);
+                    var sina = Math.sin(this.alpha);
+                    var cosb = Math.cos(this.beta);
+                    var sinb = Math.sin(this.beta);
+
+                    if (sinb === 0) {
+                        sinb = 0.0001;
+                    }
                     //@ts-ignore
-                    this._onCollisionPositionChange(this.uniqueId, coordinator._finalPosition, collider.collidedMesh);
+                    var target = this._getTargetPosition();
+                    //@ts-ignore
+                    this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
+                    //@ts-ignore
+                    target.addToRef(this._computationVector, this._newPosition);
+                    //@ts-ignore
+                    this._position.copyFrom(this._newPosition);
+
+                    var up = this.upVector;
+                    if (this.allowUpsideDown && this.beta < 0) {
+                        up = up.clone();
+                        up = up.negate();
+                    }
+                     //@ts-ignore
+                    this._computeViewMatrix(this._position, target, up);
+                    this._viewMatrix.addAtIndex(12, this.targetScreenOffset.x);
+                    this._viewMatrix.addAtIndex(13, this.targetScreenOffset.y);
+                    //@ts-ignore
+                    this._collisionTriggered = false;
+                    // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                     this._currentTarget = target;
                     return this._viewMatrix;

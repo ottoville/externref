@@ -81,7 +81,7 @@ export class Collider {
     /**
      * Define last collided mesh
      */
-    public collidedMesh: Nullable<AbstractMesh>;
+    public collidedMesh: Nullable<any>;
 
     private _collisionPoint = Vector3.Zero();
     private _planeIntersectionPoint = Vector3.Zero();
@@ -188,7 +188,10 @@ export class Collider {
     }
 
     /** @hidden */
-    public _testTriangle(faceIndex: number, trianglePlaneArray: Array<Plane>, p1: Vector3, p2: Vector3, p3: Vector3, hasMaterial: boolean, hostMesh: AbstractMesh): void {
+    public _testTriangle(faceIndex: number, trianglePlaneArray: Array<Plane>, p1a: Float32Array, p2a: Float32Array, p3a: Float32Array, hasMaterial: boolean): void {
+        const p1 = Vector3.FromArray(p1a);
+        const p2 = Vector3.FromArray(p2a);
+        const p3 = Vector3.FromArray(p3a);
         var t0;
         var embeddedInPlane = false;
 
@@ -372,19 +375,30 @@ export class Collider {
                 }
                 this._nearestDistance = distToCollision;
                 this.collisionFound = true;
-                this.collidedMesh = hostMesh;
+                console.log('collision found')
+                this.collidedMesh = "hostMesh";
             }
         }
     }
 
     /** @hidden */
     public _collide(trianglePlaneArray: Array<Plane>, pts: Vector3[], indices: IndicesArray, indexStart: number, indexEnd: number, decal: number, hasMaterial: boolean, hostMesh: AbstractMesh): void {
-        for (var i = indexStart; i < indexEnd; i += 3) {
-            var p1 = pts[indices[i] - decal];
-            var p2 = pts[indices[i + 1] - decal];
-            var p3 = pts[indices[i + 2] - decal];
+        if (!indices || indices.length === 0) {
+            for (let i = 0; i < pts.length; i += 3) {
+                const p1 = pts[i];
+                const p2 = pts[i + 1];
+                const p3 = pts[i + 2];
 
-            this._testTriangle(i, trianglePlaneArray, p3, p2, p1, hasMaterial, hostMesh);
+                //this._testTriangle(i, trianglePlaneArray, p3, p2, p1, hasMaterial);
+            }
+        } else {
+            for (let i = indexStart; i < indexEnd; i += 3) {
+                const p1 = pts[indices[i] - decal];
+                const p2 = pts[indices[i + 1] - decal];
+                const p3 = pts[indices[i + 2] - decal];
+
+                //this._testTriangle(i, trianglePlaneArray, p3, p2, p1, hasMaterial);
+            }
         }
     }
 

@@ -50,7 +50,7 @@ export class Terrain {
     #ratioY = Terrain.subdivisionsY / this.height;
 
     static heightLayouts: Map<GPU, BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>> = new Map();
-    mesh: TerrainMesh;
+    mesh!: TerrainMesh;
     //terraMesh: TerraMesh;
     static getHeightsLayout(scene: GPU): BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> {
         let layout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | undefined;
@@ -528,6 +528,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             gpuReadBufferPositions.readAndDestroy(async (buff) => {
                 this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
                 this.updateSwap();
+                this.mesh.lastColliderWorldVertices = null
                 this.serialize();
             });
             gpuReadBufferIndices.readAndDestroy(async (buff) => {
@@ -536,10 +537,6 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             })
 
         })();
-       /* const sampler = scene.gpuscene.device.createSampler({
-            magFilter: "linear",
-            minFilter: "linear",
-        });*/
         this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, this.indicesBuffer, 8, this.#terrainIndicesLength / 4);
         this.mesh.boundingBox.box.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
     }
