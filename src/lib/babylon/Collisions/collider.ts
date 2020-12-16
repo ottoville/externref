@@ -3,6 +3,11 @@ import { Vector3 } from "../Maths/math.vector";
 import { AbstractMesh } from "../Meshes/abstractMesh";
 import { Plane } from '../Maths/math.plane';
 
+    // Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
+    // https://www.peroxide.dk/papers/collision/collision.pdf
+
+
+
 var intersectBoxAASphere = (boxMin: Vector3, boxMax: Vector3, sphereCenter: Vector3, sphereRadius: number): boolean => {
     if (boxMin.x > sphereCenter.x + sphereRadius) {
         return false;
@@ -84,7 +89,7 @@ export class Collider {
     public collidedMesh: Nullable<any>;
 
     private _collisionPoint = Vector3.Zero();
-    private _planeIntersectionPoint = Vector3.Zero();
+    private _planeIntersectionPoint: [x:number,y:number,z:number] = [0,0,0];
     private _tempVector = Vector3.Zero();
     private _tempVector2 = Vector3.Zero();
     private _tempVector3 = Vector3.Zero();
@@ -148,9 +153,19 @@ export class Collider {
     }
 
     /** @hidden */
-    public _checkPointInTriangle(point: Vector3, pa: Vector3, pb: Vector3, pc: Vector3, n: Vector3): boolean {
-        pa.subtractToRef(point, this._tempVector);
-        pb.subtractToRef(point, this._tempVector2);
+    public _checkPointInTriangle(point: [x: number, y: number, z: number], pa: Float32Array, pb: Float32Array, pc: Float32Array, n: Vector3): boolean {
+        //TODO: Use simd
+        this._tempVector.x = pa[0] - point[0]
+        this._tempVector.y = pa[1] - point[1]
+        this._tempVector.z = pa[2] - point[2]
+
+        this._tempVector2.x = pb[0] - point[0]
+        this._tempVector2.y = pb[1] - point[1]
+        this._tempVector2.z = pb[2] - point[2]
+
+
+       // pa.subtractToRef(point, this._tempVector);
+       // pb.subtractToRef(point, this._tempVector2);
 
         Vector3.CrossToRef(this._tempVector, this._tempVector2, this._tempVector4);
         var d = Vector3.Dot(this._tempVector4, n);
@@ -158,7 +173,11 @@ export class Collider {
             return false;
         }
 
-        pc.subtractToRef(point, this._tempVector3);
+        this._tempVector3.x = pc[0] - point[0]
+        this._tempVector3.y = pc[1] - point[1]
+        this._tempVector3.z = pc[2] - point[2]
+
+        //pc.subtractToRef(point, this._tempVector3);
         Vector3.CrossToRef(this._tempVector2, this._tempVector3, this._tempVector4);
         d = Vector3.Dot(this._tempVector4, n);
         if (d < 0) {
@@ -189,9 +208,6 @@ export class Collider {
 
     /** @hidden */
     public _testTriangle(faceIndex: number, trianglePlaneArray: Array<Plane>, p1a: Float32Array, p2a: Float32Array, p3a: Float32Array, hasMaterial: boolean): void {
-        const p1 = Vector3.FromArray(p1a);
-        const p2 = Vector3.FromArray(p2a);
-        const p3 = Vector3.FromArray(p3a);
         var t0;
         var embeddedInPlane = false;
 
@@ -202,8 +218,9 @@ export class Collider {
 
         if (!trianglePlaneArray[faceIndex]) {
             trianglePlaneArray[faceIndex] = new Plane(0, 0, 0, 0);
-            trianglePlaneArray[faceIndex].copyFromPoints(p1, p2, p3);
+            trianglePlaneArray[faceIndex].copyFromPoints(Vector3.FromArray(p1a), Vector3.FromArray(p2a), Vector3.FromArray(p3a));
         }
+
 
         var trianglePlane = trianglePlaneArray[faceIndex];
 
@@ -249,14 +266,24 @@ export class Collider {
         var t = 1.0;
 
         if (!embeddedInPlane) {
-            this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
+            //TODO: Use simd
+            this._planeIntersectionPoint[0] = this._basePoint.x - trianglePlane.normal.x;
+            this._planeIntersectionPoint[1] = this._basePoint.y - trianglePlane.normal.y;
+            this._planeIntersectionPoint[2] = this._basePoint.z - trianglePlane.normal.z;
+            //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             this._velocity.scaleToRef(t0, this._tempVector);
-            this._planeIntersectionPoint.addInPlace(this._tempVector);
+            this._planeIntersectionPoint[0] += this._tempVector.x;
+            this._planeIntersectionPoint[1] += this._tempVector.y;
+            this._planeIntersectionPoint[2] += this._tempVector.z;
+            //this._planeIntersectionPoint.addInPlace(this._tempVector);
 
-            if (this._checkPointInTriangle(this._planeIntersectionPoint, p1, p2, p3, trianglePlane.normal)) {
+            if (this._checkPointInTriangle(this._planeIntersectionPoint, p1a, p2a, p3a, trianglePlane.normal)) {
                 found = true;
                 t = t0;
-                this._collisionPoint.copyFrom(this._planeIntersectionPoint);
+                this._collisionPoint.x = this._planeIntersectionPoint[0];
+                this._collisionPoint.y = this._planeIntersectionPoint[1];
+                this._collisionPoint.z = this._planeIntersectionPoint[2];
+               // this._collisionPoint.copyFrom(this._planeIntersectionPoint);
             }
         }
 
@@ -264,6 +291,10 @@ export class Collider {
             var velocitySquaredLength = this._velocity.lengthSquared();
 
             var a = velocitySquaredLength;
+
+            const p1 = Vector3.FromArray(p1a);
+            const p2 = Vector3.FromArray(p2a);
+            const p3 = Vector3.FromArray(p3a);
 
             this._basePoint.subtractToRef(p1, this._tempVector);
             var b = 2.0 * (Vector3.Dot(this._velocity, this._tempVector));
