@@ -227,7 +227,7 @@ export class GPU {
         else {
             var CPUBuffer = new SharedArrayBuffer(data.byteLength);
             var uintView = new Uint8Array(CPUBuffer);
-            new Uint8Array(CPUBuffer).set(uintView);
+            uintView.set(new Uint8Array(data.buffer));
         }
         if (updatable)
             usage |= GPUBufferUsage.COPY_DST;

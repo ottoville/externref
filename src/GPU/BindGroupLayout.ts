@@ -78,20 +78,5 @@ export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends BindGrou
                 }
             )])
         });
-
-        /*if (bindGroups) {
-            const createBindGroup = () => {
-                if (!bindGroups)
-                    return;
-                d.bindGroups = new Set([this.gpuscene.device.createBindGroup(
-                    {
-                        layout: this.bindGroupLayout,
-                        entries: bindGroups()
-                    }
-                )])
-            }
-            this.gpuscene.onResizes.add(createBindGroup)
-            createBindGroup();
-        }*/
     }
 }

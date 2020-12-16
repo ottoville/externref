@@ -46,7 +46,7 @@ export class Scene {
         let drawedMeshes = 0;
         renderPassEncoder.setBindGroup(1, this.lights.uniformBindGroupLightsWGSL);
         this.gpu.rootSceneLayout.renderPipeLines.forEach(rp => {
-            drawedMeshes+=rp.draw(renderPassEncoder, renderPass, 2, this);
+            drawedMeshes += rp.draw(renderPassEncoder, renderPass, 2, this);
         });
         if (this.gpu.rootSceneLayout.subBindGroups.size) {
             this.gpu.rootSceneLayout.subBindGroups.forEach(bgt => 
