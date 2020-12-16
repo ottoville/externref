@@ -13,9 +13,6 @@ async function Simple(scene: Scene) {
 
     return scene.positionBindGroupLightsTimeWGSL.addRenderPipeline({
         label: 'simple',
-        rasterizationState: {
-            cullMode: 'none',
-        },
         primitiveTopology: 'triangle-list',
         colorStates: [{
             format: "bgra8unorm",

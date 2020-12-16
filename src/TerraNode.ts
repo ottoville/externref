@@ -77,7 +77,7 @@ export abstract class TerraNode implements Partial<hasPhysics> {
         this.engine.gpu.NodeInstances.delete(this);
     }
 
-    constructor(public engine: Engine, bufferOffsetBytes?:number) {
+    constructor(public engine: Engine, bufferOffsetBytes?: number) {
         bufferOffsetBytes = typeof (bufferOffsetBytes) == "number" ? bufferOffsetBytes : engine.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
@@ -85,7 +85,7 @@ export abstract class TerraNode implements Partial<hasPhysics> {
         this.data = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes, TerraNode.GPUDataSize);
         this.customData = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 20 * 4, 4);
 
-        
+
         engine.gpu.NodeInstances.set(this, engine.gpu.NodeInstances.size * TerraNode.alignment);
         this.data.set([
             //3d matrix start, 64 bytes
@@ -127,7 +127,7 @@ const worker = new ObjectWorkerThread('/webworkers/mesh.js');
 class pickInfo {
     buffer = new SharedArrayBuffer(6 * 4);
     point = new Float32Array(this.buffer, 0, 3);
-    distance = new Float32Array(this.buffer, 3*4, 1);
+    distance = new Float32Array(this.buffer, 3 * 4, 1);
 }
 class boundingBox {
     buffer = new SharedArrayBuffer(4 * 6);
@@ -143,9 +143,9 @@ export abstract class BoundableNode extends TerraNode {
     readonly facesView?: Float32Array;
     lastColliderWorldVectors = new SharedArrayBuffer((3 * this.verticesPositionBuffer.byteLength) / this.verticesPositionStride);
     lastColliderWorldVectorsView = new Float32Array(this.lastColliderWorldVectors);
-    lastColliderWorldVectorsView2:Float32Array[]=[];
+    lastColliderWorldVectorsView2: Float32Array[] = [];
 
-    constructor(scene: Scene, public verticesPositionBuffer: SharedArrayBuffer, public verticesPositionStride: number=3, public readonly faces?: SharedArrayBuffer) {
+    constructor(scene: Scene, public verticesPositionBuffer: SharedArrayBuffer, public verticesPositionStride: number = 3, public readonly faces?: SharedArrayBuffer) {
         super(scene.engine);
         if (faces) {
             this.facesView = new Float32Array(faces);
@@ -183,73 +183,60 @@ export abstract class BoundableNode extends TerraNode {
             console.log('recalculating collision vertices ');
             this.lastColliderTransformMatrix = collisionsTransformMatrix.clone();
             this.lastColliderWorldVertices = new SharedArrayBuffer(this.verticesPositionBuffer.byteLength);
-//            let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
+            //            let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
             this.trianglePlaneArray = [];
             //this.lastColliderWorldVectors = [];
             //lastColliderVertices.set(window.Wasm.calculatelastcolliderworldvertices(new Float32Array(this.verticesPositionBuffer), collisionsTransformMatrix.m as Float32Array));
-            
+
             const positions = new Float32Array(this.verticesPositionBuffer);
             const tmpVec = Vector3.Zero();
             const len = positions.length / this.verticesPositionStride;
             this.lastColliderWorldVectorsView2 = [];
             for (let i = 0; i < len; i++) {
                 tmpVec.x = positions[i * this.verticesPositionStride];
-                tmpVec.y = positions[i * this.verticesPositionStride+1];
-                tmpVec.z = positions[i * this.verticesPositionStride+2];
+                tmpVec.y = positions[i * this.verticesPositionStride + 1];
+                tmpVec.z = positions[i * this.verticesPositionStride + 2];
                 //this.lastColliderWorldVectors.push(Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix));
                 const transformed = Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix);
                 if (isNaN(transformed.x))
                     debugger;
-                this.lastColliderWorldVectorsView[i*3]=transformed.x
-                this.lastColliderWorldVectorsView[i*3+1]=transformed.y
-                this.lastColliderWorldVectorsView[i*3 + 2] = transformed.z
-                this.lastColliderWorldVectorsView2.push(new Float32Array(this.lastColliderWorldVectors, i*3 * 4, 3))
+                this.lastColliderWorldVectorsView[i * 3] = transformed.x
+                this.lastColliderWorldVectorsView[i * 3 + 1] = transformed.y
+                this.lastColliderWorldVectorsView[i * 3 + 2] = transformed.z
+                this.lastColliderWorldVectorsView2.push(new Float32Array(this.lastColliderWorldVectors, i * 3 * 4, 3))
 
             }
-         /*   console.log(positions)
-            console.log(this.lastColliderWorldVectorsView)
-            console.log(this.lastColliderWorldVectorsView2)*/
+            /*   console.log(positions)
+               console.log(this.lastColliderWorldVectorsView)
+               console.log(this.lastColliderWorldVectorsView2)*/
         }
 
         if (!this.indicesBuffer) {
-            return
-           /* for (let i = 0; i < this.lastColliderWorldVectors.length; i += 3) {
-                const p1 = this.lastColliderWorldVectors[i];
-                const p2 = this.lastColliderWorldVectors[i + 1];
-                const p3 = this.lastColliderWorldVectors[i + 2];
-
-                collider._testTriangle(i, this.trianglePlaneArray, p3, p2, p1, false, this);
-            }*/
+           /* for (let i = 0; i < this.lastColliderWorldVectorsView2.length; i += 3) {
+                const p1 = this.lastColliderWorldVectorsView2[i];
+                const p2 = this.lastColliderWorldVectorsView2[i + 1];
+                const p3 = this.lastColliderWorldVectorsView2[i + 2];
+ 
+                 collider._testTriangle(i, this.trianglePlaneArray, p3, p2, p1, false);
+             }*/
             return;
         }
         let indices = new Uint32Array(this.indicesBuffer);
         let lenn = indices.length;
-        for (var i = 0; i < lenn; i += 3) {
-
-          //  var pp1 = this.lastColliderWorldVectors[indices[i]];
-         //   var pp2 = this.lastColliderWorldVectors[indices[i + 1]];
-          //  var pp3 = this.lastColliderWorldVectors[indices[i + 2]];
-            
-            try {
-               /* var pp1 = new Float32Array(this.lastColliderWorldVectors, indices[i] * 4, 3);
-                var pp2 = new Float32Array(this.lastColliderWorldVectors, indices[i + 1] * 4, 3);
-                var pp3 = new Float32Array(this.lastColliderWorldVectors, indices[i + 2] * 4, 3);*/
-                //
+        try {
+            for (var i = 0; i < lenn; i += 3) {
                 var pp1 = this.lastColliderWorldVectorsView2[indices[i]];
                 var pp2 = this.lastColliderWorldVectorsView2[indices[i + 1]];
                 var pp3 = this.lastColliderWorldVectorsView2[indices[i + 2]];
-                //console.log('pp', pp1, pp2, pp3)
+
                 collider._testTriangle(i, this.trianglePlaneArray, pp3, pp2, pp1, false);
 
-            } catch (e) {
-                console.log(e);
-                debugger;
             }
-            
-           // var pp2 = this.lastColliderWorldVectors[indices[i + 1]*3];
-            //var pp3 = this.lastColliderWorldVectors[indices[i + 2]*3];
-
+        } catch (e) {
+            console.log(e);
+            debugger;
         }
+
     }
 }
 export class PositionNode extends TerraNode {

@@ -224,19 +224,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                                 console.error(e);
                             }
                         })
-                    })
-
-                    // Check all meshes
-                    /*for (var index = 0; index < scene.meshes.length; index++) {
-
-
-
-                        //@ts-ignore
-                        var mesh: TerraMesh = scene.meshes[index] as TerraMesh;
-                        if (mesh.isEnabled() && mesh.checkCollisions && mesh.subMeshes && mesh !== excludedMesh && ((collisionMask & mesh.collisionGroup) !== 0)) {
-                            mesh._checkCollision(collider);
-                        }
-                    }*/
+                    });
                     if (!collider.collisionFound) {
 
                         position.addToRef(velocity, finalPosition);
@@ -516,7 +504,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }
                 }
                 //@ts-ignore
-                const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(500, 20, 0), {
+                const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(-500, 200, 0), {
                     getUniqueId: () => 1,
                     addCamera: (c) => {
                         c._scene = scene;
@@ -526,6 +514,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     getEngine: () => engine,
                     onKeyboardObservable: scene.onKeyboardObservable
                 });
+                camera.setPosition(new Vector3(1000,300,1000))
+
                 camera._cache.mode = camera.mode;
                 camera._cache.minZ = camera.minZ;
                 camera._cache.maxZ = camera.maxZ;

@@ -7,40 +7,38 @@ export class Box extends SimpleMesh {
     constructor(scene: Scene) {
         super(scene, new SharedArrayBuffer(6 * 4 * 3 * 4), 'uint32');
         new Float32Array(this.verticesPositionBuffer).set([
+                        // Left face
+            -1.0, 1.0, -1.0,
+            -1.0, 1.0, 1.0,
             -1.0, -1.0, 1.0,
+            -1.0, -1.0, -1.0,
+                        // Right face
             1.0, -1.0, 1.0,
             1.0, 1.0, 1.0,
-            -1.0, 1.0, 1.0,
-
-            // Back face
-            -1.0, -1.0, -1.0,
-            -1.0, 1.0, -1.0,
             1.0, 1.0, -1.0,
             1.0, -1.0, -1.0,
-
-            // Top face
-            -1.0, 1.0, -1.0,
-            -1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0,
-            1.0, 1.0, -1.0,
 
             // Bottom face
-            -1.0, -1.0, -1.0,
-            1.0, -1.0, -1.0,
-            1.0, -1.0, 1.0,
             -1.0, -1.0, 1.0,
-
-            // Right face
+            1.0, -1.0, 1.0,
             1.0, -1.0, -1.0,
+            -1.0, -1.0, -1.0,
+
+                        // Top face
             1.0, 1.0, -1.0,
             1.0, 1.0, 1.0,
-            1.0, -1.0, 1.0,
-
-            // Left face
-            -1.0, -1.0, -1.0,
-            -1.0, -1.0, 1.0,
             -1.0, 1.0, 1.0,
             -1.0, 1.0, -1.0,
+                        // Back face
+            1.0, -1.0, -1.0,
+            1.0, 1.0, -1.0,
+            -1.0, 1.0, -1.0,
+            -1.0, -1.0, -1.0,
+
+            -1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0,
+            1.0, -1.0, 1.0,
+            -1.0, -1.0, 1.0,
         ]);
 
         this.vBuffer = scene.gpu.createInputBuffer(GPUBufferUsage.VERTEX, this.verticesPositionBuffer);
