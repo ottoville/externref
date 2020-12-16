@@ -3,11 +3,10 @@ import { SimpleMesh } from "../RenderPipeLines/Simple";
 
 export class Box extends SimpleMesh {
     iBuffer: GPUIndexBuffer;
-    verticesPositionBuffer: SharedArrayBuffer
     vBuffer: GPUVertexBuffer;
     constructor(scene: Scene) {
-        super(scene, 'uint32');
-        [this.verticesPositionBuffer, this.vBuffer] = scene.gpu.createInputBuffer(GPUBufferUsage.VERTEX, new Float32Array([
+        super(scene, new SharedArrayBuffer(6 * 4 * 3 * 4), 'uint32');
+        new Float32Array(this.verticesPositionBuffer).set([
             -1.0, -1.0, 1.0,
             1.0, -1.0, 1.0,
             1.0, 1.0, 1.0,
@@ -42,7 +41,9 @@ export class Box extends SimpleMesh {
             -1.0, -1.0, 1.0,
             -1.0, 1.0, 1.0,
             -1.0, 1.0, -1.0,
-        ]));
+        ]);
+
+        this.vBuffer = scene.gpu.createInputBuffer(GPUBufferUsage.VERTEX, this.verticesPositionBuffer);
         [this.indicesBuffer, this.iBuffer] = scene.gpu.createInputBuffer(GPUBufferUsage.INDEX, new Uint32Array([
             0, 1, 2, 0, 2, 3,    // front
             4, 5, 6, 4, 6, 7,    // back

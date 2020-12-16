@@ -50,9 +50,8 @@ export abstract class SimpleMesh extends BoundableNode {
     
     abstract vBuffer: GPUVertexBuffer;
     abstract iBuffer: GPUIndexBuffer;
-    verticesPositionStride = 3;
-    constructor(scene: Scene, indexFormat: GPUIndexFormat='uint32') {
-        super(scene);
+    constructor(scene: Scene, verticesPositionBuffer: SharedArrayBuffer, indexFormat: GPUIndexFormat='uint32') {
+        super(scene, verticesPositionBuffer, 3);
         
         (async () => {
             let cachePipeline: Promise<RenderPipeline> | undefined = renderPipelines.get(scene.gpu);

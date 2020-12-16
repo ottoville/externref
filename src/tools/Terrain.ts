@@ -43,7 +43,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
                 boundingBox: terrain.mesh.boundingBox,
                 slopeArr: terrain.slopeArrBuffer,
                 pickInfo: terrain.mesh.pickInfo.buffer,
-                _groundFacesNormalsBuffer: terrain.facet12ArrCPUBuffer
+                _groundFacesNormalsBuffer: terrain.mesh.faces
             });
 
 
@@ -92,8 +92,8 @@ export class TerrainTool extends TerraNode implements has3DPosition {
         const b1 = this.engine.gpu.createGPUBuffer(length, [GPUBufferUsage.COPY_SRC], true);
         new Float32Array(b1.getMappedRange()).set(new Float32Array(this.terrain.terrainPositionAndUvsAndNormalsCPUSwap, offset, length / 4))
         b1.unmap();
-        const b2 = this.engine.gpu.createGPUBuffer(this.terrain.facet12ArrCPUBuffer.byteLength, [GPUBufferUsage.COPY_SRC], true);
-        new Float32Array(b2.getMappedRange()).set(this.terrain.facet12ArrCPUBufferView)
+        const b2 = this.engine.gpu.createGPUBuffer(this.terrain.mesh.faces.byteLength, [GPUBufferUsage.COPY_SRC], true);
+        new Float32Array(b2.getMappedRange()).set(this.terrain.mesh.facesView!)
         b2.unmap();
         const commandEncoder = this.engine.gpu.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
@@ -107,7 +107,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
             0, //source offset
             this.terrain.facet12ArrGPUBuffer, //destination buffer
             0, //destination offset
-            this.terrain.facet12ArrCPUBuffer.byteLength);
+            this.terrain.mesh.faces.byteLength);
         this.engine.gpu.device.defaultQueue.submit([commandEncoder.finish()]);
         b1.destroy();
         b2.destroy();

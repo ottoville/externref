@@ -108,7 +108,7 @@ export class WorldScene extends Scene {
  * @param viewR defines the right View matrix to use (if provided)
  * @param projectionR defines the right Projection matrix to use (if provided)
  */
-    public setTransformMatrix(viewL: Matrix, projectionL: Matrix, viewR?: Matrix, projectionR?: Matrix): void {
+    public setTransformMatrix(viewL: Matrix, projectionL: Matrix): void {
         //@ts-ignore
         if (this._viewUpdateFlag === viewL.updateFlag && this._projectionUpdateFlag === projectionL.updateFlag) {
             return;
@@ -647,8 +647,6 @@ export class WorldScene extends Scene {
         userinfo: loginProvider,
         public blazor: DotNet.BlazorInstance,
         ticks: number,
-        canvas: HTMLCanvasElement,
-        device: GPUDevice,
         private webSocket?: WebSocket
     ) {
         super(engine as Engine);

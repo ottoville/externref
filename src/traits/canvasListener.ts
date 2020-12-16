@@ -66,7 +66,7 @@ export class canvasListener extends Trait {
             }
         }
     }
-    public removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (ev: HTMLElementEventMap[K]) => any, lazy: boolean = false) {
+    public removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (ev: HTMLElementEventMap[K]) => any) {
         let map: Map<(ev: HTMLElementEventMap[K]) => any, ((e: HTMLElementEventMap[K]) => void) | null> | undefined;
         if (map = this.#listeners.get(type)) {
             GPU.instance.renderPassScreen.canvas.removeEventListener(type, map.get(listener) || listener);

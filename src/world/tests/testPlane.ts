@@ -6,11 +6,9 @@ import { worldPosition } from "../../traits/worldPosition";
 
 export class testPlane extends BoundableNode {
     worldPosition: worldPosition = new worldPosition(this);
-    verticesPositionBuffer = new SharedArrayBuffer(7 * 3 * 4);
-    verticesPositionStride = 3;
 
     constructor(scene: Scene) {
-        super(scene);[]
+        super(scene, new SharedArrayBuffer(7 * 3 * 4))
         this.boundingBox.box.set([0, 0, 0, 200, 200, 0])
         new Float32Array(this.verticesPositionBuffer).set([
             0, 0, 0,

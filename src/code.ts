@@ -585,7 +585,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                 const b = new Box(terrascene);
                 b.worldPosition.update(scale => scale.set([200, 200, 200]));
-
                 /*new testPlaneNormals(terrascene);*/
                 const terrainInited = Terrain.loadFromTexture(terrascene);
                 terrainInited.then(async r => {
@@ -823,7 +822,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 console.log('websocket onopen');
                 // progelem.value = 30;
                 try {
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device, webSocket));
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, webSocket));
                 } catch (e) {
                     sceneInitedrej(e);
                 }
@@ -832,7 +831,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 console.log('websocket onerror');
                 try {
                     //blazor.invokeMethod('setProgress', 20);
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, canvas, device));
+                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks));
                 } catch (e) {
                     sceneInitedrej(e);
                 }

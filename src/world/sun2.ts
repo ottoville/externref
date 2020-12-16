@@ -33,7 +33,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
         return Math.min(Math.max(value, min), max);
     }
 
-    onPhysicTick = (delta: number) => {
+    onPhysicTick = (/*delta: number*/) => {
         let anglePerMinute = (Math.PI * 2) / 1439;
         //let meridian: number = Math.PI * 0.1;
         let meridian: number = Math.PI * 0.5;

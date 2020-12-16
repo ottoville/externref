@@ -2,12 +2,10 @@
 import type { Scene } from "../Scene";
 
 export class Sea extends BoundableNode {
-    verticesPositionBuffer = new SharedArrayBuffer(4 * 4 * 3);
-    verticesPositionStride = 4;
     worldPosition=undefined
 
     constructor(scene: Scene) {
-        super(scene);
+        super(scene, new SharedArrayBuffer(4 * 4 * 3)); //48
         (async () => {
 
             const [vertex, fragment] = await Promise.all(['/shaders/wgsl/water.vert.wgsl', '/shaders/wgsl/water.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await(await fetch(u)).text() } )  ));
