@@ -101,7 +101,7 @@ export class Collider {
     private _tempVector2: [x: number, y: number, z: number] = [0, 0, 0];
     private _tempVector3: [x: number, y: number, z: number] = [0, 0, 0];
     private _tempVector4: [x: number, y: number, z: number] = [0, 0, 0];
-    private _edge = Vector3.Zero();
+    private _edge: [x: number, y: number, z: number] = [0, 0, 0];
     private _baseToVertex = Vector3.Zero();
     private _destinationPoint = Vector3.Zero();
     private _slidePlaneNormal = Vector3.Zero();
@@ -376,17 +376,18 @@ export class Collider {
             const points = [p1a, p2a, p3a, p1a];
             for (let i = 0; i < 3; i++) {
                 const p = points[i]
-                this._edge.x = points[i+1][0] - p[0];
-                this._edge.y = points[i + 1][1] - p[1];
-                this._edge.z = points[i + 1][2] - p[2];
+                this._edge[0] = points[i+1][0] - p[0];
+                this._edge[1] = points[i + 1][1] - p[1];
+                this._edge[2] = points[i + 1][2] - p[2];
 
                 this._baseToVertex.x = p[0] - this._basePoint.x;
                 this._baseToVertex.y = p[1] - this._basePoint.y;
                 this._baseToVertex.z = p[2] - this._basePoint.z;
 
-                var edgeSquaredLength = this._edge.lengthSquared();
-                var edgeDotVelocity = Vector3.Dot(this._edge, Vector3.FromArray(this._velocity));
-                var edgeDotBaseToVertex = Vector3.Dot(this._edge, this._baseToVertex);
+                //var edgeSquaredLength = this._edge.lengthSquared();
+                var edgeSquaredLength = this._edge[0] * this._edge[0] + this._edge[1] * this._edge[1] + this._edge[2] * this._edge[2]
+                var edgeDotVelocity = Dot(this._edge, this._velocity);
+                var edgeDotBaseToVertex = Vector3.Dot(Vector3.FromArray(this._edge), this._baseToVertex);
 
                 a = edgeSquaredLength * (-velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
                 b = edgeSquaredLength * (2.0 * Vector3.Dot(Vector3.FromArray(this._velocity), this._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
@@ -398,10 +399,13 @@ export class Collider {
                     if (f >= 0.0 && f <= 1.0) {
                         t = lowestRoot.root;
                         found = true;
-                        this._edge.scaleInPlace(f);
-                        this._collisionPoint.x = p[0] + this._edge.x;
-                        this._collisionPoint.y = p[1] + this._edge.y;
-                        this._collisionPoint.z = p[2] + this._edge.z;
+                       // this._edge.scaleInPlace(f);
+                        this._edge[0] *= f;
+                        this._edge[1] *= f;
+                        this._edge[2] *= f;
+                        this._collisionPoint.x = p[0] + this._edge[0];
+                        this._collisionPoint.y = p[1] + this._edge[1];
+                        this._collisionPoint.z = p[2] + this._edge[2];
                     }
                 }
             }
