@@ -292,12 +292,6 @@ export class Collider {
 
             var a = velocitySquaredLength;
 
-            //const p1 = Vector3.FromArray(p1a);
-            //const p2 = Vector3.FromArray(p2a);
-           // const p3 = Vector3.FromArray(p3a);
-
-            //this._basePoint.subtractToRef(p1, this._tempVector);
-
             let lowestRoot: { root: number, found: boolean };
             let b: number;
             let c: number;
@@ -311,147 +305,41 @@ export class Collider {
                 if (lowestRoot.found) {
                     t = lowestRoot.root;
                     found = true;
-                    //this._collisionPoint.copyFrom(p1);
                     this._collisionPoint.x = p[0]
                     this._collisionPoint.y = p[1]
                     this._collisionPoint.z = p[2]
                 }
-            })
+            });
+            const points = [p1a, p2a, p3a, p1a];
+            for (let i = 0; i < 3; i++) {
+                const p = points[i]
+                this._edge.x = points[i+1][0] - p[0];
+                this._edge.y = points[i + 1][1] - p[1];
+                this._edge.z = points[i + 1][2] - p[2];
 
-            //this._tempVector.x = this._basePoint.x - p1a[0];
-            //this._tempVector.y = this._basePoint.y - p1a[1];
-            //this._tempVector.z = this._basePoint.z - p1a[2];
+                this._baseToVertex.x = p[0] - this._basePoint.x;
+                this._baseToVertex.y = p[1] - this._basePoint.y;
+                this._baseToVertex.z = p[2] - this._basePoint.z;
 
-           // var b = 2.0 * (Vector3.Dot(this._velocity, this._tempVector));
-            //var c = this._tempVector.lengthSquared() - 1.0;
+                var edgeSquaredLength = this._edge.lengthSquared();
+                var edgeDotVelocity = Vector3.Dot(this._edge, this._velocity);
+                var edgeDotBaseToVertex = Vector3.Dot(this._edge, this._baseToVertex);
 
-          //  var lowestRoot = getLowestRoot(a, b, c, t);
-          /*  if (lowestRoot.found) {
-                t = lowestRoot.root;
-                found = true;
-                //this._collisionPoint.copyFrom(p1);
-                this._collisionPoint.x=p1a[0]
-                this._collisionPoint.y=p1a[1]
-                this._collisionPoint.z = p1a[2]
-            }
-            */
-           // this._basePoint.subtractToRef(p2, this._tempVector);
-           // this._tempVector.x = this._basePoint.x - p2a[0];
-           // this._tempVector.y = this._basePoint.y - p2a[1];
-           // this._tempVector.z = this._basePoint.z - p2a[2];
-            //b = 2.0 * (Vector3.Dot(this._velocity, this._tempVector));
-           // c = this._tempVector.lengthSquared() - 1.0;
+                a = edgeSquaredLength * (-velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
+                b = edgeSquaredLength * (2.0 * Vector3.Dot(this._velocity, this._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
+                c = edgeSquaredLength * (1.0 - this._baseToVertex.lengthSquared()) + edgeDotBaseToVertex * edgeDotBaseToVertex;
 
-          //  lowestRoot = getLowestRoot(a, b, c, t);
-        /*    if (lowestRoot.found) {
-                t = lowestRoot.root;
-                found = true;
-                //this._collisionPoint.copyFrom(p2);
-                this._collisionPoint.x = p2a[0];
-                this._collisionPoint.y = p2a[1];
-                this._collisionPoint.z = p2a[2];
-            }
-            */
-            //this._basePoint.subtractToRef(p3, this._tempVector);
-           // b = 2.0 * (Vector3.Dot(this._velocity, this._tempVector));
-          //  c = this._tempVector.lengthSquared() - 1.0;
-
-          //  lowestRoot = getLowestRoot(a, b, c, t);
-         /*   if (lowestRoot.found) {
-                t = lowestRoot.root;
-                found = true;
-                this._collisionPoint.copyFrom(p3);
-            }*/
-            this._edge.x=p2a[0]-p1a[0]
-            this._edge.y=p2a[1]-p1a[1]
-            this._edge.z = p2a[2] - p1a[2]
-           // p2.subtractToRef(p1, this._edge);
-            this._baseToVertex.x = p1a[0] - this._basePoint.x;
-            this._baseToVertex.y = p1a[1] - this._basePoint.y;
-            this._baseToVertex.z = p1a[2] - this._basePoint.z;
-            //p1.subtractToRef(this._basePoint, this._baseToVertex);
-            var edgeSquaredLength = this._edge.lengthSquared();
-            var edgeDotVelocity = Vector3.Dot(this._edge, this._velocity);
-            var edgeDotBaseToVertex = Vector3.Dot(this._edge, this._baseToVertex);
-
-            a = edgeSquaredLength * (-velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
-            b = edgeSquaredLength * (2.0 * Vector3.Dot(this._velocity, this._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
-            c = edgeSquaredLength * (1.0 - this._baseToVertex.lengthSquared()) + edgeDotBaseToVertex * edgeDotBaseToVertex;
-
-            lowestRoot = getLowestRoot(a, b, c, t);
-            if (lowestRoot.found) {
-                var f = (edgeDotVelocity * lowestRoot.root - edgeDotBaseToVertex) / edgeSquaredLength;
-
-                if (f >= 0.0 && f <= 1.0) {
-                    t = lowestRoot.root;
-                    found = true;
-                    this._edge.scaleInPlace(f);
-                   // p1.addToRef(this._edge, this._collisionPoint);
-                    this._collisionPoint.x = p1a[0] + this._edge.x;
-                    this._collisionPoint.y = p1a[1] + this._edge.y;
-                    this._collisionPoint.z = p1a[2] + this._edge.z;
-                }
-            }
-
-            //p3.subtractToRef(p2, this._edge);
-            this._edge.x = p3a[0] - p2a[0];
-            this._edge.y = p3a[1] - p2a[1];
-            this._edge.z = p3a[2] - p2a[2];
-
-            //p2.subtractToRef(this._basePoint, this._baseToVertex);
-            this._baseToVertex.x = p2a[0] - this._basePoint.x;
-            this._baseToVertex.y = p2a[1] - this._basePoint.y;
-            this._baseToVertex.z = p2a[2] - this._basePoint.z;
-            edgeSquaredLength = this._edge.lengthSquared();
-            edgeDotVelocity = Vector3.Dot(this._edge, this._velocity);
-            edgeDotBaseToVertex = Vector3.Dot(this._edge, this._baseToVertex);
-
-            a = edgeSquaredLength * (-velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
-            b = edgeSquaredLength * (2.0 * Vector3.Dot(this._velocity, this._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
-            c = edgeSquaredLength * (1.0 - this._baseToVertex.lengthSquared()) + edgeDotBaseToVertex * edgeDotBaseToVertex;
-            lowestRoot = getLowestRoot(a, b, c, t);
-            if (lowestRoot.found) {
-                f = (edgeDotVelocity * lowestRoot.root - edgeDotBaseToVertex) / edgeSquaredLength;
-
-                if (f >= 0.0 && f <= 1.0) {
-                    t = lowestRoot.root;
-                    found = true;
-                    this._edge.scaleInPlace(f);
-                  //  p2.addToRef(this._edge, this._collisionPoint);
-                    this._collisionPoint.x = p2a[0] + this._edge.x
-                    this._collisionPoint.y = p2a[1] + this._edge.y
-                    this._collisionPoint.z = p2a[2] + this._edge.z
-                }
-            }
-
-           // p1.subtractToRef(p3, this._edge);
-            this._edge.x = p1a[0] - p3a[0];
-            this._edge.y = p1a[1] - p3a[1];
-            this._edge.z = p1a[2] - p3a[2];
-            //p3.subtractToRef(this._basePoint, this._baseToVertex);
-            this._baseToVertex.x = p3a[0] - this._basePoint.x;
-            this._baseToVertex.y = p3a[1] - this._basePoint.y;
-            this._baseToVertex.z = p3a[2] - this._basePoint.z;
-            edgeSquaredLength = this._edge.lengthSquared();
-            edgeDotVelocity = Vector3.Dot(this._edge, this._velocity);
-            edgeDotBaseToVertex = Vector3.Dot(this._edge, this._baseToVertex);
-
-            a = edgeSquaredLength * (-velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
-            b = edgeSquaredLength * (2.0 * Vector3.Dot(this._velocity, this._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
-            c = edgeSquaredLength * (1.0 - this._baseToVertex.lengthSquared()) + edgeDotBaseToVertex * edgeDotBaseToVertex;
-
-            lowestRoot = getLowestRoot(a, b, c, t);
-            if (lowestRoot.found) {
-                f = (edgeDotVelocity * lowestRoot.root - edgeDotBaseToVertex) / edgeSquaredLength;
-
-                if (f >= 0.0 && f <= 1.0) {
-                    t = lowestRoot.root;
-                    found = true;
-                    this._edge.scaleInPlace(f);
-                    //p3.addToRef(this._edge, this._collisionPoint);
-                    this._collisionPoint.x = p3a[0] + this._edge.x;
-                    this._collisionPoint.y = p3a[1] + this._edge.y;
-                    this._collisionPoint.z = p3a[2] + this._edge.z;
+                lowestRoot = getLowestRoot(a, b, c, t);
+                if (lowestRoot.found) {
+                    var f = (edgeDotVelocity * lowestRoot.root - edgeDotBaseToVertex) / edgeSquaredLength;
+                    if (f >= 0.0 && f <= 1.0) {
+                        t = lowestRoot.root;
+                        found = true;
+                        this._edge.scaleInPlace(f);
+                        this._collisionPoint.x = p[0] + this._edge.x;
+                        this._collisionPoint.y = p[1] + this._edge.y;
+                        this._collisionPoint.z = p[2] + this._edge.z;
+                    }
                 }
             }
         }
