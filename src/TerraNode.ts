@@ -6,6 +6,8 @@ import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
 import { worldPosition } from "./traits/worldPosition";
 import { ObjectWorkerThread } from "./WorkerThread";
+
+
 /*
 function matrixMultiply(m: ArrayLike<number>, otherM: ArrayLike<number>): number[] {
     var tm0 = m[0], tm1 = m[1], tm2 = m[2], tm3 = m[3];
@@ -171,8 +173,9 @@ export abstract class BoundableNode extends TerraNode {
     trianglePlaneArray = [];
 
     public checkCollision(collider: Collider) {
-        //TODO: Bounding box test
-
+        if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
+            return;
+        }
         // Transformation matrix
         const collisionsScalingMatrix = new Matrix();
         Matrix.ScalingToRef(1.0 / collider._radius[0], 1.0 / collider._radius[1], 1.0 / collider._radius[2], collisionsScalingMatrix);

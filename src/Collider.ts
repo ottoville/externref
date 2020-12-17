@@ -10,31 +10,30 @@ function CrossToRef(left: [number, number, number], right: [number, number, numb
     result[1] = left[2] * right[0] - left[0] * right[2];
     result[2] = left[0] * right[1] - left[1] * right[0];
 }
-var intersectBoxAASphere = (boxMin: Vector3, boxMax: Vector3, sphereCenter: Vector3, sphereRadius: number): boolean => {
-    if (boxMin.x > sphereCenter.x + sphereRadius) {
+var intersectBoxAASphere = (boxMin: Float32Array, boxMax: Float32Array, sphereCenter: [number,number,number], sphereRadius: number): boolean => {
+    if (boxMin[0] > sphereCenter[0] + sphereRadius) {
         return false;
     }
 
-    if (sphereCenter.x - sphereRadius > boxMax.x) {
+    if (sphereCenter[0] - sphereRadius > boxMax[0]) {
         return false;
     }
 
-    if (boxMin.y > sphereCenter.y + sphereRadius) {
+    if (boxMin[1] > sphereCenter[1] + sphereRadius) {
         return false;
     }
 
-    if (sphereCenter.y - sphereRadius > boxMax.y) {
+    if (sphereCenter[1] - sphereRadius > boxMax[1]) {
         return false;
     }
 
-    if (boxMin.z > sphereCenter.z + sphereRadius) {
+    if (boxMin[2] > sphereCenter[2] + sphereRadius) {
         return false;
     }
 
-    if (sphereCenter.z - sphereRadius > boxMax.z) {
+    if (sphereCenter[2] - sphereRadius > boxMax[2]) {
         return false;
     }
-
     return true;
 };
 
@@ -209,16 +208,16 @@ export class Collider {
     }
 
     /** @hidden */
-    public _canDoCollision(sphereCenter: Vector3, sphereRadius: number, vecMin: Vector3, vecMax: Vector3): boolean {
-        var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
+    public _canDoCollision(/*sphereCenter: Vector3, sphereRadius: number, */vecMin: Float32Array, vecMax: Float32Array): boolean {
+      //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
 
         var max = Math.max(this._radius[0], this._radius[1], this._radius[2]);
 
-        if (distance > this._velocityWorldLength + max + sphereRadius) {
+     /*   if (distance > this._velocityWorldLength + max + sphereRadius) {
             return false;
-        }
+        }*/
 
-        if (!intersectBoxAASphere(vecMin, vecMax, Vector3.FromArray(this._basePointWorld), this._velocityWorldLength + max)) {
+        if (!intersectBoxAASphere(vecMin, vecMax, this._basePointWorld, this._velocityWorldLength + max)) {
             return false;
         }
 
@@ -463,10 +462,6 @@ export class Collider {
         this.intersectionPoint[0] += this._displacementVector[0];
         this.intersectionPoint[1] += this._displacementVector[1];
         this.intersectionPoint[2] += this._displacementVector[2];
-
-
-        // this._slidePlaneNormal.scaleInPlace(Plane.SignedDistanceToPlaneFromPositionAndNormal(this.intersectionPoint, this._slidePlaneNormal, this._destinationPoint));
-        // scale = Plane.SignedDistanceToPlaneFromPositionAndNormal(this.intersectionPoint, Vector3.FromArray(this._slidePlaneNormal), this._destinationPoint);
 
         var d = -(this._slidePlaneNormal[0] * this.intersectionPoint[0] + this._slidePlaneNormal[1] * this.intersectionPoint[1] + this._slidePlaneNormal[2] * this.intersectionPoint[2]);
         scale = Dot(this._destinationPoint, this._slidePlaneNormal) + d;
