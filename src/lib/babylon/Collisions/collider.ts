@@ -292,11 +292,16 @@ export class Collider {
 
             var a = velocitySquaredLength;
 
-            const p1 = Vector3.FromArray(p1a);
+            //const p1 = Vector3.FromArray(p1a);
             const p2 = Vector3.FromArray(p2a);
             const p3 = Vector3.FromArray(p3a);
 
-            this._basePoint.subtractToRef(p1, this._tempVector);
+            //this._basePoint.subtractToRef(p1, this._tempVector);
+
+            this._tempVector.x = this._basePoint.x - p1a[0];
+            this._tempVector.y = this._basePoint.y - p1a[1];
+            this._tempVector.z = this._basePoint.z - p1a[2];
+
             var b = 2.0 * (Vector3.Dot(this._velocity, this._tempVector));
             var c = this._tempVector.lengthSquared() - 1.0;
 
@@ -304,7 +309,10 @@ export class Collider {
             if (lowestRoot.found) {
                 t = lowestRoot.root;
                 found = true;
-                this._collisionPoint.copyFrom(p1);
+                //this._collisionPoint.copyFrom(p1);
+                this._collisionPoint.x=p1a[0]
+                this._collisionPoint.y=p1a[1]
+                this._collisionPoint.z = p1a[2]
             }
 
             this._basePoint.subtractToRef(p2, this._tempVector);
@@ -328,9 +336,14 @@ export class Collider {
                 found = true;
                 this._collisionPoint.copyFrom(p3);
             }
-
-            p2.subtractToRef(p1, this._edge);
-            p1.subtractToRef(this._basePoint, this._baseToVertex);
+            this._edge.x=p2.x-p1a[0]
+            this._edge.y=p2.y-p1a[1]
+            this._edge.z = p2.z - p1a[2]
+           // p2.subtractToRef(p1, this._edge);
+            this._baseToVertex.x = p1a[0] - this._basePoint.x;
+            this._baseToVertex.y = p1a[1] - this._basePoint.y;
+            this._baseToVertex.z = p1a[2] - this._basePoint.z;
+            //p1.subtractToRef(this._basePoint, this._baseToVertex);
             var edgeSquaredLength = this._edge.lengthSquared();
             var edgeDotVelocity = Vector3.Dot(this._edge, this._velocity);
             var edgeDotBaseToVertex = Vector3.Dot(this._edge, this._baseToVertex);
@@ -347,7 +360,10 @@ export class Collider {
                     t = lowestRoot.root;
                     found = true;
                     this._edge.scaleInPlace(f);
-                    p1.addToRef(this._edge, this._collisionPoint);
+                   // p1.addToRef(this._edge, this._collisionPoint);
+                    this._collisionPoint.x = p1a[0] + this._edge.x;
+                    this._collisionPoint.y = p1a[1] + this._edge.y;
+                    this._collisionPoint.z = p1a[2] + this._edge.z;
                 }
             }
 
@@ -372,7 +388,10 @@ export class Collider {
                 }
             }
 
-            p1.subtractToRef(p3, this._edge);
+           // p1.subtractToRef(p3, this._edge);
+            this._edge.x = p1a[0] - p3.x;
+            this._edge.y = p1a[1] - p3.y;
+            this._edge.z = p1a[2] - p3.z;
             p3.subtractToRef(this._basePoint, this._baseToVertex);
             edgeSquaredLength = this._edge.lengthSquared();
             edgeDotVelocity = Vector3.Dot(this._edge, this._velocity);
