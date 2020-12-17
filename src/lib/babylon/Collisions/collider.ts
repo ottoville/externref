@@ -88,14 +88,14 @@ export class Collider {
     /**
      * Define last intersection point in local space
      */
-    public intersectionPoint: Vector3;
+    public intersectionPoint: [x: number, y: number, z: number] = [0, 0, 0];
 
     /**
      * Define last collided mesh
      */
     public collidedMesh: Nullable<any>;
 
-    private _collisionPoint = Vector3.Zero();
+    private _collisionPoint: [x: number, y: number, z: number] = [0, 0, 0];
     private _planeIntersectionPoint: [x:number,y:number,z:number] = [0,0,0];
     private _tempVector: [x: number, y: number, z: number] = [0, 0, 0];
     private _tempVector2: [x: number, y: number, z: number] = [0, 0, 0];
@@ -103,9 +103,9 @@ export class Collider {
     private _tempVector4: [x: number, y: number, z: number] = [0, 0, 0];
     private _edge: [x: number, y: number, z: number] = [0, 0, 0];
     private _baseToVertex: [x: number, y: number, z: number] = [0, 0, 0];
-    private _destinationPoint = Vector3.Zero();
+    private _destinationPoint: [x: number, y: number, z: number] = [0, 0, 0];
     private _slidePlaneNormal: [x: number, y: number, z: number] = [0, 0, 0];
-    private _displacementVector = Vector3.Zero();
+    private _displacementVector: [x: number, y: number, z: number] = [0, 0, 0];
 
     /** @hidden */
     public _radius = Vector3.One();
@@ -118,7 +118,7 @@ export class Collider {
     public _velocityWorldLength: number;
     /** @hidden */
     public _basePointWorld = Vector3.Zero();
-    private _velocityWorld = Vector3.Zero();
+    private _velocityWorld: [x: number, y: number, z: number] = [0, 0, 0];
     private _normalizedVelocity: [x: number, y: number, z: number] = [0, 0, 0];
     /** @hidden */
     public _initialVelocity: Vector3;
@@ -168,10 +168,10 @@ export class Collider {
         this._basePointWorld.y = source[1] * this._radius.y;
         this._basePointWorld.z = source[2] * this._radius.z;
        // dir.multiplyToRef(this._radius, this._velocityWorld);
-        this._velocityWorld.x = dir[0] * this._radius.x;
-        this._velocityWorld.y = dir[1] * this._radius.y;
-        this._velocityWorld.z = dir[2] * this._radius.z;
-        this._velocityWorldLength = this._velocityWorld.length();
+        this._velocityWorld[0] = dir[0] * this._radius.x;
+        this._velocityWorld[1] = dir[1] * this._radius.y;
+        this._velocityWorld[2] = dir[2] * this._radius.z;
+        this._velocityWorldLength = Math.hypot(this._velocityWorld[0], this._velocityWorld[1], this._velocityWorld[2]);
 
         this._epsilon = e;
         this.collisionFound = false;
@@ -230,7 +230,7 @@ export class Collider {
 
         return true;
     }
-
+    _points: [Float32Array, Float32Array, Float32Array, Float32Array];
     /** @hidden */
     public _testTriangle(faceIndex: number, trianglePlaneArray: {normal:[x:number,y:number,z:number],d:number}[], p1a: Float32Array, p2a: Float32Array, p3a: Float32Array, hasMaterial: boolean): void {
         let t0:number;
@@ -311,7 +311,10 @@ export class Collider {
             }
         }
 
-        this._collisionPoint.copyFromFloats(0, 0, 0);
+       // this._collisionPoint.copyFromFloats(0, 0, 0);
+        this._collisionPoint[0] = 0;
+        this._collisionPoint[1] = 0;
+        this._collisionPoint[2] = 0;
 
         var found = false;
         var t = 1.0;
@@ -334,9 +337,9 @@ export class Collider {
             if (this._checkPointInTriangle(this._planeIntersectionPoint, p1a, p2a, p3a, trianglePlane.normal)) {
                 found = true;
                 t = t0;
-                this._collisionPoint.x = this._planeIntersectionPoint[0];
-                this._collisionPoint.y = this._planeIntersectionPoint[1];
-                this._collisionPoint.z = this._planeIntersectionPoint[2];
+                this._collisionPoint[0] = this._planeIntersectionPoint[0];
+                this._collisionPoint[1] = this._planeIntersectionPoint[1];
+                this._collisionPoint[2] = this._planeIntersectionPoint[2];
                // this._collisionPoint.copyFrom(this._planeIntersectionPoint);
             }
         }
@@ -350,32 +353,29 @@ export class Collider {
             let lowestRoot: { root: number, found: boolean };
             let b: number;
             let c: number;
-            [p1a, p2a, p3a].forEach(p => {
+            this._points = [p1a, p2a, p3a, p1a]
+
+            for (let i = 0; i < 3; i++) {
+                const p = this._points[i]
                 this._tempVector[0] = this._basePoint[0] - p[0];
                 this._tempVector[1] = this._basePoint[1] - p[1];
                 this._tempVector[2] = this._basePoint[2] - p[2];
                 b = 2.0 * (Dot(this._velocity, this._tempVector));
-                //Dot product
-             //   b = 2.0 * (this._velocity[0] * this._tempVector[0] + this._velocity[1] * this._tempVector[1] + this._velocity[2] * this._tempVector[2])
-
-
-               // c = this._tempVector.lengthSquared() - 1.0;
                 c = (this._tempVector[0] * this._tempVector[0] + this._tempVector[1] * this._tempVector[1] + this._tempVector[2] * this._tempVector[2]) - 1.0;
                 lowestRoot = getLowestRoot(a, b, c, t);
                 if (lowestRoot.found) {
                     t = lowestRoot.root;
                     found = true;
-                    this._collisionPoint.x = p[0]
-                    this._collisionPoint.y = p[1]
-                    this._collisionPoint.z = p[2]
+                    this._collisionPoint[0] = p[0]
+                    this._collisionPoint[1] = p[1]
+                    this._collisionPoint[2] = p[2]
                 }
-            });
-            const points = [p1a, p2a, p3a, p1a];
+            }            
             for (let i = 0; i < 3; i++) {
-                const p = points[i]
-                this._edge[0] = points[i+1][0] - p[0];
-                this._edge[1] = points[i + 1][1] - p[1];
-                this._edge[2] = points[i + 1][2] - p[2];
+                const p = this._points[i]
+                this._edge[0] = this._points[i+1][0] - p[0];
+                this._edge[1] = this._points[i + 1][1] - p[1];
+                this._edge[2] = this._points[i + 1][2] - p[2];
 
                 this._baseToVertex[0] = p[0] - this._basePoint[0];
                 this._baseToVertex[1] = p[1] - this._basePoint[1];
@@ -400,9 +400,9 @@ export class Collider {
                         this._edge[0] *= f;
                         this._edge[1] *= f;
                         this._edge[2] *= f;
-                        this._collisionPoint.x = p[0] + this._edge[0];
-                        this._collisionPoint.y = p[1] + this._edge[1];
-                        this._collisionPoint.z = p[2] + this._edge[2];
+                        this._collisionPoint[0] = p[0] + this._edge[0];
+                        this._collisionPoint[1] = p[1] + this._edge[1];
+                        this._collisionPoint[2] = p[2] + this._edge[2];
                     }
                 }
             }
@@ -413,9 +413,12 @@ export class Collider {
 
             if (!this.collisionFound || distToCollision < this._nearestDistance) {
                 if (!this.intersectionPoint) {
-                    this.intersectionPoint = this._collisionPoint.clone();
+                    this.intersectionPoint = [this._collisionPoint[0], this._collisionPoint[1], this._collisionPoint[2]];
                 } else {
-                    this.intersectionPoint.copyFrom(this._collisionPoint);
+                    //this.intersectionPoint.copyFrom(this._collisionPoint);
+                    this.intersectionPoint[0] = this._collisionPoint[0];
+                    this.intersectionPoint[1] = this._collisionPoint[1];
+                    this.intersectionPoint[2] = this._collisionPoint[2];
                 }
                 this._nearestDistance = distToCollision;
                 this.collisionFound = true;
@@ -448,26 +451,21 @@ export class Collider {
 
     /** @hidden */
     public _getResponse(pos: [x: number, y: number, z: number], vel: [x:number, y:number, z:number]): void {
-       // pos.addToRef(vel, this._destinationPoint);
-        this._destinationPoint.x = pos[0] + vel[0];
-        this._destinationPoint.y = pos[1] + vel[1];
-        this._destinationPoint.z = pos[2] + vel[2];
+        this._destinationPoint[0] = pos[0] + vel[0];
+        this._destinationPoint[1] = pos[1] + vel[1];
+        this._destinationPoint[2] = pos[2] + vel[2];
         let scale = this._nearestDistance / Math.hypot(vel[0], vel[1], vel[2]);
         vel[0] *= scale;
         vel[1] *= scale;
         vel[2] *= scale;
-        //vel.scaleInPlace((this._nearestDistance / vel.length()));
 
-
-
-        //this._basePoint.addToRef(vel, pos);
         pos[0] = this._basePoint[0] + vel[0];
         pos[1] = this._basePoint[1] + vel[1];
         pos[2] = this._basePoint[2] + vel[2];
-        //pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
-        this._slidePlaneNormal[0] = pos[0] - this.intersectionPoint.x;
-        this._slidePlaneNormal[1] = pos[1] - this.intersectionPoint.y;
-        this._slidePlaneNormal[2] = pos[2] - this.intersectionPoint.z;
+
+        this._slidePlaneNormal[0] = pos[0] - this.intersectionPoint[0];
+        this._slidePlaneNormal[1] = pos[1] - this.intersectionPoint[1];
+        this._slidePlaneNormal[2] = pos[2] - this.intersectionPoint[2];
 
         const length = Math.hypot(this._slidePlaneNormal[0], this._slidePlaneNormal[1], this._slidePlaneNormal[2]);
         if (!(length === 0 || length === 1.0)) {
@@ -480,30 +478,39 @@ export class Collider {
        // this._slidePlaneNormal.normalize();
 
        // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
-        this._displacementVector.x = this._slidePlaneNormal[0] * this._epsilon;
-        this._displacementVector.y = this._slidePlaneNormal[1] * this._epsilon;
-        this._displacementVector.z = this._slidePlaneNormal[2] * this._epsilon;
+        this._displacementVector[0] = this._slidePlaneNormal[0] * this._epsilon;
+        this._displacementVector[1] = this._slidePlaneNormal[1] * this._epsilon;
+        this._displacementVector[2] = this._slidePlaneNormal[2] * this._epsilon;
 
        // pos.addInPlace(this._displacementVector);
-        pos[0] += this._displacementVector.x;
-        pos[1] += this._displacementVector.y;
-        pos[2] += this._displacementVector.z;
-        this.intersectionPoint.addInPlace(this._displacementVector);
+        pos[0] += this._displacementVector[0];
+        pos[1] += this._displacementVector[1];
+        pos[2] += this._displacementVector[2];
+        //this.intersectionPoint.addInPlace(this._displacementVector);
+        this.intersectionPoint[0] += this._displacementVector[0];
+        this.intersectionPoint[1] += this._displacementVector[1];
+        this.intersectionPoint[2] += this._displacementVector[2];
+
 
        // this._slidePlaneNormal.scaleInPlace(Plane.SignedDistanceToPlaneFromPositionAndNormal(this.intersectionPoint, this._slidePlaneNormal, this._destinationPoint));
-        scale = Plane.SignedDistanceToPlaneFromPositionAndNormal(this.intersectionPoint, Vector3.FromArray(this._slidePlaneNormal), this._destinationPoint);
+       // scale = Plane.SignedDistanceToPlaneFromPositionAndNormal(this.intersectionPoint, Vector3.FromArray(this._slidePlaneNormal), this._destinationPoint);
+
+        var d = -(this._slidePlaneNormal[0] * this.intersectionPoint[0] + this._slidePlaneNormal[1] * this.intersectionPoint[1] + this._slidePlaneNormal[2] * this.intersectionPoint[2]);
+        scale= Dot(this._destinationPoint, this._slidePlaneNormal) + d;
+
+
+
         this._slidePlaneNormal[0] *= scale;
         this._slidePlaneNormal[1] *= scale;
         this._slidePlaneNormal[2] *= scale;
 
         //this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
-        this._destinationPoint.x -= this._slidePlaneNormal[0];
-        this._destinationPoint.y -= this._slidePlaneNormal[1];
-        this._destinationPoint.z -= this._slidePlaneNormal[2];
+        this._destinationPoint[0] -= this._slidePlaneNormal[0];
+        this._destinationPoint[1] -= this._slidePlaneNormal[1];
+        this._destinationPoint[2] -= this._slidePlaneNormal[2];
         //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
-        vel[0] = this._destinationPoint.x - this.intersectionPoint.x;
-        vel[1] = this._destinationPoint.y - this.intersectionPoint.y;
-        vel[2] = this._destinationPoint.z - this.intersectionPoint.z;
-
+        vel[0] = this._destinationPoint[0] - this.intersectionPoint[0];
+        vel[1] = this._destinationPoint[1] - this.intersectionPoint[1];
+        vel[2] = this._destinationPoint[2] - this.intersectionPoint[2];
     }
 }
