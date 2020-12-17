@@ -54,7 +54,7 @@ export class DefaultCollisionCoordinator implements ICollisionCoordinator {
 
         // Check if this is a mesh else camera or -1
         var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
-
+        //@ts-ignore
         collider._initialize(position, velocity, closeDistance);
 
         // Check all meshes
@@ -71,6 +71,7 @@ export class DefaultCollisionCoordinator implements ICollisionCoordinator {
         }
 
         if (velocity.x !== 0 || velocity.y !== 0 || velocity.z !== 0) {
+            //@ts-ignore
             collider._getResponse(position, velocity);
         }
 

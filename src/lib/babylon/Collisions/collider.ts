@@ -111,7 +111,7 @@ export class Collider {
     public _radius = Vector3.One();
     /** @hidden */
     public _retry = 0;
-    private _velocity: Vector3;
+    private _velocity: [number, number, number];
     private _basePoint: Vector3;
     private _epsilon: number;
     /** @hidden */
@@ -145,14 +145,32 @@ export class Collider {
 
     // Methods
     /** @hidden */
-    public _initialize(source: Vector3, dir: Vector3, e: number): void {
+    public _initialize(source: Vector3, dir: [number, number, number], e: number): void {
         this._velocity = dir;
-        Vector3.NormalizeToRef(dir, this._normalizedVelocity);
+       // Vector3.NormalizeToRef(dir, this._normalizedVelocity);
+
+        var len = Math.hypot(dir[0], dir[1],dir[2]);
+        if (len === 0 || len === 1.0) {
+            this._normalizedVelocity.x = dir[0];
+            this._normalizedVelocity.y = dir[1];
+            this._normalizedVelocity.z = dir[2];
+            //return reference.copyFromFloats(this.x, this.y, this.z);
+        }
+        const scale = 1.0 / len;
+        this._normalizedVelocity.x = dir[0] * scale
+        this._normalizedVelocity.y = dir[1] * scale
+        this._normalizedVelocity.z = dir[2] * scale
+
+      //  result.copyFromFloats(this.x * scale, this.y * scale, this.z * scale);
+      //  return this.scaleToRef(1.0 / len, reference);
+
         this._basePoint = source;
 
         source.multiplyToRef(this._radius, this._basePointWorld);
-        dir.multiplyToRef(this._radius, this._velocityWorld);
-
+       // dir.multiplyToRef(this._radius, this._velocityWorld);
+        this._velocityWorld.x = dir[0] * this._radius.x;
+        this._velocityWorld.y = dir[1] * this._radius.y;
+        this._velocityWorld.z = dir[2] * this._radius.z;
         this._velocityWorldLength = this._velocityWorld.length();
 
         this._epsilon = e;
@@ -265,7 +283,7 @@ export class Collider {
         }*/
 
         var signedDistToTrianglePlane = Vector3.Dot(this._basePoint, Vector3.FromArray(trianglePlane.normal)) + trianglePlane.d; //trianglePlane.signedDistanceTo(this._basePoint);
-        var normalDotVelocity = Vector3.Dot(Vector3.FromArray(trianglePlane.normal), this._velocity);
+        var normalDotVelocity = Dot(trianglePlane.normal, this._velocity);
 
         if (normalDotVelocity == 0) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
@@ -308,9 +326,9 @@ export class Collider {
             this._planeIntersectionPoint[2] = this._basePoint.z - trianglePlane.normal[2];
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
            // this._velocity.scaleToRef(t0, this._tempVector);
-            this._tempVector[0] = this._velocity.x * t0
-            this._tempVector[1] = this._velocity.y * t0
-            this._tempVector[2] = this._velocity.z * t0
+            this._tempVector[0] = this._velocity[0] * t0
+            this._tempVector[1] = this._velocity[1] * t0
+            this._tempVector[2] = this._velocity[2] * t0
             this._planeIntersectionPoint[0] += this._tempVector[0];
             this._planeIntersectionPoint[1] += this._tempVector[1];
             this._planeIntersectionPoint[2] += this._tempVector[2];
@@ -327,7 +345,8 @@ export class Collider {
         }
 
         if (!found) {
-            var velocitySquaredLength = this._velocity.lengthSquared();
+           // var velocitySquaredLength = this._velocity.lengthSquared();
+            var velocitySquaredLength = this._velocity[0] * this._velocity[0] + this._velocity[1] * this._velocity[1] + this._velocity[2] * this._velocity[2];
 
             var a = velocitySquaredLength;
 
@@ -338,9 +357,9 @@ export class Collider {
                 this._tempVector[0] = this._basePoint.x - p[0];
                 this._tempVector[1] = this._basePoint.y - p[1];
                 this._tempVector[2] = this._basePoint.z - p[2];
-               // b = 2.0 * (Dot(this._velocity.asArray(), this._tempVector));
+                b = 2.0 * (Dot(this._velocity, this._tempVector));
                 //Dot product
-                b = 2.0 * (this._velocity.x * this._tempVector[0] + this._velocity.y * this._tempVector[1] + this._velocity.z * this._tempVector[2])
+             //   b = 2.0 * (this._velocity[0] * this._tempVector[0] + this._velocity[1] * this._tempVector[1] + this._velocity[2] * this._tempVector[2])
 
 
                // c = this._tempVector.lengthSquared() - 1.0;
@@ -366,11 +385,11 @@ export class Collider {
                 this._baseToVertex.z = p[2] - this._basePoint.z;
 
                 var edgeSquaredLength = this._edge.lengthSquared();
-                var edgeDotVelocity = Vector3.Dot(this._edge, this._velocity);
+                var edgeDotVelocity = Vector3.Dot(this._edge, Vector3.FromArray(this._velocity));
                 var edgeDotBaseToVertex = Vector3.Dot(this._edge, this._baseToVertex);
 
                 a = edgeSquaredLength * (-velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
-                b = edgeSquaredLength * (2.0 * Vector3.Dot(this._velocity, this._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
+                b = edgeSquaredLength * (2.0 * Vector3.Dot(Vector3.FromArray(this._velocity), this._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
                 c = edgeSquaredLength * (1.0 - this._baseToVertex.lengthSquared()) + edgeDotBaseToVertex * edgeDotBaseToVertex;
 
                 lowestRoot = getLowestRoot(a, b, c, t);
@@ -389,7 +408,7 @@ export class Collider {
         }
 
         if (found) {
-            var distToCollision = t * this._velocity.length();
+            var distToCollision = t * Math.hypot(this._velocity[0], this._velocity[1], this._velocity[2]);
 
             if (!this.collisionFound || distToCollision < this._nearestDistance) {
                 if (!this.intersectionPoint) {
@@ -427,11 +446,23 @@ export class Collider {
     }
 
     /** @hidden */
-    public _getResponse(pos: Vector3, vel: Vector3): void {
-        pos.addToRef(vel, this._destinationPoint);
-        vel.scaleInPlace((this._nearestDistance / vel.length()));
+    public _getResponse(pos: Vector3, vel: [x:number, y:number, z:number]): void {
+       // pos.addToRef(vel, this._destinationPoint);
+        this._destinationPoint.x = pos.x + vel[0];
+        this._destinationPoint.y = pos.y + vel[1];
+        this._destinationPoint.z = pos.z + vel[2];
+        const scale = this._nearestDistance / Math.hypot(vel[0], vel[1], vel[2]);
+        vel[0] *= scale;
+        vel[1] *= scale;
+        vel[2] *= scale;
+        //vel.scaleInPlace((this._nearestDistance / vel.length()));
 
-        this._basePoint.addToRef(vel, pos);
+
+
+        //this._basePoint.addToRef(vel, pos);
+        pos.x = this._basePoint.x + vel[0];
+        pos.y = this._basePoint.y + vel[1];
+        pos.z = this._basePoint.z + vel[2];
         pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
         this._slidePlaneNormal.normalize();
         this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
@@ -442,6 +473,10 @@ export class Collider {
         this._slidePlaneNormal.scaleInPlace(Plane.SignedDistanceToPlaneFromPositionAndNormal(this.intersectionPoint, this._slidePlaneNormal, this._destinationPoint));
         this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
 
-        this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
+        //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
+        vel[0] = this._destinationPoint.x - this.intersectionPoint.x;
+        vel[1] = this._destinationPoint.y - this.intersectionPoint.y;
+        vel[2] = this._destinationPoint.z - this.intersectionPoint.z;
+
     }
 }

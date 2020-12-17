@@ -203,7 +203,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 const CollisionsEpsilon = 0.001;
                 const coordinator: DefaultCollisionCoordinator = scene.collisionCoordinator as DefaultCollisionCoordinator;
                 //@ts-ignore
-                coordinator._collideWithWorld = function (position: Vector3, velocity: Vector3, collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
+                coordinator._collideWithWorld = function (position: Vector3, velocity: [x:number,y:number,z:number], collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
                     //TODO: Call only when camera position change
                     var closeDistance = CollisionsEpsilon * 10.0;
                     if (collider._retry >= maximumRetry) {
@@ -227,14 +227,17 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     });
                     if (!collider.collisionFound) {
 
-                        position.addToRef(velocity, finalPosition);
+                        //position.addToRef(velocity, finalPosition);
+                        finalPosition.x = position.x + velocity[0];
+                        finalPosition.y = position.y + velocity[1];
+                        finalPosition.z = position.z + velocity[2];
                         return;
                     }
-                    if (velocity.x !== 0 || velocity.y !== 0 || velocity.z !== 0) {
+                    if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
                         collider._getResponse(position, velocity);
                     }
 
-                    if (velocity.length() <= closeDistance) {
+                    if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
                         finalPosition.copyFrom(position);
                         return;
                     }
@@ -284,7 +287,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //@ts-ignore
                     collider._initialPosition = coordinator._scaledPosition;
                     //@ts-ignore
-                    coordinator._collideWithWorld(coordinator._scaledPosition, coordinator._scaledVelocity, collider, 3, coordinator._finalPosition, null);
+                    coordinator._collideWithWorld(coordinator._scaledPosition, coordinator._scaledVelocity.asArray(), collider, 3, coordinator._finalPosition, null);
                     //@ts-ignore
                     coordinator._finalPosition.multiplyInPlace(collider._radius);
                     //run the callback
