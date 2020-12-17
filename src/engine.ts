@@ -2,6 +2,7 @@
 import type { GPU } from "./GPU";
 import type { DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
 import { TerraNode } from "./TerraNode";
+import { Collider } from "./Collider";
 
 export class Engine {
     physics = new Physics();
@@ -9,6 +10,7 @@ export class Engine {
     calculatePickingRaysPipeline: TerraGPUComputePipeLine;
     bindgrouplayout1: GPUBindGroupLayout;
     #tempBuffer?: GPUCopySRCBuffer;
+    collider = new Collider();
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>) {
         this.positionBindGroupTime = gpu.rootSceneLayout.addChildBindGroup(gpu.BindGroup, true);
         

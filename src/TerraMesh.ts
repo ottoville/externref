@@ -7,7 +7,7 @@ import { Matrix } from "./lib/babylon/Maths/math.js";
 import { Material } from "./lib/babylon/Materials/material.js";
 import { Geometry } from "./lib/babylon/Meshes/geometry.js";
 
-
+/*
 var getLowestRoot: (a: number, b: number, c: number, maxR: number) => { root: number, found: boolean } =
     (function () {
         var result = { root: 0, found: false };
@@ -43,7 +43,7 @@ var getLowestRoot: (a: number, b: number, c: number, maxR: number) => { root: nu
             return result;
         };
     }
-    )();
+    )();*/
 export class TerraMesh extends Mesh {
     public positionsBuffer: SharedArrayBuffer;
     public positionsView: DataView;
@@ -100,6 +100,7 @@ export class TerraMesh extends Mesh {
       //  vertexData.applyToMesh(this, true);
         new Geometry(Geometry.RandomId(), this.getScene(), vertexData, false, this);
     }
+    /*
     public _testTriangle(collider: {
         _normalizedVelocity: Vector3,
         _basePoint: Vector3,
@@ -301,7 +302,7 @@ export class TerraMesh extends Mesh {
                 collider.BabylonCollider.collidedMesh = hostMesh;
             }
         }
-    }
+    }*/
 
     public _trianglePlanes = [];
     public lastColliderWorldVectors: Vector3[] = [];

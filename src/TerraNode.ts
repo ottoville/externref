@@ -1,5 +1,6 @@
-﻿import { Engine } from "./engine";
-import { Collider } from "./lib/babylon/Collisions/collider";
+﻿import { Collider } from "./Collider";
+import { Engine } from "./engine";
+
 import type { isLight } from "./lights";
 import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
@@ -174,7 +175,7 @@ export abstract class BoundableNode extends TerraNode {
 
         // Transformation matrix
         const collisionsScalingMatrix = new Matrix();
-        Matrix.ScalingToRef(1.0 / collider._radius.x, 1.0 / collider._radius.y, 1.0 / collider._radius.z, collisionsScalingMatrix);
+        Matrix.ScalingToRef(1.0 / collider._radius[0], 1.0 / collider._radius[1], 1.0 / collider._radius[2], collisionsScalingMatrix);
         const collisionsTransformMatrix = collisionsScalingMatrix;
         if (this.worldPosition)
             Matrix.FromArray(this.worldPosition.worldMatrix).multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);

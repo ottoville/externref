@@ -24,7 +24,6 @@ import { Engine } from "./engine.js";
 import { Sun2 } from "./world/sun2.js";
 import { PositionNode } from "./TerraNode.js";
 import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
-import { Collider } from "./lib/babylon/Collisions/collider.js";
 import { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
 import { Scene } from "./Scene.js";
 
@@ -198,16 +197,20 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
             const projectionmatrix = new Float32Array(projectionmatrixBuffer);
             blazor.invokeMethod('setProgress', 12);
+            const terraEngine = new Engine(gpuscene, DB);
             // const scene2 = await scenePromise;
             const cameraReady = scenePromise.then((scene) => {
                 const CollisionsEpsilon = 0.001;
                 const coordinator: DefaultCollisionCoordinator = scene.collisionCoordinator as DefaultCollisionCoordinator;
                 //@ts-ignore
-                coordinator._collideWithWorld = function (position: Vector3, velocity: [x:number,y:number,z:number], collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
+                coordinator._collideWithWorld = function (position: [x: number, y: number, z: number], velocity: [x:number,y:number,z:number], collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
                     //TODO: Call only when camera position change
                     var closeDistance = CollisionsEpsilon * 10.0;
                     if (collider._retry >= maximumRetry) {
-                        finalPosition.copyFrom(position);
+                        finalPosition.x = position[0];
+                        finalPosition.y = position[1];
+                        finalPosition.z = position[2];
+                       // finalPosition.copyFrom(position);
                         return;
                     }
 
@@ -228,9 +231,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     if (!collider.collisionFound) {
 
                         //position.addToRef(velocity, finalPosition);
-                        finalPosition.x = position.x + velocity[0];
-                        finalPosition.y = position.y + velocity[1];
-                        finalPosition.z = position.z + velocity[2];
+                        finalPosition.x = position[0] + velocity[0];
+                        finalPosition.y = position[1] + velocity[1];
+                        finalPosition.z = position[2] + velocity[2];
                         return;
                     }
                     if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
@@ -238,14 +241,18 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }
 
                     if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
-                        finalPosition.copyFrom(position);
+                        //finalPosition.copyFrom(position);
+                        finalPosition.x = position[0];
+                        finalPosition.y = position[1];
+                        finalPosition.z = position[2];
                         return;
                     }
                     collider._retry++;
                     //@ts-ignore
                     this._collideWithWorld(position, velocity, collider, maximumRetry, finalPosition, excludedMesh);
                 }
-                const collider = coordinator.createCollider();
+
+               // const collider = coordinator.createCollider();
 
                 ArcRotateCamera.prototype._getViewMatrix = function () {
                     var cosa = Math.cos(this.alpha);
@@ -268,8 +275,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }
                     //@ts-ignore
                     target.addToRef(this._computationVector, this._newPosition);
-
-                    collider._radius = this.collisionRadius;
+                    //@ts-ignore
+                    terraEngine.collider._radius = this.collisionRadius.asArray();
                     //@ts-ignore
                     this._newPosition.subtractToRef(this._position, this._collisionVelocity);
                     //@ts-ignore
@@ -277,26 +284,26 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                     // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
                     //@ts-ignore
-                    this._position.divideToRef(collider._radius, coordinator._scaledPosition);
+                    this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
                     //@ts-ignore
-                    this._collisionVelocity.divideToRef(collider._radius, coordinator._scaledVelocity);
-                    collider.collidedMesh = null;
-                    collider._retry = 0;
+                    this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
+                    terraEngine.collider.collidedMesh = null;
+                    terraEngine.collider._retry = 0;
+
+                   // terraEngine.collider._initialVelocity = coordinator._scaledVelocity;
+
+                  //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
                     //@ts-ignore
-                    collider._initialVelocity = coordinator._scaledVelocity;
+                    coordinator._collideWithWorld(coordinator._scaledPosition.asArray(), coordinator._scaledVelocity.asArray(), terraEngine.collider, 3, coordinator._finalPosition, null);
                     //@ts-ignore
-                    collider._initialPosition = coordinator._scaledPosition;
-                    //@ts-ignore
-                    coordinator._collideWithWorld(coordinator._scaledPosition, coordinator._scaledVelocity.asArray(), collider, 3, coordinator._finalPosition, null);
-                    //@ts-ignore
-                    coordinator._finalPosition.multiplyInPlace(collider._radius);
+                    coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
                     //run the callback
 
                     //this._onCollisionPositionChange(this.uniqueId, coordinator._finalPosition, collider.collidedMesh);
 
                     //  protected _onCollisionPositionChange = (collisionId: number, newPosition: Vector3, collidedMesh: Nullable<AbstractMesh> = null) => {
 
-                    if (!collider.collidedMesh) {
+                    if (!terraEngine.collider.collidedMesh) {
                         //@ts-ignore
                         this._previousPosition.copyFrom(this._position);
                     } else {
@@ -304,10 +311,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         this.setPosition(coordinator._finalPosition);
 
                         if (this.onCollide) {
-                            this.onCollide(collider.collidedMesh);
+                            this.onCollide(terraEngine.collider.collidedMesh);
                         }
                     }
-
 
 
                     // Recompute because of constraints
@@ -340,19 +346,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //@ts-ignore
                     this._collisionTriggered = false;
                     // }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -551,7 +544,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 return camera;
             });
 
-
+            
             blazor.invokeMethod('setProgress', 13);
 
 
@@ -566,7 +559,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             blazor.invokeMethod('setProgress', 14);
 
 
-            const terraEngine = new Engine(gpuscene, DB);
+            
             TerraScene.instance = new Scene(gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
                 new Sun2(terrascene, sunBufferOffsetBytes);
                 // Initial scene objects here
