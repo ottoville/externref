@@ -102,9 +102,9 @@ export class Collider {
     private _tempVector3: [x: number, y: number, z: number] = [0, 0, 0];
     private _tempVector4: [x: number, y: number, z: number] = [0, 0, 0];
     private _edge: [x: number, y: number, z: number] = [0, 0, 0];
-    private _baseToVertex = Vector3.Zero();
+    private _baseToVertex: [x: number, y: number, z: number] = [0, 0, 0];
     private _destinationPoint = Vector3.Zero();
-    private _slidePlaneNormal = Vector3.Zero();
+    private _slidePlaneNormal: [x: number, y: number, z: number] = [0, 0, 0];
     private _displacementVector = Vector3.Zero();
 
     /** @hidden */
@@ -112,14 +112,14 @@ export class Collider {
     /** @hidden */
     public _retry = 0;
     private _velocity: [number, number, number];
-    private _basePoint: Vector3;
+    private _basePoint: [x: number, y: number, z: number] = [0, 0, 0];
     private _epsilon: number;
     /** @hidden */
     public _velocityWorldLength: number;
     /** @hidden */
     public _basePointWorld = Vector3.Zero();
     private _velocityWorld = Vector3.Zero();
-    private _normalizedVelocity = Vector3.Zero();
+    private _normalizedVelocity: [x: number, y: number, z: number] = [0, 0, 0];
     /** @hidden */
     public _initialVelocity: Vector3;
     /** @hidden */
@@ -139,34 +139,34 @@ export class Collider {
     /**
      * Gets the plane normal used to compute the sliding response (in local space)
      */
-    public get slidePlaneNormal(): Vector3 {
+    public get slidePlaneNormal(): [number, number, number] {
         return this._slidePlaneNormal;
     }
 
     // Methods
     /** @hidden */
-    public _initialize(source: Vector3, dir: [number, number, number], e: number): void {
+    public _initialize(source: [number, number, number], dir: [number, number, number], e: number): void {
         this._velocity = dir;
        // Vector3.NormalizeToRef(dir, this._normalizedVelocity);
 
         var len = Math.hypot(dir[0], dir[1],dir[2]);
         if (len === 0 || len === 1.0) {
-            this._normalizedVelocity.x = dir[0];
-            this._normalizedVelocity.y = dir[1];
-            this._normalizedVelocity.z = dir[2];
-            //return reference.copyFromFloats(this.x, this.y, this.z);
+            this._normalizedVelocity[0] = dir[0];
+            this._normalizedVelocity[1] = dir[1];
+            this._normalizedVelocity[2] = dir[2];
+        } else {
+            const scale = 1.0 / len;
+            this._normalizedVelocity[0] = dir[0] * scale
+            this._normalizedVelocity[1] = dir[1] * scale
+            this._normalizedVelocity[2] = dir[2] * scale
         }
-        const scale = 1.0 / len;
-        this._normalizedVelocity.x = dir[0] * scale
-        this._normalizedVelocity.y = dir[1] * scale
-        this._normalizedVelocity.z = dir[2] * scale
-
-      //  result.copyFromFloats(this.x * scale, this.y * scale, this.z * scale);
-      //  return this.scaleToRef(1.0 / len, reference);
 
         this._basePoint = source;
 
-        source.multiplyToRef(this._radius, this._basePointWorld);
+        //source.multiplyToRef(this._radius, this._basePointWorld);
+        this._basePointWorld.x = source[0] * this._radius.x;
+        this._basePointWorld.y = source[1] * this._radius.y;
+        this._basePointWorld.z = source[2] * this._radius.z;
        // dir.multiplyToRef(this._radius, this._velocityWorld);
         this._velocityWorld.x = dir[0] * this._radius.x;
         this._velocityWorld.y = dir[1] * this._radius.y;
@@ -242,9 +242,6 @@ export class Collider {
         }
 
         if (!trianglePlaneArray[faceIndex]) {
-            //trianglePlaneArray[faceIndex] = new Plane(0, 0, 0, 0);
-            //trianglePlaneArray[faceIndex].copyFromPoints(Vector3.FromArray(p1a), Vector3.FromArray(p2a), Vector3.FromArray(p3a));
-
             var x1 = p2a[0] - p1a[0];
             var y1 = p2a[1] - p1a[1];
             var z1 = p2a[2] - p1a[2];
@@ -274,7 +271,7 @@ export class Collider {
 
         var trianglePlane = trianglePlaneArray[faceIndex];
 
-        var dot = Vector3.Dot(Vector3.FromArray(trianglePlane.normal), this._normalizedVelocity);
+        var dot = Dot(trianglePlane.normal, this._normalizedVelocity);
         if (dot > 0)
             return
 
@@ -282,7 +279,7 @@ export class Collider {
             return;
         }*/
 
-        var signedDistToTrianglePlane = Vector3.Dot(this._basePoint, Vector3.FromArray(trianglePlane.normal)) + trianglePlane.d; //trianglePlane.signedDistanceTo(this._basePoint);
+        var signedDistToTrianglePlane = Dot(this._basePoint, trianglePlane.normal) + trianglePlane.d; //trianglePlane.signedDistanceTo(this._basePoint);
         var normalDotVelocity = Dot(trianglePlane.normal, this._velocity);
 
         if (normalDotVelocity == 0) {
@@ -321,9 +318,9 @@ export class Collider {
 
         if (!embeddedInPlane) {
             //TODO: Use simd
-            this._planeIntersectionPoint[0] = this._basePoint.x - trianglePlane.normal[0];
-            this._planeIntersectionPoint[1] = this._basePoint.y - trianglePlane.normal[1];
-            this._planeIntersectionPoint[2] = this._basePoint.z - trianglePlane.normal[2];
+            this._planeIntersectionPoint[0] = this._basePoint[0] - trianglePlane.normal[0];
+            this._planeIntersectionPoint[1] = this._basePoint[1] - trianglePlane.normal[1];
+            this._planeIntersectionPoint[2] = this._basePoint[2] - trianglePlane.normal[2];
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
            // this._velocity.scaleToRef(t0, this._tempVector);
             this._tempVector[0] = this._velocity[0] * t0
@@ -354,9 +351,9 @@ export class Collider {
             let b: number;
             let c: number;
             [p1a, p2a, p3a].forEach(p => {
-                this._tempVector[0] = this._basePoint.x - p[0];
-                this._tempVector[1] = this._basePoint.y - p[1];
-                this._tempVector[2] = this._basePoint.z - p[2];
+                this._tempVector[0] = this._basePoint[0] - p[0];
+                this._tempVector[1] = this._basePoint[1] - p[1];
+                this._tempVector[2] = this._basePoint[2] - p[2];
                 b = 2.0 * (Dot(this._velocity, this._tempVector));
                 //Dot product
              //   b = 2.0 * (this._velocity[0] * this._tempVector[0] + this._velocity[1] * this._tempVector[1] + this._velocity[2] * this._tempVector[2])
@@ -380,18 +377,18 @@ export class Collider {
                 this._edge[1] = points[i + 1][1] - p[1];
                 this._edge[2] = points[i + 1][2] - p[2];
 
-                this._baseToVertex.x = p[0] - this._basePoint.x;
-                this._baseToVertex.y = p[1] - this._basePoint.y;
-                this._baseToVertex.z = p[2] - this._basePoint.z;
+                this._baseToVertex[0] = p[0] - this._basePoint[0];
+                this._baseToVertex[1] = p[1] - this._basePoint[1];
+                this._baseToVertex[2] = p[2] - this._basePoint[2];
 
                 //var edgeSquaredLength = this._edge.lengthSquared();
                 var edgeSquaredLength = this._edge[0] * this._edge[0] + this._edge[1] * this._edge[1] + this._edge[2] * this._edge[2]
                 var edgeDotVelocity = Dot(this._edge, this._velocity);
-                var edgeDotBaseToVertex = Vector3.Dot(Vector3.FromArray(this._edge), this._baseToVertex);
+                var edgeDotBaseToVertex = Dot(this._edge, this._baseToVertex);
 
                 a = edgeSquaredLength * (-velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
-                b = edgeSquaredLength * (2.0 * Vector3.Dot(Vector3.FromArray(this._velocity), this._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
-                c = edgeSquaredLength * (1.0 - this._baseToVertex.lengthSquared()) + edgeDotBaseToVertex * edgeDotBaseToVertex;
+                b = edgeSquaredLength * (2.0 * Dot(this._velocity, this._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
+                c = edgeSquaredLength * (1.0 - (this._baseToVertex[0] * this._baseToVertex[0] + this._baseToVertex[1] * this._baseToVertex[1] + this._baseToVertex[2] * this._baseToVertex[2])) + edgeDotBaseToVertex * edgeDotBaseToVertex;
 
                 lowestRoot = getLowestRoot(a, b, c, t);
                 if (lowestRoot.found) {
@@ -450,12 +447,12 @@ export class Collider {
     }
 
     /** @hidden */
-    public _getResponse(pos: Vector3, vel: [x:number, y:number, z:number]): void {
+    public _getResponse(pos: [x: number, y: number, z: number], vel: [x:number, y:number, z:number]): void {
        // pos.addToRef(vel, this._destinationPoint);
-        this._destinationPoint.x = pos.x + vel[0];
-        this._destinationPoint.y = pos.y + vel[1];
-        this._destinationPoint.z = pos.z + vel[2];
-        const scale = this._nearestDistance / Math.hypot(vel[0], vel[1], vel[2]);
+        this._destinationPoint.x = pos[0] + vel[0];
+        this._destinationPoint.y = pos[1] + vel[1];
+        this._destinationPoint.z = pos[2] + vel[2];
+        let scale = this._nearestDistance / Math.hypot(vel[0], vel[1], vel[2]);
         vel[0] *= scale;
         vel[1] *= scale;
         vel[2] *= scale;
@@ -464,19 +461,45 @@ export class Collider {
 
 
         //this._basePoint.addToRef(vel, pos);
-        pos.x = this._basePoint.x + vel[0];
-        pos.y = this._basePoint.y + vel[1];
-        pos.z = this._basePoint.z + vel[2];
-        pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
-        this._slidePlaneNormal.normalize();
-        this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
+        pos[0] = this._basePoint[0] + vel[0];
+        pos[1] = this._basePoint[1] + vel[1];
+        pos[2] = this._basePoint[2] + vel[2];
+        //pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
+        this._slidePlaneNormal[0] = pos[0] - this.intersectionPoint.x;
+        this._slidePlaneNormal[1] = pos[1] - this.intersectionPoint.y;
+        this._slidePlaneNormal[2] = pos[2] - this.intersectionPoint.z;
 
-        pos.addInPlace(this._displacementVector);
+        const length = Math.hypot(this._slidePlaneNormal[0], this._slidePlaneNormal[1], this._slidePlaneNormal[2]);
+        if (!(length === 0 || length === 1.0)) {
+            const norm = 1 / length;
+            this._slidePlaneNormal[0] *= norm;
+            this._slidePlaneNormal[1] *= norm;
+            this._slidePlaneNormal[2] *= norm;
+        }
+
+       // this._slidePlaneNormal.normalize();
+
+       // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
+        this._displacementVector.x = this._slidePlaneNormal[0] * this._epsilon;
+        this._displacementVector.y = this._slidePlaneNormal[1] * this._epsilon;
+        this._displacementVector.z = this._slidePlaneNormal[2] * this._epsilon;
+
+       // pos.addInPlace(this._displacementVector);
+        pos[0] += this._displacementVector.x;
+        pos[1] += this._displacementVector.y;
+        pos[2] += this._displacementVector.z;
         this.intersectionPoint.addInPlace(this._displacementVector);
 
-        this._slidePlaneNormal.scaleInPlace(Plane.SignedDistanceToPlaneFromPositionAndNormal(this.intersectionPoint, this._slidePlaneNormal, this._destinationPoint));
-        this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
+       // this._slidePlaneNormal.scaleInPlace(Plane.SignedDistanceToPlaneFromPositionAndNormal(this.intersectionPoint, this._slidePlaneNormal, this._destinationPoint));
+        scale = Plane.SignedDistanceToPlaneFromPositionAndNormal(this.intersectionPoint, Vector3.FromArray(this._slidePlaneNormal), this._destinationPoint);
+        this._slidePlaneNormal[0] *= scale;
+        this._slidePlaneNormal[1] *= scale;
+        this._slidePlaneNormal[2] *= scale;
 
+        //this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
+        this._destinationPoint.x -= this._slidePlaneNormal[0];
+        this._destinationPoint.y -= this._slidePlaneNormal[1];
+        this._destinationPoint.z -= this._slidePlaneNormal[2];
         //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
         vel[0] = this._destinationPoint.x - this.intersectionPoint.x;
         vel[1] = this._destinationPoint.y - this.intersectionPoint.y;
