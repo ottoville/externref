@@ -153,7 +153,7 @@ export class Collider {
     }
 
     /** @hidden */
-    public _checkPointInTriangle(point: [x: number, y: number, z: number], pa: Float32Array, pb: Float32Array, pc: Float32Array, n: Vector3): boolean {
+    public _checkPointInTriangle(point: [x: number, y: number, z: number], pa: Float32Array, pb: Float32Array, pc: Float32Array, n: [x: number, y: number, z: number]): boolean {
         //TODO: Use simd
         this._tempVector.x = pa[0] - point[0]
         this._tempVector.y = pa[1] - point[1]
@@ -168,7 +168,7 @@ export class Collider {
        // pb.subtractToRef(point, this._tempVector2);
 
         Vector3.CrossToRef(this._tempVector, this._tempVector2, this._tempVector4);
-        var d = Vector3.Dot(this._tempVector4, n);
+        var d = Vector3.Dot(this._tempVector4, Vector3.FromArray(n));
         if (d < 0) {
             return false;
         }
@@ -179,13 +179,13 @@ export class Collider {
 
         //pc.subtractToRef(point, this._tempVector3);
         Vector3.CrossToRef(this._tempVector2, this._tempVector3, this._tempVector4);
-        d = Vector3.Dot(this._tempVector4, n);
+        d = Vector3.Dot(this._tempVector4, Vector3.FromArray(n));
         if (d < 0) {
             return false;
         }
 
         Vector3.CrossToRef(this._tempVector3, this._tempVector, this._tempVector4);
-        d = Vector3.Dot(this._tempVector4, n);
+        d = Vector3.Dot(this._tempVector4, Vector3.FromArray(n));
         return d >= 0;
     }
 
@@ -207,7 +207,7 @@ export class Collider {
     }
 
     /** @hidden */
-    public _testTriangle(faceIndex: number, trianglePlaneArray: Array<Plane>, p1a: Float32Array, p2a: Float32Array, p3a: Float32Array, hasMaterial: boolean): void {
+    public _testTriangle(faceIndex: number, trianglePlaneArray: {normal:[x:number,y:number,z:number],d:number}[], p1a: Float32Array, p2a: Float32Array, p3a: Float32Array, hasMaterial: boolean): void {
         var t0;
         var embeddedInPlane = false;
 
@@ -217,19 +217,58 @@ export class Collider {
         }
 
         if (!trianglePlaneArray[faceIndex]) {
-            trianglePlaneArray[faceIndex] = new Plane(0, 0, 0, 0);
-            trianglePlaneArray[faceIndex].copyFromPoints(Vector3.FromArray(p1a), Vector3.FromArray(p2a), Vector3.FromArray(p3a));
+            //trianglePlaneArray[faceIndex] = new Plane(0, 0, 0, 0);
+            //trianglePlaneArray[faceIndex].copyFromPoints(Vector3.FromArray(p1a), Vector3.FromArray(p2a), Vector3.FromArray(p3a));
+
+            var x1 = p2a[0] - p1a[0];
+            var y1 = p2a[1] - p1a[1];
+            var z1 = p2a[2] - p1a[2];
+            var x2 = p3a[0] - p1a[0];
+            var y2 = p3a[1] - p1a[1];
+            var z2 = p3a[2] - p1a[2];
+            var yz = (y1 * z2) - (z1 * y2);
+            var xz = (z1 * x2) - (x1 * z2);
+            var xy = (x1 * y2) - (y1 * x2);
+            var pyth = (Math.sqrt((yz * yz) + (xz * xz) + (xy * xy)));
+            var invPyth;
+
+            if (pyth !== 0) {
+                invPyth = 1.0 / pyth;
+            }
+            else {
+                invPyth = 0.0;
+            }
+            const normal:[number,number,number] = [yz * invPyth, xz * invPyth, xy * invPyth];
+            trianglePlaneArray[faceIndex] = {
+                normal,
+                d: -((normal[0] * p1a[0]) + (normal[1] * p1a[1]) + (normal[2] * p1a[2]))
+            }
+
+           /* this.normal.x = yz * invPyth;
+            this.normal.y = xz * invPyth;
+            this.normal.z = xy * invPyth;*/
+            //this.d = -((this.normal.x * point1.x) + (this.normal.y * point1.y) + (this.normal.z * point1.z));
+
+
+
+
+
+
         }
 
 
         var trianglePlane = trianglePlaneArray[faceIndex];
 
-        if ((!hasMaterial) && !trianglePlane.isFrontFacingTo(this._normalizedVelocity, 0)) {
-            return;
-        }
+        var dot = Vector3.Dot(Vector3.FromArray(trianglePlane.normal), this._normalizedVelocity);
+        if (dot > 0)
+            return
 
-        var signedDistToTrianglePlane = trianglePlane.signedDistanceTo(this._basePoint);
-        var normalDotVelocity = Vector3.Dot(trianglePlane.normal, this._velocity);
+       /* if ((!hasMaterial) && !trianglePlane.isFrontFacingTo(this._normalizedVelocity, 0)) {
+            return;
+        }*/
+
+        var signedDistToTrianglePlane = Vector3.Dot(this._basePoint, Vector3.FromArray(trianglePlane.normal)) + trianglePlane.d; //trianglePlane.signedDistanceTo(this._basePoint);
+        var normalDotVelocity = Vector3.Dot(Vector3.FromArray(trianglePlane.normal), this._velocity);
 
         if (normalDotVelocity == 0) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
@@ -267,9 +306,9 @@ export class Collider {
 
         if (!embeddedInPlane) {
             //TODO: Use simd
-            this._planeIntersectionPoint[0] = this._basePoint.x - trianglePlane.normal.x;
-            this._planeIntersectionPoint[1] = this._basePoint.y - trianglePlane.normal.y;
-            this._planeIntersectionPoint[2] = this._basePoint.z - trianglePlane.normal.z;
+            this._planeIntersectionPoint[0] = this._basePoint.x - trianglePlane.normal[0];
+            this._planeIntersectionPoint[1] = this._basePoint.y - trianglePlane.normal[1];
+            this._planeIntersectionPoint[2] = this._basePoint.z - trianglePlane.normal[2];
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             this._velocity.scaleToRef(t0, this._tempVector);
             this._planeIntersectionPoint[0] += this._tempVector.x;
