@@ -48,12 +48,15 @@ export abstract class paintGround {
     #drawArea = async (evt:PointerEvent) => {
         await this.ground.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay);
         if (this.ground.mesh.pickInfo.distance[0]) {
-            this.#end_position.set([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
+            this.#end_position[0] = this.ground.mesh.pickInfo.point[0];
+            this.#end_position[1] = this.ground.mesh.pickInfo.point[2];
+            this.#drawVector[0] = this.#start_position[0] - this.#end_position[0];
+            this.#drawVector[1] = (this.#start_position[1] - this.#end_position[1]) * -1
 
-            this.#drawVector.set([this.#start_position[0] - this.#end_position[0], (this.#start_position[1] - this.#end_position[1]) * -1])
             height = Math.hypot(this.#drawVector[0], this.#drawVector[1]);
 
-            const rad = Math.PI * 0.5 - Math.atan2(Math.abs(this.#drawVector[0]), Math.abs(this.#drawVector[1]));
+            const rad = Math.atan(Math.abs(this.#drawVector[1]) / Math.abs(this.#drawVector[0]));
+
             /*if (this.#drawVector[0] < 0)
                 rotation = Math.asin((this.#drawVector[1]) / distance);
             else
@@ -96,13 +99,7 @@ export abstract class paintGround {
             const distanceSquared = p0 * p0 + p1 * p1;
             if (Number.isNaN(distanceSquared))
                 throw ("distance is not a number");
-
-           // let rad = Math.acos(Math.abs(p0) / Math.sqrt(distanceSquared));
-
-          //  console.log(Math.atan2(Math.abs(p0), p1)+Math.PI*0.5)
-
-            let rad = Math.PI * 0.5 - Math.atan2(Math.abs(p0), Math.abs(p1));
-            //let rad = Math.atan2(Math.abs(p0), Math.abs(p1));
+            let rad = Math.atan(Math.abs(p1) / Math.abs(p0));
             if (p1 > 0) {
                 if (p0 > 0) {
                     rad = fullRad - rad;
@@ -110,8 +107,9 @@ export abstract class paintGround {
                 else
                     rad += Math.PI;
             }
-            else if (p0 < 0)
+            else if (p0 < 0) {
                 rad = Math.PI - rad;
+            }
 
             let dotang = this.ang360.distance(rad);
             //console.log(rad);

@@ -218,8 +218,8 @@ export class Terrain {
 
 
     readonly #terrainUvsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 2;
-    readonly terrainPositionAndUvsAndNormalsGPU = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST])
-    readonly terrainPositionAndUvsAndNormalsGPUSwap = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+    readonly terrainPositionAndUvsAndNormalsGPU: GPUVertexBuffer & GPUCopyDSTBuffer;
+    readonly terrainPositionAndUvsAndNormalsGPUSwap: GPUMapWriteBuffer & GPUCopySRCBuffer = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
 
     readonly terrainPositionAndUvsAndNormalsCPUSwap = new SharedArrayBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength);
@@ -273,12 +273,11 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
 })*/
         const t = await caches.match(new Request('/terrain')).then(async cachedvertices => {
             if (cachedvertices) {
-                console.log('cachedvertices');
                 const buffer = await Terrain.fromSave(cachedvertices);
-                return new Terrain(buffer, 'CreateGroundFromSave.comp', scene);
+                return new Terrain(scene, buffer);
             } else {
                 const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp');
-                return new Terrain(buffer, 'CreateGroundFromHeightMap.comp', scene);
+                return new Terrain(scene, buffer, 'CreateGroundFromHeightMap.comp');
             }
         })
 
@@ -326,25 +325,23 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
     }
 
     async serialize(compress = false) {
-        //const cacheP = caches.open('save');
+        const cacheP = caches.open('save');
         if (!compress) {
 
             //disabled fow now
-            /* const response = new Response(this.#vertices.buffer);
-             response.headers.set('content-length', this.#vertices.buffer.byteLength.toString());
+            const response = new Response(this.terrainPositionAndUvsAndNormalsCPUSwapView);
+            response.headers.set('content-length', this.terrainPositionAndUvsAndNormalsCPUSwapView.buffer.byteLength.toString());
              response.headers.set('content-type', 'application/octet-stream');
-             */
 
-            /*const response2 = new Response(this.#indices.buffer);
-            response2.headers.set('content-length', this.#vertices.buffer.byteLength.toString());
+
+            const response2 = new Response(this.#indices.buffer);
+            response2.headers.set('content-length', this.#indices.buffer.byteLength.toString());
             response2.headers.set('content-type', 'application/octet-stream');
-            */
+            
 
-            //const cache = await cacheP;
-
-            //disabled fow now
-            //  cache.put(new Request('/terrain'), response);
-            //  cache.put(new Request('/indices'), response2);
+            const cache = await cacheP;
+            cache.put(new Request('/terrain'), response);
+            cache.put(new Request('/indices'), response2);
 
         } else {
             let c = new OffscreenCanvas((Terrain.subdivisionsX + 1) * 3, (Terrain.subdivisionsY + 1));
@@ -374,7 +371,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         size: this.textureExtent,
         usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
     });
-    constructor(readonly buffer: ArrayBuffer | SharedArrayBuffer, algorithm: string, public scene: Scene) {
+    constructor(public scene: Scene, readonly buffer: ArrayBuffer | SharedArrayBuffer, algorithm?: string) {
         for (
             let i = 0,
             verticesAmount = this.terrainPositionAndUvsAndNormalsCPUSwap.byteLength / (8 * 4),
@@ -396,38 +393,48 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         new Uint32Array(sourcearr).set(new Uint32Array(buffer), 9);
         sourceGPU.unmap();
 
-        const terrainPositionAndUvsAndNormalsGPUTemp = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
         // const gpuReadBufferPositions = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength, GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST);
         //  const gpuReadBufferIndices = this.scene.gpuscene.createGPUBuffer(this.#terrainIndicesLength, GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST);
+        const commandEncoder = scene.gpu.createCommandEncoder();
+        if (algorithm) {
+            var terrainPositionAndUvsAndNormalsGPUTemp = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+
+            this.terrainPositionAndUvsAndNormalsGPU = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST])
+
+            const computePipeline = scene.gpu.createComputePipeline(algorithm)
+            const sourceBindGroup = computePipeline.createBindGroup(0, [
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: sourceGPU
+                    }
+                },
+                {
+                    binding: 1,
+                    resource: {
+                        buffer: terrainPositionAndUvsAndNormalsGPUTemp
+                    }
+                }
+            ]);
+            const passEncoder = commandEncoder.beginComputePass();
+            passEncoder.setPipeline(computePipeline);
+            passEncoder.setBindGroup(0, sourceBindGroup);
+            passEncoder.dispatch(250 + 1, 250 + 1);
+            passEncoder.endPass();
+        } else {
+            var terrainPositionAndUvsAndNormalsGPUTemp = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],true);
+            new Uint8Array(terrainPositionAndUvsAndNormalsGPUTemp.getMappedRange()).set(new Uint8Array(buffer));
+            terrainPositionAndUvsAndNormalsGPUTemp.unmap();
 
 
-        const computePipeline = scene.gpu.createComputePipeline(algorithm)
+            this.terrainPositionAndUvsAndNormalsGPU = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],true)
+            new Uint8Array(this.terrainPositionAndUvsAndNormalsGPU.getMappedRange()).set(new Uint8Array(buffer));
+            this.terrainPositionAndUvsAndNormalsGPU.unmap();
+        }
 
-        const sourceBindGroup = computePipeline.createBindGroup(0, [
-            {
-                binding: 0,
-                resource: {
-                    buffer: sourceGPU
-                }
-            },
-            {
-                binding: 1,
-                resource: {
-                    buffer: terrainPositionAndUvsAndNormalsGPUTemp
-                }
-            }/*,
-            {
-                binding: 2,
-                resource: {
-                    buffer: gpuBufferPositions
-                }
-            }*/
-        ]);
 
         const computePipelineIndices = scene.gpu.createComputePipeline('calculatePlaneIndices.comp')
-
         const computePipelineNormals = scene.gpu.createComputePipeline('calculateNormals.comp')
-
         const computePlaneHeights = scene.gpu.createComputePipeline('calculatePlaneHeights.comp');
         const bindGroupPositions = computePlaneHeights.createBindGroup(0,
             [
@@ -471,13 +478,8 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             }
             ]
         );
-        const commandEncoder = scene.gpu.createCommandEncoder();
 
         const passEncoder = commandEncoder.beginComputePass();
-        passEncoder.setPipeline(computePipeline);
-        passEncoder.setBindGroup(0, sourceBindGroup);
-
-        passEncoder.dispatch(250 + 1, 250 + 1);
 
 
         passEncoder.setPipeline(computePipelineIndices);

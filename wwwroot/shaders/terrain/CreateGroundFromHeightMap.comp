@@ -51,35 +51,12 @@ layout(std430, set = 0, binding = 1) buffer PositionsAndUvsAndNormals {
     position.y = image.minHeight + ( image.maxHeight -  image.minHeight) * gradient;
 
 
-
     positionsAndUvsAndNormals.numbers[ gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride]=position.x;
     positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+1]=position.y;
     positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+2]=position.z;
-
-   // positionsStorage.numbers[ gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride]=position.x;
-   // positionsStorage.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+1]=position.y;
-  //  positionsStorage.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+2]=position.z;
-
 
 
     positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+3] = (position.x+image.maxX) / image.width;
     positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+4] = (position.z+image.maxZ) / image.height;
 
-    //positionsStorage.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+3] = (position.x+image.maxX) / image.width;
-    //positionsStorage.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+4] = (position.z+image.maxZ) / image.height;
-
-
-    //positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+6] = (position.z+image.maxZ) / image.height;
-    //positionsAndUvsAndNormals.numbers[gl_GlobalInvocationID.y*iterations*stride + gl_GlobalInvocationID.x*stride+7] = (position.z+image.maxZ) / image.height;
-
-      
-
-
-
-
-
-
-
-    //positionsAndUvs.numbers[positionoffset + (gl_GlobalInvocationID.y*iterations*2 + gl_GlobalInvocationID.x*2)] = gl_GlobalInvocationID.x / float(image.subdivisions);
-    //positionsAndUvs.numbers[positionoffset + (gl_GlobalInvocationID.y*iterations*2 + gl_GlobalInvocationID.x*2+1)] = 1.0 - gl_GlobalInvocationID.y / float(image.subdivisions);
   }
