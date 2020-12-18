@@ -13,7 +13,7 @@ import type { Scene } from "../Scene.js";
 
 let width: number;
 let height: number;
-let rotation: number;
+//let rotation: number;
 
 export enum DrawType {
     plane = 1,
@@ -51,14 +51,20 @@ export abstract class paintGround {
             this.#end_position.set([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
 
             this.#drawVector.set([this.#start_position[0] - this.#end_position[0], (this.#start_position[1] - this.#end_position[1]) * -1])
-            const distance = Math.hypot(this.#drawVector[0], this.#drawVector[1]);
-            height = distance
+            height = Math.hypot(this.#drawVector[0], this.#drawVector[1]);
 
-            if (this.#drawVector[0] < 0)
+            const rad = Math.PI * 0.5 - Math.atan2(Math.abs(this.#drawVector[0]), Math.abs(this.#drawVector[1]));
+            /*if (this.#drawVector[0] < 0)
                 rotation = Math.asin((this.#drawVector[1]) / distance);
             else
                 rotation = Math.asin((this.#drawVector[1]) / distance) * -1;
-            const rad = Math.abs(rotation);
+
+            console.log(rotation);
+            console.log(Math.PI * 0.5 - Math.atan2(Math.abs(this.#drawVector[0]), Math.abs(this.#drawVector[1])));
+
+
+
+            const rad = Math.abs(rotation);*/
             if (this.#drawVector[1] < 0) {
                 if (this.#drawVector[0] > 0)
                     this.ang360 = new Angle(fullRad - rad);
@@ -96,11 +102,11 @@ export abstract class paintGround {
           //  console.log(Math.atan2(Math.abs(p0), p1)+Math.PI*0.5)
 
             let rad = Math.PI * 0.5 - Math.atan2(Math.abs(p0), Math.abs(p1));
-            //this works
-            //console.log(Math.PI * 0.5 - Math.atan2(Math.abs(p0), Math.abs(p1)))
+            //let rad = Math.atan2(Math.abs(p0), Math.abs(p1));
             if (p1 > 0) {
-                if (p0 > 0)
+                if (p0 > 0) {
                     rad = fullRad - rad;
+                }
                 else
                     rad += Math.PI;
             }
