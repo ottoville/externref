@@ -91,7 +91,13 @@ export abstract class paintGround {
             if (Number.isNaN(distanceSquared))
                 throw ("distance is not a number");
 
-            let rad = Math.acos(Math.abs(p0) / Math.sqrt(distanceSquared));
+           // let rad = Math.acos(Math.abs(p0) / Math.sqrt(distanceSquared));
+
+          //  console.log(Math.atan2(Math.abs(p0), p1)+Math.PI*0.5)
+
+            let rad = Math.PI * 0.5 - Math.atan2(Math.abs(p0), Math.abs(p1));
+            //this works
+            //console.log(Math.PI * 0.5 - Math.atan2(Math.abs(p0), Math.abs(p1)))
             if (p1 > 0) {
                 if (p0 > 0)
                     rad = fullRad - rad;
@@ -102,7 +108,9 @@ export abstract class paintGround {
                 rad = Math.PI - rad;
 
             let dotang = this.ang360.distance(rad);
-
+            //console.log(rad);
+            //console.log(dotang);
+            
            /* let dotprod = height * distance * Math.cos(dotang.rad);
             let shadow = dotprod / height;
             width = Math.sqrt(Math.pow(distance, 2) - Math.pow(shadow, 2));*/
