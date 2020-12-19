@@ -88,30 +88,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     }
     private direction = 0;
     private mouseinterval: number = 0;
-    updateSwap2(offset = 0, length: number) {
-        const b1 = this.engine.gpu.createGPUBuffer(length, [GPUBufferUsage.COPY_SRC], true);
-        new Float32Array(b1.getMappedRange()).set(new Float32Array(this.terrain.terrainPositionAndUvsAndNormalsCPUSwap, offset, length / 4))
-        b1.unmap();
-        const b2 = this.engine.gpu.createGPUBuffer(this.terrain.mesh.faces.byteLength, [GPUBufferUsage.COPY_SRC], true);
-        new Float32Array(b2.getMappedRange()).set(this.terrain.mesh.facesView!)
-        b2.unmap();
-        const commandEncoder = this.engine.gpu.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(
-            b1, // source buffer
-            0, //source offset
-            this.terrain.terrainPositionAndUvsAndNormalsGPU, //destination buffer
-            offset, //destination offset
-            length);
-        commandEncoder.copyBufferToBuffer(
-            b2, // source buffer
-            0, //source offset
-            this.terrain.facet12ArrGPUBuffer, //destination buffer
-            0, //destination offset
-            this.terrain.mesh.faces.byteLength);
-        this.engine.gpu.device.defaultQueue.submit([commandEncoder.finish()]);
-        b1.destroy();
-        b2.destroy();
-    }
+
     pointerdownf = (evt: PointerEvent): void => {
         if (evt.button !== 0) {
             return;
@@ -125,7 +102,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
                 console.log('range', range)
                 const length = range.max - range.min;
 
-                this.updateSwap2(range.min, length)
+                this.terrain.updateSwap2(range.min, length)
             });
         }, 17);
     }

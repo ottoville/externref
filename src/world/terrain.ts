@@ -48,7 +48,7 @@ export class Terrain {
     #ratioY = Terrain.subdivisionsY / this.height;
 
     static heightLayouts: Map<GPU, BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>> = new Map();
-    mesh!: TerrainMesh;
+    mesh: TerrainMesh;
     //terraMesh: TerraMesh;
     static getHeightsLayout(scene: GPU): BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> {
         let layout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | undefined;
@@ -211,16 +211,11 @@ export class Terrain {
 
     readonly #terrainIndicesLength = Uint32Array.BYTES_PER_ELEMENT * (250 * 250 * 6);
 
-    // readonly verticesBuffer: SharedArrayBuffer = new SharedArrayBuffer(this.#terrainPositionsLength);
     readonly indicesBuffer: SharedArrayBuffer = new SharedArrayBuffer(this.#terrainIndicesLength);
-    // readonly normalsBuffer: SharedArrayBuffer = new SharedArrayBuffer(this.#terrainPositionsLength);
-
 
 
     readonly #terrainUvsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 2;
     readonly terrainPositionAndUvsAndNormalsGPU: GPUVertexBuffer & GPUCopyDSTBuffer;
-    readonly terrainPositionAndUvsAndNormalsGPUSwap: GPUMapWriteBuffer & GPUCopySRCBuffer = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-
 
     readonly terrainPositionAndUvsAndNormalsCPUSwap = new SharedArrayBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength);
     readonly terrainPositionAndUvsAndNormalsCPUSwapView = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap);
@@ -231,33 +226,39 @@ export class Terrain {
 
 
     #indices: Uint32Array = new Uint32Array(this.indicesBuffer);
-    //#vertices: Float32Array = new Float32Array(this.verticesBuffer);
-    //#normals: Float32Array = new Float32Array(this.normalsBuffer);
-
-    
-    async updateSwap(offset = 0, length?: number) {
-        if (offset || length) {
-            if (length)
-                var view = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap, offset, length / 4)
-            else
-                var view = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap, offset)
-        } else
-            var view = this.terrainPositionAndUvsAndNormalsCPUSwapView;
-
-        await this.terrainPositionAndUvsAndNormalsGPUSwap.mapAsync(GPUMapMode.WRITE, offset, length);
-        const swaparraybuff = this.terrainPositionAndUvsAndNormalsGPUSwap.getMappedRange(offset, length);
-        new Float32Array(swaparraybuff).set(view);
-        this.terrainPositionAndUvsAndNormalsGPUSwap.unmap();
+    autosave = 0;
+    updateSwap2(offset = 0, length: number, nofaces=false) {
+        const b1 = this.scene.gpu.createGPUBuffer(length, [GPUBufferUsage.COPY_SRC], true);
+        new Float32Array(b1.getMappedRange()).set(new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap, offset, length / 4))
+        b1.unmap();
         const commandEncoder = this.scene.gpu.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
-            this.terrainPositionAndUvsAndNormalsGPUSwap, // source buffer
-            offset, //source offset
+            b1, // source buffer
+            0, //source offset
             this.terrainPositionAndUvsAndNormalsGPU, //destination buffer
             offset, //destination offset
-            length || this.terrainPositionAndUvsAndNormalsCPUSwapView.byteLength - offset);
+            length);
+        let b2: GPUCopySRCBuffer;
+        if (!nofaces) {
+            b2 = this.scene.gpu.createGPUBuffer(this.mesh.faces.byteLength, [GPUBufferUsage.COPY_SRC], true);
+            new Float32Array(b2.getMappedRange()).set(this.mesh.facesView!)
+            b2.unmap();
+            commandEncoder.copyBufferToBuffer(
+                b2, // source buffer
+                0, //source offset
+                this.facet12ArrGPUBuffer, //destination buffer
+                0, //destination offset
+                this.mesh.faces.byteLength);
+        }
         this.scene.gpu.device.defaultQueue.submit([commandEncoder.finish()]);
+        b1.destroy();
+        if (!nofaces) {
+            b2!.destroy();
+        }
+        clearTimeout(this.autosave);
+        this.autosave =setTimeout(() => this.serialize(),10000)
+        
     }
-    
 
     static async loadFromTexture(scene: Scene): Promise<[Terrain, Promise<GPUBuffer>]> {
         /*
@@ -526,9 +527,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         (async () => {
             gpuReadBufferPositions.readAndDestroy(async (buff) => {
                 this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
-                this.updateSwap();
-                this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, this.indicesBuffer, 8, this.#terrainIndicesLength / 4, facet12ArrCPUBuffer);
-                this.mesh.boundingBox.box.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
+                this.updateSwap2(0, buff.byteLength,true);
                 this.mesh.lastColliderWorldVertices = null
                 this.serialize();
             });
@@ -538,13 +537,10 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             })
 
         })();
+        this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, this.indicesBuffer, 8, this.#terrainIndicesLength / 4, facet12ArrCPUBuffer);
+        this.mesh.boundingBox.box.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
+
     }
-
-    //BABYLON 4103
-    //ARRAY 2800 -> 1897 -> 1720 -> 1708 -> 1631
-    //Dataview 6100
-    //pure array  848 -> 763
-
 
     getHeightAtCoordinates(x: number, z: number): number {
         let facet: Float32Array;
