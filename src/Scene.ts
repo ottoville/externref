@@ -135,7 +135,6 @@ export class Scene {
         const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z])
         const pickingRays: Map<BoundableNode, Float32Array> = new Map();
-        console.log(this.boundables);
         this.boundables.forEach(boundable => {
             if (!boundable.worldPosition)
                 return pickingRays.set(boundable, rayArr);

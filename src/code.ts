@@ -723,11 +723,28 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     });
                     camera._checkInputs();
                     camera._getViewMatrix();
-                    mainCamera.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
-                    mainCamera.target.set([camera.target.x, camera.target.y, camera.target.z]);
-                    waterCamera.cameraArr.set([camera.position.x, camera.position.y - (camera.position.y - 3) * 2, camera.position.z]);
-                    waterCamera.target.set([camera.target.x, camera.target.y, camera.target.z]);
+                    //mainCamera.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
+                    mainCamera.cameraArr[0] = camera.position.x;
+                    mainCamera.cameraArr[1] = camera.position.y;
+                    mainCamera.cameraArr[2] = camera.position.z;
 
+                    //mainCamera.target.set([camera.target.x, camera.target.y, camera.target.z]);
+                    mainCamera.target[0] = camera.target.x;
+                    mainCamera.target[1] = camera.target.y;
+                    mainCamera.target[2] = camera.target.z;
+
+
+
+                    waterCamera.cameraArr[0] = camera.position.x;
+                    waterCamera.cameraArr[1] = camera.position.y - (camera.position.y - 3) * 2;
+                    waterCamera.cameraArr[2] = camera.position.z;
+
+
+                    //waterCamera.cameraArr.set([camera.position.x, camera.position.y - (camera.position.y - 3) * 2, camera.position.z]);
+                    //waterCamera.target.set([camera.target.x, camera.target.y, camera.target.z]);
+                    waterCamera.target[0] = camera.target.x;
+                    waterCamera.target[1] = camera.target.y;
+                    waterCamera.target[2] = camera.target.z;
                     const renderEncoder = gpuscene.device.createCommandEncoder();
                     timeView.set([time]);
                     let physicDelta: number | null;
