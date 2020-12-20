@@ -299,10 +299,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
                     //run the callback
 
-                    //this._onCollisionPositionChange(this.uniqueId, coordinator._finalPosition, collider.collidedMesh);
-
-                    //  protected _onCollisionPositionChange = (collisionId: number, newPosition: Vector3, collidedMesh: Nullable<AbstractMesh> = null) => {
-
                     if (!terraEngine.collider.collidedMesh) {
                         //@ts-ignore
                         this._previousPosition.copyFrom(this._position);
@@ -339,15 +335,21 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         up = up.clone();
                         up = up.negate();
                     }
-                     //@ts-ignore
-                    this._computeViewMatrix(this._position, target, up);
-                    this._viewMatrix.addAtIndex(12, this.targetScreenOffset.x);
-                    this._viewMatrix.addAtIndex(13, this.targetScreenOffset.y);
+
+                    //this._computeViewMatrix(this._position, target, up);
+                    //@ts-ignore
+                    this._globalPosition.copyFrom(this._position);
+                    //@ts-ignore
+                    this._globalCurrentTarget.copyFrom(target);
+                    //@ts-ignore
+                    this._globalCurrentUpVector.copyFrom(up);
+                    //@ts-ignore
+                    //Matrix.LookAtLHToRef(this._globalPosition, this._globalCurrentTarget, this._globalCurrentUpVector, this._viewMatrix);
+                   // this._viewMatrix.addAtIndex(12, this.targetScreenOffset.x);
+                   // this._viewMatrix.addAtIndex(13, this.targetScreenOffset.y);
                     //@ts-ignore
                     this._collisionTriggered = false;
                     // }
-
-
 
 
 
@@ -400,7 +402,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         this._localDirection.copyFromFloats(this.inertialPanningX, this.inertialPanningY, this.inertialPanningY);
                         //@ts-ignore
                         this._localDirection.multiplyInPlace(this.panningAxis);
-                        this._viewMatrix.invertToRef(this._cameraTransformMatrix);
+
+                        //this._viewMatrix.invertToRef(this._cameraTransformMatrix);
+                        Matrix.FromArray(mainCamera.viewArr).invertToRef(this._cameraTransformMatrix);
                         //@ts-ignore
                         Vector3.TransformNormalToRef(this._localDirection, this._cameraTransformMatrix, this._transformedDirection);
                         //Eliminate y if map panning is enabled (panningAxis == 1,0,1)
@@ -510,7 +514,22 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     getEngine: () => engine,
                     onKeyboardObservable: scene.onKeyboardObservable
                 });
-                camera.setPosition(new Vector3(1000,300,1000))
+                /*const target = new Vector3(-500, 200, 0);
+                const camera2 = {
+                    _target: target,
+                    alpha : 0,
+                    beta : 0,
+                    radius : 10
+
+                }
+                this.getViewMatrix();
+                this.inputs = new ArcRotateCameraInputsManager(this);
+                this.inputs.addKeyboard().addMouseWheel().addPointers();*/
+
+
+
+
+                //camera.setPosition(new Vector3(1000,300,1000))
 
                 camera._cache.mode = camera.mode;
                 camera._cache.minZ = camera.minZ;
@@ -662,14 +681,19 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     DB.transaction("save").objectStore("save").get(0).onsuccess = async (evt) => {
                         const camera = await cameraReady;
                         if ((<IDBRequest>evt.target).result) {
+
                             let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
-
-                            camera.alpha = restored.alpha;
-                            camera.beta = restored.beta;
-                            camera.radius = restored.radius;
-                            camera.target = new Vector3(restored.target.x, restored.target.y, restored.target.z);
+                            camera.alpha =restored.alpha;
+                            camera.beta =  restored.beta;
+                            camera.radius =  restored.radius;
+                            camera.target =new Vector3(restored.target.x, restored.target.y, restored.target.z);
                             camera.position = restored.position;
-
+                           /* camera.alpha = 0.5301790732133063// restored.alpha;
+                            camera.beta = 1.5221956257805713 // restored.beta;
+                            camera.radius = 9298.920138598956 // restored.radius;
+                            camera.target = new Vector3(826.6071980631217, 20, 900.255132341644) //new Vector3(restored.target.x, restored.target.y, restored.target.z);
+                            camera.position = new Vector3(8839.466683038081, 471.75614493722463, 5597.0535103433585)// restored.position;
+                            */
                         }
                         let l = new LazyEval(() => {
                             //console.log(this.camera.position.y);
