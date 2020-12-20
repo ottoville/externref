@@ -311,7 +311,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         }
                     }
 
-
                     // Recompute because of constraints
                     var cosa = Math.cos(this.alpha);
                     var sina = Math.sin(this.alpha);
@@ -341,12 +340,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     this._globalPosition.copyFrom(this._position);
                     //@ts-ignore
                     this._globalCurrentTarget.copyFrom(target);
-                    //@ts-ignore
-                    this._globalCurrentUpVector.copyFrom(up);
-                    //@ts-ignore
-                    //Matrix.LookAtLHToRef(this._globalPosition, this._globalCurrentTarget, this._globalCurrentUpVector, this._viewMatrix);
-                   // this._viewMatrix.addAtIndex(12, this.targetScreenOffset.x);
-                   // this._viewMatrix.addAtIndex(13, this.targetScreenOffset.y);
                     //@ts-ignore
                     this._collisionTriggered = false;
                     // }
@@ -504,7 +497,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }
                 }
                 //@ts-ignore
-                const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(-500, 200, 0), {
+                const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(-500, 0, 0), {
                     getUniqueId: () => 1,
                     addCamera: (c) => {
                         c._scene = scene;

@@ -83,7 +83,6 @@ export class TerraCamera {
         //TODO: use SIMD
         const zAxis = new Float32Array([this.target[0] - this.cameraArr[0], this.target[1] - this.cameraArr[1], this.target[2] - this.cameraArr[2]]);
         const zLength = Math.sqrt(zAxis[0] * zAxis[0] + zAxis[1] * zAxis[1] + zAxis[2] * zAxis[2]);
-        
         if (!(zLength === 0 || zLength === 1)) {
             //zAxis.normalizeFromLength(xLength);
             const scale = 1.0 / zLength;
@@ -91,20 +90,21 @@ export class TerraCamera {
             zAxis[1] *= scale;
             zAxis[2] *= scale;
         }
-
         // X axis, cross product
         // Vector3.CrossToRef(up, zAxis, xAxis);
+      //  console.log(Math.sqrt(zAxis[0] * zAxis[0] + zAxis[1] * zAxis[1] + zAxis[2] * zAxis[2]));
         const xAxis = new Float32Array([
             this.#upVector[1] * zAxis[2] - this.#upVector[2] * zAxis[1],
             this.#upVector[2] * zAxis[0] - this.#upVector[0] * zAxis[2],
             this.#upVector[0] * zAxis[1] - this.#upVector[1] * zAxis[0]
         ])
-        const xSquareLength = xAxis[0] * xAxis[0] + xAxis[1] + xAxis[1] + xAxis[2] * xAxis[2];
+        const xSquareLength = xAxis[0] * xAxis[0] + xAxis[1] * xAxis[1] + xAxis[2] * xAxis[2];
 
         if (xSquareLength === 0) {
             xAxis[0] = 1.0;
         } else {
             let len = Math.sqrt(xSquareLength);
+           // console.log(len)
             if (!(len === 0 || len === 1.0)) {
                 const scale = 1.0 / len;
                 xAxis[0] *= scale;
@@ -121,16 +121,15 @@ export class TerraCamera {
             zAxis[2] * xAxis[0] - zAxis[0] * xAxis[2],
             zAxis[0] * xAxis[1] - zAxis[1] * xAxis[0]
         ])
-        const yLength = Math.sqrt(yAxis[0] * yAxis[0] + yAxis[1] * yAxis[1] + yAxis[2] * yAxis[2]);
-       // yAxis.normalizeFromLength(yLength);
-        if (!(yLength === 0 || yLength === 1)) {
+        //const yLength = Math.sqrt(yAxis[0] * yAxis[0] + yAxis[1] * yAxis[1] + yAxis[2] * yAxis[2]);
+       /* if (!(yLength === 0 || yLength === 1)) {
             //zAxis.normalizeFromLength(xLength);
             const scale = 1.0 / yLength;
             yAxis[0] *= scale;
             yAxis[1] *= scale;
             yAxis[2] *= scale;
         }
-
+        */
         // Eye angles, dot products
         const ex = -(xAxis[0] * this.cameraArr[0] + xAxis[1] * this.cameraArr[1] + xAxis[2] * this.cameraArr[2])
         const ey = -(yAxis[0] * this.cameraArr[0] + yAxis[1] * this.cameraArr[1] + yAxis[2] * this.cameraArr[2])

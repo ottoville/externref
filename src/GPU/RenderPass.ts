@@ -93,14 +93,12 @@ export class RenderPass {
         private loadValue: GPULoadOp | GPUColor,
         private _onResize: (width: number, height: number) => [number, number],
         private usage: number = 0) {
-
-
-
         if (depthStencil) {
             this.#depthTexture = this.createTexture("depth24plus-stencil8");
             this.depthTextureView = this.#depthTexture.createView();
         }
     }
+
     bundles: GPURenderBundle[] = [];
     render(renderEncoder: GPUCommandEncoder, cameraBindGroup:GPUBindGroup) {
         try {
@@ -139,6 +137,34 @@ export class RenderPass {
             drawedMeshes += scene.render(passEncoder, this)
         );
         console.log('scenes ', this.scenes.size, 'meshes', drawedMeshes);
+    }
+    toBitmap() {
+        //Use for debugging purpose. Targettexture must have copy source flag
+        const encoder = this.gpu.device.createCommandEncoder();
+        const buffer = this.gpu.device.createBuffer({
+            size: this.size.height * this.size.width * 4,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+        })
+        encoder.copyTextureToBuffer({
+            texture: this.targetTexture
+        }, { buffer: buffer, bytesPerRow: this.size.width * 4 },
+            [this.size.width, this.size.height, 1]);
+        this.gpu.device.defaultQueue.submit([encoder.finish()]);
+        buffer.mapAsync(GPUMapMode.READ).then(() => {
+            let c = new OffscreenCanvas(this.size.width, this.size.height);
+            let ctx = c.getContext('2d');
+            let imageData = ctx!.createImageData(c.width, c.height);
+            imageData.data.set(new Uint8ClampedArray(buffer.getMappedRange()));
+            buffer.unmap();
+            ctx!.putImageData(imageData, 0, 0);
+            c.convertToBlob({
+                type: "image/jpeg",
+                quality: 0.95
+            }).then(b => {
+                console.log(URL.createObjectURL(b));
+            })
+
+        })
     }
 }
 
