@@ -501,7 +501,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="node .\buildShaders.js&#xD;&#xA;node .\renameJS.js&#xD;&#xA;npm run build --prefix ./src" />
+    <Exec Command="node .\buildShaders.js&#xD;&#xA;node .\renameJS.js" />
   </Target>
 
 </Project>
