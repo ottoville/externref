@@ -16,7 +16,7 @@
     "@types/facebook-js-sdk": "^3.3.0",
     "esm": "^3.2.25",
     "wasm-opt": "^1.1.1",
-    "@webgpu/types": "0.0.31"
+    "@webgpu/types":"0.0.32"
   },
   "devDependencies": {
     "typescript": "4.0.2"
