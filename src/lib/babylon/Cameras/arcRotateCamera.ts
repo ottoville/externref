@@ -75,45 +75,10 @@ export class ArcRotateCamera extends TargetCamera {
         this.setPosition(newPosition);
     }
 
-    @serializeAsVector3("upVector")
-    protected _upVector = Vector3.Up();
-
     protected _upToYMatrix: Matrix;
     protected _YToUpMatrix: Matrix;
 
-    /**
-     * The vector the camera should consider as up. (default is Vector3(0, 1, 0) as returned by Vector3.Up())
-     * Setting this will copy the given vector to the camera's upVector, and set rotation matrices to and from Y up.
-     * DO NOT set the up vector using copyFrom or copyFromFloats, as this bypasses setting the above matrices.
-     */
-    //@ts-ignore
-    set upVector(vec: Vector3) {
-        if (!this._upToYMatrix) {
-            this._YToUpMatrix = new Matrix();
-            this._upToYMatrix = new Matrix();
 
-            this._upVector = Vector3.Zero();
-        }
-
-        vec.normalize();
-        this._upVector.copyFrom(vec);
-        this.setMatUp();
-    }
-
-    get upVector() {
-        return this._upVector;
-    }
-
-    /**
-     * Sets the Y-up to camera up-vector rotation matrix, and the up-vector to Y-up rotation matrix.
-     */
-    public setMatUp() {
-        // from y-up to custom-up (used in _getViewMatrix)
-        Matrix.RotationAlignToRef(Vector3.UpReadOnly, this._upVector, this._YToUpMatrix);
-
-        // from custom-up to y-up (used in rebuildAnglesAndRadius)
-        Matrix.RotationAlignToRef(this._upVector, Vector3.UpReadOnly, this._upToYMatrix);
-    }
 
     /**
      * Current inertia value on the longitudinal axis.
@@ -905,10 +870,6 @@ export class ArcRotateCamera extends TargetCamera {
     public rebuildAnglesAndRadius(): void {
         this._position.subtractToRef(this._getTargetPosition(), this._computationVector);
 
-        // need to rotate to Y up equivalent if up vector not Axis.Y
-        if (this._upVector.x !== 0 || this._upVector.y !== 1.0 || this._upVector.z !== 0) {
-            Vector3.TransformCoordinatesToRef(this._computationVector, this._upToYMatrix, this._computationVector);
-        }
 
         this.radius = this._computationVector.length();
 
@@ -997,10 +958,6 @@ export class ArcRotateCamera extends TargetCamera {
         var target = this._getTargetPosition();
         this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
 
-        // Rotate according to up vector
-        if (this._upVector.x !== 0 || this._upVector.y !== 1.0 || this._upVector.z !== 0) {
-            Vector3.TransformCoordinatesToRef(this._computationVector, this._YToUpMatrix, this._computationVector);
-        }
 
         target.addToRef(this._computationVector, this._newPosition);
         if (this.getScene().collisionsEnabled && this.checkCollisions) {
