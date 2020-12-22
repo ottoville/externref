@@ -216,24 +216,34 @@
         "signature": "3c32d0499b3d1bff5bb3e18105ce69437f49c2ad5ed746d1eaeac3ba804cdb20",
         "affectsGlobalScope": true
       },
+      "./collider.ts": {
+        "version": "6b6db9d245cb80d236b5b74ded19dafaf7eeb5fb520daaf5ab5a8652b4e971e3",
+        "signature": "c3ef1577af3b8efe48abed1ef8b3be6ce373c92a630050c572e7fcd6cef0f010",
+        "affectsGlobalScope": false
+      },
       "./db.ts": {
         "version": "39f65fdecfc213a303f46869706cba28c5a435069fbade7c5c8f16a6ee7c18a4",
         "signature": "ae1dae60ac4ec7b2640da57ccfb4cc124720d5575be26ef2e61dc296e6b2c097",
         "affectsGlobalScope": true
       },
-      "./gpu/drawable.ts": {
-        "version": "e03c8bc7a92a9158e671ac95fe2c66cb89427769e8ddc5327ec4ff9a133bd2bc",
-        "signature": "07faa671b5a5f933d3182c3160ae1e65eaa01606f78f3dd459945c71b81f864e",
+      "./traits/worldposition.ts": {
+        "version": "734035cc65adcaa7bb087e86904b9c3485b391d2a20b218c6042f47130e4b432",
+        "signature": "61374ac2b28c79c4141bff0b536b00450a6540b3c2fa87de6fe3601f7e08a25a",
         "affectsGlobalScope": false
       },
-      "./gpu/renderpipeline.ts": {
-        "version": "5309f26a3aaeaaa0992eefd7ca910ab6cd4b021725cea2c23fe1d45f15c74be6",
-        "signature": "7b1f5cb80061292f71b4e6d1254e6a5857a22622899351b14d586853ffb82a4f",
+      "./physics.ts": {
+        "version": "8498ba273e3a34a9285969f82105dc6dc66d60b978b42c182657f1c7a70a2a75",
+        "signature": "048c9b3f74faf7dd24d911c32518f352024f147a8d0e404be1c2f9c6dfb5da33",
         "affectsGlobalScope": false
       },
-      "./gpu/bindgrouplayout.ts": {
-        "version": "e68e98d8b9aa8464051f23bc85b17c6afb534115bf21b31b1a99b1eafee55540",
-        "signature": "7b3cb368d778847c73aceab9c65a933a3193d901bd510b3040f0507e3b5da753",
+      "./lights.ts": {
+        "version": "99fe5ffa541a758e3760b08c3dfa0c760f126dfa8a11cd0a66c7b6e62dfd622f",
+        "signature": "bd43037e091a8b3f20d97246dbad6f3f0cea043d9dc8a881f2037cfa33b93821",
+        "affectsGlobalScope": false
+      },
+      "./gpu/renderpass.ts": {
+        "version": "9ba9ade17c736fbe1a52865a8a37a702f6875cdef0bde89f10aea8e6f8f3a02d",
+        "signature": "beb4aac5f6f4a67cdbdb0589352ee109c1f2b94b3bfe2f0a89431e57dee9e783",
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/maths/math.viewport.d.ts": {
@@ -257,58 +267,58 @@
         "affectsGlobalScope": false
       },
       "./workerthread.ts": {
-        "version": "4277dbc9fec8564fab511b06cbb39284ef2da6b3aecb511c8bdb17f4164c5bb5",
+        "version": "61db99c699f61ad2a7491fbf1ce559521645c1bc0b9fc403a334a7071f2f2271",
         "signature": "6aef23e5d1e22348f6ab2c672996060d0f767a9cbb0db88f6cdd361c4adc2b3c",
         "affectsGlobalScope": false
       },
       "./terracamera.ts": {
-        "version": "eebc00ba6f11ece3d057a674bd21c18fe696bd70eb0b12349237ef60262a649f",
+        "version": "d9a420b9affeaaf7298e05f9939b0b896976841a3217d40d7a404a34046e2a94",
         "signature": "58e0a3e4ae005960ffacd3cd86cfbb64f49655e0a82615c5aa02bd975e68f1a6",
         "affectsGlobalScope": false
       },
       "./scene.ts": {
-        "version": "6558bd82a7511e6e93611eb35735a19eb36d101dc8e6d589139730f9a51f9824",
-        "signature": "e9c7ae381c21b7fe2c2347f0baa0fbb5304c84e00da6726ae1be50770ec95181",
+        "version": "5e2d70925a947a0e16605a1b7680af7c6f5b57ab2923c2d1e271b985d99c1ad4",
+        "signature": "7a3c4963d7b07aa381fba30399e148e69f26478b35aaf63d108edb4da0e43c93",
         "affectsGlobalScope": false
       },
-      "./gpu/renderpass.ts": {
-        "version": "9a8b94871a6e39efb15513f6d92f92c203f676c273c49a1cd600d4e868af4e1b",
-        "signature": "b685ffd6c7a17291bd7512291514eac0acdd57e6c961117039e2eb3490112b89",
+      "./gpu/drawable.ts": {
+        "version": "64b238921cbc47bfc1e66f805e093e5d012cde3a5e245d79913148ffb6f6bf93",
+        "signature": "07faa671b5a5f933d3182c3160ae1e65eaa01606f78f3dd459945c71b81f864e",
         "affectsGlobalScope": false
       },
-      "./gpu.ts": {
-        "version": "9e1e14b52de31e0dc53ebaa1e3b14cb18e7dcb010737a33d111e7e18651656bf",
-        "signature": "3279957d280cfa48002fa98decdca61699cb344ba3351be0e984d155a307ddc9",
+      "./gpu/renderpipeline.ts": {
+        "version": "5309f26a3aaeaaa0992eefd7ca910ab6cd4b021725cea2c23fe1d45f15c74be6",
+        "signature": "7b1f5cb80061292f71b4e6d1254e6a5857a22622899351b14d586853ffb82a4f",
         "affectsGlobalScope": false
       },
-      "./lights.ts": {
-        "version": "4d74e177e74e46ee900e5bd5f3d1600e37ecbe3c90465b43441a494c958f1301",
-        "signature": "bd43037e091a8b3f20d97246dbad6f3f0cea043d9dc8a881f2037cfa33b93821",
-        "affectsGlobalScope": false
-      },
-      "./terranode.ts": {
-        "version": "01d45950d2ce5fabfea50e510a0a81bcc6bcdc6c12e83d32d16047a51e174307",
-        "signature": "a082abbc55c5aef11940055a2951271540c031ef5a602ef831a3400d00118310",
-        "affectsGlobalScope": false
-      },
-      "./traits/worldposition.ts": {
-        "version": "734035cc65adcaa7bb087e86904b9c3485b391d2a20b218c6042f47130e4b432",
-        "signature": "61374ac2b28c79c4141bff0b536b00450a6540b3c2fa87de6fe3601f7e08a25a",
-        "affectsGlobalScope": false
-      },
-      "./physics.ts": {
-        "version": "777290c8cd73af4e5b131e18eb5840df25d37ea0d8042ae8980de8e5b45f1d60",
-        "signature": "fac39dac54ee87f0ac494d5896c11af86290b0c078628ba8b0dd452916bc8030",
+      "./gpu/bindgrouplayout.ts": {
+        "version": "cfb5c526d83bd5550132876009271245bfddec0cffe4219834ed6ecf5fa37f2e",
+        "signature": "7b3cb368d778847c73aceab9c65a933a3193d901bd510b3040f0507e3b5da753",
         "affectsGlobalScope": false
       },
       "./engine.ts": {
-        "version": "cdaa3ce8042eb0f05a242b9e62e7147c354a3cce9d6590691aef4b40d2acaa00",
-        "signature": "ded5d87329a4f3d9433c1fadfc1c691935e9cdfc9d962d4217454fbf84341221",
+        "version": "0e01ec64149b21370813ca01e73cabfae0727aa6ca868bcbc4116fff0a49bdd8",
+        "signature": "466a60706c535aec7d398a8d05844633dae40c7564884cd98cadba2abb350a44",
         "affectsGlobalScope": false
       },
-      "../wwwroot/js/lib/babylon/misc/observable.d.ts": {
-        "version": "ea926394d96c5ec3381da37a62d3f93fb4f447a5f471636446562a7573da81ee",
-        "signature": "ea926394d96c5ec3381da37a62d3f93fb4f447a5f471636446562a7573da81ee",
+      "./terranode.ts": {
+        "version": "40647c0065b9562d5e798c6a6d5fd5420a982ee27210b8b18db4651bc995ddcc",
+        "signature": "61ddb7ed631f1964df735fc78cf82af4fcbc89a46a0910358534b947220cb8d4",
+        "affectsGlobalScope": false
+      },
+      "./gpu.ts": {
+        "version": "dc63faaf45ca2d7ff9b186825f5bf484bedb2cf01ef76ba57fcc39b07bc1eebd",
+        "signature": "b36b34aedd3f3d5249e027a8c3761d5d041065ba7612b5542ef003535f9a6071",
+        "affectsGlobalScope": false
+      },
+      "./gputypes.ts": {
+        "version": "2706fda89f4bb008dca2f9d3e847c12a6f5a529a71c21d566b80ea58342bea7b",
+        "signature": "f10c5188db777cc85fee2409f2be762779a9376ae15378f5e6f64acc05be61bb",
+        "affectsGlobalScope": true
+      },
+      "./lazyeval.ts": {
+        "version": "b53fca539389095131d0376f7b5da7e14320d8316fbb7fe92c05684b3cc90c76",
+        "signature": "82bfc8321c0507c948cf350acad51a5eae855f48dfdf83d1b6cde74a9ea554d1",
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/animations/easing.d.ts": {
@@ -334,6 +344,11 @@
       "../wwwroot/js/lib/babylon/animations/animationevent.d.ts": {
         "version": "110bc261940513eea41310f708d509f4648174dfa0728cf6b560468dafb6f5f6",
         "signature": "110bc261940513eea41310f708d509f4648174dfa0728cf6b560468dafb6f5f6",
+        "affectsGlobalScope": false
+      },
+      "../wwwroot/js/lib/babylon/misc/observable.d.ts": {
+        "version": "ea926394d96c5ec3381da37a62d3f93fb4f447a5f471636446562a7573da81ee",
+        "signature": "ea926394d96c5ec3381da37a62d3f93fb4f447a5f471636446562a7573da81ee",
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/audio/analyser.d.ts": {
@@ -537,8 +552,8 @@
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/collisions/collider.d.ts": {
-        "version": "d7520f553f2eda40faedf7f3c6948f7d4aa7cd39294470719d99fae8d8438a9f",
-        "signature": "d7520f553f2eda40faedf7f3c6948f7d4aa7cd39294470719d99fae8d8438a9f",
+        "version": "d9882aa0dfc70b3a1ad2c1a7990db7081d2c2833cd400ca11b90c5fee006cf09",
+        "signature": "d9882aa0dfc70b3a1ad2c1a7990db7081d2c2833cd400ca11b90c5fee006cf09",
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/culling/boundinginfo.d.ts": {
@@ -911,21 +926,6 @@
         "signature": "de1e3f35e373c5aea8fc930113c0f0d56e4d3be0c1d9315f3dd73515fef729f2",
         "affectsGlobalScope": false
       },
-      "../wwwroot/js/lib/babylon/animations/animationgroup.d.ts": {
-        "version": "92d8c261761013ad50f09b336c1f5f18a0a7756daadf6a52448e0858e122d9e0",
-        "signature": "92d8c261761013ad50f09b336c1f5f18a0a7756daadf6a52448e0858e122d9e0",
-        "affectsGlobalScope": false
-      },
-      "../wwwroot/js/lib/babylon/assetcontainer.d.ts": {
-        "version": "7115d34cd1d58ce80a93a70db57ea4adcbd0e777e68578233c0bb5fca8894960",
-        "signature": "7115d34cd1d58ce80a93a70db57ea4adcbd0e777e68578233c0bb5fca8894960",
-        "affectsGlobalScope": false
-      },
-      "../wwwroot/js/lib/babylon/abstractscene.d.ts": {
-        "version": "7c63b3049e84feffe61ead6f87710a7c0052e0a9d5d345e6ab34b37de8441c0c",
-        "signature": "7c63b3049e84feffe61ead6f87710a7c0052e0a9d5d345e6ab34b37de8441c0c",
-        "affectsGlobalScope": false
-      },
       "../wwwroot/js/lib/babylon/collisions/collisioncoordinator.d.ts": {
         "version": "56fa99b5db841c5e51e4838598380a6342ab6fd842246461fd8653dacd257b2d",
         "signature": "56fa99b5db841c5e51e4838598380a6342ab6fd842246461fd8653dacd257b2d",
@@ -961,49 +961,24 @@
         "signature": "fe15e7e5dc0fbff08e3d83cddce40a6eb3e36fee9d024bb2cc3f99177cf0bba7",
         "affectsGlobalScope": false
       },
+      "../wwwroot/js/lib/babylon/animations/animationgroup.d.ts": {
+        "version": "92d8c261761013ad50f09b336c1f5f18a0a7756daadf6a52448e0858e122d9e0",
+        "signature": "92d8c261761013ad50f09b336c1f5f18a0a7756daadf6a52448e0858e122d9e0",
+        "affectsGlobalScope": false
+      },
       "../wwwroot/js/lib/babylon/scene.d.ts": {
         "version": "93bee661c309afa97312b61016c39e5fd4921f366ae185eee07ee7c79e8338cd",
         "signature": "93bee661c309afa97312b61016c39e5fd4921f366ae185eee07ee7c79e8338cd",
         "affectsGlobalScope": false
       },
-      "../wwwroot/js/lib/babylon/behaviors/cameras/autorotationbehavior.d.ts": {
-        "version": "52807eee75d1d67ebf63b21c1f371ed6dd03614db67d1c68f5e7ba5bdeeb9eea",
-        "signature": "52807eee75d1d67ebf63b21c1f371ed6dd03614db67d1c68f5e7ba5bdeeb9eea",
+      "../wwwroot/js/lib/babylon/assetcontainer.d.ts": {
+        "version": "7115d34cd1d58ce80a93a70db57ea4adcbd0e777e68578233c0bb5fca8894960",
+        "signature": "7115d34cd1d58ce80a93a70db57ea4adcbd0e777e68578233c0bb5fca8894960",
         "affectsGlobalScope": false
       },
-      "../wwwroot/js/lib/babylon/behaviors/cameras/bouncingbehavior.d.ts": {
-        "version": "16619903e0a26ef7ce9b2cdb412e7c2020b918d525da175cbe5b9c2df85d16ab",
-        "signature": "16619903e0a26ef7ce9b2cdb412e7c2020b918d525da175cbe5b9c2df85d16ab",
-        "affectsGlobalScope": false
-      },
-      "../wwwroot/js/lib/babylon/behaviors/cameras/framingbehavior.d.ts": {
-        "version": "d65b8de7dc9d3a083b6a5ae8a086c0ce373475d577ec789fb9f36e169e94e248",
-        "signature": "d65b8de7dc9d3a083b6a5ae8a086c0ce373475d577ec789fb9f36e169e94e248",
-        "affectsGlobalScope": false
-      },
-      "../wwwroot/js/lib/babylon/cameras/arcrotatecamerainputsmanager.d.ts": {
-        "version": "c8b8a6d76559a62eb494de0f332a8dbbc53fb4a3995d099edd5d84a68a7aa63b",
-        "signature": "c8b8a6d76559a62eb494de0f332a8dbbc53fb4a3995d099edd5d84a68a7aa63b",
-        "affectsGlobalScope": false
-      },
-      "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts": {
-        "version": "e26ee08ee44d65b00c0f244ca1fe6182cca9cbf05f91b99848e214a2bdc7302e",
-        "signature": "e26ee08ee44d65b00c0f244ca1fe6182cca9cbf05f91b99848e214a2bdc7302e",
-        "affectsGlobalScope": false
-      },
-      "./debugscene.ts": {
-        "version": "bd2064dad0a85184cf3b3c8b65e8bc5fb6b8841828d8d32e1a5b561f63b3cb21",
-        "signature": "4085b2c1e097063e23ec7856ff5361320e76f20f1fb4f5242e06d3c121c0c3e9",
-        "affectsGlobalScope": false
-      },
-      "./gputypes.ts": {
-        "version": "2706fda89f4bb008dca2f9d3e847c12a6f5a529a71c21d566b80ea58342bea7b",
-        "signature": "f10c5188db777cc85fee2409f2be762779a9376ae15378f5e6f64acc05be61bb",
-        "affectsGlobalScope": true
-      },
-      "./lazyeval.ts": {
-        "version": "b53fca539389095131d0376f7b5da7e14320d8316fbb7fe92c05684b3cc90c76",
-        "signature": "82bfc8321c0507c948cf350acad51a5eae855f48dfdf83d1b6cde74a9ea554d1",
+      "../wwwroot/js/lib/babylon/abstractscene.d.ts": {
+        "version": "7c63b3049e84feffe61ead6f87710a7c0052e0a9d5d345e6ab34b37de8441c0c",
+        "signature": "7c63b3049e84feffe61ead6f87710a7c0052e0a9d5d345e6ab34b37de8441c0c",
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/actions/directactions.d.ts": {
@@ -1054,6 +1029,31 @@
       "../wwwroot/js/lib/babylon/audio/index.d.ts": {
         "version": "2cb8b6d66dbe74e50b67c7cc4a6dc188ee9f1642e036ab5b70c39a4b2632dc41",
         "signature": "2cb8b6d66dbe74e50b67c7cc4a6dc188ee9f1642e036ab5b70c39a4b2632dc41",
+        "affectsGlobalScope": false
+      },
+      "../wwwroot/js/lib/babylon/behaviors/cameras/bouncingbehavior.d.ts": {
+        "version": "16619903e0a26ef7ce9b2cdb412e7c2020b918d525da175cbe5b9c2df85d16ab",
+        "signature": "16619903e0a26ef7ce9b2cdb412e7c2020b918d525da175cbe5b9c2df85d16ab",
+        "affectsGlobalScope": false
+      },
+      "../wwwroot/js/lib/babylon/behaviors/cameras/framingbehavior.d.ts": {
+        "version": "d65b8de7dc9d3a083b6a5ae8a086c0ce373475d577ec789fb9f36e169e94e248",
+        "signature": "d65b8de7dc9d3a083b6a5ae8a086c0ce373475d577ec789fb9f36e169e94e248",
+        "affectsGlobalScope": false
+      },
+      "../wwwroot/js/lib/babylon/cameras/arcrotatecamerainputsmanager.d.ts": {
+        "version": "c8b8a6d76559a62eb494de0f332a8dbbc53fb4a3995d099edd5d84a68a7aa63b",
+        "signature": "c8b8a6d76559a62eb494de0f332a8dbbc53fb4a3995d099edd5d84a68a7aa63b",
+        "affectsGlobalScope": false
+      },
+      "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts": {
+        "version": "e26ee08ee44d65b00c0f244ca1fe6182cca9cbf05f91b99848e214a2bdc7302e",
+        "signature": "e26ee08ee44d65b00c0f244ca1fe6182cca9cbf05f91b99848e214a2bdc7302e",
+        "affectsGlobalScope": false
+      },
+      "../wwwroot/js/lib/babylon/behaviors/cameras/autorotationbehavior.d.ts": {
+        "version": "52807eee75d1d67ebf63b21c1f371ed6dd03614db67d1c68f5e7ba5bdeeb9eea",
+        "signature": "52807eee75d1d67ebf63b21c1f371ed6dd03614db67d1c68f5e7ba5bdeeb9eea",
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/behaviors/cameras/index.d.ts": {
@@ -1532,8 +1532,8 @@
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/engines/webgpuengine.d.ts": {
-        "version": "97608aa410ca55bcdcf5706921839074b416ef3c2f6ed9b2e4f4639583f8aca3",
-        "signature": "97608aa410ca55bcdcf5706921839074b416ef3c2f6ed9b2e4f4639583f8aca3",
+        "version": "f0b067e9a3196004eb6aa7bca5b5b937669564a7a7c8edeaab619a44196efef0",
+        "signature": "f0b067e9a3196004eb6aa7bca5b5b937669564a7a7c8edeaab619a44196efef0",
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/engines/webgl/webgl2shaderprocessors.d.ts": {
@@ -2007,8 +2007,8 @@
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/materials/node/nodematerialbuildstateshareddata.d.ts": {
-        "version": "0482d8eb67e7349e0daa438941f12b68267dd3ffea4c7e9485d1072d12636ea0",
-        "signature": "0482d8eb67e7349e0daa438941f12b68267dd3ffea4c7e9485d1072d12636ea0",
+        "version": "1c355f1da72193d57b6f197da3e4d0e34c96b11cfbd1d53cb27b11bd9f7896dc",
+        "signature": "1c355f1da72193d57b6f197da3e4d0e34c96b11cfbd1d53cb27b11bd9f7896dc",
         "affectsGlobalScope": false
       },
       "../wwwroot/js/lib/babylon/materials/node/nodematerialbuildstate.d.ts": {
@@ -3112,13 +3112,13 @@
         "affectsGlobalScope": false
       },
       "./terraeffect.ts": {
-        "version": "3b6265873415ade5152a5cc20c86fb9b3e3f77f1373376f956d2012494e858f4",
+        "version": "1ace666495ac9b5072a3d9c2663a199390b1a52bfc0ae283e0be1c539e04d7a8",
         "signature": "9bb219e2784a362dec822b9d01ec3ea430818f1b0f07b67858201a33de546e0c",
         "affectsGlobalScope": false
       },
       "./terramesh.ts": {
-        "version": "3d6d7fcf8bd639bf7c0bbffac20bfe76a7316eb9c856d30b18eaadf142af5a5e",
-        "signature": "5539d7c9614eac07f849c675bd9dbb0c3e4d6133b5dceb5479e6065e6612cde3",
+        "version": "e78147666560c89ef5b00f9af579e804c30d8837e133a2bf49463680866d5ffd",
+        "signature": "e74acdf8f03e133f23d603b12c6a17578e858df5cf6ee0e8e0ae7d4fe944ac37",
         "affectsGlobalScope": false
       },
       "./terraray.ts": {
@@ -3127,8 +3127,8 @@
         "affectsGlobalScope": true
       },
       "./terrascene.ts": {
-        "version": "50faad81504d983a4c2b0eda1b0b52e3a13a5fa4de2b91b358eaa55aa186161d",
-        "signature": "c31c6a031489e5454127d2dc808b89d3d402b12daffc7491893bbe46161dd971",
+        "version": "67e7ed3562a3bee89a4c081950255d833f6b19654b8baa196a8603dd4ba6a96c",
+        "signature": "3e55ed234828767ebed389bd2a05407fb6f446fd0484fa92af058741c0cbcebe",
         "affectsGlobalScope": false
       },
       "./traits/trait.ts": {
@@ -3137,33 +3137,33 @@
         "affectsGlobalScope": false
       },
       "./traits/canvaslistener.ts": {
-        "version": "a15f378ae674ed9f8e29540854dd5a6206e17200060a79111991beaf3dcecfe6",
-        "signature": "c2f94ecf0374c0079c372380f0fbd18a0d7812417923948cae8cb3ac75e81f1a",
+        "version": "7ef200639c67a4745af5999f91c484d1a5fdb18445508ce4e407b86220c38fce",
+        "signature": "0e8c58cf4783166d3a207b09b299fdf350cb88efb4a1ab1b3d6057cee00a6ea0",
         "affectsGlobalScope": false
       },
       "./world/water.ts": {
-        "version": "dd4f4dd4217516b6766e8fcbe7c7692bbb89b6942afdc5bc2827c069ef13d458",
-        "signature": "ab2ee06d4df6d95dd3940457408ce3d82a92c4affc474c16fcd710dd83a5074a",
+        "version": "99dce7b99e2b9ed1518762cd00237b9114c1a11a4ff924a562e8be7ab5091d39",
+        "signature": "3d66450fa3d697f71ad4374fe883d6ff39248d09a70d823c2fbc4400d9c3d9fc",
         "affectsGlobalScope": false
       },
       "./tools/terrain.ts": {
-        "version": "4cc702a4207ec35a1fa264241efae835c68eb919c19deb07ce6f51bb8270df81",
-        "signature": "31bb803093676ffabcefb0745a0d851cdc915c6528621b26d13f7ad40ac4817f",
+        "version": "366f2a23d28f0c4e060c5bb45e55b46e1beea86e88d56e469028de9507eb00e5",
+        "signature": "ba227b65842c2cb3b941aaf7590ef323f1196fa9cd9fa95418f0a3767bb82745",
         "affectsGlobalScope": false
       },
       "./gpu/renderpipelines/terrainrenderpipeline.ts": {
-        "version": "4f3d9189fe62c49ea5052308fe92cc6e1a016fb54a69b31cd6b82f40b91f6c06",
-        "signature": "7e3d283c5e3a0f315cc8a8c6cb2c7ef9c437f0ccead5821a44da73cae2e26eb2",
+        "version": "a1d83ac5b469295ee32af32505a4144be53b27dc88ad28afff9198c3a4337103",
+        "signature": "69686542f3842c5bdb14cde4c8730446e070c2bb799cbf64d6959d6b05c384df",
         "affectsGlobalScope": false
       },
       "./world/terrain.ts": {
-        "version": "0802bcf9506b687681741439d04c8d69d5aadab7f9ef80f4e7a9d0d4276660ac",
-        "signature": "eb38512e1f60c01ad11304b1e1e0233071099f89628b828cd822708c258a3931",
+        "version": "6186a235b4ad4c960c259e9354fd5ab9b15bd7c8e300561970516ff798699a6f",
+        "signature": "37c525665a5cb43e95285de21558924c427b6421e73fb61be164694aaf6a009e",
         "affectsGlobalScope": false
       },
       "./uitab.ts": {
-        "version": "c0ee58d22524c001790f13162d5d8213b74ab3f6ca2002293d3c3688d096dd50",
-        "signature": "67ec99bfb9a5daaf1e275a34537762ca2605f75ca8892ee6503dac8d90cb45e7",
+        "version": "188a921ec5dabb6e79cbfee01a8bc11d0cdd702ff788d1e9a8b21126d0a115ae",
+        "signature": "01073abf9d71987edd816a35fb5383636cf87b020ed3b1b92e3e315888602a6c",
         "affectsGlobalScope": false
       },
       "./types/interfaces/index.d.ts": {
@@ -3172,72 +3172,67 @@
         "affectsGlobalScope": false
       },
       "./world/scene.ts": {
-        "version": "18fc7ebf89c741ad14047a2b99439d323009c755250076449fb9fdf89a3eb7f9",
-        "signature": "493ea65401ca2bd1fb9d5bf7c080d92cafd9d8dc3a5bfeb28b5bc5d6788c64fb",
+        "version": "86feaa4d6f1497c66c349e64b71f3769a6e4cdd6c57d1331d49b72030adb6e8d",
+        "signature": "7bea25b51b2ba7322447463f8314e4e8fa66befede386da50599068e39a1bd07",
         "affectsGlobalScope": false
       },
       "./plants/plants.ts": {
-        "version": "b51ba60e612a9e60f38e4fb6b94d0af6393eb1e27f964607bbdafc409ce29fe4",
+        "version": "8296e7fe2805cde71b3fe883d087447e51e348eb61d1b5d1bfb59a49f31b63aa",
         "signature": "41e9aa91caf4204e56b9d8258469b709f5010ab3c7bf65efa5f7de370cb2d763",
         "affectsGlobalScope": false
       },
       "./paintground/paintground.ts": {
-        "version": "4bacf632bca2cef67e4996e4e04a83148d9cf0a31ce14f8a48d9a6af0e3e43e2",
-        "signature": "439c1310e518a565bbac09818f9a28af24c1afeefc8a681e857d565878bd05cf",
+        "version": "130ddf97e422b64a46f55b44ba68223778b66b6c92e234fd4680b65aedf88922",
+        "signature": "a9f00ff664c7f35885fa73c57dccf256a64b1c79bc7dfb74d11a46ffc89c3460",
         "affectsGlobalScope": false
       },
       "./paintground/paintplane.ts": {
-        "version": "42dd908d5a9c9becbec24c32615067fa35077140501aa61d39b627948e332fd8",
-        "signature": "9b7b41bbcd42b70ab1a7acb6e75bf3b2448f53da2a8bef9119c7f1555ce75ffd",
+        "version": "6b87d1cfeb46545c73e2d82e5a2e373f2b1ed79d04d17c7307175890a9459249",
+        "signature": "4d83b96a585d64af7d6586ded6a5fb6687701b5d2ec6ecde03cdf6a2864e4aa3",
         "affectsGlobalScope": false
       },
       "./tools/plantsui.ts": {
-        "version": "b0f47d0f8f34d42a86cde4b601c90ac43f2685ae6a1b356358aa358fa1ae689c",
-        "signature": "24fe92cd198fc00db27448b05538bb5eacc3253d2d79c337c29d7ce77abf44c0",
+        "version": "47ab8d22712c114b88043507638504c6fcc2fb9ff19123e969ff7dad383d017c",
+        "signature": "df0e501d33f03a666fa6ca28ac09aafe2057a34f14cd974f8e3679bc754420ef",
         "affectsGlobalScope": false
       },
       "./tools/camera.ts": {
-        "version": "c2528eb6a222792285076e14a801d512da9f5d875a5b6ee38778b21691b71272",
-        "signature": "45703d092f0c1b95d435d0d8cda2cfeef8c3b57aa61bff9c0a5cd0db63691cdc",
+        "version": "728d3caedc1c5a30cce9dbe2320dad82073182fdf9ae371862b6302266762732",
+        "signature": "94a4296e5186a1c79106681e6a983f12122a3915a6133ee9602c617cd49b3f99",
         "affectsGlobalScope": false
       },
       "./tools/buildings.ts": {
-        "version": "68824c640d82973c2d17c4d9309b292e9365a92f40b62e7d9984d01f2568dcd9",
-        "signature": "9bd4a98fe9cb30d573d73f20c104175d419aa6db85e303cc85ad4984950d2aac",
+        "version": "32589e8e3041f69ad6355395fd67c4ccebbf6c494df1ad708ac55a23609833c3",
+        "signature": "a848bd657c6f666a8df9794430f134e5d5a0a31dc11baa0178dff3b189b79bb3",
         "affectsGlobalScope": false
       },
       "./paintground/painttexture.ts": {
-        "version": "4350a56b60ef634ad4c9502437db3acff362213a95eb31f7b828f1ed89bf22d8",
-        "signature": "51e7f6d83b6b9748959fa7c1dc1902c591dfba6dfb8364db812a9aef93f68dea",
+        "version": "73fbb3b61c51439acb448a46fe4587b1a58b0f41e7d17624d44cbbd0e2b2e579",
+        "signature": "370b8031b4cc531f39b3356a886c35ec9f3618d7a0105dc944fedbb88130a8d8",
         "affectsGlobalScope": false
       },
       "./tools/zones.ts": {
-        "version": "45d4f62ddcb84168e927bfe572d2d40fa73aa9bea5b6e92c7ffbf1ea7847e25a",
-        "signature": "b2115831479f68668a6e06e0f43c4a5059555af7758be91456c2faec48e84f5b",
-        "affectsGlobalScope": false
-      },
-      "./world/tests/testplane.ts": {
-        "version": "131e47f4e41cba9706d41d8ad587de9aba3ed9e5017abf96e6c5fdfcfe8d57a7",
-        "signature": "0415277542a17b461062a338f5312834e51daf2891283c6bd54b26b3619fa12f",
+        "version": "68fa575263b1bf330dd882658141b407745b9dd94546ca0c41c24bccb10797e4",
+        "signature": "5384a7ac9774633981b57d4c8858aa25ba0bcfac556c0ef2718713a7dc6bf94f",
         "affectsGlobalScope": false
       },
       "./gpu/renderpipelines/simple.ts": {
-        "version": "e069a0adfceb5d996605f4497ff9d67734953af538b5daa1de3138ae391ad71b",
-        "signature": "db69fabc47bbc942dd8ebbcbfbb8b58b0a312d8011234b5d54159192e180f612",
+        "version": "bdd25637e54faa54f562024e195f0a7b56938a8008994fb4168b9cfe53b24ab4",
+        "signature": "224a03c95947cd77fe84329a00676bde0afe80cf74ab268eba559eda09038b16",
         "affectsGlobalScope": false
       },
       "./gpu/meshes/box.ts": {
-        "version": "045d3b766809c6a43bcdf2f2e704709d470312a56af12258f116f70f809dbc8f",
-        "signature": "e12344f0acd8d4d532a5a6deb0c33358db33b54cce4a777616c9fa5162548e9c",
+        "version": "c86cf4265df286de407993c14ba3a99bb84c02d2bdb3ae944a000d26274a56b0",
+        "signature": "d1b90e818edc3cbed30efbc9151b4747d3ed0363d7485ac579d5df057ad3ac97",
         "affectsGlobalScope": false
       },
       "./world/sun2.ts": {
-        "version": "bd1d8bb108769afeb111e983d89e5ea6ad17f29ec63db9291581aa523cb0c191",
-        "signature": "4ab5ad1f7f080990acfddfca41f98315e3ec8352cb6d12d63fcd08d911b8a71d",
+        "version": "b0687f42a39fb2a6309e37363019315b0599e6b38fa08ac82bbc09e1af92c08c",
+        "signature": "6154e68082c2a86d523e7d34a0da2d70bb20de032058e5cd533a98d841292807",
         "affectsGlobalScope": false
       },
       "./code.ts": {
-        "version": "8bf9e10e152d5f9a89e869b7d58000123f616334ef91c9d268be010557fe920a",
+        "version": "7742dde38083dd9efd1ddce56f8064dbcd02a0aa0553fc421544a8111a3e559e",
         "signature": "55e264eb1aba9b8548b7ce3d9d65e8b050491cf6b30e55b95690d2a68c840f94",
         "affectsGlobalScope": true
       },
@@ -3247,8 +3242,8 @@
         "affectsGlobalScope": true
       },
       "./paintground/paintline.ts": {
-        "version": "32cd0683752a0b94b7a6f857117cfca70249e5a754226e0d42a1f11df71b90f0",
-        "signature": "056f97bd0ddff326fbb39f1a344e6c68f4af02f8b27fc66246be221a4b79dcba",
+        "version": "81b3f48e725e2b844d97f40c492e1c45f605b5c95ca0dbf7e3d25f5b7dfa95a7",
+        "signature": "82a49608a255aef2f4867b900705761d86445d557f8d7a248f05fed6e1e8e8d7",
         "affectsGlobalScope": false
       },
       "./plants/grass.ts": {
@@ -3264,6 +3259,11 @@
       "./rustwasm/hello_wasm_bg.d.ts": {
         "version": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86",
         "signature": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86",
+        "affectsGlobalScope": false
+      },
+      "./world/tests/testplane.ts": {
+        "version": "f5d95733bcee010cae8647a63b4dee6d9e29b8b2c86f203f0dbc4a16dd48d24a",
+        "signature": "91e7af7b44a5c4f6197cdb0dbd5870b21b225e9c8f1c546cefa134f38f8bf375",
         "affectsGlobalScope": false
       },
       "./rustwasm/hello_wasm.js": {
@@ -3292,7 +3292,7 @@
       "strict": true,
       "noImplicitAny": true,
       "noImplicitThis": true,
-      "noUnusedLocals": false,
+      "noUnusedLocals": true,
       "target": 99,
       "module": 99,
       "lib": [
@@ -3325,17 +3325,16 @@
     "referencedMap": {
       "./code.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "../wwwroot/js/lib/babylon/collisions/collider.d.ts",
         "../wwwroot/js/lib/babylon/collisions/collisioncoordinator.d.ts",
         "../wwwroot/js/lib/babylon/maths/math.vector.d.ts",
         "../wwwroot/js/lib/babylon/meshes/abstractmesh.d.ts",
-        "./debugscene.ts",
         "./engine.ts",
         "./gpu.ts",
         "./gpu/meshes/box.ts",
         "./gpu/renderpass.ts",
         "./lazyeval.ts",
         "./plants/plants.ts",
+        "./scene.ts",
         "./terracamera.ts",
         "./terranode.ts",
         "./terrascene.ts",
@@ -3349,19 +3348,10 @@
         "./world/scene.ts",
         "./world/sun2.ts",
         "./world/terrain.ts",
-        "./world/tests/testplane.ts",
         "./world/water.ts"
       ],
-      "./debugscene.ts": [
-        "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "./engine.ts",
-        "./gpu.ts",
-        "./gpu/bindgrouplayout.ts",
-        "./gpu/renderpass.ts",
-        "./scene.ts",
-        "./terracamera.ts"
-      ],
       "./engine.ts": [
+        "./collider.ts",
         "./gpu.ts",
         "./gpu/bindgrouplayout.ts",
         "./physics.ts",
@@ -3419,22 +3409,19 @@
       ],
       "./paintground/paintground.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
         "./types/interfaces/index.d.ts",
-        "./uitab.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
       "./paintground/paintline.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
         "../wwwroot/js/lib/babylon/maths/math.vector.d.ts",
-        "../wwwroot/js/lib/babylon/meshes/mesh.d.ts",
         "../wwwroot/js/lib/babylon/meshes/meshbuilder.d.ts",
         "./paintground/paintground.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
-        "./world/scene.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
@@ -3442,30 +3429,27 @@
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
         "./gpu/drawable.ts",
         "./paintground/paintground.ts",
+        "./scene.ts",
         "./terranode.ts",
-        "./terrascene.ts",
         "./traits/canvaslistener.ts",
         "./traits/worldposition.ts",
         "./types/interfaces/index.d.ts",
-        "./uitab.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
       "./paintground/painttexture.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
         "./paintground/paintground.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
         "./types/interfaces/index.d.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
       "./physics.ts": [
-        "./engine.ts",
         "./traits/worldposition.ts"
       ],
       "./plants/plants.ts": [
-        "./lazyeval.ts",
         "./scene.ts",
         "./types/interfaces/index.d.ts",
         "./workerthread.ts",
@@ -3505,18 +3489,16 @@
       ],
       "./terramesh.ts": [
         "../wwwroot/js/lib/babylon/collisions/collider.d.ts",
-        "../wwwroot/js/lib/babylon/collisions/pickinginfo.d.ts",
-        "../wwwroot/js/lib/babylon/culling/ray.d.ts",
         "../wwwroot/js/lib/babylon/materials/material.d.ts",
         "../wwwroot/js/lib/babylon/maths/math.d.ts",
         "../wwwroot/js/lib/babylon/maths/math.vector.d.ts",
         "../wwwroot/js/lib/babylon/meshes/abstractmesh.d.ts",
         "../wwwroot/js/lib/babylon/meshes/geometry.d.ts",
         "../wwwroot/js/lib/babylon/meshes/mesh.d.ts",
-        "../wwwroot/js/lib/babylon/meshes/mesh.vertexdata.d.ts",
-        "./workerthread.ts"
+        "../wwwroot/js/lib/babylon/meshes/mesh.vertexdata.d.ts"
       ],
       "./terranode.ts": [
+        "./collider.ts",
         "./engine.ts",
         "./lights.ts",
         "./physics.ts",
@@ -3525,22 +3507,15 @@
         "./workerthread.ts"
       ],
       "./terrascene.ts": [
-        "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "../wwwroot/js/lib/babylon/collisions/collider.d.ts",
-        "../wwwroot/js/lib/babylon/collisions/collisioncoordinator.d.ts",
-        "../wwwroot/js/lib/babylon/maths/math.d.ts",
         "./engine.ts",
         "./gpu.ts",
-        "./gpu/renderpass.ts",
         "./scene.ts",
-        "./terracamera.ts",
-        "./terranode.ts",
-        "./traits/worldposition.ts"
+        "./terracamera.ts"
       ],
       "./tools/buildings.ts": [
         "../wwwroot/js/lib/babylon/index.d.ts",
+        "./scene.ts",
         "./terramesh.ts",
-        "./terrascene.ts",
         "./traits/canvaslistener.ts",
         "./traits/trait.ts",
         "./uitab.ts",
@@ -3549,9 +3524,8 @@
       ],
       "./tools/camera.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./uitab.ts",
-        "./world/scene.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
@@ -3559,20 +3533,19 @@
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
         "./paintground/paintplane.ts",
         "./plants/plants.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
         "./traits/trait.ts",
         "./types/interfaces/index.d.ts",
         "./uitab.ts",
-        "./world/scene.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
       "./tools/terrain.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
         "./gpu/drawable.ts",
+        "./scene.ts",
         "./terranode.ts",
-        "./terrascene.ts",
         "./traits/canvaslistener.ts",
         "./traits/trait.ts",
         "./traits/worldposition.ts",
@@ -3583,9 +3556,8 @@
       ],
       "./tools/zones.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "./debugscene.ts",
         "./paintground/painttexture.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
         "./traits/trait.ts",
         "./types/interfaces/index.d.ts",
@@ -3607,14 +3579,13 @@
       ],
       "./uitab.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
       "./world/scene.ts": [
         "../wwwroot/js/lib/babylon/actions/abstractactionmanager.d.ts",
         "../wwwroot/js/lib/babylon/actions/actionevent.d.ts",
-        "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
         "../wwwroot/js/lib/babylon/cameras/camera.d.ts",
         "../wwwroot/js/lib/babylon/collisions/collisioncoordinator.d.ts",
         "../wwwroot/js/lib/babylon/collisions/pickinginfo.d.ts",
@@ -3630,11 +3601,9 @@
         "../wwwroot/js/lib/babylon/misc/observable.d.ts",
         "../wwwroot/js/lib/babylon/scene.d.ts",
         "./gpu.ts",
-        "./lazyeval.ts",
         "./terramesh.ts",
         "./terrascene.ts",
-        "./types/interfaces/index.d.ts",
-        "./world/water.ts"
+        "./types/interfaces/index.d.ts"
       ],
       "./world/sun2.ts": [
         "./lights.ts",
@@ -7755,14 +7724,8 @@
       "./code.ts": [
         "./world/scene.ts"
       ],
-      "./debugscene.ts": [
-        "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "./engine.ts",
-        "./gpu.ts",
-        "./scene.ts",
-        "./terracamera.ts"
-      ],
       "./engine.ts": [
+        "./collider.ts",
         "./gpu.ts",
         "./gpu/bindgrouplayout.ts",
         "./physics.ts"
@@ -7815,7 +7778,7 @@
       ],
       "./paintground/paintground.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
         "./types/interfaces/index.d.ts",
         "./world/terrain.ts",
@@ -7824,15 +7787,15 @@
       "./paintground/paintline.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
         "./paintground/paintground.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
-        "./world/scene.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
       "./paintground/paintplane.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
         "./paintground/paintground.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
         "./types/interfaces/index.d.ts",
         "./world/terrain.ts",
@@ -7841,14 +7804,13 @@
       "./paintground/painttexture.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
         "./paintground/paintground.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
         "./types/interfaces/index.d.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
       "./physics.ts": [
-        "./engine.ts",
         "./traits/worldposition.ts"
       ],
       "./plants/plants.ts": [
@@ -7891,6 +7853,7 @@
         "../wwwroot/js/lib/babylon/meshes/mesh.d.ts"
       ],
       "./terranode.ts": [
+        "./collider.ts",
         "./engine.ts",
         "./lights.ts",
         "./physics.ts",
@@ -7905,7 +7868,7 @@
       ],
       "./tools/buildings.ts": [
         "../wwwroot/js/lib/babylon/index.d.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/trait.ts",
         "./uitab.ts",
         "./world/terrain.ts",
@@ -7913,7 +7876,7 @@
       ],
       "./tools/camera.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./uitab.ts",
         "./world/terrain.ts",
         "./world/water.ts"
@@ -7921,7 +7884,7 @@
       "./tools/plantsui.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
         "./plants/plants.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
         "./traits/trait.ts",
         "./uitab.ts",
@@ -7930,8 +7893,8 @@
       ],
       "./tools/terrain.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
+        "./scene.ts",
         "./terranode.ts",
-        "./terrascene.ts",
         "./traits/trait.ts",
         "./traits/worldposition.ts",
         "./uitab.ts",
@@ -7940,8 +7903,7 @@
       ],
       "./tools/zones.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "./debugscene.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./traits/canvaslistener.ts",
         "./traits/trait.ts",
         "./uitab.ts",
@@ -7960,7 +7922,7 @@
       ],
       "./uitab.ts": [
         "../wwwroot/js/lib/babylon/cameras/arcrotatecamera.d.ts",
-        "./terrascene.ts",
+        "./scene.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
@@ -12135,9 +12097,9 @@
       "../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.string.d.ts",
       "../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.weakref.d.ts",
       "./code.ts",
+      "./collider.ts",
       "./commonmath.ts",
       "./db.ts",
-      "./debugscene.ts",
       "./engine.ts",
       "./gpu.ts",
       "./gpu/bindgrouplayout.ts",

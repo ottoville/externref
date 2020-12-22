@@ -420,8 +420,10 @@ export class TargetCamera extends Camera {
         }
 
         if (this.getScene().useRightHandedSystem) {
+            debugger;
             Matrix.LookAtRHToRef(this._globalPosition, this._globalCurrentTarget, this._globalCurrentUpVector, this._viewMatrix);
         } else {
+            debugger;
             Matrix.LookAtLHToRef(this._globalPosition, this._globalCurrentTarget, this._globalCurrentUpVector, this._viewMatrix);
         }
     }

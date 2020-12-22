@@ -227,7 +227,7 @@
         "affectsGlobalScope": true
       },
       "./webworkers/grass.ts": {
-        "version": "9606e935fa996485d83a4c547929b1cda8796bf3404098b2c2fda28d83e963f8",
+        "version": "7342e93ac00a3df1fcee242d5d068cacca852117f646f2498215c30d6bd3b698",
         "signature": "0f8358879cdb884760aa20cef1dbe971294a391aa5103fb2d0c4f74428e08dff",
         "affectsGlobalScope": true
       },
@@ -237,8 +237,8 @@
         "affectsGlobalScope": true
       },
       "./webworkers/mesh.ts": {
-        "version": "7a9104acb8c778364e64009e4e18602859faefab1f2562fb0826e49164806807",
-        "signature": "dea3a12dac0c4116ffe667899f7f0e236970eca204fad63b548602f39953438d",
+        "version": "22d5402c6f3889e55bcd013a07e4f26d9153b4164455d8e2b5c2f868be3b2def",
+        "signature": "8515d86ced5d0f463e843303b3799b071b5345cad5a42fe492179a163c212ea5",
         "affectsGlobalScope": true
       },
       "./webworkers/ray.ts": {
@@ -262,8 +262,8 @@
         "affectsGlobalScope": true
       },
       "./commonmath.d.ts": {
-        "version": "32b34ab405c2665817d40519983af4cb76c28678868fb90505531fe022857fe3",
-        "signature": "32b34ab405c2665817d40519983af4cb76c28678868fb90505531fe022857fe3",
+        "version": "1b475e7245b32e497ba1c8813b5a55641f07a4920473e7b1647d9a00394f17cb",
+        "signature": "1b475e7245b32e497ba1c8813b5a55641f07a4920473e7b1647d9a00394f17cb",
         "affectsGlobalScope": true
       },
       "./webgpu.d.ts": {
