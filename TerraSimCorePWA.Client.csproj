@@ -385,6 +385,7 @@
     <None Include="src\node_modules\yallist\LICENSE" />
     <None Include="src\node_modules\yallist\README.md" />
     <None Include="src\node_modules\yallist\yallist.js" />
+    <None Include="TerraSimCorePWA.Client.sln" />
   </ItemGroup>
 
   <ItemGroup>
@@ -396,10 +397,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Shared\TerraSimCorePWA.Shared.csproj" />
+    <PackageReference Include="TerraSimCorePWA.Shared" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
