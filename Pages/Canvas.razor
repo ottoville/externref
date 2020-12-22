@@ -133,7 +133,7 @@
     byte progress = 0;
     string progressError = null;
 }
-<canvas id="renderCanvas" class="gameControl hidden" style="float:left;width:100%;height:100%" @ref="canvas"></canvas>
+<canvas id="renderCanvas" class="gameControl hidden" @ref="canvas"></canvas>
 <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;">
     @foreach (var tool in tools2)
     {
@@ -164,7 +164,7 @@
         </div>
     }
 </fieldset>
-<fieldset class="gameControl hidden" id="gameState" style="position:absolute;bottom:15px;right:15px;background-color:white">
+<fieldset class="gameControl hidden" id="gameState">
     <label>Time of day: <output id="TODout" fow="TOD">@currentGameTime</output></label>
     <br />
     <input name="time" type="radio" id="pause" value="-1" checked="@(gameSpeed == -1)" @onchange="@changeState" />
