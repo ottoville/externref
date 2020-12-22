@@ -117,10 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="🎮 Continue without logging in and online features" xml:space="preserve">
-    <value>🎮 Pelaa ilman kirjautumista ja online-tukea</value>
+  <data name="Continue without logging in and online features" xml:space="preserve">
+    <value>Pelaa ilman kirjautumista ja online-tukea</value>
   </data>
-  <data name="🎮 Login with facebook" xml:space="preserve">
-    <value>🎮 Kirjaudu Facebook tunnuksilla</value>
+  <data name="Login with facebook" xml:space="preserve">
+    <value>Kirjaudu Facebook tunnuksilla</value>
   </data>
 </root>
