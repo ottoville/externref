@@ -118,59 +118,6 @@ export class Plants {
             shape: shapes,
             noises: noises
         });
-
-      /*  this.mat = new ShaderMaterial("shader", scene, "./shaders/grass2",
-            {
-                attributes: ["position", "normal", "uv", "shape", "worldPos", "noise"],
-                uniforms: ["viewProjection", "view", "projection", "time", "map", "windIntensity", "grassColor", "lightDir", "camDir", "fogColor", "grassFogFar", "fogNear", "fogFar", "lightPos", "BLADESEGS", "BLADEVERTS"]
-            });
-            */
-
-       /* const Poaceae = new TerraMesh("Poaceae", positions, undefined, new Float32Array(normals));
-        Poaceae.alwaysSelectAsActiveMesh = true;
-        Poaceae.material = new StandardMaterial("Poaceae", scene);
-        Poaceae.material.isReadyForSubMesh = () => true;
-        //@ts-ignore
-        Poaceae.subMeshes[0]._materialEffect = {};
-
-        Poaceae.material.bindForSubMesh = (world: Matrix, mesh: Mesh, subMesh: SubMesh): void => { };
-
-
-        
-        Poaceae._draw = (subMesh: SubMesh, fillMode: number, instancesCount?: number): Mesh => {
-            if (!Poaceae._geometry || !Poaceae._geometry.getVertexBuffers() || (!Poaceae._unIndexed && !Poaceae._geometry.getIndexBuffer())) {
-
-                return Poaceae;
-            }
-            //@ts-ignore
-            if (Poaceae._internalMeshDataInfo._onBeforeDrawObservable) {
-                //@ts-ignore
-                Poaceae._internalMeshDataInfo._onBeforeDrawObservable.notifyObservers(Poaceae);
-            }
-
-            //@ts-ignore
-            engine._currentIndexBuffer = null;
-            //@ts-ignore
-            const renderPass = engine._bundleEncoder || engine._currentRenderPass!;
-
-            renderPass.setPipeline(renderPipeline);
-            renderPass.setVertexBuffer(0, positionGPU);
-            renderPass.setVertexBuffer(1, shapeGPU);
-          //  renderPass.setVertexBuffer(2, VGPU);
-            //@ts-ignore
-            engine._setRenderBindGroups(bindGroups);
-            if (engine._alphaState.alphaBlend && engine._alphaState._isBlendConstantsDirty) {
-                // TODO WebGPU. should use renderPass.
-                //@ts-ignore
-                engine._currentRenderPass!.setBlendColor(engine._alphaState._blendConstants as any);
-            }
-            renderPass.draw(7, this.bladesVisible, 0, 0);
-            return Poaceae;
-        }
-
- */
-        
-
         terrainP.then((arr) => {
             const terrain = arr[0];
             
@@ -182,14 +129,7 @@ export class Plants {
             });
             const layout = computePipeline.getBindGroupLayout(0) as BindGroupLayoutFiveBinding<[GPUBindGroupLayoutEntryReadStorage, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>;
 
-
-
- 
             this.worker.subscribe('updated', async (data: { count: number }) => {
-               /* await worldSetGPU.mapAsync(GPUMapMode.WRITE);
-                const worldSetArr = worldSetGPU.getMappedRange();
-                new Float32Array(worldSetArr).set(new Float32Array(this.offset));
-                worldSetGPU.unmap();*/
 
                 const commandEncoder = scene.gpu.device.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
@@ -243,17 +183,6 @@ export class Plants {
                     this.numBlades * 4 * 4);
                 scene.gpu.device.defaultQueue.submit([commandEncoder.finish()]);
                 drawable.instanceCount = data.count
-                return;
-
-
-
-                /* gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-                    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));
-                    gl.bindBuffer(gl.ARRAY_BUFFER, glsbuffer);
-                    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(shapes));
-                    gl.bindBuffer(gl.ARRAY_BUFFER, glnoisebuffer);
-                    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(noises));
-                    gl.bindBuffer(gl.ARRAY_BUFFER, null);*/
             });
         })
 

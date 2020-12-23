@@ -15,28 +15,31 @@ export interface DrawableLikeClass extends DrawableLike {
 
 
 export class Drawable {
+
+    #indexBuffer: GPUIndexBuffer | null = null;
+    //Todo, support writable vertex buffer
+    #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
+    dynamicBuffers: Map<GPUBindGroup, number> = new Map();
+    #staticBuffers: Set<GPUBindGroup> = new Set()
+    #renderList: Map<RenderPass, Set<Drawable>> = new Map();
+    #scene?: Scene;
+    #instanceCount = 1
+
     setStaticBuffer(setBuffers: () => GPUBindGroupEntry[]) {
         const setBuffer = () => {
-            this.staticBuffers = new Set([this.renderPipeline.bindgroupdrawable.gpuscene.device.createBindGroup(
+            this.#staticBuffers = new Set([this.renderPipeline.bindgroupdrawable.gpuscene.device.createBindGroup(
                 {
                     layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout,
                     entries: setBuffers()
                 }
             )]);
-            this.renderPasses.forEach(rp => rp.bundles.length = 0);
+            this.clearBundles();
         }
         this.renderPipeline.bindgroupdrawable.gpuscene.onResizes.add(() => {
             setBuffer();
         });
         setBuffer();
     }
-    #indexBuffer: GPUIndexBuffer | null = null;
-    //Todo, support writable vertex buffer
-    #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
-    dynamicBuffers: Map<GPUBindGroup, number> = new Map();
-    staticBuffers: Set<GPUBindGroup>=new Set()
-    #renderList: Map<RenderPass, Set<Drawable>> = new Map();
-    #scene?: Scene;
     set scene(scene: Scene | undefined) {
         if (this.#scene) {
             this.#renderList.forEach(Drawables => Drawables.delete(this));
@@ -64,7 +67,16 @@ export class Drawable {
             } else
                 this.#renderList.set(rp, variant.rootDrawables.add(this));
         });
+        this.clearBundles();
+    }
+    private clearBundles() {
         this.renderPasses.forEach(rp => rp.bundles.length = 0);
+    }
+    set instanceCount(count: number) {
+        if (count === this.#instanceCount)
+            return;
+        this.#instanceCount = count;
+        this.clearBundles();
     }
     constructor(
         private renderPipeline: RenderPipeline,
@@ -72,32 +84,33 @@ export class Drawable {
         public indexOrVertexCount: number,
         scene?: Scene,
         public baseVertex = 0,
-        public instanceCount = 1,
+        instanceCount = 1,
         public firstVertexOrIndex = 0,
         public firstInstance = 0,
         private GPUIndexFormat: GPUIndexFormat = 'uint16') {
             if (instanceCount == 0)
-                console.warn('Added drawable with 0 instances, nothing will be drawn');
+            console.warn('Added drawable with 0 instances, nothing will be drawn');
+        this.#instanceCount = instanceCount;
         this.scene = scene;
-        renderPasses.forEach(rp => rp.bundles.length = 0);
+        this.clearBundles();
     }
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number) {
-        this.staticBuffers.forEach((bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup));
+        this.#staticBuffers.forEach((bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup));
         this.dynamicBuffers.forEach((offset, bindgroup) => {
             renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset]);
         })
         this.#vertexBuffers.forEach((buffer, index) => renderPass.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
         if (this.#indexBuffer) {
             renderPass.setIndexBuffer(this.#indexBuffer, this.GPUIndexFormat);
-            renderPass.drawIndexed(this.indexOrVertexCount, this.instanceCount, this.firstVertexOrIndex, this.baseVertex, this.firstInstance);
+            renderPass.drawIndexed(this.indexOrVertexCount, this.#instanceCount, this.firstVertexOrIndex, this.baseVertex, this.firstInstance);
         }
         else {
-            renderPass.draw(this.indexOrVertexCount, this.instanceCount, this.firstVertexOrIndex, this.firstInstance);
+            renderPass.draw(this.indexOrVertexCount, this.#instanceCount, this.firstVertexOrIndex, this.firstInstance);
         }
     }
     destroy(preserveIndexBuffer = false, preserveVerticeBuffers: number[] = []): void {
         this.#renderList.forEach(Drawables => Drawables.delete(this));
-        this.renderPasses.forEach(rp => rp.bundles.length = 0);
+        this.clearBundles();
         this.#vertexBuffers.forEach((b, key) => {
             if (!preserveVerticeBuffers.includes(key))
                 b.buffer.destroy()
@@ -112,7 +125,7 @@ export class Drawable {
             let Tbuffer = this.#vertexBuffers.get(index);
             if (Tbuffer) {
                 Tbuffer.buffer.destroy();
-                this.renderPasses.forEach(rp => rp.bundles.length = 0);
+                this.clearBundles();
             }
         }
         if (buffer instanceof GPUBuffer)
@@ -131,7 +144,7 @@ export class Drawable {
         this.baseVertex = baseVertex;
         if (destroyOld && this.#indexBuffer) {
             this.#indexBuffer.destroy();
-            this.renderPasses.forEach(rp => rp.bundles.length = 0);
+            this.clearBundles();
         }
         if (buffer instanceof GPUBuffer) {
             this.#indexBuffer = buffer;
