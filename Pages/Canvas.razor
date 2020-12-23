@@ -4,9 +4,15 @@
 @code {
     ElementReference canvas;
     sbyte gameSpeed = 0;
+    double rendertime = 0;
     long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
     long lastStateChangeTime = DateTime.Now.Ticks;
     string currentGameTime;
+    [JSInvokable]
+    public void setRendertime(double rendertime)
+    {
+        this.rendertime = rendertime;
+    }
     [JSInvokable]
     public void initGame(System.Text.Json.JsonElement input)
     {
@@ -60,46 +66,8 @@
         lastStateChangeTime = DateTime.Now.Ticks;
         JSRuntime.InvokeAsync<object>("scene.stateChange", new { lastStateChangeGameTime, gameSpeed, lastStateChangeTime });
     }
-    static double[] rotateMatrix(double rad, char axis)
-    {
-        // https://www.3dgep.com/3d-math-primer-for-game-programmers-matrices/#Rotation
-        // if (axis == "x")
-        //{
-        return new double[16] {
-                1, 0, 0, 0,
-                0, Math.Cos(rad), Math.Sin(rad) * -1d, 0,
-                0, Math.Sin(rad), Math.Cos(rad), 0,
-                0, 0, 0, 1
-            };
-        // }
-    }
-    static void translate(ref double[] position, double[] m)
-    {
-        position = new double[4] {
-            position[0] * m[0] + position[1] * m[1] + position[2] * m[2] + m[3],
-            position[0] * m[4] + position[1] * m[5] + position[2] * m[6] + m[7],
-            position[0] * m[8] + position[1] * m[9] + position[2] * m[10] + m[11],
-            position[0] * m[12] + position[1] * m[13] + position[2] * m[14] + m[15]
-        };
-    }
-    static double anglePerMinute = (Math.PI * 2) / 1439;
-    static double anglePerSecond = anglePerMinute / 60;
-    static long sundistance = 149600000000;
-    static double[] sunm = rotateMatrix(Math.PI * 0.2, 'x');
-    static double meridian = Math.PI * 0.95;
-    [JSInvokable]
-    public double[] sunPosition()
-    {
-        var secondsOfDay = (getGameTime() / 10000000) % 86400;
-        var sunAngle = ((secondsOfDay * anglePerSecond) + meridian);
-        double[] position = new double[3] {
-            sundistance*Math.Sin(sunAngle),
-            sundistance*Math.Cos(sunAngle),
-            0
-        };
-        translate(ref position, sunm);
-        return position;
-    }
+
+
     List<string>[] tools2 = new List<string>[] {
         new List<string>() {"Zones",      "▧" , "Zones"},
         new List<string>() {"Plants",     "🌲", "Plants" },
@@ -164,6 +132,7 @@
         </div>
     }
 </fieldset>
+<div id="fps">@(rendertime)</div>
 <fieldset class="gameControl hidden" id="gameState">
     <label>Time of day: <output id="TODout" fow="TOD">@currentGameTime</output></label>
     <br />

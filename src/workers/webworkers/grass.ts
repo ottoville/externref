@@ -94,10 +94,12 @@ let methods = {
                 })
           //  }
         }
-        bladecount = Math.min(Math.max(bladecount, plantaes.length), grasspositions.length)
+        bladecount = Math.min(Math.max(bladecount, plantaes.length), grasspositions.length/2)
         //	console.log('Start to process objs length, ', objs.length, ', took ', new Date().getTime() - d);
         for (let i = 0; i < Math.min(bladecount, plantaes.length); i++) {
-            grasspositions.set(plantaes[i].pos, i * 2);
+           // grasspositions.set(plantaes[i].pos, i * 2);
+            grasspositions[i * 2] = plantaes[i].pos[0]
+            grasspositions[i * 2 + 1] = plantaes[i].pos[1]
         }
         this.postMessage({ type: 'updated', count: bladecount });
         /*

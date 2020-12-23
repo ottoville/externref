@@ -132,7 +132,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const device = await adapter.requestDevice();
             if (!device)
                 throw ('no GPU device');
-            console.log('canvas size', canvas.width, canvas.height,)
             const gpuscene = new GPU(device, (gpu) => {
                 return [
                     new RenderPassCanvas(gpu, 4, true, canvas.width, canvas.height, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], undefined, canvas),
@@ -732,7 +731,19 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     height: number
                 } = { width: 0, height: 0 }
 
+                let curSecond = (Date.now() / 500) | 0;
+                let framecount = 0;
                 function renderLoop(time: DOMHighResTimeStamp) {
+                    const nowSecond = (Date.now() / 500) | 0;
+                    if (nowSecond !== curSecond) {
+                        blazor.invokeMethod('setRendertime', framecount*2);
+                        curSecond = nowSecond;
+                        framecount = 0;
+                    }
+                    framecount++;
+                    //performance.mark('renderloopStart');
+                    //let startTime = performance.now();
+
                     gpuscene.onRenders2.forEach(or => {
                         let buff = or();
                         if (buff)
@@ -780,6 +791,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     gpuscene.device.defaultQueue.submit([renderEncoder.finish()].concat(gpuscene.pendingCommandBuffers));
                     gpuscene.pendingCommandBuffers.length = 0;
                     renderFrame = window.requestAnimationFrame(renderLoop);
+                   /* performance.mark('renderloopEnd');
+                    performance.measure("measure a to b", 'renderloopStart', 'renderloopEnd');
+                    performance.getEntriesByType("measure")[0].duration;
+                    performance.clearMarks();
+                    performance.clearMeasures();*/
+                    
                 }
 
 
