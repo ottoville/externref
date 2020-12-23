@@ -22,7 +22,7 @@ export class Plants {
     public opts = {
         radius: 86
     }
-    private offset: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 2 * this.numBlades);
+    //private offset: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 2 * this.numBlades);
     private worker = new WorkerThread('/webworkers/grass.js');
     private ready: Promise<any>;
     public fillArea(area: PTDresult) {
@@ -114,9 +114,9 @@ export class Plants {
         let noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
 
         this.ready = this.worker.message(WorkerReturn.Promise, 'init', {
-            positions: this.offset,
+          //  positions: this.offset,
             shape: shapes,
-            noises: noises
+            noises: noises,
         });
         terrainP.then((arr) => {
             const terrain = arr[0];
@@ -129,7 +129,7 @@ export class Plants {
             });
             const layout = computePipeline.getBindGroupLayout(0) as BindGroupLayoutFiveBinding<[GPUBindGroupLayoutEntryReadStorage, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>;
 
-            this.worker.subscribe('updated', async (data: { count: number }) => {
+            this.worker.subscribe('updated', async (data: { buffer:SharedArrayBuffer }) => {
 
                 const commandEncoder = scene.gpu.device.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
@@ -138,7 +138,7 @@ export class Plants {
 
                 const worldCopyGPU = scene.gpu.createGPUBuffer(this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], true);
                 const worldSetArr = worldCopyGPU.getMappedRange();
-                new Float32Array(worldSetArr).set(new Float32Array(this.offset));
+                new Float32Array(worldSetArr).set(new Float32Array(data.buffer));
                 worldCopyGPU.unmap();
                 const bindGroup = scene.gpu.createBindGroup(layout, {
                     binding: 0,
@@ -182,7 +182,7 @@ export class Plants {
                     shapeGPU, 0,
                     this.numBlades * 4 * 4);
                 scene.gpu.device.defaultQueue.submit([commandEncoder.finish()]);
-                drawable.instanceCount = data.count
+                drawable.instanceCount = (data.buffer.byteLength/4)*2
             });
         })
 

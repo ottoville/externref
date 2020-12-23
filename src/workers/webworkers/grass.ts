@@ -8,9 +8,11 @@ const numBlades = 70000;
 const BLADE_WIDTH: number = 0.0025;
 const BLADE_HEIGHT_MIN = 0.3
 const BLADE_HEIGHT_MAX = 0.8
-let grasspositions: Float32Array;
+const buffer = new SharedArrayBuffer(2 * 4);
+let grasspositions= new Float32Array(buffer);
 let noises: Float32Array;
 let bladecount: number = 0;
+const cacheP = caches.open('save');
 interface PlantI {
     family: string,
     pos: Float32Array,
@@ -20,15 +22,31 @@ interface PlantI {
     z: number,
     grid: string,
 }
-
+function clamp(value: number, min: number, max: number) {
+    return Math.min(Math.max(value, min), max);
+}
 const plantaes: PlantI[] = [];
 
 let methods = {
-    init: (data: WMessage<{ positions: any, shape: any, noises: any }>) => {
-        console.log('init plants worker');
-        grasspositions = new Float32Array(data.data.positions);
+    init: (data: WMessage<{ positions: SharedArrayBuffer, shape: any, noises: any }>) => {
         noises = new Float32Array(data.data.noises);
         this.postMessage({ id: data.id });
+        caches.match(new Request('/grass')).then(async cachedgrass => {
+            if (cachedgrass) {
+                this.postMessage({ type: 'updated', buffer: await cachedgrass.arrayBuffer() });
+            }
+        })
+    },
+    growMemory: (size: number) => {
+        console.log('grow memory to ', size)
+        const buffer = new SharedArrayBuffer(size * 4);
+        const newArray = new Float32Array(buffer);
+        newArray.set(grasspositions);
+        grasspositions = newArray
+    },
+    deGrowMemory: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
+        new Float32Array(data.data.positions,0,grasspositions.length).set(grasspositions);
+        grasspositions = new Float32Array(data.data.positions);
     },
     save: async (data: WMessage<{ amount: number, angle: number, area: { size: any, coord: Float32Array } }>) => {
        // var d = new Date().getTime();
@@ -94,78 +112,30 @@ let methods = {
                 })
           //  }
         }
-        bladecount = Math.min(Math.max(bladecount, plantaes.length), grasspositions.length/2)
-        //	console.log('Start to process objs length, ', objs.length, ', took ', new Date().getTime() - d);
-        for (let i = 0; i < Math.min(bladecount, plantaes.length); i++) {
-           // grasspositions.set(plantaes[i].pos, i * 2);
+      //  bladecount = Math.min(Math.max(bladecount, plantaes.length), grasspositions.length/2)
+        if (amount > grasspositions.length / 2) {
+            methods.growMemory(amount*2)
+        }
+
+
+      //  bladecount = clamp(bladecount, plantaes.length, grasspositions.length / 2)
+       	
+       // for (let i = 0; i < Math.min(bladecount, plantaes.length); i++) {
+        for (let i = 0; i < amount; i++) {
+
             grasspositions[i * 2] = plantaes[i].pos[0]
             grasspositions[i * 2 + 1] = plantaes[i].pos[1]
         }
-        this.postMessage({ type: 'updated', count: bladecount });
-        /*
-        objstore.index('x').getAll(IDBKeyRange.bound(minX, maxX)).onsuccess = (ee) => {
-            console.log('PROMISE FILLED2, took ', new Date().getTime() - d2);
-            //objstore.index('grid').getAll(IDBKeyRange.bound(mingrid, maxgrid)).onsuccess = (ee) => {
-            console.log('start procesing query results, took ', new Date().getTime() - d);
-            let results: PlantI[] = (<IDBRequest>ee.target).result;
-            let grids = new Set(results.filter(v => (v.z > minZ && v.z < maxZ)).map(v => v.grid));
-            console.log('grids mapped, took ', new Date().getTime() - d);
-            for (let i = 0; i < amount; i++) {
-                let blade = [offsets[i * 2], offsets[i * 2 + 1]]
-                let grid = (blade[0] | 1) + ',' + (blade[1] | 1);
-                if (!grids.has(grid)) {
-                    objs.push({
-                        family: 'Poaceae',
-                        gridx: blade[0] | 1,
-                        gridz: blade[1] | 1,
-                        x: blade[0],
-                        z: blade[1],
-                        pos: new Float32Array(blade),
-                        grid: grid,
-                    })
-                }
-            }
-            bladecount = Math.min(Math.max(bladecount, objs.length), grasspositions.length)
-            //	console.log('Start to process objs length, ', objs.length, ', took ', new Date().getTime() - d);
-            for (let i = 0; i < Math.min(bladecount, objs.length); i++) {
-                grasspositions.set(objs[i].pos, i * 2);
-            }
-            console.log('sending grass back from worker, bladecount ', bladecount, 'took ', new Date().getTime() - d);
-            this.postMessage({ type: 'updated', count: bladecount });
-            let transs = db.transaction("plantae", 'readwrite');
-            transs.onerror = function (err) {
-                console.log(err)
-            };
-            //let objstore2 = transs.objectStore("plantae");
-            console.log('grass count', objs.length);
-            let counter = 0;
-            (function insert(transs) {
-                console.log('batching 5000 grass, length is ', objs.length);
-                let objstore2 = transs.objectStore("plantae")
-                while (objs.length) {
-                    let obj = objs.pop();
-                    counter++;
-                    objstore2.add(obj);
-                    if (objs.length % 5000 == 0 && objs.length) {
-                        console.log('register another batch');
+        console.log('update grass, count', amount);
+        this.postMessage({ type: 'updated', count: amount, buffer: grasspositions.buffer });
+        
+        const response = new Response(grasspositions);
+        response.headers.set('content-length', grasspositions.buffer.byteLength.toString());
+        response.headers.set('content-type', 'application/octet-stream');
 
-                        transs.oncomplete = () => {
-                            transs = db.transaction("plantae", 'readwrite');
-                            transs.onerror = function (err) {
-                                console.log(err)
-                            }
-                            insert(transs);
-                        }
-                        methods.get()
-                        return;
-                    }
-                }
-                transs.oncomplete = () => {
-                    console.log('grass count2', counter, 'sending grass back from worker2, took ', new Date().getTime() - d);
-                    methods.get()
-                }
-            })(transs);
-        }*/
+        const cache = await cacheP;
+        cache.put(new Request('/grass'), response);
+
     },
     get: async () => {
         let trans = (await DB).transaction(['plantae']);

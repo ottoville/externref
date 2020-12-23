@@ -104,7 +104,6 @@ export class RenderPass {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             if (!this.bundles.length) {
-                console.log('record bundle');
                 const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder({
                     colorFormats: ['bgra8unorm'],
                     sampleCount: this.sampleCount,
@@ -127,7 +126,6 @@ export class RenderPass {
             drawedMeshes+=rp.draw(passEncoder, this, 1);
         });
         if (this.gpu.rootlayout.subBindGroups.size) {
-           // console.log('this.gpu.rootlayout.subBindGroups.size', this.gpu.rootlayout.subBindGroups.size)
             this.gpu.rootlayout.subBindGroups.forEach(bgt =>
                 drawedMeshes +=this.gpu.drawBindGroups(passEncoder, bgt, this, 1)
             )
@@ -136,7 +134,7 @@ export class RenderPass {
         this.scenes.forEach(scene =>
             drawedMeshes += scene.render(passEncoder, this)
         );
-        console.log('scenes ', this.scenes.size, 'meshes', drawedMeshes);
+       // console.log('scenes ', this.scenes.size, 'meshes', drawedMeshes);
     }
     toBitmap() {
         //Use for debugging purpose. Targettexture must have copy source flag

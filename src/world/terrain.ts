@@ -329,7 +329,6 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         const cacheP = caches.open('save');
         if (!compress) {
 
-            //disabled fow now
             const response = new Response(this.terrainPositionAndUvsAndNormalsCPUSwapView);
             response.headers.set('content-length', this.terrainPositionAndUvsAndNormalsCPUSwapView.buffer.byteLength.toString());
              response.headers.set('content-type', 'application/octet-stream');

@@ -220,11 +220,10 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                     var normalized = _groundFacesNormals[half + (faceOfVertices[index] >> 1)];
                 else
                     var normalized = _groundFacesNormals[faceOfVertices[index] >> 1];
-                normalized.set([
-                    v1v2[1] * v3v2[2] - v1v2[2] * v3v2[1],
-                    v1v2[2] * v3v2[0] - v1v2[0] * v3v2[2],
-                    v1v2[0] * v3v2[1] - v1v2[1] * v3v2[0]
-                ]);
+                normalized[0] = v1v2[1] * v3v2[2] - v1v2[2] * v3v2[1]
+                normalized[1] = v1v2[2] * v3v2[0] - v1v2[0] * v3v2[2]
+                normalized[2] = v1v2[0] * v3v2[1] - v1v2[1] * v3v2[0]
+
                 const scale = 1 / Math.hypot(normalized[0], normalized[1], normalized[2]);
                 normalized[0] *= scale;
                 normalized[1] *= scale;
