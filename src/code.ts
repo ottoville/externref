@@ -788,8 +788,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     window.cancelAnimationFrame(renderFrame)
                     clearTimeout(resizeHandler);
                     resizeHandler = setTimeout(async () => {
-                        canvasSize.width = canvas.getAttribute('width')! as any | 0;
-                        canvasSize.height = canvas.getAttribute('height')! as any | 0;
+                        canvasSize.width = entries[0].contentRect.width | 0;
+                        canvasSize.height = entries[0].contentRect.height | 0;
                         renderPasses.forEach(renderpass => renderpass.onResize(canvasSize.width, canvasSize.height));
                         gpuscene.onResizes.forEach(cb => cb());
 
@@ -834,9 +834,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             engine._initializeLimits();
 
 
-            engine.resize();
-
-
             let webSocket = new WebSocket('ws://localhost:8081');
             webSocket.onopen = async () => {
                 console.log('websocket onopen');
@@ -864,14 +861,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         scene.autoClear = false;
         scene.autoClearDepthAndStencil = false;
 
-
-
-
-
-        // Resize
-        window.addEventListener("resize", function () {
-            scene.getEngine().resize();
-        });
         for (let i = 0; i < gameControlsUI.length; i++) {
             gameControlsUI[i].classList.remove('hidden');
         }

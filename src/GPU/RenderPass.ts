@@ -187,4 +187,9 @@ export class RenderPassCanvas extends RenderPass {
             usage: GPUTextureUsage.OUTPUT_ATTACHMENT
         });
     }
+    onResize(width: number, height: number) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+        super.onResize(width, height);
+    }
 }
