@@ -5,13 +5,15 @@
     ElementReference canvas;
     sbyte gameSpeed = 0;
     double rendertime = 0;
+    double msPerFrame = 0;
     long lastStateChangeGameTime = 216000000000; //21600000 * 10000; //6 hours
     long lastStateChangeTime = DateTime.Now.Ticks;
     string currentGameTime;
     [JSInvokable]
-    public void setRendertime(double rendertime)
+    public void setRendertime(double rendertime, double msPerFrame)
     {
         this.rendertime = rendertime;
+        this.msPerFrame = msPerFrame;
     }
     [JSInvokable]
     public void initGame(System.Text.Json.JsonElement input)
@@ -132,7 +134,7 @@
         </div>
     }
 </fieldset>
-<div id="fps">@(rendertime)</div>
+<div id="fps">@(rendertime) @(msPerFrame)</div>
 <fieldset class="gameControl hidden" id="gameState">
     <label>Time of day: <output id="TODout" fow="TOD">@currentGameTime</output></label>
     <br />

@@ -42,30 +42,35 @@ function matrixMultiplyToRef(m: ArrayLike<number>, otherM: ArrayLike<number>, re
 export class TerraCamera {
     readonly #uniqueID: number = uniqueID++;    
    // #upVector = new Float32Array([0, 1, 0]);
-    #uniformBufferSwap = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-
+    //#uniformBufferSwap = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+    #uniformBufferSize = 4 * 16 * 2 + 3 * 4
     target = new Float32Array([0, 0, 0]);
-    #viewProjectionPositionBuffer = new SharedArrayBuffer(4 * 16 * 2 + 3 * 4)
+    #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
 
     #projectionViewArr = new Float32Array(this.#viewProjectionPositionBuffer, 0, 16);
-
     viewArr = new Float32Array(this.#viewProjectionPositionBuffer, 64, 16);
+
+    #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer, 0, 32);
+
+
     cameraArr = new Float32Array(this.#viewProjectionPositionBuffer, 128, 3);
     projectionArr = new Float32Array(this.projection);
 
     #pickingRayBuffer = new SharedArrayBuffer(6 * 4); // origin: vec3, direction: vec3
     pickingRay = new Float32Array(this.#pickingRayBuffer);
-    #uniformBuffer = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
-    #uniformBindGroup = this.gpuscene.createBindGroup (
-        this.gpuscene.uniformBindGroupLayoutWithTime,
+    
+    #uniformBuffer = this.gpu.createGPUBuffer(this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
+    #uniformBindGroup = this.gpu.createBindGroup (
+        this.gpu.uniformBindGroupLayoutWithTime,
         {
             binding: 0,
             resource: {
                 buffer: this.#uniformBuffer
             }
-        }, this.gpuscene.timeGroup);
+        }, this.gpu.timeGroup);
     //rootlayout = new BindGroupLayout(this.gpuscene, this.gpuscene.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
-    constructor(public renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection:SharedArrayBuffer, private gpuscene: GPU, main:boolean=true) {
+    constructor(public renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection:SharedArrayBuffer, private gpu: GPU, main:boolean=true) {
+        this.viewArr[15] = 1;
         renderPass.cameras.add(this);
         if(main)
             worker.message(this.#uniqueID, 'init', [this.#viewProjectionPositionBuffer, this.projection, this.#pickingRayBuffer, mousePositionBuffer, renderPass.size]);
@@ -73,23 +78,22 @@ export class TerraCamera {
     #zAxis = new Float32Array(3);
    // #xAxis = new Float32Array(2);
     #yAxis = new Float32Array(3);
-    render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp, delta: number | null) {
+    render(renderEncoder: GPUCommandEncoder) {
         //TODO: use SIMD
-        console.log(this.target);
         this.#zAxis[0] = this.target[0] - this.cameraArr[0];
         this.#zAxis[1] = this.target[1] - this.cameraArr[1];
-        this.#zAxis[2] = this.target[2] - this.cameraArr[2];
-        const zLength = Math.sqrt(this.#zAxis[0] * this.#zAxis[0] + this.#zAxis[1] * this.#zAxis[1] + this.#zAxis[2] * this.#zAxis[2]);
+        this.viewArr[10] = this.target[2] - this.cameraArr[2];
+        const zLength = Math.sqrt(this.#zAxis[0] * this.#zAxis[0] + this.#zAxis[1] * this.#zAxis[1] + this.viewArr[10] * this.viewArr[10]);
         if (!(zLength === 0 || zLength === 1)) {
             //zAxis.normalizeFromLength(xLength);
             const scale = 1.0 / zLength;
             this.#zAxis[0] *= scale;
             this.#zAxis[1] *= scale;
-            this.#zAxis[2] *= scale;
+            this.viewArr[10] *= scale;
         }
 
        // const xAxis = new Float32Array([this.#zAxis[2], -this.#zAxis[0]]);
-        this.viewArr[0] = this.#zAxis[2];
+        this.viewArr[0] = this.viewArr[10];
         this.viewArr[8] = -this.#zAxis[0];
         
       //  const xSquareLength = xAxis[0] * xAxis[0] + xAxis[1] * xAxis[1] + xAxis[2] * xAxis[2];
@@ -107,27 +111,26 @@ export class TerraCamera {
         }
         // Y axis
         this.#yAxis[0] = this.#zAxis[1] * this.viewArr[8];
-        this.#yAxis[1] = this.#zAxis[2] * this.viewArr[0] - this.#zAxis[0] * this.viewArr[8];
-        this.#yAxis[2] = -(this.#zAxis[1] * this.viewArr[0]);
+        this.#yAxis[1] = this.viewArr[10] * this.viewArr[0] - this.#zAxis[0] * this.viewArr[8];
+        this.viewArr[9] = -(this.#zAxis[1] * this.viewArr[0]);
         // Eye angles, dot products
-        const ex = -(this.viewArr[0] * this.cameraArr[0] + this.viewArr[8] * this.cameraArr[2])
-        const ey = -(this.#yAxis[0] * this.cameraArr[0] + this.#yAxis[1] * this.cameraArr[1] + this.#yAxis[2] * this.cameraArr[2])
-        const ez = -(this.#zAxis[0] * this.cameraArr[0] + this.#zAxis[1] * this.cameraArr[1] + this.#zAxis[2] * this.cameraArr[2]);
-        this.viewArr.set([this.#yAxis[0], this.#zAxis[0], 0, 0, this.#yAxis[1], this.#zAxis[1], 0], 1);
-        this.viewArr.set([this.#yAxis[2], this.#zAxis[2], 0, ex, ey, ez, 1.0],9);
 
-       /* this.viewArr.set([this.#xAxis[0], this.#yAxis[0], this.#zAxis[0], 0,
-            0, this.#yAxis[1], this.#zAxis[1], 0.0,
-            this.#xAxis[1], this.#yAxis[2], this.#zAxis[2], 0.0,
-            ex, ey, ez, 1.0]);*/
+        //x
+        this.viewArr[12] = -(this.viewArr[0] * this.cameraArr[0] + this.viewArr[8] * this.cameraArr[2])
+        //y
+        this.viewArr[13] = -(this.#yAxis[0] * this.cameraArr[0] + this.#yAxis[1] * this.cameraArr[1] + this.viewArr[9] * this.cameraArr[2])
+        //z
+        this.viewArr[14] = -(this.#zAxis[0] * this.cameraArr[0] + this.#zAxis[1] * this.cameraArr[1] + this.viewArr[10] * this.cameraArr[2]);
+
+        this.viewArr.set([this.#yAxis[0], this.#zAxis[0], 0, 0, this.#yAxis[1], this.#zAxis[1]], 1);
 
         matrixMultiplyToRef(this.viewArr, this.projectionArr, this.#projectionViewArr);
-        
-        this.gpuscene.updateBufferRaw(this.#uniformBufferSwap, this.#uniformBuffer, this.#viewProjectionPositionBuffer).then(encoder => {
-            if (encoder)
-                this.gpuscene.device.defaultQueue.submit([encoder]);
-        });
 
+
+        const tempBuffer = this.gpu.createGPUBuffer(this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], true);
+        new Float32Array(tempBuffer.getMappedRange()).set(this.#viewAndProjection);
+        const commandBuffer = this.gpu.copyBufferToBuffer(tempBuffer, this.#uniformBuffer, this.#viewAndProjection.byteLength);
+        this.gpu.pendingCommandBuffers.push(commandBuffer);
         this.renderPass.render(renderEncoder, this.#uniformBindGroup);
     }
     createPickingRay(x: number, y: number, world?: Float32Array) {

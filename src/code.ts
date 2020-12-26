@@ -734,16 +734,17 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                 let curSecond = (Date.now() / 500) | 0;
                 let framecount = 0;
+                let msPerFrame = 0;
                 function renderLoop(time: DOMHighResTimeStamp) {
                     const nowSecond = (Date.now() / 500) | 0;
                     if (nowSecond !== curSecond) {
-                        blazor.invokeMethod('setRendertime', framecount*2);
+                        blazor.invokeMethod('setRendertime', framecount*2, msPerFrame);
                         curSecond = nowSecond;
                         framecount = 0;
                     }
                     framecount++;
                     //performance.mark('renderloopStart');
-                    //let startTime = performance.now();
+                    let startTime = performance.now();
 
                     gpuscene.onRenders2.forEach(or => {
                         let buff = or();
@@ -787,9 +788,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                     gpuscene.device.defaultQueue.writeBuffer(gpuscene.timeBuffer, 0, timeAndDeltaBuffer)
                     TerraCameras.forEach(camera => {
-                        camera.render(renderEncoder, time, physicDelta)
+                        camera.render(renderEncoder)
                     });
-                    gpuscene.device.defaultQueue.submit([renderEncoder.finish()].concat(gpuscene.pendingCommandBuffers));
+                    gpuscene.pendingCommandBuffers.push(renderEncoder.finish())
+                    gpuscene.device.defaultQueue.submit(gpuscene.pendingCommandBuffers);
                     gpuscene.pendingCommandBuffers.length = 0;
                     renderFrame = window.requestAnimationFrame(renderLoop);
                    /* performance.mark('renderloopEnd');
@@ -797,7 +799,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     performance.getEntriesByType("measure")[0].duration;
                     performance.clearMarks();
                     performance.clearMeasures();*/
-                    
+                    msPerFrame = performance.now() - startTime;
                 }
 
 

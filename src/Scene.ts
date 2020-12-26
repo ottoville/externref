@@ -81,8 +81,7 @@ export class Scene {
             return this.collissionCheck(rayFunction, boundables, pickResult);*/
     }
     async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode) => boolean, fastCheck?: boolean): Promise<BoundableNode | null> {
-
-        const b1 = this.gpu.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
+       /* const b1 = this.gpu.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
         const b1arr = b1.getMappedRange()
         new Float32Array(b1arr).set(this.TerraCameras[0].projectionArr);
         new Float32Array(b1arr).set(this.TerraCameras[0].viewArr, 16);
@@ -131,7 +130,8 @@ export class Scene {
         passEncoder.endPass();
         const gpuCommands = commandEncoder.finish();
         this.gpu.device.defaultQueue.submit([gpuCommands]);
-
+        */
+        let start = performance.now();
         const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z])
         const pickingRays: Map<BoundableNode, Float32Array> = new Map();
@@ -160,8 +160,9 @@ export class Scene {
             }
         })
         console.log(minimum);*/
+        console.log('picking took', performance.now() - start);
         return minimum;
-
+        /*
         this.gpu.GPU2CPU(async buff => {
             await buff.mapAsync(GPUMapMode.READ);
             //  console.log(new Float32Array(buff.getMappedRange()))
@@ -179,7 +180,7 @@ export class Scene {
                 //  debugger;
             }, this.gpu.GPUData);
         }, resultMatrixBuffer);
-
+        */
         let rayFunction = (boundableMesh: BoundableNode) => {
 
             let m = new TerraMatrix([1.0, 0.0, 0.0, 0.0,

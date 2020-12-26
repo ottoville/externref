@@ -182,19 +182,13 @@ export class GPU {
         }*/
         GPU.instance = this;
     }
-    async updateBufferRaw(buffer: GPUMapWriteBuffer, destination: GPUCopyDSTBuffer, data: ArrayBuffer): Promise<GPUCommandBuffer | null> {
-        if (this.#syncedBuffers.has(buffer))
-            return null;
-        this.#syncedBuffers.add(buffer);
+    async updateBufferRaw(buffer: GPUCopySRCBuffer, destination: GPUCopyDSTBuffer, data: ArrayBuffer): Promise<GPUCommandBuffer | null> {
         await buffer.mapAsync(GPUMapMode.WRITE, 0, data.byteLength);
         new Int8Array(buffer.getMappedRange(0, data.byteLength)).set(new Int8Array(data));
         return this.copyBufferToBuffer(buffer, destination, data.byteLength)
     }
-    async updateBuffer(buffer: GPUMapWriteBuffer, destination: GPUCopyDSTBuffer, ...data: (Float32Array | Uint32Array)[]): Promise<GPUCommandBuffer | null> {
-        if (this.#syncedBuffers.has(buffer))
-            return null;
+    async updateBuffer(buffer: GPUCopySRCBuffer, destination: GPUCopyDSTBuffer, ...data: (Float32Array | Uint32Array)[]): Promise<GPUCommandBuffer | null> {
         const size = data.reduce((prev, curr) => prev + curr.byteLength, 0);
-        this.#syncedBuffers.add(buffer);
         await buffer.mapAsync(GPUMapMode.WRITE, 0, size);
         let offset = 0;
         data.forEach(view => {
@@ -203,14 +197,13 @@ export class GPU {
         });
         return this.copyBufferToBuffer(buffer, destination, size)
     }
-    copyBufferToBuffer(buffer: GPUMapWriteBuffer, destination: GPUCopyDSTBuffer, size: number): GPUCommandBuffer {
+    copyBufferToBuffer(buffer: GPUCopySRCBuffer, destination: GPUCopyDSTBuffer, size: number): GPUCommandBuffer {
         buffer.unmap();
         const commandEncoder = this.device.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
             buffer, 0,
             destination, 0,
             size);
-        this.#syncedBuffers.delete(buffer);
         return commandEncoder.finish();
     }
 
@@ -238,7 +231,6 @@ export class GPU {
             return GPUBuffer;
         return [CPUBuffer, GPUBuffer]
     }
-    #syncedBuffers: WeakSet<GPUMapWriteBuffer | GPUMapReadBuffer> = new WeakSet()
     //uniform
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
