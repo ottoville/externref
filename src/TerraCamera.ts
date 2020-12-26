@@ -41,8 +41,7 @@ function matrixMultiplyToRef(m: ArrayLike<number>, otherM: ArrayLike<number>, re
 
 export class TerraCamera {
     readonly #uniqueID: number = uniqueID++;    
-   // #upVector = new Float32Array([0, 1, 0]);
-    //#uniformBufferSwap = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+
     #uniformBufferSize = 4 * 16 * 2 + 3 * 4
     target = new Float32Array([0, 0, 0]);
     #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
@@ -68,61 +67,75 @@ export class TerraCamera {
                 buffer: this.#uniformBuffer
             }
         }, this.gpu.timeGroup);
-    //rootlayout = new BindGroupLayout(this.gpuscene, this.gpuscene.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
-    constructor(public renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection:SharedArrayBuffer, private gpu: GPU, main:boolean=true) {
+    onRender?: () => void;
+    constructor(public renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection: SharedArrayBuffer, private gpu: GPU, main: boolean = true, private parent?: TerraCamera) {
         this.viewArr[15] = 1;
         renderPass.cameras.add(this);
         if(main)
             worker.message(this.#uniqueID, 'init', [this.#viewProjectionPositionBuffer, this.projection, this.#pickingRayBuffer, mousePositionBuffer, renderPass.size]);
     }
-    #zAxis = new Float32Array(3);
-   // #xAxis = new Float32Array(2);
-    #yAxis = new Float32Array(3);
+  
     render(renderEncoder: GPUCommandEncoder) {
-        //TODO: use SIMD
-        this.#zAxis[0] = this.target[0] - this.cameraArr[0];
-        this.#zAxis[1] = this.target[1] - this.cameraArr[1];
+
+        if (this.parent) {
+            this.cameraArr[0] = this.parent.cameraArr[0]
+            this.cameraArr[1] = this.parent.cameraArr[1]
+            this.cameraArr[2] = this.parent.cameraArr[2]
+
+            this.target[0] = this.parent.target[0]
+            this.target[1] = this.parent.target[1]
+            this.target[2] = this.parent.target[2]
+        }
+        this.onRender && this.onRender();
+
+        /*
+        0,1,2,3,
+        4,5,6,7,
+        8,9,10,11,
+        12,13,14,15
+
+
+*/
+        //TODO: use SIMD, use column major matrix?
+        this.viewArr[2] = this.target[0] - this.cameraArr[0];
+        this.viewArr[6] = this.target[1] - this.cameraArr[1];
         this.viewArr[10] = this.target[2] - this.cameraArr[2];
-        const zLength = Math.sqrt(this.#zAxis[0] * this.#zAxis[0] + this.#zAxis[1] * this.#zAxis[1] + this.viewArr[10] * this.viewArr[10]);
+        const zLength = Math.sqrt(this.viewArr[2] * this.viewArr[2] + this.viewArr[6] * this.viewArr[6] + this.viewArr[10] * this.viewArr[10]);
         if (!(zLength === 0 || zLength === 1)) {
             //zAxis.normalizeFromLength(xLength);
             const scale = 1.0 / zLength;
-            this.#zAxis[0] *= scale;
-            this.#zAxis[1] *= scale;
+            this.viewArr[2] *= scale;
+            this.viewArr[6] *= scale;
             this.viewArr[10] *= scale;
         }
 
-       // const xAxis = new Float32Array([this.#zAxis[2], -this.#zAxis[0]]);
         this.viewArr[0] = this.viewArr[10];
-        this.viewArr[8] = -this.#zAxis[0];
+        this.viewArr[8] = -this.viewArr[2];
         
-      //  const xSquareLength = xAxis[0] * xAxis[0] + xAxis[1] * xAxis[1] + xAxis[2] * xAxis[2];
         const xSquareLength = this.viewArr[0] * this.viewArr[0] + this.viewArr[8] * this.viewArr[8];
         if (xSquareLength === 0) {
             this.viewArr[0] = 1.0;
         } else {
             let len = Math.sqrt(xSquareLength);
-           // console.log(len)
             if (!(len === 0 || len === 1.0)) {
                 const scale = 1.0 / len;
                 this.viewArr[0] *= scale;
                 this.viewArr[8] *= scale;
             }
         }
+        
         // Y axis
-        this.#yAxis[0] = this.#zAxis[1] * this.viewArr[8];
-        this.#yAxis[1] = this.viewArr[10] * this.viewArr[0] - this.#zAxis[0] * this.viewArr[8];
-        this.viewArr[9] = -(this.#zAxis[1] * this.viewArr[0]);
+        this.viewArr[1] = this.viewArr[6] * this.viewArr[8];
+        this.viewArr[5] = this.viewArr[10] * this.viewArr[0] - this.viewArr[2] * this.viewArr[8];
+        this.viewArr[9] = -(this.viewArr[6] * this.viewArr[0]);
         // Eye angles, dot products
 
         //x
         this.viewArr[12] = -(this.viewArr[0] * this.cameraArr[0] + this.viewArr[8] * this.cameraArr[2])
         //y
-        this.viewArr[13] = -(this.#yAxis[0] * this.cameraArr[0] + this.#yAxis[1] * this.cameraArr[1] + this.viewArr[9] * this.cameraArr[2])
+        this.viewArr[13] = -(this.viewArr[1] * this.cameraArr[0] + this.viewArr[5] * this.cameraArr[1] + this.viewArr[9] * this.cameraArr[2])
         //z
-        this.viewArr[14] = -(this.#zAxis[0] * this.cameraArr[0] + this.#zAxis[1] * this.cameraArr[1] + this.viewArr[10] * this.cameraArr[2]);
-
-        this.viewArr.set([this.#yAxis[0], this.#zAxis[0], 0, 0, this.#yAxis[1], this.#zAxis[1]], 1);
+        this.viewArr[14] = -(this.viewArr[2] * this.cameraArr[0] + this.viewArr[6] * this.cameraArr[1] + this.viewArr[10] * this.cameraArr[2]);
 
         matrixMultiplyToRef(this.viewArr, this.projectionArr, this.#projectionViewArr);
 

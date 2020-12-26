@@ -507,22 +507,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         camera.inertialRadiusOffset += delta;
                     }
                 })
-                /*const target = new Vector3(-500, 200, 0);
-                const camera2 = {
-                    _target: target,
-                    alpha : 0,
-                    beta : 0,
-                    radius : 10
-
-                }
-                this.getViewMatrix();
-                this.inputs = new ArcRotateCameraInputsManager(this);
-                this.inputs.addKeyboard().addMouseWheel().addPointers();*/
-
-
-
-
-                //camera.setPosition(new Vector3(1000,300,1000))
 
                 camera._cache.mode = camera.mode;
                 camera._cache.minZ = camera.minZ;
@@ -562,7 +546,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
             const mainCamera = new TerraCamera(gpuscene.renderPassScreen, mousePositionBuffer, projectionmatrixBuffer, gpuscene)
-            const waterCamera = new TerraCamera(gpuscene.renderPassWater, mousePositionBuffer, projectionmatrixBuffer, gpuscene, false)
+            const waterCamera = new TerraCamera(gpuscene.renderPassWater, mousePositionBuffer, projectionmatrixBuffer, gpuscene, false, mainCamera)
             const TerraCameras = [mainCamera, waterCamera]
             const timeAndDeltaBuffer = new ArrayBuffer(8);
             const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
@@ -735,7 +719,15 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 let curSecond = (Date.now() / 500) | 0;
                 let framecount = 0;
                 let msPerFrame = 0;
+                let startTime = 0;
+                waterCamera.onRender = function () {
+                    this.cameraArr[1] -=  (this.cameraArr[1] - 3) * 2;
+                    this.target[1] = -this.target[1];
+                }
                 function renderLoop(time: DOMHighResTimeStamp) {
+                    msPerFrame = performance.now() - startTime;
+                    startTime = performance.now();
+
                     const nowSecond = (Date.now() / 500) | 0;
                     if (nowSecond !== curSecond) {
                         blazor.invokeMethod('setRendertime', framecount*2, msPerFrame);
@@ -744,7 +736,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     }
                     framecount++;
                     //performance.mark('renderloopStart');
-                    let startTime = performance.now();
+                    
 
                     gpuscene.onRenders2.forEach(or => {
                         let buff = or();
@@ -753,28 +745,15 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     });
                     camera._checkInputs();
                     camera._getViewMatrix();
-                    //mainCamera.cameraArr.set([camera.position.x, camera.position.y, camera.position.z]);
+
                     mainCamera.cameraArr[0] = camera.position.x;
                     mainCamera.cameraArr[1] = camera.position.y;
                     mainCamera.cameraArr[2] = camera.position.z;
 
-                    //mainCamera.target.set([camera.target.x, camera.target.y, camera.target.z]);
                     mainCamera.target[0] = camera.target.x;
                     mainCamera.target[1] = camera.target.y;
                     mainCamera.target[2] = camera.target.z;
 
-
-
-                    waterCamera.cameraArr[0] = camera.position.x;
-                    waterCamera.cameraArr[1] = camera.position.y - (camera.position.y - 3) * 2;
-                    waterCamera.cameraArr[2] = camera.position.z;
-
-
-                    //waterCamera.cameraArr.set([camera.position.x, camera.position.y - (camera.position.y - 3) * 2, camera.position.z]);
-                    //waterCamera.target.set([camera.target.x, camera.target.y, camera.target.z]);
-                    waterCamera.target[0] = camera.target.x;
-                    waterCamera.target[1] = camera.target.y;
-                    waterCamera.target[2] = camera.target.z;
                     const renderEncoder = gpuscene.device.createCommandEncoder();
                     timeView.set([time]);
                     let physicDelta: number | null;
@@ -799,7 +778,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     performance.getEntriesByType("measure")[0].duration;
                     performance.clearMarks();
                     performance.clearMeasures();*/
-                    msPerFrame = performance.now() - startTime;
+                    
                 }
 
 
