@@ -41,7 +41,7 @@ function matrixMultiplyToRef(m: ArrayLike<number>, otherM: ArrayLike<number>, re
 
 export class TerraCamera {
     readonly #uniqueID: number = uniqueID++;    
-    #upVector = new Float32Array([0, 1, 0]);
+   // #upVector = new Float32Array([0, 1, 0]);
     #uniformBufferSwap = this.gpuscene.createGPUBuffer(4 * 16 * 2 + 3 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     target = new Float32Array([0, 0, 0]);
@@ -70,74 +70,57 @@ export class TerraCamera {
         if(main)
             worker.message(this.#uniqueID, 'init', [this.#viewProjectionPositionBuffer, this.projection, this.#pickingRayBuffer, mousePositionBuffer, renderPass.size]);
     }
+    #zAxis = new Float32Array(3);
+   // #xAxis = new Float32Array(2);
+    #yAxis = new Float32Array(3);
     render(renderEncoder: GPUCommandEncoder, time: DOMHighResTimeStamp, delta: number | null) {
-        // Matrix.LookAtLHToRef(new Vector3(...this.cameraArr), new Vector3(...this.target), new Vector3(...this.#upVector), viewMatrix);
-        //const target = new Vector3(...this.target);
-        //  const up = new Vector3(...this.#upVector);
-        //const xAxis = Vector3.Zero()//new Float32Array([0,0,0])
-      //  const yAxis = Vector3.Zero();
-        // const zAxis = Vector3.Zero();
-
-        // Z axis
-        // target.subtractToRef(eye, zAxis);
         //TODO: use SIMD
-        const zAxis = new Float32Array([this.target[0] - this.cameraArr[0], this.target[1] - this.cameraArr[1], this.target[2] - this.cameraArr[2]]);
-        const zLength = Math.sqrt(zAxis[0] * zAxis[0] + zAxis[1] * zAxis[1] + zAxis[2] * zAxis[2]);
+        console.log(this.target);
+        this.#zAxis[0] = this.target[0] - this.cameraArr[0];
+        this.#zAxis[1] = this.target[1] - this.cameraArr[1];
+        this.#zAxis[2] = this.target[2] - this.cameraArr[2];
+        const zLength = Math.sqrt(this.#zAxis[0] * this.#zAxis[0] + this.#zAxis[1] * this.#zAxis[1] + this.#zAxis[2] * this.#zAxis[2]);
         if (!(zLength === 0 || zLength === 1)) {
             //zAxis.normalizeFromLength(xLength);
             const scale = 1.0 / zLength;
-            zAxis[0] *= scale;
-            zAxis[1] *= scale;
-            zAxis[2] *= scale;
+            this.#zAxis[0] *= scale;
+            this.#zAxis[1] *= scale;
+            this.#zAxis[2] *= scale;
         }
-        // X axis, cross product
-        // Vector3.CrossToRef(up, zAxis, xAxis);
-      //  console.log(Math.sqrt(zAxis[0] * zAxis[0] + zAxis[1] * zAxis[1] + zAxis[2] * zAxis[2]));
-        const xAxis = new Float32Array([
-            this.#upVector[1] * zAxis[2] - this.#upVector[2] * zAxis[1],
-            this.#upVector[2] * zAxis[0] - this.#upVector[0] * zAxis[2],
-            this.#upVector[0] * zAxis[1] - this.#upVector[1] * zAxis[0]
-        ])
-        const xSquareLength = xAxis[0] * xAxis[0] + xAxis[1] * xAxis[1] + xAxis[2] * xAxis[2];
 
+       // const xAxis = new Float32Array([this.#zAxis[2], -this.#zAxis[0]]);
+        this.viewArr[0] = this.#zAxis[2];
+        this.viewArr[8] = -this.#zAxis[0];
+        
+      //  const xSquareLength = xAxis[0] * xAxis[0] + xAxis[1] * xAxis[1] + xAxis[2] * xAxis[2];
+        const xSquareLength = this.viewArr[0] * this.viewArr[0] + this.viewArr[8] * this.viewArr[8];
         if (xSquareLength === 0) {
-            xAxis[0] = 1.0;
+            this.viewArr[0] = 1.0;
         } else {
             let len = Math.sqrt(xSquareLength);
            // console.log(len)
             if (!(len === 0 || len === 1.0)) {
                 const scale = 1.0 / len;
-                xAxis[0] *= scale;
-                xAxis[1] *= scale;
-                xAxis[2] *= scale;
+                this.viewArr[0] *= scale;
+                this.viewArr[8] *= scale;
             }
-
         }
-
         // Y axis
-       // Vector3.CrossToRef(zAxis, Vector3.FromArray(xAxis), yAxis);
-        const yAxis = new Float32Array([
-            zAxis[1] * xAxis[2] - zAxis[2] * xAxis[1],
-            zAxis[2] * xAxis[0] - zAxis[0] * xAxis[2],
-            zAxis[0] * xAxis[1] - zAxis[1] * xAxis[0]
-        ])
-        //const yLength = Math.sqrt(yAxis[0] * yAxis[0] + yAxis[1] * yAxis[1] + yAxis[2] * yAxis[2]);
-       /* if (!(yLength === 0 || yLength === 1)) {
-            //zAxis.normalizeFromLength(xLength);
-            const scale = 1.0 / yLength;
-            yAxis[0] *= scale;
-            yAxis[1] *= scale;
-            yAxis[2] *= scale;
-        }
-        */
+        this.#yAxis[0] = this.#zAxis[1] * this.viewArr[8];
+        this.#yAxis[1] = this.#zAxis[2] * this.viewArr[0] - this.#zAxis[0] * this.viewArr[8];
+        this.#yAxis[2] = -(this.#zAxis[1] * this.viewArr[0]);
         // Eye angles, dot products
-        const ex = -(xAxis[0] * this.cameraArr[0] + xAxis[1] * this.cameraArr[1] + xAxis[2] * this.cameraArr[2])
-        const ey = -(yAxis[0] * this.cameraArr[0] + yAxis[1] * this.cameraArr[1] + yAxis[2] * this.cameraArr[2])
-        const ez = -(zAxis[0] * this.cameraArr[0] + zAxis[1] * this.cameraArr[1] + zAxis[2] * this.cameraArr[2])
-        this.viewArr.set([xAxis[0], yAxis[0], zAxis[0], 0.0,
-            xAxis[1], yAxis[1], zAxis[1], 0.0,
-            xAxis[2], yAxis[2], zAxis[2], 0.0,
-            ex, ey, ez, 1.0]);
+        const ex = -(this.viewArr[0] * this.cameraArr[0] + this.viewArr[8] * this.cameraArr[2])
+        const ey = -(this.#yAxis[0] * this.cameraArr[0] + this.#yAxis[1] * this.cameraArr[1] + this.#yAxis[2] * this.cameraArr[2])
+        const ez = -(this.#zAxis[0] * this.cameraArr[0] + this.#zAxis[1] * this.cameraArr[1] + this.#zAxis[2] * this.cameraArr[2]);
+        this.viewArr.set([this.#yAxis[0], this.#zAxis[0], 0, 0, this.#yAxis[1], this.#zAxis[1], 0], 1);
+        this.viewArr.set([this.#yAxis[2], this.#zAxis[2], 0, ex, ey, ez, 1.0],9);
+
+       /* this.viewArr.set([this.#xAxis[0], this.#yAxis[0], this.#zAxis[0], 0,
+            0, this.#yAxis[1], this.#zAxis[1], 0.0,
+            this.#xAxis[1], this.#yAxis[2], this.#zAxis[2], 0.0,
+            ex, ey, ez, 1.0]);*/
+
         matrixMultiplyToRef(this.viewArr, this.projectionArr, this.#projectionViewArr);
         
         this.gpuscene.updateBufferRaw(this.#uniformBufferSwap, this.#uniformBuffer, this.#viewProjectionPositionBuffer).then(encoder => {
