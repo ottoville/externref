@@ -192,6 +192,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 Atomics.store(mousePosition, 1, e.clientY)
                 Atomics.notify(new Int32Array(mousePositionBuffer), 0);
             });
+            
 
             const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
             const projectionmatrix = new Float32Array(projectionmatrixBuffer);
@@ -266,12 +267,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //@ts-ignore
                     this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
 
-                    // Rotate according to up vector
-                    //@ts-ignore
-                    if (this._upVector.x !== 0 || this._upVector.y !== 1.0 || this._upVector.z !== 0) {
-                        //@ts-ignore
-                        Vector3.TransformCoordinatesToRef(this._computationVector, this._YToUpMatrix, this._computationVector);
-                    }
                     //@ts-ignore
                     target.addToRef(this._computationVector, this._newPosition);
                     //@ts-ignore
@@ -438,7 +433,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                     // Move
                     if (needToMove) {
-                        this._updatePosition();
+                        this.position.addInPlace(this.cameraDirection);
                     }
 
                     // Rotate
@@ -506,6 +501,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     getEngine: () => engine,
                     onKeyboardObservable: scene.onKeyboardObservable
                 });
+                canvas.addEventListener('wheel', (event) => {
+                    const delta = -event.deltaY / (3 * 40);
+                    if (delta) {
+                        camera.inertialRadiusOffset += delta;
+                    }
+                })
                 /*const target = new Vector3(-500, 200, 0);
                 const camera2 = {
                     _target: target,

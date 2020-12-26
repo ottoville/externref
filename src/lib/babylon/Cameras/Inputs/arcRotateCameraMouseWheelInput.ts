@@ -49,6 +49,7 @@ export class ArcRotateCameraMouseWheelInput implements ICameraInput<ArcRotateCam
      */
     public attachControl(element: HTMLElement, noPreventDefault?: boolean): void {
         this._wheel = (p, s) => {
+            
             //sanity check - this should be a PointerWheel event.
             if (p.type !== PointerEventTypes.POINTERWHEEL) { return; }
             var event = <MouseWheelEvent>p.event;
@@ -81,7 +82,7 @@ export class ArcRotateCameraMouseWheelInput implements ICameraInput<ArcRotateCam
             } else {
                 delta = wheelDelta / (this.wheelPrecision * 40);
             }
-
+            debugger;
             if (delta) {
                 this.camera.inertialRadiusOffset += delta;
             }
