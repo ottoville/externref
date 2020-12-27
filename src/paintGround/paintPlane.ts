@@ -4,7 +4,7 @@ import type { PTResultF } from "../types/interfaces/index.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
-import type { Drawable } from "../GPU/Drawable.js";
+import type { DrawableIndexed } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
@@ -27,7 +27,7 @@ export class paintPlane extends paintGround {
    // worldPosition = new worldPosition(this as TerraNode);
     #mesh = new PlaneMesh(this.scene.engine);
     #startingPoint: Float32Array = new Float32Array(2);
-    #templane2!: Drawable;
+    #templane2!: DrawableIndexed;
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
         const positions: number[] = [0, 0, 0, 1];
         const indices: number[] = [0, 1];
@@ -100,7 +100,7 @@ export class paintPlane extends paintGround {
                         }]
                 },
             }, [this.#mesh.bufferOffsetBytes]);
-            this.#templane2 = planeRenerPipeline.addDrawable(undefined, [scene.gpu.renderPassScreen], 0, 1, 1, 0);
+            this.#templane2 = planeRenerPipeline.addDrawableIndexed(undefined, new Set([scene.gpu.renderPassScreen]), 0,undefined, 0, 1, 0);
             this.#templane2.setVertexBuffer(0, new Float32Array([0,0,0]));
         })()
        
@@ -168,7 +168,7 @@ export class paintPlane extends paintGround {
         if (newValues) {
             this.#templane2.setVertexBuffer(0, new Float32Array(newValues.positions));
             this.#templane2.setIndexBuffer(new Uint32Array(newValues.indices));
-            this.#templane2.indexOrVertexCount = newValues.indices.length;
+            this.#templane2.indexCount = newValues.indices.length;
         }
     }
 }

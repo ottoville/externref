@@ -1,6 +1,7 @@
 ﻿import { Scene } from "../Scene";
 import { BindGroupLayout } from "./BindGroupLayout";
-import { Drawable } from "./Drawable";
+import {  DrawableIndexed, DrawableSimple } from "./Drawable";
+import type { Drawable } from "./Drawable";
 import { RenderPass } from "./RenderPass";
 
 export class RenderPipeline {
@@ -52,11 +53,13 @@ export class RenderPipeline {
         drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart));
         return drawables.size;
     }
-
-    variants: Map<RenderPass, RenderPipelineVariant> = new Map();
-    addDrawable(scene: Scene | undefined, renderPasses: RenderPass[], indexOrVertexCount: number, baseVertex: number = 0, instanceCount = 1, firstVertexOrIndex = 0, firstInstance = 0): Drawable {
-        return new Drawable(this, new Set(renderPasses), indexOrVertexCount, scene, baseVertex, instanceCount, firstVertexOrIndex, firstInstance, this.#GPUIndexFormat);
+    addDrawableSimple(scene: Scene | undefined, renderPasses: Set<RenderPass>, vertexCount: number, instanceCount = 1, firstVertex = 0, firstInstance = 0): DrawableSimple {
+        return new DrawableSimple(this, renderPasses, vertexCount, scene, instanceCount, firstVertex, firstInstance)
     }
+    addDrawableIndexed(scene: Scene | undefined, renderPasses: Set<RenderPass>, indexCount: number, indexBuffer?: GPUIndexBuffer, baseVertex: number = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {
+        return new DrawableIndexed(this, renderPasses, indexCount, indexBuffer, scene, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
+    }
+    variants: Map<RenderPass, RenderPipelineVariant> = new Map();
 }
 interface RenderPipelineVariant {
     renderPass: RenderPass;

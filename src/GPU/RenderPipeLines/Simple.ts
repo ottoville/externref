@@ -49,7 +49,6 @@ export abstract class SimpleMesh extends BoundableNode {
     abstract iBuffer: GPUIndexBuffer;
     constructor(scene: Scene, verticesPositionBuffer: SharedArrayBuffer, indexFormat: GPUIndexFormat='uint32') {
         super(scene, verticesPositionBuffer, 3);
-        
         (async () => {
             let cachePipeline: Promise<RenderPipeline> | undefined = renderPipelines.get(scene.gpu);
             if (!cachePipeline) {
@@ -57,12 +56,10 @@ export abstract class SimpleMesh extends BoundableNode {
                 renderPipelines.set(scene.gpu, Simple(scene));
             }
             const renderPipeline = await cachePipeline;
-            const m = renderPipeline.addDrawable(scene, [scene.gpu.renderPassScreen], 36);
+            const m = renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen]), 36);
             m.dynamicBuffers.set(scene.gpu.BindGroup, this.bufferOffsetBytes);
             m.setVertexBuffer(0, this.vBuffer);
             m.setIndexBuffer(this.iBuffer, undefined, undefined, indexFormat);
-
         })()
     }
-
 }

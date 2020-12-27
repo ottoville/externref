@@ -4,7 +4,7 @@ import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
-import type { Drawable } from "../GPU/Drawable.js";
+import type { DrawableSimple } from "../GPU/Drawable.js";
 import { TerraNode } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
@@ -17,7 +17,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
     traits:Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
     // private engine: WebGPUEngine;
-    #helper!: Drawable;
+    #helper!: DrawableSimple;
 
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
@@ -77,7 +77,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
                     indexFormat: 'uint32'
                 }
             }, [this.bufferOffsetBytes]);
-            this.#helper = helperPipeline.addDrawable(undefined, [scene.gpu.renderPassScreen], 4, 0, 8, 0, 0)
+            this.#helper = helperPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), 4, 8, 0)
         })();
 
         this.#canvasListener.addListener("pointermove", this.#mouseListener, { lazy: 15 });

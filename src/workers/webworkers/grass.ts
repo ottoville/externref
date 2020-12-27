@@ -66,16 +66,27 @@ let methods = {
         const cos = Math.cos(data.data.angle);
         const sin = Math.sin(data.data.angle);
 
-        let minX: number;
+      /*  let minX: number;
         let minZ: number;
         let maxX: number;
-        let maxZ: number;
-        for (let i = 0; i < amount; ++i) {
-            let posX = (Math.random() * data.data.area.size.h * -1);
-            let posZ = (Math.random() * data.data.area.size.w * -1);
+        let maxZ: number;*/
 
-            offsets[i * 2 + 0] = data.data.area.coord[0] + posX * cos + posZ * sin;
-            offsets[i * 2 + 1] = data.data.area.coord[1] + posX * -sin + posZ * cos;
+        const grids2: Map<string, number[]> = new Map()
+        for (let i = 0; i < amount; ++i) {
+            const posX = (Math.random() * data.data.area.size.h * -1);
+            const posZ = (Math.random() * data.data.area.size.w * -1);
+            const offsetsX = data.data.area.coord[0] + posX * cos + posZ * sin
+            const offsetsY = data.data.area.coord[1] + posX * -sin + posZ * cos
+            offsets[i * 2 + 0] = offsetsX;
+            offsets[i * 2 + 1] = offsetsY;
+            const grid = (offsetsX | 0) + ',' + (offsetsY | 0);
+            let gridarr = grids2.get(grid);
+            if (!gridarr) {
+                gridarr = [];
+                grids2.set(grid, gridarr)
+            }
+            gridarr.push(offsetsX, offsetsY);
+            /*
             if (i == 0) {
                 maxX = minX = offsets[i * 2 + 0];
                 maxZ = minZ = offsets[i * 2 + 1];
@@ -85,21 +96,30 @@ let methods = {
                 }
                 continue;
             }
-            //@ts-ignore
             maxX = Math.max(maxX, offsets[i * 2 + 0]);
-            //@ts-ignore
             maxZ = Math.max(maxZ, offsets[i * 2 + 1]);
-            //@ts-ignore
             minX = Math.min(minX, offsets[i * 2 + 0]);
-            //@ts-ignore
-            minZ = Math.min(minZ, offsets[i * 2 + 1]);
+            minZ = Math.min(minZ, offsets[i * 2 + 1]);*/
 
         }
         //let d2 = new Date().getTime();
         //const grids = new Set(plantaes.filter(v => (v.x > minX && v.x < maxX) && (v.z > minZ && v.z < maxZ)).map(v => v.grid));  //grid check is disabled now
+
+        if (amount > grasspositions.length / 2) {
+            methods.growMemory(amount * 2)
+        }
+        let memoryOffset = 0;
+        grids2.forEach(grid => {
+            //const array = new Float32Array(grid);
+            grasspositions.set(grid, memoryOffset);
+            memoryOffset += grid.length;
+        });
+        /*
         for (let i = 0; i < amount; i++) {
-            let blade = [offsets[i * 2], offsets[i * 2 + 1]]
+            let blade = [offsets[i * 2], offsets[i * 2 + 1]];
+
             let grid = (blade[0]) + ',' + (blade[1]);
+
            // if (!grids.has(grid)) { //grid check is disabled now
                 plantaes.push({
                     family: 'Poaceae',
@@ -111,21 +131,19 @@ let methods = {
                     grid: grid,
                 })
           //  }
-        }
+        }*/
       //  bladecount = Math.min(Math.max(bladecount, plantaes.length), grasspositions.length/2)
-        if (amount > grasspositions.length / 2) {
-            methods.growMemory(amount*2)
-        }
+
 
 
       //  bladecount = clamp(bladecount, plantaes.length, grasspositions.length / 2)
        	
        // for (let i = 0; i < Math.min(bladecount, plantaes.length); i++) {
-        for (let i = 0; i < amount; i++) {
+     /*   for (let i = 0; i < amount; i++) {
 
             grasspositions[i * 2] = plantaes[i].pos[0]
             grasspositions[i * 2 + 1] = plantaes[i].pos[1]
-        }
+        }*/
         console.log('update grass, count', amount);
         this.postMessage({ type: 'updated', count: amount, buffer: grasspositions.buffer });
         

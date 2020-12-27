@@ -3,7 +3,7 @@ import { BoundableNode } from "../../TerraNode";
 import { Scene } from "../../Scene";
 import { worldPosition } from "../../traits/worldPosition";
 import { RenderPipeline } from "../RenderPipeline";
-import { Drawable } from "../Drawable";
+import { DrawableIndexed } from "../Drawable";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 async function TerrainRenderPipeline(scene: Scene) {
@@ -68,7 +68,7 @@ async function TerrainRenderPipeline(scene: Scene) {
 }
 export class TerrainMesh extends BoundableNode {
     worldPosition?: worldPosition | undefined;
-    drawable: Promise<Drawable>;
+    drawable: Promise<DrawableIndexed>;
     #textureview: GPUTextureView
     sampler: GPUSampler;
     set textureView(textureview: GPUTextureView) {
@@ -110,7 +110,7 @@ export class TerrainMesh extends BoundableNode {
         this.#textureview = initialTexture;
         this.drawable = (async () => {
             const renderPipeline = renderPipelines.get(scene.gpu) || (await TerrainRenderPipeline(scene));
-            const m = renderPipeline.addDrawable(scene, [scene.gpu.renderPassScreen, scene.gpu.renderPassWater], indexCount, 1);
+            const m = renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), indexCount, undefined,0, 1);
             this.textureView=initialTexture;
             m.setVertexBuffer(0, this.vBuffer);
             m.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
