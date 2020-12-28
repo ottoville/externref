@@ -70,7 +70,7 @@ export abstract class Drawable {
     protected clearBundles() {
         this.renderPasses.forEach(rp => rp.bundles.length = 0);
     }
-    destroy(preserveIndexBuffer = false, preserveVerticeBuffers: number[] = []): void {
+    destroy(preserveVerticeBuffers: number[] = []): void {
         this.#renderList.forEach(Drawables => Drawables.delete(this));
         this.clearBundles();
         this.#vertexBuffers.forEach((b, key) => {
@@ -175,8 +175,8 @@ export class DrawableIndexed extends DrawableDirect {
         private GPUIndexFormat: GPUIndexFormat = 'uint16') {
             super(renderPipeline, renderPasses, instanceCount, scene);
     }
-    destroy(preserveIndexBuffer = false, preserveVerticeBuffers: number[] = []): void {
-        super.destroy();
+    destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {
+        super.destroy(preserveVerticeBuffers);
         if (!preserveIndexBuffer && this.indexBuffer)
             this.indexBuffer.destroy();
     }

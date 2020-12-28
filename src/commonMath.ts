@@ -414,17 +414,6 @@ class Quaternion {
     }
 
     /**
-     * Returns a new Vector3 set with the Euler angles translated from the current quaternion
-     * @param order is a reserved parameter and is ignore for now
-     * @returns a new Vector3 containing the Euler angles
-     */
-    public toEulerAngles(order = "YZX"): Vector3 {
-        var result = Vector3.Zero();
-        this.toEulerAnglesToRef(result);
-        return result;
-    }
-
-    /**
      * Sets the given vector3 "result" with the Euler angles translated from the current quaternion
      * @param result defines the vector which will be filled with the Euler angles
      * @param order is a reserved parameter and is ignore for now
@@ -2333,20 +2322,6 @@ class Vector3 {
         return result;
     }
 
-    /**
-     * Rotates a vector around a given point
-     * @param quaternion the rotation quaternion
-     * @param point the point to rotate around
-     * @param result vector to store the result
-     * @returns the resulting vector
-     */
-    public rotateByQuaternionAroundPointToRef(quaternion: Quaternion, point: Vector3, result: Vector3) {
-        debugger;
-       /* this.subtractToRef(point, MathTmp.Vector3[0]);
-        MathTmp.Vector3[0].rotateByQuaternionToRef(quaternion, MathTmp.Vector3[0]);
-        point.addToRef(MathTmp.Vector3[0], result);*/
-        return result;
-    }
 
     /**
      * Returns a new Vector3 as the cross product of the current vector and the "other" one
@@ -2465,27 +2440,6 @@ class Vector3 {
         var s = d0 / (d0 - d1);
 
         return s;
-    }
-
-    /**
-     * Get angle between two vectors
-     * @param vector0 angle between vector0 and vector1
-     * @param vector1 angle between vector0 and vector1
-     * @param normal direction of the normal
-     * @return the angle between vector0 and vector1
-     */
-    public static GetAngleBetweenVectors(vector0: DeepImmutable<Vector3>, vector1: DeepImmutable<Vector3>, normal: DeepImmutable<Vector3>): number {
-        debugger;
-        return 1;
-       /* const v0: Vector3 = vector0.normalizeToRef(MathTmp.Vector3[1]);
-        const v1: Vector3 = vector1.normalizeToRef(MathTmp.Vector3[2]);
-        const dot: number = Vector3.Dot(v0, v1);
-        const n = MathTmp.Vector3[3];
-        Vector3.CrossToRef(v0, v1, n);
-        if (Vector3.Dot(n, normal) > 0) {
-            return Math.acos(dot);
-        }
-        return -Math.acos(dot);*/
     }
 
     /**
@@ -2943,63 +2897,6 @@ class Vector3 {
         return vector;
     }
 
-    /**
-     * Unproject from screen space to object space
-     * @param source defines the screen space Vector3 to use
-     * @param viewportWidth defines the current width of the viewport
-     * @param viewportHeight defines the current height of the viewport
-     * @param world defines the world matrix to use (can be set to Identity to go to world space)
-     * @param view defines the view matrix to use
-     * @param projection defines the projection matrix to use
-     * @returns the new Vector3
-     */
-    public static Unproject(source: DeepImmutable<Vector3>, viewportWidth: number, viewportHeight: number, world: DeepImmutable<Matrix>, view: DeepImmutable<Matrix>, projection: DeepImmutable<Matrix>): Vector3 {
-        let result = Vector3.Zero();
-
-        Vector3.UnprojectToRef(source, viewportWidth, viewportHeight, world, view, projection, result);
-
-        return result;
-    }
-
-    /**
-     * Unproject from screen space to object space
-     * @param source defines the screen space Vector3 to use
-     * @param viewportWidth defines the current width of the viewport
-     * @param viewportHeight defines the current height of the viewport
-     * @param world defines the world matrix to use (can be set to Identity to go to world space)
-     * @param view defines the view matrix to use
-     * @param projection defines the projection matrix to use
-     * @param result defines the Vector3 where to store the result
-     */
-    public static UnprojectToRef(source: DeepImmutable<Vector3>, viewportWidth: number, viewportHeight: number, world: DeepImmutable<Matrix>, view: DeepImmutable<Matrix>, projection: DeepImmutable<Matrix>, result: Vector3): void {
-        Vector3.UnprojectFloatsToRef(source.x, source.y, source.z, viewportWidth, viewportHeight, world, view, projection, result);
-    }
-
-    /**
-     * Unproject from screen space to object space
-     * @param sourceX defines the screen space x coordinate to use
-     * @param sourceY defines the screen space y coordinate to use
-     * @param sourceZ defines the screen space z coordinate to use
-     * @param viewportWidth defines the current width of the viewport
-     * @param viewportHeight defines the current height of the viewport
-     * @param world defines the world matrix to use (can be set to Identity to go to world space)
-     * @param view defines the view matrix to use
-     * @param projection defines the projection matrix to use
-     * @param result defines the Vector3 where to store the result
-     */
-    public static UnprojectFloatsToRef(sourceX: float, sourceY: float, sourceZ: float, viewportWidth: number, viewportHeight: number, world: DeepImmutable<Matrix>, view: DeepImmutable<Matrix>, projection: DeepImmutable<Matrix>, result: Vector3): void {
-        debugger;
-        /*
-        var matrix = MathTmp.Matrix[0];
-        world.multiplyToRef(view, matrix);
-        matrix.multiplyToRef(projection, matrix);
-        matrix.invert();
-        var screenSource = MathTmp.Vector3[0];
-        screenSource.x = sourceX / viewportWidth * 2 - 1;
-        screenSource.y = -(sourceY / viewportHeight * 2 - 1);
-        screenSource.z = 2 * sourceZ - 1.0;
-        Vector3._UnprojectFromInvertedMatrixToRef(screenSource, matrix, result);*/
-    }
 
     /**
      * Gets the minimal coordinate values between two Vector3
@@ -4446,41 +4343,6 @@ class Matrix {
     }
 
     /**
-     * Gets only rotation part of the current matrix
-     * @returns a new matrix sets to the extracted rotation matrix from the current one
-     */
-    public getRotationMatrix(): Matrix {
-        var result = new Matrix();
-        this.getRotationMatrixToRef(result);
-        return result;
-    }
-
-    /**
-     * Extracts the rotation matrix from the current one and sets it as the given "result"
-     * @param result defines the target matrix to store data to
-     * @returns the current matrix
-     */
-    public getRotationMatrixToRef(result: Matrix): Matrix {
-        debugger;
-        /*const scale = MathTmp.Vector3[0];
-        if (!this.decompose(scale)) {
-            Matrix.IdentityToRef(result);
-            return this;
-        }
-
-        const m = this._m;
-        const sx = 1 / scale.x, sy = 1 / scale.y, sz = 1 / scale.z;
-        Matrix.FromValuesToRef(
-            m[0] * sx, m[1] * sx, m[2] * sx, 0.0,
-            m[4] * sy, m[5] * sy, m[6] * sy, 0.0,
-            m[8] * sz, m[9] * sz, m[10] * sz, 0.0,
-            0.0, 0.0, 0.0, 1.0,
-            result
-        );*/
-        return this;
-    }
-
-    /**
      * Toggles model matrix from being right handed to left handed in place and vice versa
      */
     public toggleModelMatrixHandInPlace() {
@@ -5004,176 +4866,6 @@ class Matrix {
         }
         result._markAsUpdated();
     }
-
-    /**
-     * Builds a new matrix whose values are computed by:
-     * * decomposing the the "startValue" and "endValue" matrices into their respective scale, rotation and translation matrices
-     * * interpolating for "gradient" (float) the values between each of these decomposed matrices between the start and the end
-     * * recomposing a new matrix from these 3 interpolated scale, rotation and translation matrices
-     * @param startValue defines the first matrix
-     * @param endValue defines the second matrix
-     * @param gradient defines the gradient between the two matrices
-     * @returns the new matrix
-     */
-    public static DecomposeLerp(startValue: DeepImmutable<Matrix>, endValue: DeepImmutable<Matrix>, gradient: number): Matrix {
-        var result = new Matrix();
-        Matrix.DecomposeLerpToRef(startValue, endValue, gradient, result);
-        return result;
-    }
-
-    /**
-     * Update a matrix to values which are computed by:
-     * * decomposing the the "startValue" and "endValue" matrices into their respective scale, rotation and translation matrices
-     * * interpolating for "gradient" (float) the values between each of these decomposed matrices between the start and the end
-     * * recomposing a new matrix from these 3 interpolated scale, rotation and translation matrices
-     * @param startValue defines the first matrix
-     * @param endValue defines the second matrix
-     * @param gradient defines the gradient between the two matrices
-     * @param result defines the target matrix
-     */
-    public static DecomposeLerpToRef(startValue: DeepImmutable<Matrix>, endValue: DeepImmutable<Matrix>, gradient: number, result: Matrix) {
-        debugger;
-       /* var startScale = MathTmp.Vector3[0];
-        var startRotation = MathTmp.Quaternion[0];
-        var startTranslation = MathTmp.Vector3[1];
-        startValue.decompose(startScale, startRotation, startTranslation);
-
-        var endScale = MathTmp.Vector3[2];
-        var endRotation = MathTmp.Quaternion[1];
-        var endTranslation = MathTmp.Vector3[3];
-        endValue.decompose(endScale, endRotation, endTranslation);
-
-        var resultScale = MathTmp.Vector3[4];
-        Vector3.LerpToRef(startScale, endScale, gradient, resultScale);
-        var resultRotation = MathTmp.Quaternion[2];
-        Quaternion.SlerpToRef(startRotation, endRotation, gradient, resultRotation);
-
-        var resultTranslation = MathTmp.Vector3[5];
-        Vector3.LerpToRef(startTranslation, endTranslation, gradient, resultTranslation);
-
-        Matrix.ComposeToRef(resultScale, resultRotation, resultTranslation, result);*/
-    }
-
-    /**
-     * Gets a new rotation matrix used to rotate an entity so as it looks at the target vector3, from the eye vector3 position, the up vector3 being oriented like "up"
-     * This function works in left handed mode
-     * @param eye defines the final position of the entity
-     * @param target defines where the entity should look at
-     * @param up defines the up vector for the entity
-     * @returns the new matrix
-     */
-    public static LookAtLH(eye: DeepImmutable<Vector3>, target: DeepImmutable<Vector3>, up: DeepImmutable<Vector3>): Matrix {
-        var result = new Matrix();
-        Matrix.LookAtLHToRef(eye, target, up, result);
-        return result;
-    }
-
-    /**
-     * Sets the given "result" Matrix to a rotation matrix used to rotate an entity so that it looks at the target vector3, from the eye vector3 position, the up vector3 being oriented like "up".
-     * This function works in left handed mode
-     * @param eye defines the final position of the entity
-     * @param target defines where the entity should look at
-     * @param up defines the up vector for the entity
-     * @param result defines the target matrix
-     */
-    public static LookAtLHToRef(eye: DeepImmutable<Vector3>, target: DeepImmutable<Vector3>, up: DeepImmutable<Vector3>, result: Matrix): void {
-        debugger;
-       /* const xAxis = MathTmp.Vector3[0];
-        const yAxis = MathTmp.Vector3[1];
-        const zAxis = MathTmp.Vector3[2];
-
-        // Z axis
-        target.subtractToRef(eye, zAxis);
-        zAxis.normalize();
-
-        // X axis
-        Vector3.CrossToRef(up, zAxis, xAxis);
-
-        const xSquareLength = xAxis.lengthSquared();
-        if (xSquareLength === 0) {
-            xAxis.x = 1.0;
-        } else {
-            xAxis.normalizeFromLength(Math.sqrt(xSquareLength));
-        }
-
-        // Y axis
-        Vector3.CrossToRef(zAxis, xAxis, yAxis);
-        yAxis.normalize();
-
-        // Eye angles
-        var ex = -Vector3.Dot(xAxis, eye);
-        var ey = -Vector3.Dot(yAxis, eye);
-        var ez = -Vector3.Dot(zAxis, eye);
-
-        Matrix.FromValuesToRef(
-            xAxis.x, yAxis.x, zAxis.x, 0.0,
-            xAxis.y, yAxis.y, zAxis.y, 0.0,
-            xAxis.z, yAxis.z, zAxis.z, 0.0,
-            ex, ey, ez, 1.0,
-            result
-        );*/
-    }
-
-    /**
-     * Gets a new rotation matrix used to rotate an entity so as it looks at the target vector3, from the eye vector3 position, the up vector3 being oriented like "up"
-     * This function works in right handed mode
-     * @param eye defines the final position of the entity
-     * @param target defines where the entity should look at
-     * @param up defines the up vector for the entity
-     * @returns the new matrix
-     */
-    public static LookAtRH(eye: DeepImmutable<Vector3>, target: DeepImmutable<Vector3>, up: DeepImmutable<Vector3>): Matrix {
-        var result = new Matrix();
-        Matrix.LookAtRHToRef(eye, target, up, result);
-        return result;
-    }
-
-    /**
-     * Sets the given "result" Matrix to a rotation matrix used to rotate an entity so that it looks at the target vector3, from the eye vector3 position, the up vector3 being oriented like "up".
-     * This function works in right handed mode
-     * @param eye defines the final position of the entity
-     * @param target defines where the entity should look at
-     * @param up defines the up vector for the entity
-     * @param result defines the target matrix
-     */
-    public static LookAtRHToRef(eye: DeepImmutable<Vector3>, target: DeepImmutable<Vector3>, up: DeepImmutable<Vector3>, result: Matrix): void {
-        debugger;
-        /*const xAxis = MathTmp.Vector3[0];
-        const yAxis = MathTmp.Vector3[1];
-        const zAxis = MathTmp.Vector3[2];
-
-        // Z axis
-        eye.subtractToRef(target, zAxis);
-        zAxis.normalize();
-
-        // X axis
-        Vector3.CrossToRef(up, zAxis, xAxis);
-
-        const xSquareLength = xAxis.lengthSquared();
-        if (xSquareLength === 0) {
-            xAxis.x = 1.0;
-        } else {
-            xAxis.normalizeFromLength(Math.sqrt(xSquareLength));
-        }
-
-        // Y axis
-        Vector3.CrossToRef(zAxis, xAxis, yAxis);
-        yAxis.normalize();
-
-        // Eye angles
-        var ex = -Vector3.Dot(xAxis, eye);
-        var ey = -Vector3.Dot(yAxis, eye);
-        var ez = -Vector3.Dot(zAxis, eye);
-
-        Matrix.FromValuesToRef(
-            xAxis.x, yAxis.x, zAxis.x, 0.0,
-            xAxis.y, yAxis.y, zAxis.y, 0.0,
-            xAxis.z, yAxis.z, zAxis.z, 0.0,
-            ex, ey, ez, 1.0,
-            result
-        );*/
-    }
-
     /**
      * Create a left-handed orthographic projection matrix
      * @param width defines the viewport width

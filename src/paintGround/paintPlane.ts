@@ -106,8 +106,8 @@ export class paintPlane extends paintGround {
        
     };
 
-    public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
-        super.activate(callback, options);
+    public activate(callback: PTResultF) {
+        super.activate(callback);
     }
     public destroy() {
         super.destroy();

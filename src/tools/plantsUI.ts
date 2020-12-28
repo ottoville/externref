@@ -40,7 +40,7 @@ export class PlantsUI extends UITAB {
             this.PT?.activate((response: PTDresult) => {
                 //this.PT && this.PT.destroy();
                 PlantsUI.plantsMesh.fillArea(response)
-            }, { forceSharedVertices: false });
+            });
         } catch (e) {
             console.error(e);
         }

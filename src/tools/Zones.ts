@@ -1,7 +1,6 @@
 import { UITAB } from "../UITAB.js";
 import { paintTexture } from "../paintGround/paintTexture.js";
 import type { Terrain } from "../world/terrain.js";
-//import * as BABYLON from "../lib/babylon/index.js"
 import type { PTDresult } from "../types/interfaces/index.js";
 
 import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
@@ -28,7 +27,6 @@ export class Zones extends UITAB {
         public ground: Terrain,
         public camera: ArcRotateCamera,
         sea: Sea,
-        debugScene: Scene
     ) {
         super(scene, ground, camera, sea);
 
@@ -63,13 +61,13 @@ export class Zones extends UITAB {
         
         ground.mesh.textureView = this.zoneTexture.createView();
         ground.mesh.drawable.then(d => {
-            d.scene = debugScene;
+            d.scene = scene.engine.scenes.get('static');
         })
 
         this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zoneTexture, 5120, 5120, this, this.#ratio);
         this.PT.activate(async (response) => {
             (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
-        }, {});
+        });
     }
     destroy = (): void => {
         this.ground.mesh.scene = this.scene;

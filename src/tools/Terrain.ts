@@ -106,7 +106,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
             });
         }, 17);
     }
-    pointerupf = (evt: PointerEvent): void => {
+    pointerupf = (): void => {
         this.camera.attachControl(this.engine.gpu.renderPassScreen.canvas, true);
         clearInterval(this.mouseinterval);
     }
@@ -118,7 +118,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
         this.traits.forEach(trait => trait.destroy());
     };
 
-    #mouseListener = (evt: PointerEvent): void => {
+    #mouseListener = (): void => {
         this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
             this.worldPosition.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
         });

@@ -218,8 +218,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
 
                     collider._initialize(position, velocity, closeDistance);
-
-                    Scene.instances.forEach(scene => {
+                    terraEngine.scenes.forEach(scene => {
                         scene.boundables.forEach(mesh => {
                             try {
                                 mesh.checkCollision(collider);
@@ -556,7 +555,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
             
-            TerraScene.instance = new Scene(gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
+            TerraScene.instance = new Scene('main',gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
                 new Sun2(terrascene, sunBufferOffsetBytes);
                 // Initial scene objects here
 
@@ -617,7 +616,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     try {
                         let tool: UITABClassLike | undefined;
                         if (tool = tools.get(name)) {
-                            tool.instance = new tool(terrascene, (await terrainInited)[0], await cameraReady, sea, debugscene);
+                            tool.instance = new tool(terrascene, (await terrainInited)[0], await cameraReady, sea);
                         }
                     } catch (e) {
                         console.error(e);
@@ -696,7 +695,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                 })
             });
-            const debugscene = new Scene(gpuscene, terraEngine, [mainCamera], (scene, sunBufferOffsetBytes) => {
+            const debugscene = new Scene('static',gpuscene, terraEngine, [mainCamera], (scene, sunBufferOffsetBytes) => {
                 const sun = new PositionNode(scene.engine, sunBufferOffsetBytes);
                 sun.worldPosition.translation.set([0, 1, 0]);
                 sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)

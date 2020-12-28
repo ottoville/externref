@@ -39,8 +39,8 @@ export class paintTexture extends paintGround {
 
         
     };
-    public activate(callback: PTResultF, options: { forceSharedVertices?: boolean }) {
-        super.activate(callback, options);
+    public activate(callback: PTResultF) {
+        super.activate(callback);
     }
     async onAreaDraw(width: number): Promise<void> {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {

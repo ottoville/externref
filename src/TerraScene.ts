@@ -1,7 +1,7 @@
-﻿import type { GPU } from "./GPU";
+﻿/*import type { GPU } from "./GPU";
 
 import { TerraCamera } from "./TerraCamera";
-import { Engine } from "./engine";
+import { Engine } from "./engine";*/
 import { Scene } from "./Scene";
 //import { Camera } from "../wwwroot/js/lib/babylon/Cameras/camera";
 
@@ -84,6 +84,9 @@ function matrixInvert64(m: Float32Array | Float64Array): void {
     m[15] = cofact_33 * detInv;
 
 }*/
+//@ts-ignore
+export const TerraScene: { instance: Scene } = {};
+/*
 export class TerraScene extends Scene {
 
     static instance: TerraScene;
@@ -101,4 +104,4 @@ export class TerraScene extends Scene {
 
     static tempM1 = new Float64Array(16);
   
-}
+}*/

@@ -14,8 +14,7 @@ export abstract class UITAB {
         public scene: Scene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
-        public sea: Sea,
-        ...args: any[]
+        public sea: Sea
     ) {
     }
 }

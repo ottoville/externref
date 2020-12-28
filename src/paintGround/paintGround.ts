@@ -34,7 +34,7 @@ export abstract class paintGround {
     ) {
     };
     public resolve: PTResultF = () => null;
-    public activate(callback: PTResultF, options?: any) {
+    public activate(callback: PTResultF) {
         this.uitab.canvasListener.addListener("pointerdown", this.#mainPointerDown, { once: true });
         this.resolve = callback;
     }
@@ -45,7 +45,7 @@ export abstract class paintGround {
 
     #drawVector = new Float32Array(2);
 
-    #drawArea = async (evt:PointerEvent) => {
+    #drawArea = async () => {
         await this.ground.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay);
         if (this.ground.mesh.pickInfo.distance[0]) {
             this.#end_position[0] = this.ground.mesh.pickInfo.point[0];
@@ -88,7 +88,7 @@ export abstract class paintGround {
     #drawqueue: boolean = false;
     #busy: boolean = false;
 
-    #mousemove = async (evt: PointerEvent) => {
+    #mousemove = async () => {
 
         await this.ground.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay);
         if (this.ground.mesh.pickInfo.distance[0] && this.#end_position) {
@@ -142,7 +142,7 @@ export abstract class paintGround {
 
         }
     }
-    private finalClick = (evt: PointerEvent) => {
+    private finalClick = () => {
         //this.canvas.addEventListener('click', async () => {
         //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
         this.scene.TerraCameras[0].unSubscribePickingRay();
@@ -155,10 +155,10 @@ export abstract class paintGround {
         this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
         this.onEnd();
     }
-    private mouseMoveRegisterClick = (evt: PointerEvent) => {
+    private mouseMoveRegisterClick = () => {
         this.uitab.canvasListener.addListener('pointerdown', this.finalClick, { once: true });
     }
-    #pointerUp = (evt: PointerEvent) => {
+    #pointerUp = () => {
 
         this.uitab.canvasListener.removeListener('pointermove', this.#drawArea);
 
