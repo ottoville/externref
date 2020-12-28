@@ -19,27 +19,14 @@ export abstract class Drawable {
     #staticBuffers: Set<GPUBindGroup> = new Set()
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
     #scene?: Scene;
-    #instanceCount: number;
     constructor(
         protected renderPipeline: RenderPipeline,
         private renderPasses: Set<RenderPass>,
-        instanceCount:number,
         scene?: Scene) {
-        if (instanceCount == 0)
-            console.warn('Added drawable with 0 instances, nothing will be drawn');
-        this.#instanceCount = instanceCount;
         this.scene = scene;
         this.clearBundles();
     }
-    set instanceCount(count: number) {
-        if (count === this.#instanceCount)
-            return;
-        this.#instanceCount = count;
-        this.clearBundles();
-    }
-    get instanceCount() {
-        return this.#instanceCount;
-    }
+
     set scene(scene: Scene | undefined) {
         if (this.#scene) {
             this.#renderList.forEach(Drawables => Drawables.delete(this));
@@ -125,7 +112,45 @@ export abstract class Drawable {
         this.render(renderPass);
     }
 }
-export class DrawableSimple extends Drawable{
+abstract class DrawableDirect extends Drawable {
+    #instanceCount: number;
+    constructor(
+        renderPipeline: RenderPipeline,
+        renderPasses: Set<RenderPass>,
+        public vertexCount: number,
+        scene?: Scene,
+        instanceCount = 1,
+        public firstVertex = 0,
+        public firstInstance = 0) {
+
+        super(renderPipeline, renderPasses, scene);
+        if (instanceCount == 0)
+            console.warn('Added drawable with 0 instances, nothing will be drawn');
+        this.#instanceCount = instanceCount;
+    }
+    set instanceCount(count: number) {
+        if (count === this.#instanceCount)
+            return;
+        this.#instanceCount = count;
+        this.clearBundles();
+    }
+    get instanceCount() {
+        return this.#instanceCount;
+    }
+}
+export class DrawableIndirect extends Drawable {
+    constructor(
+        renderPipeline: RenderPipeline,
+        renderPasses: Set<RenderPass>,
+        private buffer: GPUIndirectBuffer,
+        scene?: Scene,) {
+        super(renderPipeline, renderPasses, scene);
+    }
+    render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
+        renderPass.drawIndirect(this.buffer,0);
+    }
+}
+export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
@@ -140,7 +165,7 @@ export class DrawableSimple extends Drawable{
         renderPass.draw(this.vertexCount, this.instanceCount, this.firstVertex, this.firstInstance);
     }
 }
-export class DrawableIndexed extends Drawable{
+export class DrawableIndexed extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,

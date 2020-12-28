@@ -36,6 +36,9 @@ interface GPUVertexBuffer extends GPUBuffer {
 interface GPUIndexBuffer extends GPUBuffer {
     index: 'true';
 }
+interface GPUIndirectBuffer extends GPUBuffer {
+    indirect: 'true';
+}
 interface GPUStorageBuffer extends GPUBuffer {
     storage: 'true';
 }
@@ -72,19 +75,6 @@ interface BindGroupLayoutFourBinding extends GPUBindGroupLayout {
 interface BindGroupLayoutFiveBinding<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> extends GPUBindGroupLayout {
     numBindings: 'five';
 }
-/*interface DynamicBindGroupLayoutOneBinding<T extends GPUBindGroupLayoutEntry> extends BindGroupLayoutOneBinding<T> {
-    dynamic: 'yes';
-}
-interface DynamicBindGroupLayoutTwoBinding extends BindGroupLayoutTwoBinding {
-    dynamic: 'yes';
-}
-interface DynamicBindGroupLayoutThreeBinding extends BindGroupLayoutThreeBinding {
-    dynamic: 'yes';
-}
-interface DynamicBindGroupLayoutFourBinding extends BindGroupLayoutFourBinding {
-    dynamic: 'yes';
-}
-*/
 
 interface BindGroupOneBinding extends GPUBindGroup {
     numBindings: 'one';
