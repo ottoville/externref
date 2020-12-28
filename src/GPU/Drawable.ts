@@ -3,10 +3,6 @@ import type { GPU } from "../GPU";
 import { RenderPass } from "./RenderPass";
 import { Scene } from "../Scene";
 type DrawableLike = typeof RenderPipeline;
-interface GPUVertexReadOnlyBuffer extends GPUBuffer {
-    vertex: 'true';
-    storage?: 'false';
-}
 export interface DrawableLikeClass extends DrawableLike {
     Meshes: Set<RenderPipeline>;
     Layouts: Map<GPU, GPUPipelineLayout>;
@@ -82,9 +78,9 @@ export abstract class Drawable {
                 b.buffer.destroy()
         });
     }
-    setVertexBuffer(index: number, buffer: ArrayBufferView, destroyOld?: boolean): GPUBuffer
-    setVertexBuffer(index: number, buffer: GPUVertexReadOnlyBuffer, destroyOld?: boolean, offset?: number, size?: number): GPUBuffer
-    setVertexBuffer(index: number, buffer: ArrayBufferView | GPUVertexBuffer, destroyOld = true, offset?: number, size?: number): GPUBuffer {
+    setVertexBuffer(index: number, buffer: ArrayBufferView, destroyOld?: boolean): GPUVertexBuffer
+    setVertexBuffer<T extends GPUVertexBuffer>(index: number, buffer: T, destroyOld?: boolean, offset?: number, size?: number): T
+    setVertexBuffer(index: number, buffer: ArrayBufferView | GPUVertexBuffer, destroyOld = true, offset?: number, size?: number): GPUVertexBuffer {
         if (destroyOld) {
             let Tbuffer = this.#vertexBuffers.get(index);
             if (Tbuffer) {
@@ -138,16 +134,16 @@ abstract class DrawableDirect extends Drawable {
         return this.#instanceCount;
     }
 }
-export class DrawableIndirect extends Drawable {
+export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        private buffer: GPUIndirectBuffer,
+        readonly buffer: T,
         scene?: Scene,) {
         super(renderPipeline, renderPasses, scene);
     }
     render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
-        renderPass.drawIndirect(this.buffer,0);
+        renderPass.drawIndirect(this.buffer, 0);
     }
 }
 export class DrawableSimple extends DrawableDirect {

@@ -98,7 +98,7 @@ export class Plants {
                     }]
             },
         });
-        const drawable = planstPipeline.addDrawableSimple(scene,new Set([scene.gpu.renderPassScreen]),7,0)
+        const drawable = planstPipeline.addDrawableIndirect(scene, new Set([scene.gpu.renderPassScreen]), scene.gpu.createGPUBuffer(4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST]))
         const positionGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] );
         const shapeGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
 
@@ -107,7 +107,7 @@ export class Plants {
         const shapeGPUSwap = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE]);
 
         drawable.setVertexBuffer(0, positionGPU)
-        drawable.setVertexBuffer(1, shapeGPU)
+        drawable.setVertexBuffer(1, shapeGPU);
 
 
         let shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * this.numBlades);
@@ -181,8 +181,8 @@ export class Plants {
                     shapeGPUSwap, 0,
                     shapeGPU, 0,
                     this.numBlades * 4 * 4);
-                scene.gpu.device.defaultQueue.submit([commandEncoder.finish()]);
-                drawable.instanceCount = (data.buffer.byteLength/4)*2
+                scene.gpu.updateBufferRaw(commandEncoder,drawable.buffer, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
+                scene.gpu.pendingCommandBuffers.push(commandEncoder.finish())
             });
         })
 

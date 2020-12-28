@@ -26,7 +26,7 @@ function clamp(value: number, min: number, max: number) {
     return Math.min(Math.max(value, min), max);
 }
 const plantaes: PlantI[] = [];
-
+const grids2: Map<string, number[]> = new Map()
 let methods = {
     init: (data: WMessage<{ positions: SharedArrayBuffer, shape: any, noises: any }>) => {
         noises = new Float32Array(data.data.noises);
@@ -42,7 +42,7 @@ let methods = {
         const buffer = new SharedArrayBuffer(size * 4);
         const newArray = new Float32Array(buffer);
         newArray.set(grasspositions);
-        grasspositions = newArray
+        grasspositions = newArray;
     },
     deGrowMemory: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
         new Float32Array(data.data.positions,0,grasspositions.length).set(grasspositions);
@@ -71,7 +71,7 @@ let methods = {
         let maxX: number;
         let maxZ: number;*/
 
-        const grids2: Map<string, number[]> = new Map()
+        
         for (let i = 0; i < amount; ++i) {
             const posX = (Math.random() * data.data.area.size.h * -1);
             const posZ = (Math.random() * data.data.area.size.w * -1);
@@ -102,15 +102,14 @@ let methods = {
             minZ = Math.min(minZ, offsets[i * 2 + 1]);*/
 
         }
-        //let d2 = new Date().getTime();
-        //const grids = new Set(plantaes.filter(v => (v.x > minX && v.x < maxX) && (v.z > minZ && v.z < maxZ)).map(v => v.grid));  //grid check is disabled now
 
-        if (amount > grasspositions.length / 2) {
+       /* if (amount > grasspositions.length / 2) {
             methods.growMemory(amount * 2)
-        }
+        }*/
         let memoryOffset = 0;
         grids2.forEach(grid => {
-            //const array = new Float32Array(grid);
+            if (memoryOffset + grid.length > grasspositions.length)
+                methods.growMemory(memoryOffset + grid.length)
             grasspositions.set(grid, memoryOffset);
             memoryOffset += grid.length;
         });
@@ -144,8 +143,8 @@ let methods = {
             grasspositions[i * 2] = plantaes[i].pos[0]
             grasspositions[i * 2 + 1] = plantaes[i].pos[1]
         }*/
-        console.log('update grass, count', amount);
-        this.postMessage({ type: 'updated', count: amount, buffer: grasspositions.buffer });
+        console.log('update grass, count', grasspositions.length / 2);
+        this.postMessage({ type: 'updated', count: grasspositions.length/2, buffer: grasspositions.buffer });
         
         const response = new Response(grasspositions);
         response.headers.set('content-length', grasspositions.buffer.byteLength.toString());

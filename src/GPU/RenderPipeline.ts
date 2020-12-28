@@ -1,6 +1,6 @@
 ﻿import { Scene } from "../Scene";
 import { BindGroupLayout } from "./BindGroupLayout";
-import {  DrawableIndexed, DrawableSimple } from "./Drawable";
+import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable";
 import type { Drawable } from "./Drawable";
 import { RenderPass } from "./RenderPass";
 
@@ -52,6 +52,9 @@ export class RenderPipeline {
         }
         drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart));
         return drawables.size;
+    }
+    addDrawableIndirect<T extends GPUIndirectBuffer>(scene: Scene | undefined, renderPasses: Set<RenderPass>, buffer: T) {
+        return new DrawableIndirect(this, renderPasses, buffer, scene);
     }
     addDrawableSimple(scene: Scene | undefined, renderPasses: Set<RenderPass>, vertexCount: number, instanceCount = 1, firstVertex = 0, firstInstance = 0): DrawableSimple {
         return new DrawableSimple(this, renderPasses, vertexCount, scene, instanceCount, firstVertex, firstInstance)
