@@ -590,9 +590,7 @@ export class TerraEffect {
     /**
      * Callback that will be called when the shader is compiled.
      */
-    #compiledCallBack: () => void = () => { };
-    public onCompiled: Promise<void> = new Promise((res) => {
-        this.#compiledCallBack = res;
+    public onCompiled: Promise<void> = new Promise(() => {
     });
    
     /**
@@ -662,9 +660,6 @@ export class TerraEffect {
     public _key: string = "";
     private _indexParameters: any;
     private _fallbacks: Nullable<IEffectFallbacks> = null;
-    private _vertexSourceCodeOverride: string = "";
-    private _fragmentSourceCodeOverride: string = "";
-    private _transformFeedbackVaryings: Nullable<string[]> = null;
     /**
      * Compiled shader to webGL program.
      * @hidden
@@ -739,77 +734,12 @@ export class TerraEffect {
         webgpuPipelineContext!.bindGroupLayouts = bindGroupLayouts;
         return this._engine.getDevice().createPipelineLayout({ bindGroupLayouts });
     }
-
-    public createPipelineLayout(renderPipeline:GPURenderPipeline): GPUPipelineLayout {
-        const bindGroupLayouts: GPUBindGroupLayout[] = [];
-        const webgpuPipelineContext = this._pipelineContext;
-        for (let i = 0; i < webgpuPipelineContext!.orderedUBOsAndSamplers.length; i++) {
-            const setDefinition = webgpuPipelineContext!.orderedUBOsAndSamplers[i];
-            if (setDefinition === undefined) {
- //@ts-ignore
-                const bindings: GPUBindGroupLayoutEntry[] = [];
-                const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
-                    entries: bindings,
-                });
-                bindGroupLayouts[i] = uniformsBindGroupLayout;
-                continue;
-            }
-            //@ts-ignore
-            const bindings: GPUBindGroupLayoutEntry[] = [];
-            for (let j = 0; j < setDefinition.length; j++) {
-                const bindingDefinition = webgpuPipelineContext!.orderedUBOsAndSamplers[i][j];
-                if (bindingDefinition === undefined) {
-                    continue;
-                }
-
-                // TODO WEBGPU. Optimize shared samplers visibility for vertex/framgent.
-                if (bindingDefinition.isSampler) {
-                    bindings.push({
-                        binding: j,
-                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
-                        type: WebGPUConstants.GPUBindingType_sampledTexture,
-                        //@ts-ignore
-                        textureDimension: bindingDefinition.textureDimension,
-                        // TODO WEBGPU. Handle texture component type properly.
-                        // textureComponentType?: GPUTextureComponentType,
-                    }, {
-                        // TODO WEBGPU. No Magic + 1 (coming from current 1 texture 1 sampler startegy).
-                        binding: j + 1,
-                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
-                        type: WebGPUConstants.GPUBindingType_sampler
-                    });
-                }
-                else {
-                    bindings.push({
-                        binding: j,
-                        visibility: WebGPUConstants.GPUShaderStageBit_VERTEX | WebGPUConstants.GPUShaderStageBit_FRAGMENT,
-                        type: WebGPUConstants.GPUBindingType_uniformBuffer,
-                    });
-                }
-            }
-
-            if (bindings.length > 0) {
-                const uniformsBindGroupLayout = this._engine.getDevice().createBindGroupLayout({
-                    entries: bindings,
-                });
-                bindGroupLayouts[i] = uniformsBindGroupLayout;
-            }
-        }
-
-        webgpuPipelineContext!.bindGroupLayouts = bindGroupLayouts;
-        return this._engine.getDevice().createPipelineLayout({ bindGroupLayouts });
-    }
     constructor(baseName: any, attributesNamesOrOptions: string[] | any, uniformsNamesOrEngine: string[] | ThinEngine, samplers: Nullable<string[]> = null,
 
         engine?: ThinEngine, defines: Nullable<string> = null,
-        fallbacks: Nullable<IEffectFallbacks> = null, onCompiled: Nullable<(effect: any) => void> = null, onError: Nullable<(effect: any, errors: string) => void> = null, indexParameters?: any, key: string = "",
-        sources?: [
-            Promise<string>,
-            Promise<string>,
-        ]) {
+        fallbacks: Nullable<IEffectFallbacks> = null) {
         //super(baseName, attributesNamesOrOptions, uniformsNamesOrEngine, samplers, engine, defines, fallbacks, onCompiled, onError, indexParameters, key, sources);
         this.name = baseName;
-        this._key = key;
         if ((<any>attributesNamesOrOptions).attributes) {
             var options = <any>attributesNamesOrOptions;
             this._engine = <WebGPUEngine>uniformsNamesOrEngine;
@@ -822,7 +752,6 @@ export class TerraEffect {
             this.onError = options.onError;
             this._fallbacks = options.fallbacks;
             this._indexParameters = options.indexParameters;
-            this._transformFeedbackVaryings = options.transformFeedbackVaryings || null;
 
             if (options.uniformBuffersNames) {
                 for (var i = 0; i < options.uniformBuffersNames.length; i++) {
@@ -838,7 +767,6 @@ export class TerraEffect {
             //@ts-ignore
             this.onError = onError;
 
-            this._indexParameters = indexParameters;
             this._fallbacks = fallbacks;
         }
 
@@ -846,10 +774,6 @@ export class TerraEffect {
 
         this.uniqueId = TerraEffect._uniqueIdSeed++;
 
-        if (this._engine.compilingShaders.has(key)) {
-            return;
-        }
-        this._engine.compilingShaders.add(key);
         /*if (sources) {
             Promise.all(sources).then((r) => {
                 [this._vertexSourceCodeOverride, this._fragmentSourceCodeOverride] = r;
@@ -915,7 +839,6 @@ export class TerraEffect {
                     cache.put(vertexSource + '.vert', new Response(new Blob([finalShaders.vertexCode], { type: 'text/plain' })));
                     cache.put(fragmentSource + '.frag', new Response(new Blob([finalShaders.fragmentCode], { type: 'text/plain' })));
                 })
-                this._useFinalCode(finalShaders.vertexCode, finalShaders.fragmentCode, baseName);
             });
         }
     }
@@ -986,39 +909,6 @@ export class TerraEffect {
                         }
                     }
 
-                    if (match[4]) {
-                        var indexString = match[5];
-
-                        if (indexString.indexOf("..") !== -1) {
-                            var indexSplits = indexString.split("..");
-                            var minIndex = parseInt(indexSplits[0]);
-                            var maxIndex = parseInt(indexSplits[1]);
-                            var sourceIncludeContent = includeContent.slice(0);
-                            includeContent = "";
-
-                            if (isNaN(maxIndex)) {
-                                maxIndex = options.indexParameters[indexSplits[1]];
-                            }
-
-                            for (var i = minIndex; i < maxIndex; i++) {
-                                if (!options.supportsUniformBuffers) {
-                                    // Ubo replacement
-                                    sourceIncludeContent = sourceIncludeContent.replace(/light\{X\}.(\w*)/g, (str: string, p1: string) => {
-                                        return p1 + "{X}";
-                                    });
-                                }
-                                includeContent += sourceIncludeContent.replace(/\{X\}/g, i.toString()) + "\n";
-                            }
-                        } else {
-                            if (!options.supportsUniformBuffers) {
-                                // Ubo replacement
-                                includeContent = includeContent.replace(/light\{X\}.(\w*)/g, (str: string, p1: string) => {
-                                    return p1 + "{X}";
-                                });
-                            }
-                            includeContent = includeContent.replace(/\{X\}/g, indexString);
-                        }
-                    }
 
                     // Replace
                     returnValue = returnValue.replace(match[0], includeContent);
@@ -1037,124 +927,6 @@ export class TerraEffect {
             }
             res(returnValue);
         });
-    }
-    private _useFinalCode(migratedVertexCode: string, migratedFragmentCode: string, baseName: any) {
-        if (baseName) {
-            var vertex = baseName.vertexElement || baseName.vertex || baseName.spectorName || baseName;
-            var fragment = baseName.fragmentElement || baseName.fragment || baseName.spectorName || baseName;
-
-            this._vertexSourceCode = "#define SHADER_NAME vertex:" + vertex + "\n" + migratedVertexCode;
-            this._fragmentSourceCode = "#define SHADER_NAME fragment:" + fragment + "\n" + migratedFragmentCode;
-            /*caches.open('compiledShaders').then((cache) => {
-                cache.put(baseName + '.vert', new Response(new Blob([this._vertexSourceCode], { type: 'text/plain' })));
-                cache.put(baseName + '.frag', new Response(new Blob([this._fragmentSourceCode], { type: 'text/plain' })));
-            })*/
-        } else {
-            this._vertexSourceCode = migratedVertexCode;
-            this._fragmentSourceCode = migratedFragmentCode;
-        }
-        this._prepareEffect();
-    }
-    /**
- * Recompiles the webGL program
- * @param vertexSourceCode The source code for the vertex shader.
- * @param fragmentSourceCode The source code for the fragment shader.
- * @param onCompiled Callback called when completed.
- * @param onError Callback called on error.
- * @hidden
- */
-    public _rebuildProgram(vertexSourceCode: string, fragmentSourceCode: string, onCompiled: (pipelineContext: IPipelineContext) => void, onError: (message: string) => void) {
-        this._isReady = false;
-
-        this._vertexSourceCodeOverride = vertexSourceCode;
-        this._fragmentSourceCodeOverride = fragmentSourceCode;
-        this.onError = (effect, error) => {
-            if (onError) {
-                onError(error);
-            }
-        };
-        /*
-        this.onCompiled = () => {
-            var scenes = this._engine.scenes;
-            if (scenes) {
-                for (var i = 0; i < scenes.length; i++) {
-                    scenes[i].markAllMaterialsAsDirty(Constants.MATERIAL_AllDirtyFlag);
-                }
-            }
-
-            this._pipelineContext!._handlesSpectorRebuildCallback(onCompiled);
-        };*/
-        this._fallbacks = null;
-        this._prepareEffect();
-    }
-    /**
-     * Prepares the effect
-     * @hidden
-     */
-    public _prepareEffect() {
-        let attributesNames = this._attributesNames;
-        let defines = this.defines;
-
-        var previousPipelineContext = this._pipelineContext;
-
-        try {
-            let engine = this._engine;
-
-            //this._processingContext.availableAttributes
-            this._pipelineContext = engine.createPipelineContext(this._processingContext) as WebGPUPipelineContext;
-
-            let rebuildRebind = this._rebuildProgram.bind(this);
-            if (this._vertexSourceCodeOverride && this._fragmentSourceCodeOverride) {
-                engine._preparePipelineContext(this._pipelineContext, this._vertexSourceCodeOverride, this._fragmentSourceCodeOverride, true, rebuildRebind, null, this._transformFeedbackVaryings, this._key);
-            }
-            else {
-                engine._preparePipelineContext(this._pipelineContext, this._vertexSourceCode, this._fragmentSourceCode, false, rebuildRebind, defines, this._transformFeedbackVaryings, this._key);
-            }
-
-            this._attributes = [];
-            //@ts-ignore
-            this._pipelineContext!._fillEffectInformation(this as Effect,
-                this._uniformBuffersNames,
-                this._uniformsNames,
-                this._uniforms,
-                this._samplerList,
-                this._samplers,
-                attributesNames,
-                this._attributes);
-
-            // Caches attribute locations.
-            if (attributesNames) {
-                for (let i = 0; i < attributesNames.length; i++) {
-                    const name = attributesNames[i];
-                    this._attributeLocationByName[name] = this._attributes[i];
-                }
-            }
-            //@ts-ignore
-            engine.bindSamplers(this);
-
-            this._compilationError = "";
-            this._isReady = true;
-            this.#compiledCallBack();
-
-            this.onCompileObservable.notifyObservers(this);
-            this.onCompileObservable.clear();
-
-            // Unbind mesh reference in fallbacks
-            if (this._fallbacks) {
-                this._fallbacks.unBindMesh();
-            }
-
-            if (previousPipelineContext) {
-                this.getEngine()._deletePipelineContext(previousPipelineContext);
-            }
-
-            if (this._pipelineContext.isAsync) {
-                this._checkIsReady(previousPipelineContext);
-            }
-
-        } catch (e) {
-            this._processCompilationErrors(e, previousPipelineContext);
-        }
     }
     private _processCompilationErrors(e: any, previousPipelineContext: Nullable<WebGPUPipelineContext> = null) {
         this._compilationError = e.message;
@@ -1186,7 +958,6 @@ export class TerraEffect {
                 this._allFallbacksProcessed = false;
                 console.error("Trying next fallback.");
                 this.defines = fallbacks.reduce(this.defines, <unknown>this as any);
-                this._prepareEffect();
             } else { // Sorry we did everything we can
                 this._allFallbacksProcessed = true;
                 if (this.onError) {

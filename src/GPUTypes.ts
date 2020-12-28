@@ -17,14 +17,14 @@ interface GPUBindGroupLayoutEntryUniform extends Omit<GPUBindGroupLayoutEntry, '
     type: 'uniform-buffer'
   //  entry: TerraGPUBindGroupEntry<GPUUniformBuffer>
 }
-type bindings<T> = T extends BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry> ? [GPUBindGroupEntry]
-    : T extends BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> ? [GPUBindGroupEntry, GPUBindGroupEntry]
-    : T extends BindGroupLayoutFiveBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> ? [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]
+type bindings<T> = T extends BindGroupLayoutOneBinding ? [GPUBindGroupEntry]
+    : T extends BindGroupLayoutTwoBinding ? [GPUBindGroupEntry, GPUBindGroupEntry]
+    : T extends BindGroupLayoutFiveBinding ? [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]
     : never;
 
-type getBindType<T> = T extends BindGroupLayoutOneBinding<GPUBindGroupLayoutEntry> ? BindGroupOneBinding
-    : T extends BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> ? BindGroupTwoBinding
-    : T extends BindGroupLayoutFiveBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> ? BindGroupFiveBinding
+type getBindType<T> = T extends BindGroupLayoutOneBinding ? BindGroupOneBinding
+    : T extends BindGroupLayoutTwoBinding ? BindGroupTwoBinding
+    : T extends BindGroupLayoutFiveBinding ? BindGroupFiveBinding
     : never;
 
 interface GPUUniformBuffer extends GPUBuffer {
@@ -55,24 +55,24 @@ interface GPUCopyDSTBuffer extends GPUBuffer {
     CopyDST: 'true';
 }
 
-interface TerraBindGroupLayout<T extends GPUBindGroupLayoutEntry[]> extends GPUBindGroupLayout {
+interface TerraBindGroupLayout extends GPUBindGroupLayout {
     createBindGroup: (...entries:  GPUBindGroupEntry[]) => GPUBindGroup;
 }
-interface BindGroupLayoutOneBinding<T extends GPUBindGroupLayoutEntry> extends TerraBindGroupLayout<[T]> {
+interface BindGroupLayoutOneBinding extends TerraBindGroupLayout {
     numBindings: 'one';
 }
-interface BindGroupLayoutTwoBinding<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> extends GPUBindGroupLayout {
+interface BindGroupLayoutTwoBinding extends GPUBindGroupLayout {
     createBindGroup: (...entries: [GPUBindGroupEntry, GPUBindGroupEntry]) => GPUBindGroup;
     numBindings: 'two';
 }
-interface BindGroupLayoutThreeBinding<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> extends GPUBindGroupLayout {
+interface BindGroupLayoutThreeBinding extends GPUBindGroupLayout {
     createBindGroup: (...entries: [GPUBindGroupEntry, GPUBindGroupEntry]) => GPUBindGroup;
     numBindings: 'three';
 }
 interface BindGroupLayoutFourBinding extends GPUBindGroupLayout {
     numBindings: 'four';
 }
-interface BindGroupLayoutFiveBinding<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> extends GPUBindGroupLayout {
+interface BindGroupLayoutFiveBinding extends GPUBindGroupLayout {
     numBindings: 'five';
 }
 

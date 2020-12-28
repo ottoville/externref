@@ -92,17 +92,17 @@ export class GPU {
         return new DynamicBindGroupLayout(this, bglayout, undefined, bindgroup, isDynamic);
     }
 
-    createBindGroupLayout<T extends GPUBindGroupLayoutEntry>(entry: T): BindGroupLayoutOneBinding<T>
-    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries: T): BindGroupLayoutTwoBinding<T>
-    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries: T): BindGroupLayoutThreeBinding<T>
-    createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(...entries: T): TerraBindGroupLayout<T> {
-        const layout = this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout<T>;
+    createBindGroupLayout<T extends GPUBindGroupLayoutEntry>(entry: T): BindGroupLayoutOneBinding
+    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries: T): BindGroupLayoutTwoBinding
+    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries: T): BindGroupLayoutThreeBinding
+    createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(...entries: T): TerraBindGroupLayout {
+        const layout = this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout;
         layout.createBindGroup = (...entries: GPUBindGroupEntry[]) => {
             const bindGroup = this.device.createBindGroup({ layout, entries });
             this.GPUBindGroupLayouts.set(bindGroup, layout);
             return bindGroup
         }
-        return this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout<T>;
+        return this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout;
     }
 
     createBindGroup<T extends GPUBindGroupLayout, U extends bindings<T>>(layout: T, ...entries: U): getBindType<T>

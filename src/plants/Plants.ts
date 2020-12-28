@@ -127,7 +127,7 @@ export class Plants {
                     entryPoint: "main"
                 }
             });
-            const layout = computePipeline.getBindGroupLayout(0) as BindGroupLayoutFiveBinding<[GPUBindGroupLayoutEntryReadStorage, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>;
+            const layout = computePipeline.getBindGroupLayout(0) as BindGroupLayoutFiveBinding;
 
             this.worker.subscribe('updated', async (data: { buffer:SharedArrayBuffer }) => {
 

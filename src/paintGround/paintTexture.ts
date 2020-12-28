@@ -12,7 +12,7 @@ export class paintTexture extends paintGround {
     private height: number = 0;
     private centerX: number;
     private centerZ: number;
-    onMainPointerUp(end_position: Float32Array, height: number): void {
+    onMainPointerUp(height: number): void {
         this.height = height;
         this.subTextureCache = { x: 0, z: 0, width: 0, height: 0, imageData: null }
     }

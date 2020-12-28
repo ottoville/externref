@@ -125,7 +125,7 @@ export class paintPlane extends paintGround {
     #rows = 0;
     #rowGenerator: Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> | null = null;
 
-    onMainPointerUp(end_position: Float32Array, height: number): void {
+    onMainPointerUp(height: number): void {
         this.#columns = Math.floor(height / 10);
 
 

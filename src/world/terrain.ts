@@ -47,11 +47,11 @@ export class Terrain {
     #ratioX = Terrain.subdivisionsX / this.width;
     #ratioY = Terrain.subdivisionsY / this.height;
 
-    static heightLayouts: Map<GPU, BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>> = new Map();
+    static heightLayouts: Map<GPU, BindGroupLayoutTwoBinding> = new Map();
     mesh: TerrainMesh;
     //terraMesh: TerraMesh;
-    static getHeightsLayout(scene: GPU): BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> {
-        let layout: BindGroupLayoutTwoBinding<[GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]> | undefined;
+    static getHeightsLayout(scene: GPU): BindGroupLayoutTwoBinding {
+        let layout: BindGroupLayoutTwoBinding | undefined;
         if (layout = Terrain.heightLayouts.get(scene)) {
             return layout;
         }

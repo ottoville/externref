@@ -81,7 +81,7 @@ export abstract class paintGround {
     }
 
     abstract onMainPointerDown(startingPoint: Float32Array): void;
-    abstract onMainPointerUp(end_position: Float32Array, height: number): void;
+    abstract onMainPointerUp(height: number, end_position: Float32Array): void;
     abstract onAreaDraw(width: number): Promise<void>;
     abstract onEnd(): void;
     #nextDrawWidth: number = 0;
@@ -167,7 +167,7 @@ export abstract class paintGround {
         if (this.#end_position[0] == 0)
             return;
         try {
-            this.onMainPointerUp(this.#end_position, height);
+            this.onMainPointerUp(height, this.#end_position);
         } catch (e) {
             console.log(e);
         } finally {
