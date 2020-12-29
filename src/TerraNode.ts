@@ -216,13 +216,13 @@ export abstract class BoundableNode extends TerraNode {
         }
 
         if (!this.indicesBuffer) {
-           /* for (let i = 0; i < this.lastColliderWorldVectorsView2.length; i += 3) {
+            for (let i = 0; i < this.lastColliderWorldVectorsView2.length/3; i += 3) {
                 const p1 = this.lastColliderWorldVectorsView2[i];
                 const p2 = this.lastColliderWorldVectorsView2[i + 1];
                 const p3 = this.lastColliderWorldVectorsView2[i + 2];
  
                  collider._testTriangle(i, this.trianglePlaneArray, p3, p2, p1, false);
-             }*/
+             }
             return;
         }
         let indices = new Uint32Array(this.indicesBuffer);

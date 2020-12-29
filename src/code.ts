@@ -322,11 +322,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //@ts-ignore
                     this._position.copyFrom(this._newPosition);
 
-                    var up = this.upVector;
-                    if (this.allowUpsideDown && this.beta < 0) {
-                        up = up.clone();
-                        up = up.negate();
-                    }
 
                     //this._computeViewMatrix(this._position, target, up);
                     //@ts-ignore

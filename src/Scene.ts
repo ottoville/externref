@@ -127,7 +127,7 @@ export class Scene {
         const gpuCommands = commandEncoder.finish();
         this.gpu.device.defaultQueue.submit([gpuCommands]);
         */
-        let start = performance.now();
+        //let start = performance.now();
         const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x, ray.direction.y, ray.direction.z])
         const pickingRays: Map<BoundableNode, Float32Array> = new Map();
@@ -156,7 +156,7 @@ export class Scene {
             }
         })
         console.log(minimum);*/
-        console.log('picking took', performance.now() - start);
+       // console.log('picking took', performance.now() - start);
         return minimum;
         /*
         this.gpu.GPU2CPU(async buff => {

@@ -2,7 +2,7 @@
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
 
-function Dot(left: [number, number, number], right: [number, number, number]): number {
+function Dot(left: [number, number, number] | Float32Array, right: [number, number, number] | Float32Array): number {
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 }
 function CrossToRef(left: [number, number, number], right: [number, number, number], result: [number, number, number]): void {
@@ -104,8 +104,8 @@ export class Collider {
     public _radius: [x: number, y: number, z: number] = [1, 1, 1];
     /** @hidden */
     public _retry = 0;
-    #velocity: [number, number, number] = [0, 0, 0];
-    #basePoint: [x: number, y: number, z: number] = [0, 0, 0];
+    #velocity = new Float32Array(3);
+    #basePoint = new Float32Array(3);
     #epsilon: number=0;
     /** @hidden */
     public _velocityWorldLength: number = 0;
@@ -138,7 +138,7 @@ export class Collider {
 
     // Methods
     /** @hidden */
-    public _initialize(source: [number, number, number], dir: [number, number, number], e: number): void {
+    public _initialize(source: Float32Array, dir: Float32Array, e: number): void {
         this.#velocity = dir;
         // Vector3.NormalizeToRef(dir, this._normalizedVelocity);
 
@@ -422,7 +422,7 @@ export class Collider {
     }
 
     /** @hidden */
-    public _getResponse(pos: [x: number, y: number, z: number], vel: [x: number, y: number, z: number]): void {
+    public _getResponse(pos: Float32Array, vel: Float32Array): void {
         this._destinationPoint[0] = pos[0] + vel[0];
         this._destinationPoint[1] = pos[1] + vel[1];
         this._destinationPoint[2] = pos[2] + vel[2];

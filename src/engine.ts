@@ -5,6 +5,8 @@ import { TerraNode } from "./TerraNode";
 import { Collider } from "./Collider";
 import { Scene } from "./Scene";
 
+const CollisionsEpsilon = 0.001;
+
 export class Engine {
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
@@ -75,5 +77,52 @@ export class Engine {
                 }]
         })
     }
+    collideWithWorld(position: Float32Array, velocity: Float32Array, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): void {
+        //TODO: Call only when camera position change
+        var closeDistance = CollisionsEpsilon * 10.0;
+        if (this.collider._retry >= maximumRetry) {
+            finalPosition[0] = position[0];
+            finalPosition[1] = position[1];
+            finalPosition[2] = position[2];
+            // finalPosition.copyFrom(position);
+            return;
+        }
 
+        // Check if this is a mesh else camera or -1
+        //var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
+
+        this.collider._initialize(position, velocity, closeDistance);
+        this.scenes.forEach(scene => {
+            scene.boundables.forEach(mesh => {
+                try {
+                    mesh.checkCollision(this.collider);
+                } catch (e) {
+                    console.error(e);
+                }
+            })
+        });
+        if (!this.collider.collisionFound) {
+
+            //position.addToRef(velocity, finalPosition);
+            finalPosition[0] = position[0] + velocity[0];
+            finalPosition[1] = position[1] + velocity[1];
+            finalPosition[2] = position[2] + velocity[2];
+            return;
+        }
+        if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
+            this.collider._getResponse(position, velocity);
+        }
+
+       // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
+        if (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2] <= closeDistance) {
+            //finalPosition.copyFrom(position);
+            finalPosition[0] = position[0];
+            finalPosition[1] = position[1];
+            finalPosition[2] = position[2];
+            return;
+        }
+        this.collider._retry++;
+
+        this.collideWithWorld(position, velocity, maximumRetry, finalPosition);
+    }
 }

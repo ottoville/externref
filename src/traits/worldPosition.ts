@@ -82,24 +82,35 @@ export class worldPosition {
     }
 
     private updateMatrix(): void {
-        const m = this.worldMatrix;
-        var x = this.#rotation[0], y = this.#rotation[1], z = this.#rotation[2], w = this.#rotation[3];
-        var x2 = x + x, y2 = y + y, z2 = z + z;
-        var xx = x * x2, xy = x * y2, xz = x * z2;
-        var yy = y * y2, yz = y * z2, zz = z * z2;
+        const x = this.#rotation[0]
+        const y = this.#rotation[1]
+        const z = this.#rotation[2]
+        const w = this.#rotation[3];
+
+        const x2 = x + x
+        const y2 = y + y
+        const z2 = z + z;
+
+        const xx = x * x2
+        const xy = x * y2
+        const xz = x * z2;
+
+        const yy = y * y2
+        const yz = y * z2
+        const zz = z * z2;
         var wx = w * x2, wy = w * y2, wz = w * z2;
 
         var sx = this.#scaling[0], sy = this.#scaling[1], sz = this.#scaling[2];
-        m[0] = (1 - (yy + zz)) * sx;
-        m[1] = (xy + wz) * sx;
-        m[2] = (xz - wy) * sx;
-        m[4] = (xy - wz) * sy;
-        m[5] = (1 - (xx + zz)) * sy;
-        m[6] = (yz + wx) * sy;
+        this.worldMatrix[0] = (1 - (yy + zz)) * sx;
+        this.worldMatrix[1] = (xy + wz) * sx;
+        this.worldMatrix[2] = (xz - wy) * sx;
+        this.worldMatrix[4] = (xy - wz) * sy;
+        this.worldMatrix[5] = (1 - (xx + zz)) * sy;
+        this.worldMatrix[6] = (yz + wx) * sy;
 
-        m[8] = (xz + wy) * sz;
-        m[9] = (yz - wx) * sz;
-        m[10] = (1 - (xx + yy)) * sz;
+        this.worldMatrix[8] = (xz + wy) * sz;
+        this.worldMatrix[9] = (yz - wx) * sz;
+        this.worldMatrix[10] = (1 - (xx + yy)) * sz;
     }
     private onUpdate(): void {
         if (this.node.isBoundable()) {
