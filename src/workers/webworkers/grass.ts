@@ -38,7 +38,7 @@ let methods = {
         })
     },
     growMemory: (size: number) => {
-        console.log('grow memory to ', size)
+        //console.log('grow memory to ', size)
         const buffer = new SharedArrayBuffer(size * 4);
         const newArray = new Float32Array(buffer);
         newArray.set(grasspositions);
