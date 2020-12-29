@@ -48,7 +48,11 @@ let methods = {
         new Float32Array(data.data.positions,0,grasspositions.length).set(grasspositions);
         grasspositions = new Float32Array(data.data.positions);
     },
-    save: async (data: WMessage<{ amount: number, angle: number, area: { size: any, coord: Float32Array } }>) => {
+    save: async (data: WMessage<{ angle: number, area: { size: any, coord: Float32Array } }>) => {
+        let grassPerSquareMeter=8
+        let amount = Math.abs(data.data.area.size.h * data.data.area.size.w) * grassPerSquareMeter
+        if (amount === 0)
+            return;
        // var d = new Date().getTime();
         let db = await DB;
         let trans = db.transaction("plantae");
@@ -57,7 +61,6 @@ let methods = {
         trans.onerror = function (err) {
             console.log(err)
         }
-        let amount = data.data.amount;
         //console.log('creating grass, amount', amount, data)
 
         //let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
@@ -85,6 +88,8 @@ let methods = {
                 gridarr = [];
                 grids2.set(grid, gridarr)
             }
+            if (gridarr.length > grassPerSquareMeter * 2)
+                continue;
             gridarr.push(offsetsX, offsetsY);
             /*
             if (i == 0) {

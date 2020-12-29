@@ -28,19 +28,14 @@ export class Plants {
     public fillArea(area: PTDresult) {
 
         
-       // let amount = ~~Math.abs(area.size.h * area.size.w) * 2 // >> 2 // one per 2*2 grid
-        //let amount = ~~Math.abs(area.size.h * area.size.w) * 4 // very aggressive amount on CPU
-        let amount = Math.abs(area.size.h * area.size.w) << 3
         //let amount = 100000
-        if (amount === 0)
-            return;
+
 
         this.ready.then(() => { 
            // console.log('sending grass to worker, took ', new Date().getTime() - d);
             this.worker.message(WorkerReturn.noReturn, 'save',
             {
                 area: area,
-                amount: amount,
                 angle: area.rad
             })
         }
@@ -256,28 +251,7 @@ export class Plants {
 
         let shapebuffer = new Buffer(engine, new Float32Array(shapes), true, 4, false, true);
         let geometry: Geometry | null;
-        let noisebuffer = new Buffer(engine, new Float32Array(noises), true, 1, false, true);
-        if (geometry = Poaceae._geometry) {
-            geometry.setVerticesBuffer(new VertexBuffer(engine, shapebuffer, "shape", true, true, 0, true, 0, 4, undefined, undefined, true));
-            geometry.setVerticesBuffer(new VertexBuffer(engine, noisebuffer, "noise", true, true, 0, true, 0, 1, undefined, undefined, true));
-        }
-        let glsbuffer: WebGLBuffer = shapebuffer.getBuffer()!.underlyingResource;
-        let glnoisebuffer: WebGLBuffer = noisebuffer.getBuffer()!.underlyingResource;
-
-        this.worker.subscribe('updated', (data) => {
-            this.bladesVisible = data.count;
-            for (let i = 0; i < data.count; ++i) {
-                let blade = new Float32Array(this.offset, i << 4, 4);
-                blade[3] = this.terrain.getHeightAtCoordinates(blade[0], blade[1]) // y
-            }
-            gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-            gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(this.offset));
-            gl.bindBuffer(gl.ARRAY_BUFFER, glsbuffer);
-            gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(shapes));
-            gl.bindBuffer(gl.ARRAY_BUFFER, glnoisebuffer);
-            gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(noises));
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
-        });
+ 
         let l = new LazyEval(() => {
             this.worker.message(WorkerReturn.Promise, 'get', {
                 offset: this.offset,
