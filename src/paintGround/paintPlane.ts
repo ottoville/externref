@@ -126,27 +126,23 @@ export class paintPlane extends paintGround {
     #rowGenerator: Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> | null = null;
 
     onMainPointerUp(height: number): void {
+        this.#rowGenerator = null;
+        this.#rows = 0;
         this.#columns = Math.floor(height / 10);
-
 
         this.#mesh.worldPosition.translation[0] = this.#startingPoint[0] - 0.5
         this.#mesh.worldPosition.translation[1] = 5;
         this.#mesh.worldPosition.translation[2] = this.#startingPoint[1] - 1;
 
-        const rotQ = Quaternion.RotationYawPitchRoll(this.ang360.rad - Math.PI, 0, 0)
+       // const rotQ = Quaternion.RotationYawPitchRoll(this.ang360.rad - Math.PI, 0, 0)
+        //Quaternion.RotationYawPitchRollToRef(this.ang360.rad - Math.PI, 0, 0, rotQ);
+        // Produces a quaternion from Euler angles in the z-y-x orientation (Tait-Bryan angles)
 
+        const halfYaw = (this.ang360.rad - Math.PI) * 0.5;
         this.#mesh.worldPosition.update((scaling, rotation) => {
             scaling[0] = height / this.#columns;
-            rotation.set([rotQ.x, rotQ.y, rotQ.z, rotQ.w]);
-        })
-
-
-        //this.#mesh.worldPosition.scalingX = height / this.#columns;
-        
-        //const rotQ = new Vector3(0, this.ang360.rad - Math.PI, 0).toQuaternion();
-        //this.#mesh.worldPosition.rotation = [rotQ.x, rotQ.y, rotQ.z, rotQ.w];
-     //   this.#mesh.updateDynamicBuffer();
-
+            rotation.set([0, Math.sin(halfYaw), 0, Math.cos(halfYaw)]);
+        });
     }
 
     async onAreaDraw(width: number): Promise<void> {
@@ -161,7 +157,7 @@ export class paintPlane extends paintGround {
                 newValues = this.#rowGenerator.next().value;
             } while (++this.#rows < newRows);
         }
-        this.#mesh.worldPosition.update((scaling, rotation) => {
+        this.#mesh.worldPosition.update((scaling) => {
             scaling[2] = width / this.#rows;
         })
 
@@ -172,4 +168,3 @@ export class paintPlane extends paintGround {
         }
     }
 }
-//export const paintPlane = applyMixins<typeof BasePaintPlane>(BasePaintPlane as TraitableClassLike, [worldPosition]);
