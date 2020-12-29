@@ -62,9 +62,6 @@ export abstract class TerraNode implements Partial<hasPhysics> {
     isLight(): this is isLight {
         return 'lightType' in this;
     }
-    isBoundable(): this is BoundableNode {
-        return 'bounding' in this;
-    }
     static GPUDataSize = 16 + 4 + 4
     static alignment = 256;
     /* Todo: make dynamic with treshold values */

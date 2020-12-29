@@ -113,9 +113,8 @@ export class worldPosition {
         this.worldMatrix[10] = (1 - (xx + yy)) * sz;
     }
     private onUpdate(): void {
-        if (this.node.isBoundable()) {
+        if (this.node instanceof BoundableNode)
             this.node.updateBoundingBoxByMatrix(this.worldMatrix);
-        }
         this.node.updateDynamicBuffer();
     }
 }
