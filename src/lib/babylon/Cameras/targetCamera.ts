@@ -115,7 +115,7 @@ export class TargetCamera extends Camera {
         if (!this.lockedTarget) {
             return null;
         }
-
+        debugger;
         if (this.lockedTarget.absolutePosition) {
             this.lockedTarget.computeWorldMatrix();
         }

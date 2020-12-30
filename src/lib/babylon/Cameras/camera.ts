@@ -664,7 +664,7 @@ export class Camera extends Node {
 
         this.onViewMatrixChangedObservable.notifyObservers(this);
 
-        this._computedViewMatrix.invertToRef(this._worldMatrix);
+       // this._computedViewMatrix.invertToRef(this._worldMatrix);
 
         return this._computedViewMatrix;
     }

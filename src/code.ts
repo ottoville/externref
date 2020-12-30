@@ -252,7 +252,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 }
 
                // const collider = coordinator.createCollider();
-
+                //@ts-ignore
                 ArcRotateCamera.prototype._getViewMatrix = function () {
                     var cosa = Math.cos(this.alpha);
                     var sina = Math.sin(this.alpha);
@@ -299,9 +299,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         //@ts-ignore
                         this.setPosition(coordinator._finalPosition);
 
-                        if (this.onCollide) {
+                        /*if (this.onCollide) {
                             this.onCollide(terraEngine.collider.collidedMesh);
-                        }
+                        }*/
                     }
 
                     // Recompute because of constraints
@@ -314,7 +314,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         sinb = 0.0001;
                     }
                     //@ts-ignore
-                    var target = this._getTargetPosition();
+                    var target = this._target;
                     //@ts-ignore
                     this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
                     //@ts-ignore
@@ -335,7 +335,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
                     this._currentTarget = target;
-                    return this._viewMatrix;
+
                 }
                 ArcRotateCamera.prototype._checkInputs = function (): void {
                     //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.

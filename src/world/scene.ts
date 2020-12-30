@@ -206,7 +206,8 @@ export class WorldScene extends Scene {
         const projectionmatrix = camera._projectionMatrix;
 
         /////
-        result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : camera.getViewMatrix(), projectionmatrix);
+        
+        result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : Matrix.FromArray(TerraScene.instance.TerraCameras[0].viewArr), projectionmatrix);
         return this;
     }
     /* This is same as babylonjs _internalPick but with promise */
