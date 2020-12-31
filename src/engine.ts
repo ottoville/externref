@@ -15,7 +15,19 @@ export class Engine {
     bindgrouplayout1: GPUBindGroupLayout;
     #tempBuffer?: GPUCopySRCBuffer;
     collider = new Collider();
-    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>) {
+
+    mousePositionBuffer = new SharedArrayBuffer(4);
+    #mousePosition = new Uint16Array(this.mousePositionBuffer);
+
+    mouseOffsetBuffer = new SharedArrayBuffer(8);
+    
+
+    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, canvas:HTMLCanvasElement) {
+        canvas.addEventListener('pointermove', (e) => {
+            Atomics.store(this.#mousePosition, 0, e.clientX)
+            Atomics.store(this.#mousePosition, 1, e.clientY)
+            Atomics.notify(new Int32Array(this.mousePositionBuffer), 0);
+        });
         this.positionBindGroupTime = gpu.rootSceneLayout.addChildBindGroup(gpu.BindGroup, true);
         gpu.onRenders2.push(() => {
             if (gpu.queue.size === 0)
@@ -77,6 +89,7 @@ export class Engine {
                 }]
         })
     }
+
     collideWithWorld(position: Float32Array, velocity: Float32Array, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): void {
         //TODO: Call only when camera position change
         var closeDistance = CollisionsEpsilon * 10.0;

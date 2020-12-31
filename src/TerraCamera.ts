@@ -2,6 +2,7 @@
 import { Matrix, Vector3 } from "./lib/babylon/Maths/math.vector";
 import { ObjectWorkerThread } from "./WorkerThread";
 import type { GPU } from "./GPU";
+import { Engine } from "./engine";
 
 const worker = new ObjectWorkerThread('/webworkers/cameraWorker.js');
 let uniqueID = 0;
@@ -68,11 +69,11 @@ export class TerraCamera {
             }
         }, this.gpu.timeGroup);
     onRender?: () => void;
-    constructor(public renderPass: RenderPass, mousePositionBuffer: SharedArrayBuffer, public projection: SharedArrayBuffer, private gpu: GPU, main: boolean = true, private parent?: TerraCamera) {
+    constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, engine:Engine, main: boolean = true, private parent?: TerraCamera) {
         this.viewArr[15] = 1;
         renderPass.cameras.add(this);
         if(main)
-            worker.message(this.#uniqueID, 'init', [this.#viewProjectionPositionBuffer, this.projection, this.#pickingRayBuffer, mousePositionBuffer, renderPass.size]);
+            worker.message(this.#uniqueID, 'init', [this.#viewProjectionPositionBuffer, this.projection, this.#pickingRayBuffer, engine.mousePositionBuffer, renderPass.size]);
     }
   
     render(renderEncoder: GPUCommandEncoder) {

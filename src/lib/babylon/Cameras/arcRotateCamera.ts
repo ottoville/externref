@@ -604,8 +604,8 @@ export class ArcRotateCamera extends TargetCamera {
         this.radius = radius;
 
         this.getViewMatrix();
-        this.inputs = new ArcRotateCameraInputsManager(this);
-        this.inputs.addKeyboard().addPointers();
+        //this.inputs = new ArcRotateCameraInputsManager(this);
+        //this.inputs.addKeyboard().addPointers();
         //this.inputs.addKeyboard().addMouseWheel().addPointers();
     }
 

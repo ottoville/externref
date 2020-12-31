@@ -26,6 +26,7 @@ import { PositionNode } from "./TerraNode.js";
 import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
 import { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
 import { Scene } from "./Scene.js";
+import { ArcRotateCameraInputsManager } from "./lib/babylon/Cameras/arcRotateCameraInputsManager.js";
 
 //import  DB from "./DB.js";
 
@@ -185,19 +186,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
             blazor.invokeMethod('setProgress', 11);
 
-            const mousePositionBuffer = new SharedArrayBuffer(4);
-            const mousePosition = new Uint16Array(mousePositionBuffer);
-            canvas.addEventListener('pointermove', (e) => {
-                Atomics.store(mousePosition, 0, e.clientX)
-                Atomics.store(mousePosition, 1, e.clientY)
-                Atomics.notify(new Int32Array(mousePositionBuffer), 0);
-            });
             
 
             const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
             const projectionmatrix = new Float32Array(projectionmatrixBuffer);
             blazor.invokeMethod('setProgress', 12);
-            const terraEngine = new Engine(gpuscene, DB);
+            const terraEngine = new Engine(gpuscene, DB, canvas);
             // const scene2 = await scenePromise;
             const cameraReady = scenePromise.then((scene) => {
                 const CollisionsEpsilon = 0.001;
@@ -337,14 +331,48 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     this._currentTarget = target;
 
                 }
-                ArcRotateCamera.prototype._checkInputs = function (): void {
+                
+                //@ts-ignore
+                const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(-500, 0, 0), {
+                    getUniqueId: () => 1,
+                    addCamera: (c) => {
+                        c._scene = scene;
+                        scene.addCamera(c)
+                    },
+                    getRenderId: () => 1,
+                    getEngine: () => engine,
+                    onKeyboardObservable: scene.onKeyboardObservable
+                });
+                const inputs = new ArcRotateCameraInputsManager(camera);
+                inputs.addKeyboard()//.addPointers();
+                camera.maxZ = 1606000;
+
+                //camera.angularSensibilityX = 1000;
+                //camera.angularSensibilityY = 2000;
+                camera.panningAxis = new Vector3(1, 0, 1)
+                camera.checkCollisions = true;
+                camera.attachControl = function (element: HTMLElement, noPreventDefault?: boolean, useCtrlForPanning: boolean = true, panningMouseButton: number = 2): void {
+                    this._useCtrlForPanning = useCtrlForPanning;
+                    this._panningMouseButton = panningMouseButton;
+
+                    inputs.attachElement(element, noPreventDefault);
+
+                    this._reset = () => {
+                        this.inertialAlphaOffset = 0;
+                        this.inertialBetaOffset = 0;
+                        this.inertialRadiusOffset = 0;
+                        this.inertialPanningX = 0;
+                        this.inertialPanningY = 0;
+                    };
+                }
+                camera._checkInputs = function (): void {
                     //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
                     //@ts-ignore
                     if (this._collisionTriggered) {
                         return;
                     }
 
-                    this.inputs.checkInputs();
+                    //inputs.checkInputs();
                     // Inertia
                     if (this.inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
                         let inertialAlphaOffset = this.inertialAlphaOffset;
@@ -484,24 +512,34 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         this.cameraRotation.scaleInPlace(this.inertia);
                     }
                 }
-                //@ts-ignore
-                const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(-500, 0, 0), {
-                    getUniqueId: () => 1,
-                    addCamera: (c) => {
-                        c._scene = scene;
-                        scene.addCamera(c)
-                    },
-                    getRenderId: () => 1,
-                    getEngine: () => engine,
-                    onKeyboardObservable: scene.onKeyboardObservable
-                });
                 canvas.addEventListener('wheel', (event) => {
                     const delta = -event.deltaY / (3 * 40);
                     if (delta) {
                         camera.inertialRadiusOffset += delta;
                     }
-                })
+                });
+                let pointerDownButton: number = 0;
+                const panningSensibility: number = 20;
+                const angularSensibilityX = 3000;
+                const angularSensibilityY = 3000;
 
+                const cameraMove = function (e: PointerEvent) {
+                    e.preventDefault();
+                    if (panningSensibility !== 0 && pointerDownButton == 2) {
+                        camera.inertialPanningX += -e.movementX / panningSensibility;
+                        camera.inertialPanningY += e.movementY / panningSensibility;
+                    } else {
+                        camera.inertialAlphaOffset -= e.movementX / angularSensibilityX;
+                        camera.inertialBetaOffset -= e.movementY / angularSensibilityY;
+                    }
+                }
+                
+                canvas.addEventListener('pointerdown', (e) => {
+                    pointerDownButton = e.button;
+                    canvas.addEventListener('pointermove', cameraMove);
+                });
+                canvas.addEventListener('pointerup', e => canvas.removeEventListener('pointermove', cameraMove));
+                canvas.addEventListener('pointerleave', () => canvas.removeEventListener('pointermove', cameraMove));
                 camera._cache.mode = camera.mode;
                 camera._cache.minZ = camera.minZ;
                 camera._cache.maxZ = camera.maxZ;
@@ -539,8 +577,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
 
-            const mainCamera = new TerraCamera(gpuscene.renderPassScreen, mousePositionBuffer, projectionmatrixBuffer, gpuscene)
-            const waterCamera = new TerraCamera(gpuscene.renderPassWater, mousePositionBuffer, projectionmatrixBuffer, gpuscene, false, mainCamera)
+            const mainCamera = new TerraCamera(gpuscene.renderPassScreen, projectionmatrixBuffer, gpuscene, terraEngine)
+            const waterCamera = new TerraCamera(gpuscene.renderPassWater, projectionmatrixBuffer, gpuscene, terraEngine, false, mainCamera)
             const TerraCameras = [mainCamera, waterCamera]
             const timeAndDeltaBuffer = new ArrayBuffer(8);
             const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
@@ -679,16 +717,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                     }
                 })
-                cameraReady.then(camera => {
-                    camera.maxZ = 1606000;
-                    camera.panningSensibility = 20;
 
-                    camera.angularSensibilityX = 1000;
-                    camera.angularSensibilityY = 2000;
-                    camera.panningAxis = new Vector3(1, 0, 1)
-                    camera.checkCollisions = true;
-
-                })
             });
             const debugscene = new Scene('static',gpuscene, terraEngine, [mainCamera], (scene, sunBufferOffsetBytes) => {
                 const sun = new PositionNode(scene.engine, sunBufferOffsetBytes);

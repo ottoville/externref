@@ -92,6 +92,7 @@ export class ArcRotateCameraPointersInput extends BaseCameraPointersInput {
     protected onTouch(point: Nullable<PointerTouch>,
                       offsetX: number,
         offsetY: number): void {
+        debugger; 
         if (this.panningSensibility !== 0 &&
           ((this._ctrlKey && this.camera._useCtrlForPanning) || this._isPanClick)) {
             this.camera.inertialPanningX += -offsetX / this.panningSensibility;
@@ -121,6 +122,7 @@ export class ArcRotateCameraPointersInput extends BaseCameraPointersInput {
                            previousMultiTouchPanPosition: Nullable<PointerTouch>,
                            multiTouchPanPosition: Nullable<PointerTouch>): void
     {
+        debugger;
         if (previousPinchSquaredDistance === 0 && previousMultiTouchPanPosition === null) {
             // First time this method is called for new pinch.
             // Next time this is called there will be a

@@ -1,6 +1,6 @@
-﻿/*import { Engine } from "./engine";
+﻿import { Engine } from "./engine";
 
-class ArcRotateCamera {
+export class ArcRotateCamera {
 
     #scaledPosition = new Float32Array(3);
     #scaledVelocity = new Float32Array(3);
@@ -240,4 +240,4 @@ class ArcRotateCamera {
             this.inertialRadiusOffset = 0;
         }
     }
-}*/
+}
