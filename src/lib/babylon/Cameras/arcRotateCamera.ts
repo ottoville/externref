@@ -738,6 +738,7 @@ export class ArcRotateCamera extends TargetCamera {
      * @param element Defines the element to stop listening the inputs from
      */
     public detachControl(element: HTMLElement): void {
+        debugger;
         this.inputs.detachElement(element);
 
         if (this._reset) {

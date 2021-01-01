@@ -26,7 +26,7 @@ import { PositionNode } from "./TerraNode.js";
 import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
 import { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
 import { Scene } from "./Scene.js";
-import { ArcRotateCameraInputsManager } from "./lib/babylon/Cameras/arcRotateCameraInputsManager.js";
+
 
 //import  DB from "./DB.js";
 
@@ -343,19 +343,41 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     getEngine: () => engine,
                     onKeyboardObservable: scene.onKeyboardObservable
                 });
-                const inputs = new ArcRotateCameraInputsManager(camera);
-                inputs.addKeyboard()//.addPointers();
+
                 camera.maxZ = 1606000;
 
                 //camera.angularSensibilityX = 1000;
                 //camera.angularSensibilityY = 2000;
                 camera.panningAxis = new Vector3(1, 0, 1)
                 camera.checkCollisions = true;
+                let pointerDownButton: number = 0;
+                const panningSensibility: number = 20;
+                const angularSensibilityX = 3000;
+                const angularSensibilityY = 3000;
+                const cameraMove = function (e: PointerEvent) {
+                    e.preventDefault();
+                    if (panningSensibility !== 0 && pointerDownButton == 2) {
+                        camera.inertialPanningX += -e.movementX / panningSensibility;
+                        camera.inertialPanningY += e.movementY / panningSensibility;
+                    } else {
+                        camera.inertialAlphaOffset -= e.movementX / angularSensibilityX;
+                        camera.inertialBetaOffset -= e.movementY / angularSensibilityY;
+                    }
+                }
+                const cameraWheel = function (e: WheelEvent) {
+                        const delta = -e.deltaY / (3 * 40);
+                        if (delta) {
+                            camera.inertialRadiusOffset += delta;
+                        }
+                }
+                const cameraPointerDown = (e: PointerEvent) => {
+                    pointerDownButton = e.button;
+                    canvas.addEventListener('pointermove', cameraMove);
+
+                }
                 camera.attachControl = function (element: HTMLElement, noPreventDefault?: boolean, useCtrlForPanning: boolean = true, panningMouseButton: number = 2): void {
                     this._useCtrlForPanning = useCtrlForPanning;
                     this._panningMouseButton = panningMouseButton;
-
-                    inputs.attachElement(element, noPreventDefault);
 
                     this._reset = () => {
                         this.inertialAlphaOffset = 0;
@@ -364,6 +386,17 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         this.inertialPanningX = 0;
                         this.inertialPanningY = 0;
                     };
+                    canvas.addEventListener('wheel', cameraWheel);
+                    canvas.addEventListener('pointerdown', cameraPointerDown);
+                }
+                canvas.addEventListener('pointerup', e => canvas.removeEventListener('pointermove', cameraMove));
+                canvas.addEventListener('pointerleave', () => canvas.removeEventListener('pointermove', cameraMove));
+
+                //@ts-ignore
+                camera.detachControl = function () {
+                    canvas.removeEventListener('pointerdown', cameraPointerDown);
+                    canvas.removeEventListener('pointermove', cameraMove);
+                    canvas.removeEventListener('wheel', cameraWheel);
                 }
                 camera._checkInputs = function (): void {
                     //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
@@ -512,34 +545,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         this.cameraRotation.scaleInPlace(this.inertia);
                     }
                 }
-                canvas.addEventListener('wheel', (event) => {
-                    const delta = -event.deltaY / (3 * 40);
-                    if (delta) {
-                        camera.inertialRadiusOffset += delta;
-                    }
-                });
-                let pointerDownButton: number = 0;
-                const panningSensibility: number = 20;
-                const angularSensibilityX = 3000;
-                const angularSensibilityY = 3000;
 
-                const cameraMove = function (e: PointerEvent) {
-                    e.preventDefault();
-                    if (panningSensibility !== 0 && pointerDownButton == 2) {
-                        camera.inertialPanningX += -e.movementX / panningSensibility;
-                        camera.inertialPanningY += e.movementY / panningSensibility;
-                    } else {
-                        camera.inertialAlphaOffset -= e.movementX / angularSensibilityX;
-                        camera.inertialBetaOffset -= e.movementY / angularSensibilityY;
-                    }
-                }
-                
-                canvas.addEventListener('pointerdown', (e) => {
-                    pointerDownButton = e.button;
-                    canvas.addEventListener('pointermove', cameraMove);
-                });
-                canvas.addEventListener('pointerup', e => canvas.removeEventListener('pointermove', cameraMove));
-                canvas.addEventListener('pointerleave', () => canvas.removeEventListener('pointermove', cameraMove));
                 camera._cache.mode = camera.mode;
                 camera._cache.minZ = camera.minZ;
                 camera._cache.maxZ = camera.maxZ;

@@ -40,8 +40,8 @@ export class canvasListener extends Trait {
                 return;
             }
             let proxyf = (e: HTMLElementEventMap[K]) => {
-                listener.call(GPU.instance.renderPassScreen.canvas, e);
                 map && map.delete(listener);
+                listener.call(GPU.instance.renderPassScreen.canvas, e);
             };
             map.set(listener, proxyf)
 

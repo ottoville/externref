@@ -178,6 +178,7 @@ export abstract class paintGround {
 
     #mainPointerDown = async (evt: PointerEvent) => {
         if (evt.button !== 0) {
+            this.uitab.canvasListener.addListener('pointerdown', this.#mainPointerDown, { once: true });
             return;
         }
         // check if we are under a mesh

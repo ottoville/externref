@@ -244,8 +244,7 @@ export class Collider {
             var yz = (y1 * z2) - (z1 * y2);
             var xz = (z1 * x2) - (x1 * z2);
             var xy = (x1 * y2) - (y1 * x2);
-            // var pyth = (Math.sqrt((yz * yz) + (xz * xz) + (xy * xy)));
-            var pyth = Math.hypot(yz, xz, xy)
+            var pyth = (Math.sqrt((yz * yz) + (xz * xz) + (xy * xy)));
             var invPyth;
 
             if (pyth !== 0) {
@@ -402,7 +401,7 @@ export class Collider {
         }
 
         if (found) {
-            var distToCollision = t * Math.hypot(this.#velocity[0], this.#velocity[1], this.#velocity[2]);
+            var distToCollision = t * Math.sqrt(this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
 
             if (!this.collisionFound || distToCollision < this.#nearestDistance) {
                 if (!this.intersectionPoint) {
@@ -415,7 +414,6 @@ export class Collider {
                 }
                 this.#nearestDistance = distToCollision;
                 this.collisionFound = true;
-                console.log('collision found')
                 this.collidedMesh = "hostMesh";
             }
         }
