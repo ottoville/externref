@@ -19,7 +19,7 @@ import { DefaultCollisionCoordinator } from '../lib/babylon/Collisions/collision
 import type { Mesh } from "../lib/babylon/Meshes/mesh.js";
 import type { WebGPUEngine } from "../lib/babylon/Engines/webgpuEngine.js";
 import { GPU } from "../GPU.js";
-import { TerraScene } from "../TerraScene.js";
+//import { TerraScene } from "../TerraScene.js";
 
 /*
 function matrixMultiply64(m: number[], otherM: number[]): number[] {
@@ -147,8 +147,9 @@ export class WorldScene extends Scene {
         //@ts-ignore
         // this._sceneUbo.update();
     }
-
+    //@ts-ignore
     createPickingRayToRef(x: number, y: number, world: Matrix, result: any, camera: Nullable<Camera>, cameraViewSpace = false): Scene {
+     /*   debugger;
         var engine = this.getEngine();
         if (!camera) {
             if (!this.activeCamera) {
@@ -208,7 +209,7 @@ export class WorldScene extends Scene {
         /////
         
         result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : Matrix.FromArray(TerraScene.instance.TerraCameras[0].viewArr), projectionmatrix);
-        return this;
+        return this;*/
     }
     /* This is same as babylonjs _internalPick but with promise */
     collissionCheck(rayFunction: (world: Matrix) => any /* any = Ray */, meshIndex: number, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: AbstractMesh) => boolean): Promise<PickingInfo | null> {
@@ -247,12 +248,12 @@ export class WorldScene extends Scene {
         lastStateChangeGameTime: number
         lastStateChangeTime: number
     }) {
-
+        debugger;/*
         TerraScene.instance.engine.physics.gameSpeed = data.gameSpeed;
         if (this.webSocket) {
             this.webSocket.send(JSON.stringify({ action: 'stateChange', data }))
             return;
-        }
+        }*/
         //gameEngine.message(WorkerReturn.Promise, 'stateChange', gameStateEvent);
     };
     public attachControl(attachUp = true, attachDown = true, attachMove = true, elementToAttachTo: Nullable<HTMLElement> = null): void {
@@ -416,7 +417,7 @@ export class WorldScene extends Scene {
         };
 
         inputmanager._onPointerMove = (evt: PointerEvent) => {
-
+            /*
             inputmanager._updatePointerPosition(evt);
 
             // PreObservable support
@@ -435,11 +436,11 @@ export class WorldScene extends Scene {
             // Meshes
             var pickResult = scene.pick(inputmanager._unTranslatedPointerX, inputmanager._unTranslatedPointerY, scene.pointerMovePredicate, false, scene.cameraToUseForPointers);
 
-            inputmanager._processPointerMove(pickResult, evt);
+            inputmanager._processPointerMove(pickResult, evt);*/
         };
 
         inputmanager._onPointerDown = (evt: PointerEvent) => {
-            inputmanager._totalPointersPressed++;
+            /*inputmanager._totalPointersPressed++;
             inputmanager._pickedDownMesh = null;
             inputmanager._meshPickProceed = false;
 
@@ -482,10 +483,11 @@ export class WorldScene extends Scene {
                 else {
                     debugger;
                 }
-            });
+            });*/
         };
 
         inputmanager._onPointerUp = (evt: PointerEvent) => {
+            /*
             if (inputmanager._totalPointersPressed === 0) {  // We are attaching the pointer up to windows because of a bug in FF
                 return;                             // So we need to test it the pointer down was pressed before.
             }
@@ -550,7 +552,7 @@ export class WorldScene extends Scene {
                 inputmanager._processPointerUp(pickResult, evt, clickInfo);
 
                 inputmanager._previousPickResult = inputmanager._currentPickResult;
-            });
+            });*/
         };
 
         inputmanager._onKeyDown = (evt: KeyboardEvent) => {
@@ -647,7 +649,7 @@ export class WorldScene extends Scene {
         engine: Engine | WebGPUEngine,
         userinfo: loginProvider,
         public blazor: DotNet.BlazorInstance,
-        ticks: number,
+        ticks: number, //@ts-ignore
         private webSocket?: WebSocket
     ) {
         super(engine as Engine);

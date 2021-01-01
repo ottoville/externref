@@ -31,7 +31,7 @@
     [JSInvokable]
     public void setProgress(byte p)
     {
-        System.Diagnostics.Debug.WriteLine("setProgress " + p);
+        Console.WriteLine("setProgress " + p);
         JSRuntime.InvokeVoidAsync("appInsights.trackEvent", new { name = "startprogress_" + p });
         progress = p;
         this.StateHasChanged();
@@ -64,9 +64,12 @@
     void changeState(ChangeEventArgs e)
     {
         lastStateChangeGameTime = getGameTime();
-        gameSpeed = SByte.Parse(e.Value.ToString());
+        if (e.Value.ToString() == "-1")
+            gameSpeed = -1;
+        else
+            gameSpeed = SByte.Parse(e.Value.ToString(), System.Globalization.NumberStyles.AllowLeadingSign);
         lastStateChangeTime = DateTime.Now.Ticks;
-        JSRuntime.InvokeAsync<object>("scene.stateChange", new { lastStateChangeGameTime, gameSpeed, lastStateChangeTime });
+        JSRuntime.InvokeAsync<object>("engine.physics.setGameSpeed", new { lastStateChangeGameTime, gameSpeed, lastStateChangeTime });
     }
 
 

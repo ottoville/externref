@@ -56,7 +56,7 @@ import { Scene } from "./Scene.js";
 
 declare global {
     interface Window {
-        scene: WorldScene;
+        engine: Engine;
         login: (e: PointerEvent, method: "facebook" | "anomyous") => void;
         Wasm: any
     }
@@ -192,6 +192,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const projectionmatrix = new Float32Array(projectionmatrixBuffer);
             blazor.invokeMethod('setProgress', 12);
             const terraEngine = new Engine(gpuscene, DB, canvas);
+            window.engine = terraEngine;
             // const scene2 = await scenePromise;
             const cameraReady = scenePromise.then((scene) => {
                 const CollisionsEpsilon = 0.001;
@@ -376,16 +377,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                 }
                 camera.attachControl = function (element: HTMLElement, noPreventDefault?: boolean, useCtrlForPanning: boolean = true, panningMouseButton: number = 2): void {
-                    this._useCtrlForPanning = useCtrlForPanning;
-                    this._panningMouseButton = panningMouseButton;
-
-                    this._reset = () => {
-                        this.inertialAlphaOffset = 0;
-                        this.inertialBetaOffset = 0;
-                        this.inertialRadiusOffset = 0;
-                        this.inertialPanningX = 0;
-                        this.inertialPanningY = 0;
-                    };
                     canvas.addEventListener('wheel', cameraWheel);
                     canvas.addEventListener('pointerdown', cameraPointerDown);
                 }
@@ -884,7 +875,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         });
         const scene = await scenePromise;
 
-        window.scene = scene;
+        
         scene.collisionsEnabled = true;
         scene.autoClear = false;
         scene.autoClearDepthAndStencil = false;

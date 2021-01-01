@@ -86,6 +86,14 @@ export class Physics {
         var interval = new Date().getTime() - this.#lastStateChangeTime;
         return this.#lastStateChangeGameTime + (BigInt((interval * 60) << this.gameSpeed));
     }
+    //Called from blazor
+    setGameSpeed(value: {
+        gameSpeed: number
+        lastStateChangeGameTime: number
+        lastStateChangeTime: number
+    }) {
+        this.gameSpeed = value.gameSpeed;
+    }
     set gameSpeed(value: number) {
         console.log('set gameSpeed', value)
         this.#lastStateChangeGameTime = this.gameTime;
