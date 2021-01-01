@@ -112,18 +112,18 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
     try {
-        let [WasmModuleP, EngineModuleP] = ['./rustwasm/hello_wasm.js', './lib/babylon/Engines/webgpuEngine.js'].map(url => import(url));
+        blazor.invokeMethod('setProgress', 2);
+        
+        let [WasmModuleP] = ['./rustwasm/hello_wasm.js'].map(url => import(url));
+        
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
-
+        blazor.invokeMethod('setProgress', 3);
         //  const cache2 = await caches.open('compiledShaders');
         //try {
+        
         let WasmModule = await WasmModuleP;
-        blazor.invokeMethod('setProgress', 2);
-        let EngineModule = await EngineModuleP;
-        blazor.invokeMethod('setProgress', 3);
-        var engine: any = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: false });
         blazor.invokeMethod('setProgress', 4);
         const scenePromise = new Promise<void>(async (sceneInitedred, sceneInitedrej) => {
             const adapter = await window.navigator.gpu!.requestAdapter();
@@ -353,8 +353,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 //@ts-ignore
                 const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(-500, 0, 0), {
                     getUniqueId: () => 1,
-                    getRenderId: () => 1,
-                    getEngine: () => engine
+                    getRenderId: () => 1
                 });
 
                 camera.maxZ = 1606000;
@@ -846,22 +845,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             })
             //const adapter = await terrascene.adapter;
 
-            //@ts-ignore
-            engine._adapter = adapter;
-
             blazor.invokeMethod('setProgress', 15);
             /*   } catch (e) {
                    console.log('error');
                    console.error(e);
                }*/
             WasmModule.default().then(() => window.Wasm = WasmModule);
-
-
-            //@ts-ignore
-            engine._device = device;
-            //@ts-ignore
-            engine._initializeLimits();
-
 
             let webSocket = new WebSocket('ws://localhost:8081');
             webSocket.onopen = async () => {
