@@ -304,7 +304,7 @@ export class Camera extends Node {
     constructor(name: string, position: Vector3, scene: Scene, setActiveOnSceneIfNoneActive = true) {
         super(name, scene);
 
-        this.getScene().addCamera(this);
+        //this.getScene().addCamera(this);
 
         if (setActiveOnSceneIfNoneActive && !this.getScene().activeCamera) {
             this.getScene().activeCamera = this;

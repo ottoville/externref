@@ -1,5 +1,5 @@
 
-import type { WorldScene } from "./world/scene.js";
+//import type { WorldScene } from "./world/scene.js";
 //import * as BABYLON from "./lib/babylon/index.js"
 import type { loginProvider, DotNet, savedCamera } from "./types/interfaces/index.js";
 import { Plants } from "./plants/Plants.js";
@@ -125,7 +125,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         blazor.invokeMethod('setProgress', 3);
         var engine: any = new EngineModule.WebGPUEngine(<HTMLCanvasElement>canvas, { antialiasing: false });
         blazor.invokeMethod('setProgress', 4);
-        const scenePromise = new Promise<WorldScene>(async (sceneInitedred, sceneInitedrej) => {
+        const scenePromise = new Promise<void>(async (sceneInitedred, sceneInitedrej) => {
             const adapter = await window.navigator.gpu!.requestAdapter();
             blazor.invokeMethod('setProgress', 5);
             if (!adapter)
@@ -353,13 +353,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 //@ts-ignore
                 const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(-500, 0, 0), {
                     getUniqueId: () => 1,
-                    addCamera: (c) => {
-                        c._scene = scene;
-                        scene.addCamera(c)
-                    },
                     getRenderId: () => 1,
-                    getEngine: () => engine,
-                    onKeyboardObservable: scene.onKeyboardObservable
+                    getEngine: () => engine
                 });
 
                 camera.maxZ = 1606000;
@@ -580,7 +575,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 projectionmatrix.set(Array.from(camera._projectionMatrix.m));
                 //camera._scene = scene;
                 //camera.collisionCoordinator = scene.collisionCoordinator
-                scene.activeCameras.push(camera);
+              //  scene.activeCameras.push(camera);
                 camera.attachControl(canvas, true);
                 return camera;
             });
@@ -854,7 +849,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             //@ts-ignore
             engine._adapter = adapter;
 
-            const WorldSceneModule = await import('./world/scene.js');
             blazor.invokeMethod('setProgress', 15);
             /*   } catch (e) {
                    console.log('error');
@@ -874,7 +868,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 console.log('websocket onopen');
                 // progelem.value = 30;
                 try {
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks, webSocket));
+                    await loginPromise
+                    sceneInitedred();
                 } catch (e) {
                     sceneInitedrej(e);
                 }
@@ -882,19 +877,14 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             webSocket.onerror = async () => {
                 console.log('websocket onerror');
                 try {
+                    await loginPromise
                     //blazor.invokeMethod('setProgress', 20);
-                    sceneInitedred(new WorldSceneModule.WorldScene(engine, await loginPromise, blazor, ticks));
+                    sceneInitedred();
                 } catch (e) {
                     sceneInitedrej(e);
                 }
             }
         });
-        const scene = await scenePromise;
-
-        
-        scene.collisionsEnabled = true;
-        scene.autoClear = false;
-        scene.autoClearDepthAndStencil = false;
 
         for (let i = 0; i < gameControlsUI.length; i++) {
             gameControlsUI[i].classList.remove('hidden');
