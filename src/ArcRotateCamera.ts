@@ -1,4 +1,10 @@
 ﻿import { Engine } from "./engine";
+let pointerDownButton: number = 0;
+const panningSensibility: number = 20;
+const angularSensibilityX = 3000;
+const angularSensibilityY = 3000;
+
+
 
 export class ArcRotateCamera {
 
@@ -19,8 +25,52 @@ export class ArcRotateCamera {
     #collisionRadius: [number, number, number] = [0.5, 0.5, 0.5];
     collisionTriggered = false;
     collisionVelocity = new Float32Array(3);
+
+    inertialPanningX = 0;
+    inertialPanningY = 0;
+    /*
+    * Current inertia value on the longitudinal axis.
+    * The bigger this number the longer it will take for the camera to stop.
+    */
+    inertialAlphaOffset = 0;
+    /**
+    * Current inertia value on the latitudinal axis.
+    * The bigger this number the longer it will take for the camera to stop.
+    */
+    inertialBetaOffset = 0;
     constructor(private alpha: number, private beta: number, private radius:number, private target:Float32Array, private engine: Engine) {
 
+    }
+    #cameraMove = (e: PointerEvent) => {
+        e.preventDefault();
+        if (panningSensibility !== 0 && pointerDownButton == 2) {
+            this.inertialPanningX += -e.movementX / panningSensibility;
+            this.inertialPanningY += e.movementY / panningSensibility;
+        } else {
+            this.inertialAlphaOffset -= e.movementX / angularSensibilityX;
+            this.inertialBetaOffset -= e.movementY / angularSensibilityY;
+        }
+    }
+   #cameraWheel= (e: WheelEvent) => {
+        const delta = -e.deltaY / (3 * 40);
+        if (delta) {
+            this.inertialRadiusOffset += delta;
+        }
+    }
+    #cameraPointerDown = (e: PointerEvent) => {
+        pointerDownButton = e.button;
+        this.engine.canvas.addEventListener('pointermove', this.#cameraMove);
+
+    }
+
+    attachControl(): void {
+        this.engine.canvas.addEventListener('wheel', this.#cameraWheel);
+        this.engine.canvas.addEventListener('pointerdown', this.#cameraPointerDown);
+    }
+    detachControl() {
+        this.engine.canvas.removeEventListener('pointerdown', this.#cameraPointerDown);
+        this.engine.canvas.removeEventListener('pointermove', this.#cameraMove);
+        this.engine.canvas.removeEventListener('wheel', this.#cameraWheel);
     }
     calculateViewMatrix() {
         var cosa = Math.cos(this.alpha);
@@ -152,7 +202,154 @@ export class ArcRotateCamera {
         // }
 
         this.currentTarget = target;
-    }
+    }/*
+    checkInputs=() => {
+        //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
+        //@ts-ignore
+        if (this._collisionTriggered) {
+            return;
+        }
+
+        //inputs.checkInputs();
+        // Inertia
+        if (this.inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
+            let inertialAlphaOffset = this.inertialAlphaOffset;
+            if (this.beta <= 0) { inertialAlphaOffset *= -1; }
+            if (this.getScene().useRightHandedSystem) { inertialAlphaOffset *= -1; }
+            if (this.parent && this.parent._getWorldMatrixDeterminant() < 0) { inertialAlphaOffset *= -1; }
+            this.alpha += inertialAlphaOffset;
+
+            this.beta += this.inertialBetaOffset;
+
+            this.radius -= this.inertialRadiusOffset;
+            this.inertialAlphaOffset *= this.inertia;
+            this.inertialBetaOffset *= this.inertia;
+            this.inertialRadiusOffset *= this.inertia;
+            if (Math.abs(this.inertialAlphaOffset) < Epsilon) {
+                this.inertialAlphaOffset = 0;
+            }
+            if (Math.abs(this.inertialBetaOffset) < Epsilon) {
+                this.inertialBetaOffset = 0;
+            }
+            if (Math.abs(this.inertialRadiusOffset) < this.speed * Epsilon) {
+                this.inertialRadiusOffset = 0;
+            }
+        }
+
+        // Panning inertia
+        if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
+            //@ts-ignore
+            if (!this._localDirection) {
+                //@ts-ignore
+                this._localDirection = Vector3.Zero();
+                //@ts-ignore
+                this._transformedDirection = Vector3.Zero();
+            }
+            //@ts-ignore
+            this._localDirection.copyFromFloats(this.inertialPanningX, this.inertialPanningY, this.inertialPanningY);
+            //@ts-ignore
+            this._localDirection.multiplyInPlace(this.panningAxis);
+
+            //this._viewMatrix.invertToRef(this._cameraTransformMatrix);
+            Matrix.FromArray(mainCamera.viewArr).invertToRef(this._cameraTransformMatrix);
+            //@ts-ignore
+            Vector3.TransformNormalToRef(this._localDirection, this._cameraTransformMatrix, this._transformedDirection);
+            //Eliminate y if map panning is enabled (panningAxis == 1,0,1)
+            if (!this.panningAxis.y) {
+                //@ts-ignore
+                this._transformedDirection.y = 0;
+            }
+            //@ts-ignore
+            if (!this._targetHost) {
+                if (this.panningDistanceLimit) {//@ts-ignore
+                    this._transformedDirection.addInPlace(this._target);//@ts-ignore
+                    var distanceSquared = Vector3.DistanceSquared(this._transformedDirection, this.panningOriginTarget);
+                    if (distanceSquared <= (this.panningDistanceLimit * this.panningDistanceLimit)) {//@ts-ignore
+                        this._target.copyFrom(this._transformedDirection);
+                    }
+                }
+                else {//@ts-ignore
+                    this._target.addInPlace(this._transformedDirection);
+                }
+            }
+
+            this.inertialPanningX *= this.panningInertia;
+            this.inertialPanningY *= this.panningInertia;
+
+            if (Math.abs(this.inertialPanningX) < this.speed * Epsilon) {
+                this.inertialPanningX = 0;
+            }
+            if (Math.abs(this.inertialPanningY) < this.speed * Epsilon) {
+                this.inertialPanningY = 0;
+            }
+        }
+
+        // Limits
+        //@ts-ignore
+        this._checkLimits();
+
+        const needToMove = this._decideIfNeedsToMove();
+        const needToRotate = Math.abs(this.cameraRotation.x) > 0 || Math.abs(this.cameraRotation.y) > 0;
+
+        // Move
+        if (needToMove) {
+            this.position.addInPlace(this.cameraDirection);
+        }
+
+        // Rotate
+        if (needToRotate) {
+            console.log('needToRotate');
+            this.rotation.x += this.cameraRotation.x;
+            this.rotation.y += this.cameraRotation.y;
+
+            //rotate, if quaternion is set and rotation was used
+            if (this.rotationQuaternion) {
+                var len = this.rotation.lengthSquared();
+                if (len) {
+                    Quaternion.RotationYawPitchRollToRef(this.rotation.y, this.rotation.x, this.rotation.z, this.rotationQuaternion);
+                }
+            }
+
+            if (!this.noRotationConstraint) {
+                var limit = 1.570796;
+
+                if (this.rotation.x > limit) {
+                    this.rotation.x = limit;
+                }
+                if (this.rotation.x < -limit) {
+                    this.rotation.x = -limit;
+                }
+            }
+        }
+
+        // Inertia
+        if (needToMove) {
+            console.log('needToMove');
+            if (Math.abs(this.cameraDirection.x) < this.speed * Epsilon) {
+                this.cameraDirection.x = 0;
+            }
+
+            if (Math.abs(this.cameraDirection.y) < this.speed * Epsilon) {
+                this.cameraDirection.y = 0;
+            }
+
+            if (Math.abs(this.cameraDirection.z) < this.speed * Epsilon) {
+                this.cameraDirection.z = 0;
+            }
+
+            this.cameraDirection.scaleInPlace(this.inertia);
+        }
+        if (needToRotate) {
+            if (Math.abs(this.cameraRotation.x) < this.speed * Epsilon) {
+                this.cameraRotation.x = 0;
+            }
+
+            if (Math.abs(this.cameraRotation.y) < this.speed * Epsilon) {
+                this.cameraRotation.y = 0;
+            }
+            this.cameraRotation.scaleInPlace(this.inertia);
+        }
+    }*/
  // Rebuilds angles (alpha, beta) and radius from the give position and target
     public rebuildAnglesAndRadius(): void {
        // this._position.subtractToRef(this._getTargetPosition(), this._computationVector);

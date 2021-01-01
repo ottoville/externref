@@ -26,6 +26,7 @@ import { PositionNode } from "./TerraNode.js";
 //import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
 //import { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
 import { Scene } from "./Scene.js";
+//import { ArcRotateCamera } from "./ArcRotateCamera.js";
 
 
 //import  DB from "./DB.js";
@@ -313,9 +314,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         if (this._position.z !== terraEngine.collisionCoordinator.finalPosition[2])
                             this._position.z = terraEngine.collisionCoordinator.finalPosition[2]
                         this.rebuildAnglesAndRadius();
-                        /*if (this.onCollide) {
-                            this.onCollide(terraEngine.collider.collidedMesh);
-                        }*/
                     }
 
                     // Recompute because of constraints
@@ -350,18 +348,18 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                 }
                 
+                //const camera = new ArcRotateCamera(0, 0, 10, new Float32Array([-500, 0, 0]), terraEngine);
                 //@ts-ignore
                 const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(-500, 0, 0), {
                     getUniqueId: () => 1,
                     getRenderId: () => 1
                 });
 
+
                 camera.maxZ = 1606000;
 
-                //camera.angularSensibilityX = 1000;
-                //camera.angularSensibilityY = 2000;
                 camera.panningAxis = new Vector3(1, 0, 1)
-                camera.checkCollisions = true;
+                
                 let pointerDownButton: number = 0;
                 const panningSensibility: number = 20;
                 const angularSensibilityX = 3000;
@@ -393,7 +391,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 }
                 canvas.addEventListener('pointerup', e => canvas.removeEventListener('pointermove', cameraMove));
                 canvas.addEventListener('pointerleave', () => canvas.removeEventListener('pointermove', cameraMove));
-
+                
                 //@ts-ignore
                 camera.detachControl = function () {
                     canvas.removeEventListener('pointerdown', cameraPointerDown);
