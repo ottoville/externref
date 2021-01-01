@@ -2,9 +2,9 @@
 
 export class ArcRotateCamera {
 
-    #scaledPosition = new Float32Array(3);
-    #scaledVelocity = new Float32Array(3);
-    #finalPosition = new Float32Array(3);
+  //  #scaledPosition = new Float32Array(3);
+   // #scaledVelocity = new Float32Array(3);
+  //  #finalPosition = new Float32Array(3);
 
     #computationVector = new Float32Array(3);
     #previousPosition = new Float32Array(3);
@@ -52,15 +52,15 @@ export class ArcRotateCamera {
 
         // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
 
-       // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
-        this.#scaledPosition[0] = this.#position[0] / this.engine.collider._radius[0];
-        this.#scaledPosition[1] = this.#position[1] / this.engine.collider._radius[1];
-        this.#scaledPosition[2] = this.#position[2] / this.engine.collider._radius[2];
+        // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
+        this.engine.collisionCoordinator.scaledPosition[0] = this.#position[0] / this.engine.collider._radius[0];
+        this.engine.collisionCoordinator.scaledPosition[1] = this.#position[1] / this.engine.collider._radius[1];
+        this.engine.collisionCoordinator.scaledPosition[2] = this.#position[2] / this.engine.collider._radius[2];
 
        // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
-        this.#scaledVelocity[0] = this.#collisionVelocity[0] / this.engine.collider._radius[0];
-        this.#scaledVelocity[1] = this.#collisionVelocity[1] / this.engine.collider._radius[1];
-        this.#scaledVelocity[2] = this.#collisionVelocity[2] / this.engine.collider._radius[2];
+        this.engine.collisionCoordinator.scaledVelocity[0] = this.#collisionVelocity[0] / this.engine.collider._radius[0];
+        this.engine.collisionCoordinator.scaledVelocity[1] = this.#collisionVelocity[1] / this.engine.collider._radius[1];
+        this.engine.collisionCoordinator.scaledVelocity[2] = this.#collisionVelocity[2] / this.engine.collider._radius[2];
 
         this.engine.collider.collidedMesh = null;
         this.engine.collider._retry = 0;
@@ -69,14 +69,14 @@ export class ArcRotateCamera {
 
         //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
 
-        this.engine.collideWithWorld(this.#scaledPosition, this.#scaledVelocity, 3, this.#finalPosition);
+        this.engine.collideWithWorld(this.engine.collisionCoordinator.scaledPosition, this.engine.collisionCoordinator.scaledVelocity, 3, this.engine.collisionCoordinator.finalPosition);
 
 
 
         //coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
-        this.#finalPosition[0] *= this.engine.collider._radius[0]
-        this.#finalPosition[1] *= this.engine.collider._radius[1]
-        this.#finalPosition[2] *= this.engine.collider._radius[2]
+        this.engine.collisionCoordinator.finalPosition[0] *= this.engine.collider._radius[0]
+        this.engine.collisionCoordinator.finalPosition[1] *= this.engine.collider._radius[1]
+        this.engine.collisionCoordinator.finalPosition[2] *= this.engine.collider._radius[2]
 
         //run the callback
 
@@ -95,10 +95,10 @@ export class ArcRotateCamera {
             //}
             //this._position.copyFrom(position);
 
-            if (this.#position[0] != this.#finalPosition[0] || this.#position[1] != this.#finalPosition[1] || this.#position[2] != this.#finalPosition[2]) {
-                this.#position[0] = this.#finalPosition[0];
-                this.#position[1] = this.#finalPosition[1];
-                this.#position[2] = this.#finalPosition[2];
+            if (this.#position[0] != this.engine.collisionCoordinator.finalPosition[0] || this.#position[1] != this.engine.collisionCoordinator.finalPosition[1] || this.#position[2] != this.engine.collisionCoordinator.finalPosition[2]) {
+                this.#position[0] = this.engine.collisionCoordinator.finalPosition[0];
+                this.#position[1] = this.engine.collisionCoordinator.finalPosition[1];
+                this.#position[2] = this.engine.collisionCoordinator.finalPosition[2];
             }
 
             this.rebuildAnglesAndRadius();

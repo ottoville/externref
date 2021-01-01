@@ -89,7 +89,11 @@ export class Engine {
                 }]
         })
     }
-
+    collisionCoordinator = {
+        scaledPosition: new Float32Array(3),
+        scaledVelocity: new Float32Array(3),
+        finalPosition: new Float32Array(3),
+    }
     collideWithWorld(position: Float32Array, velocity: Float32Array, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): void {
         //TODO: Call only when camera position change
         var closeDistance = CollisionsEpsilon * 10.0;

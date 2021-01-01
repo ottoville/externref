@@ -23,8 +23,8 @@ import { TerraScene } from "./TerraScene.js";
 import { Engine } from "./engine.js";
 import { Sun2 } from "./world/sun2.js";
 import { PositionNode } from "./TerraNode.js";
-import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
-import { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
+//import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
+//import { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
 import { Scene } from "./Scene.js";
 
 
@@ -195,10 +195,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             window.engine = terraEngine;
             // const scene2 = await scenePromise;
             const cameraReady = scenePromise.then((scene) => {
-                const CollisionsEpsilon = 0.001;
-                const coordinator: DefaultCollisionCoordinator = scene.collisionCoordinator as DefaultCollisionCoordinator;
-                //@ts-ignore
-                coordinator._collideWithWorld = function (position: [x: number, y: number, z: number], velocity: [x:number,y:number,z:number], collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
+                //const CollisionsEpsilon = 0.001;
+                /*const coordinator: DefaultCollisionCoordinator = scene.collisionCoordinator as DefaultCollisionCoordinator;
+
+                coordinator._collideWithWorld = function (position: [x: number, y: number, z: number], velocity: [x: number, y: number, z: number], collider: Collider, maximumRetry: number, finalPosition: Vector3, excludedMesh: Nullable<AbstractMesh> = null): void {
                     //TODO: Call only when camera position change
                     var closeDistance = CollisionsEpsilon * 10.0;
                     if (collider._retry >= maximumRetry) {
@@ -244,7 +244,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     collider._retry++;
                     //@ts-ignore
                     this._collideWithWorld(position, velocity, collider, maximumRetry, finalPosition, excludedMesh);
-                }
+                }*/
 
                // const collider = coordinator.createCollider();
                 //@ts-ignore
@@ -271,29 +271,48 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     this._collisionTriggered = true;
 
                     // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
+                    //ts-ignore
+                    //this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), terraEngine.collisionCoordinator.scaledPosition);
+                    terraEngine.collisionCoordinator.scaledPosition[0] = this._position.x / terraEngine.collider._radius[0];
+                    terraEngine.collisionCoordinator.scaledPosition[1] = this._position.y / terraEngine.collider._radius[1];
+                    terraEngine.collisionCoordinator.scaledPosition[2] = this._position.z / terraEngine.collider._radius[2];
+                    //ts-ignore
+                   // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), terraEngine.collisionCoordinator.scaledVelocity);
                     //@ts-ignore
-                    this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
-                    //@ts-ignore
-                    this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
+                    terraEngine.collisionCoordinator.scaledVelocity[0] = this._collisionVelocity.x / terraEngine.collider._radius[0];
+                     //@ts-ignore
+                    terraEngine.collisionCoordinator.scaledVelocity[1] = this._collisionVelocity.y / terraEngine.collider._radius[1];
+                     //@ts-ignore
+                    terraEngine.collisionCoordinator.scaledVelocity[2] = this._collisionVelocity.z / terraEngine.collider._radius[2];
+
                     terraEngine.collider.collidedMesh = null;
                     terraEngine.collider._retry = 0;
 
                    // terraEngine.collider._initialVelocity = coordinator._scaledVelocity;
 
                   //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
-                    //@ts-ignore
-                    coordinator._collideWithWorld(coordinator._scaledPosition.asArray(), coordinator._scaledVelocity.asArray(), terraEngine.collider, 3, coordinator._finalPosition, null);
-                    //@ts-ignore
-                    coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
+                    //ts-ignore
+                    terraEngine.collideWithWorld(terraEngine.collisionCoordinator.scaledPosition, terraEngine.collisionCoordinator.scaledVelocity, 3, terraEngine.collisionCoordinator.finalPosition);
+                    //ts-ignore
+                   // terraEngine.collisionCoordinator.finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
+                    terraEngine.collisionCoordinator.finalPosition[0] *= terraEngine.collider._radius[0]
+                    terraEngine.collisionCoordinator.finalPosition[1] *= terraEngine.collider._radius[1]
+                    terraEngine.collisionCoordinator.finalPosition[2] *= terraEngine.collider._radius[2]
                     //run the callback
 
                     if (!terraEngine.collider.collidedMesh) {
                         //@ts-ignore
                         this._previousPosition.copyFrom(this._position);
                     } else {
-                        //@ts-ignore
-                        this.setPosition(coordinator._finalPosition);
-
+                        //ts-ignore
+                        //this.setPosition(terraEngine.collisionCoordinator.finalPosition);
+                        if (this._position.x !== terraEngine.collisionCoordinator.finalPosition[0])
+                            this._position.x = terraEngine.collisionCoordinator.finalPosition[0]
+                        if (this._position.y !== terraEngine.collisionCoordinator.finalPosition[1])
+                            this._position.y = terraEngine.collisionCoordinator.finalPosition[1]
+                        if (this._position.z !== terraEngine.collisionCoordinator.finalPosition[2])
+                            this._position.z = terraEngine.collisionCoordinator.finalPosition[2]
+                        this.rebuildAnglesAndRadius();
                         /*if (this.onCollide) {
                             this.onCollide(terraEngine.collider.collidedMesh);
                         }*/
@@ -326,8 +345,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     //@ts-ignore
                     this._collisionTriggered = false;
                     // }
-
-
 
                     this._currentTarget = target;
 
@@ -562,8 +579,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                 projectionmatrix.set(Array.from(camera._projectionMatrix.m));
                 //camera._scene = scene;
-                //@ts-ignore
-                camera.collisionCoordinator = scene.collisionCoordinator
+                //camera.collisionCoordinator = scene.collisionCoordinator
                 scene.activeCameras.push(camera);
                 camera.attachControl(canvas, true);
                 return camera;
