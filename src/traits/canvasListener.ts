@@ -35,17 +35,8 @@ export class canvasListener extends Trait {
             this.#listeners.set(type, map);
         }
         if (options && options.once) {
-            if (map.has(listener)) {
-                console.warn('Adding same listener twice not supported: ', type);
-                return;
-            }
-            let proxyf = (e: HTMLElementEventMap[K]) => {
-                map && map.delete(listener);
-                listener.call(GPU.instance.renderPassScreen.canvas, e);
-            };
-            map.set(listener, proxyf)
-
-            GPU.instance.renderPassScreen.canvas.addEventListener(type, proxyf, options);
+            map.set(listener, listener);
+            GPU.instance.renderPassScreen.canvas.addEventListener(type, listener, options);
         } else {
             if (map.has(listener)) {
                 console.warn('Adding same listener twice not supported: ', type);
