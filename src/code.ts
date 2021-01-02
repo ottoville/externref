@@ -410,7 +410,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     if (this.inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
                         let inertialAlphaOffset = this.inertialAlphaOffset;
                         if (this.beta <= 0) { inertialAlphaOffset *= -1; }
-                        if (this.getScene().useRightHandedSystem) { inertialAlphaOffset *= -1; }
                         if (this.parent && this.parent._getWorldMatrixDeterminant() < 0) { inertialAlphaOffset *= -1; }
                         this.alpha += inertialAlphaOffset;
 
@@ -502,17 +501,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                             var len = this.rotation.lengthSquared();
                             if (len) {
                                 Quaternion.RotationYawPitchRollToRef(this.rotation.y, this.rotation.x, this.rotation.z, this.rotationQuaternion);
-                            }
-                        }
-
-                        if (!this.noRotationConstraint) {
-                            var limit = 1.570796;
-
-                            if (this.rotation.x > limit) {
-                                this.rotation.x = limit;
-                            }
-                            if (this.rotation.x < -limit) {
-                                this.rotation.x = -limit;
                             }
                         }
                     }

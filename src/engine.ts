@@ -22,7 +22,7 @@ export class Engine {
     mouseOffsetBuffer = new SharedArrayBuffer(8);
     
 
-    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, canvas:HTMLCanvasElement) {
+    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas:HTMLCanvasElement) {
         canvas.addEventListener('pointermove', (e) => {
             Atomics.store(this.#mousePosition, 0, e.clientX)
             Atomics.store(this.#mousePosition, 1, e.clientY)

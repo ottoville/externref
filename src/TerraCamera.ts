@@ -101,6 +101,8 @@ export class TerraCamera {
         this.viewArr[2] = this.target[0] - this.cameraArr[0];
         this.viewArr[6] = this.target[1] - this.cameraArr[1];
         this.viewArr[10] = this.target[2] - this.cameraArr[2];
+
+
         const zLength = Math.sqrt(this.viewArr[2] * this.viewArr[2] + this.viewArr[6] * this.viewArr[6] + this.viewArr[10] * this.viewArr[10]);
         if (!(zLength === 0 || zLength === 1)) {
             //zAxis.normalizeFromLength(xLength);
