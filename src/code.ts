@@ -308,7 +308,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             }
 
             DB.then(DB => {
-                DB.transaction("save").objectStore("save").get(0).onsuccess = async (evt) => {
+                DB.transaction("save").objectStore("save").get(0).onsuccess = async (/*evt*/) => {
                     /*
                     if ((<IDBRequest>evt.target).result) {
 
@@ -464,7 +464,15 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             console.log('websocket onopen');
             // progelem.value = 30;
             try {
-                await loginPromise
+                
+                webSocket.send(JSON.stringify({ action: 'init', data: { userinfo: await loginPromise, ticks } }));
+                webSocket.onmessage = (e) => {
+                    let msg = JSON.parse(e.data);
+                    if (msg.action == 'init') {
+                        console.debug('going to init game', msg.currentPlayData)
+                        blazor.invokeMethod('initGame', msg.currentPlayData);
+                    }
+                }
                 //sceneInitedred();
             } catch (e) {
                 // sceneInitedrej(e);
@@ -474,12 +482,21 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             console.log('websocket onerror');
             try {
                 await loginPromise
+                console.debug('initing without websocket connection');
+                blazor.invokeMethod('initGame', {
+                    gameSpeed: 0,
+                    lastStateChangeGameTime: 216000000000,
+                    lastStateChangeTime: ticks
+                });
                 //blazor.invokeMethod('setProgress', 20);
                 // sceneInitedred();
             } catch (e) {
                 // sceneInitedrej(e);
             }
         }
+
+
+
 
         for (let i = 0; i < gameControlsUI.length; i++) {
             gameControlsUI[i].classList.remove('hidden');

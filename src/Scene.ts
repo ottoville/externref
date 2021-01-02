@@ -53,6 +53,9 @@ export class Scene {
         return drawedMeshes;
     }
     async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
+        if (fastCheck) {
+            throw('TODO: fastcheck');
+        }
         let boundableMesh: BoundableNode;
         do {
             const boundable = boundables.next();
@@ -77,6 +80,8 @@ export class Scene {
             return this.collissionCheck(rayFunction, boundables, pickResult);*/
     }
     async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode) => boolean, fastCheck?: boolean): Promise<BoundableNode | null> {
+        if (predicate)
+            throw ('TODO: predicate');
        /* const b1 = this.gpu.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
         const b1arr = b1.getMappedRange()
         new Float32Array(b1arr).set(this.TerraCameras[0].projectionArr);

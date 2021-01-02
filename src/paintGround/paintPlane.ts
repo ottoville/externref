@@ -18,7 +18,7 @@ class PlaneMesh extends TerraNode implements has3DPosition{
 
 export class paintPlane extends paintGround {
     onEnd() {
-        this.#mesh.worldPosition.update((scaling, rotation) => {
+        this.#mesh.worldPosition.update((scaling) => {
             scaling[2] = 0;
         });
         console.log('scaled to 0')

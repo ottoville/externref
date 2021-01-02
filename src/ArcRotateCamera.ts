@@ -17,7 +17,7 @@ export class ArcRotateCamera {
 
    #cameraTransformMatrix = Matrix.Zero()
 
-    #globalCurrentTarget = new Float32Array(3);
+   // #globalCurrentTarget = new Float32Array(3);
 
     #collisionVelocity = new Float32Array(3);
     #collisionRadius: [number, number, number] = [0.5, 0.5, 0.5];
@@ -63,7 +63,7 @@ export class ArcRotateCamera {
      */
     #rotationQuaternion: Quaternion = Quaternion.Zero();
     constructor(public alpha: number, public beta: number, public radius:number, private engine: Engine, private camera:TerraCamera) {
-        engine.canvas.addEventListener('pointerup', e => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
+        engine.canvas.addEventListener('pointerup', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
         engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
     }
     #cameraMove = (e: PointerEvent) => {
@@ -217,9 +217,9 @@ export class ArcRotateCamera {
 
 
         //this._globalCurrentTarget.copyFrom(target);
-        this.#globalCurrentTarget[0] = this.camera.target[0];
+     /*   this.#globalCurrentTarget[0] = this.camera.target[0];
         this.#globalCurrentTarget[1] = this.camera.target[1];
-        this.#globalCurrentTarget[2] = this.camera.target[2];
+        this.#globalCurrentTarget[2] = this.camera.target[2];*/
 
         this.collisionTriggered = false;
         // }

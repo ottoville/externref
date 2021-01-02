@@ -39,7 +39,7 @@ interface EarthDatabase extends IDBDatabase {
 }
 
 declare var DB: Promise<EarthDatabase>;
-globalThis.DB = new Promise<EarthDatabase>(function (res, rej) {
+globalThis.DB = new Promise<EarthDatabase>(function (res) {
     var IDB = indexedDB.open("City", 6);
     IDB.onupgradeneeded = function (e) {
         console.log('IDBVersionChangeEvent',e);
@@ -66,7 +66,7 @@ globalThis.DB = new Promise<EarthDatabase>(function (res, rej) {
             }
         })
     };
-    IDB.onsuccess = function (event) {
+    IDB.onsuccess = function () {
         this.result.onerror = function (e) {
              console.log(e,((<IDBRequest>e.target)!).error!.message);
         }

@@ -78,12 +78,12 @@ export class GPU {
             }]
     });
 
-    addBindGroup<T>(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupLayout
-    addBindGroup<T>(bindgroup: (BindGroupOneBinding), isDynamic: boolean): DynamicBindGroupLayout<[number]>
-    addBindGroup<T>(bindgroup: (BindGroupTwoBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number]>
-    addBindGroup<T>(bindgroup: (BindGroupThreeBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number]>
-    addBindGroup<T>(bindgroup: (BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number, number]>
-    addBindGroup<T>(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): BindGroupLayout | DynamicBindGroupLayout<number[]>{
+    addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupLayout
+    addBindGroup(bindgroup: (BindGroupOneBinding), isDynamic: boolean): DynamicBindGroupLayout<[number]>
+    addBindGroup(bindgroup: (BindGroupTwoBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number]>
+    addBindGroup(bindgroup: (BindGroupThreeBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number]>
+    addBindGroup(bindgroup: (BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number, number]>
+    addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): BindGroupLayout | DynamicBindGroupLayout<number[]>{
         const bglayout = this.GPUBindGroupLayouts.get(bindgroup);
         if (!bglayout)
             throw ('Bindgroup layout not found from weakmap');

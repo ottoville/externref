@@ -225,7 +225,7 @@ export class Collider {
     }
     _points?: [Float32Array, Float32Array, Float32Array, Float32Array];
     /** @hidden */
-    public _testTriangle(faceIndex: number, trianglePlaneArray: { normal: [x: number, y: number, z: number], d: number }[], p1a: Float32Array, p2a: Float32Array, p3a: Float32Array, hasMaterial: boolean): void {
+    public _testTriangle(faceIndex: number, trianglePlaneArray: { normal: [x: number, y: number, z: number], d: number }[], p1a: Float32Array, p2a: Float32Array, p3a: Float32Array): void {
         let t0: number;
         var embeddedInPlane = false;
 

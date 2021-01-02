@@ -218,7 +218,7 @@ export abstract class BoundableNode extends TerraNode {
                 const p2 = this.lastColliderWorldVectorsView2[i + 1];
                 const p3 = this.lastColliderWorldVectorsView2[i + 2];
  
-                 collider._testTriangle(i, this.trianglePlaneArray, p3, p2, p1, false);
+                 collider._testTriangle(i, this.trianglePlaneArray, p3, p2, p1);
              }
             return;
         }
@@ -230,7 +230,7 @@ export abstract class BoundableNode extends TerraNode {
                 var pp2 = this.lastColliderWorldVectorsView2[indices[i + 1]];
                 var pp3 = this.lastColliderWorldVectorsView2[indices[i + 2]];
 
-                collider._testTriangle(i, this.trianglePlaneArray, pp3, pp2, pp1, false);
+                collider._testTriangle(i, this.trianglePlaneArray, pp3, pp2, pp1);
 
             }
         } catch (e) {
