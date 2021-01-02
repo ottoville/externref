@@ -27,7 +27,6 @@ export class ArcRotateCamera {
     inertia = 0.9;
     speed = 2.0;
 
-    #localDirection?: Vector3
     #transformedDirection = Vector3.Zero();
     /**
     * Defines the value of the inertia used during panning.
@@ -259,13 +258,8 @@ export class ArcRotateCamera {
 
         // Panning inertia
         if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
-            if (!this.#localDirection) {
-                this.#localDirection = Vector3.Zero();
-                this.#transformedDirection = Vector3.Zero();
-            }
-
             Matrix.FromArray(this.camera.viewArr).invertToRef(this.#cameraTransformMatrix);
-            Vector3.TransformNormalToRef(new Vector3(1, 0, 0), this.#cameraTransformMatrix, this.#transformedDirection);
+            this.#transformedDirection.set(this.#cameraTransformMatrix.m[0], this.#cameraTransformMatrix.m[1], this.#cameraTransformMatrix.m[2]);
             // panning on X Axis
             this.#transformedDirection.x *= panningAxis.x * this.inertialPanningX;
             this.#transformedDirection.y *= panningAxis.x * this.inertialPanningX;
