@@ -126,7 +126,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         
         let WasmModule = await WasmModuleP;
         blazor.invokeMethod('setProgress', 4);
-        const scenePromise = new Promise<void>(async (sceneInitedred, sceneInitedrej) => {
+        new Promise<void>(async (sceneInitedred, sceneInitedrej) => {
             const adapter = await window.navigator.gpu!.requestAdapter();
             blazor.invokeMethod('setProgress', 5);
             if (!adapter)
@@ -195,7 +195,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const terraEngine = new Engine(gpuscene, DB, canvas);
             window.engine = terraEngine;
             // const scene2 = await scenePromise;
-            const cameraReady = scenePromise.then((scene) => {
                 //const CollisionsEpsilon = 0.001;
                 /*const coordinator: DefaultCollisionCoordinator = scene.collisionCoordinator as DefaultCollisionCoordinator;
 
@@ -562,8 +561,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 //camera.collisionCoordinator = scene.collisionCoordinator
               //  scene.activeCameras.push(camera);
                 camera.attachControl(canvas, true);
-                return camera;
-            });
+
 
             
             blazor.invokeMethod('setProgress', 13);
@@ -642,7 +640,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     try {
                         let tool: UITABClassLike | undefined;
                         if (tool = tools.get(name)) {
-                            tool.instance = new tool(terrascene, (await terrainInited)[0], await cameraReady, sea);
+                            tool.instance = new tool(terrascene, (await terrainInited)[0], camera, sea);
                         }
                     } catch (e) {
                         console.error(e);
@@ -681,7 +679,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                 DB.then(DB => {
                     DB.transaction("save").objectStore("save").get(0).onsuccess = async (evt) => {
-                        const camera = await cameraReady;
+
                         if ((<IDBRequest>evt.target).result) {
 
                             let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
@@ -725,7 +723,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             let renderFrame: number = 0;
             let resizeHandler = 0;
 
-            cameraReady.then(camera => {
                 const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
                 const canvasSize: {
                     width: number,
@@ -828,7 +825,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 });
                 ro.observe(canvas)
                 //renderFrame = window.requestAnimationFrame(renderLoop);
-            })
             //const adapter = await terrascene.adapter;
 
             blazor.invokeMethod('setProgress', 15);
