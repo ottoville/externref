@@ -12,7 +12,7 @@ type subTexture = {
     height: number;
     imageData: GPUTexture | null;
 }
-type savedCamera = {id:number, camera: {alpha: number, beta:number, radius:number, target: BABYLON.Vector3, position: BABYLON.Vector3}}
+type savedCamera = { id: number, camera: { alpha: number, beta: number, radius: number, target: Float32Array, position: Float32Array}}
 type PTDresult =
     {
         coord: Float32Array, //Vector3,

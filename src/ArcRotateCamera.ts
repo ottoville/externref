@@ -64,7 +64,7 @@ export class ArcRotateCamera {
      * Define the current rotation of the camera as a quaternion to prevent Gimbal lock
      */
     #rotationQuaternion: Quaternion = Quaternion.Zero();
-    constructor(private alpha: number, private beta: number, private radius:number, public target:Float32Array, private engine: Engine, private camera:TerraCamera) {
+    constructor(public alpha: number, public beta: number, public radius:number, public target:Float32Array, private engine: Engine, private camera:TerraCamera) {
         engine.canvas.addEventListener('pointerup', e => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
         engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
     }

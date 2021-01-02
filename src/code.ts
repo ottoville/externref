@@ -193,318 +193,11 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         window.engine = terraEngine;
         const mainCamera = new TerraCamera(gpuscene.renderPassScreen, projectionmatrixBuffer, gpuscene, terraEngine)
 
-        /*
-        //@ts-ignore
-        ArcRotateCamera.prototype._getViewMatrix = function () {
-            var cosa = Math.cos(this.alpha);
-            var sina = Math.sin(this.alpha);
-            var cosb = Math.cos(this.beta);
-            var sinb = Math.sin(this.beta);
-            if (sinb === 0) {
-                sinb = 0.0001;
-            }
-            //@ts-ignore
-            var target = this._target
-            //@ts-ignore
-            this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
-
-            //@ts-ignore
-            target.addToRef(this._computationVector, this._newPosition);
-            //@ts-ignore
-            terraEngine.collider._radius = this.collisionRadius.asArray();
-            //@ts-ignore
-            this._newPosition.subtractToRef(this._position, this._collisionVelocity);
-            //@ts-ignore
-            this._collisionTriggered = true;
-
-            // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
-            //ts-ignore
-            //this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), terraEngine.collisionCoordinator.scaledPosition);
-            terraEngine.collisionCoordinator.scaledPosition[0] = this._position.x / terraEngine.collider._radius[0];
-            terraEngine.collisionCoordinator.scaledPosition[1] = this._position.y / terraEngine.collider._radius[1];
-            terraEngine.collisionCoordinator.scaledPosition[2] = this._position.z / terraEngine.collider._radius[2];
-            //ts-ignore
-            // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), terraEngine.collisionCoordinator.scaledVelocity);
-            //@ts-ignore
-            terraEngine.collisionCoordinator.scaledVelocity[0] = this._collisionVelocity.x / terraEngine.collider._radius[0];
-            //@ts-ignore
-            terraEngine.collisionCoordinator.scaledVelocity[1] = this._collisionVelocity.y / terraEngine.collider._radius[1];
-            //@ts-ignore
-            terraEngine.collisionCoordinator.scaledVelocity[2] = this._collisionVelocity.z / terraEngine.collider._radius[2];
-
-            terraEngine.collider.collidedMesh = null;
-            terraEngine.collider._retry = 0;
-
-            // terraEngine.collider._initialVelocity = coordinator._scaledVelocity;
-
-            //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
-            //ts-ignore
-            terraEngine.collideWithWorld(terraEngine.collisionCoordinator.scaledPosition, terraEngine.collisionCoordinator.scaledVelocity, 3, terraEngine.collisionCoordinator.finalPosition);
-            //ts-ignore
-            // terraEngine.collisionCoordinator.finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
-            terraEngine.collisionCoordinator.finalPosition[0] *= terraEngine.collider._radius[0]
-            terraEngine.collisionCoordinator.finalPosition[1] *= terraEngine.collider._radius[1]
-            terraEngine.collisionCoordinator.finalPosition[2] *= terraEngine.collider._radius[2]
-            //run the callback
-
-            if (!terraEngine.collider.collidedMesh) {
-                //@ts-ignore
-                this._previousPosition.copyFrom(this._position);
-            } else {
-                //ts-ignore
-                //this.setPosition(terraEngine.collisionCoordinator.finalPosition);
-                if (this._position.x !== terraEngine.collisionCoordinator.finalPosition[0])
-                    this._position.x = terraEngine.collisionCoordinator.finalPosition[0]
-                if (this._position.y !== terraEngine.collisionCoordinator.finalPosition[1])
-                    this._position.y = terraEngine.collisionCoordinator.finalPosition[1]
-                if (this._position.z !== terraEngine.collisionCoordinator.finalPosition[2])
-                    this._position.z = terraEngine.collisionCoordinator.finalPosition[2]
-                this.rebuildAnglesAndRadius();
-            }
-
-            // Recompute because of constraints
-            var cosa = Math.cos(this.alpha);
-            var sina = Math.sin(this.alpha);
-            var cosb = Math.cos(this.beta);
-            var sinb = Math.sin(this.beta);
-
-            if (sinb === 0) {
-                sinb = 0.0001;
-            }
-            //@ts-ignore
-            var target = this._target;
-            //@ts-ignore
-            this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
-            //@ts-ignore
-            target.addToRef(this._computationVector, this._newPosition);
-            //@ts-ignore
-            this._position.copyFrom(this._newPosition);
-
-
-            //this._computeViewMatrix(this._position, target, up);
-            //@ts-ignore
-            this._globalPosition.copyFrom(this._position);
-            //@ts-ignore
-            this._globalCurrentTarget.copyFrom(target);
-            //@ts-ignore
-            this._collisionTriggered = false;
-            // }
-
-            this._currentTarget = target;
-
-        }
-        */
         const camera = new ArcRotateCamera(0, 0, 10, new Float32Array([-500, 0, 0]), terraEngine, mainCamera);
-        /*//@ts-ignore
-        const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(-500, 0, 0), {
-            getUniqueId: () => 1,
-            getRenderId: () => 1
-        });*/
-        /*
-        camera.panningAxis = new Vector3(1, 0, 1)
 
-        let pointerDownButton: number = 0;
-        const panningSensibility: number = 20;
-        const angularSensibilityX = 3000;
-        const angularSensibilityY = 3000;
-        const cameraMove = function (e: PointerEvent) {
-            e.preventDefault();
-            if (panningSensibility !== 0 && pointerDownButton == 2) {
-                camera.inertialPanningX += -e.movementX / panningSensibility;
-                camera.inertialPanningY += e.movementY / panningSensibility;
-            } else {
-                camera.inertialAlphaOffset -= e.movementX / angularSensibilityX;
-                camera.inertialBetaOffset -= e.movementY / angularSensibilityY;
-            }
-        }
-        const cameraWheel = function (e: WheelEvent) {
-            const delta = -e.deltaY / (3 * 40);
-            if (delta) {
-                camera.inertialRadiusOffset += delta;
-            }
-        }
-        const cameraPointerDown = (e: PointerEvent) => {
-            pointerDownButton = e.button;
-            canvas.addEventListener('pointermove', cameraMove);
-
-        }
-        camera.attachControl = function (element: HTMLElement, noPreventDefault?: boolean, useCtrlForPanning: boolean = true, panningMouseButton: number = 2): void {
-            canvas.addEventListener('wheel', cameraWheel);
-            canvas.addEventListener('pointerdown', cameraPointerDown);
-        }
-        canvas.addEventListener('pointerup', e => canvas.removeEventListener('pointermove', cameraMove));
-        canvas.addEventListener('pointerleave', () => canvas.removeEventListener('pointermove', cameraMove));
-
-        //@ts-ignore
-        camera.detachControl = function () {
-            canvas.removeEventListener('pointerdown', cameraPointerDown);
-            canvas.removeEventListener('pointermove', cameraMove);
-            canvas.removeEventListener('wheel', cameraWheel);
-        }
-        camera._checkInputs = function (): void {
-            //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
-            //@ts-ignore
-            if (this._collisionTriggered) {
-                return;
-            }
-
-            //inputs.checkInputs();
-            // Inertia
-            if (this.inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
-                let inertialAlphaOffset = this.inertialAlphaOffset;
-                if (this.beta <= 0) { inertialAlphaOffset *= -1; }
-                if (this.parent && this.parent._getWorldMatrixDeterminant() < 0) { inertialAlphaOffset *= -1; }
-                this.alpha += inertialAlphaOffset;
-
-                this.beta += this.inertialBetaOffset;
-
-                this.radius -= this.inertialRadiusOffset;
-                this.inertialAlphaOffset *= this.inertia;
-                this.inertialBetaOffset *= this.inertia;
-                this.inertialRadiusOffset *= this.inertia;
-                if (Math.abs(this.inertialAlphaOffset) < Epsilon) {
-                    this.inertialAlphaOffset = 0;
-                }
-                if (Math.abs(this.inertialBetaOffset) < Epsilon) {
-                    this.inertialBetaOffset = 0;
-                }
-                if (Math.abs(this.inertialRadiusOffset) < this.speed * Epsilon) {
-                    this.inertialRadiusOffset = 0;
-                }
-            }
-
-            // Panning inertia
-            if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
-                //@ts-ignore
-                if (!this._localDirection) {
-                    //@ts-ignore
-                    this._localDirection = Vector3.Zero();
-                    //@ts-ignore
-                    this._transformedDirection = Vector3.Zero();
-                }
-                //@ts-ignore
-                this._localDirection.copyFromFloats(this.inertialPanningX, this.inertialPanningY, this.inertialPanningY);
-                //@ts-ignore
-                this._localDirection.multiplyInPlace(this.panningAxis);
-
-                //this._viewMatrix.invertToRef(this._cameraTransformMatrix);
-                Matrix.FromArray(mainCamera.viewArr).invertToRef(this._cameraTransformMatrix);
-                //@ts-ignore
-                Vector3.TransformNormalToRef(this._localDirection, this._cameraTransformMatrix, this._transformedDirection);
-                //Eliminate y if map panning is enabled (panningAxis == 1,0,1)
-                if (!this.panningAxis.y) {
-                    //@ts-ignore
-                    this._transformedDirection.y = 0;
-                }
-                //@ts-ignore
-                if (!this._targetHost) {
-                    if (this.panningDistanceLimit) {//@ts-ignore
-                        this._transformedDirection.addInPlace(this._target);//@ts-ignore
-                        var distanceSquared = Vector3.DistanceSquared(this._transformedDirection, this.panningOriginTarget);
-                        if (distanceSquared <= (this.panningDistanceLimit * this.panningDistanceLimit)) {//@ts-ignore
-                            this._target.copyFrom(this._transformedDirection);
-                        }
-                    }
-                    else {//@ts-ignore
-                        this._target.addInPlace(this._transformedDirection);
-                    }
-                }
-
-                this.inertialPanningX *= this.panningInertia;
-                this.inertialPanningY *= this.panningInertia;
-
-                if (Math.abs(this.inertialPanningX) < this.speed * Epsilon) {
-                    this.inertialPanningX = 0;
-                }
-                if (Math.abs(this.inertialPanningY) < this.speed * Epsilon) {
-                    this.inertialPanningY = 0;
-                }
-            }
-
-            // Limits
-            //@ts-ignore
-            this._checkLimits();
-
-            const needToMove = this._decideIfNeedsToMove();
-            const needToRotate = Math.abs(this.cameraRotation.x) > 0 || Math.abs(this.cameraRotation.y) > 0;
-
-            // Move
-            if (needToMove) {
-                this.position.addInPlace(this.cameraDirection);
-            }
-
-            // Rotate
-            if (needToRotate) {
-                console.log('needToRotate');
-                this.rotation.x += this.cameraRotation.x;
-                this.rotation.y += this.cameraRotation.y;
-
-                //rotate, if quaternion is set and rotation was used
-                if (this.rotationQuaternion) {
-                    var len = this.rotation.lengthSquared();
-                    if (len) {
-                        Quaternion.RotationYawPitchRollToRef(this.rotation.y, this.rotation.x, this.rotation.z, this.rotationQuaternion);
-                    }
-                }
-            }
-
-            // Inertia
-            if (needToMove) {
-                console.log('needToMove');
-                if (Math.abs(this.cameraDirection.x) < this.speed * Epsilon) {
-                    this.cameraDirection.x = 0;
-                }
-
-                if (Math.abs(this.cameraDirection.y) < this.speed * Epsilon) {
-                    this.cameraDirection.y = 0;
-                }
-
-                if (Math.abs(this.cameraDirection.z) < this.speed * Epsilon) {
-                    this.cameraDirection.z = 0;
-                }
-
-                this.cameraDirection.scaleInPlace(this.inertia);
-            }
-            if (needToRotate) {
-                if (Math.abs(this.cameraRotation.x) < this.speed * Epsilon) {
-                    this.cameraRotation.x = 0;
-                }
-
-                if (Math.abs(this.cameraRotation.y) < this.speed * Epsilon) {
-                    this.cameraRotation.y = 0;
-                }
-                this.cameraRotation.scaleInPlace(this.inertia);
-            }
-        }
-        */
-        
-        const aspectRatio = (canvas.width * mainCamera.viewport.width) / (canvas.height * mainCamera.viewport.height);
-
-
-        //Create projection matrix
-        //min view distance
-        let n = 1;
-        //max view distance
-        let f = 100000;
-        //field of view?
-        const fov=0.8
-        let t = 1.0 / (Math.tan(fov * 0.5));
-        let a = t;
-        let b = t * aspectRatio;
-        let c = (f + n) / (f - n);
-        let d = -2.0 * f * n / (f - n);
-
-        projectionmatrix.set([
-            a, 0.0, 0.0, 0.0,
-            0.0, b, 0.0, 0.0,
-            0.0, 0.0, c, 1.0,
-            0.0, 0.0, d, 0.0,
-        ]);
         camera.attachControl();
 
         blazor.invokeMethod('setProgress', 13);
-
-
 
         const waterCamera = new TerraCamera(gpuscene.renderPassWater, projectionmatrixBuffer, gpuscene, terraEngine, false, mainCamera)
         const TerraCameras = [mainCamera, waterCamera]
@@ -513,7 +206,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
 
         blazor.invokeMethod('setProgress', 14);
-
 
 
         new Scene('main', gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
@@ -622,10 +314,15 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
                         let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
                         camera.alpha = restored.alpha;
+                        camera.alpha = restored.alpha;
                         camera.beta = restored.beta;
                         camera.radius = restored.radius;
-                        camera.target = new Vector3(restored.target.x, restored.target.y, restored.target.z);
-                        camera.position = restored.position;
+                        camera.target[0] = restored.target[0];
+                        camera.target[1] = restored.target[1];
+                        camera.target[2] = restored.target[2];
+                        camera.position[0] = restored.position[0];
+                        camera.position[1] = restored.position[1];
+                        camera.position[2] = restored.position[2];
                     }
                     let l = new LazyEval(() => {
                         //console.log(this.camera.position.y);
@@ -634,10 +331,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                             camera: { alpha: camera.alpha, beta: camera.beta, radius: camera.radius, target: camera.target, position: camera.position }
                         });
                     })
+                    
                     camera.onProjectionMatrixChangedObservable.add(() => {
                         l.eval(500);
                     });
-                */
+                    */
+                
                 }
             })
 
@@ -762,14 +461,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             }, 500)
         });
         ro.observe(canvas)
-        //renderFrame = window.requestAnimationFrame(renderLoop);
-        //const adapter = await terrascene.adapter;
+
 
         blazor.invokeMethod('setProgress', 15);
-        /*   } catch (e) {
-               console.log('error');
-               console.error(e);
-           }*/
+
         WasmModule.default().then(() => window.Wasm = WasmModule);
 
         let webSocket = new WebSocket('ws://localhost:8081');
