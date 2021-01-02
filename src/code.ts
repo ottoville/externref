@@ -1,7 +1,7 @@
 
 //import type { WorldScene } from "./world/scene.js";
 //import * as BABYLON from "./lib/babylon/index.js"
-import type { loginProvider, DotNet, savedCamera } from "./types/interfaces/index.js";
+import type { loginProvider, DotNet, /*savedCamera*/ } from "./types/interfaces/index.js";
 import { Plants } from "./plants/Plants.js";
 import { UITAB, UITABClassLike } from "./UITAB.js";
 import { PlantsUI } from "./tools/plantsUI.js";
@@ -12,12 +12,11 @@ import { Zones } from "./tools/zones.js";
 import { Terrain } from "./world/terrain.js";
 //import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 import { Sea } from "./world/water.js";
-import { Vector3, Matrix, Quaternion } from "./lib/babylon/Maths/math.vector";
-import { LazyEval } from "./LazyEval.js";
+//import { LazyEval } from "./LazyEval.js";
 import { GPU } from "./GPU.js";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
 import { Box } from "./GPU/Meshes/Box.js";
-import { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera.js";
+//import { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { Engine } from "./engine.js";
 import { Sun2 } from "./world/sun2.js";
@@ -25,7 +24,7 @@ import { PositionNode } from "./TerraNode.js";
 //import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
 //import { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
 import { Scene } from "./Scene.js";
-//import { ArcRotateCamera } from "./ArcRotateCamera.js";
+import { ArcRotateCamera } from "./ArcRotateCamera.js";
 
 
 //import  DB from "./DB.js";
@@ -192,6 +191,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         blazor.invokeMethod('setProgress', 12);
         const terraEngine = new Engine(gpuscene, DB, canvas);
         window.engine = terraEngine;
+        const mainCamera = new TerraCamera(gpuscene.renderPassScreen, projectionmatrixBuffer, gpuscene, terraEngine)
+
+        /*
         //@ts-ignore
         ArcRotateCamera.prototype._getViewMatrix = function () {
             var cosa = Math.cos(this.alpha);
@@ -291,14 +293,14 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             this._currentTarget = target;
 
         }
-
-        //const camera = new ArcRotateCamera(0, 0, 10, new Float32Array([-500, 0, 0]), terraEngine);
-        //@ts-ignore
+        */
+        const camera = new ArcRotateCamera(0, 0, 10, new Float32Array([-500, 0, 0]), terraEngine, mainCamera);
+        /*//@ts-ignore
         const camera = new ArcRotateCamera("Camera", 0, 0, 10, new Vector3(-500, 0, 0), {
             getUniqueId: () => 1,
             getRenderId: () => 1
-        });
-
+        });*/
+        /*
         camera.panningAxis = new Vector3(1, 0, 1)
 
         let pointerDownButton: number = 0;
@@ -474,9 +476,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 this.cameraRotation.scaleInPlace(this.inertia);
             }
         }
-
-        const mainCamera = new TerraCamera(gpuscene.renderPassScreen, projectionmatrixBuffer, gpuscene, terraEngine)
-
+        */
+        
         const aspectRatio = (canvas.width * mainCamera.viewport.width) / (canvas.height * mainCamera.viewport.height);
 
 
@@ -499,7 +500,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             0.0, 0.0, c, 1.0,
             0.0, 0.0, d, 0.0,
         ]);
-        camera.attachControl(canvas, true);
+        camera.attachControl();
 
         blazor.invokeMethod('setProgress', 13);
 
@@ -576,6 +577,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 try {
                     let tool: UITABClassLike | undefined;
                     if (tool = tools.get(name)) {
+                        //@ts-ignore
                         tool.instance = new tool(terrascene, (await terrainInited)[0], camera, sea);
                     }
                 } catch (e) {
@@ -615,7 +617,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
             DB.then(DB => {
                 DB.transaction("save").objectStore("save").get(0).onsuccess = async (evt) => {
-
+                    /*
                     if ((<IDBRequest>evt.target).result) {
 
                         let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
@@ -624,12 +626,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         camera.radius = restored.radius;
                         camera.target = new Vector3(restored.target.x, restored.target.y, restored.target.z);
                         camera.position = restored.position;
-                        /* camera.alpha = 0.5301790732133063// restored.alpha;
-                         camera.beta = 1.5221956257805713 // restored.beta;
-                         camera.radius = 9298.920138598956 // restored.radius;
-                         camera.target = new Vector3(826.6071980631217, 20, 900.255132341644) //new Vector3(restored.target.x, restored.target.y, restored.target.z);
-                         camera.position = new Vector3(8839.466683038081, 471.75614493722463, 5597.0535103433585)// restored.position;
-                         */
                     }
                     let l = new LazyEval(() => {
                         //console.log(this.camera.position.y);
@@ -641,7 +637,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     camera.onProjectionMatrixChangedObservable.add(() => {
                         l.eval(500);
                     });
-
+                */
                 }
             })
 
@@ -692,16 +688,16 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 if (buff)
                     gpuscene.pendingCommandBuffers.push(buff);
             });
-            camera._checkInputs();
-            camera._getViewMatrix();
+            camera.checkInputs();
+            camera.calculateViewMatrix();
 
-            mainCamera.cameraArr[0] = camera.position.x;
-            mainCamera.cameraArr[1] = camera.position.y;
-            mainCamera.cameraArr[2] = camera.position.z;
+            mainCamera.cameraArr[0] = camera.position[0];
+            mainCamera.cameraArr[1] = camera.position[1];
+            mainCamera.cameraArr[2] = camera.position[2];
 
-            mainCamera.target[0] = camera.target.x;
-            mainCamera.target[1] = camera.target.y;
-            mainCamera.target[2] = camera.target.z;
+            mainCamera.target[0] = camera.target[0];
+            mainCamera.target[1] = camera.target[1];
+            mainCamera.target[2] = camera.target[2];
 
             const renderEncoder = gpuscene.device.createCommandEncoder();
             timeView.set([time]);
@@ -740,21 +736,27 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 canvasSize.height = entries[0].contentRect.height | 0;
                 renderPasses.forEach(renderpass => renderpass.onResize(canvasSize.width, canvasSize.height));
                 gpuscene.onResizes.forEach(cb => cb());
+                //TODO: remove duplicate
+                const aspectRatio = (canvasSize.width * mainCamera.viewport.width) / (canvasSize.height * mainCamera.viewport.height);
+                //Create projection matrix
+                //min view distance
+                let n = 1;
+                //max view distance
+                let f = 100000;
+                //field of view?
+                const fov = 0.8
+                let t = 1.0 / (Math.tan(fov * 0.5));
+                let a = t;
+                let b = t * aspectRatio;
+                let c = (f + n) / (f - n);
+                let d = -2.0 * f * n / (f - n);
 
-                const aspectRatio = (canvasSize.width * camera.viewport.width) / (canvasSize.height * camera.viewport.height);
-                camera._cache.aspectRatio = aspectRatio;
-
-                if (camera.minZ <= 0) {
-                    camera.minZ = 0.1;
-                }
-
-                Matrix.PerspectiveFovLHToRef(camera.fov,
-                    aspectRatio,
-                    camera.minZ,
-                    camera.maxZ,
-                    camera._projectionMatrix,
-                    false);
-                projectionmatrix.set(Array.from(camera._projectionMatrix.m));
+                projectionmatrix.set([
+                    a, 0.0, 0.0, 0.0,
+                    0.0, b, 0.0, 0.0,
+                    0.0, 0.0, c, 1.0,
+                    0.0, 0.0, d, 0.0,
+                ]);
 
                 renderFrame = window.requestAnimationFrame(renderLoop);
             }, 500)

@@ -11,7 +11,7 @@ export class ArcRotateCamera {
 
     #computationVector = new Float32Array(3);
     #previousPosition = new Float32Array(3);
-    #position = new Float32Array(3);
+    position = new Float32Array(3);
     #newPosition = new Float32Array(3);
     #globalPosition = new Float32Array(3);
 
@@ -64,8 +64,9 @@ export class ArcRotateCamera {
      * Define the current rotation of the camera as a quaternion to prevent Gimbal lock
      */
     #rotationQuaternion: Quaternion = Quaternion.Zero();
-    constructor(private alpha: number, private beta: number, private radius:number, private target:Float32Array, private engine: Engine, private camera:TerraCamera) {
-
+    constructor(private alpha: number, private beta: number, private radius:number, public target:Float32Array, private engine: Engine, private camera:TerraCamera) {
+        engine.canvas.addEventListener('pointerup', e => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
+        engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
     }
     #cameraMove = (e: PointerEvent) => {
         e.preventDefault();
@@ -120,18 +121,18 @@ export class ArcRotateCamera {
         this.engine.collider._radius = this.#collisionRadius;
 
         //this._newPosition.subtractToRef(this._position, this._collisionVelocity);
-        this.#collisionVelocity[0] = this.#newPosition[0] - this.#position[0];
-        this.#collisionVelocity[1] = this.#newPosition[1] - this.#position[1];
-        this.#collisionVelocity[2] = this.#newPosition[2] - this.#position[2];
+        this.#collisionVelocity[0] = this.#newPosition[0] - this.position[0];
+        this.#collisionVelocity[1] = this.#newPosition[1] - this.position[1];
+        this.#collisionVelocity[2] = this.#newPosition[2] - this.position[2];
 
         this.collisionTriggered = true;
 
         // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
 
         // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
-        this.engine.collisionCoordinator.scaledPosition[0] = this.#position[0] / this.engine.collider._radius[0];
-        this.engine.collisionCoordinator.scaledPosition[1] = this.#position[1] / this.engine.collider._radius[1];
-        this.engine.collisionCoordinator.scaledPosition[2] = this.#position[2] / this.engine.collider._radius[2];
+        this.engine.collisionCoordinator.scaledPosition[0] = this.position[0] / this.engine.collider._radius[0];
+        this.engine.collisionCoordinator.scaledPosition[1] = this.position[1] / this.engine.collider._radius[1];
+        this.engine.collisionCoordinator.scaledPosition[2] = this.position[2] / this.engine.collider._radius[2];
 
        // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
         this.engine.collisionCoordinator.scaledVelocity[0] = this.#collisionVelocity[0] / this.engine.collider._radius[0];
@@ -159,9 +160,9 @@ export class ArcRotateCamera {
         if (!this.engine.collider.collidedMesh) {
 
             //this._previousPosition.copyFrom(this._position);
-            this.#position[0] = this.#previousPosition[0]
-            this.#position[1] = this.#previousPosition[1]
-            this.#position[2] = this.#previousPosition[2]
+            this.position[0] = this.#previousPosition[0]
+            this.position[1] = this.#previousPosition[1]
+            this.position[2] = this.#previousPosition[2]
 
         } else {
 
@@ -171,10 +172,10 @@ export class ArcRotateCamera {
             //}
             //this._position.copyFrom(position);
 
-            if (this.#position[0] != this.engine.collisionCoordinator.finalPosition[0] || this.#position[1] != this.engine.collisionCoordinator.finalPosition[1] || this.#position[2] != this.engine.collisionCoordinator.finalPosition[2]) {
-                this.#position[0] = this.engine.collisionCoordinator.finalPosition[0];
-                this.#position[1] = this.engine.collisionCoordinator.finalPosition[1];
-                this.#position[2] = this.engine.collisionCoordinator.finalPosition[2];
+            if (this.position[0] != this.engine.collisionCoordinator.finalPosition[0] || this.position[1] != this.engine.collisionCoordinator.finalPosition[1] || this.position[2] != this.engine.collisionCoordinator.finalPosition[2]) {
+                this.position[0] = this.engine.collisionCoordinator.finalPosition[0];
+                this.position[1] = this.engine.collisionCoordinator.finalPosition[1];
+                this.position[2] = this.engine.collisionCoordinator.finalPosition[2];
             }
 
             this.rebuildAnglesAndRadius();
@@ -206,17 +207,17 @@ export class ArcRotateCamera {
 
        // this._position.copyFrom(this._newPosition);
 
-        this.#position[0] = this.#newPosition[0];
-        this.#position[1] = this.#newPosition[1];
-        this.#position[2] = this.#newPosition[2];
+        this.position[0] = this.#newPosition[0];
+        this.position[1] = this.#newPosition[1];
+        this.position[2] = this.#newPosition[2];
 
 
         //this._computeViewMatrix(this._position, target, up);
 
         //this._globalPosition.copyFrom(this._position);
-        this.#globalPosition[0] = this.#position[0];
-        this.#globalPosition[1] = this.#position[1];
-        this.#globalPosition[2] = this.#position[2];
+        this.#globalPosition[0] = this.position[0];
+        this.#globalPosition[1] = this.position[1];
+        this.#globalPosition[2] = this.position[2];
 
 
         //this._globalCurrentTarget.copyFrom(target);
@@ -302,9 +303,9 @@ export class ArcRotateCamera {
         // Move
         if (needToMove) {
           //  this.position.addInPlace(this.#cameraDirection);
-            this.#position[0] += this.#cameraDirection.x;
-            this.#position[1] += this.#cameraDirection.y;
-            this.#position[2] += this.#cameraDirection.z;
+            this.position[0] += this.#cameraDirection.x;
+            this.position[1] += this.#cameraDirection.y;
+            this.position[2] += this.#cameraDirection.z;
         }
 
         // Rotate
@@ -353,9 +354,9 @@ export class ArcRotateCamera {
  // Rebuilds angles (alpha, beta) and radius from the give position and target
     public rebuildAnglesAndRadius(): void {
        // this._position.subtractToRef(this._getTargetPosition(), this._computationVector);
-        this.#computationVector[0] = this.#position[0] - this.target[0];
-        this.#computationVector[1] = this.#position[1] - this.target[0];
-        this.#computationVector[2] = this.#position[2] - this.target[0];
+        this.#computationVector[0] = this.position[0] - this.target[0];
+        this.#computationVector[1] = this.position[1] - this.target[1];
+        this.#computationVector[2] = this.position[2] - this.target[2];
 
        // this.radius = this._computationVector.length();
         this.radius=Math.sqrt(this.#computationVector[0] * this.#computationVector[0] + this.#computationVector[1] * this.#computationVector[1] + this.#computationVector[2] * this.#computationVector[2])
