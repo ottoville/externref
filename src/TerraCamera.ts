@@ -43,6 +43,8 @@ function matrixMultiplyToRef(m: ArrayLike<number>, otherM: ArrayLike<number>, re
 export class TerraCamera {
     readonly #uniqueID: number = uniqueID++;    
 
+    viewport = new Viewport(0, 0, 1.0, 1.0);
+
     #uniformBufferSize = 4 * 16 * 2 + 3 * 4
     target = new Float32Array([0, 0, 0]);
     #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
