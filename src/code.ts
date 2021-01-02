@@ -481,9 +481,13 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
 
         //Create projection matrix
-        let n = camera.minZ;
-        let f = camera.maxZ;
-        let t = 1.0 / (Math.tan(camera.fov * 0.5));
+        //min view distance
+        let n = 1;
+        //max view distance
+        let f = 100000;
+        //field of view?
+        const fov=0.8
+        let t = 1.0 / (Math.tan(fov * 0.5));
         let a = t;
         let b = t * aspectRatio;
         let c = (f + n) / (f - n);
