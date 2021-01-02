@@ -299,9 +299,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             getRenderId: () => 1
         });
 
-
-        camera.maxZ = 1606000;
-
         camera.panningAxis = new Vector3(1, 0, 1)
 
         let pointerDownButton: number = 0;
@@ -478,22 +475,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             }
         }
 
-        camera._cache.mode = camera.mode;
-        camera._cache.minZ = camera.minZ;
-        camera._cache.maxZ = camera.maxZ;
         const mainCamera = new TerraCamera(gpuscene.renderPassScreen, projectionmatrixBuffer, gpuscene, terraEngine)
 
-        // Matrix
-        //@ts-ignore
-        camera._refreshFrustumPlanes = true;
-        camera._cache.fov = camera.fov;
-        camera._cache.fovMode = camera.fovMode;
         const aspectRatio = (canvas.width * mainCamera.viewport.width) / (canvas.height * mainCamera.viewport.height);
-        camera._cache.aspectRatio = aspectRatio;
 
-        if (camera.minZ <= 0) {
-            camera.minZ = 0.1;
-        }
 
         //Create projection matrix
         let n = camera.minZ;
