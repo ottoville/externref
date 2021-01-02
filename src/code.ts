@@ -193,7 +193,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         window.engine = terraEngine;
         const mainCamera = new TerraCamera(gpuscene.renderPassScreen, projectionmatrixBuffer, gpuscene, terraEngine)
 
-        const camera = new ArcRotateCamera(0, 0, 10, new Float32Array([-500, 0, 0]), terraEngine, mainCamera);
+        const camera = new ArcRotateCamera(0, 0, 10, terraEngine, mainCamera);
 
         camera.attachControl();
 
@@ -365,7 +365,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         let msPerFrame = 0;
         let startTime = 0;
         waterCamera.onRender = function () {
-            this.cameraArr[1] -= (this.cameraArr[1] - 3) * 2;
+            this.cameraPosition[1] -= (this.cameraPosition[1] - 3) * 2;
             this.target[1] = -this.target[1];
         }
         function renderLoop(time: DOMHighResTimeStamp) {
@@ -389,14 +389,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             });
             camera.checkInputs();
             camera.calculateViewMatrix();
-
-            mainCamera.cameraArr[0] = camera.position[0];
-            mainCamera.cameraArr[1] = camera.position[1];
-            mainCamera.cameraArr[2] = camera.position[2];
-
-            mainCamera.target[0] = camera.target[0];
-            mainCamera.target[1] = camera.target[1];
-            mainCamera.target[2] = camera.target[2];
 
             const renderEncoder = gpuscene.device.createCommandEncoder();
             timeView.set([time]);

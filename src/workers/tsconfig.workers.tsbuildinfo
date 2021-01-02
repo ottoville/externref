@@ -227,8 +227,8 @@
         "affectsGlobalScope": true
       },
       "./webworkers/grass.ts": {
-        "version": "7342e93ac00a3df1fcee242d5d068cacca852117f646f2498215c30d6bd3b698",
-        "signature": "0f8358879cdb884760aa20cef1dbe971294a391aa5103fb2d0c4f74428e08dff",
+        "version": "e99099b75f5e44fbc8e477a48af01dfd3c6f8576f8b2120d1e10ff01047ded72",
+        "signature": "d604959799cf1487d7a1fd22c61832d5097266d71f1f5a5f20c2a230fffc2d45",
         "affectsGlobalScope": true
       },
       "./webworkers/interfaces.ts": {
@@ -247,7 +247,7 @@
         "affectsGlobalScope": true
       },
       "./webworkers/terrainworker.ts": {
-        "version": "965a3597cef82dbed86df9768c8a59214eae43240695a5a1e9aea9edda0412df",
+        "version": "35b653e266bc6aab46409dafc591d0c56f8184c88703e4a16543efde5fd254e7",
         "signature": "3f9b343697e9e7e6e98f3c6cc0c5217afca8c587d95abca11a646d8d03891238",
         "affectsGlobalScope": true
       },

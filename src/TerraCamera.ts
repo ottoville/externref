@@ -46,7 +46,7 @@ export class TerraCamera {
     viewport = new Viewport(0, 0, 1.0, 1.0);
 
     #uniformBufferSize = 4 * 16 * 2 + 3 * 4
-    target = new Float32Array([0, 0, 0]);
+    target = new Float32Array([-500, 0, 0]);
     #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
 
     #projectionViewArr = new Float32Array(this.#viewProjectionPositionBuffer, 0, 16);
@@ -55,7 +55,7 @@ export class TerraCamera {
     #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer, 0, 32);
 
 
-    cameraArr = new Float32Array(this.#viewProjectionPositionBuffer, 128, 3);
+    cameraPosition = new Float32Array(this.#viewProjectionPositionBuffer, 128, 3);
     projectionArr = new Float32Array(this.projection);
 
     #pickingRayBuffer = new SharedArrayBuffer(6 * 4); // origin: vec3, direction: vec3
@@ -81,9 +81,9 @@ export class TerraCamera {
     render(renderEncoder: GPUCommandEncoder) {
 
         if (this.parent) {
-            this.cameraArr[0] = this.parent.cameraArr[0]
-            this.cameraArr[1] = this.parent.cameraArr[1]
-            this.cameraArr[2] = this.parent.cameraArr[2]
+            this.cameraPosition[0] = this.parent.cameraPosition[0]
+            this.cameraPosition[1] = this.parent.cameraPosition[1]
+            this.cameraPosition[2] = this.parent.cameraPosition[2]
 
             this.target[0] = this.parent.target[0]
             this.target[1] = this.parent.target[1]
@@ -100,9 +100,9 @@ export class TerraCamera {
 
 */
         //TODO: use SIMD, use column major matrix?
-        this.viewArr[2] = this.target[0] - this.cameraArr[0];
-        this.viewArr[6] = this.target[1] - this.cameraArr[1];
-        this.viewArr[10] = this.target[2] - this.cameraArr[2];
+        this.viewArr[2] = this.target[0] - this.cameraPosition[0];
+        this.viewArr[6] = this.target[1] - this.cameraPosition[1];
+        this.viewArr[10] = this.target[2] - this.cameraPosition[2];
 
 
         const zLength = Math.sqrt(this.viewArr[2] * this.viewArr[2] + this.viewArr[6] * this.viewArr[6] + this.viewArr[10] * this.viewArr[10]);
@@ -136,11 +136,11 @@ export class TerraCamera {
         // Eye angles, dot products
 
         //x
-        this.viewArr[12] = -(this.viewArr[0] * this.cameraArr[0] + this.viewArr[8] * this.cameraArr[2])
+        this.viewArr[12] = -(this.viewArr[0] * this.cameraPosition[0] + this.viewArr[8] * this.cameraPosition[2])
         //y
-        this.viewArr[13] = -(this.viewArr[1] * this.cameraArr[0] + this.viewArr[5] * this.cameraArr[1] + this.viewArr[9] * this.cameraArr[2])
+        this.viewArr[13] = -(this.viewArr[1] * this.cameraPosition[0] + this.viewArr[5] * this.cameraPosition[1] + this.viewArr[9] * this.cameraPosition[2])
         //z
-        this.viewArr[14] = -(this.viewArr[2] * this.cameraArr[0] + this.viewArr[6] * this.cameraArr[1] + this.viewArr[10] * this.cameraArr[2]);
+        this.viewArr[14] = -(this.viewArr[2] * this.cameraPosition[0] + this.viewArr[6] * this.cameraPosition[1] + this.viewArr[10] * this.cameraPosition[2]);
 
         matrixMultiplyToRef(this.viewArr, this.projectionArr, this.#projectionViewArr);
 
