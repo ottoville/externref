@@ -27,8 +27,6 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
     worldPosition: worldPosition = new worldPosition(this);
     lightType: 'point' = 'point';
 
-
-
     clamp(value: number, min: number, max: number) {
         return Math.min(Math.max(value, min), max);
     }
@@ -51,7 +49,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
 
 
         sunPositionY = sunPositionY * yAngle;
-        const currentPos = this.worldPosition.translation as Float32Array;
+        const currentPos = this.worldPosition.translation;
         this.worldPosition.SetTranslationDelta([sunPositionX - currentPos[0], sunPositionY - currentPos[1], sunPositionZ - currentPos[2]]);
         //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
         const ambientR = this.clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
@@ -75,7 +73,7 @@ export class Sun2 extends TerraNode implements hasPhysics, isLight {
 
 
         (async () => {
-            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/sun.vert.wgsl', '/shaders/wgsl/sun.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
+            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/sun.vert.wgsl', '/shaders/wgsl/sun.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })) as [Promise<GPUShaderModule>, Promise<GPUShaderModule>]);
             const sunPipeline = scene.engine.positionBindGroupTime.addRenderPipeline({
                 rasterizationState: {
                     cullMode: 'none',

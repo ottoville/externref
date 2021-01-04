@@ -1,46 +1,17 @@
-﻿import { BoundableNode, TerraNode } from "../TerraNode";
+﻿import { TerraMatrix, Vector3, Vector4 } from "../Math";
+import { BoundableNode, TerraNode } from "../TerraNode";
 export interface has3DPosition {
     worldPosition: worldPosition;
-}
-export interface TerraMatrix {
-    readonly length: 16;
-    [n: number]: never
-}
-
-
-
-
-export class TerraMatrix extends Float32Array {
-    constructor(Arr? :  [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]) {
-        //@ts-ignore
-        super(Arr || 16);
-    } //@ts-ignore
-    [0]: number;//@ts-ignore
-    [1]: number;//@ts-ignore
-    [2]: number;//@ts-ignore
-    [3]: number;//@ts-ignore
-    [4]: number;//@ts-ignore
-    [5]: number;//@ts-ignore
-    [6]: number;//@ts-ignore
-    [7]: number;//@ts-ignore
-    [8]: number;//@ts-ignore
-    [9]: number;//@ts-ignore
-    [10]: number;//@ts-ignore
-    [11]: number;//@ts-ignore
-    [12]: number;//@ts-ignore
-    [13]: number;//@ts-ignore
-    [14]: number;//@ts-ignore
-    [15]: number;
 }
 
 
 export class worldPosition {
-    readonly worldMatrix = new Float32Array(this.node.data.buffer, this.node.bufferOffsetBytes, 16) as TerraMatrix;
-    readonly translation = new Float32Array(this.node.data.buffer, this.node.bufferOffsetBytes+ 12 * this.node.data.BYTES_PER_ELEMENT, 3);
+    readonly worldMatrix = new TerraMatrix(this.node.data.buffer, this.node.bufferOffsetBytes);
+    readonly translation = new Vector3(this.node.data.buffer, this.node.bufferOffsetBytes+ 12 * this.node.data.BYTES_PER_ELEMENT, 3);
     readonly translationDelta: Float32Array = new Float32Array(this.node.data.buffer, this.node.bufferOffsetBytes + 16 * this.node.data.BYTES_PER_ELEMENT, 3);
 
-    readonly #scaling: Float32Array = new Float32Array([1, 1, 1]);
-    readonly #rotation: Float32Array = new Float32Array([0, 0, 0, 0]);
+    readonly #scaling = new Vector3([1, 1, 1]);
+    readonly #rotation = new Vector4([0, 0, 0, 0]);
 
     public update(callback: (scaling: Float32Array, rotation: Float32Array) => void) {
         callback(this.#scaling, this.#rotation);
@@ -100,7 +71,9 @@ export class worldPosition {
         const zz = z * z2;
         var wx = w * x2, wy = w * y2, wz = w * z2;
 
-        var sx = this.#scaling[0], sy = this.#scaling[1], sz = this.#scaling[2];
+        const sx = this.#scaling[0]
+        const sy = this.#scaling[1]
+        const sz = this.#scaling[2];
         this.worldMatrix[0] = (1 - (yy + zz)) * sx;
         this.worldMatrix[1] = (xy + wz) * sx;
         this.worldMatrix[2] = (xz - wy) * sx;

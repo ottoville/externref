@@ -44,8 +44,6 @@ export class Terrain {
 
     public slopeArr = new Int32Array(this.slopeArrBuffer);
 
-    #ratioX = Terrain.subdivisionsX / this.width;
-    #ratioY = Terrain.subdivisionsY / this.height;
 
     static heightLayouts: Map<GPU, BindGroupLayoutTwoBinding> = new Map();
     mesh: TerrainMesh;
@@ -357,7 +355,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             (await cacheP).put(new Request('/terrain.webp'), response);*/
         }
     }
-    textureSize = [5120, 5120];
+    textureSize = [5120, 5120] as const;
     textureExtent = {
         width: this.textureSize[0],
         height: this.textureSize[1],
@@ -540,7 +538,9 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         this.mesh.boundingBox.box.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
 
     }
-
+    /*
+    #ratioX = Terrain.subdivisionsX / this.width;
+    #ratioY = Terrain.subdivisionsY / this.height;
     getHeightAtCoordinates(x: number, z: number): number {
         let facet: Float32Array;
         let col = ((x + this.#maxX) * this.#ratioX) | 0;
@@ -549,11 +549,9 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         console.log(col, row);
         let pos: number = row * Terrain.subdivisionsX + col;
         try {
-            /*
-             HOX!  this.facet1Arr and this.facet2Arr has now been combinet to this.facet12ArrCPUBuffer,
-             look and example from terrainWorker how to access its indices.
+             //HOX!  this.facet1Arr and this.facet2Arr has now been combinet to this.facet12ArrCPUBuffer,
+             //look and example from terrainWorker how to access its indices.
 
-             * */
             if (z < -1 * x + this.slopeArr[pos]) {
                 //@ts-ignore
                 facet = new Float32Array(this.facet1Arr.buffer, pos << 4, 4) // << 4 =  4 *  Float32Array.BYTES_PER_ELEMENT
@@ -570,5 +568,5 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             throw (e);
         }
         return -(facet[0] * x + facet[2] * z + facet[3]) / facet[1];
-    }
+    }*/
 }

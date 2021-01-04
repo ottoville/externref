@@ -3,9 +3,9 @@ import type { BoundableNode, PickingInfo } from "./TerraNode";
 import type { GPU } from "./GPU";
 import type { Engine } from "./engine";
 import { BindGroupLayout, LayoutGroupDrawable } from "./GPU/BindGroupLayout";
-import { TerraMatrix } from "./traits/worldPosition";
 import type { TerraCamera } from "./TerraCamera";
 import { RenderPass } from "./GPU/RenderPass";
+import { TerraMatrix } from "./Math";
 
 export class Scene {
 
@@ -81,7 +81,7 @@ export class Scene {
     }
     async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode) => boolean, fastCheck?: boolean): Promise<BoundableNode | null> {
         if (predicate)
-            throw ('TODO: predicate');
+            console.warn('TODO: predicate');
        /* const b1 = this.gpu.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
         const b1arr = b1.getMappedRange()
         new Float32Array(b1arr).set(this.TerraCameras[0].projectionArr);

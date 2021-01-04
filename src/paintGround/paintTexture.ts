@@ -1,10 +1,10 @@
 ﻿import { paintGround } from "./paintGround.js";
 import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
-import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
+import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 export class paintTexture extends paintGround {
     onEnd() { }

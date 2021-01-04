@@ -1,5 +1,5 @@
 ﻿import { RenderPass } from "./GPU/RenderPass";
-import { Matrix, Vector3 } from "./lib/babylon/Maths/math.vector";
+
 import { ObjectWorkerThread } from "./WorkerThread";
 import type { GPU } from "./GPU";
 import { Engine } from "./engine";

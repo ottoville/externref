@@ -2,14 +2,12 @@ import { UITAB } from "../UITAB.js";
 import { paintTexture } from "../paintGround/paintTexture.js";
 import type { Terrain } from "../world/terrain.js";
 import type { PTDresult } from "../types/interfaces/index.js";
-
-import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
-
 import { canvasListener } from "../traits/canvasListener.js";
 
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
 import type { Scene } from "../Scene.js";
+import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 export class Zones extends UITAB {
     traits: Set<Trait> = new Set();

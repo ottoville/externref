@@ -4,12 +4,12 @@ import type { Plants } from "../plants/Plants.js";
 import type { Terrain } from "../world/terrain.js";
 
 import type { PTDresult } from "../types/interfaces/index.js";
-import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 
 import { canvasListener } from "../traits/canvasListener.js";
 import { Trait } from "../traits/trait.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
+import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 
 export class PlantsUI extends UITAB {

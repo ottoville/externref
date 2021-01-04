@@ -2,10 +2,12 @@
 import { Engine } from "./engine";
 
 import type { isLight } from "./lights";
+import { TerraMatrix } from "./Math";
 import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
 import { worldPosition } from "./traits/worldPosition";
 import { ObjectWorkerThread } from "./WorkerThread";
+import { Vector3 } from "./Math";
 
 
 /*
@@ -40,7 +42,7 @@ function matrixMultiply(m: ArrayLike<number>, otherM: ArrayLike<number>): number
     result[14] = tm12 * om2 + tm13 * om6 + tm14 * om10 + tm15 * om14;
     result[15] = tm12 * om3 + tm13 * om7 + tm14 * om11 + tm15 * om15;
     return result;
-}*/
+}
 function Vector3Multiply(vector: Float32Array | Float64Array, m: ArrayLike<number>): void {
     var rx = vector[0] * m[0] + vector[1] * m[4] + vector[2] * m[8] + m[12];
     var ry = vector[0] * m[1] + vector[1] * m[5] + vector[2] * m[9] + m[13];
@@ -50,7 +52,7 @@ function Vector3Multiply(vector: Float32Array | Float64Array, m: ArrayLike<numbe
     vector[0] = rx * rw;
     vector[1] = ry * rw;
     vector[2] = rz * rw;
-}
+}*/
 export abstract class TerraNode implements Partial<hasPhysics> {
     static uniqueID = 0;
     protected readonly uniqueID: number = TerraNode.uniqueID++;
@@ -132,8 +134,8 @@ class pickInfo {
 class boundingBox {
     buffer = new SharedArrayBuffer(4 * 6);
     box = new Float32Array(this.buffer);
-    min = new Float32Array(this.buffer, 0, 3);
-    max = new Float32Array(this.buffer, 4 * 3, 3);
+    min = new Vector3(this.buffer, 0, 3);
+    max = new Vector3(this.buffer, 4 * 3, 3);
 }
 export abstract class BoundableNode extends TerraNode {
     indicesBuffer?: SharedArrayBuffer | undefined;
@@ -159,10 +161,10 @@ export abstract class BoundableNode extends TerraNode {
     public intersectsRay(ray: Float32Array): Promise<void> {
         return worker.message(this.uniqueID, 'intersectsRay', [ray.buffer]);
     }
-    public updateBoundingBoxByMatrix(m: Float32Array) {
+    public updateBoundingBoxByMatrix(m: TerraMatrix) {
         //TODO: Use SIMD
-        Vector3Multiply(this.boundingBox.min, m);
-        Vector3Multiply(this.boundingBox.max, m);
+        this.boundingBox.min.multiply(m);
+        this.boundingBox.max.multiply(m);
     }
 
     lastColliderWorldVertices: SharedArrayBuffer | null = null;
@@ -174,7 +176,7 @@ export abstract class BoundableNode extends TerraNode {
             return;
         }
         // Transformation matrix
-        const collisionsScalingMatrix = new Matrix();
+        const collisionsScalingMatrix = Matrix.FromArray(new TerraMatrix([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]));
         Matrix.ScalingToRef(1.0 / collider._radius[0], 1.0 / collider._radius[1], 1.0 / collider._radius[2], collisionsScalingMatrix);
         const collisionsTransformMatrix = collisionsScalingMatrix;
         if (this.worldPosition)
@@ -190,20 +192,21 @@ export abstract class BoundableNode extends TerraNode {
             //lastColliderVertices.set(window.Wasm.calculatelastcolliderworldvertices(new Float32Array(this.verticesPositionBuffer), collisionsTransformMatrix.m as Float32Array));
 
             const positions = new Float32Array(this.verticesPositionBuffer);
-            const tmpVec = Vector3.Zero();
+            const tmpVec = new Vector3(3);
             const len = positions.length / this.verticesPositionStride;
             this.lastColliderWorldVectorsView2 = [];
             for (let i = 0; i < len; i++) {
-                tmpVec.x = positions[i * this.verticesPositionStride];
-                tmpVec.y = positions[i * this.verticesPositionStride + 1];
-                tmpVec.z = positions[i * this.verticesPositionStride + 2];
+                tmpVec[0] = positions[i * this.verticesPositionStride];
+                tmpVec[1] = positions[i * this.verticesPositionStride + 1];
+                tmpVec[2] = positions[i * this.verticesPositionStride + 2];
                 //this.lastColliderWorldVectors.push(Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix));
-                const transformed = Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix);
-                if (isNaN(transformed.x))
-                    debugger;
-                this.lastColliderWorldVectorsView[i * 3] = transformed.x
-                this.lastColliderWorldVectorsView[i * 3 + 1] = transformed.y
-                this.lastColliderWorldVectorsView[i * 3 + 2] = transformed.z
+                // const transformed = Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix);
+                tmpVec.multiply(new TerraMatrix(collisionsTransformMatrix.m.buffer as ArrayBuffer, 0));
+               // if (isNaN(transformed.x))
+               //     debugger;
+                this.lastColliderWorldVectorsView[i * 3] = tmpVec[0]
+                this.lastColliderWorldVectorsView[i * 3 + 1] = tmpVec[1]
+                this.lastColliderWorldVectorsView[i * 3 + 2] = tmpVec[2]
                 this.lastColliderWorldVectorsView2.push(new Float32Array(this.lastColliderWorldVectors, i * 3 * 4, 3))
 
             }

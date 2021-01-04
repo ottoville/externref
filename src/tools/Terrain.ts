@@ -1,7 +1,6 @@
 ﻿import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
-import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import type { DrawableSimple } from "../GPU/Drawable.js";
@@ -9,6 +8,7 @@ import { TerraNode } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
 import type { Scene } from "../Scene.js";
+import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 const terrainWorker = new WorkerThread('../webworkers/terrainWorker.js');
 
@@ -94,7 +94,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
             return;
         }
         this.#canvasListener.addListener("pointerup", this.pointerupf, { once: true });
-        this.camera.detachControl(this.engine.gpu.renderPassScreen.canvas);
+        this.camera.detachControl();
        
         this.mouseinterval = setInterval(() => {
             terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
@@ -107,7 +107,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
         }, 17);
     }
     pointerupf = (): void => {
-        this.camera.attachControl(this.engine.gpu.renderPassScreen.canvas, true);
+        this.camera.attachControl();
         clearInterval(this.mouseinterval);
     }
     destroy = (): void => {

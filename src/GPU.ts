@@ -2,10 +2,9 @@
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass";
 import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
 import { Scene } from "./Scene";
-
-
-
-
+type CopyBuffers<T> = {
+    [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
+};
 export class GPU {
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     #bufferIndexFormats: WeakMap<GPUBuffer, GPUIndexFormat> = new WeakMap();
@@ -291,7 +290,7 @@ export class GPU {
 
         return buff;
     }
-    createCopy(commandEncoder: GPUCommandEncoder, ...buffers: GPUCopySRCBuffer[]): (GPUMapReadBuffer & GPUCopyDSTBuffer)[] {
+    createCopy<T extends GPUCopySRCBuffer[]>(commandEncoder: GPUCommandEncoder, ...buffers: T): CopyBuffers<T> {
         const readBuffers: (GPUMapReadBuffer & GPUCopyDSTBuffer)[] = [];
         buffers.forEach(buffer => {
             let size: number | undefined;
@@ -309,7 +308,7 @@ export class GPU {
             else
                 throw (new Error('Buffer size not found from weakmap'));
         });
-        return readBuffers;
+        return readBuffers as CopyBuffers<T>;
     }
 
     createCommandEncoder(descriptor?: GPUCommandEncoderDescriptor): TerraGPUCommandEncoder {

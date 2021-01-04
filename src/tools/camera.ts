@@ -1,8 +1,8 @@
 import { UITAB } from "../UITAB.js";
-import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import type { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
+import { ArcRotateCamera } from "../ArcRotateCamera.js";
 export class CameraTAB extends UITAB {
     public label = 'Camera';
     constructor(
@@ -21,10 +21,12 @@ export class CameraTAB extends UITAB {
     }*/
     activateDebugCamera = (enable: boolean): void => {
         if (enable) {
+            //@ts-ignore
             this.camera.viewport = new Viewport(0.5, 0, 0.5, 1.0);
            // this.scene.activeCameras.push(this.scene.camera2);
         }
         else {
+            //@ts-ignore
             this.camera.viewport = new Viewport(0, 0, 1, 1.0);
            // this.scene.removeCamera(this.scene.camera2);
         }

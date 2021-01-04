@@ -10,7 +10,8 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noUnusedLocals": true,
-    "noUnusedParameters":  true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": false,
     //"strict": true,
     "target": "esnext",
     "module": "ESNext",
@@ -27,12 +28,7 @@
     "allowJs": true,
     "incremental": true,
     "tsBuildInfoFile": "tsconfig.main.tsbuildinfo",
-    "baseUrl": ".",
-    "paths": {
-      "babylonjs/*": [
-        "./lib/babylon/"
-      ]
-    }
+    "baseUrl": "."
   },
   "include": [ "**/*.ts", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*" ],
   "exclude": [
@@ -41,7 +37,6 @@
     "lib"
   ],
   "references": [
-    { "path": "./workers/tsconfig.json" },
-    { "path": "./lib/tsconfig.babylon.json" }
+    { "path": "./workers/tsconfig.json" }
   ]
 }

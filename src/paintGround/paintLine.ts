@@ -3,10 +3,10 @@ import type { Terrain } from "../world/terrain.js";
 //import { Vector3 } from "../lib/babylon/Maths/math.vector.js";
 //import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
 
-import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
+import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 export class paintLine extends paintGround {
     onEnd() { }

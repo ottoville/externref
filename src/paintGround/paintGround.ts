@@ -1,13 +1,14 @@
 //let tempplane: BABYLON.Mesh | null
 //let end_position: Vector2
 const fullRad = Math.PI * 2
+import { Vector2 } from "../Math";
 
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
-import type { ArcRotateCamera } from "../lib/babylon/Cameras/arcRotateCamera.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
+import { ArcRotateCamera } from "../ArcRotateCamera";
 
 //import { rotateMatrix, translate } from "./math.js";
 
@@ -24,7 +25,7 @@ export enum DrawType {
 export abstract class paintGround {
     protected ang360: Angle = new Angle(0);
     #end_position: Float32Array = new Float32Array(2);
-    #start_position: Float32Array = new Float32Array(2);
+    #start_position  = new Vector2(2);
     constructor(
         protected scene: Scene,
         protected camera: ArcRotateCamera,
@@ -39,7 +40,7 @@ export abstract class paintGround {
         this.resolve = callback;
     }
     public destroy() {
-        this.camera.attachControl(this.scene.gpu.renderPassScreen.canvas, true);
+        this.camera.attachControl();
         this.uitab.canvasListener.destroy();
     }
 
@@ -162,7 +163,7 @@ export abstract class paintGround {
 
         this.uitab.canvasListener.removeListener('pointermove', this.#drawArea);
 
-        this.camera.attachControl(this.scene.engine.gpu.renderPassScreen.canvas, true);
+        this.camera.attachControl();
         //fix race condition
         if (this.#end_position[0] == 0)
             return;
@@ -202,9 +203,9 @@ export abstract class paintGround {
                 debugger;
                 return;
             }*/
-            this.#start_position = new Float32Array([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
+            this.#start_position = new Vector2([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
             this.onMainPointerDown(this.#start_position);
-            this.camera.detachControl(this.scene.engine.gpu.renderPassScreen.canvas);
+            this.camera.detachControl();
             this.scene.TerraCameras[0].subscribePickingRay();
             this.uitab.canvasListener.addListener("pointermove", this.#drawArea, { lazy: 25 });
 

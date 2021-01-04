@@ -1,8 +1,9 @@
 //type Angle={rad:number, deg:number}
-import * as BABYLON from "../../lib/babylon/index.js"
+import { Vector2} from "../../Math";
+
 
 type Zone = {
-    coord: BABYLON.Vector3, ang: any, //Angle,
+    coord: any, ang: any, //Angle,
     size: { h: number, w: number }
 }
 type subTexture = {
@@ -15,14 +16,14 @@ type subTexture = {
 type savedCamera = { id: number, camera: { alpha: number, beta: number, radius: number, target: Float32Array, position: Float32Array}}
 type PTDresult =
     {
-        coord: Float32Array, //Vector3,
+        coord: Vector2,
         rad: number, // Angle,
         size: {
             w: number,
             h: number
         }
     }
-type PTResultF= ( coords: PTDresult, plane?:BABYLON.Mesh) => void;
+type PTResultF= ( coords: PTDresult, plane?:any) => void;
 
 declare namespace DotNet  {
     function invokeMethodAsync(namespace: string, method: string, ...param: any): Promise<any>
