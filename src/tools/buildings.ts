@@ -1,12 +1,13 @@
 ﻿import { UITAB } from "../UITAB.js";
-import { TerraMesh } from "../TerraMesh.js";
-import * as BABYLON from "../lib/babylon/index.js"
+
+
 import { canvasListener } from "../traits/canvasListener.js";
 import { Trait } from "../traits/trait.js";
-import { ArcRotateCamera } from "../lib/babylon/index.js";
+
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
+import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 
 export class BuildingsUI extends UITAB {
@@ -20,7 +21,7 @@ export class BuildingsUI extends UITAB {
         terrain: Terrain,
         camera: ArcRotateCamera,
         sea: Sea,
-    ) {
+    ) {//@ts-ignore
         super(scene, terrain, camera, sea);
 
     }
@@ -29,6 +30,7 @@ export class BuildingsUI extends UITAB {
 
         if (type == 'house') {
             this.#canvasListener.addListener("pointerdown", function doHouse() {
+                //@ts-ignore
                 let pickInfo: BABYLON.PickingInfo | null;
                 //@ts-ignore
                 if (pickInfo = scene.pick(scene.pointerX, scene.pointerY, (m) => {
@@ -48,6 +50,7 @@ export class BuildingsUI extends UITAB {
                             (accumulator: Array<number>, currentValue, currentIndex) => accumulator.concat(currentValue * scaleArray[currentIndex % 3]),
                             []
                         );
+                        //@ts-ignore
                         let building = new TerraMesh('building', new Float32Array(positions),indices,normals)
                         building.checkCollisions = true;
                         building.position.x = pickInfo.pickedPoint.x;

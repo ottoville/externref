@@ -42,7 +42,7 @@ function matrixMultiplyToRef(m: ArrayLike<number>, otherM: ArrayLike<number>, re
 
 export class TerraCamera {
     readonly #uniqueID: number = uniqueID++;    
-
+    childCameras: Set<TerraCamera> = new Set();
     viewport = new Viewport(0, 0, 1.0, 1.0);
 
     #uniformBufferSize = 4 * 16 * 2 + 3 * 4
@@ -71,84 +71,83 @@ export class TerraCamera {
             }
         }, this.gpu.timeGroup);
     onRender?: () => void;
-    constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, engine:Engine, main: boolean = true, private parent?: TerraCamera) {
+    constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, engine:Engine, main: boolean = true, parent?:TerraCamera) {
         this.viewArr[15] = 1;
+        if(parent)
+            parent.childCameras.add(this);
         renderPass.cameras.add(this);
         if(main)
             worker.message(this.#uniqueID, 'init', [this.#viewProjectionPositionBuffer, this.projection, this.#pickingRayBuffer, engine.mousePositionBuffer, renderPass.size]);
     }
-  
-    render(renderEncoder: GPUCommandEncoder) {
+    doUpdateView = false;
+    updateView() {
+            this.viewArr[2] = this.target[0] - this.cameraPosition[0];
+            this.viewArr[6] = this.target[1] - this.cameraPosition[1];
+            this.viewArr[10] = this.target[2] - this.cameraPosition[2];
 
-        if (this.parent) {
-            this.cameraPosition[0] = this.parent.cameraPosition[0]
-            this.cameraPosition[1] = this.parent.cameraPosition[1]
-            this.cameraPosition[2] = this.parent.cameraPosition[2]
-
-            this.target[0] = this.parent.target[0]
-            this.target[1] = this.parent.target[1]
-            this.target[2] = this.parent.target[2]
-        }
-        this.onRender && this.onRender();
-
-        /*
-        0,1,2,3,
-        4,5,6,7,
-        8,9,10,11,
-        12,13,14,15
-
-
-*/
-        //TODO: use SIMD, use column major matrix?
-        this.viewArr[2] = this.target[0] - this.cameraPosition[0];
-        this.viewArr[6] = this.target[1] - this.cameraPosition[1];
-        this.viewArr[10] = this.target[2] - this.cameraPosition[2];
-
-
-        const zLength = Math.sqrt(this.viewArr[2] * this.viewArr[2] + this.viewArr[6] * this.viewArr[6] + this.viewArr[10] * this.viewArr[10]);
-        if (!(zLength === 0 || zLength === 1)) {
-            //zAxis.normalizeFromLength(xLength);
-            const scale = 1.0 / zLength;
-            this.viewArr[2] *= scale;
-            this.viewArr[6] *= scale;
-            this.viewArr[10] *= scale;
-        }
-
-        this.viewArr[0] = this.viewArr[10];
-        this.viewArr[8] = -this.viewArr[2];
-        
-        const xSquareLength = this.viewArr[0] * this.viewArr[0] + this.viewArr[8] * this.viewArr[8];
-        if (xSquareLength === 0) {
-            this.viewArr[0] = 1.0;
-        } else {
-            let len = Math.sqrt(xSquareLength);
-            if (!(len === 0 || len === 1.0)) {
-                const scale = 1.0 / len;
-                this.viewArr[0] *= scale;
-                this.viewArr[8] *= scale;
+            const zLength = Math.sqrt(this.viewArr[2] * this.viewArr[2] + this.viewArr[6] * this.viewArr[6] + this.viewArr[10] * this.viewArr[10]);
+            if (!(zLength === 0 || zLength === 1)) {
+                //zAxis.normalizeFromLength(xLength);
+                const scale = 1.0 / zLength;
+                this.viewArr[2] *= scale;
+                this.viewArr[6] *= scale;
+                this.viewArr[10] *= scale;
             }
-        }
-        
-        // Y axis
-        this.viewArr[1] = this.viewArr[6] * this.viewArr[8];
-        this.viewArr[5] = this.viewArr[10] * this.viewArr[0] - this.viewArr[2] * this.viewArr[8];
-        this.viewArr[9] = -(this.viewArr[6] * this.viewArr[0]);
-        // Eye angles, dot products
 
-        //x
-        this.viewArr[12] = -(this.viewArr[0] * this.cameraPosition[0] + this.viewArr[8] * this.cameraPosition[2])
-        //y
-        this.viewArr[13] = -(this.viewArr[1] * this.cameraPosition[0] + this.viewArr[5] * this.cameraPosition[1] + this.viewArr[9] * this.cameraPosition[2])
-        //z
-        this.viewArr[14] = -(this.viewArr[2] * this.cameraPosition[0] + this.viewArr[6] * this.cameraPosition[1] + this.viewArr[10] * this.cameraPosition[2]);
+            this.viewArr[0] = this.viewArr[10];
+            this.viewArr[8] = -this.viewArr[2];
 
-        matrixMultiplyToRef(this.viewArr, this.projectionArr, this.#projectionViewArr);
+            const xSquareLength = this.viewArr[0] * this.viewArr[0] + this.viewArr[8] * this.viewArr[8];
+            if (xSquareLength === 0) {
+                this.viewArr[0] = 1.0;
+            } else {
+                let len = Math.sqrt(xSquareLength);
+                if (!(len === 0 || len === 1.0)) {
+                    const scale = 1.0 / len;
+                    this.viewArr[0] *= scale;
+                    this.viewArr[8] *= scale;
+                }
+            }
 
+            // Y axis
+            this.viewArr[1] = this.viewArr[6] * this.viewArr[8];
+            this.viewArr[5] = this.viewArr[10] * this.viewArr[0] - this.viewArr[2] * this.viewArr[8];
+            this.viewArr[9] = -(this.viewArr[6] * this.viewArr[0]);
+            // Eye angles, dot products
 
-        const tempBuffer = this.gpu.createGPUBuffer(this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], true);
-        new Float32Array(tempBuffer.getMappedRange()).set(this.#viewAndProjection);
-        const commandBuffer = this.gpu.copyBufferToBuffer(tempBuffer, this.#uniformBuffer, this.#viewAndProjection.byteLength);
+            //x
+            this.viewArr[12] = -(this.viewArr[0] * this.cameraPosition[0] + this.viewArr[8] * this.cameraPosition[2])
+            //y
+            this.viewArr[13] = -(this.viewArr[1] * this.cameraPosition[0] + this.viewArr[5] * this.cameraPosition[1] + this.viewArr[9] * this.cameraPosition[2])
+            //z
+            this.viewArr[14] = -(this.viewArr[2] * this.cameraPosition[0] + this.viewArr[6] * this.cameraPosition[1] + this.viewArr[10] * this.cameraPosition[2]);
+
+            matrixMultiplyToRef(this.viewArr, this.projectionArr, this.#projectionViewArr);
+            const tempBuffer = this.gpu.createGPUBuffer(this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], true);
+            new Float32Array(tempBuffer.getMappedRange()).set(this.#viewAndProjection);
+            const commandBuffer = this.gpu.copyBufferToBuffer(tempBuffer, this.#uniformBuffer, this.#viewAndProjection.byteLength);
         this.gpu.pendingCommandBuffers.push(commandBuffer);
+        
+    }
+    beforeViewUpdate:Set<() => void> = new Set();
+    render(renderEncoder: GPUCommandEncoder) {
+        this.onRender && this.onRender();
+        //TODO: use SIMD, use column major matrix?
+        if (this.doUpdateView) {
+            this.childCameras.forEach(childCamera => {
+                childCamera.cameraPosition[0] = this.cameraPosition[0]
+                childCamera.cameraPosition[1] = this.cameraPosition[1]
+                childCamera.cameraPosition[2] = this.cameraPosition[2]
+
+                childCamera.target[0] = this.target[0]
+                childCamera.target[1] = this.target[1]
+                childCamera.target[2] = this.target[2];
+                childCamera.doUpdateView = true;
+            })
+            this.beforeViewUpdate.forEach(cb => cb());
+            this.updateView();
+            this.doUpdateView = false;
+        }
         this.renderPass.render(renderEncoder, this.#uniformBindGroup);
     }
     createPickingRay(x: number, y: number, world?: Float32Array) {

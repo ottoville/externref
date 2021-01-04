@@ -1,6 +1,4 @@
 
-//import type { WorldScene } from "./world/scene.js";
-//import * as BABYLON from "./lib/babylon/index.js"
 import type { loginProvider, DotNet, /*savedCamera*/ } from "./types/interfaces/index.js";
 import { Plants } from "./plants/Plants.js";
 import { UITAB, UITABClassLike } from "./UITAB.js";
@@ -16,13 +14,10 @@ import { Sea } from "./world/water.js";
 import { GPU } from "./GPU.js";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
 import { Box } from "./GPU/Meshes/Box.js";
-//import { ArcRotateCamera } from "./lib/babylon/Cameras/arcRotateCamera.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { Engine } from "./engine.js";
 import { Sun2 } from "./world/sun2.js";
 import { PositionNode } from "./TerraNode.js";
-//import { DefaultCollisionCoordinator } from "./lib/babylon/Collisions/collisionCoordinator.js";
-//import { AbstractMesh } from "./lib/babylon/Meshes/abstractMesh.js";
 import { Scene } from "./Scene.js";
 import { ArcRotateCamera } from "./ArcRotateCamera.js";
 
@@ -199,7 +194,11 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
         blazor.invokeMethod('setProgress', 13);
 
-        const waterCamera = new TerraCamera(gpuscene.renderPassWater, projectionmatrixBuffer, gpuscene, terraEngine, false, mainCamera)
+        const waterCamera = new TerraCamera(gpuscene.renderPassWater, projectionmatrixBuffer, gpuscene, terraEngine, false, mainCamera);
+        waterCamera.beforeViewUpdate.add(() => {
+            waterCamera.cameraPosition[1] -= (waterCamera.cameraPosition[1] - 3) * 2;
+            waterCamera.target[1] = -waterCamera.target[1];
+        });
         const TerraCameras = [mainCamera, waterCamera]
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
@@ -261,6 +260,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
             tools.set('Plants', PlantsUI);
             tools.set('Camera', CameraTAB);
+            //@ts-ignore
             tools.set('Buildings', BuildingsUI);
             tools.set('TerrainTool', TerrainTool);
             tools.set('Zones', Zones);
@@ -364,10 +364,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         let framecount = 0;
         let msPerFrame = 0;
         let startTime = 0;
-        waterCamera.onRender = function () {
-            this.cameraPosition[1] -= (this.cameraPosition[1] - 3) * 2;
-            this.target[1] = -this.target[1];
-        }
+
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();
@@ -387,8 +384,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 if (buff)
                     gpuscene.pendingCommandBuffers.push(buff);
             });
-            camera.checkInputs();
-            camera.calculateViewMatrix();
+            if (camera.checkInputs()) {
+                camera.calculateCameraPositionAndTarget();
+                mainCamera.doUpdateView = true;
+            }
 
             const renderEncoder = gpuscene.device.createCommandEncoder();
             timeView.set([time]);

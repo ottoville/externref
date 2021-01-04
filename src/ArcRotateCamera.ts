@@ -21,7 +21,6 @@ export class ArcRotateCamera {
 
     #collisionVelocity = new Float32Array(3);
     #collisionRadius: [number, number, number] = [0.5, 0.5, 0.5];
-    collisionTriggered = false;
     collisionVelocity = new Float32Array(3);
 
     inertia = 0.9;
@@ -50,18 +49,6 @@ export class ArcRotateCamera {
     * Define the current direction the camera is moving to
     */
     #cameraDirection = new Vector3(0, 0, 0);
-    /**
-    * Define the current rotation the camera is rotating to
-    */
-    #cameraRotation = new Vector2(0, 0);
-    /**
-     * Define the current rotation of the camera
-     */
-    #rotation = new Vector3(0, 0, 0);
-    /**
-     * Define the current rotation of the camera as a quaternion to prevent Gimbal lock
-     */
-    #rotationQuaternion: Quaternion = Quaternion.Zero();
     constructor(public alpha: number, public beta: number, public radius:number, private engine: Engine, private camera:TerraCamera) {
         engine.canvas.addEventListener('pointerup', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
         engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
@@ -97,7 +84,7 @@ export class ArcRotateCamera {
         this.engine.canvas.removeEventListener('pointermove', this.#cameraMove);
         this.engine.canvas.removeEventListener('wheel', this.#cameraWheel);
     }
-    calculateViewMatrix() {
+    calculateCameraPositionAndTarget() {
         var cosa = Math.cos(this.alpha);
         var sina = Math.sin(this.alpha);
         var cosb = Math.cos(this.beta);
@@ -123,8 +110,6 @@ export class ArcRotateCamera {
         this.#collisionVelocity[1] = this.#newPosition[1] - this.camera.cameraPosition[1];
         this.#collisionVelocity[2] = this.#newPosition[2] - this.camera.cameraPosition[2];
 
-        this.collisionTriggered = true;
-
         // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
 
         // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
@@ -145,7 +130,6 @@ export class ArcRotateCamera {
         //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
 
         this.engine.collideWithWorld(this.engine.collisionCoordinator.scaledPosition, this.engine.collisionCoordinator.scaledVelocity, 3, this.engine.collisionCoordinator.finalPosition);
-
 
 
         //coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
@@ -207,7 +191,6 @@ export class ArcRotateCamera {
         this.camera.cameraPosition[1] = this.#newPosition[1];
         this.camera.cameraPosition[2] = this.#newPosition[2];
 
-
         //this._computeViewMatrix(this._position, target, up);
 
         //this._globalPosition.copyFrom(this._position);
@@ -221,16 +204,12 @@ export class ArcRotateCamera {
         this.#globalCurrentTarget[1] = this.camera.target[1];
         this.#globalCurrentTarget[2] = this.camera.target[2];*/
 
-        this.collisionTriggered = false;
         // }
     }
     
-    checkInputs=() => {
+    checkInputs = () => {
+        let updateView: boolean = false;
         //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
-
-        if (this.collisionTriggered) {
-            return;
-        }
 
         //inputs.checkInputs();
         // Inertia
@@ -254,8 +233,9 @@ export class ArcRotateCamera {
             if (Math.abs(this.inertialRadiusOffset) < this.speed * Epsilon) {
                 this.inertialRadiusOffset = 0;
             }
+            updateView = true;
         }
-
+        
         // Panning inertia
         if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
             Matrix.FromArray(this.camera.viewArr).invertToRef(this.#cameraTransformMatrix);
@@ -278,7 +258,7 @@ export class ArcRotateCamera {
             this.camera.target[0] += this.#transformedDirection.x;
             this.camera.target[1] += this.#transformedDirection.y;
             this.camera.target[2] += this.#transformedDirection.z;
-
+            updateView = true;
             this.inertialPanningX *= this.#panningInertia;
             this.inertialPanningY *= this.#panningInertia;
 
@@ -295,7 +275,6 @@ export class ArcRotateCamera {
 
        // const needToMove = this._decideIfNeedsToMove();
         const needToMove = Math.abs(this.#cameraDirection.x) > 0 || Math.abs(this.#cameraDirection.y) > 0 || Math.abs(this.#cameraDirection.z) > 0;
-        const needToRotate = Math.abs(this.#cameraRotation.x) > 0 || Math.abs(this.#cameraRotation.y) > 0;
 
         // Move
         if (needToMove) {
@@ -303,26 +282,8 @@ export class ArcRotateCamera {
             this.camera.cameraPosition[0] += this.#cameraDirection.x;
             this.camera.cameraPosition[1] += this.#cameraDirection.y;
             this.camera.cameraPosition[2] += this.#cameraDirection.z;
-        }
-
-        // Rotate
-        if (needToRotate) {
-            console.log('needToRotate');
-            this.#rotation.x += this.#cameraRotation.x;
-            this.#rotation.y += this.#cameraRotation.y;
-
-            //rotate, if quaternion is set and rotation was used
-            if (this.#rotationQuaternion) {
-                var len = this.#rotation.lengthSquared();
-                if (len) {
-                    Quaternion.RotationYawPitchRollToRef(this.#rotation.y, this.#rotation.x, this.#rotation.z, this.#rotationQuaternion);
-                }
-            }
-        }
-
+            updateView = true;
         // Inertia
-        if (needToMove) {
-            console.log('needToMove');
             if (Math.abs(this.#cameraDirection.x) < this.speed * Epsilon) {
                 this.#cameraDirection.x = 0;
             }
@@ -337,16 +298,7 @@ export class ArcRotateCamera {
 
             this.#cameraDirection.scaleInPlace(this.inertia);
         }
-        if (needToRotate) {
-            if (Math.abs(this.#cameraRotation.x) < this.speed * Epsilon) {
-                this.#cameraRotation.x = 0;
-            }
-
-            if (Math.abs(this.#cameraRotation.y) < this.speed * Epsilon) {
-                this.#cameraRotation.y = 0;
-            }
-            this.#cameraRotation.scaleInPlace(this.inertia);
-        }
+        return updateView;
     }
  // Rebuilds angles (alpha, beta) and radius from the give position and target
     public rebuildAnglesAndRadius(): void {
