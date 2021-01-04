@@ -1,4 +1,4 @@
-﻿import { TerraMatrix, Vector3, Vector4 } from "../Math";
+﻿import { TerraMatrix, TerraVector3, TerraVector4 } from "../Math";
 import { BoundableNode, TerraNode } from "../TerraNode";
 export interface has3DPosition {
     worldPosition: worldPosition;
@@ -7,11 +7,11 @@ export interface has3DPosition {
 
 export class worldPosition {
     readonly worldMatrix = new TerraMatrix(this.node.data.buffer, this.node.bufferOffsetBytes);
-    readonly translation = new Vector3(this.node.data.buffer, this.node.bufferOffsetBytes+ 12 * this.node.data.BYTES_PER_ELEMENT, 3);
+    readonly translation = new TerraVector3(this.node.data.buffer, this.node.bufferOffsetBytes+ 12 * this.node.data.BYTES_PER_ELEMENT, 3);
     readonly translationDelta: Float32Array = new Float32Array(this.node.data.buffer, this.node.bufferOffsetBytes + 16 * this.node.data.BYTES_PER_ELEMENT, 3);
 
-    readonly #scaling = new Vector3([1, 1, 1]);
-    readonly #rotation = new Vector4([0, 0, 0, 0]);
+    readonly #scaling = new TerraVector3([1, 1, 1]);
+    readonly #rotation = new TerraVector4([0, 0, 0, 0]);
 
     public update(callback: (scaling: Float32Array, rotation: Float32Array) => void) {
         callback(this.#scaling, this.#rotation);

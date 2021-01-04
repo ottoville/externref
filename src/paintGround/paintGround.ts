@@ -1,7 +1,7 @@
 //let tempplane: BABYLON.Mesh | null
 //let end_position: Vector2
 const fullRad = Math.PI * 2
-import { Vector2 } from "../Math";
+import { TerraVector2 } from "../Math";
 
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
@@ -25,7 +25,7 @@ export enum DrawType {
 export abstract class paintGround {
     protected ang360: Angle = new Angle(0);
     #end_position: Float32Array = new Float32Array(2);
-    #start_position  = new Vector2(2);
+    #start_position  = new TerraVector2(2);
     constructor(
         protected scene: Scene,
         protected camera: ArcRotateCamera,
@@ -203,7 +203,7 @@ export abstract class paintGround {
                 debugger;
                 return;
             }*/
-            this.#start_position = new Vector2([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
+            this.#start_position = new TerraVector2([this.ground.mesh.pickInfo.point[0], this.ground.mesh.pickInfo.point[2]]);
             this.onMainPointerDown(this.#start_position);
             this.camera.detachControl();
             this.scene.TerraCameras[0].subscribePickingRay();

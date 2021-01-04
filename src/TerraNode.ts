@@ -7,42 +7,11 @@ import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
 import { worldPosition } from "./traits/worldPosition";
 import { ObjectWorkerThread } from "./WorkerThread";
-import { Vector3 } from "./Math";
+import { TerraVector3 } from "./Math";
 
 
 /*
-function matrixMultiply(m: ArrayLike<number>, otherM: ArrayLike<number>): number[] {
-    var tm0 = m[0], tm1 = m[1], tm2 = m[2], tm3 = m[3];
-    var tm4 = m[4], tm5 = m[5], tm6 = m[6], tm7 = m[7];
-    var tm8 = m[8], tm9 = m[9], tm10 = m[10], tm11 = m[11];
-    var tm12 = m[12], tm13 = m[13], tm14 = m[14], tm15 = m[15];
 
-    var om0 = otherM[0], om1 = otherM[1], om2 = otherM[2], om3 = otherM[3];
-    var om4 = otherM[4], om5 = otherM[5], om6 = otherM[6], om7 = otherM[7];
-    var om8 = otherM[8], om9 = otherM[9], om10 = otherM[10], om11 = otherM[11];
-    var om12 = otherM[12], om13 = otherM[13], om14 = otherM[14], om15 = otherM[15];
-    const result: number[] = [];
-    result[0] = tm0 * om0 + tm1 * om4 + tm2 * om8 + tm3 * om12;
-    result[1] = tm0 * om1 + tm1 * om5 + tm2 * om9 + tm3 * om13;
-    result[2] = tm0 * om2 + tm1 * om6 + tm2 * om10 + tm3 * om14;
-    result[3] = tm0 * om3 + tm1 * om7 + tm2 * om11 + tm3 * om15;
-
-    result[4] = tm4 * om0 + tm5 * om4 + tm6 * om8 + tm7 * om12;
-    result[5] = tm4 * om1 + tm5 * om5 + tm6 * om9 + tm7 * om13;
-    result[6] = tm4 * om2 + tm5 * om6 + tm6 * om10 + tm7 * om14;
-    result[7] = tm4 * om3 + tm5 * om7 + tm6 * om11 + tm7 * om15;
-
-    result[8] = tm8 * om0 + tm9 * om4 + tm10 * om8 + tm11 * om12;
-    result[9] = tm8 * om1 + tm9 * om5 + tm10 * om9 + tm11 * om13;
-    result[10] = tm8 * om2 + tm9 * om6 + tm10 * om10 + tm11 * om14;
-    result[11] = tm8 * om3 + tm9 * om7 + tm10 * om11 + tm11 * om15;
-
-    result[12] = tm12 * om0 + tm13 * om4 + tm14 * om8 + tm15 * om12;
-    result[13] = tm12 * om1 + tm13 * om5 + tm14 * om9 + tm15 * om13;
-    result[14] = tm12 * om2 + tm13 * om6 + tm14 * om10 + tm15 * om14;
-    result[15] = tm12 * om3 + tm13 * om7 + tm14 * om11 + tm15 * om15;
-    return result;
-}
 function Vector3Multiply(vector: Float32Array | Float64Array, m: ArrayLike<number>): void {
     var rx = vector[0] * m[0] + vector[1] * m[4] + vector[2] * m[8] + m[12];
     var ry = vector[0] * m[1] + vector[1] * m[5] + vector[2] * m[9] + m[13];
@@ -134,8 +103,8 @@ class pickInfo {
 class boundingBox {
     buffer = new SharedArrayBuffer(4 * 6);
     box = new Float32Array(this.buffer);
-    min = new Vector3(this.buffer, 0, 3);
-    max = new Vector3(this.buffer, 4 * 3, 3);
+    min = new TerraVector3(this.buffer, 0, 3);
+    max = new TerraVector3(this.buffer, 4 * 3, 3);
 }
 export abstract class BoundableNode extends TerraNode {
     indicesBuffer?: SharedArrayBuffer | undefined;
@@ -168,7 +137,7 @@ export abstract class BoundableNode extends TerraNode {
     }
 
     lastColliderWorldVertices: SharedArrayBuffer | null = null;
-    lastColliderTransformMatrix: Matrix = Matrix.Zero();
+    lastColliderTransformMatrix=new TerraMatrix();
     trianglePlaneArray = [];
 
     public checkCollision(collider: Collider) {
@@ -176,11 +145,14 @@ export abstract class BoundableNode extends TerraNode {
             return;
         }
         // Transformation matrix
-        const collisionsScalingMatrix = Matrix.FromArray(new TerraMatrix([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]));
-        Matrix.ScalingToRef(1.0 / collider._radius[0], 1.0 / collider._radius[1], 1.0 / collider._radius[2], collisionsScalingMatrix);
+        const collisionsScalingMatrix = new TerraMatrix([
+            1.0 / collider._radius[0], 0.0, 0.0, 0.0,
+            0.0, 1.0 / collider._radius[1], 0.0, 0.0,
+            0.0, 0.0, 1.0 / collider._radius[2], 0.0,
+            0.0, 0.0, 0.0, 1.0]);
         const collisionsTransformMatrix = collisionsScalingMatrix;
         if (this.worldPosition)
-            Matrix.FromArray(this.worldPosition.worldMatrix).multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
+            this.worldPosition.worldMatrix.multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
 
         if (!this.lastColliderWorldVertices || !this.lastColliderTransformMatrix.equals(collisionsTransformMatrix)) {
             console.log('recalculating collision vertices ');
@@ -192,7 +164,7 @@ export abstract class BoundableNode extends TerraNode {
             //lastColliderVertices.set(window.Wasm.calculatelastcolliderworldvertices(new Float32Array(this.verticesPositionBuffer), collisionsTransformMatrix.m as Float32Array));
 
             const positions = new Float32Array(this.verticesPositionBuffer);
-            const tmpVec = new Vector3(3);
+            const tmpVec = new TerraVector3(3);
             const len = positions.length / this.verticesPositionStride;
             this.lastColliderWorldVectorsView2 = [];
             for (let i = 0; i < len; i++) {
@@ -201,7 +173,7 @@ export abstract class BoundableNode extends TerraNode {
                 tmpVec[2] = positions[i * this.verticesPositionStride + 2];
                 //this.lastColliderWorldVectors.push(Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix));
                 // const transformed = Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix);
-                tmpVec.multiply(new TerraMatrix(collisionsTransformMatrix.m.buffer as ArrayBuffer, 0));
+                tmpVec.multiply(new TerraMatrix(collisionsTransformMatrix.buffer as ArrayBuffer, 0));
                // if (isNaN(transformed.x))
                //     debugger;
                 this.lastColliderWorldVectorsView[i * 3] = tmpVec[0]

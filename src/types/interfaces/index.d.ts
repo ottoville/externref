@@ -1,5 +1,5 @@
 //type Angle={rad:number, deg:number}
-import { Vector2} from "../../Math";
+import { TerraVector2} from "../../Math";
 
 
 type Zone = {
@@ -16,7 +16,7 @@ type subTexture = {
 type savedCamera = { id: number, camera: { alpha: number, beta: number, radius: number, target: Float32Array, position: Float32Array}}
 type PTDresult =
     {
-        coord: Vector2,
+        coord: TerraVector2,
         rad: number, // Angle,
         size: {
             w: number,
