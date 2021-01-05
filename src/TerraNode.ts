@@ -97,7 +97,7 @@ const worker = new ObjectWorkerThread('/webworkers/mesh.js');
 
 class pickInfo {
     buffer = new SharedArrayBuffer(6 * 4);
-    point = new Float32Array(this.buffer, 0, 3);
+    point = new TerraVector3(this.buffer);
     distance = new Float32Array(this.buffer, 3 * 4, 1);
 }
 class boundingBox {

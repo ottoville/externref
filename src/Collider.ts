@@ -225,7 +225,7 @@ export class Collider {
 
         return true;
     }
-    _points?: [Float32Array, Float32Array, Float32Array, Float32Array];
+    _points?: [TerraVector3, TerraVector3, TerraVector3, TerraVector3];
     /** @hidden */
     public _testTriangle(faceIndex: number, trianglePlaneArray: { normal: [x: number, y: number, z: number], d: number }[], p1a: TerraVector3, p2a: TerraVector3, p3a: TerraVector3): void {
         let t0: number;

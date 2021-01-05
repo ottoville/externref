@@ -179,7 +179,7 @@ export class TerraVector3 extends Float32Array {
         this[2] *= scale;
         return this;
     }
-    set(arr:ArrayLike<number>) {
+    set(arr:[number,number,number] | TerraVector3) {
         this[0] = arr[0];
         this[1] = arr[1];
         this[2] = arr[2];
