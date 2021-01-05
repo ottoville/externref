@@ -146,6 +146,19 @@ export class TerraVector3 extends Float32Array {
     declare 0: number
     declare 1: number
     declare 2: number
+    constructor(Arr?: ArrayBufferLike, offset?: number)
+    constructor(Arr?: number[])
+    constructor(Arr?: number[] | ArrayBufferLike, offset = 0) {
+        if (!Arr)
+            super(3);
+        else if (Array.isArray(Arr)) {
+            Arr.length = 3;
+            super(Arr);
+        }
+        else {
+            super(Arr, offset, 3);
+        }
+    }
     multiply(m: TerraMatrix): void {
         var rx = this[0] * m[0] + this[1] * m[4] + this[2] * m[8] + m[12];
         var ry = this[0] * m[1] + this[1] * m[5] + this[2] * m[9] + m[13];

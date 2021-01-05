@@ -3,7 +3,7 @@
 import { ObjectWorkerThread } from "./WorkerThread";
 import type { GPU } from "./GPU";
 import { Engine } from "./engine";
-import { TerraMatrix } from "./Math";
+import { TerraMatrix, TerraVector3 } from "./Math";
 
 const worker = new ObjectWorkerThread('/webworkers/cameraWorker.js');
 let uniqueID = 0;
@@ -151,6 +151,8 @@ export class TerraCamera {
         }
         this.renderPass.render(renderEncoder, this.#uniformBindGroup);
     }
+    #nearVec3=new TerraVector3();
+    #farVec3 = new TerraVector3();
     createPickingRay(x: number, y: number, world?: Float32Array) {
         const viewport = {
             x: 0,
@@ -183,22 +185,50 @@ export class TerraCamera {
         matrix.multiplyToRef(Matrix.FromArray(Array.from(this.projectionArr)), matrix);
         //TODO use matrixMultiply64 and matrixInvert64
 
-        // matrixInvert64(matrix);
-        // const inverted = Matrix.FromArray(matrix);
-        //const inverted = Matrix.FromArray(matrix).invert();
-        const inverted = matrix.invert();
-        var nearScreenSource = Vector3.Zero()
-        nearScreenSource.x = x / viewport.width * 2 - 1;
-        nearScreenSource.y = -(y / viewport.height * 2 - 1);
-        nearScreenSource.z = -1.0;
-        var farScreenSource = (new Vector3()).copyFromFloats(nearScreenSource.x, nearScreenSource.y, 1.0);
-        const nearVec3 = new Vector3();
-        const farVec3 = new Vector3();
-        Vector3._UnprojectFromInvertedMatrixToRef(nearScreenSource, inverted, nearVec3);
-        Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, inverted, farVec3);
-        const origin = (new Vector3()).copyFrom(nearVec3);
+        const inverted = new TerraMatrix(Array.from(matrix.invert().asArray()));
+       /* this.nearScreenSource[0] = x / viewport.width * 2 - 1;
+        this.nearScreenSource[1] = -(y / viewport.height * 2 - 1);
+        this.nearScreenSource[2] = -1.0;*/
+        this.#nearVec3[0] = x / viewport.width * 2 - 1;
+        this.#nearVec3[1] = -(y / viewport.height * 2 - 1);
+        this.#nearVec3[2] = -1.0;
+       // var farScreenSource = (new Vector3()).copyFromFloats(this.nearScreenSource[0], this.nearScreenSource[1], 1.0);
+        this.#farVec3 = new TerraVector3([this.#nearVec3[0], this.#nearVec3[1], 1.0]);
+
+       // const farVec3 = new Vector3();
+
+        /*Vector3._UnprojectFromInvertedMatrixToRef(this.nearScreenSource, inverted, nearVec3);
+                Vector3.TransformCoordinatesToRef(source, matrix, result);
+        const m = matrix.m;*/
+        let num = this.#nearVec3[0] * inverted[3] + this.#nearVec3[1] * inverted[7] + this.#nearVec3[2] * inverted[11] + inverted[15];
+
+        this.#nearVec3.multiply(inverted);
+        if (Scalar.WithinEpsilon(num, 1.0)) {
+            const scale = 1.0 / num;
+            //result.scaleInPlace(1.0 / num);
+            this.#nearVec3[0] *= scale;
+            this.#nearVec3[1] *= scale;
+            this.#nearVec3[2] *= scale;
+        }
+
+
+        //Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, inverted, farVec3);
+        num = this.#farVec3[0] * inverted[3] + this.#farVec3[1] * inverted[7] + this.#farVec3[2] * inverted[11] + inverted[15];
+        this.#farVec3.multiply(inverted)
+        if (Scalar.WithinEpsilon(num, 1.0)) {
+            const scale = 1.0 / num;
+            //result.scaleInPlace(1.0 / num);
+            this.#farVec3[0] *= scale;
+            this.#farVec3[1] *= scale;
+            this.#farVec3[2] *= scale;
+        }
+        const origin = new TerraVector3([this.#nearVec3[0], this.#nearVec3[1], this.#nearVec3[2]]);
         const direction = new Vector3();
-        farVec3.subtractToRef(nearVec3, direction);
+        //farVec3.subtractToRef(nearVec3, direction);
+        direction.x = this.#farVec3[0] - this.#nearVec3[0]
+        direction.y = this.#farVec3[1] - this.#nearVec3[1]
+        direction.z = this.#farVec3[2] - this.#nearVec3[2]
+
         direction.normalize();
         return {
             origin,

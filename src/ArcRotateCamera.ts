@@ -27,7 +27,7 @@ export class ArcRotateCamera {
     inertia = 0.9;
     speed = 2.0;
 
-    #transformedDirection = Vector3.Zero();
+    #transformedDirection = new TerraVector3();
     /**
     * Defines the value of the inertia used during panning.
     * 0 would mean stop inertia and one would mean no decelleration at all.
@@ -49,7 +49,7 @@ export class ArcRotateCamera {
     /**
     * Define the current direction the camera is moving to
     */
-    #cameraDirection = new Vector3(0, 0, 0);
+    #cameraDirection = new TerraVector3();
     constructor(public alpha: number, public beta: number, public radius:number, private engine: Engine, private camera:TerraCamera) {
         engine.canvas.addEventListener('pointerup', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
         engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
@@ -240,27 +240,27 @@ export class ArcRotateCamera {
         // Panning inertia
         if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
             this.camera.viewArr.invertToRef(this.#cameraTransformMatrix);
-            this.#transformedDirection.set(this.#cameraTransformMatrix[0], this.#cameraTransformMatrix[1], this.#cameraTransformMatrix[2]);
+            this.#transformedDirection.set([this.#cameraTransformMatrix[0], this.#cameraTransformMatrix[1], this.#cameraTransformMatrix[2]]);
             const scaleX = panningAxis[0] * this.inertialPanningX;
             const scaleZ = panningAxis[2] * this.inertialPanningY
             // panning on X Axis
-            this.#transformedDirection.x *= scaleX;
-            this.#transformedDirection.y *= scaleX;
-            this.#transformedDirection.z *= scaleX;
+            this.#transformedDirection[0] *= scaleX;
+            this.#transformedDirection[1] *= scaleX;
+            this.#transformedDirection[2] *= scaleX;
 
             // panning on Y axis
-            this.#transformedDirection.y += panningAxis[1] * this.inertialPanningY;
+            this.#transformedDirection[1] += panningAxis[1] * this.inertialPanningY;
 
             // panning on Z axis
-            this.#transformedDirection.x -= Math.cos(this.alpha) * scaleZ;
-            this.#transformedDirection.z -= Math.sin(this.alpha) * scaleZ;
+            this.#transformedDirection[0] -= Math.cos(this.alpha) * scaleZ;
+            this.#transformedDirection[2] -= Math.sin(this.alpha) * scaleZ;
 
 
             //this._target.addInPlace(this._transformedDirection);
 
-            this.camera.target[0] += this.#transformedDirection.x;
-            this.camera.target[1] += this.#transformedDirection.y;
-            this.camera.target[2] += this.#transformedDirection.z;
+            this.camera.target[0] += this.#transformedDirection[0];
+            this.camera.target[1] += this.#transformedDirection[1];
+            this.camera.target[2] += this.#transformedDirection[2];
             updateView = true;
             this.inertialPanningX *= this.#panningInertia;
             this.inertialPanningY *= this.#panningInertia;
@@ -277,29 +277,30 @@ export class ArcRotateCamera {
         this.checkLimits();
 
        // const needToMove = this._decideIfNeedsToMove();
-        const needToMove = Math.abs(this.#cameraDirection.x) > 0 || Math.abs(this.#cameraDirection.y) > 0 || Math.abs(this.#cameraDirection.z) > 0;
+        const needToMove = Math.abs(this.#cameraDirection[0]) > 0 || Math.abs(this.#cameraDirection[1]) > 0 || Math.abs(this.#cameraDirection[2]) > 0;
 
         // Move
         if (needToMove) {
           //  this.position.addInPlace(this.#cameraDirection);
-            this.camera.cameraPosition[0] += this.#cameraDirection.x;
-            this.camera.cameraPosition[1] += this.#cameraDirection.y;
-            this.camera.cameraPosition[2] += this.#cameraDirection.z;
+            this.camera.cameraPosition[0] += this.#cameraDirection[0];
+            this.camera.cameraPosition[1] += this.#cameraDirection[1];
+            this.camera.cameraPosition[2] += this.#cameraDirection[2];
             updateView = true;
         // Inertia
-            if (Math.abs(this.#cameraDirection.x) < this.speed * Epsilon) {
-                this.#cameraDirection.x = 0;
+            if (Math.abs(this.#cameraDirection[0]) < this.speed * Epsilon) {
+                this.#cameraDirection[0] = 0;
             }
 
-            if (Math.abs(this.#cameraDirection.y) < this.speed * Epsilon) {
-                this.#cameraDirection.y = 0;
+            if (Math.abs(this.#cameraDirection[1]) < this.speed * Epsilon) {
+                this.#cameraDirection[1] = 0;
             }
 
-            if (Math.abs(this.#cameraDirection.z) < this.speed * Epsilon) {
-                this.#cameraDirection.z = 0;
+            if (Math.abs(this.#cameraDirection[2]) < this.speed * Epsilon) {
+                this.#cameraDirection[2] = 0;
             }
-
-            this.#cameraDirection.scaleInPlace(this.inertia);
+            this.#cameraDirection[0] *= this.inertia;
+            this.#cameraDirection[1] *= this.inertia;
+            this.#cameraDirection[2] *= this.inertia;
         }
         return updateView;
     }

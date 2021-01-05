@@ -103,8 +103,8 @@ class pickInfo {
 class boundingBox {
     buffer = new SharedArrayBuffer(4 * 6);
     box = new Float32Array(this.buffer);
-    min = new TerraVector3(this.buffer, 0, 3);
-    max = new TerraVector3(this.buffer, 4 * 3, 3);
+    min = new TerraVector3(this.buffer, 0);
+    max = new TerraVector3(this.buffer, 4 * 3);
 }
 export abstract class BoundableNode extends TerraNode {
     indicesBuffer?: SharedArrayBuffer | undefined;
@@ -139,7 +139,7 @@ export abstract class BoundableNode extends TerraNode {
     lastColliderWorldVertices: SharedArrayBuffer | null = null;
     lastColliderTransformMatrix=new TerraMatrix();
     trianglePlaneArray = [];
-
+    tmpVec = new TerraVector3();
     public checkCollision(collider: Collider) {
         if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
             return;
@@ -164,21 +164,21 @@ export abstract class BoundableNode extends TerraNode {
             //lastColliderVertices.set(window.Wasm.calculatelastcolliderworldvertices(new Float32Array(this.verticesPositionBuffer), collisionsTransformMatrix.m as Float32Array));
 
             const positions = new Float32Array(this.verticesPositionBuffer);
-            const tmpVec = new TerraVector3(3);
+            
             const len = positions.length / this.verticesPositionStride;
             this.lastColliderWorldVectorsView2 = [];
             for (let i = 0; i < len; i++) {
-                tmpVec[0] = positions[i * this.verticesPositionStride];
-                tmpVec[1] = positions[i * this.verticesPositionStride + 1];
-                tmpVec[2] = positions[i * this.verticesPositionStride + 2];
+                this.tmpVec[0] = positions[i * this.verticesPositionStride];
+                this.tmpVec[1] = positions[i * this.verticesPositionStride + 1];
+                this.tmpVec[2] = positions[i * this.verticesPositionStride + 2];
                 //this.lastColliderWorldVectors.push(Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix));
                 // const transformed = Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix);
-                tmpVec.multiply(collisionsTransformMatrix);
+                this.tmpVec.multiply(collisionsTransformMatrix);
                // if (isNaN(transformed.x))
                //     debugger;
-                this.lastColliderWorldVectorsView[i * 3] = tmpVec[0]
-                this.lastColliderWorldVectorsView[i * 3 + 1] = tmpVec[1]
-                this.lastColliderWorldVectorsView[i * 3 + 2] = tmpVec[2]
+                this.lastColliderWorldVectorsView[i * 3] = this.tmpVec[0]
+                this.lastColliderWorldVectorsView[i * 3 + 1] = this.tmpVec[1]
+                this.lastColliderWorldVectorsView[i * 3 + 2] = this.tmpVec[2]
                 this.lastColliderWorldVectorsView2.push(new Float32Array(this.lastColliderWorldVectors, i * 3 * 4, 3))
 
             }

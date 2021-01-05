@@ -7,7 +7,7 @@ export interface has3DPosition {
 
 export class worldPosition {
     readonly worldMatrix = new TerraMatrix(this.node.data.buffer, this.node.bufferOffsetBytes);
-    readonly translation = new TerraVector3(this.node.data.buffer, this.node.bufferOffsetBytes+ 12 * this.node.data.BYTES_PER_ELEMENT, 3);
+    readonly translation = new TerraVector3(this.node.data.buffer, this.node.bufferOffsetBytes+ 12 * this.node.data.BYTES_PER_ELEMENT);
     readonly translationDelta: Float32Array = new Float32Array(this.node.data.buffer, this.node.bufferOffsetBytes + 16 * this.node.data.BYTES_PER_ELEMENT, 3);
 
     readonly #scaling = new TerraVector3([1, 1, 1]);
