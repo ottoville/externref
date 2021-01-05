@@ -114,7 +114,7 @@ export abstract class BoundableNode extends TerraNode {
     readonly facesView?: Float32Array;
     lastColliderWorldVectors = new SharedArrayBuffer((3 * this.verticesPositionBuffer.byteLength) / this.verticesPositionStride);
     lastColliderWorldVectorsView = new Float32Array(this.lastColliderWorldVectors);
-    lastColliderWorldVectorsView2: Float32Array[] = [];
+    lastColliderWorldVectorsView2: TerraVector3[] = [];
 
     constructor(scene: Scene, public verticesPositionBuffer: SharedArrayBuffer, public verticesPositionStride: number = 3, public readonly faces?: SharedArrayBuffer) {
         super(scene.engine);
@@ -179,7 +179,7 @@ export abstract class BoundableNode extends TerraNode {
                 this.lastColliderWorldVectorsView[i * 3] = this.tmpVec[0]
                 this.lastColliderWorldVectorsView[i * 3 + 1] = this.tmpVec[1]
                 this.lastColliderWorldVectorsView[i * 3 + 2] = this.tmpVec[2]
-                this.lastColliderWorldVectorsView2.push(new Float32Array(this.lastColliderWorldVectors, i * 3 * 4, 3))
+                this.lastColliderWorldVectorsView2.push(new TerraVector3(this.lastColliderWorldVectors, i * 3 * 4))
 
             }
             /*   console.log(positions)

@@ -11,7 +11,7 @@ const panningAxis = new TerraVector3([1, 0, 1])
 export class ArcRotateCamera {
 
     #computationVector = new Float32Array(3);
-    #previousPosition = new Float32Array(3);
+    #previousPosition = new TerraVector3();
     //position = new Float32Array(3);
     #newPosition = new Float32Array(3);
     #globalPosition = new Float32Array(3);

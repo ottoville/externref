@@ -4,6 +4,7 @@ import type { DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
 import { TerraNode } from "./TerraNode";
 import { Collider } from "./Collider";
 import { Scene } from "./Scene";
+import { TerraVector3 } from "./Math";
 
 const CollisionsEpsilon = 0.001;
 
@@ -90,11 +91,11 @@ export class Engine {
         })
     }
     collisionCoordinator = {
-        scaledPosition: new Float32Array(3),
-        scaledVelocity: new Float32Array(3),
-        finalPosition: new Float32Array(3),
+        scaledPosition: new TerraVector3(),
+        scaledVelocity: new TerraVector3(),
+        finalPosition: new TerraVector3(),
     }
-    collideWithWorld(position: Float32Array, velocity: Float32Array, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): void {
+    collideWithWorld(position: TerraVector3, velocity: TerraVector3, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): void {
         //TODO: Call only when camera position change
         var closeDistance = CollisionsEpsilon * 10.0;
         if (this.collider._retry >= maximumRetry) {

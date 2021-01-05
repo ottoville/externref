@@ -7,7 +7,7 @@ import { TerraMatrix, TerraVector3 } from "./Math";
 
 const worker = new ObjectWorkerThread('/webworkers/cameraWorker.js');
 let uniqueID = 0;
-
+/*
 function matrixMultiplyToRef(m: ArrayLike<number>, otherM: ArrayLike<number>, result: Float32Array) {
     var tm0 = m[0], tm1 = m[1], tm2 = m[2], tm3 = m[3];
     var tm4 = m[4], tm5 = m[5], tm6 = m[6], tm7 = m[7];
@@ -39,7 +39,7 @@ function matrixMultiplyToRef(m: ArrayLike<number>, otherM: ArrayLike<number>, re
     result[15] = tm12 * om3 + tm13 * om7 + tm14 * om11 + tm15 * om15;
     return result;
 }
-
+*/
 
 export class TerraCamera {
     readonly #uniqueID: number = uniqueID++;    
@@ -47,17 +47,17 @@ export class TerraCamera {
     viewport = new Viewport(0, 0, 1.0, 1.0);
 
     #uniformBufferSize = 4 * 16 * 2 + 3 * 4
-    target = new Float32Array([-500, 0, 0]);
+    target = new TerraVector3([-500, 0, 0]);
     #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
 
-    #projectionViewArr = new Float32Array(this.#viewProjectionPositionBuffer, 0, 16);
+    #projectionViewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 0);
     viewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 64);
 
     #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer, 0, 32);
 
 
-    cameraPosition = new Float32Array(this.#viewProjectionPositionBuffer, 128, 3);
-    projectionArr = new Float32Array(this.projection);
+    cameraPosition = new TerraVector3(this.#viewProjectionPositionBuffer, 128);
+    projectionArr = new TerraMatrix(this.projection);
 
     #pickingRayBuffer = new SharedArrayBuffer(6 * 4); // origin: vec3, direction: vec3
     pickingRay = new Float32Array(this.#pickingRayBuffer);
@@ -122,8 +122,8 @@ export class TerraCamera {
             this.viewArr[13] = -(this.viewArr[1] * this.cameraPosition[0] + this.viewArr[5] * this.cameraPosition[1] + this.viewArr[9] * this.cameraPosition[2])
             //z
             this.viewArr[14] = -(this.viewArr[2] * this.cameraPosition[0] + this.viewArr[6] * this.cameraPosition[1] + this.viewArr[10] * this.cameraPosition[2]);
+            this.viewArr.multiplyToRef(this.projectionArr, this.#projectionViewArr)
 
-            matrixMultiplyToRef(this.viewArr, this.projectionArr, this.#projectionViewArr);
             const tempBuffer = this.gpu.createGPUBuffer(this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], true);
             new Float32Array(tempBuffer.getMappedRange()).set(this.#viewAndProjection);
             const commandBuffer = this.gpu.copyBufferToBuffer(tempBuffer, this.#uniformBuffer, this.#viewAndProjection.byteLength);

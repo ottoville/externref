@@ -1,6 +1,8 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
+import { TerraVector3 } from "./Math";
+
 
 function Dot(left: [number, number, number] | Float32Array, right: [number, number, number] | Float32Array): number {
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
@@ -10,7 +12,7 @@ function CrossToRef(left: [number, number, number], right: [number, number, numb
     result[1] = left[2] * right[0] - left[0] * right[2];
     result[2] = left[0] * right[1] - left[1] * right[0];
 }
-var intersectBoxAASphere = (boxMin: Float32Array, boxMax: Float32Array, sphereCenter: [number,number,number], sphereRadius: number): boolean => {
+var intersectBoxAASphere = (boxMin: TerraVector3, boxMax: TerraVector3, sphereCenter: [number,number,number], sphereRadius: number): boolean => {
     if (boxMin[0] > sphereCenter[0] + sphereRadius) {
         return false;
     }
@@ -104,14 +106,14 @@ export class Collider {
     public _radius: [x: number, y: number, z: number] = [1, 1, 1];
     /** @hidden */
     public _retry = 0;
-    #velocity = new Float32Array(3);
-    #basePoint = new Float32Array(3);
+    #velocity = new TerraVector3();
+    #basePoint = new TerraVector3();
     #epsilon: number=0;
     /** @hidden */
     public _velocityWorldLength: number = 0;
     /** @hidden */
     public _basePointWorld: [number, number, number] = [0, 0, 0];
-    #velocityWorld: [x: number, y: number, z: number] = [0, 0, 0];
+    #velocityWorld = new TerraVector3()
     #normalizedVelocity: [x: number, y: number, z: number] = [0, 0, 0];
     /** @hidden */
    // public _initialVelocity: [x: number, y: number, z: number] = [0, 0, 0];
@@ -138,11 +140,11 @@ export class Collider {
 
     // Methods
     /** @hidden */
-    public _initialize(source: Float32Array, dir: Float32Array, e: number): void {
+    public _initialize(source: TerraVector3, dir: TerraVector3, e: number): void {
         this.#velocity = dir;
         // Vector3.NormalizeToRef(dir, this._normalizedVelocity);
 
-        var len = Math.hypot(dir[0], dir[1], dir[2]);
+        var len = Math.sqrt(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]);
         if (len === 0 || len === 1.0) {
             this.#normalizedVelocity[0] = dir[0];
             this.#normalizedVelocity[1] = dir[1];
@@ -164,14 +166,14 @@ export class Collider {
         this.#velocityWorld[0] = dir[0] * this._radius[0];
         this.#velocityWorld[1] = dir[1] * this._radius[1];
         this.#velocityWorld[2] = dir[2] * this._radius[2];
-        this._velocityWorldLength = Math.hypot(this.#velocityWorld[0], this.#velocityWorld[1], this.#velocityWorld[2]);
+        this._velocityWorldLength = Math.sqrt(this.#velocityWorld[0] * this.#velocityWorld[0] + this.#velocityWorld[1] + this.#velocityWorld[1] + this.#velocityWorld[2] + this.#velocityWorld[2]);
 
         this.#epsilon = e;
         this.collisionFound = false;
     }
 
     /** @hidden */
-    public _checkPointInTriangle(point: [x: number, y: number, z: number], pa: Float32Array, pb: Float32Array, pc: Float32Array, n: [x: number, y: number, z: number]): boolean {
+    public _checkPointInTriangle(point: [x: number, y: number, z: number], pa: TerraVector3, pb: TerraVector3, pc: TerraVector3, n: [x: number, y: number, z: number]): boolean {
         //TODO: Use simd
         this.#tempVector[0] = pa[0] - point[0]
         this.#tempVector[1] = pa[1] - point[1]
@@ -208,7 +210,7 @@ export class Collider {
     }
 
     /** @hidden */
-    public _canDoCollision(/*sphereCenter: Vector3, sphereRadius: number, */vecMin: Float32Array, vecMax: Float32Array): boolean {
+    public _canDoCollision(/*sphereCenter: Vector3, sphereRadius: number, */vecMin: TerraVector3, vecMax: TerraVector3): boolean {
       //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
 
         var max = Math.max(this._radius[0], this._radius[1], this._radius[2]);
@@ -225,7 +227,7 @@ export class Collider {
     }
     _points?: [Float32Array, Float32Array, Float32Array, Float32Array];
     /** @hidden */
-    public _testTriangle(faceIndex: number, trianglePlaneArray: { normal: [x: number, y: number, z: number], d: number }[], p1a: Float32Array, p2a: Float32Array, p3a: Float32Array): void {
+    public _testTriangle(faceIndex: number, trianglePlaneArray: { normal: [x: number, y: number, z: number], d: number }[], p1a: TerraVector3, p2a: TerraVector3, p3a: TerraVector3): void {
         let t0: number;
         var embeddedInPlane = false;
 
@@ -420,7 +422,7 @@ export class Collider {
     }
 
     /** @hidden */
-    public _getResponse(pos: Float32Array, vel: Float32Array): void {
+    public _getResponse(pos: TerraVector3, vel: TerraVector3): void {
         this._destinationPoint[0] = pos[0] + vel[0];
         this._destinationPoint[1] = pos[1] + vel[1];
         this._destinationPoint[2] = pos[2] + vel[2];
