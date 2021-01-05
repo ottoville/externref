@@ -134,13 +134,13 @@ export class Scene {
         */
         //let start = performance.now();
         const ray = this.TerraCameras[0].createPickingRay(x, y);
-        const rayArr = new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction.x, ray.direction.y, ray.direction.z])
+        const rayArr = new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]])
         const pickingRays: Map<BoundableNode, Float32Array> = new Map();
         this.boundables.forEach(boundable => {
             if (!boundable.worldPosition)
                 return pickingRays.set(boundable, rayArr);
             const ray = this.TerraCameras[0].createPickingRay(x, y, boundable.worldPosition.worldMatrix);
-            pickingRays.set(boundable, new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction.x, ray.direction.y, ray.direction.z]));
+            pickingRays.set(boundable, new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]]));
         });
         const results: Promise<void>[] = [];
         pickingRays.forEach((ray, boundable) => {

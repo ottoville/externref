@@ -168,6 +168,22 @@ export class TerraVector3 extends Float32Array {
         this[1] = ry * rw;
         this[2] = rz * rw;
     }
+    normalize() {
+        const len = Math.sqrt(this[0] * this[0] + this[1] * this[1] + this[2] * this[2]);
+        if (len == 0 || len == 1.0) {
+            return this;
+        }
+        const scale = 1.0 / len;
+        this[0] *= scale;
+        this[1] *= scale;
+        this[2] *= scale;
+        return this;
+    }
+    set(arr:ArrayLike<number>) {
+        this[0] = arr[0];
+        this[1] = arr[1];
+        this[2] = arr[2];
+    }
 }
 export class TerraVector4 extends Float32Array {
     declare 0: number

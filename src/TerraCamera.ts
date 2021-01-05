@@ -222,17 +222,13 @@ export class TerraCamera {
             this.#farVec3[1] *= scale;
             this.#farVec3[2] *= scale;
         }
-        const origin = new TerraVector3([this.#nearVec3[0], this.#nearVec3[1], this.#nearVec3[2]]);
-        const direction = new Vector3();
-        //farVec3.subtractToRef(nearVec3, direction);
-        direction.x = this.#farVec3[0] - this.#nearVec3[0]
-        direction.y = this.#farVec3[1] - this.#nearVec3[1]
-        direction.z = this.#farVec3[2] - this.#nearVec3[2]
 
-        direction.normalize();
+        this.#farVec3[0] -= this.#nearVec3[0]
+       this.#farVec3[1] -= this.#nearVec3[1]
+        this.#farVec3[2] -= this.#nearVec3[2]
         return {
-            origin,
-            direction
+            origin: this.#nearVec3,
+            direction: this.#farVec3.normalize()
         }
         // result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : camera.getViewMatrix(), camera.getProjectionMatrix());
     }
