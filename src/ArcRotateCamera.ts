@@ -1,11 +1,12 @@
 ﻿import { Engine } from "./engine";
+import { TerraMatrix, TerraVector3 } from "./Math";
 import { TerraCamera } from "./TerraCamera";
 let pointerDownButton: number = 0;
 const panningSensibility: number = 20;
 const angularSensibilityX = 3000;
 const angularSensibilityY = 3000;
 
-const panningAxis = new Vector3(1, 0, 1)
+const panningAxis = new TerraVector3([1, 0, 1])
 
 export class ArcRotateCamera {
 
@@ -15,7 +16,7 @@ export class ArcRotateCamera {
     #newPosition = new Float32Array(3);
     #globalPosition = new Float32Array(3);
 
-   #cameraTransformMatrix = Matrix.Zero()
+    #cameraTransformMatrix = new TerraMatrix();
 
    // #globalCurrentTarget = new Float32Array(3);
 
@@ -238,19 +239,21 @@ export class ArcRotateCamera {
         
         // Panning inertia
         if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
-            Matrix.FromArray(this.camera.viewArr).invertToRef(this.#cameraTransformMatrix);
-            this.#transformedDirection.set(this.#cameraTransformMatrix.m[0], this.#cameraTransformMatrix.m[1], this.#cameraTransformMatrix.m[2]);
+            this.camera.viewArr.invertToRef(this.#cameraTransformMatrix);
+            this.#transformedDirection.set(this.#cameraTransformMatrix[0], this.#cameraTransformMatrix[1], this.#cameraTransformMatrix[2]);
+            const scaleX = panningAxis[0] * this.inertialPanningX;
+            const scaleZ = panningAxis[2] * this.inertialPanningY
             // panning on X Axis
-            this.#transformedDirection.x *= panningAxis.x * this.inertialPanningX;
-            this.#transformedDirection.y *= panningAxis.x * this.inertialPanningX;
-            this.#transformedDirection.z *= panningAxis.x * this.inertialPanningX;
+            this.#transformedDirection.x *= scaleX;
+            this.#transformedDirection.y *= scaleX;
+            this.#transformedDirection.z *= scaleX;
 
             // panning on Y axis
-            this.#transformedDirection.y += panningAxis.y * this.inertialPanningY;
+            this.#transformedDirection.y += panningAxis[1] * this.inertialPanningY;
 
             // panning on Z axis
-            this.#transformedDirection.x -= Math.cos(this.alpha) * panningAxis.z * this.inertialPanningY;
-            this.#transformedDirection.z -= Math.sin(this.alpha) *  panningAxis.z * this.inertialPanningY;
+            this.#transformedDirection.x -= Math.cos(this.alpha) * scaleZ;
+            this.#transformedDirection.z -= Math.sin(this.alpha) * scaleZ;
 
 
             //this._target.addInPlace(this._transformedDirection);

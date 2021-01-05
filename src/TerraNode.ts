@@ -173,7 +173,7 @@ export abstract class BoundableNode extends TerraNode {
                 tmpVec[2] = positions[i * this.verticesPositionStride + 2];
                 //this.lastColliderWorldVectors.push(Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix));
                 // const transformed = Vector3.TransformCoordinates(tmpVec, collisionsTransformMatrix);
-                tmpVec.multiply(new TerraMatrix(collisionsTransformMatrix.buffer as ArrayBuffer, 0));
+                tmpVec.multiply(collisionsTransformMatrix);
                // if (isNaN(transformed.x))
                //     debugger;
                 this.lastColliderWorldVectorsView[i * 3] = tmpVec[0]

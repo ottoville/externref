@@ -3,6 +3,7 @@
 import { ObjectWorkerThread } from "./WorkerThread";
 import type { GPU } from "./GPU";
 import { Engine } from "./engine";
+import { TerraMatrix } from "./Math";
 
 const worker = new ObjectWorkerThread('/webworkers/cameraWorker.js');
 let uniqueID = 0;
@@ -50,7 +51,7 @@ export class TerraCamera {
     #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
 
     #projectionViewArr = new Float32Array(this.#viewProjectionPositionBuffer, 0, 16);
-    viewArr = new Float32Array(this.#viewProjectionPositionBuffer, 64, 16);
+    viewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 64);
 
     #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer, 0, 32);
 
