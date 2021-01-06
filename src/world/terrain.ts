@@ -525,7 +525,6 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             gpuReadBufferPositions.readAndDestroy(async (buff) => {
                 this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
                 this.updateSwap2(0, buff.byteLength,true);
-                this.mesh.lastColliderWorldVertices = null
                 this.serialize();
             });
             gpuReadBufferIndices.readAndDestroy(async (buff) => {

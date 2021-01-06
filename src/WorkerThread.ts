@@ -21,7 +21,7 @@ abstract class MainWorker extends Worker {
                 let operation: [
                     (value?: unknown | PromiseLike<unknown> | undefined) => void,
                     (value?: unknown | PromiseLike<unknown> | undefined) => void
-                ] | null;
+                ] | null | undefined;
                 if (operation = this.operations[e.data.id]) {
                     if (e.data.rejected)
                         operation[1](e.data.data);
@@ -29,8 +29,10 @@ abstract class MainWorker extends Worker {
                         operation[0](e.data.data);
                 }
                 this.operations[e.data.id] = null;
-            } else if (typeof (this.#subscriptions[e.data.type]) !== 'undefined') {
-                this.#subscriptions[e.data.type](e.data);
+            } else {
+                const func = this.#subscriptions[e.data.type];
+                if (func)
+                    func(e.data);
             }
         };
     }

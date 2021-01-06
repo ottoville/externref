@@ -47,6 +47,7 @@ export class BuildingsUI extends UITAB {
                         var scaleArray = [width / 2, height / 2, depth / 2] as const;
 
                         var positions = basePositions.reduce(
+                            //@ts-ignore
                             (accumulator: Array<number>, currentValue, currentIndex) => accumulator.concat(currentValue * scaleArray[currentIndex % 3]),
                             []
                         );

@@ -1,7 +1,7 @@
 //let tempplane: BABYLON.Mesh | null
 //let end_position: Vector2
 const fullRad = Math.PI * 2
-import { TerraVector2 } from "../Math";
+import { TerraVector2, Angle } from "../Math";
 
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";

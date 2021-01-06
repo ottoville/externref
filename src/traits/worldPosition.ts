@@ -24,7 +24,7 @@ export class worldPosition {
         this.node.updateDynamicBuffer();
     }
 
-    SetTranslation(value: [number, number, number] | [number, number] | [number] | Float32Array) {
+    SetTranslation(value: [number, number, number] | TerraVector3) {
         this.translation.set(value);
         this.onUpdate();
     }

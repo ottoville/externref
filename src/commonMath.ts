@@ -58,52 +58,7 @@ interface DeepImmutableArray<T> extends ReadonlyArray<DeepImmutable<T>> { }
 /* interface DeepImmutableMap<K, V> extends ReadonlyMap<DeepImmutable<K>, DeepImmutable<V>> {} // es2015+ only */
 /** @hidden */
 type DeepImmutableObject<T> = { readonly [K in keyof T]: DeepImmutable<T[K]> };
-const fullRad = Math.PI * 2
-class Angle {
-    constructor(private _rad: number, private _deg?: number) { }
-    get deg(): number {
-        if (typeof (this._deg) === 'number')
-            return this._deg;
-        this._deg = Math.abs(this._rad * (180 / Math.PI));
-        return this._deg;
-    }
-    get rad(): number {
-        if (typeof (this._rad) === 'number')
-            return this._rad;
-        if (typeof (this._deg) == 'undefined') {
-            throw (new Error('Broken Angle instance'));
-        }
-        this._rad = Math.abs(this._deg * Math.PI / 180);
-        return this._rad;
-    }
-    360(p1: Float32Array, p2: Float32Array): Angle {
-        if (p2[1] - p1[1] < 0) {
-            if (p2[0] - p1[0] < 0)
-                return new Angle(fullRad - this.rad);
-            return new Angle(Math.PI + this.rad);
-        }
-        else if (p2[0] - p1[0] > 0)
-            return new Angle(Math.PI - this.rad);
-        return new Angle(this.rad);
-    }
-    sum(ang: Angle): Angle {
-        return new Angle(this.rad % ang.rad % fullRad)
-    }
-    add(deg: number): number {
-        return this.deg + deg % 360
-    }
-    sub(rad: number): number {
-        if(rad < fullRad && rad > this.rad)
-            return fullRad+(this.rad-rad);
-        else
-            return this.rad - rad % 360
-    }
-    distance(rad: number): Angle {
-        let phi = (rad - this.rad) % fullRad;       // This is either the distance or 360 - distance
-        let distance = phi > Math.PI ? fullRad - phi : phi;
-        return new Angle(distance);
-    }
-}
+
 
 /*
  * Constant used to convert a value to gamma space

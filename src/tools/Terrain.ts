@@ -51,7 +51,7 @@ export class TerrainTool extends TerraNode implements has3DPosition {
 
         this.worldPosition = new worldPosition(this);
         (async () => {
-            const [fragment] = await Promise.all(['/shaders/wgsl/color.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
+            const [fragment] = await Promise.all(['/shaders/wgsl/color.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })) as [Promise<GPUShaderModule>]);
             const helperPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
                 primitiveTopology: 'triangle-strip',
                 rasterizationState: {

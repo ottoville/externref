@@ -5,6 +5,7 @@ import { hasCanvasListener } from "../traits/canvasListener.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
+import { TerraVector2 } from "../Math.js";
 
 export class paintTexture extends paintGround {
     onEnd() { }
@@ -18,7 +19,7 @@ export class paintTexture extends paintGround {
     }
     #offsetX: number = 0;
     #offsetY: number = 0;
-    onMainPointerDown(startingPoint: Float32Array): void {
+    onMainPointerDown(startingPoint: TerraVector2): void {
         this.#offsetX = this.centerX + startingPoint[0] / this.ratio;
         this.#offsetY = this.centerZ + startingPoint[1] / this.ratio;
     }
