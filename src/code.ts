@@ -1,5 +1,5 @@
 
-import type { loginProvider, DotNet, /*savedCamera*/ } from "./types/interfaces/index.js";
+import type { loginProvider, DotNet, savedCamera } from "./types/interfaces/index.js";
 import { Plants } from "./plants/Plants.js";
 import { UITAB, UITABClassLike } from "./UITAB.js";
 import { PlantsUI } from "./tools/plantsUI.js";
@@ -10,7 +10,7 @@ import { Zones } from "./tools/zones.js";
 import { Terrain } from "./world/terrain.js";
 //import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 import { Sea } from "./world/water.js";
-//import { LazyEval } from "./LazyEval.js";
+import { LazyEval } from "./LazyEval.js";
 import { GPU } from "./GPU.js";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
 import { Box } from "./GPU/Meshes/Box.js";
@@ -195,9 +195,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         blazor.invokeMethod('setProgress', 13);
 
         const waterCamera = new TerraCamera(gpuscene.renderPassWater, projectionmatrixBuffer, gpuscene, terraEngine, false, mainCamera);
-        waterCamera.beforeViewUpdate.add(() => {
-            waterCamera.cameraPosition[1] -= (waterCamera.cameraPosition[1] - 3) * 2;
-            waterCamera.target[1] = -waterCamera.target[1];
+        waterCamera.beforeViewUpdate.add((position, target) => {
+            position[1] -= (position[1] - 3) * 2;
+            target[1] = -target[1];
         });
         const TerraCameras = [mainCamera, waterCamera]
         const timeAndDeltaBuffer = new ArrayBuffer(8);
@@ -308,8 +308,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             }
 
             DB.then(DB => {
-                DB.transaction("save").objectStore("save").get(0).onsuccess = async (/*evt*/) => {
-                    /*
+                DB.transaction("save").objectStore("save").get(0).onsuccess = async (evt) => {
+                    
                     if ((<IDBRequest>evt.target).result) {
 
                         let restored = (<savedCamera>(<IDBRequest>evt.target).result).camera;
@@ -317,26 +317,25 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         camera.alpha = restored.alpha;
                         camera.beta = restored.beta;
                         camera.radius = restored.radius;
-                        camera.target[0] = restored.target[0];
-                        camera.target[1] = restored.target[1];
-                        camera.target[2] = restored.target[2];
-                        camera.position[0] = restored.position[0];
-                        camera.position[1] = restored.position[1];
-                        camera.position[2] = restored.position[2];
+                        mainCamera.update(values => {
+                            values.target[0] = restored.target[0];
+                            values.target[1] = restored.target[1];
+                            values.target[2] = restored.target[2];
+                            values.position[0] = restored.position[0];
+                            values.position[1] = restored.position[1];
+                            values.position[2] = restored.position[2];
+                        })
                     }
                     let l = new LazyEval(() => {
                         //console.log(this.camera.position.y);
                         DB.transaction("save", "readwrite").objectStore("save").put(<savedCamera>{
                             id: 0,
-                            camera: { alpha: camera.alpha, beta: camera.beta, radius: camera.radius, target: camera.target, position: camera.position }
+                            camera: { alpha: camera.alpha, beta: camera.beta, radius: camera.radius, target: new Float32Array([mainCamera.target[0], mainCamera.target[1], mainCamera.target[2]]), position: new Float32Array([mainCamera.position[0], mainCamera.position[1], mainCamera.position[2]]) }
                         });
                     })
-                    
-                    camera.onProjectionMatrixChangedObservable.add(() => {
+                    mainCamera.beforeViewUpdate.add(() => {
                         l.eval(500);
                     });
-                    */
-                
                 }
             })
 
@@ -385,8 +384,10 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     gpuscene.pendingCommandBuffers.push(buff);
             });
             if (camera.checkInputs()) {
-                camera.calculateCameraPositionAndTarget();
-                mainCamera.doUpdateView = true;
+                camera.camera.update(values => {
+                    camera.calculateCameraPositionAndTarget(values.position, values.target);
+                })
+                
             }
 
             const renderEncoder = gpuscene.device.createCommandEncoder();

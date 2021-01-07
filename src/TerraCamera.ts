@@ -47,7 +47,9 @@ export class TerraCamera {
     viewport = new Viewport(0, 0, 1.0, 1.0);
 
     #uniformBufferSize = 4 * 16 * 2 + 3 * 4
-    target = new TerraVector3([-500, 0, 0]);
+    #target = new TerraVector3([-500, 0, 0]);
+    
+
     #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
 
     #projectionViewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 0);
@@ -56,7 +58,7 @@ export class TerraCamera {
     #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer, 0, 32);
 
 
-    cameraPosition = new TerraVector3(this.#viewProjectionPositionBuffer, 128);
+    #position = new TerraVector3(this.#viewProjectionPositionBuffer, 128);
     projectionArr = new TerraMatrix(this.projection);
 
     #pickingRayBuffer = new SharedArrayBuffer(6 * 4); // origin: vec3, direction: vec3
@@ -72,7 +74,41 @@ export class TerraCamera {
             }
         }, this.gpu.timeGroup);
     onRender?: () => void;
+    target: { readonly 0: number; readonly 1: number; readonly 2: number; };
+    position: { readonly 0: number; readonly 1: number; readonly 2: number; };
+
+    update(cb: (values:{ position: TerraVector3, target: TerraVector3 }) => void) {
+        cb({ position: this.#position, target: this.#target  });
+        this.#doUpdateView = true;
+    }
+
+
     constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, engine:Engine, main: boolean = true, parent?:TerraCamera) {
+        const thistarget = this.#target
+        const thisposition = this.#position
+        this.target = {
+            get 0() {
+                return thistarget[0]
+            },
+            get 1() {
+                return thistarget[1]
+                },
+            get 2() {
+                return thistarget[2]
+            }
+          }
+        this.position = {
+            get 0() {
+                return thisposition[0]
+            },
+            get 1() {
+                return thisposition[1]
+            },
+            get 2() {
+                return thisposition[2]
+            }
+        }
+
         this.viewArr[15] = 1;
         if(parent)
             parent.childCameras.add(this);
@@ -80,11 +116,11 @@ export class TerraCamera {
         if(main)
             worker.message(this.#uniqueID, 'init', [this.#viewProjectionPositionBuffer, this.projection, this.#pickingRayBuffer, engine.mousePositionBuffer, renderPass.size]);
     }
-    doUpdateView = false;
+    #doUpdateView = false;
     updateView() {
-            this.viewArr[2] = this.target[0] - this.cameraPosition[0];
-            this.viewArr[6] = this.target[1] - this.cameraPosition[1];
-            this.viewArr[10] = this.target[2] - this.cameraPosition[2];
+            this.viewArr[2] = this.target[0] - this.#position[0];
+        this.viewArr[6] = this.target[1] - this.#position[1];
+        this.viewArr[10] = this.target[2] - this.#position[2];
 
             const zLength = Math.sqrt(this.viewArr[2] * this.viewArr[2] + this.viewArr[6] * this.viewArr[6] + this.viewArr[10] * this.viewArr[10]);
             if (!(zLength === 0 || zLength === 1)) {
@@ -117,11 +153,11 @@ export class TerraCamera {
             // Eye angles, dot products
 
             //x
-            this.viewArr[12] = -(this.viewArr[0] * this.cameraPosition[0] + this.viewArr[8] * this.cameraPosition[2])
+        this.viewArr[12] = -(this.viewArr[0] * this.#position[0] + this.viewArr[8] * this.#position[2])
             //y
-            this.viewArr[13] = -(this.viewArr[1] * this.cameraPosition[0] + this.viewArr[5] * this.cameraPosition[1] + this.viewArr[9] * this.cameraPosition[2])
+        this.viewArr[13] = -(this.viewArr[1] * this.#position[0] + this.viewArr[5] * this.#position[1] + this.viewArr[9] * this.#position[2])
             //z
-            this.viewArr[14] = -(this.viewArr[2] * this.cameraPosition[0] + this.viewArr[6] * this.cameraPosition[1] + this.viewArr[10] * this.cameraPosition[2]);
+        this.viewArr[14] = -(this.viewArr[2] * this.#position[0] + this.viewArr[6] * this.#position[1] + this.viewArr[10] * this.#position[2]);
             this.viewArr.multiplyToRef(this.projectionArr, this.#projectionViewArr)
 
             const tempBuffer = this.gpu.createGPUBuffer(this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], true);
@@ -130,24 +166,25 @@ export class TerraCamera {
         this.gpu.pendingCommandBuffers.push(commandBuffer);
         
     }
-    beforeViewUpdate:Set<() => void> = new Set();
+    beforeViewUpdate:Set<(position:TerraVector3, target:TerraVector3) => void> = new Set();
     render(renderEncoder: GPUCommandEncoder) {
         this.onRender && this.onRender();
         //TODO: use SIMD, use column major matrix?
-        if (this.doUpdateView) {
+        if (this.#doUpdateView) {
             this.childCameras.forEach(childCamera => {
-                childCamera.cameraPosition[0] = this.cameraPosition[0]
-                childCamera.cameraPosition[1] = this.cameraPosition[1]
-                childCamera.cameraPosition[2] = this.cameraPosition[2]
+                childCamera.update((values) => {
+                    values.position[0] = this.#position[0]
+                    values.position[1] = this.#position[1]
+                    values.position[2] = this.#position[2]
 
-                childCamera.target[0] = this.target[0]
-                childCamera.target[1] = this.target[1]
-                childCamera.target[2] = this.target[2];
-                childCamera.doUpdateView = true;
+                    values.target[0] = this.target[0]
+                    values.target[1] = this.target[1]
+                    values.target[2] = this.target[2];
+                });
             })
-            this.beforeViewUpdate.forEach(cb => cb());
+            this.beforeViewUpdate.forEach(cb => cb(this.#position, this.#target));
             this.updateView();
-            this.doUpdateView = false;
+            this.#doUpdateView = false;
         }
         this.renderPass.render(renderEncoder, this.#uniformBindGroup);
     }
