@@ -521,17 +521,15 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
 
 
         terrainPositionAndUvsAndNormalsGPUTemp.destroy();
-        (async () => {
-            gpuReadBufferPositions.readAndDestroy(async (buff) => {
-                this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
-                this.updateSwap2(0, buff.byteLength,true);
-                this.serialize();
-            });
-            gpuReadBufferIndices.readAndDestroy(async (buff) => {
-                this.#indices.set(new Uint32Array(buff));
-                this.mesh.rebuildTrianglePlanes();
-            });
-        })();
+        gpuReadBufferPositions.readAndDestroy(async (buff) => {
+            this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
+            this.updateSwap2(0, buff.byteLength,true);
+            this.serialize();
+        });
+        gpuReadBufferIndices.readAndDestroy(async (buff) => {
+            this.#indices.set(new Uint32Array(buff));
+            this.mesh.rebuildTrianglePlanes();
+        });
         this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, this.indicesBuffer, 8, this.#terrainIndicesLength / 4, facet12ArrCPUBuffer);
         this.mesh.boundingBox.box.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
 
