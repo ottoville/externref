@@ -160,12 +160,14 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
         for (var file in jsondata) {
             shaderPuts.push(cache.put(new Request('/shaders/' + file), new Response(jsondata[file])));
+            //@ts-ignore
             if (jsondata[file].substr(0, 12) == '#version 450') {
                 let type: string = 'vertex';
                 if (file.substr(-5) == '.frag')
                     type = 'fragment';
                 else if (file.substr(-5) == '.comp')
                     type = 'compute';
+                //@ts-ignore
                 const compiled = glslang.compileGLSL(jsondata[file], type);
 
                 gpuscene.shaderModules.set(file, gpuscene.device.createShaderModule({

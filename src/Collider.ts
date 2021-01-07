@@ -1,7 +1,7 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
-import { TerraVector3 } from "./Math";
+import { TerraVector3, Triangle } from "./Math";
 
 
 function Dot(left: [number, number, number] | Float32Array, right: [number, number, number] | Float32Array): number {
@@ -225,56 +225,23 @@ export class Collider {
 
         return true;
     }
-    _points?: [TerraVector3, TerraVector3, TerraVector3, TerraVector3];
+    #points: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()];
     /** @hidden */
-    public _testTriangle(faceIndex: number, trianglePlaneArray: { normal: [x: number, y: number, z: number], d: number }[], p1a: TerraVector3, p2a: TerraVector3, p3a: TerraVector3): void {
+    public _testTriangle(triangle:Triangle): void {
+        const p1a = triangle.vectors[2];
+        const p2a = triangle.vectors[1];
+        const p3a = triangle.vectors[0];
         let t0: number;
         var embeddedInPlane = false;
 
-        //defensive programming, actually not needed.
-        if (!trianglePlaneArray) {
-            trianglePlaneArray = [];
-        }
 
-        if (!trianglePlaneArray[faceIndex]) {
-            var x1 = p2a[0] - p1a[0];
-            var y1 = p2a[1] - p1a[1];
-            var z1 = p2a[2] - p1a[2];
-            var x2 = p3a[0] - p1a[0];
-            var y2 = p3a[1] - p1a[1];
-            var z2 = p3a[2] - p1a[2];
-            var yz = (y1 * z2) - (z1 * y2);
-            var xz = (z1 * x2) - (x1 * z2);
-            var xy = (x1 * y2) - (y1 * x2);
-            var pyth = (Math.sqrt((yz * yz) + (xz * xz) + (xy * xy)));
-            var invPyth;
-
-            if (pyth !== 0) {
-                invPyth = 1.0 / pyth;
-            }
-            else {
-                invPyth = 0.0;
-            }
-            const normal: [number, number, number] = [yz * invPyth, xz * invPyth, xy * invPyth];
-            trianglePlaneArray[faceIndex] = {
-                normal,
-                d: -((normal[0] * p1a[0]) + (normal[1] * p1a[1]) + (normal[2] * p1a[2]))
-            }
-        }
-
-
-        var trianglePlane = trianglePlaneArray[faceIndex];
-
-        var dot = Dot(trianglePlane.normal, this.#normalizedVelocity);
+        var dot = Dot(triangle.plane.normal, this.#normalizedVelocity);
         if (dot > 0)
             return
 
-        /* if ((!hasMaterial) && !trianglePlane.isFrontFacingTo(this._normalizedVelocity, 0)) {
-             return;
-         }*/
 
-        var signedDistToTrianglePlane = Dot(this.#basePoint, trianglePlane.normal) + trianglePlane.d; //trianglePlane.signedDistanceTo(this._basePoint);
-        var normalDotVelocity = Dot(trianglePlane.normal, this.#velocity);
+        var signedDistToTrianglePlane = Dot(this.#basePoint, triangle.plane.normal) + triangle.plane.d; //trianglePlane.signedDistanceTo(this._basePoint);
+        var normalDotVelocity = Dot(triangle.plane.normal, this.#velocity);
 
         if (normalDotVelocity == 0) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
@@ -315,9 +282,9 @@ export class Collider {
 
         if (!embeddedInPlane) {
             //TODO: Use simd
-            this._planeIntersectionPoint[0] = this.#basePoint[0] - trianglePlane.normal[0];
-            this._planeIntersectionPoint[1] = this.#basePoint[1] - trianglePlane.normal[1];
-            this._planeIntersectionPoint[2] = this.#basePoint[2] - trianglePlane.normal[2];
+            this._planeIntersectionPoint[0] = this.#basePoint[0] - triangle.plane.normal[0];
+            this._planeIntersectionPoint[1] = this.#basePoint[1] - triangle.plane.normal[1];
+            this._planeIntersectionPoint[2] = this.#basePoint[2] - triangle.plane.normal[2];
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             // this._velocity.scaleToRef(t0, this._tempVector);
             this.#tempVector[0] = this.#velocity[0] * t0
@@ -328,7 +295,7 @@ export class Collider {
             this._planeIntersectionPoint[2] += this.#tempVector[2];
             //this._planeIntersectionPoint.addInPlace(this._tempVector);
 
-            if (this._checkPointInTriangle(this._planeIntersectionPoint, p1a, p2a, p3a, trianglePlane.normal)) {
+            if (this._checkPointInTriangle(this._planeIntersectionPoint, p1a, p2a, p3a, triangle.plane.normal)) {
                 found = true;
                 t = t0;
                 this._collisionPoint[0] = this._planeIntersectionPoint[0];
@@ -347,10 +314,14 @@ export class Collider {
             let lowestRoot: { root: number, found: boolean };
             let b: number;
             let c: number;
-            this._points = [p1a, p2a, p3a, p1a]
+
+            this.#points[0] = p2a;
+            this.#points[1] = p3a;
+            this.#points[2] = p1a;
+
 
             for (let i = 0; i < 3; i++) {
-                const p = this._points[i]
+                const p = this.#points[i]
                 this.#tempVector[0] = this.#basePoint[0] - p[0];
                 this.#tempVector[1] = this.#basePoint[1] - p[1];
                 this.#tempVector[2] = this.#basePoint[2] - p[2];
@@ -365,11 +336,11 @@ export class Collider {
                     this._collisionPoint[2] = p[2]
                 }
             }
-            for (let i = 0; i < 3; i++) {
-                const p = this._points[i]
-                this._edge[0] = this._points[i + 1][0] - p[0];
-                this._edge[1] = this._points[i + 1][1] - p[1];
-                this._edge[2] = this._points[i + 1][2] - p[2];
+
+            this.#points.reduce((p, cur) => {
+                this._edge[0] = cur[0] - p[0];
+                this._edge[1] = cur[1] - p[1];
+                this._edge[2] = cur[2] - p[2];
 
                 this._baseToVertex[0] = p[0] - this.#basePoint[0];
                 this._baseToVertex[1] = p[1] - this.#basePoint[1];
@@ -399,7 +370,8 @@ export class Collider {
                         this._collisionPoint[2] = p[2] + this._edge[2];
                     }
                 }
-            }
+                return cur;
+            }, p1a);
         }
 
         if (found) {

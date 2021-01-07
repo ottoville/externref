@@ -2,7 +2,7 @@
 import { Engine } from "./engine";
 
 import type { isLight } from "./lights";
-import { TerraMatrix } from "./Math";
+import { TerraMatrix, Triangle } from "./Math";
 import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
 import { worldPosition } from "./traits/worldPosition";
@@ -10,18 +10,6 @@ import { ObjectWorkerThread } from "./WorkerThread";
 import { TerraVector3 } from "./Math";
 
 
-/*
-
-function Vector3Multiply(vector: Float32Array | Float64Array, m: ArrayLike<number>): void {
-    var rx = vector[0] * m[0] + vector[1] * m[4] + vector[2] * m[8] + m[12];
-    var ry = vector[0] * m[1] + vector[1] * m[5] + vector[2] * m[9] + m[13];
-    var rz = vector[0] * m[2] + vector[1] * m[6] + vector[2] * m[10] + m[14];
-    var rw = 1 / (vector[0] * m[3] + vector[1] * m[7] + vector[2] * m[11] + m[15]);
-
-    vector[0] = rx * rw;
-    vector[1] = ry * rw;
-    vector[2] = rz * rw;
-}*/
 export abstract class TerraNode implements Partial<hasPhysics> {
     static uniqueID = 0;
     protected readonly uniqueID: number = TerraNode.uniqueID++;
@@ -106,6 +94,7 @@ class boundingBox {
     min = new TerraVector3(this.buffer, 0);
     max = new TerraVector3(this.buffer, 4 * 3);
 }
+
 export abstract class BoundableNode extends TerraNode {
     indicesBuffer?: SharedArrayBuffer | undefined;
 
@@ -116,28 +105,29 @@ export abstract class BoundableNode extends TerraNode {
     //verticesBuffer: ArrayBuffer = new ArrayBuffer((3 * this.verticesPositionBuffer.byteLength) / this.verticesPositionStride);
     vertices: TerraVector3[] = [];
 
-    lastColliderWorldVectors = new SharedArrayBuffer(this.verticesPositionBuffer.byteLength);
-    lastColliderWorldVectorsView2: TerraVector3[] = [];
+    #lastColliderWorldVectors = new SharedArrayBuffer(this.verticesPositionBuffer.byteLength);
+    #lastColliderWorldVectorsView2: TerraVector3[] = [];
 
 
-    #triangles: [TerraVector3, TerraVector3, TerraVector3][] = [];
+    #triangles: Triangle[] = [];
+    #lastColliderTransformMatrix = new TerraMatrix();
     rebuildTrianglePlanes() {
         let vectors: TerraVector3[] = [];
         if (this.indicesBuffer) {
             let indices = new Uint32Array(this.indicesBuffer);
             indices.forEach(indice => {
-                let vector = this.lastColliderWorldVectorsView2[indice];
+                let vector = this.#lastColliderWorldVectorsView2[indice];
                 if (!vector)
                     throw ('position not found');
                 if (vectors.push(vector) == 3) {
-                    this.#triangles.push(vectors as [TerraVector3, TerraVector3, TerraVector3]);
+                    this.#triangles.push(new Triangle(vectors as [TerraVector3, TerraVector3, TerraVector3]));
                     vectors = [];
                 }
             });
         } else {
-            this.lastColliderWorldVectorsView2.forEach(vector => {
+            this.#lastColliderWorldVectorsView2.forEach(vector => {
                 if (vectors.push(vector) == 3) {
-                    this.#triangles.push(vectors as [TerraVector3, TerraVector3, TerraVector3]);
+                    this.#triangles.push(new Triangle(vectors as [TerraVector3, TerraVector3, TerraVector3]));
                     vectors = [];
                 }
             });            
@@ -160,11 +150,8 @@ export abstract class BoundableNode extends TerraNode {
         const len = positions.length / this.verticesPositionStride;
         for (let i = 0; i < len; i++) {
             this.vertices.push(new TerraVector3(verticesPositionBuffer, i * verticesPositionStride * 4));
-            this.lastColliderWorldVectorsView2.push(new TerraVector3(this.lastColliderWorldVectors, i * verticesPositionStride * 4));
+            this.#lastColliderWorldVectorsView2.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
         }
-
-
-
     }
     public intersectsRay(ray: Float32Array): Promise<void> {
         return worker.message(this.uniqueID, 'intersectsRay', [ray.buffer]);
@@ -174,10 +161,6 @@ export abstract class BoundableNode extends TerraNode {
         this.boundingBox.min.multiply(m);
         this.boundingBox.max.multiply(m);
     }
-
-    lastColliderTransformMatrix=new TerraMatrix();
-    trianglePlaneArray = [];
-    tmpVec = new TerraVector3();
     public checkCollision(collider: Collider) {
         if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
             return;
@@ -192,24 +175,25 @@ export abstract class BoundableNode extends TerraNode {
         if (this.worldPosition)
             this.worldPosition.worldMatrix.multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
 
-        if (!this.lastColliderTransformMatrix.equals(collisionsTransformMatrix)) {
+        if (!this.#lastColliderTransformMatrix.equals(collisionsTransformMatrix)) {
             console.log('recalculating collision vertices ');
-            this.lastColliderTransformMatrix = collisionsTransformMatrix.clone();
+            this.#lastColliderTransformMatrix = collisionsTransformMatrix.clone();
 
             //            let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
-            this.trianglePlaneArray = [];
+            //this.#colliderTrianglePlaneArray = [];
             //this.lastColliderWorldVectors = [];
             //lastColliderVertices.set(window.Wasm.calculatelastcolliderworldvertices(new Float32Array(this.verticesPositionBuffer), collisionsTransformMatrix.m as Float32Array));
 
-            new Uint8Array(this.lastColliderWorldVectors).set(new Uint8Array(this.verticesPositionBuffer));
-            this.lastColliderWorldVectorsView2.forEach(v => {
+            new Uint8Array(this.#lastColliderWorldVectors).set(new Uint8Array(this.verticesPositionBuffer));
+            this.#lastColliderWorldVectorsView2.forEach(v => {
                 v.multiply(collisionsTransformMatrix);
             });
+            this.#triangles.forEach(triangle => {
+                triangle.createPlane();
+            });
         }
-        let i = 0;
         this.#triangles.forEach(triangle => {
-            collider._testTriangle(i, this.trianglePlaneArray, triangle[2], triangle[1], triangle[0]);
-            i += 3;
+            collider._testTriangle(triangle);
         });
 
     }

@@ -237,3 +237,34 @@ export class Angle {
         return new Angle(distance);
     }
 }
+export class Triangle {
+    constructor(
+        public vectors: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()],
+        public plane: { normal: [number, number, number], d: number } = { normal: [0, 0, 0], d: 0 }) {
+    }
+    createPlane = () => {
+        var x1 = this.vectors[1][0] - this.vectors[2][0];
+        var y1 = this.vectors[1][1] - this.vectors[2][1];
+        var z1 = this.vectors[1][2] - this.vectors[2][2];
+        var x2 = this.vectors[0][0] - this.vectors[2][0];
+        var y2 = this.vectors[0][1] - this.vectors[2][1];
+        var z2 = this.vectors[0][2] - this.vectors[2][2];
+        var yz = (y1 * z2) - (z1 * y2);
+        var xz = (z1 * x2) - (x1 * z2);
+        var xy = (x1 * y2) - (y1 * x2);
+        var pyth = Math.sqrt(yz * yz + xz * xz + xy * xy);
+        var invPyth;
+
+        if (pyth !== 0) {
+            invPyth = 1.0 / pyth;
+        }
+        else {
+            invPyth = 0.0;
+        }
+        this.plane.normal[0] = yz * invPyth
+        this.plane.normal[1] = xz * invPyth
+        this.plane.normal[2] = xy * invPyth
+        this.plane.d = -((this.plane.normal[0] * this.vectors[2][0]) + (this.plane.normal[1] * this.vectors[2][1]) + (this.plane.normal[2] * this.vectors[2][2]))
+
+    }
+}
