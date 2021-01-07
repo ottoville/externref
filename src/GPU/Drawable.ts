@@ -115,9 +115,7 @@ abstract class DrawableDirect extends Drawable {
         renderPasses: Set<RenderPass>,
         public vertexCount: number,
         scene?: Scene,
-        instanceCount = 1,
-        public firstVertex = 0,
-        public firstInstance = 0) {
+        instanceCount = 1) {
 
         super(renderPipeline, renderPasses, scene);
         if (instanceCount == 0)
@@ -150,12 +148,12 @@ export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        public vertexCount: number,
+        vertexCount: number,
         scene?: Scene,
         instanceCount = 1,
         public firstVertex = 0,
         public firstInstance = 0) {
-            super(renderPipeline, renderPasses, instanceCount, scene);
+        super(renderPipeline, renderPasses, vertexCount, scene, instanceCount);
     }
     render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
         renderPass.draw(this.vertexCount, this.instanceCount, this.firstVertex, this.firstInstance);
