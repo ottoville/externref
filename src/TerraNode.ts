@@ -122,9 +122,9 @@ export abstract class BoundableNode extends TerraNode {
 
     #triangles: [TerraVector3, TerraVector3, TerraVector3][] = [];
     rebuildTrianglePlanes() {
+        let vectors: TerraVector3[] = [];
         if (this.indicesBuffer) {
             let indices = new Uint32Array(this.indicesBuffer);
-            let vectors: TerraVector3[] = [];
             indices.forEach(indice => {
                 let vector = this.lastColliderWorldVectorsView2[indice];
                 if (!vector)
@@ -134,6 +134,13 @@ export abstract class BoundableNode extends TerraNode {
                     vectors = [];
                 }
             });
+        } else {
+            this.lastColliderWorldVectorsView2.forEach(vector => {
+                if (vectors.push(vector) == 3) {
+                    this.#triangles.push(vectors as [TerraVector3, TerraVector3, TerraVector3]);
+                    vectors = [];
+                }
+            });            
         }
     }
     constructor(scene: Scene, public verticesPositionBuffer: SharedArrayBuffer, public verticesPositionStride: number = 3, public readonly faces?: SharedArrayBuffer) {
@@ -199,30 +206,11 @@ export abstract class BoundableNode extends TerraNode {
                 v.multiply(collisionsTransformMatrix);
             });
         }
-
-        if (!this.indicesBuffer) {
-            for (let i = 0; i < this.lastColliderWorldVectorsView2.length/3; i += 3) {
-                const p1 = this.lastColliderWorldVectorsView2[i];
-                const p2 = this.lastColliderWorldVectorsView2[i + 1];
-                const p3 = this.lastColliderWorldVectorsView2[i + 2];
- 
-                 collider._testTriangle(i, this.trianglePlaneArray, p3, p2, p1);
-             }
-            return;
-        }
         let i = 0;
         this.#triangles.forEach(triangle => {
             collider._testTriangle(i, this.trianglePlaneArray, triangle[2], triangle[1], triangle[0]);
             i += 3;
         });
-      /*  let indices = new Uint32Array(this.indicesBuffer);
-        let lenn = indices.length;
-        for (var i = 0; i < lenn; i += 3) {
-            var pp1 = this.lastColliderWorldVectorsView2[indices[i]];
-            var pp2 = this.lastColliderWorldVectorsView2[indices[i + 1]];
-            var pp3 = this.lastColliderWorldVectorsView2[indices[i + 2]];
-            collider._testTriangle(i, this.trianglePlaneArray, pp3, pp2, pp1);
-        }*/
 
     }
 }
