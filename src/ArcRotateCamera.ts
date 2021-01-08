@@ -128,7 +128,7 @@ export class ArcRotateCamera {
         // terraEngine.collider._initialVelocity = coordinator._scaledVelocity;
 
         //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
-
+        let starttime=performance.now();
         this.engine.collideWithWorld(this.engine.collisionCoordinator.scaledPosition, this.engine.collisionCoordinator.scaledVelocity, 3, this.engine.collisionCoordinator.finalPosition);
 
 
@@ -138,7 +138,6 @@ export class ArcRotateCamera {
         this.engine.collisionCoordinator.finalPosition[2] *= this.engine.collider._radius[2]
 
         //run the callback
-
         if (!this.engine.collider.collidedMesh) {
 
             //this._previousPosition.copyFrom(this._position);
@@ -147,7 +146,7 @@ export class ArcRotateCamera {
             position[2] = this.#previousPosition[2]
 
         } else {
-
+            console.log('collide found ', performance.now() - starttime);
            // this.setPosition(coordinator._finalPosition);
            // if (this._position.equals(position)) {
             //    return;

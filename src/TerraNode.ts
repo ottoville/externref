@@ -161,24 +161,19 @@ export abstract class BoundableNode extends TerraNode {
         this.boundingBox.min.multiply(m);
         this.boundingBox.max.multiply(m);
     }
+    myCollisionsTransformMatrix = new TerraMatrix();
     public checkCollision(collider: Collider) {
         if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
             return;
         }
         // Transformation matrix
-        const collisionsScalingMatrix = new TerraMatrix([
-            1.0 / collider._radius[0], 0.0, 0.0, 0.0,
-            0.0, 1.0 / collider._radius[1], 0.0, 0.0,
-            0.0, 0.0, 1.0 / collider._radius[2], 0.0,
-            0.0, 0.0, 0.0, 1.0]);
-        const collisionsTransformMatrix = collisionsScalingMatrix;
+        this.myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
         if (this.worldPosition)
-            this.worldPosition.worldMatrix.multiplyToRef(collisionsScalingMatrix, collisionsTransformMatrix);
+            this.worldPosition.worldMatrix.multiplyToRef(this.myCollisionsTransformMatrix, this.myCollisionsTransformMatrix);
 
-        if (!this.#lastColliderTransformMatrix.equals(collisionsTransformMatrix)) {
+        if (!this.#lastColliderTransformMatrix.equals(this.myCollisionsTransformMatrix)) {
             console.log('recalculating collision vertices ');
-            this.#lastColliderTransformMatrix = collisionsTransformMatrix.clone();
-
+            this.#lastColliderTransformMatrix = this.myCollisionsTransformMatrix.clone();
             //            let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
             //this.#colliderTrianglePlaneArray = [];
             //this.lastColliderWorldVectors = [];
@@ -186,7 +181,7 @@ export abstract class BoundableNode extends TerraNode {
 
             new Uint8Array(this.#lastColliderWorldVectors).set(new Uint8Array(this.verticesPositionBuffer));
             this.#lastColliderWorldVectorsView2.forEach(v => {
-                v.multiply(collisionsTransformMatrix);
+                v.multiply(this.myCollisionsTransformMatrix);
             });
             this.#triangles.forEach(triangle => {
                 triangle.createPlane();

@@ -1,7 +1,7 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
-import { TerraVector3, Triangle } from "./Math";
+import { TerraMatrix, TerraVector3, Triangle } from "./Math";
 
 
 function Dot(left: [number, number, number] | Float32Array, right: [number, number, number] | Float32Array): number {
@@ -77,6 +77,7 @@ var getLowestRoot: (a: number, b: number, c: number, maxR: number) => { root: nu
     )();
 
 export class Collider {
+
     /** Define if a collision was found */
     public collisionFound: boolean = false;
 
@@ -90,7 +91,7 @@ export class Collider {
      */
     public collidedMesh: Nullable<any>;
 
-    private _collisionPoint: [x: number, y: number, z: number] = [0, 0, 0];
+    #collisionPoint: [x: number, y: number, z: number] = [0, 0, 0];
     private _planeIntersectionPoint: [x: number, y: number, z: number] = [0, 0, 0];
     #tempVector: [x: number, y: number, z: number] = [0, 0, 0];
     #tempVector2: [x: number, y: number, z: number] = [0, 0, 0];
@@ -104,6 +105,11 @@ export class Collider {
 
     /** @hidden */
     public _radius: [x: number, y: number, z: number] = [1, 1, 1];
+    collisionsScalingMatrix = new TerraMatrix([
+        1.0 / this._radius[0], 0.0, 0.0, 0.0,
+        0.0, 1.0 / this._radius[1], 0.0, 0.0,
+        0.0, 0.0, 1.0 / this._radius[2], 0.0,
+        0.0, 0.0, 0.0, 1.0]);
     /** @hidden */
     public _retry = 0;
     #velocity = new TerraVector3();
@@ -141,7 +147,10 @@ export class Collider {
     // Methods
     /** @hidden */
     public _initialize(source: TerraVector3, dir: TerraVector3, e: number): void {
-        this.#velocity = dir;
+        this.#velocity[0] = dir[0];
+        this.#velocity[1] = dir[1];
+        this.#velocity[2] = dir[2];
+
         // Vector3.NormalizeToRef(dir, this._normalizedVelocity);
 
         var len = Math.sqrt(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]);
@@ -156,7 +165,9 @@ export class Collider {
             this.#normalizedVelocity[2] = dir[2] * scale
         }
 
-        this.#basePoint = source;
+        this.#basePoint[0] = source[0];
+        this.#basePoint[1] = source[1];
+        this.#basePoint[2] = source[2];
 
 
         this._basePointWorld[0] = source[0] * this._radius[0];
@@ -166,7 +177,7 @@ export class Collider {
         this.#velocityWorld[0] = dir[0] * this._radius[0];
         this.#velocityWorld[1] = dir[1] * this._radius[1];
         this.#velocityWorld[2] = dir[2] * this._radius[2];
-        this._velocityWorldLength = Math.sqrt(this.#velocityWorld[0] * this.#velocityWorld[0] + this.#velocityWorld[1] + this.#velocityWorld[1] + this.#velocityWorld[2] + this.#velocityWorld[2]);
+        this._velocityWorldLength = Math.sqrt(this.#velocityWorld[0] * this.#velocityWorld[0] + this.#velocityWorld[1] * this.#velocityWorld[1] + this.#velocityWorld[2] * this.#velocityWorld[2]);
 
         this.#epsilon = e;
         this.collisionFound = false;
@@ -273,9 +284,9 @@ export class Collider {
         }
 
         // this._collisionPoint.copyFromFloats(0, 0, 0);
-        this._collisionPoint[0] = 0;
-        this._collisionPoint[1] = 0;
-        this._collisionPoint[2] = 0;
+        this.#collisionPoint[0] = 0;
+        this.#collisionPoint[1] = 0;
+        this.#collisionPoint[2] = 0;
 
         var found = false;
         var t = 1.0;
@@ -298,9 +309,9 @@ export class Collider {
             if (this._checkPointInTriangle(this._planeIntersectionPoint, p1a, p2a, p3a, triangle.plane.normal)) {
                 found = true;
                 t = t0;
-                this._collisionPoint[0] = this._planeIntersectionPoint[0];
-                this._collisionPoint[1] = this._planeIntersectionPoint[1];
-                this._collisionPoint[2] = this._planeIntersectionPoint[2];
+                this.#collisionPoint[0] = this._planeIntersectionPoint[0];
+                this.#collisionPoint[1] = this._planeIntersectionPoint[1];
+                this.#collisionPoint[2] = this._planeIntersectionPoint[2];
                 // this._collisionPoint.copyFrom(this._planeIntersectionPoint);
             }
         }
@@ -319,9 +330,7 @@ export class Collider {
             this.#points[1] = p3a;
             this.#points[2] = p1a;
 
-
-            for (let i = 0; i < 3; i++) {
-                const p = this.#points[i]
+            this.#points.forEach(p => {
                 this.#tempVector[0] = this.#basePoint[0] - p[0];
                 this.#tempVector[1] = this.#basePoint[1] - p[1];
                 this.#tempVector[2] = this.#basePoint[2] - p[2];
@@ -331,12 +340,11 @@ export class Collider {
                 if (lowestRoot.found) {
                     t = lowestRoot.root;
                     found = true;
-                    this._collisionPoint[0] = p[0]
-                    this._collisionPoint[1] = p[1]
-                    this._collisionPoint[2] = p[2]
+                    this.#collisionPoint[0] = p[0]
+                    this.#collisionPoint[1] = p[1]
+                    this.#collisionPoint[2] = p[2]
                 }
-            }
-
+            });
             this.#points.reduce((p, cur) => {
                 this._edge[0] = cur[0] - p[0];
                 this._edge[1] = cur[1] - p[1];
@@ -365,9 +373,9 @@ export class Collider {
                         this._edge[0] *= f;
                         this._edge[1] *= f;
                         this._edge[2] *= f;
-                        this._collisionPoint[0] = p[0] + this._edge[0];
-                        this._collisionPoint[1] = p[1] + this._edge[1];
-                        this._collisionPoint[2] = p[2] + this._edge[2];
+                        this.#collisionPoint[0] = p[0] + this._edge[0];
+                        this.#collisionPoint[1] = p[1] + this._edge[1];
+                        this.#collisionPoint[2] = p[2] + this._edge[2];
                     }
                 }
                 return cur;
@@ -378,14 +386,13 @@ export class Collider {
             var distToCollision = t * Math.sqrt(this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
 
             if (!this.collisionFound || distToCollision < this.#nearestDistance) {
-                if (!this.intersectionPoint) {
-                    this.intersectionPoint = [this._collisionPoint[0], this._collisionPoint[1], this._collisionPoint[2]];
-                } else {
-                    //this.intersectionPoint.copyFrom(this._collisionPoint);
-                    this.intersectionPoint[0] = this._collisionPoint[0];
-                    this.intersectionPoint[1] = this._collisionPoint[1];
-                    this.intersectionPoint[2] = this._collisionPoint[2];
-                }
+
+                /*
+                this is causing lag?
+                this.intersectionPoint[0] = this.#collisionPoint[0];
+                this.intersectionPoint[1] = this.#collisionPoint[1];
+                this.intersectionPoint[2] = this.#collisionPoint[2];
+                */
                 this.#nearestDistance = distToCollision;
                 this.collisionFound = true;
                 this.collidedMesh = "hostMesh";
@@ -398,7 +405,7 @@ export class Collider {
         this._destinationPoint[0] = pos[0] + vel[0];
         this._destinationPoint[1] = pos[1] + vel[1];
         this._destinationPoint[2] = pos[2] + vel[2];
-        let scale = this.#nearestDistance / Math.hypot(vel[0], vel[1], vel[2]);
+        let scale = this.#nearestDistance / Math.sqrt(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
         vel[0] *= scale;
         vel[1] *= scale;
         vel[2] *= scale;
@@ -411,7 +418,7 @@ export class Collider {
         this._slidePlaneNormal[1] = pos[1] - this.intersectionPoint[1];
         this._slidePlaneNormal[2] = pos[2] - this.intersectionPoint[2];
 
-        const length = Math.hypot(this._slidePlaneNormal[0], this._slidePlaneNormal[1], this._slidePlaneNormal[2]);
+        const length = Math.sqrt(this._slidePlaneNormal[0] * this._slidePlaneNormal[0] + this._slidePlaneNormal[1] * this._slidePlaneNormal[1] + this._slidePlaneNormal[2] * this._slidePlaneNormal[2]);
         if (!(length === 0 || length === 1.0)) {
             const norm = 1 / length;
             this._slidePlaneNormal[0] *= norm;
