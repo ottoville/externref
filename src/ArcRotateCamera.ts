@@ -103,7 +103,9 @@ export class ArcRotateCamera {
         this.#newPosition[1] = target[1] + this.#computationVector[1];
         this.#newPosition[2] = target[2] + this.#computationVector[2];
 
-        this.engine.collider._radius = this.#collisionRadius;
+        this.engine.collider.radius[0] = this.#collisionRadius[0];
+        this.engine.collider.radius[1] = this.#collisionRadius[1];
+        this.engine.collider.radius[2] = this.#collisionRadius[2];
 
         //this._newPosition.subtractToRef(this._position, this._collisionVelocity);
         this.#collisionVelocity[0] = this.#newPosition[0] - position[0];
@@ -113,14 +115,14 @@ export class ArcRotateCamera {
         // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
 
         // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
-        this.engine.collisionCoordinator.scaledPosition[0] = position[0] / this.engine.collider._radius[0];
-        this.engine.collisionCoordinator.scaledPosition[1] = position[1] / this.engine.collider._radius[1];
-        this.engine.collisionCoordinator.scaledPosition[2] = position[2] / this.engine.collider._radius[2];
+        this.engine.collisionCoordinator.scaledPosition[0] = position[0] / this.engine.collider.radius[0];
+        this.engine.collisionCoordinator.scaledPosition[1] = position[1] / this.engine.collider.radius[1];
+        this.engine.collisionCoordinator.scaledPosition[2] = position[2] / this.engine.collider.radius[2];
 
        // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
-        this.engine.collisionCoordinator.scaledVelocity[0] = this.#collisionVelocity[0] / this.engine.collider._radius[0];
-        this.engine.collisionCoordinator.scaledVelocity[1] = this.#collisionVelocity[1] / this.engine.collider._radius[1];
-        this.engine.collisionCoordinator.scaledVelocity[2] = this.#collisionVelocity[2] / this.engine.collider._radius[2];
+        this.engine.collisionCoordinator.scaledVelocity[0] = this.#collisionVelocity[0] / this.engine.collider.radius[0];
+        this.engine.collisionCoordinator.scaledVelocity[1] = this.#collisionVelocity[1] / this.engine.collider.radius[1];
+        this.engine.collisionCoordinator.scaledVelocity[2] = this.#collisionVelocity[2] / this.engine.collider.radius[2];
 
         this.engine.collider.collidedMesh = null;
         this.engine.collider._retry = 0;
@@ -133,9 +135,9 @@ export class ArcRotateCamera {
 
 
         //coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
-        this.engine.collisionCoordinator.finalPosition[0] *= this.engine.collider._radius[0]
-        this.engine.collisionCoordinator.finalPosition[1] *= this.engine.collider._radius[1]
-        this.engine.collisionCoordinator.finalPosition[2] *= this.engine.collider._radius[2]
+        this.engine.collisionCoordinator.finalPosition[0] *= this.engine.collider.radius[0]
+        this.engine.collisionCoordinator.finalPosition[1] *= this.engine.collider.radius[1]
+        this.engine.collisionCoordinator.finalPosition[2] *= this.engine.collider.radius[2]
 
         //run the callback
         if (!this.engine.collider.collidedMesh) {

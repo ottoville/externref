@@ -161,6 +161,7 @@ export abstract class BoundableNode extends TerraNode {
         this.boundingBox.min.multiply(m);
         this.boundingBox.max.multiply(m);
     }
+    //collisionsScalingMatrix = new TerraMatrix();
     myCollisionsTransformMatrix = new TerraMatrix();
     public checkCollision(collider: Collider) {
         if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
@@ -168,6 +169,7 @@ export abstract class BoundableNode extends TerraNode {
         }
         // Transformation matrix
         this.myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
+
         if (this.worldPosition)
             this.worldPosition.worldMatrix.multiplyToRef(this.myCollisionsTransformMatrix, this.myCollisionsTransformMatrix);
 

@@ -102,14 +102,42 @@ export class Collider {
     private _destinationPoint: [x: number, y: number, z: number] = [0, 0, 0];
     private _slidePlaneNormal: [x: number, y: number, z: number] = [0, 0, 0];
     private _displacementVector: [x: number, y: number, z: number] = [0, 0, 0];
+    radius: { 0: number; 1: number; 2: number; };
 
-    /** @hidden */
-    public _radius: [x: number, y: number, z: number] = [1, 1, 1];
     collisionsScalingMatrix = new TerraMatrix([
         1.0 / this._radius[0], 0.0, 0.0, 0.0,
         0.0, 1.0 / this._radius[1], 0.0, 0.0,
         0.0, 0.0, 1.0 / this._radius[2], 0.0,
         0.0, 0.0, 0.0, 1.0]);
+    constructor(private _radius: [x: number, y: number, z: number]=[1,1,1]) {
+        const me = this;
+        this.radius = {
+            get 0() {
+                return _radius[0]
+            },
+            get 1() {
+                return _radius[1]
+            },
+            get 2() {
+                return _radius[2]
+            },
+            set 0(v:number) {
+                _radius[0] = v;
+                me.collisionsScalingMatrix[0] = 1.0 / v;
+            },
+            set 1(v: number) {
+                _radius[1] = v;
+                me.collisionsScalingMatrix[5] = 1.0 / v;
+            },
+            set 2(v: number) {
+                _radius[2] = v;
+                me.collisionsScalingMatrix[10] = 1.0 / v;
+
+            }
+        }
+    }
+
+
     /** @hidden */
     public _retry = 0;
     #velocity = new TerraVector3();
