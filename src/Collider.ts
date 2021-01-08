@@ -153,7 +153,8 @@ export class Collider {
    // public _initialVelocity: [x: number, y: number, z: number] = [0, 0, 0];
     /** @hidden */
    // public _initialPosition: Vector3 = Vector3.Zero();
-    #nearestDistance: number =9999999;
+
+    #nearestDistanceSquared: number = 9999999;
 
     private _collisionMask = -1;
 
@@ -411,17 +412,16 @@ export class Collider {
         }
 
         if (found) {
-            var distToCollision = t * Math.sqrt(this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
 
-            if (!this.collisionFound || distToCollision < this.#nearestDistance) {
+            var distToCollisionSquared = t * (this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
 
-                /*
-                this is causing lag?
+            if (!this.collisionFound || distToCollisionSquared < this.#nearestDistanceSquared) {
+
                 this.intersectionPoint[0] = this.#collisionPoint[0];
                 this.intersectionPoint[1] = this.#collisionPoint[1];
                 this.intersectionPoint[2] = this.#collisionPoint[2];
-                */
-                this.#nearestDistance = distToCollision;
+                
+                this.#nearestDistanceSquared = distToCollisionSquared;
                 this.collisionFound = true;
                 this.collidedMesh = "hostMesh";
             }
@@ -433,7 +433,7 @@ export class Collider {
         this._destinationPoint[0] = pos[0] + vel[0];
         this._destinationPoint[1] = pos[1] + vel[1];
         this._destinationPoint[2] = pos[2] + vel[2];
-        let scale = this.#nearestDistance / Math.sqrt(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+        let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
         vel[0] *= scale;
         vel[1] *= scale;
         vel[2] *= scale;
