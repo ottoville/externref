@@ -174,7 +174,7 @@ export abstract class BoundableNode extends TerraNode {
             this.worldPosition.worldMatrix.multiplyToRef(this.myCollisionsTransformMatrix, this.myCollisionsTransformMatrix);
 
         if (!this.#lastColliderTransformMatrix.equals(this.myCollisionsTransformMatrix)) {
-            console.log('recalculating collision vertices ');
+            
             this.#lastColliderTransformMatrix = this.myCollisionsTransformMatrix.clone();
             //            let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
             //this.#colliderTrianglePlaneArray = [];
@@ -182,12 +182,25 @@ export abstract class BoundableNode extends TerraNode {
             //lastColliderVertices.set(window.Wasm.calculatelastcolliderworldvertices(new Float32Array(this.verticesPositionBuffer), collisionsTransformMatrix.m as Float32Array));
 
             new Uint8Array(this.#lastColliderWorldVectors).set(new Uint8Array(this.verticesPositionBuffer));
-            this.#lastColliderWorldVectorsView2.forEach(v => {
+            let timer = performance.now();
+            let i = 0, len1 = this.#lastColliderWorldVectorsView2.length, len2 = this.#triangles.length;
+            while (i < len1) {
+                this.#lastColliderWorldVectorsView2[i].multiply(this.myCollisionsTransformMatrix);
+                i++;
+            }
+            console.log('recalculated collision vertices', performance.now() - timer);
+            i = 0;
+            while (i < len2) {
+                this.#triangles[i].createPlane();
+                i++;
+            }
+         /*   this.#lastColliderWorldVectorsView2.forEach(v => {
                 v.multiply(this.myCollisionsTransformMatrix);
             });
             this.#triangles.forEach(triangle => {
                 triangle.createPlane();
-            });
+            });*/
+            
         }
         this.#triangles.forEach(triangle => {
             collider._testTriangle(triangle);

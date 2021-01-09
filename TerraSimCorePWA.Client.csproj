@@ -4,7 +4,9 @@
   </PropertyGroup>  <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
-  </PropertyGroup>
+  </PropertyGroup>  <ItemGroup>
+  <None Remove="src\collider\collider.wat" />
+</ItemGroup>
 
   <ItemGroup>
     <Content Include="src\node_modules\%40types\color-name\package.json" />
@@ -405,6 +407,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="src\collider\collider.wat" />
     <TypeScriptCompile Include="src\node_modules\%40types\color-name\index.d.ts" />
     <TypeScriptCompile Include="src\node_modules\%40types\facebook-js-sdk\index.d.ts" />
     <TypeScriptCompile Include="src\node_modules\%40webgpu\types\dist\constants.d.ts" />
@@ -485,6 +488,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\js\lib\" />
+    <Folder Include="wwwroot\collider\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -501,6 +505,10 @@
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="node .\buildShaders.js&#xD;&#xA;node .\renameJS.js" />
+  </Target>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="npm --prefix $(ProjectDir)/src run build" />
   </Target>
 
 </Project>

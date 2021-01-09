@@ -16,6 +16,7 @@ export class Engine {
     bindgrouplayout1: GPUBindGroupLayout;
     #tempBuffer?: GPUCopySRCBuffer;
     collider = new Collider();
+    colliderWASM = new Collider();
 
     mousePositionBuffer = new SharedArrayBuffer(4);
     #mousePosition = new Uint16Array(this.mousePositionBuffer);
@@ -23,7 +24,8 @@ export class Engine {
     mouseOffsetBuffer = new SharedArrayBuffer(8);
     
 
-    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas:HTMLCanvasElement) {
+    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: { getLowestRoot: (a: number, b: number, c: number, maxR: number) => number }) {
+        this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
         canvas.addEventListener('pointermove', (e) => {
             Atomics.store(this.#mousePosition, 0, e.clientX)
             Atomics.store(this.#mousePosition, 1, e.clientY)

@@ -179,19 +179,24 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         await Promise.all(shaderPuts);
         blazor.invokeMethod('setProgress', 10);
 
-        blazor.invokeMethod('setProgress', 11);
 
 
 
         const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
         const projectionmatrix = new Float32Array(projectionmatrixBuffer);
-        blazor.invokeMethod('setProgress', 12);
-        const terraEngine = new Engine(gpuscene, DB, canvas);
+
+
+        const obj = await WebAssembly.instantiateStreaming(fetch('collider/colliderO.wasm'));
+        const wasm: { getLowestRoot: (a: number, b: number, c: number,maxR: number) => number} = obj.instance.exports as any;
+
+        const terraEngine = new Engine(gpuscene, DB, canvas, wasm);
+        blazor.invokeMethod('setProgress', 11);
+
         window.engine = terraEngine;
         const mainCamera = new TerraCamera(gpuscene.renderPassScreen, projectionmatrixBuffer, gpuscene, terraEngine)
 
         const camera = new ArcRotateCamera(0, 0, 10, terraEngine, mainCamera);
-
+        blazor.invokeMethod('setProgress', 12);
         camera.attachControl();
 
         blazor.invokeMethod('setProgress', 13);
@@ -496,9 +501,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 // sceneInitedrej(e);
             }
         }
-
-
-
 
         for (let i = 0; i < gameControlsUI.length; i++) {
             gameControlsUI[i].classList.remove('hidden');

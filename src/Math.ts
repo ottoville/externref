@@ -184,6 +184,10 @@ export class TerraVector3 extends Float32Array {
         this[1] = arr[1];
         this[2] = arr[2];
     }
+    dot(vector:TerraVector3|[number,number,number]) {
+        return this[0] * vector[0] + this[1] * vector[1] + this[2] * vector[2];
+
+    }
 }
 export class TerraVector4 extends Float32Array {
     declare 0: number
@@ -240,15 +244,18 @@ export class Angle {
 export class Triangle {
     constructor(
         public vectors: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()],
-        public plane: { normal: [number, number, number], d: number } = { normal: [0, 0, 0], d: 0 }) {
+        public plane: { normal: [number, number, number], d: number} = { normal: [0, 0, 0], d: 0}) {
     }
     createPlane = () => {
-        var x1 = this.vectors[1][0] - this.vectors[2][0];
-        var y1 = this.vectors[1][1] - this.vectors[2][1];
-        var z1 = this.vectors[1][2] - this.vectors[2][2];
-        var x2 = this.vectors[0][0] - this.vectors[2][0];
-        var y2 = this.vectors[0][1] - this.vectors[2][1];
-        var z2 = this.vectors[0][2] - this.vectors[2][2];
+        const v0 = this.vectors[0];
+        const v1 = this.vectors[1];
+        const v2 = this.vectors[2];
+        var x1 = v1[0] - v2[0];
+        var y1 = v1[1] - v2[1];
+        var z1 = v1[2] - v2[2];
+        var x2 = v0[0] - v2[0];
+        var y2 = v0[1] - v2[1];
+        var z2 = v0[2] - v2[2];
         var yz = (y1 * z2) - (z1 * y2);
         var xz = (z1 * x2) - (x1 * z2);
         var xy = (x1 * y2) - (y1 * x2);
@@ -265,6 +272,5 @@ export class Triangle {
         this.plane.normal[1] = xz * invPyth
         this.plane.normal[2] = xy * invPyth
         this.plane.d = -((this.plane.normal[0] * this.vectors[2][0]) + (this.plane.normal[1] * this.vectors[2][1]) + (this.plane.normal[2] * this.vectors[2][2]))
-
     }
 }
