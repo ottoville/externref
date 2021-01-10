@@ -25,7 +25,7 @@ export class Engine {
     
 
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: { getLowestRoot: (a: number, b: number, c: number, maxR: number) => number }) {
-        this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
+        //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
         canvas.addEventListener('pointermove', (e) => {
             Atomics.store(this.#mousePosition, 0, e.clientX)
             Atomics.store(this.#mousePosition, 1, e.clientY)
@@ -97,7 +97,7 @@ export class Engine {
         scaledVelocity: new TerraVector3(),
         finalPosition: new TerraVector3(),
     }
-    collideWithWorld(position: TerraVector3, velocity: TerraVector3, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): void {
+    async collideWithWorld(position: TerraVector3, velocity: TerraVector3, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): Promise<void> {
         //TODO: Call only when camera position change
         var closeDistance = CollisionsEpsilon * 10.0;
         if (this.collider._retry >= maximumRetry) {
@@ -112,15 +112,9 @@ export class Engine {
         //var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
 
         this.collider._initialize(position, velocity, closeDistance);
-        this.scenes.forEach(scene => {
-            scene.boundables.forEach(mesh => {
-                try {
-                    mesh.checkCollision(this.collider);
-                } catch (e) {
-                    console.error(e);
-                }
-            })
-        });
+        const scenesArr=[...this.scenes]
+
+        await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh =>mesh.checkCollision(this.collider)))));
         if (!this.collider.collisionFound) {
 
             //position.addToRef(velocity, finalPosition);
@@ -143,6 +137,6 @@ export class Engine {
         }
         this.collider._retry++;
 
-        this.collideWithWorld(position, velocity, maximumRetry, finalPosition);
+        await this.collideWithWorld(position, velocity, maximumRetry, finalPosition);
     }
 }

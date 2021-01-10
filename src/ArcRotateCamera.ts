@@ -49,6 +49,7 @@ export class ArcRotateCamera {
     * Define the current direction the camera is moving to
     */
     #cameraDirection = new TerraVector3();
+    #collisionTriggered: boolean = false;
     constructor(public alpha: number, public beta: number, public radius:number, private engine: Engine, public camera:TerraCamera) {
         engine.canvas.addEventListener('pointerup', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
         engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
@@ -84,7 +85,9 @@ export class ArcRotateCamera {
         this.engine.canvas.removeEventListener('pointermove', this.#cameraMove);
         this.engine.canvas.removeEventListener('wheel', this.#cameraWheel);
     }
-    calculateCameraPositionAndTarget(position:TerraVector3, target: TerraVector3) {
+    async calculateCameraPositionAndTarget(position: TerraVector3, target: TerraVector3) {
+
+        this.#collisionTriggered = true;
         var cosa = Math.cos(this.alpha);
         var sina = Math.sin(this.alpha);
         var cosb = Math.cos(this.beta);
@@ -112,6 +115,7 @@ export class ArcRotateCamera {
         this.#collisionVelocity[1] = this.#newPosition[1] - position[1];
         this.#collisionVelocity[2] = this.#newPosition[2] - position[2];
 
+        
         // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
 
         // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
@@ -131,7 +135,7 @@ export class ArcRotateCamera {
 
         //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
         let starttime=performance.now();
-        this.engine.collideWithWorld(this.engine.collisionCoordinator.scaledPosition, this.engine.collisionCoordinator.scaledVelocity, 3, this.engine.collisionCoordinator.finalPosition);
+        await this.engine.collideWithWorld(this.engine.collisionCoordinator.scaledPosition, this.engine.collisionCoordinator.scaledVelocity, 3, this.engine.collisionCoordinator.finalPosition);
 
 
         //coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
@@ -192,10 +196,14 @@ export class ArcRotateCamera {
         position[0] = this.#newPosition[0];
         position[1] = this.#newPosition[1];
         position[2] = this.#newPosition[2];
-
+        this.#collisionTriggered = false;
     }
     
     checkInputs = () => {
+        if (this.#collisionTriggered) {
+            console.log('collisionTriggered')
+            return false;
+        }
         let updateView: boolean = false;
         //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
 
@@ -244,7 +252,7 @@ export class ArcRotateCamera {
 
 
             //this._target.addInPlace(this._transformedDirection);
-            this.camera.update(values => {
+            this.camera.update(async values => {
                 values.target[0] += this.#transformedDirection[0];
                 values.target[1] += this.#transformedDirection[1];
                 values.target[2] += this.#transformedDirection[2];
@@ -270,7 +278,7 @@ export class ArcRotateCamera {
         // Move
         if (needToMove) {
           //  this.position.addInPlace(this.#cameraDirection);
-            this.camera.update(values => {
+            this.camera.update(async values => {
                 values.position[0] += this.#cameraDirection[0];
                 values.position[1] += this.#cameraDirection[1];
                 values.position[2] += this.#cameraDirection[2];

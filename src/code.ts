@@ -324,7 +324,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         camera.alpha = restored.alpha;
                         camera.beta = restored.beta;
                         camera.radius = restored.radius;
-                        mainCamera.update(values => {
+                        mainCamera.update(async values => {
                             values.target[0] = restored.target[0];
                             values.target[1] = restored.target[1];
                             values.target[2] = restored.target[2];
@@ -391,7 +391,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     gpuscene.pendingCommandBuffers.push(buff);
             });
             if (camera.checkInputs()) {
-                camera.camera.update(values => {
+                camera.camera.update(async values => {
                     camera.calculateCameraPositionAndTarget(values.position, values.target);
                 })
                 
