@@ -239,7 +239,7 @@ export class Terrain {
         let b2: GPUCopySRCBuffer;
         if (!nofaces) {
             b2 = this.scene.gpu.createGPUBuffer(this.mesh.faces.byteLength, [GPUBufferUsage.COPY_SRC], true);
-            new Float32Array(b2.getMappedRange()).set(this.mesh.facesView!)
+            new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.facesBuffer))
             b2.unmap();
             commandEncoder.copyBufferToBuffer(
                 b2, // source buffer

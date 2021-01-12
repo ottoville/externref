@@ -43,12 +43,12 @@ async function Simple(scene: Scene) {
 export abstract class SimpleMesh extends BoundableNode {
     worldPosition: worldPosition = new worldPosition(this);
     
-    indicesBuffer?: SharedArrayBuffer | undefined;
+    //indicesBuffer?: SharedArrayBuffer | undefined;
     
     abstract vBuffer: GPUVertexBuffer;
     abstract iBuffer: GPUIndexBuffer;
-    constructor(scene: Scene, verticesPositionBuffer: SharedArrayBuffer, indexFormat: GPUIndexFormat='uint32') {
-        super(scene, verticesPositionBuffer, 3);
+    constructor(scene: Scene, verticesPositionBuffer: SharedArrayBuffer, indexFormat: GPUIndexFormat='uint32', indicesBuffer:SharedArrayBuffer) {
+        super(scene, verticesPositionBuffer, 3, indicesBuffer);
         (async () => {
             let cachePipeline: Promise<RenderPipeline> | undefined = renderPipelines.get(scene.gpu);
             if (!cachePipeline) {

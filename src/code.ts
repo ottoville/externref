@@ -138,6 +138,14 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         let shadersP: Promise<{ [key: string]: string }> = fetch('/shaders/shaders.json').then(s => s.json());
         const cache = await caches.open(CACHE_NAME);
         blazor.invokeMethod('setProgress', 7);
+        /*
+        const shaders = ['collider.wgsl'];
+        await Promise.all(shaders.map(async u => {
+            const compiled = await (await fetch(u)).text();
+            gpuscene.shaderModules.set(u, device.createShaderModule({ code: compiled }));
+        }));
+
+*/
 
         const glslang: { compileGLSL: (source: string, type: string) => Uint32Array } = await new Promise((res, rej) => {
             const glslangOptions = {
@@ -223,7 +231,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const sea = new Sea(terrascene);
             //new testPlane(terrascene);
 
-            const b = new Box(terrascene);
+            const b = Box.create(terrascene);
             b.worldPosition.update(scale => scale.set([200, 200, 200]));
             /*new testPlaneNormals(terrascene);*/
             const terrainInited = Terrain.loadFromTexture(terrascene);
@@ -324,7 +332,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                         camera.alpha = restored.alpha;
                         camera.beta = restored.beta;
                         camera.radius = restored.radius;
-                        mainCamera.update(async values => {
+                        mainCamera.update(values => {
                             values.target[0] = restored.target[0];
                             values.target[1] = restored.target[1];
                             values.target[2] = restored.target[2];
@@ -353,7 +361,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
         });
 
-        const b2 = new Box(debugscene);
+        const b2 = Box.create(debugscene);
         b2.worldPosition.update(scale => scale.set([200, 200, 200]));
         b2.worldPosition.setTranslationX(500);
 
@@ -391,9 +399,9 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                     gpuscene.pendingCommandBuffers.push(buff);
             });
             if (camera.checkInputs()) {
-                camera.camera.update(async values => {
-                    camera.calculateCameraPositionAndTarget(values.position, values.target);
-                })
+                //camera.camera.update(values => {
+                    camera.calculateCameraPositionAndTarget(/*values.position, values.target*/);
+                //})
                 
             }
 

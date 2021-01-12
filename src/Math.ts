@@ -194,6 +194,19 @@ export class TerraVector4 extends Float32Array {
     declare 1: number
     declare 2: number
     declare 3: number
+    constructor(Arr?: ArrayBufferLike, offset?: number)
+    constructor(Arr?: number[])
+    constructor(Arr?: number[] | ArrayBufferLike, offset = 0) {
+        if (!Arr)
+            super(4);
+        else if (Array.isArray(Arr)) {
+            Arr.length = 3;
+            super(Arr);
+        }
+        else {
+            super(Arr, offset, 4);
+        }
+    }
 }
 const fullRad = Math.PI * 2
 export class Angle {
@@ -241,12 +254,9 @@ export class Angle {
         return new Angle(distance);
     }
 }
+
 export class Triangle {
-    constructor(
-        public vectors: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()],
-        public plane: { normal: [number, number, number], d: number} = { normal: [0, 0, 0], d: 0}) {
-    }
-    createPlane = () => {
+    createPlane(): TerraVector4 {
         const v0 = this.vectors[0];
         const v1 = this.vectors[1];
         const v2 = this.vectors[2];
@@ -268,9 +278,22 @@ export class Triangle {
         else {
             invPyth = 0.0;
         }
-        this.plane.normal[0] = yz * invPyth
-        this.plane.normal[1] = xz * invPyth
-        this.plane.normal[2] = xy * invPyth
-        this.plane.d = -((this.plane.normal[0] * this.vectors[2][0]) + (this.plane.normal[1] * this.vectors[2][1]) + (this.plane.normal[2] * this.vectors[2][2]))
+        let normal_x = yz * invPyth
+        let normal_y = xz * invPyth
+        let normal_z = xy * invPyth;
+        if (!this.plane)
+            return new TerraVector4([normal_x, normal_y, normal_z, -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))]);
+        else
+            this.plane.set([normal_x, normal_y, normal_z, -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))]);
+        return this.plane;
     }
+    updatePlane() {
+        this.createPlane();
+    }
+    public plane = this.createPlane()
+    constructor(
+        public vectors: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()],
+        ) {
+    }
+
 }

@@ -2,7 +2,7 @@
 import { Engine } from "./engine";
 
 import type { isLight } from "./lights";
-import { TerraMatrix, Triangle } from "./Math";
+import { TerraMatrix, TerraVector4, Triangle } from "./Math";
 import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
 import { worldPosition } from "./traits/worldPosition";
@@ -96,11 +96,11 @@ class boundingBox {
 }
 
 export abstract class BoundableNode extends TerraNode {
-    indicesBuffer?: SharedArrayBuffer | undefined;
+   
 
     readonly boundingBox = new boundingBox();
     readonly pickInfo = new pickInfo();
-    readonly facesView?: Float32Array;
+    readonly facesBuffer: ArrayBuffer;
 
     //verticesBuffer: ArrayBuffer = new ArrayBuffer((3 * this.verticesPositionBuffer.byteLength) / this.verticesPositionStride);
     vertices: TerraVector3[] = [];
@@ -109,34 +109,95 @@ export abstract class BoundableNode extends TerraNode {
     #lastColliderWorldVectorsView2: TerraVector3[] = [];
 
 
-    #triangles: Triangle[] = [];
+    #faces: Triangle[];
     #lastColliderTransformMatrix = new TerraMatrix();
-    rebuildTrianglePlanes() {
-        let vectors: TerraVector3[] = [];
-        if (this.indicesBuffer) {
-            let indices = new Uint32Array(this.indicesBuffer);
-            indices.forEach(indice => {
-                let vector = this.#lastColliderWorldVectorsView2[indice];
-                if (!vector)
-                    throw ('position not found');
-                if (vectors.push(vector) == 3) {
-                    this.#triangles.push(new Triangle(vectors as [TerraVector3, TerraVector3, TerraVector3]));
-                    vectors = [];
-                }
-            });
-        } else {
-            this.#lastColliderWorldVectorsView2.forEach(vector => {
-                if (vectors.push(vector) == 3) {
-                    this.#triangles.push(new Triangle(vectors as [TerraVector3, TerraVector3, TerraVector3]));
-                    vectors = [];
-                }
-            });            
+    addVectors(faceIndex: number, vectors: [TerraVector3, TerraVector3, TerraVector3]) {
+        try {
+            const t = new Triangle(vectors as [TerraVector3, TerraVector3, TerraVector3]);
+            t.plane = new TerraVector4(this.facesBuffer, faceIndex * 4 * 4)
+            this.#faces[faceIndex] = t;
+        } catch (e) {
+            console.log(e);
+            debugger;
         }
     }
-    constructor(scene: Scene, public verticesPositionBuffer: SharedArrayBuffer, public verticesPositionStride: number = 3, public readonly faces?: SharedArrayBuffer) {
+    rebuildTrianglePlanes() {
+        let vectors: TerraVector3[] = [];
+        let faceIndex = 0;
+        if (this.indicesBuffer) {
+            let indices = new Uint32Array(this.indicesBuffer);
+            if (this.strip) {
+                indices.forEach(indice => {
+                    let vector = this.#lastColliderWorldVectorsView2[indice];
+                    if (!vector) {
+                        debugger;
+
+                        throw ('position not found');
+                    }
+                    if (vectors.push(vector) < 3)
+                        return;
+                    this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3]);
+                    vectors = [vectors[1], vectors[2]];
+                });
+            } else {
+                indices.forEach(indice => {
+                    let vector = this.#lastColliderWorldVectorsView2[indice];
+                    if (!vector) {
+                        debugger;
+                        throw ('position not found');
+                    }
+                    if (vectors.push(vector) == 3) {
+                        this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
+                        vectors = [];
+                    }
+                });
+            }
+        } else {
+            if (this.strip) {
+                this.#lastColliderWorldVectorsView2.forEach(vector => {
+                    if (vectors.push(vector) < 3)
+                        return;
+                    this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
+                    vectors = [vectors[1], vectors[2]];
+                });
+            } else {
+                this.#lastColliderWorldVectorsView2.forEach(vector => {
+                    if (vectors.push(vector) == 3) {
+                        this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
+                        vectors = [];
+                    }
+                });
+            }
+        }
+    }
+    constructor(
+        scene: Scene,
+        public verticesPositionBuffer: SharedArrayBuffer,
+        public verticesPositionStride: number = 3,
+        protected readonly indicesBuffer?: SharedArrayBuffer,
+        public readonly faces?: SharedArrayBuffer,
+        private strip = false
+    ) {
         super(scene.engine);
-        if (faces) {
-            this.facesView = new Float32Array(faces);
+        const positions = new Float32Array(this.verticesPositionBuffer);
+        const vecticesCount = indicesBuffer? indicesBuffer.byteLength/4 : positions.length / this.verticesPositionStride;
+        if (!this.strip) {
+            this.#faces = new Array(vecticesCount / 3);
+            if (faces) {
+                //this.facesView = new Float32Array(faces);
+                this.facesBuffer = new ArrayBuffer((vecticesCount / 3) * 4 * 4);
+            } else {
+                this.facesBuffer = new ArrayBuffer((vecticesCount / 3) * 4 * 4);
+            }
+        }
+        else {
+            this.#faces = new Array(vecticesCount - 2)
+            if (faces) {
+                //this.facesView = new Float32Array(faces);
+                this.facesBuffer = new ArrayBuffer((vecticesCount - 2) * 4 * 4);
+            } else {
+                this.facesBuffer = new ArrayBuffer((vecticesCount - 2) * 4 * 4);
+            }
         }
         scene.boundables.add(this);
             //Run this on microtask so the scope who called
@@ -145,12 +206,17 @@ export abstract class BoundableNode extends TerraNode {
             worker.message(this.uniqueID, 'init', [this.indicesBuffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
             this.rebuildTrianglePlanes();
         });
-        const positions = new Float32Array(this.verticesPositionBuffer);
-
-        const len = positions.length / this.verticesPositionStride;
-        for (let i = 0; i < len; i++) {
-            this.vertices.push(new TerraVector3(verticesPositionBuffer, i * verticesPositionStride * 4));
-            this.#lastColliderWorldVectorsView2.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
+        if (indicesBuffer) {
+            const indices = new Uint32Array(indicesBuffer);
+            for (let i = 0; i < indices.length; i++) {
+                this.vertices.push(new TerraVector3(verticesPositionBuffer, indices[i] * verticesPositionStride * 4));
+                this.#lastColliderWorldVectorsView2.push(new TerraVector3(this.#lastColliderWorldVectors, indices[i] * verticesPositionStride * 4));
+            }
+        } else {
+            for (let i = 0; i < vecticesCount; i++) {
+                this.vertices.push(new TerraVector3(verticesPositionBuffer, i * verticesPositionStride * 4));
+                this.#lastColliderWorldVectorsView2.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
+            }
         }
     }
     public intersectsRay(ray: Float32Array): Promise<void> {
@@ -163,7 +229,7 @@ export abstract class BoundableNode extends TerraNode {
     }
     //collisionsScalingMatrix = new TerraMatrix();
     myCollisionsTransformMatrix = new TerraMatrix();
-    public checkCollision(collider: Collider) {
+    public checkCollision(collider: Collider, /*normalizedVelocity:TerraVector3*/) {
         if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
             return;
         }
@@ -176,14 +242,10 @@ export abstract class BoundableNode extends TerraNode {
         if (!this.#lastColliderTransformMatrix.equals(this.myCollisionsTransformMatrix)) {
             
             this.#lastColliderTransformMatrix = this.myCollisionsTransformMatrix.clone();
-            //            let lastColliderVertices = new Float32Array(this.lastColliderWorldVertices);
-            //this.#colliderTrianglePlaneArray = [];
-            //this.lastColliderWorldVectors = [];
-            //lastColliderVertices.set(window.Wasm.calculatelastcolliderworldvertices(new Float32Array(this.verticesPositionBuffer), collisionsTransformMatrix.m as Float32Array));
 
             new Uint8Array(this.#lastColliderWorldVectors).set(new Uint8Array(this.verticesPositionBuffer));
             let timer = performance.now();
-            let i = 0, len1 = this.#lastColliderWorldVectorsView2.length, len2 = this.#triangles.length;
+            let i = 0, len1 = this.#lastColliderWorldVectorsView2.length, len2 = this.#faces.length;
             while (i < len1) {
                 this.#lastColliderWorldVectorsView2[i].multiply(this.myCollisionsTransformMatrix);
                 i++;
@@ -191,18 +253,29 @@ export abstract class BoundableNode extends TerraNode {
             console.log('recalculated collision vertices', performance.now() - timer);
             i = 0;
             while (i < len2) {
-                this.#triangles[i].createPlane();
+                this.#faces[i].updatePlane();
                 i++;
             }
-         /*   this.#lastColliderWorldVectorsView2.forEach(v => {
-                v.multiply(this.myCollisionsTransformMatrix);
-            });
-            this.#triangles.forEach(triangle => {
-                triangle.createPlane();
-            });*/
             
         }
-        this.#triangles.forEach(triangle => {
+        /*
+        const pipeline=this.engine.gpu.createComputePipeline('collider.wgsl');
+        const sourceBindGroup = pipeline.createBindGroup(0, [
+            {
+                binding: 0,
+                resource: {
+                    buffer: sourceGPU
+                }
+            },
+            {
+                binding: 1,
+                resource: {
+                    buffer: terrainPositionAndUvsAndNormalsGPUTemp
+                }
+            }
+        ]);
+        */
+        this.#faces.forEach(triangle => {
             collider._testTriangle(triangle);
         });
 

@@ -77,8 +77,8 @@ export class TerraCamera {
     target: { readonly 0: number; readonly 1: number; readonly 2: number; };
     position: { readonly 0: number; readonly 1: number; readonly 2: number; };
 
-    async update(cb: (values:{ position: TerraVector3, target: TerraVector3 }) => Promise<void>) {
-        await cb({ position: this.#position, target: this.#target  });
+    update(cb: (values:{ position: TerraVector3, target: TerraVector3 }) => void) {
+        cb({ position: this.#position, target: this.#target  });
         this.#doUpdateView = true;
     }
 
@@ -172,7 +172,7 @@ export class TerraCamera {
         //TODO: use SIMD, use column major matrix?
         if (this.#doUpdateView) {
             this.childCameras.forEach(childCamera => {
-                childCamera.update(async (values) => {
+                childCamera.update((values) => {
                     values.position[0] = this.#position[0]
                     values.position[1] = this.#position[1]
                     values.position[2] = this.#position[2]

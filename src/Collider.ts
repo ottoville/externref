@@ -218,7 +218,7 @@ export class Collider {
         // pb.subtractToRef(point, this._tempVector2);
 
         CrossToRef(this.#tempVector, this.#tempVector2, this.#tempVector4);
-        var d = Dot(this.#tempVector4, triangle.plane.normal);
+        var d = Dot(this.#tempVector4, triangle.plane);
         if (d < 0) {
             return false;
         }
@@ -229,13 +229,13 @@ export class Collider {
 
         //pc.subtractToRef(point, this._tempVector3);
         CrossToRef(this.#tempVector2, this.#tempVector3, this.#tempVector4);
-        d = Dot(this.#tempVector4, triangle.plane.normal);
+        d = Dot(this.#tempVector4, triangle.plane);
         if (d < 0) {
             return false;
         }
 
         CrossToRef(this.#tempVector3, this.#tempVector, this.#tempVector4);
-        d = Dot(this.#tempVector4, triangle.plane.normal);
+        d = Dot(this.#tempVector4, triangle.plane);
         return d >= 0;
     }
 
@@ -260,11 +260,11 @@ export class Collider {
     public _testTriangle(triangle: Triangle): void {
         let t0: number;
         var embeddedInPlane = false;
-        var dot = Dot(triangle.plane.normal, this.#normalizedVelocity);
+        var dot = Dot(triangle.plane, this.#normalizedVelocity);
         if (dot > 0)
             return
-        var signedDistToTrianglePlane = Dot(this.#basePoint, triangle.plane.normal) + triangle.plane.d; //trianglePlane.signedDistanceTo(this._basePoint);
-        var normalDotVelocity = Dot(triangle.plane.normal, this.#velocity);
+        var signedDistToTrianglePlane = Dot(this.#basePoint, triangle.plane) + triangle.plane[3]; //trianglePlane.signedDistanceTo(this._basePoint);
+        var normalDotVelocity = Dot(triangle.plane, this.#velocity);
 
         if (normalDotVelocity == 0) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
@@ -305,9 +305,9 @@ export class Collider {
 
         if (!embeddedInPlane) {
             //TODO: Use simd
-            this._planeIntersectionPoint[0] = this.#basePoint[0] - triangle.plane.normal[0];
-            this._planeIntersectionPoint[1] = this.#basePoint[1] - triangle.plane.normal[1];
-            this._planeIntersectionPoint[2] = this.#basePoint[2] - triangle.plane.normal[2];
+            this._planeIntersectionPoint[0] = this.#basePoint[0] - triangle.plane[0];
+            this._planeIntersectionPoint[1] = this.#basePoint[1] - triangle.plane[1];
+            this._planeIntersectionPoint[2] = this.#basePoint[2] - triangle.plane[2];
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             // this._velocity.scaleToRef(t0, this._tempVector);
             this.#tempVector[0] = this.#velocity[0] * t0

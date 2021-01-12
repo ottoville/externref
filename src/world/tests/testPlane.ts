@@ -8,7 +8,7 @@ export class testPlane extends BoundableNode {
     worldPosition: worldPosition = new worldPosition(this);
 
     constructor(scene: Scene) {
-        super(scene, new SharedArrayBuffer(7 * 3 * 4))
+        super(scene, new SharedArrayBuffer(7 * 3 * 4),undefined,undefined,undefined,true)
         this.boundingBox.box.set([0, 0, 0, 200, 200, 0])
         new Float32Array(this.verticesPositionBuffer).set([
             0, 0, 0,

@@ -98,6 +98,12 @@ export class Engine {
         finalPosition: new TerraVector3(),
     }
     async collideWithWorld(position: TerraVector3, velocity: TerraVector3, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): Promise<void> {
+        /*
+        await new Promise<void>(res => {
+            setTimeout(() => { res(); }, 80);
+        });
+        
+        */
         //TODO: Call only when camera position change
         var closeDistance = CollisionsEpsilon * 10.0;
         if (this.collider._retry >= maximumRetry) {
@@ -113,8 +119,8 @@ export class Engine {
 
         this.collider._initialize(position, velocity, closeDistance);
         const scenesArr=[...this.scenes]
-
-        await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh =>mesh.checkCollision(this.collider)))));
+        //const normalizedVelocity=velocity.normalize();
+        await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider/*, normalizedVelocity*/)))));
         if (!this.collider.collisionFound) {
 
             //position.addToRef(velocity, finalPosition);
