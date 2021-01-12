@@ -96,7 +96,7 @@ export class TerrainMesh extends BoundableNode {
         initialTexture: GPUTextureView,
         public vBuffer: GPUVertexBuffer,
         public iBuffer: GPUIndexBuffer,
-        public verticesPositionBuffer: SharedArrayBuffer,
+        verticesPositionBuffer: SharedArrayBuffer,
         indicesBuffer: SharedArrayBuffer,
         verticesPositionStride = 3,
         indexCount: number,
