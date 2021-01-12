@@ -37,6 +37,7 @@ wwwroot/js
 wwwroot/shaders/*.json
 wwwroot/webworkers
 wwwroot/sw.js
+wwwroot/**/*.wasm
 *.map
 # Visual Studio 2017 auto generated files
 Generated\ Files/

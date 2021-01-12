@@ -200,7 +200,7 @@ export class TerraVector4 extends Float32Array {
         if (!Arr)
             super(4);
         else if (Array.isArray(Arr)) {
-            Arr.length = 3;
+            Arr.length = 4;
             super(Arr);
         }
         else {
