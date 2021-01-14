@@ -107,8 +107,6 @@ export abstract class BoundableNode extends TerraNode {
 
     #lastColliderWorldVectors = new SharedArrayBuffer(this.verticesPositionBuffer.byteLength);
     #lastColliderWorldVectorsView2: TerraVector3[] = [];
-    #lastColliderWorldVectorsViewIndexed: Map<number, TerraVector3> = new Map();
-
 
     #faces: Triangle[];
     #lastColliderTransformMatrix = new TerraMatrix();
@@ -142,23 +140,16 @@ export abstract class BoundableNode extends TerraNode {
                 });
             } else {
                 this.#indices.forEach(indice => {
-                    const position = this.#lastColliderWorldVectorsViewIndexed.get(indice);
-                    if (!position)
-                        throw ('position not found');
+                    //const position = this.#lastColliderWorldVectorsViewIndexed.get(indice);
+                    const position = this.#colliderVertices[indice]
+                    if (!position) {
+                        debugger;
+                        throw ('position ' + indice + ' not found');
+                    }
                     if (vectors.push(position) == 3) {
                         this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
                         vectors = [];
                     }
-                    /*
-                    let vector = this.#lastColliderWorldVectorsView2[indice];
-                    if (!vector) {
-                        debugger;
-                        throw ('position not found');
-                    }
-                    if (vectors.push(vector) == 3) {
-                        this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
-                        vectors = [];
-                    }*/
                 });
             }
         } else {
@@ -179,41 +170,14 @@ export abstract class BoundableNode extends TerraNode {
             }
         }
     }
-    private buildVerticesFromIndices(indices: Uint32Array) {
-        //this.vertices = [];
-        this.#lastColliderWorldVectorsView2 = [];
-        this.#lastColliderWorldVectorsViewIndexed.clear();
-        for (let i = 0; i < indices.length; i++) {
 
-            if (!this.#lastColliderWorldVectorsViewIndexed.has(indices[i])) {
-                this.#lastColliderWorldVectorsViewIndexed.set(indices[i], new TerraVector3(this.#lastColliderWorldVectors, indices[i] * this.verticesPositionStride * 4));
-            }
-            /*
-
-            //this.vertices.push(new TerraVector3(this.verticesPositionBuffer, indices[i] * this.verticesPositionStride * 4));
-            let v = new TerraVector3(this.#lastColliderWorldVectors, indices[i] * this.verticesPositionStride * 4);
-            //294
-            //@ts-ignore
-            v.indice = indices[i];
-            this.#lastColliderWorldVectorsView2.push(v);
-            if (i === 0) {
-                console.log(new TerraVector3(this.#lastColliderWorldVectors, indices[i] * this.verticesPositionStride * 4));
-                if(debug)
-                    debugger;
-            }
-            //@ts-ignore
-            if (v.indice === 294 && debug)
-                debugger;*/
-        }
-        this.rebuildTrianglePlanes()
-    }
     set indices(indices: ArrayLike<number>) {
         if (this.#indices) {
             this.#indices.set(indices);
         } else {
             this.#indices = new Uint32Array(indices);
         }
-        this.buildVerticesFromIndices(this.#indices);
+        this.rebuildTrianglePlanes();
     }
     constructor(
         scene: Scene,
@@ -249,23 +213,25 @@ export abstract class BoundableNode extends TerraNode {
             }
         }
         scene.boundables.add(this);
-            //Run this on microtask so the scope who called
-            //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
-        queueMicrotask(() => {   
-            //worker.message(this.uniqueID, 'init', [this.indicesBuffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
-            this.rebuildTrianglePlanes();
-        });
+        for (let i = 0; i < positionCount; i++) {
+            this.#colliderVertices.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
+        }
         if (indicesBuffer) {
             this.#indices = new Uint32Array(indicesBuffer);
-            this.buildVerticesFromIndices(this.#indices);
         } else {
             for (let i = 0; i < vecticesCount; i++) {
                 this.#lastColliderWorldVectorsView2.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
             }
         }
-        for (let i = 0; i < positionCount; i++) {
-            this.#colliderVertices.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
-        }
+        this.rebuildTrianglePlanes();
+
+            //Run this on microtask so the scope who called
+            //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
+
+        /*queueMicrotask(() => {
+            //worker.message(this.uniqueID, 'init', [this.indicesBuffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
+           
+        });*/
     }
     public intersectsRay(ray: Float32Array): Promise<void> {
         return worker.message(this.uniqueID, 'intersectsRay', [ray.buffer]);
