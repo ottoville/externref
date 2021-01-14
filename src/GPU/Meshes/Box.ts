@@ -2,7 +2,6 @@
 import { SimpleMesh } from "../RenderPipeLines/Simple";
 
 export class Box extends SimpleMesh {
-    vBuffer: GPUVertexBuffer;
     static create(scene: Scene) {
         const [indicesBuffer, iBuffer] = scene.gpu.createInputBuffer(GPUBufferUsage.INDEX, new Uint32Array([
             0, 1, 2, 0, 2, 3,    // front
@@ -12,22 +11,13 @@ export class Box extends SimpleMesh {
             16, 17, 18, 16, 18, 19,   // right
             20, 21, 22, 20, 22, 23,   // left
         ]));
-        return new Box(scene, indicesBuffer, iBuffer);
-    }
-
-    constructor(
-        scene: Scene,
-        CPUIndexBuffer: SharedArrayBuffer,
-        public iBuffer: GPUIndexBuffer
-    ) {
-        super(scene, new SharedArrayBuffer(6 * 4 * 3 * 4), 'uint32', CPUIndexBuffer);
-        new Float32Array(this.verticesPositionBuffer).set([
-                        // Left face
+        const [verticesBuffer, vBuffer] = scene.gpu.createInputBuffer(GPUBufferUsage.VERTEX, new Float32Array([
+            // Left face
             -1.0, 1.0, -1.0,
             -1.0, 1.0, 1.0,
             -1.0, -1.0, 1.0,
             -1.0, -1.0, -1.0,
-                        // Right face
+            // Right face
             1.0, -1.0, 1.0,
             1.0, 1.0, 1.0,
             1.0, 1.0, -1.0,
@@ -39,12 +29,12 @@ export class Box extends SimpleMesh {
             1.0, -1.0, -1.0,
             -1.0, -1.0, -1.0,
 
-                        // Top face
+            // Top face
             1.0, 1.0, -1.0,
             1.0, 1.0, 1.0,
             -1.0, 1.0, 1.0,
             -1.0, 1.0, -1.0,
-                        // Back face
+            // Back face
             1.0, -1.0, -1.0,
             1.0, 1.0, -1.0,
             -1.0, 1.0, -1.0,
@@ -54,9 +44,18 @@ export class Box extends SimpleMesh {
             1.0, 1.0, 1.0,
             1.0, -1.0, 1.0,
             -1.0, -1.0, 1.0,
-        ]);
+        ]));
+        return new Box(scene, verticesBuffer, indicesBuffer, iBuffer, vBuffer);
+    }
 
-        this.vBuffer = scene.gpu.createInputBuffer(GPUBufferUsage.VERTEX, this.verticesPositionBuffer);
+    constructor(
+        scene: Scene,
+        CPUVertexBuffer: SharedArrayBuffer,
+        CPUIndexBuffer: SharedArrayBuffer,
+        public iBuffer: GPUIndexBuffer,
+        public vBuffer: GPUVertexBuffer
+    ) {
+        super(scene, CPUVertexBuffer, 'uint32', CPUIndexBuffer, iBuffer, vBuffer);
         this.boundingBox.box.set([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0])
     }
 }

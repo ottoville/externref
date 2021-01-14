@@ -138,14 +138,14 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         let shadersP: Promise<{ [key: string]: string }> = fetch('/shaders/shaders.json').then(s => s.json());
         const cache = await caches.open(CACHE_NAME);
         blazor.invokeMethod('setProgress', 7);
-        /*
-        const shaders = ['collider.wgsl'];
+        
+        const shaders = ['simple.vert.wgsl', 'simple.frag.wgsl'];
         await Promise.all(shaders.map(async u => {
-            const compiled = await (await fetch(u)).text();
+            const compiled = await (await fetch('/shaders/wgsl/'+u)).text();
             gpuscene.shaderModules.set(u, device.createShaderModule({ code: compiled }));
         }));
 
-*/
+
 
         const glslang: { compileGLSL: (source: string, type: string) => Uint32Array } = await new Promise((res, rej) => {
             const glslangOptions = {
