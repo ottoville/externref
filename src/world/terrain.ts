@@ -527,8 +527,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             this.serialize();
         });
         gpuReadBufferIndices.readAndDestroy(async (buff) => {
-            this.#indices.set(new Uint32Array(buff));
-            this.mesh.rebuildTrianglePlanes();
+            this.mesh.indices = new Uint32Array(buff);
         });
         this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, this.indicesBuffer, 8, this.#terrainIndicesLength / 4, facet12ArrCPUBuffer);
         this.mesh.boundingBox.box.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);

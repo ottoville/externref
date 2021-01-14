@@ -401,7 +401,7 @@ export class Collider {
         }
 
         if (found) {
-
+            console.log('collided');
             var distToCollisionSquared = t * (this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
 
             if (!this.collisionFound || distToCollisionSquared < this.#nearestDistanceSquared) {
