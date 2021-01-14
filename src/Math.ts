@@ -292,7 +292,7 @@ export class Triangle {
     }
     public plane = this.createPlane()
     constructor(
-        public vectors: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()],
+        public vectors: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()]
         ) {
     }
 

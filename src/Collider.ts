@@ -95,10 +95,10 @@ export class Collider {
     radius: { 0: number; 1: number; 2: number; };
 
     collisionsScalingMatrix = new TerraMatrix([
-        1.0 / this._radius[0], 0.0, 0.0, 0.0,
-        0.0, 1.0 / this._radius[1], 0.0, 0.0,
-        0.0, 0.0, 1.0 / this._radius[2], 0.0,
-        0.0, 0.0, 0.0, 1.0]);
+        1.0 / this._radius[0],   0.0,                   0.0,                    0.0,
+        0.0,                     1.0 / this._radius[1], 0.0,                    0.0,
+        0.0,                     0.0,                   1.0 / this._radius[2],  0.0,
+        0.0,                     0.0,                   0.0,                   1.0]);
     constructor(private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
         const me = this;
         this.radius = {
@@ -401,7 +401,6 @@ export class Collider {
         }
 
         if (found) {
-            console.log('collided');
             var distToCollisionSquared = t * (this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
 
             if (!this.collisionFound || distToCollisionSquared < this.#nearestDistanceSquared) {

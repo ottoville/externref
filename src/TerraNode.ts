@@ -103,10 +103,11 @@ export abstract class BoundableNode extends TerraNode {
     readonly facesBuffer: ArrayBuffer;
 
 
-    //vertices: TerraVector3[] = [];
+    #colliderVertices: TerraVector3[] = [];
 
     #lastColliderWorldVectors = new SharedArrayBuffer(this.verticesPositionBuffer.byteLength);
     #lastColliderWorldVectorsView2: TerraVector3[] = [];
+    #lastColliderWorldVectorsViewIndexed: Map<number, TerraVector3> = new Map();
 
 
     #faces: Triangle[];
@@ -141,6 +142,14 @@ export abstract class BoundableNode extends TerraNode {
                 });
             } else {
                 this.#indices.forEach(indice => {
+                    const position = this.#lastColliderWorldVectorsViewIndexed.get(indice);
+                    if (!position)
+                        throw ('position not found');
+                    if (vectors.push(position) == 3) {
+                        this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
+                        vectors = [];
+                    }
+                    /*
                     let vector = this.#lastColliderWorldVectorsView2[indice];
                     if (!vector) {
                         debugger;
@@ -149,7 +158,7 @@ export abstract class BoundableNode extends TerraNode {
                     if (vectors.push(vector) == 3) {
                         this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
                         vectors = [];
-                    }
+                    }*/
                 });
             }
         } else {
@@ -173,12 +182,28 @@ export abstract class BoundableNode extends TerraNode {
     private buildVerticesFromIndices(indices: Uint32Array) {
         //this.vertices = [];
         this.#lastColliderWorldVectorsView2 = [];
-
+        this.#lastColliderWorldVectorsViewIndexed.clear();
         for (let i = 0; i < indices.length; i++) {
+
+            if (!this.#lastColliderWorldVectorsViewIndexed.has(indices[i])) {
+                this.#lastColliderWorldVectorsViewIndexed.set(indices[i], new TerraVector3(this.#lastColliderWorldVectors, indices[i] * this.verticesPositionStride * 4));
+            }
+            /*
+
             //this.vertices.push(new TerraVector3(this.verticesPositionBuffer, indices[i] * this.verticesPositionStride * 4));
-            this.#lastColliderWorldVectorsView2.push(new TerraVector3(this.#lastColliderWorldVectors, indices[i] * this.verticesPositionStride * 4));
-            if (i === 0)
+            let v = new TerraVector3(this.#lastColliderWorldVectors, indices[i] * this.verticesPositionStride * 4);
+            //294
+            //@ts-ignore
+            v.indice = indices[i];
+            this.#lastColliderWorldVectorsView2.push(v);
+            if (i === 0) {
                 console.log(new TerraVector3(this.#lastColliderWorldVectors, indices[i] * this.verticesPositionStride * 4));
+                if(debug)
+                    debugger;
+            }
+            //@ts-ignore
+            if (v.indice === 294 && debug)
+                debugger;*/
         }
         this.rebuildTrianglePlanes()
     }
@@ -200,7 +225,11 @@ export abstract class BoundableNode extends TerraNode {
     ) {
         super(scene.engine);
         //const positions = new Float32Array(this.verticesPositionBuffer);
-        const vecticesCount = indicesBuffer ? indicesBuffer.byteLength / 4 : (this.verticesPositionBuffer.byteLength / 4) / this.verticesPositionStride;
+
+
+        const positionCount = (this.verticesPositionBuffer.byteLength / 4) / this.verticesPositionStride;
+        const vecticesCount = indicesBuffer ? indicesBuffer.byteLength / 4 : positionCount;
+
         if (this.strip) {
             this.#faces = new Array(vecticesCount - 2)
             if (faces) {
@@ -231,9 +260,11 @@ export abstract class BoundableNode extends TerraNode {
             this.buildVerticesFromIndices(this.#indices);
         } else {
             for (let i = 0; i < vecticesCount; i++) {
-                //this.vertices.push(new TerraVector3(verticesPositionBuffer, i * verticesPositionStride * 4));
                 this.#lastColliderWorldVectorsView2.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
             }
+        }
+        for (let i = 0; i < positionCount; i++) {
+            this.#colliderVertices.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
         }
     }
     public intersectsRay(ray: Float32Array): Promise<void> {
@@ -263,13 +294,11 @@ export abstract class BoundableNode extends TerraNode {
             new Uint8Array(this.#lastColliderWorldVectors).set(new Uint8Array(this.verticesPositionBuffer));
             let timer = performance.now();
             let i = 0
-            let len1 = this.#lastColliderWorldVectorsView2.length
+            let len1 = this.#colliderVertices.length
             let len2 = this.#faces.length;
 
             while (i < len1) {
-                this.#lastColliderWorldVectorsView2[i].multiply(this.myCollisionsTransformMatrix);
-                if (i == 0)
-                    console.log(this.#lastColliderWorldVectorsView2[i])
+                this.#colliderVertices[i].multiply(this.myCollisionsTransformMatrix);
                 i++;
             }
             console.log('recalculated collision vertices', performance.now() - timer);
@@ -297,7 +326,6 @@ export abstract class BoundableNode extends TerraNode {
             }
         ]);
         */
-        debugger;
         this.#faces.forEach(triangle => {
             collider._testTriangle(triangle);
         });
