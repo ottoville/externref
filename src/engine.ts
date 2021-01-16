@@ -1,7 +1,7 @@
 ﻿import { Physics } from "./physics";
 import type { GPU } from "./GPU";
 import type { DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
-import { TerraNode } from "./TerraNode";
+import { TerraNodeGPU } from "./TerraNode";
 import { Collider } from "./Collider";
 import { Scene } from "./Scene";
 import { TerraVector3 } from "./Math";
@@ -37,7 +37,7 @@ export class Engine {
                 return null
             if (this.#tempBuffer)
                 this.#tempBuffer.destroy();
-            const dataSizeBytes = TerraNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
+            const dataSizeBytes = TerraNodeGPU.GPUDataSize * 4; //4 * 16 + 3 * 4;
             this.#tempBuffer = gpu.createGPUBuffer(dataSizeBytes * gpu.queue.size, [GPUBufferUsage.COPY_SRC], true);
             let tempOffset = 0;
             const commandEncoder = gpu.device.createCommandEncoder();

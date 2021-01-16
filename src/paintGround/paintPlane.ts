@@ -4,18 +4,76 @@ import type { PTResultF } from "../types/interfaces/index.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
 import type { DrawableIndexed } from "../GPU/Drawable.js";
-import { TerraNode } from "../TerraNode.js";
+import { TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline.js";
+import type { GPU } from "../GPU";
+import type { Engine } from "../engine.js";
 
 
 
-class PlaneMesh extends TerraNode implements has3DPosition{
+class PlaneMesh extends TerraNodeGPU implements has3DPosition{
     worldPosition: worldPosition = new worldPosition(this);
 }
 
 
+
+const renderPipelines: Map<GPU, RenderPipeline> = new Map();
+
+function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, number]{
+    const bufferOffsetBytes = allocateMemory(scene.engine)
+
+    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
+    if (renderPipeline)
+        return [renderPipeline, bufferOffsetBytes];
+    const fragment = scene.engine.gpu.shaderModules.get('color.frag.wgsl')
+    if (!fragment)
+        throw ('Missing shader')
+    //const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
+    //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
+
+    renderPipeline = ground.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
+        primitiveTopology: 'triangle-strip',
+        rasterizationState: {
+            cullMode: 'none',
+        },
+        colorStates: [{
+            format: "bgra8unorm",
+        }],
+        vertexStage: {
+            module: scene.gpu.shaderModules.get("plane.vert")!,
+            entryPoint: "main",
+        },
+        fragmentStage: {
+            module: fragment,
+            entryPoint: "main"
+        },
+        vertexState: {
+            indexFormat: 'uint32',
+            vertexBuffers:
+                [{
+                    arrayStride: 4 * 2,
+                    stepMode: "vertex" as GPUInputStepMode,
+                    attributes: [{
+                        // position
+                        shaderLocation: 0,
+                        offset: 0,
+                        format: "float2" as GPUVertexFormat
+                    }]
+                }]
+        },
+    }, [bufferOffsetBytes]);
+    renderPipelines.set(scene.gpu, renderPipeline);
+    return [renderPipeline, bufferOffsetBytes]
+}
+function allocateMemory(engine: Engine) {
+    const bufferOffsetBytes = engine.gpu.DataSlots.pop();
+    if (typeof (bufferOffsetBytes) == 'undefined')
+        throw ('Out of memory');
+    return bufferOffsetBytes;
+}
 export class paintPlane extends paintGround {
     onEnd() {
         this.#mesh.worldPosition.update((scaling) => {
@@ -25,7 +83,7 @@ export class paintPlane extends paintGround {
     }
 
    // worldPosition = new worldPosition(this as TerraNode);
-    #mesh = new PlaneMesh(this.scene.engine);
+    #mesh = new PlaneMesh(this.scene.engine, ...getRenderPipeline(this.scene, this.ground));
     #startingPoint: Float32Array = new Float32Array(2);
     #templane2!: DrawableIndexed;
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
@@ -66,7 +124,7 @@ export class paintPlane extends paintGround {
         uitab: hasCanvasListener,
     ) {
         super(scene, camera, ground, sea, uitab);
-        (async () => {
+        /*(async () => {
             const [fragment] = await Promise.all([scene.gpu.getShaderModule('/shaders/wgsl/color.frag.wgsl')])
 
             const planeRenerPipeline = ground.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
@@ -102,8 +160,9 @@ export class paintPlane extends paintGround {
             }, [this.#mesh.bufferOffsetBytes]);
             this.#templane2 = planeRenerPipeline.addDrawableIndexed(undefined, new Set([scene.gpu.renderPassScreen]), 0,undefined, 0, 1, 0);
             this.#templane2.setVertexBuffer(0, new Float32Array([0,0,0]));
-        })()
-       
+        })()*/
+        this.#templane2 = this.#mesh.renderPipeline.addDrawableIndexed(undefined, new Set([scene.gpu.renderPassScreen]), 0, undefined, 0, 1, 0);
+        this.#templane2.setVertexBuffer(0, new Float32Array([0, 0, 0]));
     };
 
     public activate(callback: PTResultF) {

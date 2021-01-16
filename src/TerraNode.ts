@@ -8,44 +8,24 @@ import type { Scene } from "./Scene";
 import { worldPosition } from "./traits/worldPosition";
 import { ObjectWorkerThread } from "./WorkerThread";
 import { TerraVector3 } from "./Math";
+import { RenderPipeline } from "./GPU/RenderPipeline";
 
-
-export abstract class TerraNode implements Partial<hasPhysics> {
-    static uniqueID = 0;
-    protected readonly uniqueID: number = TerraNode.uniqueID++;
-    abstract worldPosition?: worldPosition
-
-    hasPhysics(): this is hasPhysics {
-        return 'worldPosition' in this && 'onPhysicTick' in this;
-    }
-    isLight(): this is isLight {
-        return 'lightType' in this;
-    }
-    static GPUDataSize = 16 + 4 + 4
-    static alignment = 256;
-    /* Todo: make dynamic with treshold values */
-    static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
-
-    //readonly dataBuffer = new ArrayBuffer(TerraNode.GPUDataSize);
+export abstract class MainNode {
     readonly bufferOffsetBytes: number;
 
     readonly data: Float32Array;
     readonly customData: Float32Array;
-
-    destroy() {
-        this.engine.gpu.NodeInstances.delete(this);
-    }
-
+    abstract worldPosition?: worldPosition
     constructor(public engine: Engine, bufferOffsetBytes?: number) {
         bufferOffsetBytes = typeof (bufferOffsetBytes) == "number" ? bufferOffsetBytes : engine.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
         this.bufferOffsetBytes = bufferOffsetBytes;
-        this.data = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes, TerraNode.GPUDataSize);
+        this.data = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes, TerraNodeGPU.GPUDataSize);
         this.customData = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 20 * 4, 4);
 
 
-        engine.gpu.NodeInstances.set(this, engine.gpu.NodeInstances.size * TerraNode.alignment);
+        //engine.gpu.NodeInstances.set(this, engine.gpu.NodeInstances.size * TerraNodeGPU.alignment);
         this.data.set([
             //3d matrix start, 64 bytes
             1.0, 0.0, 0.0, 0.0,
@@ -69,11 +49,40 @@ export abstract class TerraNode implements Partial<hasPhysics> {
             }
         });
         this.updateDynamicBuffer();
+
     }
 
     async updateDynamicBuffer() {
         this.engine.gpu.queue.set(this.data, this.bufferOffsetBytes);
     }
+
+    hasPhysics(): this is hasPhysics {
+        return 'worldPosition' in this && 'onPhysicTick' in this;
+    }
+    isLight(): this is isLight {
+        return 'lightType' in this;
+    }
+}
+export abstract class TerraNodeGPU extends MainNode implements Partial<hasPhysics>{
+    static uniqueID = 0;
+    protected readonly uniqueID: number = TerraNodeGPU.uniqueID++;
+    
+
+    static GPUDataSize = 16 + 4 + 4
+    static alignment = 256;
+    /* Todo: make dynamic with treshold values */
+    static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
+
+    //readonly dataBuffer = new ArrayBuffer(TerraNode.GPUDataSize);
+
+    destroy() {
+        //this.engine.gpu.NodeInstances.delete(this);
+    }
+
+    constructor(public engine: Engine, public renderPipeline: RenderPipeline, bufferOffsetBytes?: number) {
+        super(engine, bufferOffsetBytes)
+    }
+
 }
 export interface PickingInfo {
     hit: boolean,
@@ -95,7 +104,7 @@ class boundingBox {
     max = new TerraVector3(this.buffer, 4 * 3);
 }
 
-export abstract class BoundableNode extends TerraNode {
+export abstract class BoundableNode extends TerraNodeGPU {
    
 
     readonly boundingBox = new boundingBox();
@@ -181,13 +190,16 @@ export abstract class BoundableNode extends TerraNode {
     }
     constructor(
         scene: Scene,
+        renderPipeline: RenderPipeline,
         public verticesPositionBuffer: SharedArrayBuffer,
         public verticesPositionStride: number = 3,
-        indicesBuffer?: SharedArrayBuffer | ArrayBuffer,
+        indicesBuffer?: SharedArrayBuffer,
         public readonly faces?: SharedArrayBuffer,
-        private strip = false
+        
+        private strip = false,
+        
     ) {
-        super(scene.engine);
+        super(scene.engine, renderPipeline);
         //const positions = new Float32Array(this.verticesPositionBuffer);
 
 
@@ -228,10 +240,10 @@ export abstract class BoundableNode extends TerraNode {
             //Run this on microtask so the scope who called
             //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
 
-        /*queueMicrotask(() => {
-            //worker.message(this.uniqueID, 'init', [this.indicesBuffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
+        queueMicrotask(() => {
+            worker.message(this.uniqueID, 'init', [indicesBuffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
            
-        });*/
+        });
     }
     public intersectsRay(ray: Float32Array): Promise<void> {
         return worker.message(this.uniqueID, 'intersectsRay', [ray.buffer]);
@@ -297,7 +309,7 @@ export abstract class BoundableNode extends TerraNode {
         });
     }
 }
-export class PositionNode extends TerraNode {
+export class PositionNode extends MainNode {
     worldPosition: worldPosition = new worldPosition(this);
     constructor(engine: Engine, bufferOffsetBytes?: number) {
         super(engine, bufferOffsetBytes);

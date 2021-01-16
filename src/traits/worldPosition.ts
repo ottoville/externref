@@ -1,5 +1,5 @@
 ﻿import { TerraMatrix, TerraVector3, TerraVector4 } from "../Math";
-import { BoundableNode, TerraNode } from "../TerraNode";
+import { BoundableNode, MainNode } from "../TerraNode";
 export interface has3DPosition {
     worldPosition: worldPosition;
 }
@@ -45,7 +45,7 @@ export class worldPosition {
    // #busy = false;
    // bufferOffset = this.node.scene.gpuscene.worldPositionScene.instances.size * alignment;
 
-    constructor(public node: TerraNode | BoundableNode) {
+    constructor(public node: MainNode | BoundableNode) {
 
        // node.scene.gpuscene.worldPositionScene.instances.set(this, node.scene.gpuscene.worldPositionScene.instances.size * alignment);
        // this.updatePositionBuffer(false);

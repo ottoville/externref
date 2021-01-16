@@ -56,6 +56,6 @@ export class Box extends SimpleMesh {
         public vBuffer: GPUVertexBuffer
     ) {
         super(scene, CPUVertexBuffer, 'uint32', CPUIndexBuffer, iBuffer, vBuffer);
-        this.boundingBox.box.set([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0])
+        this.boundingBox.box.set([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0]);
     }
 }

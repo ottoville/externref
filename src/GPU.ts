@@ -1,4 +1,4 @@
-﻿import { TerraNode } from "./TerraNode";
+﻿import { TerraNodeGPU } from "./TerraNode";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass";
 import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
 import { Scene } from "./Scene";
@@ -9,7 +9,7 @@ export class GPU {
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     #bufferIndexFormats: WeakMap<GPUBuffer, GPUIndexFormat> = new WeakMap();
 
-    NodeInstances: Map<TerraNode, number> = new Map();
+   // NodeInstances: Map<TerraNodeGPU, number> = new Map();
 
     GPUBindGroupLayouts: WeakMap<GPUBindGroup, GPUBindGroupLayout> = new WeakMap();
     DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
@@ -54,9 +54,9 @@ export class GPU {
 
     shaderModules: Map<string, GPUShaderModule> = new Map();
     //Todo: Remove COPY_SRC
-    GPUData = this.createGPUBuffer(TerraNode.alignment * TerraNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-    CPUData = new SharedArrayBuffer(TerraNode.alignment * TerraNode.maxInstances);
-    DataSlots: number[] = new Array(TerraNode.maxInstances).fill(TerraNode.alignment).map((v, i) => i * v);
+    GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+    CPUData = new SharedArrayBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances);
+    DataSlots: number[] = new Array(TerraNodeGPU.maxInstances).fill(TerraNodeGPU.alignment).map((v, i) => i * v);
     
     BindGroup: BindGroupOneBinding;
     BindGroupLayout = this.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
@@ -151,7 +151,7 @@ export class GPU {
                 resource: {
                     buffer: this.GPUData,
                     offset: 0,
-                    size: TerraNode.GPUDataSize*4
+                    size: TerraNodeGPU.GPUDataSize*4
                 }
             });
         this.DynamicBindGroups.add(this.BindGroup);
