@@ -80,12 +80,12 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
     facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     constructor(
-        scene:Scene,
+        public scene:Scene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea,
     ) {
-        super(scene, ...getRenderPipeline(scene, terrain));
+        super(scene.engine, ...getRenderPipeline(scene, terrain));
         scene.TerraCameras[0].subscribePickingRay();
 
         terrainWorker.message(WorkerReturn.Promise, 'init',

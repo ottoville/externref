@@ -99,8 +99,8 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
         // this.worldPosition.translation = [newpos.x, newpos.y, newpos.z];
     }
     Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), 14);
-    constructor(scene: Scene, sunBufferOffsetBytes: number) {
-        super(scene, getRenderPipeline(scene, sunBufferOffsetBytes), sunBufferOffsetBytes);
+    constructor(private scene: Scene, sunBufferOffsetBytes: number) {
+        super(scene.engine, getRenderPipeline(scene, sunBufferOffsetBytes), sunBufferOffsetBytes);
 
 /*
         (async () => {

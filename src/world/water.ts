@@ -57,7 +57,7 @@ function getRenderPipeline(scene: Scene) {
 export class Sea extends BoundableNode {
     worldPosition = undefined
     Drawable = this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), 4);
-    constructor(scene: Scene) {
+    constructor(private scene: Scene) {
         super(scene, getRenderPipeline(scene),new SharedArrayBuffer(4 * 4 * 3), undefined, undefined, undefined, true); //48
       /*  const vertex = scene.engine.gpu.shaderModules.get('water.vert.wgsl')
         const fragment = scene.engine.gpu.shaderModules.get('water.frag.wgsl')

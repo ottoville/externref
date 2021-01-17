@@ -3,7 +3,6 @@ import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
-import type { DrawableIndexed } from "../GPU/Drawable.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
@@ -16,7 +15,7 @@ import type { Engine } from "../engine.js";
 
 class PlaneMesh extends TerraNodeGPU implements has3DPosition{
     worldPosition: worldPosition = new worldPosition(this);
-    Drawable = this.renderPipeline.addDrawableIndexed(undefined, new Set([this.scene.gpu.renderPassScreen]), 0, undefined, 0, 1, 0);
+    Drawable = this.renderPipeline.addDrawableIndexed(undefined, new Set([this.engine.gpu.renderPassScreen]), 0, undefined, 0, 1, 0);
 }
 
 
@@ -84,9 +83,8 @@ export class paintPlane extends paintGround {
     }
 
    // worldPosition = new worldPosition(this as TerraNode);
-    #mesh = new PlaneMesh(this.scene, ...getRenderPipeline(this.scene, this.ground));
+    #mesh = new PlaneMesh(this.scene.engine, ...getRenderPipeline(this.scene, this.ground));
     #startingPoint: Float32Array = new Float32Array(2);
-    #templane2!: DrawableIndexed;
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
         const positions: number[] = [0, 0, 0, 1];
         const indices: number[] = [0, 1];
@@ -171,7 +169,7 @@ export class paintPlane extends paintGround {
     }
     public destroy() {
         super.destroy();
-        this.#templane2.destroy();
+        this.#mesh.Drawable.destroy();
         this.#columns = 0;
         this.#rows = 0;
     }
@@ -222,9 +220,9 @@ export class paintPlane extends paintGround {
         })
 
         if (newValues) {
-            this.#templane2.setVertexBuffer(0, new Float32Array(newValues.positions));
-            this.#templane2.setIndexBuffer(new Uint32Array(newValues.indices));
-            this.#templane2.indexCount = newValues.indices.length;
+            this.#mesh.Drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
+            this.#mesh.Drawable.setIndexBuffer(new Uint32Array(newValues.indices));
+            this.#mesh.Drawable.indexCount = newValues.indices.length;
         }
     }
 }

@@ -57,7 +57,7 @@ export abstract class SimpleMesh extends BoundableNode {
     // abstract iBuffer: GPUIndexBuffer;
     Drawable = this.renderPipeline.addDrawableIndexed(this.scene, new Set([this.scene.gpu.renderPassScreen]), this.verticesCount);
     constructor(
-        scene: Scene,
+        private scene: Scene,
         verticesPositionBuffer: SharedArrayBuffer,
         indicesView: Uint32Array | Uint16Array,
         iBuffer: GPUIndexBuffer,

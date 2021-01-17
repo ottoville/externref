@@ -80,8 +80,8 @@ export abstract class TerraNodeGPU extends MainNode implements Partial<hasPhysic
         //this.engine.gpu.NodeInstances.delete(this);
     }
 
-    constructor(public scene: Scene, public renderPipeline: RenderPipeline, bufferOffsetBytes?: number) {
-        super(scene.engine, bufferOffsetBytes)
+    constructor(public engine: Engine, public renderPipeline: RenderPipeline, bufferOffsetBytes?: number) {
+        super(engine, bufferOffsetBytes)
     }
 
 }
@@ -201,7 +201,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         private strip = false,
         
     ) {
-        super(scene, renderPipeline);
+        super(scene.engine, renderPipeline);
         //const positions = new Float32Array(this.verticesPositionBuffer);
 
 
