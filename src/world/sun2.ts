@@ -98,8 +98,9 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
         // let newpos = matrixTranslate(sunPositionX, sunPositionY, 0, sunm);
         // this.worldPosition.translation = [newpos.x, newpos.y, newpos.z];
     }
+    Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), 14);
     constructor(scene: Scene, sunBufferOffsetBytes: number) {
-        super(scene.engine, getRenderPipeline(scene, sunBufferOffsetBytes), sunBufferOffsetBytes);
+        super(scene, getRenderPipeline(scene, sunBufferOffsetBytes), sunBufferOffsetBytes);
 
 /*
         (async () => {
@@ -126,7 +127,7 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
             },[this.bufferOffsetBytes]);
             sunPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), 14);
         })();*/
-        this.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), 14);
+        
 
     }
 }

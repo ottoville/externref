@@ -71,7 +71,7 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
     traits:Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
     // private engine: WebGPUEngine;
-    #helper!: DrawableSimple;
+    Drawable: DrawableSimple;
 
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
@@ -80,12 +80,12 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
     facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     constructor(
-        public scene:Scene,
+        scene:Scene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea,
     ) {
-        super(scene.engine, ...getRenderPipeline(scene, terrain));
+        super(scene, ...getRenderPipeline(scene, terrain));
         scene.TerraCameras[0].subscribePickingRay();
 
         terrainWorker.message(WorkerReturn.Promise, 'init',
@@ -133,7 +133,7 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
             }, [this.bufferOffsetBytes]);
             this.#helper = helperPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), 4, 8, 0)
         })();*/
-        this.#helper = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), 4, 8, 0)
+        this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), 4, 8, 0)
         this.#canvasListener.addListener("pointermove", this.#mouseListener, { lazy: 15 });
 
     }
@@ -166,7 +166,7 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
     }
     destroy = (): void => {
         terrainWorker.unsubscribe('heights');
-        this.#helper.destroy();
+        this.Drawable.destroy();
         this.scene.TerraCameras[0].unSubscribePickingRay();
         this.facet12ArrGPUBufferSwap.destroy();
         this.traits.forEach(trait => trait.destroy());

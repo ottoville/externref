@@ -16,6 +16,7 @@ import type { Engine } from "../engine.js";
 
 class PlaneMesh extends TerraNodeGPU implements has3DPosition{
     worldPosition: worldPosition = new worldPosition(this);
+    Drawable = this.renderPipeline.addDrawableIndexed(undefined, new Set([this.scene.gpu.renderPassScreen]), 0, undefined, 0, 1, 0);
 }
 
 
@@ -83,7 +84,7 @@ export class paintPlane extends paintGround {
     }
 
    // worldPosition = new worldPosition(this as TerraNode);
-    #mesh = new PlaneMesh(this.scene.engine, ...getRenderPipeline(this.scene, this.ground));
+    #mesh = new PlaneMesh(this.scene, ...getRenderPipeline(this.scene, this.ground));
     #startingPoint: Float32Array = new Float32Array(2);
     #templane2!: DrawableIndexed;
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
@@ -161,8 +162,8 @@ export class paintPlane extends paintGround {
             this.#templane2 = planeRenerPipeline.addDrawableIndexed(undefined, new Set([scene.gpu.renderPassScreen]), 0,undefined, 0, 1, 0);
             this.#templane2.setVertexBuffer(0, new Float32Array([0,0,0]));
         })()*/
-        this.#templane2 = this.#mesh.renderPipeline.addDrawableIndexed(undefined, new Set([scene.gpu.renderPassScreen]), 0, undefined, 0, 1, 0);
-        this.#templane2.setVertexBuffer(0, new Float32Array([0, 0, 0]));
+        //this.#templane2 = this.#mesh.renderPipeline.addDrawableIndexed(undefined, new Set([scene.gpu.renderPassScreen]), 0, undefined, 0, 1, 0);
+        this.#mesh.Drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
     };
 
     public activate(callback: PTResultF) {

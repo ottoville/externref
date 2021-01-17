@@ -3,7 +3,7 @@ import { BoundableNode } from "../../TerraNode";
 import { worldPosition } from "../../traits/worldPosition";
 
 
-
+//@ts-ignore
 export class testPlane extends BoundableNode {
     worldPosition: worldPosition = new worldPosition(this);
 

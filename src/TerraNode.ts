@@ -9,6 +9,7 @@ import { worldPosition } from "./traits/worldPosition";
 import { ObjectWorkerThread } from "./WorkerThread";
 import { TerraVector3 } from "./Math";
 import { RenderPipeline } from "./GPU/RenderPipeline";
+import { Drawable } from "./GPU/Drawable";
 
 export abstract class MainNode {
     readonly bufferOffsetBytes: number;
@@ -67,7 +68,7 @@ export abstract class TerraNodeGPU extends MainNode implements Partial<hasPhysic
     static uniqueID = 0;
     protected readonly uniqueID: number = TerraNodeGPU.uniqueID++;
     
-
+    abstract Drawable:Drawable
     static GPUDataSize = 16 + 4 + 4
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
@@ -79,8 +80,8 @@ export abstract class TerraNodeGPU extends MainNode implements Partial<hasPhysic
         //this.engine.gpu.NodeInstances.delete(this);
     }
 
-    constructor(public engine: Engine, public renderPipeline: RenderPipeline, bufferOffsetBytes?: number) {
-        super(engine, bufferOffsetBytes)
+    constructor(public scene: Scene, public renderPipeline: RenderPipeline, bufferOffsetBytes?: number) {
+        super(scene.engine, bufferOffsetBytes)
     }
 
 }
@@ -199,7 +200,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         private strip = false,
         
     ) {
-        super(scene.engine, renderPipeline);
+        super(scene, renderPipeline);
         //const positions = new Float32Array(this.verticesPositionBuffer);
 
 

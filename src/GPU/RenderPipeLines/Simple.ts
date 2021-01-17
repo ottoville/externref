@@ -54,7 +54,8 @@ export abstract class SimpleMesh extends BoundableNode {
     //indicesBuffer?: SharedArrayBuffer | undefined;
     
    // abstract vBuffer: GPUVertexBuffer;
-   // abstract iBuffer: GPUIndexBuffer;
+    // abstract iBuffer: GPUIndexBuffer;
+    Drawable = this.renderPipeline.addDrawableIndexed(this.scene, new Set([this.scene.gpu.renderPassScreen]), 36);
     constructor(scene: Scene, verticesPositionBuffer: SharedArrayBuffer, indexFormat: GPUIndexFormat = 'uint32', indicesBuffer: SharedArrayBuffer, iBuffer: GPUIndexBuffer, vBuffer: GPUVertexBuffer) {
         super(scene, Simple(scene), verticesPositionBuffer, 3, indicesBuffer);
         /*
@@ -63,10 +64,10 @@ export abstract class SimpleMesh extends BoundableNode {
             renderPipeline = Simple(scene);
             renderPipelines.set(scene.gpu, Simple(scene));
         }*/
-        const m = this.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen]), 36);
-        m.dynamicBuffers.set(scene.gpu.BindGroup, this.bufferOffsetBytes);
-        m.setVertexBuffer(0, vBuffer);
-        m.setIndexBuffer(iBuffer, undefined, undefined, indexFormat);
+        //const m = this.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen]), 36);
+        this.Drawable.dynamicBuffers.set(scene.gpu.BindGroup, this.bufferOffsetBytes);
+        this.Drawable.setVertexBuffer(0, vBuffer);
+        this.Drawable.setIndexBuffer(iBuffer, undefined, undefined, indexFormat);
 
     }
 }
