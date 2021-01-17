@@ -120,7 +120,8 @@ export abstract class BoundableNode extends TerraNodeGPU {
 
     #faces: Triangle[];
     #lastColliderTransformMatrix = new TerraMatrix();
-    #indices?: Uint32Array;
+
+    verticesCount: number;
     addVectors(faceIndex: number, vectors: [TerraVector3, TerraVector3, TerraVector3]) {
         try {
             const t = new Triangle(vectors as [TerraVector3, TerraVector3, TerraVector3]);
@@ -134,9 +135,9 @@ export abstract class BoundableNode extends TerraNodeGPU {
     rebuildTrianglePlanes() {
         let vectors: TerraVector3[] = [];
         let faceIndex = 0;
-        if (this.#indices) {
+        if (this.indicesView) {
             if (this.strip) {
-                this.#indices.forEach(indice => {
+                this.indicesView.forEach((indice:number) => {
                     let vector = this.#lastColliderWorldVectorsView2[indice];
                     if (!vector) {
                         debugger;
@@ -149,7 +150,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
                     vectors = [vectors[1], vectors[2]];
                 });
             } else {
-                this.#indices.forEach(indice => {
+                this.indicesView.forEach((indice: number) => {
                     //const position = this.#lastColliderWorldVectorsViewIndexed.get(indice);
                     const position = this.#colliderVertices[indice]
                     if (!position) {
@@ -182,10 +183,10 @@ export abstract class BoundableNode extends TerraNodeGPU {
     }
 
     set indices(indices: ArrayLike<number>) {
-        if (this.#indices) {
-            this.#indices.set(indices);
+        if (this.indicesView) {
+            this.indicesView.set(indices);
         } else {
-            this.#indices = new Uint32Array(indices);
+            this.indicesView = new Uint32Array(indices);
         }
         this.rebuildTrianglePlanes();
     }
@@ -194,7 +195,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         renderPipeline: RenderPipeline,
         public verticesPositionBuffer: SharedArrayBuffer,
         public verticesPositionStride: number = 3,
-        indicesBuffer?: SharedArrayBuffer,
+        private indicesView?: Uint32Array | Uint16Array,
         public readonly faces?: SharedArrayBuffer,
         
         private strip = false,
@@ -204,35 +205,34 @@ export abstract class BoundableNode extends TerraNodeGPU {
         //const positions = new Float32Array(this.verticesPositionBuffer);
 
 
+
         const positionCount = (this.verticesPositionBuffer.byteLength / 4) / this.verticesPositionStride;
-        const vecticesCount = indicesBuffer ? indicesBuffer.byteLength / 4 : positionCount;
+        this.verticesCount = indicesView ? indicesView.length : positionCount;
 
         if (this.strip) {
-            this.#faces = new Array(vecticesCount - 2)
+            this.#faces = new Array(this.verticesCount - 2)
             if (faces) {
                 //this.facesView = new Float32Array(faces);
-                this.facesBuffer = new ArrayBuffer((vecticesCount - 2) * 4 * 4);
+                this.facesBuffer = new ArrayBuffer((this.verticesCount - 2) * 4 * 4);
             } else {
-                this.facesBuffer = new ArrayBuffer((vecticesCount - 2) * 4 * 4);
+                this.facesBuffer = new ArrayBuffer((this.verticesCount - 2) * 4 * 4);
             }
         }
         else {
-            this.#faces = new Array(vecticesCount / 3);
+            this.#faces = new Array(this.verticesCount / 3);
             if (faces) {
                 //this.facesView = new Float32Array(faces);
-                this.facesBuffer = new ArrayBuffer((vecticesCount / 3) * 4 * 4);
+                this.facesBuffer = new ArrayBuffer((this.verticesCount / 3) * 4 * 4);
             } else {
-                this.facesBuffer = new ArrayBuffer((vecticesCount / 3) * 4 * 4);
+                this.facesBuffer = new ArrayBuffer((this.verticesCount / 3) * 4 * 4);
             }
         }
         scene.boundables.add(this);
         for (let i = 0; i < positionCount; i++) {
             this.#colliderVertices.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
         }
-        if (indicesBuffer) {
-            this.#indices = new Uint32Array(indicesBuffer);
-        } else {
-            for (let i = 0; i < vecticesCount; i++) {
+        if (!indicesView) {
+            for (let i = 0; i < this.verticesCount; i++) {
                 this.#lastColliderWorldVectorsView2.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
             }
         }
@@ -242,7 +242,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
             //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
 
         queueMicrotask(() => {
-            worker.message(this.uniqueID, 'init', [indicesBuffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
+            worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
            
         });
     }

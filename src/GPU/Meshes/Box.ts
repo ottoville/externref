@@ -45,17 +45,17 @@ export class Box extends SimpleMesh {
             1.0, -1.0, 1.0,
             -1.0, -1.0, 1.0,
         ]));
-        return new Box(scene, verticesBuffer, indicesBuffer, iBuffer, vBuffer);
+        return new Box(scene, verticesBuffer, new Uint32Array(indicesBuffer), iBuffer, vBuffer);
     }
 
     constructor(
         scene: Scene,
         CPUVertexBuffer: SharedArrayBuffer,
-        CPUIndexBuffer: SharedArrayBuffer,
+        CPUIndexBufferView: Uint32Array,
         public iBuffer: GPUIndexBuffer,
         public vBuffer: GPUVertexBuffer
     ) {
-        super(scene, CPUVertexBuffer, 'uint32', CPUIndexBuffer, iBuffer, vBuffer);
+        super(scene, CPUVertexBuffer, CPUIndexBufferView, iBuffer, vBuffer);
         this.boundingBox.box.set([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0]);
     }
 }
