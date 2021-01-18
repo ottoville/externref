@@ -99,10 +99,9 @@ export class TerrainMesh extends BoundableNode {
         public iBuffer: GPUIndexBuffer,
         verticesPositionBuffer: SharedArrayBuffer,
         indicesView: Uint32Array,
-        verticesPositionStride = 3,
-        public faces: SharedArrayBuffer,        
+        verticesPositionStride = 3
     ) {
-        super(scene, TerrainRenderPipeline(scene), verticesPositionBuffer, verticesPositionStride, indicesView, faces);
+        super(scene, TerrainRenderPipeline(scene), verticesPositionBuffer, verticesPositionStride, indicesView);
         this.sampler = scene.gpu.device.createSampler({
             magFilter: "linear",
             minFilter: "linear",

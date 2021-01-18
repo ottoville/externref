@@ -110,7 +110,6 @@ export abstract class BoundableNode extends TerraNodeGPU {
 
     readonly boundingBox = new boundingBox();
     readonly pickInfo = new pickInfo();
-    readonly facesBuffer: ArrayBuffer;
 
 
     #colliderVertices: TerraVector3[] = [];
@@ -122,6 +121,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
     #lastColliderTransformMatrix = new TerraMatrix();
 
     verticesCount: number;
+    facesBuffer: SharedArrayBuffer;
     addVectors(faceIndex: number, vectors: [TerraVector3, TerraVector3, TerraVector3]) {
         try {
             const t = new Triangle(vectors as [TerraVector3, TerraVector3, TerraVector3]);
@@ -195,9 +195,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         renderPipeline: RenderPipeline,
         public verticesPositionBuffer: SharedArrayBuffer,
         public verticesPositionStride: number = 3,
-        private indicesView?: Uint32Array | Uint16Array,
-        public readonly faces?: SharedArrayBuffer,
-        
+        private indicesView?: Uint32Array | Uint16Array,        
         private strip = false,
         
     ) {
@@ -211,21 +209,11 @@ export abstract class BoundableNode extends TerraNodeGPU {
 
         if (this.strip) {
             this.#faces = new Array(this.verticesCount - 2)
-            if (faces) {
-                //this.facesView = new Float32Array(faces);
-                this.facesBuffer = new ArrayBuffer((this.verticesCount - 2) * 4 * 4);
-            } else {
-                this.facesBuffer = new ArrayBuffer((this.verticesCount - 2) * 4 * 4);
-            }
+            this.facesBuffer = new SharedArrayBuffer((this.verticesCount - 2) * 4 * 4);
         }
         else {
             this.#faces = new Array(this.verticesCount / 3);
-            if (faces) {
-                //this.facesView = new Float32Array(faces);
-                this.facesBuffer = new ArrayBuffer((this.verticesCount / 3) * 4 * 4);
-            } else {
-                this.facesBuffer = new ArrayBuffer((this.verticesCount / 3) * 4 * 4);
-            }
+            this.facesBuffer = new SharedArrayBuffer((this.verticesCount / 3) * 4 * 4);
         }
         scene.boundables.add(this);
         for (let i = 0; i < positionCount; i++) {

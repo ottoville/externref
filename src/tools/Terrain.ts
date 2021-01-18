@@ -97,7 +97,7 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
                 boundingBox: terrain.mesh.boundingBox,
                 slopeArr: terrain.slopeArrBuffer,
                 pickInfo: terrain.mesh.pickInfo.buffer,
-                _groundFacesNormalsBuffer: terrain.mesh.faces
+                _groundFacesNormalsBuffer: terrain.mesh.facesBuffer
             });
 
 

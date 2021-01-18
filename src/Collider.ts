@@ -258,11 +258,12 @@ export class Collider {
     //#points: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()];
     /** @hidden */
     public _testTriangle(triangle: Triangle): void {
-        let t0: number;
-        var embeddedInPlane = false;
         var dot = Dot(triangle.plane, this.#normalizedVelocity);
         if (dot > 0)
             return
+        let t0: number;
+        let embeddedInPlane = false;
+
         var signedDistToTrianglePlane = Dot(this.#basePoint, triangle.plane) + triangle.plane[3]; //trianglePlane.signedDistanceTo(this._basePoint);
         var normalDotVelocity = Dot(triangle.plane, this.#velocity);
 
