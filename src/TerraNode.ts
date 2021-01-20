@@ -1,5 +1,5 @@
 ﻿import { Collider } from "./Collider";
-import { Engine } from "./engine";
+import { Engine, Vector3 } from "./engine";
 
 import type { isLight } from "./lights";
 import { TerraMatrix, TerraVector4, Triangle } from "./Math";
@@ -122,10 +122,21 @@ export abstract class BoundableNode extends TerraNodeGPU {
 
     verticesCount: number;
     facesBuffer: SharedArrayBuffer;
+    //facesBufferCollider: ArrayBuffer;
+    normalizedVelocityDotBuffer: GPUStorageBuffer & GPUCopySRCBuffer;
+    normalizedVelocityDotBufferRead: GPUMapReadBuffer & GPUCopyDSTBuffer;
+    sourceBindGroup: GPUBindGroup;
+    facesGPUBufferCollide: GPUStorageBuffer & GPUCopyDSTBuffer;
+    normalizedVelocityBuffer: GPUStorageBuffer & GPUCopyDSTBuffer;
+    facesBufferColliderPointer: number;
     addVectors(faceIndex: number, vectors: [TerraVector3, TerraVector3, TerraVector3]) {
         try {
-            const t = new Triangle(vectors as [TerraVector3, TerraVector3, TerraVector3]);
-            t.plane = new TerraVector4(this.facesBuffer, faceIndex * 4 * 4)
+            const t = new Triangle(
+                vectors as [TerraVector3, TerraVector3, TerraVector3],
+                new TerraVector4(this.facesBuffer, faceIndex * 4 * 4),
+                new TerraVector4(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer + faceIndex * 4 * 4)
+               // new TerraVector4(this.facesBufferCollider, faceIndex * 4 * 4)
+            );
             this.#faces[faceIndex] = t;
         } catch (e) {
             console.log(e);
@@ -200,10 +211,6 @@ export abstract class BoundableNode extends TerraNodeGPU {
         
     ) {
         super(scene.engine, renderPipeline);
-        //const positions = new Float32Array(this.verticesPositionBuffer);
-
-
-
         const positionCount = (this.verticesPositionBuffer.byteLength / 4) / this.verticesPositionStride;
         this.verticesCount = indicesView ? indicesView.length : positionCount;
 
@@ -215,6 +222,9 @@ export abstract class BoundableNode extends TerraNodeGPU {
             this.#faces = new Array(this.verticesCount / 3);
             this.facesBuffer = new SharedArrayBuffer((this.verticesCount / 3) * 4 * 4);
         }
+        this.facesBufferColliderPointer = scene.engine.malloc(this.facesBuffer.byteLength);
+
+        //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
         scene.boundables.add(this);
         for (let i = 0; i < positionCount; i++) {
             this.#colliderVertices.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
@@ -231,8 +241,55 @@ export abstract class BoundableNode extends TerraNodeGPU {
 
         queueMicrotask(() => {
             worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
-           
         });
+
+
+        this.facesGPUBufferCollide = this.engine.gpu.createGPUBuffer(this.facesBuffer.byteLength, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST]);
+        this.normalizedVelocityBuffer = this.engine.gpu.createGPUBuffer(3 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST]);
+        this.normalizedVelocityDotBuffer = this.engine.gpu.createGPUBuffer(this.#faces.length * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+        this.normalizedVelocityDotBufferRead = this.engine.gpu.createGPUBuffer(this.#faces.length * 4, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ]);
+        this.sourceBindGroup = this.engine.gpu.device.createBindGroup({
+            layout: this.engine.gpu.device.createBindGroupLayout({
+                entries: [
+                    {
+                        binding: 0,
+                        visibility: GPUShaderStage.COMPUTE,
+                        type: "readonly-storage-buffer"
+                    },
+                    {
+                        binding: 1,
+                        visibility: GPUShaderStage.COMPUTE,
+                        type: "storage-buffer"
+                    },
+                    {
+                        binding: 2,
+                        visibility: GPUShaderStage.COMPUTE,
+                        type: "storage-buffer"
+                    }
+                ]
+            }),
+            entries: [
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: this.facesGPUBufferCollide
+                    }
+                },
+                {
+                    binding: 1,
+                    resource: {
+                        buffer: this.normalizedVelocityBuffer
+                    }
+                },
+                {
+                    binding: 2,
+                    resource: {
+                        buffer: this.normalizedVelocityDotBuffer
+                    }
+                }
+            ]
+        });
+
     }
     public intersectsRay(ray: Float32Array): Promise<void> {
         return worker.message(this.uniqueID, 'intersectsRay', [ray.buffer]);
@@ -244,7 +301,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
     }
     //collisionsScalingMatrix = new TerraMatrix();
     myCollisionsTransformMatrix = new TerraMatrix();
-    public checkCollision(collider: Collider, /*normalizedVelocity:TerraVector3*/) {
+    public async checkCollision(collider: Collider, basePoint: Vector3, VelocityWasm: Vector3) {
         if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
             return;
         }
@@ -259,6 +316,8 @@ export abstract class BoundableNode extends TerraNodeGPU {
             this.#lastColliderTransformMatrix = this.myCollisionsTransformMatrix.clone();
 
             new Uint8Array(this.#lastColliderWorldVectors).set(new Uint8Array(this.verticesPositionBuffer));
+           // new Uint8Array(this.facesBufferCollider).set(new Uint8Array(this.facesBuffer));
+
             let timer = performance.now();
             let i = 0
             let len1 = this.#colliderVertices.length
@@ -274,28 +333,46 @@ export abstract class BoundableNode extends TerraNodeGPU {
                 this.#faces[i].updatePlane();
                 i++;
             }
-            
         }
-        /*
-        const pipeline=this.engine.gpu.createComputePipeline('collider.wgsl');
-        const sourceBindGroup = pipeline.createBindGroup(0, [
-            {
-                binding: 0,
-                resource: {
-                    buffer: sourceGPU
-                }
-            },
-            {
-                binding: 1,
-                resource: {
-                    buffer: terrainPositionAndUvsAndNormalsGPUTemp
-                }
-            }
-        ]);
-        */
+        
+        /*const facesBufferSwap = this.engine.gpu.createGPUBuffer(this.facesBuffer.byteLength, [GPUBufferUsage.COPY_SRC], true);
+        //new Uint8Array(facesBufferSwap.getMappedRange()).set(new Uint8Array(this.facesBufferCollider));
+        facesBufferSwap.unmap();
+
+        const normalizedVelocityBufferSwap = this.engine.gpu.createGPUBuffer(normalizedVelocity.byteLength, [GPUBufferUsage.COPY_SRC], true);
+        new Uint8Array(normalizedVelocityBufferSwap.getMappedRange()).set(new Uint8Array(normalizedVelocity.buffer));
+        normalizedVelocityBufferSwap.unmap();
+        const commandEncoder = this.engine.gpu.createCommandEncoder();
+        commandEncoder.copyBufferToBuffer(facesBufferSwap, 0, this.facesGPUBufferCollide, 0, this.#faces.length * 4)
+        commandEncoder.copyBufferToBuffer(normalizedVelocityBufferSwap, 0, this.normalizedVelocityBuffer, 0, 3 * 4)
+
+        const passEncoder = commandEncoder.beginComputePass();
+
+
+        passEncoder.setPipeline(collider.pipeline);
+        passEncoder.setBindGroup(0, this.sourceBindGroup);
+        passEncoder.dispatch(this.#faces.length);
+        passEncoder.endPass();
+
+        commandEncoder.copyBufferToBuffer(this.normalizedVelocityDotBuffer, 0, this.normalizedVelocityDotBufferRead, 0, this.#faces.length * 4)
+
+        const gpuCommands = commandEncoder.finish();
+        this.engine.gpu.device.defaultQueue.submit([gpuCommands]);
+
+        await this.normalizedVelocityDotBufferRead.mapAsync(GPUMapMode.READ);
+
+        const dots = new Float32Array(this.normalizedVelocityDotBufferRead.getMappedRange());
+        this.normalizedVelocityDotBufferRead.unmap();
+        console.log('gpu took', performance.now() - timer);*/
+        //let timer = performance.now();
+
         this.#faces.forEach(triangle => {
             collider._testTriangle(triangle);
         });
+       // console.log('cpu took', performance.now() - timer);
+       // timer = performance.now();
+        this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.facesBuffer.byteLength, collider.normalizedVelocityWasm.byteOffset, basePoint.byteOffset, VelocityWasm.byteOffset)
+        //console.log('wasm took', performance.now() - timer);
     }
 }
 export class PositionNode extends MainNode {

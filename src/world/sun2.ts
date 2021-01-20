@@ -101,33 +101,5 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
     Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), 14);
     constructor(private scene: Scene, sunBufferOffsetBytes: number) {
         super(scene.engine, getRenderPipeline(scene, sunBufferOffsetBytes), sunBufferOffsetBytes);
-
-/*
-        (async () => {
-            const [vertex, fragment] = await Promise.all(['/shaders/wgsl/sun.vert.wgsl', '/shaders/wgsl/sun.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })) as [Promise<GPUShaderModule>, Promise<GPUShaderModule>]);
-            const sunPipeline = scene.engine.positionBindGroupTime.addRenderPipeline({
-                rasterizationState: {
-                    cullMode: 'none',
-                },
-                primitiveTopology: 'triangle-strip',
-                colorStates: [{
-                    format: "bgra8unorm",
-                }],
-                vertexStage: {
-                    module: vertex,
-                    entryPoint: "main",
-                },
-                fragmentStage: {
-                    module: fragment,
-                    entryPoint: "main"
-                },
-                vertexState: {
-                    indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
-                }
-            },[this.bufferOffsetBytes]);
-            sunPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), 14);
-        })();*/
-        
-
     }
 }

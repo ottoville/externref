@@ -160,8 +160,6 @@ class IntersectionInfo {
  * Class representing a ray with position and direction
  */
 class Ray {
-    private static readonly TmpVector3 = ArrayTools.BuildArray(6, Vector3.Zero);
-    private _tmpRay!: Ray;
 
     /**
      * Creates a new ray
@@ -187,7 +185,9 @@ class Ray {
      * @returns if the box was hit
      */
     public intersectsBoxMinMax(minimum: { x: number, y: number, z: number }, maximum: { x: number, y: number, z: number }, intersectionTreshold: number = 0): boolean {
+        //@ts-ignore
         const newMinimum = Ray.TmpVector3[0].copyFromFloats(minimum.x - intersectionTreshold, minimum.y - intersectionTreshold, minimum.z - intersectionTreshold);
+        //@ts-ignore
         const newMaximum = Ray.TmpVector3[1].copyFromFloats(maximum.x + intersectionTreshold, maximum.y + intersectionTreshold, maximum.z + intersectionTreshold);
         var d = 0.0;
         var maxValue = Number.MAX_VALUE;
@@ -299,10 +299,15 @@ class Ray {
      * @returns intersection information if hit
      */
     public intersectsTriangle(vertex0: DeepImmutable<Vector3>, vertex1: DeepImmutable<Vector3>, vertex2: DeepImmutable<Vector3>): Nullable<IntersectionInfo> {
+        //@ts-ignore
         const edge1 = Ray.TmpVector3[0];
+        //@ts-ignore
         const edge2 = Ray.TmpVector3[1];
+        //@ts-ignore
         const pvec = Ray.TmpVector3[2];
+        //@ts-ignore
         const tvec = Ray.TmpVector3[3];
+        //@ts-ignore
         const qvec = Ray.TmpVector3[4];
 
         vertex1.subtractToRef(vertex0, edge1);
@@ -461,9 +466,6 @@ class Ray {
         }
 
     }
-
-    private static smallnum = 0.00000001;
-    private static rayl = 10e8;
 
     /**
      * Intersection test between the ray and a given segment whithin a given tolerance (threshold)

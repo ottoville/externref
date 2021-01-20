@@ -6,25 +6,99 @@ import { Collider } from "./Collider";
 import { Scene } from "./Scene";
 import { TerraVector3 } from "./Math";
 
+export type Vector3 = Omit<TerraVector3, 'buffer'>;
+
 const CollisionsEpsilon = 0.001;
 
+export interface ColliderWasm {
+    memory: {buffer: ArrayBuffer}
+    getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
+    testTriangles: (position: number, length: number, velocity:number, basePoint: number, velocityWasm:number) => void
+}
+
+
 export class Engine {
+    freeMemoryBlocks: { byteOffset: number, byteLength: number }[] = []
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
     positionBindGroupTime: DynamicBindGroupLayout<[number]>;
     calculatePickingRaysPipeline: TerraGPUComputePipeLine;
     bindgrouplayout1: GPUBindGroupLayout;
     #tempBuffer?: GPUCopySRCBuffer;
-    collider = new Collider();
-    colliderWASM = new Collider();
+    collider = new Collider(this);
 
     mousePositionBuffer = new SharedArrayBuffer(4);
     #mousePosition = new Uint16Array(this.mousePositionBuffer);
 
     mouseOffsetBuffer = new SharedArrayBuffer(8);
-    
 
-    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: { getLowestRoot: (a: number, b: number, c: number, maxR: number) => number }) {
+    allocatedSize = 0;
+    
+    registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
+    malloc(byteLength: number) {
+        const available = this.freeMemoryBlocks.findIndex(arr => arr.byteLength == byteLength)
+        if (available > -1)
+            return this.freeMemoryBlocks.splice(available, 1)[0].byteOffset;
+        else {
+            const available2 = this.freeMemoryBlocks.find(arr => arr.byteLength < byteLength)
+            if (available2) {
+                const offset = available2.byteOffset;
+                available2.byteOffset += byteLength;
+                available2.byteLength -= byteLength;
+                return offset;
+            } else {
+                const offset = this.allocatedSize;
+                this.allocatedSize += byteLength;
+                return offset;
+            }
+        }
+    }
+    callocVector3(): Vector3 {
+        const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(12));
+        arr.fill(0);
+        return arr;
+    }
+    mallocVector3(x?: number, y?: number, z?: number): Vector3 {
+        const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(12));
+        if(x)
+            arr[0] = x;
+        if(y)
+            arr[1] = y;
+        if(z)
+            arr[2] = z;
+        this.registry.register(arr, { byteOffset: arr.byteOffset, byteLength: arr.byteLength });
+        return arr;
+    }
+    freeMemory(arr: { byteOffset: number, byteLength: number }) {
+        console.log('freeMemory');
+        const end = arr.byteOffset + arr.byteLength;
+        if (end == this.allocatedSize) {
+            this.allocatedSize = arr.byteOffset;
+            const previousBlockIndex = this.freeMemoryBlocks.findIndex(parr => parr.byteOffset + parr.byteLength == arr.byteOffset)
+            if (previousBlockIndex > -1) {
+                this.allocatedSize = this.freeMemoryBlocks.splice(previousBlockIndex, 1)[0].byteOffset;
+            }
+            return;
+        }
+        queueMicrotask(() => {
+            let byteLength = arr.byteLength;
+            const nextBlock = this.freeMemoryBlocks.findIndex(arr => arr.byteOffset == end)
+            if (nextBlock > -1) {
+                byteLength += this.freeMemoryBlocks.splice(nextBlock, 1)[0].byteLength
+            }
+            let byteOffset = arr.byteOffset
+            const previousBlockIndex = this.freeMemoryBlocks.findIndex(arr => arr.byteOffset + arr.byteLength == byteOffset)
+            if (previousBlockIndex > -1) {
+                const previousBlock = this.freeMemoryBlocks.splice(previousBlockIndex, 1)[0]
+                byteLength += previousBlock.byteLength
+                byteOffset = previousBlock.byteOffset;
+                return;
+            }
+            this.freeMemoryBlocks.push({ byteOffset, byteLength});
+        })
+    }
+
+    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm) {
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
         canvas.addEventListener('pointermove', (e) => {
             Atomics.store(this.#mousePosition, 0, e.clientX)
@@ -93,11 +167,11 @@ export class Engine {
         })
     }
     collisionCoordinator = {
-        scaledPosition: new TerraVector3(),
-        scaledVelocity: new TerraVector3(),
+        scaledPosition: this.callocVector3(),
+        scaledVelocity: this.callocVector3(),
         finalPosition: new TerraVector3(),
     }
-    async collideWithWorld(position: TerraVector3, velocity: TerraVector3, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): Promise<void> {
+    async collideWithWorld(position: Vector3, velocity: Vector3, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): Promise<void> {
         /*
         await new Promise<void>(res => {
             setTimeout(() => { res(); }, 80);
@@ -118,9 +192,12 @@ export class Engine {
         //var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
 
         this.collider._initialize(position, velocity, closeDistance);
-        const scenesArr=[...this.scenes]
-        //const normalizedVelocity=velocity.normalize();
-        await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider/*, normalizedVelocity*/)))));
+        const scenesArr = [...this.scenes];
+        //this.collider.normalizedVelocityWasm.set(velocity)
+        //this.collider.normalizedVelocityWasm.normalize();
+
+       // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
+        await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider, position, velocity)))));
         if (!this.collider.collisionFound) {
 
             //position.addToRef(velocity, finalPosition);

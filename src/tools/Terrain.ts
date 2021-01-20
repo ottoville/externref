@@ -16,14 +16,14 @@ import { Engine } from "../engine.js";
 const terrainWorker = new WorkerThread('../webworkers/terrainWorker.js');
 
 
-const renderPipelines: Map<GPU, RenderPipeline> = new Map();
+const renderPipelines: Map<GPU, [RenderPipeline,number]> = new Map();
 
 function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline, number] {
     const bufferOffsetBytes = allocateMemory(scene.engine)
 
-    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
+    let renderPipeline = renderPipelines.get(scene.gpu);
     if (renderPipeline)
-        return [renderPipeline, bufferOffsetBytes];
+        return renderPipeline;
 
     const vertex = scene.gpu.shaderModules.get("helper2.vert");
     const fragment = scene.engine.gpu.shaderModules.get('color.frag.wgsl')
@@ -31,7 +31,7 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline, nu
         throw ('Missing shader')
     //const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
     //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
-    renderPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
+    renderPipeline = [terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
         primitiveTopology: 'triangle-strip',
         rasterizationState: {
             cullMode: 'none',
@@ -55,9 +55,9 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline, nu
         vertexState: {
             indexFormat: 'uint32'
         }
-    }, [bufferOffsetBytes]);
+    }, [bufferOffsetBytes]), bufferOffsetBytes];
     renderPipelines.set(scene.gpu, renderPipeline);
-    return [renderPipeline, bufferOffsetBytes]
+    return renderPipeline
 }
 function allocateMemory(engine:Engine) {
     const bufferOffsetBytes = engine.gpu.DataSlots.pop();
@@ -104,35 +104,7 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
         // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
         this.worldPosition = new worldPosition(this);
-        /*(async () => {
-            const [fragment] = await Promise.all(['/shaders/wgsl/color.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })) as [Promise<GPUShaderModule>]);
-            const helperPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
-                primitiveTopology: 'triangle-strip',
-                rasterizationState: {
-                    cullMode: 'none',
-                },
-                depthStencilState: {
-                    depthWriteEnabled: true,
-                    depthCompare: "less",
-                    format: "depth24plus-stencil8",
-                },
-                colorStates: [{
-                    format: "bgra8unorm",
-                }],
-                vertexStage: {
-                    module: scene.gpu.shaderModules.get("helper2.vert")!,
-                    entryPoint: "main",
-                },
-                fragmentStage: {
-                    module: fragment,
-                    entryPoint: "main"
-                },
-                vertexState: {
-                    indexFormat: 'uint32'
-                }
-            }, [this.bufferOffsetBytes]);
-            this.#helper = helperPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), 4, 8, 0)
-        })();*/
+
         this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), 4, 8, 0)
         this.#canvasListener.addListener("pointermove", this.#mouseListener, { lazy: 15 });
 
@@ -170,6 +142,10 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
         this.scene.TerraCameras[0].unSubscribePickingRay();
         this.facet12ArrGPUBufferSwap.destroy();
         this.traits.forEach(trait => trait.destroy());
+
+        //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
+        this.engine.gpu.DataSlots.push(this.bufferOffsetBytes);
+        renderPipelines.delete(this.engine.gpu);
     };
 
     #mouseListener = (): void => {

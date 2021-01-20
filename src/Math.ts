@@ -1,4 +1,6 @@
-﻿export class TerraMatrix extends Float32Array {
+﻿import type { Vector3 } from "./engine";
+
+export class TerraMatrix extends Float32Array {
     view64: Float64Array;
     constructor(Arr?: ArrayBufferLike, offset?: number)
     constructor(Arr?: number[])
@@ -142,6 +144,7 @@ export class TerraVector2 extends Float32Array {
     declare 0: number
     declare 1: number
 }
+
 export class TerraVector3 extends Float32Array {
     declare 0: number
     declare 1: number
@@ -179,7 +182,7 @@ export class TerraVector3 extends Float32Array {
         this[2] *= scale;
         return this;
     }
-    set(arr:[number,number,number] | TerraVector3) {
+    set(arr:[number,number,number] | TerraVector3 | Vector3) {
         this[0] = arr[0];
         this[1] = arr[1];
         this[2] = arr[2];
@@ -256,7 +259,7 @@ export class Angle {
 }
 
 export class Triangle {
-    createPlane(): TerraVector4 {
+    updatePlane() {
         const v0 = this.vectors[0];
         const v1 = this.vectors[1];
         const v2 = this.vectors[2];
@@ -281,18 +284,12 @@ export class Triangle {
         let normal_x = yz * invPyth
         let normal_y = xz * invPyth
         let normal_z = xy * invPyth;
-        if (!this.plane)
-            return new TerraVector4([normal_x, normal_y, normal_z, -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))]);
-        else
-            this.plane.set([normal_x, normal_y, normal_z, -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))]);
-        return this.plane;
+        this.planeCollider.set([normal_x, normal_y, normal_z, -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))]);
     }
-    updatePlane() {
-        this.createPlane();
-    }
-    public plane = this.createPlane()
     constructor(
-        public vectors: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()]
+        public vectors: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()],
+        public plane:TerraVector4,
+        public planeCollider: TerraVector4,
         ) {
     }
 

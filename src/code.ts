@@ -15,12 +15,11 @@ import { GPU } from "./GPU.js";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
 import { Box } from "./GPU/Meshes/Box.js";
 import { TerraCamera } from "./TerraCamera.js";
-import { Engine } from "./engine.js";
+import { ColliderWasm, Engine } from "./engine.js";
 import { Sun2 } from "./world/sun2.js";
 import { PositionNode } from "./TerraNode.js";
 import { Scene } from "./Scene.js";
 import { ArcRotateCamera } from "./ArcRotateCamera.js";
-
 
 //import  DB from "./DB.js";
 
@@ -107,9 +106,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 (<any>window).initCanvas = async function (blazor: DotNet.BlazorInstance, ticks: number, canvas: HTMLCanvasElement) {
     try {
         blazor.invokeMethod('setProgress', 2);
-
-        let [WasmModuleP] = ['./rustwasm/hello_wasm.js'].map(url => import(url));
-
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
@@ -117,7 +113,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         //  const cache2 = await caches.open('compiledShaders');
         //try {
 
-        let WasmModule = await WasmModuleP;
         blazor.invokeMethod('setProgress', 4);
         const adapter = await window.navigator.gpu!.requestAdapter();
         blazor.invokeMethod('setProgress', 5);
@@ -193,22 +188,24 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
 
         const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
         const projectionmatrix = new Float32Array(projectionmatrixBuffer);
+        blazor.invokeMethod('setProgress', 13);
+        const wasmRequest = await fetch('collider/colliderO.wasm');
+        blazor.invokeMethod('setProgress', 14);
+        const obj = await WebAssembly.instantiateStreaming(wasmRequest);
+        const wasm: ColliderWasm = obj.instance.exports as any;
 
-
-        const obj = await WebAssembly.instantiateStreaming(fetch('collider/colliderO.wasm'));
-        const wasm: { getLowestRoot: (a: number, b: number, c: number,maxR: number) => number} = obj.instance.exports as any;
-
+        blazor.invokeMethod('setProgress', 15);
         const terraEngine = new Engine(gpuscene, DB, canvas, wasm);
-        blazor.invokeMethod('setProgress', 11);
+        blazor.invokeMethod('setProgress', 16);
 
         window.engine = terraEngine;
         const mainCamera = new TerraCamera(gpuscene.renderPassScreen, projectionmatrixBuffer, gpuscene, terraEngine)
 
         const camera = new ArcRotateCamera(0, 0, 10, terraEngine, mainCamera);
-        blazor.invokeMethod('setProgress', 12);
+        blazor.invokeMethod('setProgress', 17);
         camera.attachControl();
 
-        blazor.invokeMethod('setProgress', 13);
+        blazor.invokeMethod('setProgress', 18);
 
         const waterCamera = new TerraCamera(gpuscene.renderPassWater, projectionmatrixBuffer, gpuscene, terraEngine, false, mainCamera);
         waterCamera.beforeViewUpdate.add((position, target) => {
@@ -220,7 +217,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
         const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
 
-        blazor.invokeMethod('setProgress', 14);
+        blazor.invokeMethod('setProgress', 19);
 
 
         new Scene('main', gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
@@ -471,9 +468,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         ro.observe(canvas)
 
 
-        blazor.invokeMethod('setProgress', 15);
-
-        WasmModule.default().then(() => window.Wasm = WasmModule);
+        blazor.invokeMethod('setProgress', 20);
 
         let webSocket = new WebSocket('ws://localhost:8081');
         webSocket.onopen = async () => {

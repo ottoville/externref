@@ -134,7 +134,7 @@ export class ArcRotateCamera {
         // terraEngine.collider._initialVelocity = coordinator._scaledVelocity;
 
         //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
-        let starttime=performance.now();
+        //let starttime=performance.now();
         await this.engine.collideWithWorld(this.engine.collisionCoordinator.scaledPosition, this.engine.collisionCoordinator.scaledVelocity, 3, this.engine.collisionCoordinator.finalPosition);
 
 
@@ -154,7 +154,7 @@ export class ArcRotateCamera {
                 position[2] = this.#previousPosition[2]
 
             } else {
-                console.log('collide found ', performance.now() - starttime);
+                //console.log('collide found ', performance.now() - starttime);
                 // this.setPosition(coordinator._finalPosition);
                 // if (this._position.equals(position)) {
                 //    return;
@@ -205,7 +205,6 @@ export class ArcRotateCamera {
     
     checkInputs = () => {
         if (this.#collisionTriggered) {
-            console.log('collisionTriggered')
             return false;
         }
         let updateView: boolean = false;

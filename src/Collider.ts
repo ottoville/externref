@@ -2,6 +2,7 @@
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
 import { TerraMatrix, TerraVector3, Triangle } from "./Math";
+import type { Engine, Vector3 } from "./engine";
 
 
 function Dot(left: [number, number, number] | Float32Array, right: [number, number, number] | Float32Array): number {
@@ -98,8 +99,31 @@ export class Collider {
         1.0 / this._radius[0],   0.0,                   0.0,                    0.0,
         0.0,                     1.0 / this._radius[1], 0.0,                    0.0,
         0.0,                     0.0,                   1.0 / this._radius[2],  0.0,
-        0.0,                     0.0,                   0.0,                   1.0]);
-    constructor(private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+        0.0, 0.0, 0.0, 1.0]);
+    pipeline = this.engine.gpu.createComputePipeline('collider.comp', this.engine.gpu.device.createPipelineLayout({
+        bindGroupLayouts: [this.engine.gpu.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.COMPUTE,
+                    type: "readonly-storage-buffer"
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.COMPUTE,
+                    type: "storage-buffer"
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.COMPUTE,
+                    type: "storage-buffer"
+                }
+            ]
+        })]
+    }));
+    constructor(private engine:Engine, private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+
+
         const me = this;
         this.radius = {
             get 0() {
@@ -139,6 +163,7 @@ export class Collider {
     public _basePointWorld: [number, number, number] = [0, 0, 0];
     #velocityWorld = new TerraVector3()
     #normalizedVelocity: [x: number, y: number, z: number] = [0, 0, 0];
+    normalizedVelocityWasm = this.engine.callocVector3();
     /** @hidden */
     // public _initialVelocity: [x: number, y: number, z: number] = [0, 0, 0];
     /** @hidden */
@@ -162,10 +187,9 @@ export class Collider {
     public get slidePlaneNormal(): [number, number, number] {
         return this._slidePlaneNormal;
     }
-
     // Methods
     /** @hidden */
-    public _initialize(source: TerraVector3, dir: TerraVector3, e: number): void {
+    public _initialize(source: Vector3, dir: Vector3, e: number): void {
         this.#velocity[0] = dir[0];
         this.#velocity[1] = dir[1];
         this.#velocity[2] = dir[2];
@@ -218,7 +242,7 @@ export class Collider {
         // pb.subtractToRef(point, this._tempVector2);
 
         CrossToRef(this.#tempVector, this.#tempVector2, this.#tempVector4);
-        var d = Dot(this.#tempVector4, triangle.plane);
+        var d = Dot(this.#tempVector4, triangle.planeCollider);
         if (d < 0) {
             return false;
         }
@@ -229,13 +253,13 @@ export class Collider {
 
         //pc.subtractToRef(point, this._tempVector3);
         CrossToRef(this.#tempVector2, this.#tempVector3, this.#tempVector4);
-        d = Dot(this.#tempVector4, triangle.plane);
+        d = Dot(this.#tempVector4, triangle.planeCollider);
         if (d < 0) {
             return false;
         }
 
         CrossToRef(this.#tempVector3, this.#tempVector, this.#tempVector4);
-        d = Dot(this.#tempVector4, triangle.plane);
+        d = Dot(this.#tempVector4, triangle.planeCollider);
         return d >= 0;
     }
 
@@ -258,24 +282,27 @@ export class Collider {
     //#points: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()];
     /** @hidden */
     public _testTriangle(triangle: Triangle): void {
-        var dot = Dot(triangle.plane, this.#normalizedVelocity);
+        var dot = Dot(triangle.planeCollider, this.#normalizedVelocity);
         if (dot > 0)
             return
-        let t0: number;
-        let embeddedInPlane = false;
 
-        var signedDistToTrianglePlane = Dot(this.#basePoint, triangle.plane) + triangle.plane[3]; //trianglePlane.signedDistanceTo(this._basePoint);
-        var normalDotVelocity = Dot(triangle.plane, this.#velocity);
+        var signedDistToTrianglePlane = Dot(this.#basePoint, triangle.planeCollider) + triangle.planeCollider[3]; //trianglePlane.signedDistanceTo(this._basePoint);
+        var normalDotVelocity = Dot(triangle.planeCollider, this.#velocity);
 
+       // let t0=0;
+        // this._collisionPoint.copyFromFloats(0, 0, 0);
+        this.#collisionPoint[0] = 0;
+        this.#collisionPoint[1] = 0;
+        this.#collisionPoint[2] = 0;
+        var found = false;
+        var t = 1.0;
         if (normalDotVelocity == 0) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
                 return;
             }
-            embeddedInPlane = true;
-            t0 = 0;
         }
         else {
-            t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+            let t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
             var t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
 
             if (t0 > t1) {
@@ -294,21 +321,10 @@ export class Collider {
             if (t0 > 1.0) {
                 t0 = 1.0;
             }
-        }
-
-        // this._collisionPoint.copyFromFloats(0, 0, 0);
-        this.#collisionPoint[0] = 0;
-        this.#collisionPoint[1] = 0;
-        this.#collisionPoint[2] = 0;
-
-        var found = false;
-        var t = 1.0;
-
-        if (!embeddedInPlane) {
             //TODO: Use simd
-            this._planeIntersectionPoint[0] = this.#basePoint[0] - triangle.plane[0];
-            this._planeIntersectionPoint[1] = this.#basePoint[1] - triangle.plane[1];
-            this._planeIntersectionPoint[2] = this.#basePoint[2] - triangle.plane[2];
+            this._planeIntersectionPoint[0] = this.#basePoint[0] - triangle.planeCollider[0];
+            this._planeIntersectionPoint[1] = this.#basePoint[1] - triangle.planeCollider[1];
+            this._planeIntersectionPoint[2] = this.#basePoint[2] - triangle.planeCollider[2];
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             // this._velocity.scaleToRef(t0, this._tempVector);
             this.#tempVector[0] = this.#velocity[0] * t0
@@ -418,7 +434,7 @@ export class Collider {
     }
 
     /** @hidden */
-    public _getResponse(pos: TerraVector3, vel: TerraVector3): void {
+    public _getResponse(pos: Vector3, vel: Vector3): void {
         this._destinationPoint[0] = pos[0] + vel[0];
         this._destinationPoint[1] = pos[1] + vel[1];
         this._destinationPoint[2] = pos[2] + vel[2];
