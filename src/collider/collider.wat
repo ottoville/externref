@@ -4,13 +4,21 @@
 
   ;;(import "env" "memory" (memory $mem 31 32))
   (global $gv0 (mut v128) (v128.const i32x4 0 0 0 0))
+  (global $planeIntersectionPoint (mut v128) (v128.const i32x4 0 0 0 0))
+
+  (global $normalizedVelocity (mut v128) (v128.const i32x4 0 0 0 0))
 
     (func $main (export "_start")
         ;; Creating a new io vector within linear memory
         (i32.store (i32.const 0) (i32.const 8))  ;; iov.iov_base - This is a pointer to the start of the 'hello world\n' string
         (i32.store (i32.const 4) (i32.const 12))  ;; iov.iov_len - The length of the 'hello world\n' string
     )
-
+  (func $_initialize
+    (param $normalizedVelocity i32)
+    local.get $normalizedVelocity
+    v128.load
+    global.set $normalizedVelocity
+  )
 
   (func $v3_dot
     (param $a v128)
@@ -30,6 +38,7 @@
       f32.add
       f32.add
   )
+
   (func $unitTest (param $position i32)
     (param $velocityNormalizedPointer i32) 
     (param $basePointPointer i32)
@@ -38,16 +47,12 @@
 
     ;;return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 
-    (local $normalizedVelocity v128)
     (local $basePoint v128)
     (local $velocity v128)
     (local $gv1 v128)
     (local $signedDistToTrianglePlane f32)
     (local $normalDotVelocity f32)
     
-    (local.set $normalizedVelocity
-      (v128.load(local.get $velocityNormalizedPointer))
-    )
     (local.set $basePoint
       (v128.load(local.get $basePointPointer))
     )
@@ -56,25 +61,44 @@
     )
     (call $testTriangle
       (v128.load(local.get $position))
-      (local.get $normalizedVelocity)
       (local.get $velocity)
       (local.get $basePoint)
       (local.get $normalDotVelocity)
       (local.get $signedDistToTrianglePlane)
     )
   )
+  (func $checkPointInTriangle
+    (param $planeCollider v128)
+    (param $triangle0v0 v128)
+    (param $triangle0v1 v128)
+    (param $triangle0v2 v128)
+
+    (param $triangle1v0 v128)
+    (param $triangle1v1 v128)
+    (param $triangle1v2 v128)
+
+    (param $triangle2v0 v128)
+    (param $triangle2v1 v128)
+    (param $triangle2v2 v128)
+
+    (result i32)
+
+    i32.const 0
+  )
   (func $testTriangle
     (param $planeCollider v128)
-    (param $normalizedVelocity v128)
     (param $velocity v128)
     (param $basePoint v128)
     (param $normalDotVelocity f32)
     (param $signedDistToTrianglePlane f32)
     (result f32)
+
     (local $t0 f32)
+    (local $t1 f32)
+
     (call $v3_dot
       (local.get $planeCollider)
-      (local.get $normalizedVelocity)
+      (global.get $normalizedVelocity)
     )
     f32.const 0
     f32.gt
@@ -101,20 +125,74 @@
       f32.eq
       if
           local.get $signedDistToTrianglePlane
+          f32.abs
           f32.const 1
           f32.lt  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
           if
-            ;; embeddedInPlane = true;
-            ;; t0 = 0;
-            
+
           else
             f32.const 0
             return
           end
 
       else
+            (local.tee $t0  ;;let t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+              (f32.div
+                (f32.sub
+                  (f32.const -1)
+                  (local.get $signedDistToTrianglePlane)
+                )
+                (local.get $normalDotVelocity)
+              )
+            )
+            (local.tee $t1   ;;var t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+              (f32.div
+                (f32.sub
+                  (f32.const 1)
+                  (local.get $signedDistToTrianglePlane)
+                )
+                (local.get $normalDotVelocity)
+              )
+            )
+          f32.gt
+          if
+              local.get $t0
+              local.get $t1
+              local.set $t0
+              local.set $t1
+          end
+          local.get $t0
+          f32.const 1
+          f32.gt
+          if
+            f32.const 0
+            return
+          end
+          local.get $t1
+          f32.const 0
+          f32.lt
+          if
+            f32.const 0
+            return
+          end
 
-
+          (global.set $planeIntersectionPoint
+            (f32x4.add
+              (f32x4.sub
+                (local.get $basePoint)
+                (local.get $planeCollider)
+              )
+              (f32x4.mul
+                (local.get $velocity)
+                (f32x4.splat
+                  (f32.max
+                    (f32.const 0)
+                    (local.get $t0)
+                  )
+                )
+              )
+          )
+        )
       end
 
       
@@ -128,7 +206,6 @@
     (param $velocityPointer i32)
     ;;return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 
-    (local $normalizedVelocity v128)
     (local $basePoint v128)
     (local $velocity v128)
     (local $gv1 v128)
@@ -136,10 +213,6 @@
     (local $normalDotVelocity f32)
     (local $nextPosition i32)
 
-
-    (local.set $normalizedVelocity
-      (v128.load(local.get $velocityNormalizedPointer))
-    )
     (local.set $basePoint
       (v128.load(local.get $basePointPointer))
     )
@@ -149,7 +222,6 @@
     loop $for-loop|0
       (call $testTriangle
         (v128.load(local.get $position))
-        (local.get $normalizedVelocity)
         (local.get $velocity)
         (local.get $basePoint)
         (local.get $normalDotVelocity)
@@ -258,4 +330,5 @@
   (export "getLowestRoot" (func $getLowestRoot))
   (export "testTriangles" (func $testTriangles))
   (export "unitTest" (func $unitTest))
+  (export "_initialize" (func $_initialize))
 )

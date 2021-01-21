@@ -5,7 +5,7 @@ import { TerraMatrix, TerraVector3, Triangle } from "./Math";
 import type { Engine, Vector3 } from "./engine";
 
 
-function Dot(left: [number, number, number] | Float32Array, right: [number, number, number] | Float32Array): number {
+function Dot(left: [number, number, number] | Float32Array | Vector3, right: [number, number, number] | Float32Array | Vector3): number {
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 }
 function CrossToRef(left: [number, number, number], right: [number, number, number], result: [number, number, number]): void {
@@ -83,7 +83,8 @@ export class Collider {
     public collidedMesh: Nullable<any>;
 
     #collisionPoint: [x: number, y: number, z: number] = [0, 0, 0];
-    private _planeIntersectionPoint: [x: number, y: number, z: number] = [0, 0, 0];
+    #planeIntersectionPoint: [x: number, y: number, z: number] = [0, 0, 0];
+    planeIntersectionPoint = this.engine.callocVector3();
     #tempVector: [x: number, y: number, z: number] = [0, 0, 0];
     #tempVector2: [x: number, y: number, z: number] = [0, 0, 0];
     #tempVector3: [x: number, y: number, z: number] = [0, 0, 0];
@@ -154,7 +155,7 @@ export class Collider {
 
     /** @hidden */
     public _retry = 0;
-    #velocity = new TerraVector3();
+    #velocity!:Vector3;
     #basePoint = new TerraVector3();
     #epsilon: number = 0;
     /** @hidden */
@@ -190,9 +191,10 @@ export class Collider {
     // Methods
     /** @hidden */
     public _initialize(source: Vector3, dir: Vector3, e: number): void {
-        this.#velocity[0] = dir[0];
+        this.#velocity = dir;
+       /* this.#velocity[0] = dir[0];
         this.#velocity[1] = dir[1];
-        this.#velocity[2] = dir[2];
+        this.#velocity[2] = dir[2];*/
 
         // Vector3.NormalizeToRef(dir, this._normalizedVelocity);
 
@@ -318,29 +320,20 @@ export class Collider {
             if (t0 < 0) {
                 t0 = 0;
             }
-            if (t0 > 1.0) {
-                t0 = 1.0;
-            }
             //TODO: Use simd
-            this._planeIntersectionPoint[0] = this.#basePoint[0] - triangle.planeCollider[0];
-            this._planeIntersectionPoint[1] = this.#basePoint[1] - triangle.planeCollider[1];
-            this._planeIntersectionPoint[2] = this.#basePoint[2] - triangle.planeCollider[2];
+            this.#planeIntersectionPoint[0] = this.#basePoint[0] - triangle.planeCollider[0] + this.#velocity[0] * t0;
+            this.#planeIntersectionPoint[1] = this.#basePoint[1] - triangle.planeCollider[1] + this.#velocity[1] * t0;
+            this.#planeIntersectionPoint[2] = this.#basePoint[2] - triangle.planeCollider[2] + this.#velocity[2] * t0;
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             // this._velocity.scaleToRef(t0, this._tempVector);
-            this.#tempVector[0] = this.#velocity[0] * t0
-            this.#tempVector[1] = this.#velocity[1] * t0
-            this.#tempVector[2] = this.#velocity[2] * t0
-            this._planeIntersectionPoint[0] += this.#tempVector[0];
-            this._planeIntersectionPoint[1] += this.#tempVector[1];
-            this._planeIntersectionPoint[2] += this.#tempVector[2];
             //this._planeIntersectionPoint.addInPlace(this._tempVector);
 
-            if (this._checkPointInTriangle(this._planeIntersectionPoint, triangle)) {
+            if (this._checkPointInTriangle(this.#planeIntersectionPoint, triangle)) {
                 found = true;
                 t = t0;
-                this.#collisionPoint[0] = this._planeIntersectionPoint[0];
-                this.#collisionPoint[1] = this._planeIntersectionPoint[1];
-                this.#collisionPoint[2] = this._planeIntersectionPoint[2];
+                this.#collisionPoint[0] = this.#planeIntersectionPoint[0];
+                this.#collisionPoint[1] = this.#planeIntersectionPoint[1];
+                this.#collisionPoint[2] = this.#planeIntersectionPoint[2];
                 // this._collisionPoint.copyFrom(this._planeIntersectionPoint);
             }
         }

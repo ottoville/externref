@@ -371,7 +371,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         });
        // console.log('cpu took', performance.now() - timer);
        // timer = performance.now();
-        this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.facesBuffer.byteLength, collider.normalizedVelocityWasm.byteOffset, basePoint.byteOffset, VelocityWasm.byteOffset)
+        this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.facesBuffer.byteLength, basePoint.byteOffset, VelocityWasm.byteOffset)
         //console.log('wasm took', performance.now() - timer);
     }
 }

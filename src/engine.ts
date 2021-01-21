@@ -13,12 +13,14 @@ const CollisionsEpsilon = 0.001;
 export interface ColliderWasm {
     memory: {buffer: ArrayBuffer}
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
-    testTriangles: (position: number, length: number, velocity:number, basePoint: number, velocityWasm:number) => void
+    testTriangles: (position: number, length: number, basePoint: number, velocityWasm: number) => void
+    _initialize: (normalizedVelocity:number) => void
 }
 
 
 export class Engine {
     freeMemoryBlocks: { byteOffset: number, byteLength: number }[] = []
+    allocatedSize = 0;
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
     positionBindGroupTime: DynamicBindGroupLayout<[number]>;
@@ -31,11 +33,10 @@ export class Engine {
     #mousePosition = new Uint16Array(this.mousePositionBuffer);
 
     mouseOffsetBuffer = new SharedArrayBuffer(8);
-
-    allocatedSize = 0;
+    
     
     registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
-    malloc(byteLength: number) {
+    malloc(byteLength: number): number {
         const available = this.freeMemoryBlocks.findIndex(arr => arr.byteLength == byteLength)
         if (available > -1)
             return this.freeMemoryBlocks.splice(available, 1)[0].byteOffset;
@@ -46,20 +47,19 @@ export class Engine {
                 available2.byteOffset += byteLength;
                 available2.byteLength -= byteLength;
                 return offset;
-            } else {
-                const offset = this.allocatedSize;
-                this.allocatedSize += byteLength;
-                return offset;
             }
+            const offset = this.allocatedSize;
+            this.allocatedSize += byteLength;
+            return offset;
         }
     }
     callocVector3(): Vector3 {
-        const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(12));
+        const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(16));
         arr.fill(0);
         return arr;
     }
     mallocVector3(x?: number, y?: number, z?: number): Vector3 {
-        const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(12));
+        const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(16));
         if(x)
             arr[0] = x;
         if(y)
@@ -193,8 +193,10 @@ export class Engine {
 
         this.collider._initialize(position, velocity, closeDistance);
         const scenesArr = [...this.scenes];
-        //this.collider.normalizedVelocityWasm.set(velocity)
-        //this.collider.normalizedVelocityWasm.normalize();
+        this.collider.normalizedVelocityWasm.set(velocity)
+        this.collider.normalizedVelocityWasm.normalize();
+
+        this.wasm._initialize(this.collider.normalizedVelocityWasm.byteOffset)
 
        // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
         await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider, position, velocity)))));
