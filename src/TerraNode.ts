@@ -114,8 +114,6 @@ export abstract class BoundableNode extends TerraNodeGPU {
 
     #colliderVertices: TerraVector3[] = [];
 
-    #lastColliderWorldVectors = new SharedArrayBuffer(this.verticesPositionBuffer.byteLength);
-    #lastColliderWorldVectorsView2: TerraVector3[] = [];
 
     #faces: Triangle[];
     #lastColliderTransformMatrix = new TerraMatrix();
@@ -129,6 +127,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
     facesGPUBufferCollide: GPUStorageBuffer & GPUCopyDSTBuffer;
     normalizedVelocityBuffer: GPUStorageBuffer & GPUCopyDSTBuffer;
     facesBufferColliderPointer: number;
+
     addVectors(faceIndex: number, vectors: [TerraVector3, TerraVector3, TerraVector3]) {
         try {
             const t = new Triangle(
@@ -149,7 +148,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         if (this.indicesView) {
             if (this.strip) {
                 this.indicesView.forEach((indice:number) => {
-                    let vector = this.#lastColliderWorldVectorsView2[indice];
+                    let vector = this.#colliderVertices[indice];
                     if (!vector) {
                         debugger;
 
@@ -176,14 +175,15 @@ export abstract class BoundableNode extends TerraNodeGPU {
             }
         } else {
             if (this.strip) {
-                this.#lastColliderWorldVectorsView2.forEach(vector => {
+                this.#colliderVertices.forEach(vector => {
                     if (vectors.push(vector) < 3)
                         return;
                     this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
                     vectors = [vectors[1], vectors[2]];
                 });
             } else {
-                this.#lastColliderWorldVectorsView2.forEach(vector => {
+                
+                this.#colliderVertices.forEach(vector => {
                     if (vectors.push(vector) == 3) {
                         this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
                         vectors = [];
@@ -222,17 +222,13 @@ export abstract class BoundableNode extends TerraNodeGPU {
             this.#faces = new Array(this.verticesCount / 3);
             this.facesBuffer = new SharedArrayBuffer((this.verticesCount / 3) * 4 * 4);
         }
-        this.facesBufferColliderPointer = scene.engine.malloc(this.facesBuffer.byteLength);
+        this.facesBufferColliderPointer = scene.engine.malloc(this.facesBuffer.byteLength + this.verticesPositionBuffer.byteLength);
 
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
         scene.boundables.add(this);
         for (let i = 0; i < positionCount; i++) {
-            this.#colliderVertices.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
-        }
-        if (!indicesView) {
-            for (let i = 0; i < this.verticesCount; i++) {
-                this.#lastColliderWorldVectorsView2.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
-            }
+            //this.#colliderVertices.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
+            this.#colliderVertices.push(new TerraVector3(this.engine.wasm.memory.buffer, this.facesBuffer.byteLength + i * verticesPositionStride * 4));
         }
         this.rebuildTrianglePlanes();
 
@@ -315,7 +311,8 @@ export abstract class BoundableNode extends TerraNodeGPU {
             
             this.#lastColliderTransformMatrix = this.myCollisionsTransformMatrix.clone();
 
-            new Uint8Array(this.#lastColliderWorldVectors).set(new Uint8Array(this.verticesPositionBuffer));
+           // new Uint8Array(this.#lastColliderWorldVectors).set(new Uint8Array(this.verticesPositionBuffer));
+            new Uint8Array(this.engine.wasm.memory.buffer, this.facesBuffer.byteLength).set(new Uint8Array(this.verticesPositionBuffer));
            // new Uint8Array(this.facesBufferCollider).set(new Uint8Array(this.facesBuffer));
 
             let timer = performance.now();
