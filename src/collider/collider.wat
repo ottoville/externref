@@ -40,7 +40,6 @@
   )
 
   (func $unitTest (param $position i32)
-    (param $velocityNormalizedPointer i32) 
     (param $basePointPointer i32)
     (param $velocityPointer i32)
     (result f32)
@@ -198,10 +197,10 @@
       
         ;;        var normalDotVelocity = Dot(triangle.planeCollider, this.#velocity);
       end
-      local.get $normalDotVelocity
+      global.get $planeIntersectionPoint
+      f32x4.extract_lane 1
   )
   (func $testTriangles (param $position i32) (param $length i32)
-    (param $velocityNormalizedPointer i32) 
     (param $basePointPointer i32)
     (param $velocityPointer i32)
     ;;return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);

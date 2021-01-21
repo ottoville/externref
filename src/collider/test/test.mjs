@@ -15,16 +15,24 @@ const wasm = await WebAssembly.compile(fs.readFileSync("../../../wwwroot/collide
 const instance = await WebAssembly.instantiate(wasm, importObject);
 
 const memory=new Float32Array(instance.exports.memory.buffer)
-const velocity=[-0.1953125, 0, -4.52960205078125];
-const normalizedVelocity=[-0.043079101057668934, 0, -0.9990716646227452]
-const basePoint=[-6658.89208984375, 273.1256103515625, 351.8554992675781]
-memory.set([0.004787201061844826,0.9999885559082031,0,44.897769927978516]);
+const planeCollider=[0.0994977280497551,0.9872344136238098,-0.12437216192483902,-87.58885955810547]
+const velocity=[-0.462890625,0,0.9068603515625];
+const normalizedVelocity=[-0.4546314716756858,0,0.8906796421620964]
+const basePoint=[1275.986083984375,191.6114501953125,1843.778076171875]
+memory.set(planeCollider);
 memory.set(normalizedVelocity,4);
 memory.set(basePoint,7);
 memory.set(velocity,10);
 //signeddistancetoplane Should be:286.14279932177396
 //normaldotvelocity Should be:-0.0009350002073915675
-console.log(instance.exports.unitTest(0,4*4,7*4,10*4));
-console.log(Dot([0.004787201061844826,0.9999885559082031,0,44.897769927978516], velocity))
 
-wasi.start(instance);
+/*
+    Planeintersectionpoint:
+    0: 1275.8865862563252
+    1: 190.6242157816887
+    2: 1843.9024483337998
+*/
+instance.exports._initialize(4*4)
+console.log(instance.exports.unitTest(0,7*4,10*4));
+
+//wasi.start(instance);
