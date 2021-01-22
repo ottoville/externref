@@ -1,5 +1,5 @@
 (module
-  (memory $mem 100 101)
+  (memory $mem 200 201)
   (export "memory" (memory 0))
 
   ;;(import "env" "memory" (memory $mem 31 32))

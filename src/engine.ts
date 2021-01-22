@@ -37,6 +37,10 @@ export class Engine {
     
     registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
     malloc(byteLength: number): number {
+        if (byteLength % 4 != 0) {
+            debugger;
+            throw ('malloc should be called with length divitable with four')
+        }
         const available = this.freeMemoryBlocks.findIndex(arr => arr.byteLength == byteLength)
         if (available > -1)
             return this.freeMemoryBlocks.splice(available, 1)[0].byteOffset;
@@ -50,6 +54,8 @@ export class Engine {
             }
             const offset = this.allocatedSize;
             this.allocatedSize += byteLength;
+            if (this.allocatedSize > this.wasm.memory.buffer.byteLength)
+                throw('Out of memory')
             return offset;
         }
     }
