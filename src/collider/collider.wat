@@ -6,6 +6,7 @@
   (global $gv0 (mut v128) (v128.const i32x4 0 0 0 0))
   (global $planeIntersectionPoint (mut v128) (v128.const i32x4 0 0 0 0))
 
+  (global $velocity (mut v128) (v128.const i32x4 0 0 0 0))
   (global $normalizedVelocity (mut v128) (v128.const i32x4 0 0 0 0))
 
     (func $main (export "_start")
@@ -13,10 +14,52 @@
         (i32.store (i32.const 0) (i32.const 8))  ;; iov.iov_base - This is a pointer to the start of the 'hello world\n' string
         (i32.store (i32.const 4) (i32.const 12))  ;; iov.iov_len - The length of the 'hello world\n' string
     )
+  (func $v3_normalize 
+    (param $v3 v128)
+    (result v128)
+    (local $len f32)
+    (local $temp v128)
+
+    local.get $v3
+    local.get $v3
+    f32x4.mul
+    local.tee $temp
+    f32x4.extract_lane 0
+    local.get $temp
+    f32x4.extract_lane 1
+    f32.add
+    local.get $temp
+    f32x4.extract_lane 2
+    f32.add
+    f32.sqrt
+    local.tee $len
+    f32.const 0
+    f32.eq
+      if
+        local.get $v3
+      return
+      end
+    local.get $len
+    f32.const 1
+    f32.eq
+      if
+        local.get $v3
+      return
+      end
+    f32.const 1
+    local.get $len
+    f32.div
+    f32x4.splat
+    local.get $v3
+    f32x4.mul
+  )
   (func $_initialize
-    (param $normalizedVelocity i32)
-    local.get $normalizedVelocity
+    (param $velocity i32)
+    local.get $velocity
     v128.load
+    global.set $velocity
+    global.get $velocity
+    call $v3_normalize
     global.set $normalizedVelocity
   )
 
@@ -39,7 +82,7 @@
       f32.add
   )
 
-  (func $unitTest (param $position i32)
+  (func $unitTest (param $planePosition i32)
     (param $basePointPointer i32)
     (param $velocityPointer i32)
     (result f32)
@@ -59,7 +102,7 @@
       (v128.load(local.get $velocityPointer))
     )
     (call $testTriangle
-      (v128.load(local.get $position))
+      (local.get $planePosition)
       (local.get $velocity)
       (local.get $basePoint)
       (local.get $normalDotVelocity)
@@ -68,35 +111,48 @@
   )
   (func $checkPointInTriangle
     (param $planeCollider v128)
-    (param $triangle0v0 v128)
-    (param $triangle0v1 v128)
-    (param $triangle0v2 v128)
-
-    (param $triangle1v0 v128)
-    (param $triangle1v1 v128)
-    (param $triangle1v2 v128)
-
-    (param $triangle2v0 v128)
-    (param $triangle2v1 v128)
-    (param $triangle2v2 v128)
-
+    (param $offset i32)
     (result i32)
+    (local $triangle0 v128)
+    (local $triangle1 v128)
+    (local $triangle2 v128)
+
+    (
+      local.set $triangle0 (v128.load (local.get $offset))
+    )
+
+    local.get $offset
+    i32.const 16
+    i32.add
+    v128.load
+    local.set $triangle1
+    local.get $offset
+    i32.const 32
+    i32.add
+    v128.load
+    local.set $triangle2
+    
 
     i32.const 0
   )
   (func $testTriangle
-    (param $planeCollider v128)
+    (param $planePosition i32)
     (param $velocity v128)
     (param $basePoint v128)
     (param $normalDotVelocity f32)
     (param $signedDistToTrianglePlane f32)
     (result f32)
 
+    (local $planeCollider v128)
     (local $t0 f32)
     (local $t1 f32)
 
     (call $v3_dot
-      (local.get $planeCollider)
+      (local.tee $planeCollider
+        (v128.load
+         (local.get $planePosition)
+       )
+      )
       (global.get $normalizedVelocity)
     )
     f32.const 0
@@ -126,12 +182,12 @@
           local.get $signedDistToTrianglePlane
           f32.abs
           f32.const 1
-          f32.lt  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
+          f32.ge  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
           if
-
-          else
             f32.const 0
             return
+          else
+ 
           end
 
       else
@@ -192,6 +248,14 @@
               )
           )
         )
+        (call $checkPointInTriangle
+          (local.get $planeCollider)
+          (i32.add
+            (local.get $planePosition)
+            (i32.const 16)
+          )
+        )
+        drop
       end
 
       
@@ -200,10 +264,13 @@
       global.get $planeIntersectionPoint
       f32x4.extract_lane 1
   )
-  (func $testTriangles (param $position i32) (param $length i32)
+  (func $testTriangles
+    (param $planePosition i32)
+    (param $length i32)
     (param $basePointPointer i32)
-    (param $velocityPointer i32)
     ;;return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
+
+    (local $position i32)
 
     (local $basePoint v128)
     (local $velocity v128)
@@ -212,25 +279,25 @@
     (local $normalDotVelocity f32)
     (local $nextPosition i32)
 
+
     (local.set $basePoint
       (v128.load(local.get $basePointPointer))
     )
-    (local.set $velocity
-      (v128.load(local.get $velocityPointer))
-    )
+
     loop $for-loop|0
       (call $testTriangle
-        (v128.load(local.get $position))
+        (local.get $planePosition)
         (local.get $velocity)
         (local.get $basePoint)
         (local.get $normalDotVelocity)
         (local.get $signedDistToTrianglePlane)
       )
       drop
-      local.get $position
-      i32.const 12
+
+      local.get $planePosition
+      i32.const 28 ;;i32.const 12
       i32.add
-      local.tee $position
+      local.tee $planePosition
       local.get $length
       i32.lt_u
       br_if $for-loop|0

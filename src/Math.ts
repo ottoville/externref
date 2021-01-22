@@ -169,7 +169,7 @@ export class TerraVector3 extends Float32Array {
         var rw = 1 / (this[0] * m[3] + this[1] * m[7] + this[2] * m[11] + m[15]);
         this[0] = rx * rw;
         this[1] = ry * rw;
-        this[2] = rz * rw;
+        this[2] = rz * rw;  
     }
     normalize() {
         const len = Math.sqrt(this[0] * this[0] + this[1] * this[1] + this[2] * this[2]);
@@ -288,7 +288,6 @@ export class Triangle {
     }
     constructor(
         public vectors: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()],
-        public plane:TerraVector4,
         public planeCollider: TerraVector4,
         ) {
     }

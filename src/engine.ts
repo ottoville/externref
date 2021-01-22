@@ -13,7 +13,7 @@ const CollisionsEpsilon = 0.001;
 export interface ColliderWasm {
     memory: {buffer: ArrayBuffer}
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
-    testTriangles: (position: number, length: number, basePoint: number, velocityWasm: number) => void
+    testTriangles: (position: number, length: number, basePoint: number) => void
     _initialize: (normalizedVelocity:number) => void
 }
 
@@ -193,13 +193,11 @@ export class Engine {
 
         this.collider._initialize(position, velocity, closeDistance);
         const scenesArr = [...this.scenes];
-        this.collider.normalizedVelocityWasm.set(velocity)
-        this.collider.normalizedVelocityWasm.normalize();
 
-        this.wasm._initialize(this.collider.normalizedVelocityWasm.byteOffset)
+        this.wasm._initialize(velocity.byteOffset)
 
        // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-        await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider, position, velocity)))));
+        await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider, position)))));
         if (!this.collider.collisionFound) {
 
             //position.addToRef(velocity, finalPosition);
