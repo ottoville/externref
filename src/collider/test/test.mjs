@@ -11,28 +11,34 @@ function Dot(left, right) {
 
 const importObject = { wasi_snapshot_preview1: wasi.wasiImport };
 
-const wasm = await WebAssembly.compile(fs.readFileSync("../../../wwwroot/collider/colliderO.wasm"));
+const wasm = await WebAssembly.compile(fs.readFileSync("../wwwroot/collider/colliderO.wasm"));
 const instance = await WebAssembly.instantiate(wasm, importObject);
 
 const memory=new Float32Array(instance.exports.memory.buffer)
-const planeCollider=[0.0994977280497551,0.9872344136238098,-0.12437216192483902,-87.58885955810547]
-const velocity=[-0.462890625,0,0.9068603515625];
-const normalizedVelocity=[-0.4546314716756858,0,0.8906796421620964]
-const basePoint=[1275.986083984375,191.6114501953125,1843.778076171875]
+const planeCollider=[-0,0.9996827244758606,0.025188086554408073,-241.8369903564453]
+const velocity=[-0.447998046875, 0, -0.780517578125];
+const normalizedVelocity=[-0.49780328265518553, 0, -0.8672899698357647]
+const basePoint=[-1946.251953125, 166.8318328857422, 2980.095458984375]
+const pointers=[17542392,17534360,17534328]
+const vec1=[4880.0009765625,-1.9843136072158813,9680]
+const vec2=[4880.0009765625,-4,9760]
+const vec3=[4800.0009765625,-4,9760]
+memory.set(vec1,17542392/4);
+memory.set(vec2,17534360/4);
+memory.set(vec3,17534328/4);
+
 memory.set(planeCollider);
-memory.set(normalizedVelocity,4);
+new Uint32Array(instance.exports.memory.buffer,4*4).set(pointers)
+//memory.set(pointers,4);
 memory.set(basePoint,7);
 memory.set(velocity,10);
-//signeddistancetoplane Should be:286.14279932177396
-//normaldotvelocity Should be:-0.0009350002073915675
+//dot: -0.02184537482799321
+//signeddistancetoplane Should be:0.004813233371805836
+//normaldotvelocity Should be:-0.10351959205490857
+//planeintersectionpoint should be: -1946.251953125,165.83215016126633,2980.0702708978206
+//checkpointsintriangle d should be -1082436.0262384948
 
-/*
-    Planeintersectionpoint:
-    0: 1275.8865862563252
-    1: 190.6242157816887
-    2: 1843.9024483337998
-*/
-instance.exports._initialize(4*4)
-console.log(instance.exports.unitTest(0,7*4,10*4));
-
+instance.exports._initialize(10*4,7*4)
+console.log(instance.exports.unitTest(0));
+//console.log(Dot(planeCollider,normalizedVelocity))
 //wasi.start(instance);

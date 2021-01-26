@@ -206,7 +206,7 @@ export class TerraCamera {
         const m = matrix.m;*/
         let num = this.#nearVec3[0] * inverted[3] + this.#nearVec3[1] * inverted[7] + this.#nearVec3[2] * inverted[11] + inverted[15];
 
-        this.#nearVec3.multiply(inverted);
+        this.#nearVec3.multiply2Ref(inverted, this.#nearVec3);
         if (Scalar.WithinEpsilon(num, 1.0)) {
             const scale = 1.0 / num;
             //result.scaleInPlace(1.0 / num);
@@ -218,7 +218,7 @@ export class TerraCamera {
 
         //Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, inverted, farVec3);
         num = this.#farVec3[0] * inverted[3] + this.#farVec3[1] * inverted[7] + this.#farVec3[2] * inverted[11] + inverted[15];
-        this.#farVec3.multiply(inverted)
+        this.#farVec3.multiply2Ref(inverted, this.#farVec3)
         if (Scalar.WithinEpsilon(num, 1.0)) {
             const scale = 1.0 / num;
             //result.scaleInPlace(1.0 / num);

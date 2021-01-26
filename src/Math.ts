@@ -1,4 +1,4 @@
-﻿import type { Vector3 } from "./engine";
+﻿import type { Vector3, Vector4 } from "./engine";
 
 export class TerraMatrix extends Float32Array {
     view64: Float64Array;
@@ -162,14 +162,14 @@ export class TerraVector3 extends Float32Array {
             super(Arr, offset, 3);
         }
     }
-    multiply(m: TerraMatrix): void {
+    multiply2Ref(m: TerraMatrix, ref: Vector3|Vector4): void {
         var rx = this[0] * m[0] + this[1] * m[4] + this[2] * m[8] + m[12];
         var ry = this[0] * m[1] + this[1] * m[5] + this[2] * m[9] + m[13];
         var rz = this[0] * m[2] + this[1] * m[6] + this[2] * m[10] + m[14];
         var rw = 1 / (this[0] * m[3] + this[1] * m[7] + this[2] * m[11] + m[15]);
-        this[0] = rx * rw;
-        this[1] = ry * rw;
-        this[2] = rz * rw;  
+        ref[0] = rx * rw;
+        ref[1] = ry * rw;
+        ref[2] = rz * rw;
     }
     normalize() {
         const len = Math.sqrt(this[0] * this[0] + this[1] * this[1] + this[2] * this[2]);
@@ -259,6 +259,7 @@ export class Angle {
 }
 
 export class Triangle {
+    pointers!: Uint32Array;
     updatePlane() {
         const v0 = this.vectors[0];
         const v1 = this.vectors[1];
@@ -287,7 +288,7 @@ export class Triangle {
         this.planeCollider.set([normal_x, normal_y, normal_z, -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))]);
     }
     constructor(
-        public vectors: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()],
+        public vectors: [TerraVector4, TerraVector4, TerraVector4] = [new TerraVector4(), new TerraVector4(), new TerraVector4()],
         public planeCollider: TerraVector4,
         ) {
     }

@@ -8,7 +8,7 @@
     "buildWasm": "wat2wasm.exe collider\\collider.wat -o ..\\wwwroot\\collider\\collider.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\collider.wasm -o ..\\wwwroot\\collider\\colliderO.wasm -O3 --enable-simd",
     "build": "npm run buildWasm",
     "publish": "tsc && dotnet build ../BlazorApp1.csproj && dotnet publish ../BlazorApp1.csproj",
-    "test": "@powershell cp .\\src\\test\\package.json ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\js\\test; node --experimental-modules -r esm ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\js\\test\\test.js"
+    "test": "npm run buildWasm && node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs"
   },
   "author": "",
   "license": "ISC",

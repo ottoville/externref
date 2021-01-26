@@ -4,17 +4,18 @@ import type { DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
 import { TerraNodeGPU } from "./TerraNode";
 import { Collider } from "./Collider";
 import { Scene } from "./Scene";
-import { TerraVector3 } from "./Math";
+import { TerraVector3, TerraVector4 } from "./Math";
 
 export type Vector3 = Omit<TerraVector3, 'buffer'>;
+export type Vector4 = Omit<TerraVector4, 'buffer'>;
 
 const CollisionsEpsilon = 0.001;
 
 export interface ColliderWasm {
     memory: {buffer: ArrayBuffer}
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
-    testTriangles: (position: number, length: number, basePoint: number) => void
-    _initialize: (normalizedVelocity:number) => void
+    testTriangles: (position: number, length: number) => void
+    _initialize: (velocity:number, basePoint: number) => void
 }
 
 
@@ -200,10 +201,10 @@ export class Engine {
         this.collider._initialize(position, velocity, closeDistance);
         const scenesArr = [...this.scenes];
 
-        this.wasm._initialize(velocity.byteOffset)
+        this.wasm._initialize(velocity.byteOffset, position.byteOffset)
 
        // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-        await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider, position)))));
+        await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider)))));
         if (!this.collider.collisionFound) {
 
             //position.addToRef(velocity, finalPosition);

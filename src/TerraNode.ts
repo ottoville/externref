@@ -1,5 +1,5 @@
 ﻿import { Collider } from "./Collider";
-import { Engine, Vector3 } from "./engine";
+import type { Engine } from "./engine";
 
 import type { isLight } from "./lights";
 import { TerraMatrix, TerraVector4, Triangle } from "./Math";
@@ -112,7 +112,8 @@ export abstract class BoundableNode extends TerraNodeGPU {
     readonly pickInfo = new pickInfo();
 
 
-    #colliderVertices: TerraVector3[] = [];
+    #positions: TerraVector3[] = [];
+    #colliderVertices: TerraVector4[] = [];
 
 
     #faces: Triangle[];
@@ -124,14 +125,16 @@ export abstract class BoundableNode extends TerraNodeGPU {
     lastColliderWorldVectorsPointer: number;
     facesBufferColliderPointerParallel: number;
 
-    addVectors(faceIndex: number, vectors: [TerraVector3, TerraVector3, TerraVector3]) {
+    addVectors(faceIndex: number, vectors: [TerraVector4, TerraVector4, TerraVector4]) {
         try {
+            if (vectors.length != 3)
+                throw('less than 3 vector')
             const t = new Triangle(
-                vectors as [TerraVector3, TerraVector3, TerraVector3],
+                vectors as [TerraVector4, TerraVector4, TerraVector4],
                 new TerraVector4(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer + faceIndex * 4 * 7)
             );
-            const pointers = new TerraVector3(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer + faceIndex * 4 * 7 + 16);
-            pointers.set(vectors.map(v => v.byteOffset) as [number,number,number]);
+            t.pointers = new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,3); //4 is from plane
+            t.pointers.set(vectors.map(v => v.byteOffset) as [number, number, number]);
             this.#faces[faceIndex] = t;
         } catch (e) {
             console.log(e);
@@ -139,7 +142,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         }
     }
     rebuildTrianglePlanes() {
-        let vectors: TerraVector3[] = [];
+        let vectors: TerraVector4[] = [];
         let faceIndex = 0;
         if (this.indicesView) {
             if (this.strip) {
@@ -152,7 +155,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
                     }
                     if (vectors.push(vector) < 3)
                         return;
-                    this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3]);
+                    this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4]);
                     vectors = [vectors[1], vectors[2]];
                 });
             } else {
@@ -164,7 +167,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
                         throw ('position ' + indice + ' not found');
                     }
                     if (vectors.push(position) == 3) {
-                        this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
+                        this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
                         vectors = [];
                     }
                 });
@@ -174,14 +177,14 @@ export abstract class BoundableNode extends TerraNodeGPU {
                 this.#colliderVertices.forEach(vector => {
                     if (vectors.push(vector) < 3)
                         return;
-                    this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
+                    this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
                     vectors = [vectors[1], vectors[2]];
                 });
             } else {
                 
                 this.#colliderVertices.forEach(vector => {
                     if (vectors.push(vector) == 3) {
-                        this.addVectors(faceIndex++, vectors as [TerraVector3, TerraVector3, TerraVector3])
+                        this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
                         vectors = [];
                     }
                 });
@@ -218,15 +221,18 @@ export abstract class BoundableNode extends TerraNodeGPU {
         this.facesBuffer = new SharedArrayBuffer(this.#faces.length * 4 * Float32Array.BYTES_PER_ELEMENT);
 
         this.facesBufferColliderPointer = scene.engine.malloc(this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT);
-        this.facesBufferColliderPointerParallel = scene.engine.malloc(this.#faces.length * 3 * 4 * Float32Array.BYTES_PER_ELEMENT);
+        this.facesBufferColliderPointerParallel = scene.engine.malloc(this.#faces.length * (16+12) * Float32Array.BYTES_PER_ELEMENT);
 
-
-        this.lastColliderWorldVectorsPointer = scene.engine.malloc(this.verticesPositionBuffer.byteLength);
+        this.lastColliderWorldVectorsPointer = scene.engine.malloc(positionCount * 4 * Float32Array.BYTES_PER_ELEMENT);
+        
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
         scene.boundables.add(this);
+
         for (let i = 0; i < positionCount; i++) {
+            this.#positions.push(new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT));
+
             //this.#colliderVertices.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
-            this.#colliderVertices.push(new TerraVector3(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer + i * verticesPositionStride * 4));
+            this.#colliderVertices.push(new TerraVector4(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer + i * 4 * Float32Array.BYTES_PER_ELEMENT));
         }
         this.rebuildTrianglePlanes();
 
@@ -242,12 +248,12 @@ export abstract class BoundableNode extends TerraNodeGPU {
     }
     public updateBoundingBoxByMatrix(m: TerraMatrix) {
         //TODO: Use SIMD
-        this.boundingBox.min.multiply(m);
-        this.boundingBox.max.multiply(m);
+        this.boundingBox.min.multiply2Ref(m, this.boundingBox.min);
+        this.boundingBox.max.multiply2Ref(m, this.boundingBox.max);
     }
     //collisionsScalingMatrix = new TerraMatrix();
     myCollisionsTransformMatrix = new TerraMatrix();
-    public async checkCollision(collider: Collider, basePoint: Vector3) {
+    public async checkCollision(collider: Collider) {
         if (this.#faces.length % 4 != 0) //TODO
             return
         if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
@@ -263,16 +269,17 @@ export abstract class BoundableNode extends TerraNodeGPU {
             
             this.#lastColliderTransformMatrix = this.myCollisionsTransformMatrix.clone();
             console.log('verticesPositionBuffer', this.verticesPositionBuffer.byteLength)
-            new Uint8Array(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer, this.verticesPositionBuffer.byteLength).set(new Uint8Array(this.verticesPositionBuffer));
+            //new Uint8Array(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer, this.verticesPositionBuffer.byteLength).set(new Uint8Array(this.verticesPositionBuffer));
            // new Uint8Array(this.engine.wasm.memory.buffer, this.facesBuffer.byteLength).set(new Uint8Array(this.verticesPositionBuffer));
 
             let timer = performance.now();
             let i = 0
-            let len1 = this.#colliderVertices.length
+            let len1 = this.#positions.length
             let len2 = this.#faces.length;
 
             while (i < len1) {
-                this.#colliderVertices[i].multiply(this.myCollisionsTransformMatrix);
+                this.#positions[i].multiply2Ref(this.myCollisionsTransformMatrix,this.#colliderVertices[i])
+               // this.#colliderVertices[i].multiply(this.myCollisionsTransformMatrix);
                 i++;
             }
             console.log('recalculated collision vertices', performance.now() - timer);
@@ -284,10 +291,15 @@ export abstract class BoundableNode extends TerraNodeGPU {
                 this.#faces[i + 1].updatePlane();
                 this.#faces[i + 2].updatePlane();
                 this.#faces[i + 3].updatePlane();
-                new Float32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointerParallel + i * 4 * 4 * 3, 4 * 3).set([ //ByteLength = 3*4*4=48
+                new Float32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointerParallel + i * 4 * (16+12), 16+12).set([
                     this.#faces[i].planeCollider[0], this.#faces[i + 1].planeCollider[0], this.#faces[i + 2].planeCollider[0], this.#faces[i + 3].planeCollider[0],
                     this.#faces[i].planeCollider[1], this.#faces[i + 1].planeCollider[1], this.#faces[i + 2].planeCollider[1], this.#faces[i + 3].planeCollider[1],
-                    this.#faces[i].planeCollider[2], this.#faces[i + 1].planeCollider[2], this.#faces[i + 2].planeCollider[2], this.#faces[i + 3].planeCollider[2]
+                    this.#faces[i].planeCollider[2], this.#faces[i + 1].planeCollider[2], this.#faces[i + 2].planeCollider[2], this.#faces[i + 3].planeCollider[2],
+                    this.#faces[i].planeCollider[3], this.#faces[i + 1].planeCollider[3], this.#faces[i + 2].planeCollider[3], this.#faces[i + 3].planeCollider[3],
+                    
+                    this.#faces[i].pointers[0], this.#faces[i + 1].pointers[0], this.#faces[i + 2].pointers[0], this.#faces[i+3].pointers[0],
+                    this.#faces[i].pointers[1], this.#faces[i + 1].pointers[1], this.#faces[i + 2].pointers[1], this.#faces[i+3].pointers[1],
+                    this.#faces[i].pointers[2], this.#faces[i + 1].pointers[2], this.#faces[i + 2].pointers[2], this.#faces[i+3].pointers[2],
                 ]);
                 i+=4;
             }
@@ -300,7 +312,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         });
        // console.log('cpu took', performance.now() - timer);
         // timer = performance.now();
-        this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.#faces.length * 7, basePoint.byteOffset)
+        this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.#faces.length * 7 /*  plane + vector pointers*/)
         //console.log('wasm took', performance.now() - timer);
     }
 }
