@@ -347,7 +347,7 @@ export class Collider {
            // var velocitySquaredLength = this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2];
 
             //var a = this.#velocitySquaredLength;
-            var a = this.#velocitySquaredLength;
+            
 
             let lowestRoot: number;
             let b: number;
@@ -365,7 +365,7 @@ export class Collider {
                 this.#tempVector[2] = this.#basePoint[2] - p[2];
                 b = 2.0 * (Dot(this.#velocity, this.#tempVector));
                 c = (this.#tempVector[0] * this.#tempVector[0] + this.#tempVector[1] * this.#tempVector[1] + this.#tempVector[2] * this.#tempVector[2]) - 1.0;
-                lowestRoot = this.getLowestRoot(a, b, c, t);
+                lowestRoot = this.getLowestRoot(this.#velocitySquaredLength, b, c, t);
                 if (lowestRoot) {
                     t = lowestRoot;
                     found = true;
@@ -375,6 +375,9 @@ export class Collider {
                 }
                 i++;
             }
+            if (found)
+                debugger
+            var a = this.#velocitySquaredLength;
             i = 2;
             while (i > 0) {
                 const p = triangle.vectors[i]

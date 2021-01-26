@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "serve": "npm run publish && http-server ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\ -S -o",
-    "buildWasm": "wat2wasm.exe collider\\collider.wat -o ..\\wwwroot\\collider\\collider.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\collider.wasm -o ..\\wwwroot\\collider\\colliderO.wasm -O3 --enable-simd",
+    "buildWasm": "wat2wasm.exe collider\\collider.wat -o ..\\wwwroot\\collider\\collider.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\collider.wasm -o ..\\wwwroot\\collider\\colliderO.wasm -O3 --enable-simd --always-inline-max-function-size 100",
     "build": "npm run buildWasm",
     "publish": "tsc && dotnet build ../BlazorApp1.csproj && dotnet publish ../BlazorApp1.csproj",
     "test": "npm run buildWasm && node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs"
