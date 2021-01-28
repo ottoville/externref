@@ -15,13 +15,15 @@ export interface ColliderWasm {
     memory: {buffer: ArrayBuffer}
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
     testTriangles: (position: number, length: number) => void
-    _initialize: (velocity:number, basePoint: number) => void
+    _initialize: (velocity:number, basePoint: number, intersectionPointer:number) => void
 }
 
 
 export class Engine {
     freeMemoryBlocks: { byteOffset: number, byteLength: number }[] = []
     allocatedSize = 0;
+    registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
+
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
     positionBindGroupTime: DynamicBindGroupLayout<[number]>;
@@ -36,7 +38,6 @@ export class Engine {
     mouseOffsetBuffer = new SharedArrayBuffer(8);
     
     
-    registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
     malloc(byteLength: number): number {
         if (byteLength % 4 != 0) {
             debugger;
@@ -63,6 +64,7 @@ export class Engine {
     callocVector3(): Vector3 {
         const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(16));
         arr.fill(0);
+        this.registry.register(arr, { byteOffset: arr.byteOffset, byteLength: arr.byteLength });
         return arr;
     }
     mallocVector3(x?: number, y?: number, z?: number): Vector3 {
@@ -201,7 +203,7 @@ export class Engine {
         this.collider._initialize(position, velocity, closeDistance);
         const scenesArr = [...this.scenes];
 
-        this.wasm._initialize(velocity.byteOffset, position.byteOffset)
+        this.wasm._initialize(velocity.byteOffset, position.byteOffset, this.collider.intersectionPointWasm.byteOffset)
 
        // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
         await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider)))));

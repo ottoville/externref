@@ -1,4 +1,5 @@
 (module
+  (import "console" "log" (func $log (param f32)))
   (memory $mem 300 301)
   (export "memory" (memory 0))
 
@@ -6,7 +7,7 @@
 
   (global $collisionPoint (mut v128) (v128.const i32x4 0 0 0 0))
   (global $intersectionPointer (mut i32) (i32.const 0))
-  (global $nearestDistanceSquared (mut f32) (f32.const 0))
+  (global $nearestDistanceSquared (mut f32) (f32.const 9999999))
 
   (global $velocity (mut v128) (v128.const i32x4 0 0 0 0))
   (global $velocitySquared (mut f32) (f32.const 0))
@@ -109,13 +110,69 @@
   (func $unitTest
     (param $planePosition i32)
     (result f32)
-
-    ;;return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
-
-    
     (call $testTriangle
       (local.get $planePosition)
     )
+  )
+  (func $testTriangles_unitTest
+    (param $planePosition i32)
+    (param $length i32)
+    (result f32)
+    (local $end i32)
+    (local $i i32)
+
+    local.get $planePosition
+    local.get $length 
+    i32.add   ;;112
+    i32.const 28  ;;84
+    i32.sub       ;; Subtract one length from end because $i variable is always position-28
+    local.set $end
+
+    local.get $planePosition
+    i32.const 112
+    i32.sub
+    local.set $planePosition
+
+    loop $for-loop|0
+      (call $testTriangle
+        (local.tee $planePosition
+          (i32.add
+              (local.get $planePosition)
+              (i32.const 112) ;; 7*4 = 28; 28*4=112
+          )
+        )
+      )
+      drop
+      (call $testTriangle
+        (i32.add
+            (local.get $planePosition)
+            (i32.const 28)
+        )
+      )
+      drop
+      (call $testTriangle
+        (i32.add
+            (local.get $planePosition)
+            (i32.const 56)
+        )
+      )
+      drop
+      (call $testTriangle
+        (local.tee $i
+           (i32.add
+              (local.get $planePosition)
+              (i32.const 84)
+           )
+        )
+      )
+      return
+      drop
+      local.get $i
+      local.get $end
+      i32.lt_u
+      br_if $for-loop|0
+    end
+    f32.const 404
   )
   (func $checkPointInTriangle
     (param $point v128)
@@ -261,7 +318,6 @@
     (local $triangle2 v128)
 
     
-
     (call $v3_dot
       (local.tee $planeCollider
         (v128.load
@@ -270,6 +326,7 @@
       )
       (global.get $normalizedVelocity)
     )
+
     f32.const 0
     f32.gt
     if
@@ -309,7 +366,7 @@
     global.set $lowestRoot
 
     (local.set $triangle0
-      (v128.load  ;;bug here
+      (v128.load
         (i32.load
           (i32.add
             (i32.const 16)
@@ -318,8 +375,9 @@
         )
       )
     )
+
     (local.set $triangle1
-      (v128.load  ;;bug here
+      (v128.load
         (i32.load
           (i32.add
             (i32.const 20)
@@ -329,7 +387,7 @@
       )
     )
     (local.set $triangle2
-      (v128.load  ;;bug here
+      (v128.load 
         (i32.load
           (i32.add
             (i32.const 24)
@@ -342,7 +400,6 @@
     f32.const 0
     f32.ne
     if
-
       (local.tee $t0  ;;t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
         (f32.div
           (f32.sub
@@ -413,7 +470,6 @@
         )
       )
       if
-
         local.get $t0
         global.set $lowestRoot
         local.get $planeIntersectionPoint
@@ -517,6 +573,12 @@
         global.set $collisionNotFound
       end
     end
+
+  ;;  global.get $intersectionPointer
+  ;;  v128.load
+  ;;  f32x4.extract_lane 0
+
+   ;; global.get $lowestRoot
     local.get $distToCollisionSquared
 
 
@@ -686,11 +748,10 @@
       (global.get $lowestRoot)
     )
   )
+  
   (func $testTriangles
     (param $planePosition i32)
     (param $length i32)
-    ;;return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
-
     (local $end i32)
     (local $i i32)
 
@@ -706,28 +767,27 @@
     i32.sub
     local.set $planePosition
 
-
     loop $for-loop|0
       (call $testTriangle
         (local.tee $planePosition
           (i32.add
-              (local.get $planePosition)
-              (i32.const 112) ;; 7*4 = 28; 28*4=112
+            (local.get $planePosition)
+            (i32.const 112) ;; 7*4 = 28; 28*4=112
           )
         )
       )
       drop
       (call $testTriangle
         (i32.add
-            (local.get $planePosition)
-            (i32.const 28)
+          (local.get $planePosition)
+          (i32.const 28)
         )
       )
       drop
       (call $testTriangle
         (i32.add
-            (local.get $planePosition)
-            (i32.const 56)
+          (local.get $planePosition)
+          (i32.const 56)
         )
       )
       drop
@@ -838,6 +898,6 @@
   )
   (export "getLowestRoot" (func $getLowestRoot))
   (export "testTriangles" (func $testTriangles))
-  (export "unitTest" (func $unitTest))
+  (export "testTriangles_unitTest" (func $testTriangles_unitTest))
   (export "_initialize" (func $_initialize))
 )

@@ -9,29 +9,35 @@ function Dot(left, right) {
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 }
 
-const importObject = { wasi_snapshot_preview1: wasi.wasiImport };
+const importObject = {
+    wasi_snapshot_preview1: wasi.wasiImport,
+        console: {
+                log: function (arg) {
+                    console.log(arg);
+                }
+            } };
 
 const wasm = await WebAssembly.compile(fs.readFileSync("../wwwroot/collider/colliderO.wasm"));
 const instance = await WebAssembly.instantiate(wasm, importObject);
 
 const memory=new Float32Array(instance.exports.memory.buffer)
-const planeCollider=[0.02490527182817459,0.9884583353996277,-0.14943163096904755,-639.5983276367188]
-const velocity=[-5.98779296875,-225.3956298828125,1.7177734375];
+const planeCollider=[0.025180285796523094, 0.9993657469749451, -0.025179903954267502, -145.06715393066406]
+const velocity=[-3.84814453125,-217.21981811523438,-1.49462890625];
 const normalizedVelocity=[-0.1100491123294244,-0.9199018225146004, 0.3763905283210806]
-const basePoint=[-3976.2060546875, 232.89031982421875,-3823.5654296875]
+const basePoint=[-4030.13671875,211.58010864257812,-4133.25048828125]
 const pointers=[17542392,17534360,17534328]
-const vec1=[-3999.99951171875, 167.33334350585938, -3839.99951171875]
-const vec2=[-3919.99951171875, 165.31765747070312, -3839.99951171875]
-const vec3=[-3999.99951171875, 179.42745971679688, -3759.99951171875]
+const vec1=[-4079.99951171875, 143.14511108398438, -4159.99951171875]
+const vec2=[-3999.99951171875, 141.12940979003906, -4159.99951171875]
+const vec3=[-4079.99951171875, 145.16078186035156, -4079.99951171875]
 memory.set(vec1,17542392/4);
 memory.set(vec2,17534360/4);
 memory.set(vec3,17534328/4);
 
-memory.set(planeCollider);
-new Uint32Array(instance.exports.memory.buffer,4*4).set(pointers)
-//memory.set(pointers,4);
-memory.set(basePoint,7);
-memory.set(velocity,10);
+memory.set(planeCollider,21);
+new Uint32Array(instance.exports.memory.buffer,21*4 + 4*4).set(pointers)
+//memory.set(pointers,21+4);
+memory.set(basePoint,21+7);
+memory.set(velocity,21+10);
 //dot: -0.02184537482799321
 //signeddistancetoplane Should be:0.004813233371805836
 //normaldotvelocity Should be:-0.10351959205490857
@@ -40,9 +46,9 @@ memory.set(velocity,10);
 
 //t (lowestroot): 0.79659551713961
 //f -38.078174470045326
-//nearestDistanceSquared: 788.0773160549195
+//nearestDistanceSquared: 14108.470703125
 
-instance.exports._initialize(10*4,7*4)
-console.log(instance.exports.unitTest(0));
+instance.exports._initialize((21+10)*4,(21+7)*4,1000)
+console.log(instance.exports.testTriangles_unitTest(0,28));
 //console.log(Dot(planeCollider,normalizedVelocity))
 //wasi.start(instance);

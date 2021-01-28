@@ -191,7 +191,13 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         blazor.invokeMethod('setProgress', 13);
         const wasmRequest = await fetch('collider/colliderO.wasm');
         blazor.invokeMethod('setProgress', 14);
-        const obj = await WebAssembly.instantiateStreaming(wasmRequest);
+        const obj = await WebAssembly.instantiateStreaming(wasmRequest, {
+            console: {
+                log: function (arg:any) {
+                    console.log(arg);
+                }
+            }
+        });
         const wasm: ColliderWasm = obj.instance.exports as any;
 
         blazor.invokeMethod('setProgress', 15);
