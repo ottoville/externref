@@ -3,17 +3,18 @@
   (export "memory" (memory 0))
 
   ;;(import "env" "memory" (memory $mem 31 32))
-  (global $gv0 (mut v128) (v128.const i32x4 0 0 0 0))
 
   (global $collisionPoint (mut v128) (v128.const i32x4 0 0 0 0))
+  (global $intersectionPointer (mut i32) (i32.const 0))
+  (global $nearestDistanceSquared (mut f32) (f32.const 0))
 
   (global $velocity (mut v128) (v128.const i32x4 0 0 0 0))
   (global $velocitySquared (mut f32) (f32.const 0))
+  (global $lowestRoot (mut f32) (f32.const 0))
   (global $normalizedVelocity (mut v128) (v128.const i32x4 0 0 0 0))
+  (global $collisionNotFound (mut i32) (i32.const 1))
 
-    (global $basePoint (mut v128) (v128.const i32x4 0 0 0 0))
-
-
+  (global $basePoint (mut v128) (v128.const i32x4 0 0 0 0))
     (func $main (export "_start")
         ;; Creating a new io vector within linear memory
         (i32.store (i32.const 0) (i32.const 8))  ;; iov.iov_base - This is a pointer to the start of the 'hello world\n' string
@@ -22,9 +23,14 @@
   (func $_initialize
     (param $velocity i32)
     (param $basePointPointer i32)
+    (param $interSectionPoint i32)
 
     (local $temp v128)
     (local $len f32)
+
+    (global.set $intersectionPointer
+      (local.get $interSectionPoint)
+    )
 
     (global.set $velocity
       (v128.load
@@ -100,34 +106,6 @@
       f32.add
       f32.add
   )
-  (func $v3_cross
-    (param $a v128)
-    (param $b v128)
-    (result v128)
-    (local $temp v128)
-
-   ;; result[2] = left[0] * right[1] - left[1] * right[0];
-    ;;result[0] = left[1] * right[2] - left[2] * right[1];
-    ;;result[1] = left[2] * right[0] - left[0] * right[2];
-
-    local.get $b
-    local.get $a
-    local.get $a
-    i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
-    f32x4.mul
-
-    local.get $a
-    local.get $b
-    local.get $b
-    i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0  ;; 012 -> 201
-    f32x4.mul
-
-    f32x4.sub
-    local.tee $temp
-    local.get $temp
-    i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
-  )
-
   (func $unitTest
     (param $planePosition i32)
     (result f32)
@@ -157,10 +135,6 @@
     (local $temp_v2_shuffle v128)
     (local $temp_v3 v128)
     (local $temp_v3_shuffle v128)
-   ;; (      f32x4.extract_lane 0 (v128.load (i32.load (local.get $offset)))    )
-    ;;return
-
-
     (call $v3_dot
       (i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
         (local.get $shuffled_cross
@@ -264,15 +238,6 @@
     )
     f32.const 0
     f32.gt
-  ;;  (call $v3_dot
-  ;;    (call $v3_cross
-  ;;      (local.get $temp_v3)
-  ;;      (local.get $temp_v1)
-  ;;    )
-  ;;    (local.get $planeCollider)
-  ;;  )
-    ;;f32.const 0 ;;Disabled for unit test
-    ;;f32.ge
   )
   (func $testTriangle
     (param $planePosition i32)
@@ -284,11 +249,12 @@
     (local $normalDotVelocity f32)
     (local $temp_t f32)
     (local $curLowestRoot f32)
-    (local $lowestRoot f32)
     (local $t0 f32)
     (local $t1 f32)
     (local $found i32)
     (local $planeIntersectionPoint v128)
+    (local $distToCollisionSquared f32)
+
 
     (local $triangle0 v128)
     (local $triangle1 v128)
@@ -310,7 +276,8 @@
       f32.const 0
       return
     end
-    (local.set $signedDistToTrianglePlane  ;;var signedDistToTrianglePlane = Dot(this.#basePoint, triangle.planeCollider) + triangle.planeCollider[3];
+    ;;Dot(this.#basePoint, triangle.planeCollider) + triangle.planeCollider[3];
+    (local.set $signedDistToTrianglePlane  
       (f32.add
         (f32x4.extract_lane 3 (local.get $planeCollider))
         (call $v3_dot
@@ -339,7 +306,7 @@
     end
 
     f32.const 1.0
-    local.set $lowestRoot
+    global.set $lowestRoot
 
     (local.set $triangle0
       (v128.load  ;;bug here
@@ -371,12 +338,12 @@
         )
       )
     )
-
     local.get $normalDotVelocity
     f32.const 0
-    f32.eq
+    f32.ne
     if
-      (local.tee $t0  ;;let t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+
+      (local.tee $t0  ;;t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
         (f32.div
           (f32.sub
             (f32.const -1)
@@ -385,7 +352,7 @@
           (local.get $normalDotVelocity)
         )
       )
-      (local.tee $t1   ;;var t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+      (local.tee $t1   ;; t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
         (f32.div
           (f32.sub
             (f32.const 1)
@@ -401,6 +368,9 @@
           local.set $t0
           local.set $t1
       end
+
+
+
       local.get $t0
       f32.const 1
       f32.gt
@@ -418,6 +388,7 @@
 
       (local.tee $found
         (call $checkPointInTriangle
+          ;;planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
           (local.tee $planeIntersectionPoint
             (f32x4.add
               (f32x4.sub
@@ -442,8 +413,9 @@
         )
       )
       if
+
         local.get $t0
-        local.set $lowestRoot
+        global.set $lowestRoot
         local.get $planeIntersectionPoint
         global.set $collisionPoint
       end
@@ -454,65 +426,240 @@
       (local.tee $curLowestRoot
         (call $checkForLowestRoot
           (local.get $triangle0)  
-          (local.get $lowestRoot)
         )
       )
       f32.const 0
       f32.gt
       if
         local.get $curLowestRoot
-        local.set $lowestRoot
-        i32.const 1
-        local.set $found
+        global.set $lowestRoot
         local.get $triangle0
         global.set $collisionPoint
       end
       (local.tee $curLowestRoot
         (call $checkForLowestRoot
           (local.get $triangle1)
-          (local.get $lowestRoot)
         )
       )
       f32.const 0
       f32.gt
       if
         local.get $curLowestRoot
-        local.set $lowestRoot
-        i32.const 1
-        local.set $found
+        global.set $lowestRoot
         local.get $triangle1
         global.set $collisionPoint
       end
       (local.tee $curLowestRoot
         (call $checkForLowestRoot
           (local.get $triangle2)
-          (local.get $lowestRoot)
         )
       )
       f32.const 0
       f32.gt
       if
         local.get $curLowestRoot
-        local.set $lowestRoot
-        i32.const 1
-        local.set $found
+        global.set $lowestRoot
+      ;;  i32.const 1
+     ;;   local.set $found
         local.get $triangle2
         global.set $collisionPoint
       end
+
+      (call $checkForLowestRoot2
+        (local.get $triangle1)
+        (local.get $triangle2)
+      )
+      drop
+
+      (call $checkForLowestRoot2
+        (local.get $triangle0)
+        (local.get $triangle1)
+      )
+      drop
+
+      (call $checkForLowestRoot2
+        (local.get $triangle2)
+        (local.get $triangle0)
+      )
+      drop
+
+      ;;var velocitySquaredLength = this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2];
     end
 
 
-      ;;var velocitySquaredLength = this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2];
+    global.get $lowestRoot
+    i32.reinterpret_f32
+    i32.ctz
+    i32.const 23            ;;Check whetever integer has no fraction bits (in this case 0 > $lowestRoot < 1 )
+    i32.lt_u
+    if
+      global.get $collisionNotFound
+      i32.const 1
+      (f32.lt
+        (local.tee $distToCollisionSquared
+          (f32.mul
+            (global.get $lowestRoot)
+            (global.get $velocitySquared)
+          )
+        )
+        (global.get $nearestDistanceSquared)
+      )
+      select
+      if
+        global.get $intersectionPointer
+        global.get $collisionPoint
+        v128.store
 
-      local.get $lowestRoot
-    
-      ;;        var normalDotVelocity = Dot(triangle.planeCollider, this.#velocity);
-    ;;local.get $signedDistToTrianglePlane
-    ;;(f32x4.extract_lane 3 (local.get $planeCollider))
+        local.get $distToCollisionSquared
+        global.set $nearestDistanceSquared
+
+        i32.const 0
+        global.set $collisionNotFound
+      end
+    end
+    local.get $distToCollisionSquared
+
+
+
+  )
+  (func $checkForLowestRoot2
+    (param $triangle1 v128)
+    (param $triangle2 v128)
+    (result f32)
+    (local $edge v128)
+    (local $baseToVertex v128)
+    (local $edgeDotBaseToVertex f32)
+    (local $edgeDotVelocity f32)
+    (local $edgeSquaredLength f32)
+    (local $f f32)
+    (local $curLowestRoot f32)
+    (local.tee $curLowestRoot
+     (call $getLowestRoot
+      ;;edgeDotVelocity * edgeDotVelocity - edgeSquaredLength * this.#velocitySquaredLength;
+        (f32.sub
+          (f32.mul
+            (local.tee $edgeDotVelocity
+              (call $v3_dot
+                (local.tee $edge
+                  (f32x4.sub
+                    (local.get $triangle1)
+                    (local.get $triangle2)
+                  )
+                )
+                (global.get $velocity)
+              )
+            )
+            (local.get $edgeDotVelocity)
+          )
+
+          (f32.mul
+            (local.tee $edgeSquaredLength
+              (call $v3_dot
+                (local.get $edge)
+                (local.get $edge)
+              )
+            )
+            (global.get $velocitySquared)
+          )
+        )
+        ;;2*(edgeSquaredLength * Dot(this.#velocity, this._baseToVertex) - edgeDotVelocity * edgeDotBaseToVertex)
+        (f32.mul
+          (f32.const 2)
+          (f32.sub
+            (f32.mul
+              (local.get $edgeSquaredLength)
+              (call $v3_dot
+                (global.get $velocity)
+                (local.tee $baseToVertex
+                  (f32x4.sub
+                    (local.get $triangle2)
+                    (global.get $basePoint)
+                  )
+                )
+              )
+            )
+            (f32.mul
+              (local.get $edgeDotVelocity)
+              (local.tee $edgeDotBaseToVertex
+                (call $v3_dot
+                  (local.get $edge)
+                  (local.get $baseToVertex)
+                )
+              )
+            )
+          )
+        )
+        ;;edgeSquaredLength * (1.0 - (this._baseToVertex[0] * this._baseToVertex[0] + this._baseToVertex[1] * this._baseToVertex[1] + this._baseToVertex[2] * this._baseToVertex[2]))
+          ;;+ edgeDotBaseToVertex * edgeDotBaseToVertex;
+        (f32.add
+          (f32.mul
+            (local.get $edgeSquaredLength)
+            (f32.sub
+              (f32.const 1)
+              (call $v3_dot
+                (local.get $baseToVertex)
+                (local.get $baseToVertex)
+              )
+            )
+          )
+          (f32.mul
+            (local.get $edgeDotBaseToVertex)
+            (local.get $edgeDotBaseToVertex)
+          )
+        )
+        (global.get $lowestRoot)
+      )
+    )
+    f32.const 0
+    f32.gt
+    if
+        ;;f = (edgeDotVelocity * lowestRoot - edgeDotBaseToVertex) / edgeSquaredLength;
+        (local.tee $f
+          (f32.div
+            (f32.sub
+              (f32.mul
+                (local.get $edgeDotVelocity)
+                (local.get $curLowestRoot)
+              )
+              (local.get $edgeDotBaseToVertex)
+            )
+            (local.get $edgeSquaredLength)
+          )
+        )
+        f32.const 0
+        f32.lt
+        if
+          f32.const 0
+          return
+        end
+        local.get $f
+        f32.const 1
+        f32.gt
+        if
+          f32.const 0
+          return
+        end
+        local.get $curLowestRoot
+        global.set $lowestRoot
+
+        (global.set $collisionPoint
+          (f32x4.add
+            (local.get $triangle2)
+            (f32x4.mul
+              (local.get $edge)
+              (f32x4.splat
+                (local.get $f)
+              )
+            )
+          )
+        )
+     ;;   i32.const 1
+     ;;   local.set $found
+    end
+    (local.get $curLowestRoot)
   )
   (func $checkForLowestRoot
     (param $triangle v128)
-    (param $lowestRoot f32)
     (result f32)
     (local $temp_v v128)
     (call $getLowestRoot
@@ -536,7 +683,7 @@
         )
         (f32.const 1)
       )
-      (local.get $lowestRoot)
+      (global.get $lowestRoot)
     )
   )
   (func $testTriangles
