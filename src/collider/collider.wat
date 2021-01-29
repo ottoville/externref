@@ -15,6 +15,8 @@
   (global $normalizedVelocity (mut v128) (v128.const i32x4 0 0 0 0))
   (global $collisionNotFound (mut i32) (i32.const 1))
 
+  (global $found (mut i32) (i32.const 0))
+
   (global $basePoint (mut v128) (v128.const i32x4 0 0 0 0))
     (func $main (export "_start")
         ;; Creating a new io vector within linear memory
@@ -28,6 +30,9 @@
 
     (local $temp v128)
     (local $len f32)
+
+    i32.const 1
+    global.set $collisionNotFound
 
     (global.set $intersectionPointer
       (local.get $interSectionPoint)
@@ -308,7 +313,7 @@
     (local $curLowestRoot f32)
     (local $t0 f32)
     (local $t1 f32)
-    (local $found i32)
+    
     (local $planeIntersectionPoint v128)
     (local $distToCollisionSquared f32)
 
@@ -316,8 +321,10 @@
     (local $triangle0 v128)
     (local $triangle1 v128)
     (local $triangle2 v128)
-
     
+    i32.const 0
+    global.set $found
+
     (call $v3_dot
       (local.tee $planeCollider
         (v128.load
@@ -442,41 +449,40 @@
         f32.const 0
         return
       end
-
-      (local.tee $found
-        (call $checkPointInTriangle
-          ;;planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
-          (local.tee $planeIntersectionPoint
-            (f32x4.add
-              (f32x4.sub
-                (global.get $basePoint)
-                (local.get $planeCollider)
-              )
-              (f32x4.mul
-                (global.get $velocity)
-                (f32x4.splat
-                  (f32.max
-                    (f32.const 0)
-                    (local.get $t0)
-                  )
+      (call $checkPointInTriangle
+        ;;planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
+        (local.tee $planeIntersectionPoint
+          (f32x4.add
+            (f32x4.sub
+              (global.get $basePoint)
+              (local.get $planeCollider)
+            )
+            (f32x4.mul
+              (global.get $velocity)
+              (f32x4.splat
+                (f32.max
+                  (f32.const 0)
+                  (local.get $t0)
                 )
               )
             )
           )
-          (local.get $planeCollider)
-          (local.get $triangle0)
-          (local.get $triangle1)
-          (local.get $triangle2)
         )
+        (local.get $planeCollider)
+        (local.get $triangle0)
+        (local.get $triangle1)
+        (local.get $triangle2)
       )
       if
         local.get $t0
         global.set $lowestRoot
         local.get $planeIntersectionPoint
         global.set $collisionPoint
+        i32.const 1
+        global.set $found
       end
     end
-    local.get $found
+    global.get $found
     i32.eqz
     if
       (local.tee $curLowestRoot
@@ -489,6 +495,8 @@
       if
         local.get $curLowestRoot
         global.set $lowestRoot
+        i32.const 1
+        global.set $found
         local.get $triangle0
         global.set $collisionPoint
       end
@@ -502,8 +510,11 @@
       if
         local.get $curLowestRoot
         global.set $lowestRoot
+        i32.const 1
+        global.set $found
         local.get $triangle1
         global.set $collisionPoint
+
       end
       (local.tee $curLowestRoot
         (call $checkForLowestRoot
@@ -515,11 +526,14 @@
       if
         local.get $curLowestRoot
         global.set $lowestRoot
-      ;;  i32.const 1
-     ;;   local.set $found
+        i32.const 1
+        global.set $found
         local.get $triangle2
         global.set $collisionPoint
+
       end
+
+
 
       (call $checkForLowestRoot2
         (local.get $triangle1)
@@ -543,14 +557,19 @@
     end
 
 
-    global.get $lowestRoot
-    i32.reinterpret_f32
-    i32.ctz
-    i32.const 23            ;;Check whetever integer has no fraction bits (in this case 0 > $lowestRoot < 1 )
-    i32.lt_u
+    global.get $found
     if
-      global.get $collisionNotFound
+
+           ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      ;; global.get $collisionPoint
+      ;; f32x4.extract_lane 0
+  ;;    global.get $collisionNotFound
+  ;;    i32.eqz
+  ;;    f32.convert_i32_u
+  ;;      call $log
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
       i32.const 1
+      global.get $collisionNotFound
       (f32.lt
         (local.tee $distToCollisionSquared
           (f32.mul
@@ -562,6 +581,7 @@
       )
       select
       if
+
         global.get $intersectionPointer
         global.get $collisionPoint
         v128.store
@@ -574,12 +594,12 @@
       end
     end
 
-  ;;  global.get $intersectionPointer
-  ;;  v128.load
-  ;;  f32x4.extract_lane 0
+    global.get $intersectionPointer
+    v128.load
+    f32x4.extract_lane 0
 
    ;; global.get $lowestRoot
-    local.get $distToCollisionSquared
+    ;;local.get $distToCollisionSquared
 
 
 
@@ -675,48 +695,48 @@
     f32.const 0
     f32.gt
     if
-        ;;f = (edgeDotVelocity * lowestRoot - edgeDotBaseToVertex) / edgeSquaredLength;
-        (local.tee $f
-          (f32.div
-            (f32.sub
-              (f32.mul
-                (local.get $edgeDotVelocity)
-                (local.get $curLowestRoot)
-              )
-              (local.get $edgeDotBaseToVertex)
+      ;;f = (edgeDotVelocity * lowestRoot - edgeDotBaseToVertex) / edgeSquaredLength;
+      (local.tee $f
+        (f32.div
+          (f32.sub
+            (f32.mul
+              (local.get $edgeDotVelocity)
+              (local.get $curLowestRoot)
             )
-            (local.get $edgeSquaredLength)
+            (local.get $edgeDotBaseToVertex)
           )
+          (local.get $edgeSquaredLength)
         )
+      )
+      f32.const 0
+      f32.lt
+      if
         f32.const 0
-        f32.lt
-        if
-          f32.const 0
-          return
-        end
-        local.get $f
-        f32.const 1
-        f32.gt
-        if
-          f32.const 0
-          return
-        end
-        local.get $curLowestRoot
-        global.set $lowestRoot
+        return
+      end
+      local.get $f
+      f32.const 1
+      f32.gt
+      if
+        f32.const 0
+        return
+      end
+      local.get $curLowestRoot
+      global.set $lowestRoot
 
-        (global.set $collisionPoint
-          (f32x4.add
-            (local.get $triangle2)
-            (f32x4.mul
-              (local.get $edge)
-              (f32x4.splat
-                (local.get $f)
-              )
+      (global.set $collisionPoint
+        (f32x4.add
+          (local.get $triangle2)
+          (f32x4.mul
+            (local.get $edge)
+            (f32x4.splat
+              (local.get $f)
             )
           )
         )
-     ;;   i32.const 1
-     ;;   local.set $found
+      )
+      i32.const 1
+      global.set $found
     end
     (local.get $curLowestRoot)
   )

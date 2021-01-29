@@ -328,11 +328,14 @@ export class Collider {
             //this._planeIntersectionPoint.addInPlace(this._tempVector);
             if (this._checkPointInTriangle(this.#planeIntersectionPoint, triangle)) {
                 found = true;
+                 //@ts-ignore
+                 //   window.debug = true;
                // console.log('t', t, 't0', t0, 'this.#planeIntersectionPoint', this.#planeIntersectionPoint[0], this.#planeIntersectionPoint[1], this.#planeIntersectionPoint[2], 'normalDotVelocity', normalDotVelocity, 'signedDistToTrianglePlane', signedDistToTrianglePlane)
                 t = t0;
                 this.#collisionPoint[0] = this.#planeIntersectionPoint[0];
                 this.#collisionPoint[1] = this.#planeIntersectionPoint[1];
                 this.#collisionPoint[2] = this.#planeIntersectionPoint[2];
+                
                 // this._collisionPoint.copyFrom(this._planeIntersectionPoint);
             }
         }
@@ -365,16 +368,16 @@ export class Collider {
                     //@ts-ignore
                  //   window.debug = true;
                //     debugger;
-               //     console.log('b', b, 'c', c, 'lowestRoot', lowestRoot, 'i',i)
+                 //   console.log('b', b, 'c', c, 'lowestRoot', lowestRoot, 'i',i)
                     t = lowestRoot;
                     found = true;
                     this.#collisionPoint[0] = p[0]
                     this.#collisionPoint[1] = p[1]
-                    this.#collisionPoint[2] = p[2]
+                    this.#collisionPoint[2] = p[2]                    
                 }
                 i++;
             }
-
+            
 
             let a; // = this.#velocitySquaredLength;
             i = 2;
@@ -418,6 +421,8 @@ export class Collider {
                         this.#collisionPoint[0] = p[0] + this._edge[0] * f;
                         this.#collisionPoint[1] = p[1] + this._edge[1] * f;
                         this.#collisionPoint[2] = p[2] + this._edge[2] * f;
+                            
+
                     }
                 }
                 i--;
@@ -426,13 +431,12 @@ export class Collider {
         if (found) {
             var distToCollisionSquared = t * this.#velocitySquaredLength;
             //var distToCollisionSquared = t * (this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
-
+          //  console.log(this.collisionFound);
             if (!this.collisionFound || distToCollisionSquared < this.#nearestDistanceSquared) {
-
+               
                 this.intersectionPoint[0] = this.#collisionPoint[0];
                 this.intersectionPoint[1] = this.#collisionPoint[1];
                 this.intersectionPoint[2] = this.#collisionPoint[2];
-
                 this.#nearestDistanceSquared = distToCollisionSquared;
                 //@ts-ignore
                 if(window.debug)
@@ -457,7 +461,9 @@ export class Collider {
         pos[0] = this.#basePoint[0] + vel[0];
         pos[1] = this.#basePoint[1] + vel[1];
         pos[2] = this.#basePoint[2] + vel[2];
-
+      /*  console.log(this.intersectionPoint)
+        console.log(this.intersectionPointWasm);
+        debugger;*/
         this._slidePlaneNormal[0] = pos[0] - this.intersectionPoint[0];
         this._slidePlaneNormal[1] = pos[1] - this.intersectionPoint[1];
         this._slidePlaneNormal[2] = pos[2] - this.intersectionPoint[2];

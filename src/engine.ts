@@ -218,7 +218,7 @@ export class Engine {
         if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
             this.collider._getResponse(position, velocity);
         }
-
+         //TSEKKAA TÄN COMMITTIHISTORIA, ONKO SQRT JÄÄNYT VAHINGOSSA POIS
        // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
         if (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2] <= closeDistance) {
             //finalPosition.copyFrom(position);
