@@ -291,15 +291,10 @@ export abstract class BoundableNode extends TerraNodeGPU {
                 this.#faces[i + 1].updatePlane();
                 this.#faces[i + 2].updatePlane();
                 this.#faces[i + 3].updatePlane();
-                new Float32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointerParallel + i * 4 * (16+12), 16+12).set([
+                new Float32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointerParallel + i * 4 * 12, 12).set([
                     this.#faces[i].planeCollider[0], this.#faces[i + 1].planeCollider[0], this.#faces[i + 2].planeCollider[0], this.#faces[i + 3].planeCollider[0],
                     this.#faces[i].planeCollider[1], this.#faces[i + 1].planeCollider[1], this.#faces[i + 2].planeCollider[1], this.#faces[i + 3].planeCollider[1],
-                    this.#faces[i].planeCollider[2], this.#faces[i + 1].planeCollider[2], this.#faces[i + 2].planeCollider[2], this.#faces[i + 3].planeCollider[2],
-                    this.#faces[i].planeCollider[3], this.#faces[i + 1].planeCollider[3], this.#faces[i + 2].planeCollider[3], this.#faces[i + 3].planeCollider[3],
-                    
-                    this.#faces[i].pointers[0], this.#faces[i + 1].pointers[0], this.#faces[i + 2].pointers[0], this.#faces[i+3].pointers[0],
-                    this.#faces[i].pointers[1], this.#faces[i + 1].pointers[1], this.#faces[i + 2].pointers[1], this.#faces[i+3].pointers[1],
-                    this.#faces[i].pointers[2], this.#faces[i + 1].pointers[2], this.#faces[i + 2].pointers[2], this.#faces[i+3].pointers[2],
+                    this.#faces[i].planeCollider[2], this.#faces[i + 1].planeCollider[2], this.#faces[i + 2].planeCollider[2], this.#faces[i + 3].planeCollider[2]
                 ]);
                 i+=4;
             }
