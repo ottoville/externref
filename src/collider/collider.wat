@@ -13,30 +13,39 @@
   (global $velocitySquared (mut f32) (f32.const 0))
   (global $lowestRoot (mut f32) (f32.const 0))
   (global $normalizedVelocity (mut v128) (v128.const i32x4 0 0 0 0))
-  (global $collisionNotFound (mut i32) (i32.const 1))
+  (global $collisionNotFoundPointer (mut i32) (i32.const 1))
 
   (global $found (mut i32) (i32.const 0))
 
   (global $basePoint (mut v128) (v128.const i32x4 0 0 0 0))
-    (func $main (export "_start")
-        ;; Creating a new io vector within linear memory
-        (i32.store (i32.const 0) (i32.const 8))  ;; iov.iov_base - This is a pointer to the start of the 'hello world\n' string
-        (i32.store (i32.const 4) (i32.const 12))  ;; iov.iov_len - The length of the 'hello world\n' string
-    )
+  (func $main (export "_start")
+      ;; Creating a new io vector within linear memory
+      (i32.store (i32.const 0) (i32.const 8))  ;; iov.iov_base - This is a pointer to the start of the 'hello world\n' string
+      (i32.store (i32.const 4) (i32.const 12))  ;; iov.iov_len - The length of the 'hello world\n' string
+  )
+  (func $constructor
+      (param $collisionNotFoundPointer i32)
+      (param $interSectionPoint i32)
+      (global.set $intersectionPointer
+        (local.get $interSectionPoint)
+      )
+     (global.set $collisionNotFoundPointer
+        (local.get $collisionNotFoundPointer)
+      )
+  
+  )
   (func $_initialize
     (param $velocity i32)
     (param $basePointPointer i32)
-    (param $interSectionPoint i32)
 
     (local $temp v128)
     (local $len f32)
 
+    global.get $collisionNotFoundPointer
     i32.const 1
-    global.set $collisionNotFound
+    i32.store
 
-    (global.set $intersectionPointer
-      (local.get $interSectionPoint)
-    )
+
 
     (global.set $velocity
       (v128.load
@@ -486,7 +495,9 @@
   ;;      call $log
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
       i32.const 1
-      global.get $collisionNotFound
+      global.get $collisionNotFoundPointer
+      i32.load
+      
       (f32.lt
         (local.tee $distToCollisionSquared
           (f32.mul
@@ -505,9 +516,9 @@
 
         local.get $distToCollisionSquared
         global.set $nearestDistanceSquared
-
+        global.get $collisionNotFoundPointer
         i32.const 0
-        global.set $collisionNotFound
+        i32.store
       end
     end
   )
@@ -819,4 +830,5 @@
   (export "getLowestRoot" (func $getLowestRoot))
   (export "testTriangles" (func $testTriangles))
   (export "_initialize" (func $_initialize))
+  (export "constructor" (func $constructor))
 )

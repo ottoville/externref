@@ -78,7 +78,6 @@ export class Collider {
      * Define last intersection point in local space
      */
     public intersectionPoint = this.engine.callocVector3()//[0, 0, 0]
-    public intersectionPointWasm = this.engine.callocVector3()//[0, 0, 0]
 
     /**
      * Define last collided mesh
@@ -464,9 +463,9 @@ export class Collider {
       /*  console.log(this.intersectionPoint)
         console.log(this.intersectionPointWasm);
         debugger;*/
-        this._slidePlaneNormal[0] = pos[0] - this.intersectionPoint[0];
-        this._slidePlaneNormal[1] = pos[1] - this.intersectionPoint[1];
-        this._slidePlaneNormal[2] = pos[2] - this.intersectionPoint[2];
+        this._slidePlaneNormal[0] = pos[0] - this.engine.intersectionPointWasm[0];
+        this._slidePlaneNormal[1] = pos[1] - this.engine.intersectionPointWasm[1];
+        this._slidePlaneNormal[2] = pos[2] - this.engine.intersectionPointWasm[2];
 
         const length = Math.sqrt(this._slidePlaneNormal[0] * this._slidePlaneNormal[0] + this._slidePlaneNormal[1] * this._slidePlaneNormal[1] + this._slidePlaneNormal[2] * this._slidePlaneNormal[2]);
         if (!(length === 0 || length === 1.0)) {
@@ -488,11 +487,11 @@ export class Collider {
         pos[1] += this._displacementVector[1];
         pos[2] += this._displacementVector[2];
         //this.intersectionPoint.addInPlace(this._displacementVector);
-        this.intersectionPoint[0] += this._displacementVector[0];
-        this.intersectionPoint[1] += this._displacementVector[1];
-        this.intersectionPoint[2] += this._displacementVector[2];
+        this.engine.intersectionPointWasm[0] += this._displacementVector[0];
+        this.engine.intersectionPointWasm[1] += this._displacementVector[1];
+        this.engine.intersectionPointWasm[2] += this._displacementVector[2];
 
-        var d = -(this._slidePlaneNormal[0] * this.intersectionPoint[0] + this._slidePlaneNormal[1] * this.intersectionPoint[1] + this._slidePlaneNormal[2] * this.intersectionPoint[2]);
+        var d = -(this._slidePlaneNormal[0] * this.engine.intersectionPointWasm[0] + this._slidePlaneNormal[1] * this.engine.intersectionPointWasm[1] + this._slidePlaneNormal[2] * this.engine.intersectionPointWasm[2]);
         scale = Dot(this._destinationPoint, this._slidePlaneNormal) + d;
 
 
@@ -506,8 +505,8 @@ export class Collider {
         this._destinationPoint[1] -= this._slidePlaneNormal[1];
         this._destinationPoint[2] -= this._slidePlaneNormal[2];
         //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
-        vel[0] = this._destinationPoint[0] - this.intersectionPoint[0];
-        vel[1] = this._destinationPoint[1] - this.intersectionPoint[1];
-        vel[2] = this._destinationPoint[2] - this.intersectionPoint[2];
+        vel[0] = this._destinationPoint[0] - this.engine.intersectionPointWasm[0];
+        vel[1] = this._destinationPoint[1] - this.engine.intersectionPointWasm[1];
+        vel[2] = this._destinationPoint[2] - this.engine.intersectionPointWasm[2];
     }
 }

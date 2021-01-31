@@ -309,7 +309,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/)
         //this.engine.wasm.testTriangles(this.facesBufferColliderPointer, 8 * 7 * 4 /*  plane + vector pointers*/)
         console.log(this.engine.collider.intersectionPoint)
-        console.log(this.engine.collider.intersectionPointWasm)
+        console.log(this.engine.intersectionPointWasm)
         //console.log('wasm took', performance.now() - timer);
     }
 }

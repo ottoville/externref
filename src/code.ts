@@ -15,7 +15,7 @@ import { GPU } from "./GPU.js";
 import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
 import { Box } from "./GPU/Meshes/Box.js";
 import { TerraCamera } from "./TerraCamera.js";
-import { ColliderWasm, Engine } from "./engine.js";
+import { Engine } from "./engine.js";
 import { Sun2 } from "./world/sun2.js";
 import { PositionNode } from "./TerraNode.js";
 import { Scene } from "./Scene.js";
@@ -189,23 +189,15 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
         const projectionmatrix = new Float32Array(projectionmatrixBuffer);
         blazor.invokeMethod('setProgress', 13);
-        const wasmRequest = await fetch('collider/colliderO.wasm');
-        blazor.invokeMethod('setProgress', 14);
-        const obj = await WebAssembly.instantiateStreaming(wasmRequest, {
-            console: {
-                log: function (arg:any) {
-                    console.log(arg);
-                }
-            }
-        });
-        const wasm: ColliderWasm = obj.instance.exports as any;
+        
 
+        const terraEngine = await Engine.initEngine(gpuscene, DB, canvas);
         blazor.invokeMethod('setProgress', 15);
-        const terraEngine = new Engine(gpuscene, DB, canvas, wasm);
-        blazor.invokeMethod('setProgress', 16);
+
 
         window.engine = terraEngine;
         const mainCamera = new TerraCamera(gpuscene.renderPassScreen, projectionmatrixBuffer, gpuscene, terraEngine)
+        blazor.invokeMethod('setProgress', 16);
 
         const camera = new ArcRotateCamera(0, 0, 10, terraEngine, mainCamera);
         blazor.invokeMethod('setProgress', 17);

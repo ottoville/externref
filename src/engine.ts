@@ -12,10 +12,11 @@ export type Vector4 = Omit<TerraVector4, 'buffer'>;
 const CollisionsEpsilon = 0.001;
 
 export interface ColliderWasm {
+    constructor(collisionFound: number, intersectionPointer: number):void;
     memory: {buffer: ArrayBuffer}
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
     testTriangles: (position: number, length: number) => void
-    _initialize: (velocity:number, basePoint: number, intersectionPointer:number) => void
+    _initialize: (velocity:number, basePoint: number) => void
 }
 
 
@@ -60,6 +61,11 @@ export class Engine {
                 throw('Out of memory')
             return offset;
         }
+    }
+    calloc(byteLength: number): number {
+        const pointer = this.malloc(byteLength);
+        new Uint8Array(this.wasm.memory.buffer, pointer, byteLength >> 2).fill(0)
+        return pointer;
     }
     callocVector3(): Vector3 {
         const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(16));
@@ -107,7 +113,27 @@ export class Engine {
         })
     }
 
+
+
+
+    static async initEngine(gpu: GPU, DB: Promise<EarthDatabase>, canvas: HTMLCanvasElement): Promise<Engine> {
+        const wasmRequest = await fetch('collider/colliderO.wasm');
+        const obj = await WebAssembly.instantiateStreaming(wasmRequest, {
+            console: {
+                log: function (arg: any) {
+                    console.log(arg);
+                }
+            }
+        });
+        const wasm: ColliderWasm = obj.instance.exports as any;
+        return new Engine(gpu, DB, canvas, wasm);
+    }
+    intersectionPointWasm = this.callocVector3()
+    collisionFound = this.malloc(4);
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm) {
+
+        wasm.constructor(this.collisionFound, this.intersectionPointWasm.byteOffset)
+
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
         canvas.addEventListener('pointermove', (e) => {
             Atomics.store(this.#mousePosition, 0, e.clientX)
@@ -203,7 +229,7 @@ export class Engine {
         this.collider._initialize(position, velocity, closeDistance);
         const scenesArr = [...this.scenes];
 
-        this.wasm._initialize(velocity.byteOffset, position.byteOffset, this.collider.intersectionPointWasm.byteOffset)
+        this.wasm._initialize(velocity.byteOffset, position.byteOffset)
 
        // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
         await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider)))));
