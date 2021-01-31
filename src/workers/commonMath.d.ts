@@ -44,19 +44,6 @@ interface DeepImmutableArray<T> extends ReadonlyArray<DeepImmutable<T>> {
 declare type DeepImmutableObject<T> = {
     readonly [K in keyof T]: DeepImmutable<T[K]>;
 };
-declare class Angle {
-    private _rad;
-    private _deg?;
-    private fullRad;
-    constructor(_rad: number, _deg?: number);
-    get deg(): number;
-    get rad(): number;
-    360(p1: Vector3, p2: Vector3): Angle;
-    sum(ang: Angle): Angle;
-    add(deg: number): number;
-    sub(rad: number): number;
-    distance(rad: number): Angle;
-}
 
 declare const ToGammaSpace: number;
 /**
@@ -242,21 +229,7 @@ declare class Quaternion {
      * Normalize in place the current quaternion
      * @returns the current updated quaternion
      */
-    normalize(): Quaternion;
-    /**
-     * Returns a new Vector3 set with the Euler angles translated from the current quaternion
-     * @param order is a reserved parameter and is ignore for now
-     * @returns a new Vector3 containing the Euler angles
-     */
-    toEulerAngles(order?: string): Vector3;
-    /**
-     * Sets the given vector3 "result" with the Euler angles translated from the current quaternion
-     * @param result defines the vector which will be filled with the Euler angles
-     * @param order is a reserved parameter and is ignore for now
-     * @returns the current unchanged quaternion
-     */
-    toEulerAnglesToRef(result: Vector3): Quaternion;
-    /**
+    normalize(): Quaternion;    /**
      * Updates the given rotation matrix with the current quaternion values
      * @param result defines the target matrix
      * @returns the current unchanged quaternion
@@ -324,21 +297,6 @@ declare class Quaternion {
      */
     static IsIdentity(quaternion: DeepImmutable<Quaternion>): boolean;
     /**
-     * Creates a quaternion from a rotation around an axis
-     * @param axis defines the axis to use
-     * @param angle defines the angle to use
-     * @returns a new quaternion created from the given axis (Vector3) and angle in radians (float)
-     */
-    static RotationAxis(axis: DeepImmutable<Vector3>, angle: number): Quaternion;
-    /**
-     * Creates a rotation around an axis and stores it into the given quaternion
-     * @param axis defines the axis to use
-     * @param angle defines the angle to use
-     * @param result defines the target quaternion
-     * @returns the target quaternion
-     */
-    static RotationAxisToRef(axis: DeepImmutable<Vector3>, angle: number, result: Quaternion): Quaternion;
-    /**
      * Creates a new quaternion from data stored into an array
      * @param array defines the data source
      * @param offset defines the offset in the source array where the data starts
@@ -362,19 +320,6 @@ declare class Quaternion {
      * @returns the updated quaternion
      */
     static FromEulerAnglesToRef(x: number, y: number, z: number, result: Quaternion): Quaternion;
-    /**
-     * Create a quaternion from Euler rotation vector
-     * @param vec the Euler vector (x Pitch, y Yaw, z Roll)
-     * @returns the new Quaternion
-     */
-    static FromEulerVector(vec: DeepImmutable<Vector3>): Quaternion;
-    /**
-     * Updates a quaternion from Euler rotation vector
-     * @param vec the Euler vector (x Pitch, y Yaw, z Roll)
-     * @param result the quaternion to store the result
-     * @returns the updated quaternion
-     */
-    static FromEulerVectorToRef(vec: DeepImmutable<Vector3>, result: Quaternion): Quaternion;
     /**
      * Creates a new quaternion from the given Euler float angles (y, x, z)
      * @param yaw defines the rotation around Y axis
@@ -407,23 +352,7 @@ declare class Quaternion {
      * @param result defines the target quaternion
      */
     static RotationAlphaBetaGammaToRef(alpha: number, beta: number, gamma: number, result: Quaternion): void;
-    /**
-     * Creates a new quaternion containing the rotation value to reach the target (axis1, axis2, axis3) orientation as a rotated XYZ system (axis1, axis2 and axis3 are normalized during this operation)
-     * @param axis1 defines the first axis
-     * @param axis2 defines the second axis
-     * @param axis3 defines the third axis
-     * @returns the new quaternion
-     */
-    static RotationQuaternionFromAxis(axis1: DeepImmutable<Vector3>, axis2: DeepImmutable<Vector3>, axis3: DeepImmutable<Vector3>): Quaternion;
-    /**
-     * Creates a rotation value to reach the target (axis1, axis2, axis3) orientation as a rotated XYZ system (axis1, axis2 and axis3 are normalized during this operation) and stores it in the target quaternion
-     * @param axis1 defines the first axis
-     * @param axis2 defines the second axis
-     * @param axis3 defines the third axis
-     * @param ref defines the target quaternion
-     */
-    static RotationQuaternionFromAxisToRef(axis1: DeepImmutable<Vector3>, axis2: DeepImmutable<Vector3>, axis3: DeepImmutable<Vector3>, ref: Quaternion): void;
-    /**
+      /**
      * Interpolates between two quaternions
      * @param left defines first quaternion
      * @param right defines second quaternion
@@ -725,12 +654,6 @@ declare class Vector2 {
      */
     addInPlace(otherVector: DeepImmutable<Vector2>): Vector2;
     /**
-     * Gets a new Vector2 by adding the current Vector2 coordinates to the given Vector3 x, y coordinates
-     * @param otherVector defines the other vector
-     * @returns a new Vector2
-     */
-    addVector3(otherVector: Vector3): Vector2;
-    /**
      * Gets a new Vector2 set with the subtracted coordinates of the given one from the current Vector2
      * @param otherVector defines the other vector
      * @returns a new Vector2
@@ -1010,711 +933,6 @@ declare class Vector2 {
      */
     static DistanceOfPointFromSegment(p: DeepImmutable<Vector2>, segA: DeepImmutable<Vector2>, segB: DeepImmutable<Vector2>): number;
 }
-declare class Vector3 {
-    private static _UpReadOnly;
-    private static _ZeroReadOnly;
-    buffer?: SharedArrayBuffer;
-    private view?;
-    /**
-     * Creates a new Vector3 object from the given x, y, z (floats) coordinates.
-     * @param x defines the first coordinates (on X axis)
-     * @param y defines the second coordinates (on Y axis)
-     * @param z defines the third coordinates (on Z axis)
-     */
-    constructor(x?: number, y?: number, z?: number);
-    get x(): number;
-    get y(): number;
-    get z(): number;
-    set x(n: number);
-    set y(n: number);
-    set z(n: number);
-    /**
-     * Creates a string representation of the Vector3
-     * @returns a string with the Vector3 coordinates.
-     */
-    toString(): string;
-    /**
-     * Gets the class name
-     * @returns the string "Vector3"
-     */
-    getClassName(): string;
-    /**
-     * Creates the Vector3 hash code
-     * @returns a number which tends to be unique between Vector3 instances
-     */
-    getHashCode(): number;
-    /**
-     * Creates an array containing three elements : the coordinates of the Vector3
-     * @returns a new array of numbers
-     */
-    asArray(): number[];
-    /**
-     * Populates the given array or Float32Array from the given index with the successive coordinates of the Vector3
-     * @param array defines the destination array
-     * @param index defines the offset in the destination array
-     * @returns the current Vector3
-     */
-    toArray(array: FloatArray, index?: number): Vector3;
-    /**
-     * Converts the current Vector3 into a Quaternion (considering that the Vector3 contains Euler angles representation of a rotation)
-     * @returns a new Quaternion object, computed from the Vector3 coordinates
-     */
-    toQuaternion(): Quaternion;
-    /**
-     * Adds the given vector to the current Vector3
-     * @param otherVector defines the second operand
-     * @returns the current updated Vector3
-     */
-    addInPlace(otherVector: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Adds the given coordinates to the current Vector3
-     * @param x defines the x coordinate of the operand
-     * @param y defines the y coordinate of the operand
-     * @param z defines the z coordinate of the operand
-     * @returns the current updated Vector3
-     */
-    addInPlaceFromFloats(x: number, y: number, z: number): Vector3;
-    /**
-     * Gets a new Vector3, result of the addition the current Vector3 and the given vector
-     * @param otherVector defines the second operand
-     * @returns the resulting Vector3
-     */
-    add(otherVector: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Adds the current Vector3 to the given one and stores the result in the vector "result"
-     * @param otherVector defines the second operand
-     * @param result defines the Vector3 object where to store the result
-     * @returns the current Vector3
-     */
-    addToRef(otherVector: DeepImmutable<Vector3>, result: Vector3): Vector3;
-    /**
-     * Subtract the given vector from the current Vector3
-     * @param otherVector defines the second operand
-     * @returns the current updated Vector3
-     */
-    subtractInPlace(otherVector: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Returns a new Vector3, result of the subtraction of the given vector from the current Vector3
-     * @param otherVector defines the second operand
-     * @returns the resulting Vector3
-     */
-    subtract(otherVector: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Subtracts the given vector from the current Vector3 and stores the result in the vector "result".
-     * @param otherVector defines the second operand
-     * @param result defines the Vector3 object where to store the result
-     * @returns the current Vector3
-     */
-    subtractToRef(otherVector: DeepImmutable<Vector3>, result: Vector3): Vector3;
-    /**
-     * Returns a new Vector3 set with the subtraction of the given floats from the current Vector3 coordinates
-     * @param x defines the x coordinate of the operand
-     * @param y defines the y coordinate of the operand
-     * @param z defines the z coordinate of the operand
-     * @returns the resulting Vector3
-     */
-    subtractFromFloats(x: number, y: number, z: number): Vector3;
-    /**
-     * Subtracts the given floats from the current Vector3 coordinates and set the given vector "result" with this result
-     * @param x defines the x coordinate of the operand
-     * @param y defines the y coordinate of the operand
-     * @param z defines the z coordinate of the operand
-     * @param result defines the Vector3 object where to store the result
-     * @returns the current Vector3
-     */
-    subtractFromFloatsToRef(x: number, y: number, z: number, result: Vector3): Vector3;
-    /**
-     * Gets a new Vector3 set with the current Vector3 negated coordinates
-     * @returns a new Vector3
-     */
-    negate(): Vector3;
-    /**
-     * Multiplies the Vector3 coordinates by the float "scale"
-     * @param scale defines the multiplier factor
-     * @returns the current updated Vector3
-     */
-    scaleInPlace(scale: number): Vector3;
-    /**
-     * Returns a new Vector3 set with the current Vector3 coordinates multiplied by the float "scale"
-     * @param scale defines the multiplier factor
-     * @returns a new Vector3
-     */
-    scale(scale: number): Vector3;
-    /**
-     * Multiplies the current Vector3 coordinates by the float "scale" and stores the result in the given vector "result" coordinates
-     * @param scale defines the multiplier factor
-     * @param result defines the Vector3 object where to store the result
-     * @returns the current Vector3
-     */
-    scaleToRef(scale: number, result: Vector3): Vector3;
-    /**
-     * Scale the current Vector3 values by a factor and add the result to a given Vector3
-     * @param scale defines the scale factor
-     * @param result defines the Vector3 object where to store the result
-     * @returns the unmodified current Vector3
-     */
-    scaleAndAddToRef(scale: number, result: Vector3): Vector3;
-    /**
-     * Returns true if the current Vector3 and the given vector coordinates are strictly equal
-     * @param otherVector defines the second operand
-     * @returns true if both vectors are equals
-     */
-    equals(otherVector: DeepImmutable<Vector3>): boolean;
-    /**
-     * Returns true if the current Vector3 and the given vector coordinates are distant less than Epsilon
-     * @param otherVector defines the second operand
-     * @param Epsilon defines the minimal distance to define values as equals
-     * @returns true if both vectors are distant less than Epsilon
-     */
-    equalsWithEpsilon(otherVector: DeepImmutable<Vector3>, epsilon?: number): boolean;
-    /**
-     * Returns true if the current Vector3 coordinates equals the given floats
-     * @param x defines the x coordinate of the operand
-     * @param y defines the y coordinate of the operand
-     * @param z defines the z coordinate of the operand
-     * @returns true if both vectors are equals
-     */
-    equalsToFloats(x: number, y: number, z: number): boolean;
-    /**
-     * Multiplies the current Vector3 coordinates by the given ones
-     * @param otherVector defines the second operand
-     * @returns the current updated Vector3
-     */
-    multiplyInPlace(otherVector: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Returns a new Vector3, result of the multiplication of the current Vector3 by the given vector
-     * @param otherVector defines the second operand
-     * @returns the new Vector3
-     */
-    multiply(otherVector: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Multiplies the current Vector3 by the given one and stores the result in the given vector "result"
-     * @param otherVector defines the second operand
-     * @param result defines the Vector3 object where to store the result
-     * @returns the current Vector3
-     */
-    multiplyToRef(otherVector: DeepImmutable<Vector3>, result: Vector3): Vector3;
-    /**
-     * Returns a new Vector3 set with the result of the mulliplication of the current Vector3 coordinates by the given floats
-     * @param x defines the x coordinate of the operand
-     * @param y defines the y coordinate of the operand
-     * @param z defines the z coordinate of the operand
-     * @returns the new Vector3
-     */
-    multiplyByFloats(x: number, y: number, z: number): Vector3;
-    /**
-     * Returns a new Vector3 set with the result of the division of the current Vector3 coordinates by the given ones
-     * @param otherVector defines the second operand
-     * @returns the new Vector3
-     */
-    divide(otherVector: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Divides the current Vector3 coordinates by the given ones and stores the result in the given vector "result"
-     * @param otherVector defines the second operand
-     * @param result defines the Vector3 object where to store the result
-     * @returns the current Vector3
-     */
-    divideToRef(otherVector: DeepImmutable<Vector3>, result: Vector3): Vector3;
-    /**
-     * Divides the current Vector3 coordinates by the given ones.
-     * @param otherVector defines the second operand
-     * @returns the current updated Vector3
-     */
-    divideInPlace(otherVector: Vector3): Vector3;
-    /**
-     * Updates the current Vector3 with the minimal coordinate values between its and the given vector ones
-     * @param other defines the second operand
-     * @returns the current updated Vector3
-     */
-    minimizeInPlace(other: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Updates the current Vector3 with the maximal coordinate values between its and the given vector ones.
-     * @param other defines the second operand
-     * @returns the current updated Vector3
-     */
-    maximizeInPlace(other: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Updates the current Vector3 with the minimal coordinate values between its and the given coordinates
-     * @param x defines the x coordinate of the operand
-     * @param y defines the y coordinate of the operand
-     * @param z defines the z coordinate of the operand
-     * @returns the current updated Vector3
-     */
-    minimizeInPlaceFromFloats(x: number, y: number, z: number): Vector3;
-    /**
-     * Updates the current Vector3 with the maximal coordinate values between its and the given coordinates.
-     * @param x defines the x coordinate of the operand
-     * @param y defines the y coordinate of the operand
-     * @param z defines the z coordinate of the operand
-     * @returns the current updated Vector3
-     */
-    maximizeInPlaceFromFloats(x: number, y: number, z: number): Vector3;
-    /**
-     * Due to float precision, scale of a mesh could be uniform but float values are off by a small fraction
-     * Check if is non uniform within a certain amount of decimal places to account for this
-     * @param Epsilon the amount the values can differ
-     * @returns if the the vector is non uniform to a certain number of decimal places
-     */
-    isNonUniformWithinEpsilon(Epsilon: number): boolean;
-    /**
-     * Gets a boolean indicating that the vector is non uniform meaning x, y or z are not all the same
-     */
-    get isNonUniform(): boolean;
-    /**
-     * Gets a new Vector3 from current Vector3 floored values
-     * @returns a new Vector3
-     */
-    floor(): Vector3;
-    /**
-     * Gets a new Vector3 from current Vector3 floored values
-     * @returns a new Vector3
-     */
-    fract(): Vector3;
-    /**
-     * Gets the length of the Vector3
-     * @returns the length of the Vector3
-     */
-    length(): number;
-    /**
-     * Gets the squared length of the Vector3
-     * @returns squared length of the Vector3
-     */
-    lengthSquared(): number;
-    /**
-     * Normalize the current Vector3.
-     * Please note that this is an in place operation.
-     * @returns the current updated Vector3
-     */
-    normalize(): Vector3;
-    /**
-     * Reorders the x y z properties of the vector in place
-     * @param order new ordering of the properties (eg. for vector 1,2,3 with "ZYX" will produce 3,2,1)
-     * @returns the current updated vector
-     */
-    reorderInPlace(order: string): this;
-    /**
-     * Rotates the vector around 0,0,0 by a Quaternion
-     * @param Quaternion the rotation Quaternion
-     * @param result vector to store the result
-     * @returns the resulting vector
-     */
-    rotateByQuaternionToRef(quaternion: Quaternion, result: Vector3): Vector3;
-    /**
-     * Rotates a vector around a given point
-     * @param Quaternion the rotation Quaternion
-     * @param point the point to rotate around
-     * @param result vector to store the result
-     * @returns the resulting vector
-     */
-    rotateByQuaternionAroundPointToRef(Quaternion: Quaternion, point: Vector3, result: Vector3): Vector3;
-    /**
-     * Normalize the current Vector3 with the given input length.
-     * Please note that this is an in place operation.
-     * @param len the length of the vector
-     * @returns the current updated Vector3
-     */
-    normalizeFromLength(len: number): Vector3;
-    /**
-     * Normalize the current Vector3 to a new vector
-     * @returns the new Vector3
-     */
-    normalizeToNew(): Vector3;
-    /**
-     * Normalize the current Vector3 to the reference
-     * @param reference define the Vector3 to update
-     * @returns the updated Vector3
-     */
-    normalizeToRef(reference: Vector3): Vector3;
-    /**
-     * Creates a new Vector3 copied from the current Vector3
-     * @returns the new Vector3
-     */
-    clone(): Vector3;
-    /**
-     * Copies the given vector coordinates to the current Vector3 ones
-     * @param source defines the source Vector3
-     * @returns the current updated Vector3
-     */
-    copyFrom(source: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Copies the given floats to the current Vector3 coordinates
-     * @param x defines the x coordinate of the operand
-     * @param y defines the y coordinate of the operand
-     * @param z defines the z coordinate of the operand
-     * @returns the current updated Vector3
-     */
-    copyFromFloats(x: number, y: number, z: number): Vector3;
-    /**
-     * Copies the given floats to the current Vector3 coordinates
-     * @param x defines the x coordinate of the operand
-     * @param y defines the y coordinate of the operand
-     * @param z defines the z coordinate of the operand
-     * @returns the current updated Vector3
-     */
-    set(x: number, y: number, z: number): Vector3;
-    /**
-     * Copies the given float to the current Vector3 coordinates
-     * @param v defines the x, y and z coordinates of the operand
-     * @returns the current updated Vector3
-     */
-    setAll(v: number): Vector3;
-    /**
-     * Get the clip factor between two vectors
-     * @param vector0 defines the first operand
-     * @param vector1 defines the second operand
-     * @param axis defines the axis to use
-     * @param size defines the size along the axis
-     * @returns the clip factor
-     */
-    static GetClipFactor(vector0: DeepImmutable<Vector3>, vector1: DeepImmutable<Vector3>, axis: DeepImmutable<Vector3>, size: number): number;
-    /**
-     * Get angle between two vectors
-     * @param vector0 angle between vector0 and vector1
-     * @param vector1 angle between vector0 and vector1
-     * @param normal direction of the normal
-     * @return the angle between vector0 and vector1
-     */
-    static GetAngleBetweenVectors(vector0: DeepImmutable<Vector3>, vector1: DeepImmutable<Vector3>, normal: DeepImmutable<Vector3>): number;
-    /**
-     * Returns a new Vector3 set from the index "offset" of the given array
-     * @param array defines the source array
-     * @param offset defines the offset in the source array
-     * @returns the new Vector3
-     */
-    static FromArray(array: DeepImmutable<ArrayLike<number>>, offset?: number): Vector3;
-    /**
-     * Returns a new Vector3 set from the index "offset" of the given Float32Array
-     * This function is deprecated. Use FromArray instead
-     * @param array defines the source array
-     * @param offset defines the offset in the source array
-     * @returns the new Vector3
-     */
-    static FromFloatArray(array: DeepImmutable<Float32Array>, offset?: number): Vector3;
-    /**
-     * Sets the given vector "result" with the element values from the index "offset" of the given array
-     * @param array defines the source array
-     * @param offset defines the offset in the source array
-     * @param result defines the Vector3 where to store the result
-     */
-    static FromArrayToRef(array: DeepImmutable<ArrayLike<number>>, offset: number, result: Vector3): void;
-    /**
-     * Sets the given vector "result" with the element values from the index "offset" of the given Float32Array
-     * This function is deprecated.  Use FromArrayToRef instead.
-     * @param array defines the source array
-     * @param offset defines the offset in the source array
-     * @param result defines the Vector3 where to store the result
-     */
-    static FromFloatArrayToRef(array: DeepImmutable<Float32Array>, offset: number, result: Vector3): void;
-    /**
-     * Sets the given vector "result" with the given floats.
-     * @param x defines the x coordinate of the source
-     * @param y defines the y coordinate of the source
-     * @param z defines the z coordinate of the source
-     * @param result defines the Vector3 where to store the result
-     */
-    static FromFloatsToRef(x: number, y: number, z: number, result: Vector3): void;
-    /**
-     * Returns a new Vector3 set to (0.0, 0.0, 0.0)
-     * @returns a new empty Vector3
-     */
-    static Zero(): Vector3;
-    /**
-     * Returns a new Vector3 set to (1.0, 1.0, 1.0)
-     * @returns a new unit Vector3
-     */
-    static One(): Vector3;
-    /**
-     * Returns a new Vector3 set to (0.0, 1.0, 0.0)
-     * @returns a new up Vector3
-     */
-    static Up(): Vector3;
-    /**
-     * Gets a up Vector3 that must not be updated
-     */
-    static get UpReadOnly(): DeepImmutable<Vector3>;
-    /**
-     * Gets a zero Vector3 that must not be updated
-     */
-    static get ZeroReadOnly(): DeepImmutable<Vector3>;
-    /**
-     * Returns a new Vector3 set to (0.0, -1.0, 0.0)
-     * @returns a new down Vector3
-     */
-    static Down(): Vector3;
-    /**
-     * Returns a new Vector3 set to (0.0, 0.0, 1.0)
-     * @returns a new forward Vector3
-     */
-    static Forward(): Vector3;
-    /**
-     * Returns a new Vector3 set to (0.0, 0.0, -1.0)
-     * @returns a new forward Vector3
-     */
-    static Backward(): Vector3;
-    /**
-     * Returns a new Vector3 set to (1.0, 0.0, 0.0)
-     * @returns a new right Vector3
-     */
-    static Right(): Vector3;
-    /**
-     * Returns a new Vector3 set to (-1.0, 0.0, 0.0)
-     * @returns a new left Vector3
-     */
-    static Left(): Vector3;
-    /**
-     * Returns a new Vector3 set with the result of the transformation by the given matrix of the given vector.
-     * This method computes tranformed coordinates only, not transformed direction vectors (ie. it takes translation in account)
-     * @param vector defines the Vector3 to transform
-     * @param transformation defines the transformation matrix
-     * @returns the transformed Vector3
-     */
-    static TransformCoordinates(vector: DeepImmutable<Vector3>, transformation: DeepImmutable<Matrix>): Vector3;
-    /**
-     * Sets the given vector "result" coordinates with the result of the transformation by the given matrix of the given vector
-     * This method computes tranformed coordinates only, not transformed direction vectors (ie. it takes translation in account)
-     * @param vector defines the Vector3 to transform
-     * @param transformation defines the transformation matrix
-     * @param result defines the Vector3 where to store the result
-     */
-    static TransformCoordinatesToRef(vector: DeepImmutable<Vector3>, transformation: DeepImmutable<Matrix>, result: Vector3): void;
-    /**
-     * Sets the given vector "result" coordinates with the result of the transformation by the given matrix of the given floats (x, y, z)
-     * This method computes tranformed coordinates only, not transformed direction vectors
-     * @param x define the x coordinate of the source vector
-     * @param y define the y coordinate of the source vector
-     * @param z define the z coordinate of the source vector
-     * @param transformation defines the transformation matrix
-     * @param result defines the Vector3 where to store the result
-     */
-    static TransformCoordinatesFromFloatsToRef(x: number, y: number, z: number, transformation: DeepImmutable<Matrix>, result: Vector3): void;
-    /**
-     * Returns a new Vector3 set with the result of the normal transformation by the given matrix of the given vector
-     * This methods computes transformed normalized direction vectors only (ie. it does not apply translation)
-     * @param vector defines the Vector3 to transform
-     * @param transformation defines the transformation matrix
-     * @returns the new Vector3
-     */
-    static TransformNormal(vector: DeepImmutable<Vector3>, transformation: DeepImmutable<Matrix>): Vector3;
-    /**
-     * Sets the given vector "result" with the result of the normal transformation by the given matrix of the given vector
-     * This methods computes transformed normalized direction vectors only (ie. it does not apply translation)
-     * @param vector defines the Vector3 to transform
-     * @param transformation defines the transformation matrix
-     * @param result defines the Vector3 where to store the result
-     */
-    static TransformNormalToRef(vector: DeepImmutable<Vector3>, transformation: DeepImmutable<Matrix>, result: Vector3): void;
-    /**
-     * Sets the given vector "result" with the result of the normal transformation by the given matrix of the given floats (x, y, z)
-     * This methods computes transformed normalized direction vectors only (ie. it does not apply translation)
-     * @param x define the x coordinate of the source vector
-     * @param y define the y coordinate of the source vector
-     * @param z define the z coordinate of the source vector
-     * @param transformation defines the transformation matrix
-     * @param result defines the Vector3 where to store the result
-     */
-    static TransformNormalFromFloatsToRef(x: number, y: number, z: number, transformation: DeepImmutable<Matrix>, result: Vector3): void;
-    /**
-     * Returns a new Vector3 located for "amount" on the CatmullRom interpolation spline defined by the vectors "value1", "value2", "value3", "value4"
-     * @param value1 defines the first control point
-     * @param value2 defines the second control point
-     * @param value3 defines the third control point
-     * @param value4 defines the fourth control point
-     * @param amount defines the amount on the spline to use
-     * @returns the new Vector3
-     */
-    static CatmullRom(value1: DeepImmutable<Vector3>, value2: DeepImmutable<Vector3>, value3: DeepImmutable<Vector3>, value4: DeepImmutable<Vector3>, amount: number): Vector3;
-    /**
-     * Returns a new Vector3 set with the coordinates of "value", if the vector "value" is in the cube defined by the vectors "min" and "max"
-     * If a coordinate value of "value" is lower than one of the "min" coordinate, then this "value" coordinate is set with the "min" one
-     * If a coordinate value of "value" is greater than one of the "max" coordinate, then this "value" coordinate is set with the "max" one
-     * @param value defines the current value
-     * @param min defines the lower range value
-     * @param max defines the upper range value
-     * @returns the new Vector3
-     */
-    static Clamp(value: DeepImmutable<Vector3>, min: DeepImmutable<Vector3>, max: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Sets the given vector "result" with the coordinates of "value", if the vector "value" is in the cube defined by the vectors "min" and "max"
-     * If a coordinate value of "value" is lower than one of the "min" coordinate, then this "value" coordinate is set with the "min" one
-     * If a coordinate value of "value" is greater than one of the "max" coordinate, then this "value" coordinate is set with the "max" one
-     * @param value defines the current value
-     * @param min defines the lower range value
-     * @param max defines the upper range value
-     * @param result defines the Vector3 where to store the result
-     */
-    static ClampToRef(value: DeepImmutable<Vector3>, min: DeepImmutable<Vector3>, max: DeepImmutable<Vector3>, result: Vector3): void;
-    /**
-     * Returns a new Vector3 located for "amount" (float) on the Hermite interpolation spline defined by the vectors "value1", "tangent1", "value2", "tangent2"
-     * @param value1 defines the first control point
-     * @param tangent1 defines the first tangent vector
-     * @param value2 defines the second control point
-     * @param tangent2 defines the second tangent vector
-     * @param amount defines the amount on the interpolation spline (between 0 and 1)
-     * @returns the new Vector3
-     */
-    static Hermite(value1: DeepImmutable<Vector3>, tangent1: DeepImmutable<Vector3>, value2: DeepImmutable<Vector3>, tangent2: DeepImmutable<Vector3>, amount: number): Vector3;
-    /**
-     * Returns a new Vector3 located for "amount" (float) on the linear interpolation between the vectors "start" and "end"
-     * @param start defines the start value
-     * @param end defines the end value
-     * @param amount max defines amount between both (between 0 and 1)
-     * @returns the new Vector3
-     */
-    static Lerp(start: DeepImmutable<Vector3>, end: DeepImmutable<Vector3>, amount: number): Vector3;
-    /**
-     * Sets the given vector "result" with the result of the linear interpolation from the vector "start" for "amount" to the vector "end"
-     * @param start defines the start value
-     * @param end defines the end value
-     * @param amount max defines amount between both (between 0 and 1)
-     * @param result defines the Vector3 where to store the result
-     */
-    static LerpToRef(start: DeepImmutable<Vector3>, end: DeepImmutable<Vector3>, amount: number, result: Vector3): void;
-    /**
-     * Returns the dot product (float) between the vectors "left" and "right"
-     * @param left defines the left operand
-     * @param right defines the right operand
-     * @returns the dot product
-     */
-    static Dot(left: DeepImmutable<Vector3>, right: DeepImmutable<Vector3>): number;
-    /**
-     * Returns a new Vector3 as the cross product of the vectors "left" and "right"
-     * The cross product is then orthogonal to both "left" and "right"
-     * @param left defines the left operand
-     * @param right defines the right operand
-     * @returns the cross product
-     */
-    static Cross(left: DeepImmutable<Vector3>, right: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Sets the given vector "result" with the cross product of "left" and "right"
-     * The cross product is then orthogonal to both "left" and "right"
-     * @param left defines the left operand
-     * @param right defines the right operand
-     * @param result defines the Vector3 where to store the result
-     */
-    static CrossToRef(left: Vector3, right: Vector3, result: Vector3): void;
-    /**
-     * Returns a new Vector3 as the normalization of the given vector
-     * @param vector defines the Vector3 to normalize
-     * @returns the new Vector3
-     */
-    static Normalize(vector: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Sets the given vector "result" with the normalization of the given first vector
-     * @param vector defines the Vector3 to normalize
-     * @param result defines the Vector3 where to store the result
-     */
-    static NormalizeToRef(vector: DeepImmutable<Vector3>, result: Vector3): void;
-    /**
-     * Project a Vector3 onto screen space
-     * @param vector defines the Vector3 to project
-     * @param world defines the world matrix to use
-     * @param transform defines the transform (view x projection) matrix to use
-     * @param viewport defines the screen viewport to use
-     * @returns the new Vector3
-     */
-    static Project(vector: DeepImmutable<Vector3>, world: DeepImmutable<Matrix>, transform: DeepImmutable<Matrix>, viewport: DeepImmutable<Viewport>): Vector3;
-    /** @hidden */
-    static _UnprojectFromInvertedMatrixToRef(source: DeepImmutable<Vector3>, matrix: DeepImmutable<Matrix>, result: Vector3): void;
-    /**
-     * Unproject from screen space to object space
-     * @param source defines the screen space Vector3 to use
-     * @param viewportWidth defines the current width of the viewport
-     * @param viewportHeight defines the current height of the viewport
-     * @param world defines the world matrix to use (can be set to Identity to go to world space)
-     * @param transform defines the transform (view x projection) matrix to use
-     * @returns the new Vector3
-     */
-    static UnprojectFromTransform(source: Vector3, viewportWidth: number, viewportHeight: number, world: DeepImmutable<Matrix>, transform: DeepImmutable<Matrix>): Vector3;
-    /**
-     * Unproject from screen space to object space
-     * @param source defines the screen space Vector3 to use
-     * @param viewportWidth defines the current width of the viewport
-     * @param viewportHeight defines the current height of the viewport
-     * @param world defines the world matrix to use (can be set to Identity to go to world space)
-     * @param view defines the view matrix to use
-     * @param projection defines the projection matrix to use
-     * @returns the new Vector3
-     */
-    static Unproject(source: DeepImmutable<Vector3>, viewportWidth: number, viewportHeight: number, world: DeepImmutable<Matrix>, view: DeepImmutable<Matrix>, projection: DeepImmutable<Matrix>): Vector3;
-    /**
-     * Unproject from screen space to object space
-     * @param source defines the screen space Vector3 to use
-     * @param viewportWidth defines the current width of the viewport
-     * @param viewportHeight defines the current height of the viewport
-     * @param world defines the world matrix to use (can be set to Identity to go to world space)
-     * @param view defines the view matrix to use
-     * @param projection defines the projection matrix to use
-     * @param result defines the Vector3 where to store the result
-     */
-    static UnprojectToRef(source: DeepImmutable<Vector3>, viewportWidth: number, viewportHeight: number, world: DeepImmutable<Matrix>, view: DeepImmutable<Matrix>, projection: DeepImmutable<Matrix>, result: Vector3): void;
-    /**
-     * Unproject from screen space to object space
-     * @param sourceX defines the screen space x coordinate to use
-     * @param sourceY defines the screen space y coordinate to use
-     * @param sourceZ defines the screen space z coordinate to use
-     * @param viewportWidth defines the current width of the viewport
-     * @param viewportHeight defines the current height of the viewport
-     * @param world defines the world matrix to use (can be set to Identity to go to world space)
-     * @param view defines the view matrix to use
-     * @param projection defines the projection matrix to use
-     * @param result defines the Vector3 where to store the result
-     */
-    static UnprojectFloatsToRef(sourceX: float, sourceY: float, sourceZ: float, viewportWidth: number, viewportHeight: number, world: DeepImmutable<Matrix>, view: DeepImmutable<Matrix>, projection: DeepImmutable<Matrix>, result: Vector3): void;
-    /**
-     * Gets the minimal coordinate values between two Vector3
-     * @param left defines the first operand
-     * @param right defines the second operand
-     * @returns the new Vector3
-     */
-    static Minimize(left: DeepImmutable<Vector3>, right: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Gets the maximal coordinate values between two Vector3
-     * @param left defines the first operand
-     * @param right defines the second operand
-     * @returns the new Vector3
-     */
-    static Maximize(left: DeepImmutable<Vector3>, right: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Returns the distance between the vectors "value1" and "value2"
-     * @param value1 defines the first operand
-     * @param value2 defines the second operand
-     * @returns the distance
-     */
-    static Distance(value1: DeepImmutable<Vector3>, value2: DeepImmutable<Vector3>): number;
-    /**
-     * Returns the squared distance between the vectors "value1" and "value2"
-     * @param value1 defines the first operand
-     * @param value2 defines the second operand
-     * @returns the squared distance
-     */
-    static DistanceSquared(value1: DeepImmutable<Vector3>, value2: DeepImmutable<Vector3>): number;
-    /**
-     * Returns a new Vector3 located at the center between "value1" and "value2"
-     * @param value1 defines the first operand
-     * @param value2 defines the second operand
-     * @returns the new Vector3
-     */
-    static Center(value1: DeepImmutable<Vector3>, value2: DeepImmutable<Vector3>): Vector3;
-    /**
-     * Given three orthogonal normalized left-handed oriented Vector3 axis in space (target system),
-     * RotationFromAxis() returns the rotation Euler angles (ex : rotation.x, rotation.y, rotation.z) to apply
-     * to something in order to rotate it from its local system to the given target system
-     * Note: axis1, axis2 and axis3 are normalized during this operation
-     * @param axis1 defines the first axis
-     * @param axis2 defines the second axis
-     * @param axis3 defines the third axis
-     * @returns a new Vector3
-     */
-    static RotationFromAxis(axis1: DeepImmutable<Vector3>, axis2: DeepImmutable<Vector3>, axis3: DeepImmutable<Vector3>): Vector3;
-    /**
-     * The same than RotationFromAxis but updates the given ref Vector3 parameter instead of returning a new Vector3
-     * @param axis1 defines the first axis
-     * @param axis2 defines the second axis
-     * @param axis3 defines the third axis
-     * @param ref defines the Vector3 where to store the result
-     */
-    static RotationFromAxisToRef(axis1: DeepImmutable<Vector3>, axis2: DeepImmutable<Vector3>, axis3: DeepImmutable<Vector3>, ref: Vector3): void;
-}
 /**
  * Vector4 class created for EulerAngle class conversion to Quaternion
  */
@@ -1967,11 +1185,7 @@ declare class Vector4 {
      * @returns the updated Vector4.
      */
     normalize(): Vector4;
-    /**
-     * Returns a new Vector3 from the Vector4 (x, y, z) coordinates.
-     * @returns this converted to a new vector3
-     */
-    toVector3(): Vector3;
+
     /**
      * Returns a new Vector4 copied from the current one.
      * @returns the new cloned vector
@@ -2121,13 +1335,6 @@ declare class Vector4 {
      * @param result the vector to store the results in
      */
     static TransformNormalFromFloatsToRef(x: number, y: number, z: number, w: number, transformation: DeepImmutable<Matrix>, result: Vector4): void;
-    /**
-     * Creates a new Vector4 from a Vector3
-     * @param source defines the source data
-     * @param w defines the 4th component (default is 0)
-     * @returns a new Vector4
-     */
-    static FromVector3(source: Vector3, w?: number): Vector4;
 }
 /**
  * Class used to store matrix data (4x4)
@@ -2248,23 +1455,7 @@ declare class Matrix {
      * @returns the current updated matrix
      */
     addTranslationFromFloats(x: number, y: number, z: number): Matrix;
-    /**
-     * Inserts the translation vector in the current matrix
-     * @param vector3 defines the translation to insert
-     * @returns the current updated matrix
-     */
-    setTranslation(vector3: DeepImmutable<Vector3>): Matrix;
-    /**
-     * Gets the translation value of the current matrix
-     * @returns a new Vector3 as the extracted translation from the matrix
-     */
-    getTranslation(): Vector3;
-    /**
-     * Fill a Vector3 with the extracted translation from the matrix
-     * @param result defines the Vector3 where to store the translation
-     * @returns the current matrix
-     */
-    getTranslationToRef(result: Vector3): Matrix;
+
     /**
      * Remove rotation and scaling part from the matrix
      * @returns the updated matrix
@@ -2325,14 +1516,7 @@ declare class Matrix {
      * @returns the hash code
      */
     getHashCode(): number;
-    /**
-     * Decomposes the current Matrix into a translation, rotation and scaling components
-     * @param scale defines the scale vector3 given as a reference to update
-     * @param rotation defines the rotation quaternion given as a reference to update
-     * @param translation defines the translation vector3 given as a reference to update
-     * @returns true if operation was successful
-     */
-    decompose(scale?: Vector3, rotation?: Quaternion, translation?: Vector3): boolean;
+  
     /**
      * Gets specific row of the matrix
      * @param index defines the number of the row to get
@@ -2479,22 +1663,7 @@ declare class Matrix {
      * @returns the new matrix
      */
     static FromValues(initialM11: number, initialM12: number, initialM13: number, initialM14: number, initialM21: number, initialM22: number, initialM23: number, initialM24: number, initialM31: number, initialM32: number, initialM33: number, initialM34: number, initialM41: number, initialM42: number, initialM43: number, initialM44: number): Matrix;
-    /**
-     * Creates a new matrix composed by merging scale (vector3), rotation (quaternion) and translation (vector3)
-     * @param scale defines the scale vector3
-     * @param rotation defines the rotation quaternion
-     * @param translation defines the translation vector3
-     * @returns a new matrix
-     */
-    static Compose(scale: DeepImmutable<Vector3>, rotation: DeepImmutable<Quaternion>, translation: DeepImmutable<Vector3>): Matrix;
-    /**
-     * Sets a matrix to a value composed by merging scale (vector3), rotation (quaternion) and translation (vector3)
-     * @param scale defines the scale vector3
-     * @param rotation defines the rotation quaternion
-     * @param translation defines the translation vector3
-     * @param result defines the target matrix
-     */
-    static ComposeToRef(scale: DeepImmutable<Vector3>, rotation: DeepImmutable<Quaternion>, translation: DeepImmutable<Vector3>, result: Matrix): void;
+  
     /**
      * Creates a new identity matrix
      * @returns a new identity matrix
@@ -2552,28 +1721,7 @@ declare class Matrix {
      * @param result defines the target matrix
      */
     static RotationZToRef(angle: number, result: Matrix): void;
-    /**
-     * Creates a new rotation matrix for "angle" radians around the given axis
-     * @param axis defines the axis to use
-     * @param angle defines the angle (in radians) to use
-     * @return the new matrix
-     */
-    static RotationAxis(axis: DeepImmutable<Vector3>, angle: number): Matrix;
-    /**
-     * Creates a new rotation matrix for "angle" radians around the given axis and stores it in a given matrix
-     * @param axis defines the axis to use
-     * @param angle defines the angle (in radians) to use
-     * @param result defines the target matrix
-     */
-    static RotationAxisToRef(axis: DeepImmutable<Vector3>, angle: number, result: Matrix): void;
-    /**
-     * Takes normalised vectors and returns a rotation matrix to align "from" with "to".
-     * Taken from http://www.iquilezles.org/www/articles/noacos/noacos.htm
-     * @param from defines the vector to align
-     * @param to defines the vector to align to
-     * @param result defines the target matrix
-     */
-    static RotationAlignToRef(from: DeepImmutable<Vector3>, to: DeepImmutable<Vector3>, result: Matrix): void;
+   
     /**
      * Creates a rotation matrix
      * @param yaw defines the yaw angle in radians (Y axis)
@@ -2660,42 +1808,7 @@ declare class Matrix {
      * @param result defines the target matrix
      */
     static DecomposeLerpToRef(startValue: DeepImmutable<Matrix>, endValue: DeepImmutable<Matrix>, gradient: number, result: Matrix): void;
-    /**
-     * Gets a new rotation matrix used to rotate an entity so as it looks at the target vector3, from the eye vector3 position, the up vector3 being oriented like "up"
-     * This function works in left handed mode
-     * @param eye defines the final position of the entity
-     * @param target defines where the entity should look at
-     * @param up defines the up vector for the entity
-     * @returns the new matrix
-     */
-    static LookAtLH(eye: DeepImmutable<Vector3>, target: DeepImmutable<Vector3>, up: DeepImmutable<Vector3>): Matrix;
-    /**
-     * Sets the given "result" Matrix to a rotation matrix used to rotate an entity so that it looks at the target vector3, from the eye vector3 position, the up vector3 being oriented like "up".
-     * This function works in left handed mode
-     * @param eye defines the final position of the entity
-     * @param target defines where the entity should look at
-     * @param up defines the up vector for the entity
-     * @param result defines the target matrix
-     */
-    static LookAtLHToRef(eye: DeepImmutable<Vector3>, target: DeepImmutable<Vector3>, up: DeepImmutable<Vector3>, result: Matrix): void;
-    /**
-     * Gets a new rotation matrix used to rotate an entity so as it looks at the target vector3, from the eye vector3 position, the up vector3 being oriented like "up"
-     * This function works in right handed mode
-     * @param eye defines the final position of the entity
-     * @param target defines where the entity should look at
-     * @param up defines the up vector for the entity
-     * @returns the new matrix
-     */
-    static LookAtRH(eye: DeepImmutable<Vector3>, target: DeepImmutable<Vector3>, up: DeepImmutable<Vector3>): Matrix;
-    /**
-     * Sets the given "result" Matrix to a rotation matrix used to rotate an entity so that it looks at the target vector3, from the eye vector3 position, the up vector3 being oriented like "up".
-     * This function works in right handed mode
-     * @param eye defines the final position of the entity
-     * @param target defines where the entity should look at
-     * @param up defines the up vector for the entity
-     * @param result defines the target matrix
-     */
-    static LookAtRHToRef(eye: DeepImmutable<Vector3>, target: DeepImmutable<Vector3>, up: DeepImmutable<Vector3>, result: Matrix): void;
+ 
     /**
      * Create a left-handed orthographic projection matrix
      * @param width defines the viewport width
@@ -2854,137 +1967,8 @@ declare class Matrix {
      * @param result defines the target matrix
      */
     static TransposeToRef(matrix: DeepImmutable<Matrix>, result: Matrix): void;
-    /**
-     * Computes a reflection matrix from a plane
-     * @param plane defines the reflection plane
-     * @returns a new matrix
-     */
-    static Reflection(plane: DeepImmutable<Plane>): Matrix;
-    /**
-     * Computes a reflection matrix from a plane
-     * @param plane defines the reflection plane
-     * @param result defines the target matrix
-     */
-    static ReflectionToRef(plane: DeepImmutable<Plane>, result: Matrix): void;
-    /**
-     * Sets the given matrix as a rotation matrix composed from the 3 left handed axes
-     * @param xaxis defines the value of the 1st axis
-     * @param yaxis defines the value of the 2nd axis
-     * @param zaxis defines the value of the 3rd axis
-     * @param result defines the target matrix
-     */
-    static FromXYZAxesToRef(xaxis: DeepImmutable<Vector3>, yaxis: DeepImmutable<Vector3>, zaxis: DeepImmutable<Vector3>, result: Matrix): void;
-    /**
-     * Creates a rotation matrix from a quaternion and stores it in a target matrix
-     * @param quat defines the quaternion to use
-     * @param result defines the target matrix
-     */
+  
     static FromQuaternionToRef(quat: DeepImmutable<Quaternion>, result: Matrix): void;
-}
-/**
- * Represens a plane by the equation ax + by + cz + d = 0
- */
-declare class Plane {
-    /**
-     * Normal of the plane (a,b,c)
-     */
-    normal: Vector3;
-    /**
-     * d component of the plane
-     */
-    d: number;
-    /**
-     * Creates a Plane object according to the given floats a, b, c, d and the plane equation : ax + by + cz + d = 0
-     * @param a a component of the plane
-     * @param b b component of the plane
-     * @param c c component of the plane
-     * @param d d component of the plane
-     */
-    constructor(a: number, b: number, c: number, d: number);
-    /**
-     * @returns the plane coordinates as a new array of 4 elements [a, b, c, d].
-     */
-    asArray(): number[];
-    /**
-     * @returns a new plane copied from the current Plane.
-     */
-    clone(): Plane;
-    /**
-     * @returns the string "Plane".
-     */
-    getClassName(): string;
-    /**
-     * @returns the Plane hash code.
-     */
-    getHashCode(): number;
-    /**
-     * Normalize the current Plane in place.
-     * @returns the updated Plane.
-     */
-    normalize(): Plane;
-    /**
-     * Applies a transformation the plane and returns the result
-     * @param transformation the transformation matrix to be applied to the plane
-     * @returns a new Plane as the result of the transformation of the current Plane by the given matrix.
-     */
-    transform(transformation: DeepImmutable<Matrix>): Plane;
-    /**
-     * Calcualtte the dot product between the point and the plane normal
-     * @param point point to calculate the dot product with
-     * @returns the dot product (float) of the point coordinates and the plane normal.
-     */
-    dotCoordinate(point: DeepImmutable<Vector3>): number;
-    /**
-     * Updates the current Plane from the plane defined by the three given points.
-     * @param point1 one of the points used to contruct the plane
-     * @param point2 one of the points used to contruct the plane
-     * @param point3 one of the points used to contruct the plane
-     * @returns the updated Plane.
-     */
-    copyFromPoints(point1: DeepImmutable<Vector3>, point2: DeepImmutable<Vector3>, point3: DeepImmutable<Vector3>): Plane;
-    /**
-     * Checks if the plane is facing a given direction
-     * @param direction the direction to check if the plane is facing
-     * @param epsilon value the dot product is compared against (returns true if dot <= epsilon)
-     * @returns True is the vector "direction"  is the same side than the plane normal.
-     */
-    isFrontFacingTo(direction: DeepImmutable<Vector3>, epsilon: number): boolean;
-    /**
-     * Calculates the distance to a point
-     * @param point point to calculate distance to
-     * @returns the signed distance (float) from the given point to the Plane.
-     */
-    signedDistanceTo(point: DeepImmutable<Vector3>): number;
-    /**
-     * Creates a plane from an  array
-     * @param array the array to create a plane from
-     * @returns a new Plane from the given array.
-     */
-    static FromArray(array: DeepImmutable<ArrayLike<number>>): Plane;
-    /**
-     * Creates a plane from three points
-     * @param point1 point used to create the plane
-     * @param point2 point used to create the plane
-     * @param point3 point used to create the plane
-     * @returns a new Plane defined by the three given points.
-     */
-    static FromPoints(point1: DeepImmutable<Vector3>, point2: DeepImmutable<Vector3>, point3: DeepImmutable<Vector3>): Plane;
-    /**
-     * Creates a plane from an origin point and a normal
-     * @param origin origin of the plane to be constructed
-     * @param normal normal of the plane to be constructed
-     * @returns a new Plane the normal vector to this plane at the given origin point.
-     * Note : the vector "normal" is updated because normalized.
-     */
-    static FromPositionAndNormal(origin: DeepImmutable<Vector3>, normal: DeepImmutable<Vector3>): Plane;
-    /**
-     * Calculates the distance from a plane and a point
-     * @param origin origin of the plane to be constructed
-     * @param normal normal of the plane to be constructed
-     * @param point point to calculate distance to
-     * @returns the signed distance between the plane defined by the normal vector at the "origin"" point and the given other point.
-     */
-    static SignedDistanceToPlaneFromPositionAndNormal(origin: DeepImmutable<Vector3>, normal: DeepImmutable<Vector3>, point: DeepImmutable<Vector3>): number;
 }
 /**
  * Class used to represent a viewport on screen

@@ -35,7 +35,7 @@ export class GPU {
         entries: [{
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
-            type: 'uniform-buffer'
+            buffer: { }
         }]
     });
     rootlayout = new BindGroupLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
@@ -47,7 +47,7 @@ export class GPU {
         entries: [
             {
                 binding: 0,
-                visibility: GPUShaderStage.COMPUTE,
+                visibility: GPUShaderStage.COMPUTE, //@ts-ignore
                 type: "storage-buffer"
             }]
     })
@@ -68,12 +68,12 @@ export class GPU {
             {
                 binding: 0,
                 visibility: GPUShaderStage.VERTEX,
-                type: 'uniform-buffer'
+                buffer: { }
             },
             {
                 binding: 1,
                 visibility: GPUShaderStage.VERTEX,
-                type: 'uniform-buffer'
+                buffer: { }
             }]
     });
 

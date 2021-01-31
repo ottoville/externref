@@ -31,7 +31,6 @@ interface pickInfo {
     bv?: number;
     bu?: number;
     pickedMesh?: number;
-    pickedPoint?: Vector3;
     distance?: number;
     hit: boolean;
 
@@ -95,7 +94,7 @@ class Mesh {
 
 
         //const boundingInfo = this._boundingInfo;
-        let ray = new Ray(Vector3.FromArray(new Float32Array(rayArrBuff, 0, 3)), Vector3.FromArray(new Float32Array(rayArrBuff, 3*4)));
+        let ray = new Ray(new Float32Array(rayArrBuff, 0, 3) as unknown as [number, number, number], new Float32Array(rayArrBuff, 3 * 4) as unknown as [number, number, number]);
         
         if (!ray.intersectsBoxMinMax({ x: this.#boundingBox[0], y: this.#boundingBox[1], z: this.#boundingBox[2] }, { x: this.#boundingBox[3], y: this.#boundingBox[4], z: this.#boundingBox[5] })) {
             return; // pickingInfo;
@@ -103,25 +102,25 @@ class Mesh {
         var intersectInfo: Nullable<IntersectionInfo> = null;
 
         // Triangles test
-        let p0 = new Vector3();
-        let p1 = new Vector3();
-        let p2 = new Vector3();
+        let p0: [number, number, number] = [0,0,0]
+        let p1: [number, number, number] = [0, 0, 0]
+        let p2: [number, number, number] = [0, 0, 0]
         if (!this.#indicesView) {
             console.error('Intersection with non indexed mesh not coded');
             return; // pickingInfo;
         }
         for (var index = 0; index < this.#indicesView.length; index += 3) {
-            p0.x = this.#positionsView[this.#indicesView[index] * this.positionsStride]
-            p0.y = this.#positionsView[this.#indicesView[index] * this.positionsStride + 1]
-            p0.z = this.#positionsView[this.#indicesView[index] * this.positionsStride + 2]
+            p0[0] = this.#positionsView[this.#indicesView[index] * this.positionsStride]
+            p0[1] = this.#positionsView[this.#indicesView[index] * this.positionsStride + 1]
+            p0[2] = this.#positionsView[this.#indicesView[index] * this.positionsStride + 2]
 
-            p1.x = this.#positionsView[this.#indicesView[index + 1] * this.positionsStride]
-            p1.y = this.#positionsView[this.#indicesView[index + 1] * this.positionsStride + 1]
-            p1.z = this.#positionsView[this.#indicesView[index + 1] * this.positionsStride + 2]
+            p1[0] = this.#positionsView[this.#indicesView[index + 1] * this.positionsStride]
+            p1[1] = this.#positionsView[this.#indicesView[index + 1] * this.positionsStride + 1]
+            p1[2] = this.#positionsView[this.#indicesView[index + 1] * this.positionsStride + 2]
 
-            p2.x = this.#positionsView[this.#indicesView[index + 2] * this.positionsStride]
-            p2.y = this.#positionsView[this.#indicesView[index + 2] * this.positionsStride + 1]
-            p2.z = this.#positionsView[this.#indicesView[index + 2] * this.positionsStride + 2]
+            p2[0] = this.#positionsView[this.#indicesView[index + 2] * this.positionsStride]
+            p2[1] = this.#positionsView[this.#indicesView[index + 2] * this.positionsStride + 1]
+            p2[2] = this.#positionsView[this.#indicesView[index + 2] * this.positionsStride + 2]
 
             if (trianglePredicate && !trianglePredicate(p0, p1, p2, ray)) {
                 continue;
@@ -144,13 +143,28 @@ class Mesh {
         if (intersectInfo) {
 
             // Get picked point
-            const direction = new Vector3();
-            ray.direction.scaleToRef(intersectInfo.distance, direction);
+            const direction: [number, number, number] = [0, 0, 0]
+            //ray.direction.scaleToRef(intersectInfo.distance, direction);
+            direction[0] = ray.direction[0] * intersectInfo.distance
+            direction[1] = ray.direction[1] * intersectInfo.distance
+            direction[2] = ray.direction[2] * intersectInfo.distance
+
             //const worldDirection = Vector3.TransformNormal(direction, world);
-            const pickedPoint = direction.addInPlace(ray.origin);
+          //  const pickedPoint = direction.addInPlace(ray.origin);
+            direction[0] += ray.origin[0]
+            direction[1] += ray.origin[1]
+            direction[2] += ray.origin[2]
+            const pickedPoint = direction
             // Return result
-            this.#pickingPoint.set([pickedPoint.x, pickedPoint.y, pickedPoint.z]);
-            this.#pickingDistance.set([Vector3.Distance(ray.origin, pickedPoint)]);
+            this.#pickingPoint.set([pickedPoint[0], pickedPoint[1], pickedPoint[2]]);
+           // this.#pickingDistance.set([Vector3.Distance(ray.origin, pickedPoint)]);
+            const x= ray.origin[0] - pickedPoint[0]
+            const y= ray.origin[1] - pickedPoint[1]
+            const z = ray.origin[2] - pickedPoint[2]
+
+            this.#pickingDistance.set([Math.sqrt(x * x + y * y + z * z)]);
+
+
            /* pickingInfo.hit = true;
             pickingInfo.distance = Vector3.Distance(ray.origin, pickedPoint);
             pickingInfo.pickedPoint = pickedPoint;

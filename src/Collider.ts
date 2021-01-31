@@ -103,27 +103,6 @@ export class Collider {
         0.0,                     1.0 / this._radius[1], 0.0,                    0.0,
         0.0,                     0.0,                   1.0 / this._radius[2],  0.0,
         0.0, 0.0, 0.0, 1.0]);
-    pipeline = this.engine.gpu.createComputePipeline('collider.comp', this.engine.gpu.device.createPipelineLayout({
-        bindGroupLayouts: [this.engine.gpu.device.createBindGroupLayout({
-            entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.COMPUTE,
-                    type: "readonly-storage-buffer"
-                },
-                {
-                    binding: 1,
-                    visibility: GPUShaderStage.COMPUTE,
-                    type: "storage-buffer"
-                },
-                {
-                    binding: 2,
-                    visibility: GPUShaderStage.COMPUTE,
-                    type: "storage-buffer"
-                }
-            ]
-        })]
-    }));
     constructor(private engine:Engine, private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
 
 

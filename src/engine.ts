@@ -28,8 +28,6 @@ export class Engine {
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
     positionBindGroupTime: DynamicBindGroupLayout<[number]>;
-    calculatePickingRaysPipeline: TerraGPUComputePipeLine;
-    bindgrouplayout1: GPUBindGroupLayout;
     #tempBuffer?: GPUCopySRCBuffer;
     collider = new Collider(this);
 
@@ -170,43 +168,6 @@ export class Engine {
             //gpu.device.defaultQueue.submit([commandEncoder.finish()]);
            // return null
             return commandEncoder.finish();
-        })
-        const pickingRayLayout = gpu.createBindGroupLayout(
-            {
-                binding: 0,
-                visibility: GPUShaderStage.COMPUTE,
-                type: "readonly-storage-buffer"
-            },
-            {
-                binding: 1,
-                visibility: GPUShaderStage.COMPUTE,
-                type: "readonly-storage-buffer"
-            },
-            {
-                binding: 2,
-                visibility: GPUShaderStage.COMPUTE,
-                type: "storage-buffer"
-            });
-        this.calculatePickingRaysPipeline = gpu.createComputePipeline("calculatePickingRays.comp", gpu.device.createPipelineLayout({
-            bindGroupLayouts: [pickingRayLayout]
-        }));
-        this.bindgrouplayout1 = gpu.device.createBindGroupLayout({
-            entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.COMPUTE,
-                    type: "readonly-storage-buffer"
-                },
-                {
-                    binding: 1,
-                    visibility: GPUShaderStage.COMPUTE,
-                    type: "readonly-storage-buffer"
-                },
-                {
-                    binding: 2,
-                    visibility: GPUShaderStage.COMPUTE,
-                    type: "storage-buffer"
-                }]
         })
     }
     collisionCoordinator = {
