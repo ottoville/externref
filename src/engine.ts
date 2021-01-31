@@ -10,15 +10,15 @@ export type Vector3 = Omit<TerraVector3, 'buffer'>;
 export type Vector4 = Omit<TerraVector4, 'buffer'>;
 
 const CollisionsEpsilon = 0.001;
-
+const closeDistance = CollisionsEpsilon * 10.0;
+const closeDistanceSquared = closeDistance * closeDistance
 export interface ColliderWasm {
-    constructor(collisionFound: number, intersectionPointer: number):void;
+    constructor(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer:number, collidedMeshPointer:number):void;
     memory: {buffer: ArrayBuffer}
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
-    testTriangles: (position: number, length: number) => void
+    testTriangles: (position: number, length: number, meshID:number) => void
     _initialize: (velocity:number, basePoint: number) => void
 }
-
 
 export class Engine {
     freeMemoryBlocks: { byteOffset: number, byteLength: number }[] = []
@@ -66,6 +66,12 @@ export class Engine {
         const pointer = this.malloc(byteLength);
         new Uint8Array(this.wasm.memory.buffer, pointer, byteLength >> 2).fill(0)
         return pointer;
+    }
+    mallocView(byteLength: number): DataView {
+        const pointer = this.malloc(byteLength);
+        const dv = new DataView(this.wasm.memory.buffer, pointer, byteLength);
+        this.registry.register(dv, { byteOffset: dv.byteOffset, byteLength: dv.byteLength });
+        return dv;
     }
     callocVector3(): Vector3 {
         const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(16));
@@ -129,10 +135,12 @@ export class Engine {
         return new Engine(gpu, DB, canvas, wasm);
     }
     intersectionPointWasm = this.callocVector3()
-    collisionFound = this.malloc(4);
+    collisionNotFound = this.mallocView(4);
+    nearestDistanceSquared = this.mallocView(4);
+    collidedMesh = this.mallocView(4);
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm) {
 
-        wasm.constructor(this.collisionFound, this.intersectionPointWasm.byteOffset)
+        wasm.constructor(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
 
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
         canvas.addEventListener('pointermove', (e) => {
@@ -214,7 +222,7 @@ export class Engine {
         
         */
         //TODO: Call only when camera position change
-        var closeDistance = CollisionsEpsilon * 10.0;
+        
         if (this.collider._retry >= maximumRetry) {
             finalPosition[0] = position[0];
             finalPosition[1] = position[1];
@@ -229,11 +237,13 @@ export class Engine {
         this.collider._initialize(position, velocity, closeDistance);
         const scenesArr = [...this.scenes];
 
+        //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
         this.wasm._initialize(velocity.byteOffset, position.byteOffset)
 
        // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
         await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider)))));
-        if (!this.collider.collisionFound) {
+        if (this.collisionNotFound.getUint32(0,true)) {
+        //    if (!this.collider.collisionFound) {
 
             //position.addToRef(velocity, finalPosition);
             finalPosition[0] = position[0] + velocity[0];
@@ -244,9 +254,9 @@ export class Engine {
         if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
             this.collider._getResponse(position, velocity);
         }
-         //TSEKKAA TÄN COMMITTIHISTORIA, ONKO SQRT JÄÄNYT VAHINGOSSA POIS
+
        // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
-        if (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2] <= closeDistance) {
+        if (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2] <= closeDistanceSquared) {
             //finalPosition.copyFrom(position);
             finalPosition[0] = position[0];
             finalPosition[1] = position[1];

@@ -158,7 +158,7 @@ export class Collider {
     /** @hidden */
     public _retry = 0;
     #velocity!:Vector3;
-    #basePoint = new TerraVector3();
+    #basePoint!: Vector3;
     #epsilon: number = 0;
     /** @hidden */
     public _velocityWorldLength: number = 0;
@@ -183,6 +183,8 @@ export class Collider {
     // Methods
     /** @hidden */
     public _initialize(source: Vector3, dir: Vector3, e: number): void {
+        this.#nearestDistanceSquared = 9999999;
+
         this.#velocity = dir;
         this.#velocitySquaredLength = this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2];
        /* this.#velocity[0] = dir[0];
@@ -202,10 +204,10 @@ export class Collider {
             this.#normalizedVelocity[1] = dir[1] * scale
             this.#normalizedVelocity[2] = dir[2] * scale
         }
-
-        this.#basePoint[0] = source[0];
+        this.#basePoint = source
+        /*this.#basePoint[0] = source[0];
         this.#basePoint[1] = source[1];
-        this.#basePoint[2] = source[2];
+        this.#basePoint[2] = source[2];*/
 
 
         this._basePointWorld[0] = source[0] * this._radius[0];
@@ -452,7 +454,8 @@ export class Collider {
         this._destinationPoint[0] = pos[0] + vel[0];
         this._destinationPoint[1] = pos[1] + vel[1];
         this._destinationPoint[2] = pos[2] + vel[2];
-        let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+        let scale = this.engine.nearestDistanceSquared.getFloat32(0,true) / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+       // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
         vel[0] *= scale;
         vel[1] *= scale;
         vel[2] *= scale;
@@ -494,16 +497,10 @@ export class Collider {
         var d = -(this._slidePlaneNormal[0] * this.engine.intersectionPointWasm[0] + this._slidePlaneNormal[1] * this.engine.intersectionPointWasm[1] + this._slidePlaneNormal[2] * this.engine.intersectionPointWasm[2]);
         scale = Dot(this._destinationPoint, this._slidePlaneNormal) + d;
 
-
-
-        this._slidePlaneNormal[0] *= scale;
-        this._slidePlaneNormal[1] *= scale;
-        this._slidePlaneNormal[2] *= scale;
-
         //this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
-        this._destinationPoint[0] -= this._slidePlaneNormal[0];
-        this._destinationPoint[1] -= this._slidePlaneNormal[1];
-        this._destinationPoint[2] -= this._slidePlaneNormal[2];
+        this._destinationPoint[0] -= this._slidePlaneNormal[0] * scale;
+        this._destinationPoint[1] -= this._slidePlaneNormal[1] * scale;
+        this._destinationPoint[2] -= this._slidePlaneNormal[2] * scale
         //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
         vel[0] = this._destinationPoint[0] - this.engine.intersectionPointWasm[0];
         vel[1] = this._destinationPoint[1] - this.engine.intersectionPointWasm[1];

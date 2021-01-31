@@ -7,13 +7,14 @@
 
   (global $collisionPoint (mut v128) (v128.const i32x4 0 0 0 0))
   (global $intersectionPointer (mut i32) (i32.const 0))
-  (global $nearestDistanceSquared (mut f32) (f32.const 9999999))
+  (global $nearestDistanceSquaredPointer (mut i32) (i32.const 0))
 
   (global $velocity (mut v128) (v128.const i32x4 0 0 0 0))
   (global $velocitySquared (mut f32) (f32.const 0))
   (global $lowestRoot (mut f32) (f32.const 0))
   (global $normalizedVelocity (mut v128) (v128.const i32x4 0 0 0 0))
   (global $collisionNotFoundPointer (mut i32) (i32.const 1))
+  (global $collidedMeshPointer (mut i32) (i32.const 0))
 
   (global $found (mut i32) (i32.const 0))
 
@@ -26,13 +27,20 @@
   (func $constructor
       (param $collisionNotFoundPointer i32)
       (param $interSectionPoint i32)
+      (param $nearestDistanceSquared i32)
+      (param $collidedMesh i32)
       (global.set $intersectionPointer
         (local.get $interSectionPoint)
       )
      (global.set $collisionNotFoundPointer
         (local.get $collisionNotFoundPointer)
       )
-  
+      (global.set $nearestDistanceSquaredPointer
+        (local.get $nearestDistanceSquared)
+      )
+      (global.set $collidedMeshPointer
+        (local.get $collidedMesh)
+      )
   )
   (func $_initialize
     (param $velocity i32)
@@ -41,11 +49,13 @@
     (local $temp v128)
     (local $len f32)
 
+    global.get $nearestDistanceSquaredPointer
+    f32.const 9999999
+    f32.store
+
     global.get $collisionNotFoundPointer
     i32.const 1
     i32.store
-
-
 
     (global.set $velocity
       (v128.load
@@ -245,6 +255,7 @@
   )
   (func $testTriangle
     (param $planePosition i32)
+    (param $meshID i32)
     
     (local $planeCollider v128)
     (local $signedDistToTrianglePlane f32)
@@ -485,19 +496,9 @@
 
     global.get $found
     if
-
-           ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      ;; global.get $collisionPoint
-      ;; f32x4.extract_lane 0
-  ;;    global.get $collisionNotFound
-  ;;    i32.eqz
-  ;;    f32.convert_i32_u
-  ;;      call $log
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
       i32.const 1
       global.get $collisionNotFoundPointer
       i32.load
-      
       (f32.lt
         (local.tee $distToCollisionSquared
           (f32.mul
@@ -505,7 +506,9 @@
             (global.get $velocitySquared)
           )
         )
-        (global.get $nearestDistanceSquared)
+        (f32.load
+          (global.get $nearestDistanceSquaredPointer)
+        )
       )
       select
       if
@@ -513,12 +516,18 @@
         global.get $intersectionPointer
         global.get $collisionPoint
         v128.store
-
+        global.get $nearestDistanceSquaredPointer
         local.get $distToCollisionSquared
-        global.set $nearestDistanceSquared
+        f32.store
         global.get $collisionNotFoundPointer
         i32.const 0
         i32.store
+
+        global.get $collidedMeshPointer
+        local.get $meshID
+        i32.store
+
+
       end
     end
   )
@@ -687,6 +696,8 @@
   (func $testTriangles
     (param $planePosition i32)
     (param $length i32)
+    (param $meshID i32)
+
     (local $end i32)
     (local $i i32)
 
@@ -710,18 +721,21 @@
             (i32.const 112) ;; 7*4 = 28; 28*4=112
           )
         )
+        (local.get $meshID)
       )
       (call $testTriangle
         (i32.add
           (local.get $planePosition)
           (i32.const 28)
         )
+        (local.get $meshID)
       )
       (call $testTriangle
         (i32.add
           (local.get $planePosition)
           (i32.const 56)
         )
+        (local.get $meshID)
       )
       (call $testTriangle
         (local.tee $i
@@ -730,6 +744,7 @@
               (i32.const 84)
           )
         )
+        (local.get $meshID)
       )
       local.get $i
       local.get $end

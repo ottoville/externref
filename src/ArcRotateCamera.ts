@@ -141,7 +141,8 @@ export class ArcRotateCamera {
             const position = values.position;
             const target = values.target;
             //run the callback
-            if (!this.engine.collider.collidedMesh) {
+            // if (!this.engine.collider.collidedMesh) {
+            if (!this.engine.collidedMesh.getUint32(0,true)) {
 
                 //this._previousPosition.copyFrom(this._position);
                 position[0] = this.#previousPosition[0]
