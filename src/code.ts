@@ -135,7 +135,8 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         blazor.invokeMethod('setProgress', 7);
         
         const shaders = ['simple.vert.wgsl', 'simple.frag.wgsl',
-            'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl'];
+            'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl',
+            'terrain/calculatePlaneIndices.comp.wgsl'];
         await Promise.all(shaders.map(async u => {
             const compiled = await (await fetch('/shaders/wgsl/'+u)).text();
             gpuscene.shaderModules.set(u, device.createShaderModule({ code: compiled }));
