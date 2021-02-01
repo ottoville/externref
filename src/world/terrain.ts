@@ -430,7 +430,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
 
 
         const computePipelineIndices = scene.gpu.createComputePipeline('terrain/calculatePlaneIndices.comp.wgsl')
-        const computePipelineNormals = scene.gpu.createComputePipeline('calculateNormals.comp')
+        const computePipelineNormals = scene.gpu.createComputePipeline('terrain/calculateNormals.comp.wgsl')
         const computePlaneHeights = scene.gpu.createComputePipeline('calculatePlaneHeights.comp');
         const bindGroupPositions = computePlaneHeights.createBindGroup(0,
             [

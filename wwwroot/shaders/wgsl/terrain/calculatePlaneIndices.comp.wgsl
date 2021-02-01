@@ -1,9 +1,9 @@
-const subdivisions : i32 = 250;
+const subdivisions : u32 = 250;
 
 [[block]] struct Indices {
   [[offset(0)]] numbers : [[stride(4)]] array<u32>;
 };
-[[binding(0), group(0)]] var<storage_buffer> indices : Indices;
+[[binding(0), group(0)]] var<storage_buffer> indices : [[access(write)]] Indices;
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 [[stage(compute)]]
 fn main() -> void {
