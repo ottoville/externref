@@ -153,10 +153,10 @@ export class Terrain {
     public createTexture(): Promise<GPUBuffer> {
         return new Promise(async (tres) => {
 
-            const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (2 + 5120 * 5120);
+            const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (5120 * 5120);
             const resultMatrixBuffer = this.scene.gpu.createGPUBuffer(resultMatrixBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
-            const createTexturePipeline = this.scene.gpu.createComputePipeline("createTerrainTexture.comp", this.scene.gpu.device.createPipelineLayout({
+            const createTexturePipeline = this.scene.gpu.createComputePipeline("terrain/createTerrainTexture.comp.wgsl", this.scene.gpu.device.createPipelineLayout({
                 bindGroupLayouts: [Terrain.getHeightsLayout(this.scene.gpu), this.scene.gpu.singleWritableStorageLayout]
             }));
 
@@ -180,14 +180,14 @@ export class Terrain {
 
             console.timeEnd('Webgpu paint');
             // Get a GPU buffer for reading in an unmapped state.
-            const gpuReadBuffer = this.scene.gpu.createGPUBuffer(resultMatrixBufferSize - 8, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ]);
+            const gpuReadBuffer = this.scene.gpu.createGPUBuffer(resultMatrixBufferSize, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ]);
             // Encode commands for copying buffer to buffer.
             commandEncoder.copyBufferToBuffer(
                 resultMatrixBuffer,
-                8,
+                0,
                 gpuReadBuffer,
                 0,
-                resultMatrixBufferSize - 8
+                resultMatrixBufferSize
             );
             // Submit GPU commands.
             const gpuCommands = commandEncoder.finish();
@@ -430,7 +430,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
 
         const computePipelineIndices = scene.gpu.createComputePipeline('terrain/calculatePlaneIndices.comp.wgsl')
         const computePipelineNormals = scene.gpu.createComputePipeline('terrain/calculateNormals.comp.wgsl')
-        const computePlaneHeights = scene.gpu.createComputePipeline('calculatePlaneHeights.comp');
+        const computePlaneHeights = scene.gpu.createComputePipeline('terrain/calculatePlaneHeights.comp.wgsl');
         const bindGroupPositions = computePlaneHeights.createBindGroup(0,
             [
                 {
