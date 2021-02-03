@@ -37,7 +37,7 @@ function TerrainRenderPipeline(scene: Scene) {
         vertexState: {
             vertexBuffers:
                 [{
-                    arrayStride: 4 * 8,
+                    arrayStride: 48,
                     stepMode: "vertex",
                     attributes: [{
                         // position
@@ -46,29 +46,21 @@ function TerrainRenderPipeline(scene: Scene) {
                         format: "float3"
                     },
                     {
-                        // uv
-                        shaderLocation: 1,
-                        offset: 4 * 3,
-                        format: "float2"
-                    },
-                    {
                         // normals
                         shaderLocation: 2,
-                        offset: 4 * 3 + 4 * 2,
+                        offset: 16,
                         format: "float3"
-                    }]
+                    },
+                    {
+                        // uv
+                        shaderLocation: 1,
+                        offset: 32,
+                        format: "float2"
+                    }
+                    ]
                 }]
         },
-    }/*, () => [
-        {
-            binding: 0,
-            resource: sampler
-        },
-        {
-            binding: 1,
-            resource: textureView //this.texture.createView()
-        }
-    ]*/);
+    });
     renderPipelines.set(scene.gpu, renderPipeLine);
     return renderPipeLine;
 }

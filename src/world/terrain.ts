@@ -204,24 +204,21 @@ export class Terrain {
         });
     }
 
-    readonly #terrainPositionsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 3;
-    readonly #terrainNormalsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 3;
+    readonly #terrainPositionsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 4;
+    readonly #terrainNormalsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 4;
 
     readonly #terrainIndicesLength = Uint32Array.BYTES_PER_ELEMENT * (250 * 250 * 6);
 
     readonly indicesBuffer: SharedArrayBuffer = new SharedArrayBuffer(this.#terrainIndicesLength);
 
 
-    readonly #terrainUvsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 2;
+    readonly #terrainUvsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 4;
     readonly terrainPositionAndUvsAndNormalsGPU: GPUVertexBuffer & GPUCopyDSTBuffer;
 
     readonly terrainPositionAndUvsAndNormalsCPUSwap = new SharedArrayBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength);
     readonly terrainPositionAndUvsAndNormalsCPUSwapView = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap);
     readonly #positionsView: Float32Array[] = [];
     readonly #normalsViewGPU: Float32Array[] = [];
-
-    readonly verticesPositionStride = 8;
-
 
     #indices: Uint32Array = new Uint32Array(this.indicesBuffer);
     autosave = 0;
@@ -276,7 +273,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
                 return new Terrain(scene, buffer);
             } else {
                 const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp');
-                return new Terrain(scene, buffer, 'CreateGroundFromHeightMap.comp');
+                return new Terrain(scene, buffer, 'terrain/CreateGroundFromHeightMap.comp.wgsl');
             }
         })
 
@@ -372,21 +369,23 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
     constructor(public scene: Scene, readonly buffer: ArrayBuffer | SharedArrayBuffer, algorithm?: string) {
         for (
             let i = 0,
-            verticesAmount = this.terrainPositionAndUvsAndNormalsCPUSwap.byteLength / (8 * 4),
-            byteStride = 4 * 8;
+            verticesAmount = this.terrainPositionAndUvsAndNormalsCPUSwap.byteLength / 48,
+            byteStride = 48;
             i < verticesAmount; i++) {
             this.#positionsView.push(new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride, 3));
-            this.#normalsViewGPU.push(new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride + 5 * 4, 3));
+            this.#normalsViewGPU.push(new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap, i * byteStride + 16, 3));
         }
 
-        const sourceGPU = scene.gpu.createGPUBuffer(4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + buffer.byteLength, [GPUBufferUsage.STORAGE], true);
+        const sourceGPU = scene.gpu.createGPUBuffer(40 + buffer.byteLength, [GPUBufferUsage.STORAGE], true);
         const sourcearr = sourceGPU.getMappedRange();
-        new Float32Array(sourcearr).set([10000, 10000]);   // terrain width and height
-        new Uint32Array(sourcearr).set([250, 250,   //buffer width and height
+        new Uint32Array(sourcearr).set([10000, 10000]);   // terrain width and height
+        new Uint32Array(sourcearr,8).set([250, 250,   //buffer width and height
             250,        //subdivisions
-        ], 2);
-        new Int32Array(sourcearr).set([this.#minY, this.#maxY, this.#maxX, this.#maxZ], 5); //min and max height, maxX, maxZ
-        new Uint32Array(sourcearr).set(new Uint32Array(buffer), 9);
+        ]);
+        new Int32Array(sourcearr,20).set([this.#minY, this.#maxY]); //min and max height,
+        new Int32Array(sourcearr, 32).set([this.#maxX, this.#maxZ]); //maxX, maxZ
+        new Uint32Array(sourcearr, 40).set(new Uint32Array(buffer));
+        console.log(new Uint8Array(sourcearr, 40));
         sourceGPU.unmap();
 
         // const gpuReadBufferPositions = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength, GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST);
@@ -510,7 +509,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
 
         const gpuCommands = commandEncoder.finish();
         scene.gpu.device.defaultQueue.submit([gpuCommands]);
-        this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, new Uint32Array(this.indicesBuffer), 8);
+        this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, new Uint32Array(this.indicesBuffer), 12);
 
 
         scene.gpu.GPU2CPU(async (buff) => {
@@ -522,6 +521,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         terrainPositionAndUvsAndNormalsGPUTemp.destroy();
         gpuReadBufferPositions.readAndDestroy(async (buff) => {
             this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
+            console.log(this.terrainPositionAndUvsAndNormalsCPUSwapView)
             this.updateSwap2(0, buff.byteLength,true);
             this.serialize();
         });

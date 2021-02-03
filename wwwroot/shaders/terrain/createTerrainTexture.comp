@@ -21,10 +21,6 @@ float height = 10000.0;
       float numbers[];
   } facet1;
 
-  //layout(std430, set = 0, binding = 2) readonly buffer Facet2 {
-  //    float numbers[];
-  //} facet2;
-
   layout(std430, set = 1, binding = 0) buffer ResultMatrix {
       vec2 size;
       int numbers[];

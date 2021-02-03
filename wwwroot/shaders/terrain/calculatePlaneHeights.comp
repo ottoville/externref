@@ -4,17 +4,13 @@ uint subdivisions = 250;
 uint facetSize= 250 * 250 * 4;
 
 
-uint stride=8;
+uint stride=12;
 layout(std430, set = 0, binding = 0) readonly buffer Plane {
     float positionsAndUvsAndNormals[];
 } plane;
 layout(std430, set = 1, binding = 0) buffer Slopes {
     int numbers[];
 } slopes;
-
-//layout(std430, set = 1, binding = 1) buffer Facet1 {
- //   float numbers[];
-//} facet1;
 
 layout(std430, set = 1, binding = 1) buffer Facet12 {
     float numbers[];

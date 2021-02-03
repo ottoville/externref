@@ -18,7 +18,7 @@
 [[binding(1), set(0)]] var<uniform> times : Time;
 [[binding(0), set(1)]] var<uniform> worldposition : WorldPosition;
 
-const sunDistance: f32= 1495000.0;  #divided by 100000 correct one
+const sunDistance: f32= 1495000.0;  //divided by 100000 correct one
 
 const vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(
             vec2<f32>( -6824.0,  1557.0),

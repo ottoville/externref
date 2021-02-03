@@ -5,6 +5,7 @@ const subdivisions : u32 = 250;
 };
 [[binding(0), group(0)]] var<storage_buffer> indices : [[access(write)]] Indices;
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
+
 [[stage(compute)]]
 fn main() -> void {
   var idx1: u32 = (GlobalInvocationID.x + 1 + (GlobalInvocationID.y + 1) * (subdivisions + 1));

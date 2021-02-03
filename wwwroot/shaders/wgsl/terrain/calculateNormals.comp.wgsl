@@ -1,7 +1,6 @@
-
 const subdivisions : u32 = 250;
 const facetSize : u32 = 250000; //250*250* 4;
-const stride : u32 = 8;
+const stride : u32 = 12;
 
 [[block]] struct FloatArray {
   [[offset(0)]] numbers : [[stride(4)]] array<f32>;
@@ -90,8 +89,8 @@ fn main() -> void {
     //7 and 8   far
     
 
-    normals.numbers[j + i + 5]=normalized.x;
-    normals.numbers[j + i + 6]=normalized.y;
-    normals.numbers[j + i + 7]=normalized.z;
+    normals.numbers[j + i + 4]=normalized.x;
+    normals.numbers[j + i + 5]=normalized.y;
+    normals.numbers[j + i + 6]=normalized.z;
     return;
  }

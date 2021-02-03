@@ -27,7 +27,7 @@ fn main() -> void {
   Position = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
   shading = dot(normal, lights.sunDirection)*lights.shadow;
   ambient=lights.ambient;
-  #TODO: precompute
+  //TODO: precompute
   v_uv=(position.xz + vec2<f32>(5000.0, 5000.0)) * 0.0001; 
   return;
 }

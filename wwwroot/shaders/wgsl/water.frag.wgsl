@@ -1,7 +1,7 @@
 [[location(0)]] var<out> outColor : vec4<f32>;
 
 [[binding(0), set(2)]] var<uniform_constant> mySampler: sampler;
-[[binding(1), set(2)]] var<uniform_constant> myTexture: texture_sampled_2d<f32>;
+[[binding(1), set(2)]] var<uniform_constant> myTexture: texture_2d<f32>;
 
 [[location(0)]] var<in> shading:f32;
 [[location(1)]] var<in> ambient: vec3<f32>;
@@ -9,8 +9,8 @@
 
 [[stage(fragment)]]
 fn main() -> void {
-  #outColor = vec4<f32>(ambient,0.0)+vec4<f32>(0.0,0.0,1.0,1.0) *  vec4<f32>(shading,shading,shading,1.0);
- # outColor = vec4<f32>(ambient,0.0)+textureSample(myTexture, mySampler, vec2<f32>(v_uv.x/v_uv.w + 0.1 , v_uv.y/v_uv.w*1.0 +0.1)) *  vec4<f32>(shading,shading,shading,1.0);
+  //outColor = vec4<f32>(ambient,0.0)+vec4<f32>(0.0,0.0,1.0,1.0) *  vec4<f32>(shading,shading,shading,1.0);
+ // outColor = vec4<f32>(ambient,0.0)+textureSample(myTexture, mySampler, vec2<f32>(v_uv.x/v_uv.w + 0.1 , v_uv.y/v_uv.w*1.0 +0.1)) *  vec4<f32>(shading,shading,shading,1.0);
   const uv : vec2<f32> = vec2<f32>(v_uv.x/v_uv.w , (v_uv.y/v_uv.w))*0.5+vec2<f32>(0.5,0.5);
   outColor = textureSample(myTexture, mySampler, uv);
   return;

@@ -1,0 +1,49 @@
+const filt:vec3<f32> = vec3<f32>(0.3, 0.59, 0.11);
+
+[[block]] struct Image {
+    [[offset(0)]] size : vec2<u32>;
+    [[offset(8)]] bufferSize : vec2<u32>;
+    [[offset(16)]] subdivisions : u32;
+    [[offset(20)]] heightMinMax : vec2<i32>;
+    [[offset(32)]] maxXZ : vec2<i32>;
+    [[offset(40)]] pixels : [[stride(4)]] array<u32>;
+};
+[[block]] struct Vertice {
+  [[offset(0)]] position : vec3<f32>;
+  [[offset(16)]] normals : vec3<f32>;
+  [[offset(32)]] uv : vec2<f32>;
+};
+[[block]] struct Vertices {
+    [[offset(0)]] vert : [[stride(48)]] array<Vertice>;
+};
+[[binding(0), group(0)]] var<storage_buffer> img : [[access(read)]] Image;
+[[binding(1), group(0)]] var<storage_buffer> positions : [[access(write)]] Vertices;
+
+[[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
+
+[[stage(compute)]]
+fn main() -> void {
+    var position: vec3<f32> = vec3<f32>(f32(GlobalInvocationID.x * img.size.x) / f32(img.subdivisions) - (f32(img.size.x) / 2.0),
+    0,
+    f32((img.subdivisions - GlobalInvocationID.y) * img.size.y) / f32(img.subdivisions) - (f32(img.size.y) / 2.0));
+
+   var heightmap:vec2<i32> = vec2<i32>(
+       i32(((position.x + f32(img.size.x) / 2.0) / f32(img.size.x)) * f32(img.bufferSize.x - 1)),
+        i32((1.0 - (position.z + f32(img.size.y) / 2.0) / f32(img.size.y)) * f32(img.bufferSize.y - 1))
+   );
+   var pos:u32 = u32(heightmap.x + heightmap.y * i32(img.bufferSize.x));
+  
+   var pixel:u32= img.pixels[pos];
+   var normalized:vec3<f32> = (vec3<f32>(vec3<u32>(pixel, pixel, pixel) >> vec3<u32>(0,8,16) & vec3<u32>(0xff,0xff,0xff))) / vec3<f32>(255,255,255);
+  
+   var filtered:vec3<f32> = normalized * filt;
+   var gradient:f32 = filtered.r + filtered.g + filtered.b;
+  
+   position.y = f32(img.heightMinMax.x) + f32( img.heightMinMax.y -  img.heightMinMax.x) * gradient;
+   positions.vert[GlobalInvocationID.y * (img.subdivisions + 1) + GlobalInvocationID.x].position = position;
+  
+   positions.vert[GlobalInvocationID.y * (img.subdivisions + 1) + GlobalInvocationID.x].uv.x = (position.x + f32(img.maxXZ.x)) / f32(img.size.x);
+   positions.vert[GlobalInvocationID.y * (img.subdivisions + 1) + GlobalInvocationID.x].uv.y = (position.z + f32(img.maxXZ.z)) / f32(img.size.y);
+
+    return;
+  }
