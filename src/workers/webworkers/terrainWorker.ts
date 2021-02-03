@@ -29,11 +29,20 @@ let pickInfo: {
 
 const mousePosition: [number, number] = [0, 0]
 let _groundFacesNormalsView: Float32Array;
-const byteStride = 4 * 8;
+let byteStride:number
 let terrainPositionAndUvsAndNormalsCPUSwap: Float32Array;
 let methods2: { [index: string]: (e: WMessage<any>) => void } = {
-    init: (e: WMessage<{ positionsAndNormals: any, indices: any, subdivisionsX: any, subdivisionsY: any, boundingBox: SharedArrayBuffer, pickInfo: SharedArrayBuffer, _groundFacesNormalsBuffer: SharedArrayBuffer }>) => {
-
+    init: (e: WMessage<{
+        positionsAndNormals: any,
+        indices: any,
+        subdivisionsX: any,
+        subdivisionsY: any,
+        boundingBox: SharedArrayBuffer,
+        pickInfo: SharedArrayBuffer,
+        _groundFacesNormalsBuffer: SharedArrayBuffer,
+        byteStride:number
+    }>) => {
+        byteStride = e.data.byteStride
         terrainPositionAndUvsAndNormalsCPUSwap = new Float32Array(e.data.positionsAndNormals);
         const faceCount = e.data._groundFacesNormalsBuffer.byteLength / 4 / 4;
         _groundFacesNormals = [];
@@ -42,11 +51,11 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         for (let i = 0; i < faceCount; i++) {
             _groundFacesNormals.push(new Float32Array(e.data._groundFacesNormalsBuffer, i << 4,4))
         }
-        const verticesAmount = e.data.positionsAndNormals.byteLength / (8 * 4);
+        const verticesAmount = e.data.positionsAndNormals.byteLength / e.data.byteStride;
         if (normalsView.length == 0) {
             for (let i = 0; i < verticesAmount; i++) {
-                positionsView.push(new Float32Array(e.data.positionsAndNormals, i * byteStride, 3));
-                normalsView.push(new Float32Array(e.data.positionsAndNormals, i * byteStride + 5 * 4, 3));
+                positionsView.push(new Float32Array(e.data.positionsAndNormals, i * e.data.byteStride, 3));
+                normalsView.push(new Float32Array(e.data.positionsAndNormals, i * e.data.byteStride + 16, 3));
             }
         }
         terrainIndices = new Uint32Array(e.data.indices);
@@ -97,7 +106,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
             let radiusPow = Math.pow(e.data.radius, 2);
 
             let length = terrainPositionAndUvsAndNormalsCPUSwap.length;
-            for (let index = 0; index < length; index += 8) {
+            for (let index = 0; index < length; index += 12) {
                 let distance = Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index] - pickInfo.point[0], 2) + Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index+2] - pickInfo.point[2], 2)
                 if (distance < radiusPow) {
                     _selectedVertices.push({
@@ -141,7 +150,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
             terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
 
 
-            faceOfVertices = _facesOfVertices[sv.vertice/8];
+            faceOfVertices = _facesOfVertices[sv.vertice/12];
             
 
             for (let index = 0; index < faceOfVertices.length; index++) {
@@ -200,7 +209,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         });
 
         _selectedVertices.forEach(sv => {
-            faceOfVertices = _facesOfVertices[sv.vertice / 8];
+            faceOfVertices = _facesOfVertices[sv.vertice / 12];
             for (let index = 0; index < faceOfVertices.length; index++) {
                 var indices = new Uint32Array(terrainIndices.buffer, (faceOfVertices[index] * 3) << 2, 3);
 
