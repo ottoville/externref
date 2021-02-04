@@ -22,10 +22,11 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline, nu
     const bufferOffsetBytes = allocateMemory(scene.engine)
 
     let renderPipeline = renderPipelines.get(scene.gpu);
-    if (renderPipeline)
+    if (renderPipeline) {
         return renderPipeline;
+    }
 
-    const vertex = scene.gpu.shaderModules.get("helper2.vert");
+    const vertex = scene.gpu.shaderModules.get("helper2.vert.wgsl");
     const fragment = scene.engine.gpu.shaderModules.get('color.frag.wgsl')
     if (!vertex || !fragment)
         throw ('Missing shader')
@@ -45,7 +46,7 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline, nu
             format: "bgra8unorm",
         }],
         vertexStage: {
-            module: scene.gpu.shaderModules.get("helper2.vert")!,
+            module: vertex,
             entryPoint: "main",
         },
         fragmentStage: {

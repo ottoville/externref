@@ -136,7 +136,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         
         const shaders = ['simple.vert.wgsl', 'simple.frag.wgsl',
             'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl',
-            'plane.vert.wgsl',
+            'plane.vert.wgsl', 'helper2.vert.wgsl',
             'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
             'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl', 'grass/getHeightAtCoordinates.comp.wgsl'];
         await Promise.all(shaders.map(async u => {
