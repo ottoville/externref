@@ -18,19 +18,21 @@ class PlaneMesh extends TerraNodeGPU implements has3DPosition{
     Drawable = this.renderPipeline.addDrawableIndexed(undefined, new Set([this.engine.gpu.renderPassScreen]), 0, undefined, 0, 1, 0);
 }
 
-
-
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, number]{
-    const bufferOffsetBytes = allocateMemory(scene.engine)
-
     let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
-    if (renderPipeline)
+    const bufferOffsetBytes = allocateMemory(scene.engine);
+    if (renderPipeline) {
+        renderPipeline.dynamicBindGroupOffset = [bufferOffsetBytes];
         return [renderPipeline, bufferOffsetBytes];
+    }
+    const vertex = scene.engine.gpu.shaderModules.get('plane.vert.wgsl')
+    if (!vertex)
+        throw ('Missing vertex shader')
     const fragment = scene.engine.gpu.shaderModules.get('color.frag.wgsl')
     if (!fragment)
-        throw ('Missing shader')
+        throw ('Missing fragment shader')
     //const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
     //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
 
@@ -43,7 +45,7 @@ function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, numbe
             format: "bgra8unorm",
         }],
         vertexStage: {
-            module: scene.gpu.shaderModules.get("plane.vert")!,
+            module: vertex,
             entryPoint: "main",
         },
         fragmentStage: {
@@ -81,8 +83,6 @@ export class paintPlane extends paintGround {
         });
         console.log('scaled to 0')
     }
-
-   // worldPosition = new worldPosition(this as TerraNode);
     #mesh = new PlaneMesh(this.scene.engine, ...getRenderPipeline(this.scene, this.ground));
     #startingPoint: Float32Array = new Float32Array(2);
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
@@ -123,44 +123,6 @@ export class paintPlane extends paintGround {
         uitab: hasCanvasListener,
     ) {
         super(scene, camera, ground, sea, uitab);
-        /*(async () => {
-            const [fragment] = await Promise.all([scene.gpu.getShaderModule('/shaders/wgsl/color.frag.wgsl')])
-
-            const planeRenerPipeline = ground.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
-                primitiveTopology: 'triangle-strip',
-                rasterizationState: {
-                    cullMode: 'none',
-                },
-                colorStates: [{
-                    format: "bgra8unorm",
-                }],
-                vertexStage: {
-                    module: scene.gpu.shaderModules.get("plane.vert")!,
-                    entryPoint: "main",
-                },
-                fragmentStage: {
-                    module: fragment,
-                    entryPoint: "main"
-                },
-                vertexState: {
-                    indexFormat: 'uint32',
-                    vertexBuffers:
-                        [{
-                            arrayStride: 4 * 2,
-                            stepMode: "vertex" as GPUInputStepMode,
-                            attributes: [{
-                                // position
-                                shaderLocation: 0,
-                                offset: 0,
-                                format: "float2" as GPUVertexFormat
-                            }]
-                        }]
-                },
-            }, [this.#mesh.bufferOffsetBytes]);
-            this.#templane2 = planeRenerPipeline.addDrawableIndexed(undefined, new Set([scene.gpu.renderPassScreen]), 0,undefined, 0, 1, 0);
-            this.#templane2.setVertexBuffer(0, new Float32Array([0,0,0]));
-        })()*/
-        //this.#templane2 = this.#mesh.renderPipeline.addDrawableIndexed(undefined, new Set([scene.gpu.renderPassScreen]), 0, undefined, 0, 1, 0);
         this.#mesh.Drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
     };
 
@@ -172,12 +134,11 @@ export class paintPlane extends paintGround {
         this.#mesh.Drawable.destroy();
         this.#columns = 0;
         this.#rows = 0;
+        this.scene.engine.gpu.DataSlots.push(this.#mesh.bufferOffsetBytes);
     }
 
     onMainPointerDown(startingPoint: Float32Array) {
-
         this.#startingPoint = startingPoint;
-        
     }
     #columns = 0;
     #rows = 0;

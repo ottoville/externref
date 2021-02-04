@@ -98,8 +98,11 @@ export abstract class paintGround {
             const p1 = this.#start_position[1] - this.ground.mesh.pickInfo.point[2];
 
             const distanceSquared = p0 * p0 + p1 * p1;
-            if (Number.isNaN(distanceSquared))
-                throw ("distance is not a number");
+            if (Number.isNaN(distanceSquared)) {
+                console.log(this.#start_position)
+                console.log(this.ground.mesh.pickInfo.point)
+                throw ("distance is not a number ");
+            }
             let rad = Math.atan(Math.abs(p1) / Math.abs(p0));
             if (p1 > 0) {
                 if (p0 > 0) {

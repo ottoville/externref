@@ -26,10 +26,7 @@ export class Plants {
     private worker = new WorkerThread('/webworkers/grass.js');
     private ready: Promise<any>;
     public fillArea(area: PTDresult) {
-
-        
         //let amount = 100000
-
 
         this.ready.then(() => { 
            // console.log('sending grass to worker, took ', new Date().getTime() - d);
@@ -38,9 +35,7 @@ export class Plants {
                 area: area,
                 angle: area.rad
             })
-        }
-        )
-
+        })
     }
     constructor(
         scene: Scene,
@@ -235,10 +230,7 @@ export class Plants {
  
        // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
 
-       /* let vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.offset), gl.DYNAMIC_DRAW);
-        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+       /* 
 
 
 
