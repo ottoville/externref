@@ -115,13 +115,8 @@ export class Plants {
         });
         terrainP.then((arr) => {
             const terrain = arr[0];
-            
-            const computePipeline = scene.gpu.device.createComputePipeline({
-                computeStage: {
-                    module: scene.gpu.shaderModules.get("getHeightAtCoordinates.comp")!,
-                    entryPoint: "main"
-                }
-            });
+
+            const computePipeline = scene.gpu.createComputePipeline("grass/getHeightAtCoordinates.comp.wgsl");
             const layout = computePipeline.getBindGroupLayout(0) as BindGroupLayoutFiveBinding;
 
             this.worker.subscribe('updated', async (data: { buffer:SharedArrayBuffer }) => {
