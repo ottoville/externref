@@ -6,6 +6,7 @@
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
   </PropertyGroup>  <ItemGroup>
   <None Remove="src\collider\collider.wat" />
+  <None Remove="src\collider\colliderSIMD.wat" />
 </ItemGroup>
 
   <ItemGroup>
@@ -407,6 +408,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="src\collider\colliderSIMD.wat" />
     <TypeScriptCompile Include="src\collider\collider.wat" />
     <TypeScriptCompile Include="src\node_modules\%40types\color-name\index.d.ts" />
     <TypeScriptCompile Include="src\node_modules\%40types\facebook-js-sdk\index.d.ts" />

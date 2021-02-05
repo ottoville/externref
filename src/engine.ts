@@ -89,7 +89,6 @@ export class Engine {
         return arr;
     }
     freeMemory(arr: { byteOffset: number, byteLength: number }) {
-        console.log('freeMemory');
         const end = arr.byteOffset + arr.byteLength;
         if (end == this.allocatedSize) {
             this.allocatedSize = arr.byteOffset;
@@ -121,22 +120,43 @@ export class Engine {
 
 
     static async initEngine(gpu: GPU, DB: Promise<EarthDatabase>, canvas: HTMLCanvasElement): Promise<Engine> {
+
+        const memory = new WebAssembly.Memory({ initial: 300 });
+
         const wasmRequest = await fetch('collider/colliderO.wasm');
         const obj = await WebAssembly.instantiateStreaming(wasmRequest, {
             console: {
                 log: function (arg: any) {
                     console.log(arg);
                 }
+            },
+            env: {
+                memory: memory
             }
         });
         const wasm: ColliderWasm = obj.instance.exports as any;
-        return new Engine(gpu, DB, canvas, wasm);
+        
+        const wasmRequestSIMD = await fetch('collider/colliderSIMDO.wasm');
+        const objSIMD = await WebAssembly.instantiateStreaming(wasmRequestSIMD, {
+            console: {
+                log: function (arg: any) {
+                    console.log(arg);
+                }
+            },
+            env: {
+                memory: memory
+            }
+        });
+        const wasmSIMD: ColliderWasm = objSIMD.instance.exports as any;
+
+
+        return new Engine(gpu, DB, canvas, wasm, wasmSIMD);
     }
     intersectionPointWasm = this.callocVector3()
     collisionNotFound = this.mallocView(4);
     nearestDistanceSquared = this.mallocView(4);
     collidedMesh = this.mallocView(4);
-    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm) {
+    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasm) {
 
         wasm.constructor(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
 
