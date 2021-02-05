@@ -42,7 +42,8 @@ export class Plants {
         terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
         const vertex = scene.engine.gpu.shaderModules.get('grass/grass.vert.wgsl')
-        if (!vertex)
+        const frag = scene.engine.gpu.shaderModules.get('color.frag.wgsl')
+        if (!vertex || !frag)
             throw ('Missing shader')
         const planstPipeline = scene.gpu.rootSceneLayout.addRenderPipeline({
             primitiveTopology: 'triangle-strip',
@@ -62,7 +63,7 @@ export class Plants {
                 entryPoint: "main",
             },
             fragmentStage: {
-                module: scene.gpu.shaderModules.get("grass.frag")!,
+                module: frag,
                 entryPoint: "main"
             },
             vertexState: {

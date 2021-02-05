@@ -27,7 +27,7 @@ const rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(vec2<f32>(0.0,0.0), vec2<f3
 [[location(0)]] var<in> positions : vec4<f32>; //position xyz + rotate
 [[location(1)]] var<in> shape : vec4<f32>; // {x:scale, y:baseAngle, z:curve, w:color} (blade's shape properties)
 
-[[location(0)]] var<out> color : vec4<f32>;
+[[location(0)]] var<out> color : vec3<f32>;
 [[location(1)]] var<out> shading : f32;
 [[location(2)]] var<out> ambient : vec3<f32>;
 
@@ -100,7 +100,6 @@ fn main() -> void {
 
    Position = scene.viewProjection * worldPos;
 
-   var green:vec3<f32> = vec3<f32>(clamp(shape.w,0.0,1.0),1.0,0.0)*diffuse;
-   color=vec4<f32>(green.rgb,1.0);
+   color = vec3<f32>(clamp(shape.w,0.0,1.0),1.0,0.0)*diffuse;
     return;
 }
