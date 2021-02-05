@@ -63,8 +63,11 @@ export class ArcRotateCamera {
             this.inertialBetaOffset -= e.movementY / angularSensibilityY;
         }
     }
-   #cameraWheel= (e: WheelEvent) => {
-        const delta = -e.deltaY / (3 * 40);
+    #cameraWheel = (e: WheelEvent) => {
+        e.preventDefault();
+        let delta = -e.deltaY / (3 * 40);
+        if (e.ctrlKey)
+            delta *= 10;
         if (delta) {
             this.inertialRadiusOffset += delta;
         }

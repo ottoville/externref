@@ -41,6 +41,9 @@ export class Plants {
         scene: Scene,
         terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
+        const vertex = scene.engine.gpu.shaderModules.get('grass/grass.vert.wgsl')
+        if (!vertex)
+            throw ('Missing shader')
         const planstPipeline = scene.gpu.rootSceneLayout.addRenderPipeline({
             primitiveTopology: 'triangle-strip',
             rasterizationState: {
@@ -55,7 +58,7 @@ export class Plants {
                 format: "bgra8unorm",
             }],
             vertexStage: {
-                module: scene.gpu.shaderModules.get("grass.vert")!,
+                module: vertex,
                 entryPoint: "main",
             },
             fragmentStage: {
