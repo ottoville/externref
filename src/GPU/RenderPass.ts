@@ -28,7 +28,7 @@ export class RenderPass {
             size: this.size,
             sampleCount: this.sampleCount,
             format,
-            usage: GPUTextureUsage.OUTPUT_ATTACHMENT | this.usage //: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.SAMPLED
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | this.usage //: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.SAMPLED
         });
     };
     scenes: Set<Scene> = new Set();
@@ -147,7 +147,7 @@ export class RenderPass {
             texture: this.targetTexture
         }, { buffer: buffer, bytesPerRow: this.size.width * 4 },
             [this.size.width, this.size.height, 1]);
-        this.gpu.device.defaultQueue.submit([encoder.finish()]);
+        this.gpu.device.queue.submit([encoder.finish()]);
         buffer.mapAsync(GPUMapMode.READ).then(() => {
             let c = new OffscreenCanvas(this.size.width, this.size.height);
             let ctx = c.getContext('2d');
@@ -182,7 +182,7 @@ export class RenderPassCanvas extends RenderPass {
         this.swapChain = context.configureSwapChain({
             device: gpu.device,
             format: "bgra8unorm",
-            usage: GPUTextureUsage.OUTPUT_ATTACHMENT
+            usage: GPUTextureUsage.RENDER_ATTACHMENT
         });
     }
     onResize(width: number, height: number) {

@@ -123,7 +123,7 @@ export class paintTexture extends paintGround {
         }
         encoder.copyTextureToBuffer({ texture: tempTexture }, { buffer: tempBuffer, bytesPerRow: (c.width * 4) }, [c.width, c.height, 1]);
 
-        this.scene.gpu.device.defaultQueue.submit([encoder.finish()]);
+        this.scene.gpu.device.queue.submit([encoder.finish()]);
         const encoder2 = this.scene.gpu.device.createCommandEncoder();
         const cacheImage = this.subTextureCache.imageData;
         if (cacheImage) {
@@ -174,7 +174,7 @@ export class paintTexture extends paintGround {
                 y: minZ
             }
         }, { width: c.width, height: c.height, depth: 1 });
-        this.scene.gpu.device.defaultQueue.submit([encoder2.finish()]);
+        this.scene.gpu.device.queue.submit([encoder2.finish()]);
         if (cacheImage)
             cacheImage.destroy();
     }

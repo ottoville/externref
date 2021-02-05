@@ -52,7 +52,7 @@ export class Zones extends UITAB {
                 });
                 ctx.stroke();
                 const bitmap = texture.transferToImageBitmap();
-                scene.gpu.device.defaultQueue.copyImageBitmapToTexture({ imageBitmap: bitmap }, { texture: this.zoneTexture }, [5120, 5120, 1]);
+                scene.gpu.device.queue.copyImageBitmapToTexture({ imageBitmap: bitmap }, { texture: this.zoneTexture }, [5120, 5120, 1]);
                 bitmap.close();
             }
         })();

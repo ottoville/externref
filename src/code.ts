@@ -216,7 +216,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
                 blazor.invokeMethod('setProgress', 90);
 
 
-                device.defaultQueue.submit([commandEncoder.finish()]);
+                device.queue.submit([commandEncoder.finish()]);
                 blazor.invokeMethod('setProgress', 95);
                 bufferView.buffer.destroy();
                 blazor.invokeMethod('setProgress', 100);
@@ -366,12 +366,12 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             if (physicDelta !== null)
                 deltaView.set([physicDelta]);
 
-            gpuscene.device.defaultQueue.writeBuffer(gpuscene.timeBuffer, 0, timeAndDeltaBuffer)
+            gpuscene.device.queue.writeBuffer(gpuscene.timeBuffer, 0, timeAndDeltaBuffer)
             TerraCameras.forEach(camera => {
                 camera.render(renderEncoder)
             });
             gpuscene.pendingCommandBuffers.push(renderEncoder.finish())
-            gpuscene.device.defaultQueue.submit(gpuscene.pendingCommandBuffers);
+            gpuscene.device.queue.submit(gpuscene.pendingCommandBuffers);
             gpuscene.pendingCommandBuffers.length = 0;
             renderFrame = window.requestAnimationFrame(renderLoop);
             /* performance.mark('renderloopEnd');

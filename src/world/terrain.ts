@@ -191,7 +191,7 @@ export class Terrain {
             );
             // Submit GPU commands.
             const gpuCommands = commandEncoder.finish();
-            this.scene.gpu.device.defaultQueue.submit([gpuCommands]);
+            this.scene.gpu.device.queue.submit([gpuCommands]);
             //resultMatrixBuffer.destroy();
             tres(resultMatrixBuffer);
 
@@ -245,7 +245,7 @@ export class Terrain {
                 0, //destination offset
                 this.mesh.facesBuffer.byteLength);
         }
-        this.scene.gpu.device.defaultQueue.submit([commandEncoder.finish()]);
+        this.scene.gpu.device.queue.submit([commandEncoder.finish()]);
         b1.destroy();
         if (!nofaces) {
             b2!.destroy();
@@ -385,7 +385,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         new Int32Array(sourcearr,20).set([this.#minY, this.#maxY]); //min and max height,
         new Int32Array(sourcearr, 32).set([this.#maxX, this.#maxZ]); //maxX, maxZ
         new Uint32Array(sourcearr, 40).set(new Uint32Array(buffer));
-        console.log(new Uint8Array(sourcearr, 40));
+
         sourceGPU.unmap();
 
         // const gpuReadBufferPositions = this.scene.gpuscene.createGPUBuffer(this.#terrainPositionsLength, GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST);
@@ -508,7 +508,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         const [gpuReadBufferPositions, gpuReadBufferIndices] = scene.gpu.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
 
         const gpuCommands = commandEncoder.finish();
-        scene.gpu.device.defaultQueue.submit([gpuCommands]);
+        scene.gpu.device.queue.submit([gpuCommands]);
         this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, this.terrainPositionAndUvsAndNormalsCPUSwap, new Uint32Array(this.indicesBuffer), 12);
 
 
@@ -521,7 +521,6 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         terrainPositionAndUvsAndNormalsGPUTemp.destroy();
         gpuReadBufferPositions.readAndDestroy(async (buff) => {
             this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
-            console.log(this.terrainPositionAndUvsAndNormalsCPUSwapView)
             this.updateSwap2(0, buff.byteLength,true);
             this.serialize();
         });

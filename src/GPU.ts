@@ -35,6 +35,7 @@ export class GPU {
         entries: [{
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
+            //@ts-ignore
             buffer: { }
         }]
     });
@@ -68,6 +69,7 @@ export class GPU {
             {
                 binding: 0,
                 visibility: GPUShaderStage.VERTEX,
+                //@ts-ignore
                 buffer: { }
             },
             {
@@ -321,7 +323,7 @@ export class GPU {
     GPU2CPU(callback: (...buff: (GPUMapReadBuffer & GPUCopyDSTBuffer)[]) => Promise<void>, ...buffers: GPUCopySRCBuffer[]): void {
         const commandEncoder = this.device.createCommandEncoder();
         const readBuffers = this.createCopy(commandEncoder, ...buffers);
-        this.device.defaultQueue.submit([commandEncoder.finish()]);
+        this.device.queue.submit([commandEncoder.finish()]);
         callback(...readBuffers).finally(() => readBuffers.forEach(gpuReadBuffer => gpuReadBuffer.destroy()));
     }
     createComputePipeline(shader: string, layout?: GPUPipelineLayout, entryPoint = 'main'): TerraGPUComputePipeLine {
