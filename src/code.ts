@@ -109,16 +109,14 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
         if (canvas.dataset.inited === "true")
             return;
         canvas.dataset.inited = "true";
-        blazor.invokeMethod('setProgress', 3);
-        //  const cache2 = await caches.open('compiledShaders');
-        //try {
 
-        blazor.invokeMethod('setProgress', 4);
+        blazor.invokeMethod('setProgress', 3);
         const adapter = await window.navigator.gpu!.requestAdapter();
-        blazor.invokeMethod('setProgress', 5);
+        blazor.invokeMethod('setProgress', 4);
         if (!adapter)
             throw ('No adapter');
         const device = await adapter.requestDevice();
+        blazor.invokeMethod('setProgress', 5);
         if (!device)
             throw ('no GPU device');
         const gpuscene = new GPU(device, (gpu) => {
@@ -128,11 +126,6 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             ]
         });
         blazor.invokeMethod('setProgress', 6);
-
-        const CACHE_NAME = 'terrasim-v1';
-        let shadersP: Promise<{ [key: string]: string }> = fetch('/shaders/shaders.json').then(s => s.json());
-        const cache = await caches.open(CACHE_NAME);
-        blazor.invokeMethod('setProgress', 7);
         
         const shaders = ['simple.vert.wgsl', 'simple.frag.wgsl',
             'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl',
@@ -145,50 +138,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             gpuscene.shaderModules.set(u, device.createShaderModule({ code: compiled }));
         }));
 
-
-
-        const glslang: { compileGLSL: (source: string, type: string) => Uint32Array } = await new Promise((res, rej) => {
-            const glslangOptions = {
-                jsPath: "https://preview.babylonjs.com/glslang/glslang.js",
-                wasmPath: "https://preview.babylonjs.com/glslang/glslang.wasm",
-                glslang: undefined
-            };
-            if ((window as any).glslang)
-                res((window as any).glslang(glslangOptions!.wasmPath));
-
-            let script = document.createElement('script');
-            script.onload = () => res((window as any).glslang(glslangOptions!.wasmPath));
-            script.onerror = rej;
-            script.src = glslangOptions.jsPath;
-            document.head.appendChild(script);
-        });
-        blazor.invokeMethod('setProgress', 8);
-        const jsondata = await shadersP
-        const shaderPuts: Promise<void>[] = [];
-
-        for (var file in jsondata) {
-            shaderPuts.push(cache.put(new Request('/shaders/' + file), new Response(jsondata[file])));
-            //@ts-ignore
-            if (jsondata[file].substr(0, 12) == '#version 450') {
-                let type: string = 'vertex';
-                if (file.substr(-5) == '.frag')
-                    type = 'fragment';
-                else if (file.substr(-5) == '.comp')
-                    type = 'compute';
-                //@ts-ignore
-                const compiled = glslang.compileGLSL(jsondata[file], type);
-
-                gpuscene.shaderModules.set(file, gpuscene.device.createShaderModule({
-                    code: compiled,
-                }));
-            }
-        }
-        blazor.invokeMethod('setProgress', 9);
-        await Promise.all(shaderPuts);
         blazor.invokeMethod('setProgress', 10);
-
-
-
 
         const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
         const projectionmatrix = new Float32Array(projectionmatrixBuffer);

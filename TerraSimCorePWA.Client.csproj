@@ -504,7 +504,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="node .\buildShaders.js&#xD;&#xA;node .\renameJS.js" />
+    <Exec Command="node .\renameJS.js" />
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
