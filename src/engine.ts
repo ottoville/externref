@@ -19,6 +19,13 @@ export interface ColliderWasm {
     testTriangles: (position: number, length: number, meshID:number) => void
     _initialize: (velocity:number, basePoint: number) => void
 }
+export interface ColliderWasmSIMD {
+    constructor(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number): void;
+    memory: { buffer: ArrayBuffer }
+    getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
+    testTriangles: (position: number, planePositionHorizontal:number, length: number, meshID: number) => void
+    _initialize: (velocity: number, basePoint: number) => void
+}
 
 export class Engine {
     freeMemoryBlocks: { byteOffset: number, byteLength: number }[] = []
@@ -147,18 +154,24 @@ export class Engine {
                 memory: memory
             }
         });
-        const wasmSIMD: ColliderWasm = objSIMD.instance.exports as any;
+        const wasmSIMD: ColliderWasmSIMD = objSIMD.instance.exports as any;
 
 
         return new Engine(gpu, DB, canvas, wasm, wasmSIMD);
     }
     intersectionPointWasm = this.callocVector3()
+    intersectionPointWasmSIMD = this.callocVector3()
     collisionNotFound = this.mallocView(4);
+    collisionNotFoundSIMD = this.mallocView(4);
     nearestDistanceSquared = this.mallocView(4);
+    nearestDistanceSquaredSIMD = this.mallocView(4);
     collidedMesh = this.mallocView(4);
-    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasm) {
+    collidedMeshSIMD = this.mallocView(4);
+    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasmSIMD) {
 
         wasm.constructor(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
+       wasmSIMD.constructor(this.collisionNotFoundSIMD.byteOffset, this.intersectionPointWasmSIMD.byteOffset, this.nearestDistanceSquaredSIMD.byteOffset, this.collidedMeshSIMD.byteOffset)
+      //  wasmSIMD.constructor(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
 
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
         canvas.addEventListener('pointermove', (e) => {
@@ -220,6 +233,7 @@ export class Engine {
 
         //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
         this.wasm._initialize(velocity.byteOffset, position.byteOffset)
+        this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
        // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
         await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider)))));

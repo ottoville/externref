@@ -6,13 +6,17 @@
 
   (global $collisionPoint (mut v128) (v128.const i32x4 0 0 0 0))
   (global $intersectionPointer (mut i32) (i32.const 0))
-  (global $nearestDistanceSquared (mut f32) (f32.const 9999999))
+  (global $nearestDistanceSquaredPointer (mut i32) (i32.const 0))
 
   (global $velocity (mut v128) (v128.const i32x4 0 0 0 0))
   (global $velocitySquared (mut f32) (f32.const 0))
   (global $lowestRoot (mut f32) (f32.const 0))
   (global $normalizedVelocity (mut v128) (v128.const i32x4 0 0 0 0))
-  (global $collisionNotFound (mut i32) (i32.const 1))
+  (global $normalizedVelocityX (mut v128) (v128.const i32x4 0 0 0 0))
+  (global $normalizedVelocityY (mut v128) (v128.const i32x4 0 0 0 0))
+  (global $normalizedVelocityZ (mut v128) (v128.const i32x4 0 0 0 0))
+  (global $collisionNotFoundPointer (mut i32) (i32.const 1))
+  (global $collidedMeshPointer (mut i32) (i32.const 0))
 
   (global $found (mut i32) (i32.const 0))
 
@@ -27,6 +31,27 @@
         (i32.store (i32.const 0) (i32.const 8))  ;; iov.iov_base - This is a pointer to the start of the 'hello world\n' string
         (i32.store (i32.const 4) (i32.const 12))  ;; iov.iov_len - The length of the 'hello world\n' string
     )
+  (func $constructor
+      (param $collisionNotFoundPointer i32)
+      (param $interSectionPoint i32)
+      (param $nearestDistanceSquared i32)
+      (param $collidedMesh i32)
+      (global.set $intersectionPointer
+        (local.get $interSectionPoint)
+      )
+     (global.set $collisionNotFoundPointer
+        (local.get $collisionNotFoundPointer)
+      )
+      (global.set $nearestDistanceSquaredPointer
+        (local.get $nearestDistanceSquared)
+      )
+      (global.set $collidedMeshPointer
+        (local.get $collidedMesh)
+      )
+      global.get $nearestDistanceSquaredPointer
+      f32.const 9999999
+      f32.store
+  )
   (func $_initialize
     (param $velocity i32)
     (param $basePointPointer i32)
@@ -35,12 +60,9 @@
     (local $temp v128)
     (local $len f32)
 
+    global.get $collisionNotFoundPointer
     i32.const 1
-    global.set $collisionNotFound
-
-    (global.set $intersectionPointer
-      (local.get $interSectionPoint)
-    )
+    i32.store
 
     (global.set $velocity
       (v128.load
@@ -71,26 +93,43 @@
       )
       (f32.const 0)
     )
-      if
-        global.get $velocity
-        global.set $normalizedVelocity
-      else
-        local.get $len
-        f32.const 1
-        f32.eq
-          if
-            global.get $velocity
-            global.set $normalizedVelocity
-          else
-            f32.const 1
-            local.get $len
-            f32.div
-            f32x4.splat
-            global.get $velocity
-            f32x4.mul
-            global.set $normalizedVelocity
-          end
-      end
+    if
+      global.get $velocity
+      global.set $normalizedVelocity
+    else
+      local.get $len
+      f32.const 1
+      f32.eq
+        if
+          global.get $velocity
+          global.set $normalizedVelocity
+        else
+          f32.const 1
+          local.get $len
+          f32.div
+          f32x4.splat
+          global.get $velocity
+          f32x4.mul
+          global.set $normalizedVelocity
+        end
+    end
+
+    global.get $normalizedVelocity
+    f32x4.extract_lane 0
+    f32x4.splat
+    global.set $normalizedVelocityX
+
+    global.get $normalizedVelocity
+    f32x4.extract_lane 1
+    f32x4.splat
+    global.set $normalizedVelocityY
+
+    global.get $normalizedVelocity
+    f32x4.extract_lane 2
+    f32x4.splat
+    global.set $normalizedVelocityZ
+
+
 
     local.get $basePointPointer
     v128.load
@@ -241,6 +280,7 @@
   (func $testTriangle
     (param $planePosition i32)
     (param $planeCollider v128)
+    (param $meshID i32)
 
     (local $signedDistToTrianglePlane f32)
     (local $normalDotVelocity f32)
@@ -349,9 +389,6 @@
           local.set $t0
           local.set $t1
       end
-
-
-
       local.get $t0
       f32.const 1
       f32.gt
@@ -466,17 +503,7 @@
 
     global.get $found
     if
-
-           ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      ;; global.get $collisionPoint
-      ;; f32x4.extract_lane 0
-  ;;    global.get $collisionNotFound
-  ;;    i32.eqz
-  ;;    f32.convert_i32_u
-  ;;      call $log
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
       i32.const 1
-      global.get $collisionNotFound
       (f32.lt
         (local.tee $distToCollisionSquared
           (f32.mul
@@ -484,20 +511,28 @@
             (global.get $velocitySquared)
           )
         )
-        (global.get $nearestDistanceSquared)
+        (f32.load
+          (global.get $nearestDistanceSquaredPointer)
+        )
+      )
+      (i32.load
+        (global.get $collisionNotFoundPointer)
       )
       select
       if
-
         global.get $intersectionPointer
         global.get $collisionPoint
         v128.store
-
+        global.get $nearestDistanceSquaredPointer
         local.get $distToCollisionSquared
-        global.set $nearestDistanceSquared
-
+        f32.store
+        global.get $collisionNotFoundPointer
         i32.const 0
-        global.set $collisionNotFound
+        i32.store
+
+        global.get $collidedMeshPointer
+        local.get $meshID
+        i32.store
       end
     end
   )
@@ -665,6 +700,7 @@
     (param $planePosition i32)
     (param $planePositionHorizontal i32)
     (param $length i32)
+    (param $meshID i32)
     (local $end i32)
     ;;(local $i i32)
 
@@ -697,7 +733,7 @@
                     )
                   )
                 )
-                (global.get $normalizedVelocity)
+                (global.get $normalizedVelocityX)
               )
               (f32x4.mul
                 (v128.load
@@ -706,7 +742,7 @@
                     (i32.const 16)
                   )
                 )
-                (global.get $normalizedVelocity)
+                (global.get $normalizedVelocityY)
               )
             )
             (f32x4.mul
@@ -716,65 +752,87 @@
                   (i32.const 32)
                 )
               )
-              (global.get $normalizedVelocity)
+              (global.get $normalizedVelocityZ)
             )
           )
           (v128.const i32x4 0 0 0 0)
         )
       )
-      i32x4.extract_lane 0
+      i32x4.any_true
       if
-        (call $testTriangle
-          (local.get $planePosition)
-          (v128.load
+
+           ;; (local.set $signedDistToTrianglePlane  
+           ;;   (f32.add
+           ;;     (f32x4.extract_lane 3 (local.get $planeCollider))
+           ;;     (call $v3_dot
+           ;;       (global.get $basePoint)
+           ;;       (local.get $planeCollider)
+           ;;     )
+           ;;   )
+           ;; )
+        
+
+
+
+        local.get $v0
+        i32x4.extract_lane 0
+        if
+          (call $testTriangle
             (local.get $planePosition)
-          )
-        )
-      end
-      local.get $v0
-      i32x4.extract_lane 1
-      if
-        (call $testTriangle
-          (local.tee $planePositionTemp
-            (i32.add
+            (v128.load
               (local.get $planePosition)
-              (i32.const 28)
             )
+            (local.get $meshID)
           )
-          (v128.load
-            (local.get $planePositionTemp)
-          )
-        )
-      end
-      local.get $v0
-      i32x4.extract_lane 2
-      if
-        (call $testTriangle
-          (local.tee $planePositionTemp
-            (i32.add
-              (local.get $planePosition)
-              (i32.const 56)
+        end
+        local.get $v0
+        i32x4.extract_lane 1
+        if
+          (call $testTriangle
+            (local.tee $planePositionTemp
+              (i32.add
+                (local.get $planePosition)
+                (i32.const 28)
+              )
             )
-          )
-          (v128.load
-            (local.get $planePositionTemp)
-          )
-        )
-      end
-      local.get $v0
-      i32x4.extract_lane 3
-      if
-        (call $testTriangle
-          (local.tee $planePositionTemp
-            (i32.add
-              (local.get $planePosition)
-              (i32.const 84)
+            (v128.load
+              (local.get $planePositionTemp)
             )
+            (local.get $meshID)
           )
-          (v128.load
-            (local.get $planePositionTemp)
+        end
+        local.get $v0
+        i32x4.extract_lane 2
+        if
+          (call $testTriangle
+            (local.tee $planePositionTemp
+              (i32.add
+                (local.get $planePosition)
+                (i32.const 56)
+              )
+            )
+            (v128.load
+              (local.get $planePositionTemp)
+            )
+            (local.get $meshID)
           )
-        )
+        end
+        local.get $v0
+        i32x4.extract_lane 3
+        if
+          (call $testTriangle
+            (local.tee $planePositionTemp
+              (i32.add
+                (local.get $planePosition)
+                (i32.const 84)
+              )
+            )
+            (v128.load
+              (local.get $planePositionTemp)
+            )
+            (local.get $meshID)
+          )
+        end
       end
       local.get $planePosition
       i32.const 112
@@ -878,4 +936,5 @@
   (export "getLowestRoot" (func $getLowestRoot))
   (export "testTriangles" (func $testTriangles))
   (export "_initialize" (func $_initialize))
+  (export "constructor" (func $constructor))
 )

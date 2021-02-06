@@ -181,7 +181,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             const sea = new Sea(terrascene);
             //new testPlane(terrascene);
 
-            const b = Box.create(terrascene);
+            const b = new Box(terrascene);
             b.worldPosition.update(scale => scale.set([200, 200, 200]));
             /*new testPlaneNormals(terrascene);*/
             const terrainInited = Terrain.loadFromTexture(terrascene);
@@ -311,7 +311,7 @@ var loginPromise: Promise<loginProvider> = new Promise<loginProvider>(login => {
             sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
         });
 
-        const b2 = Box.create(debugscene);
+        const b2 = new Box(debugscene);
         b2.worldPosition.update(scale => scale.set([200, 200, 200]));
         b2.worldPosition.setTranslationX(500);
 

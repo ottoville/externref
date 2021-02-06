@@ -305,12 +305,14 @@ export abstract class BoundableNode extends TerraNodeGPU {
             collider._testTriangle(triangle);
         });*/
        // console.log('cpu took', performance.now() - timer);
-        // timer = performance.now();
+       // let timer = performance.now();
+       // for (let i = 0; i < 20;i++)
         this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.uniqueID)
-        //this.engine.wasm.testTriangles(this.facesBufferColliderPointer, 8 * 7 * 4 /*  plane + vector pointers*/)
-     //   console.log(this.engine.collider.intersectionPoint)
-      //  console.log(this.engine.intersectionPointWasm)
-        //console.log('wasm took', performance.now() - timer);
+       // console.log('wasm took', performance.now() - timer);
+      //  timer = performance.now();
+       // for (let i = 0; i < 20; i++)
+        //this.engine.wasmSIMD.testTriangles(this.facesBufferColliderPointer, this.facesBufferColliderPointerParallel, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.uniqueID)
+     //   console.log('simd took', performance.now() - timer);
     }
 }
 export class PositionNode extends MainNode {

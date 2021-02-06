@@ -41,6 +41,9 @@
       (global.set $collidedMeshPointer
         (local.get $collidedMesh)
       )
+      global.get $nearestDistanceSquaredPointer
+      f32.const 9999999
+      f32.store
   )
   (func $_initialize
     (param $velocity i32)
@@ -48,10 +51,6 @@
 
     (local $temp v128)
     (local $len f32)
-
-    global.get $nearestDistanceSquaredPointer
-    f32.const 9999999
-    f32.store
 
     global.get $collisionNotFoundPointer
     i32.const 1
@@ -497,8 +496,6 @@
     global.get $found
     if
       i32.const 1
-      global.get $collisionNotFoundPointer
-      i32.load
       (f32.lt
         (local.tee $distToCollisionSquared
           (f32.mul
@@ -510,9 +507,11 @@
           (global.get $nearestDistanceSquaredPointer)
         )
       )
+      (i32.load
+        (global.get $collisionNotFoundPointer)
+      )
       select
       if
-
         global.get $intersectionPointer
         global.get $collisionPoint
         v128.store
@@ -526,8 +525,6 @@
         global.get $collidedMeshPointer
         local.get $meshID
         i32.store
-
-
       end
     end
   )
