@@ -1,7 +1,6 @@
 ﻿import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
-import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import type { DrawableSimple } from "../GPU/Drawable.js";
 import { TerraNodeGPU } from "../TerraNode.js";
@@ -67,7 +66,7 @@ function allocateMemory(engine:Engine) {
     return bufferOffsetBytes;
 }
 
-export class TerrainTool extends TerraNodeGPU implements has3DPosition {
+export class TerrainTool extends TerraNodeGPU {
     public static instance: UITAB | null = null;
     traits:Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
@@ -77,7 +76,6 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
 
-    worldPosition: worldPosition;
     facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     constructor(
@@ -105,7 +103,6 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
 
         // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
-        this.worldPosition = new worldPosition(this);
 
         this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), 4, 8, 0)
         this.#canvasListener.addListener("pointermove", this.#mouseListener, { lazy: 15 });
@@ -152,7 +149,7 @@ export class TerrainTool extends TerraNodeGPU implements has3DPosition {
 
     #mouseListener = (): void => {
         this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
-            this.worldPosition.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
+            this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
         });
     }
     raise = (): void => {

@@ -1,15 +1,10 @@
-﻿import type { worldPosition } from "./traits/worldPosition";
+﻿import { MainNode } from "./TerraNode";
 
 //let Epsilon = 0.001;
-
-
-
 export interface hasPhysics {
     onPhysicTick: (time: number) => void
-    worldPosition: worldPosition
+    hasGravity:boolean
 }
-
-
 /*
  * One real life second = One game minute
  * Gametime is saved in minutes.
@@ -25,7 +20,7 @@ export class Physics {
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
 
-    tickables: Set<hasPhysics> = new Set();
+    tickables: Set<MainNode & hasPhysics> = new Set();
     tickTime = 21600;  //6 hours
     tickIntervalMs = 1000;
 
@@ -53,17 +48,21 @@ export class Physics {
         me.#lastTickTimeMs = timestamp;
         me.tickTime += delta / 1000;
 
-       // console.log(delta / me.scene.tickIntervalMs);
-
         me.tickables.forEach(tickable => {
             tickable.onPhysicTick(delta);
-            
-            const currentTranslation = tickable.worldPosition.translation;
-            if (tickable.worldPosition.translationDelta[0] !== 0 || tickable.worldPosition.translationDelta[1] !== 0 || tickable.worldPosition.translationDelta[2] !== 0) {
-                tickable.worldPosition.translation.set([
-                    currentTranslation[0] + tickable.worldPosition.translationDelta[0],
-                    currentTranslation[1] + tickable.worldPosition.translationDelta[1],
-                    currentTranslation[2] + tickable.worldPosition.translationDelta[2]
+            if (tickable.hasGravity) {
+                tickable.SetTranslationDelta([
+                    tickable.velocity[0],
+                    tickable.velocity[1] - (9.81*(delta/1000)),
+                    tickable.velocity[2]]
+                )
+            }
+            const currentTranslation = tickable.translation;
+            if (tickable.velocity[0] !== 0 || tickable.velocity[1] !== 0 || tickable.velocity[2] !== 0) {
+                tickable.translation.set([
+                    currentTranslation[0] + tickable.velocity[0],
+                    currentTranslation[1] + tickable.velocity[1],
+                    currentTranslation[2] + tickable.velocity[2]
                 ]);
             }
         });

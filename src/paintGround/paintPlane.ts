@@ -1,7 +1,6 @@
 ﻿import { paintGround } from "./paintGround.js";
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
-import { worldPosition, has3DPosition } from "../traits/worldPosition.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
@@ -13,8 +12,7 @@ import type { Engine } from "../engine.js";
 
 
 
-class PlaneMesh extends TerraNodeGPU implements has3DPosition{
-    worldPosition: worldPosition = new worldPosition(this);
+class PlaneMesh extends TerraNodeGPU {
     Drawable = this.renderPipeline.addDrawableIndexed(undefined, new Set([this.engine.gpu.renderPassScreen]), 0, undefined, 0, 1, 0);
 }
 
@@ -78,7 +76,7 @@ function allocateMemory(engine: Engine) {
 }
 export class paintPlane extends paintGround {
     onEnd() {
-        this.#mesh.worldPosition.update((scaling) => {
+        this.#mesh.update((scaling) => {
             scaling[2] = 0;
         });
         console.log('scaled to 0')
@@ -149,16 +147,16 @@ export class paintPlane extends paintGround {
         this.#rows = 0;
         this.#columns = Math.floor(height / 10);
 
-        this.#mesh.worldPosition.translation[0] = this.#startingPoint[0] - 0.5
-        this.#mesh.worldPosition.translation[1] = 5;
-        this.#mesh.worldPosition.translation[2] = this.#startingPoint[1] - 1;
+        this.#mesh.translation[0] = this.#startingPoint[0] - 0.5
+        this.#mesh.translation[1] = 5;
+        this.#mesh.translation[2] = this.#startingPoint[1] - 1;
 
        // const rotQ = Quaternion.RotationYawPitchRoll(this.ang360.rad - Math.PI, 0, 0)
         //Quaternion.RotationYawPitchRollToRef(this.ang360.rad - Math.PI, 0, 0, rotQ);
         // Produces a quaternion from Euler angles in the z-y-x orientation (Tait-Bryan angles)
 
         const halfYaw = (this.ang360.rad - Math.PI) * 0.5;
-        this.#mesh.worldPosition.update((scaling, rotation) => {
+        this.#mesh.update((scaling, rotation) => {
             scaling[0] = height / this.#columns;
             rotation.set([0, Math.sin(halfYaw), 0, Math.cos(halfYaw)]);
         });
@@ -176,7 +174,7 @@ export class paintPlane extends paintGround {
                 newValues = this.#rowGenerator.next().value;
             } while (++this.#rows < newRows);
         }
-        this.#mesh.worldPosition.update((scaling) => {
+        this.#mesh.update((scaling) => {
             scaling[2] = width / this.#rows;
         })
 

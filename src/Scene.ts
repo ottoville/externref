@@ -137,9 +137,9 @@ export class Scene {
         const rayArr = new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]])
         const pickingRays: Map<BoundableNode, Float32Array> = new Map();
         this.boundables.forEach(boundable => {
-            if (!boundable.worldPosition)
+            if (boundable.isStatic)
                 return pickingRays.set(boundable, rayArr);
-            const ray = this.TerraCameras[0].createPickingRay(x, y, boundable.worldPosition.worldMatrix);
+            const ray = this.TerraCameras[0].createPickingRay(x, y, boundable.transformation);
             pickingRays.set(boundable, new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]]));
         });
         const results: Promise<void>[] = [];
@@ -188,8 +188,8 @@ export class Scene {
                 0.0, 1.0, 0.0, 0.0,
                 0.0, 0.0, 1.0, 0.0,
                 0.0, 0.0, 0.0, 1.0]);
-            if (boundableMesh.worldPosition) {
-                m = boundableMesh.worldPosition.worldMatrix;
+            if (!boundableMesh.isStatic) {
+                m = boundableMesh.transformation;
             }
             return this.TerraCameras[0].createPickingRay(x, y, m);
         };

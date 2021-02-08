@@ -1,8 +1,6 @@
 ﻿import type { GPU } from "./GPU";
-import type { worldPosition } from "./traits/worldPosition";
 export interface isLight {
     lightType: 'point' | 'directional' | 'spot' | 'ambient'
-    worldPosition: worldPosition
 }
 export class Light {
 /*

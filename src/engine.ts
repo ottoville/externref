@@ -209,12 +209,6 @@ export class Engine {
         finalPosition: new TerraVector3(),
     }
     async collideWithWorld(position: Vector3, velocity: Vector3, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): Promise<void> {
-        /*
-        await new Promise<void>(res => {
-            setTimeout(() => { res(); }, 80);
-        });
-        
-        */
         //TODO: Call only when camera position change
         
         if (this.collider._retry >= maximumRetry) {

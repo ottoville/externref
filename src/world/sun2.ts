@@ -1,5 +1,4 @@
-﻿import { worldPosition } from "../traits/worldPosition";
-import { hasPhysics } from "../physics";
+﻿import { hasPhysics } from "../physics";
 import { Scene } from "../Scene";
 import { isLight } from "../lights";
 import { TerraNodeGPU } from "../TerraNode";
@@ -53,8 +52,7 @@ function getRenderPipeline(scene: Scene, sunBufferOffsetBytes: number) {
 
 
 export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
-
-    worldPosition: worldPosition = new worldPosition(this);
+    hasGravity = false;
     lightType: 'point' = 'point';
 
     clamp(value: number, min: number, max: number) {
@@ -79,8 +77,8 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
 
 
         sunPositionY = sunPositionY * yAngle;
-        const currentPos = this.worldPosition.translation;
-        this.worldPosition.SetTranslationDelta([sunPositionX - currentPos[0], sunPositionY - currentPos[1], sunPositionZ - currentPos[2]]);
+        const currentPos = this.translation;
+        this.SetTranslationDelta([sunPositionX - currentPos[0], sunPositionY - currentPos[1], sunPositionZ - currentPos[2]]);
         //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
         const ambientR = this.clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
         const ambientGB = this.clamp((sunPositionY + 0.1) * 0.4 - 0.1, 0.05, 0.3);

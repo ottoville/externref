@@ -1,11 +1,9 @@
 ﻿import { Scene } from "../../Scene";
 import { BoundableNode } from "../../TerraNode";
-import { worldPosition } from "../../traits/worldPosition";
 
 
 //@ts-ignore
 export class testPlane extends BoundableNode {
-    worldPosition: worldPosition = new worldPosition(this);
 
     constructor(scene: Scene) {
         //@ts-ignore
@@ -22,7 +20,7 @@ export class testPlane extends BoundableNode {
         const vBuffer = scene.gpu.createGPUBuffer(this.verticesPositionBuffer.byteLength, [GPUBufferUsage.VERTEX], true);
         new Float32Array(vBuffer.getMappedRange()).set(new Float32Array(this.verticesPositionBuffer));
         vBuffer.unmap();
-        this.worldPosition.update(scaling => {
+        this.update(scaling => {
             scaling.set([200, 200, 200]);
         })
         /*const testPlaneRenderpipeline = this.scene.lightsBindGroup.addRenderPipeline({

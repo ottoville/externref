@@ -12,10 +12,14 @@
   [[offset(80)]] ambient : vec3<f32>;
   [[offset(92)]] shadow : f32;
 };
-
+[[block]] struct Time {
+  [[offset(0)]] time : u32;
+  [[offset(4)]] delta : f32;
+};
 [[binding(0), set(0)]] var<uniform> uniforms : Uniforms;
 [[binding(0), set(1)]] var<uniform> lights : Lights;
 [[binding(0), set(2)]] var<uniform> worldposition : WorldPosition;
+[[binding(1), set(0)]] var<uniform> times : Time;
 
 
 [[builtin(position)]] var<out> Position : vec4<f32>;
@@ -29,7 +33,11 @@
 
 [[stage(vertex)]]
 fn main() -> void {
-  Position = uniforms.modelViewProjectionMatrix * worldposition.world * vec4<f32>(pos, 1.0);
+  var curPos : mat4x4<f32> = worldposition.world;
+  curPos[3] = worldposition.world[3] + vec4<f32>(worldposition.delta,1.0) * times.delta;
+  curPos[3].w=1.0;
+  Position = uniforms.modelViewProjectionMatrix * curPos * vec4<f32>(pos, 1.0);
+
   shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
   ambient=lights.ambient;
   return;

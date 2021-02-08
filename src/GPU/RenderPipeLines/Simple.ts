@@ -1,7 +1,6 @@
 ﻿import type { GPU } from "../../GPU";
 import { BoundableNode } from "../../TerraNode";
 import { Scene } from "../../Scene";
-import { worldPosition } from "../../traits/worldPosition";
 import type { RenderPipeline } from "../RenderPipeline";
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
@@ -49,7 +48,6 @@ function Simple(scene: Scene) {
     return renderPipeline
 }
 export abstract class SimpleMesh extends BoundableNode {
-    worldPosition: worldPosition = new worldPosition(this);
     
     Drawable = this.renderPipeline.addDrawableIndexed(this.scene, new Set([this.scene.gpu.renderPassScreen]), this.verticesCount);
     constructor(

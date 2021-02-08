@@ -5,7 +5,6 @@ import type { isLight } from "./lights";
 import { TerraMatrix, TerraVector4, Triangle } from "./Math";
 import type { hasPhysics } from "./physics";
 import type { Scene } from "./Scene";
-import { worldPosition } from "./traits/worldPosition";
 import { ObjectWorkerThread } from "./WorkerThread";
 import { TerraVector3 } from "./Math";
 import { RenderPipeline } from "./GPU/RenderPipeline";
@@ -14,16 +13,96 @@ import { Drawable } from "./GPU/Drawable";
 export abstract class MainNode {
     readonly bufferOffsetBytes: number;
 
+    isStatic = false;
+
     readonly data: Float32Array;
     readonly customData: Float32Array;
-    abstract worldPosition?: worldPosition
+    readonly acceleration: Float32Array;
+    readonly velocity: Float32Array;
+    readonly transformation: TerraMatrix;
+    readonly translation: Float32Array;
+
+    readonly #scaling = new TerraVector3([1, 1, 1]);
+    readonly #rotation = new TerraVector4([0, 0, 0, 0]);
+
+    public update(callback: (scaling: Float32Array, rotation: Float32Array) => void) {
+        callback(this.#scaling, this.#rotation);
+        this.updateMatrix();
+        this.onUpdate();
+    }
+    private updateMatrix(): void {
+        const x = this.#rotation[0]
+        const y = this.#rotation[1]
+        const z = this.#rotation[2]
+        const w = this.#rotation[3];
+
+        const x2 = x + x
+        const y2 = y + y
+        const z2 = z + z;
+
+        const xx = x * x2
+        const xy = x * y2
+        const xz = x * z2;
+
+        const yy = y * y2
+        const yz = y * z2
+        const zz = z * z2;
+        var wx = w * x2, wy = w * y2, wz = w * z2;
+
+        const sx = this.#scaling[0]
+        const sy = this.#scaling[1]
+        const sz = this.#scaling[2];
+        this.transformation[0] = (1 - (yy + zz)) * sx;
+        this.transformation[1] = (xy + wz) * sx;
+        this.transformation[2] = (xz - wy) * sx;
+        this.transformation[4] = (xy - wz) * sy;
+        this.transformation[5] = (1 - (xx + zz)) * sy;
+        this.transformation[6] = (yz + wx) * sy;
+
+        this.transformation[8] = (xz + wy) * sz;
+        this.transformation[9] = (yz - wx) * sz;
+        this.transformation[10] = (1 - (xx + yy)) * sz;
+    }
+    private onUpdate(): void {
+        if (this instanceof BoundableNode)
+            this.updateBoundingBoxByMatrix(this.transformation);
+        this.updateDynamicBuffer();
+    }
+    SetTranslationDelta(value: [number, number, number] | [number, number] | [number] | Float32Array) {
+        this.velocity.set(value);
+        this.updateDynamicBuffer();
+    }
+
+    SetTranslation(value: [number, number, number] | TerraVector3) {
+        this.translation.set(value);
+        this.onUpdate();
+    }
+    setTranslationX(value: number) {
+        this.translation[0] = value;
+        this.onUpdate();
+    }
+    setTranslationY(value: number) {
+        this.translation[1] = value;
+        this.onUpdate();
+    }
+    setTranslationZ(value: number) {
+        this.translation[2] = value;
+        this.onUpdate();
+    }
     constructor(public engine: Engine, bufferOffsetBytes?: number) {
         bufferOffsetBytes = typeof (bufferOffsetBytes) == "number" ? bufferOffsetBytes : engine.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
         this.bufferOffsetBytes = bufferOffsetBytes;
         this.data = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes, TerraNodeGPU.GPUDataSize);
-        this.customData = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 20 * 4, 4);
+        this.transformation = new TerraMatrix(this.engine.gpu.CPUData, bufferOffsetBytes);
+        this.translation = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 12 * Float32Array.BYTES_PER_ELEMENT, 4)
+        this.velocity = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 16 * Float32Array.BYTES_PER_ELEMENT, 4);
+        this.customData = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 20 * Float32Array.BYTES_PER_ELEMENT, 4);
+        this.acceleration = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 24 * Float32Array.BYTES_PER_ELEMENT, 4);
+
+
+
 
 
         //engine.gpu.NodeInstances.set(this, engine.gpu.NodeInstances.size * TerraNodeGPU.alignment);
@@ -38,8 +117,11 @@ export abstract class MainNode {
             0, 0, 0, 0,
             //delta end
             //custom data start, 16 bytes
-            0, 0, 0, 0
+            0, 0, 0, 0,
             //custom data end
+            //acceleration starts
+            0, 0, 0, 0
+            //acceleration ends
         ])
         queueMicrotask(() => {
             if (this.hasPhysics()) {
@@ -64,7 +146,7 @@ export abstract class MainNode {
         return 'lightType' in this;
     }
 }
-export abstract class TerraNodeGPU extends MainNode implements Partial<hasPhysics>{
+export abstract class TerraNodeGPU extends MainNode {
     static uniqueID = 0;
     protected readonly uniqueID: number = TerraNodeGPU.uniqueID++;
     
@@ -262,8 +344,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         // Transformation matrix
         this.myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
 
-        if (this.worldPosition)
-            this.worldPosition.worldMatrix.multiplyToRef(this.myCollisionsTransformMatrix, this.myCollisionsTransformMatrix);
+        this.transformation.multiplyToRef(this.myCollisionsTransformMatrix, this.myCollisionsTransformMatrix);
 
         if (!this.#lastColliderTransformMatrix.equals(this.myCollisionsTransformMatrix)) {
             
@@ -316,7 +397,6 @@ export abstract class BoundableNode extends TerraNodeGPU {
     }
 }
 export class PositionNode extends MainNode {
-    worldPosition: worldPosition = new worldPosition(this);
     constructor(engine: Engine, bufferOffsetBytes?: number) {
         super(engine, bufferOffsetBytes);
     }
