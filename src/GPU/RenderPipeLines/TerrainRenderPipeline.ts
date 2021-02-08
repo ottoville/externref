@@ -1,7 +1,6 @@
 ﻿import { GPU } from "../../GPU";
 import { BoundableNode } from "../../TerraNode";
 import { Scene } from "../../Scene";
-import { worldPosition } from "../../traits/worldPosition";
 import { RenderPipeline } from "../RenderPipeline";
 import { DrawableIndexed } from "../Drawable";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
@@ -65,7 +64,6 @@ function TerrainRenderPipeline(scene: Scene) {
     return renderPipeLine;
 }
 export class TerrainMesh extends BoundableNode {
-    worldPosition?: worldPosition | undefined;
     Drawable: DrawableIndexed;
     #textureview: GPUTextureView
     sampler: GPUSampler;
