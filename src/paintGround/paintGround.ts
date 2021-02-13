@@ -1,14 +1,14 @@
 //let tempplane: BABYLON.Mesh | null
 //let end_position: Vector2
 const fullRad = Math.PI * 2
-import { TerraVector2, Angle } from "../Math";
+import { TerraVector2, Angle } from "../Math.js";
 
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
-import { hasCanvasListener } from "../traits/canvasListener.js";
-import { Sea } from "../world/water.js";
+import type { hasCanvasListener } from "../traits/canvasListener.js";
+import type { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
-import { ArcRotateCamera } from "../ArcRotateCamera";
+import type { ArcRotateCamera } from "../ArcRotateCamera";
 
 //import { rotateMatrix, translate } from "./math.js";
 

@@ -1,11 +1,11 @@
-﻿import { Light } from "./lights";
-import type { BoundableNode, PickingInfo } from "./TerraNode";
-import type { GPU } from "./GPU";
-import type { Engine } from "./engine";
-import { BindGroupLayout, LayoutGroupDrawable } from "./GPU/BindGroupLayout";
-import type { TerraCamera } from "./TerraCamera";
-import { RenderPass } from "./GPU/RenderPass";
-import { TerraMatrix } from "./Math";
+﻿import { Light } from "./lights.js";
+import type { BoundableNode, PickingInfo } from "./TerraNode.js";
+import type { GPU } from "./GPU.js";
+import type { Engine } from "./engine.js";
+import { BindGroupLayout, LayoutGroupDrawable } from "./GPU/BindGroupLayout.js";
+import type { TerraCamera } from "./TerraCamera.js";
+import type { RenderPass } from "./GPU/RenderPass.js";
+import { TerraMatrix } from "./Math.js";
 
 export class Scene {
 

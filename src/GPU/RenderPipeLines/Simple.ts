@@ -1,7 +1,7 @@
-﻿import type { GPU } from "../../GPU";
-import { BoundableNode } from "../../TerraNode";
-import { Scene } from "../../Scene";
-import type { RenderPipeline } from "../RenderPipeline";
+﻿import type { GPU } from "../../GPU.js";
+import { BoundableNode } from "../../TerraNode.js";
+import type { Scene } from "../../Scene.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 

@@ -1,14 +1,13 @@
-﻿import { Collider } from "./Collider";
-import type { Engine } from "./engine";
+﻿import type { Collider } from "./Collider.js";
+import type { Engine } from "./engine.js";
 
-import type { isLight } from "./lights";
-import { TerraMatrix, TerraVector4, Triangle } from "./Math";
-import type { hasPhysics } from "./physics";
-import type { Scene } from "./Scene";
-import { ObjectWorkerThread } from "./WorkerThread";
-import { TerraVector3 } from "./Math";
-import { RenderPipeline } from "./GPU/RenderPipeline";
-import { Drawable } from "./GPU/Drawable";
+import type { isLight } from "./lights.js";
+import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
+import type { hasPhysics } from "./physics.js";
+import type { Scene } from "./Scene.js";
+import { ObjectWorkerThread } from "./WorkerThread.js";
+import type { RenderPipeline } from "./GPU/RenderPipeline.js";
+import type { Drawable } from "./GPU/Drawable.js";
 
 export abstract class MainNode {
     readonly bufferOffsetBytes: number;
@@ -140,7 +139,7 @@ export abstract class MainNode {
     }
 
     hasPhysics(): this is hasPhysics {
-        return 'worldPosition' in this && 'onPhysicTick' in this;
+        return 'hasGravity' in this && 'onPhysicTick' in this;
     }
     isLight(): this is isLight {
         return 'lightType' in this;
@@ -151,7 +150,7 @@ export abstract class TerraNodeGPU extends MainNode {
     protected readonly uniqueID: number = TerraNodeGPU.uniqueID++;
     
     abstract Drawable:Drawable
-    static GPUDataSize = 16 + 4 + 4
+    static GPUDataSize = 16 + 4 + 4 + 4;
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
@@ -181,10 +180,10 @@ class pickInfo {
     distance = new Float32Array(this.buffer, 3 * 4, 1);
 }
 class boundingBox {
-    buffer = new SharedArrayBuffer(4 * 6);
-    box = new Float32Array(this.buffer);
-    min = new TerraVector3(this.buffer, 0);
-    max = new TerraVector3(this.buffer, 4 * 3);
+    #buffer = new ArrayBuffer(4 * 6);
+    box = new Float32Array(this.#buffer);
+    min = new TerraVector3(this.#buffer, 0);
+    max = new TerraVector3(this.#buffer, 4 * 3);
 }
 
 export abstract class BoundableNode extends TerraNodeGPU {
@@ -322,7 +321,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
             //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
 
         queueMicrotask(() => {
-            worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
+            worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, new SharedArrayBuffer(6*4), this.pickInfo.buffer])
         });
     }
     public intersectsRay(ray: Float32Array): Promise<void> {
@@ -332,6 +331,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         //TODO: Use SIMD
         this.boundingBox.min.multiply2Ref(m, this.boundingBox.min);
         this.boundingBox.max.multiply2Ref(m, this.boundingBox.max);
+        debugger;
     }
     //collisionsScalingMatrix = new TerraMatrix();
     myCollisionsTransformMatrix = new TerraMatrix();
@@ -341,6 +341,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
             return;
         }
+        debugger;
         // Transformation matrix
         this.myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
 
@@ -388,6 +389,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
        // console.log('cpu took', performance.now() - timer);
        // let timer = performance.now();
        // for (let i = 0; i < 20;i++)
+
         this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.uniqueID)
        // console.log('wasm took', performance.now() - timer);
       //  timer = performance.now();

@@ -1,8 +1,8 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
-import { TerraMatrix, TerraVector3, Triangle } from "./Math";
-import type { Engine, Vector3 } from "./engine";
+import { TerraMatrix, TerraVector3, Triangle } from "./Math.js";
+import type { Engine, Vector3 } from "./engine.js";
 
 
 function Dot(left: [number, number, number] | Float32Array | Vector3, right: [number, number, number] | Float32Array | Vector3): number {

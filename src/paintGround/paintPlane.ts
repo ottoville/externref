@@ -7,7 +7,7 @@ import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
-import type { GPU } from "../GPU";
+import type { GPU } from "../GPU.js";
 import type { Engine } from "../engine.js";
 
 

@@ -1,10 +1,10 @@
-﻿import { hasPhysics } from "../physics";
-import { Scene } from "../Scene";
-import { isLight } from "../lights";
-import { TerraNodeGPU } from "../TerraNode";
-import { Angle } from "../Math";
-import type { GPU } from "../GPU";
-import type { RenderPipeline } from "../GPU/RenderPipeline";
+﻿import type { hasPhysics } from "../physics.js";
+import type { Scene } from "../Scene.js";
+import type { isLight } from "../lights.js";
+import { TerraNodeGPU } from "../TerraNode.js";
+import { Angle } from "../Math.js";
+import type { GPU } from "../GPU.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 
 //const sundistance = 149600000000;
 
@@ -78,6 +78,7 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
 
         sunPositionY = sunPositionY * yAngle;
         const currentPos = this.translation;
+
         this.SetTranslationDelta([sunPositionX - currentPos[0], sunPositionY - currentPos[1], sunPositionZ - currentPos[2]]);
         //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
         const ambientR = this.clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
@@ -88,13 +89,6 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
         const shadow = this.clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
         this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
         this.updateDynamicBuffer();
-        // this.worldPosition.translation = [sunPositionX, sunPositionY, sunPositionZ];
-
-
-
-        //let sunm = rotateMatrix(Math.PI * 0.2, 'x');
-        // let newpos = matrixTranslate(sunPositionX, sunPositionY, 0, sunm);
-        // this.worldPosition.translation = [newpos.x, newpos.y, newpos.z];
     }
     Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), 14);
     constructor(private scene: Scene, sunBufferOffsetBytes: number) {

@@ -1,7 +1,7 @@
-﻿import { TerraNodeGPU } from "./TerraNode";
-import { RenderPass, RenderPassCanvas } from "./GPU/RenderPass";
-import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
-import { Scene } from "./Scene";
+﻿import { TerraNodeGPU } from "./TerraNode.js";
+import type { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
+import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout.js";
+import type { Scene } from "./Scene.js";
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
 };

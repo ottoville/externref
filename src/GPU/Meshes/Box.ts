@@ -1,5 +1,5 @@
-﻿import { Scene } from "../../Scene";
-import { SimpleMesh } from "../RenderPipeLines/Simple";
+﻿import type { Scene } from "../../Scene.js";
+import { SimpleMesh } from "../RenderPipeLines/Simple.js";
 function create(scene: Scene): [SharedArrayBuffer, Uint32Array, GPUIndexBuffer, GPUVertexBuffer] {
     const [indicesBuffer, iBuffer] = scene.gpu.createInputBuffer(GPUBufferUsage.INDEX, new Uint32Array([
         0, 1, 2, 0, 2, 3,    // front

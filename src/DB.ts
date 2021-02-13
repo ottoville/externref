@@ -73,3 +73,58 @@ globalThis.DB = new Promise<EarthDatabase>(function (res) {
         res(this.result);
     }
 })
+
+declare namespace JSX {
+    interface ElementClass {
+        render: (props: any) => HTMLElement;
+    }
+    type IntrinsicElements = {
+        [elemName in keyof HTMLElementTagNameMap]: any;
+    };
+}
+
+abstract class TerraCompoment {
+    abstract render(props: { [index: string]: any }): HTMLElement
+}
+
+
+declare var TerraUI: { createElement: (name: string | ((props: any) => HTMLElement), props: { [index: string]: any }, ...content: (HTMLElement | string)[]) => HTMLElement };
+
+globalThis.TerraUI = {
+    createElement: (name: string | HTMLElement | ((props: any) => HTMLElement) | (new () => TerraCompoment), props?: { [index: string]: any }, ...content: (HTMLElement | HTMLElement[] | string | string[])[]) => {
+        props = props || {};
+        const nametype = typeof (name);
+        if (nametype === 'function') {
+            props.children = content
+            if (name.toString().substr(0, 5) === 'class') {
+                var instance = new (name as new () => TerraCompoment)()
+                return instance.render(props);
+            }
+            return (name as (props: any) => HTMLElement)(props);
+        }
+        else if (nametype == 'string')
+            var elem = document.createElement(name as string);
+        else
+            var elem = name as HTMLElement;
+            
+        for (var key in props) {
+            if (key == 'onClick') {
+                if(typeof(name)==='string')
+                    elem.addEventListener('click', props[key])
+            } else
+                elem.setAttribute(key, props[key]);
+        }
+        content.forEach(function appendContent(content) {
+            if (Array.isArray(content)) {
+                content.forEach(appendContent)
+            } else {
+                if (content instanceof HTMLElement)
+                    elem.appendChild(content);
+                else {
+                    elem.appendChild(document.createTextNode(content));
+                }
+            }
+        });
+        return elem;
+    }
+}

@@ -1,7 +1,7 @@
-﻿import { LazyEval } from "../LazyEval";
-import { GPU } from "../GPU";
-import { UITAB } from "../UITAB";
-import { Trait } from "./trait";
+﻿import { LazyEval } from "../LazyEval.js";
+import { GPU } from "../GPU.js";
+import type { UITAB } from "../UITAB.js";
+import { Trait } from "./trait.js";
 
 interface addListenerOptions extends AddEventListenerOptions {
     lazy?: number;

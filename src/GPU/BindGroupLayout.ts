@@ -1,5 +1,5 @@
-﻿import type { GPU } from "../GPU";
-import { RenderPipeline } from "./RenderPipeline";
+﻿import type { GPU } from "../GPU.js";
+import { RenderPipeline } from "./RenderPipeline.js";
 
 export class BindGroupLayout {
     static instances: Set<BindGroupLayout> = new Set();

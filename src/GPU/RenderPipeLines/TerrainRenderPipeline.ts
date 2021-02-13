@@ -1,8 +1,8 @@
-﻿import { GPU } from "../../GPU";
-import { BoundableNode } from "../../TerraNode";
-import { Scene } from "../../Scene";
-import { RenderPipeline } from "../RenderPipeline";
-import { DrawableIndexed } from "../Drawable";
+﻿import type { GPU } from "../../GPU.js";
+import { BoundableNode } from "../../TerraNode.js";
+import type { Scene } from "../../Scene.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
+import type { DrawableIndexed } from "../Drawable.js";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 function TerrainRenderPipeline(scene: Scene) {

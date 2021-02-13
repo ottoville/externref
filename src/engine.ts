@@ -1,10 +1,10 @@
-﻿import { Physics } from "./physics";
-import type { GPU } from "./GPU";
-import type { DynamicBindGroupLayout } from "./GPU/BindGroupLayout";
-import { TerraNodeGPU } from "./TerraNode";
-import { Collider } from "./Collider";
-import { Scene } from "./Scene";
-import { TerraVector3, TerraVector4 } from "./Math";
+﻿import { Physics } from "./physics.js";
+import type { GPU } from "./GPU.js";
+import type { DynamicBindGroupLayout } from "./GPU/BindGroupLayout.js";
+import { TerraNodeGPU } from "./TerraNode.js";
+import { Collider } from "./Collider.js";
+import type { Scene } from "./Scene.js";
+import { TerraVector3, TerraVector4 } from "./Math.js";
 
 export type Vector3 = Omit<TerraVector3, 'buffer'>;
 export type Vector4 = Omit<TerraVector4, 'buffer'>;
@@ -142,7 +142,7 @@ export class Engine {
             }
         });
         const wasm: ColliderWasm = obj.instance.exports as any;
-        
+        /*
         const wasmRequestSIMD = await fetch('collider/colliderSIMDO.wasm');
         const objSIMD = await WebAssembly.instantiateStreaming(wasmRequestSIMD, {
             console: {
@@ -153,7 +153,8 @@ export class Engine {
             env: {
                 memory: memory
             }
-        });
+        });*/
+        const objSIMD = obj;
         const wasmSIMD: ColliderWasmSIMD = objSIMD.instance.exports as any;
 
 

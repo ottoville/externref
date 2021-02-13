@@ -1,9 +1,9 @@
-﻿import { RenderPass } from "./GPU/RenderPass";
+﻿import type { RenderPass } from "./GPU/RenderPass.js";
 
-import { ObjectWorkerThread } from "./WorkerThread";
-import type { GPU } from "./GPU";
-import { Engine } from "./engine";
-import { TerraMatrix, TerraVector3 } from "./Math";
+import { ObjectWorkerThread } from "./WorkerThread.js";
+import type { GPU } from "./GPU.js";
+import type { Engine } from "./engine.js";
+import { TerraMatrix, TerraVector3 } from "./Math.js";
 
 const worker = new ObjectWorkerThread('/webworkers/cameraWorker.js');
 let uniqueID = 0;

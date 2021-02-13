@@ -1,7 +1,7 @@
-﻿import { RenderPipeline } from "./RenderPipeline";
-import type { GPU } from "../GPU";
-import { RenderPass } from "./RenderPass";
-import { Scene } from "../Scene";
+﻿import type { RenderPipeline } from "./RenderPipeline.js";
+import type { GPU } from "../GPU.js";
+import type { RenderPass } from "./RenderPass.js";
+import type { Scene } from "../Scene.js";
 type DrawableLike = typeof RenderPipeline;
 export interface DrawableLikeClass extends DrawableLike {
     Meshes: Set<RenderPipeline>;

@@ -1,244 +1,244 @@
 {
   "program": {
     "fileInfos": {
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es5.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es5.d.ts": {
         "version": "d8c6d01738cf647063555d12272d66951cce8701802b3177bf259264c6b1f8b0",
         "signature": "d8c6d01738cf647063555d12272d66951cce8701802b3177bf259264c6b1f8b0",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.d.ts": {
         "version": "e8d2e50f9e8fdd312d31f97571b4c7295b8f29f7f8363498edae2a9eb113ee36",
         "signature": "e8d2e50f9e8fdd312d31f97571b4c7295b8f29f7f8363498edae2a9eb113ee36",
         "affectsGlobalScope": false
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2016.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2016.d.ts": {
         "version": "4b1854aec637e8e041eff02899e16fd3c0c78685c622336aadfd67e6604bbe1b",
         "signature": "4b1854aec637e8e041eff02899e16fd3c0c78685c622336aadfd67e6604bbe1b",
         "affectsGlobalScope": false
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.d.ts": {
         "version": "d6f7d47355a0167969e9a8eedfb0994f21e038d360965ec06c30f6871038900b",
         "signature": "d6f7d47355a0167969e9a8eedfb0994f21e038d360965ec06c30f6871038900b",
         "affectsGlobalScope": false
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.d.ts": {
         "version": "4735756aff7c5857de387f321633f272e2daba4950c427ab200de954340c7c13",
         "signature": "4735756aff7c5857de387f321633f272e2daba4950c427ab200de954340c7c13",
         "affectsGlobalScope": false
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2019.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2019.d.ts": {
         "version": "4cac3201303b24c71d334bcdab63aee38b7424f51ba9f8884515705b7cba7606",
         "signature": "4cac3201303b24c71d334bcdab63aee38b7424f51ba9f8884515705b7cba7606",
         "affectsGlobalScope": false
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.d.ts": {
         "version": "f59097764af44b6038195f8ef1ac7fb21a8ab5ca66585982e3028430c6846ed6",
         "signature": "f59097764af44b6038195f8ef1ac7fb21a8ab5ca66585982e3028430c6846ed6",
         "affectsGlobalScope": false
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.esnext.d.ts": {
         "version": "85257083c42bc112004efc110999c3526da4d5faab7bfc898f3dc05f6bd1b0a5",
         "signature": "85257083c42bc112004efc110999c3526da4d5faab7bfc898f3dc05f6bd1b0a5",
         "affectsGlobalScope": false
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.dom.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.dom.d.ts": {
         "version": "6b771b165d91307363057712b92f2690edf1dad48fa60e9185f8deb58eab19d7",
         "signature": "6b771b165d91307363057712b92f2690edf1dad48fa60e9185f8deb58eab19d7",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.core.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.core.d.ts": {
         "version": "0e37e1b8effb51f822e0c188cb5551f08c26726ed3851e0c6b81cd4fe9da6565",
         "signature": "0e37e1b8effb51f822e0c188cb5551f08c26726ed3851e0c6b81cd4fe9da6565",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.collection.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.collection.d.ts": {
         "version": "5a8c535851f6cb0d376f135a2a6640dec8070d48d03072c2f1ab70528d7cb4fe",
         "signature": "5a8c535851f6cb0d376f135a2a6640dec8070d48d03072c2f1ab70528d7cb4fe",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.generator.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.generator.d.ts": {
         "version": "28065193ddf88bf697915b9236d2d00a27e85726563e88474f166790376e10d8",
         "signature": "28065193ddf88bf697915b9236d2d00a27e85726563e88474f166790376e10d8",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.iterable.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.iterable.d.ts": {
         "version": "64e54603fa12e3bb5e001683347f2d791f233ad77c8764ffd221d36cb53d75af",
         "signature": "64e54603fa12e3bb5e001683347f2d791f233ad77c8764ffd221d36cb53d75af",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.promise.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.promise.d.ts": {
         "version": "26836bdbc21f49dfd2915e7679b0574aaa2388aa4736865333220a4ace6170fb",
         "signature": "26836bdbc21f49dfd2915e7679b0574aaa2388aa4736865333220a4ace6170fb",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.proxy.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.proxy.d.ts": {
         "version": "3be8c09cea44fd4d069274ec932bf6b74eb86700ec8c185c4be4abf0abdc6f21",
         "signature": "3be8c09cea44fd4d069274ec932bf6b74eb86700ec8c185c4be4abf0abdc6f21",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.reflect.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.reflect.d.ts": {
         "version": "378046398977a38b534922c0ce8f5adcb9fdadca2979c2f3f83b0030f1357ee7",
         "signature": "378046398977a38b534922c0ce8f5adcb9fdadca2979c2f3f83b0030f1357ee7",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.symbol.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.symbol.d.ts": {
         "version": "e5d8d715990d96a37f3521a3f1460679507b261eec1b42dc84d4de835997b794",
         "signature": "e5d8d715990d96a37f3521a3f1460679507b261eec1b42dc84d4de835997b794",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.symbol.wellknown.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.symbol.wellknown.d.ts": {
         "version": "2857da74e710584e64d9e7a1d6cc013300a5d770ac021e9ff6650a76e0087304",
         "signature": "2857da74e710584e64d9e7a1d6cc013300a5d770ac021e9ff6650a76e0087304",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2016.array.include.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2016.array.include.d.ts": {
         "version": "a003a6051b48dc64eaa8ad83789e4c2a540f3482bed821053b6770969bd598fb",
         "signature": "a003a6051b48dc64eaa8ad83789e4c2a540f3482bed821053b6770969bd598fb",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.object.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.object.d.ts": {
         "version": "e90857fa86cecc3bc964a2d7db9d95a0c406bebfadeb4853a01a0079936f12f7",
         "signature": "e90857fa86cecc3bc964a2d7db9d95a0c406bebfadeb4853a01a0079936f12f7",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.sharedmemory.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.sharedmemory.d.ts": {
         "version": "8bbb03589e48f10b49996064f35256e858d205dcb364428fb4cc045061b1d786",
         "signature": "8bbb03589e48f10b49996064f35256e858d205dcb364428fb4cc045061b1d786",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.string.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.string.d.ts": {
         "version": "5044747370afee4b4c247e8a14c2969d245bbcf8396295dc5a60c659d796a71f",
         "signature": "5044747370afee4b4c247e8a14c2969d245bbcf8396295dc5a60c659d796a71f",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.intl.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.intl.d.ts": {
         "version": "d42841f3fb4fc368f35cba018a81bd0b38f1d00ae9b0449a63ab47ac1bcaba10",
         "signature": "d42841f3fb4fc368f35cba018a81bd0b38f1d00ae9b0449a63ab47ac1bcaba10",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.typedarrays.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.typedarrays.d.ts": {
         "version": "a894424c7058bcc77c1a3c92fe289c0ff93792e583e064c683d021879479f7b8",
         "signature": "a894424c7058bcc77c1a3c92fe289c0ff93792e583e064c683d021879479f7b8",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.asyncgenerator.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.asyncgenerator.d.ts": {
         "version": "8f03386d697248c5d356fd53f2729b920ea124cd1414a6c22de03c5d24729277",
         "signature": "8f03386d697248c5d356fd53f2729b920ea124cd1414a6c22de03c5d24729277",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.asynciterable.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.asynciterable.d.ts": {
         "version": "939977970c14d9ee2e52b722896e1279a7ba955d6f561e671e4f9d91a0ff6aa4",
         "signature": "939977970c14d9ee2e52b722896e1279a7ba955d6f561e671e4f9d91a0ff6aa4",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.intl.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.intl.d.ts": {
         "version": "e9174c5ffd9983fd688f9c2374412de678459c33161f4990a1fe171552705263",
         "signature": "e9174c5ffd9983fd688f9c2374412de678459c33161f4990a1fe171552705263",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.promise.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.promise.d.ts": {
         "version": "fe7acdc1039eca904399190766d1c8766b7d2621413f972c8542dddd69612097",
         "signature": "fe7acdc1039eca904399190766d1c8766b7d2621413f972c8542dddd69612097",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.regexp.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.regexp.d.ts": {
         "version": "c25aa843b930662d62f0e853dd1f347d08b66cdec09bd760151d4ba6ce220fe6",
         "signature": "c25aa843b930662d62f0e853dd1f347d08b66cdec09bd760151d4ba6ce220fe6",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2019.array.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2019.array.d.ts": {
         "version": "3e47477f297e4fa0d556c40a872c2c45bddefa487fd054bf1f80bceb527a682b",
         "signature": "3e47477f297e4fa0d556c40a872c2c45bddefa487fd054bf1f80bceb527a682b",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2019.object.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2019.object.d.ts": {
         "version": "a902be9f4116b449dbac07ffe3f4d69abb664f8eddfaeb892225612469213788",
         "signature": "a902be9f4116b449dbac07ffe3f4d69abb664f8eddfaeb892225612469213788",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2019.string.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2019.string.d.ts": {
         "version": "55964e13f8243acb182025dbf3fb64a4dc63ebb88095506568e551de287333c2",
         "signature": "55964e13f8243acb182025dbf3fb64a4dc63ebb88095506568e551de287333c2",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2019.symbol.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2019.symbol.d.ts": {
         "version": "5b30b81cdeb239772daf44e6c0d5bf6adec9dbf8d534ed25c9a0e8a43b9abfff",
         "signature": "5b30b81cdeb239772daf44e6c0d5bf6adec9dbf8d534ed25c9a0e8a43b9abfff",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.bigint.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.bigint.d.ts": {
         "version": "730aa536cb2704eff9eb43ab551eaf2a28fd9155975bc13b42240d217d60959d",
         "signature": "730aa536cb2704eff9eb43ab551eaf2a28fd9155975bc13b42240d217d60959d",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.promise.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.promise.d.ts": {
         "version": "ea2d62f611bbe855ee8a66ea7972198718da7f0da955f5750100c18b819984b6",
         "signature": "ea2d62f611bbe855ee8a66ea7972198718da7f0da955f5750100c18b819984b6",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.sharedmemory.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.sharedmemory.d.ts": {
         "version": "c021bff90eb33d29edfde16c9b861097bbf99aa290726d0d0ac65330aa7be85a",
         "signature": "c021bff90eb33d29edfde16c9b861097bbf99aa290726d0d0ac65330aa7be85a",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.string.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.string.d.ts": {
         "version": "1c4e64dc374ea5922d7632a52b167187ba7c7e35b34d3c1e22625be66ca1576d",
         "signature": "1c4e64dc374ea5922d7632a52b167187ba7c7e35b34d3c1e22625be66ca1576d",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.symbol.wellknown.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.symbol.wellknown.d.ts": {
         "version": "1f3170660a9a4d18283bc3c43139994ec6e1089f28982a21d1e8b2cf9785427a",
         "signature": "1f3170660a9a4d18283bc3c43139994ec6e1089f28982a21d1e8b2cf9785427a",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.intl.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.intl.d.ts": {
         "version": "467beb6c26f5db16f44b37cb9611996f7d3692adc83496daacd81a3b1299e813",
         "signature": "467beb6c26f5db16f44b37cb9611996f7d3692adc83496daacd81a3b1299e813",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.intl.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.esnext.intl.d.ts": {
         "version": "f7b5f5a0faa894afd5d132a7d283672b50080423ebd8517eaf7700f6e482576a",
         "signature": "f7b5f5a0faa894afd5d132a7d283672b50080423ebd8517eaf7700f6e482576a",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.string.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.esnext.string.d.ts": {
         "version": "cebef4c7f9b6afb02cd08e7288fab05d0be3e3c898c720775b8aa286e9f7cfed",
         "signature": "cebef4c7f9b6afb02cd08e7288fab05d0be3e3c898c720775b8aa286e9f7cfed",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.promise.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.esnext.promise.d.ts": {
         "version": "5f0738e96b305d1d844c9b6346fef2b196647e41a194c0fac3bc6535fc792227",
         "signature": "5f0738e96b305d1d844c9b6346fef2b196647e41a194c0fac3bc6535fc792227",
         "affectsGlobalScope": true
       },
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.weakref.d.ts": {
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.esnext.weakref.d.ts": {
         "version": "3c32d0499b3d1bff5bb3e18105ce69437f49c2ad5ed746d1eaeac3ba804cdb20",
         "signature": "3c32d0499b3d1bff5bb3e18105ce69437f49c2ad5ed746d1eaeac3ba804cdb20",
         "affectsGlobalScope": true
       },
       "./math.ts": {
-        "version": "f4b9fbbfd9fa6fc759d4a8be94ae6c25374aadc0c72324e0202341bd8c0cb054",
-        "signature": "55fe76ed992792ddd131afe7bb163e223aa882b78108364944d81d92636bb2ad",
+        "version": "7dff584e91c2e01fe7bdd5745947f579c551b9658034b1ca848c8dc3b2de8ec7",
+        "signature": "31ea9796199371ec36d25f31e050a01fae8d56bd5c9bb5adb256df653adadfe9",
         "affectsGlobalScope": false
       },
       "./collider.ts": {
-        "version": "730de48a3f01165b9235660245d54f8e7005765e4d57f799e9f73ba439cb2e4a",
-        "signature": "001bc6b98bbfa472090b4dd18c0663aa358d6845310c961b780591e60ae1ac5a",
+        "version": "7b4e7ea2109f639e98db1e8b10b2ab5fafa744004c254ceca0065da5aa466cd6",
+        "signature": "5e30070ad09240b6cea36b1b569146da31096dc094eda574f2037ae8c46f739e",
         "affectsGlobalScope": false
       },
       "./gpu/drawable.ts": {
-        "version": "a54f6b06ebf7bc3e75f041d19f014b37e2e460aa5c711b0515d3b05a501c55c0",
-        "signature": "f44a66e0c5393c1aa028bb9ea0782b9be7f560a47ac47d6d1871310c69a5ea26",
+        "version": "40ff23fdc28dcc2935923d35d51a24d64a0d3b0c316077e872ffbf7697ce70b3",
+        "signature": "ee3b3ed43cbcdd4b3a671e910beb65fa1ffdcffe60c8782b23378164d81676aa",
         "affectsGlobalScope": false
       },
       "./gpu/renderpipeline.ts": {
-        "version": "58db5b40424453b76b6fa17f8bf1b4c880c88b04d9d0e170f49e24c4a279e440",
-        "signature": "99e58dc2afae827341155fd6bb355f6b1f562c881941288084fdd956a693887d",
+        "version": "df335023a186189b554438da37c7b4833ef71f5f544b3958a8ee61c5dcc8d4c7",
+        "signature": "f4af8ecc5359586199e26d95fef9bd81eebf394c704fdbeda6d505537bf99248",
         "affectsGlobalScope": false
       },
       "./gpu/bindgrouplayout.ts": {
-        "version": "f1f6e0a5aa02dd6efebc5f995840669274e22bdae168e6214a31230acab124e1",
-        "signature": "1875120b183dd8267e00ca81af3da4bc15e60108ade58e5aea14c916bfa27539",
+        "version": "3f9a5d5b04140e91c8ee98f4e90f2de6ed230cf7a8e7ee2bec6da3f866a29c9b",
+        "signature": "e316b8809550c74a306a992803923cf8ba4a774fab8544bd6e1610282fb47eaa",
         "affectsGlobalScope": false
       },
       "./workerthread.ts": {
@@ -247,58 +247,53 @@
         "affectsGlobalScope": false
       },
       "./terracamera.ts": {
-        "version": "730ab84f684e6eb0d191a4a35666d7d24af7a748d445265a6e4c4c004686dec3",
-        "signature": "c293797749a64699434de8cb1f5df95bc07be3cb7cdbb3391d7ce9ca16735626",
+        "version": "30cc119b2024da39b8260304eb658ae045a2c5b08b6968e91313dc90240d376c",
+        "signature": "77f9efcbb2e3c05d0c8a148cb7cd22c063925e82f8d5b0ef19a0f1c9f5d0be3c",
         "affectsGlobalScope": false
       },
       "./scene.ts": {
-        "version": "68654fa8d048194911862c2629d8329803103a16660415ba436685eacfaad29a",
-        "signature": "2601ff885f77f814014bb7ed8375493520bcefb0e018bd7913c985d658b1a43c",
+        "version": "5509e88e7e6d24cd9a6e9e924075960b98ca3f31bbc132956340d3390001f1ca",
+        "signature": "174ab035cafe0fe33a9a01edd726c2d4e238d91c0542218c63538cda0651c6b1",
         "affectsGlobalScope": false
       },
       "./gpu/renderpass.ts": {
-        "version": "ca535637425f3a429fff38c9636129be54140590aded60aa6ba143aebdc75dec",
-        "signature": "287d169a151aea9a960bc5b3de9a98086b5155c1ef182b313e6b10c7c77a5ac1",
+        "version": "ab344c0d04092e8c69fb4f23c511ee92710b5779571b55c76236d1a666e9c5e1",
+        "signature": "6b2afbe4ebbcec8c6eeb79059ef53bf8f8161ec1d78153223bca79bfc32ea0d5",
         "affectsGlobalScope": false
       },
       "./gpu.ts": {
-        "version": "6f68a6a06bbc06fa846a4f52bd22a15d0ce7f9aac7cad1f3d71b2e6252cbc1e2",
-        "signature": "be5de71b73048a261c06cdace1373cdd4715d398310da3edc21ea34368b7de6b",
+        "version": "a41ae5b69667b0261e5bceba5b6c86d5f92b972f64ceac76c2f5647299074217",
+        "signature": "3f6cabf349569c09a6995eac9afb178281df43fd1c2ebcb764d2b46720a8cea7",
         "affectsGlobalScope": false
       },
       "./lights.ts": {
-        "version": "99fe5ffa541a758e3760b08c3dfa0c760f126dfa8a11cd0a66c7b6e62dfd622f",
-        "signature": "bd43037e091a8b3f20d97246dbad6f3f0cea043d9dc8a881f2037cfa33b93821",
+        "version": "d59a14a8b76760547a5123db49638312d75241f0d502246f908d7728c1c5ebf0",
+        "signature": "d7bec1715c105ae1fa9a73d2e13e8d631e958f44349b0dae7ec73528ac586230",
         "affectsGlobalScope": false
       },
       "./terranode.ts": {
-        "version": "45039be2c1745e76ab314341f11df85d3bade6059c34f29c6840df38d2b21fd4",
-        "signature": "28d795590d15b9d3e01464c68b54ccc8ccd2d73bd5635c9cc5576faec7f68020",
-        "affectsGlobalScope": false
-      },
-      "./traits/worldposition.ts": {
-        "version": "3296a27d3913d3c995509d02d0a59e55e1d1db3ce95473e64ed31d8876df6859",
-        "signature": "7e053201f776102e1c865b3cd4e46666a81265c45142fa2f90ef7046d5fad632",
+        "version": "a8c3b0236bf33799eb9bae4ee65dfdcb97e0354ac3aa976a76dd5d18b6fc6e47",
+        "signature": "4e2a0daf4df188d405abe691f1dcb9d415bf60214a434248cf1366844ef05f9f",
         "affectsGlobalScope": false
       },
       "./physics.ts": {
-        "version": "11114607168d6e1735bd5e6e4ed84503b1d918c4045e7421da825ef268c93078",
-        "signature": "a6cd3abe3d42a2437eee20a1de8c66ccdcd4a534aef8da5b9b7f94ca05ea4fef",
+        "version": "d3096f3fff839e892e23ddf2b66232a77635fa3cb431a80e0f80032aca829e8b",
+        "signature": "4ab10c7ddf91621dbecd69619802066cd223bd4b7c8c7b1a4963c48e9a2fdce3",
         "affectsGlobalScope": false
       },
       "./engine.ts": {
-        "version": "368cc4d010e74e7a09c8e776c32d99ddf2ce47da4cb1ec56f93def9d0f961a2c",
-        "signature": "dcc55d601a9bb7a16471f6449cbc1aaec00b44b61efc205a2f419a9e848e5ed0",
+        "version": "27a6b767f5cc9f782927d18be748fd87172c6e948af412076fbb623b83f8451c",
+        "signature": "6279015f25b8cb93379304e2731b09d07495d1ed6de5b3a1f6e0522c3bf2a542",
         "affectsGlobalScope": false
       },
       "./arcrotatecamera.ts": {
-        "version": "28642711abbcb8b7d04f225b2fbaa7154bc7e4467a25fe02d842158516f7ecf9",
-        "signature": "a63d8a5bb4e0a182f4b4943b5d4d170aff5ff3ae21db487197c668dcfc38534b",
+        "version": "638adf5c3681190166c2c9be2b7a185c7f1077aa9a8cd06ef5ac379e2daa1b7c",
+        "signature": "bae60b904f7cd9904948e5c8b674c81cb754c64d38f221d5dd6d961e11ea202f",
         "affectsGlobalScope": false
       },
       "./db.ts": {
-        "version": "b0bf0761b5f9b239e4be7637f78183e35f40cf33451eed92ecd56e4c516e7ea6",
-        "signature": "ae1dae60ac4ec7b2640da57ccfb4cc124720d5575be26ef2e61dc296e6b2c097",
+        "version": "5ad5f06a70e7717a421fa365c9182fc1d1a41884adb22c84a1b2dd0a8023064b",
+        "signature": "d891ba160846ae33ba9b40d76c580597f81461a953a536c5a86b8ac81609708e",
         "affectsGlobalScope": true
       },
       "./gputypes.ts": {
@@ -327,28 +322,28 @@
         "affectsGlobalScope": false
       },
       "./traits/canvaslistener.ts": {
-        "version": "f270711ca61794d791589dbdffb289b2abef13cfec28c55cb813dc483d9a684f",
-        "signature": "0e8c58cf4783166d3a207b09b299fdf350cb88efb4a1ab1b3d6057cee00a6ea0",
+        "version": "71ec9e4c951d2c21296daeb20c5840e510310ccef68e576160b638fe5ca0b255",
+        "signature": "33ce5c704fca500d991a6544780ba4aa98349f4b4686a6ec4ab8cbbb176f19f7",
         "affectsGlobalScope": false
       },
       "./world/water.ts": {
-        "version": "faa111306c7a31ab2d1fbde4865eec093c8c8e536adaf9f14a581a36e4f25304",
-        "signature": "3d66450fa3d697f71ad4374fe883d6ff39248d09a70d823c2fbc4400d9c3d9fc",
+        "version": "b08d29fac902107013dd29f50313333f557de8fff6e7ea4f0abd6a8dff373045",
+        "signature": "63522cfe72b486b7d4db65f3f4b5fd05ab5ec2d6136c32a17e6a5c86a8a27a2a",
         "affectsGlobalScope": false
       },
       "./tools/terrain.ts": {
-        "version": "0e110a2995ca62b2c08def411cb19b08d0f93ab8990f59a5ff4b3c2bc68570ea",
-        "signature": "846874b3e2119d7081492670a544b20ef70b9226a478dc007899b2dd7eb7c541",
+        "version": "96f3b043d69af54ac061765cf3e9c82a84726e24a2d43fba5972f28e276b59fc",
+        "signature": "17c5b564d2fc8d866b0a6ac79fdda9584a4e128084f409a598468ca16d89283a",
         "affectsGlobalScope": false
       },
       "./gpu/renderpipelines/terrainrenderpipeline.ts": {
-        "version": "66aef0d00db751d0b71cfc899b54c26d6e80f7715009a6f40fa445e32294bade",
-        "signature": "a3c5b2a2c2fdd6a86e3bccb7a93ec0babcfe41a74492f12c5307f032e9d4b460",
+        "version": "56780cc6006d377677bf4041b4faf49784108f1e470e2dce28c0978c0a01d691",
+        "signature": "26b2589d4276e1b8bb667823a4b88d085504d26ba001185f4057e893bfa78bbd",
         "affectsGlobalScope": false
       },
       "./world/terrain.ts": {
-        "version": "a4f22f82cc26f94c99de9a90f50149974931bf62517528b0225e22cc84334d4c",
-        "signature": "7e841013144c9f02bda5d1ac3d4156ea9c10a7fa5270bd4e22bd9bcaa704f1e9",
+        "version": "3e5a1cb2ad905c8510a397b38811493ffe0f64555406bff17e612dc09e42123a",
+        "signature": "c2922213df84c5618bc6c377007dc9f31c55503f5eb7b7ba278e63326e603815",
         "affectsGlobalScope": false
       },
       "./uitab.ts": {
@@ -356,79 +351,54 @@
         "signature": "d1fedd100de5b08fcdbf2e9b81756144278250efc3567940a9275b27a96370f6",
         "affectsGlobalScope": false
       },
+      "./commonmath.ts": {
+        "version": "9436b1f2f1f7b8c7984b78e676c02fdd78d16483eec3e22d281a7ab65bd30f51",
+        "signature": "ba59f8bbd418773eaa4aca44375f86d13667b43e668bdb4791ed9f838f8984c0",
+        "affectsGlobalScope": true
+      },
+      "./gpu/renderpipelines/simple.ts": {
+        "version": "f31ef86fcb7bf685d5d4f982eceb82728c7a355708e83ab8bacbc9681a0cbf24",
+        "signature": "3c6005b099f3f875f20a9a42ddaa572e7fc82105b6fc54f5c4c78328186b153a",
+        "affectsGlobalScope": false
+      },
+      "./gpu/meshes/box.ts": {
+        "version": "ab1ed60cde1a49c125bb1eaaed9ad275d84d0118a7d8b52c1123f068cd393076",
+        "signature": "3731162631fee3a5afddbec3ec7e81743f928da39e02732b95ab721a0a3db760",
+        "affectsGlobalScope": false
+      },
+      "./human.ts": {
+        "version": "3bf23f5602ab96850548010974290bcc9cb7262d559340e9b873d86830f0d6b6",
+        "signature": "b93d12e5bbcadf0273d3238e5326f95715ecdb41c1f1e2962edbd1a8d9aa7c27",
+        "affectsGlobalScope": false
+      },
       "./types/interfaces/index.d.ts": {
         "version": "f1a721122bcc0bcad932999529fc467b4f59647f5ecf65b7d8f850ec3feb2cc8",
         "signature": "f1a721122bcc0bcad932999529fc467b4f59647f5ecf65b7d8f850ec3feb2cc8",
         "affectsGlobalScope": false
       },
-      "./plants/plants.ts": {
-        "version": "5ba9d6a508b40c8f5107d2892af26ee0bf32c976c27b1989df42f17a4b5e785f",
-        "signature": "35a44bd77705e47732b3edf77f8081225ddf94e195cc39cfb93e32693127c701",
-        "affectsGlobalScope": false
-      },
       "./paintground/paintground.ts": {
-        "version": "218584b58248687e281d73cff9c5a9312149c89837d9da40534b174d9e08f620",
-        "signature": "f12175217a65693a85dafb3fbce4283c02aba05b12aedc21d5020e145095d840",
+        "version": "6a6d32cf605a96d19577c37e8e31e32a713cffccb75a89ba7250e392be18693a",
+        "signature": "7064f6d1fb0a5c695081f514e4d7bbcf37afd7a3169fd26537fe345855e7beb0",
         "affectsGlobalScope": false
-      },
-      "./paintground/paintplane.ts": {
-        "version": "c49771bf91e12c0689d3173f18c9539cbc40b6a01100730adb14dcde44436aae",
-        "signature": "e478bf5b4bd6dad763fdf4859bf0ff493bb623868fd28f2535c01c55489c967b",
-        "affectsGlobalScope": false
-      },
-      "./tools/plantsui.ts": {
-        "version": "8652832b534f5b4cb99a6175c51d746ac799809c753ea2ae94d3ba55d53887d0",
-        "signature": "9a2dcb90f636f617ff183275164d064ad4bd38c6235844be3c2b5cd217ab32f5",
-        "affectsGlobalScope": false
-      },
-      "./tools/camera.ts": {
-        "version": "31f8eea1dcbc9fab6dc354f4e65f032c878a1e00cdc8ddf84389bf96122ac808",
-        "signature": "e28078ea0ff9ba37a4db71ae056f668605b8620acfb9bf3ba79252b55a690ed8",
-        "affectsGlobalScope": false
-      },
-      "./tools/buildings.ts": {
-        "version": "83534ed030023c8cf1d0c4db8fc141a3227cbd1b4d3e65ae3537d8094ec131d1",
-        "signature": "d766af34284b925136e7e244b931f3803cd0f5fa2116b9df1698a6311de7832b",
-        "affectsGlobalScope": false
-      },
-      "./paintground/painttexture.ts": {
-        "version": "0cd2291c304a6c1e0e544441a8afb82ebf11b93e71c0be302af4968db1faaf8b",
-        "signature": "5b274a077eaddf7b2fe297f8f70d605d5d96c7b6d663c68f3f0f032626522f89",
-        "affectsGlobalScope": false
-      },
-      "./tools/zones.ts": {
-        "version": "f3334800aaf7bbd2a18191cc88987aff2a9dec6e4d8ed5fccd9c2b862c92979b",
-        "signature": "8ad2c905fd0377328a0a8381fcd1cdd192d5c44ef2ef25fc545312f9a6571330",
-        "affectsGlobalScope": false
-      },
-      "./gpu/renderpipelines/simple.ts": {
-        "version": "01a0630aab66483cd1512e0c862ea91946a36cfeecd5cad9ffd46a1eb25f263d",
-        "signature": "224a03c95947cd77fe84329a00676bde0afe80cf74ab268eba559eda09038b16",
-        "affectsGlobalScope": false
-      },
-      "./gpu/meshes/box.ts": {
-        "version": "c86cf4265df286de407993c14ba3a99bb84c02d2bdb3ae944a000d26274a56b0",
-        "signature": "d1b90e818edc3cbed30efbc9151b4747d3ed0363d7485ac579d5df057ad3ac97",
-        "affectsGlobalScope": false
-      },
-      "./world/sun2.ts": {
-        "version": "b65328c1f8e56eef8f5c7a592d6b3784de23bb27f6f7dd599e62500cf930eff0",
-        "signature": "6154e68082c2a86d523e7d34a0da2d70bb20de032058e5cd533a98d841292807",
-        "affectsGlobalScope": false
-      },
-      "./code.ts": {
-        "version": "493eec4df3c715b0205c32c67b043216b5f9ef3e980c827e457109fbec764dae",
-        "signature": "ea15b972c0081d3da5c10807f9a6f8f2aa2b80fd924f1eaa4d44e41c2edb15fe",
-        "affectsGlobalScope": true
-      },
-      "./commonmath.ts": {
-        "version": "de823811ff7487953844178d2ba89eb9001b04b0c326322ce21f642c9ba83d89",
-        "signature": "07bf9c5b59eb2f3117a4cbea37312687fe44ddc1f78c6789d09a92e0eb1f5ab7",
-        "affectsGlobalScope": true
       },
       "./paintground/paintline.ts": {
         "version": "6ac8e7f29c6ca7460dd85dfed649599d3b0fb6919e3259810b04da74f35e7651",
         "signature": "a56ad90fb7de181c50a6b95cd44a8aee0ebf993e14d18b9a18a7d14c804f2c72",
+        "affectsGlobalScope": false
+      },
+      "./paintground/paintplane.ts": {
+        "version": "62459c17f851e658ff0c6c9e0feaa84b718f1e81d93705df5854da5f83fd2a57",
+        "signature": "e478bf5b4bd6dad763fdf4859bf0ff493bb623868fd28f2535c01c55489c967b",
+        "affectsGlobalScope": false
+      },
+      "./paintground/painttexture.ts": {
+        "version": "f435598d84351ccead9fd0f5b5849640f35e34472698a214ec2fc5ca2ad1a274",
+        "signature": "5b274a077eaddf7b2fe297f8f70d605d5d96c7b6d663c68f3f0f032626522f89",
+        "affectsGlobalScope": false
+      },
+      "./plants/plants.ts": {
+        "version": "9f1c4af15155993edb2dfb059314af61402d879b18a3d6ecff6dbb89caf4b70f",
+        "signature": "35a44bd77705e47732b3edf77f8081225ddf94e195cc39cfb93e32693127c701",
         "affectsGlobalScope": false
       },
       "./plants/grass.ts": {
@@ -446,10 +416,50 @@
         "signature": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86",
         "affectsGlobalScope": false
       },
-      "./world/tests/testplane.ts": {
-        "version": "f5d95733bcee010cae8647a63b4dee6d9e29b8b2c86f203f0dbc4a16dd48d24a",
-        "signature": "91e7af7b44a5c4f6197cdb0dbd5870b21b225e9c8f1c546cefa134f38f8bf375",
+      "./tools/zones.ts": {
+        "version": "761a15e661eb266df02f61f3479b2cabcd402a2d88b6e2336153e16123eba334",
+        "signature": "8ad2c905fd0377328a0a8381fcd1cdd192d5c44ef2ef25fc545312f9a6571330",
         "affectsGlobalScope": false
+      },
+      "./tools/buildings.ts": {
+        "version": "83534ed030023c8cf1d0c4db8fc141a3227cbd1b4d3e65ae3537d8094ec131d1",
+        "signature": "d766af34284b925136e7e244b931f3803cd0f5fa2116b9df1698a6311de7832b",
+        "affectsGlobalScope": false
+      },
+      "./tools/camera.ts": {
+        "version": "31f8eea1dcbc9fab6dc354f4e65f032c878a1e00cdc8ddf84389bf96122ac808",
+        "signature": "e28078ea0ff9ba37a4db71ae056f668605b8620acfb9bf3ba79252b55a690ed8",
+        "affectsGlobalScope": false
+      },
+      "./tools/plantsui.ts": {
+        "version": "8652832b534f5b4cb99a6175c51d746ac799809c753ea2ae94d3ba55d53887d0",
+        "signature": "9a2dcb90f636f617ff183275164d064ad4bd38c6235844be3c2b5cd217ab32f5",
+        "affectsGlobalScope": false
+      },
+      "./world/sun2.ts": {
+        "version": "9fc32da3e779adbca563f118dca9add29481c33b5144b66ade50d041c5127589",
+        "signature": "da7cca74af8cf57d949c2eec71466b366355351f6c433902df141a884d4040a2",
+        "affectsGlobalScope": false
+      },
+      "./world/tests/testplane.ts": {
+        "version": "42cea3587225a4c87cd4b5a90c352c269ed0b56fb38badc964879eb99cac83ea",
+        "signature": "bf932e6d1f2194110633380ced7c1ccbdf9c4c94f99a2e098bc529abbfc96e2d",
+        "affectsGlobalScope": false
+      },
+      "./ui/login.tsx": {
+        "version": "7549846d5d2850fa6bc102e3ecf1c761d4c188925844652fae83093c670dce9a",
+        "signature": "8dfda864d3beaf738e6638df5d26a24b6b08bf235ebe42d69d9908291b010d31",
+        "affectsGlobalScope": false
+      },
+      "./ui/canvas.tsx": {
+        "version": "952118ab650f526cb4e2a785d1dc05265c87d8becca23c14fdf6704e39277924",
+        "signature": "1894b6a0d8a3e76487a9ce24ebe7ebb38c41d9debff843b3075f249a47e79f95",
+        "affectsGlobalScope": false
+      },
+      "./code.tsx": {
+        "version": "b17fac58257e559e86c5e6b67a550a1dfe7d91ed4451e4b4b856c339eb7669d1",
+        "signature": "1f8727e32de057cc99bf79b5fea9b00794cf794875b19683d690c6ba8fba378a",
+        "affectsGlobalScope": true
       },
       "./rustwasm/hello_wasm.js": {
         "version": "6a46400090dd40da2263903087a43a1de57d6db13fe10c05852c18360dc809d4",
@@ -462,8 +472,8 @@
         "affectsGlobalScope": true
       },
       "./node_modules/@webgpu/types/dist/index.d.ts": {
-        "version": "5a7b96e689cea7b3e747aefde52271b4d61a2631ec11dacc51fc3aba2eb06c9f",
-        "signature": "5a7b96e689cea7b3e747aefde52271b4d61a2631ec11dacc51fc3aba2eb06c9f",
+        "version": "a77e0b7ba6946517b797739ed215784db0cee09cf33cf34c6b1a82ca423d547d",
+        "signature": "a77e0b7ba6946517b797739ed215784db0cee09cf33cf34c6b1a82ca423d547d",
         "affectsGlobalScope": true
       }
     },
@@ -480,11 +490,14 @@
       "noUnusedLocals": true,
       "noUnusedParameters": true,
       "noUncheckedIndexedAccess": false,
+      "jsx": 2,
+      "jsxFactory": "TerraUI.createElement",
       "target": 99,
       "module": 99,
       "lib": [
         "lib.dom.d.ts",
-        "lib.esnext.d.ts"
+        "lib.esnext.d.ts",
+        "lib.es2017.sharedmemory.d.ts"
       ],
       "typeRoots": [
         "./node_modules/@types",
@@ -510,28 +523,14 @@
         "./math.ts",
         "./terracamera.ts"
       ],
-      "./code.ts": [
-        "./arcrotatecamera.ts",
+      "./code.tsx": [
         "./engine.ts",
-        "./gpu.ts",
-        "./gpu/meshes/box.ts",
-        "./gpu/renderpass.ts",
-        "./plants/plants.ts",
-        "./scene.ts",
-        "./terracamera.ts",
-        "./terranode.ts",
-        "./tools/buildings.ts",
-        "./tools/camera.ts",
-        "./tools/plantsui.ts",
-        "./tools/terrain.ts",
-        "./tools/zones.ts",
         "./types/interfaces/index.d.ts",
-        "./uitab.ts",
-        "./world/sun2.ts",
-        "./world/terrain.ts",
-        "./world/water.ts"
+        "./ui/canvas.tsx",
+        "./ui/login.tsx"
       ],
       "./collider.ts": [
+        "./engine.ts",
         "./math.ts"
       ],
       "./engine.ts": [
@@ -578,20 +577,25 @@
         "./gpu.ts",
         "./gpu/renderpipeline.ts",
         "./scene.ts",
-        "./terranode.ts",
-        "./traits/worldposition.ts"
+        "./terranode.ts"
       ],
       "./gpu/renderpipelines/terrainrenderpipeline.ts": [
         "./gpu.ts",
         "./gpu/drawable.ts",
         "./gpu/renderpipeline.ts",
         "./scene.ts",
-        "./terranode.ts",
-        "./traits/worldposition.ts"
+        "./terranode.ts"
+      ],
+      "./human.ts": [
+        "./gpu/meshes/box.ts",
+        "./physics.ts",
+        "./scene.ts"
       ],
       "./lights.ts": [
-        "./gpu.ts",
-        "./traits/worldposition.ts"
+        "./gpu.ts"
+      ],
+      "./math.ts": [
+        "./engine.ts"
       ],
       "./paintground/paintground.ts": [
         "./arcrotatecamera.ts",
@@ -612,12 +616,13 @@
       ],
       "./paintground/paintplane.ts": [
         "./arcrotatecamera.ts",
-        "./gpu/drawable.ts",
+        "./engine.ts",
+        "./gpu.ts",
+        "./gpu/renderpipeline.ts",
         "./paintground/paintground.ts",
         "./scene.ts",
         "./terranode.ts",
         "./traits/canvaslistener.ts",
-        "./traits/worldposition.ts",
         "./types/interfaces/index.d.ts",
         "./world/terrain.ts",
         "./world/water.ts"
@@ -633,7 +638,7 @@
         "./world/water.ts"
       ],
       "./physics.ts": [
-        "./traits/worldposition.ts"
+        "./terranode.ts"
       ],
       "./plants/plants.ts": [
         "./scene.ts",
@@ -661,11 +666,12 @@
       "./terranode.ts": [
         "./collider.ts",
         "./engine.ts",
+        "./gpu/drawable.ts",
+        "./gpu/renderpipeline.ts",
         "./lights.ts",
         "./math.ts",
         "./physics.ts",
         "./scene.ts",
-        "./traits/worldposition.ts",
         "./workerthread.ts"
       ],
       "./terrascene.ts": [
@@ -701,12 +707,14 @@
       ],
       "./tools/terrain.ts": [
         "./arcrotatecamera.ts",
+        "./engine.ts",
+        "./gpu.ts",
         "./gpu/drawable.ts",
+        "./gpu/renderpipeline.ts",
         "./scene.ts",
         "./terranode.ts",
         "./traits/canvaslistener.ts",
         "./traits/trait.ts",
-        "./traits/worldposition.ts",
         "./uitab.ts",
         "./workerthread.ts",
         "./world/terrain.ts",
@@ -729,12 +737,31 @@
         "./traits/trait.ts",
         "./uitab.ts"
       ],
-      "./traits/worldposition.ts": [
-        "./math.ts",
-        "./terranode.ts"
-      ],
       "./types/interfaces/index.d.ts": [
         "./math.ts"
+      ],
+      "./ui/canvas.tsx": [
+        "./arcrotatecamera.ts",
+        "./engine.ts",
+        "./gpu.ts",
+        "./gpu/meshes/box.ts",
+        "./gpu/renderpass.ts",
+        "./human.ts",
+        "./lazyeval.ts",
+        "./plants/plants.ts",
+        "./scene.ts",
+        "./terracamera.ts",
+        "./terranode.ts",
+        "./tools/buildings.ts",
+        "./tools/camera.ts",
+        "./tools/plantsui.ts",
+        "./tools/terrain.ts",
+        "./tools/zones.ts",
+        "./types/interfaces/index.d.ts",
+        "./uitab.ts",
+        "./world/sun2.ts",
+        "./world/terrain.ts",
+        "./world/water.ts"
       ],
       "./uitab.ts": [
         "./arcrotatecamera.ts",
@@ -743,12 +770,13 @@
         "./world/water.ts"
       ],
       "./world/sun2.ts": [
+        "./gpu.ts",
+        "./gpu/renderpipeline.ts",
         "./lights.ts",
         "./math.ts",
         "./physics.ts",
         "./scene.ts",
-        "./terranode.ts",
-        "./traits/worldposition.ts"
+        "./terranode.ts"
       ],
       "./world/terrain.ts": [
         "./gpu.ts",
@@ -758,10 +786,11 @@
       ],
       "./world/tests/testplane.ts": [
         "./scene.ts",
-        "./terranode.ts",
-        "./traits/worldposition.ts"
+        "./terranode.ts"
       ],
       "./world/water.ts": [
+        "./gpu.ts",
+        "./gpu/renderpipeline.ts",
         "./scene.ts",
         "./terranode.ts"
       ]
@@ -771,10 +800,11 @@
         "./engine.ts",
         "./terracamera.ts"
       ],
-      "./code.ts": [
+      "./code.tsx": [
         "./engine.ts"
       ],
       "./collider.ts": [
+        "./engine.ts",
         "./math.ts"
       ],
       "./engine.ts": [
@@ -788,8 +818,7 @@
       "./gpu.ts": [
         "./gpu/bindgrouplayout.ts",
         "./gpu/renderpass.ts",
-        "./scene.ts",
-        "./terranode.ts"
+        "./scene.ts"
       ],
       "./gpu/bindgrouplayout.ts": [
         "./gpu.ts",
@@ -817,19 +846,25 @@
         "./scene.ts"
       ],
       "./gpu/renderpipelines/simple.ts": [
+        "./gpu/drawable.ts",
         "./scene.ts",
-        "./terranode.ts",
-        "./traits/worldposition.ts"
+        "./terranode.ts"
       ],
       "./gpu/renderpipelines/terrainrenderpipeline.ts": [
         "./gpu/drawable.ts",
         "./scene.ts",
-        "./terranode.ts",
-        "./traits/worldposition.ts"
+        "./terranode.ts"
+      ],
+      "./human.ts": [
+        "./gpu/meshes/box.ts",
+        "./physics.ts",
+        "./scene.ts"
       ],
       "./lights.ts": [
-        "./gpu.ts",
-        "./traits/worldposition.ts"
+        "./gpu.ts"
+      ],
+      "./math.ts": [
+        "./engine.ts"
       ],
       "./paintground/paintground.ts": [
         "./arcrotatecamera.ts",
@@ -868,7 +903,7 @@
         "./world/water.ts"
       ],
       "./physics.ts": [
-        "./traits/worldposition.ts"
+        "./terranode.ts"
       ],
       "./plants/plants.ts": [
         "./scene.ts",
@@ -893,11 +928,12 @@
       "./terranode.ts": [
         "./collider.ts",
         "./engine.ts",
+        "./gpu/drawable.ts",
+        "./gpu/renderpipeline.ts",
         "./lights.ts",
         "./math.ts",
         "./physics.ts",
-        "./scene.ts",
-        "./traits/worldposition.ts"
+        "./scene.ts"
       ],
       "./terrascene.ts": [
         "./scene.ts"
@@ -929,10 +965,10 @@
       ],
       "./tools/terrain.ts": [
         "./arcrotatecamera.ts",
+        "./gpu/drawable.ts",
         "./scene.ts",
         "./terranode.ts",
         "./traits/trait.ts",
-        "./traits/worldposition.ts",
         "./uitab.ts",
         "./world/terrain.ts",
         "./world/water.ts"
@@ -950,10 +986,6 @@
         "./traits/trait.ts",
         "./uitab.ts"
       ],
-      "./traits/worldposition.ts": [
-        "./math.ts",
-        "./terranode.ts"
-      ],
       "./types/interfaces/index.d.ts": [
         "./math.ts"
       ],
@@ -964,11 +996,11 @@
         "./world/water.ts"
       ],
       "./world/sun2.ts": [
+        "./gpu/drawable.ts",
         "./lights.ts",
         "./physics.ts",
         "./scene.ts",
-        "./terranode.ts",
-        "./traits/worldposition.ts"
+        "./terranode.ts"
       ],
       "./world/terrain.ts": [
         "./gpu.ts",
@@ -978,60 +1010,60 @@
       ],
       "./world/tests/testplane.ts": [
         "./scene.ts",
-        "./terranode.ts",
-        "./traits/worldposition.ts"
+        "./terranode.ts"
       ],
       "./world/water.ts": [
+        "./gpu/drawable.ts",
         "./scene.ts",
         "./terranode.ts"
       ]
     },
     "semanticDiagnosticsPerFile": [
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.dom.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.collection.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.core.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.generator.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.iterable.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.promise.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.proxy.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.reflect.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.symbol.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2015.symbol.wellknown.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2016.array.include.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2016.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.intl.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.object.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.sharedmemory.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.string.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2017.typedarrays.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.asyncgenerator.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.asynciterable.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.intl.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.promise.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2018.regexp.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2019.array.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2019.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2019.object.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2019.string.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2019.symbol.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.bigint.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.intl.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.promise.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.sharedmemory.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.string.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.es5.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.intl.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.promise.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.string.d.ts",
-      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.1.2/tools/tsc/lib.esnext.weakref.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.dom.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.collection.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.core.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.generator.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.iterable.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.promise.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.proxy.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.reflect.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.symbol.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2015.symbol.wellknown.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2016.array.include.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2016.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.intl.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.object.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.sharedmemory.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.string.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2017.typedarrays.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.asyncgenerator.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.asynciterable.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.intl.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.promise.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2018.regexp.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2019.array.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2019.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2019.object.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2019.string.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2019.symbol.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.bigint.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.intl.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.promise.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.sharedmemory.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.string.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es2020.symbol.wellknown.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.es5.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.esnext.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.esnext.intl.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.esnext.promise.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.esnext.string.d.ts",
+      "../../../../../.nuget/packages/microsoft.typescript.msbuild/4.2.0/tools/tsc/lib.esnext.weakref.d.ts",
       "./arcrotatecamera.ts",
-      "./code.ts",
+      "./code.tsx",
       "./collider.ts",
       "./commonmath.ts",
       "./db.ts",
@@ -1045,6 +1077,7 @@
       "./gpu/renderpipelines/simple.ts",
       "./gpu/renderpipelines/terrainrenderpipeline.ts",
       "./gputypes.ts",
+      "./human.ts",
       "./lazyeval.ts",
       "./lights.ts",
       "./math.ts",
@@ -1072,8 +1105,9 @@
       "./tools/zones.ts",
       "./traits/canvaslistener.ts",
       "./traits/trait.ts",
-      "./traits/worldposition.ts",
       "./types/interfaces/index.d.ts",
+      "./ui/canvas.tsx",
+      "./ui/login.tsx",
       "./uitab.ts",
       "./workerthread.ts",
       "./world/sun2.ts",
@@ -1082,5 +1116,5 @@
       "./world/water.ts"
     ]
   },
-  "version": "4.1.2"
+  "version": "4.2.0-dev"
 }

@@ -1,6 +1,6 @@
-﻿import type { Scene } from "../Scene";
-import type { TerraCamera } from "../TerraCamera";
-import type { GPU } from "../GPU";
+﻿import type { Scene } from "../Scene.js";
+import type { TerraCamera } from "../TerraCamera.js";
+import type { GPU } from "../GPU.js";
 
 export class RenderPass {
     cameras: Set<TerraCamera> = new Set();

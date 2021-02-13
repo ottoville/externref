@@ -2,8 +2,8 @@
   "compilerOptions": {
     "experimentalDecorators": true,
     "outDir": "../wwwroot/js",
-     "strictNullChecks": true,
-     "strictBindCallApply": true,
+    "strictNullChecks": true,
+    "strictBindCallApply": true,
     "strictFunctionTypes": true,
     "strictPropertyInitialization": true,
     "strict": true,
@@ -12,12 +12,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noUncheckedIndexedAccess": false,
+    "jsx": "react",
+    "jsxFactory": "TerraUI.createElement",
     //"strict": true,
     "target": "esnext",
     "module": "ESNext",
     "lib": [
       "dom",
-      "esnext"
+      "esnext",
+      "ES2017.SharedMemory"
     ],
     "typeRoots": [ "./node_modules/@types/", "./node_modules/@webgpu/" ],
     "types": [
@@ -30,7 +33,7 @@
     "tsBuildInfoFile": "tsconfig.main.tsbuildinfo",
     "baseUrl": "."
   },
-  "include": [ "**/*.ts", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*" ],
+  "include": [ "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "code.tsx" ],
   "exclude": [
     "node_modules",
     "workers",

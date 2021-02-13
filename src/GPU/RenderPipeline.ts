@@ -1,8 +1,8 @@
-﻿import { Scene } from "../Scene";
-import { BindGroupLayout } from "./BindGroupLayout";
-import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable";
-import type { Drawable } from "./Drawable";
-import { RenderPass } from "./RenderPass";
+﻿import type { Scene } from "../Scene.js";
+import type { BindGroupLayout } from "./BindGroupLayout.js";
+import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
+import type { Drawable } from "./Drawable.js";
+import type { RenderPass } from "./RenderPass.js";
 
 export class RenderPipeline {
     static BindedTerrains: Set<RenderPipeline> = new Set();

@@ -1,4 +1,4 @@
-﻿import { MainNode } from "./TerraNode";
+﻿import type { MainNode } from "./TerraNode.js";
 
 //let Epsilon = 0.001;
 export interface hasPhysics {

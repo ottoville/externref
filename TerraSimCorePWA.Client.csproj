@@ -389,6 +389,7 @@
     <None Include="src\node_modules\yallist\README.md" />
     <None Include="src\node_modules\yallist\yallist.js" />
     <None Include="TerraSimCorePWA.Client.sln" />
+    <None Include="wwwroot\lib\vue.runtime.global.prod.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -491,6 +492,7 @@
   <ItemGroup>
     <Folder Include="wwwroot\js\lib\" />
     <Folder Include="wwwroot\collider\" />
+    <Folder Include="wwwroot\resources\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -504,10 +506,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="node .\renameJS.js" />
-  </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="npm --prefix $(ProjectDir)/src run build" />
