@@ -171,7 +171,7 @@ export class Engine {
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasmSIMD) {
 
         wasm.constructor(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
-       wasmSIMD.constructor(this.collisionNotFoundSIMD.byteOffset, this.intersectionPointWasmSIMD.byteOffset, this.nearestDistanceSquaredSIMD.byteOffset, this.collidedMeshSIMD.byteOffset)
+      // wasmSIMD.constructor(this.collisionNotFoundSIMD.byteOffset, this.intersectionPointWasmSIMD.byteOffset, this.nearestDistanceSquaredSIMD.byteOffset, this.collidedMeshSIMD.byteOffset)
       //  wasmSIMD.constructor(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
 
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
@@ -254,7 +254,6 @@ export class Engine {
             return;
         }
         this.collider._retry++;
-
         await this.collideWithWorld(position, velocity, maximumRetry, finalPosition);
     }
 }

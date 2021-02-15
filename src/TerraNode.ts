@@ -63,8 +63,10 @@ export abstract class MainNode {
         this.transformation[10] = (1 - (xx + yy)) * sz;
     }
     private onUpdate(): void {
-        if (this instanceof BoundableNode)
-            this.updateBoundingBoxByMatrix(this.transformation);
+        if (this instanceof BoundableNode) {
+            this.boundingBox.dirtyMin = true;
+            this.boundingBox.dirtyMax = true;
+        }
         this.updateDynamicBuffer();
     }
     SetTranslationDelta(value: [number, number, number] | [number, number] | [number] | Float32Array) {
@@ -180,18 +182,96 @@ class pickInfo {
     distance = new Float32Array(this.buffer, 3 * 4, 1);
 }
 class boundingBox {
-    #buffer = new ArrayBuffer(4 * 6);
-    box = new Float32Array(this.#buffer);
-    min = new TerraVector3(this.#buffer, 0);
-    max = new TerraVector3(this.#buffer, 4 * 3);
+    buffer = new SharedArrayBuffer(4 * 6);
+    #min = new TerraVector3(this.buffer, 0);
+    #max = new TerraVector3(this.buffer, 4 * 3);
+
+    #maxOriginal: TerraVector3;
+    #minOriginal: TerraVector3;
+
+    dirtyMin = true
+    dirtyMax = true
+    needInitMin = true;
+    needInitMax = true
+
+    constructor(private mesh: BoundableNode) {
+        const original = new ArrayBuffer(6 * 4);
+        this.#minOriginal = new TerraVector3(original, 0);
+        this.#maxOriginal = new TerraVector3(original, 4 * 3);
+    }
+
+    initMin() {
+        this.#minOriginal.set(new TerraVector3(this.mesh.verticesPositionBuffer));
+        let value = 0;
+        for (let i = 0; i < this.mesh.positionCount; i++) {
+            let ii = i * this.mesh.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT;
+            value = this.mesh.verticesDataview.getFloat32(ii, true);
+            if (value < this.#minOriginal[0])
+                this.#minOriginal[0] = value;
+            value = this.mesh.verticesDataview.getFloat32(ii + 4, true)
+            if (value < this.#minOriginal[1])
+                this.#minOriginal[1] = value;
+            value = this.mesh.verticesDataview.getFloat32(ii + 8, true)
+            if (value < this.#minOriginal[2])
+                this.#minOriginal[2] = value;
+        }
+        this.needInitMin = false;
+        this.updateMin();
+    }
+    initMax() {
+        this.#maxOriginal.set(new TerraVector3(this.mesh.verticesPositionBuffer));
+        let value = 0;
+        for (let i = 0; i < this.mesh.positionCount; i++) {
+            let ii = i * this.mesh.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT;
+            value = this.mesh.verticesDataview.getFloat32(ii, true);
+            if (value > this.#maxOriginal[0])
+                this.#maxOriginal[0] = value;
+            value = this.mesh.verticesDataview.getFloat32(ii + 4, true)
+            if (value > this.#maxOriginal[1])
+                this.#maxOriginal[1] = value;
+            value = this.mesh.verticesDataview.getFloat32(ii + 8, true)
+            if (value > this.#maxOriginal[2])
+                this.#maxOriginal[2] = value;
+        }
+        this.needInitMax = false;
+        this.updateMax();
+    }
+    updateMin() {
+        this.#minOriginal.multiply2Ref(this.mesh.transformation, this.#min);
+        this.dirtyMin = false;
+    }
+    updateMax() {
+        this.#maxOriginal.multiply2Ref(this.mesh.transformation, this.#max);
+        this.dirtyMax = false;
+    }
+    get min() {
+        if (this.needInitMin) {
+            this.initMin();
+        }
+        else if (this.dirtyMin) {
+            this.#minOriginal.multiply2Ref(this.mesh.transformation, this.#min);
+            this.dirtyMin = false;
+        }
+        return this.#min;
+    }
+    get max() {
+        if (this.needInitMax) {
+            this.initMax();
+        }
+        else if (this.dirtyMax) {
+            this.#maxOriginal.multiply2Ref(this.mesh.transformation, this.#max);
+            this.dirtyMax = false;
+        }
+        return this.#max;
+    }
+
+
 }
 
 export abstract class BoundableNode extends TerraNodeGPU {
-   
 
-    readonly boundingBox = new boundingBox();
+    readonly boundingBox: boundingBox;
     readonly pickInfo = new pickInfo();
-
 
     #positions: TerraVector3[] = [];
     #colliderVertices: TerraVector4[] = [];
@@ -205,6 +285,10 @@ export abstract class BoundableNode extends TerraNodeGPU {
     facesBufferColliderPointer: number;
     lastColliderWorldVectorsPointer: number;
     facesBufferColliderPointerParallel: number;
+    verticesPositionBuffer: SharedArrayBuffer;
+    verticesView: Omit<Float32Array, 'set'>;
+    verticesBuffesSize: number;
+    verticesDataview: DataView;
 
     addVectors(faceIndex: number, vectors: [TerraVector4, TerraVector4, TerraVector4]) {
         try {
@@ -281,17 +365,28 @@ export abstract class BoundableNode extends TerraNodeGPU {
         }
         this.rebuildTrianglePlanes();
     }
+    updateVertices(callback: (arr: SharedArrayBuffer) => void) {
+        callback(this.verticesPositionBuffer);
+        this.boundingBox.needInitMin = true;
+        this.boundingBox.needInitMax = true;
+    }
+    
     constructor(
         scene: Scene,
         renderPipeline: RenderPipeline,
-        public readonly verticesPositionBuffer: SharedArrayBuffer,
+        public positionCount: number,
         public verticesPositionStride: number = 3,
         private indicesView?: Uint32Array | Uint16Array,        
         private strip = false,
         
     ) {
         super(scene.engine, renderPipeline);
-        const positionCount = (this.verticesPositionBuffer.byteLength / 4) / this.verticesPositionStride;
+        // const positionCount = (this.verticesPositionBuffer.byteLength / 4) / this.verticesPositionStride;
+        this.verticesBuffesSize = positionCount * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
+
+        this.verticesPositionBuffer = new SharedArrayBuffer(this.verticesBuffesSize)
+        this.verticesView = new Float32Array(this.verticesPositionBuffer)
+        this.verticesDataview = new DataView(this.verticesPositionBuffer);
         this.verticesCount = indicesView ? indicesView.length : positionCount;
         if (this.strip) {
             this.#faces = new Array(this.verticesCount - 2)
@@ -307,31 +402,25 @@ export abstract class BoundableNode extends TerraNodeGPU {
         this.lastColliderWorldVectorsPointer = scene.engine.malloc(positionCount * 4 * Float32Array.BYTES_PER_ELEMENT);
         
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
-        scene.boundables.add(this);
-
+        scene.boundables.add(this);1
         for (let i = 0; i < positionCount; i++) {
-            this.#positions.push(new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT));
-
+            let pos = new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT)
+            this.#positions.push(pos);
             //this.#colliderVertices.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
             this.#colliderVertices.push(new TerraVector4(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer + i * 4 * Float32Array.BYTES_PER_ELEMENT));
         }
+        this.boundingBox = new boundingBox(this);
         this.rebuildTrianglePlanes();
 
             //Run this on microtask so the scope who called
             //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
 
         queueMicrotask(() => {
-            worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, new SharedArrayBuffer(6*4), this.pickInfo.buffer])
+            worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
         });
     }
     public intersectsRay(ray: Float32Array): Promise<void> {
         return worker.message(this.uniqueID, 'intersectsRay', [ray.buffer]);
-    }
-    public updateBoundingBoxByMatrix(m: TerraMatrix) {
-        //TODO: Use SIMD
-        this.boundingBox.min.multiply2Ref(m, this.boundingBox.min);
-        this.boundingBox.max.multiply2Ref(m, this.boundingBox.max);
-        debugger;
     }
     //collisionsScalingMatrix = new TerraMatrix();
     myCollisionsTransformMatrix = new TerraMatrix();
@@ -341,7 +430,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
             return;
         }
-        debugger;
+
         // Transformation matrix
         this.myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
 
@@ -383,7 +472,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
         }
         
         //let timer = performance.now();
-       /* this.#faces.forEach(triangle => {
+     /*   this.#faces.forEach(triangle => {
             collider._testTriangle(triangle);
         });*/
        // console.log('cpu took', performance.now() - timer);

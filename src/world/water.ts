@@ -58,6 +58,6 @@ export class Sea extends BoundableNode {
     worldPosition = undefined
     Drawable = this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), 4);
     constructor(private scene: Scene) {
-        super(scene, getRenderPipeline(scene),new SharedArrayBuffer(4 * 4 * 3), undefined, undefined, true); //48
+        super(scene, getRenderPipeline(scene),4, undefined, undefined, true); //48
     }
 }

@@ -1,24 +1,27 @@
 ﻿import { Scene } from "../../Scene";
 import { BoundableNode } from "../../TerraNode";
-
+const vertices = new Float32Array([
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0,
+    1, 1, 0,
+    0, 2, 0,
+    1, 2, 0,
+    0, 3, 0]);
 
 //@ts-ignore
 export class testPlane extends BoundableNode {
 
     constructor(scene: Scene) {
         //@ts-ignore
-        super(scene, new SharedArrayBuffer(7 * 3 * 4),undefined,undefined,undefined,true)
-        this.boundingBox.box.set([0, 0, 0, 200, 200, 0])
-        new Float32Array(this.verticesPositionBuffer).set([
-            0, 0, 0,
-            1, 0, 0,
-            0, 1, 0,
-            1, 1, 0,
-            0, 2, 0,
-            1, 2, 0,
-            0, 3, 0]);
-        const vBuffer = scene.gpu.createGPUBuffer(this.verticesPositionBuffer.byteLength, [GPUBufferUsage.VERTEX], true);
-        new Float32Array(vBuffer.getMappedRange()).set(new Float32Array(this.verticesPositionBuffer));
+        super(scene, new SharedArrayBuffer(7 * 3 * 4),7,undefined,undefined,true)
+        //this.boundingBox.box.set([0, 0, 0, 200, 200, 0])
+        this.updateVertices(buffer =>
+            new Float32Array(buffer).set(vertices)
+         )
+
+        const vBuffer = scene.gpu.createGPUBuffer(this.verticesBuffesSize, [GPUBufferUsage.VERTEX], true);
+        new Float32Array(vBuffer.getMappedRange()).set(vertices);
         vBuffer.unmap();
         this.update(scaling => {
             scaling.set([200, 200, 200]);

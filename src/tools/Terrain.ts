@@ -89,7 +89,7 @@ export class TerrainTool extends TerraNodeGPU {
 
         terrainWorker.message(WorkerReturn.Promise, 'init',
             {
-                positionsAndNormals: terrain.terrainPositionAndUvsAndNormalsCPUSwap,
+                positionsAndNormals: terrain.mesh.verticesPositionBuffer,
                 indices: terrain.indicesBuffer,
                 subdivisionsX: Terrain.subdivisionsX,
                 subdivisionsY: Terrain.subdivisionsY,
@@ -127,7 +127,7 @@ export class TerrainTool extends TerraNodeGPU {
                 console.log('range', range)
                 const length = range.max - range.min;
 
-                this.terrain.updateSwap2(range.min, length)
+                this.terrain.updateSwap2(range.min, length, this.terrain.mesh.verticesPositionBuffer)
             });
         }, 17);
     }

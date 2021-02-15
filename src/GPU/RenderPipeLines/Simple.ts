@@ -52,12 +52,12 @@ export abstract class SimpleMesh extends BoundableNode {
     Drawable = this.renderPipeline.addDrawableIndexed(this.scene, new Set([this.scene.gpu.renderPassScreen]), this.verticesCount);
     constructor(
         private scene: Scene,
-        verticesPositionBuffer: SharedArrayBuffer,
+        positionsCount: number,
         indicesView: Uint32Array | Uint16Array,
         iBuffer: GPUIndexBuffer,
         vBuffer: GPUVertexBuffer) {
 
-        super(scene, Simple(scene), verticesPositionBuffer, 3, indicesView);
+        super(scene, Simple(scene), positionsCount, 3, indicesView);
         this.Drawable.dynamicBuffers.set(scene.gpu.BindGroup, this.bufferOffsetBytes);
         this.Drawable.setVertexBuffer(0, vBuffer);
         this.Drawable.setIndexBuffer(iBuffer, undefined, undefined, indicesView.BYTES_PER_ELEMENT == 4 ? 'uint32' : 'uint16');
