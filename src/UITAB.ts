@@ -5,12 +5,10 @@ import { ArcRotateCamera } from "./ArcRotateCamera.js";
 
 type UITABClass = typeof UITAB;
 export interface UITABClassLike extends UITABClass {
-    instance: UITAB | null;
-ö    label: string;
+    label: string;
     menuElem: ((instance: any) => HTMLElement)
 };
 export abstract class UITAB {
-    public static instance: UITAB | null = null;
     abstract destroy(): void;
     constructor(
         public scene: Scene,
@@ -18,5 +16,6 @@ export abstract class UITAB {
         public camera: ArcRotateCamera,
         public sea: Sea
     ) {
+
     }
 }

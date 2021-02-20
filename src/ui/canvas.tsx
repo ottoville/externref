@@ -135,8 +135,6 @@ export class Canvas extends TerraCompoment {
         const mainScene = new Scene('main', gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
             new Sun2(terrascene, sunBufferOffsetBytes);
             // Initial scene objects here
-            //@ts-ignore
-            const tools: Map<string, UITABClassLike> = new Map();
 
             const sea = new Sea(terrascene);
             //new testPlane(terrascene);
@@ -192,57 +190,6 @@ export class Canvas extends TerraCompoment {
                 }).catch(rej);
                 PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
             })
-
-           
-            
-            tools.set('Plants', PlantsUI);
-            tools.set('Camera', CameraTAB);
-            //@ts-ignore
-            tools.set('Buildings', BuildingsUI);
-            tools.set('TerrainTool', TerrainTool);
-            tools.set('Zones', Zones);
-            //@ts-expect-error
-            window.activateMenu = async (name: string) => {
-                try {
-                    let tool: UITABClassLike | undefined;
-                    if (tool = tools.get(name)) {
-                        //@ts-ignore
-                        tool.instance = new tool(terrascene, (await terrainInited)[0], camera, sea);
-                    }
-                } catch (e) {
-                    console.error(e);
-                }
-            }
-            //@ts-expect-error
-            window.deActivateMenu = async (name: string) => {
-                try {
-                    let tool: UITABClassLike | undefined;
-                    if (tool = tools.get(name)) {
-                        tool.instance?.destroy();
-                        tool.instance = null;
-                    } else
-                        throw (new Error('Tool ' + name + ' not found'))
-                } catch (e) {
-                    console.error(e);
-                }
-            }
-            //@ts-expect-error
-            window.invokeMenu = async (name: string, method: string) => {
-                try {
-                    let tool: UITABClassLike | undefined;
-                    if (tool = tools.get(name)) {
-                        let instance: UITAB | null;
-                        if (instance = tool.instance) {
-                            //@ts-ignore
-                            instance[method]();
-                        } else
-                            throw (new Error('Method ' + method + ' was not found from tool ' + name + ''))
-                    } else
-                        throw (new Error('Tool ' + name + ' not found'))
-                } catch (e) {
-                    console.error(e);
-                }
-            }
 
             DB.then(DB => {
                 DB.transaction("save").objectStore("save").get(0).onsuccess = async (evt) => {
@@ -435,7 +382,7 @@ export class Canvas extends TerraCompoment {
     toolsContainer: HTMLFieldSetElement= <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;"></fieldset>
     
     uiTabs: UITABClassLike[] = [PlantsUI, BuildingsUI, CameraTAB, TerrainTool, Zones]
-    openedMenu?: HTMLFieldSetElement;
+    openedMenu?: [UITAB, HTMLFieldSetElement];
     constructor() {
         super();
         this.progress = 2;
@@ -449,17 +396,21 @@ export class Canvas extends TerraCompoment {
         this.initalize().then(async args => {
             //@ts-ignore
             const [terrain, sea]: [Terrain, Sea] = await args[0].ready;
-            this.menuClick=(tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => {
-                if (this.openedMenu && this.openedMenu.firstChild) {
-                    this.openedMenu.removeChild(this.openedMenu.firstChild);
-                    if (this.openedMenu == menuContainer) {
-                        this.openedMenu = undefined;
-                        return;
+            this.menuClick = (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => {
+                if (this.openedMenu) {
+                    const [oldInstance, oldMenuContainer] = this.openedMenu;
+                    oldInstance.destroy();
+                    if (oldMenuContainer.firstChild) {
+                        oldMenuContainer.removeChild(oldMenuContainer.firstChild);
+                        if (oldMenuContainer == menuContainer) {
+                            this.openedMenu = undefined;
+                            return;
+                        }
                     }
                 }
                 const instance=new tool(args[0], terrain, args[1], sea);
                 menuContainer.appendChild(tool.menuElem(instance));
-                this.openedMenu = menuContainer;
+                this.openedMenu = [instance,menuContainer];
                 
             }
         }).catch(e => {

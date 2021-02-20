@@ -11,7 +11,7 @@ import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 export class Zones extends UITAB {
     static label = 'Zones';
-    static menuElem = <div><legend style="background-color:white"> Draw zone </legend>
+    static menuElem = () => <div><legend style="background-color:white"> Draw zone </legend>
         <label >
             Residental
             <input class="w3-bar-item w3-button" type = "checkbox" name = "planning" value = "residental" />
