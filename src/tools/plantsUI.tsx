@@ -13,8 +13,15 @@ import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 
 export class PlantsUI extends UITAB {
+    static menuElem = (instance: PlantsUI) => {
+        return <div><legend style="background-color:white">
+            Terrain
+        </legend>
+            <button class="w3-bar-item w3-button" onClick={() => instance.activateDraw()}>Create poaceae</button>
+        </div>
+    };
     traits: Set<Trait> = new Set();
-    public label: string = 'Plants';
+    static label: string = 'Plants';
     public static instance: UITAB | null = null;
     static plantsMesh: Plants;
     private PT: paintPlane | null = null;
@@ -28,7 +35,6 @@ export class PlantsUI extends UITAB {
         sea: Sea,
     ) {
         super(scene, terrain, camera, sea);
-        console.log('activate plantsUI');
     }
     activateDraw = () => {
         try {

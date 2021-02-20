@@ -21,36 +21,42 @@ import { PositionNode } from "../TerraNode.js";
 import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 import { savedCamera } from "../types/interfaces/index.js";
-
+/*
 const tools: {
     name: string,
     icon: string,
     class: string
+    elem: HTMLElement
 }[] = [{
     name: 'Zones',
     icon: '▧',
-    class: 'Zones'
+    class: 'Zones',
+    elem: <div></div>
 },
 {
     name: 'Plants',
     icon: '🌲',
-    class: 'Buildings'
+    class: 'Buildings',
+    elem: <div></div>
 },
 {
     name: 'Buildings',
     icon: '🏠',
-    class: 'Buildings'
+    class: 'Buildings',
+    elem: <div></div>
 },
 {
     name: 'Camera',
-    icon: '📷',
-    class: 'Camera'
+    icon: '📷', 
+    class: 'Camera',
+    elem: <div></div>
 },
 {
     name: 'Terrain',
     icon: '🗻',
-    class: 'TerrainTool'
-}]
+    class: 'TerrainTool',
+     elem: <div></div>
+}]*/
 
 
 
@@ -62,7 +68,8 @@ export class Canvas extends TerraCompoment {
     rendertime = 0;
     msPerFrame = 0;
     currentGameTime = 0;
-    async initalize() {
+    menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
+    async initalize(): Promise<[Scene, ArcRotateCamera]> {
         const adapter = await window.navigator.gpu!.requestAdapter();
         this.progress = 4;
 
@@ -125,10 +132,10 @@ export class Canvas extends TerraCompoment {
 
 
 
-        new Scene('main', gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
+        const mainScene = new Scene('main', gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
             new Sun2(terrascene, sunBufferOffsetBytes);
             // Initial scene objects here
-
+            //@ts-ignore
             const tools: Map<string, UITABClassLike> = new Map();
 
             const sea = new Sea(terrascene);
@@ -140,48 +147,54 @@ export class Canvas extends TerraCompoment {
             //@ts-ignore
             const human = new Human(terrascene)
 
-
-            const terrainInited = Terrain.loadFromTexture(terrascene);
-            terrainInited.then(async r => {
-                const ground = r[0];
-                const gpuBuffer = await r[1];
-                this.progress = 76;
-
-
-                const commandEncoder = device.createCommandEncoder({});
-                this.progress = 80;
-
-                let bufferView: GPUBufferCopyView = {
-                    buffer: gpuBuffer,
-                    bytesPerRow: ground.textureSize[0] * 4,
-                    rowsPerImage: 0,
-                    offset: 0,
-                };
-                this.progress = 85;
+            const ready = new Promise((res, rej) => {
+                const terrainInited = Terrain.loadFromTexture(terrascene);
+                terrainInited.then(async r => {
+                    
+                    const ground = r[0];
+                    res([ground, sea])
+                    const gpuBuffer = await r[1];
+                    this.progress = 76;
 
 
-                commandEncoder.copyBufferToTexture(bufferView,
-                    {
-                        texture: ground.texture,
-                        origin: {
-                            x: 0,
-                            y: 0,
-                            z: Math.max(-1, 0)
-                        },
-                        mipLevel: 0,
-                    }, ground.textureExtent);
-                this.progress = 90;
+                    const commandEncoder = device.createCommandEncoder({});
+                    this.progress = 80;
+
+                    let bufferView: GPUBufferCopyView = {
+                        buffer: gpuBuffer,
+                        bytesPerRow: ground.textureSize[0] * 4,
+                        rowsPerImage: 0,
+                        offset: 0,
+                    };
+                    this.progress = 85;
 
 
-                device.queue.submit([commandEncoder.finish()]);
-                this.progress = 95;
+                    commandEncoder.copyBufferToTexture(bufferView,
+                        {
+                            texture: ground.texture,
+                            origin: {
+                                x: 0,
+                                y: 0,
+                                z: Math.max(-1, 0)
+                            },
+                            mipLevel: 0,
+                        }, ground.textureExtent);
+                    this.progress = 90;
 
-                bufferView.buffer.destroy();
-                this.progress = 100;
 
-                console.debug("Progress 100");
-            });
-            PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
+                    device.queue.submit([commandEncoder.finish()]);
+                    this.progress = 95;
+
+                    bufferView.buffer.destroy();
+                    this.progress = 100;
+
+                    console.debug("Progress 100");
+                }).catch(rej);
+                PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
+            })
+
+           
+            
             tools.set('Plants', PlantsUI);
             tools.set('Camera', CameraTAB);
             //@ts-ignore
@@ -262,9 +275,9 @@ export class Canvas extends TerraCompoment {
                     });
                 }
             })
-
+            return ready;
         });
-        const debugscene = new Scene('static', gpuscene, terraEngine, [mainCamera], (scene, sunBufferOffsetBytes) => {
+        const debugscene = new Scene('static', gpuscene, terraEngine, [mainCamera], async (scene, sunBufferOffsetBytes) => {
             const sun = new PositionNode(scene.engine, sunBufferOffsetBytes);
             sun.translation.set([0, 1, 0]);
             sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
@@ -338,7 +351,7 @@ export class Canvas extends TerraCompoment {
             gpuscene.device.queue.submit(gpuscene.pendingCommandBuffers);
             gpuscene.pendingCommandBuffers.length = 0;
             renderFrame = window.requestAnimationFrame(renderLoop);
-
+            
         }
 
 
@@ -417,11 +430,39 @@ export class Canvas extends TerraCompoment {
             gameControlsUI[i].classList.remove('hidden');
         }
         */
+        return [mainScene,camera];
     }
+    toolsContainer: HTMLFieldSetElement= <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;"></fieldset>
+    
+    uiTabs: UITABClassLike[] = [PlantsUI, BuildingsUI, CameraTAB, TerrainTool, Zones]
+    openedMenu?: HTMLFieldSetElement;
     constructor() {
         super();
         this.progress = 2;
-        this.initalize().catch(e => {
+        this.uiTabs.forEach(tool => {
+            const menuContainer: HTMLFieldSetElement = <fieldset class="w3-dropdown-content w3-card-4 w3-show" style="margin-top:36px"></fieldset>
+            this.toolsContainer.appendChild(<div class="w3-dropdown-click">
+                <button class="w3-bar-item w3-button" onClick={() => this.menuClick && this.menuClick(tool, menuContainer)}>{tool.label}</button>
+                {menuContainer}
+            </div>)
+        });
+        this.initalize().then(async args => {
+            //@ts-ignore
+            const [terrain, sea]: [Terrain, Sea] = await args[0].ready;
+            this.menuClick=(tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => {
+                if (this.openedMenu && this.openedMenu.firstChild) {
+                    this.openedMenu.removeChild(this.openedMenu.firstChild);
+                    if (this.openedMenu == menuContainer) {
+                        this.openedMenu = undefined;
+                        return;
+                    }
+                }
+                const instance=new tool(args[0], terrain, args[1], sea);
+                menuContainer.appendChild(tool.menuElem(instance));
+                this.openedMenu = menuContainer;
+                
+            }
+        }).catch(e => {
             console.error('creating terrain failed', e);
             this.progresElem.textContent = e.name + ' ' + e.message;
 
@@ -433,16 +474,11 @@ export class Canvas extends TerraCompoment {
         if (value === 100)
             this.progressBar.parentNode?.parentNode?.removeChild(this.progressBar.parentNode);
     }
+
     render() {
-        return <div>
+        return <div style="height:100%">
             {this.canvasElem}
-            <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;">
-                {tools.map(tool => {
-                    return <div class="w3-dropdown-click"><button class="w3-bar-item w3-button">{tool.name}</button></div>
-                })
-                };
-                    @foreach (var tool in tools2)
-            </fieldset>
+            {this.toolsContainer}
             <div style="position:absolute;top:30%; background-color:white;width:100%;text-align:center ">
                 {this.progresElem}
                 <br />

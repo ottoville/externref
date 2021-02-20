@@ -11,6 +11,12 @@ import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 
 export class BuildingsUI extends UITAB {
+    static label = 'Buildings'
+    static menuElem = <div><legend style="background-color:white">
+        Buildings
+</legend>
+        <button class="w3-bar-item w3-button">Create house</button>
+</div>;
     activate: () => void= () => null;
     destroy: () => void = () => {
         this.traits.forEach(trait => trait.destroy());

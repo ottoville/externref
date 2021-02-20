@@ -79,7 +79,7 @@ declare namespace JSX {
         render: (props: any) => HTMLElement;
     }
     type IntrinsicElements = {
-        [elemName in keyof HTMLElementTagNameMap]: any;
+        [elemName in keyof HTMLElementTagNameMap]: {[index:string]:any};
     };
 }
 

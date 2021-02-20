@@ -10,6 +10,23 @@ import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 export class Zones extends UITAB {
+    static label = 'Zones';
+    static menuElem = <div><legend style="background-color:white"> Draw zone </legend>
+        <label >
+            Residental
+            <input class="w3-bar-item w3-button" type = "checkbox" name = "planning" value = "residental" />
+        </label><br/>
+        <label >
+            Industry
+            <input class="w3-bar-item w3-button" type = "checkbox" name = "planning" value = "industry" />
+        </label><br/>
+        <label >
+            Commerce
+            <input class="w3-bar-item w3-button" type = "checkbox" name = "planning" value = "commerce" />
+        </label>
+     </div>
+
+
     traits: Set<Trait> = new Set();
     public canvasListener = new canvasListener(this);
     private PT: paintTexture;
@@ -44,7 +61,7 @@ export class Zones extends UITAB {
                 ctx.fillStyle = "blue";
                 ctx.lineWidth = 1;
                 //@ts-ignore
-                (<PTDresult[]>evt.target.result).forEach(z => {
+                ((evt.target.result) as PTDresult[]).forEach(z => {
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
                     ctx.translate(centerX + z.coord[0] / this.#ratio, centerZ + z.coord[1] / this.#ratio );
                     ctx.rotate(-z.rad);

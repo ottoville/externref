@@ -13,8 +13,9 @@ export class Scene {
     lights;
     positionBindGroupLightsTimeWGSL: LayoutGroupDrawable<[GPUBindGroupEntry]>;
     lightsBindGroupTexture: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
+    ready: Promise<any>;
 
-    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes: number) => void) {
+    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes: number) => Promise<any>) {
         engine.scenes.set(name, this);
         TerraCameras.forEach(camera => {
             camera.renderPass.scenes.add(this);
@@ -35,7 +36,7 @@ export class Scene {
             visibility: GPUShaderStage.FRAGMENT,
             type: 'sampled-texture'
         }));
-        onRenderStart(this, sunBufferOffsetBytes)
+        this.ready=onRenderStart(this, sunBufferOffsetBytes)
     }
 
     render(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass) {

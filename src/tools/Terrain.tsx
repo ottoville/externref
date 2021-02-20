@@ -67,7 +67,13 @@ function allocateMemory(engine:Engine) {
 }
 
 export class TerrainTool extends TerraNodeGPU {
+    static label = 'Terrain';
     public static instance: UITAB | null = null;
+    static menuElem = <div><legend style="background-color:white">Terrain</legend>
+<button class="w3-bar-item w3-button">⇫</button>
+<button class="w3-bar-item w3-button" style="transform: rotate(-180deg);" >⇫</button >
+
+</div>;
     traits:Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
     // private engine: WebGPUEngine;
@@ -123,7 +129,7 @@ export class TerrainTool extends TerraNodeGPU {
        
         this.mouseinterval = setInterval(() => {
             terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
-                let range = <{ min: number, max: number }><any>e;
+                let range = e as { min: number, max: number };
                 console.log('range', range)
                 const length = range.max - range.min;
 

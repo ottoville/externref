@@ -4,7 +4,8 @@ import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 export class CameraTAB extends UITAB {
-    public label = 'Camera';
+    static menuElem = <button class="w3-bar-item w3-button">Debug camera</button>;
+    static label = 'Camera';
     constructor(
         public scene: Scene,
         public terrain: Terrain,

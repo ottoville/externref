@@ -22,11 +22,8 @@ let logged = false;
 
 const render = () => {
     app.innerHTML=''
-    app.appendChild(
-        <div>
-            {logged ? <Canvas>foo</Canvas> : <Login callback={onLogin}>faa</Login>}
-
-        </div>);
+    app.appendChild(logged ? <Canvas>foo</Canvas> : <Login callback={onLogin}></Login>
+);
 }
 const onLogin = (obj: { provider: string, accessToken: string, pointerEvent: PointerEvent }) => {
     console.log('onlogin', obj.provider)
