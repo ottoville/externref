@@ -31,6 +31,11 @@ function getRenderPipeline(engine: Engine, sunBufferOffsetBytes: number) {
         rasterizationState: {
             cullMode: 'none',
         },
+        depthStencilState: {
+            format: 'depth24plus-stencil8',
+            depthWriteEnabled: false,
+            depthCompare: 'always'
+        },
         primitiveTopology: 'triangle-strip',
         colorStates: [{
             format: "bgra8unorm",

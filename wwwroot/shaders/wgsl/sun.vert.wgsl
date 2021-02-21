@@ -44,16 +44,16 @@ const vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(
 
 [[stage(vertex)]]
 fn main() -> void {
-  const vertexPosition : vec3<f32> = vec3<f32>(vertices[VertexIndex].xy,0.0);
   const curPos : vec3<f32> =worldposition.world[3].xyz+worldposition.delta*times.delta;
-  const transform : vec3<f32> = curPos *sunDistance;
+  const transform : vec3<f32> = curPos * sunDistance;
   const CameraRight_worldspace : vec3<f32> = vec3<f32>(uniforms.view[0].x, uniforms.view[1].x, uniforms.view[2].x);
   const CameraUp_worldspace : vec3<f32>  = vec3<f32>(uniforms.view[0].y, uniforms.view[1].y, uniforms.view[2].y);
  
  
-  const transformbill : vec3<f32> =  transform  + CameraRight_worldspace * vertexPosition.x + CameraUp_worldspace * vertexPosition.y;
+  const transformbill : vec3<f32> =  transform  + CameraRight_worldspace * vertices[VertexIndex].x + CameraUp_worldspace * vertices[VertexIndex].y;
 
   Position = uniforms.modelViewProjectionMatrix * vec4<f32>(transformbill.xyz, 1.0);
+  Position.z=1.0;
   ambient=vec4<f32>(1.0,clamp(curPos.y*4.0,0.1,1.0),(max(curPos.y,0.0)),1.0);
   return;
 }
