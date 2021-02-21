@@ -2,6 +2,7 @@
 import type { GPU } from "../GPU.js";
 import type { RenderPass } from "./RenderPass.js";
 import type { Scene } from "../Scene.js";
+import { TerraNodeGPU } from "../TerraNode.js";
 type DrawableLike = typeof RenderPipeline;
 export interface DrawableLikeClass extends DrawableLike {
     Meshes: Set<RenderPipeline>;
@@ -108,12 +109,12 @@ export abstract class Drawable {
         this.render(renderPass);
     }
 }
-abstract class DrawableDirect extends Drawable {
+export abstract class DrawableDirect extends Drawable {
     #instanceCount: number;
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        public vertexCount: number,
+        public node: TerraNodeGPU<DrawableDirect>,
         scene?: Scene,
         instanceCount = 1) {
 
@@ -148,22 +149,22 @@ export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        vertexCount: number,
+        node: TerraNodeGPU<DrawableDirect>,
         scene?: Scene,
         instanceCount = 1,
         public firstVertex = 0,
         public firstInstance = 0) {
-        super(renderPipeline, renderPasses, vertexCount, scene, instanceCount);
+        super(renderPipeline, renderPasses, node, scene, instanceCount);
     }
     render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
-        renderPass.draw(this.vertexCount, this.instanceCount, this.firstVertex, this.firstInstance);
+        renderPass.draw(this.node.verticesCount, this.instanceCount, this.firstVertex, this.firstInstance);
     }
 }
 export class DrawableIndexed extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        public indexCount: number,
+        node: TerraNodeGPU<DrawableDirect>,
         private indexBuffer?: GPUIndexBuffer,
         scene?: Scene,
         public baseVertex = 0,
@@ -171,7 +172,7 @@ export class DrawableIndexed extends DrawableDirect {
         public firstIndex = 0,
         public firstInstance = 0,
         private GPUIndexFormat: GPUIndexFormat = 'uint16') {
-            super(renderPipeline, renderPasses, instanceCount, scene);
+            super(renderPipeline, renderPasses, node, scene,instanceCount);
     }
     destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {
         super.destroy(preserveVerticeBuffers);
@@ -206,7 +207,7 @@ export class DrawableIndexed extends DrawableDirect {
     render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
         if (this.indexBuffer) {
             renderPass.setIndexBuffer(this.indexBuffer, this.GPUIndexFormat);
-            renderPass.drawIndexed(this.indexCount, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);
+            renderPass.drawIndexed(this.node.verticesCount, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);
         }
     }
 }

@@ -7,7 +7,7 @@ import type { hasPhysics } from "./physics.js";
 import type { Scene } from "./Scene.js";
 import { ObjectWorkerThread } from "./WorkerThread.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
-import type { Drawable } from "./GPU/Drawable.js";
+import type { Drawable, DrawableDirect } from "./GPU/Drawable.js";
 
 export abstract class MainNode {
     readonly bufferOffsetBytes: number;
@@ -147,11 +147,11 @@ export abstract class MainNode {
         return 'lightType' in this;
     }
 }
-export abstract class TerraNodeGPU extends MainNode {
+export abstract class TerraNodeGPU<T extends Drawable> extends MainNode {
     static uniqueID = 0;
     protected readonly uniqueID: number = TerraNodeGPU.uniqueID++;
-    
-    abstract Drawable:Drawable
+
+    abstract Drawable:T
     static GPUDataSize = 16 + 4 + 4 + 4;
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
@@ -163,8 +163,8 @@ export abstract class TerraNodeGPU extends MainNode {
         //this.engine.gpu.NodeInstances.delete(this);
     }
 
-    constructor(public engine: Engine, public renderPipeline: RenderPipeline, bufferOffsetBytes?: number) {
-        super(engine, bufferOffsetBytes)
+    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number, bufferOffsetBytes?: number) {
+        super(engine, bufferOffsetBytes);
     }
 
 }
@@ -268,7 +268,7 @@ class boundingBox {
 
 }
 
-export abstract class BoundableNode extends TerraNodeGPU {
+export abstract class BoundableNode extends TerraNodeGPU<DrawableDirect> {
 
     readonly boundingBox: boundingBox;
     readonly pickInfo = new pickInfo();
@@ -280,7 +280,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
     #faces: Triangle[];
     #lastColliderTransformMatrix = new TerraMatrix();
 
-    verticesCount: number;
+    //verticesCount: number;
     facesBuffer: SharedArrayBuffer;
     facesBufferColliderPointer: number;
     lastColliderWorldVectorsPointer: number;
@@ -380,14 +380,14 @@ export abstract class BoundableNode extends TerraNodeGPU {
         private strip = false,
         
     ) {
-        super(scene.engine, renderPipeline);
+        super(scene.engine, renderPipeline, indicesView ? indicesView.length : positionCount);
         // const positionCount = (this.verticesPositionBuffer.byteLength / 4) / this.verticesPositionStride;
         this.verticesBuffesSize = positionCount * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
 
         this.verticesPositionBuffer = new SharedArrayBuffer(this.verticesBuffesSize)
         this.verticesView = new Float32Array(this.verticesPositionBuffer)
         this.verticesDataview = new DataView(this.verticesPositionBuffer);
-        this.verticesCount = indicesView ? indicesView.length : positionCount;
+        //this.verticesCount = indicesView ? indicesView.length : positionCount;
         if (this.strip) {
             this.#faces = new Array(this.verticesCount - 2)
         }

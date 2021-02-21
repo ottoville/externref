@@ -49,7 +49,7 @@ function Simple(scene: Scene) {
 }
 export abstract class SimpleMesh extends BoundableNode {
     
-    Drawable = this.renderPipeline.addDrawableIndexed(this.scene, new Set([this.scene.gpu.renderPassScreen]), this.verticesCount);
+    Drawable = this.renderPipeline.addDrawableIndexed(this.scene, new Set([this.scene.gpu.renderPassScreen]), this);
     constructor(
         private scene: Scene,
         positionsCount: number,

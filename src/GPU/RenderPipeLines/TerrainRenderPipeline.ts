@@ -97,7 +97,7 @@ export class TerrainMesh extends BoundableNode {
             minFilter: "linear",
         });
         this.#textureview = initialTexture;
-        this.Drawable = this.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), this.verticesCount, undefined, 0, 1);
+        this.Drawable = this.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), this, undefined, 0, 1);
         this.textureView=initialTexture;
         this.Drawable.setVertexBuffer(0, this.vBuffer);
         this.Drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');

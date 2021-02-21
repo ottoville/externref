@@ -56,7 +56,7 @@ function getRenderPipeline(scene: Scene) {
 
 export class Sea extends BoundableNode {
     worldPosition = undefined
-    Drawable = this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), 4);
+    Drawable = this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), this);
     constructor(private scene: Scene) {
         super(scene, getRenderPipeline(scene),4, undefined, undefined, true); //48
     }

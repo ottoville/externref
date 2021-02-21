@@ -2,7 +2,7 @@
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { canvasListener } from "../traits/canvasListener.js";
-import type { DrawableSimple } from "../GPU/Drawable.js";
+import type { DrawableDirect, DrawableSimple } from "../GPU/Drawable.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
@@ -66,7 +66,7 @@ function allocateMemory(engine:Engine) {
     return bufferOffsetBytes;
 }
 
-export class TerrainTool extends TerraNodeGPU {
+export class TerrainTool extends TerraNodeGPU<DrawableDirect> {
     static label = 'Terrain';
     public static instance: UITAB | null = null;
     static menuElem = <div><legend style="background-color:white">Terrain</legend>
@@ -110,7 +110,7 @@ export class TerrainTool extends TerraNodeGPU {
         // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
 
-        this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), 4, 8, 0)
+        this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), this, 8, 0)
         this.#canvasListener.addListener("pointermove", this.#mouseListener, { lazy: 15 });
 
     }

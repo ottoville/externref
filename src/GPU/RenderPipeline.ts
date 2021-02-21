@@ -1,8 +1,9 @@
 ﻿import type { Scene } from "../Scene.js";
 import type { BindGroupLayout } from "./BindGroupLayout.js";
-import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
+import {  DrawableDirect, DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
 import type { Drawable } from "./Drawable.js";
 import type { RenderPass } from "./RenderPass.js";
+import { TerraNodeGPU } from "../TerraNode.js";
 
 export class RenderPipeline {
     static BindedTerrains: Set<RenderPipeline> = new Set();
@@ -56,11 +57,11 @@ export class RenderPipeline {
     addDrawableIndirect<T extends GPUIndirectBuffer>(scene: Scene | undefined, renderPasses: Set<RenderPass>, buffer: T) {
         return new DrawableIndirect(this, renderPasses, buffer, scene);
     }
-    addDrawableSimple(scene: Scene | undefined, renderPasses: Set<RenderPass>, vertexCount: number, instanceCount = 1, firstVertex = 0, firstInstance = 0): DrawableSimple {
-        return new DrawableSimple(this, renderPasses, vertexCount, scene, instanceCount, firstVertex, firstInstance)
+    addDrawableSimple(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: TerraNodeGPU<DrawableDirect>, instanceCount = 1, firstVertex = 0, firstInstance = 0): DrawableSimple {
+        return new DrawableSimple(this, renderPasses, node, scene, instanceCount, firstVertex, firstInstance)
     }
-    addDrawableIndexed(scene: Scene | undefined, renderPasses: Set<RenderPass>, indexCount: number, indexBuffer?: GPUIndexBuffer, baseVertex: number = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {
-        return new DrawableIndexed(this, renderPasses, indexCount, indexBuffer, scene, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
+    addDrawableIndexed(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: TerraNodeGPU<DrawableDirect>, indexBuffer?: GPUIndexBuffer, baseVertex: number = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {
+        return new DrawableIndexed(this, renderPasses, node, indexBuffer, scene, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
     }
     variants: Map<RenderPass, RenderPipelineVariant> = new Map();
 }

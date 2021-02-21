@@ -5,6 +5,8 @@ import { TerraNodeGPU } from "../TerraNode.js";
 import { Angle } from "../Math.js";
 import type { GPU } from "../GPU.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
+import { DrawableDirect } from "../GPU/Drawable.js";
+import { Engine } from "../engine.js";
 
 //const sundistance = 149600000000;
 
@@ -15,18 +17,18 @@ const yAngle = Math.sin(Math.PI * 0.2);
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(scene: Scene, sunBufferOffsetBytes: number) {
-    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
+function getRenderPipeline(engine: Engine, sunBufferOffsetBytes: number) {
+    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(engine.gpu);
     if (renderPipeline)
         return renderPipeline;
-    const vertex = scene.engine.gpu.shaderModules.get('sun.vert.wgsl')
-    const fragment = scene.engine.gpu.shaderModules.get('sun.frag.wgsl')
+    const vertex = engine.gpu.shaderModules.get('sun.vert.wgsl')
+    const fragment = engine.gpu.shaderModules.get('sun.frag.wgsl')
     if (!vertex || !fragment)
         throw ('Missing shader')
     //const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
     //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
 
-    renderPipeline = scene.engine.positionBindGroupTime.addRenderPipeline({
+    renderPipeline = engine.positionBindGroupTime.addRenderPipeline({
         rasterizationState: {
             cullMode: 'none',
         },
@@ -46,12 +48,12 @@ function getRenderPipeline(scene: Scene, sunBufferOffsetBytes: number) {
             indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
         }
     }, [sunBufferOffsetBytes]);
-    renderPipelines.set(scene.gpu, renderPipeline);
+    renderPipelines.set(engine.gpu, renderPipeline);
     return renderPipeline
 }
 
 
-export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
+export class Sun2 extends TerraNodeGPU<DrawableDirect> implements hasPhysics, isLight {
     hasGravity = false;
     lightType: 'point' = 'point';
 
@@ -90,8 +92,8 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
         this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
         this.updateDynamicBuffer();
     }
-    Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), 14);
+    Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), this);
     constructor(private scene: Scene, sunBufferOffsetBytes: number) {
-        super(scene.engine, getRenderPipeline(scene, sunBufferOffsetBytes), sunBufferOffsetBytes);
+        super(scene.engine, getRenderPipeline(scene.engine, sunBufferOffsetBytes), sunBufferOffsetBytes);
     }
 }

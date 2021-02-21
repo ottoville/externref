@@ -9,11 +9,12 @@ import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 import type { Engine } from "../engine.js";
+import { DrawableDirect } from "../GPU/Drawable.js";
 
 
 
-class PlaneMesh extends TerraNodeGPU {
-    Drawable = this.renderPipeline.addDrawableIndexed(undefined, new Set([this.engine.gpu.renderPassScreen]), 0, undefined, 0, 1, 0);
+class PlaneMesh extends TerraNodeGPU<DrawableDirect> {
+    Drawable = this.renderPipeline.addDrawableIndexed(undefined, new Set([this.engine.gpu.renderPassScreen]), this, undefined, 0, 1, 0);
 }
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
@@ -181,7 +182,8 @@ export class paintPlane extends paintGround {
         if (newValues) {
             this.#mesh.Drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
             this.#mesh.Drawable.setIndexBuffer(new Uint32Array(newValues.indices));
-            this.#mesh.Drawable.indexCount = newValues.indices.length;
+            this.#mesh.verticesCount = newValues.indices.length;
+           // this.#mesh.Drawable.indexCount = newValues.indices.length;
         }
     }
 }

@@ -223,17 +223,17 @@
       },
       "./collider.ts": {
         "version": "7b4e7ea2109f639e98db1e8b10b2ab5fafa744004c254ceca0065da5aa466cd6",
-        "signature": "5e30070ad09240b6cea36b1b569146da31096dc094eda574f2037ae8c46f739e",
+        "signature": "e675474926d3c2041e8d883ffb6f43ffcdf000cae9ce13f616cac6855879a462",
         "affectsGlobalScope": false
       },
       "./gpu/drawable.ts": {
-        "version": "40ff23fdc28dcc2935923d35d51a24d64a0d3b0c316077e872ffbf7697ce70b3",
-        "signature": "ee3b3ed43cbcdd4b3a671e910beb65fa1ffdcffe60c8782b23378164d81676aa",
+        "version": "ac4d80581a7e461edd3d6562752a7df1d840a905697246c1c98c41b02dc3ab5e",
+        "signature": "5ce81170e56a3855bd3c696dd0cf8b88b1b9bc6fb676587719cd152cff1c2f3d",
         "affectsGlobalScope": false
       },
       "./gpu/renderpipeline.ts": {
-        "version": "df335023a186189b554438da37c7b4833ef71f5f544b3958a8ee61c5dcc8d4c7",
-        "signature": "f4af8ecc5359586199e26d95fef9bd81eebf394c704fdbeda6d505537bf99248",
+        "version": "1e3e6c8ca30e2e15cc10d1ad99510d564fd5ca3f03f8bd2bf24d85e9ad7dc5b0",
+        "signature": "f2aa76fe0bedbc9555b93dbb278dcdd543b7128f8f23722fcbd5bd629cc55738",
         "affectsGlobalScope": false
       },
       "./gpu/bindgrouplayout.ts": {
@@ -252,8 +252,8 @@
         "affectsGlobalScope": false
       },
       "./scene.ts": {
-        "version": "5509e88e7e6d24cd9a6e9e924075960b98ca3f31bbc132956340d3390001f1ca",
-        "signature": "174ab035cafe0fe33a9a01edd726c2d4e238d91c0542218c63538cda0651c6b1",
+        "version": "9ad1bfc38c861c7e4093608d1785742f790ddfc9003014fc7b5748531656d398",
+        "signature": "552aeed0aa9fc7b2eb340a5606e60599a62885a75ea3970c62d8c5aaae461632",
         "affectsGlobalScope": false
       },
       "./gpu/renderpass.ts": {
@@ -272,8 +272,8 @@
         "affectsGlobalScope": false
       },
       "./terranode.ts": {
-        "version": "a8c3b0236bf33799eb9bae4ee65dfdcb97e0354ac3aa976a76dd5d18b6fc6e47",
-        "signature": "4e2a0daf4df188d405abe691f1dcb9d415bf60214a434248cf1366844ef05f9f",
+        "version": "d5ea13d905060884d7c0c3fb884412267b25671fb4383999582aea9af21ba088",
+        "signature": "3903240dfdbfcce097cba3e284c0098f62453908354b7e201a36f30ab0677019",
         "affectsGlobalScope": false
       },
       "./physics.ts": {
@@ -282,8 +282,8 @@
         "affectsGlobalScope": false
       },
       "./engine.ts": {
-        "version": "27a6b767f5cc9f782927d18be748fd87172c6e948af412076fbb623b83f8451c",
-        "signature": "6279015f25b8cb93379304e2731b09d07495d1ed6de5b3a1f6e0522c3bf2a542",
+        "version": "47efcd18c310e05bddeb775fee7f65ed7a58c9baecd11aaa6ea7799690ceb82a",
+        "signature": "341e25bd353ed0ed574d0d2d396f1455f82697aa1aa5ac4869b5a2077a3c607d",
         "affectsGlobalScope": false
       },
       "./arcrotatecamera.ts": {
@@ -292,8 +292,8 @@
         "affectsGlobalScope": false
       },
       "./db.ts": {
-        "version": "5ad5f06a70e7717a421fa365c9182fc1d1a41884adb22c84a1b2dd0a8023064b",
-        "signature": "d891ba160846ae33ba9b40d76c580597f81461a953a536c5a86b8ac81609708e",
+        "version": "85ad34542b4800face21021399b2af2485093a4155c6708a067a710dc5ab19c0",
+        "signature": "1441325d9312460b41449df8e4e60c59d422b28c06240b3f8a9e36fe8f028b42",
         "affectsGlobalScope": true
       },
       "./gputypes.ts": {
@@ -311,11 +311,6 @@
         "signature": "0280f4b19506cb75c94079aa61adae885d21819847283d46bdc6091c9d5e8939",
         "affectsGlobalScope": true
       },
-      "./terrascene.ts": {
-        "version": "813bab63d485a9bb7d960507a376dd056fc112cce4c30e6c616f0e4b2c72c5c2",
-        "signature": "c8b9cb3d8c9d947a9bd361faf706bae49c8313e9cff2926511fb5a56da135690",
-        "affectsGlobalScope": false
-      },
       "./traits/trait.ts": {
         "version": "6ef37e38edb89aab58486e449b234d9ba6c2c22239c9a18589d64addd1403fd1",
         "signature": "b1aafe31b4e571446091818aecfd27e462667e9ddfeed17728284cc0c8e0a398",
@@ -327,28 +322,28 @@
         "affectsGlobalScope": false
       },
       "./world/water.ts": {
-        "version": "b08d29fac902107013dd29f50313333f557de8fff6e7ea4f0abd6a8dff373045",
+        "version": "4a73ce8ca4281992f32828dfe377a7728b8adb9717c14e96f35d7d187c1b3713",
         "signature": "63522cfe72b486b7d4db65f3f4b5fd05ab5ec2d6136c32a17e6a5c86a8a27a2a",
         "affectsGlobalScope": false
       },
-      "./tools/terrain.ts": {
-        "version": "96f3b043d69af54ac061765cf3e9c82a84726e24a2d43fba5972f28e276b59fc",
-        "signature": "17c5b564d2fc8d866b0a6ac79fdda9584a4e128084f409a598468ca16d89283a",
+      "./tools/terrain.tsx": {
+        "version": "86a0efbebd42ba0ad1505d5ad7085941cb93483ffa62499ca380d603308ecf43",
+        "signature": "088b33b9cf388a63ec5b33b33e596f7ffb2d2fc673f37f5df0139d080bbd8be3",
         "affectsGlobalScope": false
       },
       "./gpu/renderpipelines/terrainrenderpipeline.ts": {
-        "version": "56780cc6006d377677bf4041b4faf49784108f1e470e2dce28c0978c0a01d691",
-        "signature": "26b2589d4276e1b8bb667823a4b88d085504d26ba001185f4057e893bfa78bbd",
+        "version": "4e0aeb9eaa68a651d9dbbf3529afde42a2852133cd0a2cd32f1528f20f94c4e7",
+        "signature": "db8d98e0f20ae8937ed4e7e040c5a265e79377c1e63897ffc5485da070df3f4b",
         "affectsGlobalScope": false
       },
       "./world/terrain.ts": {
-        "version": "3e5a1cb2ad905c8510a397b38811493ffe0f64555406bff17e612dc09e42123a",
-        "signature": "c2922213df84c5618bc6c377007dc9f31c55503f5eb7b7ba278e63326e603815",
+        "version": "969c1c32317900420ff2673195b46b4e817cd28b4f694e247218ddcb5b064c27",
+        "signature": "139befc47de9b64b1af72c6c531a94713f5590313ead7e4aafc7d5ec0b6035d0",
         "affectsGlobalScope": false
       },
       "./uitab.ts": {
-        "version": "b7feb6a76366c139ab2e26d21039df6885c44c603d89c33510f183574ea55614",
-        "signature": "d1fedd100de5b08fcdbf2e9b81756144278250efc3567940a9275b27a96370f6",
+        "version": "edc5180c87f290aae9d0f638882f7339947cb4ebcb1a2a177160d6d2b4036449",
+        "signature": "47afe9f140a9947401ea6a6e994a5cf0fa5c2b22c7c8af50bea163a0f8bebc82",
         "affectsGlobalScope": false
       },
       "./commonmath.ts": {
@@ -357,12 +352,12 @@
         "affectsGlobalScope": true
       },
       "./gpu/renderpipelines/simple.ts": {
-        "version": "f31ef86fcb7bf685d5d4f982eceb82728c7a355708e83ab8bacbc9681a0cbf24",
-        "signature": "3c6005b099f3f875f20a9a42ddaa572e7fc82105b6fc54f5c4c78328186b153a",
+        "version": "80c6df1297e83010f526930b606b7c1f9d23c9afdb8a17e7d1a954d4e04e540a",
+        "signature": "71f3f93fb6b859a8d477d51b08ee4675b922a109adf7caeee1501f38ed50c5e8",
         "affectsGlobalScope": false
       },
       "./gpu/meshes/box.ts": {
-        "version": "ab1ed60cde1a49c125bb1eaaed9ad275d84d0118a7d8b52c1123f068cd393076",
+        "version": "bde6d7f68a271606688503628d637ccbeb00f1ba13feae8fb00f7f0b8ad2bfbf",
         "signature": "3731162631fee3a5afddbec3ec7e81743f928da39e02732b95ab721a0a3db760",
         "affectsGlobalScope": false
       },
@@ -387,7 +382,7 @@
         "affectsGlobalScope": false
       },
       "./paintground/paintplane.ts": {
-        "version": "62459c17f851e658ff0c6c9e0feaa84b718f1e81d93705df5854da5f83fd2a57",
+        "version": "f0a56b43c255cdb7dd2acd1a767829886c9554d8ab3fbe21a1c7a836481d16b4",
         "signature": "e478bf5b4bd6dad763fdf4859bf0ff493bb623868fd28f2535c01c55489c967b",
         "affectsGlobalScope": false
       },
@@ -406,43 +401,13 @@
         "signature": "0a41ea16e99415f020cc8e313456b43b97aee60bee33a25fed49731e7ca8fc33",
         "affectsGlobalScope": false
       },
-      "./rustwasm/hello_wasm.d.ts": {
-        "version": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c",
-        "signature": "8911461a2a5f2e2564464e4f0f2dace3d5b1eb23056d437f65a9b0bc7c23841c",
-        "affectsGlobalScope": false
-      },
-      "./rustwasm/hello_wasm_bg.d.ts": {
-        "version": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86",
-        "signature": "d31a25752e6bfcc27c986e8f9e16af090ccc88b6084cbc592bd1379526d3ec86",
-        "affectsGlobalScope": false
-      },
-      "./tools/zones.ts": {
-        "version": "761a15e661eb266df02f61f3479b2cabcd402a2d88b6e2336153e16123eba334",
-        "signature": "8ad2c905fd0377328a0a8381fcd1cdd192d5c44ef2ef25fc545312f9a6571330",
-        "affectsGlobalScope": false
-      },
-      "./tools/buildings.ts": {
-        "version": "83534ed030023c8cf1d0c4db8fc141a3227cbd1b4d3e65ae3537d8094ec131d1",
-        "signature": "d766af34284b925136e7e244b931f3803cd0f5fa2116b9df1698a6311de7832b",
-        "affectsGlobalScope": false
-      },
-      "./tools/camera.ts": {
-        "version": "31f8eea1dcbc9fab6dc354f4e65f032c878a1e00cdc8ddf84389bf96122ac808",
-        "signature": "e28078ea0ff9ba37a4db71ae056f668605b8620acfb9bf3ba79252b55a690ed8",
-        "affectsGlobalScope": false
-      },
-      "./tools/plantsui.ts": {
-        "version": "8652832b534f5b4cb99a6175c51d746ac799809c753ea2ae94d3ba55d53887d0",
-        "signature": "9a2dcb90f636f617ff183275164d064ad4bd38c6235844be3c2b5cd217ab32f5",
-        "affectsGlobalScope": false
-      },
       "./world/sun2.ts": {
-        "version": "9fc32da3e779adbca563f118dca9add29481c33b5144b66ade50d041c5127589",
-        "signature": "da7cca74af8cf57d949c2eec71466b366355351f6c433902df141a884d4040a2",
+        "version": "98dbcbe2888328343ecf972d335785d899e4df7a9e5351e32e6dd33a2d5c95b1",
+        "signature": "3f8b32855cb289ed07135db52ea4e61820dc6007b3e68d5fcaa6e653f52d4f6c",
         "affectsGlobalScope": false
       },
       "./world/tests/testplane.ts": {
-        "version": "42cea3587225a4c87cd4b5a90c352c269ed0b56fb38badc964879eb99cac83ea",
+        "version": "1662719447f8b6c1e4b82892db8aff01d9ae082746308002229e22694ecfd1aa",
         "signature": "bf932e6d1f2194110633380ced7c1ccbdf9c4c94f99a2e098bc529abbfc96e2d",
         "affectsGlobalScope": false
       },
@@ -451,20 +416,35 @@
         "signature": "8dfda864d3beaf738e6638df5d26a24b6b08bf235ebe42d69d9908291b010d31",
         "affectsGlobalScope": false
       },
+      "./tools/plantsui.tsx": {
+        "version": "629f104c1432fe91148b48c74f1fe7bfb8525d718910d51e5abadad02bd24481",
+        "signature": "d5611c6ddb9e1eaae69aa2d41596142d22c536c17f9f2b8f54647985be451ab3",
+        "affectsGlobalScope": false
+      },
+      "./tools/camera.tsx": {
+        "version": "e70e8e8d4b221b5440546f91bf333d33f4336955fd9ec603f6eede80d5973364",
+        "signature": "b10b0c1e0aacd5afd3bc4a9167f7c9beb362b3420c9bee72a256c376b5b99a12",
+        "affectsGlobalScope": false
+      },
+      "./tools/buildings.tsx": {
+        "version": "18dac7860c98234ed47d2f844e20001ba3806f6e805af1850f23a6c2578326b0",
+        "signature": "a1c98b0bfb11de37a54d0c9347b8e7bc9e6763c94c318998d95e71b470009d67",
+        "affectsGlobalScope": false
+      },
+      "./tools/zones.tsx": {
+        "version": "129616b88099fecbddf3919aa2dcf3150ade89dd97c503c787d2b883d9b72e1b",
+        "signature": "6a2ff364b978cb0bc9f616926e950fa17bf39cc7a86cbcb4d3ef2f20830fba2b",
+        "affectsGlobalScope": false
+      },
       "./ui/canvas.tsx": {
-        "version": "952118ab650f526cb4e2a785d1dc05265c87d8becca23c14fdf6704e39277924",
-        "signature": "1894b6a0d8a3e76487a9ce24ebe7ebb38c41d9debff843b3075f249a47e79f95",
+        "version": "de9287b34220f256a15c03f577cbe6dc5b93a2ac0dcbf7c3fdd65feba812ca27",
+        "signature": "38861bd8232f0def66150db54cf3ccdb522838d0ae35783476876a66867afa02",
         "affectsGlobalScope": false
       },
       "./code.tsx": {
-        "version": "b17fac58257e559e86c5e6b67a550a1dfe7d91ed4451e4b4b856c339eb7669d1",
+        "version": "c2b9bda47c1c4a36234f1e830b3bb37b38a756e055c1206f31e8452b5f8cab1a",
         "signature": "1f8727e32de057cc99bf79b5fea9b00794cf794875b19683d690c6ba8fba378a",
         "affectsGlobalScope": true
-      },
-      "./rustwasm/hello_wasm.js": {
-        "version": "6a46400090dd40da2263903087a43a1de57d6db13fe10c05852c18360dc809d4",
-        "signature": "ce7196f043e593877984a7c982df828e9f356e408ce4d35a0a2c542aec421000",
-        "affectsGlobalScope": false
       },
       "./node_modules/@types/facebook-js-sdk/index.d.ts": {
         "version": "6aadc0e7ef7e8930121db014145d3085fe91b51c086c4a282cc209dfff9fc2bc",
@@ -556,7 +536,8 @@
         "./gpu.ts",
         "./gpu/renderpass.ts",
         "./gpu/renderpipeline.ts",
-        "./scene.ts"
+        "./scene.ts",
+        "./terranode.ts"
       ],
       "./gpu/meshes/box.ts": [
         "./gpu/renderpipelines/simple.ts",
@@ -571,7 +552,8 @@
         "./gpu/bindgrouplayout.ts",
         "./gpu/drawable.ts",
         "./gpu/renderpass.ts",
-        "./scene.ts"
+        "./scene.ts",
+        "./terranode.ts"
       ],
       "./gpu/renderpipelines/simple.ts": [
         "./gpu.ts",
@@ -618,6 +600,7 @@
         "./arcrotatecamera.ts",
         "./engine.ts",
         "./gpu.ts",
+        "./gpu/drawable.ts",
         "./gpu/renderpipeline.ts",
         "./paintground/paintground.ts",
         "./scene.ts",
@@ -674,10 +657,7 @@
         "./scene.ts",
         "./workerthread.ts"
       ],
-      "./terrascene.ts": [
-        "./scene.ts"
-      ],
-      "./tools/buildings.ts": [
+      "./tools/buildings.tsx": [
         "./arcrotatecamera.ts",
         "./scene.ts",
         "./traits/canvaslistener.ts",
@@ -686,14 +666,14 @@
         "./world/terrain.ts",
         "./world/water.ts"
       ],
-      "./tools/camera.ts": [
+      "./tools/camera.tsx": [
         "./arcrotatecamera.ts",
         "./scene.ts",
         "./uitab.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
-      "./tools/plantsui.ts": [
+      "./tools/plantsui.tsx": [
         "./arcrotatecamera.ts",
         "./paintground/paintplane.ts",
         "./plants/plants.ts",
@@ -705,7 +685,7 @@
         "./world/terrain.ts",
         "./world/water.ts"
       ],
-      "./tools/terrain.ts": [
+      "./tools/terrain.tsx": [
         "./arcrotatecamera.ts",
         "./engine.ts",
         "./gpu.ts",
@@ -720,7 +700,7 @@
         "./world/terrain.ts",
         "./world/water.ts"
       ],
-      "./tools/zones.ts": [
+      "./tools/zones.tsx": [
         "./arcrotatecamera.ts",
         "./paintground/painttexture.ts",
         "./scene.ts",
@@ -752,11 +732,11 @@
         "./scene.ts",
         "./terracamera.ts",
         "./terranode.ts",
-        "./tools/buildings.ts",
-        "./tools/camera.ts",
-        "./tools/plantsui.ts",
-        "./tools/terrain.ts",
-        "./tools/zones.ts",
+        "./tools/buildings.tsx",
+        "./tools/camera.tsx",
+        "./tools/plantsui.tsx",
+        "./tools/terrain.tsx",
+        "./tools/zones.tsx",
         "./types/interfaces/index.d.ts",
         "./uitab.ts",
         "./world/sun2.ts",
@@ -770,7 +750,9 @@
         "./world/water.ts"
       ],
       "./world/sun2.ts": [
+        "./engine.ts",
         "./gpu.ts",
+        "./gpu/drawable.ts",
         "./gpu/renderpipeline.ts",
         "./lights.ts",
         "./math.ts",
@@ -782,7 +764,7 @@
         "./gpu.ts",
         "./gpu/renderpipelines/terrainrenderpipeline.ts",
         "./scene.ts",
-        "./tools/terrain.ts"
+        "./tools/terrain.tsx"
       ],
       "./world/tests/testplane.ts": [
         "./scene.ts",
@@ -828,7 +810,8 @@
         "./gpu.ts",
         "./gpu/renderpass.ts",
         "./gpu/renderpipeline.ts",
-        "./scene.ts"
+        "./scene.ts",
+        "./terranode.ts"
       ],
       "./gpu/meshes/box.ts": [
         "./gpu/renderpipelines/simple.ts",
@@ -843,7 +826,8 @@
         "./gpu/bindgrouplayout.ts",
         "./gpu/drawable.ts",
         "./gpu/renderpass.ts",
-        "./scene.ts"
+        "./scene.ts",
+        "./terranode.ts"
       ],
       "./gpu/renderpipelines/simple.ts": [
         "./gpu/drawable.ts",
@@ -935,10 +919,7 @@
         "./physics.ts",
         "./scene.ts"
       ],
-      "./terrascene.ts": [
-        "./scene.ts"
-      ],
-      "./tools/buildings.ts": [
+      "./tools/buildings.tsx": [
         "./arcrotatecamera.ts",
         "./scene.ts",
         "./traits/trait.ts",
@@ -946,14 +927,14 @@
         "./world/terrain.ts",
         "./world/water.ts"
       ],
-      "./tools/camera.ts": [
+      "./tools/camera.tsx": [
         "./arcrotatecamera.ts",
         "./scene.ts",
         "./uitab.ts",
         "./world/terrain.ts",
         "./world/water.ts"
       ],
-      "./tools/plantsui.ts": [
+      "./tools/plantsui.tsx": [
         "./arcrotatecamera.ts",
         "./plants/plants.ts",
         "./scene.ts",
@@ -963,7 +944,7 @@
         "./world/terrain.ts",
         "./world/water.ts"
       ],
-      "./tools/terrain.ts": [
+      "./tools/terrain.tsx": [
         "./arcrotatecamera.ts",
         "./gpu/drawable.ts",
         "./scene.ts",
@@ -973,7 +954,7 @@
         "./world/terrain.ts",
         "./world/water.ts"
       ],
-      "./tools/zones.ts": [
+      "./tools/zones.tsx": [
         "./arcrotatecamera.ts",
         "./scene.ts",
         "./traits/canvaslistener.ts",
@@ -988,6 +969,11 @@
       ],
       "./types/interfaces/index.d.ts": [
         "./math.ts"
+      ],
+      "./ui/canvas.tsx": [
+        "./arcrotatecamera.ts",
+        "./scene.ts",
+        "./uitab.ts"
       ],
       "./uitab.ts": [
         "./arcrotatecamera.ts",
@@ -1090,19 +1076,15 @@
       "./physics.ts",
       "./plants/grass.ts",
       "./plants/plants.ts",
-      "./rustwasm/hello_wasm.d.ts",
-      "./rustwasm/hello_wasm.js",
-      "./rustwasm/hello_wasm_bg.d.ts",
       "./scene.ts",
       "./terracamera.ts",
       "./terranode.ts",
       "./terraray.ts",
-      "./terrascene.ts",
-      "./tools/buildings.ts",
-      "./tools/camera.ts",
-      "./tools/plantsui.ts",
-      "./tools/terrain.ts",
-      "./tools/zones.ts",
+      "./tools/buildings.tsx",
+      "./tools/camera.tsx",
+      "./tools/plantsui.tsx",
+      "./tools/terrain.tsx",
+      "./tools/zones.tsx",
       "./traits/canvaslistener.ts",
       "./traits/trait.ts",
       "./types/interfaces/index.d.ts",
