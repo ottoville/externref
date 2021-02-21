@@ -2,7 +2,7 @@
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { canvasListener } from "../traits/canvasListener.js";
-import type { DrawableDirect, DrawableSimple } from "../GPU/Drawable.js";
+import type { DrawableSimple } from "../GPU/Drawable.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
@@ -15,9 +15,9 @@ import { Engine } from "../engine.js";
 const terrainWorker = new WorkerThread('../webworkers/terrainWorker.js');
 
 
-const renderPipelines: Map<GPU, [RenderPipeline,number]> = new Map();
+const renderPipelines: Map<GPU, [RenderPipeline,number,number]> = new Map();
 
-function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline, number] {
+function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline,number, number] {
     const bufferOffsetBytes = allocateMemory(scene.engine)
 
     let renderPipeline = renderPipelines.get(scene.gpu);
@@ -55,7 +55,7 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline, nu
         vertexState: {
             indexFormat: 'uint32'
         }
-    }, [bufferOffsetBytes]), bufferOffsetBytes];
+    }, [bufferOffsetBytes]), 4, bufferOffsetBytes];
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline
 }
@@ -66,7 +66,7 @@ function allocateMemory(engine:Engine) {
     return bufferOffsetBytes;
 }
 
-export class TerrainTool extends TerraNodeGPU<DrawableDirect> {
+export class TerrainTool extends TerraNodeGPU {
     static label = 'Terrain';
     public static instance: UITAB | null = null;
     static menuElem = <div><legend style="background-color:white">Terrain</legend>

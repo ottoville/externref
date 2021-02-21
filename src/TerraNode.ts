@@ -7,7 +7,7 @@ import type { hasPhysics } from "./physics.js";
 import type { Scene } from "./Scene.js";
 import { ObjectWorkerThread } from "./WorkerThread.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
-import type { Drawable, DrawableDirect } from "./GPU/Drawable.js";
+import type { DrawableDirect } from "./GPU/Drawable.js";
 
 export abstract class MainNode {
     readonly bufferOffsetBytes: number;
@@ -147,11 +147,11 @@ export abstract class MainNode {
         return 'lightType' in this;
     }
 }
-export abstract class TerraNodeGPU<T extends Drawable> extends MainNode {
+export abstract class TerraNodeGPU extends MainNode {
     static uniqueID = 0;
     protected readonly uniqueID: number = TerraNodeGPU.uniqueID++;
 
-    abstract Drawable:T
+    abstract Drawable:DrawableDirect
     static GPUDataSize = 16 + 4 + 4 + 4;
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
@@ -268,7 +268,7 @@ class boundingBox {
 
 }
 
-export abstract class BoundableNode extends TerraNodeGPU<DrawableDirect> {
+export abstract class BoundableNode extends TerraNodeGPU {
 
     readonly boundingBox: boundingBox;
     readonly pickInfo = new pickInfo();

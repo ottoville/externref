@@ -9,22 +9,21 @@ import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 import type { Engine } from "../engine.js";
-import { DrawableDirect } from "../GPU/Drawable.js";
 
 
 
-class PlaneMesh extends TerraNodeGPU<DrawableDirect> {
+class PlaneMesh extends TerraNodeGPU {
     Drawable = this.renderPipeline.addDrawableIndexed(undefined, new Set([this.engine.gpu.renderPassScreen]), this, undefined, 0, 1, 0);
 }
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, number]{
+function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, number, number]{
     let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
     const bufferOffsetBytes = allocateMemory(scene.engine);
     if (renderPipeline) {
         renderPipeline.dynamicBindGroupOffset = [bufferOffsetBytes];
-        return [renderPipeline, bufferOffsetBytes];
+        return [renderPipeline, 0, bufferOffsetBytes];
     }
     const vertex = scene.engine.gpu.shaderModules.get('plane.vert.wgsl')
     if (!vertex)
@@ -67,7 +66,7 @@ function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, numbe
         },
     }, [bufferOffsetBytes]);
     renderPipelines.set(scene.gpu, renderPipeline);
-    return [renderPipeline, bufferOffsetBytes]
+    return [renderPipeline, 0, bufferOffsetBytes]
 }
 function allocateMemory(engine: Engine) {
     const bufferOffsetBytes = engine.gpu.DataSlots.pop();
