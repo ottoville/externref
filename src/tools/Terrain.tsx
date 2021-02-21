@@ -69,11 +69,10 @@ function allocateMemory(engine:Engine) {
 export class TerrainTool extends TerraNodeGPU {
     static label = 'Terrain';
     public static instance: UITAB | null = null;
-    static menuElem = <div><legend style="background-color:white">Terrain</legend>
-<button class="w3-bar-item w3-button">⇫</button>
-<button class="w3-bar-item w3-button" style="transform: rotate(-180deg);" >⇫</button >
-
-</div>;
+    static menuElem = (instance: TerrainTool) => <div><legend style="background-color:white">Terrain</legend>
+        <button class="w3-bar-item w3-button" onClick={() => instance.raise()}>⇫</button>
+        <button class="w3-bar-item w3-button" style="transform: rotate(-180deg);" onClick={() => instance.lower()} >⇫</button >
+        </div>;
     traits:Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
     // private engine: WebGPUEngine;
@@ -99,7 +98,7 @@ export class TerrainTool extends TerraNodeGPU {
                 indices: terrain.indicesBuffer,
                 subdivisionsX: Terrain.subdivisionsX,
                 subdivisionsY: Terrain.subdivisionsY,
-                boundingBox: terrain.mesh.boundingBox,
+                boundingBox: terrain.mesh.boundingBox.buffer,
                 slopeArr: terrain.slopeArrBuffer,
                 pickInfo: terrain.mesh.pickInfo.buffer,
                 _groundFacesNormalsBuffer: terrain.mesh.facesBuffer,

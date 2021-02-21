@@ -94,7 +94,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
 
     },
     elevateFaces: (e: WMessage<{ radius: number, height: number, direction: number }>) => {
-        if (pickInfo.distance[0] = NaN)
+        if (pickInfo.distance[0] == NaN)
             return;
 
         // Impact zone
