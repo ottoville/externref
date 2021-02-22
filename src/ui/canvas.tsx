@@ -380,9 +380,11 @@ export class Canvas extends TerraCompoment {
         return [mainScene,camera];
     }
     toolsContainer: HTMLFieldSetElement= <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;"></fieldset>
-    
+    gameState = <fieldset class="gameControl hidden" id="gameState"></fieldset>
+
     uiTabs: UITABClassLike[] = [PlantsUI, BuildingsUI, CameraTAB, TerrainTool, Zones]
     openedMenu?: [UITAB, HTMLFieldSetElement];
+    timeOfDay:HTMLOutputElement = <output id="TODout" fow="TOD"></output>
     constructor() {
         super();
         this.progress = 2;
@@ -394,6 +396,10 @@ export class Canvas extends TerraCompoment {
             </div>)
         });
         this.initalize().then(async args => {
+            setInterval(() => {
+                this.timeOfDay.value = new Date(Number(args[0].engine.physics.gameTime)).toUTCString();
+            }, 1000);
+
             //@ts-ignore
             const [terrain, sea]: [Terrain, Sea] = await args[0].ready;
             this.menuClick = (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => {
@@ -411,8 +417,25 @@ export class Canvas extends TerraCompoment {
                 const instance=new tool(args[0], terrain, args[1], sea);
                 menuContainer.appendChild(tool.menuElem(instance));
                 this.openedMenu = [instance,menuContainer];
-                
             }
+            this.gameState.appendChild(<div onChange={(e: Event) => { args[0].engine.physics.gameSpeed = parseInt((e.target as HTMLInputElement).value) }}>
+                <label>Time of day: {this.timeOfDay}</label>
+                <br />
+                <input name="time" type="radio" id="pause" value="-1" checked={args[0].engine.physics.gameSpeed === -1} />
+                <label for="pause">⏸️</label>
+                <input name="time" type="radio" id="play" value="0" checked={args[0].engine.physics.gameSpeed === 0} />
+                <label for="play">▶️</label>
+                <input name="time" type="radio" id="fastforward" value="1" checked={args[0].engine.physics.gameSpeed === 1} />
+                <label for="fastforward">⏩</label>
+                <input name="time" type="radio" id="fastforward2" value="2" checked={args[0].engine.physics.gameSpeed === 2} />
+                <label for="fastforward2">4⏩</label>
+                <input name="time" type="radio" id="fastforward3" value="3" checked={args[0].engine.physics.gameSpeed === 3}/>
+                <label for="fastforward3">8⏩</label>
+                <input name="time" type="radio" id="fastforward4" value="4" checked={args[0].engine.physics.gameSpeed === 4} />
+                <label for="fastforward4">16⏩</label>
+                <input name="time" type="radio" id="fastforward5" value="5" checked={args[0].engine.physics.gameSpeed === 5} />
+                <label for="fastforward5">32⏩</label>
+            </div>)
         }).catch(e => {
             console.error('creating terrain failed', e);
             this.progresElem.textContent = e.name + ' ' + e.message;
@@ -425,11 +448,12 @@ export class Canvas extends TerraCompoment {
         if (value === 100)
             this.progressBar.parentNode?.parentNode?.removeChild(this.progressBar.parentNode);
     }
-
     render() {
         return <div style="height:100%">
             {this.canvasElem}
             {this.toolsContainer}
+            <div id="fps">@(rendertime) @(msPerFrame)</div>
+            { this.gameState }
             <div style="position:absolute;top:30%; background-color:white;width:100%;text-align:center ">
                 {this.progresElem}
                 <br />

@@ -16,7 +16,7 @@ export class Physics {
     #lastStateChangeTime = new Date().getTime();
     #gameSpeed = 0;
     #interval: number = 0;
-    #lastStateChangeGameTime = BigInt(216000000); //21600 * 1000; //6 hours
+    #lastStateChangeGameTime = BigInt(21600000); //21600 * 1000; //6 hours
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
 
@@ -94,7 +94,6 @@ export class Physics {
         this.gameSpeed = value.gameSpeed;
     }
     set gameSpeed(value: number) {
-        console.log('set gameSpeed', value)
         this.#lastStateChangeGameTime = this.gameTime;
         this.#lastStateChangeTime = new Date().getTime();
 

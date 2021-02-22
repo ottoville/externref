@@ -111,6 +111,14 @@ globalThis.TerraUI = {
             if (key == 'onClick') {
                 if(typeof(name)==='string')
                     elem.addEventListener('click', props[key])
+            } else if (key == 'onChange') {
+                if (typeof (name) === 'string')
+                    elem.addEventListener('change', props[key])
+            }
+            else if (key == 'checked') {
+                if (props[key])
+                    (elem as HTMLInputElement).checked=true
+            
             } else
                 elem.setAttribute(key, props[key]);
         }
