@@ -83,9 +83,8 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
 
 
         sunPositionY = sunPositionY * yAngle;
-        const currentPos = this.translation;
 
-        this.SetTranslationDelta([sunPositionX - currentPos[0], sunPositionY - currentPos[1], sunPositionZ - currentPos[2]]);
+        this.SetTranslationDelta([sunPositionX - this.translation[0], sunPositionY - this.translation[1], sunPositionZ - this.translation[2]]);
         //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
         const ambientR = this.clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
         const ambientGB = this.clamp((sunPositionY + 0.1) * 0.4 - 0.1, 0.05, 0.3);

@@ -1,5 +1,5 @@
 //type Angle={rad:number, deg:number}
-import { TerraVector2} from "../../Math";
+import { TerraVector2, TerraVector3} from "../../Math";
 
 
 type Zone = {
@@ -13,7 +13,7 @@ type subTexture = {
     height: number;
     imageData: GPUTexture | null;
 }
-type savedCamera = { id: number, camera: { alpha: number, beta: number, radius: number, target: Float32Array, position: Float32Array}}
+type savedCamera = { id: number, camera: { alpha: number, beta: number, radius: number, target: TerraVector3, position: TerraVector3 } }
 type PTDresult =
     {
         coord: TerraVector2,

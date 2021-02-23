@@ -157,7 +157,7 @@ export class TerraCamera {
     }
     #nearVec3 = new TerraVector3();
     #farVec3 = new TerraVector3();
-    createPickingRay(x: number, y: number, world?: Float32Array) {
+    createPickingRay(x: number, y: number, world?: TerraMatrix) {
         const viewport = {
             x: 0,
             y: 0,
@@ -180,16 +180,16 @@ export class TerraCamera {
 
 
         if (world) {
-            var matrix = Matrix.Zero();
-            const worldM = Matrix.FromArray(world);
-            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.viewArr)), matrix);
+            var matrix = new TerraMatrix();
+            world.multiplyToRef(this.viewArr, matrix,)
         } else {
-            var matrix = Matrix.FromArray(Array.from(this.viewArr));
+            var matrix = this.viewArr.clone();
         }
-        matrix.multiplyToRef(Matrix.FromArray(Array.from(this.projectionArr)), matrix);
+        matrix.multiplyToRef(this.projectionArr, matrix);
         //TODO use matrixMultiply64 and matrixInvert64
 
-        const inverted = new TerraMatrix(Array.from(matrix.invert().asArray()));
+        const inverted = new TerraMatrix();
+        matrix.invertToRef(inverted);
         /* this.nearScreenSource[0] = x / viewport.width * 2 - 1;
          this.nearScreenSource[1] = -(y / viewport.height * 2 - 1);
          this.nearScreenSource[2] = -1.0;*/

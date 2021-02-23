@@ -13,8 +13,6 @@ export class BindGroupLayout {
     }
     renderPipeLines: Set<RenderPipeline> = new Set();
 
-    properties: number = 0
-    propertiesLength: number = 0
     subBindGroups: Set<BindGroupLayout> = new Set();
     layout: GPUPipelineLayout;
     constructor(public gpuscene: GPU, public bindGroupLayout: GPUBindGroupLayout, public parent?: BindGroupLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false, isRoot = false) {
