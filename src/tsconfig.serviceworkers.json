@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "../wwwroot",
+    "module": "esnext",
+    "target": "esnext",
+    "lib": [ "esnext", "webworker" ],
+    "sourceMap": false,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    //"strict": true,
+    "tsBuildInfoFile": "tsconfig.workers.tsbuildinfo"
+    },
+    "exclude": [
+      "node_modules"
+    ],
+  "include": [
+    "./workers/service-worker.ts",
+    "./workers/service-worker.published.ts"
+  ]
+}

@@ -12,7 +12,7 @@ import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU";
 import { Engine } from "../engine.js";
 
-const terrainWorker = new WorkerThread('../webworkers/terrainWorker.js');
+const terrainWorker = new WorkerThread('/js/workers/webworkers/terrainWorker.js');
 
 
 const renderPipelines: Map<GPU, [RenderPipeline,number,number]> = new Map();

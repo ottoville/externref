@@ -36,7 +36,7 @@ class PickingInfo {
     /**
      * The location of pick collision
      */
-    public pickedPoint: Nullable<[number, number,number]> = null;
+    public pickedPoint: [number, number,number] | null = null;
     /**
      * The mesh corresponding the the pick collision
      */
@@ -58,7 +58,7 @@ class PickingInfo {
     /**
      * The ray that was used to perform the picking.
      */
-    public ray: Nullable<Ray> = null;
+    public ray: Ray | null = null;
 
     /**
      * Gets the normal correspodning to the face the pick collided with
@@ -160,8 +160,8 @@ class IntersectionInfo {
     public subMeshId = 0;
 
     constructor(
-        public bu: Nullable<number>,
-        public bv: Nullable<number>,
+        public bu: number | null,
+        public bv: number | null,
         public distance: number) {
     }
 }
@@ -317,7 +317,7 @@ class Ray {
      * @param vertex2 triangle vertex
      * @returns intersection information if hit
      */
-    public intersectsTriangle(vertex0: [number, number, number], vertex1: [number, number, number], vertex2: [number, number, number]): Nullable<IntersectionInfo> {
+    public intersectsTriangle(vertex0: [number, number, number], vertex1: [number, number, number], vertex2: [number, number, number]): IntersectionInfo | null {
 
         
 
@@ -431,7 +431,7 @@ class Ray {
 
     }
     */
-    private _comparePickingInfo(pickingInfoA: DeepImmutable<PickingInfo>, pickingInfoB: DeepImmutable<PickingInfo>): number {
+    private _comparePickingInfo(pickingInfoA: PickingInfo, pickingInfoB: PickingInfo): number {
 
         if (pickingInfoA.distance < pickingInfoB.distance) {
             return -1;

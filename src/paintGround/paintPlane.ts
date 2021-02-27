@@ -9,6 +9,7 @@ import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 import type { Engine } from "../engine.js";
+import { TerraVector2 } from "../Math.js";
 
 
 
@@ -82,7 +83,7 @@ export class paintPlane extends paintGround {
         console.log('scaled to 0')
     }
     #mesh = new PlaneMesh(this.scene.engine, ...getRenderPipeline(this.scene, this.ground));
-    #startingPoint: Float32Array = new Float32Array(2);
+    #startingPoint = new TerraVector2(2);
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
         const positions: number[] = [0, 0, 0, 1];
         const indices: number[] = [0, 1];
@@ -100,10 +101,10 @@ export class paintPlane extends paintGround {
                     if (row == 0)
                         indices.push((positions.push(i, row) - 2) >> 1)
                     else
-                        indices.push(indices[indices.length - i * 4]);
+                        indices.push(indices[indices.length - i * 4]!);
                     indices.push((positions.push(i, row + 1) - 2) >> 1);
                 } else {
-                    indices.push(indices[indices.length - i * 4]);
+                    indices.push(indices[indices.length - i * 4]!);
                     indices.push((positions.push(width - i, row + 1) - 2) >> 1)
 
                 }
@@ -135,7 +136,7 @@ export class paintPlane extends paintGround {
         this.scene.engine.gpu.DataSlots.push(this.#mesh.bufferOffsetBytes);
     }
 
-    onMainPointerDown(startingPoint: Float32Array) {
+    onMainPointerDown(startingPoint: TerraVector2) {
         this.#startingPoint = startingPoint;
     }
     #columns = 0;

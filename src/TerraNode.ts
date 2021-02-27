@@ -17,7 +17,7 @@ export abstract class MainNode {
     readonly data: Float32Array;
     readonly customData: Float32Array;
     readonly acceleration: Float32Array;
-    readonly velocity: Float32Array;
+    readonly velocity: TerraVector3;
     readonly transformation: TerraMatrix;
     readonly translation: TerraVector3;
 
@@ -69,7 +69,7 @@ export abstract class MainNode {
         }
         this.updateDynamicBuffer();
     }
-    SetTranslationDelta(value: [number, number, number] | [number, number] | [number] | Float32Array) {
+    SetTranslationDelta(value: [number, number, number] | TerraVector3) {
         this.velocity.set(value);
         this.updateDynamicBuffer();
     }
@@ -98,7 +98,7 @@ export abstract class MainNode {
         this.data = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes, TerraNodeGPU.GPUDataSize);
         this.transformation = new TerraMatrix(this.engine.gpu.CPUData, bufferOffsetBytes);
         this.translation = new TerraVector3(this.engine.gpu.CPUData, bufferOffsetBytes + 12 * Float32Array.BYTES_PER_ELEMENT)
-        this.velocity = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 16 * Float32Array.BYTES_PER_ELEMENT, 4);
+        this.velocity = new TerraVector3(this.engine.gpu.CPUData, bufferOffsetBytes + 16 * Float32Array.BYTES_PER_ELEMENT, 4);
         this.customData = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 20 * Float32Array.BYTES_PER_ELEMENT, 4);
         this.acceleration = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 24 * Float32Array.BYTES_PER_ELEMENT, 4);
 
@@ -174,12 +174,19 @@ export interface PickingInfo {
     pickedMesh: BoundableNode,
     distance: number
 }
-const worker = new ObjectWorkerThread('/webworkers/mesh.js');
+const worker = new ObjectWorkerThread('/js/workers/webworkers/mesh.js');
 
 class pickInfo {
     buffer = new SharedArrayBuffer(6 * 4);
     point = new TerraVector3(this.buffer);
-    distance = new Float32Array(this.buffer, 3 * 4, 1);
+    //distance = new Float32Array(this.buffer, 3 * 4, 1);
+    #view=new DataView(this.buffer,3*4,4)
+    get distance() {
+        return this.#view.getFloat32(0, true);
+    }
+    set distance(value:number) {
+        this.#view.setFloat32(0,value, true);
+    }
 }
 class boundingBox {
     buffer = new SharedArrayBuffer(4 * 6);

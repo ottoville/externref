@@ -1,8 +1,8 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
-import { TerraMatrix, TerraVector3, Triangle } from "./Math.js";
-import type { Engine, Vector3 } from "./engine.js";
+import { TerraMatrix, TerraVector3, Triangle, Vector3 } from "./Math.js";
+import type { Engine } from "./engine.js";
 
 
 function Dot(left: [number, number, number] | Float32Array | Vector3, right: [number, number, number] | Float32Array | Vector3): number {
@@ -338,6 +338,9 @@ export class Collider {
             while (i < 3) {
                 // for (let i = 0; i < 3; i++) {
                 const p = triangle.vectors[i];
+                if (!p)
+                    continue;
+
                 this.#tempVector[0] = this.#basePoint[0] - p[0];
                 this.#tempVector[1] = this.#basePoint[1] - p[1];
                 this.#tempVector[2] = this.#basePoint[2] - p[2];
@@ -363,6 +366,8 @@ export class Collider {
             i = 2;
             while (i > 0) {
                 const p = triangle.vectors[i]
+                if (!p)
+                    continue;
                 const p2 = triangle.vectors[i - 1] || triangle.vectors[2];
                 this._edge[0] = p2[0] - p[0];
                 this._edge[1] = p2[1] - p[1];

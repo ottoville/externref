@@ -1,5 +1,11 @@
-﻿import type { Vector3, Vector4 } from "./engine";
+﻿
+export interface Vector3 extends Omit<TerraVector3, 'buffer'> {
+    [0]: number
+    [1]: number
+    [2]: number
+}
 
+export type Vector4 = Omit<TerraVector4, 'buffer'>;
 export class TerraMatrix extends Float32Array {
     view64: Float64Array;
     constructor(Arr?: ArrayBufferLike, offset?: number)
@@ -149,17 +155,17 @@ export class TerraVector3 extends Float32Array {
     declare 0: number
     declare 1: number
     declare 2: number
-    constructor(Arr?: ArrayBufferLike, offset?: number)
+    constructor(Arr?: ArrayBufferLike, offset?: number, length?:number)
     constructor(Arr?: number[])
-    constructor(Arr?: number[] | ArrayBufferLike, offset = 0) {
+    constructor(Arr?: number[] | ArrayBufferLike, offset = 0, length = 3) {
         if (!Arr)
-            super(3);
+            super(length);
         else if (Array.isArray(Arr)) {
-            Arr.length = 3;
+            Arr.length = length;
             super(Arr);
         }
         else {
-            super(Arr, offset, 3);
+            super(Arr, offset, length);
         }
     }
     multiply2Ref(m: TerraMatrix, ref: Vector3|Vector4): void {

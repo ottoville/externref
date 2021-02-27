@@ -23,7 +23,7 @@ export class Plants {
         radius: 86
     }
     //private offset: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 2 * this.numBlades);
-    private worker = new WorkerThread('/webworkers/grass.js');
+    private worker = new WorkerThread('/js/workers/webworkers/grass.js');
     private ready: Promise<any>;
     public fillArea(area: PTDresult) {
         //let amount = 100000

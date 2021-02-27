@@ -4,10 +4,9 @@ import type { DynamicBindGroupLayout } from "./GPU/BindGroupLayout.js";
 import { TerraNodeGPU } from "./TerraNode.js";
 import { Collider } from "./Collider.js";
 import type { Scene } from "./Scene.js";
-import { TerraVector3, TerraVector4 } from "./Math.js";
+import { TerraVector3, Vector3 } from "./Math.js";
 
-export type Vector3 = Omit<TerraVector3, 'buffer'>;
-export type Vector4 = Omit<TerraVector4, 'buffer'>;
+
 
 const CollisionsEpsilon = 0.001;
 const closeDistance = CollisionsEpsilon * 10.0;
@@ -51,7 +50,7 @@ export class Engine {
         }
         const available = this.freeMemoryBlocks.findIndex(arr => arr.byteLength == byteLength)
         if (available > -1)
-            return this.freeMemoryBlocks.splice(available, 1)[0].byteOffset;
+            return this.freeMemoryBlocks.splice(available, 1)[0]!.byteOffset;
         else {
             const available2 = this.freeMemoryBlocks.find(arr => arr.byteLength < byteLength)
             if (available2) {
@@ -101,7 +100,7 @@ export class Engine {
             this.allocatedSize = arr.byteOffset;
             const previousBlockIndex = this.freeMemoryBlocks.findIndex(parr => parr.byteOffset + parr.byteLength == arr.byteOffset)
             if (previousBlockIndex > -1) {
-                this.allocatedSize = this.freeMemoryBlocks.splice(previousBlockIndex, 1)[0].byteOffset;
+                this.allocatedSize = this.freeMemoryBlocks.splice(previousBlockIndex, 1)[0]!.byteOffset;
             }
             return;
         }
@@ -109,12 +108,12 @@ export class Engine {
             let byteLength = arr.byteLength;
             const nextBlock = this.freeMemoryBlocks.findIndex(arr => arr.byteOffset == end)
             if (nextBlock > -1) {
-                byteLength += this.freeMemoryBlocks.splice(nextBlock, 1)[0].byteLength
+                byteLength += this.freeMemoryBlocks.splice(nextBlock, 1)[0]!.byteLength
             }
             let byteOffset = arr.byteOffset
             const previousBlockIndex = this.freeMemoryBlocks.findIndex(arr => arr.byteOffset + arr.byteLength == byteOffset)
             if (previousBlockIndex > -1) {
-                const previousBlock = this.freeMemoryBlocks.splice(previousBlockIndex, 1)[0]
+                const previousBlock = this.freeMemoryBlocks.splice(previousBlockIndex, 1)[0]!
                 byteLength += previousBlock.byteLength
                 byteOffset = previousBlock.byteOffset;
                 return;

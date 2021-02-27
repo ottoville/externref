@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "composite": true,
-    "outDir": "../../wwwroot",
+    "outDir": "../wwwroot/js",
     "module": "esnext",
     "target": "esnext",
     "lib": [ "esnext", "webworker" ],
@@ -10,15 +10,13 @@
     "strictPropertyInitialization": true,
     //"strict": true,
     "tsBuildInfoFile": "tsconfig.workers.tsbuildinfo"
-  },
-  "exclude": [
-    "node_modules"
-  ],
+    },
+    "exclude": [
+      "node_modules"
+    ],
   "include": [
-    "./webworkers/*.ts",
-    "./service-worker.ts",
-    "./service-worker.published.ts",
-    "commonMath.d.ts",
+    "./Math.ts",
+    "./workers/webworkers/*.ts",
     "./webgpu.d.ts"
   ]
 }

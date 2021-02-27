@@ -151,7 +151,7 @@ export class Scene {
         let minimum: BoundableNode | null = null;
 
         this.boundables.forEach(boundable => {
-            if (!minimum || boundable.pickInfo.distance[0] < minimum.pickInfo.distance[0])
+            if (!minimum || boundable.pickInfo.distance < minimum.pickInfo.distance)
                 minimum = boundable;
 
         })

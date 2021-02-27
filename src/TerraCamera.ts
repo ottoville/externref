@@ -5,7 +5,9 @@ import type { GPU } from "./GPU.js";
 import type { Engine } from "./engine.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 
-const worker = new ObjectWorkerThread('/webworkers/cameraWorker.js');
+const worker = new ObjectWorkerThread('/js/workers/webworkers/cameraWorker.js', {
+    type: 'module'
+});
 let uniqueID = 0;
 
 export class TerraCamera {
@@ -158,17 +160,6 @@ export class TerraCamera {
     #nearVec3 = new TerraVector3();
     #farVec3 = new TerraVector3();
     createPickingRay(x: number, y: number, world?: TerraMatrix) {
-        const viewport = {
-            x: 0,
-            y: 0,
-            width: this.renderPass.size.width,
-            height: this.renderPass.size.height
-        }
-
-        // Moving coordinates to local viewport world
-        x = x - viewport.x;
-        y = y - (this.renderPass.size.height - viewport.y - viewport.height);
-
         //Todo, reuse matrix and vector
 
         //const matrix = world.multiply(viewProjection);
@@ -193,8 +184,8 @@ export class TerraCamera {
         /* this.nearScreenSource[0] = x / viewport.width * 2 - 1;
          this.nearScreenSource[1] = -(y / viewport.height * 2 - 1);
          this.nearScreenSource[2] = -1.0;*/
-        this.#nearVec3[0] = x / viewport.width * 2 - 1;
-        this.#nearVec3[1] = -(y / viewport.height * 2 - 1);
+        this.#nearVec3[0] = x / this.renderPass.size.width * 2 - 1;
+        this.#nearVec3[1] = -(y / this.renderPass.size.height * 2 - 1);
         this.#nearVec3[2] = -1.0;
         // var farScreenSource = (new Vector3()).copyFromFloats(this.nearScreenSource[0], this.nearScreenSource[1], 1.0);
         this.#farVec3 = new TerraVector3([this.#nearVec3[0], this.#nearVec3[1], 1.0]);
@@ -251,6 +242,7 @@ export class TerraCamera {
         return worker.message(this.#uniqueID, 'updatePickingRay');
     }
     onResize(width: number, height: number) {
+        console.log('terracamera onresize', [width, height]);
         worker.signal(this.#uniqueID, 'onResize', [width, height]);
     }
 

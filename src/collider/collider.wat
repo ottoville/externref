@@ -498,9 +498,12 @@
       i32.const 1
       (f32.lt
         (local.tee $distToCollisionSquared
-          (f32.mul
+          (f32.mul 
             (global.get $lowestRoot)
-            (global.get $velocitySquared)
+            (f32.mul
+              (global.get $lowestRoot)
+              (global.get $velocitySquared)
+            )
           )
         )
         (f32.load

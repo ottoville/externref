@@ -3,7 +3,6 @@
     <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
   </PropertyGroup>  <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
   </PropertyGroup>  <ItemGroup>
   <None Remove="src\collider\collider.wat" />
   <None Remove="src\collider\colliderSIMD.wat" />
@@ -405,10 +404,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
-  </ItemGroup>
-
-  <ItemGroup>
     <TypeScriptCompile Include="src\collider\colliderSIMD.wat" />
     <TypeScriptCompile Include="src\collider\collider.wat" />
     <TypeScriptCompile Include="src\node_modules\%40types\color-name\index.d.ts" />
@@ -490,7 +485,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\js\lib\" />
     <Folder Include="wwwroot\collider\" />
     <Folder Include="wwwroot\resources\" />
   </ItemGroup>

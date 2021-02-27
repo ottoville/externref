@@ -11,7 +11,7 @@
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noUncheckedIndexedAccess": false,
+    "noUncheckedIndexedAccess": true,
     "jsx": "react",
     "jsxFactory": "TerraUI.createElement",
     //"strict": true,
@@ -40,6 +40,7 @@
     "lib"
   ],
   "references": [
-    { "path": "./workers/tsconfig.json" }
+    { "path": "./tsconfig.workers.json" },
+    { "path": "./tsconfig.serviceworkers.json" }
   ]
 }

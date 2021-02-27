@@ -1,8 +1,13 @@
-﻿importScripts("/js/commonMath.js");
+﻿
+//import { TerraMatrix } from "/js/Math.js";
+import { TerraMatrix } from "../../Math.js";
+function WithinEpsilon(a: number, b: number, epsilon: number = 1.401298E-45): boolean {
+    var num = a - b;
+    return -epsilon <= num && num <= epsilon;
+}
+const epsilon = 1.401298E-45;
 
-
-function TransformCoordinatesToRef(source: [number, number, number], transformation: DeepImmutable < Matrix >, result: [number,number,number]): void {
-    const m = transformation.m;
+function TransformCoordinatesToRef(source: [number, number, number], m: TerraMatrix, result: [number,number,number]): void {
     const x = source[0]
     const y = source[1]
     const z = source[2]
@@ -19,23 +24,24 @@ function TransformCoordinatesToRef(source: [number, number, number], transformat
 const cameras: Map<number, CameraWorker> = new Map();
 class CameraWorker {
     projectionViewArr: Float32Array;
-    viewArr: Float32Array;
+    viewArr: TerraMatrix;
     cameraArr: Float32Array;
-    projectionArr: Float32Array;
+    projectionArr: TerraMatrix;
     pickingRay: Float32Array;
     mousePosition: Uint16Array;
 
 
     constructor(viewProjectionPositionBuffer: SharedArrayBuffer, projection: SharedArrayBuffer, pickingRayBuffer: SharedArrayBuffer,mousePositionBuffer: SharedArrayBuffer, private size: { width: number, height: number }) {
         this.projectionViewArr = new Float32Array(viewProjectionPositionBuffer, 0, 16);
-        this.viewArr = new Float32Array(viewProjectionPositionBuffer, 64, 16);;
+        this.viewArr = new TerraMatrix(viewProjectionPositionBuffer, 64);
         this.cameraArr = new Float32Array(viewProjectionPositionBuffer, 128, 3);
-        this.projectionArr = new Float32Array(projection);
+        this.projectionArr = new TerraMatrix(projection);
 
         this.pickingRay = new Float32Array(pickingRayBuffer);
         this.mousePosition = new Uint16Array(mousePositionBuffer);
     }
     onResize(width: number, height: number) {
+        console.log('onResize', width,height)
         this.size.width = width;
         this.size.height = height;
     }
@@ -58,7 +64,7 @@ class CameraWorker {
     createPickingRay(matrix?: SharedArrayBuffer) {
 
     }
-    updatePickingRay(worldPosition?: SharedArrayBuffer) {
+    updatePickingRay(worldPosition?: TerraMatrix) {
         const nearScreenSource : [number, number, number] = [0, 0, 0];
         nearScreenSource[0] = this.mousePosition[0] / this.size.width * 2 - 1;
         nearScreenSource[1] = -(this.mousePosition[1] / this.size.height * 2 - 1);
@@ -70,28 +76,34 @@ class CameraWorker {
 
         //const matrix = world.multiply(viewProjection);
         if (worldPosition) {
-            var matrix = Matrix.Zero();
-            const worldM = Matrix.FromArray(Array.from(new Float32Array(worldPosition)))
-            worldM.multiplyToRef(Matrix.FromArray(Array.from(this.viewArr)), matrix);
-        } else
-            var matrix = Matrix.FromArray(Array.from(this.viewArr));
+            var matrix = new TerraMatrix();
+            //TODO
+            debugger;
+            //@ts-ignore
+            world.multiplyToRef(this.viewArr, matrix,)
+        } else {
+            var matrix = this.viewArr.clone();
+        }
         
-        matrix.multiplyToRef(Matrix.FromArray(Array.from(this.projectionArr)), matrix);
+        matrix.multiplyToRef(this.projectionArr, matrix);
 
         //TODO use matrixMultiply64 and matrixInvert64
 
         // matrixInvert64(matrix);
         // const inverted = Matrix.FromArray(matrix);
         //const inverted = Matrix.FromArray(matrix).invert();
-        const inverted = matrix.invert();
+        const inverted = new TerraMatrix();
+        matrix.invertToRef(inverted);
         const nearVec3 :[number,number,number]= [0,0,0];
         const farVec3: [number, number, number] = [0, 0, 0]
 
        // Vector3._UnprojectFromInvertedMatrixToRef(nearScreenSource, inverted, nearVec3);
-        TransformCoordinatesToRef(nearScreenSource, matrix, nearVec3);
-        const m = inverted.m;
-        var num = nearScreenSource[0] * m[3] + nearScreenSource[1] * m[7] + nearScreenSource[2] * m[11] + m[15];
-        if (Scalar.WithinEpsilon(num, 1.0)) {
+        TransformCoordinatesToRef(nearScreenSource, inverted, nearVec3);
+
+
+        var num = nearScreenSource[0] * inverted[3] + nearScreenSource[1] * inverted[7] + nearScreenSource[2] * inverted[11] + inverted[15];
+
+        if (WithinEpsilon(num, 1.0)) {
             //nearVec3.scaleInPlace(1.0 / num);
             const scale = 1.0 / num
             nearVec3[0] /= scale;
@@ -102,10 +114,10 @@ class CameraWorker {
 
 
        // Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, inverted, farVec3);
-        TransformCoordinatesToRef(farScreenSource, matrix, farVec3);
+        TransformCoordinatesToRef(farScreenSource, inverted, farVec3);
        // const m = inverted.m;
-        var num = farScreenSource[0] * m[3] + farScreenSource[1] * m[7] + farScreenSource[2] * m[11] + m[15];
-        if (Scalar.WithinEpsilon(num, 1.0)) {
+        var num = farScreenSource[0] * inverted[3] + farScreenSource[1] * inverted[7] + farScreenSource[2] * inverted[11] + inverted[15];
+        if (WithinEpsilon(num, 1.0)) {
             //nearVec3.scaleInPlace(1.0 / num);
             const scale = 1.0 / num
             farVec3[0] /= scale;
@@ -129,7 +141,7 @@ class CameraWorker {
             direction[1] /= scale;
             direction[2] /= scale;
         }
-
+      //  console.log('nearvec', nearVec3, 'direction', direction)
         this.pickingRay.set(nearVec3);
         this.pickingRay.set(direction, 3);
     }

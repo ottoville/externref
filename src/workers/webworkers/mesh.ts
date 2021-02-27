@@ -1,28 +1,5 @@
 ﻿importScripts("/js/commonMath.js");
-importScripts("/webworkers/ray.js");
-
-class TerraMatrix extends Float32Array {
-    constructor(Arr?: [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]) {
-        //@ts-ignore
-        super(Arr || 16);
-    } //@ts-ignore
-    [0]: number;//@ts-ignore
-    [1]: number;//@ts-ignore
-    [2]: number;//@ts-ignore
-    [3]: number;//@ts-ignore
-    [4]: number;//@ts-ignore
-    [5]: number;//@ts-ignore
-    [6]: number;//@ts-ignore
-    [7]: number;//@ts-ignore
-    [8]: number;//@ts-ignore
-    [9]: number;//@ts-ignore
-    [10]: number;//@ts-ignore
-    [11]: number;//@ts-ignore
-    [12]: number;//@ts-ignore
-    [13]: number;//@ts-ignore
-    [14]: number;//@ts-ignore
-    [15]: number;
-}
+importScripts("/js/workers/webworkers/ray.js");
 
 let meshes: Map<number, Mesh> = new Map();
 interface pickInfo {
@@ -99,7 +76,7 @@ class Mesh {
         if (!ray.intersectsBoxMinMax({ x: this.#boundingBox[0], y: this.#boundingBox[1], z: this.#boundingBox[2] }, { x: this.#boundingBox[3], y: this.#boundingBox[4], z: this.#boundingBox[5] })) {
             return; // pickingInfo;
         }
-        var intersectInfo: Nullable<IntersectionInfo> = null;
+        var intersectInfo: IntersectionInfo | null = null;
 
         // Triangles test
         let p0: [number, number, number] = [0,0,0]
