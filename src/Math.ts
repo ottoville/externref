@@ -79,7 +79,7 @@ export class TerraMatrix extends Float32Array {
             )
     }
     clone() {
-        return new TerraMatrix(this.buffer.slice(0));
+        return new TerraMatrix(this.buffer.slice(this.byteOffset, this.byteOffset+64));
     }
     invertToRef(other: TerraMatrix): TerraMatrix {
         // the inverse of a Matrix is the transpose of cofactor matrix divided by the determinant

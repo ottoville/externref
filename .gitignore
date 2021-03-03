@@ -36,6 +36,7 @@ bld/
 wwwroot/js
 wwwroot/shaders/*.json
 wwwroot/workers
+wwwroot/webworkers
 wwwroot/sw.js
 wwwroot/**/*.wasm
 wwwroot/service-worker.*
