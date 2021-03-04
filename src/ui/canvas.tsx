@@ -301,14 +301,12 @@ export class Canvas extends TerraCompoment {
             
         }
 
-
-        //@ts-ignore
         let ro = new window.ResizeObserver((entries) => {
             window.cancelAnimationFrame(renderFrame)
             clearTimeout(resizeHandler);
             resizeHandler = setTimeout(async () => {
-                canvasSize.width = entries[0].contentRect.width | 0;
-                canvasSize.height = entries[0].contentRect.height | 0;
+                canvasSize.width = entries[0]!.contentRect.width | 0;
+                canvasSize.height = entries[0]!.contentRect.height | 0;
                 renderPasses.forEach(renderpass => renderpass.onResize(canvasSize.width, canvasSize.height));
                 gpuscene.onResizes.forEach(cb => cb());
                 //TODO: remove duplicate
@@ -400,7 +398,6 @@ export class Canvas extends TerraCompoment {
                 this.timeOfDay.value = new Date(Number(args[0].engine.physics.gameTime)).toUTCString();
             }, 1000);
 
-            //@ts-ignore
             const [terrain, sea]: [Terrain, Sea] = await args[0].ready;
             this.menuClick = (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => {
                 if (this.openedMenu) {

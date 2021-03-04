@@ -3,8 +3,12 @@ import type { Sea } from "./world/water.js";
 import type { Scene } from "./Scene.js";
 import { ArcRotateCamera } from "./ArcRotateCamera.js";
 
-type UITABClass = typeof UITAB;
-export interface UITABClassLike extends UITABClass {
+export interface UITABClassLike {
+    new (scene: Scene,
+        terrain: Terrain,
+        camera: ArcRotateCamera,
+        sea: Sea): UITAB;
+
     label: string;
     menuElem: ((instance: any) => HTMLElement)
 };
