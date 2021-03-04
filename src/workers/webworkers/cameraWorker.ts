@@ -25,6 +25,7 @@ const cameras: Map<number, CameraWorker> = new Map();
 class CameraWorker {
     projectionViewArr: Float32Array;
     viewArr: TerraMatrix;
+    tempView: TerraMatrix;
     cameraArr: Float32Array;
     projectionArr: TerraMatrix;
     pickingRay: Float32Array;
@@ -35,6 +36,7 @@ class CameraWorker {
         this.projectionViewArr = new Float32Array(viewProjectionPositionBuffer, 0, 16);
         this.viewArr = new TerraMatrix(viewProjectionPositionBuffer, 64);
         this.cameraArr = new Float32Array(viewProjectionPositionBuffer, 128, 3);
+        this.tempView = new TerraMatrix(viewProjectionPositionBuffer, 144);
         this.projectionArr = new TerraMatrix(projection);
 
         this.pickingRay = new Float32Array(pickingRayBuffer);
@@ -76,32 +78,26 @@ class CameraWorker {
 
         //const matrix = world.multiply(viewProjection);
         if (worldPosition) {
-            var matrix = new TerraMatrix();
             //TODO
             debugger;
             //@ts-ignore
-            world.multiplyToRef(this.viewArr, matrix,)
+            world.multiplyToRef(this.viewArr, this.tempView)
+            this.tempView.multiplyToRef(this.projectionArr,  this.tempView);
+
         } else {
-            var matrix = this.viewArr.clone();
+            this.viewArr.multiplyToRef(this.projectionArr,  this.tempView);
         }
-        
-        matrix.multiplyToRef(this.projectionArr, matrix);
 
-        //TODO use matrixMultiply64 and matrixInvert64
 
-        // matrixInvert64(matrix);
-        // const inverted = Matrix.FromArray(matrix);
-        //const inverted = Matrix.FromArray(matrix).invert();
-        const inverted = new TerraMatrix();
-        matrix.invertToRef(inverted);
+        this.tempView.invertToRef(this.tempView);
         const nearVec3 :[number,number,number]= [0,0,0];
         const farVec3: [number, number, number] = [0, 0, 0]
 
        // Vector3._UnprojectFromInvertedMatrixToRef(nearScreenSource, inverted, nearVec3);
-        TransformCoordinatesToRef(nearScreenSource, inverted, nearVec3);
+        TransformCoordinatesToRef(nearScreenSource, this.tempView, nearVec3);
 
 
-        var num = nearScreenSource[0] * inverted[3] + nearScreenSource[1] * inverted[7] + nearScreenSource[2] * inverted[11] + inverted[15];
+        var num = nearScreenSource[0] * this.tempView[3] + nearScreenSource[1] * this.tempView[7] + nearScreenSource[2] * this.tempView[11] + this.tempView[15];
 
         if (WithinEpsilon(num, 1.0)) {
             //nearVec3.scaleInPlace(1.0 / num);
@@ -114,9 +110,9 @@ class CameraWorker {
 
 
        // Vector3._UnprojectFromInvertedMatrixToRef(farScreenSource, inverted, farVec3);
-        TransformCoordinatesToRef(farScreenSource, inverted, farVec3);
+        TransformCoordinatesToRef(farScreenSource, this.tempView, farVec3);
        // const m = inverted.m;
-        var num = farScreenSource[0] * inverted[3] + farScreenSource[1] * inverted[7] + farScreenSource[2] * inverted[11] + inverted[15];
+        var num = farScreenSource[0] * this.tempView[3] + farScreenSource[1] * this.tempView[7] + farScreenSource[2] * this.tempView[11] + this.tempView[15];
         if (WithinEpsilon(num, 1.0)) {
             //nearVec3.scaleInPlace(1.0 / num);
             const scale = 1.0 / num

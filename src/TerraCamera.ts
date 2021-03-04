@@ -15,7 +15,7 @@ export class TerraCamera {
     childCameras: Set<TerraCamera> = new Set();
     viewport = new Viewport(0, 0, 1.0, 1.0);
 
-    #uniformBufferSize = 4 * 16 * 2 + 3 * 4
+    #uniformBufferSize = 4 * 16 * 2 + 4 * 4 + 16*4
     #target = new TerraVector3([-500, 0, 0]);
 
 
