@@ -57,12 +57,17 @@ export class Terrain {
             {
                 binding: 0,
                 visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
-                type: "readonly-storage-buffer"
+                buffer: {
+                    type: "read-only-storage"
+                }
+                
             },
             {
                 binding: 1,
                 visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
-                type: "readonly-storage-buffer"
+                buffer: {
+                    type: "read-only-storage"
+                }
             });
         Terrain.heightLayouts.set(scene, layout);
         return layout;
@@ -101,7 +106,7 @@ export class Terrain {
         let workers: Worker[] = [];
         //self.postMessage({ type: 'setProgress', data: { progress: 41 } });
         const buffer: SharedArrayBuffer = await new Promise(function initWorker(res, rej) {
-            let worker = new Worker('../webworkers/bitmapWorker.js');
+            let worker = new Worker('/js/workers/webworkers/bitmapWorker.js');
             workers.push(worker);
             /* progress 42 and 43 are reserved for this */
             // self.postMessage({ type: 'setProgress', data: { progress: 41 + (2 * (workers.length / partcount)) } });
@@ -354,7 +359,6 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
     textureExtent = {
         width: this.textureSize[0],
         height: this.textureSize[1],
-        depth: 1,
     };
     texture = this.scene.gpu.device.createTexture({
         dimension: '2d',
@@ -523,8 +527,6 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
         gpuReadBufferIndices.readAndDestroy(async (buff) => {
             this.mesh.indices = new Uint32Array(buff);
         });
-        //this.mesh.boundingBox.box.set([this.#minX, this.#minY, this.#minZ, this.#maxX, this.#maxY, this.#maxZ]);
-
     }
     /*
     #ratioX = Terrain.subdivisionsX / this.width;

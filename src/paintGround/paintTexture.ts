@@ -91,7 +91,7 @@ export class paintTexture extends paintGround {
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
         });
         const tempTexture = this.scene.gpu.device.createTexture({
-            size: { width: c.width, height: c.height, depth: 1 },
+            size: { width: c.width, height: c.height },
             format: "rgba8unorm",
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC
         });
@@ -173,7 +173,7 @@ export class paintTexture extends paintGround {
                 x: minX,
                 y: minZ
             }
-        }, { width: c.width, height: c.height, depth: 1 });
+        }, { width: c.width, height: c.height });
         this.scene.gpu.device.queue.submit([encoder2.finish()]);
         if (cacheImage)
             cacheImage.destroy();

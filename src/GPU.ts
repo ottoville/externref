@@ -18,24 +18,27 @@ export class GPU {
         {
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
-            type: 'uniform-buffer'
+            buffer:{
+                type:"uniform"
+            }
         },
         {
             binding: 1,
             visibility: GPUShaderStage.VERTEX,
-            type: 'uniform-buffer'
-        }
+            buffer:{
+                type:"uniform"
+            }        }
     );
     uniformBindGroupLayoutLightsWGSL2 = this.createBindGroupLayout({
         binding: 0,
         visibility: GPUShaderStage.VERTEX,
-        type: 'uniform-buffer'
-    });
+        buffer:{
+            type:"uniform"
+        }    });
     uniformBindGroupLayoutLightsWGSL = this.device.createBindGroupLayout({
         entries: [{
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
-            //@ts-ignore
             buffer: { }
         }]
     });
@@ -48,8 +51,10 @@ export class GPU {
         entries: [
             {
                 binding: 0,
-                visibility: GPUShaderStage.COMPUTE, //@ts-ignore
-                type: "storage-buffer"
+                visibility: GPUShaderStage.COMPUTE,
+                buffer:{
+                    type:"storage"
+                }
             }]
     })
 
@@ -60,7 +65,15 @@ export class GPU {
     DataSlots: number[] = new Array(TerraNodeGPU.maxInstances).fill(TerraNodeGPU.alignment).map((v, i) => i * v);
     
     BindGroup: BindGroupOneBinding;
-    BindGroupLayout = this.createBindGroupLayout({ binding: 0, visibility: GPUShaderStage.VERTEX, type: "uniform-buffer", hasDynamicOffset: true });
+    BindGroupLayout = this.createBindGroupLayout(
+        {
+            binding: 0,
+            visibility: GPUShaderStage.VERTEX,
+            buffer:{
+                type:"uniform",
+                hasDynamicOffset: true
+            }
+        });
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
@@ -69,7 +82,6 @@ export class GPU {
             {
                 binding: 0,
                 visibility: GPUShaderStage.VERTEX,
-                //@ts-ignore
                 buffer: { }
             },
             {
@@ -93,9 +105,9 @@ export class GPU {
         return new DynamicBindGroupLayout(this, bglayout, undefined, bindgroup, isDynamic);
     }
 
-    createBindGroupLayout<T extends GPUBindGroupLayoutEntry>(entry: T): BindGroupLayoutOneBinding
-    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries: T): BindGroupLayoutTwoBinding
-    createBindGroupLayout<T extends [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]>(...entries: T): BindGroupLayoutThreeBinding
+    createBindGroupLayout(entry: GPUBindGroupLayoutEntry): BindGroupLayoutOneBinding
+    createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutTwoBinding
+    createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutThreeBinding
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(...entries: T): TerraBindGroupLayout {
         const layout = this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout;
         layout.createBindGroup = (...entries: GPUBindGroupEntry[]) => {

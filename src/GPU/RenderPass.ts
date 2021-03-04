@@ -20,8 +20,7 @@ export class RenderPass {
     swapChain: GPUSwapChain | undefined;
     size = {
         width: this.width,
-        height: this.height,
-        depth: 1,
+        height: this.height
     };
     createTexture(format: GPUTextureFormat) {
         return this.gpu.device.createTexture({

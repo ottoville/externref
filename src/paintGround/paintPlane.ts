@@ -61,7 +61,7 @@ function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, numbe
                         // position
                         shaderLocation: 0,
                         offset: 0,
-                        format: "float2" as GPUVertexFormat
+                        format: "float32x2"
                     }]
                 }]
         },

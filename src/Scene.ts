@@ -30,11 +30,15 @@ export class Scene {
         this.lightsBindGroupTexture = gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
             binding: 0,
             visibility: GPUShaderStage.FRAGMENT,
-            type: 'sampler'
+            sampler:{
+
+            }
         }, {
             binding: 1,
             visibility: GPUShaderStage.FRAGMENT,
-            type: 'sampled-texture'
+            texture: {
+
+            }
         }));
         this.ready=onRenderStart(this, sunBufferOffsetBytes)
     }

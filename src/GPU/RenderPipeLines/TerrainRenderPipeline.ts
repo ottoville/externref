@@ -42,19 +42,19 @@ function TerrainRenderPipeline(scene: Scene) {
                         // position
                         shaderLocation: 0,
                         offset: 0,
-                        format: "float3"
+                        format: "float32x3"
                     },
                     {
                         // normals
                         shaderLocation: 2,
                         offset: 16,
-                        format: "float3"
+                        format: "float32x3"
                     },
                     {
                         // uv
                         shaderLocation: 1,
                         offset: 32,
-                        format: "float2"
+                        format: "float32x2"
                     }
                     ]
                 }]

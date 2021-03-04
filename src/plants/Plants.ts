@@ -75,7 +75,7 @@ export class Plants {
                         attributes: [{ // position
                             shaderLocation: 0,
                             offset: 0,
-                            format: "float4" as GPUVertexFormat
+                            format: "float32x4"
                         }
                         ]
                     },
@@ -86,7 +86,7 @@ export class Plants {
                             {  // shape
                                 shaderLocation: 1,
                                 offset: 0,
-                                format: "float4" as GPUVertexFormat
+                                format: "float32x4"
                             }
                         ]
                     }]
