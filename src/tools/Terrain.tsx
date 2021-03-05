@@ -82,7 +82,6 @@ export class TerrainTool extends TerraNodeGPU {
         public sea: Sea,
     ) {
         super(scene.engine, ...getRenderPipeline(scene, terrain));
-        this.renderPipeline.dynamicBindGroupOffset=[this.bufferOffsetBytes];
         scene.TerraCameras[0].subscribePickingRay();
 
         terrainWorker.message(WorkerReturn.Promise, 'init',

@@ -98,6 +98,5 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
     Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), this);
     constructor(private scene: Scene) {
         super(scene.engine, getRenderPipeline(scene.engine),14);
-        this.renderPipeline.dynamicBindGroupOffset=[this.bufferOffsetBytes]
     }
 }

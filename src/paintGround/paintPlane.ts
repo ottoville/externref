@@ -115,7 +115,6 @@ export class paintPlane extends paintGround {
     ) {
         super(scene, camera, ground, sea, uitab);
         this.#mesh.Drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
-        this.#mesh.renderPipeline.dynamicBindGroupOffset=[this.#mesh.bufferOffsetBytes]
     };
 
     public activate(callback: PTResultF) {

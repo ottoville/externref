@@ -165,6 +165,8 @@ export abstract class TerraNodeGPU extends MainNode {
 
     constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number) {
         super(engine);
+        if(renderPipeline.dynamicBindGroupOffset.length)
+            renderPipeline.dynamicBindGroupOffset[0]=this.bufferOffsetBytes;
     }
 
 }
