@@ -1,6 +1,8 @@
 ﻿import type { Collider } from "./Collider.js";
 import type { Engine } from "./engine.js";
 
+import { Mesh } from "/js/engine/engine.js";
+
 import type { isLight } from "./lights.js";
 import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
 import type { hasPhysics } from "./physics.js";
@@ -91,6 +93,9 @@ export abstract class MainNode {
         this.onUpdate();
     }
     constructor(public engine: Engine) {
+        let m=new Mesh(Math.random());
+        console.log('mesh',m);
+        
         const bufferOffsetBytes = engine.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
@@ -103,10 +108,6 @@ export abstract class MainNode {
         this.acceleration = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 24 * Float32Array.BYTES_PER_ELEMENT, 4);
 
 
-
-
-
-        //engine.gpu.NodeInstances.set(this, engine.gpu.NodeInstances.size * TerraNodeGPU.alignment);
         this.data.set([
             //3d matrix start, 64 bytes
             1.0, 0.0, 0.0, 0.0,
@@ -133,7 +134,6 @@ export abstract class MainNode {
             }
         });
         this.updateDynamicBuffer();
-
     }
 
     async updateDynamicBuffer() {

@@ -5,6 +5,7 @@ import { TerraNodeGPU } from "./TerraNode.js";
 import { Collider } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import { TerraVector3, Vector3 } from "./Math.js";
+import init from "/js/engine/engine.js";
 
 
 
@@ -156,6 +157,8 @@ export class Engine {
         const objSIMD = obj;
         const wasmSIMD: ColliderWasmSIMD = objSIMD.instance.exports as any;
 
+
+        await init();
 
         return new Engine(gpu, DB, canvas, wasm, wasmSIMD);
     }
