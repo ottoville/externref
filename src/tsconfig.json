@@ -31,7 +31,10 @@
     "allowJs": true,
     "incremental": true,
     "tsBuildInfoFile": "tsconfig.main.tsbuildinfo",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "/js/engine/*": ["../wwwroot/js/engine/*"],
+    }
   },
   "include": [ "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "code.tsx" ],
   "exclude": [

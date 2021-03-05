@@ -16,12 +16,28 @@ export abstract class MainNode {
 
     isStatic = false;
 
-    readonly data: Float32Array;
-    readonly customData: Float32Array;
-    readonly acceleration: Float32Array;
-    readonly velocity: TerraVector3;
-    readonly transformation: TerraMatrix;
-    readonly translation: TerraVector3;
+    readonly data = new Float32Array([
+        //3d matrix start, 64 bytes
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0,
+        //3d matrix end
+        //delta start, 12 bytes + alignment 4 byte
+        0, 0, 0, 0,
+        //delta end
+        //custom data start, 16 bytes
+        0, 0, 0, 0,
+        //custom data end
+        //acceleration starts
+        0, 0, 0, 0
+        //acceleration ends
+    ]);
+    readonly customData= new Float32Array(this.data.buffer, 20 * Float32Array.BYTES_PER_ELEMENT, 4);
+    readonly acceleration=new Float32Array(this.data.buffer, 24 * Float32Array.BYTES_PER_ELEMENT, 4);;
+    readonly velocity=new TerraVector3(this.data.buffer, 16 * Float32Array.BYTES_PER_ELEMENT, 4);
+    readonly transformation= new TerraMatrix(this.data.buffer);
+    readonly translation = new TerraVector3(this.data.buffer, 12 * Float32Array.BYTES_PER_ELEMENT);
 
     readonly #scaling = new TerraVector3([1, 1, 1]);
     readonly #rotation = new TerraVector4([0, 0, 0, 0]);
@@ -100,31 +116,7 @@ export abstract class MainNode {
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
         this.bufferOffsetBytes = bufferOffsetBytes;
-        this.data = new Float32Array(TerraNodeGPU.GPUDataSize);
-        this.transformation = new TerraMatrix(this.data.buffer);
-        this.translation = new TerraVector3(this.data.buffer, 12 * Float32Array.BYTES_PER_ELEMENT)
-        this.velocity = new TerraVector3(this.data.buffer, 16 * Float32Array.BYTES_PER_ELEMENT, 4);
-        this.customData = new Float32Array(this.data.buffer, 20 * Float32Array.BYTES_PER_ELEMENT, 4);
-        this.acceleration = new Float32Array(this.data.buffer, 24 * Float32Array.BYTES_PER_ELEMENT, 4);
 
-
-        this.data.set([
-            //3d matrix start, 64 bytes
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0,
-            //3d matrix end
-            //delta start, 12 bytes + alignment 4 byte
-            0, 0, 0, 0,
-            //delta end
-            //custom data start, 16 bytes
-            0, 0, 0, 0,
-            //custom data end
-            //acceleration starts
-            0, 0, 0, 0
-            //acceleration ends
-        ])
         queueMicrotask(() => {
             if (this.hasPhysics()) {
                 engine.physics.tickables.add(this);
