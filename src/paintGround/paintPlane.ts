@@ -8,7 +8,7 @@ import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
-import type { Engine } from "../engine.js";
+
 import { TerraVector2 } from "../Math.js";
 
 
@@ -19,12 +19,10 @@ class PlaneMesh extends TerraNodeGPU {
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, number, number]{
+function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, number]{
     let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
-    const bufferOffsetBytes = allocateMemory(scene.engine);
     if (renderPipeline) {
-        renderPipeline.dynamicBindGroupOffset = [bufferOffsetBytes];
-        return [renderPipeline, 0, bufferOffsetBytes];
+        return [renderPipeline, 0];
     }
     const vertex = scene.engine.gpu.shaderModules.get('plane.vert.wgsl')
     if (!vertex)
@@ -65,15 +63,9 @@ function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, numbe
                     }]
                 }]
         },
-    }, [bufferOffsetBytes]);
+    }, [0]);
     renderPipelines.set(scene.gpu, renderPipeline);
-    return [renderPipeline, 0, bufferOffsetBytes]
-}
-function allocateMemory(engine: Engine) {
-    const bufferOffsetBytes = engine.gpu.DataSlots.pop();
-    if (typeof (bufferOffsetBytes) == 'undefined')
-        throw ('Out of memory');
-    return bufferOffsetBytes;
+    return [renderPipeline, 0]
 }
 export class paintPlane extends paintGround {
     onEnd() {
@@ -123,6 +115,7 @@ export class paintPlane extends paintGround {
     ) {
         super(scene, camera, ground, sea, uitab);
         this.#mesh.Drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
+        this.#mesh.renderPipeline.dynamicBindGroupOffset=[this.#mesh.bufferOffsetBytes]
     };
 
     public activate(callback: PTResultF) {

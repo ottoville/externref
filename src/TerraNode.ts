@@ -90,8 +90,8 @@ export abstract class MainNode {
         this.translation[2] = value;
         this.onUpdate();
     }
-    constructor(public engine: Engine, bufferOffsetBytes?: number) {
-        bufferOffsetBytes = typeof (bufferOffsetBytes) == "number" ? bufferOffsetBytes : engine.gpu.DataSlots.pop();
+    constructor(public engine: Engine) {
+        const bufferOffsetBytes = engine.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
         this.bufferOffsetBytes = bufferOffsetBytes;
@@ -163,8 +163,8 @@ export abstract class TerraNodeGPU extends MainNode {
         //this.engine.gpu.NodeInstances.delete(this);
     }
 
-    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number, bufferOffsetBytes?: number) {
-        super(engine, bufferOffsetBytes);
+    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number) {
+        super(engine);
     }
 
 }
@@ -498,7 +498,7 @@ export abstract class BoundableNode extends TerraNodeGPU {
     }
 }
 export class PositionNode extends MainNode {
-    constructor(engine: Engine, bufferOffsetBytes?: number) {
-        super(engine, bufferOffsetBytes);
+    constructor(engine: Engine) {
+        super(engine);
     }
 }

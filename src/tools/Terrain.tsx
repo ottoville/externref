@@ -10,15 +10,13 @@ import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU";
-import { Engine } from "../engine.js";
 
 const terrainWorker = new WorkerThread('/js/workers/webworkers/terrainWorker.js');
 
 
-const renderPipelines: Map<GPU, [RenderPipeline,number,number]> = new Map();
+const renderPipelines: Map<GPU, [RenderPipeline,number]> = new Map();
 
-function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline,number, number] {
-    const bufferOffsetBytes = allocateMemory(scene.engine)
+function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline,number] {
 
     let renderPipeline = renderPipelines.get(scene.gpu);
     if (renderPipeline) {
@@ -55,15 +53,9 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline,num
         vertexState: {
             indexFormat: 'uint32'
         }
-    }, [bufferOffsetBytes]), 4, bufferOffsetBytes];
+    }, [0]), 4];
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline
-}
-function allocateMemory(engine:Engine) {
-    const bufferOffsetBytes = engine.gpu.DataSlots.pop();
-    if (typeof (bufferOffsetBytes) == 'undefined')
-        throw ('Out of memory');
-    return bufferOffsetBytes;
 }
 
 export class TerrainTool extends TerraNodeGPU {
@@ -90,6 +82,7 @@ export class TerrainTool extends TerraNodeGPU {
         public sea: Sea,
     ) {
         super(scene.engine, ...getRenderPipeline(scene, terrain));
+        this.renderPipeline.dynamicBindGroupOffset=[this.bufferOffsetBytes];
         scene.TerraCameras[0].subscribePickingRay();
 
         terrainWorker.message(WorkerReturn.Promise, 'init',
