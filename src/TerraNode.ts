@@ -100,12 +100,12 @@ export abstract class MainNode {
         if (typeof (bufferOffsetBytes) == 'undefined')
             throw ('Out of memory');
         this.bufferOffsetBytes = bufferOffsetBytes;
-        this.data = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes, TerraNodeGPU.GPUDataSize);
-        this.transformation = new TerraMatrix(this.engine.gpu.CPUData, bufferOffsetBytes);
-        this.translation = new TerraVector3(this.engine.gpu.CPUData, bufferOffsetBytes + 12 * Float32Array.BYTES_PER_ELEMENT)
-        this.velocity = new TerraVector3(this.engine.gpu.CPUData, bufferOffsetBytes + 16 * Float32Array.BYTES_PER_ELEMENT, 4);
-        this.customData = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 20 * Float32Array.BYTES_PER_ELEMENT, 4);
-        this.acceleration = new Float32Array(this.engine.gpu.CPUData, bufferOffsetBytes + 24 * Float32Array.BYTES_PER_ELEMENT, 4);
+        this.data = new Float32Array(TerraNodeGPU.GPUDataSize);
+        this.transformation = new TerraMatrix(this.data.buffer);
+        this.translation = new TerraVector3(this.data.buffer, 12 * Float32Array.BYTES_PER_ELEMENT)
+        this.velocity = new TerraVector3(this.data.buffer, 16 * Float32Array.BYTES_PER_ELEMENT, 4);
+        this.customData = new Float32Array(this.data.buffer, 20 * Float32Array.BYTES_PER_ELEMENT, 4);
+        this.acceleration = new Float32Array(this.data.buffer, 24 * Float32Array.BYTES_PER_ELEMENT, 4);
 
 
         this.data.set([
