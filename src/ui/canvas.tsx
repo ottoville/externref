@@ -132,8 +132,8 @@ export class Canvas extends TerraCompoment {
 
 
 
-        const mainScene = new Scene('main', gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene, sunBufferOffsetBytes) => {
-            new Sun2(terrascene, sunBufferOffsetBytes);
+        const mainScene = new Scene('main', gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene) => {
+            let sun = new Sun2(terrascene);
             // Initial scene objects here
 
             const sea = new Sea(terrascene);
@@ -222,12 +222,13 @@ export class Canvas extends TerraCompoment {
                     });
                 }
             })
-            return ready;
+            return [sun.bufferOffsetBytes,ready];
         });
-        const debugscene = new Scene('static', gpuscene, terraEngine, [mainCamera], async (scene, sunBufferOffsetBytes) => {
-            const sun = new PositionNode(scene.engine, sunBufferOffsetBytes);
+        const debugscene = new Scene('static', gpuscene, terraEngine, [mainCamera], (scene) => {
+            const sun = new PositionNode(scene.engine);
             sun.translation.set([0, 1, 0]);
             sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
+            return [sun.bufferOffsetBytes]
         });
 
         const b2 = new Box(debugscene);

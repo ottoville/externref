@@ -13,18 +13,14 @@ export class Scene {
     lights;
     positionBindGroupLightsTimeWGSL: LayoutGroupDrawable<[GPUBindGroupEntry]>;
     lightsBindGroupTexture: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
-    ready: Promise<any>;
+    ready?: Promise<any>;
 
-    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene, sunBufferOffsetBytes: number) => Promise<any>) {
+    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [number,Promise<any>?]) {
         engine.scenes.set(name, this);
         TerraCameras.forEach(camera => {
             camera.renderPass.scenes.add(this);
         })
 
-        const sunBufferOffsetBytes = gpu.DataSlots.pop();
-        if (typeof (sunBufferOffsetBytes) == 'undefined')
-            throw ('Out of memory');
-        this.lights = new Light(gpu, sunBufferOffsetBytes);
 
         this.positionBindGroupLightsTimeWGSL = this.gpu.rootSceneLayout.addChildLayout(gpu.BindGroupLayout);
         this.lightsBindGroupTexture = gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
@@ -40,7 +36,9 @@ export class Scene {
 
             }
         }));
-        this.ready=onRenderStart(this, sunBufferOffsetBytes)
+        const [sunBufferOffsetBytes, groundAndSea ] = onRenderStart(this);
+        this.ready=groundAndSea;
+        this.lights = new Light(gpu, sunBufferOffsetBytes);
     }
 
     render(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass) {

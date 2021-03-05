@@ -16,7 +16,7 @@ const yAngle = Math.sin(Math.PI * 0.2);
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(engine: Engine, sunBufferOffsetBytes: number) {
+function getRenderPipeline(engine: Engine) {
     let renderPipeline: RenderPipeline | undefined = renderPipelines.get(engine.gpu);
     if (renderPipeline)
         return renderPipeline;
@@ -51,7 +51,7 @@ function getRenderPipeline(engine: Engine, sunBufferOffsetBytes: number) {
         vertexState: {
             indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
         }
-    }, [sunBufferOffsetBytes]);
+    }, [0]);
     renderPipelines.set(engine.gpu, renderPipeline);
     return renderPipeline
 }
@@ -96,7 +96,8 @@ export class Sun2 extends TerraNodeGPU implements hasPhysics, isLight {
         this.updateDynamicBuffer();
     }
     Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), this);
-    constructor(private scene: Scene, sunBufferOffsetBytes: number) {
-        super(scene.engine, getRenderPipeline(scene.engine, sunBufferOffsetBytes),14, sunBufferOffsetBytes);
+    constructor(private scene: Scene) {
+        super(scene.engine, getRenderPipeline(scene.engine),14);
+        this.renderPipeline.dynamicBindGroupOffset=[this.bufferOffsetBytes]
     }
 }
