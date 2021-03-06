@@ -55,9 +55,6 @@ export class Plants {
                 depthCompare: "less",
                 format: "depth24plus-stencil8",
             },
-            colorStates: [{
-                format: "bgra8unorm",
-            }],
             vertexStage: {
                 module: vertex,
                 entryPoint: "main",

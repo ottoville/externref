@@ -15,7 +15,7 @@ export class RenderPipeline {
     bindGroups: Set<GPUBindGroup> | null = null;
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
 
-    constructor(public renderPipelineDescriptor: GPURenderPipelineDescriptor, public bindgroupdrawable: BindGroupLayout, createBindGroup?: (rp: RenderPipeline) => void) {
+    constructor(public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates'>, public bindgroupdrawable: BindGroupLayout, createBindGroup?: (rp: RenderPipeline) => void) {
         if (createBindGroup) {
             createBindGroup(this);
             bindgroupdrawable.gpuscene.onResizes.add(() => {

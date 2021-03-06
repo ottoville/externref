@@ -17,9 +17,6 @@ if (!app)
     throw ('App not found');
 let logged = false;
 
-
-
-
 const render = () => {
     app.innerHTML=''
     app.appendChild(logged ? <Canvas>foo</Canvas> : <Login callback={onLogin}></Login>

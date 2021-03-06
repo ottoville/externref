@@ -23,9 +23,6 @@ function getRenderPipeline(scene: Scene) {
     });
     renderPipeline = scene.lightsBindGroupTexture.addRenderPipeline({
         primitiveTopology: 'triangle-strip',
-        colorStates: [{
-            format: "bgra8unorm",
-        }],
         vertexStage: {
             module: vertex,
             entryPoint: "main",
@@ -44,7 +41,7 @@ function getRenderPipeline(scene: Scene) {
                 resource: sampler
             },
             {
-                binding: 1,
+                binding: 1, 
                 resource: scene.gpu.renderPassWater.targetTextureView
             }
         ]

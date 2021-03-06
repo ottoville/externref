@@ -38,9 +38,6 @@ function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, numbe
         rasterizationState: {
             cullMode: 'none',
         },
-        colorStates: [{
-            format: "bgra8unorm",
-        }],
         vertexStage: {
             module: vertex,
             entryPoint: "main",

@@ -6,7 +6,7 @@ export class BindGroupLayout {
 
     childBindGroups: Map<GPUBindGroup, BindGroupLayout> = new Map();
 
-    addRenderPipeline(renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>,...args: any): RenderPipeline {
+    addRenderPipeline(renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'colorStates'>,...args: any): RenderPipeline {
         const d = new RenderPipeline(renderPipeline, this, ...args)
         this.renderPipeLines.add(d);
         return d;
@@ -58,14 +58,14 @@ export class BindGroupLayout {
 }
 
 export class DynamicBindGroupLayout<T extends number[]> extends BindGroupLayout {
-    addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>, offsets: T): RenderPipeline => {
+    addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'colorStates'>, offsets: T): RenderPipeline => {
         const d = super.addRenderPipeline(renderPipeline);
         d.dynamicBindGroupOffset = offsets;
         return d;
     }
 }
 export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends BindGroupLayout {
-    addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount'>, bindGroups?: () => T): RenderPipeline => {
+    addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'colorStates'>, bindGroups?: () => T): RenderPipeline => {
         return super.addRenderPipeline(renderPipeline, (rp:RenderPipeline) => {
             if (!bindGroups)
                 return;

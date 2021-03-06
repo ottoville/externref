@@ -19,9 +19,6 @@ function Simple(scene: Scene) {
     renderPipeline= scene.positionBindGroupLightsTimeWGSL.addRenderPipeline({
         label: 'simple',
         primitiveTopology: 'triangle-list',
-        colorStates: [{
-            format: "bgra8unorm",
-        }],
         vertexStage: {
             module: vertex,
             entryPoint: "main",

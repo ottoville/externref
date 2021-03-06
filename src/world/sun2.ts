@@ -37,9 +37,6 @@ function getRenderPipeline(engine: Engine) {
             depthCompare: 'always'
         },
         primitiveTopology: 'triangle-strip',
-        colorStates: [{
-            format: "bgra8unorm",
-        }],
         vertexStage: {
             module: vertex,
             entryPoint: "main",
