@@ -82,8 +82,8 @@ export class Canvas extends TerraCompoment {
             throw ('no GPU device');
         const gpuscene = new GPU(device, (gpu) => {
             return [
-                new RenderPassCanvas(gpu, 4, true, this.canvasElem.width, this.canvasElem.height, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], undefined, this.canvasElem),
-                new RenderPass(gpu, 1, false, this.canvasElem.width, this.canvasElem.height, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
+                new RenderPassCanvas(gpu, 4, true, {width: this.canvasElem.width, height: this.canvasElem.height}, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], undefined, this.canvasElem),
+                new RenderPass(gpu, 1, false, {width: this.canvasElem.width, height: this.canvasElem.height}, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
             ]
         });
         this.progress = 6;

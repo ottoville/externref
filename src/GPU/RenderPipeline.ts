@@ -1,7 +1,6 @@
 ﻿import type { Scene } from "../Scene.js";
 import type { BindGroupLayout } from "./BindGroupLayout.js";
 import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
-import type { Drawable } from "./Drawable.js";
 import type { RenderPass } from "./RenderPass.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 
@@ -31,11 +30,10 @@ export class RenderPipeline {
         }
     }
     destroy(): void {
-        this.variants.forEach(rp => rp.drawables.forEach(scene => scene.forEach(drawable => drawable.destroy())));
         this.bindgroupdrawable.renderPipeLines.delete(this);
     }
     draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass, BindGroupsStart: number, scene?: Scene): number {
-        const variant = this.variants.get(renderPass)
+        const variant = renderPass.renderPipelines.get(this)
         if (!variant)
             return 0;
         if (scene) {
@@ -63,11 +61,4 @@ export class RenderPipeline {
     addDrawableIndexed(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: TerraNodeGPU, indexBuffer?: GPUIndexBuffer, baseVertex: number = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {
         return new DrawableIndexed(this, renderPasses, node, indexBuffer, scene, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
     }
-    variants: Map<RenderPass, RenderPipelineVariant> = new Map();
-}
-interface RenderPipelineVariant {
-    renderPass: RenderPass;
-    renderpipeline: GPURenderPipeline;
-    drawables: Map<Scene, Set<Drawable>>
-    rootDrawables: Set<Drawable>
 }

@@ -30,16 +30,16 @@ export abstract class Drawable {
         }
         this.#scene = scene;
         this.renderPasses.forEach(rp => {
-            let variant = this.renderPipeline.variants.get(rp);
-            if (!variant) {
-                const renderpipeline = this.renderPipeline.bindgroupdrawable.gpuscene.device.createRenderPipeline(rp.decoratePipeline(this.renderPipeline.renderPipelineDescriptor));
+
+           let variant = rp.renderPipelines.get(this.renderPipeline)
+            if(!variant) {
+                const renderpipeline = rp.decoratePipeline(this.renderPipeline.renderPipelineDescriptor);
                 variant = {
-                    renderPass: rp,
                     renderpipeline: renderpipeline,
                     drawables: new Map(),
                     rootDrawables: new Set()
                 }
-                this.renderPipeline.variants.set(rp, variant)
+                rp.renderPipelines.set(this.renderPipeline, variant)
             }
             if (scene) {
                 let sceneDrawables = variant.drawables.get(scene);
