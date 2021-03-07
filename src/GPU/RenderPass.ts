@@ -27,7 +27,7 @@ export class RenderPass {
         public gpu: GPU,
         public sampleCount: number = 1,
         depthStencil = false,
-        public size:{width:number, height:number},
+        public size: { width: number, height: number },
         private loadValue: GPULoadOp | GPUColor,
         private _onResize: (width: number, height: number) => [number, number],
         private usage: number = 0) {
@@ -166,48 +166,46 @@ export class RenderPass {
 }
 class RenderTarget {
     view: GPUTextureView;
+    texture: GPUTexture;
+    debug = false
     createTexture(size: { width: number, height: number }, sampleCount: number) {
         this.size = size;
         this.sampleCount = sampleCount;
-        const texture = this.renderPass.gpu.device.createTexture({
+        let usage = this.usage;
+        if (this.debug)
+            usage |= GPUTextureUsage.COPY_SRC;
+        this.texture = this.renderPass.gpu.device.createTexture({
             size,
             sampleCount,
             format: this.format,
-            usage: this.usage,
+            usage: usage,
         });
-        this.view = texture.createView();
-        return this.view;
+        this.view = this.texture.createView();
+        return [this.view, this.texture] as const;
     }
     constructor(public renderPass: RenderPass,
         public format: GPUTextureFormat, public usage: GPUTextureUsageFlags, public size: { width: number, height: number }, public sampleCount: number) {
-        this.view = this.createTexture(size, sampleCount)
+        [this.view, this.texture] = this.createTexture(size, sampleCount)
     }
     toBitmap() {
-        //Use for debugging purpose. Targettexture must have copy source flag
-
-        const texture = this.renderPass.gpu.device.createTexture({
-            size: this.size,
-            sampleCount: 1,
-            format: this.format,
-            usage: this.usage | GPUTextureUsage.COPY_SRC,
-        });
-        this.view = texture.createView();
+        //Use for debugging purpose.
+        this.debug = true;
         const oldSampleCount = this.renderPass.sampleCount;
 
         this.renderPass.sampleCount = 1
-       this.renderPass.renderPipelines.forEach((rpVariant,rp) => rpVariant.renderpipeline = this.renderPass.decoratePipeline(rp.renderPipelineDescriptor))
+        this.renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = this.renderPass.decoratePipeline(rp.renderPipelineDescriptor))
 
-       this.renderPass.bundles.length = 0;
+        this.renderPass.bundles.length = 0;
         this.renderPass.onResize(this.renderPass.size.width, this.renderPass.size.height)
 
-       setTimeout(() => {
+        setTimeout(() => {
             const encoder = this.renderPass.gpu.device.createCommandEncoder();
             const buffer = this.renderPass.gpu.device.createBuffer({
                 size: this.size.height * this.size.width * 4,
                 usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
             })
             encoder.copyTextureToBuffer({
-                texture: texture
+                texture: this.texture
             }, { buffer: buffer, bytesPerRow: this.size.width * 4 },
                 [this.size.width, this.size.height, 1]);
             this.renderPass.gpu.device.queue.submit([encoder.finish()]);
@@ -215,8 +213,7 @@ class RenderTarget {
                 let c = new OffscreenCanvas(this.size.width, this.size.height);
                 let ctx = c.getContext('2d');
                 let imageData = ctx!.createImageData(c.width, c.height);
-                const data=new Uint8ClampedArray(buffer.getMappedRange());
-                console.log(data)
+                const data = new Uint8ClampedArray(buffer.getMappedRange());
                 imageData.data.set(data);
                 buffer.unmap();
                 ctx!.putImageData(imageData, 0, 0);
@@ -228,9 +225,10 @@ class RenderTarget {
                 })
             });
             setTimeout(() => {
+                this.debug = false;
                 this.renderPass.bundles.length = 0;
                 this.renderPass.sampleCount = oldSampleCount;
-                this.renderPass.renderPipelines.forEach((rpVariant,rp) => rpVariant.renderpipeline = this.renderPass.decoratePipeline(rp.renderPipelineDescriptor))
+                this.renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = this.renderPass.decoratePipeline(rp.renderPipelineDescriptor))
                 this.renderPass.onResize(this.renderPass.size.width, this.renderPass.size.height)
 
                 this.createTexture(this.size, this.sampleCount);
@@ -243,7 +241,7 @@ export class RenderPassCanvas extends RenderPass {
         gpu: GPU,
         sampleCount: number = 1,
         depthStencil = false,
-        size:{width:number, height:number},
+        size: { width: number, height: number },
         loadValue: GPULoadOp | GPUColor,
         _onResize: (width: number, height: number) => [number, number],
         usage: number = 0,
