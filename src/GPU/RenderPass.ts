@@ -74,7 +74,7 @@ export class RenderPass {
             this.#depthTexture = this.createTexture("depth24plus-stencil8");
             this.depthTextureView = this.#depthTexture.createView();
         }
-        this.renderTargets.forEach(renderTarget => renderTarget.createTexture(this.size, this.sampleCount));
+        this.renderTargets.forEach(renderTarget => renderTarget.createTexture());
     }
     #renderPassDescriptor: Partial<GPURenderPassDescriptor> = {
         colorAttachments: undefined,
@@ -160,10 +160,6 @@ export class RenderPass {
         );
         // console.log('scenes ', this.scenes.size, 'meshes', drawedMeshes);
     }
-    addRenderTarget(rt: RenderTarget) {
-        this.colorFormats.push(rt.format);
-        this.renderTargets.push(rt);
-    }
 }
 export class RenderPassCanvas extends RenderPass {
     constructor(
@@ -177,10 +173,9 @@ export class RenderPassCanvas extends RenderPass {
         public canvas: HTMLCanvasElement) {
 
         super(gpu, sampleCount, depthStencil, size, loadValue, _onResize, usage);
-        this.addRenderTarget(new RenderTarget(this,"bgra8unorm",size,sampleCount))
+        new RenderTarget(this,"bgra8unorm");
 
-        const gRenderTarget = new RenderTarget(this, "bgra8unorm", size, sampleCount, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-        this.addRenderTarget(gRenderTarget);
+        const gRenderTarget = new RenderTarget(this, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
         //@ts-ignore
         window.printRenderTarget = () => {
             gRenderTarget.toBitmap()

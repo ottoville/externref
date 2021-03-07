@@ -153,7 +153,7 @@ export class GPU {
     }
     renderPassScreen: RenderPassCanvas
     renderPassWater: RenderPass
-    constructor(public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPassCanvas, RenderPass]) {
+    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPassCanvas, RenderPass]) {
 
         //Scene layoyt is iterated manually so remove it not to iterate it twise.
         this.rootlayout.subBindGroups.delete(this.rootSceneLayout);
