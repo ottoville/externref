@@ -42,7 +42,7 @@ function getRenderPipeline(scene: Scene) {
             },
             {
                 binding: 1, 
-                resource: scene.gpu.renderPassWater.targetTextureView
+                resource: scene.gpu.renderPassWater.renderTargets[0]!.view
             }
         ]
     );

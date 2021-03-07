@@ -21,6 +21,7 @@
 [[location(0)]] var<out> v_uv : vec2<f32>;
 [[location(1)]] var<out> shading : f32;
 [[location(2)]] var<out> ambient : vec3<f32>;
+[[location(3)]] var<out> normalOut : vec3<f32>;
 
 [[stage(vertex)]]
 fn main() -> void {
@@ -29,5 +30,6 @@ fn main() -> void {
   ambient=lights.ambient;
   //TODO: precompute
   v_uv=(position.xz + vec2<f32>(5000.0, 5000.0)) * 0.0001; 
+  normalOut=normal;
   return;
 }
