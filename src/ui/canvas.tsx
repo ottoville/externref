@@ -1,5 +1,5 @@
 ﻿import { GPU } from "../GPU.js";
-import { RenderPass, RenderPassCanvas } from "../GPU/RenderPass.js";
+import { RenderPass } from "../GPU/RenderPass.js";
 import { TerraCamera } from "../TerraCamera.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { Engine } from "../engine.js";
@@ -81,10 +81,30 @@ export class Canvas extends TerraCompoment {
 
         if (!device)
             throw ('no GPU device');
-        const gpuscene = new GPU(this.canvasElem,device, (gpu) => {
-            const renderpassCanvas=new RenderPassCanvas(gpu, 4, true, {width: this.canvasElem.width, height: this.canvasElem.height}, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, (w, h) => [w, h], undefined, this.canvasElem);
-            const renderpassWater=new RenderPass(gpu, 1, false, {width: this.canvasElem.width, height: this.canvasElem.height}, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
-            new RenderTarget(renderpassWater,"bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+        const gpuscene = new GPU(this.canvasElem, device, (gpu) => {
+            const renderpassCanvas = new RenderPass(gpu, 4, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
+                (w, h) => {
+                    this.canvasElem.width = w;
+                    this.canvasElem.height = h;
+                    return [w, h]
+                });
+            new RenderTarget(renderpassCanvas, "bgra8unorm");
+
+            const gRenderTarget = new RenderTarget(renderpassCanvas, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            //@ts-ignore
+            window.printRenderTarget = () => {
+                gRenderTarget.toBitmap()
+            }
+
+            const context: GPUCanvasContext = this.canvasElem.getContext('gpupresent') as unknown as GPUCanvasContext;
+            renderpassCanvas.swapChain = context.configureSwapChain({
+                device: gpu.device,
+                format: "bgra8unorm",
+                usage: GPUTextureUsage.RENDER_ATTACHMENT
+            });
+
+            const renderpassWater = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
+            new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             return [
                 renderpassCanvas,
                 renderpassWater
@@ -152,7 +172,7 @@ export class Canvas extends TerraCompoment {
             const ready = new Promise((res, rej) => {
                 const terrainInited = Terrain.loadFromTexture(terrascene);
                 terrainInited.then(async r => {
-                    
+
                     const ground = r[0];
                     res([ground, sea])
                     const gpuBuffer = await r[1];
@@ -226,7 +246,7 @@ export class Canvas extends TerraCompoment {
                     });
                 }
             })
-            return [sun.bufferOffsetBytes,ready];
+            return [sun.bufferOffsetBytes, ready];
         });
         const debugscene = new Scene('static', gpuscene, terraEngine, [mainCamera], (scene) => {
             const sun = new PositionNode(scene.engine);
@@ -303,7 +323,7 @@ export class Canvas extends TerraCompoment {
             gpuscene.device.queue.submit(gpuscene.pendingCommandBuffers);
             gpuscene.pendingCommandBuffers.length = 0;
             renderFrame = window.requestAnimationFrame(renderLoop);
-            
+
         }
 
         let ro = new window.ResizeObserver((entries) => {
@@ -380,14 +400,14 @@ export class Canvas extends TerraCompoment {
             gameControlsUI[i].classList.remove('hidden');
         }
         */
-        return [mainScene,camera];
+        return [mainScene, camera];
     }
-    toolsContainer: HTMLFieldSetElement= <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;"></fieldset>
+    toolsContainer: HTMLFieldSetElement = <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;"></fieldset>
     gameState = <fieldset class="gameControl hidden" id="gameState"></fieldset>
 
     uiTabs: UITABClassLike[] = [PlantsUI, BuildingsUI, CameraTAB, TerrainTool, Zones]
     openedMenu?: [UITAB, HTMLFieldSetElement];
-    timeOfDay:HTMLOutputElement = <output id="TODout" fow="TOD"></output>
+    timeOfDay: HTMLOutputElement = <output id="TODout" fow="TOD"></output>
     constructor() {
         super();
         this.progress = 2;
@@ -416,9 +436,9 @@ export class Canvas extends TerraCompoment {
                         }
                     }
                 }
-                const instance=new tool(args[0], terrain, args[1], sea);
+                const instance = new tool(args[0], terrain, args[1], sea);
                 menuContainer.appendChild(tool.menuElem(instance));
-                this.openedMenu = [instance,menuContainer];
+                this.openedMenu = [instance, menuContainer];
             }
             this.gameState.appendChild(<div onChange={(e: Event) => { args[0].engine.physics.gameSpeed = parseInt((e.target as HTMLInputElement).value) }}>
                 <label>Time of day: {this.timeOfDay}</label>
@@ -431,7 +451,7 @@ export class Canvas extends TerraCompoment {
                 <label for="fastforward">⏩</label>
                 <input name="time" type="radio" id="fastforward2" value="2" checked={args[0].engine.physics.gameSpeed === 2} />
                 <label for="fastforward2">4⏩</label>
-                <input name="time" type="radio" id="fastforward3" value="3" checked={args[0].engine.physics.gameSpeed === 3}/>
+                <input name="time" type="radio" id="fastforward3" value="3" checked={args[0].engine.physics.gameSpeed === 3} />
                 <label for="fastforward3">8⏩</label>
                 <input name="time" type="radio" id="fastforward4" value="4" checked={args[0].engine.physics.gameSpeed === 4} />
                 <label for="fastforward4">16⏩</label>
@@ -455,7 +475,7 @@ export class Canvas extends TerraCompoment {
             {this.canvasElem}
             {this.toolsContainer}
             <div id="fps">@(rendertime) @(msPerFrame)</div>
-            { this.gameState }
+            {this.gameState}
             <div style="position:absolute;top:30%; background-color:white;width:100%;text-align:center ">
                 {this.progresElem}
                 <br />

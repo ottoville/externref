@@ -161,36 +161,3 @@ export class RenderPass {
         // console.log('scenes ', this.scenes.size, 'meshes', drawedMeshes);
     }
 }
-export class RenderPassCanvas extends RenderPass {
-    constructor(
-        gpu: GPU,
-        sampleCount: number = 1,
-        depthStencil = false,
-        size: { width: number, height: number },
-        loadValue: GPULoadOp | GPUColor,
-        _onResize: (width: number, height: number) => [number, number],
-        usage: number = 0,
-        public canvas: HTMLCanvasElement) {
-
-        super(gpu, sampleCount, depthStencil, size, loadValue, _onResize, usage);
-        new RenderTarget(this,"bgra8unorm");
-
-        const gRenderTarget = new RenderTarget(this, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-        //@ts-ignore
-        window.printRenderTarget = () => {
-            gRenderTarget.toBitmap()
-        }
-
-        const context: GPUCanvasContext = canvas.getContext('gpupresent') as unknown as GPUCanvasContext;
-        this.swapChain = context.configureSwapChain({
-            device: gpu.device,
-            format: "bgra8unorm",
-            usage: GPUTextureUsage.RENDER_ATTACHMENT
-        });
-    }
-    onResize(width: number, height: number) {
-        this.canvas.width = width;
-        this.canvas.height = height;
-        super.onResize(width, height);
-    }
-}

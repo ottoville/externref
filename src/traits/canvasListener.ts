@@ -16,7 +16,7 @@ export class canvasListener extends Trait {
     public destroy() {
         this.#listeners.forEach((map, type) => {
             map.forEach((proxy, listener) => {
-                GPU.instance.renderPassScreen.canvas.removeEventListener(type, proxy || listener);
+                GPU.instance.canvas.removeEventListener(type, proxy || listener);
             });
             map.clear();
         });
@@ -36,7 +36,7 @@ export class canvasListener extends Trait {
         }
         if (options && options.once) {
             map.set(listener, listener);
-            GPU.instance.renderPassScreen.canvas.addEventListener(type, listener, options);
+            GPU.instance.canvas.addEventListener(type, listener, options);
         } else {
             if (map.has(listener)) {
                 console.warn('Adding same listener twice not supported: ', type);
@@ -44,23 +44,23 @@ export class canvasListener extends Trait {
             }
             if (options && options.lazy !== undefined) {
                 let lazyf = new LazyEval((e) => {
-                    listener.call(GPU.instance.renderPassScreen.canvas, e);
+                    listener.call(GPU.instance.canvas, e);
                 });
                 let proxyf = (e: HTMLElementEventMap[K]) => {
                     lazyf.eval(options.lazy!, e);
                 };
                 map.set(listener, proxyf);
-                GPU.instance.renderPassScreen.canvas.addEventListener(type, proxyf);
+                GPU.instance.canvas.addEventListener(type, proxyf);
             } else {
                 map.set(listener, null);
-                GPU.instance.renderPassScreen.canvas.addEventListener(type, listener);
+                GPU.instance.canvas.addEventListener(type, listener);
             }
         }
     }
     public removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (ev: HTMLElementEventMap[K]) => any) {
         let map: Map<(ev: HTMLElementEventMap[K]) => any, ((e: HTMLElementEventMap[K]) => void) | null> | undefined;
         if (map = this.#listeners.get(type)) {
-            GPU.instance.renderPassScreen.canvas.removeEventListener(type, map.get(listener) || listener);
+            GPU.instance.canvas.removeEventListener(type, map.get(listener) || listener);
             if (!map.delete(listener))
                 console.warn('Tried to remove listener that did not exists:', type);
         }

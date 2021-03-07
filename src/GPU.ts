@@ -1,5 +1,5 @@
 ﻿import { TerraNodeGPU } from "./TerraNode.js";
-import type { RenderPass, RenderPassCanvas } from "./GPU/RenderPass.js";
+import type { RenderPass } from "./GPU/RenderPass.js";
 import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout.js";
 import type { Scene } from "./Scene.js";
 type CopyBuffers<T> = {
@@ -151,9 +151,9 @@ export class GPU {
         }
         return parentBGLayout;
     }
-    renderPassScreen: RenderPassCanvas
+    renderPassScreen: RenderPass
     renderPassWater: RenderPass
-    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPassCanvas, RenderPass]) {
+    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPass, RenderPass]) {
 
         //Scene layoyt is iterated manually so remove it not to iterate it twise.
         this.rootlayout.subBindGroups.delete(this.rootSceneLayout);
