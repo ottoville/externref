@@ -91,9 +91,14 @@ export class Canvas extends TerraCompoment {
             new RenderTarget(renderpassCanvas, "bgra8unorm");
 
             const gRenderTarget = new RenderTarget(renderpassCanvas, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            const gRenderTarget2 = new RenderTarget(renderpassCanvas, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             //@ts-ignore
             window.printRenderTarget = () => {
                 gRenderTarget.toBitmap()
+            }
+            //@ts-ignore
+            window.printRenderTarget2 = () => {
+                gRenderTarget2.toBitmap()
             }
 
             const context: GPUCanvasContext = this.canvasElem.getContext('gpupresent') as unknown as GPUCanvasContext;
