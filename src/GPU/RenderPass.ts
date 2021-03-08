@@ -124,7 +124,7 @@ export class RenderPass {
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
 
-    render(renderEncoder: GPUCommandEncoder, cameraBindGroup: GPUBindGroup) {
+    render(renderEncoder: GPUCommandEncoder, cameraBindGroup?: GPUBindGroup) {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             if (!this.bundles.length) {
@@ -143,14 +143,20 @@ export class RenderPass {
             debugger;
         }
     }
-    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, cameraBindGroup: GPUBindGroup) {
+    rootRenderPipeLines: Set<RenderPipeline> = new Set();
+    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, cameraBindGroup?: GPUBindGroup) {
         let drawedMeshes = 0;
-        passEncoder.setBindGroup(0, cameraBindGroup);
-        this.gpu.rootlayout.renderPipeLines.forEach(rp => {
+        this.rootRenderPipeLines.forEach(rp => {
             drawedMeshes += rp.draw(passEncoder, this, 1);
         });
-        if (this.gpu.rootlayout.subBindGroups.size) {
-            this.gpu.rootlayout.subBindGroups.forEach(bgt =>
+        if(cameraBindGroup) {
+            passEncoder.setBindGroup(0, cameraBindGroup);
+            this.gpu.rootCameralayout.renderPipeLines.forEach(rp => {
+                drawedMeshes += rp.draw(passEncoder, this, 1);
+            });
+        }
+        if (this.gpu.rootCameralayout.subBindGroups.size) {
+            this.gpu.rootCameralayout.subBindGroups.forEach(bgt =>
                 drawedMeshes += this.gpu.drawBindGroups(passEncoder, bgt, this, 1)
             )
         };

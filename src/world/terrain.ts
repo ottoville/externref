@@ -88,7 +88,7 @@ export class Terrain {
     ];
 
     //TerrainHeightsbindGroupTree = this.scene.TerraCameras[0].baseBindGroup.addChildBindGroup(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene), ...this.heightsBindGroupEntries));
-    TerrainHeightsbindGroupTree = this.scene.gpu.rootlayout.addChildBindGroup(this.scene.gpu.createBindGroup(Terrain.getHeightsLayout(this.scene.gpu), ...this.heightsBindGroupEntries));
+    TerrainHeightsbindGroupTree = this.scene.gpu.rootCameralayout.addChildBindGroup(this.scene.gpu.createBindGroup(Terrain.getHeightsLayout(this.scene.gpu), ...this.heightsBindGroupEntries));
     
     TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpu.BindGroup, true)
 

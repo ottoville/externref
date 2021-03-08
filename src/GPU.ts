@@ -42,8 +42,8 @@ export class GPU {
             buffer: { }
         }]
     });
-    rootlayout = new BindGroupLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
-    rootSceneLayout = new BindGroupLayout(this, this.uniformBindGroupLayoutLightsWGSL2, this.rootlayout, undefined, false);
+    rootCameralayout = new BindGroupLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
+    rootSceneLayout = new BindGroupLayout(this, this.uniformBindGroupLayoutLightsWGSL2, this.rootCameralayout, undefined, false);
 
     //viewprojection and camera position
 
@@ -64,7 +64,28 @@ export class GPU {
     CPUData = new SharedArrayBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances);
     DataSlots: number[] = new Array(TerraNodeGPU.maxInstances).fill(TerraNodeGPU.alignment).map((v, i) => i * v);
     
-    BindGroup: BindGroupOneBinding;
+    canvasSampler=this.device.createSampler({
+        magFilter: "linear",
+        minFilter: "linear",
+    });
+    BindGroupLayoutCanvas = this.createBindGroupLayout(
+        {
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            sampler:{
+            }
+        },
+        {
+            binding: 1,
+            visibility: GPUShaderStage.FRAGMENT,
+            texture:{
+                multisampled:true
+            }
+        });
+
+
+    rootLayout = new BindGroupLayout(this, this.BindGroupLayoutCanvas);
+
     BindGroupLayout = this.createBindGroupLayout(
         {
             binding: 0,
@@ -72,6 +93,15 @@ export class GPU {
             buffer:{
                 type:"uniform",
                 hasDynamicOffset: true
+            }
+        });
+    BindGroup=this.createBindGroup(this.BindGroupLayout,
+        {
+            binding: 0,
+            resource: {
+                buffer: this.GPUData,
+                offset: 0,
+                size: TerraNodeGPU.GPUDataSize*4
             }
         });
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
@@ -90,6 +120,7 @@ export class GPU {
                 buffer: { }
             }]
     });
+    BindGroupCanvas: BindGroupTwoBinding;
 
     addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupLayout
     addBindGroup(bindgroup: (BindGroupOneBinding), isDynamic: boolean): DynamicBindGroupLayout<[number]>
@@ -158,18 +189,21 @@ export class GPU {
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPass, RenderPass, RenderPass]) {
 
         //Scene layoyt is iterated manually so remove it not to iterate it twise.
-        this.rootlayout.subBindGroups.delete(this.rootSceneLayout);
+        this.rootCameralayout.subBindGroups.delete(this.rootSceneLayout);
 
-        [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = createRenderPasses(this)
-        this.BindGroup = this.createBindGroup(this.BindGroupLayout,
+        [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = createRenderPasses(this);
+
+
+        this.BindGroupCanvas=this.createBindGroup(this.BindGroupLayoutCanvas,
             {
                 binding: 0,
-                resource: {
-                    buffer: this.GPUData,
-                    offset: 0,
-                    size: TerraNodeGPU.GPUDataSize*4
-                }
+                resource: this.canvasSampler
+            },
+            {
+                binding: 1,
+                resource: this.renderPassScreen.renderTargets[0]!.view
             });
+
         this.DynamicBindGroups.add(this.BindGroup);
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);

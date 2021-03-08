@@ -287,8 +287,7 @@ export class Canvas extends TerraCompoment {
         const fragment = gpu.shaderModules.get('color.frag.wgsl')
         if (!vertex || !fragment)
             throw ('Missing shader')
-
-        const canvasPipeLine=gpu.renderPassCanvas.decoratePipeline({
+        const canvasPipeline = gpu.rootLayout.addRenderPipeline({
             label: 'canvas',
             primitiveTopology: 'triangle-list',
             depthStencilState: {
@@ -305,6 +304,9 @@ export class Canvas extends TerraCompoment {
                 entryPoint: "main"
             },
         });
+        
+        gpu.renderPassCanvas.rootRenderPipeLines.add(canvasPipeline)
+       // canvasPipeline.addDrawableSimple(undefined,gpu.renderPassCanvas,)
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();
@@ -346,12 +348,13 @@ export class Canvas extends TerraCompoment {
 
             gpu.device.queue.writeBuffer(gpu.timeBuffer, 0, timeAndDeltaBuffer);
 
-            const passEncoder = renderEncoder.beginRenderPass(gpu.renderPassCanvas.GPURenderPassDescriptor);
+            gpu.renderPassCanvas.render(renderEncoder);
+            /*const passEncoder = renderEncoder.beginRenderPass(gpu.renderPassCanvas.GPURenderPassDescriptor);
             passEncoder.setPipeline(canvasPipeLine);
             passEncoder.draw(6, 1, 0, 0);
 
             passEncoder.endPass();
-
+*/
             TerraCameras.forEach(camera => {
                 camera.render(renderEncoder)
             });

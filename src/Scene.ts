@@ -2,7 +2,7 @@
 import type { BoundableNode, PickingInfo } from "./TerraNode.js";
 import type { GPU } from "./GPU.js";
 import type { Engine } from "./engine.js";
-import { BindGroupLayout, LayoutGroupDrawable } from "./GPU/BindGroupLayout.js";
+import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import type { TerraCamera } from "./TerraCamera.js";
 import type { RenderPass } from "./GPU/RenderPass.js";
 import { TerraMatrix } from "./Math.js";
@@ -11,8 +11,20 @@ export class Scene {
 
     boundables: Set<BoundableNode> = new Set();
     lights;
-    positionBindGroupLightsTimeWGSL: LayoutGroupDrawable<[GPUBindGroupEntry]>;
-    lightsBindGroupTexture: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
+    positionBindGroupLightsTimeWGSL=this.gpu.rootSceneLayout.addChildLayout(this.gpu.BindGroupLayout);
+    lightsBindGroupTexture=this.gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        sampler:{
+
+        }
+    }, {
+        binding: 1,
+        visibility: GPUShaderStage.FRAGMENT,
+        texture: {
+
+        }
+    }));
     ready?: Promise<any>;
 
     constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [number,Promise<any>?]) {
@@ -21,21 +33,6 @@ export class Scene {
             camera.renderPass.scenes.add(this);
         })
 
-
-        this.positionBindGroupLightsTimeWGSL = this.gpu.rootSceneLayout.addChildLayout(gpu.BindGroupLayout);
-        this.lightsBindGroupTexture = gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
-            binding: 0,
-            visibility: GPUShaderStage.FRAGMENT,
-            sampler:{
-
-            }
-        }, {
-            binding: 1,
-            visibility: GPUShaderStage.FRAGMENT,
-            texture: {
-
-            }
-        }));
         const [sunBufferOffsetBytes, groundAndSea ] = onRenderStart(this);
         this.ready=groundAndSea;
         this.lights = new Light(gpu, sunBufferOffsetBytes);

@@ -1,6 +1,5 @@
 ﻿import { Physics } from "./physics.js";
 import type { GPU } from "./GPU.js";
-import type { DynamicBindGroupLayout } from "./GPU/BindGroupLayout.js";
 import { TerraNodeGPU } from "./TerraNode.js";
 import { Collider } from "./Collider.js";
 import type { Scene } from "./Scene.js";
@@ -34,7 +33,7 @@ export class Engine {
 
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
-    positionBindGroupTime: DynamicBindGroupLayout<[number]>;
+    positionBindGroupTime = this.gpu.rootSceneLayout.addChildBindGroup(this.gpu.BindGroup, true)
     #tempBuffer?: GPUCopySRCBuffer;
     collider = new Collider(this);
 
@@ -182,7 +181,6 @@ export class Engine {
             Atomics.store(this.#mousePosition, 1, e.clientY)
             Atomics.notify(new Int32Array(this.mousePositionBuffer), 0);
         });
-        this.positionBindGroupTime = gpu.rootSceneLayout.addChildBindGroup(gpu.BindGroup, true);
         gpu.onRenders2.push(() => {
             if (gpu.queue.size === 0)
                 return null
