@@ -153,12 +153,14 @@ export class GPU {
     }
     renderPassScreen: RenderPass
     renderPassWater: RenderPass
-    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPass, RenderPass]) {
+    renderPassCanvas: RenderPass;
+
+    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPass, RenderPass, RenderPass]) {
 
         //Scene layoyt is iterated manually so remove it not to iterate it twise.
         this.rootlayout.subBindGroups.delete(this.rootSceneLayout);
 
-        [this.renderPassScreen, this.renderPassWater] = createRenderPasses(this)
+        [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = createRenderPasses(this)
         this.BindGroup = this.createBindGroup(this.BindGroupLayout,
             {
                 binding: 0,

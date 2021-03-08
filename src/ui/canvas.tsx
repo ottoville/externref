@@ -60,8 +60,6 @@ const tools: {
 }]*/
 
 
-
-
 export class Canvas extends TerraCompoment {
     progressBar: HTMLProgressElement = <progress min="0" max="100" value="0"></progress>;
     progresElem: HTMLSpanElement = <span>0</span>;
@@ -81,7 +79,7 @@ export class Canvas extends TerraCompoment {
 
         if (!device)
             throw ('no GPU device');
-        const gpuscene = new GPU(this.canvasElem, device, (gpu) => {
+        const gpu = new GPU(this.canvasElem, device, (gpu) => {
             const renderpassCanvas = new RenderPass(gpu, 4, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                 (w, h) => {
                     this.canvasElem.width = w;
@@ -89,9 +87,21 @@ export class Canvas extends TerraCompoment {
                     return [w, h]
                 });
             new RenderTarget(renderpassCanvas, "bgra8unorm");
+            const context = this.canvasElem.getContext('gpupresent');
+            if(!context)
+                throw('Unable to get webgpu context')
+            renderpassCanvas.swapChain = context.configureSwapChain({
+                device: gpu.device,
+                format: "bgra8unorm",
+                usage: GPUTextureUsage.RENDER_ATTACHMENT
+            });
+            const renderpassScreen = new RenderPass(gpu, 4, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
+                (w, h) => {
+                    return [w, h]
+                });
 
-            const gRenderTarget = new RenderTarget(renderpassCanvas, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-            const gRenderTarget2 = new RenderTarget(renderpassCanvas, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            const gRenderTarget = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            const gRenderTarget2 = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             //@ts-ignore
             window.printRenderTarget = () => {
                 gRenderTarget.toBitmap()
@@ -101,17 +111,11 @@ export class Canvas extends TerraCompoment {
                 gRenderTarget2.toBitmap()
             }
 
-            const context: GPUCanvasContext = this.canvasElem.getContext('gpupresent') as unknown as GPUCanvasContext;
-            renderpassCanvas.swapChain = context.configureSwapChain({
-                device: gpu.device,
-                format: "bgra8unorm",
-                usage: GPUTextureUsage.RENDER_ATTACHMENT
-            });
-
             const renderpassWater = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
             new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             return [
                 renderpassCanvas,
+                renderpassScreen,
                 renderpassWater
             ]
         });
@@ -121,10 +125,10 @@ export class Canvas extends TerraCompoment {
             'plane.vert.wgsl', 'helper2.vert.wgsl',
             'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
             'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',
-            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl'];
+            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl', 'canvas.vert.wgsl'];
         await Promise.all(shaders.map(async u => {
             const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
-            gpuscene.shaderModules.set(u, device.createShaderModule({ code: compiled }));
+            gpu.shaderModules.set(u, device.createShaderModule({ code: compiled }));
         }));
 
         this.progress = 10;
@@ -133,12 +137,12 @@ export class Canvas extends TerraCompoment {
         const projectionmatrix = new Float32Array(projectionmatrixBuffer);
         this.progress = 13;
 
-        const terraEngine = await Engine.initEngine(gpuscene, DB, this.canvasElem);
+        const terraEngine = await Engine.initEngine(gpu, DB, this.canvasElem);
         this.progress = 15;
 
 
         window.engine = terraEngine;
-        const mainCamera = new TerraCamera(gpuscene.renderPassScreen, projectionmatrixBuffer, gpuscene, terraEngine)
+        const mainCamera = new TerraCamera(gpu.renderPassScreen, projectionmatrixBuffer, gpu, terraEngine)
         this.progress = 16;
 
         const camera = new ArcRotateCamera(0, 0, 10, terraEngine, mainCamera);
@@ -147,7 +151,7 @@ export class Canvas extends TerraCompoment {
 
         this.progress = 18;
 
-        const waterCamera = new TerraCamera(gpuscene.renderPassWater, projectionmatrixBuffer, gpuscene, terraEngine, false, mainCamera);
+        const waterCamera = new TerraCamera(gpu.renderPassWater, projectionmatrixBuffer, gpu, terraEngine, false, mainCamera);
         waterCamera.beforeViewUpdate.add((position, target) => {
             position[1] -= (position[1] - 3) * 2;
             target[1] = -target[1];
@@ -161,7 +165,7 @@ export class Canvas extends TerraCompoment {
 
 
 
-        const mainScene = new Scene('main', gpuscene, terraEngine, [mainCamera, waterCamera], (terrascene) => {
+        const mainScene = new Scene('main', gpu, terraEngine, [mainCamera, waterCamera], (terrascene) => {
             let sun = new Sun2(terrascene);
             // Initial scene objects here
 
@@ -253,7 +257,7 @@ export class Canvas extends TerraCompoment {
             })
             return [sun.bufferOffsetBytes, ready];
         });
-        const debugscene = new Scene('static', gpuscene, terraEngine, [mainCamera], (scene) => {
+        const debugscene = new Scene('static', gpu, terraEngine, [mainCamera], (scene) => {
             const sun = new PositionNode(scene.engine);
             sun.translation.set([0, 1, 0]);
             sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
@@ -265,13 +269,10 @@ export class Canvas extends TerraCompoment {
         b2.setTranslationX(500);
 
 
-
-
-
         let renderFrame: number = 0;
         let resizeHandler = 0;
 
-        const renderPasses: Set<RenderPass> = new Set([gpuscene.renderPassScreen, gpuscene.renderPassWater]);
+        const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen, gpu.renderPassWater]);
         const canvasSize: {
             width: number,
             height: number
@@ -282,6 +283,28 @@ export class Canvas extends TerraCompoment {
         let msPerFrame = 0;
         let startTime = 0;
         const me = this;
+        const vertex = gpu.shaderModules.get('canvas.vert.wgsl')
+        const fragment = gpu.shaderModules.get('color.frag.wgsl')
+        if (!vertex || !fragment)
+            throw ('Missing shader')
+
+        const canvasPipeLine=gpu.renderPassCanvas.decoratePipeline({
+            label: 'canvas',
+            primitiveTopology: 'triangle-list',
+            depthStencilState: {
+                depthWriteEnabled: false,
+                depthCompare: "less",
+                format: "depth24plus-stencil8",
+            },
+            vertexStage: {
+                module: vertex,
+                entryPoint: "main",
+            },
+            fragmentStage: {
+                module: fragment,
+                entryPoint: "main"
+            },
+        });
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();
@@ -297,10 +320,10 @@ export class Canvas extends TerraCompoment {
             //performance.mark('renderloopStart');
 
 
-            gpuscene.onRenders2.forEach(or => {
+            gpu.onRenders2.forEach(or => {
                 let buff = or();
                 if (buff)
-                    gpuscene.pendingCommandBuffers.push(buff);
+                    gpu.pendingCommandBuffers.push(buff);
             });
             if (camera.checkInputs()) {
                 //camera.camera.update(values => {
@@ -309,7 +332,8 @@ export class Canvas extends TerraCompoment {
 
             }
 
-            const renderEncoder = gpuscene.device.createCommandEncoder();
+            const renderEncoder = gpu.device.createCommandEncoder();
+
             timeView.set([time]);
             let physicDelta: number | null;
             if (terraEngine.physics.gameSpeed == -1)
@@ -320,13 +344,20 @@ export class Canvas extends TerraCompoment {
             if (physicDelta !== null)
                 deltaView.set([physicDelta]);
 
-            gpuscene.device.queue.writeBuffer(gpuscene.timeBuffer, 0, timeAndDeltaBuffer)
+            gpu.device.queue.writeBuffer(gpu.timeBuffer, 0, timeAndDeltaBuffer);
+
+            const passEncoder = renderEncoder.beginRenderPass(gpu.renderPassCanvas.GPURenderPassDescriptor);
+            passEncoder.setPipeline(canvasPipeLine);
+            passEncoder.draw(6, 1, 0, 0);
+
+            passEncoder.endPass();
+
             TerraCameras.forEach(camera => {
                 camera.render(renderEncoder)
             });
-            gpuscene.pendingCommandBuffers.push(renderEncoder.finish())
-            gpuscene.device.queue.submit(gpuscene.pendingCommandBuffers);
-            gpuscene.pendingCommandBuffers.length = 0;
+            gpu.pendingCommandBuffers.push(renderEncoder.finish())
+            gpu.device.queue.submit(gpu.pendingCommandBuffers);
+            gpu.pendingCommandBuffers.length = 0;
             renderFrame = window.requestAnimationFrame(renderLoop);
 
         }
@@ -338,7 +369,7 @@ export class Canvas extends TerraCompoment {
                 canvasSize.width = entries[0]!.contentRect.width | 0;
                 canvasSize.height = entries[0]!.contentRect.height | 0;
                 renderPasses.forEach(renderpass => renderpass.onResize(canvasSize.width, canvasSize.height));
-                gpuscene.onResizes.forEach(cb => cb());
+                gpu.onResizes.forEach(cb => cb());
                 //TODO: remove duplicate
                 const aspectRatio = (canvasSize.width * mainCamera.viewport.width) / (canvasSize.height * mainCamera.viewport.height);
                 //Create projection matrix
@@ -394,7 +425,6 @@ export class Canvas extends TerraCompoment {
             try {
                 console.debug('initing without websocket connection');
 
-                //blazor.invokeMethod('setProgress', 20);
                 // sceneInitedred();
             } catch (e) {
                 // sceneInitedrej(e);
