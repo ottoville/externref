@@ -2,6 +2,7 @@
 import { BoundableNode } from "../../TerraNode.js";
 import type { Scene } from "../../Scene.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
+import { DrawableIndexed } from "GPU/Drawable.js";
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
@@ -44,17 +45,16 @@ function Simple(scene: Scene) {
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline
 }
-export abstract class SimpleMesh extends BoundableNode {
+export abstract class SimpleMesh extends BoundableNode<DrawableIndexed> {
     
-    Drawable = this.renderPipeline.addDrawableIndexed(this.scene, new Set([this.scene.gpu.renderPassScreen]), this);
     constructor(
-        private scene: Scene,
+        scene: Scene,
         positionsCount: number,
         indicesView: Uint32Array | Uint16Array,
         iBuffer: GPUIndexBuffer,
         vBuffer: GPUVertexBuffer) {
 
-        super(scene, Simple(scene), positionsCount, 3, indicesView);
+        super(scene, Simple(scene), positionsCount,(node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen]), node), 3, indicesView);
         this.Drawable.dynamicBuffers.set(scene.gpu.BindGroup, this.bufferOffsetBytes);
         this.Drawable.setVertexBuffer(0, vBuffer);
         this.Drawable.setIndexBuffer(iBuffer, undefined, undefined, indicesView.BYTES_PER_ELEMENT == 4 ? 'uint32' : 'uint16');

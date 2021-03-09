@@ -114,7 +114,7 @@ export abstract class DrawableDirect extends Drawable {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        public node: TerraNodeGPU,
+        public node: TerraNodeGPU<DrawableDirect>,
         scene?: Scene,
         instanceCount = 1) {
 
@@ -149,7 +149,7 @@ export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        node: TerraNodeGPU,
+        node: TerraNodeGPU<DrawableSimple>,
         scene?: Scene,
         instanceCount = 1,
         public firstVertex = 0,
@@ -164,7 +164,7 @@ export class DrawableIndexed extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        node: TerraNodeGPU,
+        node: TerraNodeGPU<DrawableIndexed>,
         private indexBuffer?: GPUIndexBuffer,
         scene?: Scene,
         public baseVertex = 0,

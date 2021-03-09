@@ -14,9 +14,9 @@ import type { GPU } from "../GPU";
 const terrainWorker = new WorkerThread('/js/workers/webworkers/terrainWorker.js');
 
 
-const renderPipelines: Map<GPU, [RenderPipeline,number]> = new Map();
+const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline,number] {
+function getRenderPipeline(scene: Scene, terrain: Terrain) : RenderPipeline {
 
     let renderPipeline = renderPipelines.get(scene.gpu);
     if (renderPipeline) {
@@ -29,7 +29,7 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline,num
         throw ('Missing shader')
     //const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
     //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
-    renderPipeline = [terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
+    renderPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
         primitiveTopology: 'triangle-strip',
         rasterizationState: {
             cullMode: 'none',
@@ -50,12 +50,12 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : [RenderPipeline,num
         vertexState: {
             indexFormat: 'uint32'
         }
-    }, [0]), 4];
+    }, [0])
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline
 }
 
-export class TerrainTool extends TerraNodeGPU {
+export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     static label = 'Terrain';
     public static instance: UITAB | null = null;
     static menuElem = (instance: TerrainTool) => <div><legend style="background-color:white">Terrain</legend>
@@ -64,9 +64,7 @@ export class TerrainTool extends TerraNodeGPU {
         </div>;
     traits:Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
-    // private engine: WebGPUEngine;
-    Drawable: DrawableSimple;
-
+    
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
 
@@ -78,7 +76,7 @@ export class TerrainTool extends TerraNodeGPU {
         public camera: ArcRotateCamera,
         public sea: Sea,
     ) {
-        super(scene.engine, ...getRenderPipeline(scene, terrain));
+        super(scene.engine, getRenderPipeline(scene, terrain),4,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), node, 8, 0));
         scene.TerraCameras[0].subscribePickingRay();
 
         terrainWorker.message(WorkerReturn.Promise, 'init',
@@ -98,7 +96,6 @@ export class TerrainTool extends TerraNodeGPU {
         // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
 
-        this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), this, 8, 0)
         this.#canvasListener.addListener("pointermove", this.#mouseListener, { lazy: 15 });
 
     }

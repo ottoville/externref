@@ -6,10 +6,11 @@ import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import type { TerraCamera } from "./TerraCamera.js";
 import type { RenderPass } from "./GPU/RenderPass.js";
 import { TerraMatrix } from "./Math.js";
+import { DrawableDirect } from "GPU/Drawable.js";
 
 export class Scene {
 
-    boundables: Set<BoundableNode> = new Set();
+    boundables: Set<BoundableNode<DrawableDirect>> = new Set();
     lights;
     positionBindGroupLightsTimeWGSL=this.gpu.rootSceneLayout.addChildLayout(this.gpu.BindGroupLayout);
     lightsBindGroupTexture=this.gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
@@ -52,11 +53,11 @@ export class Scene {
         BindGroupLayout.instances.forEach((bgt) => { drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 2, this) });
         return drawedMeshes;
     }
-    async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
+    async collissionCheck(rayFunction: (mesh: BoundableNode<DrawableDirect>) => any, boundables: IterableIterator<BoundableNode<DrawableDirect>>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode<DrawableDirect>) => boolean): Promise<PickingInfo | null> {
         if (fastCheck) {
             throw ('TODO: fastcheck');
         }
-        let boundableMesh: BoundableNode;
+        let boundableMesh: BoundableNode<DrawableDirect>;
         do {
             const boundable = boundables.next();
             if (boundable.done)
@@ -79,7 +80,7 @@ export class Scene {
         else
             return this.collissionCheck(rayFunction, boundables, pickResult);*/
     }
-    async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode) => boolean, fastCheck?: boolean): Promise<BoundableNode | null> {
+    async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode<DrawableDirect>) => boolean, fastCheck?: boolean): Promise<BoundableNode<DrawableDirect> | null> {
         if (predicate)
             console.warn('TODO: predicate');
         /* const b1 = this.gpu.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
@@ -135,7 +136,7 @@ export class Scene {
         //let start = performance.now();
         const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]])
-        const pickingRays: Map<BoundableNode, Float32Array> = new Map();
+        const pickingRays: Map<BoundableNode<DrawableDirect>, Float32Array> = new Map();
         this.boundables.forEach(boundable => {
             if (boundable.isStatic)
                 return pickingRays.set(boundable, rayArr);
@@ -147,7 +148,7 @@ export class Scene {
             results.push(boundable.intersectsRay(ray));
         })
         /*const pickresults = */await Promise.all(results);
-        let minimum: BoundableNode | null = null;
+        let minimum: BoundableNode<DrawableDirect> | null = null;
 
         this.boundables.forEach(boundable => {
             if (!minimum || boundable.pickInfo.distance < minimum.pickInfo.distance)
@@ -182,7 +183,7 @@ export class Scene {
             }, this.gpu.GPUData);
         }, resultMatrixBuffer);
         */
-        let rayFunction = (boundableMesh: BoundableNode) => {
+        let rayFunction = (boundableMesh: BoundableNode<DrawableDirect>) => {
 
             let m = new TerraMatrix([1.0, 0.0, 0.0, 0.0,
                 0.0, 1.0, 0.0, 0.0,

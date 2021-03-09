@@ -10,19 +10,23 @@ import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 
 import { TerraVector2 } from "../Math.js";
+import { DrawableIndexed } from "GPU/Drawable.js";
+import type { Engine } from "engine.js";
 
 
 
-class PlaneMesh extends TerraNodeGPU {
-    Drawable = this.renderPipeline.addDrawableIndexed(undefined, new Set([this.engine.gpu.renderPassScreen]), this, undefined, 0, 1, 0);
+class PlaneMesh extends TerraNodeGPU<DrawableIndexed> {
+    constructor(engine:Engine, renderPipeline: RenderPipeline, verticesCount:number) {
+        super(engine,renderPipeline,verticesCount, () => renderPipeline.addDrawableIndexed(undefined, new Set([engine.gpu.renderPassScreen]), this, undefined, 0, 1, 0))
+    }
 }
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, number]{
+function getRenderPipeline(scene: Scene, ground: Terrain):RenderPipeline{
     let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
     if (renderPipeline) {
-        return [renderPipeline, 0];
+        return renderPipeline;
     }
     const vertex = scene.engine.gpu.shaderModules.get('plane.vert.wgsl')
     if (!vertex)
@@ -62,7 +66,7 @@ function getRenderPipeline(scene: Scene, ground: Terrain):[RenderPipeline, numbe
         },
     }, [0]);
     renderPipelines.set(scene.gpu, renderPipeline);
-    return [renderPipeline, 0]
+    return renderPipeline
 }
 export class paintPlane extends paintGround {
     onEnd() {
@@ -71,7 +75,7 @@ export class paintPlane extends paintGround {
         });
         console.log('scaled to 0')
     }
-    #mesh = new PlaneMesh(this.scene.engine, ...getRenderPipeline(this.scene, this.ground));
+    #mesh = new PlaneMesh(this.scene.engine, getRenderPipeline(this.scene, this.ground),0);
     #startingPoint = new TerraVector2(2);
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
         const positions: number[] = [0, 0, 0, 1];

@@ -2,6 +2,7 @@
 import type { Scene } from "../Scene.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
+import { DrawableSimple } from "GPU/Drawable.js";
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
@@ -51,10 +52,9 @@ function getRenderPipeline(scene: Scene) {
 }
 
 
-export class Sea extends BoundableNode {
+export class Sea extends BoundableNode<DrawableSimple> {
     worldPosition = undefined
-    Drawable = this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), this);
-    constructor(private scene: Scene) {
-        super(scene, getRenderPipeline(scene),4, undefined, undefined, true); //48
+    constructor(scene: Scene) {
+        super(scene, getRenderPipeline(scene),4,(node) =>node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node), undefined, undefined, true); //48
     }
 }

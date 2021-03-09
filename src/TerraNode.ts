@@ -139,24 +139,24 @@ export abstract class MainNode {
         return 'lightType' in this;
     }
 }
-export abstract class TerraNodeGPU extends MainNode {
+export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     static uniqueID = 0;
     protected readonly uniqueID: number = TerraNodeGPU.uniqueID++;
 
-    abstract Drawable:DrawableDirect
+   // abstract Drawable:DrawableDirect
     static GPUDataSize = 16 + 4 + 4 + 4;
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
-
-    //readonly dataBuffer = new ArrayBuffer(TerraNode.GPUDataSize);
-
+    Drawable: T;
+    
     destroy() {
         //this.engine.gpu.NodeInstances.delete(this);
     }
 
-    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number) {
+    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number, createDrawable: (node:TerraNodeGPU<T>) => T) {
         super(engine);
+        this.Drawable = createDrawable(this);
         if(renderPipeline.dynamicBindGroupOffset.length)
             renderPipeline.dynamicBindGroupOffset[0]=this.bufferOffsetBytes;
     }
@@ -165,7 +165,7 @@ export abstract class TerraNodeGPU extends MainNode {
 export interface PickingInfo {
     hit: boolean,
     pickedPoint: { x: number, y: number, z: number },
-    pickedMesh: BoundableNode,
+    pickedMesh: BoundableNode<DrawableDirect>,
     distance: number
 }
 const worker = new ObjectWorkerThread('/js/workers/webworkers/mesh.js');
@@ -195,7 +195,7 @@ class boundingBox {
     needInitMin = true;
     needInitMax = true
 
-    constructor(private mesh: BoundableNode) {
+    constructor(private mesh: BoundableNode<DrawableDirect>) {
         const original = new ArrayBuffer(6 * 4);
         this.#minOriginal = new TerraVector3(original, 0);
         this.#maxOriginal = new TerraVector3(original, 4 * 3);
@@ -269,7 +269,7 @@ class boundingBox {
 
 }
 
-export abstract class BoundableNode extends TerraNodeGPU {
+export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeGPU<T> {
 
     readonly boundingBox: boundingBox;
     readonly pickInfo = new pickInfo();
@@ -384,12 +384,13 @@ export abstract class BoundableNode extends TerraNodeGPU {
         scene: Scene,
         renderPipeline: RenderPipeline,
         public positionCount: number,
+        createDrawable: (node:TerraNodeGPU<T>) => T,
         public verticesPositionStride: number = 3,
-        private indicesView?: Uint32Array | Uint16Array,        
+        private indicesView?: Uint32Array | Uint16Array,
         private strip = false,
         
     ) {
-        super(scene.engine, renderPipeline, indicesView ? indicesView.length : positionCount);
+        super(scene.engine, renderPipeline, indicesView ? indicesView.length : positionCount, createDrawable);
         // const positionCount = (this.verticesPositionBuffer.byteLength / 4) / this.verticesPositionStride;
         this.verticesBuffesSize = positionCount * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
 
