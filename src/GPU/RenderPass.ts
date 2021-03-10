@@ -4,6 +4,7 @@ import type { GPU } from "../GPU.js";
 import type { RenderPipeline } from "./RenderPipeline.js";
 import type { Drawable } from "./Drawable.js";
 import { RenderTarget } from "./RenderTarget.js";
+import { BindGroupLayout } from "./BindGroupLayout.js";
 
 interface RenderPipelineVariant2 {
     renderpipeline: GPURenderPipeline;
@@ -124,7 +125,7 @@ export class RenderPass {
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
 
-    render(renderEncoder: GPUCommandEncoder, cameraBindGroup?: GPUBindGroup) {
+    render(renderEncoder: GPUCommandEncoder, cameraBindGroup: GPUBindGroup, rootLayout:BindGroupLayout) {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             if (!this.bundles.length) {
@@ -133,7 +134,7 @@ export class RenderPass {
                     sampleCount: this.sampleCount,
                     depthStencilFormat: this.#depthTexture ? 'depth24plus-stencil8' : undefined
                 });
-                this.recordRenderPass(renderBundleEncoder, cameraBindGroup);
+                this.recordRenderPass(renderBundleEncoder, cameraBindGroup, rootLayout);
                 this.bundles.push(renderBundleEncoder.finish());
             }
             passEncoder.executeBundles(this.bundles);
@@ -143,20 +144,18 @@ export class RenderPass {
             debugger;
         }
     }
-    rootRenderPipeLines: Set<RenderPipeline> = new Set();
-    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, cameraBindGroup?: GPUBindGroup) {
+    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, cameraBindGroup: GPUBindGroup, rootLayout:BindGroupLayout) {
         let drawedMeshes = 0;
-        this.rootRenderPipeLines.forEach(rp => {
-            drawedMeshes += rp.draw(passEncoder, this, 1);
-        });
+
         if(cameraBindGroup) {
             passEncoder.setBindGroup(0, cameraBindGroup);
-            this.gpu.rootCameralayout.renderPipeLines.forEach(rp => {
+            //this.gpu.rootCameralayout
+            rootLayout.renderPipeLines.forEach(rp => {
                 drawedMeshes += rp.draw(passEncoder, this, 1);
             });
         }
-        if (this.gpu.rootCameralayout.subBindGroups.size) {
-            this.gpu.rootCameralayout.subBindGroups.forEach(bgt =>
+        if (rootLayout.subBindGroups.size) {
+            rootLayout.subBindGroups.forEach(bgt =>
                 drawedMeshes += this.gpu.drawBindGroups(passEncoder, bgt, this, 1)
             )
         };

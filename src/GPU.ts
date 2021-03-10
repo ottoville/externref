@@ -68,24 +68,25 @@ export class GPU {
         magFilter: "linear",
         minFilter: "linear",
     });
+
     BindGroupLayoutCanvas = this.createBindGroupLayout(
         {
             binding: 0,
             visibility: GPUShaderStage.FRAGMENT,
             sampler:{
+                
             }
         },
         {
             binding: 1,
             visibility: GPUShaderStage.FRAGMENT,
             texture:{
-                multisampled:true
+                
             }
         });
 
 
     rootLayout = new BindGroupLayout(this, this.BindGroupLayoutCanvas);
-
     BindGroupLayout = this.createBindGroupLayout(
         {
             binding: 0,
@@ -193,7 +194,6 @@ export class GPU {
 
         [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = createRenderPasses(this);
 
-
         this.BindGroupCanvas=this.createBindGroup(this.BindGroupLayoutCanvas,
             {
                 binding: 0,
@@ -204,7 +204,7 @@ export class GPU {
                 resource: this.renderPassScreen.renderTargets[0]!.view
             });
 
-        this.DynamicBindGroups.add(this.BindGroup);
+            this.DynamicBindGroups.add(this.BindGroup);
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
         this.timeGroup = {

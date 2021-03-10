@@ -155,7 +155,7 @@ export class TerraCamera {
             this.updateView();
             this.#doUpdateView = false;
         }
-        this.renderPass.render(renderEncoder, this.#uniformBindGroup);
+        this.renderPass.render(renderEncoder, this.#uniformBindGroup,this.gpu.rootCameralayout);
     }
     #nearVec3 = new TerraVector3();
     #farVec3 = new TerraVector3();

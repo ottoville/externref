@@ -5,7 +5,7 @@ export class RenderTarget {
     texture: GPUTexture;
     debug = false
     createTexture() {
-        this.texture?.destroy();
+        //this.texture?.destroy();
         let usage = this.usage;
         if (this.debug)
             usage |= GPUTextureUsage.COPY_SRC;

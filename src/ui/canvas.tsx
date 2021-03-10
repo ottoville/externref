@@ -17,11 +17,13 @@ import { Sea } from "../world/water.js";
 import { LazyEval } from "../LazyEval.js";
 import { Box } from "../GPU/Meshes/Box.js";
 import { Sun2 } from "../world/sun2.js";
-import { PositionNode } from "../TerraNode.js";
+import { PositionNode, TerraNodeGPU } from "../TerraNode.js";
 import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 import { savedCamera } from "../types/interfaces/index.js";
 import { RenderTarget } from "../GPU/RenderTarget.js";
+//@ts-ignore
+import { DrawableSimple } from "GPU/Drawable.js";
 /*
 const tools: {
     name: string,
@@ -95,7 +97,7 @@ export class Canvas extends TerraCompoment {
                 format: "bgra8unorm",
                 usage: GPUTextureUsage.RENDER_ATTACHMENT
             });
-            const renderpassScreen = new RenderPass(gpu, 4, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
+            const renderpassScreen = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                 (w, h) => {
                     return [w, h]
                 });
@@ -125,7 +127,7 @@ export class Canvas extends TerraCompoment {
             'plane.vert.wgsl', 'helper2.vert.wgsl',
             'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
             'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',
-            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl', 'canvas.vert.wgsl'];
+            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl', 'canvas.vert.wgsl', 'texture.frag.wgsl'];
         await Promise.all(shaders.map(async u => {
             const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
             gpu.shaderModules.set(u, device.createShaderModule({ code: compiled }));
@@ -156,6 +158,7 @@ export class Canvas extends TerraCompoment {
             position[1] -= (position[1] - 3) * 2;
             target[1] = -target[1];
         });
+        //@ts-ignore
         const TerraCameras = [mainCamera, waterCamera]
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
@@ -284,9 +287,11 @@ export class Canvas extends TerraCompoment {
         let startTime = 0;
         const me = this;
         const vertex = gpu.shaderModules.get('canvas.vert.wgsl')
-        const fragment = gpu.shaderModules.get('color.frag.wgsl')
+        const fragment = gpu.shaderModules.get('texture.frag.wgsl')
         if (!vertex || !fragment)
             throw ('Missing shader')
+
+
         const canvasPipeline = gpu.rootLayout.addRenderPipeline({
             label: 'canvas',
             primitiveTopology: 'triangle-list',
@@ -304,9 +309,8 @@ export class Canvas extends TerraCompoment {
                 entryPoint: "main"
             },
         });
-        
-        gpu.renderPassCanvas.rootRenderPipeLines.add(canvasPipeline)
-       // canvasPipeline.addDrawableSimple(undefined,gpu.renderPassCanvas,)
+
+        new TerraNodeGPU<DrawableSimple>(terraEngine,canvasPipeline,6,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]),node))
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();
@@ -348,16 +352,20 @@ export class Canvas extends TerraCompoment {
 
             gpu.device.queue.writeBuffer(gpu.timeBuffer, 0, timeAndDeltaBuffer);
 
-            gpu.renderPassCanvas.render(renderEncoder);
             /*const passEncoder = renderEncoder.beginRenderPass(gpu.renderPassCanvas.GPURenderPassDescriptor);
             passEncoder.setPipeline(canvasPipeLine);
             passEncoder.draw(6, 1, 0, 0);
 
             passEncoder.endPass();
 */
+            
             TerraCameras.forEach(camera => {
                 camera.render(renderEncoder)
             });
+
+
+            gpu.renderPassCanvas.render(renderEncoder, gpu.BindGroupCanvas, gpu.rootLayout);
+
             gpu.pendingCommandBuffers.push(renderEncoder.finish())
             gpu.device.queue.submit(gpu.pendingCommandBuffers);
             gpu.pendingCommandBuffers.length = 0;

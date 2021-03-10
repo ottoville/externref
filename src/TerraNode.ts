@@ -139,7 +139,7 @@ export abstract class MainNode {
         return 'lightType' in this;
     }
 }
-export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
+export class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     static uniqueID = 0;
     protected readonly uniqueID: number = TerraNodeGPU.uniqueID++;
 
