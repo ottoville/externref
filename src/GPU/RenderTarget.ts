@@ -1,25 +1,29 @@
 import type { RenderPass } from "./RenderPass";
 
-export class RenderTarget {
-    view: GPUTextureView;
-    texture: GPUTexture;
+export class RenderTarget<T extends GPUTexture> {
+    view: TerraGPUTextureView<T>;
+    texture: GPUTextureSampled | GPUTexture;
     debug = false
+    
+    lastSize:{width:number, height:number}={width:0,height:0}
+
     createTexture() {
+        this.lastSize=this.renderPass.size;
         //this.texture?.destroy();
-        let usage = this.usage;
+        const usage:[number]= [this.usage];
         if (this.debug)
-            usage |= GPUTextureUsage.COPY_SRC;
-        this.texture = this.renderPass.gpu.device.createTexture({
-            size:this.renderPass.size,
-            sampleCount:this.renderPass.sampleCount,
-            format: this.format,
-            usage: usage,
-        });
-        this.view = this.texture.createView();
+            usage.push(GPUTextureUsage.COPY_SRC);
+        this.texture = this.renderPass.gpu.createGPUTexture(
+            this.renderPass.size,
+            this.format,
+            usage,
+            this.sampleCount
+        );
+        this.view = this.texture.createView() as TerraGPUTextureView<T>;
         return [this.view, this.texture] as const;
     }
     constructor(public renderPass: RenderPass,
-        public format: GPUTextureFormat,public usage: GPUTextureUsageFlags = GPUTextureUsage.RENDER_ATTACHMENT) {
+        public format: GPUTextureFormat,public usage: GPUTextureUsageFlags = GPUTextureUsage.RENDER_ATTACHMENT, private sampleCount=1) {
             [this.view, this.texture] = this.createTexture();
             renderPass.colorFormats.push(format);
             renderPass.renderTargets.push(this);

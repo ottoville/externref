@@ -55,6 +55,14 @@ interface GPUCopyDSTBuffer extends GPUBuffer {
     CopyDST: 'true';
 }
 
+interface TerraGPUTextureView<T extends GPUTexture> extends GPUTextureView {
+    brand:T
+}
+interface GPUTextureSampled extends GPUTexture {
+    sampled: 'true';
+    createView(descriptor?: GPUTextureViewDescriptor): TerraGPUTextureView<GPUTextureSampled>
+}
+
 interface TerraBindGroupLayout extends GPUBindGroupLayout {
     createBindGroup: (...entries:  GPUBindGroupEntry[]) => GPUBindGroup;
 }

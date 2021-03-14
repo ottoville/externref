@@ -13,7 +13,7 @@ interface RenderPipelineVariant2 {
 }
 export class RenderPass {
     cameras: Set<TerraCamera> = new Set();
-    
+
 
     scenes: Set<Scene> = new Set();
     depthTextureView: GPUTextureView | undefined
@@ -21,9 +21,9 @@ export class RenderPass {
 
     bundles: GPURenderBundle[] = [];
     colorFormats: GPUTextureFormat[] = [];
-    renderTargets: RenderTarget[] = []
+    renderTargets: RenderTarget<GPUTexture>[] = []
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
-    swapChainAndTarget?: [GPUSwapChain, RenderTarget];
+    swapChainAndTarget?: [GPUSwapChain, RenderTarget<GPUTexture>];
 
     constructor(
         public gpu: GPU,
@@ -82,26 +82,37 @@ export class RenderPass {
         colorAttachments: undefined,
         depthStencilAttachment: undefined
     }
-    addSwapChain() {
+    addSwapChain(usages: [typeof GPUTextureUsage.SAMPLED]): RenderTarget<GPUTextureSampled>
+    addSwapChain(usages: GPUTextureUsageFlags[]): RenderTarget<GPUTexture>
+    addSwapChain(usages: GPUTextureUsageFlags[] = [GPUTextureUsage.RENDER_ATTACHMENT]) {
+        //const rt = new RenderTarget(this, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT, this.sampleCount);
+        const rt = this.addTarget("bgra8unorm", usages, this.sampleCount)
         this.swapChainAndTarget = [this.gpu.context.configureSwapChain({
             device: this.gpu.device,
             format: "bgra8unorm",
             usage: GPUTextureUsage.RENDER_ATTACHMENT
         }),
-        new RenderTarget(this, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT,this.sampleCount)];
+            rt];
+        return rt;
+    }
+    addTarget(format: GPUTextureFormat, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount: number): RenderTarget<GPUTextureSampled>
+    addTarget(format: GPUTextureFormat, usages: GPUTextureUsageFlags[], sampleCount: number): RenderTarget<GPUTexture>
+    addTarget(format: GPUTextureFormat, usages: GPUTextureUsageFlags[], sampleCount = 1): RenderTarget<GPUTexture> {
+        const usage = usages.reduce((prev, curr) => prev | curr, GPUTextureUsage.RENDER_ATTACHMENT);
+        return new RenderTarget(this, format, usage, sampleCount)
     }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const colorAttachments: GPURenderPassColorAttachmentDescriptor[] = []
 
         if (this.swapChainAndTarget) {
-                colorAttachments.push(this.sampleCount > 1 ? {
-                    attachment: this.swapChainAndTarget[1].view,
-                    resolveTarget: this.swapChainAndTarget[0].getCurrentTexture().createView(),
-                    loadValue: this.loadValue
-                } : {
-                    attachment: this.swapChainAndTarget[0].getCurrentTexture().createView(),
-                    loadValue: this.loadValue
-                })
+            colorAttachments.push(this.sampleCount > 1 ? {
+                attachment: this.swapChainAndTarget[1].view,
+                resolveTarget: this.swapChainAndTarget[0].getCurrentTexture().createView(),
+                loadValue: this.loadValue
+            } : {
+                attachment: this.swapChainAndTarget[0].getCurrentTexture().createView(),
+                loadValue: this.loadValue
+            })
             colorAttachments.push(...this.renderTargets.slice(1).map(rt => {
                 return {
                     attachment: rt.view,
@@ -131,7 +142,7 @@ export class RenderPass {
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
 
-    render(renderEncoder: GPUCommandEncoder, cameraBindGroup: GPUBindGroup, rootLayout:BindGroupLayout) {
+    render(renderEncoder: GPUCommandEncoder, cameraBindGroup: GPUBindGroup, rootLayout: BindGroupLayout) {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             if (!this.bundles.length) {
@@ -150,10 +161,10 @@ export class RenderPass {
             debugger;
         }
     }
-    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, cameraBindGroup: GPUBindGroup, rootLayout:BindGroupLayout) {
+    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, cameraBindGroup: GPUBindGroup, rootLayout: BindGroupLayout) {
         let drawedMeshes = 0;
 
-        if(cameraBindGroup) {
+        if (cameraBindGroup) {
             passEncoder.setBindGroup(0, cameraBindGroup);
             //this.gpu.rootCameralayout
             rootLayout.renderPipeLines.forEach(rp => {

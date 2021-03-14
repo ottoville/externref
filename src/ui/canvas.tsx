@@ -71,6 +71,7 @@ export class Canvas extends TerraCompoment {
     msPerFrame = 0;
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
+    BindGroupCanvas!: BindGroupTwoBinding;
     async initalize(): Promise<[Scene, ArcRotateCamera]> {
         const adapter = await window.navigator.gpu!.requestAdapter();
         this.progress = 4;
@@ -83,10 +84,6 @@ export class Canvas extends TerraCompoment {
         if (!device)
             throw ('no GPU device');
         const gpu = new GPU(this.canvasElem, device, (gpu) => {
-
-
-
-
             const renderpassCanvas = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                 (w, h) => {
                     this.canvasElem.width = w;
@@ -98,7 +95,7 @@ export class Canvas extends TerraCompoment {
                 (w, h) => {
                     return [w, h]
                 });
-            renderpassScreen.addSwapChain();
+            const screenTarget = renderpassScreen.addSwapChain([GPUTextureUsage.SAMPLED]);
 
             const gRenderTarget = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
            // const gRenderTarget2 = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
@@ -113,6 +110,18 @@ export class Canvas extends TerraCompoment {
 
             const renderpassWater = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
             new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            
+
+            this.BindGroupCanvas = gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
+                {
+                    binding: 0,
+                    resource: gpu.canvasSampler
+                },
+                {
+                    binding: 1,
+                    resource: screenTarget.view //this.renderPassWater.renderTargets[0]!.view
+                });
+            
             return [
                 renderpassCanvas,
                 renderpassScreen,
@@ -367,7 +376,7 @@ export class Canvas extends TerraCompoment {
             });
 
 
-            gpu.renderPassCanvas.render(renderEncoder, gpu.BindGroupCanvas, gpu.rootLayout);
+            gpu.renderPassCanvas.render(renderEncoder, me.BindGroupCanvas, gpu.rootLayout);
 
             gpu.pendingCommandBuffers.push(renderEncoder.finish())
             gpu.device.queue.submit(gpu.pendingCommandBuffers);
