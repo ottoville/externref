@@ -13,7 +13,7 @@ interface RenderPipelineVariant2 {
 }
 export class RenderPass {
     cameras: Set<TerraCamera> = new Set();
-    swapChain: GPUSwapChain | undefined;
+    
 
     scenes: Set<Scene> = new Set();
     depthTextureView: GPUTextureView | undefined
@@ -23,6 +23,7 @@ export class RenderPass {
     colorFormats: GPUTextureFormat[] = [];
     renderTargets: RenderTarget[] = []
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
+    swapChainAndTarget?: [GPUSwapChain, RenderTarget];
 
     constructor(
         public gpu: GPU,
@@ -81,21 +82,26 @@ export class RenderPass {
         colorAttachments: undefined,
         depthStencilAttachment: undefined
     }
+    addSwapChain() {
+        this.swapChainAndTarget = [this.gpu.context.configureSwapChain({
+            device: this.gpu.device,
+            format: "bgra8unorm",
+            usage: GPUTextureUsage.RENDER_ATTACHMENT
+        }),
+        new RenderTarget(this, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT,this.sampleCount)];
+    }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const colorAttachments: GPURenderPassColorAttachmentDescriptor[] = []
 
-        if (this.swapChain) {
-            const swapTarget=this.renderTargets[0]
-            if(swapTarget) {
+        if (this.swapChainAndTarget) {
                 colorAttachments.push(this.sampleCount > 1 ? {
-                    attachment: swapTarget.view,
-                    resolveTarget: this.swapChain.getCurrentTexture().createView(),
+                    attachment: this.swapChainAndTarget[1].view,
+                    resolveTarget: this.swapChainAndTarget[0].getCurrentTexture().createView(),
                     loadValue: this.loadValue
                 } : {
-                    attachment: this.swapChain.getCurrentTexture().createView(),
+                    attachment: this.swapChainAndTarget[0].getCurrentTexture().createView(),
                     loadValue: this.loadValue
                 })
-            }
             colorAttachments.push(...this.renderTargets.slice(1).map(rt => {
                 return {
                     attachment: rt.view,

@@ -98,16 +98,9 @@ export class Canvas extends TerraCompoment {
                 (w, h) => {
                     return [w, h]
                 });
+            renderpassScreen.addSwapChain();
 
-            renderpassScreen.swapChain = gpu.context.configureSwapChain({
-                device: gpu.device,
-                format: "bgra8unorm",
-                usage: GPUTextureUsage.RENDER_ATTACHMENT
-            });
-           // new RenderTarget(renderpassCanvas, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT,4);
-
-
-            const gRenderTarget = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,4);
+            const gRenderTarget = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
            // const gRenderTarget2 = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             //@ts-ignore
             window.printRenderTarget = () => {
