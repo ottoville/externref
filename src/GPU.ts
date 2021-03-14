@@ -188,7 +188,7 @@ export class GPU {
     renderPassScreen: RenderPass
     renderPassWater: RenderPass
     renderPassCanvas: RenderPass;
-
+    renderPasses:Set<RenderPass>;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPass, RenderPass, RenderPass]) {
         const context = canvas.getContext('gpupresent');
         if (!context)
@@ -197,7 +197,9 @@ export class GPU {
         //Scene layoyt is iterated manually so remove it not to iterate it twise.
         this.rootCameralayout.subBindGroups.delete(this.rootSceneLayout);
 
-        [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = createRenderPasses(this);
+        const renderPasses=createRenderPasses(this);
+        this.renderPasses=new Set(renderPasses);
+        [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
 
         
         

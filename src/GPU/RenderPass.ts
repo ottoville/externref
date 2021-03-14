@@ -82,10 +82,9 @@ export class RenderPass {
         colorAttachments: undefined,
         depthStencilAttachment: undefined
     }
-    addSwapChain(usages: [typeof GPUTextureUsage.SAMPLED]): RenderTarget<GPUTextureSampled>
-    addSwapChain(usages: GPUTextureUsageFlags[]): RenderTarget<GPUTexture>
+    addSwapChain(usages?: [typeof GPUTextureUsage.SAMPLED]): RenderTarget<GPUTextureSampled>
+    addSwapChain(usages?: GPUTextureUsageFlags[]): RenderTarget<GPUTexture>
     addSwapChain(usages: GPUTextureUsageFlags[] = [GPUTextureUsage.RENDER_ATTACHMENT]) {
-        //const rt = new RenderTarget(this, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT, this.sampleCount);
         const rt = this.addTarget("bgra8unorm", usages, this.sampleCount)
         this.swapChainAndTarget = [this.gpu.context.configureSwapChain({
             device: this.gpu.device,
