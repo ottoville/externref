@@ -17,6 +17,7 @@ import { Sea } from "../world/water.js";
 import { LazyEval } from "../LazyEval.js";
 import { Box } from "../GPU/Meshes/Box.js";
 import { Sun2 } from "../world/sun2.js";
+//@ts-ignore
 import { PositionNode, TerraNodeGPU } from "../TerraNode.js";
 import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
@@ -82,35 +83,39 @@ export class Canvas extends TerraCompoment {
         if (!device)
             throw ('no GPU device');
         const gpu = new GPU(this.canvasElem, device, (gpu) => {
-            const renderpassCanvas = new RenderPass(gpu, 4, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
+
+
+
+
+            const renderpassCanvas = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                 (w, h) => {
                     this.canvasElem.width = w;
                     this.canvasElem.height = h;
                     return [w, h]
                 });
             new RenderTarget(renderpassCanvas, "bgra8unorm");
-            const context = this.canvasElem.getContext('gpupresent');
-            if(!context)
-                throw('Unable to get webgpu context')
-            renderpassCanvas.swapChain = context.configureSwapChain({
-                device: gpu.device,
-                format: "bgra8unorm",
-                usage: GPUTextureUsage.RENDER_ATTACHMENT
-            });
-            const renderpassScreen = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
+            const renderpassScreen = new RenderPass(gpu, 4, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                 (w, h) => {
                     return [w, h]
                 });
 
-            const gRenderTarget = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-            const gRenderTarget2 = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            renderpassScreen.swapChain = gpu.context.configureSwapChain({
+                device: gpu.device,
+                format: "bgra8unorm",
+                usage: GPUTextureUsage.RENDER_ATTACHMENT
+            });
+           // new RenderTarget(renderpassCanvas, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT,4);
+
+
+            const gRenderTarget = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,4);
+           // const gRenderTarget2 = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             //@ts-ignore
             window.printRenderTarget = () => {
                 gRenderTarget.toBitmap()
             }
             //@ts-ignore
             window.printRenderTarget2 = () => {
-                gRenderTarget2.toBitmap()
+               // gRenderTarget2.toBitmap()
             }
 
             const renderpassWater = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
@@ -276,10 +281,6 @@ export class Canvas extends TerraCompoment {
         let resizeHandler = 0;
 
         const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen, gpu.renderPassWater]);
-        const canvasSize: {
-            width: number,
-            height: number
-        } = { width: 0, height: 0 }
 
         let curSecond = (Date.now() / 500) | 0;
         let framecount = 0;
@@ -291,7 +292,7 @@ export class Canvas extends TerraCompoment {
         if (!vertex || !fragment)
             throw ('Missing shader')
 
-
+        //@ts-ignore
         const canvasPipeline = gpu.rootLayout.addRenderPipeline({
             label: 'canvas',
             primitiveTopology: 'triangle-list',
@@ -308,9 +309,18 @@ export class Canvas extends TerraCompoment {
                 module: fragment,
                 entryPoint: "main"
             },
-        });
+        },() => {
+            console.log('refresh texture');
+            return [{
+            binding: 0,
+            resource: gpu.canvasSampler
+        },
+        {
+            binding: 1,
+            resource: gpu.renderPassScreen.renderTargets[0]!.view //this.renderPassWater.renderTargets[0]!.view
+        }]});
 
-        new TerraNodeGPU<DrawableSimple>(terraEngine,canvasPipeline,6,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]),node))
+        //new TerraNodeGPU<DrawableSimple>(terraEngine,canvasPipeline,6,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]),node))
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();
@@ -358,7 +368,7 @@ export class Canvas extends TerraCompoment {
 
             passEncoder.endPass();
 */
-            
+
             TerraCameras.forEach(camera => {
                 camera.render(renderEncoder)
             });
@@ -372,17 +382,28 @@ export class Canvas extends TerraCompoment {
             renderFrame = window.requestAnimationFrame(renderLoop);
 
         }
-
+        
+        const maxResolution= {
+            width: 1920,
+            height: 1080
+        }
         let ro = new window.ResizeObserver((entries) => {
             window.cancelAnimationFrame(renderFrame)
             clearTimeout(resizeHandler);
             resizeHandler = setTimeout(async () => {
-                canvasSize.width = entries[0]!.contentRect.width | 0;
-                canvasSize.height = entries[0]!.contentRect.height | 0;
-                renderPasses.forEach(renderpass => renderpass.onResize(canvasSize.width, canvasSize.height));
+                const aspectRatio = entries[0]!.contentRect.width / entries[0]!.contentRect.height
+                this.canvasElem.width = Math.min((entries[0]!.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
+                
+                this.canvasElem.height = this.canvasElem.width/aspectRatio
+                
+                if(this.canvasElem.height > maxResolution.height) {
+                    this.canvasElem.height=maxResolution.height;
+                    this.canvasElem.width = this.canvasElem.height*aspectRatio;
+                }
+
+                renderPasses.forEach(renderpass => renderpass.onResize(this.canvasElem.width, this.canvasElem.height));
                 gpu.onResizes.forEach(cb => cb());
-                //TODO: remove duplicate
-                const aspectRatio = (canvasSize.width * mainCamera.viewport.width) / (canvasSize.height * mainCamera.viewport.height);
+
                 //Create projection matrix
                 //min view distance
                 let n = 1;
@@ -406,7 +427,7 @@ export class Canvas extends TerraCompoment {
                 renderFrame = window.requestAnimationFrame(renderLoop);
             }, 500)
         });
-        ro.observe(this.canvasElem)
+        ro.observe(this.canvasElem.parentElement!)
 
 
         this.progress = 20;
