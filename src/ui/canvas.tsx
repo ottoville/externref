@@ -86,17 +86,15 @@ export class Canvas extends TerraCompoment {
         const gpu = new GPU(this.canvasElem, device, (gpu) => {
             const renderpassCanvas = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                 (w, h) => {
-                    this.canvasElem.width = w;
-                    this.canvasElem.height = h;
                     return [w, h]
                 });
-            new RenderTarget(renderpassCanvas, "bgra8unorm");
-            const renderpassScreen = new RenderPass(gpu, 4, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
+           new RenderTarget(renderpassCanvas, "bgra8unorm");
+            const renderpassScreen = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                 (w, h) => {
                     return [w, h]
                 });
-            const screenTarget = renderpassScreen.addSwapChain([GPUTextureUsage.SAMPLED]);
-
+                renderpassScreen.addSwapChain();
+            //new RenderTarget(renderpassScreen, "bgra8unorm");
             const gRenderTarget = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
            // const gRenderTarget2 = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             //@ts-ignore
@@ -109,7 +107,7 @@ export class Canvas extends TerraCompoment {
             }
 
             const renderpassWater = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
-            new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            const waterTexture=new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             
 
             this.BindGroupCanvas = gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
@@ -119,7 +117,7 @@ export class Canvas extends TerraCompoment {
                 },
                 {
                     binding: 1,
-                    resource: screenTarget.view //this.renderPassWater.renderTargets[0]!.view
+                    resource: waterTexture.view //this.renderPassWater.renderTargets[0]!.view
                 });
             
             return [
@@ -282,8 +280,6 @@ export class Canvas extends TerraCompoment {
         let renderFrame: number = 0;
         let resizeHandler = 0;
 
-        const renderPasses: Set<RenderPass> = new Set([gpu.renderPassScreen, gpu.renderPassWater]);
-
         let curSecond = (Date.now() / 500) | 0;
         let framecount = 0;
         let msPerFrame = 0;
@@ -311,7 +307,7 @@ export class Canvas extends TerraCompoment {
                 module: fragment,
                 entryPoint: "main"
             },
-        },() => {
+        }/*,() => {
             console.log('refresh texture');
             return [{
             binding: 0,
@@ -319,10 +315,10 @@ export class Canvas extends TerraCompoment {
         },
         {
             binding: 1,
-            resource: gpu.renderPassScreen.renderTargets[0]!.view //this.renderPassWater.renderTargets[0]!.view
-        }]});
+            resource: gpu.renderPassWater.renderTargets[0]!.view //this.renderPassWater.renderTargets[0]!.view
+        }]}*/);
 
-        //new TerraNodeGPU<DrawableSimple>(terraEngine,canvasPipeline,6,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]),node))
+        new TerraNodeGPU<DrawableSimple>(terraEngine,canvasPipeline,6,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]),node))
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();
@@ -403,8 +399,13 @@ export class Canvas extends TerraCompoment {
                     this.canvasElem.width = this.canvasElem.height*aspectRatio;
                 }
 
-                renderPasses.forEach(renderpass => renderpass.onResize(this.canvasElem.width, this.canvasElem.height));
-                gpu.onResizes.forEach(cb => cb());
+               gpu.renderPasses.forEach(renderPass => {
+                    renderPass.onResize(this.canvasElem.width, this.canvasElem.height)
+                    renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = renderPass.decoratePipeline(rp.renderPipelineDescriptor))
+                    renderPass.bundles.length = 0;
+               })
+
+
 
                 //Create projection matrix
                 //min view distance

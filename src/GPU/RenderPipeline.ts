@@ -11,16 +11,9 @@ export class RenderPipeline {
     useTime = true;
 
     dynamicBindGroupOffset: number[] = [];
-    bindGroups: Set<GPUBindGroup> | null = null;
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
 
-    constructor(public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates'>, public bindgroupdrawable: BindGroupLayout, createBindGroup?: (rp: RenderPipeline) => void) {
-        if (createBindGroup) {
-            createBindGroup(this);
-            bindgroupdrawable.gpuscene.onResizes.add(() => {
-                createBindGroup(this);
-            })
-        }
+    constructor(public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates'>, public bindgroupdrawable: BindGroupLayout, private createBindGroups?: () => Set<GPUBindGroup>) {
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
         renderPipelineDescriptor.vertexState && renderPipelineDescriptor.vertexState.indexFormat && (this.#GPUIndexFormat = renderPipelineDescriptor.vertexState.indexFormat);
         if (!renderPipelineDescriptor.rasterizationState) {
@@ -45,10 +38,10 @@ export class RenderPipeline {
             return 0;
 
         renderPassEncoder.setPipeline(variant.renderpipeline);
-        variant.renderpipeline.label && console.log('set Pipeline ', variant.renderpipeline.label)
-        if (this.bindGroups) {
-            this.bindGroups.forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
-        }
+        //variant.renderpipeline.label && console.log('set Pipeline ', variant.renderpipeline.label)
+        if(this.createBindGroups) {
+            this.createBindGroups().forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
+         }
         drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart));
         return drawables.size;
     }

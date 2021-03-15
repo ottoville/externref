@@ -42,10 +42,11 @@ function getRenderPipeline(scene: Scene) {
                 resource: sampler
             },
             {
-                binding: 1, 
+                binding: 1,
                 resource: scene.gpu.renderPassWater.renderTargets[0]!.view
             }
         ]
+
     );
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline
@@ -55,6 +56,6 @@ function getRenderPipeline(scene: Scene) {
 export class Sea extends BoundableNode<DrawableSimple> {
     worldPosition = undefined
     constructor(scene: Scene) {
-        super(scene, getRenderPipeline(scene),4,(node) =>node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node), undefined, undefined, true); //48
+        super(scene, getRenderPipeline(scene), 4, (node) => node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node), undefined, undefined, true); //48
     }
 }

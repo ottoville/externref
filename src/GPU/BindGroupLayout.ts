@@ -66,15 +66,13 @@ export class DynamicBindGroupLayout<T extends number[]> extends BindGroupLayout 
 }
 export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends BindGroupLayout {
     addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'colorStates'>, bindGroups?: () => T): RenderPipeline => {
-        return super.addRenderPipeline(renderPipeline, (rp:RenderPipeline) => {
-            if (!bindGroups)
-                return;
-            rp.bindGroups = new Set([this.gpuscene.device.createBindGroup(
+        return super.addRenderPipeline(renderPipeline, bindGroups ? () : Set<GPUBindGroup> | undefined => {
+            return new Set([this.gpuscene.device.createBindGroup(
                 {
                     layout: this.bindGroupLayout,
                     entries: bindGroups()
                 }
             )])
-        });
+        } : undefined);
     }
 }
