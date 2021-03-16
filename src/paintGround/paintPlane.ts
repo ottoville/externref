@@ -17,7 +17,7 @@ import type { Engine } from "engine.js";
 
 class PlaneMesh extends TerraNodeGPU<DrawableIndexed> {
     constructor(engine:Engine, renderPipeline: RenderPipeline, verticesCount:number) {
-        super(engine,renderPipeline,verticesCount, () => renderPipeline.addDrawableIndexed(undefined, new Set([engine.gpu.renderPassScreen]), this, undefined, 0, 1, 0))
+        super(engine,renderPipeline,verticesCount, (node) => renderPipeline.addDrawableIndexed(undefined, new Set([engine.gpu.renderPassScreen]), node, undefined, 0, 1, 0))
     }
 }
 
@@ -64,7 +64,7 @@ function getRenderPipeline(scene: Scene, ground: Terrain):RenderPipeline{
                     }]
                 }]
         },
-    }, [0]);
+    });
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline
 }

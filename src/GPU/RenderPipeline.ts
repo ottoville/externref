@@ -12,8 +12,8 @@ export class RenderPipeline {
 
     dynamicBindGroupOffset: number[] = [];
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
-
-    constructor(public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates'>, public bindgroupdrawable: BindGroupLayout, private createBindGroups?: () => Set<GPUBindGroup>) {
+    public createBindGroups?: () => Set<GPUBindGroup>
+    constructor(public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates'>, public bindgroupdrawable: BindGroupLayout) {
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
         renderPipelineDescriptor.vertexState && renderPipelineDescriptor.vertexState.indexFormat && (this.#GPUIndexFormat = renderPipelineDescriptor.vertexState.indexFormat);
         if (!renderPipelineDescriptor.rasterizationState) {

@@ -49,7 +49,7 @@ function getRenderPipeline(engine: Engine) {
         vertexState: {
             indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
         }
-    }, [0]);
+    });
     renderPipelines.set(engine.gpu, renderPipeline);
     return renderPipeline
 }

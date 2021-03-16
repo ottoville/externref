@@ -50,7 +50,7 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : RenderPipeline {
         vertexState: {
             indexFormat: 'uint32'
         }
-    }, [0])
+    })
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline
 }
