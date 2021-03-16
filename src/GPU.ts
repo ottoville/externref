@@ -126,11 +126,8 @@ export class GPU {
     //BindGroupCanvas: BindGroupTwoBinding;
 
     addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupLayout
-    addBindGroup(bindgroup: (BindGroupOneBinding), isDynamic: boolean): DynamicBindGroupLayout<[number]>
-    addBindGroup(bindgroup: (BindGroupTwoBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number]>
-    addBindGroup(bindgroup: (BindGroupThreeBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number]>
-    addBindGroup(bindgroup: (BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupLayout<[number, number, number, number]>
-    addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): BindGroupLayout | DynamicBindGroupLayout<number[]> {
+    addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupLayout
+    addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): BindGroupLayout | DynamicBindGroupLayout {
         const bglayout = this.GPUBindGroupLayouts.get(bindgroup);
         if (!bglayout)
             throw ('Bindgroup layout not found from weakmap');
@@ -400,7 +397,6 @@ export class GPU {
         });
         return pipeline
     }
-    properties = 0
     readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
     pendingCommandBuffers: GPUCommandBuffer[] = [];
     drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: BindGroupLayout, renderPass: RenderPass, index: number, scene?: Scene) {
@@ -417,7 +413,6 @@ export class GPU {
                     renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup);
                 }
                 bgt.renderPipeLines.forEach(m => {
-                    this.properties |= m.properties;
                     drawedMeshes += m.draw(renderPassEncoder, renderPass, index, scene)
                 });
             }

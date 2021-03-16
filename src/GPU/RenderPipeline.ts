@@ -5,10 +5,6 @@ import type { RenderPass } from "./RenderPass.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 
 export class RenderPipeline {
-    static BindedTerrains: Set<RenderPipeline> = new Set();
-
-    properties: number = 0;
-    useTime = true;
 
     dynamicBindGroupOffset: number[] = [];
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
