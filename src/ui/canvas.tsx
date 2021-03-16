@@ -80,9 +80,17 @@ export class Canvas extends TerraCompoment {
             throw ('No adapter');
         const device = await adapter.requestDevice();
         this.progress = 5;
-
         if (!device)
             throw ('no GPU device');
+
+
+
+        const canvasSampler = device.createSampler({
+            magFilter: "linear",
+            minFilter: "linear",
+        });
+    
+
         const gpu = new GPU(this.canvasElem, device, (gpu) => {
             const renderpassCanvas = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                 (w, h) => {
@@ -107,17 +115,17 @@ export class Canvas extends TerraCompoment {
             }
 
             const renderpassWater = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
-            const waterTexture=new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             
 
             this.BindGroupCanvas = gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
                 {
                     binding: 0,
-                    resource: gpu.canvasSampler
+                    resource: canvasSampler
                 },
                 {
                     binding: 1,
-                    resource: waterTexture.view //this.renderPassWater.renderTargets[0]!.view
+                    resource: gRenderTarget.view //this.renderPassWater.renderTargets[0]!.view
                 });
             
             return [
@@ -408,11 +416,11 @@ export class Canvas extends TerraCompoment {
                this.BindGroupCanvas = gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
                 {
                     binding: 0,
-                    resource: gpu.canvasSampler
+                    resource: canvasSampler
                 },
                 {
                     binding: 1,
-                    resource: gpu.renderPassWater.renderTargets[0]!.view
+                    resource: gpu.renderPassScreen.renderTargets[1]!.view
                 });
 
 

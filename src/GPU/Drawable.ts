@@ -63,9 +63,6 @@ export abstract class Drawable {
             )]);
             this.clearBundles();
         }
-        this.renderPipeline.bindgroupdrawable.gpuscene.onResizes.add(() => {
-            setBuffer();
-        });
         setBuffer();
     }
     protected clearBundles() {

@@ -9,7 +9,7 @@ export class RenderTarget<T extends GPUTexture> {
 
     createTexture() {
         this.lastSize = this.renderPass.size;
-        //this.texture?.destroy();
+        this.texture?.destroy();
         const usage: [number] = [this.usage];
         if (this.debug)
             usage.push(GPUTextureUsage.COPY_SRC);

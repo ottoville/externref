@@ -12,8 +12,8 @@
 
 [[stage(fragment)]]
 fn main() -> void {
-  //outColor = textureSample(myTexture, mySampler, position.xy);
-  outColor = textureSample(myTexture, mySampler, uv);
+  outColor = textureSample(myTexture, mySampler, position.xy);
+  //outColor = textureSample(myTexture, mySampler, uv);
   //outColor = vec4<f32>(position.xy,0.0,1.0);
   //outColor = vec4<f32>(1.0,1.0,0.0,1.0);
   //outColor = vec4<f32>(color.xyz,1.0);
