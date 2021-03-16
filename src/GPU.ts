@@ -1,6 +1,6 @@
 ﻿import { TerraNodeGPU } from "./TerraNode.js";
 import type { RenderPass } from "./GPU/RenderPass.js";
-import { BindGroupLayout, DynamicBindGroupLayout } from "./GPU/BindGroupLayout.js";
+import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import type { Scene } from "./Scene.js";
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
@@ -123,18 +123,6 @@ export class GPU {
             }]
     });
     context: GPUCanvasContext;
-    //BindGroupCanvas: BindGroupTwoBinding;
-
-    addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): BindGroupLayout
-    addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic: boolean): DynamicBindGroupLayout
-    addBindGroup(bindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic?: boolean): BindGroupLayout | DynamicBindGroupLayout {
-        const bglayout = this.GPUBindGroupLayouts.get(bindgroup);
-        if (!bglayout)
-            throw ('Bindgroup layout not found from weakmap');
-        if (!isDynamic)
-            return new BindGroupLayout(this, bglayout, undefined, bindgroup);
-        return new DynamicBindGroupLayout(this, bglayout, undefined, bindgroup, isDynamic);
-    }
 
     createBindGroupLayout(entry: GPUBindGroupLayoutEntry): BindGroupLayoutOneBinding
     createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutTwoBinding

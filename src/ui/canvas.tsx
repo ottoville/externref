@@ -88,13 +88,13 @@ export class Canvas extends TerraCompoment {
                 (w, h) => {
                     return [w, h]
                 });
-           new RenderTarget(renderpassCanvas, "bgra8unorm");
+           //new RenderTarget(renderpassCanvas, "bgra8unorm");
             const renderpassScreen = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
                 (w, h) => {
                     return [w, h]
                 });
-                renderpassScreen.addSwapChain();
-            //new RenderTarget(renderpassScreen, "bgra8unorm");
+                renderpassCanvas.addSwapChain();
+            new RenderTarget(renderpassScreen, "bgra8unorm");
             const gRenderTarget = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
            // const gRenderTarget2 = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             //@ts-ignore
@@ -405,6 +405,15 @@ export class Canvas extends TerraCompoment {
                     renderPass.bundles.length = 0;
                })
 
+               this.BindGroupCanvas = gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
+                {
+                    binding: 0,
+                    resource: gpu.canvasSampler
+                },
+                {
+                    binding: 1,
+                    resource: gpu.renderPassWater.renderTargets[0]!.view
+                });
 
 
                 //Create projection matrix
