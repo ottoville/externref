@@ -20,6 +20,7 @@ interface GPUBindGroupLayoutEntryUniform extends Omit<GPUBindGroupLayoutEntry, '
 type bindings<T> = T extends BindGroupLayoutOneBinding ? [GPUBindGroupEntry]
     : T extends BindGroupLayoutTwoBinding ? [GPUBindGroupEntry, GPUBindGroupEntry]
     : T extends BindGroupLayoutThreeBinding ? [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]
+    : T extends BindGroupLayoutFourBinding ? [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]
     : T extends BindGroupLayoutFiveBinding ? [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]
     : never;
 
@@ -76,10 +77,12 @@ interface BindGroupLayoutTwoBinding extends GPUBindGroupLayout {
     numBindings: 'two';
 }
 interface BindGroupLayoutThreeBinding extends GPUBindGroupLayout {
-    createBindGroup: (...entries: [GPUBindGroupEntry, GPUBindGroupEntry]) => GPUBindGroup;
+    createBindGroup: (...entries: [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]) => GPUBindGroup;
     numBindings: 'three';
 }
 interface BindGroupLayoutFourBinding extends GPUBindGroupLayout {
+    createBindGroup: (...entries: [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]) => GPUBindGroup;
+
     numBindings: 'four';
 }
 interface BindGroupLayoutFiveBinding extends GPUBindGroupLayout {

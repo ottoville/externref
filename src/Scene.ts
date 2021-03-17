@@ -12,11 +12,11 @@ export class Scene {
 
     boundables: Set<BoundableNode<DrawableDirect>> = new Set();
     lights;
-    positionBindGroupLightsTimeWGSL=this.gpu.rootSceneLayout.addChildLayout(this.gpu.BindGroupLayout);
-    lightsBindGroupTexture=this.gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
+    positionBindGroupLightsTimeWGSL = this.gpu.rootSceneLayout.addChildLayout(this.gpu.BindGroupLayout);
+    lightsBindGroupTexture = this.gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
-        sampler:{
+        sampler: {
 
         }
     }, {
@@ -28,14 +28,14 @@ export class Scene {
     }));
     ready?: Promise<any>;
 
-    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [number,Promise<any>?]) {
+    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [number, Promise<any>?]) {
         engine.scenes.set(name, this);
         TerraCameras.forEach(camera => {
             camera.renderPass.scenes.add(this);
         })
 
-        const [sunBufferOffsetBytes, groundAndSea ] = onRenderStart(this);
-        this.ready=groundAndSea;
+        const [sunBufferOffsetBytes, groundAndSea] = onRenderStart(this);
+        this.ready = groundAndSea;
         this.lights = new Light(gpu, sunBufferOffsetBytes);
     }
 

@@ -22,7 +22,32 @@ function getRenderPipeline(scene: Scene) {
         magFilter: "linear",
         minFilter: "linear",
     });
-    renderPipeline = scene.lightsBindGroupTexture.addRenderPipeline({
+    const lightsBindGroupTextureWater = scene.gpu.rootSceneLayout.addChildLayout(scene.gpu.createBindGroupLayout({
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        sampler: {
+
+        }
+    }, {
+        binding: 1,
+        visibility: GPUShaderStage.FRAGMENT,
+        texture: {
+
+        }
+    }, {
+        binding: 2,
+        visibility: GPUShaderStage.FRAGMENT,
+        texture: {
+
+        }
+    }, {
+        binding: 3,
+        visibility: GPUShaderStage.FRAGMENT,
+        texture: {
+
+        }
+    }));
+    renderPipeline = lightsBindGroupTextureWater.addRenderPipeline({
         primitiveTopology: 'triangle-strip',
         vertexStage: {
             module: vertex,
@@ -43,7 +68,15 @@ function getRenderPipeline(scene: Scene) {
             },
             {
                 binding: 1,
-                resource: scene.gpu.renderPassWater.renderTargets[0]!.view
+                resource: scene.gpu.renderPassWater.renderTargets[1]!.view
+            },
+            {
+                binding: 2,
+                resource: scene.gpu.renderPassWater.renderTargets[2]!.view
+            },
+            {
+                binding: 3,
+                resource: scene.gpu.renderPassWater.renderTargets[3]!.view
             }
         ]
 

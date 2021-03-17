@@ -1,6 +1,7 @@
 [[location(0)]] var<out> outColor : vec4<f32>;
 [[location(1)]] var<out> outNormals : vec4<f32>;
 [[location(2)]] var<out> outPositions : vec4<f32>;
+[[location(3)]] var<out> outDiffuse : vec4<f32>;
 
 [[binding(0), set(2)]] var<uniform_constant> mySampler: sampler;
 [[binding(1), set(2)]] var<uniform_constant> myTexture: texture_2d<f32>;
@@ -17,5 +18,6 @@ fn main() -> void {
   outColor.w=1.0;
   outNormals=vec4<f32>(normal.xyz, 1.0);
   outPositions=vec4<f32>(position.xyz, 1.0);
+  outDiffuse = textureSample(myTexture, mySampler, v_uv);
   return;
 }

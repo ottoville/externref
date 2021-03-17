@@ -13,7 +13,7 @@ export interface DrawableLikeClass extends DrawableLike {
 export abstract class Drawable {
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     dynamicBuffers: Map<GPUBindGroup, number> = new Map();
-    #staticBuffers: Set<GPUBindGroup> = new Set()
+    staticBuffers?: () => GPUBindGroup
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
     #scene?: Scene;
     constructor(
@@ -54,16 +54,13 @@ export abstract class Drawable {
         this.clearBundles();
     }
     setStaticBuffer(setBuffers: () => GPUBindGroupEntry[]) {
-        const setBuffer = () => {
-            this.#staticBuffers = new Set([this.renderPipeline.bindgroupdrawable.gpuscene.device.createBindGroup(
-                {
-                    layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout,
-                    entries: setBuffers()
-                }
-            )]);
-            this.clearBundles();
-        }
-        setBuffer();
+        this.staticBuffers = () => this.renderPipeline.bindgroupdrawable.gpuscene.device.createBindGroup(
+            {
+                layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout,
+                entries: setBuffers()
+            }
+        );
+        this.clearBundles();
     }
     protected clearBundles() {
         this.renderPasses.forEach(rp => rp.bundles.length = 0);
@@ -98,7 +95,8 @@ export abstract class Drawable {
     }
     abstract render: (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => void
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number) {
-        this.#staticBuffers.forEach((bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup));
+        this.staticBuffers &&  renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers())
+        //this.#staticBuffers.forEach((bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup()));
         this.dynamicBuffers.forEach((offset, bindgroup) => {
             renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset]);
         })
@@ -107,7 +105,7 @@ export abstract class Drawable {
     }
 }
 export abstract class DrawableDirect extends Drawable {
-    #instanceCount: number;
+    #instanceCount: number;    
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,

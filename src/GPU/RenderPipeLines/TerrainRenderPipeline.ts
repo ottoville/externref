@@ -5,6 +5,8 @@ import type { RenderPipeline } from "../RenderPipeline.js";
 import type { DrawableIndexed } from "../Drawable.js";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
+
+
 function TerrainRenderPipeline(scene: Scene) {
     const renderPipeline = renderPipelines.get(scene.gpu);
     if (renderPipeline)
@@ -13,6 +15,7 @@ function TerrainRenderPipeline(scene: Scene) {
     const fragment = scene.engine.gpu.shaderModules.get('ground.frag.wgsl')
     if (!vertex || !fragment)
         throw ('Missing shader terrain')
+
 
     const renderPipeLine = scene.lightsBindGroupTexture.addRenderPipeline({
         label: 'terrain',
@@ -61,10 +64,11 @@ function TerrainRenderPipeline(scene: Scene) {
     return renderPipeLine;
 }
 export class TerrainMesh extends BoundableNode<DrawableIndexed> {
-    #textureview: GPUTextureView
-    sampler: GPUSampler;
+    sampler=this.engine.gpu.device.createSampler({
+        magFilter: "linear",
+        minFilter: "linear",
+    })
     set textureView(textureview: GPUTextureView) {
-        this.#textureview = textureview;
         this.Drawable.setStaticBuffer(() => {
             return [
                 {
@@ -73,7 +77,7 @@ export class TerrainMesh extends BoundableNode<DrawableIndexed> {
                 },
                 {
                     binding: 1,
-                    resource: this.#textureview
+                    resource: textureview
                 }
             ]
         });
@@ -88,11 +92,6 @@ export class TerrainMesh extends BoundableNode<DrawableIndexed> {
         verticesPositionStride = 3
     ) {
         super(scene, TerrainRenderPipeline(scene), positionsCount,(node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), node, undefined, 0, 1), verticesPositionStride, indicesView);
-        this.sampler = scene.gpu.device.createSampler({
-            magFilter: "linear",
-            minFilter: "linear",
-        });
-        this.#textureview = initialTexture;
         this.textureView=initialTexture;
         this.Drawable.setVertexBuffer(0, this.vBuffer);
         this.Drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');

@@ -103,19 +103,31 @@ export class Canvas extends TerraCompoment {
                 });
                 renderpassCanvas.addSwapChain();
             new RenderTarget(renderpassScreen, "bgra8unorm");
-            const gRenderTarget = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
-            const gRenderTarget2 = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            const gRenderTargetNormals = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+            const gRenderTargetPositions = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            const gRenderTargetDiffuse = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+            
             //@ts-ignore
             window.printRenderTarget = () => {
-                gRenderTarget.toBitmap()
+                gRenderTargetNormals.toBitmap()
             }
             //@ts-ignore
             window.printRenderTarget2 = () => {
-                gRenderTarget2.toBitmap()
+                gRenderTargetDiffuse.toBitmap()
             }
 
             const renderpassWater = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
             new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+
+            //@ts-ignore
+            const gRenderTargetNormalsWater = new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+            //@ts-ignore
+            const gRenderTargetPositionsWater = new RenderTarget(renderpassWater, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            //@ts-ignore
+            const gRenderTargetDiffuseWater = new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+
+            
+            
             
 
             this.BindGroupCanvas = () => gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
@@ -125,11 +137,15 @@ export class Canvas extends TerraCompoment {
                 },
                 {
                     binding: 1,
-                    resource: gRenderTarget.view
+                    resource: gRenderTargetNormals.view
                 },
                 {
                     binding: 2,
-                    resource: gRenderTarget2.view
+                    resource: gRenderTargetPositions.view
+                },
+                {
+                    binding: 3,
+                    resource: gRenderTargetDiffuse.view
                 });
             
             return [

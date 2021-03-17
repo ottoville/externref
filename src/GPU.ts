@@ -74,6 +74,13 @@ export class GPU {
             texture: {
 
             }
+        },
+        {
+            binding: 3,
+            visibility: GPUShaderStage.FRAGMENT,
+            texture: {
+
+            }
         });
 
 
@@ -104,6 +111,7 @@ export class GPU {
     createBindGroupLayout(entry: GPUBindGroupLayoutEntry): BindGroupLayoutOneBinding
     createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutTwoBinding
     createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutThreeBinding
+    createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutFourBinding
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(...entries: T): TerraBindGroupLayout {
         const layout = this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout;
         layout.createBindGroup = (...entries: GPUBindGroupEntry[]) => {
