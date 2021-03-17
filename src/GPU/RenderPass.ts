@@ -30,7 +30,6 @@ export class RenderPass {
         public sampleCount: number = 1,
         depthStencil = false,
         public size: { width: number, height: number },
-        private loadValue: GPULoadOp | GPUColor,
         private _onResize: (width: number, height: number) => [number, number],
         private usage: number = 0) {
         if (depthStencil) {
@@ -82,10 +81,10 @@ export class RenderPass {
         colorAttachments: undefined,
         depthStencilAttachment: undefined
     }
-    addSwapChain(usages?: [typeof GPUTextureUsage.SAMPLED]): RenderTarget<GPUTextureSampled>
-    addSwapChain(usages?: GPUTextureUsageFlags[]): RenderTarget<GPUTexture>
-    addSwapChain(usages: GPUTextureUsageFlags[] = [GPUTextureUsage.RENDER_ATTACHMENT]) {
-        const rt = this.addTarget("bgra8unorm", usages, this.sampleCount)
+    addSwapChain(loadValue: GPULoadOp | GPUColor,usages?: [typeof GPUTextureUsage.SAMPLED]): RenderTarget<GPUTextureSampled>
+    addSwapChain(loadValue: GPULoadOp | GPUColor,usages?: GPUTextureUsageFlags[]): RenderTarget<GPUTexture>
+    addSwapChain(loadValue: GPULoadOp | GPUColor,usages: GPUTextureUsageFlags[] = [GPUTextureUsage.RENDER_ATTACHMENT]) {
+        const rt = this.addTarget("bgra8unorm", usages,loadValue, this.sampleCount)
         this.swapChainAndTarget = [this.gpu.context.configureSwapChain({
             device: this.gpu.device,
             format: "bgra8unorm",
@@ -94,11 +93,11 @@ export class RenderPass {
             rt];
         return rt;
     }
-    addTarget(format: GPUTextureFormat, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount: number): RenderTarget<GPUTextureSampled>
-    addTarget(format: GPUTextureFormat, usages: GPUTextureUsageFlags[], sampleCount: number): RenderTarget<GPUTexture>
-    addTarget(format: GPUTextureFormat, usages: GPUTextureUsageFlags[], sampleCount = 1): RenderTarget<GPUTexture> {
+    addTarget(format: GPUTextureFormat, usages: [typeof GPUTextureUsage.SAMPLED],loadValue: GPULoadOp | GPUColor, sampleCount: number): RenderTarget<GPUTextureSampled>
+    addTarget(format: GPUTextureFormat, usages: GPUTextureUsageFlags[],loadValue: GPULoadOp | GPUColor, sampleCount: number): RenderTarget<GPUTexture>
+    addTarget(format: GPUTextureFormat, usages: GPUTextureUsageFlags[],loadValue: GPULoadOp | GPUColor, sampleCount = 1): RenderTarget<GPUTexture> {
         const usage = usages.reduce((prev, curr) => prev | curr, GPUTextureUsage.RENDER_ATTACHMENT);
-        return new RenderTarget(this, format, usage, sampleCount)
+        return new RenderTarget(this, format, loadValue, usage, sampleCount)
     }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const colorAttachments: GPURenderPassColorAttachmentDescriptor[] = []
@@ -107,10 +106,10 @@ export class RenderPass {
             colorAttachments.push(this.sampleCount > 1 ? {
                 attachment: this.swapChainAndTarget[1].view,
                 resolveTarget: this.swapChainAndTarget[0].getCurrentTexture().createView(),
-                loadValue: this.loadValue
+                loadValue: this.swapChainAndTarget[1].loadValue
             } : {
                 attachment: this.swapChainAndTarget[0].getCurrentTexture().createView(),
-                loadValue: this.loadValue
+                loadValue: this.swapChainAndTarget[1].loadValue
             })
             colorAttachments.push(...this.renderTargets.slice(1).map(rt => {
                 return {
@@ -123,7 +122,7 @@ export class RenderPass {
             colorAttachments.push(...this.renderTargets.map(rt => {
                 return {
                     attachment: rt.view,
-                    loadValue: this.loadValue,
+                    loadValue: rt.loadValue,
                     storeOp: "store" as const,
                 }
             }))

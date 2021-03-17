@@ -25,6 +25,7 @@ export class RenderTarget<T extends GPUTexture> {
     constructor(
         public renderPass: RenderPass,
         public format: GPUTextureFormat,
+        public loadValue: GPULoadOp | GPUColor,
         public usage: GPUTextureUsageFlags = GPUTextureUsage.RENDER_ATTACHMENT,
         private sampleCount = 1) {
 

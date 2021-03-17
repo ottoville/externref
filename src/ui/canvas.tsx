@@ -92,20 +92,20 @@ export class Canvas extends TerraCompoment {
     
 
         const gpu = new GPU(this.canvasElem, device, (gpu) => {
-            const renderpassCanvas = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
+            const renderpassCanvas = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height },
                 (w, h) => {
                     return [w, h]
                 });
            //new RenderTarget(renderpassCanvas, "bgra8unorm");
-            const renderpassScreen = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
+            const renderpassScreen = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height },
                 (w, h) => {
                     return [w, h]
                 });
-                renderpassCanvas.addSwapChain();
-            new RenderTarget(renderpassScreen, "bgra8unorm");
-            const gRenderTargetNormals = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
-            const gRenderTargetPositions = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-            const gRenderTargetDiffuse = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+                renderpassCanvas.addSwapChain({ r: 0.53, g: 0.8, b: 0.92, a: 1.0 });
+           // new RenderTarget(renderpassScreen, "bgra8unorm");
+            const gRenderTargetNormals = new RenderTarget(renderpassScreen, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+            const gRenderTargetPositions = new RenderTarget(renderpassScreen, "rgba32float",{ r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            const gRenderTargetDiffuse = new RenderTarget(renderpassScreen, "bgra8unorm",{ r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
             
             //@ts-ignore
             window.printRenderTarget = () => {
@@ -115,16 +115,15 @@ export class Canvas extends TerraCompoment {
             window.printRenderTarget2 = () => {
                 gRenderTargetDiffuse.toBitmap()
             }
+            //water color { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }
+            const renderpassWater = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
 
-            const renderpassWater = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
-            new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-
-            //@ts-ignore
-            const gRenderTargetNormalsWater = new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
-            //@ts-ignore
-            const gRenderTargetPositionsWater = new RenderTarget(renderpassWater, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-            //@ts-ignore
-            const gRenderTargetDiffuseWater = new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+            //Normals
+            new RenderTarget(renderpassWater, "bgra8unorm",{ r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+            //Position
+            new RenderTarget(renderpassWater, "rgba32float",{ r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            //Diffuse
+            new RenderTarget(renderpassWater, "bgra8unorm",{ r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
 
             
             
