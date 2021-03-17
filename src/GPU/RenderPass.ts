@@ -16,7 +16,7 @@ export class RenderPass {
 
 
     scenes: Set<Scene> = new Set();
-    depthTextureView: GPUTextureView | undefined
+    #depthTextureView: GPUTextureView | undefined
     #depthTexture: GPUTexture | undefined
 
     bundles: GPURenderBundle[] = [];
@@ -35,7 +35,7 @@ export class RenderPass {
         private usage: number = 0) {
         if (depthStencil) {
             this.#depthTexture = this.createTexture("depth24plus-stencil8");
-            this.depthTextureView = this.#depthTexture.createView();
+            this.#depthTextureView = this.#depthTexture.createView();
         }
     }
     decoratePipeline(partialRenderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates'>): GPURenderPipeline {
@@ -74,7 +74,7 @@ export class RenderPass {
         if (this.#depthTexture) {
             this.#depthTexture.destroy();
             this.#depthTexture = this.createTexture("depth24plus-stencil8");
-            this.depthTextureView = this.#depthTexture.createView();
+            this.#depthTextureView = this.#depthTexture.createView();
         }
         this.renderTargets.forEach(renderTarget => renderTarget.createTexture());
     }
@@ -128,9 +128,9 @@ export class RenderPass {
                 }
             }))
         }
-        if (this.depthTextureView) {
+        if (this.#depthTextureView) {
             this.#renderPassDescriptor.depthStencilAttachment = {
-                attachment: this.depthTextureView,
+                attachment: this.#depthTextureView,
                 depthLoadValue: 1,
                 depthStoreOp: "store",
                 stencilLoadValue: 0,

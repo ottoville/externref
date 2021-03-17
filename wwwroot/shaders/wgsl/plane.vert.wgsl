@@ -60,7 +60,7 @@ fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
 
 [[stage(vertex)]]
 fn main() -> void {
-    var worldPos:vec4<f32> = world.position * vec4<f32>(position.x, 0, position.y, 1.0);
+    var worldPos:vec4<f32> = world.position * vec4<f32>(position.x, 0.0, position.y, 1.0);
     worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz);
     Position = scene.viewProjection * worldPos;
     color = vec3<f32>(1.0,1.0,1.0);

@@ -24,7 +24,7 @@ const filt:vec3<f32> = vec3<f32>(0.3, 0.59, 0.11);
 [[stage(compute)]]
 fn main() -> void {
     var position: vec3<f32> = vec3<f32>(f32(GlobalInvocationID.x * img.size.x) / f32(img.subdivisions) - (f32(img.size.x) / 2.0),
-    0,
+    0.0,
     f32((img.subdivisions - GlobalInvocationID.y) * img.size.y) / f32(img.subdivisions) - (f32(img.size.y) / 2.0));
 
    var heightmap:vec2<i32> = vec2<i32>(
@@ -34,7 +34,7 @@ fn main() -> void {
    var pos:u32 = u32(heightmap.x + heightmap.y * i32(img.bufferSize.x));
   
    var pixel:u32= img.pixels[pos];
-   var normalized:vec3<f32> = (vec3<f32>(vec3<u32>(pixel, pixel, pixel) >> vec3<u32>(0,8,16) & vec3<u32>(0xff,0xff,0xff))) / vec3<f32>(255,255,255);
+   var normalized:vec3<f32> = (vec3<f32>(vec3<u32>(pixel, pixel, pixel) >> vec3<u32>(u32(0),u32(8),u32(16)) & vec3<u32>(u32(0xff),u32(0xff),u32(0xff)))) / vec3<f32>(255.0,255.0,255.0);
   
    var filtered:vec3<f32> = normalized * filt;
    var gradient:f32 = filtered.r + filtered.g + filtered.b;

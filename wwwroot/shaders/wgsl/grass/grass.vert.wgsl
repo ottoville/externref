@@ -87,7 +87,7 @@ fn main() -> void {
 
    var mulMat:mat3x3<f32> = MCurve * m;
    vertice = vertice * mulMat;
-   var normal:vec3<f32> = vec3<f32>(0,0,1) * mulMat;
+   var normal:vec3<f32> = vec3<f32>(0.0,0.0,1.0) * mulMat;
 
    var scaled:vec3<f32> =shape.x*vertice;
 
