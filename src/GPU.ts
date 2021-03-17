@@ -68,6 +68,12 @@ export class GPU {
             texture: {
 
             }
+        }, {
+            binding: 2,
+            visibility: GPUShaderStage.FRAGMENT,
+            texture: {
+
+            }
         });
 
 

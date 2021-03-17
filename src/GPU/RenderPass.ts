@@ -141,7 +141,7 @@ export class RenderPass {
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
 
-    render(renderEncoder: GPUCommandEncoder, cameraBindGroup: GPUBindGroup, rootLayout: BindGroupLayout) {
+    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | (() => GPUBindGroup), rootLayout: BindGroupLayout) {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             if (!this.bundles.length) {
@@ -150,7 +150,7 @@ export class RenderPass {
                     sampleCount: this.sampleCount,
                     depthStencilFormat: this.#depthTexture ? 'depth24plus-stencil8' : undefined
                 });
-                this.recordRenderPass(renderBundleEncoder, cameraBindGroup, rootLayout);
+                this.recordRenderPass(renderBundleEncoder, typeof(rootBindGroup)==='function'?rootBindGroup():rootBindGroup, rootLayout);
                 this.bundles.push(renderBundleEncoder.finish());
             }
             passEncoder.executeBundles(this.bundles);

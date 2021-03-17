@@ -71,7 +71,7 @@ export class Canvas extends TerraCompoment {
     msPerFrame = 0;
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
-    BindGroupCanvas!: BindGroupTwoBinding;
+    BindGroupCanvas!: () => BindGroupThreeBinding;
     async initalize(): Promise<[Scene, ArcRotateCamera]> {
         const adapter = await window.navigator.gpu!.requestAdapter();
         this.progress = 4;
@@ -104,28 +104,32 @@ export class Canvas extends TerraCompoment {
                 renderpassCanvas.addSwapChain();
             new RenderTarget(renderpassScreen, "bgra8unorm");
             const gRenderTarget = new RenderTarget(renderpassScreen, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
-           // const gRenderTarget2 = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            const gRenderTarget2 = new RenderTarget(renderpassScreen, "rgba32float", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             //@ts-ignore
             window.printRenderTarget = () => {
                 gRenderTarget.toBitmap()
             }
             //@ts-ignore
             window.printRenderTarget2 = () => {
-               // gRenderTarget2.toBitmap()
+                gRenderTarget2.toBitmap()
             }
 
             const renderpassWater = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height }, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
             new RenderTarget(renderpassWater, "bgra8unorm", GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             
 
-            this.BindGroupCanvas = gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
+            this.BindGroupCanvas = () => gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
                 {
                     binding: 0,
                     resource: canvasSampler
                 },
                 {
                     binding: 1,
-                    resource: gRenderTarget.view //this.renderPassWater.renderTargets[0]!.view
+                    resource: gRenderTarget.view
+                },
+                {
+                    binding: 2,
+                    resource: gRenderTarget2.view
                 });
             
             return [
@@ -412,17 +416,6 @@ export class Canvas extends TerraCompoment {
                     renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = renderPass.decoratePipeline(rp.renderPipelineDescriptor))
                     renderPass.bundles.length = 0;
                })
-
-               this.BindGroupCanvas = gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
-                {
-                    binding: 0,
-                    resource: canvasSampler
-                },
-                {
-                    binding: 1,
-                    resource: gpu.renderPassScreen.renderTargets[1]!.view
-                });
-
 
                 //Create projection matrix
                 //min view distance
