@@ -19,6 +19,6 @@ fn main() -> void {
   const uv : vec2<f32> = vec2<f32>(v_uv.x/v_uv.w , (v_uv.y/v_uv.w))*0.5+vec2<f32>(0.5,0.5);
   //outColor = textureSample(myTexture, mySampler, uv);
   outNormals=textureSample(normalTexture, mySampler, uv);
-  outPositions=textureSample(diffuseTexture, mySampler, uv);
+  outDiffuse=textureSample(diffuseTexture, mySampler, uv);
   return;
 }

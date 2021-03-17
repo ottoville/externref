@@ -1,6 +1,4 @@
 [[location(0)]] var<in> position:vec2<f32>;
-[[location(1)]] var<in> posX:f32;
-[[location(2)]] var<in> posY:f32;
 
 [[location(0)]] var<out> outColor : vec4<f32>;
 
@@ -16,10 +14,5 @@ fn main() -> void {
   const diffuse:vec4<f32> = textureSample(diffuseTexture, mySampler, position.xy);
   const shading :f32 = dot(normal.xyz, vec3<f32>(0.0,1.0,0.0));
   outColor = vec4<f32>(diffuse.xyz * shading,1.0);
-
-  //outColor = textureSample(myTexture, mySampler, uv);
-  //outColor = vec4<f32>(position.xy,0.0,1.0);
-  //outColor = vec4<f32>(1.0,1.0,0.0,1.0);
-  //outColor = vec4<f32>(color.xyz,1.0);
   return;
 }
