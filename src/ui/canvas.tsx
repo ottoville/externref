@@ -101,11 +101,12 @@ export class Canvas extends TerraCompoment {
                 (w, h) => {
                     return [w, h]
                 });
-                renderpassCanvas.addSwapChain({ r: 0.53, g: 0.8, b: 0.92, a: 1.0 });
+            //loadValue here does not make any difference because quad is filling the whole screen
+            renderpassCanvas.addSwapChain({ r: 0.53, g: 0.8, b: 0.92, a: 1.0 });
            // new RenderTarget(renderpassScreen, "bgra8unorm");
             const gRenderTargetNormals = new RenderTarget(renderpassScreen, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
             const gRenderTargetPositions = new RenderTarget(renderpassScreen, "rgba32float",{ r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-            const gRenderTargetDiffuse = new RenderTarget(renderpassScreen, "bgra8unorm",{ r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+            const gRenderTargetDiffuse = new RenderTarget(renderpassScreen, "bgra8unorm",{ r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
             
             //@ts-ignore
             window.printRenderTarget = () => {

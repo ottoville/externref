@@ -17,9 +17,15 @@
 
 [[stage(fragment)]]
 fn main() -> void {
-  const normal:vec4<f32> = normalize(textureSample(normalTexture, mySampler, position.xy));
   const diffuse:vec4<f32> = textureSample(diffuseTexture, mySampler, position.xy);
+  if(diffuse.w == 0.0) {
+    outColor=vec4<f32>(diffuse.xyz,1.0);
+    return;
+  }
+  const normal:vec4<f32> = normalize(textureSample(normalTexture, mySampler, position.xy));
+
   const shading :f32 = dot(normal.xyz, lights.sunDirection)*lights.shadow;
-  outColor = vec4<f32>(diffuse.xyz * shading,1.0);
+  outColor = vec4<f32>(lights.ambient + (diffuse.xyz * shading),1.0);
+
   return;
 }
