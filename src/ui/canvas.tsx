@@ -396,14 +396,6 @@ export class Canvas extends TerraCompoment {
                 deltaView.set([physicDelta]);
 
             gpu.device.queue.writeBuffer(gpu.timeBuffer, 0, timeAndDeltaBuffer);
-
-            /*const passEncoder = renderEncoder.beginRenderPass(gpu.renderPassCanvas.GPURenderPassDescriptor);
-            passEncoder.setPipeline(canvasPipeLine);
-            passEncoder.draw(6, 1, 0, 0);
-
-            passEncoder.endPass();
-*/
-
             TerraCameras.forEach(camera => {
                 camera.render(renderEncoder)
             });
@@ -435,6 +427,9 @@ export class Canvas extends TerraCompoment {
                     this.canvasElem.height=maxResolution.height;
                     this.canvasElem.width = this.canvasElem.height*aspectRatio;
                 }
+
+                gpu.scale.x=this.canvasElem.width / entries[0]!.contentRect.width;
+                gpu.scale.y=this.canvasElem.height / entries[0]!.contentRect.height;
 
                gpu.renderPasses.forEach(renderPass => {
                     renderPass.onResize(this.canvasElem.width, this.canvasElem.height)

@@ -177,8 +177,8 @@ export class Engine {
 
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
         canvas.addEventListener('pointermove', (e) => {
-            Atomics.store(this.#mousePosition, 0, e.clientX)
-            Atomics.store(this.#mousePosition, 1, e.clientY)
+            Atomics.store(this.#mousePosition, 0, e.clientX*gpu.scale.x)
+            Atomics.store(this.#mousePosition, 1, e.clientY*gpu.scale.y)
             Atomics.notify(new Int32Array(this.mousePositionBuffer), 0);
         });
         gpu.onRenders2.push(() => {

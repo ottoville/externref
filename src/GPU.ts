@@ -144,6 +144,11 @@ export class GPU {
     renderPassWater: RenderPass
     renderPassCanvas: RenderPass;
     renderPasses: Set<RenderPass>;
+
+    readonly scale={
+        x:1,
+        y:1
+    }
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPass, RenderPass, RenderPass]) {
         const context = canvas.getContext('gpupresent');
         if (!context)
