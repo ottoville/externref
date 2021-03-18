@@ -82,10 +82,10 @@ interface BindGroupLayoutThreeBinding extends GPUBindGroupLayout {
 }
 interface BindGroupLayoutFourBinding extends GPUBindGroupLayout {
     createBindGroup: (...entries: [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]) => GPUBindGroup;
-
     numBindings: 'four';
 }
 interface BindGroupLayoutFiveBinding extends GPUBindGroupLayout {
+    createBindGroup: (...entries: [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]) => GPUBindGroup;
     numBindings: 'five';
 }
 

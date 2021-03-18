@@ -71,7 +71,7 @@ export class Canvas extends TerraCompoment {
     msPerFrame = 0;
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
-    BindGroupCanvas!: () => BindGroupThreeBinding;
+    BindGroupCanvas!: () => BindGroupFiveBinding;
     async initalize(): Promise<[Scene, ArcRotateCamera]> {
         const adapter = await window.navigator.gpu!.requestAdapter();
         this.progress = 4;
@@ -116,7 +116,7 @@ export class Canvas extends TerraCompoment {
                 gRenderTargetDiffuse.toBitmap()
             }
             //water color { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }
-            const renderpassWater = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, (w, h) => [w, h], GPUTextureUsage.SAMPLED)
+            const renderpassWater = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED)
 
             //Normals
             new RenderTarget(renderpassWater, "bgra8unorm",{ r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
@@ -145,6 +145,14 @@ export class Canvas extends TerraCompoment {
                 {
                     binding: 3,
                     resource: gRenderTargetDiffuse.view
+                },
+                {
+                    binding: 4,
+                    resource: {
+                        buffer: gpu.GPUData, //this.#lightsBuffer
+                        size: 256,
+                        offset: 2304
+                    }
                 });
             
             return [
@@ -202,6 +210,7 @@ export class Canvas extends TerraCompoment {
 
         const mainScene = new Scene('main', gpu, terraEngine, [mainCamera, waterCamera], (terrascene) => {
             let sun = new Sun2(terrascene);
+            console.log('bufferOffsetBytes', sun.bufferOffsetBytes)
             // Initial scene objects here
 
             const sea = new Sea(terrascene);
