@@ -70,8 +70,9 @@ fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
         norm = facet12.plane[row * 250 + col].norm;
         d = facet12.plane[row * 250 + col].d;
     } else {
-        norm = facet12.plane[facetSize + (row * 250 + col)].norm;
-        d = facet12.plane[facetSize + (row * 250 + col)].d;
+        var index:u32 = facetSize + (row * 250 + col);
+        norm = facet12.plane[index].norm;
+        d = facet12.plane[index].d;
     }
     return -(norm.x * f32(cx) + norm.z * f32(cz) + d) / norm.y;
  }

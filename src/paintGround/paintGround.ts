@@ -48,7 +48,7 @@ export abstract class paintGround {
 
     #drawArea = async () => {
         await this.ground.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay);
-        if (this.ground.mesh.pickInfo.distance) {
+        if (this.ground.mesh.pickInfo.getDistance()) {
             this.#end_position[0] = this.ground.mesh.pickInfo.point[0];
             this.#end_position[1] = this.ground.mesh.pickInfo.point[2];
             this.#drawVector[0] = this.#start_position[0] - this.#end_position[0];
@@ -92,7 +92,7 @@ export abstract class paintGround {
     #mousemove = async () => {
 
         await this.ground.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay);
-        if (this.ground.mesh.pickInfo.distance && this.#end_position) {
+        if (this.ground.mesh.pickInfo.getDistance() && this.#end_position) {
             //Distance from first point
             const p0 = this.#start_position[0] - this.ground.mesh.pickInfo.point[0];
             const p1 = this.#start_position[1] - this.ground.mesh.pickInfo.point[2];
@@ -198,7 +198,7 @@ export abstract class paintGround {
             console.log(pickInfo);
             return;
         }*/
-        if (this.ground.mesh.pickInfo.distance) {
+        if (this.ground.mesh.pickInfo.getDistance()) {
         //if (pickInfo.hit && pickInfo.pickedPoint != null) {
             //@ts-ignore
             /*if (pickInfo.pickedMesh === this.sea) {

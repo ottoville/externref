@@ -150,9 +150,7 @@ export class Canvas extends TerraCompoment {
                 {
                     binding: 4,
                     resource: {
-                        buffer: gpu.GPUData, //this.#lightsBuffer
-                        size: 256,
-                        offset: 2304
+                        buffer: gpu.GPUData
                     }
                 });
             
@@ -344,16 +342,7 @@ export class Canvas extends TerraCompoment {
                 module: fragment,
                 entryPoint: "main"
             },
-        }/*,() => {
-            console.log('refresh texture');
-            return [{
-            binding: 0,
-            resource: gpu.canvasSampler
-        },
-        {
-            binding: 1,
-            resource: gpu.renderPassWater.renderTargets[0]!.view //this.renderPassWater.renderTargets[0]!.view
-        }]}*/);
+        });
 
         new TerraNodeGPU<DrawableSimple>(terraEngine,canvasPipeline,6,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]),node))
         function renderLoop(time: DOMHighResTimeStamp) {

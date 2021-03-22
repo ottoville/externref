@@ -105,7 +105,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     private direction = 0;
     private mouseinterval: number = 0;
 
-    pointerdownf = (evt: PointerEvent): void => {
+    #pointerdownf = (evt: PointerEvent): void => {
         if (evt.button !== 0) {
             return;
         }
@@ -139,21 +139,23 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     };
 
     #mouseListener = (): void => {
+        console.log('mouseListener')
         this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
+            console.log([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
             this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
         });
     }
     raise = (): void => {
         this.direction = 1;
-        this.#canvasListener.removeListener("pointerdown", this.pointerdownf);
+        this.#canvasListener.removeListener("pointerdown", this.#pointerdownf);
         console.log('add pointerdown listener');
-        this.#canvasListener.addListener("pointerdown", this.pointerdownf);
+        this.#canvasListener.addListener("pointerdown", this.#pointerdownf);
 
     }
     lower = (): void => {
         this.direction = -1;
-        this.#canvasListener.removeListener("pointerdown", this.pointerdownf);
+        this.#canvasListener.removeListener("pointerdown", this.#pointerdownf);
         console.log('add pointerdown listener');
-        this.#canvasListener.addListener("pointerdown", this.pointerdownf);
+        this.#canvasListener.addListener("pointerdown", this.#pointerdownf);
     }
 }

@@ -85,7 +85,7 @@ export class GPU {
             binding: 4,
             visibility: GPUShaderStage.FRAGMENT,
             buffer: {
-                type: "uniform"
+                type: "read-only-storage"
             }
         });
 

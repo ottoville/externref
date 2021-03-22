@@ -74,7 +74,7 @@ export class Zones extends UITAB {
             }
         })();
         
-        ground.mesh.textureView = this.zoneTexture.createView();
+        ground.mesh.setTextureView(this.zoneTexture.createView());
         ground.mesh.Drawable.scene = scene.engine.scenes.get('static');
         this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zoneTexture, 5120, 5120, this, this.#ratio);
         this.PT.activate(async (response) => {
@@ -83,7 +83,7 @@ export class Zones extends UITAB {
     }
     destroy = (): void => {
         this.ground.mesh.Drawable.scene = this.scene;
-        this.ground.mesh.textureView = this.ground.texture.createView();
+        this.ground.mesh.setTextureView(this.ground.texture.createView());
         this.zoneTexture.destroy();
         this.PT.destroy();
         this.traits.forEach(trait => trait.destroy());

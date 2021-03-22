@@ -7,12 +7,16 @@
   [[offset(80)]] ambient : vec3<f32>;
   [[offset(92)]] shadow : f32;
 };
+[[block]] struct LightsArray {
+  [[offset(0)]] light : [[stride(256)]] array<Lights>;
+};
+[[binding(0), group(0)]] var<uniform_constant> mySampler: sampler;
+[[binding(1), group(0)]] var<uniform_constant> normalTexture: texture_2d<f32>;
+[[binding(2), group(0)]] var<uniform_constant> positionTexture: texture_2d<f32>;
+[[binding(3), group(0)]] var<uniform_constant> diffuseTexture: texture_2d<f32>;
 
-[[binding(0), set(0)]] var<uniform_constant> mySampler: sampler;
-[[binding(1), set(0)]] var<uniform_constant> normalTexture: texture_2d<f32>;
-[[binding(2), set(0)]] var<uniform_constant> positionTexture: texture_2d<f32>;
-[[binding(3), set(0)]] var<uniform_constant> diffuseTexture: texture_2d<f32>;
-[[binding(4), set(0)]] var<uniform> lights : Lights;
+[[binding(4), group(0)]] var<storage_buffer> lights : [[access(read)]] LightsArray;
+
 
 
 [[stage(fragment)]]
@@ -24,8 +28,8 @@ fn main() -> void {
   }
   const normal:vec4<f32> = normalize(textureSample(normalTexture, mySampler, position.xy));
 
-  const shading :f32 = dot(normal.xyz, lights.sunDirection)*lights.shadow;
-  outColor = vec4<f32>(lights.ambient + (diffuse.xyz * shading),1.0);
+  const shading :f32 = dot(normal.xyz, lights.light[9].sunDirection)*lights.light[9].shadow;
+  outColor = vec4<f32>(lights.light[9].ambient + (diffuse.xyz * shading),1.0);
 
   return;
 }

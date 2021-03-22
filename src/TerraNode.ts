@@ -1,6 +1,5 @@
 ﻿import type { Collider } from "./Collider.js";
 import type { Engine } from "./engine.js";
-
 import { Mesh } from "/js/engine/engine.js";
 
 import type { isLight } from "./lights.js";
@@ -11,7 +10,7 @@ import { ObjectWorkerThread } from "./WorkerThread.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import type { DrawableDirect } from "./GPU/Drawable.js";
 
-export abstract class MainNode {
+export abstract class MainNode extends Mesh {
     readonly bufferOffsetBytes: number;
 
     isStatic = false;
@@ -42,12 +41,12 @@ export abstract class MainNode {
     readonly #scaling = new TerraVector3([1, 1, 1]);
     readonly #rotation = new TerraVector4([0, 0, 0, 0]);
 
-    public update(callback: (scaling: Float32Array, rotation: Float32Array) => void) {
+    public update = (callback: (scaling: Float32Array, rotation: Float32Array) => void) => {
         callback(this.#scaling, this.#rotation);
-        this.updateMatrix();
-        this.onUpdate();
+        this.#updateMatrix();
+        this.#onUpdate();
     }
-    private updateMatrix(): void {
+    #updateMatrix = (): void => {
         const x = this.#rotation[0]
         const y = this.#rotation[1]
         const z = this.#rotation[2]
@@ -80,37 +79,38 @@ export abstract class MainNode {
         this.transformation[9] = (yz - wx) * sz;
         this.transformation[10] = (1 - (xx + yy)) * sz;
     }
-    private onUpdate(): void {
+    #onUpdate = (): void => {
         if (this instanceof BoundableNode) {
             this.boundingBox.dirtyMin = true;
             this.boundingBox.dirtyMax = true;
         }
         this.updateDynamicBuffer();
     }
-    SetTranslationDelta(value: [number, number, number] | TerraVector3) {
+    SetTranslationDelta = (value: [number, number, number] | TerraVector3) => {
         this.velocity.set(value);
         this.updateDynamicBuffer();
     }
 
-    SetTranslation(value: [number, number, number] | TerraVector3) {
+    SetTranslation = (value: [number, number, number] | TerraVector3) => {
         this.translation.set(value);
-        this.onUpdate();
+        this.#onUpdate();
     }
-    setTranslationX(value: number) {
+    setTranslationX = (value: number) => {
         this.translation[0] = value;
-        this.onUpdate();
+        this.#onUpdate();
     }
-    setTranslationY(value: number) {
+    setTranslationY = (value: number) => {
         this.translation[1] = value;
-        this.onUpdate();
+        this.#onUpdate();
     }
-    setTranslationZ(value: number) {
+    setTranslationZ = (value: number) => {
         this.translation[2] = value;
-        this.onUpdate();
+        this.#onUpdate();
     }
     constructor(public engine: Engine) {
-        let m=new Mesh(Math.random());
-        console.log('mesh',m);
+        super(Math.random())
+       // let m=new Mesh(Math.random());
+        //console.log('mesh',m);
         
         const bufferOffsetBytes = engine.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
@@ -118,24 +118,24 @@ export abstract class MainNode {
         this.bufferOffsetBytes = bufferOffsetBytes;
 
         queueMicrotask(() => {
-            if (this.hasPhysics()) {
+            if (this.#hasPhysics()) {
                 engine.physics.tickables.add(this);
             }
-            if (this.isLight()) {
+            if (this.#isLight()) {
                 //scene.lights.add(this);
             }
         });
         this.updateDynamicBuffer();
     }
 
-    async updateDynamicBuffer() {
+    updateDynamicBuffer = () => {
         this.engine.gpu.queue.set(this.data, this.bufferOffsetBytes);
     }
 
-    hasPhysics(): this is hasPhysics {
+    #hasPhysics = (): this is hasPhysics => {
         return 'hasGravity' in this && 'onPhysicTick' in this;
     }
-    isLight(): this is isLight {
+    #isLight = (): this is isLight => {
         return 'lightType' in this;
     }
 }
@@ -175,11 +175,8 @@ class pickInfo {
     point = new TerraVector3(this.buffer);
     //distance = new Float32Array(this.buffer, 3 * 4, 1);
     #view=new DataView(this.buffer,3*4,4)
-    get distance() {
+    getDistance() {
         return this.#view.getFloat32(0, true);
-    }
-    set distance(value:number) {
-        this.#view.setFloat32(0,value, true);
     }
 }
 class boundingBox {
@@ -245,7 +242,7 @@ class boundingBox {
         this.#maxOriginal.multiply2Ref(this.mesh.transformation, this.#max);
         this.dirtyMax = false;
     }
-    get min() {
+    min() {
         if (this.needInitMin) {
             this.initMin();
         }
@@ -255,7 +252,7 @@ class boundingBox {
         }
         return this.#min;
     }
-    get max() {
+    max() {
         if (this.needInitMax) {
             this.initMax();
         }
@@ -265,8 +262,6 @@ class boundingBox {
         }
         return this.#max;
     }
-
-
 }
 
 export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeGPU<T> {
@@ -293,7 +288,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
     #positionsAndCollider: [TerraVector3, TerraVector4][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][]=[];
 
-    addVectors(faceIndex: number, vectors: [TerraVector4, TerraVector4, TerraVector4]) {
+    #addVectors = (faceIndex: number, vectors: [TerraVector4, TerraVector4, TerraVector4]) => {
         try {
             if (vectors.length != 3)
                 throw('less than 3 vector')
@@ -309,7 +304,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
             debugger;
         }
     }
-    rebuildTrianglePlanes() {
+    #rebuildTrianglePlanes = () => {
         let vectors: TerraVector4[] = [];
         let faceIndex = 0;
         if (this.indicesView) {
@@ -321,7 +316,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
                     }
                     if (vectors.push(vector) < 3)
                         return;
-                    this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4]);
+                    this.#addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4]);
                     vectors = [(vectors as [TerraVector4, TerraVector4, TerraVector4])[1], (vectors as [TerraVector4, TerraVector4, TerraVector4])[2]];
                 });
             } else {
@@ -332,7 +327,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
                         throw ('position ' + indice + ' not found');
                     }
                     if (vectors.push(position) == 3) {
-                        this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
+                        this.#addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
                         vectors = [];
                     }
                 });
@@ -342,14 +337,14 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
                 this.#colliderVertices.forEach(vector => {
                     if (vectors.push(vector) < 3)
                         return;
-                    this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
+                    this.#addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
                     vectors = [(vectors as [TerraVector4, TerraVector4, TerraVector4])[1], (vectors as [TerraVector4, TerraVector4, TerraVector4])[2]];
                 });
             } else {
                 
                 this.#colliderVertices.forEach(vector => {
                     if (vectors.push(vector) == 3) {
-                        this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
+                        this.#addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
                         vectors = [];
                     }
                 });
@@ -366,15 +361,15 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         }
     }
 
-    set indices(indices: ArrayLike<number>) {
+    setIndices = (indices: ArrayLike<number>) => {
         if (this.indicesView) {
             this.indicesView.set(indices);
         } else {
             this.indicesView = new Uint32Array(indices);
         }
-        this.rebuildTrianglePlanes();
+        this.#rebuildTrianglePlanes();
     }
-    updateVertices(callback: (arr: SharedArrayBuffer) => void) {
+    updateVertices = (callback: (arr: SharedArrayBuffer) => void) => {
         callback(this.verticesPositionBuffer);
         this.boundingBox.needInitMin = true;
         this.boundingBox.needInitMax = true;
@@ -422,24 +417,26 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
             this.#positionsAndCollider.push([pos, colPos])
         }
         this.boundingBox = new boundingBox(this);
-        this.rebuildTrianglePlanes();
+        this.#rebuildTrianglePlanes();
 
             //Run this on microtask so the scope who called
             //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
 
         queueMicrotask(() => {
             worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
+            this.boundingBox.initMin();
+            this.boundingBox.initMax();
         });
     }
-    public intersectsRay(ray: Float32Array): Promise<void> {
+    intersectsRay=(ray: Float32Array): Promise<void> => {
         return worker.message(this.uniqueID, 'intersectsRay', [ray.buffer]);
     }
     //collisionsScalingMatrix = new TerraMatrix();
     myCollisionsTransformMatrix = new TerraMatrix();
-    public async checkCollision(collider: Collider) {
+    public checkCollision=async (collider: Collider) => {
         if (this.#faces.length % 4 != 0) //TODO
             return
-        if (!collider._canDoCollision(this.boundingBox.min, this.boundingBox.max)) {
+        if (!collider._canDoCollision(this.boundingBox.min(), this.boundingBox.max())) {
             return;
         }
 

@@ -525,7 +525,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             this.serialize();
         });
         gpuReadBufferIndices.readAndDestroy(async (buff) => {
-            this.mesh.indices = new Uint32Array(buff);
+            this.mesh.setIndices(new Uint32Array(buff));
         });
     }
     /*
