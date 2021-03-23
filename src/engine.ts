@@ -157,7 +157,7 @@ export class Engine {
         const wasmSIMD: ColliderWasmSIMD = objSIMD.instance.exports as any;
 
         //Init rust wasm
-        const rust = await init();       
+        const rust = await init();
         return new Engine(gpu, DB, canvas, wasm, wasmSIMD, rust.memory);
     }
     intersectionPointWasm = this.callocVector3()
