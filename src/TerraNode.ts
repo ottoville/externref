@@ -14,7 +14,7 @@ export abstract class MainNode extends Mesh {
     readonly bufferOffsetBytes: number;
 
     isStatic = false;
-    #rustOffset=this.get_pointer();
+    #rustOffset=this.gpu_pointer();
     readonly data=new Float32Array(this.engine.memory.buffer,this.#rustOffset,28);
     readonly customData= new Float32Array(this.engine.memory.buffer, this.#rustOffset+20 * Float32Array.BYTES_PER_ELEMENT, 4);
     readonly acceleration=new Float32Array(this.engine.memory.buffer,this.#rustOffset+ 24 * Float32Array.BYTES_PER_ELEMENT, 4);;
@@ -23,7 +23,7 @@ export abstract class MainNode extends Mesh {
     readonly translation = new TerraVector3(this.engine.memory.buffer, this.#rustOffset+12 * Float32Array.BYTES_PER_ELEMENT);
 
     readonly #scaling = new TerraVector3([1, 1, 1]);
-    readonly #rotation = new TerraVector4([0, 0, 0, 0]);
+    readonly #rotation = new TerraVector4(this.engine.memory.buffer,this.rotation_pointer());
 
     public update = (callback: (scaling: Float32Array, rotation: Float32Array) => void) => {
         callback(this.#scaling, this.#rotation);
