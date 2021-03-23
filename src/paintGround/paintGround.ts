@@ -190,7 +190,7 @@ export abstract class paintGround {
             return mesh === this.ground
         }, false, this.camera);*/
 
-        var pickInfo = await this.scene.pickPromise(evt.clientX, evt.clientY, mesh => { return mesh === this.ground.mesh }, false);
+        var pickInfo = await this.scene.pickPromise(evt.clientX*this.scene.gpu.scale.x, evt.clientY*this.scene.gpu.scale.y, mesh => { return mesh === this.ground.mesh }, false);
 
        // console.log(pickInfo);
         /*if (!pickInfo) {

@@ -14,29 +14,13 @@ export abstract class MainNode extends Mesh {
     readonly bufferOffsetBytes: number;
 
     isStatic = false;
-
-    readonly data = new Float32Array([
-        //3d matrix start, 64 bytes
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0,
-        //3d matrix end
-        //delta start, 12 bytes + alignment 4 byte
-        0, 0, 0, 0,
-        //delta end
-        //custom data start, 16 bytes
-        0, 0, 0, 0,
-        //custom data end
-        //acceleration starts
-        0, 0, 0, 0
-        //acceleration ends
-    ]);
-    readonly customData= new Float32Array(this.data.buffer, 20 * Float32Array.BYTES_PER_ELEMENT, 4);
-    readonly acceleration=new Float32Array(this.data.buffer, 24 * Float32Array.BYTES_PER_ELEMENT, 4);;
-    readonly velocity=new TerraVector3(this.data.buffer, 16 * Float32Array.BYTES_PER_ELEMENT, 4);
-    readonly transformation= new TerraMatrix(this.data.buffer);
-    readonly translation = new TerraVector3(this.data.buffer, 12 * Float32Array.BYTES_PER_ELEMENT);
+    #rustOffset=this.get_pointer();
+    readonly data=new Float32Array(this.engine.memory.buffer,this.#rustOffset,28);
+    readonly customData= new Float32Array(this.engine.memory.buffer, this.#rustOffset+20 * Float32Array.BYTES_PER_ELEMENT, 4);
+    readonly acceleration=new Float32Array(this.engine.memory.buffer,this.#rustOffset+ 24 * Float32Array.BYTES_PER_ELEMENT, 4);;
+    readonly velocity=new TerraVector3(this.engine.memory.buffer,this.#rustOffset+ 16 * Float32Array.BYTES_PER_ELEMENT, 4);
+    readonly transformation= new TerraMatrix(this.engine.memory.buffer,this.#rustOffset)//new TerraMatrix(this.data.buffer);
+    readonly translation = new TerraVector3(this.engine.memory.buffer, this.#rustOffset+12 * Float32Array.BYTES_PER_ELEMENT);
 
     readonly #scaling = new TerraVector3([1, 1, 1]);
     readonly #rotation = new TerraVector4([0, 0, 0, 0]);
@@ -108,9 +92,7 @@ export abstract class MainNode extends Mesh {
         this.#onUpdate();
     }
     constructor(public engine: Engine) {
-        super(Math.random())
-       // let m=new Mesh(Math.random());
-        //console.log('mesh',m);
+        super();
         
         const bufferOffsetBytes = engine.gpu.DataSlots.pop();
         if (typeof (bufferOffsetBytes) == 'undefined')
