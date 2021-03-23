@@ -20,7 +20,8 @@ impl Engine {
 #[wasm_bindgen]
 pub struct Mesh {
     gpu_mesh: GPUMesh,
-    rotation: [f32;4]
+    rotation: [f32;4],
+    scaling: [f32;3]
 }
 #[wasm_bindgen]
 impl Mesh {
@@ -32,11 +33,16 @@ impl Mesh {
     pub fn rotation_pointer(&self) -> * const f32 {
         (&self.rotation).as_ptr()
     }
+    #[wasm_bindgen]
+    pub fn scaling_pointer(&self) -> * const f32 {
+        (&self.scaling).as_ptr()
+    }
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         let m=Mesh {
             gpu_mesh: GPUMesh::new(),
-            rotation: [0.0,0.0,0.0,0.0]
+            rotation: [0.0,0.0,0.0,0.0],
+            scaling: [1.0,1.0,1.0]
         };
         return m;
     }

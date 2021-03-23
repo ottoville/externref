@@ -22,7 +22,7 @@ export abstract class MainNode extends Mesh {
     readonly transformation= new TerraMatrix(this.engine.memory.buffer,this.#rustOffset)//new TerraMatrix(this.data.buffer);
     readonly translation = new TerraVector3(this.engine.memory.buffer, this.#rustOffset+12 * Float32Array.BYTES_PER_ELEMENT);
 
-    readonly #scaling = new TerraVector3([1, 1, 1]);
+    readonly #scaling = new TerraVector3(this.engine.memory.buffer,this.scaling_pointer());
     readonly #rotation = new TerraVector4(this.engine.memory.buffer,this.rotation_pointer());
 
     public update = (callback: (scaling: Float32Array, rotation: Float32Array) => void) => {
