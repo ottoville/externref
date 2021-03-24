@@ -20,46 +20,13 @@ export abstract class MainNode extends Mesh {
     readonly transformation= new TerraMatrix(this.engine.memory.buffer,this.#rustOffset)//new TerraMatrix(this.data.buffer);
     readonly translation = new TerraVector3(this.engine.memory.buffer, this.#rustOffset+12 * Float32Array.BYTES_PER_ELEMENT);
 
-    readonly #scaling = new TerraVector3(this.engine.memory.buffer,this.scaling_pointer);
-    readonly #rotation = new TerraVector4(this.engine.memory.buffer,this.rotation_pointer);
-
-    public update = (callback: (scaling: Float32Array, rotation: Float32Array) => void) => {
-        callback(this.#scaling, this.#rotation);
-        this.#updateMatrix();
+    update_scale = (x:number,y:number,z:number) => {
+        super.update_scale(x,y,z)
         this.#onUpdate();
     }
-    #updateMatrix = (): void => {
-        const x = this.#rotation[0]
-        const y = this.#rotation[1]
-        const z = this.#rotation[2]
-        const w = this.#rotation[3];
-
-        const x2 = x + x
-        const y2 = y + y
-        const z2 = z + z;
-
-        const xx = x * x2
-        const xy = x * y2
-        const xz = x * z2;
-
-        const yy = y * y2
-        const yz = y * z2
-        const zz = z * z2;
-        var wx = w * x2, wy = w * y2, wz = w * z2;
-
-        const sx = this.#scaling[0]
-        const sy = this.#scaling[1]
-        const sz = this.#scaling[2];
-        this.transformation[0] = (1 - (yy + zz)) * sx;
-        this.transformation[1] = (xy + wz) * sx;
-        this.transformation[2] = (xz - wy) * sx;
-        this.transformation[4] = (xy - wz) * sy;
-        this.transformation[5] = (1 - (xx + zz)) * sy;
-        this.transformation[6] = (yz + wx) * sy;
-
-        this.transformation[8] = (xz + wy) * sz;
-        this.transformation[9] = (yz - wx) * sz;
-        this.transformation[10] = (1 - (xx + yy)) * sz;
+    update_scale_and_rotation = (x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number) => {
+        super.update_scale_and_rotation(x,y,z,rx,ry,rz,rw);
+        this.#onUpdate();
     }
     #onUpdate = (): void => {
         if (this instanceof BoundableNode) {
@@ -90,8 +57,7 @@ export abstract class MainNode extends Mesh {
         this.#onUpdate();
     }
     constructor(public engine: Engine) {
-        super(engine.rustEngine);
-
+        super(engine.rustEngine, true);
         queueMicrotask(() => {
             if (this.#hasPhysics()) {
                 engine.physics.tickables.add(this);
@@ -125,10 +91,6 @@ export class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
     Drawable: T;
     
-    destroy() {
-        //this.engine.gpu.NodeInstances.delete(this);
-    }
-
     constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number, createDrawable: (node:TerraNodeGPU<T>) => T) {
         super(engine);
         this.Drawable = createDrawable(this);

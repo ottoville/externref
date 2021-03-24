@@ -215,8 +215,7 @@ export class Canvas extends TerraCompoment {
             //new testPlane(terrascene);
 
             const b = new Box(terrascene);
-            b.update(scale => scale.set([200, 200, 200]));
-
+            b.update_scale(200, 200, 200);
             //@ts-ignore
             const human = new Human(terrascene)
 
@@ -307,7 +306,8 @@ export class Canvas extends TerraCompoment {
         });
 
         const b2 = new Box(debugscene);
-        b2.update(scale => scale.set([200, 200, 200]));
+        //b2.update(scale => scale.set([200, 200, 200]));
+        b2.update_scale(200, 200, 200);
         b2.setTranslationX(500);
 
 

@@ -7,7 +7,7 @@ export class Human extends Box implements hasPhysics {
         super(scene);
         this.setTranslationY(300)
         this.setTranslationZ(700)
-        this.update(scale => scale.set([50, 50, 50]));
+        this.update_scale(50, 50, 50);
     }
     onPhysicTick = () => {
 

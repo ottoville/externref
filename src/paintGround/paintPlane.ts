@@ -70,10 +70,11 @@ function getRenderPipeline(scene: Scene, ground: Terrain):RenderPipeline{
 }
 export class paintPlane extends paintGround {
     onEnd() {
-        this.#mesh.update((scaling) => {
+        /*this.#mesh.update((scaling) => {
             scaling[2] = 0;
-        });
-        console.log('scaled to 0')
+        });*/
+       // this.#mesh.scale_z=0;
+        this.#mesh.update_scale(this.#mesh.scale_x,this.#mesh.scale_y,0)
     }
     #mesh = new PlaneMesh(this.scene.engine, getRenderPipeline(this.scene, this.ground),0);
     #startingPoint = new TerraVector2(2);
@@ -123,10 +124,10 @@ export class paintPlane extends paintGround {
     }
     public destroy() {
         super.destroy();
+        this.#mesh.destroy();
         this.#mesh.Drawable.destroy();
         this.#columns = 0;
         this.#rows = 0;
-        this.scene.engine.gpu.DataSlots.push(this.#mesh.gpu_alignment);
     }
 
     onMainPointerDown(startingPoint: TerraVector2) {
@@ -150,10 +151,10 @@ export class paintPlane extends paintGround {
         // Produces a quaternion from Euler angles in the z-y-x orientation (Tait-Bryan angles)
 
         const halfYaw = (this.ang360.rad - Math.PI) * 0.5;
-        this.#mesh.update((scaling, rotation) => {
-            scaling[0] = height / this.#columns;
-            rotation.set([0, Math.sin(halfYaw), 0, Math.cos(halfYaw)]);
-        });
+
+        this.#mesh.update_scale_and_rotation(
+            height / this.#columns, this.#mesh.scale_y,this.#mesh.scale_z,
+            0, Math.sin(halfYaw), 0, Math.cos(halfYaw) )
     }
 
     async onAreaDraw(width: number): Promise<void> {
@@ -168,9 +169,7 @@ export class paintPlane extends paintGround {
                 newValues = this.#rowGenerator.next().value;
             } while (++this.#rows < newRows);
         }
-        this.#mesh.update((scaling) => {
-            scaling[2] = width / this.#rows;
-        })
+        this.#mesh.update_scale(this.#mesh.scale_x,this.#mesh.scale_y,width / this.#rows)
 
         if (newValues) {
             this.#mesh.Drawable.setVertexBuffer(0, new Float32Array(newValues.positions));

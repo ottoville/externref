@@ -52,7 +52,6 @@ export class GPU {
     shaderModules: Map<string, GPUShaderModule> = new Map();
     //Todo: Remove COPY_SRC
     GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-    DataSlots: number[] = new Array(TerraNodeGPU.maxInstances).fill(TerraNodeGPU.alignment).map((v, i) => i * v);
 
     BindGroupLayoutCanvas = this.createBindGroupLayout(
         {
