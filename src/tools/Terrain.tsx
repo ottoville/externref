@@ -133,7 +133,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.traits.forEach(trait => trait.destroy());
 
         //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
-        this.engine.gpu.DataSlots.push(this.bufferOffsetBytes);
+        this.engine.gpu.DataSlots.push(this.gpu_alignment);
         renderPipelines.delete(this.engine.gpu);
     };
 

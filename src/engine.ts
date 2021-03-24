@@ -4,7 +4,7 @@ import { TerraNodeGPU } from "./TerraNode.js";
 import { Collider } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import { TerraVector3, Vector3 } from "./Math.js";
-import init from "/js/engine/engine.js";
+import init, {Engine as RustEngine } from "/js/engine/engine.js";
 
 
 
@@ -158,7 +158,7 @@ export class Engine {
 
         //Init rust wasm
         const rust = await init();
-        return new Engine(gpu, DB, canvas, wasm, wasmSIMD, rust.memory);
+        return new Engine(gpu, DB, canvas, wasm, wasmSIMD, rust.memory, new RustEngine());
     }
     intersectionPointWasm = this.callocVector3()
     intersectionPointWasmSIMD = this.callocVector3()
@@ -168,7 +168,7 @@ export class Engine {
     nearestDistanceSquaredSIMD = this.mallocView(4);
     collidedMesh = this.mallocView(4);
     collidedMeshSIMD = this.mallocView(4);
-    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasmSIMD, public memory: WebAssembly.Memory) {
+    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasmSIMD, public memory: WebAssembly.Memory, public rustEngine: RustEngine) {
 
         wasm.constructor(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
       // wasmSIMD.constructor(this.collisionNotFoundSIMD.byteOffset, this.intersectionPointWasmSIMD.byteOffset, this.nearestDistanceSquaredSIMD.byteOffset, this.collidedMeshSIMD.byteOffset)
@@ -193,7 +193,7 @@ export class Engine {
                 new Float32Array(this.#tempBuffer!.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(matrix);
                 commandEncoder.copyBufferToBuffer(
                     this.#tempBuffer!, tempOffset++ * dataSizeBytes,
-                    gpu.GPUData, bufferOffset,
+                    gpu.GPUData, bufferOffset*256,
                     dataSizeBytes);
             });
             this.#tempBuffer.unmap();

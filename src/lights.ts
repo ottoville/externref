@@ -1,4 +1,5 @@
-﻿import type { GPU } from "./GPU";
+﻿import { TerraNodeGPU } from "./TerraNode.js";
+import type { GPU } from "./GPU";
 export interface isLight {
     lightType: 'point' | 'directional' | 'spot' | 'ambient'
 }
@@ -30,7 +31,7 @@ export class Light {
                 resource: {
                     buffer: this.gpu.GPUData, //this.#lightsBuffer
                     size: 256,
-                    offset: byteoffset
+                    offset: byteoffset * TerraNodeGPU.alignment
                 }
             });
     }

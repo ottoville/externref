@@ -98,7 +98,7 @@ export abstract class Drawable {
         this.staticBuffers &&  renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers())
         //this.#staticBuffers.forEach((bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup()));
         this.dynamicBuffers.forEach((offset, bindgroup) => {
-            renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset]);
+            renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset*TerraNodeGPU.alignment]);
         })
         this.#vertexBuffers.forEach((buffer, index) => renderPass.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
         this.render(renderPass);

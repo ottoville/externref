@@ -11,10 +11,8 @@ import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import type { DrawableDirect } from "./GPU/Drawable.js";
 
 export abstract class MainNode extends Mesh {
-    readonly bufferOffsetBytes: number;
-
     isStatic = false;
-    #rustOffset=this.gpu_pointer();
+    #rustOffset=this.gpu_pointer;
     readonly data=new Float32Array(this.engine.memory.buffer,this.#rustOffset,28);
     readonly customData= new Float32Array(this.engine.memory.buffer, this.#rustOffset+20 * Float32Array.BYTES_PER_ELEMENT, 4);
     readonly acceleration=new Float32Array(this.engine.memory.buffer,this.#rustOffset+ 24 * Float32Array.BYTES_PER_ELEMENT, 4);;
@@ -22,8 +20,8 @@ export abstract class MainNode extends Mesh {
     readonly transformation= new TerraMatrix(this.engine.memory.buffer,this.#rustOffset)//new TerraMatrix(this.data.buffer);
     readonly translation = new TerraVector3(this.engine.memory.buffer, this.#rustOffset+12 * Float32Array.BYTES_PER_ELEMENT);
 
-    readonly #scaling = new TerraVector3(this.engine.memory.buffer,this.scaling_pointer());
-    readonly #rotation = new TerraVector4(this.engine.memory.buffer,this.rotation_pointer());
+    readonly #scaling = new TerraVector3(this.engine.memory.buffer,this.scaling_pointer);
+    readonly #rotation = new TerraVector4(this.engine.memory.buffer,this.rotation_pointer);
 
     public update = (callback: (scaling: Float32Array, rotation: Float32Array) => void) => {
         callback(this.#scaling, this.#rotation);
@@ -92,12 +90,7 @@ export abstract class MainNode extends Mesh {
         this.#onUpdate();
     }
     constructor(public engine: Engine) {
-        super();
-        
-        const bufferOffsetBytes = engine.gpu.DataSlots.pop();
-        if (typeof (bufferOffsetBytes) == 'undefined')
-            throw ('Out of memory');
-        this.bufferOffsetBytes = bufferOffsetBytes;
+        super(engine.rustEngine);
 
         queueMicrotask(() => {
             if (this.#hasPhysics()) {
@@ -111,7 +104,7 @@ export abstract class MainNode extends Mesh {
     }
 
     updateDynamicBuffer = () => {
-        this.engine.gpu.queue.set(this.data, this.bufferOffsetBytes);
+        this.engine.gpu.queue.set(this.data, this.gpu_alignment);
     }
 
     #hasPhysics = (): this is hasPhysics => {
@@ -140,7 +133,7 @@ export class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
         super(engine);
         this.Drawable = createDrawable(this);
         if(renderPipeline.dynamicBindGroupOffset.length)
-            renderPipeline.dynamicBindGroupOffset[0]=this.bufferOffsetBytes;
+            renderPipeline.dynamicBindGroupOffset[0]=this.gpu_alignment;
     }
 
 }

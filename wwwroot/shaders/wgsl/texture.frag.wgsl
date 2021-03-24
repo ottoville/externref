@@ -21,6 +21,9 @@
 
 [[stage(fragment)]]
 fn main() -> void {
+
+const sunOffset:u32 = u32(0);
+
   const diffuse:vec4<f32> = textureSample(diffuseTexture, mySampler, position.xy);
   if(diffuse.w == 0.0) {
     outColor=vec4<f32>(diffuse.xyz,1.0);
@@ -28,8 +31,8 @@ fn main() -> void {
   }
   const normal:vec4<f32> = normalize(textureSample(normalTexture, mySampler, position.xy));
 
-  const shading :f32 = dot(normal.xyz, lights.light[9].sunDirection)*lights.light[9].shadow;
-  outColor = vec4<f32>(lights.light[9].ambient + (diffuse.xyz * shading),1.0);
+  const shading :f32 = dot(normal.xyz, lights.light[sunOffset].sunDirection)*lights.light[sunOffset].shadow;
+  outColor = vec4<f32>(lights.light[sunOffset].ambient + (diffuse.xyz * shading),1.0);
 
   return;
 }

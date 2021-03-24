@@ -351,7 +351,7 @@ export class GPU {
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
             if (bgt.sharedBindgroup && this.#DynamicBindGroups.has(bgt.sharedBindgroup)) {
                 bgt.renderPipeLines.forEach(m => {
-                    renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset);
+                    renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset.map(o => o*TerraNodeGPU.alignment));
                     drawedMeshes += m.draw(renderPassEncoder, renderPass, index, scene);
                 });
             }

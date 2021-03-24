@@ -126,7 +126,7 @@ export class paintPlane extends paintGround {
         this.#mesh.Drawable.destroy();
         this.#columns = 0;
         this.#rows = 0;
-        this.scene.engine.gpu.DataSlots.push(this.#mesh.bufferOffsetBytes);
+        this.scene.engine.gpu.DataSlots.push(this.#mesh.gpu_alignment);
     }
 
     onMainPointerDown(startingPoint: TerraVector2) {
