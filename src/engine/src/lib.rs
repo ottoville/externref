@@ -2,58 +2,13 @@ extern crate wasm_bindgen;
 
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
-pub struct Engine {
-    meshes: Vec<GPUMesh>,
-    gpu_slots: Vec<u32>,
-    gpu_queue: Vec<(*const GPUMesh, u32)>,
-    gpu_next_available_address: u32,
-}
+mod engine;
+mod boundingBox;
+pub use crate::engine::Engine;
+pub use crate::boundingBox::BoundingBox;
 
 const GPU_ALIGNMENT: u32 = 256;
 
-//const GPU_QUEUE: Vec<(* const GPUMesh, u32)> = Vec::new();
-const MESHES: Vec<*const Mesh> = Vec::new();
-#[wasm_bindgen]
-impl Engine {
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
-        let e = Engine {
-            meshes: Vec::new(),
-            gpu_next_available_address: 0,
-            gpu_slots: Vec::new(),
-            gpu_queue: Vec::new(),
-        };
-        return e;
-    }
-    fn allocate_gpu(&mut self) -> u32 {
-        let o = self.gpu_slots.pop();
-        match o {
-            None => {
-                let r = self.gpu_next_available_address;
-                self.gpu_next_available_address += 1;
-                return r
-            }
-            Some(i) => i,
-        }
-    }
-    fn de_allocate_gpu(&mut self, address: u32) {
-        if address == self.gpu_next_available_address - 1 {
-            self.gpu_next_available_address -= 1;
-            loop {
-                let max_used_address=self.gpu_next_available_address - 1;
-                if self.gpu_slots.iter().max() == Some(&max_used_address) {
-                    self.gpu_slots.pop();
-                    self.gpu_next_available_address = max_used_address;
-                } else {
-                    break;
-                }
-            }
-        } else {
-            self.gpu_slots.push(address);
-        }
-    }
-}
 pub struct Vec4<T> {
     x: T,
     y: T,
@@ -65,20 +20,7 @@ pub struct Vec3 {
     y: f32,
     z: f32,
 }
-pub struct BoundingBox {
-    has_bounding:bool,
-    min:Vec3,
-    max:Vec3,
-    min_original:Vec3,
-    max_original:Vec3,
-    dirty_min:bool,
-    dirty_max:bool,
-    need_init_min:bool,
-    need_init_max:bool,
-}
-impl BoundingBox {
 
-}
 #[wasm_bindgen]
 pub struct Mesh {
     engine: *mut Engine,
@@ -196,7 +138,7 @@ impl Mesh {
                 z: 1.0,
             },
         };
-        MESHES.push(&m);
+        //MESHES.push(&m);
         return m;
     }
     pub fn destroy(self) {
