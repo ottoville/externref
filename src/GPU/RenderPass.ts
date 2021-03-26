@@ -4,7 +4,7 @@ import type { GPU } from "../GPU.js";
 import type { RenderPipeline } from "./RenderPipeline.js";
 import type { Drawable } from "./Drawable.js";
 import { RenderTarget } from "./RenderTarget.js";
-import { BindGroupLayout } from "./BindGroupLayout.js";
+import { PipelineLayout } from "./PipelineLayout.js";
 
 interface RenderPipelineVariant2 {
     renderpipeline: GPURenderPipeline;
@@ -140,7 +140,7 @@ export class RenderPass {
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
 
-    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | (() => GPUBindGroup), rootLayout: BindGroupLayout) {
+    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | (() => GPUBindGroup), rootLayout: PipelineLayout) {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             if (!this.bundles.length) {
@@ -159,7 +159,7 @@ export class RenderPass {
             debugger;
         }
     }
-    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, cameraBindGroup: GPUBindGroup, rootLayout: BindGroupLayout) {
+    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, cameraBindGroup: GPUBindGroup, rootLayout: PipelineLayout) {
         let drawedMeshes = 0;
 
         if (cameraBindGroup) {

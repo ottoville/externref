@@ -1,6 +1,6 @@
 ﻿import { TerraNodeGPU } from "./TerraNode.js";
 import type { RenderPass } from "./GPU/RenderPass.js";
-import { PipelineLayout, DynamicPipelineLayout } from "./GPU/BindGroupLayout.js";
+import { PipelineLayout } from "./GPU/PipelineLayout.js";
 import type { Scene } from "./Scene.js";
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)

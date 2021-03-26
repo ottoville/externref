@@ -1,5 +1,5 @@
 ﻿import type { Scene } from "../Scene.js";
-import type { BindGroupLayout } from "./BindGroupLayout.js";
+import type { PipelineLayout } from "./PipelineLayout.js";
 import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
 import type { RenderPass } from "./RenderPass.js";
 import { TerraNodeGPU } from "../TerraNode.js";
@@ -9,7 +9,7 @@ export class RenderPipeline {
     dynamicBindGroupOffset: number[] = [];
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
     public createBindGroups?: () => Set<GPUBindGroup>
-    constructor(public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates'>, public bindgroupdrawable: BindGroupLayout) {
+    constructor(public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates'>, public bindgroupdrawable: PipelineLayout) {
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
         renderPipelineDescriptor.vertexState && renderPipelineDescriptor.vertexState.indexFormat && (this.#GPUIndexFormat = renderPipelineDescriptor.vertexState.indexFormat);
         if (!renderPipelineDescriptor.rasterizationState) {
