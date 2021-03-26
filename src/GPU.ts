@@ -1,6 +1,6 @@
 ﻿import { TerraNodeGPU } from "./TerraNode.js";
 import type { RenderPass } from "./GPU/RenderPass.js";
-import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
+import { PipelineLayout, DynamicPipelineLayout } from "./GPU/BindGroupLayout.js";
 import type { Scene } from "./Scene.js";
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
@@ -33,8 +33,8 @@ export class GPU {
             type: "uniform"
         }
     });
-    rootCameralayout = new BindGroupLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
-    rootSceneLayout = new BindGroupLayout(this, this.uniformBindGroupLayoutLightsWGSL2, this.rootCameralayout, undefined, false);
+    rootCameralayout = new PipelineLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
+    rootSceneLayout = new PipelineLayout(this, this.uniformBindGroupLayoutLightsWGSL2, this.rootCameralayout, undefined, false);
 
     //viewprojection and camera position
 
@@ -89,7 +89,7 @@ export class GPU {
         });
 
 
-    rootLayout = new BindGroupLayout(this, this.BindGroupLayoutCanvas);
+    rootLayout = new PipelineLayout(this, this.BindGroupLayoutCanvas);
     BindGroupLayout = this.createBindGroupLayout(
         {
             binding: 0,
@@ -159,8 +159,6 @@ export class GPU {
         const renderPasses = createRenderPasses(this);
         this.renderPasses = new Set(renderPasses);
         [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
-
-
 
 
         this.#DynamicBindGroups.add(this.BindGroup);
@@ -345,7 +343,7 @@ export class GPU {
     }
     readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
     pendingCommandBuffers: GPUCommandBuffer[] = [];
-    drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: BindGroupLayout, renderPass: RenderPass, index: number, scene?: Scene) {
+    drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass, index: number, scene?: Scene) {
         let drawedMeshes = 0;
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
             if (bgt.sharedBindgroup && this.#DynamicBindGroups.has(bgt.sharedBindgroup)) {
