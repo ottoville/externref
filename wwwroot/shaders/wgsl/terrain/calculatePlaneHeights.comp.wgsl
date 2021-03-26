@@ -1,4 +1,5 @@
 const subdivisions:u32 = 250;
+const subdivisions_plus_one:u32 = 251;
 //const facetSize:u32 = 250000; // 250 * 250 * 4;
 const facetSize:u32 = 62500; // 250 * 250;
 
@@ -31,23 +32,26 @@ const facetSize:u32 = 62500; // 250 * 250;
 const cd: f32 = -1.0;
 [[stage(compute)]]
 fn main() -> void {
-    var idx1:u32 = (GlobalInvocationID.x + 1 + (GlobalInvocationID.y + 1) * (subdivisions + 1));
-    var idx2:u32 = (GlobalInvocationID.x + 1 + GlobalInvocationID.y * (subdivisions + 1));
-    var idx3:u32 = (GlobalInvocationID.x + GlobalInvocationID.y * (subdivisions + 1));
-    var idx4:u32 = (GlobalInvocationID.x + (GlobalInvocationID.y + 1) * (subdivisions + 1));
+    const next_x:u32=GlobalInvocationID.x + u32(1);
+    const next_y:u32=GlobalInvocationID.y + u32(1);
+
+    var idx1:u32 = (next_x + next_y * subdivisions_plus_one);
+    var idx2:u32 = (next_x + GlobalInvocationID.y * subdivisions_plus_one);
+    var idx3:u32 = (GlobalInvocationID.x + GlobalInvocationID.y * subdivisions_plus_one);
+    var idx4:u32 = (GlobalInvocationID.x + next_y * subdivisions_plus_one);
 
 
     //calculateHeightSquad(row, col);
     var i:u32 = GlobalInvocationID.y;
-    var j:u32 = GlobalInvocationID.x * (subdivisions + 1);
-    var k:u32 = (GlobalInvocationID.x + 1) * (subdivisions + 1);
+    var j:u32 = GlobalInvocationID.x * subdivisions_plus_one;
+    var k:u32 = next_x * subdivisions_plus_one;
 
 
     var v1arr:vec3<f32> = vertices.vert[j + i].position;
-    var v2arr:vec3<f32> =  vertices.vert[j + i + 1].position;
+    var v2arr:vec3<f32> =  vertices.vert[j + i + u32(1)].position;
 
     var v1v3:vec3<f32> = vertices.vert[k + i].position - v1arr;
-    var v1v4:vec3<f32> = vertices.vert[k + i + 1].position - v1arr;
+    var v1v4:vec3<f32> = vertices.vert[k + i + u32(1)].position - v1arr;
 
     //   cd = (terrainPositions[k + i + 2] - v1arr[2]) / (terrainPositions[k + i + 3] - v1arr[0]);
 

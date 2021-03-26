@@ -136,7 +136,7 @@ fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
         norm = facet12.plane[row * 250 + col].norm;
         d = facet12.plane[row * 250 + col].d;
     } else {
-        var index:u32 = facetSize + (row * 250 + col);
+        var index:u32 = facetSize + u32(row * 250 + col);
         norm = facet12.plane[index].norm;
         d = facet12.plane[index].d;
     }
@@ -152,10 +152,10 @@ fn main() -> void {
     var y:f32 = getHeightAtCoordinates(flatpos);
     positionAndRotate.arr[GlobalInvocationID.x].position = vec3<f32>(flatpos.x,y,flatpos.y);
     positionAndRotate.arr[GlobalInvocationID.x].rotation = 3.145 * rand(flatpos);
-
-    shapes.numbers[GlobalInvocationID.x * 4] = 0.4 + 0.6 * rand(vec2<f32>(flatpos.yx)); // x:scale
-    shapes.numbers[GlobalInvocationID.x * 4 + 1] = PI *0.2 * rand(vec2<f32>(flatpos.x, flatpos.y + f32(GlobalInvocationID.x))); // baseAngle
-    shapes.numbers[GlobalInvocationID.x * 4 + 2] = PI *0.2 * rand(vec2<f32>(flatpos.xy)); // z:curve
-    shapes.numbers[GlobalInvocationID.x * 4 + 3] = snoise(vec2<f32>(flatpos.xy)); //  w:color
+    var index:u32 = GlobalInvocationID.x * u32(4);
+    shapes.numbers[index] = 0.4 + 0.6 * rand(vec2<f32>(flatpos.yx)); // x:scale
+    shapes.numbers[index + u32(1)] = PI *0.2 * rand(vec2<f32>(flatpos.x, flatpos.y + f32(GlobalInvocationID.x))); // baseAngle
+    shapes.numbers[index + u32(2)] = PI *0.2 * rand(vec2<f32>(flatpos.xy)); // z:curve
+    shapes.numbers[index + u32(3)] = snoise(vec2<f32>(flatpos.xy)); //  w:color
     return;
 }

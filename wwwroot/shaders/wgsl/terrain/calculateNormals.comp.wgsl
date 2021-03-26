@@ -22,39 +22,46 @@ const stride : u32 = 12;
 fn main() -> void {
 
     var i:u32 = GlobalInvocationID.y * stride;
-    var j:u32 = GlobalInvocationID.x * (subdivisions + 1) * stride;
+    var j:u32 = GlobalInvocationID.x * (subdivisions + u32(1)) * stride;
 
-
+    const rows:u32 = GlobalInvocationID.x * subdivisions;
+    const last_y:u32=GlobalInvocationID.y - u32(1);
+    var index:u32 = (rows +  GlobalInvocationID.y) * u32(4);
     var norm1:vec3<f32> =vec3<f32>(
-        facet12.numbers[(GlobalInvocationID.x * subdivisions +  GlobalInvocationID.y) * 4],
-        facet12.numbers[(GlobalInvocationID.x * subdivisions +  GlobalInvocationID.y) * 4 +1],
-        facet12.numbers[(GlobalInvocationID.x * subdivisions +  GlobalInvocationID.y) * 4 +2]
+        facet12.numbers[index],
+        facet12.numbers[index + u32(1)],
+        facet12.numbers[index + u32(2)]
     );
+    index= facetSize +  ((rows +  GlobalInvocationID.y) * u32(4));
     var norm2:vec3<f32> =vec3<f32>(
-        facet12.numbers[facetSize +  ((GlobalInvocationID.x * subdivisions +  GlobalInvocationID.y) * 4)],
-        facet12.numbers[facetSize + ((GlobalInvocationID.x * subdivisions +  GlobalInvocationID.y) * 4 +1)],
-        facet12.numbers[facetSize + ((GlobalInvocationID.x * subdivisions +  GlobalInvocationID.y) * 4 +2)]
+        facet12.numbers[index],
+        facet12.numbers[index + u32(1)],
+        facet12.numbers[index + u32(2)]
     );
+    index = facetSize +  ((rows +  last_y) * u32(4));
     var norm4:vec3<f32> =vec3<f32>(
-        facet12.numbers[facetSize +  (((GlobalInvocationID.x) * subdivisions +  (GlobalInvocationID.y - 1)) * 4)],
-        facet12.numbers[facetSize + (((GlobalInvocationID.x) * subdivisions +  (GlobalInvocationID.y - 1)) * 4 +1)],
-        facet12.numbers[facetSize + (((GlobalInvocationID.x) * subdivisions +  (GlobalInvocationID.y - 1)) * 4 +2)]
+        facet12.numbers[index],
+        facet12.numbers[index + u32(1)],
+        facet12.numbers[index + u32(2)]
     );
-
+    const last_x:u32 = GlobalInvocationID.x - u32(1);
+  index = (last_x * subdivisions +  (GlobalInvocationID.y)) * u32(4);
     var norm5:vec3<f32> =vec3<f32>(
-        facet12.numbers[((GlobalInvocationID.x - 1) * subdivisions +  (GlobalInvocationID.y)) * 4],
-        facet12.numbers[((GlobalInvocationID.x - 1) * subdivisions +  (GlobalInvocationID.y)) * 4 +1],
-        facet12.numbers[((GlobalInvocationID.x - 1) * subdivisions +  (GlobalInvocationID.y)) * 4 +2]
+        facet12.numbers[index],
+        facet12.numbers[index + u32(1)],
+        facet12.numbers[index + u32(1)]
     );
+    index=(last_x * subdivisions +  last_y) * u32(4);
     var norm7:vec3<f32> =vec3<f32>(
-       facet12.numbers[((GlobalInvocationID.x - 1) * subdivisions +  (GlobalInvocationID.y - 1)) * 4],
-       facet12.numbers[((GlobalInvocationID.x - 1) * subdivisions +  (GlobalInvocationID.y - 1)) * 4 +1],
-       facet12.numbers[((GlobalInvocationID.x - 1) * subdivisions +  (GlobalInvocationID.y - 1)) * 4 +2]
+       facet12.numbers[index],
+       facet12.numbers[index + u32(1)],
+       facet12.numbers[index + u32(2)]
     );
+    index=facetSize +  ((last_x * subdivisions +  last_y) * u32(4));
     var norm8:vec3<f32> =vec3<f32>(
-        facet12.numbers[facetSize +  (((GlobalInvocationID.x - 1) * subdivisions +  (GlobalInvocationID.y - 1)) * 4)],
-        facet12.numbers[facetSize + (((GlobalInvocationID.x - 1) * subdivisions +  (GlobalInvocationID.y - 1)) * 4 + 1)],
-        facet12.numbers[facetSize + (((GlobalInvocationID.x - 1) * subdivisions +  (GlobalInvocationID.y - 1)) * 4 + 2)]
+        facet12.numbers[index],
+        facet12.numbers[index + u32(1)],
+        facet12.numbers[index + u32(2)]
     );
 
     var normalized:vec3<f32> = normalize(norm1 + norm2 + norm4 + norm5 + norm7 + norm8);
@@ -89,8 +96,8 @@ fn main() -> void {
     //7 and 8   far
     
 
-    normals.numbers[j + i + 4]=normalized.x;
-    normals.numbers[j + i + 5]=normalized.y;
-    normals.numbers[j + i + 6]=normalized.z;
+    normals.numbers[j + i + u32(4)]=normalized.x;
+    normals.numbers[j + i + u32(5)]=normalized.y;
+    normals.numbers[j + i + u32(6)]=normalized.z;
     return;
  }

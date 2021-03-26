@@ -8,16 +8,17 @@ const subdivisions : u32 = 250;
 
 [[stage(compute)]]
 fn main() -> void {
-  var idx1: u32 = (GlobalInvocationID.x + 1 + (GlobalInvocationID.y + 1) * (subdivisions + 1));
-  var idx2: u32 = (GlobalInvocationID.x + 1 + GlobalInvocationID.y * (subdivisions + 1));
-  var idx3: u32 = (GlobalInvocationID.x + GlobalInvocationID.y * (subdivisions + 1));
-  var idx4: u32 = (GlobalInvocationID.x + (GlobalInvocationID.y + 1) * (subdivisions + 1));
-  indices.numbers[GlobalInvocationID.y*250*6 + GlobalInvocationID.x*6] = idx1;
-  indices.numbers[GlobalInvocationID.y*250*6 + GlobalInvocationID.x*6+1]=idx2;
-  indices.numbers[GlobalInvocationID.y*250*6 + GlobalInvocationID.x*6+2]=idx3;
+  var idx1: u32 = (GlobalInvocationID.x + u32(1) + (GlobalInvocationID.y + u32(1)) * (subdivisions + u32(1)));
+  var idx2: u32 = (GlobalInvocationID.x + u32(1) + GlobalInvocationID.y * (subdivisions + u32(1)));
+  var idx3: u32 = (GlobalInvocationID.x + GlobalInvocationID.y * (subdivisions + u32(1)));
+  var idx4: u32 = (GlobalInvocationID.x + (GlobalInvocationID.y + u32(1)) * (subdivisions + u32(1)));
+  var index:u32 = GlobalInvocationID.y*u32(250*6) + GlobalInvocationID.x*u32(6);
+  indices.numbers[index] = idx1;
+  indices.numbers[index+u32(1)]=idx2;
+  indices.numbers[index+u32(2)]=idx3;
 
-  indices.numbers[GlobalInvocationID.y*250*6 + GlobalInvocationID.x*6+3]=idx4;
-  indices.numbers[GlobalInvocationID.y*250*6 + GlobalInvocationID.x*6+4]=idx1;
-  indices.numbers[GlobalInvocationID.y*250*6 + GlobalInvocationID.x*6+5]=idx3;
+  indices.numbers[index+u32(3)]=idx4;
+  indices.numbers[index+u32(4)]=idx1;
+  indices.numbers[index+u32(5)]=idx3;
   return;
 }
