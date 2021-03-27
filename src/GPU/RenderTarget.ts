@@ -40,7 +40,7 @@ export class RenderTarget<T extends GPUTexture> {
         const oldSampleCount = this.renderPass.sampleCount;
 
         this.renderPass.sampleCount = 1
-        this.renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = this.renderPass.decoratePipeline(rp.renderPipelineDescriptor))
+        this.renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = this.renderPass.decoratePipeline(rp))
 
         this.renderPass.bundles.length = 0;
         this.renderPass.onResize(this.renderPass.size.width, this.renderPass.size.height)
@@ -77,7 +77,7 @@ export class RenderTarget<T extends GPUTexture> {
                 this.debug = false;
                 this.renderPass.bundles.length = 0;
                 this.renderPass.sampleCount = oldSampleCount;
-                this.renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = this.renderPass.decoratePipeline(rp.renderPipelineDescriptor))
+                this.renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = this.renderPass.decoratePipeline(rp))
                 this.renderPass.onResize(this.renderPass.size.width, this.renderPass.size.height)
 
                 this.createTexture();

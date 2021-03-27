@@ -17,14 +17,15 @@ import { Sea } from "../world/water.js";
 import { LazyEval } from "../LazyEval.js";
 import { Box } from "../GPU/Meshes/Box.js";
 import { Sun2 } from "../world/sun2.js";
-//@ts-ignore
+
 import { PositionNode, TerraNodeGPU } from "../TerraNode.js";
 import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 import { savedCamera } from "../types/interfaces/index.js";
 import { RenderTarget } from "../GPU/RenderTarget.js";
-//@ts-ignore
+
 import { DrawableSimple } from "GPU/Drawable.js";
+import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
 /*
 const tools: {
     name: string,
@@ -89,25 +90,25 @@ export class Canvas extends TerraCompoment {
             magFilter: "linear",
             minFilter: "linear",
         });
-    
+
 
         const gpu = new GPU(this.canvasElem, device, (gpu) => {
             const renderpassCanvas = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height },
                 (w, h) => {
                     return [w, h]
                 });
-           //new RenderTarget(renderpassCanvas, "bgra8unorm");
+            //new RenderTarget(renderpassCanvas, "bgra8unorm");
             const renderpassScreen = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height },
                 (w, h) => {
                     return [w, h]
                 });
             //loadValue here does not make any difference because quad is filling the whole screen
             renderpassCanvas.addSwapChain({ r: 0.53, g: 0.8, b: 0.92, a: 1.0 });
-           // new RenderTarget(renderpassScreen, "bgra8unorm");
-            const gRenderTargetNormals = new RenderTarget(renderpassScreen, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
-            const gRenderTargetPositions = new RenderTarget(renderpassScreen, "rgba32float",{ r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-            const gRenderTargetDiffuse = new RenderTarget(renderpassScreen, "bgra8unorm",{ r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
-            
+            // new RenderTarget(renderpassScreen, "bgra8unorm");
+            const gRenderTargetNormals = new RenderTarget(renderpassScreen, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1);
+            const gRenderTargetPositions = new RenderTarget(renderpassScreen, "rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            const gRenderTargetDiffuse = new RenderTarget(renderpassScreen, "bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1);
+
             //@ts-ignore
             window.printRenderTarget = () => {
                 gRenderTargetNormals.toBitmap()
@@ -120,15 +121,15 @@ export class Canvas extends TerraCompoment {
             const renderpassWater = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED)
 
             //Normals
-            new RenderTarget(renderpassWater, "bgra8unorm",{ r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+            new RenderTarget(renderpassWater, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1);
             //Position
-            new RenderTarget(renderpassWater, "rgba32float",{ r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
+            new RenderTarget(renderpassWater, "rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
             //Diffuse
-            new RenderTarget(renderpassWater, "bgra8unorm",{ r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,1);
+            new RenderTarget(renderpassWater, "bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1);
 
-            
-            
-            
+
+
+
 
             this.BindGroupCanvas = () => gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
                 {
@@ -153,7 +154,7 @@ export class Canvas extends TerraCompoment {
                         buffer: gpu.GPUData
                     }
                 });
-            
+
             return [
                 renderpassCanvas,
                 renderpassScreen,
@@ -197,7 +198,7 @@ export class Canvas extends TerraCompoment {
             position[1] -= (position[1] - 3) * 2;
             target[1] = -target[1];
         });
-        //@ts-ignore
+
         const TerraCameras = [mainCamera, waterCamera]
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
@@ -216,8 +217,7 @@ export class Canvas extends TerraCompoment {
 
             const b = new Box(terrascene);
             b.update_scale(200, 200, 200);
-            //@ts-ignore
-            const human = new Human(terrascene)
+            new Human(terrascene)
 
             const ready = new Promise((res, rej) => {
                 const terrainInited = Terrain.loadFromTexture(terrascene);
@@ -319,31 +319,20 @@ export class Canvas extends TerraCompoment {
         let msPerFrame = 0;
         let startTime = 0;
         const me = this;
-        const vertex = gpu.shaderModules.get('canvas.vert.wgsl')
-        const fragment = gpu.shaderModules.get('texture.frag.wgsl')
-        if (!vertex || !fragment)
-            throw ('Missing shader')
 
-        //@ts-ignore
-        const canvasPipeline = gpu.rootLayout.addRenderPipeline({
+        const canvasPipeline = gpu.rootLayout.addRenderPipeline(new VertexShader(gpu,'canvas.vert.wgsl'), new Shader(gpu,'texture.frag.wgsl'), {
             label: 'canvas',
-            primitiveTopology: 'triangle-list',
-            depthStencilState: {
+            primitive: {
+                topology: 'triangle-list'
+            },
+            depthStencil: {
                 depthWriteEnabled: false,
                 depthCompare: "less",
                 format: "depth24plus-stencil8",
-            },
-            vertexStage: {
-                module: vertex,
-                entryPoint: "main",
-            },
-            fragmentStage: {
-                module: fragment,
-                entryPoint: "main"
-            },
+            }
         });
 
-        new TerraNodeGPU<DrawableSimple>(terraEngine,canvasPipeline,6,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]),node))
+        new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node))
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();
@@ -397,8 +386,8 @@ export class Canvas extends TerraCompoment {
             renderFrame = window.requestAnimationFrame(renderLoop);
 
         }
-        
-        const maxResolution= {
+
+        const maxResolution = {
             width: 1920,
             height: 1080
         }
@@ -408,22 +397,22 @@ export class Canvas extends TerraCompoment {
             resizeHandler = setTimeout(async () => {
                 const aspectRatio = entries[0]!.contentRect.width / entries[0]!.contentRect.height
                 this.canvasElem.width = Math.min((entries[0]!.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
-                
-                this.canvasElem.height = this.canvasElem.width/aspectRatio
-                
-                if(this.canvasElem.height > maxResolution.height) {
-                    this.canvasElem.height=maxResolution.height;
-                    this.canvasElem.width = this.canvasElem.height*aspectRatio;
+
+                this.canvasElem.height = this.canvasElem.width / aspectRatio
+
+                if (this.canvasElem.height > maxResolution.height) {
+                    this.canvasElem.height = maxResolution.height;
+                    this.canvasElem.width = this.canvasElem.height * aspectRatio;
                 }
 
-                gpu.scale.x=this.canvasElem.width / entries[0]!.contentRect.width;
-                gpu.scale.y=this.canvasElem.height / entries[0]!.contentRect.height;
+                gpu.scale.x = this.canvasElem.width / entries[0]!.contentRect.width;
+                gpu.scale.y = this.canvasElem.height / entries[0]!.contentRect.height;
 
-               gpu.renderPasses.forEach(renderPass => {
+                gpu.renderPasses.forEach(renderPass => {
                     renderPass.onResize(this.canvasElem.width, this.canvasElem.height)
-                    renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = renderPass.decoratePipeline(rp.renderPipelineDescriptor))
+                    renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = renderPass.decoratePipeline(rp))
                     renderPass.bundles.length = 0;
-               })
+                })
 
                 //Create projection matrix
                 //min view distance

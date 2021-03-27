@@ -8,7 +8,7 @@ import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
 import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
+import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU";
 
 const terrainWorker = new WorkerThread('/js/workers/webworkers/terrainWorker.js');
@@ -23,33 +23,17 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : RenderPipeline {
         return renderPipeline;
     }
 
-    const vertex = scene.gpu.shaderModules.get("helper2.vert.wgsl");
-    const fragment = scene.engine.gpu.shaderModules.get('color.frag.wgsl')
-    if (!vertex || !fragment)
-        throw ('Missing shader')
-    //const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
-    //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
-    renderPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
-        primitiveTopology: 'triangle-strip',
-        rasterizationState: {
-            cullMode: 'none',
+    renderPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline(new VertexShader(scene.engine.gpu,"helper2.vert.wgsl"),new Shader(scene.engine.gpu,'color.frag.wgsl'),{
+        primitive: {
+            topology: 'triangle-list',
+            cullMode: 'none'
         },
-        depthStencilState: {
+        depthStencil: {
             depthWriteEnabled: true,
             depthCompare: "less",
             format: "depth24plus-stencil8",
         },
-        vertexStage: {
-            module: vertex,
-            entryPoint: "main",
-        },
-        fragmentStage: {
-            module: fragment,
-            entryPoint: "main"
-        },
-        vertexState: {
-            indexFormat: 'uint32'
-        }
+
     })
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline

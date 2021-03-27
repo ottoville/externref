@@ -33,7 +33,7 @@ export abstract class Drawable {
 
            let variant = rp.renderPipelines.get(this.renderPipeline)
             if(!variant) {
-                const renderpipeline = rp.decoratePipeline(this.renderPipeline.renderPipelineDescriptor);
+                const renderpipeline = rp.decoratePipeline(this.renderPipeline);
                 variant = {
                     renderpipeline: renderpipeline,
                     drawables: new Map(),

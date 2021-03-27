@@ -4,7 +4,7 @@ import type { isLight } from "../lights.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 import { Angle } from "../Math.js";
 import type { GPU } from "../GPU.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
+import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { Engine } from "../engine.js";
 import { DrawableSimple } from "GPU/Drawable.js";
 
@@ -21,33 +21,16 @@ function getRenderPipeline(engine: Engine) {
     let renderPipeline: RenderPipeline | undefined = renderPipelines.get(engine.gpu);
     if (renderPipeline)
         return renderPipeline;
-    const vertex = engine.gpu.shaderModules.get('sun.vert.wgsl')
-    const fragment = engine.gpu.shaderModules.get('sun.frag.wgsl')
-    if (!vertex || !fragment)
-        throw ('Missing shader')
-    //const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
-    //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
-
-    renderPipeline = engine.positionBindGroupTime.addRenderPipeline({
-        rasterizationState: {
-            cullMode: 'none',
-        },
-        depthStencilState: {
+    renderPipeline = engine.positionBindGroupTime.addRenderPipeline(new VertexShader(engine.gpu,'sun.vert.wgsl'), new Shader(engine.gpu,'sun.frag.wgsl'), {
+        depthStencil: {
             format: 'depth24plus-stencil8',
             depthWriteEnabled: false,
             depthCompare: 'always'
         },
-        primitiveTopology: 'triangle-strip',
-        vertexStage: {
-            module: vertex,
-            entryPoint: "main",
-        },
-        fragmentStage: {
-            module: fragment,
-            entryPoint: "main"
-        },
-        vertexState: {
-            indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
+        primitive: {
+            topology: 'triangle-strip',
+            cullMode: 'none',
+            stripIndexFormat:'uint16'
         }
     });
     renderPipelines.set(engine.gpu, renderPipeline);

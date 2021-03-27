@@ -1,13 +1,12 @@
 ﻿import type { GPU } from "../GPU.js";
-import { RenderPipeline } from "./RenderPipeline.js";
-
+import { RenderPipeline, Shader, VertexShader } from "./RenderPipeline.js";
 export class PipelineLayout {
     static instances: Set<PipelineLayout> = new Set();
 
     childBindGroups: Map<GPUBindGroup, PipelineLayout> = new Map();
 
-    addRenderPipeline(renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'colorStates'>): RenderPipeline {
-        const d = new RenderPipeline(renderPipeline, this)
+    addRenderPipeline(vertexShader:VertexShader, fragmentShader:Shader, renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>): RenderPipeline {
+        const d = new RenderPipeline(vertexShader,fragmentShader,renderPipeline, this)
         this.renderPipeLines.add(d);
         return d;
     }
@@ -53,15 +52,15 @@ export class PipelineLayout {
     }
 }
 export class DynamicPipelineLayout extends PipelineLayout {
-    addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'colorStates'>): RenderPipeline => {
-        const d = super.addRenderPipeline(renderPipeline);
+    addRenderPipeline = (vertexShader:VertexShader, fragmentShader:Shader,renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>): RenderPipeline => {
+        const d = super.addRenderPipeline(vertexShader,fragmentShader,renderPipeline);
         d.dynamicBindGroupOffset = [0];
         return d;
     }
 }
 export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends PipelineLayout {
-    addRenderPipeline = (renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'colorStates'>, bindGroups?: () => T): RenderPipeline => {
-        const RP = super.addRenderPipeline(renderPipeline);
+    addRenderPipeline = (vertexShader:VertexShader, fragmentShader:Shader, renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>, bindGroups?: () => T): RenderPipeline => {
+        const RP = super.addRenderPipeline(vertexShader,fragmentShader,renderPipeline);
         if (bindGroups) {
             RP.createBindGroups = (): Set<GPUBindGroup> => {
                 return new Set([this.gpuscene.device.createBindGroup(

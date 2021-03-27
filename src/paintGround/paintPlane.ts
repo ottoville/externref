@@ -6,7 +6,7 @@ import { TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
+import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 
 import { TerraVector2 } from "../Math.js";
@@ -16,54 +16,29 @@ import type { Engine } from "engine.js";
 
 
 class PlaneMesh extends TerraNodeGPU<DrawableIndexed> {
-    constructor(engine:Engine, renderPipeline: RenderPipeline, verticesCount:number) {
-        super(engine,renderPipeline,verticesCount, (node) => renderPipeline.addDrawableIndexed(undefined, new Set([engine.gpu.renderPassScreen]), node, undefined, 0, 1, 0))
+    constructor(engine: Engine, renderPipeline: RenderPipeline, verticesCount: number) {
+        super(engine, renderPipeline, verticesCount, (node) => renderPipeline.addDrawableIndexed(undefined, new Set([engine.gpu.renderPassScreen]), node, undefined, 0, 1, 0))
     }
 }
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(scene: Scene, ground: Terrain):RenderPipeline{
+function getRenderPipeline(scene: Scene, ground: Terrain): RenderPipeline {
     let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
     if (renderPipeline) {
         return renderPipeline;
     }
-    const vertex = scene.engine.gpu.shaderModules.get('plane.vert.wgsl')
-    if (!vertex)
-        throw ('Missing vertex shader')
-    const fragment = scene.engine.gpu.shaderModules.get('color.frag.wgsl')
-    if (!fragment)
-        throw ('Missing fragment shader')
-    //const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
-    //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
-
-    renderPipeline = ground.TerrainHeightsbindGroupPositionTree.addRenderPipeline({
-        primitiveTopology: 'triangle-strip',
-        rasterizationState: {
-            cullMode: 'none',
-        },
-        vertexStage: {
-            module: vertex,
-            entryPoint: "main",
-        },
-        fragmentStage: {
-            module: fragment,
-            entryPoint: "main"
-        },
-        vertexState: {
-            indexFormat: 'uint32',
-            vertexBuffers:
-                [{
-                    arrayStride: 4 * 2,
-                    stepMode: "vertex" as GPUInputStepMode,
-                    attributes: [{
-                        // position
-                        shaderLocation: 0,
-                        offset: 0,
-                        format: "float32x2"
-                    }]
-                }]
-        },
+    renderPipeline = ground.TerrainHeightsbindGroupPositionTree.addRenderPipeline(new VertexShader(scene.engine.gpu,'plane.vert.wgsl', 'main', [{
+        arrayStride: 4 * 2,
+        stepMode: "vertex" as GPUInputStepMode,
+        attributes: [{
+            // position
+            shaderLocation: 0,
+            offset: 0,
+            format: "float32x2"
+        }]
+    }]), new Shader(scene.engine.gpu,'color.frag.wgsl'), {
+        primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat:'uint32' },
     });
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline
@@ -73,10 +48,10 @@ export class paintPlane extends paintGround {
         /*this.#mesh.update((scaling) => {
             scaling[2] = 0;
         });*/
-       // this.#mesh.scale_z=0;
-        this.#mesh.update_scale(this.#mesh.scale_x,this.#mesh.scale_y,0)
+        // this.#mesh.scale_z=0;
+        this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0)
     }
-    #mesh = new PlaneMesh(this.scene.engine, getRenderPipeline(this.scene, this.ground),0);
+    #mesh = new PlaneMesh(this.scene.engine, getRenderPipeline(this.scene, this.ground), 0);
     #startingPoint = new TerraVector2(2);
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
         const positions: number[] = [0, 0, 0, 1];
@@ -146,15 +121,15 @@ export class paintPlane extends paintGround {
         this.#mesh.translation[1] = 5;
         this.#mesh.translation[2] = this.#startingPoint[1] - 1;
 
-       // const rotQ = Quaternion.RotationYawPitchRoll(this.ang360.rad - Math.PI, 0, 0)
+        // const rotQ = Quaternion.RotationYawPitchRoll(this.ang360.rad - Math.PI, 0, 0)
         //Quaternion.RotationYawPitchRollToRef(this.ang360.rad - Math.PI, 0, 0, rotQ);
         // Produces a quaternion from Euler angles in the z-y-x orientation (Tait-Bryan angles)
 
         const halfYaw = (this.ang360.rad - Math.PI) * 0.5;
 
         this.#mesh.update_scale_and_rotation(
-            height / this.#columns, this.#mesh.scale_y,this.#mesh.scale_z,
-            0, Math.sin(halfYaw), 0, Math.cos(halfYaw) )
+            height / this.#columns, this.#mesh.scale_y, this.#mesh.scale_z,
+            0, Math.sin(halfYaw), 0, Math.cos(halfYaw))
     }
 
     async onAreaDraw(width: number): Promise<void> {
@@ -162,20 +137,20 @@ export class paintPlane extends paintGround {
         if (!this.#rowGenerator) {
             this.#rowGenerator = this.createTiledGround(this.#columns);
         }
-        
-        const newRows = Math.max(1,Math.floor(width / 10));
+
+        const newRows = Math.max(1, Math.floor(width / 10));
         if (newRows > this.#rows) {
             do {
                 newValues = this.#rowGenerator.next().value;
             } while (++this.#rows < newRows);
         }
-        this.#mesh.update_scale(this.#mesh.scale_x,this.#mesh.scale_y,width / this.#rows)
+        this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, width / this.#rows)
 
         if (newValues) {
             this.#mesh.Drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
             this.#mesh.Drawable.setIndexBuffer(new Uint32Array(newValues.indices));
             this.#mesh.verticesCount = newValues.indices.length;
-           // this.#mesh.Drawable.indexCount = newValues.indices.length;
+            // this.#mesh.Drawable.indexCount = newValues.indices.length;
         }
     }
 }

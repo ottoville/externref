@@ -3,20 +3,35 @@ import type { PipelineLayout } from "./PipelineLayout.js";
 import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
 import type { RenderPass } from "./RenderPass.js";
 import { TerraNodeGPU } from "../TerraNode.js";
+import type { GPU } from "../GPU.js";
 
+export class Shader {
+    module:GPUShaderModule;
+    constructor(gpu:GPU, shader:string, public entryPoint='main') {
+        const module=gpu.shaderModules.get(shader);
+        if(!module)
+            throw(new Error('shader '+shader+' not found'));
+        this.module = module;
+    }
+}
+export class VertexShader extends Shader {
+    constructor(gpu:GPU,shader:string, entrypoint='main', public buffers?:Iterable<GPUVertexBufferLayout>) {
+        super(gpu,shader, entrypoint)
+    }
+}
 export class RenderPipeline {
 
     dynamicBindGroupOffset: number[] = [];
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
     public createBindGroups?: () => Set<GPUBindGroup>
-    constructor(public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates'>, public bindgroupdrawable: PipelineLayout) {
+    constructor(public vertexShader:VertexShader, public fragmentShader:Shader, public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates' | 'vertex' | 'fragment'>, public bindgroupdrawable: PipelineLayout) {
+
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
-        renderPipelineDescriptor.vertexState && renderPipelineDescriptor.vertexState.indexFormat && (this.#GPUIndexFormat = renderPipelineDescriptor.vertexState.indexFormat);
-        if (!renderPipelineDescriptor.rasterizationState) {
-            renderPipelineDescriptor.rasterizationState = {
-                cullMode: 'back',
-            }
-        }
+        if(!renderPipelineDescriptor.primitive)
+            renderPipelineDescriptor.primitive={cullMode:'back'};
+        else if(!renderPipelineDescriptor.primitive.cullMode)
+            renderPipelineDescriptor.primitive.cullMode='back';
+
     }
     destroy(): void {
         this.bindgroupdrawable.renderPipeLines.delete(this);

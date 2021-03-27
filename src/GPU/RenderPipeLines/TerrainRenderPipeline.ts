@@ -1,7 +1,7 @@
 ﻿import type { GPU } from "../../GPU.js";
 import { BoundableNode } from "../../TerraNode.js";
 import type { Scene } from "../../Scene.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
+import { RenderPipeline, Shader, VertexShader } from "../RenderPipeline.js";
 import type { DrawableIndexed } from "../Drawable.js";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
@@ -11,64 +11,47 @@ function TerrainRenderPipeline(scene: Scene) {
     const renderPipeline = renderPipelines.get(scene.gpu);
     if (renderPipeline)
         return renderPipeline;
-    const vertex = scene.engine.gpu.shaderModules.get('ground.vert.wgsl')
-    const fragment = scene.engine.gpu.shaderModules.get('ground.frag.wgsl')
-    if (!vertex || !fragment)
-        throw ('Missing shader terrain')
 
-
-    const renderPipeLine = scene.lightsBindGroupTexture.addRenderPipeline({
+    const renderPipeLine = scene.lightsBindGroupTexture.addRenderPipeline(new VertexShader(scene.engine.gpu,'ground.vert.wgsl', 'main', [{
+        arrayStride: 48,
+        stepMode: "vertex",
+        attributes: [{
+            // position
+            shaderLocation: 0,
+            offset: 0,
+            format: "float32x3"
+        },
+        {
+            // normals
+            shaderLocation: 2,
+            offset: 16,
+            format: "float32x3"
+        },
+        {
+            // uv
+            shaderLocation: 1,
+            offset: 32,
+            format: "float32x2"
+        }
+        ]
+    }]), new Shader(scene.engine.gpu,'ground.frag.wgsl'), {
         label: 'terrain',
-        primitiveTopology: 'triangle-list',
-        depthStencilState: {
+        primitive: { topology: 'triangle-list' },
+        depthStencil: {
             depthWriteEnabled: true,
             depthCompare: "less",
             format: "depth24plus-stencil8",
-        },
-        vertexStage: {
-            module: vertex,
-            entryPoint: "main",
-        },
-        fragmentStage: {
-            module: fragment,
-            entryPoint: "main"
-        },
-        vertexState: {
-            vertexBuffers:
-                [{
-                    arrayStride: 48,
-                    stepMode: "vertex",
-                    attributes: [{
-                        // position
-                        shaderLocation: 0,
-                        offset: 0,
-                        format: "float32x3"
-                    },
-                    {
-                        // normals
-                        shaderLocation: 2,
-                        offset: 16,
-                        format: "float32x3"
-                    },
-                    {
-                        // uv
-                        shaderLocation: 1,
-                        offset: 32,
-                        format: "float32x2"
-                    }
-                    ]
-                }]
-        },
+        }
     });
     renderPipelines.set(scene.gpu, renderPipeLine);
     return renderPipeLine;
 }
 export class TerrainMesh extends BoundableNode<DrawableIndexed> {
-    sampler=this.engine.gpu.device.createSampler({
+    sampler = this.engine.gpu.device.createSampler({
         magFilter: "linear",
         minFilter: "linear",
     })
-    setTextureView=(textureview: GPUTextureView) => {
+    setTextureView = (textureview: GPUTextureView) => {
         this.Drawable.setStaticBuffer(() => {
             return [
                 {
@@ -91,7 +74,7 @@ export class TerrainMesh extends BoundableNode<DrawableIndexed> {
         indicesView: Uint32Array,
         verticesPositionStride = 3
     ) {
-        super(scene, TerrainRenderPipeline(scene), positionsCount,(node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), node, undefined, 0, 1), verticesPositionStride, indicesView);
+        super(scene, TerrainRenderPipeline(scene), positionsCount, (node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), node, undefined, 0, 1), verticesPositionStride, indicesView);
         this.setTextureView(initialTexture);
         this.Drawable.setVertexBuffer(0, this.vBuffer);
         this.Drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');

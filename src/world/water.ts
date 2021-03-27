@@ -1,6 +1,6 @@
 ﻿import { BoundableNode } from "../TerraNode.js";
 import type { Scene } from "../Scene.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
+import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 import { DrawableSimple } from "GPU/Drawable.js";
 
@@ -10,12 +10,6 @@ function getRenderPipeline(scene: Scene) {
     let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
     if (renderPipeline)
         return renderPipeline;
-    const vertex = scene.engine.gpu.shaderModules.get('water.vert.wgsl')
-    const fragment = scene.engine.gpu.shaderModules.get('water.frag.wgsl')
-    if (!vertex || !fragment)
-        throw ('Missing shader')
-    //const [vertex, fragment] = await Promise.all(['/shaders/wgsl/simple.vert.wgsl', '/shaders/wgsl/simple.frag.wgsl'].map(async u => scene.gpu.device.createShaderModule({ code: await (await fetch(u)).text() })));
-    //const bindGroupLayout = scene.gpu.addBindGroup(scene.lights.uniformBindGroupLightsWGSL);
 
     //TODO: Reuse sampler with terrain.ts?
     const sampler = scene.gpu.device.createSampler({
@@ -47,19 +41,8 @@ function getRenderPipeline(scene: Scene) {
 
         }
     }));
-    renderPipeline = lightsBindGroupTextureWater.addRenderPipeline({
-        primitiveTopology: 'triangle-strip',
-        vertexStage: {
-            module: vertex,
-            entryPoint: "main",
-        },
-        fragmentStage: {
-            module: fragment,
-            entryPoint: "main"
-        },
-        vertexState: {
-            indexFormat: 'uint16' //todo: this is not needed as shader does not use indexes.
-        }
+    renderPipeline = lightsBindGroupTextureWater.addRenderPipeline(new VertexShader(scene.engine.gpu,'water.vert.wgsl'), new Shader(scene.engine.gpu,'water.frag.wgsl'), {
+        primitive: { topology: 'triangle-strip', stripIndexFormat:'uint16' }
     }, () =>
         [
             {

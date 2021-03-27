@@ -37,23 +37,26 @@ export class RenderPass {
             this.#depthTextureView = this.#depthTexture.createView();
         }
     }
-    decoratePipeline(partialRenderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates'>): GPURenderPipeline {
-        const renderPipelineDescriptor = partialRenderPipelineDescriptor as GPURenderPipelineDescriptor;
+    decoratePipeline(renderpipeline: RenderPipeline): GPURenderPipeline {
+        const renderPipelineDescriptor = renderpipeline.renderPipelineDescriptor as GPURenderPipelineDescriptor;
+        renderPipelineDescriptor.vertex=renderpipeline.vertexShader;
+        renderPipelineDescriptor.fragment={...renderpipeline.fragmentShader, targets: this.colorFormats.map(cf => {
+            return {
+                format: cf
+            }
+        })};
         if (!this.#depthTexture)
-            renderPipelineDescriptor.depthStencilState = undefined
-        else if (!renderPipelineDescriptor.depthStencilState) {
-            renderPipelineDescriptor.depthStencilState = {
+            renderPipelineDescriptor.depthStencil = undefined
+        else if (!renderPipelineDescriptor.depthStencil) {
+            renderPipelineDescriptor.depthStencil = {
                 depthWriteEnabled: true,
                 depthCompare: "less",
                 format: "depth24plus-stencil8",
             }
         }
-        renderPipelineDescriptor.sampleCount = this.sampleCount;
-        renderPipelineDescriptor.colorStates = this.colorFormats.map(cf => {
-            return {
-                format: cf
-            }
-        });
+        if(this.sampleCount > 1)
+            renderPipelineDescriptor.multisample= { count: this.sampleCount};
+
         return this.gpu.device.createRenderPipeline(renderPipelineDescriptor)
     }
 

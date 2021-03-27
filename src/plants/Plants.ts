@@ -1,11 +1,12 @@
 //import { translate, rotateMatrix } from "../math.js";
-import {WorkerThread, WorkerReturn} from "../WorkerThread.js";
+import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
 import { Terrain } from "../world/terrain.js";
 //import simplex from '../simplex.js'
 
 import type { PTDresult } from "../types/interfaces/index.js";
 
 import type { Scene } from "../Scene.js";
+import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
 
 
 
@@ -28,69 +29,49 @@ export class Plants {
     public fillArea(area: PTDresult) {
         //let amount = 100000
 
-        this.ready.then(() => { 
-           // console.log('sending grass to worker, took ', new Date().getTime() - d);
+        this.ready.then(() => {
+            // console.log('sending grass to worker, took ', new Date().getTime() - d);
             this.worker.message(WorkerReturn.noReturn, 'save',
-            {
-                area: area,
-                angle: area.rad
-            })
+                {
+                    area: area,
+                    angle: area.rad
+                })
         })
     }
     constructor(
         scene: Scene,
         terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
-        const vertex = scene.engine.gpu.shaderModules.get('grass/grass.vert.wgsl')
-        const frag = scene.engine.gpu.shaderModules.get('color.frag.wgsl')
-        if (!vertex || !frag)
-            throw ('Missing shader')
-        const planstPipeline = scene.gpu.rootSceneLayout.addRenderPipeline({
-            primitiveTopology: 'triangle-strip',
-            rasterizationState: {
-                cullMode: 'none',
-            },
-            depthStencilState: {
+        const planstPipeline = scene.gpu.rootSceneLayout.addRenderPipeline(new VertexShader(scene.engine.gpu,'grass/grass.vert.wgsl', 'main', [{
+            arrayStride: 4 * 4,
+            stepMode: "instance" as GPUInputStepMode,
+            attributes: [{ // position
+                shaderLocation: 0,
+                offset: 0,
+                format: "float32x4"
+            }
+            ]
+        },
+        {
+            arrayStride: 4 * 4,
+            stepMode: "instance" as GPUInputStepMode,
+            attributes: [
+                {  // shape
+                    shaderLocation: 1,
+                    offset: 0,
+                    format: "float32x4"
+                }
+            ]
+        }]), new Shader(scene.engine.gpu,'color.frag.wgsl'), {
+            primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat:'uint16' },
+            depthStencil: {
                 depthWriteEnabled: true,
                 depthCompare: "less",
                 format: "depth24plus-stencil8",
-            },
-            vertexStage: {
-                module: vertex,
-                entryPoint: "main",
-            },
-            fragmentStage: {
-                module: frag,
-                entryPoint: "main"
-            },
-            vertexState: {
-                indexFormat: 'uint16',
-                vertexBuffers:
-                    [{
-                        arrayStride: 4 * 4,
-                        stepMode: "instance" as GPUInputStepMode,
-                        attributes: [{ // position
-                            shaderLocation: 0,
-                            offset: 0,
-                            format: "float32x4"
-                        }
-                        ]
-                    },
-                    {
-                        arrayStride: 4 * 4,
-                        stepMode: "instance" as GPUInputStepMode,
-                        attributes: [
-                            {  // shape
-                                shaderLocation: 1,
-                                offset: 0,
-                                format: "float32x4"
-                            }
-                        ]
-                    }]
-            },
+            }
         });
         const drawable = planstPipeline.addDrawableIndirect(scene, new Set([scene.gpu.renderPassScreen]), scene.gpu.createGPUBuffer(4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST]))
-        const positionGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST] );
+        const positionGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
         const shapeGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
 
 
@@ -105,7 +86,7 @@ export class Plants {
         let noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
 
         this.ready = this.worker.message(WorkerReturn.Promise, 'init', {
-          //  positions: this.offset,
+            //  positions: this.offset,
             shape: shapes,
             noises: noises,
         });
@@ -115,7 +96,7 @@ export class Plants {
             const computePipeline = scene.gpu.createComputePipeline("grass/getHeightAtCoordinates.comp.wgsl");
             const layout = computePipeline.getBindGroupLayout(0) as BindGroupLayoutFiveBinding;
 
-            this.worker.subscribe('updated', async (data: { buffer:SharedArrayBuffer }) => {
+            this.worker.subscribe('updated', async (data: { buffer: SharedArrayBuffer }) => {
 
                 const commandEncoder = scene.gpu.device.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
@@ -167,7 +148,7 @@ export class Plants {
                     shapeGPUSwap, 0,
                     shapeGPU, 0,
                     this.numBlades * 4 * 4);
-                scene.gpu.updateBufferRaw(commandEncoder,drawable.buffer, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
+                scene.gpu.updateBufferRaw(commandEncoder, drawable.buffer, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
                 scene.gpu.pendingCommandBuffers.push(commandEncoder.finish())
             });
         })
@@ -176,7 +157,7 @@ export class Plants {
         return;
 
 
-        
+
 
 
 
@@ -197,58 +178,58 @@ export class Plants {
 
         //Empty array to contain calculated values or normals added
 
-     /*   this.mat.setTexture("map", new Texture("./images/grass2.jpg", scene));
-        this.mat.setColor3("grassColor", new Color3(0.45, 0.46, 0.19));
-        this.mat.setColor3("fogColor", new Color3(0.74, 0.77, 0.91));
-        let LIGHT_DIR = new Vector3(1, 0, 0)
-        LIGHT_DIR = LIGHT_DIR.normalize();
-        LIGHT_DIR.z *= 0.5
-        LIGHT_DIR = LIGHT_DIR.normalize();
-        this.mat.setVector3("lightPos", new Vector3(20, 4000, 2));
-        this.mat.setVector3("lightDir", LIGHT_DIR);
-        let timed = new Date();
-        scene.registerBeforeRender(() => {
-            this.mat.setFloat("time", (timed.getTime() - new Date().getTime()) / 1000);
-            this.mat.setVector3("camDir", camera.position);
-        });
-        //FIX
+        /*   this.mat.setTexture("map", new Texture("./images/grass2.jpg", scene));
+           this.mat.setColor3("grassColor", new Color3(0.45, 0.46, 0.19));
+           this.mat.setColor3("fogColor", new Color3(0.74, 0.77, 0.91));
+           let LIGHT_DIR = new Vector3(1, 0, 0)
+           LIGHT_DIR = LIGHT_DIR.normalize();
+           LIGHT_DIR.z *= 0.5
+           LIGHT_DIR = LIGHT_DIR.normalize();
+           this.mat.setVector3("lightPos", new Vector3(20, 4000, 2));
+           this.mat.setVector3("lightDir", LIGHT_DIR);
+           let timed = new Date();
+           scene.registerBeforeRender(() => {
+               this.mat.setFloat("time", (timed.getTime() - new Date().getTime()) / 1000);
+               this.mat.setVector3("camDir", camera.position);
+           });
+           //FIX
+   
+           this.mat.setFloat("windIntensity", 1.5);
+           //fix
+           this.mat.setFloat("fogFar", 1200.0);
+           this.mat.setFloat("fogNear", 1.0);
+           this.mat.setFloat("BLADESEGS", BLADE_SEGS);
+           this.mat.setFloat("BLADEVERTS", (BLADE_SEGS + 1) * 2);
+           //depth*2 fix
+           this.mat.setFloat("grassFogFar", 1600);
+           //this.mat.backFaceCulling = false;
+   
+           Poaceae.material = this.mat;
+           Poaceae.alwaysSelectAsActiveMesh = true;
+   
+   
+           this.mat.backFaceCulling = false;*/
 
-        this.mat.setFloat("windIntensity", 1.5);
-        //fix
-        this.mat.setFloat("fogFar", 1200.0);
-        this.mat.setFloat("fogNear", 1.0);
-        this.mat.setFloat("BLADESEGS", BLADE_SEGS);
-        this.mat.setFloat("BLADEVERTS", (BLADE_SEGS + 1) * 2);
-        //depth*2 fix
-        this.mat.setFloat("grassFogFar", 1600);
-        //this.mat.backFaceCulling = false;
+        // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
 
-        Poaceae.material = this.mat;
-        Poaceae.alwaysSelectAsActiveMesh = true;
-
-
-        this.mat.backFaceCulling = false;*/
+        /* 
  
-       // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
-
-       /* 
-
-
-
-        //Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));
-
-        let shapebuffer = new Buffer(engine, new Float32Array(shapes), true, 4, false, true);
-        let geometry: Geometry | null;
  
-        let l = new LazyEval(() => {
-            this.worker.message(WorkerReturn.Promise, 'get', {
-                offset: this.offset,
-                shape: shapes
-            })
-        }, true);
-        l.eval(4000);
-        this.camera.onViewMatrixChangedObservable.add(() => {
-            l.eval(4000);
-        }); */
+ 
+         //Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));
+ 
+         let shapebuffer = new Buffer(engine, new Float32Array(shapes), true, 4, false, true);
+         let geometry: Geometry | null;
+  
+         let l = new LazyEval(() => {
+             this.worker.message(WorkerReturn.Promise, 'get', {
+                 offset: this.offset,
+                 shape: shapes
+             })
+         }, true);
+         l.eval(4000);
+         this.camera.onViewMatrixChangedObservable.add(() => {
+             l.eval(4000);
+         }); */
     }
 }
