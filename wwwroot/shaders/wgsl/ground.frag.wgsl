@@ -7,10 +7,10 @@
 [[binding(1), set(2)]] var myTexture: texture_2d<f32>;
 
 [[location(0)]] var<in> v_uv : vec2<f32>;
-[[location(1)]] var<in> shading : f32;
-[[location(2)]] var<in> ambient : vec3<f32>;
-[[location(3)]] var<in> normal : vec3<f32>;
-[[location(4)]] var<in> position : vec3<f32>;
+//[[location(1)]] var<in> shading : f32;
+[[location(1)]] var<in> ambient : vec3<f32>;
+[[location(2)]] var<in> normal : vec3<f32>;
+[[location(3)]] var<in> position : vec3<f32>;
 
 [[stage(fragment)]]
 fn main() -> void {

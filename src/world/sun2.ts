@@ -64,8 +64,8 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics, is
 
 
         sunPositionY = sunPositionY * yAngle;
-
-        this.SetTranslationDelta([sunPositionX - this.translation[0], sunPositionY - this.translation[1], sunPositionZ - this.translation[2]]);
+        const translation=this.get_translation();
+        this.SetTranslationDelta([sunPositionX - translation[0], sunPositionY - translation[1], sunPositionZ - translation[2]]);
         //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
         const ambientR = this.#clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
         const ambientGB = this.#clamp((sunPositionY + 0.1) * 0.4 - 0.1, 0.05, 0.3);
@@ -73,7 +73,8 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics, is
 
         //earth shadow
         const shadow = this.#clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
-        this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
+        this.gpu_custom_data=new Float32Array([ambientR, ambientGB, ambientGB, shadow]);
+       // this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
         this.updateDynamicBuffer();
     }
     // Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), this);

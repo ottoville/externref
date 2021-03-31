@@ -198,8 +198,6 @@ export class Engine {
             });
             this.#tempBuffer.unmap();
             gpu.queue.clear();
-            //gpu.device.defaultQueue.submit([commandEncoder.finish()]);
-           // return null
             return commandEncoder.finish();
         })
     }

@@ -50,19 +50,20 @@ export class Physics {
 
         me.tickables.forEach(tickable => {
             tickable.onPhysicTick(delta);
+            const velocity=tickable.get_velocity();
             if (tickable.hasGravity) {
                 tickable.SetTranslationDelta([
-                    tickable.velocity[0],
-                    tickable.velocity[1] - (9.81*(delta/1000)),
-                    tickable.velocity[2]]
+                    velocity[0],
+                    velocity[1] - (9.81*(delta/1000)),
+                    velocity[2]]
                 )
             }
-            const currentTranslation = tickable.translation;
-            if (tickable.velocity[0] !== 0 || tickable.velocity[1] !== 0 || tickable.velocity[2] !== 0) {
-                tickable.translation.set([
-                    currentTranslation[0] + tickable.velocity[0],
-                    currentTranslation[1] + tickable.velocity[1],
-                    currentTranslation[2] + tickable.velocity[2]
+            const currentTranslation = tickable.get_translation();
+            if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
+                currentTranslation.set([
+                    currentTranslation[0] + velocity[0],
+                    currentTranslation[1] + velocity[1],
+                    currentTranslation[2] + velocity[2]
                 ]);
             }
         });

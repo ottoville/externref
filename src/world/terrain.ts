@@ -326,8 +326,7 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
     async serialize(compress = false) {
         const cacheP = caches.open('save');
         if (!compress) {
-
-            const response = new Response(this.mesh.verticesView);
+            const response = new Response(this.mesh.verticesView());
             response.headers.set('content-length', this.mesh.verticesBuffesSize.toString());
              response.headers.set('content-type', 'application/octet-stream');
 
@@ -516,9 +515,10 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
 
         terrainPositionAndUvsAndNormalsGPUTemp.destroy();
         gpuReadBufferPositions.readAndDestroy(async (readbuff) => {
-            this.mesh.updateVertices(buff => {
+            this.mesh.update_vertices(new Float32Array(readbuff));
+            /*this.mesh.updateVertices(buff => {
                 new Uint8Array(buff).set(new Uint8Array(readbuff));
-            })
+            })*/
 
             //this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
             this.updateSwap2(0, readbuff.byteLength, readbuff,true);

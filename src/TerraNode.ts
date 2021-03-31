@@ -12,13 +12,16 @@ import type { DrawableDirect } from "./GPU/Drawable.js";
 
 export abstract class MainNode extends Mesh {
     isStatic = false;
-    #rustOffset=this.gpu_pointer;
-    readonly data=new Float32Array(this.engine.memory.buffer,this.#rustOffset,28);
-    readonly customData= new Float32Array(this.engine.memory.buffer, this.#rustOffset+20 * Float32Array.BYTES_PER_ELEMENT, 4);
-    readonly acceleration=new Float32Array(this.engine.memory.buffer,this.#rustOffset+ 24 * Float32Array.BYTES_PER_ELEMENT, 4);;
-    readonly velocity=new TerraVector3(this.engine.memory.buffer,this.#rustOffset+ 16 * Float32Array.BYTES_PER_ELEMENT, 4);
-    readonly transformation= new TerraMatrix(this.engine.memory.buffer,this.#rustOffset)//new TerraMatrix(this.data.buffer);
-    readonly translation = new TerraVector3(this.engine.memory.buffer, this.#rustOffset+12 * Float32Array.BYTES_PER_ELEMENT);
+
+    readonly acceleration=new Float32Array(this.engine.memory.buffer,this.gpu_pointer+ 24 * Float32Array.BYTES_PER_ELEMENT, 4);;
+    readonly transformation= new TerraMatrix(this.engine.memory.buffer,this.gpu_pointer)//new TerraMatrix(this.data.buffer);
+
+    get_velocity = () => {
+        return new TerraVector3(this.engine.memory.buffer,this.gpu_pointer+ 16 * Float32Array.BYTES_PER_ELEMENT, 4)
+    }
+    get_translation = () => {
+        return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer+12 * Float32Array.BYTES_PER_ELEMENT);
+    }
 
     update_scale = (x:number,y:number,z:number) => {
         super.update_scale(x,y,z)
@@ -30,20 +33,21 @@ export abstract class MainNode extends Mesh {
     }
     #onUpdate = (): void => {
         if (this instanceof BoundableNode) {
-            this.boundingBox.dirtyMin = true;
-            this.boundingBox.dirtyMax = true;
+            this.set_bounding_need_dirty_min();
+            this.set_bounding_need_dirty_max();
         }
         this.updateDynamicBuffer();
     }
     SetTranslationDelta = (value: [number, number, number] | TerraVector3) => {
-        this.velocity.set(value);
+        this.get_velocity().set(value);
         this.updateDynamicBuffer();
     }
 
     SetTranslation = (value: [number, number, number] | TerraVector3) => {
-        this.translation.set(value);
+        this.get_translation().set(value);
         this.#onUpdate();
     }
+    /*
     setTranslationX = (value: number) => {
         this.translation[0] = value;
         this.#onUpdate();
@@ -55,9 +59,10 @@ export abstract class MainNode extends Mesh {
     setTranslationZ = (value: number) => {
         this.translation[2] = value;
         this.#onUpdate();
-    }
-    constructor(public engine: Engine) {
-        super(engine.rustEngine, true);
+    }*/
+
+    constructor(public engine: Engine, hasBounding:boolean, vertices_amount:number=0,vertices_stride=3) {
+        super(engine.rustEngine, hasBounding,true,vertices_amount,vertices_stride);
         queueMicrotask(() => {
             if (this.#hasPhysics()) {
                 engine.physics.tickables.add(this);
@@ -70,7 +75,7 @@ export abstract class MainNode extends Mesh {
     }
 
     updateDynamicBuffer = () => {
-        this.engine.gpu.queue.set(this.data, this.gpu_alignment);
+        this.engine.gpu.queue.set(new Float32Array(this.engine.memory.buffer.slice(this.gpu_pointer, this.gpu_pointer + 28 * Float32Array.BYTES_PER_ELEMENT)), this.gpu_alignment);
     }
 
     #hasPhysics = (): this is hasPhysics => {
@@ -91,8 +96,8 @@ export class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
     Drawable: T;
     
-    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number, createDrawable: (node:TerraNodeGPU<T>) => T) {
-        super(engine);
+    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number, createDrawable: (node:TerraNodeGPU<T>) => T, hasBounding:boolean=false, vertices_stride:number=3) {
+        super(engine, hasBounding,verticesCount, vertices_stride);
         this.Drawable = createDrawable(this);
         if(renderPipeline.dynamicBindGroupOffset.length)
             renderPipeline.dynamicBindGroupOffset[0]=this.gpu_alignment;
@@ -116,7 +121,8 @@ class pickInfo {
         return this.#view.getFloat32(0, true);
     }
 }
-class boundingBox {
+/*
+class boundingBoxOLD {
     buffer = new SharedArrayBuffer(4 * 6);
     #min = new TerraVector3(this.buffer, 0);
     #max = new TerraVector3(this.buffer, 4 * 3);
@@ -200,10 +206,10 @@ class boundingBox {
         return this.#max;
     }
 }
-
+*/
 export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeGPU<T> {
 
-    readonly boundingBox: boundingBox;
+    //readonly boundingBox: boundingBox;
     readonly pickInfo = new pickInfo();
 
     #positions: TerraVector3[] = [];
@@ -218,10 +224,10 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
     facesBufferColliderPointer: number;
     lastColliderWorldVectorsPointer: number;
     facesBufferColliderPointerParallel: number;
-    verticesPositionBuffer: SharedArrayBuffer;
-    verticesView: Omit<Float32Array, 'set'>;
+    //verticesPositionBuffer: SharedArrayBuffer;
+    //verticesView: Omit<Float32Array, 'set'>;
     verticesBuffesSize: number;
-    verticesDataview: DataView;
+    //verticesDataview: DataView;
     #positionsAndCollider: [TerraVector3, TerraVector4][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][]=[];
 
@@ -306,12 +312,9 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         }
         this.#rebuildTrianglePlanes();
     }
-    updateVertices = (callback: (arr: SharedArrayBuffer) => void) => {
-        callback(this.verticesPositionBuffer);
-        this.boundingBox.needInitMin = true;
-        this.boundingBox.needInitMax = true;
+    verticesView = () => {
+        return new Float32Array(this.engine.memory.buffer,this.vertices_pointer(), this.positionCount * this.verticesPositionStride);
     }
-    
     constructor(
         scene: Scene,
         renderPipeline: RenderPipeline,
@@ -322,14 +325,8 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         private strip = false,
         
     ) {
-        super(scene.engine, renderPipeline, indicesView ? indicesView.length : positionCount, createDrawable);
-        // const positionCount = (this.verticesPositionBuffer.byteLength / 4) / this.verticesPositionStride;
+        super(scene.engine, renderPipeline, indicesView ? indicesView.length : positionCount, createDrawable,true,verticesPositionStride);
         this.verticesBuffesSize = positionCount * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
-
-        this.verticesPositionBuffer = new SharedArrayBuffer(this.verticesBuffesSize)
-        this.verticesView = new Float32Array(this.verticesPositionBuffer)
-        this.verticesDataview = new DataView(this.verticesPositionBuffer);
-        //this.verticesCount = indicesView ? indicesView.length : positionCount;
         if (this.strip) {
             this.#faces = new Array(this.verticesCount - 2)
         }
@@ -346,23 +343,23 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
         scene.boundables.add(this);1
         for (let i = 0; i < positionCount; i++) {
-            let pos = new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT)
+            //let pos = new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT)
+            let pos = new TerraVector3(scene.engine.memory.buffer, this.vertices_pointer() + i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
             this.#positions.push(pos);
-            //this.#colliderVertices.push(new TerraVector3(this.#lastColliderWorldVectors, i * verticesPositionStride * 4));
+
             let colPos = new TerraVector4(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer + i * 4 * Float32Array.BYTES_PER_ELEMENT);
             this.#colliderVertices.push(colPos);
             this.#positionsAndCollider.push([pos, colPos])
         }
-        this.boundingBox = new boundingBox(this);
         this.#rebuildTrianglePlanes();
 
             //Run this on microtask so the scope who called
             //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
 
         queueMicrotask(() => {
-            worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
-            this.boundingBox.initMin();
-            this.boundingBox.initMax();
+            //worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
+            //this.boundingBox.initMin();
+            //this.boundingBox.initMax();
         });
     }
     intersectsRay=(ray: Float32Array): Promise<void> => {
@@ -373,7 +370,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
     public checkCollision=async (collider: Collider) => {
         if (this.#faces.length % 4 != 0) //TODO
             return
-        if (!collider._canDoCollision(this.boundingBox.min(), this.boundingBox.max())) {
+        if (!collider._canDoCollision(this.bounding_min as TerraVector3, this.bounding_max as TerraVector3)) {
             return;
         }
 
@@ -385,7 +382,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         if (!this.#lastColliderTransformMatrix.equals(this.myCollisionsTransformMatrix)) {
             
             this.#lastColliderTransformMatrix = this.myCollisionsTransformMatrix.clone();
-            console.log('verticesPositionBuffer', this.verticesPositionBuffer.byteLength)
+
             //new Uint8Array(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer, this.verticesPositionBuffer.byteLength).set(new Uint8Array(this.verticesPositionBuffer));
            // new Uint8Array(this.engine.wasm.memory.buffer, this.facesBuffer.byteLength).set(new Uint8Array(this.verticesPositionBuffer));
 
@@ -428,6 +425,6 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
 }
 export class PositionNode extends MainNode {
     constructor(engine: Engine) {
-        super(engine);
+        super(engine,false);
     }
 }

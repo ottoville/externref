@@ -5,22 +5,60 @@ pub use crate::engine::Engine;
 pub use crate::Vec3;
 pub use crate::Vec4;
 pub use crate::GPUMesh;
-pub use crate::boundingbox::BoundingBox;
+pub use crate::geometry::Geometry;
 
 #[wasm_bindgen]
 pub struct Mesh {
     engine: *mut Engine,
     gpu_alignment: u32,
-    gpu_mesh: GPUMesh,
+    #[wasm_bindgen(skip)]
+    pub gpu_mesh: GPUMesh,
     rotation: Vec4<f32>,
     scaling: Vec3<f32>,
-    bounding_box:BoundingBox,
-   /* vertices: Vec<f32>, //position:4, normals: 4, uvs:4
-    vertices_stride:u8,*/
+    #[wasm_bindgen(skip)]
+    pub geometry:Geometry
 }
 
 #[wasm_bindgen]
 impl Mesh {
+    #[wasm_bindgen(method, getter)]
+    pub fn bounding_min(&mut self) -> Vec<f32> {
+        if self.geometry.bounding_box.need_init_min {
+            let mut bb = self.geometry.bounding_box;
+            bb.init_min(self);
+        }
+        else if self.geometry.bounding_box.dirty_min {
+            self.geometry.bounding_box.min_original.transform_to_ref(&mut self.gpu_mesh.transformation,&mut self.geometry.bounding_box.min);
+            self.geometry.bounding_box.dirty_min = false;
+        }
+        return vec![self.geometry.bounding_box.min.x, self.geometry.bounding_box.min.y, self.geometry.bounding_box.min.z];
+    }
+    #[wasm_bindgen(method, getter)]
+    pub fn bounding_max(&mut self) -> Vec<f32> {
+        if self.geometry.bounding_box.need_init_max {
+            let mut bb = self.geometry.bounding_box;
+            bb.init_max(self);
+        }
+        else if self.geometry.bounding_box.dirty_max {
+            self.geometry.bounding_box.max_original.transform_to_ref(&mut self.gpu_mesh.transformation,&mut self.geometry.bounding_box.max);
+            self.geometry.bounding_box.dirty_max = false;
+        }
+        return vec![self.geometry.bounding_box.max.x, self.geometry.bounding_box.max.y, self.geometry.bounding_box.max.z];
+    }
+    //#[wasm_bindgen(method, setter)]
+    pub fn set_bounding_need_init_min(&mut self) {
+        self.geometry.bounding_box.need_init_min = true;
+    }
+    //#[wasm_bindgen(method, setter)]
+    pub fn set_bounding_need_init_max(&mut self) {
+        self.geometry.bounding_box.need_init_max = true;
+    }
+    pub fn set_bounding_need_dirty_min(&mut self) {
+        self.geometry.bounding_box.dirty_min = true;
+    }
+    pub fn set_bounding_need_dirty_max(&mut self) {
+        self.geometry.bounding_box.dirty_max = true;
+    }
     fn update(&mut self, callback : Box<dyn FnOnce(&Vec3<f32>, &Vec4<f32>)>) {
         callback(&self.scaling, &self.rotation);
         self.on_update();
@@ -31,9 +69,9 @@ impl Mesh {
             let engine = &mut *self.engine;
             engine.gpu_queue.push((&self.gpu_mesh, 1));
         }
-        if self.bounding_box.has_bounding {
-            self.bounding_box.dirty_max=true;
-            self.bounding_box.dirty_min=true;
+        if self.geometry.bounding_box.has_bounding {
+            self.geometry.bounding_box.dirty_max=true;
+            self.geometry.bounding_box.dirty_min=true;
         }
     }
     pub fn update_scale_and_rotation(&mut self, x: f32, y: f32, z: f32, rx: f32, ry: f32, rz: f32, rw: f32) {
@@ -95,29 +133,30 @@ impl Mesh {
     pub fn gpu_pointer(&self) -> *const Vec4<Vec4<f32>> {
         &self.gpu_mesh.transformation
     }
+    #[wasm_bindgen(setter)]
+    pub fn set_gpu_custom_data(&mut self, data:Vec<f32>) {
+        self.gpu_mesh.custom[0]=data[0];
+        self.gpu_mesh.custom[1]=data[1];
+        self.gpu_mesh.custom[2]=data[2];
+        self.gpu_mesh.custom[3]=data[3];
+    }
     #[wasm_bindgen(getter)]
     pub fn gpu_alignment(&self) -> u32 {
         self.gpu_alignment
     }
+    pub fn vertices_pointer(&self) -> *const f32 {
+        self.geometry.vertices.as_ptr()
+    }
+    pub fn update_vertices(&mut self, vertices:Vec<f32>) {
+        self.geometry.update_vertices(vertices);
+    }
     #[wasm_bindgen(constructor)]
-    pub fn new(engine: &mut Engine,has_bounding:bool/*, vertices:Vec<f32>, vertices_stride:i32*/) -> Self {
+    pub fn new(engine: &mut Engine,has_bounding:bool, has_geometry:bool, vertices_amount:usize , vertices_stride:usize) -> Self {
         let m = Mesh {
             engine: engine,
             gpu_alignment: engine.allocate_gpu(),
             gpu_mesh: GPUMesh::new(),
-            /*vertices,
-            vertices_stride:vertices_stride as u8,*/
-            bounding_box: BoundingBox {
-                has_bounding,
-                min:Vec3 {x:0.0,y:0.0,z:0.0},
-                max:Vec3 {x:0.0,y:0.0,z:0.0},
-                min_original:Vec3 {x:0.0,y:0.0,z:0.0},
-                max_original:Vec3 {x:0.0,y:0.0,z:0.0},
-                dirty_min:true,
-                dirty_max:true,
-                need_init_min:true,
-                need_init_max:true,
-            },
+            geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, vertices_amount),
             rotation: Vec4 {
                 x: 0.0,
                 y: 0.0,

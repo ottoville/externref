@@ -5,8 +5,10 @@ export class Human extends Box implements hasPhysics {
     hasGravity=true
     constructor(scene: Scene) {
         super(scene);
-        this.setTranslationY(300)
-        this.setTranslationZ(700)
+        const translation=this.get_translation();
+        this.SetTranslation([translation[0], 300, 700]);
+       // this.setTranslationY(300)
+        //this.setTranslationZ(700)
         this.update_scale(50, 50, 50);
     }
     onPhysicTick = () => {

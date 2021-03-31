@@ -55,9 +55,6 @@ export class Box extends SimpleMesh {
         scene: Scene,
     ) {
         super(scene, ...create(scene));
-        this.updateVertices(buffer => {
-            new Float32Array(buffer).set(positions)
-        })
-        //this.boundingBox.box.set([-1.0, -1.0, -1.0, 1.0, 1.0, 1.0]);
+        this.update_vertices(positions);
     }
 }

@@ -62,20 +62,21 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     ) {
         super(scene.engine, getRenderPipeline(scene, terrain),4,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), node, 8, 0));
         scene.TerraCameras[0].subscribePickingRay();
-
+        //TERRAIN EDITING DISABLED
+        /*
         terrainWorker.message(WorkerReturn.Promise, 'init',
             {
                 positionsAndNormals: terrain.mesh.verticesPositionBuffer,
                 indices: terrain.indicesBuffer,
                 subdivisionsX: Terrain.subdivisionsX,
                 subdivisionsY: Terrain.subdivisionsY,
-                boundingBox: terrain.mesh.boundingBox.buffer,
+                //boundingBox: terrain.mesh.boundingBox.buffer,
                 slopeArr: terrain.slopeArrBuffer,
                 pickInfo: terrain.mesh.pickInfo.buffer,
                 _groundFacesNormalsBuffer: terrain.mesh.facesBuffer,
                 byteStride: 48
             });
-
+*/
 
         // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
@@ -86,7 +87,8 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     static saveTexture(arrayBuffer: ArrayBuffer) {
         terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
     }
-    private direction = 0;
+    //TERRAIN EDITING DISABLED
+    //private direction = 0;
     private mouseinterval: number = 0;
 
     #pointerdownf = (evt: PointerEvent): void => {
@@ -97,12 +99,13 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.camera.detachControl();
        
         this.mouseinterval = setInterval(() => {
-            terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
-                let range = e as { min: number, max: number };
-                const length = range.max - range.min;
+            //TERRAIN EDITING DISABLED
+            //terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
+                //let range = e as { min: number, max: number };
+               // const length = range.max - range.min;
 
-                this.terrain.updateSwap2(range.min, length, this.terrain.mesh.verticesPositionBuffer)
-            });
+                //this.terrain.updateSwap2(range.min, length, this.terrain.mesh.verticesPositionBuffer)
+            //});
         }, 17);
     }
     pointerupf = (): void => {
@@ -127,13 +130,15 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         });
     }
     raise = (): void => {
-        this.direction = 1;
+        //TERRAIN EDITING DISABLED
+        //this.direction = 1;
         this.#canvasListener.removeListener("pointerdown", this.#pointerdownf);
         this.#canvasListener.addListener("pointerdown", this.#pointerdownf);
 
     }
     lower = (): void => {
-        this.direction = -1;
+        //TERRAIN EDITING DISABLED
+        //this.direction = -1;
         this.#canvasListener.removeListener("pointerdown", this.#pointerdownf);
         this.#canvasListener.addListener("pointerdown", this.#pointerdownf);
     }

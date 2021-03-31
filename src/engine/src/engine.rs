@@ -3,7 +3,6 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct Engine {
-    meshes: Vec<GPUMesh>,
     gpu_slots: Vec<u32>,
     #[wasm_bindgen(skip)]
     pub gpu_queue: Vec<(*const GPUMesh, u32)>,
@@ -17,7 +16,6 @@ impl Engine {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         let e = Engine {
-            meshes: Vec::new(),
             gpu_next_available_address: 0,
             gpu_slots: Vec::new(),
             gpu_queue: Vec::new(),

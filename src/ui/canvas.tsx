@@ -300,15 +300,18 @@ export class Canvas extends TerraCompoment {
         });
         const debugscene = new Scene('static', gpu, terraEngine, [mainCamera], (scene) => {
             const sun = new PositionNode(scene.engine);
-            sun.translation.set([0, 1, 0]);
-            sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
+            sun.get_translation().set([0, 1, 0]);
+            sun.gpu_custom_data=new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
+          //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
             return [sun.gpu_alignment]
         });
 
         const b2 = new Box(debugscene);
         //b2.update(scale => scale.set([200, 200, 200]));
         b2.update_scale(200, 200, 200);
-        b2.setTranslationX(500);
+        const translation=b2.get_translation();
+        b2.SetTranslation([500,translation[1],translation[2]])
+        //b2.setTranslationX(500);
 
 
         let renderFrame: number = 0;
