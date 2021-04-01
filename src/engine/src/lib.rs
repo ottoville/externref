@@ -21,7 +21,7 @@ pub struct Vec3<T> {
 }
 
 impl Vec3<f32> {
-    fn transform_to_ref(&self, m: &mut Vec4<Vec4<f32>>, other: &mut Vec3<f32>) {
+    fn transform_to_ref(&self, m: &Vec4<Vec4<f32>>, other: &mut Vec3<f32>) {
         let rx = self.x * m.x.x + self.y * m.y.x + self.z * m.z.x + m.w.x;
         let ry = self.x * m.x.y + self.y * m.y.y + self.z * m.z.y + m.w.y;
         let rz = self.x * m.x.z + self.y * m.y.z + self.z * m.z.z + m.w.z;

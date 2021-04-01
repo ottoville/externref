@@ -1,4 +1,3 @@
-use wasm_bindgen::prelude::*;
 
 pub use crate::Vec3;
 pub use crate::boundingbox::BoundingBox;

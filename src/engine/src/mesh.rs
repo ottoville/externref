@@ -6,9 +6,11 @@ pub use crate::Vec3;
 pub use crate::Vec4;
 pub use crate::GPUMesh;
 pub use crate::geometry::Geometry;
+pub use crate::boundingbox::BoundingBox;
 
 #[wasm_bindgen]
 pub struct Mesh {
+    id:u32,
     engine: *mut Engine,
     gpu_alignment: u32,
     #[wasm_bindgen(skip)]
@@ -23,9 +25,9 @@ pub struct Mesh {
 impl Mesh {
     #[wasm_bindgen(method, getter)]
     pub fn bounding_min(&mut self) -> Vec<f32> {
+
         if self.geometry.bounding_box.need_init_min {
-            let mut bb = self.geometry.bounding_box;
-            bb.init_min(self);
+            BoundingBox::init_min(self);
         }
         else if self.geometry.bounding_box.dirty_min {
             self.geometry.bounding_box.min_original.transform_to_ref(&mut self.gpu_mesh.transformation,&mut self.geometry.bounding_box.min);
@@ -36,8 +38,7 @@ impl Mesh {
     #[wasm_bindgen(method, getter)]
     pub fn bounding_max(&mut self) -> Vec<f32> {
         if self.geometry.bounding_box.need_init_max {
-            let mut bb = self.geometry.bounding_box;
-            bb.init_max(self);
+            BoundingBox::init_max(self);
         }
         else if self.geometry.bounding_box.dirty_max {
             self.geometry.bounding_box.max_original.transform_to_ref(&mut self.gpu_mesh.transformation,&mut self.geometry.bounding_box.max);
@@ -93,7 +94,6 @@ impl Mesh {
             let engine = &mut *self.engine;
             engine.gpu_queue.push((&self.gpu_mesh, 1));
         }
-        // GPU_QUEUE.push((&self.gpu_mesh,1))
     }
     #[wasm_bindgen(setter)]
     pub fn set_scale_x(&mut self, x:f32) {
@@ -141,6 +141,10 @@ impl Mesh {
         self.gpu_mesh.custom[3]=data[3];
     }
     #[wasm_bindgen(getter)]
+    pub fn id(& self) -> u32 {
+        self.id
+    }
+    #[wasm_bindgen(getter)]
     pub fn gpu_alignment(&self) -> u32 {
         self.gpu_alignment
     }
@@ -151,8 +155,9 @@ impl Mesh {
         self.geometry.update_vertices(vertices);
     }
     #[wasm_bindgen(constructor)]
-    pub fn new(engine: &mut Engine,has_bounding:bool, has_geometry:bool, vertices_amount:usize , vertices_stride:usize) -> Self {
+    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, vertices_amount:usize , vertices_stride:usize) -> Self {
         let m = Mesh {
+            id,
             engine: engine,
             gpu_alignment: engine.allocate_gpu(),
             gpu_mesh: GPUMesh::new(),
@@ -169,7 +174,6 @@ impl Mesh {
                 z: 1.0,
             },
         };
-        //MESHES.push(&m);
         return m;
     }
     pub fn destroy(self) {

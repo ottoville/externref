@@ -140,7 +140,7 @@ export class Scene {
         this.boundables.forEach(boundable => {
             if (boundable.isStatic)
                 return pickingRays.set(boundable, rayArr);
-            const ray = this.TerraCameras[0].createPickingRay(x, y, boundable.transformation);
+            const ray = this.TerraCameras[0].createPickingRay(x, y, boundable.get_transformation());
             pickingRays.set(boundable, new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]]));
         });
         const results: Promise<void>[] = [];
@@ -190,7 +190,7 @@ export class Scene {
                 0.0, 0.0, 1.0, 0.0,
                 0.0, 0.0, 0.0, 1.0]);
             if (!boundableMesh.isStatic) {
-                m = boundableMesh.transformation;
+                m = boundableMesh.get_transformation();
             }
             return this.TerraCameras[0].createPickingRay(x, y, m);
         };
