@@ -143,7 +143,7 @@ export class RenderPass {
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
 
-    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | (() => GPUBindGroup), rootLayout: PipelineLayout) {
+    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass:RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             if (!this.bundles.length) {
@@ -152,7 +152,7 @@ export class RenderPass {
                     sampleCount: this.sampleCount,
                     depthStencilFormat: this.#depthTexture ? 'depth24plus-stencil8' : undefined
                 });
-                this.recordRenderPass(renderBundleEncoder, typeof(rootBindGroup)==='function'?rootBindGroup():rootBindGroup, rootLayout);
+                this.recordRenderPass(renderBundleEncoder, typeof(rootBindGroup)==='function'?rootBindGroup(this):rootBindGroup, rootLayout);
                 this.bundles.push(renderBundleEncoder.finish());
             }
             passEncoder.executeBundles(this.bundles);
@@ -162,11 +162,11 @@ export class RenderPass {
             debugger;
         }
     }
-    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, cameraBindGroup: GPUBindGroup, rootLayout: PipelineLayout) {
+    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, rootBindGroup: GPUBindGroup, rootLayout: PipelineLayout) {
         let drawedMeshes = 0;
 
-        if (cameraBindGroup) {
-            passEncoder.setBindGroup(0, cameraBindGroup);
+        if (rootBindGroup) {
+            passEncoder.setBindGroup(0, rootBindGroup);
             //this.gpu.rootCameralayout
             rootLayout.renderPipeLines.forEach(rp => {
                 drawedMeshes += rp.draw(passEncoder, this, 1);

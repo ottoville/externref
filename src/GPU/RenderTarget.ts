@@ -3,8 +3,8 @@ import type { RenderPass } from "./RenderPass";
 export class RenderTarget<T extends GPUTexture> {
     view: TerraGPUTextureView<T>;
     texture: GPUTextureSampled | GPUTexture;
-    debug = false
-
+    debug = false;
+    renderPasses:Set<RenderPass>=new Set();
     lastSize: { width: number, height: number } = { width: 0, height: 0 }
 
     createTexture() {
@@ -32,6 +32,7 @@ export class RenderTarget<T extends GPUTexture> {
         [this.view, this.texture] = this.createTexture();
         renderPass.colorFormats.push(format);
         renderPass.renderTargets.push(this);
+        this.renderPasses.add(renderPass);
 
     }
     toBitmap() {
@@ -40,10 +41,10 @@ export class RenderTarget<T extends GPUTexture> {
         const oldSampleCount = this.renderPass.sampleCount;
 
         this.renderPass.sampleCount = 1
-        this.renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = this.renderPass.decoratePipeline(rp))
-
-        this.renderPass.bundles.length = 0;
-        this.renderPass.onResize(this.renderPass.size.width, this.renderPass.size.height)
+        this.renderPasses.forEach(rp => {
+            rp.onResize(rp.size.width, rp.size.height)
+            rp.renderPipelines.forEach((rpVariant, pipeline) => rpVariant.renderpipeline = rp.decoratePipeline(pipeline))
+        })
 
         setTimeout(() => {
             const encoder = this.renderPass.gpu.device.createCommandEncoder();
@@ -75,11 +76,12 @@ export class RenderTarget<T extends GPUTexture> {
             });
             setTimeout(() => {
                 this.debug = false;
-                this.renderPass.bundles.length = 0;
                 this.renderPass.sampleCount = oldSampleCount;
-                this.renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = this.renderPass.decoratePipeline(rp))
-                this.renderPass.onResize(this.renderPass.size.width, this.renderPass.size.height)
 
+                this.renderPasses.forEach(rp => {
+                    rp.onResize(rp.size.width, rp.size.height)
+                    rp.renderPipelines.forEach((rpVariant, pipeline) => rpVariant.renderpipeline = rp.decoratePipeline(pipeline))
+                })
                 this.createTexture();
             }, 200)
         }, 200)

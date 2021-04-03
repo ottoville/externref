@@ -2,9 +2,19 @@
 import type { RenderPass } from "./GPU/RenderPass.js";
 import { PipelineLayout } from "./GPU/PipelineLayout.js";
 import type { Scene } from "./Scene.js";
+import { RenderTarget } from "./GPU/RenderTarget.js";
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
 };
+type TerraBindGroupEntry = GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> }
+type bindings<T> = T extends BindGroupLayoutOneBinding ? [TerraBindGroupEntry]
+    : T extends BindGroupLayoutTwoBinding ? [TerraBindGroupEntry, TerraBindGroupEntry]
+    : T extends BindGroupLayoutThreeBinding ? [TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry]
+    : T extends BindGroupLayoutFourBinding ? [TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry]
+    : T extends BindGroupLayoutFiveBinding ? [TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry]
+    : never;
+
+
 export class GPU {
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     GPUBindGroupLayouts: WeakMap<GPUBindGroup, GPUBindGroupLayout> = new WeakMap();
@@ -68,25 +78,25 @@ export class GPU {
 
             }
         }, {
-            binding: 2,
-            visibility: GPUShaderStage.FRAGMENT,
-            texture: {
+        binding: 2,
+        visibility: GPUShaderStage.FRAGMENT,
+        texture: {
 
-            }
-        },
+        }
+    },
         {
             binding: 3,
             visibility: GPUShaderStage.FRAGMENT,
             texture: {
 
             }
-        },{
-            binding: 4,
-            visibility: GPUShaderStage.FRAGMENT,
-            buffer: {
-                type: "read-only-storage"
-            }
-        });
+        }, {
+        binding: 4,
+        visibility: GPUShaderStage.FRAGMENT,
+        buffer: {
+            type: "read-only-storage"
+        }
+    });
 
 
     rootLayout = new PipelineLayout(this, this.BindGroupLayoutCanvas);
@@ -127,10 +137,26 @@ export class GPU {
         }
         return this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout;
     }
-
+    createBindGroupForRenderPass<T extends GPUBindGroupLayout, U extends bindings<T>>(layout: T, renderPass:RenderPass, ...entries: U): getBindType<T>
+    createBindGroupForRenderPass(layout: GPUBindGroupLayout, renderPass:RenderPass, ...entries: (GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })[]): GPUBindGroup {
+        const bindGroup = this.device.createBindGroup({
+            layout, entries: entries.map<GPUBindGroupEntry>(entry => {
+                if (entry.resource instanceof RenderTarget) {
+                    entry.resource.renderPasses.add(renderPass);
+                    //renderPass.textures.add(entry.resource);
+                    entry.resource = entry.resource.view;
+                }
+                return entry as GPUBindGroupEntry;
+            })
+        });
+        this.GPUBindGroupLayouts.set(bindGroup, layout);
+        return bindGroup
+    }
     createBindGroup<T extends GPUBindGroupLayout, U extends bindings<T>>(layout: T, ...entries: U): getBindType<T>
     createBindGroup(layout: GPUBindGroupLayout, ...entries: GPUBindGroupEntry[]): GPUBindGroup {
-        const bindGroup = this.device.createBindGroup({ layout, entries });
+        const bindGroup = this.device.createBindGroup({
+            layout, entries
+        });
         this.GPUBindGroupLayouts.set(bindGroup, layout);
         return bindGroup
     }
@@ -144,9 +170,9 @@ export class GPU {
     renderPassCanvas: RenderPass;
     renderPasses: Set<RenderPass>;
 
-    readonly scale={
-        x:1,
-        y:1
+    readonly scale = {
+        x: 1,
+        y: 1
     }
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPass, RenderPass, RenderPass]) {
         const context = canvas.getContext('gpupresent');
@@ -348,7 +374,7 @@ export class GPU {
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
             if (bgt.sharedBindgroup && this.#DynamicBindGroups.has(bgt.sharedBindgroup)) {
                 bgt.renderPipeLines.forEach(m => {
-                    renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset.map(o => o*TerraNodeGPU.alignment));
+                    renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset.map(o => o * TerraNodeGPU.alignment));
                     drawedMeshes += m.draw(renderPassEncoder, renderPass, index, scene);
                 });
             }

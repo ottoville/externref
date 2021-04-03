@@ -192,12 +192,6 @@ export abstract class paintGround {
 
         var pickInfo = await this.scene.pickPromise(evt.clientX*this.scene.gpu.scale.x, evt.clientY*this.scene.gpu.scale.y, mesh => { return mesh === this.ground.mesh }, false);
 
-       // console.log(pickInfo);
-        /*if (!pickInfo) {
-            console.log('pick did not hit');
-            console.log(pickInfo);
-            return;
-        }*/
         if (this.ground.mesh.pickInfo.getDistance()) {
         //if (pickInfo.hit && pickInfo.pickedPoint != null) {
             //@ts-ignore

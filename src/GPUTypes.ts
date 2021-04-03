@@ -17,12 +17,6 @@ interface GPUBindGroupLayoutEntryUniform extends Omit<GPUBindGroupLayoutEntry, '
     type: 'uniform-buffer'
   //  entry: TerraGPUBindGroupEntry<GPUUniformBuffer>
 }
-type bindings<T> = T extends BindGroupLayoutOneBinding ? [GPUBindGroupEntry]
-    : T extends BindGroupLayoutTwoBinding ? [GPUBindGroupEntry, GPUBindGroupEntry]
-    : T extends BindGroupLayoutThreeBinding ? [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]
-    : T extends BindGroupLayoutFourBinding ? [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]
-    : T extends BindGroupLayoutFiveBinding ? [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]
-    : never;
 
 type getBindType<T> = T extends BindGroupLayoutOneBinding ? BindGroupOneBinding
     : T extends BindGroupLayoutTwoBinding ? BindGroupTwoBinding

@@ -64,6 +64,7 @@ const tools: {
 }]*/
 
 
+
 export class Canvas extends TerraCompoment {
     progressBar: HTMLProgressElement = <progress min="0" max="100" value="0"></progress>;
     progresElem: HTMLSpanElement = <span>0</span>;
@@ -72,7 +73,7 @@ export class Canvas extends TerraCompoment {
     msPerFrame = 0;
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
-    BindGroupCanvas!: () => BindGroupFiveBinding;
+    BindGroupCanvas!: (renderPass:RenderPass) => BindGroupFiveBinding;
     async initalize(): Promise<[Scene, ArcRotateCamera]> {
         const adapter = await window.navigator.gpu!.requestAdapter();
         this.progress = 4;
@@ -127,26 +128,22 @@ export class Canvas extends TerraCompoment {
             //Diffuse
             new RenderTarget(renderpassWater, "bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1);
 
-
-
-
-
-            this.BindGroupCanvas = () => gpu.createBindGroup(gpu.BindGroupLayoutCanvas,
+            this.BindGroupCanvas = (renderPass:RenderPass) => gpu.createBindGroupForRenderPass(gpu.BindGroupLayoutCanvas, renderPass,
                 {
                     binding: 0,
                     resource: canvasSampler
                 },
                 {
                     binding: 1,
-                    resource: gRenderTargetNormals.view
+                    resource: gRenderTargetNormals
                 },
                 {
                     binding: 2,
-                    resource: gRenderTargetPositions.view
+                    resource: gRenderTargetPositions
                 },
                 {
                     binding: 3,
-                    resource: gRenderTargetDiffuse.view
+                    resource: gRenderTargetDiffuse
                 },
                 {
                     binding: 4,
@@ -380,7 +377,6 @@ export class Canvas extends TerraCompoment {
                 camera.render(renderEncoder)
             });
 
-
             gpu.renderPassCanvas.render(renderEncoder, me.BindGroupCanvas, gpu.rootLayout);
 
             gpu.pendingCommandBuffers.push(renderEncoder.finish())
@@ -414,7 +410,6 @@ export class Canvas extends TerraCompoment {
                 gpu.renderPasses.forEach(renderPass => {
                     renderPass.onResize(this.canvasElem.width, this.canvasElem.height)
                     renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = renderPass.decoratePipeline(rp))
-                    renderPass.bundles.length = 0;
                 })
 
                 //Create projection matrix
