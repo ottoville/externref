@@ -409,7 +409,6 @@ export class Canvas extends TerraCompoment {
 
                 gpu.renderPasses.forEach(renderPass => {
                     renderPass.onResize(this.canvasElem.width, this.canvasElem.height)
-                    renderPass.renderPipelines.forEach((rpVariant, rp) => rpVariant.renderpipeline = renderPass.decoratePipeline(rp))
                 })
 
                 //Create projection matrix

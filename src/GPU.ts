@@ -143,7 +143,6 @@ export class GPU {
             layout, entries: entries.map<GPUBindGroupEntry>(entry => {
                 if (entry.resource instanceof RenderTarget) {
                     entry.resource.renderPasses.add(renderPass);
-                    //renderPass.textures.add(entry.resource);
                     entry.resource = entry.resource.view;
                 }
                 return entry as GPUBindGroupEntry;

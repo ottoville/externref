@@ -2,25 +2,29 @@ import type { RenderPass } from "./RenderPass";
 
 export class RenderTarget<T extends GPUTexture> {
     view: TerraGPUTextureView<T>;
-    texture: GPUTextureSampled | GPUTexture;
-    debug = false;
+    #texture: GPUTextureSampled | GPUTexture;
+    #debug = false;
     renderPasses:Set<RenderPass>=new Set();
-    lastSize: { width: number, height: number } = { width: 0, height: 0 }
 
     createTexture() {
-        this.lastSize = this.renderPass.size;
-        this.texture?.destroy();
+        if(this.#texture) {
+            this.#texture.destroy();
+            this.renderPasses.forEach(rp => {
+                rp.bundles.length = 0;
+                rp.renderPipelines.forEach((rpVariant, pipeline) => rpVariant.renderpipeline = rp.decoratePipeline(pipeline))
+            })
+        }
         const usage: [number] = [this.usage];
-        if (this.debug)
+        if (this.#debug)
             usage.push(GPUTextureUsage.COPY_SRC);
-            this.texture = this.renderPass.gpu.createGPUTexture(
+            this.#texture = this.renderPass.gpu.createGPUTexture(
             this.renderPass.size,
             this.format,
             usage,
             this.sampleCount
         );
-        this.view = this.texture.createView() as TerraGPUTextureView<T>;
-        return [this.view, this.texture] as const;
+        this.view = this.#texture.createView() as TerraGPUTextureView<T>;
+        return [this.view, this.#texture] as const;
     }
     constructor(
         public renderPass: RenderPass,
@@ -29,7 +33,7 @@ export class RenderTarget<T extends GPUTexture> {
         public usage: GPUTextureUsageFlags = GPUTextureUsage.RENDER_ATTACHMENT,
         private sampleCount = 1) {
 
-        [this.view, this.texture] = this.createTexture();
+        [this.view, this.#texture] = this.createTexture();
         renderPass.colorFormats.push(format);
         renderPass.renderTargets.push(this);
         this.renderPasses.add(renderPass);
@@ -37,15 +41,11 @@ export class RenderTarget<T extends GPUTexture> {
     }
     toBitmap() {
         //Use for debugging purpose.
-        this.debug = true;
+        this.#debug = true;
         const oldSampleCount = this.renderPass.sampleCount;
 
         this.renderPass.sampleCount = 1
-        this.renderPasses.forEach(rp => {
-            rp.onResize(rp.size.width, rp.size.height)
-            rp.renderPipelines.forEach((rpVariant, pipeline) => rpVariant.renderpipeline = rp.decoratePipeline(pipeline))
-        })
-
+        this.createTexture();
         setTimeout(() => {
             const encoder = this.renderPass.gpu.device.createCommandEncoder();
             const buffer = this.renderPass.gpu.device.createBuffer({
@@ -53,7 +53,7 @@ export class RenderTarget<T extends GPUTexture> {
                 usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
             })
             encoder.copyTextureToBuffer({
-                texture: this.texture
+                texture: this.#texture
             }, { buffer: buffer, bytesPerRow: this.renderPass.size.width * 4 },
                 [this.renderPass.size.width, this.renderPass.size.height, 1]);
             this.renderPass.gpu.device.queue.submit([encoder.finish()]);
@@ -75,15 +75,10 @@ export class RenderTarget<T extends GPUTexture> {
                 })
             });
             setTimeout(() => {
-                this.debug = false;
+                this.#debug = false;
                 this.renderPass.sampleCount = oldSampleCount;
-
-                this.renderPasses.forEach(rp => {
-                    rp.onResize(rp.size.width, rp.size.height)
-                    rp.renderPipelines.forEach((rpVariant, pipeline) => rpVariant.renderpipeline = rp.decoratePipeline(pipeline))
-                })
                 this.createTexture();
-            }, 200)
-        }, 200)
+            }, 100)
+        }, 100)
     }
 }

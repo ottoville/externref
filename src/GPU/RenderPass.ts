@@ -4,7 +4,7 @@ import type { GPU } from "../GPU.js";
 import type { RenderPipeline } from "./RenderPipeline.js";
 import type { Drawable } from "./Drawable.js";
 import { RenderTarget } from "./RenderTarget.js";
-import { PipelineLayout } from "./PipelineLayout.js";
+import type { PipelineLayout } from "./PipelineLayout.js";
 
 interface RenderPipelineVariant2 {
     renderpipeline: GPURenderPipeline;
@@ -23,7 +23,11 @@ export class RenderPass {
     colorFormats: GPUTextureFormat[] = [];
     renderTargets: RenderTarget<GPUTexture>[] = []
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
-    swapChainAndTarget?: [GPUSwapChain, RenderTarget<GPUTexture>];
+    #swapChainAndTarget?: [GPUSwapChain, RenderTarget<GPUTexture>];
+    #renderPassDescriptor: Partial<GPURenderPassDescriptor> = {
+        colorAttachments: undefined,
+        depthStencilAttachment: undefined
+    }
 
     constructor(
         public gpu: GPU,
@@ -70,7 +74,6 @@ export class RenderPass {
     };
 
     onResize(width: number, height: number) {
-        this.bundles.length = 0;
         [this.size.width, this.size.height] = this._onResize(width, height);
         this.cameras.forEach(camera => camera.onResize(this.size.width, this.size.height));
         if (this.#depthTexture) {
@@ -80,15 +83,12 @@ export class RenderPass {
         }
         this.renderTargets.forEach(renderTarget => renderTarget.createTexture());
     }
-    #renderPassDescriptor: Partial<GPURenderPassDescriptor> = {
-        colorAttachments: undefined,
-        depthStencilAttachment: undefined
-    }
+
     addSwapChain(loadValue: GPULoadOp | GPUColor,usages?: [typeof GPUTextureUsage.SAMPLED]): RenderTarget<GPUTextureSampled>
     addSwapChain(loadValue: GPULoadOp | GPUColor,usages?: GPUTextureUsageFlags[]): RenderTarget<GPUTexture>
     addSwapChain(loadValue: GPULoadOp | GPUColor,usages: GPUTextureUsageFlags[] = [GPUTextureUsage.RENDER_ATTACHMENT]) {
         const rt = this.addTarget("bgra8unorm", usages,loadValue, this.sampleCount)
-        this.swapChainAndTarget = [this.gpu.context.configureSwapChain({
+        this.#swapChainAndTarget = [this.gpu.context.configureSwapChain({
             device: this.gpu.device,
             format: "bgra8unorm",
             usage: GPUTextureUsage.RENDER_ATTACHMENT
@@ -105,14 +105,14 @@ export class RenderPass {
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const colorAttachments: GPURenderPassColorAttachmentDescriptor[] = []
 
-        if (this.swapChainAndTarget) {
+        if (this.#swapChainAndTarget) {
             colorAttachments.push(this.sampleCount > 1 ? {
-                attachment: this.swapChainAndTarget[1].view,
-                resolveTarget: this.swapChainAndTarget[0].getCurrentTexture().createView(),
-                loadValue: this.swapChainAndTarget[1].loadValue
+                attachment: this.#swapChainAndTarget[1].view,
+                resolveTarget: this.#swapChainAndTarget[0].getCurrentTexture().createView(),
+                loadValue: this.#swapChainAndTarget[1].loadValue
             } : {
-                attachment: this.swapChainAndTarget[0].getCurrentTexture().createView(),
-                loadValue: this.swapChainAndTarget[1].loadValue
+                attachment: this.#swapChainAndTarget[0].getCurrentTexture().createView(),
+                loadValue: this.#swapChainAndTarget[1].loadValue
             })
             colorAttachments.push(...this.renderTargets.slice(1).map(rt => {
                 return {
@@ -177,7 +177,6 @@ export class RenderPass {
                 drawedMeshes += this.gpu.drawBindGroups(passEncoder, bgt, this, 1)
             )
         };
-
         this.scenes.forEach(scene =>
             drawedMeshes += scene.render(passEncoder, this)
         );
