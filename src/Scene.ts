@@ -83,24 +83,32 @@ export class Scene {
     async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode<DrawableDirect>) => boolean, fastCheck?: boolean): Promise<BoundableNode<DrawableDirect> | null> {
         if (predicate)
             console.warn('TODO: predicate');
-
+    let start = performance.now();
     const encoder = this.gpu.device.createCommandEncoder();
     
-    const renderTarget=this.gpu.renderPassScreen.renderTargets.gRenderTargetPositions;
-    const bytes_per_fixel = 16;
     const buffer = this.gpu.device.createBuffer({
-        size: this.gpu.canvas.height * this.gpu.canvas.width * bytes_per_fixel,
+        size: 16,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     })
-    encoder.copyTextureToBuffer({
-        texture: renderTarget.texture
-    }, { buffer: buffer, bytesPerRow: this.gpu.canvas.width * bytes_per_fixel },
-        [this.gpu.canvas.width, this.gpu.canvas.height, 1]);
+    encoder.copyTextureToBuffer(
+    {
+        texture: this.gpu.renderPassScreen.renderTargets.gRenderTargetPositions.texture,
+        origin: { x:this.engine.mousePosition[0],y:this.engine.mousePosition[1] }
+    },
+    {
+        buffer,
+        bytesPerRow: 256,
+        offset:0
+    },
+        [1, 1, 1]);
     this.gpu.device.queue.submit([encoder.finish()]);
+
     buffer.mapAsync(GPUMapMode.READ).then(() => {
         const floatData=new Float32Array(buffer.getMappedRange());
-        console.log(floatData);
-
+        console.log(floatData[0]);
+        console.log(floatData[1]);
+        console.log(floatData[2]);
+        console.log('picking took', performance.now() - start) //55
     })
 
 
@@ -108,7 +116,7 @@ export class Scene {
 
 
 
-        //let start = performance.now();
+        
         const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]])
         const pickingRays: Map<BoundableNode<DrawableDirect>, Float32Array> = new Map();
@@ -137,7 +145,6 @@ export class Scene {
             }
         })
         console.log(minimum);*/
-        // console.log('picking took', performance.now() - start);
         return minimum;
         /*
         this.gpu.GPU2CPU(async buff => {
