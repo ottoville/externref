@@ -52,7 +52,7 @@ export class TerraCamera {
     }
 
 
-    constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, engine: Engine, main: boolean = true, parent?: TerraCamera) {
+    constructor(public renderPass: RenderPass<{}>, public projection: SharedArrayBuffer, private gpu: GPU, engine: Engine, main: boolean = true, parent?: TerraCamera) {
         const thistarget = this.#target
         const thisposition = this.#position
         this.target = {

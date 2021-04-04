@@ -51,15 +51,15 @@ function getRenderPipeline(scene: Scene) {
             },
             {
                 binding: 1,
-                resource: scene.gpu.renderPassWater.renderTargets[0]!.view
+                resource: scene.gpu.renderPassWater.renderTargets.normals.view
             },
             {
                 binding: 2,
-                resource: scene.gpu.renderPassWater.renderTargets[1]!.view
+                resource: scene.gpu.renderPassWater.renderTargets.position.view
             },
             {
                 binding: 3,
-                resource: scene.gpu.renderPassWater.renderTargets[2]!.view
+                resource: scene.gpu.renderPassWater.renderTargets.diffuse.view
             }
         ]
 

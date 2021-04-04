@@ -39,7 +39,7 @@ export class Scene {
         this.lights = new Light(gpu, sunBufferOffsetBytes);
     }
 
-    render(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass) {
+    render(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass<{}>) {
         let drawedMeshes = 0;
         renderPassEncoder.setBindGroup(1, this.lights.uniformBindGroupLightsWGSL);
         this.gpu.rootSceneLayout.renderPipeLines.forEach(rp => {
@@ -83,56 +83,31 @@ export class Scene {
     async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode<DrawableDirect>) => boolean, fastCheck?: boolean): Promise<BoundableNode<DrawableDirect> | null> {
         if (predicate)
             console.warn('TODO: predicate');
-        /* const b1 = this.gpu.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE], true);
-         const b1arr = b1.getMappedRange()
-         new Float32Array(b1arr).set(this.TerraCameras[0].projectionArr);
-         new Float32Array(b1arr).set(this.TerraCameras[0].viewArr, 16);
-         const sourceX = x / this.gpu.renderPassScreen.size.width * 2 - 1;
-         const sourceY = -(y / this.gpu.renderPassScreen.size.height * 2 - 1);
-         new Float32Array(b1arr).set([
-             sourceX,
-             sourceY,
-             -1.0,
-             sourceX,
-             sourceY,
-             1.0
-         ]
-             , 32);
-         b1.unmap();
-         //Todo: Size from terranode
-         const resultMatrixBuffer = this.gpu.createGPUBuffer(10 * 6 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-         const bindGroup1 = this.engine.calculatePickingRaysPipeline.createBindGroup(this.engine.bindgrouplayout1, [
-             {
-                 binding: 0,
-                 resource: {
-                     buffer: b1
-                 }
-             },
-             {
-                 binding: 1,
-                 resource: {
-                     buffer: this.gpu.GPUData
-                 }
-             },
-             {
-                 binding: 2,
-                 resource: {
-                     buffer: resultMatrixBuffer
-                 }
-             }
-         ]);
-         const commandEncoder = this.gpu.createCommandEncoder();
- 
-         const passEncoder = commandEncoder.beginComputePass();
-         passEncoder.setPipeline(this.engine.calculatePickingRaysPipeline);
-         passEncoder.setBindGroup(0, bindGroup1);
- 
-         passEncoder.dispatch(10);
- 
-         passEncoder.endPass();
-         const gpuCommands = commandEncoder.finish();
-         this.gpu.device.defaultQueue.submit([gpuCommands]);
-         */
+
+    const encoder = this.gpu.device.createCommandEncoder();
+    
+    const renderTarget=this.gpu.renderPassScreen.renderTargets.gRenderTargetPositions;
+    const bytes_per_fixel = 16;
+    const buffer = this.gpu.device.createBuffer({
+        size: this.gpu.canvas.height * this.gpu.canvas.width * bytes_per_fixel,
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    })
+    encoder.copyTextureToBuffer({
+        texture: renderTarget.texture
+    }, { buffer: buffer, bytesPerRow: this.gpu.canvas.width * bytes_per_fixel },
+        [this.gpu.canvas.width, this.gpu.canvas.height, 1]);
+    this.gpu.device.queue.submit([encoder.finish()]);
+    buffer.mapAsync(GPUMapMode.READ).then(() => {
+        const floatData=new Float32Array(buffer.getMappedRange());
+        console.log(floatData);
+
+    })
+
+
+
+
+
+
         //let start = performance.now();
         const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]])

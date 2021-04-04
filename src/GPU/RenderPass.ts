@@ -11,31 +11,35 @@ interface RenderPipelineVariant2 {
     drawables: Map<Scene, Set<Drawable>>
     rootDrawables: Set<Drawable>
 }
-export class RenderPass {
+export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
     cameras: Set<TerraCamera> = new Set();
-
-
     scenes: Set<Scene> = new Set();
     #depthTextureView: GPUTextureView | undefined
     #depthTexture: GPUTexture | undefined
 
     bundles: GPURenderBundle[] = [];
     colorFormats: GPUTextureFormat[] = [];
-    renderTargets: RenderTarget<GPUTexture>[] = []
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
     #swapChainAndTarget?: [GPUSwapChain, RenderTarget<GPUTexture>];
     #renderPassDescriptor: Partial<GPURenderPassDescriptor> = {
         colorAttachments: undefined,
         depthStencilAttachment: undefined
     }
-
     constructor(
         public gpu: GPU,
+        public renderTargets: T,
         public sampleCount: number = 1,
         depthStencil = false,
         public size: { width: number, height: number },
         private _onResize: (width: number, height: number) => [number, number],
         private usage: number = 0) {
+        for(const key in renderTargets) {
+            this.colorFormats.push(renderTargets[key]!.format);
+            renderTargets[key]!.renderPasses.add(this);
+            renderTargets[key]!.writableRenderPass=this;
+            renderTargets[key]!.createTexture();
+        }
+
         if (depthStencil) {
             this.#depthTexture = this.createTexture("depth24plus-stencil8");
             this.#depthTextureView = this.#depthTexture.createView();
@@ -81,13 +85,21 @@ export class RenderPass {
             this.#depthTexture = this.createTexture("depth24plus-stencil8");
             this.#depthTextureView = this.#depthTexture.createView();
         }
-        this.renderTargets.forEach(renderTarget => renderTarget.createTexture());
+        for(const key in this.renderTargets) {
+            this.renderTargets[key]!.createTexture();
+        }
     }
 
     addSwapChain(loadValue: GPULoadOp | GPUColor,usages?: [typeof GPUTextureUsage.SAMPLED]): RenderTarget<GPUTextureSampled>
     addSwapChain(loadValue: GPULoadOp | GPUColor,usages?: GPUTextureUsageFlags[]): RenderTarget<GPUTexture>
     addSwapChain(loadValue: GPULoadOp | GPUColor,usages: GPUTextureUsageFlags[] = [GPUTextureUsage.RENDER_ATTACHMENT]) {
-        const rt = this.addTarget("bgra8unorm", usages,loadValue, this.sampleCount)
+        const rt = this.addTarget("bgra8unorm", usages,loadValue, this.sampleCount);
+        this.colorFormats.push(rt.format);
+        rt.renderPasses.add(this);
+        rt.writableRenderPass=this;
+        rt.createTexture();
+        //@ts-expect-error
+        this.renderTargets.swap=rt;
         this.#swapChainAndTarget = [this.gpu.context.configureSwapChain({
             device: this.gpu.device,
             format: "bgra8unorm",
@@ -100,7 +112,7 @@ export class RenderPass {
     addTarget(format: GPUTextureFormat, usages: GPUTextureUsageFlags[],loadValue: GPULoadOp | GPUColor, sampleCount: number): RenderTarget<GPUTexture>
     addTarget(format: GPUTextureFormat, usages: GPUTextureUsageFlags[],loadValue: GPULoadOp | GPUColor, sampleCount = 1): RenderTarget<GPUTexture> {
         const usage = usages.reduce((prev, curr) => prev | curr, GPUTextureUsage.RENDER_ATTACHMENT);
-        return new RenderTarget(this, format, loadValue, usage, sampleCount)
+        return new RenderTarget(this.gpu, format, loadValue, usage, sampleCount)
     }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const colorAttachments: GPURenderPassColorAttachmentDescriptor[] = []
@@ -113,22 +125,25 @@ export class RenderPass {
             } : {
                 attachment: this.#swapChainAndTarget[0].getCurrentTexture().createView(),
                 loadValue: this.#swapChainAndTarget[1].loadValue
-            })
-            colorAttachments.push(...this.renderTargets.slice(1).map(rt => {
-                return {
-                    attachment: rt.view,
-                    loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+            });
+            
+            for(const key in this.renderTargets) {
+                if(key === 'swap')
+                    continue;
+                colorAttachments.push({
+                    attachment: this.renderTargets[key]!.view,
+                    loadValue: this.renderTargets[key]!.loadValue,
                     storeOp: "store" as const,
-                }
-            }))
+                })
+            }
         } else {
-            colorAttachments.push(...this.renderTargets.map(rt => {
-                return {
-                    attachment: rt.view,
-                    loadValue: rt.loadValue,
+            for(const key in this.renderTargets) {
+                colorAttachments.push({
+                    attachment: this.renderTargets[key]!.view,
+                    loadValue: this.renderTargets[key]!.loadValue,
                     storeOp: "store" as const,
-                }
-            }))
+                })
+            }
         }
         if (this.#depthTextureView) {
             this.#renderPassDescriptor.depthStencilAttachment = {
@@ -143,7 +158,7 @@ export class RenderPass {
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
 
-    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass:RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {
+    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass:RenderPass<{}>) => GPUBindGroup), rootLayout: PipelineLayout) {
         try {
             const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
             if (!this.bundles.length) {

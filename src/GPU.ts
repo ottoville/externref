@@ -1,5 +1,5 @@
 ﻿import { TerraNodeGPU } from "./TerraNode.js";
-import type { RenderPass } from "./GPU/RenderPass.js";
+import { RenderPass } from "./GPU/RenderPass.js";
 import { PipelineLayout } from "./GPU/PipelineLayout.js";
 import type { Scene } from "./Scene.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
@@ -63,7 +63,7 @@ export class GPU {
     //Todo: Remove COPY_SRC
     GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
-    BindGroupLayoutCanvas = this.createBindGroupLayout(
+    #BindGroupLayoutCanvas = this.createBindGroupLayout(
         {
             binding: 0,
             visibility: GPUShaderStage.FRAGMENT,
@@ -99,7 +99,7 @@ export class GPU {
     });
 
 
-    rootLayout = new PipelineLayout(this, this.BindGroupLayoutCanvas);
+    rootLayout = new PipelineLayout(this, this.#BindGroupLayoutCanvas);
     BindGroupLayout = this.createBindGroupLayout(
         {
             binding: 0,
@@ -122,6 +122,7 @@ export class GPU {
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
     context: GPUCanvasContext;
+    BindGroupCanvas: (renderPass: RenderPass<{}>) => BindGroupFiveBinding;
 
     createBindGroupLayout(entry: GPUBindGroupLayoutEntry): BindGroupLayoutOneBinding
     createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutTwoBinding
@@ -137,8 +138,8 @@ export class GPU {
         }
         return this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout;
     }
-    createBindGroupForRenderPass<T extends GPUBindGroupLayout, U extends bindings<T>>(layout: T, renderPass:RenderPass, ...entries: U): getBindType<T>
-    createBindGroupForRenderPass(layout: GPUBindGroupLayout, renderPass:RenderPass, ...entries: (GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })[]): GPUBindGroup {
+    createBindGroupForRenderPass<T extends GPUBindGroupLayout, U extends bindings<T>>(layout: T, renderPass:RenderPass<{}>, ...entries: U): getBindType<T>
+    createBindGroupForRenderPass(layout: GPUBindGroupLayout, renderPass:RenderPass<{}>, ...entries: (GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })[]): GPUBindGroup {
         const bindGroup = this.device.createBindGroup({
             layout, entries: entries.map<GPUBindGroupEntry>(entry => {
                 if (entry.resource instanceof RenderTarget) {
@@ -164,16 +165,27 @@ export class GPU {
 
     queue: Map<Float32Array, number> = new Map();
 
-    renderPassScreen: RenderPass
-    renderPassWater: RenderPass
-    renderPassCanvas: RenderPass;
-    renderPasses: Set<RenderPass>;
+    renderPassScreen=new RenderPass(this, {
+        gRenderTargetNormals: new RenderTarget(this, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1),
+        gRenderTargetPositions: new RenderTarget(this, "rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_SRC),
+        gRenderTargetDiffuse: new RenderTarget(this, "bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1)
+    }, 1, true, { width: this.canvas.width, height: this.canvas.height },
+    (w, h) => {
+        return [w, h]
+    });
+    renderPassWater= new RenderPass(this, {
+        normals: new RenderTarget(this, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1),
+        position: new RenderTarget(this, "rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED),
+        diffuse: new RenderTarget(this, "bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1)
+    }, 1, true, { width: this.canvas.width, height: this.canvas.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED)
+    renderPassCanvas: RenderPass<{}>;
+    renderPasses: Set<RenderPass<{}>>;
 
     readonly scale = {
         x: 1,
         y: 1
     }
-    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, createRenderPasses: (gpu: GPU) => [RenderPass, RenderPass, RenderPass]) {
+    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
         const context = canvas.getContext('gpupresent');
         if (!context)
             throw ('Unable to get webgpu context')
@@ -181,9 +193,48 @@ export class GPU {
         //Scene layoyt is iterated manually so remove it not to iterate it twise.
         this.rootCameralayout.subBindGroups.delete(this.rootSceneLayout);
 
-        const renderPasses = createRenderPasses(this);
-        this.renderPasses = new Set(renderPasses);
-        [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
+
+        this.renderPassCanvas = new RenderPass(this,{}, 1, false, { width: canvas.width, height: canvas.height },
+            (w, h) => {
+                return [w, h]
+            });
+        
+        //loadValue here does not make any difference because quad is filling the whole screen
+        this.renderPassCanvas.addSwapChain({ r: 0.53, g: 0.8, b: 0.92, a: 1.0 });
+
+        //water color { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }
+
+        this.renderPasses = new Set([this.renderPassCanvas, this.renderPassScreen, this.renderPassWater]);
+        //[this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
+        const canvasSampler = device.createSampler({
+            magFilter: "linear",
+            minFilter: "linear",
+        });
+        this.BindGroupCanvas = (renderPass: RenderPass<{}>) => this.createBindGroupForRenderPass(this.#BindGroupLayoutCanvas, renderPass,
+            {
+                binding: 0,
+                resource: canvasSampler
+            },
+            {
+                binding: 1,
+                resource: this.renderPassScreen.renderTargets.gRenderTargetNormals
+            },
+            {
+                binding: 2,
+                resource: this.renderPassScreen.renderTargets.gRenderTargetPositions
+            },
+            {
+                binding: 3,
+                resource: this.renderPassScreen.renderTargets.gRenderTargetDiffuse
+            },
+            {
+                binding: 4,
+                resource: {
+                    buffer: this.GPUData
+                }
+            });
+
+
 
 
         this.#DynamicBindGroups.add(this.BindGroup);
@@ -368,7 +419,7 @@ export class GPU {
     }
     readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
     pendingCommandBuffers: GPUCommandBuffer[] = [];
-    drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass, index: number, scene?: Scene) {
+    drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass<{}>, index: number, scene?: Scene) {
         let drawedMeshes = 0;
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
             if (bgt.sharedBindgroup && this.#DynamicBindGroups.has(bgt.sharedBindgroup)) {

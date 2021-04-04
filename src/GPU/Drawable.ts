@@ -14,11 +14,11 @@ export abstract class Drawable {
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     dynamicBuffers: Map<GPUBindGroup, number> = new Map();
     staticBuffers?: () => GPUBindGroup
-    #renderList: Map<RenderPass, Set<Drawable>> = new Map();
+    #renderList: Map<RenderPass<{}>, Set<Drawable>> = new Map();
     #scene?: Scene;
     constructor(
         protected renderPipeline: RenderPipeline,
-        private renderPasses: Set<RenderPass>,
+        private renderPasses: Set<RenderPass<{}>>,
         scene?: Scene) {
         this.scene = scene;
         this.clearBundles();
@@ -108,7 +108,7 @@ export abstract class DrawableDirect extends Drawable {
     #instanceCount: number;    
     constructor(
         renderPipeline: RenderPipeline,
-        renderPasses: Set<RenderPass>,
+        renderPasses: Set<RenderPass<{}>>,
         public node: TerraNodeGPU<DrawableDirect>,
         scene?: Scene,
         instanceCount = 1) {
@@ -131,7 +131,7 @@ export abstract class DrawableDirect extends Drawable {
 export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
     constructor(
         renderPipeline: RenderPipeline,
-        renderPasses: Set<RenderPass>,
+        renderPasses: Set<RenderPass<{}>>,
         readonly buffer: T,
         scene?: Scene,) {
         super(renderPipeline, renderPasses, scene);
@@ -143,7 +143,7 @@ export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
 export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
-        renderPasses: Set<RenderPass>,
+        renderPasses: Set<RenderPass<{}>>,
         node: TerraNodeGPU<DrawableSimple>,
         scene?: Scene,
         instanceCount = 1,
@@ -158,7 +158,7 @@ export class DrawableSimple extends DrawableDirect {
 export class DrawableIndexed extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
-        renderPasses: Set<RenderPass>,
+        renderPasses: Set<RenderPass<{}>>,
         node: TerraNodeGPU<DrawableIndexed>,
         private indexBuffer?: GPUIndexBuffer,
         scene?: Scene,

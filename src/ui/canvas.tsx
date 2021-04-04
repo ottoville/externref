@@ -1,5 +1,4 @@
 ﻿import { GPU } from "../GPU.js";
-import { RenderPass } from "../GPU/RenderPass.js";
 import { TerraCamera } from "../TerraCamera.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { Engine } from "../engine.js";
@@ -22,7 +21,6 @@ import { PositionNode, TerraNodeGPU } from "../TerraNode.js";
 import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 import { savedCamera } from "../types/interfaces/index.js";
-import { RenderTarget } from "../GPU/RenderTarget.js";
 
 import { DrawableSimple } from "GPU/Drawable.js";
 import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
@@ -66,14 +64,13 @@ const tools: {
 
 
 export class Canvas extends TerraCompoment {
-    progressBar: HTMLProgressElement = <progress min="0" max="100" value="0"></progress>;
-    progresElem: HTMLSpanElement = <span>0</span>;
-    canvasElem: HTMLCanvasElement = <canvas class="gameControl hidden"></canvas>
+    #progressBar: HTMLProgressElement = <progress min="0" max="100" value="0"></progress>;
+    #progresElem: HTMLSpanElement = <span>0</span>;
+    #canvasElem: HTMLCanvasElement = <canvas class="gameControl hidden"></canvas>
     rendertime = 0;
     msPerFrame = 0;
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
-    BindGroupCanvas!: (renderPass:RenderPass) => BindGroupFiveBinding;
     async initalize(): Promise<[Scene, ArcRotateCamera]> {
         const adapter = await window.navigator.gpu!.requestAdapter();
         this.progress = 4;
@@ -85,79 +82,18 @@ export class Canvas extends TerraCompoment {
         if (!device)
             throw ('no GPU device');
 
+        const gpu = new GPU(this.#canvasElem, device);
 
 
-        const canvasSampler = device.createSampler({
-            magFilter: "linear",
-            minFilter: "linear",
-        });
+        //@ts-ignore
+        window.printRenderTarget = () => {
+            gpu.renderPassScreen.renderTargets.gRenderTargetNormals.toBitmap()
+        }
+        //@ts-ignore
+        window.printRenderTarget2 = () => {
+            gpu.renderPassScreen.renderTargets.gRenderTargetPositions.toBitmap()
+        }
 
-
-        const gpu = new GPU(this.canvasElem, device, (gpu) => {
-            const renderpassCanvas = new RenderPass(gpu, 1, false, { width: this.canvasElem.width, height: this.canvasElem.height },
-                (w, h) => {
-                    return [w, h]
-                });
-            //new RenderTarget(renderpassCanvas, "bgra8unorm");
-            const renderpassScreen = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height },
-                (w, h) => {
-                    return [w, h]
-                });
-            //loadValue here does not make any difference because quad is filling the whole screen
-            renderpassCanvas.addSwapChain({ r: 0.53, g: 0.8, b: 0.92, a: 1.0 });
-            // new RenderTarget(renderpassScreen, "bgra8unorm");
-            const gRenderTargetNormals = new RenderTarget(renderpassScreen, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1);
-            const gRenderTargetPositions = new RenderTarget(renderpassScreen, "rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-            const gRenderTargetDiffuse = new RenderTarget(renderpassScreen, "bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1);
-
-            //@ts-ignore
-            window.printRenderTarget = () => {
-                gRenderTargetNormals.toBitmap()
-            }
-            //@ts-ignore
-            window.printRenderTarget2 = () => {
-                gRenderTargetDiffuse.toBitmap()
-            }
-            //water color { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }
-            const renderpassWater = new RenderPass(gpu, 1, true, { width: this.canvasElem.width, height: this.canvasElem.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED)
-
-            //Normals
-            new RenderTarget(renderpassWater, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1);
-            //Position
-            new RenderTarget(renderpassWater, "rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED);
-            //Diffuse
-            new RenderTarget(renderpassWater, "bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1);
-
-            this.BindGroupCanvas = (renderPass:RenderPass) => gpu.createBindGroupForRenderPass(gpu.BindGroupLayoutCanvas, renderPass,
-                {
-                    binding: 0,
-                    resource: canvasSampler
-                },
-                {
-                    binding: 1,
-                    resource: gRenderTargetNormals
-                },
-                {
-                    binding: 2,
-                    resource: gRenderTargetPositions
-                },
-                {
-                    binding: 3,
-                    resource: gRenderTargetDiffuse
-                },
-                {
-                    binding: 4,
-                    resource: {
-                        buffer: gpu.GPUData
-                    }
-                });
-
-            return [
-                renderpassCanvas,
-                renderpassScreen,
-                renderpassWater
-            ]
-        });
         this.progress = 6;
         const shaders = ['simple.vert.wgsl', 'simple.frag.wgsl',
             'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl',
@@ -176,7 +112,7 @@ export class Canvas extends TerraCompoment {
         const projectionmatrix = new Float32Array(projectionmatrixBuffer);
         this.progress = 13;
 
-        const terraEngine = await Engine.initEngine(gpu, DB, this.canvasElem);
+        const terraEngine = await Engine.initEngine(gpu, DB, this.#canvasElem);
         this.progress = 15;
 
 
@@ -298,16 +234,16 @@ export class Canvas extends TerraCompoment {
         const debugscene = new Scene('static', gpu, terraEngine, [mainCamera], (scene) => {
             const sun = new PositionNode(scene.engine);
             sun.get_translation().set([0, 1, 0]);
-            sun.gpu_custom_data=new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
-          //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
+            sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
+            //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
             return [sun.gpu_alignment]
         });
 
         const b2 = new Box(debugscene);
         //b2.update(scale => scale.set([200, 200, 200]));
         b2.update_scale(200, 200, 200);
-        const translation=b2.get_translation();
-        b2.SetTranslation([500,translation[1],translation[2]])
+        const translation = b2.get_translation();
+        b2.SetTranslation([500, translation[1], translation[2]])
         //b2.setTranslationX(500);
 
 
@@ -320,7 +256,7 @@ export class Canvas extends TerraCompoment {
         let startTime = 0;
         const me = this;
 
-        const canvasPipeline = gpu.rootLayout.addRenderPipeline(new VertexShader(gpu,'canvas.vert.wgsl'), new Shader(gpu,'texture.frag.wgsl'), {
+        const canvasPipeline = gpu.rootLayout.addRenderPipeline(new VertexShader(gpu, 'canvas.vert.wgsl'), new Shader(gpu, 'texture.frag.wgsl'), {
             label: 'canvas',
             primitive: {
                 topology: 'triangle-list'
@@ -377,7 +313,7 @@ export class Canvas extends TerraCompoment {
                 camera.render(renderEncoder)
             });
 
-            gpu.renderPassCanvas.render(renderEncoder, me.BindGroupCanvas, gpu.rootLayout);
+            gpu.renderPassCanvas.render(renderEncoder, gpu.BindGroupCanvas, gpu.rootLayout);
 
             gpu.pendingCommandBuffers.push(renderEncoder.finish())
             gpu.device.queue.submit(gpu.pendingCommandBuffers);
@@ -395,20 +331,21 @@ export class Canvas extends TerraCompoment {
             clearTimeout(resizeHandler);
             resizeHandler = setTimeout(async () => {
                 const aspectRatio = entries[0]!.contentRect.width / entries[0]!.contentRect.height
-                this.canvasElem.width = Math.min((entries[0]!.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
+                this.#canvasElem.width = Math.min((entries[0]!.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
 
-                this.canvasElem.height = this.canvasElem.width / aspectRatio
+                this.#canvasElem.height = this.#canvasElem.width / aspectRatio
 
-                if (this.canvasElem.height > maxResolution.height) {
-                    this.canvasElem.height = maxResolution.height;
-                    this.canvasElem.width = this.canvasElem.height * aspectRatio;
+                if (this.#canvasElem.height > maxResolution.height) {
+                    this.#canvasElem.height = maxResolution.height;
+                    this.#canvasElem.width = this.#canvasElem.height * aspectRatio;
                 }
 
-                gpu.scale.x = this.canvasElem.width / entries[0]!.contentRect.width;
-                gpu.scale.y = this.canvasElem.height / entries[0]!.contentRect.height;
+                gpu.scale.x = this.#canvasElem.width / entries[0]!.contentRect.width;
+                gpu.scale.y = this.#canvasElem.height / entries[0]!.contentRect.height;
 
                 gpu.renderPasses.forEach(renderPass => {
-                    renderPass.onResize(this.canvasElem.width, this.canvasElem.height)
+                    console.log('canvas resize', this.#canvasElem.width, this.#canvasElem.height)
+                    renderPass.onResize(this.#canvasElem.width, this.#canvasElem.height)
                 })
 
                 //Create projection matrix
@@ -434,7 +371,7 @@ export class Canvas extends TerraCompoment {
                 renderFrame = window.requestAnimationFrame(renderLoop);
             }, 500)
         });
-        ro.observe(this.canvasElem.parentElement!)
+        ro.observe(this.#canvasElem.parentElement!)
 
 
         this.progress = 20;
@@ -534,26 +471,26 @@ export class Canvas extends TerraCompoment {
             </div>)
         }).catch(e => {
             console.error('creating terrain failed', e);
-            this.progresElem.textContent = e.name + ' ' + e.message;
+            this.#progresElem.textContent = e.name + ' ' + e.message;
 
         });
     }
     set progress(value: number) {
-        this.progressBar.value = value;
-        this.progresElem.textContent = value.toFixed(0);
+        this.#progressBar.value = value;
+        this.#progresElem.textContent = value.toFixed(0);
         if (value === 100)
-            this.progressBar.parentNode?.parentNode?.removeChild(this.progressBar.parentNode);
+            this.#progressBar.parentNode?.parentNode?.removeChild(this.#progressBar.parentNode);
     }
     render() {
         return <div style="height:100%">
-            {this.canvasElem}
+            {this.#canvasElem}
             {this.toolsContainer}
             <div id="fps">@(rendertime) @(msPerFrame)</div>
             {this.gameState}
             <div style="position:absolute;top:30%; background-color:white;width:100%;text-align:center ">
-                {this.progresElem}
+                {this.#progresElem}
                 <br />
-                {this.progressBar}
+                {this.#progressBar}
             </div>
         </div >
     }
