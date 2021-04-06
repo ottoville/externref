@@ -16,7 +16,7 @@ function getRenderPipeline(scene: Scene) {
         magFilter: "linear",
         minFilter: "linear",
     });
-    const lightsBindGroupTextureWater = scene.gpu.rootSceneLayout.addChildLayout(scene.gpu.createBindGroupLayout({
+    const lightsBindGroupTextureWater = scene.gpu.rootCameralayout.addChildLayout(scene.gpu.createBindGroupLayout({
         entries: [
             {
                 binding: 0,

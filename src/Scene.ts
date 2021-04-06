@@ -11,8 +11,8 @@ export class Scene {
 
     boundables: Set<BoundableNode<DrawableDirect>> = new Set();
     lights;
-    positionBindGroupLightsTimeWGSL = this.gpu.rootSceneLayout.addChildLayout(this.gpu.BindGroupLayoutPosition);
-    lightsBindGroupTexture2 = this.gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
+    positionBindGroupLightsTimeWGSL = this.gpu.rootCameralayout.addChildLayout(this.gpu.BindGroupLayoutPosition);
+    lightsBindGroupTexture2 = this.gpu.rootCameralayout.addChildLayout(this.gpu.createBindGroupLayout({
         label:'lightsBindGroupTexture2',
         entries: [
             {
@@ -49,17 +49,17 @@ export class Scene {
 
     render(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass<{}>) {
         let drawedMeshes = 0;
-        renderPassEncoder.setBindGroup(1, this.lights.uniformBindGroupLightsWGSL);
-        this.gpu.rootSceneLayout.renderPipeLines.forEach(rp => {
+        //renderPassEncoder.setBindGroup(1, this.lights.uniformBindGroupLightsWGSL);
+        this.gpu.rootCameralayout.renderPipeLines.forEach(rp => {
             drawedMeshes += rp.draw(renderPassEncoder, renderPass, 2, this);
         });
-        if (this.gpu.rootSceneLayout.subBindGroups.size) {
-            this.gpu.rootSceneLayout.subBindGroups.forEach(bgt =>
-                drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 2, this)
+        if (this.gpu.rootCameralayout.subBindGroups.size) {
+            this.gpu.rootCameralayout.subBindGroups.forEach(bgt =>
+                drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 1, this)
             )
         };
         PipelineLayout.instances.forEach((bgt) => {
-            drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 2, this)
+            drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 1, this)
         });
         return drawedMeshes;
     }

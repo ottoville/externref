@@ -22,14 +22,14 @@ const rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(vec2<f32>(0.0,0.0), vec2<f3
   [[offset(80)]] ambient : vec3<f32>;
   [[offset(92)]] shadow : f32;
 };
-[[binding(0), group(1)]] var<uniform> lights : Lights;
+//[[binding(0), group(1)]] var<uniform> lights : Lights;
 
 [[location(0)]] var<in> positions : vec4<f32>; //position xyz + rotate
 [[location(1)]] var<in> shape : vec4<f32>; // {x:scale, y:baseAngle, z:curve, w:color} (blade's shape properties)
 
 [[location(0)]] var<out> color : vec3<f32>;
-[[location(1)]] var<out> shading : f32;
-[[location(2)]] var<out> ambient : vec3<f32>;
+//[[location(1)]] var<out> shading : f32;
+//[[location(2)]] var<out> ambient : vec3<f32>;
 
 //const PI:f32 = 3.141592653589793;
 
@@ -54,7 +54,7 @@ const vertices : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
 
 [[stage(vertex)]]
 fn main() -> void {
- ambient = lights.ambient;
+ //ambient = lights.ambient;
   var vertice:vec3<f32> = vec3<f32>(vertices[VertexIndex].xy,0.0);
   var windRotate:f32 = rot[VertexIndex].x;
 
@@ -96,10 +96,10 @@ fn main() -> void {
    var viewDirectionW:vec3<f32> = normalize(scene.cameraPosition - worldPos.xyz);
    normal = normal * sign(dot(viewDirectionW, normal));
 
-   var diffuse:f32 = dot(normal, lights.sunDirection)*lights.shadow;
+   //var diffuse:f32 = dot(normal, lights.sunDirection)*lights.shadow;
 
    Position = scene.viewProjection * worldPos;
 
-   color = vec3<f32>(clamp(shape.w,0.0,1.0),1.0,0.0)*diffuse;
+   color = vec3<f32>(clamp(shape.w,0.0,1.0),1.0,0.0);//*diffuse;
     return;
 }

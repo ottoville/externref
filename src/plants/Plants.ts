@@ -42,7 +42,7 @@ export class Plants {
         scene: Scene,
         terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
-        const planstPipeline = scene.gpu.rootSceneLayout.addRenderPipeline(new VertexShader(scene.engine.gpu,'grass/grass.vert.wgsl', 'main', [{
+        const planstPipeline = scene.gpu.rootCameralayout.addRenderPipeline(new VertexShader(scene.engine.gpu,'grass/grass.vert.wgsl', 'main', [{
             arrayStride: 4 * 4,
             stepMode: "instance" as GPUInputStepMode,
             attributes: [{ // position

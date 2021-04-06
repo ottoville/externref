@@ -15,9 +15,9 @@
   [[offset(92)]] shadow : f32;
 };
 
-[[binding(0), set(0)]] var<uniform> uniforms : Uniforms;
-[[binding(1), set(0)]] var<uniform> times : Time;
-[[binding(0), set(1)]] var<uniform> lights : Lights;
+[[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
+[[binding(1), group(0)]] var<uniform> times : Time;
+//[[binding(0), set(1)]] var<uniform> lights : Lights;
 
 const pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
     vec3<f32>(-50000.0,     3.0,   -50000.0),
@@ -30,16 +30,16 @@ const pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
 
 [[builtin(vertex_idx)]] var<in> VertexIndex : i32;
 
-[[location(0)]] var<out> shading : f32;
-[[location(1)]] var<out> ambient : vec3<f32>;
-[[location(2)]] var<out> v_uv : vec4<f32>;
+//[[location(0)]] var<out> shading : f32;
+//[[location(1)]] var<out> ambient : vec3<f32>;
+[[location(0)]] var<out> v_uv : vec4<f32>;
 
 
 [[stage(vertex)]]
 fn main() -> void {
   Position = uniforms.modelViewProjectionMatrix * vec4<f32>(pos[VertexIndex], 1.0);
   v_uv = Position;
-  shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
-  ambient=lights.ambient;
+  //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
+  //ambient=lights.ambient;
   return;
 }

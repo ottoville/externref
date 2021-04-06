@@ -23,7 +23,7 @@ export class RenderPipeline {
 
     dynamicBindGroupOffset: number[] = [];
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
-    public createBindGroups?: () => Set<GPUBindGroup>
+    public createSharedBindGroups?: () => Set<GPUBindGroup>
     constructor(public vertexShader:VertexShader, public fragmentShader:Shader, public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates' | 'vertex' | 'fragment'>, public bindgroupdrawable: PipelineLayout) {
 
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
@@ -50,8 +50,8 @@ export class RenderPipeline {
 
         renderPassEncoder.setPipeline(variant.renderpipeline);
         //variant.renderpipeline.label && console.log('set Pipeline ', variant.renderpipeline.label)
-        if(this.createBindGroups) {
-            this.createBindGroups().forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
+        if(this.createSharedBindGroups) {
+            this.createSharedBindGroups().forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
          }
         drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart));
         return drawables.size;

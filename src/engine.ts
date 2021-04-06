@@ -33,7 +33,7 @@ export class Engine {
 
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
-    positionBindGroupTime = this.gpu.rootSceneLayout.addChildBindGroup(this.gpu.BindGroupPosition, true)
+    positionBindGroupTime = this.gpu.rootCameralayout.addChildBindGroup(this.gpu.BindGroupPosition, true)
     #tempBuffer?: GPUCopySRCBuffer;
     collider = new Collider(this);
 

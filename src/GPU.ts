@@ -74,7 +74,7 @@ export class GPU {
         }]
     });
     rootCameralayout = new PipelineLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
-    rootSceneLayout = new PipelineLayout(this, this.uniformBindGroupLayoutLightsWGSL2, this.rootCameralayout, undefined, false);
+    //rootSceneLayout = new PipelineLayout(this, this.uniformBindGroupLayoutLightsWGSL2, this.rootCameralayout, undefined, false);
 
     //viewprojection and camera position
 
@@ -230,7 +230,7 @@ export class GPU {
             throw ('Unable to get webgpu context')
         this.context = context;
         //Scene layoyt is iterated manually so remove it not to iterate it twise.
-        this.rootCameralayout.subBindGroups.delete(this.rootSceneLayout);
+        //this.rootCameralayout.subBindGroups.delete(this.rootSceneLayout);
 
 
         this.renderPassCanvas = new RenderPass(this, {}, 1, false, { width: canvas.width, height: canvas.height },

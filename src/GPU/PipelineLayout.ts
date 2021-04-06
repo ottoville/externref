@@ -66,7 +66,7 @@ export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends Pipeline
     addRenderPipeline = (vertexShader:VertexShader, fragmentShader:Shader, renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>, bindGroups?: () => T): RenderPipeline => {
         const RP = super.addRenderPipeline(vertexShader,fragmentShader,renderPipeline);
         if (bindGroups) {
-            RP.createBindGroups = (): Set<GPUBindGroup> => {
+            RP.createSharedBindGroups = (): Set<GPUBindGroup> => {
                 return new Set([this.gpuscene.device.createBindGroup(
                     {
                         layout: this.bindGroupLayout,
