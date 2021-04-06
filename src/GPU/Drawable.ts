@@ -13,7 +13,8 @@ export interface DrawableLikeClass extends DrawableLike {
 export abstract class Drawable {
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     dynamicBuffers: Map<GPUBindGroup, number> = new Map();
-    staticBuffers?: () => GPUBindGroup
+    //staticBuffers?: () => GPUBindGroup
+    #staticBufferArray: (GPUSampler | GPUTextureView)[] = [];
     #renderList: Map<RenderPass<{}>, Set<Drawable>> = new Map();
     #scene?: Scene;
     constructor(
@@ -53,18 +54,20 @@ export abstract class Drawable {
         });
         this.clearBundles();
     }
-    setStaticBuffer(setBuffers: () => GPUBindingResource[]) {
-        this.staticBuffers = () => this.renderPipeline.bindgroupdrawable.gpuscene.device.createBindGroup(
+    get staticBuffers() {
+        return this.renderPipeline.bindgroupdrawable.gpuscene.device.createBindGroup(
             {
                 layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout,
-                entries: setBuffers().map((resource, binding) => {
+                entries: this.#staticBufferArray.map((resource, binding) => {
                     return {
                         binding,
                         resource
                     }
                 })
-            }
-        );
+            })
+    }
+    setStaticBuffer(...staticBuffers:(GPUSampler | GPUTextureView)[]) {
+        this.#staticBufferArray=staticBuffers;
         this.clearBundles();
     }
     protected clearBundles() {
@@ -100,7 +103,7 @@ export abstract class Drawable {
     }
     abstract render: (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => void
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number) {
-        this.staticBuffers && renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers())
+        this.#staticBufferArray.length && renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers)
         //this.#staticBuffers.forEach((bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup()));
         this.dynamicBuffers.forEach((offset, bindgroup) => {
             renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset * TerraNodeGPU.alignment]);

@@ -52,11 +52,11 @@ export class TerrainMesh extends BoundableNode<DrawableIndexed> {
         minFilter: "linear",
     })
     setTextureView = (textureview: GPUTextureView) => {
-        this.Drawable.setStaticBuffer(() => [this.sampler, textureview] );
+        this.Drawable.setStaticBuffer(this.sampler, textureview);
     }
     constructor(
         scene: Scene,
-        initialTexture: GPUTextureView,
+        public initialTexture: GPUTextureView,
         public vBuffer: GPUVertexBuffer,
         public iBuffer: GPUIndexBuffer,
         positionsCount: number,
@@ -65,7 +65,7 @@ export class TerrainMesh extends BoundableNode<DrawableIndexed> {
     ) {
         super(scene, TerrainRenderPipeline(scene), positionsCount, (node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), node, undefined, 0, 1), verticesPositionStride, indicesView);
         this.Drawable.dynamicBuffers.set(scene.gpu.BindGroupPosition, this.gpu_alignment);
-        this.setTextureView(initialTexture);
+        this.Drawable.setStaticBuffer(this.sampler, initialTexture);
         this.Drawable.setVertexBuffer(0, this.vBuffer);
         this.Drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
     }
