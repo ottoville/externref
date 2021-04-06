@@ -31,8 +31,8 @@ export abstract class Drawable {
         this.#scene = scene;
         this.renderPasses.forEach(rp => {
 
-           let variant = rp.renderPipelines.get(this.renderPipeline)
-            if(!variant) {
+            let variant = rp.renderPipelines.get(this.renderPipeline)
+            if (!variant) {
                 const renderpipeline = rp.decoratePipeline(this.renderPipeline);
                 variant = {
                     renderpipeline: renderpipeline,
@@ -53,11 +53,16 @@ export abstract class Drawable {
         });
         this.clearBundles();
     }
-    setStaticBuffer(setBuffers: () => GPUBindGroupEntry[]) {
+    setStaticBuffer(setBuffers: () => GPUBindingResource[]) {
         this.staticBuffers = () => this.renderPipeline.bindgroupdrawable.gpuscene.device.createBindGroup(
             {
                 layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout,
-                entries: setBuffers()
+                entries: setBuffers().map((resource, binding) => {
+                    return {
+                        binding,
+                        resource
+                    }
+                })
             }
         );
         this.clearBundles();
@@ -95,17 +100,17 @@ export abstract class Drawable {
     }
     abstract render: (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => void
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number) {
-        this.staticBuffers &&  renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers())
+        this.staticBuffers && renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers())
         //this.#staticBuffers.forEach((bindgroup) => renderPass.setBindGroup(BindGroupsStart++, bindgroup()));
         this.dynamicBuffers.forEach((offset, bindgroup) => {
-            renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset*TerraNodeGPU.alignment]);
+            renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset * TerraNodeGPU.alignment]);
         })
         this.#vertexBuffers.forEach((buffer, index) => renderPass.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
         this.render(renderPass);
     }
 }
 export abstract class DrawableDirect extends Drawable {
-    #instanceCount: number;    
+    #instanceCount: number;
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass<{}>>,
@@ -167,7 +172,7 @@ export class DrawableIndexed extends DrawableDirect {
         public firstIndex = 0,
         public firstInstance = 0,
         private GPUIndexFormat: GPUIndexFormat = 'uint16') {
-            super(renderPipeline, renderPasses, node, scene,instanceCount);
+        super(renderPipeline, renderPasses, node, scene, instanceCount);
     }
     destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {
         super.destroy(preserveVerticeBuffers);

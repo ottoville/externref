@@ -7,24 +7,32 @@ import type { TerraCamera } from "./TerraCamera.js";
 import type { RenderPass } from "./GPU/RenderPass.js";
 import { TerraMatrix } from "./Math.js";
 import { DrawableDirect } from "GPU/Drawable.js";
-
 export class Scene {
 
     boundables: Set<BoundableNode<DrawableDirect>> = new Set();
     lights;
-    positionBindGroupLightsTimeWGSL = this.gpu.rootSceneLayout.addChildLayout(this.gpu.BindGroupLayout);
-    lightsBindGroupTexture = this.gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
-        binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
-        sampler: {
-
-        }
-    }, {
-        binding: 1,
-        visibility: GPUShaderStage.FRAGMENT,
-        texture: {
-
-        }
+    positionBindGroupLightsTimeWGSL = this.gpu.rootSceneLayout.addChildLayout(this.gpu.BindGroupLayoutPosition);
+    lightsBindGroupTexture2 = this.gpu.rootSceneLayout.addChildLayout(this.gpu.createBindGroupLayout({
+        label:'lightsBindGroupTexture2',
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.FRAGMENT,
+                sampler: {},
+            }, {
+                binding: 1,
+                visibility: GPUShaderStage.FRAGMENT,
+                texture: {}
+            }/*,
+            {
+                binding: 2,
+                visibility: GPUShaderStage.VERTEX,
+                buffer: {
+                    type: "uniform",
+                    hasDynamicOffset: true
+                }
+            }*/
+        ]
     }));
     ready?: Promise<any>;
 
@@ -50,7 +58,9 @@ export class Scene {
                 drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 2, this)
             )
         };
-        PipelineLayout.instances.forEach((bgt) => { drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 2, this) });
+        PipelineLayout.instances.forEach((bgt) => {
+            drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 2, this)
+        });
         return drawedMeshes;
     }
     async collissionCheck(rayFunction: (mesh: BoundableNode<DrawableDirect>) => any, boundables: IterableIterator<BoundableNode<DrawableDirect>>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode<DrawableDirect>) => boolean): Promise<PickingInfo | null> {
@@ -83,40 +93,32 @@ export class Scene {
     async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode<DrawableDirect>) => boolean, fastCheck?: boolean): Promise<BoundableNode<DrawableDirect> | null> {
         if (predicate)
             console.warn('TODO: predicate');
-    let start = performance.now();
-    const encoder = this.gpu.device.createCommandEncoder();
-    
-    const buffer = this.gpu.device.createBuffer({
-        size: 16,
-        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-    })
-    encoder.copyTextureToBuffer(
-    {
-        texture: this.gpu.renderPassScreen.renderTargets.gRenderTargetPositions.texture,
-        origin: { x:this.engine.mousePosition[0],y:this.engine.mousePosition[1] }
-    },
-    {
-        buffer,
-        bytesPerRow: 256,
-        offset:0
-    },
-        [1, 1, 1]);
-    this.gpu.device.queue.submit([encoder.finish()]);
+        let start = performance.now();
+        const encoder = this.gpu.device.createCommandEncoder();
 
-    buffer.mapAsync(GPUMapMode.READ).then(() => {
-        const floatData=new Float32Array(buffer.getMappedRange());
-        console.log(floatData[0]);
-        console.log(floatData[1]);
-        console.log(floatData[2]);
-        console.log('picking took', performance.now() - start) //55
-    })
+        const buffer = this.gpu.device.createBuffer({
+            size: 16,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+        })
+        encoder.copyTextureToBuffer(
+            {
+                texture: this.gpu.renderPassScreen.renderTargets.gRenderTargetPositions.texture,
+                origin: { x: this.engine.mousePosition[0], y: this.engine.mousePosition[1] }
+            },
+            {
+                buffer,
+                bytesPerRow: 256,
+                offset: 0
+            },
+            [1, 1, 1]);
+        this.gpu.device.queue.submit([encoder.finish()]);
 
+        buffer.mapAsync(GPUMapMode.READ).then(() => {
+            const floatData = new Float32Array(buffer.getMappedRange());
+            console.log(floatData);
+            console.log('picking took', performance.now() - start) //55
+        });
 
-
-
-
-
-        
         const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]])
         const pickingRays: Map<BoundableNode<DrawableDirect>, Float32Array> = new Map();
@@ -137,7 +139,7 @@ export class Scene {
             if (!minimum || boundable.pickInfo.getDistance() < minimum.pickInfo.getDistance())
                 minimum = boundable;
 
-        })
+        });
         /*pickresults.forEach(pickresult => {
             if (pickresult.hit) {
                 if (!minimum || pickresult.distance < minimum.distance)

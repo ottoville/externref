@@ -14,7 +14,7 @@ export class PipelineLayout {
 
     subBindGroups: Set<PipelineLayout> = new Set();
     layout: GPUPipelineLayout;
-    constructor(public gpuscene: GPU, public bindGroupLayout: GPUBindGroupLayout, public parent?: PipelineLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false, isRoot = false) {
+    constructor(public gpuscene: GPU, public bindGroupLayout: TerraBindGroupLayout, public parent?: PipelineLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false, isRoot = false, debug=false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout];
         if (!isRoot) {
             if (parent) {
@@ -27,14 +27,18 @@ export class PipelineLayout {
                 PipelineLayout.instances.add(this);
             }
         }
+        if(debug) {
+            console.log(layoutTree);
+            debugger;
+        }
         this.layout = this.gpuscene.device.createPipelineLayout({ bindGroupLayouts: layoutTree });
     }
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutOneBinding): LayoutGroupDrawable<[GPUBindGroupEntry]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutTwoBinding): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutThreeBinding): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
-    addChildLayout(meshBindGroupLayout: BindGroupLayoutFourBinding): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
-    addChildLayout(meshBindGroupLayout: (BindGroupLayoutOneBinding | BindGroupLayoutTwoBinding | BindGroupLayoutThreeBinding | BindGroupLayoutFourBinding)): LayoutGroupDrawable<GPUBindGroupEntry[]> {
-        return new LayoutGroupDrawable(this.gpuscene, meshBindGroupLayout, this, undefined);
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutOneBinding,debug?:boolean): LayoutGroupDrawable<[GPUBindGroupEntry]>
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutTwoBinding,debug?:boolean): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutThreeBinding,debug?:boolean): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    addChildLayout(meshBindGroupLayout: BindGroupLayoutFourBinding,debug?:boolean): LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    addChildLayout(meshBindGroupLayout: (BindGroupLayoutOneBinding | BindGroupLayoutTwoBinding | BindGroupLayoutThreeBinding | BindGroupLayoutFourBinding), debug=false): LayoutGroupDrawable<GPUBindGroupEntry[]> {
+        return new LayoutGroupDrawable(this.gpuscene, meshBindGroupLayout, this, undefined,undefined,undefined,debug);
     }
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), isDynamic: boolean): DynamicPipelineLayout
     addChildBindGroup(sharedBindgroup: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding)): PipelineLayout

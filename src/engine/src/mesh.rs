@@ -160,7 +160,18 @@ impl Mesh {
             id,
             engine: engine,
             gpu_alignment: engine.allocate_gpu(),
-            gpu_mesh: GPUMesh::new(),
+            gpu_mesh: GPUMesh {
+                transformation: Vec4 {
+                    x: Vec4 { x:1.0, y:0.0, z:0.0, w:0.0},
+                    y: Vec4 { x:0.0, y:1.0, z:0.0, w:0.0},
+                    z: Vec4 { x:0.0, y:0.0, z:1.0, w:0.0},
+                    w: Vec4 { x:0.0, y:0.0, z:0.0, w:1.0},
+                },
+                delta: [0.0, 0.0, 0.0, 0.0],
+                custom: [0.0, 0.0, 0.0, 0.0],
+                acceleration: [0.0, 0.0, 0.0, 0.0],
+                id
+            },
             geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, vertices_amount),
             rotation: Vec4 {
                 x: 0.0,

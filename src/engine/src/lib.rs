@@ -39,21 +39,5 @@ pub struct GPUMesh {
     delta: [f32; 4],
     custom: [f32; 4],
     acceleration: [f32; 4],
-}
-impl GPUMesh {
-    pub fn new() -> Self {
-        let m = GPUMesh {
-            transformation: Vec4 {
-                x: Vec4 { x:1.0, y:0.0, z:0.0, w:0.0},
-                y: Vec4 { x:0.0, y:1.0, z:0.0, w:0.0},
-                z: Vec4 { x:0.0, y:0.0, z:1.0, w:0.0},
-                w: Vec4 { x:0.0, y:0.0, z:0.0, w:1.0},
-            },
-            delta: [0.0, 0.0, 0.0, 0.0],
-            custom: [0.0, 0.0, 0.0, 0.0],
-            acceleration: [0.0, 0.0, 0.0, 0.0],
-        };
-
-        return m;
-    }
+    id: u32,
 }

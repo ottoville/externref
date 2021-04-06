@@ -114,10 +114,9 @@ const worker = new ObjectWorkerThread('/js/workers/webworkers/mesh.js');
 class pickInfo {
     buffer = new SharedArrayBuffer(6 * 4);
     point = new TerraVector3(this.buffer);
-    //distance = new Float32Array(this.buffer, 3 * 4, 1);
-    #view=new DataView(this.buffer,3*4,4)
+    #distance=new DataView(this.buffer,3*4,4)
     getDistance() {
-        return this.#view.getFloat32(0, true);
+        return this.#distance.getFloat32(0, true);
     }
 }
 export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeGPU<T> {

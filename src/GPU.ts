@@ -13,35 +13,65 @@ type bindings<T> = T extends BindGroupLayoutOneBinding ? [TerraBindGroupEntry]
     : T extends BindGroupLayoutFourBinding ? [TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry]
     : T extends BindGroupLayoutFiveBinding ? [TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry, TerraBindGroupEntry]
     : never;
+interface TerraGPUBindGroupLayoutDescriptorOne
+    extends GPUBindGroupLayoutDescriptor {
+    entries: [GPUBindGroupLayoutEntry];
+}
+interface TerraGPUBindGroupLayoutDescriptorTwo
+    extends GPUBindGroupLayoutDescriptor {
+    entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry];
+}
+interface TerraGPUBindGroupLayoutDescriptorThree
+    extends GPUBindGroupLayoutDescriptor {
+    entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry];
+}
+interface TerraGPUBindGroupLayoutDescriptorFour
+    extends GPUBindGroupLayoutDescriptor {
+    entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry];
+}
+interface TerraGPUBindGroupLayoutDescriptorFive
+    extends GPUBindGroupLayoutDescriptor {
+    entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry];
+}
+
 
 
 export class GPU {
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
-    GPUBindGroupLayouts: WeakMap<GPUBindGroup, GPUBindGroupLayout> = new WeakMap();
+    GPUBindGroupLayouts: WeakMap<GPUBindGroup, TerraBindGroupLayout> = new WeakMap();
     #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
 
-    uniformBindGroupLayoutWithTime = this.createBindGroupLayout(
-        {
+    uniformBindGroupLayoutWithTime = this.createBindGroupLayout({
+        label: 'uniformBindGroupLayoutWithTime',
+        entries:
+            [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.VERTEX,
+                    buffer: {
+                        type: "uniform"
+                    }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.VERTEX,
+                    buffer: {
+                        type: "uniform"
+                    }
+                }
+            ]
+    }
+
+    );
+    uniformBindGroupLayoutLightsWGSL2 = this.createBindGroupLayout({
+        label: 'uniformBindGroupLayoutLightsWGSL2',
+        entries: [{
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
             buffer: {
                 type: "uniform"
             }
-        },
-        {
-            binding: 1,
-            visibility: GPUShaderStage.VERTEX,
-            buffer: {
-                type: "uniform"
-            }
-        }
-    );
-    uniformBindGroupLayoutLightsWGSL2 = this.createBindGroupLayout({
-        binding: 0,
-        visibility: GPUShaderStage.VERTEX,
-        buffer: {
-            type: "uniform"
-        }
+        }]
     });
     rootCameralayout = new PipelineLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
     rootSceneLayout = new PipelineLayout(this, this.uniformBindGroupLayoutLightsWGSL2, this.rootCameralayout, undefined, false);
@@ -63,53 +93,60 @@ export class GPU {
     //Todo: Remove COPY_SRC
     GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
-    #BindGroupLayoutCanvas = this.createBindGroupLayout(
-        {
-            binding: 0,
-            visibility: GPUShaderStage.FRAGMENT,
-            sampler: {
+    #BindGroupLayoutCanvas = this.createBindGroupLayout({
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.FRAGMENT,
+                sampler: {
 
+                }
+            },
+            {
+                binding: 1,
+                visibility: GPUShaderStage.FRAGMENT,
+                texture: {
+
+                }
+            }, {
+                binding: 2,
+                visibility: GPUShaderStage.FRAGMENT,
+                texture: {
+
+                }
+            },
+            {
+                binding: 3,
+                visibility: GPUShaderStage.FRAGMENT,
+                texture: {
+
+                }
+            }, {
+                binding: 4,
+                visibility: GPUShaderStage.FRAGMENT,
+                buffer: {
+                    type: "read-only-storage"
+                }
             }
-        },
-        {
-            binding: 1,
-            visibility: GPUShaderStage.FRAGMENT,
-            texture: {
-
-            }
-        }, {
-        binding: 2,
-        visibility: GPUShaderStage.FRAGMENT,
-        texture: {
-
-        }
-    },
-        {
-            binding: 3,
-            visibility: GPUShaderStage.FRAGMENT,
-            texture: {
-
-            }
-        }, {
-        binding: 4,
-        visibility: GPUShaderStage.FRAGMENT,
-        buffer: {
-            type: "read-only-storage"
-        }
-    });
+        ]
+    }
+    );
 
 
     rootLayout = new PipelineLayout(this, this.#BindGroupLayoutCanvas);
-    BindGroupLayout = this.createBindGroupLayout(
-        {
-            binding: 0,
-            visibility: GPUShaderStage.VERTEX,
-            buffer: {
-                type: "uniform",
-                hasDynamicOffset: true
-            }
-        });
-    BindGroup = this.createBindGroup(this.BindGroupLayout,
+    BindGroupLayoutPosition = this.createBindGroupLayout({
+        label: 'BindGroupLayoutPosition',
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.VERTEX,
+                buffer: {
+                    type: "uniform",
+                    hasDynamicOffset: true
+                }
+            }]
+    });
+    BindGroupPosition = this.createBindGroup(this.BindGroupLayoutPosition,
         {
             binding: 0,
             resource: {
@@ -124,22 +161,24 @@ export class GPU {
     context: GPUCanvasContext;
     BindGroupCanvas: (renderPass: RenderPass<{}>) => BindGroupFiveBinding;
 
-    createBindGroupLayout(entry: GPUBindGroupLayoutEntry): BindGroupLayoutOneBinding
-    createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutTwoBinding
-    createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutThreeBinding
-    createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutFourBinding
-    createBindGroupLayout(...entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry]): BindGroupLayoutFiveBinding
-    createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(...entries: T): TerraBindGroupLayout {
-        const layout = this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout;
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorOne): BindGroupLayoutOneBinding
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorTwo): BindGroupLayoutTwoBinding
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorThree): BindGroupLayoutThreeBinding
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFour): BindGroupLayoutFourBinding
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFive): BindGroupLayoutFiveBinding
+    createBindGroupLayout<T extends TerraGPUBindGroupLayoutDescriptorFive>(entry: T): TerraBindGroupLayout {
+        
+
+        const layout = this.device.createBindGroupLayout(entry) as TerraBindGroupLayout;
         layout.createBindGroup = (...entries: GPUBindGroupEntry[]) => {
             const bindGroup = this.device.createBindGroup({ layout, entries });
             this.GPUBindGroupLayouts.set(bindGroup, layout);
             return bindGroup
         }
-        return this.device.createBindGroupLayout({ entries }) as TerraBindGroupLayout;
+        return layout;
     }
-    createBindGroupForRenderPass<T extends GPUBindGroupLayout, U extends bindings<T>>(layout: T, renderPass:RenderPass<{}>, ...entries: U): getBindType<T>
-    createBindGroupForRenderPass(layout: GPUBindGroupLayout, renderPass:RenderPass<{}>, ...entries: (GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })[]): GPUBindGroup {
+    createBindGroupForRenderPass<T extends GPUBindGroupLayout, U extends bindings<T>>(layout: T, renderPass: RenderPass<{}>, ...entries: U): getBindType<T>
+    createBindGroupForRenderPass(layout: TerraBindGroupLayout, renderPass: RenderPass<{}>, ...entries: (GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })[]): GPUBindGroup {
         const bindGroup = this.device.createBindGroup({
             layout, entries: entries.map<GPUBindGroupEntry>(entry => {
                 if (entry.resource instanceof RenderTarget) {
@@ -153,7 +192,7 @@ export class GPU {
         return bindGroup
     }
     createBindGroup<T extends GPUBindGroupLayout, U extends bindings<T>>(layout: T, ...entries: U): getBindType<T>
-    createBindGroup(layout: GPUBindGroupLayout, ...entries: GPUBindGroupEntry[]): GPUBindGroup {
+    createBindGroup(layout: TerraBindGroupLayout, ...entries: GPUBindGroupEntry[]): GPUBindGroup {
         const bindGroup = this.device.createBindGroup({
             layout, entries
         });
@@ -165,15 +204,15 @@ export class GPU {
 
     queue: Map<Float32Array, number> = new Map();
 
-    renderPassScreen=new RenderPass(this, {
+    renderPassScreen = new RenderPass(this, {
         gRenderTargetNormals: new RenderTarget(this, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1),
         gRenderTargetPositions: new RenderTarget(this, "rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_SRC),
         gRenderTargetDiffuse: new RenderTarget(this, "bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1)
     }, 1, true, { width: this.canvas.width, height: this.canvas.height },
-    (w, h) => {
-        return [w, h]
-    });
-    renderPassWater= new RenderPass(this, {
+        (w, h) => {
+            return [w, h]
+        });
+    renderPassWater = new RenderPass(this, {
         normals: new RenderTarget(this, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1),
         position: new RenderTarget(this, "rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED),
         diffuse: new RenderTarget(this, "bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1)
@@ -194,11 +233,11 @@ export class GPU {
         this.rootCameralayout.subBindGroups.delete(this.rootSceneLayout);
 
 
-        this.renderPassCanvas = new RenderPass(this,{}, 1, false, { width: canvas.width, height: canvas.height },
+        this.renderPassCanvas = new RenderPass(this, {}, 1, false, { width: canvas.width, height: canvas.height },
             (w, h) => {
                 return [w, h]
             });
-        
+
         //loadValue here does not make any difference because quad is filling the whole screen
         this.renderPassCanvas.addSwapChain({ r: 0.53, g: 0.8, b: 0.92, a: 1.0 });
 
@@ -237,7 +276,7 @@ export class GPU {
 
 
 
-        this.#DynamicBindGroups.add(this.BindGroup);
+        this.#DynamicBindGroups.add(this.BindGroupPosition);
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
         this.timeGroup = {

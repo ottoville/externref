@@ -66,7 +66,7 @@ interface TerraBindGroupLayout extends GPUBindGroupLayout {
 interface BindGroupLayoutOneBinding extends TerraBindGroupLayout {
     numBindings: 'one';
 }
-interface BindGroupLayoutTwoBinding extends GPUBindGroupLayout {
+interface BindGroupLayoutTwoBinding extends TerraBindGroupLayout {
     createBindGroup: (...entries: [GPUBindGroupEntry, GPUBindGroupEntry]) => GPUBindGroup;
     numBindings: 'two';
 }

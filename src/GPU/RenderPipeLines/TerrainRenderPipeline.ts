@@ -12,7 +12,7 @@ function TerrainRenderPipeline(scene: Scene) {
     if (renderPipeline)
         return renderPipeline;
 
-    const renderPipeLine = scene.lightsBindGroupTexture.addRenderPipeline(new VertexShader(scene.engine.gpu,'ground.vert.wgsl', 'main', [{
+    const renderPipeLine = scene.lightsBindGroupTexture2.addRenderPipeline(new VertexShader(scene.engine.gpu,'ground.vert.wgsl', 'main', [{
         arrayStride: 48,
         stepMode: "vertex",
         attributes: [{
@@ -52,18 +52,7 @@ export class TerrainMesh extends BoundableNode<DrawableIndexed> {
         minFilter: "linear",
     })
     setTextureView = (textureview: GPUTextureView) => {
-        this.Drawable.setStaticBuffer(() => {
-            return [
-                {
-                    binding: 0,
-                    resource: this.sampler
-                },
-                {
-                    binding: 1,
-                    resource: textureview
-                }
-            ]
-        });
+        this.Drawable.setStaticBuffer(() => [this.sampler, textureview] );
     }
     constructor(
         scene: Scene,
@@ -75,6 +64,7 @@ export class TerrainMesh extends BoundableNode<DrawableIndexed> {
         verticesPositionStride = 3
     ) {
         super(scene, TerrainRenderPipeline(scene), positionsCount, (node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), node, undefined, 0, 1), verticesPositionStride, indicesView);
+        this.Drawable.dynamicBuffers.set(scene.gpu.BindGroupPosition, this.gpu_alignment);
         this.setTextureView(initialTexture);
         this.Drawable.setVertexBuffer(0, this.vBuffer);
         this.Drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
