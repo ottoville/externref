@@ -5,7 +5,6 @@ import { TerraNodeGPU } from "../TerraNode.js";
 import { Angle } from "../Math.js";
 import type { GPU } from "../GPU.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
-import { Engine } from "../engine.js";
 import { DrawableSimple } from "GPU/Drawable.js";
 
 //const sundistance = 149600000000;
@@ -17,11 +16,11 @@ const yAngle = Math.sin(Math.PI * 0.2);
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(engine: Engine) {
-    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(engine.gpu);
+function getRenderPipeline(gpu: GPU) {
+    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(gpu);
     if (renderPipeline)
         return renderPipeline;
-    renderPipeline = engine.positionBindGroupTime.addRenderPipeline(new VertexShader(engine.gpu,'sun.vert.wgsl'), new Shader(engine.gpu,'sun.frag.wgsl'), {
+    renderPipeline = gpu.positionBindGroupTime.addRenderPipeline(new VertexShader(gpu,'sun.vert.wgsl'), new Shader(gpu,'sun.frag.wgsl'), {
         depthStencil: {
             format: 'depth24plus-stencil8',
             depthWriteEnabled: false,
@@ -33,7 +32,7 @@ function getRenderPipeline(engine: Engine) {
             stripIndexFormat:'uint16'
         }
     });
-    renderPipelines.set(engine.gpu, renderPipeline);
+    renderPipelines.set(gpu, renderPipeline);
     return renderPipeline
 }
 
@@ -80,6 +79,6 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics, is
     // Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), this);
 
     constructor(scene: Scene) {
-        super(scene.engine, getRenderPipeline(scene.engine), 14, (node) => node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node));
+        super(scene.engine, getRenderPipeline(scene.gpu), 14, (node) => node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node));
     }
 }

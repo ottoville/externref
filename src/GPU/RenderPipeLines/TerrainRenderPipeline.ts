@@ -7,12 +7,12 @@ const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 
 
-function TerrainRenderPipeline(scene: Scene) {
-    const renderPipeline = renderPipelines.get(scene.gpu);
+function TerrainRenderPipeline(gpu: GPU) {
+    const renderPipeline = renderPipelines.get(gpu);
     if (renderPipeline)
         return renderPipeline;
 
-    const renderPipeLine = scene.lightsBindGroupTexture2.addRenderPipeline(new VertexShader(scene.engine.gpu,'ground.vert.wgsl', 'main', [{
+    const renderPipeLine = gpu.lightsBindGroupTexture2.addRenderPipeline(new VertexShader(gpu,'ground.vert.wgsl', 'main', [{
         arrayStride: 48,
         stepMode: "vertex",
         attributes: [{
@@ -34,7 +34,7 @@ function TerrainRenderPipeline(scene: Scene) {
             format: "float32x2"
         }
         ]
-    }]), new Shader(scene.engine.gpu,'ground.frag.wgsl'), {
+    }]), new Shader(gpu,'ground.frag.wgsl'), {
         label: 'terrain',
         primitive: { topology: 'triangle-list' },
         depthStencil: {
@@ -43,7 +43,7 @@ function TerrainRenderPipeline(scene: Scene) {
             format: "depth24plus-stencil8",
         }
     });
-    renderPipelines.set(scene.gpu, renderPipeLine);
+    renderPipelines.set(gpu, renderPipeLine);
     return renderPipeLine;
 }
 export class TerrainMesh extends BoundableNode<DrawableIndexed> {
@@ -63,7 +63,7 @@ export class TerrainMesh extends BoundableNode<DrawableIndexed> {
         indicesView: Uint32Array,
         verticesPositionStride = 3
     ) {
-        super(scene, TerrainRenderPipeline(scene), positionsCount, (node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), node, undefined, 0, 1), verticesPositionStride, indicesView);
+        super(scene, TerrainRenderPipeline(scene.gpu), positionsCount, (node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), node, undefined, 0, 1), verticesPositionStride, indicesView);
         this.Drawable.dynamicBuffers.set(scene.gpu.BindGroupPosition, this.gpu_alignment);
         this.Drawable.setStaticBuffer(this.sampler, initialTexture);
         this.Drawable.setVertexBuffer(0, this.vBuffer);

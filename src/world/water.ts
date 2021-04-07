@@ -6,17 +6,17 @@ import { DrawableSimple } from "GPU/Drawable.js";
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(scene: Scene) {
-    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
+function getRenderPipeline(gpu: GPU) {
+    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(gpu);
     if (renderPipeline)
         return renderPipeline;
 
     //TODO: Reuse sampler with terrain.ts?
-    const sampler = scene.gpu.device.createSampler({
+    const sampler = gpu.device.createSampler({
         magFilter: "linear",
         minFilter: "linear",
     });
-    const lightsBindGroupTextureWater = scene.gpu.rootCameralayout.addChildLayout(scene.gpu.createBindGroupLayout({
+    const lightsBindGroupTextureWater = gpu.rootCameralayout.addChildLayout(gpu.createBindGroupLayout({
         entries: [
             {
                 binding: 0,
@@ -45,7 +45,7 @@ function getRenderPipeline(scene: Scene) {
             }
         ]
     }));
-    renderPipeline = lightsBindGroupTextureWater.addRenderPipeline(new VertexShader(scene.engine.gpu, 'water.vert.wgsl'), new Shader(scene.engine.gpu, 'water.frag.wgsl'), {
+    renderPipeline = lightsBindGroupTextureWater.addRenderPipeline(new VertexShader(gpu, 'water.vert.wgsl'), new Shader(gpu, 'water.frag.wgsl'), {
         primitive: { topology: 'triangle-strip', stripIndexFormat: 'uint16' }
     }, () =>
         [
@@ -55,20 +55,20 @@ function getRenderPipeline(scene: Scene) {
             },
             {
                 binding: 1,
-                resource: scene.gpu.renderPassWater.renderTargets.normals.view
+                resource: gpu.renderPassWater.renderTargets.normals.view
             },
             {
                 binding: 2,
-                resource: scene.gpu.renderPassWater.renderTargets.position.view
+                resource: gpu.renderPassWater.renderTargets.position.view
             },
             {
                 binding: 3,
-                resource: scene.gpu.renderPassWater.renderTargets.diffuse.view
+                resource: gpu.renderPassWater.renderTargets.diffuse.view
             }
         ]
 
     );
-    renderPipelines.set(scene.gpu, renderPipeline);
+    renderPipelines.set(gpu, renderPipeline);
     return renderPipeline
 }
 
@@ -76,6 +76,6 @@ function getRenderPipeline(scene: Scene) {
 export class Sea extends BoundableNode<DrawableSimple> {
     worldPosition = undefined
     constructor(scene: Scene) {
-        super(scene, getRenderPipeline(scene), 4, (node) => node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node), undefined, undefined, true); //48
+        super(scene, getRenderPipeline(scene.gpu), 4, (node) => node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node), undefined, undefined, true); //48
     }
 }

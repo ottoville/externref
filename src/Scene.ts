@@ -9,29 +9,8 @@ export class Scene {
 
     boundables: Set<BoundableNode<DrawableDirect>> = new Set();
     lights;
-    positionBindGroupLightsTimeWGSL = this.gpu.rootCameralayout.addChildLayout(this.gpu.BindGroupLayoutPosition);
-    lightsBindGroupTexture2 = this.gpu.rootCameralayout.addChildLayout(this.gpu.createBindGroupLayout({
-        label:'lightsBindGroupTexture2',
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.FRAGMENT,
-                sampler: {},
-            }, {
-                binding: 1,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {}
-            }/*,
-            {
-                binding: 2,
-                visibility: GPUShaderStage.VERTEX,
-                buffer: {
-                    type: "uniform",
-                    hasDynamicOffset: true
-                }
-            }*/
-        ]
-    }));
+    
+    
     ready?: Promise<any>;
 
     constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [number, Promise<any>?]) {

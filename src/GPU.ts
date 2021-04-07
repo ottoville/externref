@@ -145,6 +145,30 @@ export class GPU {
                 }
             }]
     });
+    positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout(this.BindGroupLayoutPosition);
+
+    lightsBindGroupTexture2 = this.rootCameralayout.addChildLayout(this.createBindGroupLayout({
+        label:'lightsBindGroupTexture2',
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.FRAGMENT,
+                sampler: {},
+            }, {
+                binding: 1,
+                visibility: GPUShaderStage.FRAGMENT,
+                texture: {}
+            }/*,
+            {
+                binding: 2,
+                visibility: GPUShaderStage.VERTEX,
+                buffer: {
+                    type: "uniform",
+                    hasDynamicOffset: true
+                }
+            }*/
+        ]
+    }));
     BindGroupPosition = this.createBindGroup(this.BindGroupLayoutPosition,
         {
             binding: 0,
@@ -154,6 +178,7 @@ export class GPU {
                 size: TerraNodeGPU.GPUDataSize * 4
             }
         });
+    positionBindGroupTime = this.rootCameralayout.addChildBindGroup(this.BindGroupPosition, true)
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
