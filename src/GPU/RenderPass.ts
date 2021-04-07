@@ -167,7 +167,16 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
                     sampleCount: this.sampleCount,
                     depthStencilFormat: this.#depthTexture ? 'depth24plus-stencil8' : undefined
                 });
-                this.recordRenderPass(renderBundleEncoder, typeof(rootBindGroup)==='function'?rootBindGroup(this):rootBindGroup, rootLayout);
+
+                let drawedMeshes = 0;
+                renderBundleEncoder.setBindGroup(0, typeof(rootBindGroup)==='function'?rootBindGroup(this):rootBindGroup);
+                rootLayout.renderPipeLines.forEach(renderPipeline => {
+                    drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
+                });
+                rootLayout.subBindGroups.forEach(pipelineLayoyt =>
+                    drawedMeshes += this.gpu.drawBindGroups(renderBundleEncoder, pipelineLayoyt, this, 1)
+                )
+
                 this.bundles.push(renderBundleEncoder.finish());
             }
             passEncoder.executeBundles(this.bundles);
@@ -176,23 +185,5 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
             console.error(e);
             debugger;
         }
-    }
-    recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, rootBindGroup: GPUBindGroup, rootLayout: PipelineLayout) {
-        let drawedMeshes = 0;
-        if (rootBindGroup) {
-            passEncoder.setBindGroup(0, rootBindGroup);
-            rootLayout.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(passEncoder, this, 1);
-            });
-        }
-        if (rootLayout.subBindGroups.size) {
-            rootLayout.subBindGroups.forEach(pipelineLayoyt =>
-                drawedMeshes += this.gpu.drawBindGroups(passEncoder, pipelineLayoyt, this, 1)
-            )
-        };
-        this.scenes.forEach(scene =>
-            drawedMeshes += scene.render(passEncoder, this)
-        );
-        // console.log('scenes ', this.scenes.size, 'meshes', drawedMeshes);
     }
 }
