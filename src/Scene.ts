@@ -48,13 +48,9 @@ export class Scene {
 
     render(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass<{}>) {
         let drawedMeshes = 0;
-        //renderPassEncoder.setBindGroup(1, this.lights.uniformBindGroupLightsWGSL);
-        this.gpu.rootCameralayout.renderPipeLines.forEach(rp => {
-            drawedMeshes += rp.draw(renderPassEncoder, renderPass, 2, this);
-        });
         if (this.gpu.rootCameralayout.subBindGroups.size) {
             this.gpu.rootCameralayout.subBindGroups.forEach(bgt =>
-                drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 1, this)
+                drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 1)
             )
         };
         return drawedMeshes;

@@ -40,14 +40,14 @@ export abstract class Drawable {
                 }
                 rp.renderPipelines.set(this.renderPipeline, variant)
             }
-            if (scene) {
+            /*if (scene) {
                 let sceneDrawables = variant.drawables.get(scene);
                 if (!sceneDrawables) {
                     sceneDrawables = new Set()
                     variant.drawables.set(scene, sceneDrawables);
                 }
                 this.#renderList.set(rp, sceneDrawables.add(this));
-            } else
+            } else*/
                 this.#renderList.set(rp, variant.rootDrawables.add(this));
         });
         this.clearBundles();

@@ -1,7 +1,6 @@
 ﻿import { TerraNodeGPU } from "./TerraNode.js";
 import { RenderPass } from "./GPU/RenderPass.js";
 import { PipelineLayout } from "./GPU/PipelineLayout.js";
-import type { Scene } from "./Scene.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
@@ -458,13 +457,13 @@ export class GPU {
     }
     readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
     pendingCommandBuffers: GPUCommandBuffer[] = [];
-    drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass<{}>, index: number, scene?: Scene) {
+    drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass<{}>, index: number) {
         let drawedMeshes = 0;
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
             if (bgt.sharedBindgroup && this.#DynamicBindGroups.has(bgt.sharedBindgroup)) {
                 bgt.renderPipeLines.forEach(m => {
                     renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset.map(o => o * TerraNodeGPU.alignment));
-                    drawedMeshes += m.draw(renderPassEncoder, renderPass, index, scene);
+                    drawedMeshes += m.draw(renderPassEncoder, renderPass, index);
                 });
             }
             else {
@@ -472,11 +471,11 @@ export class GPU {
                     renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup);
                 }
                 bgt.renderPipeLines.forEach(m => {
-                    drawedMeshes += m.draw(renderPassEncoder, renderPass, index, scene)
+                    drawedMeshes += m.draw(renderPassEncoder, renderPass, index)
                 });
             }
             if (bgt.subBindGroups.size) {
-                bgt.subBindGroups.forEach((bgt) => { drawedMeshes += this.drawBindGroups(renderPassEncoder, bgt, renderPass, ++index, scene) });
+                bgt.subBindGroups.forEach((bgt) => { drawedMeshes += this.drawBindGroups(renderPassEncoder, bgt, renderPass, ++index) });
             }
         }
         return drawedMeshes;

@@ -36,15 +36,11 @@ export class RenderPipeline {
     destroy(): void {
         this.bindgroupdrawable.renderPipeLines.delete(this);
     }
-    draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass<{}>, BindGroupsStart: number, scene?: Scene): number {
+    draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass<{}>, BindGroupsStart: number): number {
         const variant = renderPass.renderPipelines.get(this)
         if (!variant)
             return 0;
-        if (scene) {
-            var drawables = variant.drawables.get(scene);
-        } else { //@ts-ignore
-            var drawables = variant.rootDrawables;
-        }
+        var drawables = variant.rootDrawables;
         if (!drawables || drawables.size == 0)
             return 0;
 
