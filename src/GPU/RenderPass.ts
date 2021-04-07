@@ -179,20 +179,15 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
     }
     recordRenderPass(passEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, rootBindGroup: GPUBindGroup, rootLayout: PipelineLayout) {
         let drawedMeshes = 0;
-
         if (rootBindGroup) {
             passEncoder.setBindGroup(0, rootBindGroup);
-            PipelineLayout.instances.forEach((bgt) => {
-                drawedMeshes += this.gpu.drawBindGroups(passEncoder, bgt, this, 1, undefined)
-            });
-
-            rootLayout.renderPipeLines.forEach(rp => {
-                drawedMeshes += rp.draw(passEncoder, this, 1);
+            rootLayout.renderPipeLines.forEach(renderPipeline => {
+                drawedMeshes += renderPipeline.draw(passEncoder, this, 1);
             });
         }
         if (rootLayout.subBindGroups.size) {
-            rootLayout.subBindGroups.forEach(bgt =>
-                drawedMeshes += this.gpu.drawBindGroups(passEncoder, bgt, this, 1)
+            rootLayout.subBindGroups.forEach(pipelineLayoyt =>
+                drawedMeshes += this.gpu.drawBindGroups(passEncoder, pipelineLayoyt, this, 1)
             )
         };
         this.scenes.forEach(scene =>

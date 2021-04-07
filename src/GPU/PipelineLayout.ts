@@ -1,8 +1,6 @@
 ﻿import type { GPU } from "../GPU.js";
 import { RenderPipeline, Shader, VertexShader } from "./RenderPipeline.js";
 export class PipelineLayout {
-    static instances: Set<PipelineLayout> = new Set();
-
     childBindGroups: Map<GPUBindGroup, PipelineLayout> = new Map();
 
     addRenderPipeline(vertexShader:VertexShader, fragmentShader:Shader, renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>): RenderPipeline {
@@ -16,16 +14,12 @@ export class PipelineLayout {
     layout: GPUPipelineLayout;
     constructor(public gpuscene: GPU, public bindGroupLayout: TerraBindGroupLayout, public parent?: PipelineLayout, public sharedBindgroup?: (BindGroupOneBinding | BindGroupTwoBinding | BindGroupThreeBinding | BindGroupFourBinding), public isDynamic = false, isRoot = false, debug=false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout];
-        if (!isRoot) {
-            if (parent) {
-                let curparent: PipelineLayout | undefined = parent;
-                do {
-                    layoutTree.unshift(curparent.bindGroupLayout);
-                } while (curparent = curparent.parent)
-                parent.subBindGroups.add(this);
-            } else {
-                PipelineLayout.instances.add(this);
-            }
+        if (!isRoot && parent) {
+            let curparent: PipelineLayout | undefined = parent;
+            do {
+                layoutTree.unshift(curparent.bindGroupLayout);
+            } while (curparent = curparent.parent)
+            parent.subBindGroups.add(this);
         }
         if(debug) {
             console.log(layoutTree);
