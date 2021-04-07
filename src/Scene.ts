@@ -2,7 +2,6 @@
 import type { BoundableNode, PickingInfo } from "./TerraNode.js";
 import type { GPU } from "./GPU.js";
 import type { Engine } from "./engine.js";
-import { PipelineLayout } from "./GPU/PipelineLayout.js";
 import type { TerraCamera } from "./TerraCamera.js";
 import type { RenderPass } from "./GPU/RenderPass.js";
 import { TerraMatrix } from "./Math.js";
@@ -58,9 +57,6 @@ export class Scene {
                 drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 1, this)
             )
         };
-        PipelineLayout.instances.forEach((bgt) => {
-            drawedMeshes += this.gpu.drawBindGroups(renderPassEncoder, bgt, renderPass, 1, this)
-        });
         return drawedMeshes;
     }
     async collissionCheck(rayFunction: (mesh: BoundableNode<DrawableDirect>) => any, boundables: IterableIterator<BoundableNode<DrawableDirect>>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode<DrawableDirect>) => boolean): Promise<PickingInfo | null> {

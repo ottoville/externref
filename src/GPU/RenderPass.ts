@@ -4,7 +4,7 @@ import type { GPU } from "../GPU.js";
 import type { RenderPipeline } from "./RenderPipeline.js";
 import type { Drawable } from "./Drawable.js";
 import { RenderTarget } from "./RenderTarget.js";
-import type { PipelineLayout } from "./PipelineLayout.js";
+import { PipelineLayout } from "./PipelineLayout.js";
 
 interface RenderPipelineVariant2 {
     renderpipeline: GPURenderPipeline;
@@ -182,7 +182,10 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
 
         if (rootBindGroup) {
             passEncoder.setBindGroup(0, rootBindGroup);
-            //this.gpu.rootCameralayout
+            PipelineLayout.instances.forEach((bgt) => {
+                drawedMeshes += this.gpu.drawBindGroups(passEncoder, bgt, this, 1, undefined)
+            });
+
             rootLayout.renderPipeLines.forEach(rp => {
                 drawedMeshes += rp.draw(passEncoder, this, 1);
             });
