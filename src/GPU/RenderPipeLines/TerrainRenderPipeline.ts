@@ -36,12 +36,7 @@ function TerrainRenderPipeline(gpu: GPU) {
         ]
     }]), new Shader(gpu,'ground.frag.wgsl'), {
         label: 'terrain',
-        primitive: { topology: 'triangle-list' },
-        depthStencil: {
-            depthWriteEnabled: true,
-            depthCompare: "less",
-            format: "depth24plus-stencil8",
-        }
+        primitive: { topology: 'triangle-list' }
     });
     renderPipelines.set(gpu, renderPipeLine);
     return renderPipeLine;

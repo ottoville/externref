@@ -14,13 +14,12 @@ interface RenderPipelineVariant2 {
 export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
     cameras: Set<TerraCamera> = new Set();
     scenes: Set<Scene> = new Set();
-    #depthTextureView: GPUTextureView | undefined
-    #depthTexture: GPUTexture | undefined
-
+    #depthTextureView?: GPUTextureView
+    #depthTexture?: GPUTexture
+    #depthFormat: GPUTextureFormat='depth24plus-stencil8';
     bundles: GPURenderBundle[] = [];
     colorFormats: GPUTextureFormat[] = [];
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
-    #swapChainAndTarget?: [GPUSwapChain, RenderTarget<GPUTexture>];
     #renderPassDescriptor: Partial<GPURenderPassDescriptor> = {
         colorAttachments: undefined,
         depthStencilAttachment: undefined
@@ -41,7 +40,7 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
         }
 
         if (depthStencil) {
-            this.#depthTexture = this.createTexture("depth24plus-stencil8");
+            this.#depthTexture = this.createTexture(this.#depthFormat);
             this.#depthTextureView = this.#depthTexture.createView();
         }
     }
@@ -59,7 +58,7 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
             renderPipelineDescriptor.depthStencil = {
                 depthWriteEnabled: true,
                 depthCompare: "less",
-                format: "depth24plus-stencil8",
+                format: this.#depthFormat,
             }
         }
         if(this.sampleCount > 1)
@@ -82,49 +81,23 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
         this.cameras.forEach(camera => camera.onResize(this.size.width, this.size.height));
         if (this.#depthTexture) {
             this.#depthTexture.destroy();
-            this.#depthTexture = this.createTexture("depth24plus-stencil8");
+            this.#depthTexture = this.createTexture(this.#depthFormat);
             this.#depthTextureView = this.#depthTexture.createView();
         }
         for(const key in this.renderTargets) {
             this.renderTargets[key]!.createTexture();
         }
     }
-
-    addSwapChain(loadValue: GPULoadOp | GPUColor,usages?: [typeof GPUTextureUsage.SAMPLED]): RenderTarget<GPUTextureSampled>
-    addSwapChain(loadValue: GPULoadOp | GPUColor,usages?: GPUTextureUsageFlags[]): RenderTarget<GPUTexture>
-    addSwapChain(loadValue: GPULoadOp | GPUColor,usages: GPUTextureUsageFlags[] = [GPUTextureUsage.RENDER_ATTACHMENT]) {
-        const rt = this.addTarget("bgra8unorm", usages,loadValue, this.sampleCount);
-        this.colorFormats.push(rt.format);
-        rt.renderPasses.add(this);
-        rt.writableRenderPass=this;
-        rt.createTexture();
-        //@ts-expect-error
-        this.renderTargets.swap=rt;
-        this.#swapChainAndTarget = [this.gpu.context.configureSwapChain({
-            device: this.gpu.device,
-            format: "bgra8unorm",
-            usage: GPUTextureUsage.RENDER_ATTACHMENT
-        }),
-            rt];
-        return rt;
-    }
-    addTarget(format: GPUTextureFormat, usages: [typeof GPUTextureUsage.SAMPLED],loadValue: GPULoadOp | GPUColor, sampleCount: number): RenderTarget<GPUTextureSampled>
-    addTarget(format: GPUTextureFormat, usages: GPUTextureUsageFlags[],loadValue: GPULoadOp | GPUColor, sampleCount: number): RenderTarget<GPUTexture>
-    addTarget(format: GPUTextureFormat, usages: GPUTextureUsageFlags[],loadValue: GPULoadOp | GPUColor, sampleCount = 1): RenderTarget<GPUTexture> {
-        const usage = usages.reduce((prev, curr) => prev | curr, GPUTextureUsage.RENDER_ATTACHMENT);
-        return new RenderTarget(this.gpu, format, loadValue, usage, sampleCount)
-    }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const colorAttachments: GPURenderPassColorAttachmentDescriptor[] = []
-
-        if (this.#swapChainAndTarget) {
+        if(typeof this.renderTargets.swap !=='undefined') {
             colorAttachments.push(this.sampleCount > 1 ? {
-                attachment: this.#swapChainAndTarget[1].view,
-                resolveTarget: this.#swapChainAndTarget[0].getCurrentTexture().createView(),
-                loadValue: this.#swapChainAndTarget[1].loadValue
+                attachment: this.renderTargets.swap.view,
+                resolveTarget: this.gpu.swapChain.getCurrentTexture().createView(),
+                loadValue: this.renderTargets.swap.loadValue
             } : {
-                attachment: this.#swapChainAndTarget[0].getCurrentTexture().createView(),
-                loadValue: this.#swapChainAndTarget[1].loadValue
+                attachment: this.gpu.swapChain.getCurrentTexture().createView(),
+                loadValue: this.renderTargets.swap.loadValue
             });
             
             for(const key in this.renderTargets) {
@@ -165,7 +138,7 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
                 const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder({
                     colorFormats: this.colorFormats,
                     sampleCount: this.sampleCount,
-                    depthStencilFormat: this.#depthTexture ? 'depth24plus-stencil8' : undefined
+                    depthStencilFormat: this.#depthTexture ? this.#depthFormat : undefined
                 });
 
                 let drawedMeshes = 0;

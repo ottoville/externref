@@ -59,6 +59,14 @@ interface GPUTextureSampled extends GPUTexture {
     sampled: 'true';
     createView(descriptor?: GPUTextureViewDescriptor): TerraGPUTextureView<GPUTextureSampled>
 }
+interface GPUTextureRenderAttachment extends GPUTexture {
+    RenderAttachment: 'true';
+    createView(descriptor?: GPUTextureViewDescriptor): TerraGPUTextureView<GPUTextureRenderAttachment>
+}
+interface GPUTextureCopySrc extends GPUTexture {
+    CopySrc: 'true';
+    createView(descriptor?: GPUTextureViewDescriptor): TerraGPUTextureView<GPUTextureCopySrc>
+}
 
 interface TerraBindGroupLayout extends GPUBindGroupLayout {
     createBindGroup: (...entries:  GPUBindGroupEntry[]) => GPUBindGroup;

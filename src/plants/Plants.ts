@@ -63,12 +63,7 @@ export class Plants {
                 }
             ]
         }]), new Shader(scene.engine.gpu,'color.frag.wgsl'), {
-            primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat:'uint16' },
-            depthStencil: {
-                depthWriteEnabled: true,
-                depthCompare: "less",
-                format: "depth24plus-stencil8",
-            }
+            primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat:'uint16' }
         });
         const drawable = planstPipeline.addDrawableIndirect(scene, new Set([scene.gpu.renderPassScreen]), scene.gpu.createGPUBuffer(4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST]))
         const positionGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);

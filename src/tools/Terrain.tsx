@@ -27,13 +27,7 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : RenderPipeline {
         primitive: {
             topology: 'triangle-list',
             cullMode: 'none'
-        },
-        depthStencil: {
-            depthWriteEnabled: true,
-            depthCompare: "less",
-            format: "depth24plus-stencil8",
-        },
-
+        }
     })
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline

@@ -39,6 +39,15 @@ export class GPU {
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     GPUBindGroupLayouts: WeakMap<GPUBindGroup, TerraBindGroupLayout> = new WeakMap();
     #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
+    swapChain: GPUSwapChain;
+
+    addTarget(format: GPUTextureFormat,loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount?: number): RenderTarget<GPUTextureSampled>
+    addTarget(format: GPUTextureFormat,loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureRenderAttachment>
+    addTarget(format: GPUTextureFormat,loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment>
+    addTarget(format: GPUTextureFormat,loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount?: number): RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment | GPUTextureCopySrc>
+    addTarget(format: GPUTextureFormat,loadValue: GPULoadOp | GPUColor, usages: GPUTextureUsageFlags[], sampleCount = 1): RenderTarget<GPUTexture> {
+        return new RenderTarget(this, format, loadValue, usages.reduce((prev, curr) => prev | curr, GPUTextureUsage.RENDER_ATTACHMENT), sampleCount)
+    }
 
     uniformBindGroupLayoutWithTime = this.createBindGroupLayout({
         label: 'uniformBindGroupLayoutWithTime',
@@ -169,6 +178,7 @@ export class GPU {
             }*/
         ]
     }));
+
     BindGroupPosition = this.createBindGroup(this.BindGroupLayoutPosition,
         {
             binding: 0,
@@ -182,7 +192,6 @@ export class GPU {
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
-    context: GPUCanvasContext;
     BindGroupCanvas: (renderPass: RenderPass<{}>) => BindGroupFiveBinding;
 
     createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorOne): BindGroupLayoutOneBinding
@@ -229,19 +238,24 @@ export class GPU {
     queue: Map<Float32Array, number> = new Map();
 
     renderPassScreen = new RenderPass(this, {
-        gRenderTargetNormals: new RenderTarget(this, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1),
-        gRenderTargetPositions: new RenderTarget(this, "rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_SRC),
-        gRenderTargetDiffuse: new RenderTarget(this, "bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1)
+        gRenderTargetNormals: this.addTarget("bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
+        gRenderTargetPositions: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED, GPUTextureUsage.COPY_SRC]),
+        gRenderTargetDiffuse: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
     }, 1, true, { width: this.canvas.width, height: this.canvas.height },
         (w, h) => {
             return [w, h]
         });
     renderPassWater = new RenderPass(this, {
-        normals: new RenderTarget(this, "bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1),
-        position: new RenderTarget(this, "rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED),
-        diffuse: new RenderTarget(this, "bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED, 1)
-    }, 1, true, { width: this.canvas.width, height: this.canvas.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED)
-    renderPassCanvas: RenderPass<{}>;
+        normals: this.addTarget("bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
+        position: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED]),
+        diffuse: this.addTarget("bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
+    }, 1, false, { width: this.canvas.width, height: this.canvas.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED)
+    renderPassCanvas = new RenderPass(this, {
+        swap: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT], 1)
+    }, 1, false, { width: this.canvas.width, height: this.canvas.height },
+    (w, h) => {
+        return [w, h]
+    });
     renderPasses: Set<RenderPass<{}>>;
 
     readonly scale = {
@@ -252,18 +266,13 @@ export class GPU {
         const context = canvas.getContext('gpupresent');
         if (!context)
             throw ('Unable to get webgpu context')
-        this.context = context;
+        this.swapChain = context.configureSwapChain({
+            device: device,
+            format: "bgra8unorm",
+            usage: GPUTextureUsage.RENDER_ATTACHMENT
+        })
         //Scene layoyt is iterated manually so remove it not to iterate it twise.
         //this.rootCameralayout.subBindGroups.delete(this.rootSceneLayout);
-
-
-        this.renderPassCanvas = new RenderPass(this, {}, 1, false, { width: canvas.width, height: canvas.height },
-            (w, h) => {
-                return [w, h]
-            });
-
-        //loadValue here does not make any difference because quad is filling the whole screen
-        this.renderPassCanvas.addSwapChain({ r: 0.53, g: 0.8, b: 0.92, a: 1.0 });
 
         //water color { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }
 
