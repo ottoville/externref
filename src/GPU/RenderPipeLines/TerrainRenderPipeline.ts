@@ -59,7 +59,6 @@ export class TerrainMesh extends BoundableNode<DrawableIndexed> {
         verticesPositionStride = 3
     ) {
         super(scene, TerrainRenderPipeline(scene.gpu), positionsCount, (node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), node, undefined, 0, 1), verticesPositionStride, indicesView);
-        this.Drawable.dynamicBuffers.push([scene.gpu.BindGroupPosition, this.gpu_alignment]);
         this.Drawable.setStaticBuffer(this.sampler, initialTexture);
         this.Drawable.setVertexBuffer(0, this.vBuffer);
         this.Drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');

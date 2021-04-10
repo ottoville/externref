@@ -235,6 +235,8 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         
     ) {
         super(scene.engine, renderPipeline, indicesView ? indicesView.length : positionCount, createDrawable,true,verticesPositionStride);
+        this.Drawable.dynamicBuffers.push([scene.gpu.BindGroupPosition, this.gpu_alignment]);
+
         this.verticesBuffesSize = positionCount * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
         if (this.strip) {
             this.#faces = new Array(this.verticesCount - 2)
