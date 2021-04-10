@@ -140,16 +140,24 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
                     sampleCount: this.sampleCount,
                     depthStencilFormat: this.#depthTexture ? this.#depthFormat : undefined
                 });
-
+                //@ts-ignore
                 let drawedMeshes = 0;
                 renderBundleEncoder.setBindGroup(0, typeof(rootBindGroup)==='function'?rootBindGroup(this):rootBindGroup);
                 rootLayout.renderPipeLines.forEach(renderPipeline => {
                     drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
                 });
-                rootLayout.subBindGroups.forEach(pipelineLayoyt =>
-                    drawedMeshes += this.gpu.drawBindGroups(renderBundleEncoder, pipelineLayoyt, this, 1)
-                )
 
+                //position
+                this.gpu.positionBindGroupTimeWGSL.renderPipeLines.forEach(renderPipeline => {
+                    const dynamicIndices=[1];
+                    drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1, dynamicIndices);
+                });
+                this.gpu.positionBindGroupTimeWGSL.subBindGroups.forEach(bindGroup => {
+                    const dynamicIndices=[1];
+                    bindGroup.renderPipeLines.forEach(renderPipeline => {
+                        drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1+dynamicIndices.length,dynamicIndices);
+                    });
+                });
                 this.bundles.push(renderBundleEncoder.finish());
             }
             passEncoder.executeBundles(this.bundles);

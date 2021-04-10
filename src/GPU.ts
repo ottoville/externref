@@ -1,7 +1,8 @@
-﻿import { TerraNodeGPU } from "./TerraNode.js";
+﻿import { BoundableNode, TerraNodeGPU } from "./TerraNode.js";
 import { RenderPass } from "./GPU/RenderPass.js";
 import { PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
+import { DrawableDirect } from "./GPU/Drawable.js";
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
 };
@@ -48,7 +49,7 @@ export class GPU {
     addTarget(format: GPUTextureFormat,loadValue: GPULoadOp | GPUColor, usages: GPUTextureUsageFlags[], sampleCount = 1): RenderTarget<GPUTexture> {
         return new RenderTarget(this, format, loadValue, usages.reduce((prev, curr) => prev | curr, GPUTextureUsage.RENDER_ATTACHMENT), sampleCount)
     }
-
+    boundables: Set<BoundableNode<DrawableDirect>> = new Set();
     uniformBindGroupLayoutWithTime = this.createBindGroupLayout({
         label: 'uniformBindGroupLayoutWithTime',
         entries:
@@ -156,7 +157,7 @@ export class GPU {
     });
     positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout(this.BindGroupLayoutPosition);
 
-    lightsBindGroupTexture2 = this.rootCameralayout.addChildLayout(this.createBindGroupLayout({
+    lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout(this.createBindGroupLayout({
         label:'lightsBindGroupTexture2',
         entries: [
             {
@@ -495,9 +496,9 @@ export class GPU {
         let drawedMeshes = 0;
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
             if (bgt.sharedBindgroup && this.#DynamicBindGroups.has(bgt.sharedBindgroup)) {
-                bgt.renderPipeLines.forEach(m => {
-                    renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, m.dynamicBindGroupOffset.map(o => o * TerraNodeGPU.alignment));
-                    drawedMeshes += m.draw(renderPassEncoder, renderPass, index);
+                bgt.renderPipeLines.forEach(renderPipeline => {
+                    renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, renderPipeline.dynamicBindGroupOffset.map(o => o * TerraNodeGPU.alignment));
+                    drawedMeshes += renderPipeline.draw(renderPassEncoder, renderPass, index);
                 });
             }
             else {

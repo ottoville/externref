@@ -8,7 +8,13 @@
   [[offset(0)]] time : u32;
   [[offset(4)]] delta : f32;
 };
-
+[[block]] struct WorldPosition {
+  [[offset(0)]] world : mat4x4<f32>;
+  [[offset(64)]] delta : vec3<f32>;
+  [[offset(80)]] custom : vec3<f32>;
+  [[offset(96)]] acceleration : vec3<f32>;
+  [[offset(112)]] id : u32;
+};
 [[block]] struct Lights {
   [[offset(48)]] sunDirection : vec3<f32>;
   [[offset(80)]] ambient : vec3<f32>;
@@ -17,6 +23,8 @@
 
 [[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
 [[binding(1), group(0)]] var<uniform> times : Time;
+[[binding(0), group(1)]] var<uniform> worldposition : WorldPosition;
+
 //[[binding(0), set(1)]] var<uniform> lights : Lights;
 
 const pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(

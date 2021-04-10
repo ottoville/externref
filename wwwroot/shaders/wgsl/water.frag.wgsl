@@ -2,10 +2,10 @@
 [[location(1)]] var<out> outPositions : vec4<f32>;
 [[location(2)]] var<out> outDiffuse : vec4<f32>;
 
-[[binding(0), group(1)]] var mySampler: sampler;
-[[binding(1), group(1)]] var normalTexture: texture_2d<f32>;
-[[binding(2), group(1)]] var positionTexture: texture_2d<f32>;
-[[binding(3), group(1)]] var diffuseTexture: texture_2d<f32>;
+[[binding(0), group(2)]] var mySampler: sampler;
+[[binding(1), group(2)]] var normalTexture: texture_2d<f32>;
+[[binding(2), group(2)]] var positionTexture: texture_2d<f32>;
+[[binding(3), group(2)]] var diffuseTexture: texture_2d<f32>;
 
 //[[location(0)]] var<in> shading:f32;
 //[[location(1)]] var<in> ambient: vec3<f32>;

@@ -36,7 +36,11 @@ export class RenderPipeline {
     destroy(): void {
         this.bindgroupdrawable.renderPipeLines.delete(this);
     }
-    draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass<{}>, BindGroupsStart: number): number {
+    draw(   renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder,
+            renderPass: RenderPass<{}>,
+            BindGroupsStart: number,
+            dynamicIndices:number[]=[]): number {
+
         const variant = renderPass.renderPipelines.get(this)
         if (!variant)
             return 0;
@@ -49,7 +53,7 @@ export class RenderPipeline {
         if(this.createSharedBindGroups) {
             this.createSharedBindGroups().forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
          }
-        drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart));
+        drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart,dynamicIndices));
         return drawables.size;
     }
     addDrawableIndirect<T extends GPUIndirectBuffer>(scene: Scene | undefined, renderPasses: Set<RenderPass<{}>>, buffer: T) {

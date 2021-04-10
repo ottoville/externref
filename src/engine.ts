@@ -221,14 +221,13 @@ export class Engine {
         //var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
 
         this.collider._initialize(position, velocity, closeDistance);
-        const scenesArr = [...this.scenes];
 
         //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
         this.wasm._initialize(velocity.byteOffset, position.byteOffset)
         this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
        // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-        await Promise.all(scenesArr.map(scene => Promise.all([...scene[1].boundables].map(mesh => mesh.checkCollision(this.collider)))));
+        await Promise.all([...this.gpu.boundables].map(mesh => mesh.checkCollision(this.collider)));
         if (this.collisionNotFound.getUint32(0,true)) {
         //    if (!this.collider.collisionFound) {
 

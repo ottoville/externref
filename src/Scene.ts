@@ -7,7 +7,7 @@ import { TerraMatrix } from "./Math.js";
 import { DrawableDirect } from "GPU/Drawable.js";
 export class Scene {
 
-    boundables: Set<BoundableNode<DrawableDirect>> = new Set();
+    
     lights;
     
     
@@ -82,7 +82,7 @@ export class Scene {
         const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]])
         const pickingRays: Map<BoundableNode<DrawableDirect>, Float32Array> = new Map();
-        this.boundables.forEach(boundable => {
+        this.gpu.boundables.forEach(boundable => {
             if (boundable.isStatic)
                 return pickingRays.set(boundable, rayArr);
             const ray = this.TerraCameras[0].createPickingRay(x, y, boundable.get_transformation());
@@ -95,7 +95,7 @@ export class Scene {
         /*const pickresults = */await Promise.all(results);
         let minimum: BoundableNode<DrawableDirect> | null = null;
 
-        this.boundables.forEach(boundable => {
+        this.gpu.boundables.forEach(boundable => {
             if (!minimum || boundable.pickInfo.getDistance() < minimum.pickInfo.getDistance())
                 minimum = boundable;
 

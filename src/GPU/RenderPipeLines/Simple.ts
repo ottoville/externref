@@ -36,7 +36,7 @@ export abstract class SimpleMesh extends BoundableNode<DrawableIndexed> {
         vBuffer: GPUVertexBuffer) {
 
         super(scene, Simple(scene.gpu), positionsCount, (node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen]), node), 3, indicesView);
-        this.Drawable.dynamicBuffers.set(scene.gpu.BindGroupPosition, this.gpu_alignment);
+        this.Drawable.dynamicBuffers.push([scene.gpu.BindGroupPosition, this.gpu_alignment]);
         this.Drawable.setVertexBuffer(0, vBuffer);
         this.Drawable.setIndexBuffer(iBuffer, undefined, undefined, indicesView.BYTES_PER_ELEMENT == 4 ? 'uint32' : 'uint16');
 

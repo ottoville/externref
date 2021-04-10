@@ -89,7 +89,7 @@ export abstract class MainNode extends Mesh {
 export class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     
    // abstract Drawable:DrawableDirect
-    static GPUDataSize = 16 + 4 + 4 + 4;
+    static GPUDataSize = 16 + 4 + 4 + 4 + 4;
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
@@ -250,7 +250,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         this.lastColliderWorldVectorsPointer = scene.engine.malloc(positionCount * 4 * Float32Array.BYTES_PER_ELEMENT);
         
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
-        scene.boundables.add(this);1
+        scene.gpu.boundables.add(this);1
         for (let i = 0; i < positionCount; i++) {
             //let pos = new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT)
             let pos = new TerraVector3(scene.engine.memory.buffer, this.vertices_pointer() + i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);

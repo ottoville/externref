@@ -16,7 +16,8 @@ function getRenderPipeline(gpu: GPU) {
         magFilter: "linear",
         minFilter: "linear",
     });
-    const lightsBindGroupTextureWater = gpu.rootCameralayout.addChildLayout(gpu.createBindGroupLayout({
+    const bindGroupTextureWater = gpu.positionBindGroupTimeWGSL.addChildLayout(gpu.createBindGroupLayout({
+        label:'water',
         entries: [
             {
                 binding: 0,
@@ -45,7 +46,7 @@ function getRenderPipeline(gpu: GPU) {
             }
         ]
     }));
-    renderPipeline = lightsBindGroupTextureWater.addRenderPipeline(new VertexShader(gpu, 'water.vert.wgsl'), new Shader(gpu, 'water.frag.wgsl'), {
+    renderPipeline = bindGroupTextureWater.addRenderPipeline(new VertexShader(gpu, 'water.vert.wgsl'), new Shader(gpu, 'water.frag.wgsl'), {
         primitive: { topology: 'triangle-strip', stripIndexFormat: 'uint16' }
     }, () =>
         [
@@ -77,5 +78,7 @@ export class Sea extends BoundableNode<DrawableSimple> {
     worldPosition = undefined
     constructor(scene: Scene) {
         super(scene, getRenderPipeline(scene.gpu), 4, (node) => node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node), undefined, undefined, true); //48
+        this.Drawable.dynamicBuffers.push([scene.gpu.BindGroupPosition, this.gpu_alignment]);
+
     }
 }

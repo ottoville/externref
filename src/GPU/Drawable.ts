@@ -12,7 +12,7 @@ export interface DrawableLikeClass extends DrawableLike {
 
 export abstract class Drawable {
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
-    dynamicBuffers: Map<GPUBindGroup, number> = new Map();
+    dynamicBuffers: [GPUBindGroup, number][] = [];
     #renderList: Map<RenderPass<{}>, Set<Drawable>> = new Map();
     #scene?: Scene;
     constructor(
@@ -98,11 +98,14 @@ export abstract class Drawable {
         return Tbuffer;
     }
     abstract render: (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => void
-    draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number) {
+    draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex:number[]) {
+        this.dynamicBuffers.forEach((gpubindgroup_offset, i) => {
+            let di=dynamicIndex[i];
+            if(di)
+                renderPass.setBindGroup(di, gpubindgroup_offset[0], [gpubindgroup_offset[1] * TerraNodeGPU.alignment]);
+        });
         this.staticBuffers && renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers)
-        this.dynamicBuffers.forEach((offset, bindgroup) => {
-            renderPass.setBindGroup(BindGroupsStart++, bindgroup, [offset * TerraNodeGPU.alignment]);
-        })
+
         this.#vertexBuffers.forEach((buffer, index) => renderPass.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
         this.render(renderPass);
     }
