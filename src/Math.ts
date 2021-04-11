@@ -155,18 +155,21 @@ export class TerraVector3 extends Float32Array {
     declare 0: number
     declare 1: number
     declare 2: number
-    constructor(Arr?: ArrayBufferLike, offset?: number, length?:number)
+    constructor(Arr?: ArrayBufferLike, offset?: number)
     constructor(Arr?: number[])
-    constructor(Arr?: number[] | ArrayBufferLike, offset = 0, length = 3) {
+    constructor(Arr?: number[] | ArrayBufferLike, offset = 0) {
         if (!Arr)
-            super(length);
+            super(3);
         else if (Array.isArray(Arr)) {
-            Arr.length = length;
+            Arr.length = 3;
             super(Arr);
         }
         else {
-            super(Arr, offset, length);
+            super(Arr, offset, 3);
         }
+    }
+    clone() {
+        return new TerraVector3(this.buffer.slice(this.byteOffset, this.byteOffset+12));
     }
     multiply2Ref(m: TerraMatrix, ref: Vector3|Vector4): void {
         var rx = this[0] * m[0] + this[1] * m[4] + this[2] * m[8] + m[12];

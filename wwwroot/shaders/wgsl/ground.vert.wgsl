@@ -33,7 +33,7 @@
 //[[location(1)]] var<out> ambient : vec3<f32>;
 [[location(1)]] var<out> normalOut : vec3<f32>;
 [[location(2)]] var<out> positionOut : vec3<f32>;
-//[[location(4)]] var<out> idOut : u32;
+[[location(3)]] var<out> idOut : u32;
 
 [[stage(vertex)]]
 fn main() -> void {
@@ -44,6 +44,6 @@ fn main() -> void {
   v_uv=(position.xz + vec2<f32>(5000.0, 5000.0)) * 0.0001; 
   normalOut=normal;
   positionOut=position;
-  //idOut=worldposition.id;
+  idOut=worldposition.id;
   return;
 }

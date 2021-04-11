@@ -78,6 +78,5 @@ export class Sea extends BoundableNode<DrawableSimple> {
     worldPosition = undefined
     constructor(scene: Scene) {
         super(scene, getRenderPipeline(scene.gpu), 4, (node) => node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node), undefined, undefined, true); //48
-
     }
 }

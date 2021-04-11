@@ -41,12 +41,17 @@ const pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
 //[[location(0)]] var<out> shading : f32;
 //[[location(1)]] var<out> ambient : vec3<f32>;
 [[location(0)]] var<out> v_uv : vec4<f32>;
+[[location(1)]] var<out> positionOut : vec3<f32>;
+[[location(2)]] var<out> idOut : u32;
 
 
 [[stage(vertex)]]
 fn main() -> void {
   Position = uniforms.modelViewProjectionMatrix * vec4<f32>(pos[VertexIndex], 1.0);
   v_uv = Position;
+  positionOut=pos[VertexIndex];
+  idOut=worldposition.id;
+
   //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;
   return;

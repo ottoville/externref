@@ -12,13 +12,13 @@ import type { DrawableDirect } from "./GPU/Drawable.js";
 
 export abstract class MainNode extends Mesh {
     isStatic = false;
-    static uniqueID = 0;
-
+    static uniqueID = 1;
+    static Meshes:Map<number, MainNode>=new Map();
     readonly acceleration=new Float32Array(this.engine.memory.buffer,this.gpu_pointer+ 24 * Float32Array.BYTES_PER_ELEMENT, 4);;
     get_transformation= () => new TerraMatrix(this.engine.memory.buffer,this.gpu_pointer)//new TerraMatrix(this.data.buffer);
 
     get_velocity = () => {
-        return new TerraVector3(this.engine.memory.buffer,this.gpu_pointer+ 16 * Float32Array.BYTES_PER_ELEMENT, 4)
+        return new TerraVector3(this.engine.memory.buffer,this.gpu_pointer+ 16 * Float32Array.BYTES_PER_ELEMENT)
     }
     get_translation = () => {
         return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer+12 * Float32Array.BYTES_PER_ELEMENT);
@@ -64,6 +64,7 @@ export abstract class MainNode extends Mesh {
 
     constructor(public engine: Engine, hasBounding:boolean, vertices_amount:number=0,vertices_stride=3) {
         super(engine.rustEngine, MainNode.uniqueID++, hasBounding,true,vertices_amount,vertices_stride);
+        MainNode.Meshes.set(this.id,this);
         queueMicrotask(() => {
             if (this.#hasPhysics()) {
                 engine.physics.tickables.add(this);
@@ -76,7 +77,7 @@ export abstract class MainNode extends Mesh {
     }
 
     updateDynamicBuffer = () => {
-        this.engine.gpu.queue.set(new Float32Array(this.engine.memory.buffer.slice(this.gpu_pointer, this.gpu_pointer + 28 * Float32Array.BYTES_PER_ELEMENT)), this.gpu_alignment);
+        this.engine.gpu.queue.set(new Float32Array(this.engine.memory.buffer.slice(this.gpu_pointer, this.gpu_pointer + TerraNodeGPU.GPUDataSize * Float32Array.BYTES_PER_ELEMENT)), this.gpu_alignment);
     }
 
     #hasPhysics = (): this is hasPhysics => {

@@ -10,6 +10,8 @@
 //[[location(0)]] var<in> shading:f32;
 //[[location(1)]] var<in> ambient: vec3<f32>;
 [[location(0)]] var<in> v_uv : vec4<f32>;
+[[location(1)]] var<in> position : vec3<f32>;
+[[location(2)]] var<in> id : u32;
 
 [[stage(fragment)]]
 fn main() -> void {
@@ -17,6 +19,8 @@ fn main() -> void {
 
   outNormals=textureSample(normalTexture, mySampler, uv);
   outDiffuse=textureSample(diffuseTexture, mySampler, uv);
+
+  outPositions=vec4<f32>(position.xyz, bitcast<f32>(id));
 
 
 

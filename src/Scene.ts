@@ -1,16 +1,16 @@
 ﻿import { Light } from "./lights.js";
-import type { BoundableNode, PickingInfo } from "./TerraNode.js";
+import { BoundableNode, MainNode, PickingInfo } from "./TerraNode.js";
 import type { GPU } from "./GPU.js";
 import type { Engine } from "./engine.js";
 import type { TerraCamera } from "./TerraCamera.js";
-import { TerraMatrix } from "./Math.js";
+import { TerraMatrix, TerraVector3 } from "./Math.js";
 import { DrawableDirect } from "GPU/Drawable.js";
 export class Scene {
 
-    
+
     lights;
-    
-    
+
+
     ready?: Promise<any>;
 
     constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [number, Promise<any>?]) {
@@ -50,9 +50,8 @@ export class Scene {
         else
             return this.collissionCheck(rayFunction, boundables, pickResult);*/
     }
-    async pickPromise(x: number, y: number, predicate?: (mesh: BoundableNode<DrawableDirect>) => boolean, fastCheck?: boolean): Promise<BoundableNode<DrawableDirect> | null> {
-        if (predicate)
-            console.warn('TODO: predicate');
+    pickPromise(cb: (pick?: { position: TerraVector3, mesh: MainNode }) => void, wantedMeshIds?: Set<number>, predicate?: (mesh: MainNode) => boolean): void {
+
         let start = performance.now();
         const encoder = this.gpu.device.createCommandEncoder();
 
@@ -74,17 +73,35 @@ export class Scene {
         this.gpu.device.queue.submit([encoder.finish()]);
 
         buffer.mapAsync(GPUMapMode.READ).then(() => {
-            const floatData = new Float32Array(buffer.getMappedRange());
-            console.log(floatData);
+            const b = buffer.getMappedRange();
+            const meshId = new DataView(b).getUint32(12, true);
             console.log('picking took', performance.now() - start) //55
+            if (meshId === 0 || (wantedMeshIds && !wantedMeshIds.has(meshId))) {
+                cb();
+            }
+            else {
+                const mesh = MainNode.Meshes.get(meshId);
+                if (!mesh) {
+                    throw ('Mesh not found');
+                }
+                if (predicate && !predicate(mesh)) {
+                    cb();
+                } else {
+                    const position = new TerraVector3(b);
+                    cb({ position, mesh });
+                }
+            }
+            buffer.destroy();
         });
-
+        return;
+        //@ts-ignore
         const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]])
         const pickingRays: Map<BoundableNode<DrawableDirect>, Float32Array> = new Map();
         this.gpu.boundables.forEach(boundable => {
             if (boundable.isStatic)
                 return pickingRays.set(boundable, rayArr);
+            //@ts-ignore
             const ray = this.TerraCameras[0].createPickingRay(x, y, boundable.get_transformation());
             pickingRays.set(boundable, new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]]));
         });
@@ -92,7 +109,7 @@ export class Scene {
         pickingRays.forEach((ray, boundable) => {
             results.push(boundable.intersectsRay(ray));
         })
-        /*const pickresults = */await Promise.all(results);
+        //await Promise.all(results);
         let minimum: BoundableNode<DrawableDirect> | null = null;
 
         this.gpu.boundables.forEach(boundable => {
@@ -107,26 +124,8 @@ export class Scene {
             }
         })
         console.log(minimum);*/
-        return minimum;
-        /*
-        this.gpu.GPU2CPU(async buff => {
-            await buff.mapAsync(GPUMapMode.READ);
-            //  console.log(new Float32Array(buff.getMappedRange()))
-            await this.gpu.GPU2CPU(async buff => {
-                await buff.mapAsync(GPUMapMode.READ);
-                const gpudata = new Float32Array(buff.getMappedRange());
-                //console.log(gpudata);
-                var matrix = Matrix.Zero();
-                const worldM = Matrix.FromArray(gpudata);
-                worldM.multiplyToRef(Matrix.FromArray(Array.from(this.TerraCameras[0].viewArr)), matrix);
-                matrix.multiplyToRef(Matrix.FromArray(Array.from(this.TerraCameras[0].projectionArr)), matrix);
+        //return minimum;
 
-                //console.log(matrix);
-                // console.log(this.createPickingRay(x, y, new Float32Array(gpudata, 0, 16)));
-                //  debugger;
-            }, this.gpu.GPUData);
-        }, resultMatrixBuffer);
-        */
         let rayFunction = (boundableMesh: BoundableNode<DrawableDirect>) => {
 
             let m = new TerraMatrix([1.0, 0.0, 0.0, 0.0,
@@ -136,6 +135,7 @@ export class Scene {
             if (!boundableMesh.isStatic) {
                 m = boundableMesh.get_transformation();
             }
+            //@ts-ignore
             return this.TerraCameras[0].createPickingRay(x, y, m);
         };
         //TODO
