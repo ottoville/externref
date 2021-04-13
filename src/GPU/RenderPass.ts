@@ -147,6 +147,8 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
                     drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
                 });
 
+               // this.gpu.drawBindGroups(renderBundleEncoder,this.gpu.positionBindGroupTimeWGSL,this,1);
+                
                 //position
                 this.gpu.positionBindGroupTimeWGSL.renderPipeLines.forEach(renderPipeline => {
                     const dynamicIndices=[1];

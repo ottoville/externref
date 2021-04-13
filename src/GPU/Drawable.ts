@@ -57,7 +57,7 @@ export abstract class Drawable {
         this.clearBundles();
         this.staticBuffers= this.renderPipeline.bindgroupdrawable.gpuscene.device.createBindGroup(
             {
-                layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout,
+                layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout.layout,
                 entries: staticBuffers.map((resource, binding) => {
                     return {
                         binding,

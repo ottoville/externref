@@ -1,4 +1,5 @@
-﻿type GPUBindGroupLayoutEntryNoDynamic = Omit<GPUBindGroupLayoutEntry, "hasDynamicOffset">;
+﻿
+type GPUBindGroupLayoutEntryNoDynamic = Omit<GPUBindGroupLayoutEntry, "hasDynamicOffset">;
 
 interface TerraGPUBindingResource<bufferType extends GPUBuffer> extends GPUBufferBinding {
     buffer: bufferType
@@ -18,11 +19,6 @@ interface GPUBindGroupLayoutEntryUniform extends Omit<GPUBindGroupLayoutEntry, '
   //  entry: TerraGPUBindGroupEntry<GPUUniformBuffer>
 }
 
-type getBindType<T> = T extends BindGroupLayoutOneBinding ? BindGroupOneBinding
-    : T extends BindGroupLayoutTwoBinding ? BindGroupTwoBinding
-    : T extends BindGroupLayoutThreeBinding ? BindGroupThreeBinding
-    : T extends BindGroupLayoutFiveBinding ? BindGroupFiveBinding
-    : never;
 
 interface GPUUniformBuffer extends GPUBuffer {
     uniform: 'true';

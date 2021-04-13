@@ -18,21 +18,19 @@ export class Light {
 * intensity uint32
 * */
     #instances: Set<isLight> = new Set();
+    uniformBindGroupLightsWGSL: GPUBindGroup;
     add(light: isLight) {
         this.#instances.add(light);
-    }
-
-    uniformBindGroupLightsWGSL: BindGroupOneBinding;
-
+    }    
     constructor(public gpu: GPU, byteoffset:number) {
         this.uniformBindGroupLightsWGSL = this.gpu.createBindGroup(this.gpu.uniformBindGroupLayoutLightsWGSL2,
-            {
+            [{
                 binding: 0,
                 resource: {
                     buffer: this.gpu.GPUData, //this.#lightsBuffer
                     size: 256,
                     offset: byteoffset * TerraNodeGPU.alignment
                 }
-            });
+            }]);
     }
 }

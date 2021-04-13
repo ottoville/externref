@@ -2,6 +2,7 @@
 import { Scene } from "../Scene.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { TerrainMesh } from "../GPU/RenderPipeLines/TerrainRenderPipeline.js";
+import { BindGroupLayout } from "../GPU/BindGroupLayout.js";
 
 
 export interface TerrainPipelineLayoutPosition extends GPUPipelineLayout {
@@ -45,11 +46,11 @@ export class Terrain {
     public slopeArr = new Int32Array(this.slopeArrBuffer);
 
 
-    static heightLayouts: Map<GPU, BindGroupLayoutTwoBinding> = new Map();
+    static heightLayouts: Map<GPU, BindGroupLayout<[GPUBindGroupEntry,GPUBindGroupEntry]>> = new Map();
     mesh: TerrainMesh;
     //terraMesh: TerraMesh;
-    static getHeightsLayout(scene: GPU): BindGroupLayoutTwoBinding {
-        let layout: BindGroupLayoutTwoBinding | undefined;
+    static getHeightsLayout(scene: GPU): BindGroupLayout<[GPUBindGroupEntry,GPUBindGroupEntry]> {
+        let layout: BindGroupLayout<[GPUBindGroupEntry,GPUBindGroupEntry]> | undefined;
         if (layout = Terrain.heightLayouts.get(scene)) {
             return layout;
         }
@@ -88,7 +89,7 @@ export class Terrain {
     ];
 
     //TerrainHeightsbindGroupTree = this.scene.TerraCameras[0].baseBindGroup.addChildBindGroup(this.scene.gpuscene.createBindGroup(Terrain.getHeightsLayout(this.scene.gpuscene), ...this.heightsBindGroupEntries));
-    TerrainHeightsbindGroupTree = this.scene.gpu.rootCameralayout.addChildBindGroup(this.scene.gpu.createBindGroup(Terrain.getHeightsLayout(this.scene.gpu), ...this.heightsBindGroupEntries));
+    TerrainHeightsbindGroupTree = this.scene.gpu.rootCameralayout.addChildBindGroup(this.scene.gpu.createBindGroup(Terrain.getHeightsLayout(this.scene.gpu), this.heightsBindGroupEntries));
     
     TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpu.BindGroupPosition, true)
 
@@ -162,7 +163,7 @@ export class Terrain {
             const resultMatrixBuffer = this.scene.gpu.createGPUBuffer(resultMatrixBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
             const createTexturePipeline = this.scene.gpu.createComputePipeline("terrain/createTerrainTexture.comp.wgsl", this.scene.gpu.device.createPipelineLayout({
-                bindGroupLayouts: [Terrain.getHeightsLayout(this.scene.gpu), this.scene.gpu.singleWritableStorageLayout]
+                bindGroupLayouts: [Terrain.getHeightsLayout(this.scene.gpu).layout, this.scene.gpu.singleWritableStorageLayout]
             }));
 
             const bindGroup1 = createTexturePipeline.createBindGroup(this.scene.gpu.singleWritableStorageLayout, [

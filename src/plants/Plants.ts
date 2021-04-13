@@ -42,7 +42,7 @@ export class Plants {
         scene: Scene,
         terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
     ) {
-        const planstPipeline = scene.gpu.rootCameralayout.addRenderPipeline(new VertexShader(scene.engine.gpu,'grass/grass.vert.wgsl', 'main', [{
+        const planstPipeline = scene.gpu.rootCameralayout.addRenderPipeline(new VertexShader(scene.engine.gpu, 'grass/grass.vert.wgsl', 'main', [{
             arrayStride: 4 * 4,
             stepMode: "instance" as GPUInputStepMode,
             attributes: [{ // position
@@ -62,8 +62,8 @@ export class Plants {
                     format: "float32x4"
                 }
             ]
-        }]), new Shader(scene.engine.gpu,'color.frag.wgsl'), {
-            primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat:'uint16' }
+        }]), new Shader(scene.engine.gpu, 'color.frag.wgsl'), {
+            primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }
         });
         const drawable = planstPipeline.addDrawableIndirect(scene, new Set([scene.gpu.renderPassScreen]), scene.gpu.createGPUBuffer(4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST]))
         const positionGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
@@ -89,7 +89,7 @@ export class Plants {
             const terrain = arr[0];
 
             const computePipeline = scene.gpu.createComputePipeline("grass/getHeightAtCoordinates.comp.wgsl");
-            const layout = computePipeline.getBindGroupLayout(0) as BindGroupLayoutFiveBinding;
+            const layout = computePipeline.getBindGroupLayout(0);
 
             this.worker.subscribe('updated', async (data: { buffer: SharedArrayBuffer }) => {
 
@@ -102,12 +102,13 @@ export class Plants {
                 const worldSetArr = worldCopyGPU.getMappedRange();
                 new Float32Array(worldSetArr).set(new Float32Array(data.buffer));
                 worldCopyGPU.unmap();
-                const bindGroup = scene.gpu.createBindGroup(layout, {
-                    binding: 0,
-                    resource: {
-                        buffer: worldCopyGPU
-                    }
-                },
+                const bindGroup = scene.gpu.device.createBindGroup({
+                    layout, entries: [{
+                        binding: 0,
+                        resource: {
+                            buffer: worldCopyGPU
+                        }
+                    },
                     {
                         binding: 1,
                         resource: {
@@ -131,7 +132,8 @@ export class Plants {
                         resource: {
                             buffer: shapeGPUSwap
                         }
-                    });
+                    }]
+                });
                 passEncoder.setBindGroup(0, bindGroup);
                 passEncoder.dispatch(this.numBlades);
                 passEncoder.endPass();

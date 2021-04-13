@@ -36,12 +36,12 @@ export class TerraCamera {
     #uniformBuffer = this.gpu.createGPUBuffer(this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
     #uniformBindGroup = this.gpu.createBindGroup(
         this.gpu.uniformBindGroupLayoutWithTime,
-        {
+        [{
             binding: 0,
             resource: {
                 buffer: this.#uniformBuffer
             }
-        }, this.gpu.timeGroup);
+        }, this.gpu.timeGroup]);
     onRender?: () => void;
     target: { readonly 0: number; readonly 1: number; readonly 2: number; };
     position: { readonly 0: number; readonly 1: number; readonly 2: number; };
