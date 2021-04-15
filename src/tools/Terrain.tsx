@@ -83,7 +83,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     }
     //TERRAIN EDITING DISABLED
     //private direction = 0;
-    private mouseinterval: number = 0;
+    private mouseinterval = 0;
 
     #pointerdownf = (evt: PointerEvent): void => {
         if (evt.button !== 0) {
@@ -95,7 +95,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.mouseinterval = setInterval(() => {
             //TERRAIN EDITING DISABLED
             //terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
-                //let range = e as { min: number, max: number };
+                //const range = e as { min: number, max: number };
                // const length = range.max - range.min;
 
                 //this.terrain.updateSwap2(range.min, length, this.terrain.mesh.verticesPositionBuffer)
