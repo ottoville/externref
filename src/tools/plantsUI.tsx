@@ -21,7 +21,7 @@ export class PlantsUI extends UITAB {
         </div>
     };
     traits: Set<Trait> = new Set();
-    static label: string = 'Plants';
+    static label = 'Plants';
     public static instance: UITAB | null = null;
     static plantsMesh: Plants;
     private PT: paintPlane | null = null;
@@ -38,15 +38,14 @@ export class PlantsUI extends UITAB {
     }
     activateDraw = () => {
         try {
-            this.PT = new paintPlane(this.scene, this.camera, this.terrain, this.sea, this);
-
-          //  this.PT = applyMixins<typeof BaseTerrainTool>(BaseTerrainTool, [worldPosition]);
-
-            
-            this.PT?.activate((response: PTDresult) => {
+            this.PT = new paintPlane(this.scene, this.camera, this.terrain, this.sea, this, (response: PTDresult) => {
+                //this.PT && this.PT.destroy();
+                PlantsUI.plantsMesh.fillArea(response);
+            });
+            /*this.PT?.activate((response: PTDresult) => {
                 //this.PT && this.PT.destroy();
                 PlantsUI.plantsMesh.fillArea(response)
-            });
+            });*/
         } catch (e) {
             console.error(e);
         }

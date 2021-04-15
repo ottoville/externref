@@ -14,7 +14,7 @@ const loginf = async (e: any, method: string | undefined, callback: (obj: { prov
             });
             FB.AppEvents.logPageView();
             //@ts-ignore
-            FB.Event.subscribe('auth.login', async (response) => {
+            FB.Event.subscribe('auth.login', async (/*response*/) => {
                 //progelem.value = 5;
                // (await BlazorRouter).invokeMethod('startGame');
                 //progelem.value = 10;

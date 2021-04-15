@@ -10,8 +10,8 @@ export class Terrain {
 
      * */
 
-    static subdivisionsX: number = 250;
-    static subdivisionsY: number = 250;
+    static subdivisionsX = 250;
+    static subdivisionsY = 250;
 
     width = 10000;
     height = 10000;
@@ -75,19 +75,19 @@ export class Terrain {
 
 
     public static async fromHeightMap(url: string): Promise<SharedArrayBuffer> {
-        let b = await (await fetch(url)).blob();
+        const b = await (await fetch(url)).blob();
 
         let bitmap = await createImageBitmap(b);
-        let totalbufferdata = new SharedArrayBuffer(250 * 250 * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT);
+        const totalbufferdata = new SharedArrayBuffer(250 * 250 * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT);
 
-        let align = (250 - bitmap.width) / 2
+        const align = (250 - bitmap.width) / 2
 
-        let partcount = 2;
+        const partcount = 2;
         let readycount = 0;
-        let workers: Worker[] = [];
+        const workers: Worker[] = [];
         //self.postMessage({ type: 'setProgress', data: { progress: 41 } });
         const buffer: SharedArrayBuffer = await new Promise(function initWorker(res, rej) {
-            let worker = new Worker('/js/workers/webworkers/bitmapWorker.js');
+            const worker = new Worker('/js/workers/webworkers/bitmapWorker.js');
             workers.push(worker);
             /* progress 42 and 43 are reserved for this */
             // self.postMessage({ type: 'setProgress', data: { progress: 41 + (2 * (workers.length / partcount)) } });
@@ -136,58 +136,58 @@ export class Terrain {
          context.drawImage(cacheimg, 0, 0);
          return context.getImageData(0, 0, cacheimg.width, cacheimg.height).data.buffer;*/
     }
-    public createTexture(): Promise<GPUBuffer> {
-        return new Promise(async (tres) => {
+    public async createTexture(): Promise<GPUBuffer> {
 
-            const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (5120 * 5120);
-            const resultMatrixBuffer = this.scene.gpu.createGPUBuffer(resultMatrixBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+        const resultMatrixBufferSize = Int32Array.BYTES_PER_ELEMENT * (5120 * 5120);
+        const resultMatrixBuffer = this.scene.gpu.createGPUBuffer(resultMatrixBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
-            const createTexturePipeline = this.scene.gpu.createComputePipeline("terrain/createTerrainTexture.comp.wgsl", this.scene.gpu.device.createPipelineLayout({
-                bindGroupLayouts: [this.heightsLayout.layout, this.scene.gpu.singleWritableStorageLayout]
-            }));
+        const createTexturePipeline = this.scene.gpu.createComputePipeline("terrain/createTerrainTexture.comp.wgsl", this.scene.gpu.device.createPipelineLayout({
+            bindGroupLayouts: [this.heightsLayout.layout, this.scene.gpu.singleWritableStorageLayout]
+        }));
 
-            const bindGroup1 = createTexturePipeline.createBindGroup(this.scene.gpu.singleWritableStorageLayout, [
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: resultMatrixBuffer
-                    }
+        const bindGroup1 = createTexturePipeline.createBindGroup(this.scene.gpu.singleWritableStorageLayout, [
+            {
+                binding: 0,
+                resource: {
+                    buffer: resultMatrixBuffer
                 }
-            ])
-            console.time('Webgpu paint')
-            const commandEncoder = this.scene.gpu.createCommandEncoder();
+            }
+        ])
+        console.time('Webgpu paint')
+        const commandEncoder = this.scene.gpu.createCommandEncoder();
 
-            const passEncoder = commandEncoder.beginComputePass();
-            passEncoder.setPipeline(createTexturePipeline);
-            passEncoder.setBindGroup(0, this.TerrainHeightsbindGroupTree.sharedBindgroup!);
-            passEncoder.setBindGroup(1, bindGroup1);
-            passEncoder.dispatch(5120, 5120);
-            passEncoder.endPass();
+        const passEncoder = commandEncoder.beginComputePass();
+        passEncoder.setPipeline(createTexturePipeline);
+        passEncoder.setBindGroup(0, this.TerrainHeightsbindGroupTree.sharedBindgroup!);
+        passEncoder.setBindGroup(1, bindGroup1);
+        passEncoder.dispatch(5120, 5120);
+        passEncoder.endPass();
 
-            console.timeEnd('Webgpu paint');
-            // Get a GPU buffer for reading in an unmapped state.
-            const gpuReadBuffer = this.scene.gpu.createGPUBuffer(resultMatrixBufferSize, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ]);
-            // Encode commands for copying buffer to buffer.
-            commandEncoder.copyBufferToBuffer(
-                resultMatrixBuffer,
-                0,
-                gpuReadBuffer,
-                0,
-                resultMatrixBufferSize
-            );
-            // Submit GPU commands.
-            const gpuCommands = commandEncoder.finish();
-            this.scene.gpu.device.queue.submit([gpuCommands]);
-            //resultMatrixBuffer.destroy();
-            tres(resultMatrixBuffer);
+        console.timeEnd('Webgpu paint');
+        // Get a GPU buffer for reading in an unmapped state.
+        const gpuReadBuffer = this.scene.gpu.createGPUBuffer(resultMatrixBufferSize, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ]);
+        // Encode commands for copying buffer to buffer.
+        commandEncoder.copyBufferToBuffer(
+            resultMatrixBuffer,
+            0,
+            gpuReadBuffer,
+            0,
+            resultMatrixBufferSize
+        );
+        // Submit GPU commands.
+        const gpuCommands = commandEncoder.finish();
+        this.scene.gpu.device.queue.submit([gpuCommands]);
+        //resultMatrixBuffer.destroy();
 
-            await gpuReadBuffer.mapAsync(GPUMapMode.READ);
+        gpuReadBuffer.mapAsync(GPUMapMode.READ).then(() => {
             // Read buffer.
-            let arrayBuffer = gpuReadBuffer.getMappedRange()
+            const arrayBuffer = gpuReadBuffer.getMappedRange()
             TerrainTool.saveTexture(arrayBuffer);
             //  Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
-            gpuReadBuffer.destroy()
-        });
+            gpuReadBuffer.destroy();
+
+        })
+        return resultMatrixBuffer;
     }
 
     readonly #terrainPositionsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisionsX + 1) * (Terrain.subdivisionsY + 1) * 4;
@@ -265,12 +265,12 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
 
             const cachedtexture = await caches.match(new Request('/terrainTexture.webp'));
             if (cachedtexture) {
-                let cacheimg = new Image();
+                const cacheimg = new Image();
                 cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
 
                 return [t, cacheimg.decode().then(async () => {
-                    let imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
-                    let imgctx = imgcanvas.getContext('2d');
+                    const imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
+                    const imgctx = imgcanvas.getContext('2d');
                     if (!imgctx)
                         throw (new Error('Unable to get 2d canvas'));
                     imgctx.drawImage(cacheimg, 0, 0);
@@ -322,8 +322,8 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
             cache.put(new Request('/indices'), response2);
 
         } else {
-            let c = new OffscreenCanvas((Terrain.subdivisionsX + 1) * 3, (Terrain.subdivisionsY + 1));
-            let ctx = c.getContext("2d");
+            const c = new OffscreenCanvas((Terrain.subdivisionsX + 1) * 3, (Terrain.subdivisionsY + 1));
+            const ctx = c.getContext("2d");
             if (!ctx)
                 throw ('get 2d context failed');
             //disabled for now
@@ -352,10 +352,10 @@ const t = await caches.match(new Request('/terrain.webp')).then(async cachedvert
 
 
 
-    static instance:Terrain;
+    static instance: Terrain;
     constructor(public scene: Scene, readonly buffer: ArrayBuffer | SharedArrayBuffer, algorithm?: string) {
 
-        Terrain.instance=this;
+        Terrain.instance = this;
         const sourceGPU = scene.gpu.createGPUBuffer(40 + buffer.byteLength, [GPUBufferUsage.STORAGE], true);
         const sourcearr = sourceGPU.getMappedRange();
         new Uint32Array(sourcearr).set([10000, 10000]);   // terrain width and height

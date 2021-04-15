@@ -52,8 +52,8 @@ export class Zones extends UITAB {
         ctx.beginPath();
         ctx.fillStyle = "yellow";
         ctx.fillRect(0, 0, 5120, 5120);
-        let centerX = this.#size / 2;
-        let centerZ = this.#size / 2;
+        const centerX = this.#size / 2;
+        const centerZ = this.#size / 2;
 
         (async () => {
             (await this.scene.engine.DB).transaction("zones").objectStore("zones").getAll().onsuccess = (evt) => {
@@ -76,10 +76,12 @@ export class Zones extends UITAB {
         
         ground.mesh.setTextureView(this.zoneTexture.createView());
         ground.mesh.Drawable.scene = scene.engine.scenes.get('static');
-        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zoneTexture, 5120, 5120, this, this.#ratio);
-        this.PT.activate(async (response) => {
+        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zoneTexture, 5120, 5120, this, this.#ratio, async (response) => {
             (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
         });
+        /*this.PT.activate(async (response) => {
+            (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
+        });*/
     }
     destroy = (): void => {
         this.ground.mesh.Drawable.scene = this.scene;

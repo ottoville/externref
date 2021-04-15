@@ -46,20 +46,20 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics, is
     }
 
     onPhysicTick = (/*delta: number*/) => {
-        let anglePerMinute = (Math.PI * 2) / 1439;
+        const anglePerMinute = (Math.PI * 2) / 1439;
         //let meridian: number = Math.PI * 0.1;
-        let meridian: number = Math.PI * 0.5;
+        const meridian: number = Math.PI * 0.5;
         //149597870000
 
         //let sundistance = 149600; //divided by 100000
-        let secondsOfDay = ~~((Number(this.engine.physics.tickTime * 60)) % 86400);
-        let minutesOfDay = secondsOfDay / 60;
-        let sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
+        const secondsOfDay = ~~((Number(this.engine.physics.tickTime * 60)) % 86400);
+        const minutesOfDay = secondsOfDay / 60;
+        const sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
 
-        let sunPositionX = Math.sin(sunAngle);
+        const sunPositionX = Math.sin(sunAngle);
         let sunPositionY = Math.cos(sunAngle);
 
-        let sunPositionZ = sunPositionY * zAngle;
+        const sunPositionZ = sunPositionY * zAngle;
 
 
         sunPositionY = sunPositionY * yAngle;

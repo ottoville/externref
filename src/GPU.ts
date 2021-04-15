@@ -190,7 +190,7 @@ export class GPU {
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
-    BindGroupCanvas: (renderPass: RenderPass<{}>) => GPUBindGroup;
+    BindGroupCanvas: (renderPass: RenderPass<{[index:string]:any}>) => GPUBindGroup;
 
     createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorOne): BindGroupLayout<[GPUBindGroupEntry]>
     createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorTwo): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry]>
@@ -207,7 +207,7 @@ export class GPU {
         }
         return layout;*/
     }
-    createBindGroupForRenderPass<T extends BindGroupLayout<GPUBindGroupEntry[]>>(layout: T, renderPass: RenderPass<{}>, entries: MapToGPUBindGroupEntry<extractGeneric<T>>): GPUBindGroup {
+    createBindGroupForRenderPass<T extends BindGroupLayout<GPUBindGroupEntry[]>>(layout: T, renderPass: RenderPass<{[index:string]:any}>, entries: MapToGPUBindGroupEntry<extractGeneric<T>>): GPUBindGroup {
         //createBindGroupForRenderPass(layout:  BindGroupLayout<[GPUBindGroupEntry,GPUBindGroupEntry]>, renderPass: RenderPass<{}>, entries: [(GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })]): GPUBindGroup {
         const bindGroup = this.device.createBindGroup({
             //@ts-expect-error

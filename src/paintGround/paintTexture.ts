@@ -8,17 +8,16 @@ import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { TerraVector2 } from "../Math.js";
 
 export class paintTexture extends paintGround {
-    onEnd() { }
     private subTextureCache: subTexture = { x: 0, z: 0, width: 0, height: 0, imageData: null };
-    private height: number = 0;
+    private height = 0;
     private centerX: number;
     private centerZ: number;
     onMainPointerUp(height: number): void {
         this.height = height;
         this.subTextureCache = { x: 0, z: 0, width: 0, height: 0, imageData: null }
     }
-    #offsetX: number = 0;
-    #offsetY: number = 0;
+    #offsetX = 0;
+    #offsetY = 0;
     onMainPointerDown(startingPoint: TerraVector2): void {
         this.#offsetX = this.centerX + startingPoint[0] / this.ratio;
         this.#offsetY = this.centerZ + startingPoint[1] / this.ratio;
@@ -32,17 +31,18 @@ export class paintTexture extends paintGround {
         textureWidth: number,
         textureHeight: number,
         uitab: hasCanvasListener,
-        private ratio:number
+        private ratio:number,
+        callback: PTResultF
     ) {
-        super(scene, camera, ground, sea, uitab);
+        super(scene, camera, ground, sea, uitab,callback);
         this.centerX = textureWidth / 2;
         this.centerZ = textureHeight / 2;
 
         
-    };
-    public activate(callback: PTResultF) {
-        super.activate(callback);
     }
+    /*public activate(callback: PTResultF) {
+        super.activate(callback);
+    }*/
     async onAreaDraw(width: number): Promise<void> {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {
             throw ('onAreaDraw non numeric width or height');
@@ -55,7 +55,7 @@ export class paintTexture extends paintGround {
     async drawSubImage(width: number, height: number, rad: number) {
         width /= this.ratio;
         height /= this.ratio;
-        let coords: { x: number, y: number }[] = [
+        const coords: { x: number, y: number }[] = [
             { x: 0, y: 0 },
             { x: 0, y: -width },
             { x: -height, y: 0 },
@@ -77,10 +77,10 @@ export class paintTexture extends paintGround {
         const cwidth = maxX - minX;
         const missAlignment = (cwidth * 4) % 256;
         const alignment = missAlignment ? 256 - missAlignment : 0
-        let c = new OffscreenCanvas(cwidth + alignment / 4, maxZ - minZ);
+        const c = new OffscreenCanvas(cwidth + alignment / 4, maxZ - minZ);
         const buffersize = c.width * c.height * 4
 
-        let ctx = c.getContext("2d");
+        const ctx = c.getContext("2d");
         if (!ctx)
             throw ('cannot get 2D context');
 

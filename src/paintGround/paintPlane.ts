@@ -37,20 +37,27 @@ function getRenderPipeline(scene: Scene, ground: Terrain): RenderPipeline {
             offset: 0,
             format: "float32x2"
         }]
-    }]), new Shader(scene.engine.gpu,'color.frag.wgsl'), {
+    }]), new Shader(scene.engine.gpu,'UIColor.frag.wgsl'), {
         primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat:'uint32' },
     });
     renderPipelines.set(scene.gpu, renderPipeline);
     return renderPipeline
 }
 export class paintPlane extends paintGround {
-    onEnd() {
-        /*this.#mesh.update((scaling) => {
-            scaling[2] = 0;
-        });*/
-        // this.#mesh.scale_z=0;
-        this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0)
-    }
+    constructor(
+        protected scene: Scene,
+        protected camera: ArcRotateCamera,
+        protected ground: Terrain,
+        protected sea: Sea,
+        uitab: hasCanvasListener,
+        callback: PTResultF
+    ) {
+        super(scene, camera, ground, sea, uitab,(p) => {
+            this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0)
+            callback(p);
+        });
+        this.#mesh.Drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
+    };
     #mesh = new PlaneMesh(this.scene.engine, getRenderPipeline(this.scene, this.ground), 0);
     #startingPoint = new TerraVector2(2);
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
@@ -83,20 +90,9 @@ export class paintPlane extends paintGround {
             yield { positions: positions, indices: indices };
         }
     }
-    constructor(
-        protected scene: Scene,
-        protected camera: ArcRotateCamera,
-        protected ground: Terrain,
-        protected sea: Sea,
-        uitab: hasCanvasListener,
-    ) {
-        super(scene, camera, ground, sea, uitab);
-        this.#mesh.Drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
-    };
-
-    public activate(callback: PTResultF) {
+    /*public activate(callback: PTResultF) {
         super.activate(callback);
-    }
+    }*/
     public destroy() {
         super.destroy();
         this.#mesh.destroy();

@@ -3,7 +3,7 @@ import { TerraCamera } from "../TerraCamera.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { Engine } from "../engine.js";
 
-//@ts-expect-error
+
 import { Plants } from "../plants/Plants.js";
 import { UITAB, UITABClassLike } from "../UITAB.js";
 import { PlantsUI } from "../tools/plantsUI.js";
@@ -67,12 +67,12 @@ export class Canvas extends TerraCompoment {
     #progressBar: HTMLProgressElement = <progress min="0" max="100" value="0"></progress>;
     #progresElem: HTMLSpanElement = <span>0</span>;
     #canvasElem: HTMLCanvasElement = <canvas class="gameControl hidden"></canvas>
-    rendertime = 0;
-    msPerFrame = 0;
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
     async initalize(): Promise<[Scene, ArcRotateCamera]> {
-        const adapter = await window.navigator.gpu!.requestAdapter();
+        if(!window.navigator.gpu)
+            throw('no webgpu support');
+        const adapter = await window.navigator.gpu.requestAdapter();
         this.progress = 4;
 
         if (!adapter)
@@ -142,7 +142,7 @@ export class Canvas extends TerraCompoment {
 
 
         const mainScene = new Scene('main', gpu, terraEngine, [mainCamera, waterCamera], (terrascene) => {
-            let sun = new Sun2(terrascene);
+            const sun = new Sun2(terrascene);
             // Initial scene objects here
 
             const sea = new Sea(terrascene);
@@ -165,7 +165,7 @@ export class Canvas extends TerraCompoment {
                     const commandEncoder = device.createCommandEncoder({});
                     this.progress = 80;
 
-                    let bufferView: GPUBufferCopyView = {
+                    const bufferView = {
                         buffer: gpuBuffer,
                         bytesPerRow: ground.textureSize[0] * 4,
                         rowsPerImage: 0,
@@ -195,7 +195,7 @@ export class Canvas extends TerraCompoment {
 
                     console.debug("Progress 100");
                 }).catch(rej);
-                //PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
+                PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
             })
 
             DB.then(DB => {
@@ -203,7 +203,7 @@ export class Canvas extends TerraCompoment {
 
                     if ((evt.target as IDBRequest).result) {
 
-                        let restored = ((evt.target as IDBRequest).result as savedCamera).camera;
+                        const restored = ((evt.target as IDBRequest).result as savedCamera).camera;
                         camera.alpha = restored.alpha;
                         camera.alpha = restored.alpha;
                         camera.beta = restored.beta;
@@ -217,7 +217,7 @@ export class Canvas extends TerraCompoment {
                             values.position[2] = restored.position[2];
                         })
                     }
-                    let l = new LazyEval(() => {
+                    const l = new LazyEval(() => {
                         //console.log(this.camera.position.y);
                         DB.transaction("save", "readwrite").objectStore("save").put({
                             id: 0,
@@ -247,15 +247,19 @@ export class Canvas extends TerraCompoment {
         //b2.setTranslationX(500);
 
 
-        let renderFrame: number = 0;
+        let renderFrame = 0;
         let resizeHandler = 0;
 
         let curSecond = (Date.now() / 500) | 0;
         let framecount = 0;
+        //@ts-ignore
+        let rendertime = 0;
+        //@ts-ignore
         let msPerFrame = 0;
-        let startTime = 0;
-        const me = this;
 
+        let startTime = 0;
+
+        
         const canvasPipeline = gpu.rootLayout.addRenderPipeline(new VertexShader(gpu, 'canvas.vert.wgsl'), new Shader(gpu, 'texture.frag.wgsl'), {
             label: 'canvas',
             primitive: {
@@ -267,7 +271,7 @@ export class Canvas extends TerraCompoment {
                 format: "depth24plus-stencil8",
             }
         });
-
+    
         new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node,undefined,undefined,undefined,'canvas'))
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
@@ -275,8 +279,7 @@ export class Canvas extends TerraCompoment {
 
             const nowSecond = (Date.now() / 500) | 0;
             if (nowSecond !== curSecond) {
-                me.rendertime = framecount * 2;
-                me.msPerFrame = msPerFrame
+                rendertime = framecount * 2;
                 curSecond = nowSecond;
                 framecount = 0;
             }
@@ -285,7 +288,7 @@ export class Canvas extends TerraCompoment {
 
 
             gpu.onRenders2.forEach(or => {
-                let buff = or();
+                const buff = or();
                 if (buff)
                     gpu.pendingCommandBuffers.push(buff);
             });
@@ -293,7 +296,6 @@ export class Canvas extends TerraCompoment {
                 //camera.camera.update(values => {
                 camera.calculateCameraPositionAndTarget();
                 //})
-
             }
 
             const renderEncoder = gpu.device.createCommandEncoder();
@@ -326,12 +328,15 @@ export class Canvas extends TerraCompoment {
             width: 1920,
             height: 1080
         }
-        let ro = new window.ResizeObserver((entries) => {
+        const ro = new window.ResizeObserver(entries => {
+            const entry=entries[0];
+            if(!entry)
+                return;
             window.cancelAnimationFrame(renderFrame)
             clearTimeout(resizeHandler);
             resizeHandler = setTimeout(async () => {
-                const aspectRatio = entries[0]!.contentRect.width / entries[0]!.contentRect.height
-                this.#canvasElem.width = Math.min((entries[0]!.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
+                const aspectRatio = entry.contentRect.width / entry.contentRect.height
+                this.#canvasElem.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
 
                 this.#canvasElem.height = this.#canvasElem.width / aspectRatio
 
@@ -340,8 +345,8 @@ export class Canvas extends TerraCompoment {
                     this.#canvasElem.width = this.#canvasElem.height * aspectRatio;
                 }
 
-                gpu.scale.x = this.#canvasElem.width / entries[0]!.contentRect.width;
-                gpu.scale.y = this.#canvasElem.height / entries[0]!.contentRect.height;
+                gpu.scale.x = this.#canvasElem.width / entry.contentRect.width;
+                gpu.scale.y = this.#canvasElem.height / entry.contentRect.height;
 
                 gpu.renderPasses.forEach(renderPass => {
                     console.log('canvas resize', this.#canvasElem.width, this.#canvasElem.height)
@@ -350,16 +355,16 @@ export class Canvas extends TerraCompoment {
 
                 //Create projection matrix
                 //min view distance
-                let n = 1;
+                const n = 1;
                 //max view distance
-                let f = 100000;
+                const f = 100000;
                 //field of view?
                 const fov = 0.8
-                let t = 1.0 / (Math.tan(fov * 0.5));
-                let a = t;
-                let b = t * aspectRatio;
-                let c = (f + n) / (f - n);
-                let d = -2.0 * f * n / (f - n);
+                const t = 1.0 / (Math.tan(fov * 0.5));
+                const a = t;
+                const b = t * aspectRatio;
+                const c = (f + n) / (f - n);
+                const d = -2.0 * f * n / (f - n);
 
                 projectionmatrix.set([
                     a, 0.0, 0.0, 0.0,
@@ -377,7 +382,7 @@ export class Canvas extends TerraCompoment {
         this.progress = 20;
 
 
-        let webSocket = new WebSocket('ws://localhost:8081');
+        const webSocket = new WebSocket('ws://localhost:8081');
         webSocket.onopen = async () => {
             console.log('websocket onopen');
             // progelem.value = 30;
@@ -385,7 +390,7 @@ export class Canvas extends TerraCompoment {
 
                 webSocket.send(JSON.stringify({ action: 'init', data: { /* userinfo: state.userInfo, ticks */ } }));
                 webSocket.onmessage = (e) => {
-                    let msg = JSON.parse(e.data);
+                    const msg = JSON.parse(e.data);
                     if (msg.action == 'init') {
                         console.debug('going to init game', msg.currentPlayData)
 

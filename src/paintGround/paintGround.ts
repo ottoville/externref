@@ -20,7 +20,7 @@ export enum DrawType {
     plane = 1,
     texture = 2,
     line = 3
-};
+}
 //type test = keyof HTMLElementEventMap;
 export abstract class paintGround {
     protected ang360: Angle = new Angle(0);
@@ -31,14 +31,16 @@ export abstract class paintGround {
         protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Sea,
-        private uitab: hasCanvasListener
+        private uitab: hasCanvasListener,
+        public resolve: PTResultF
     ) {
-    };
-    public resolve: PTResultF = () => null;
-    public activate(callback: PTResultF) {
+        this.uitab.canvasListener.addListener("pointerdown", this.#mainPointerDown, { once: true });
+    }
+    //public resolve: PTResultF = () => null;
+   /* public activate(callback: PTResultF) {
         this.uitab.canvasListener.addListener("pointerdown", this.#mainPointerDown, { once: true });
         this.resolve = callback;
-    }
+    }*/
     public destroy() {
         this.camera.attachControl();
         this.uitab.canvasListener.destroy();
@@ -75,10 +77,9 @@ export abstract class paintGround {
     abstract onMainPointerDown(startingPoint: Float32Array): void;
     abstract onMainPointerUp(height: number, end_position: Float32Array): void;
     abstract onAreaDraw(width: number): Promise<void>;
-    abstract onEnd(): void;
-    #nextDrawWidth: number = 0;
-    #drawqueue: boolean = false;
-    #busy: boolean = false;
+    #nextDrawWidth = 0;
+    #drawqueue = false;
+    #busy = false;
 
     #mousemove = async () => {
         this.scene.pickMesh(pickInfo => {
@@ -101,7 +102,7 @@ export abstract class paintGround {
                     rad = Math.PI - rad;
                 }
     
-                let dotang = this.ang360.distance(rad);
+                const dotang = this.ang360.distance(rad);
                 //console.log(rad);
                 //console.log(dotang);
     
@@ -144,7 +145,6 @@ export abstract class paintGround {
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
         this.uitab.canvasListener.addListener('pointerdown', this.#mainPointerDown, { once: true });
         this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
-        this.onEnd();
     }
     private mouseMoveRegisterClick = () => {
         this.uitab.canvasListener.addListener('pointerdown', this.finalClick, { once: true });

@@ -72,7 +72,7 @@ export class Collider {
         return 0;
     };
     /** Define if a collision was found */
-    public collisionFound: boolean = false;
+    public collisionFound = false;
 
     /**
      * Define last intersection point in local space
@@ -82,7 +82,7 @@ export class Collider {
     /**
      * Define last collided mesh
      */
-    public collidedMesh: Nullable<any>;
+    public collidedMesh?: string;
 
     #collisionPoint: [x: number, y: number, z: number] = [0, 0, 0];
     #planeIntersectionPoint: [x: number, y: number, z: number] = [0, 0, 0];
@@ -138,9 +138,9 @@ export class Collider {
     public _retry = 0;
     #velocity!:Vector3;
     #basePoint!: Vector3;
-    #epsilon: number = 0;
+    #epsilon = 0;
     /** @hidden */
-    public _velocityWorldLength: number = 0;
+    public _velocityWorldLength = 0;
     /** @hidden */
     public _basePointWorld: [number, number, number] = [0, 0, 0];
     #velocityWorld = new TerraVector3()
@@ -150,7 +150,7 @@ export class Collider {
     /** @hidden */
     // public _initialPosition: Vector3 = Vector3.Zero();
 
-    #nearestDistanceSquared: number = 9999999;
+    #nearestDistanceSquared = 9999999;
 
 
     /**

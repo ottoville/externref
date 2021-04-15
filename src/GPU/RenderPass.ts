@@ -194,20 +194,6 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
                         drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1+dynamicIndices.length,dynamicIndices);
                     });
                 });
-                dynamicIndices.length=0;
-                //TERRAIN
-              /*  if(Terrain.instance.TerrainHeightsbindGroupTree.bindGroupLayout.dynamicIndices) {
-                    dynamicIndices.push(1);
-                }
-                if(Terrain.instance.TerrainHeightsbindGroupTree.sharedBindgroup) {
-                    renderBundleEncoder.setBindGroup(1, Terrain.instance.TerrainHeightsbindGroupTree.sharedBindgroup);
-
-                }
-                Terrain.instance.TerrainHeightsbindGroupTree.renderPipeLines.forEach(renderPipeline => {
-                    drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,2, dynamicIndices);
-                });*/
-
-
 
                 this.bundles.push(renderBundleEncoder.finish());
             }

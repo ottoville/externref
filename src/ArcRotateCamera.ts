@@ -126,7 +126,7 @@ export class ArcRotateCamera {
         this.engine.collisionCoordinator.scaledVelocity[1] = (this.#newPosition[1] - this.camera.position[1]) / this.engine.collider.radius[1];
         this.engine.collisionCoordinator.scaledVelocity[2] = (this.#newPosition[2] - this.camera.position[2]) / this.engine.collider.radius[2];
 
-        this.engine.collider.collidedMesh = null;
+        this.engine.collider.collidedMesh = undefined;
         this.engine.collider._retry = 0;
 
         // terraEngine.collider._initialVelocity = coordinator._scaledVelocity;
@@ -206,7 +206,7 @@ export class ArcRotateCamera {
         if (this.#collisionTriggered) {
             return false;
         }
-        let updateView: boolean = false;
+        let updateView = false;
         //if (async) collision inspection was triggered, don't update the camera's position - until the collision callback was called.
 
         //inputs.checkInputs();
