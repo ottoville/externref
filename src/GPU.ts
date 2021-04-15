@@ -186,20 +186,19 @@ export class GPU {
                 size: TerraNodeGPU.GPUDataSize * 4
             }
         }]);
-    positionBindGroupTime = this.rootCameralayout.addChildBindGroup(this.BindGroupPosition, true)
+    positionBindGroupTime = this.rootCameralayout.addChildBindGroup(this.BindGroupPosition, true);
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
     BindGroupCanvas: (renderPass: RenderPass<{}>) => GPUBindGroup;
 
-    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorOne, dynamicIndices?: number[]): BindGroupLayout<[GPUBindGroupEntry]>
-    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorTwo, dynamicIndices?: number[]): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry]>
-    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorThree, dynamicIndices?: number[]): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
-    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFour, dynamicIndices?: number[]): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
-    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFive, dynamicIndices?: number[]): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
-    createBindGroupLayout<T extends TerraGPUBindGroupLayoutDescriptorFive>(entry: T, dynamicIndices?: number[]): BindGroupLayout<GPUBindGroupEntry[]> {
-
-        return new BindGroupLayout<[GPUBindGroupEntry]>(this, entry, dynamicIndices)
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorOne): BindGroupLayout<[GPUBindGroupEntry]>
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorTwo): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry]>
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorThree): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFour): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFive): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    createBindGroupLayout<T extends TerraGPUBindGroupLayoutDescriptorFive>(entry: T,): BindGroupLayout<GPUBindGroupEntry[]> {
+        return new BindGroupLayout<[GPUBindGroupEntry]>(this, entry)
         /*const layout = this.device.createBindGroupLayout(entry) as TerraBindGroupLayout;
         layout.createBindGroup = (...entries: GPUBindGroupEntry[]) => {
             const bindGroup = this.device.createBindGroup({ layout, entries });
@@ -517,14 +516,26 @@ export class GPU {
         return drawedMeshes;
     }
     //Without shared bindgroups
-    drawBindGroups2(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass<{}>, index: number) {
+    drawBindGroups2(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, pipelineLayout: PipelineLayout, renderPass: RenderPass<{}>, index: number, dynamicIndices: number[] = []) {
         let drawedMeshes = 0;
-        if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
-            bgt.renderPipeLines.forEach(m => {
-                drawedMeshes += m.draw(renderPassEncoder, renderPass, index)
+        if (pipelineLayout.renderPipeLines.size || pipelineLayout.subBindGroups.size) {
+
+            if (pipelineLayout.bindGroupLayout.dynamicIndices) {
+                dynamicIndices.push(index);
+
+            }
+
+            pipelineLayout.renderPipeLines.forEach(renderpipeline => {
+                drawedMeshes += renderpipeline.draw(renderPassEncoder, renderPass, index, dynamicIndices)
             });
-            if (bgt.subBindGroups.size) {
-                bgt.subBindGroups.forEach((bgt) => { drawedMeshes += this.drawBindGroups(renderPassEncoder, bgt, renderPass, ++index) });
+            if (pipelineLayout.subBindGroups.size) {
+                pipelineLayout.subBindGroups.forEach((subPipelineLayot) => {
+                    /*subPipelineLayot.renderPipeLines.forEach(renderPipeline => {
+                        drawedMeshes += renderPipeline.draw(renderPassEncoder, renderPass, index + dynamicIndices.length, dynamicIndices);
+                    });*/
+                    drawedMeshes += this.drawBindGroups2(renderPassEncoder, subPipelineLayot, renderPass, pipelineLayout.bindGroupLayout.dynamicIndices?index:++index, dynamicIndices)
+                    
+                });
             }
         }
         return drawedMeshes;

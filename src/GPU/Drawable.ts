@@ -11,6 +11,7 @@ export interface DrawableLikeClass extends DrawableLike {
 };
 
 export abstract class Drawable {
+    abstract label:string;
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     dynamicBuffers: [GPUBindGroup, number][] = [];
     #renderList: Map<RenderPass<{}>, Set<Drawable>> = new Map();
@@ -99,10 +100,15 @@ export abstract class Drawable {
     }
     abstract render: (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => void
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex:number[]) {
+        console.log('dynamic buffers ',this.dynamicBuffers, dynamicIndex)
         this.dynamicBuffers.forEach((gpubindgroup_offset, i) => {
             let di=dynamicIndex[i];
-            if(di)
+            if(di) {
                 renderPass.setBindGroup(di, gpubindgroup_offset[0], [gpubindgroup_offset[1] * TerraNodeGPU.alignment]);
+                console.log('set dynamic bindgroup',di)
+            } else {
+                debugger;
+            }
         });
         this.staticBuffers && renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers)
 
@@ -139,6 +145,7 @@ export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass<{}>>,
         readonly buffer: T,
+        public label='unnamed',
         scene?: Scene,) {
         super(renderPipeline, renderPasses, scene);
     }
@@ -151,6 +158,7 @@ export class DrawableSimple extends DrawableDirect {
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass<{}>>,
         node: TerraNodeGPU<DrawableSimple>,
+        public label='unnamed',
         scene?: Scene,
         instanceCount = 1,
         public firstVertex = 0,
@@ -159,6 +167,7 @@ export class DrawableSimple extends DrawableDirect {
     }
     render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
         renderPass.draw(this.node.verticesCount, this.instanceCount, this.firstVertex, this.firstInstance);
+        console.log('drawsimple',this.label, this.node.verticesCount, this.instanceCount, this.firstVertex, this.firstInstance);
     }
 }
 export class DrawableIndexed extends DrawableDirect {
@@ -167,6 +176,7 @@ export class DrawableIndexed extends DrawableDirect {
         renderPasses: Set<RenderPass<{}>>,
         node: TerraNodeGPU<DrawableIndexed>,
         private indexBuffer?: GPUIndexBuffer,
+        public label='unnamed',
         scene?: Scene,
         public baseVertex = 0,
         instanceCount = 1,

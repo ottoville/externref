@@ -3,7 +3,7 @@ import { BoundableNode, MainNode, PickingInfo } from "./TerraNode.js";
 import type { GPU } from "./GPU.js";
 import type { Engine } from "./engine.js";
 import type { TerraCamera } from "./TerraCamera.js";
-import { TerraMatrix, TerraVector3 } from "./Math.js";
+import { TerraVector3 } from "./Math.js";
 import { DrawableDirect } from "GPU/Drawable.js";
 export class Scene {
 
@@ -50,11 +50,8 @@ export class Scene {
         else
             return this.collissionCheck(rayFunction, boundables, pickResult);*/
     }
-    pickPromise(cb: (pick?: { position: TerraVector3, mesh: MainNode }) => void, wantedMeshIds?: Set<number>, predicate?: (mesh: MainNode) => boolean): void {
-
-        let start = performance.now();
+    pickPosition(cb: (pick: { position: TerraVector3, meshId: number }) => void): void {
         const encoder = this.gpu.device.createCommandEncoder();
-
         const buffer = this.gpu.device.createBuffer({
             size: 16,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
@@ -74,25 +71,30 @@ export class Scene {
 
         buffer.mapAsync(GPUMapMode.READ).then(() => {
             const b = buffer.getMappedRange();
-            const meshId = new DataView(b).getUint32(12, true);
-            console.log('picking took', performance.now() - start) //55
-            if (meshId === 0 || (wantedMeshIds && !wantedMeshIds.has(meshId))) {
+            const meshId=new DataView(b).getUint32(12, true);
+            if(meshId)
+                cb({ position: new TerraVector3(b), meshId });
+            buffer.destroy();
+        });
+    }
+    pickMesh(cb: (pick?: { position: TerraVector3, mesh: MainNode }) => void, wantedMeshIds?: Set<number>, predicate?: (mesh: MainNode) => boolean): void {
+        this.pickPosition(pickInfo => {
+            if (wantedMeshIds && !wantedMeshIds.has(pickInfo.meshId)) {
                 cb();
             }
             else {
-                const mesh = MainNode.Meshes.get(meshId);
+                const mesh = MainNode.Meshes.get(pickInfo.meshId);
                 if (!mesh) {
                     throw ('Mesh not found');
                 }
                 if (predicate && !predicate(mesh)) {
                     cb();
                 } else {
-                    const position = new TerraVector3(b);
-                    cb({ position, mesh });
+                    cb({ position:pickInfo.position, mesh });
                 }
             }
-            buffer.destroy();
-        });
+        })
+
         return;
         //@ts-ignore
         const ray = this.TerraCameras[0].createPickingRay(x, y);
@@ -126,27 +128,6 @@ export class Scene {
         console.log(minimum);*/
         //return minimum;
 
-        let rayFunction = (boundableMesh: BoundableNode<DrawableDirect>) => {
-
-            let m = new TerraMatrix([1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 1.0, 0.0,
-                0.0, 0.0, 0.0, 1.0]);
-            if (!boundableMesh.isStatic) {
-                m = boundableMesh.get_transformation();
-            }
-            //@ts-ignore
-            return this.TerraCameras[0].createPickingRay(x, y, m);
-        };
-        //TODO
-        //@ts-ignore
-        return this.collissionCheck(rayFunction, this.boundables.values(), null, fastCheck).then((pickResult: PickingInfo | null) => {
-            /* if (pickResult) {
-                 pickResult.ray = Ray.Zero();
-                 this.createPickingRayToRef(x, y, Matrix.Identity(), pickResult.ray, this.cameraToUseForPointers || null, false)
-             }*/
-            return pickResult;
-        });
     }
 }
 

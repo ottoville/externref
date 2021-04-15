@@ -98,7 +98,10 @@ export class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     
     constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number, createDrawable: (node:TerraNodeGPU<T>) => T, hasBounding:boolean=false, vertices_stride:number=3) {
         super(engine, hasBounding,verticesCount, vertices_stride);
+
         this.Drawable = createDrawable(this);
+        this.Drawable.dynamicBuffers.push([engine.gpu.BindGroupPosition, this.gpu_alignment]);
+
         if(renderPipeline.dynamicBindGroupOffset.length)
             renderPipeline.dynamicBindGroupOffset[0]=this.gpu_alignment;
     }
@@ -236,7 +239,6 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         
     ) {
         super(scene.engine, renderPipeline, indicesView ? indicesView.length : positionCount, createDrawable,true,verticesPositionStride);
-        this.Drawable.dynamicBuffers.push([scene.gpu.BindGroupPosition, this.gpu_alignment]);
 
         this.verticesBuffesSize = positionCount * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
         if (this.strip) {

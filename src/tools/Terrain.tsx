@@ -23,7 +23,7 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : RenderPipeline {
         return renderPipeline;
     }
 
-    renderPipeline = terrain.TerrainHeightsbindGroupPositionTree.addRenderPipeline(new VertexShader(scene.engine.gpu,"helper2.vert.wgsl"),new Shader(scene.engine.gpu,'color.frag.wgsl'),{
+    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(new VertexShader(scene.engine.gpu,"helper2.vert.wgsl"),new Shader(scene.engine.gpu,'color.frag.wgsl'),{
         primitive: {
             topology: 'triangle-list',
             cullMode: 'none'
@@ -54,7 +54,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         public camera: ArcRotateCamera,
         public sea: Sea,
     ) {
-        super(scene.engine, getRenderPipeline(scene, terrain),4,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), node, 8, 0));
+        super(scene.engine, getRenderPipeline(scene, terrain),4,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), node, 8, 0,undefined,'TerrainTool'));
         scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*
@@ -119,9 +119,16 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     };
 
     #mouseListener = (): void => {
-        this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
+        /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
             this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
+        });*/
+
+        this.scene.pickPosition(pickInfo => {
+            this.SetTranslation([pickInfo.position[0], 0, pickInfo.position[2]]);
+            console.log([pickInfo.position[0], 0, pickInfo.position[2]])
         });
+
+
     }
     raise = (): void => {
         //TERRAIN EDITING DISABLED

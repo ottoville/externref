@@ -142,24 +142,73 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
                 });
                 //@ts-ignore
                 let drawedMeshes = 0;
+                const dynamicIndices:number[]=[];
+
                 renderBundleEncoder.setBindGroup(0, typeof(rootBindGroup)==='function'?rootBindGroup(this):rootBindGroup);
                 rootLayout.renderPipeLines.forEach(renderPipeline => {
                     drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
                 });
+               /* rootLayout.subBindGroups.forEach(pipelineLayout => {
+                    if (pipelineLayout.sharedBindgroup) {
+                        renderBundleEncoder.setBindGroup(1, pipelineLayout.sharedBindgroup);
+                    } else {
+                        debugger;
+                    }
+                    pipelineLayout.renderPipeLines.forEach(renderPipeline => {
+                        drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1+dynamicIndices.length,dynamicIndices);
+                    });
+                });*/
 
-               // this.gpu.drawBindGroups(renderBundleEncoder,this.gpu.positionBindGroupTimeWGSL,this,1);
+
+
+               // this.gpu.drawBindGroups2(renderBundleEncoder,this.gpu.positionBindGroupTimeWGSL,this,1);
                 
-                //position
+                //POSITION
+                if(this.gpu.positionBindGroupTimeWGSL.bindGroupLayout.dynamicIndices) {
+                    dynamicIndices.push(1);
+                }
                 this.gpu.positionBindGroupTimeWGSL.renderPipeLines.forEach(renderPipeline => {
-                    const dynamicIndices=[1];
                     drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1, dynamicIndices);
                 });
-                this.gpu.positionBindGroupTimeWGSL.subBindGroups.forEach(bindGroup => {
-                    const dynamicIndices=[1];
+                this.gpu.positionBindGroupTimeWGSL.subBindGroups.forEach(pipelineLayout => {
+                    if(pipelineLayout.sharedBindgroup) {
+                        renderBundleEncoder.setBindGroup(2, pipelineLayout.sharedBindgroup);
+                    }
+                    pipelineLayout.renderPipeLines.forEach(renderPipeline => {
+                        if(pipelineLayout.sharedBindgroup) {
+                            console.log('draw with shared bindgroup');
+                        }
+                        drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1+dynamicIndices.length,dynamicIndices);
+                    });
+                });
+                dynamicIndices.length=0;
+                //SUN
+                if(this.gpu.positionBindGroupTime.bindGroupLayout.dynamicIndices) {
+                    dynamicIndices.push(1);
+                }
+                this.gpu.positionBindGroupTime.renderPipeLines.forEach(renderPipeline => {
+                    drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1, dynamicIndices);
+                });
+                this.gpu.positionBindGroupTime.subBindGroups.forEach(bindGroup => {
                     bindGroup.renderPipeLines.forEach(renderPipeline => {
                         drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1+dynamicIndices.length,dynamicIndices);
                     });
                 });
+                dynamicIndices.length=0;
+                //TERRAIN
+              /*  if(Terrain.instance.TerrainHeightsbindGroupTree.bindGroupLayout.dynamicIndices) {
+                    dynamicIndices.push(1);
+                }
+                if(Terrain.instance.TerrainHeightsbindGroupTree.sharedBindgroup) {
+                    renderBundleEncoder.setBindGroup(1, Terrain.instance.TerrainHeightsbindGroupTree.sharedBindgroup);
+
+                }
+                Terrain.instance.TerrainHeightsbindGroupTree.renderPipeLines.forEach(renderPipeline => {
+                    drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,2, dynamicIndices);
+                });*/
+
+
+
                 this.bundles.push(renderBundleEncoder.finish());
             }
             passEncoder.executeBundles(this.bundles);

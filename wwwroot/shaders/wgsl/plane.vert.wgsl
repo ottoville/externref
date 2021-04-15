@@ -5,12 +5,10 @@
   [[offset(64)]] view : mat4x4<f32>;
   [[offset(128)]] viewPosition : vec3<f32>;
 };
-[[binding(0), group(0)]] var<uniform> scene : Scene;
 
 [[block]] struct IntArray {
   [[offset(0)]] numbers : [[stride(4)]] array<i32>;
 };
-[[binding(0), group(1)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
 
 [[block]] struct Plane {
   [[offset(0)]] norm : vec3<f32>;
@@ -19,12 +17,14 @@
 [[block]] struct PlaneArray {
   [[offset(0)]] plane : [[stride(16)]] array<Plane>;
 };
-[[binding(1), group(1)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
 
 [[block]] struct WorldPosition {
   [[offset(0)]] position : mat4x4<f32>;
 };
-[[binding(0), group(2)]] var<uniform> world : WorldPosition;
+[[binding(0), group(0)]] var<uniform> scene : Scene;
+[[binding(0), group(1)]] var<uniform> world : WorldPosition;
+[[binding(0), group(2)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
+[[binding(1), group(2)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
 
 [[location(0)]] var<in> position : vec3<f32>;
 [[builtin(position)]] var<out> Position : vec4<f32>;

@@ -3,7 +3,7 @@ import { TerraCamera } from "../TerraCamera.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { Engine } from "../engine.js";
 
-
+//@ts-expect-error
 import { Plants } from "../plants/Plants.js";
 import { UITAB, UITABClassLike } from "../UITAB.js";
 import { PlantsUI } from "../tools/plantsUI.js";
@@ -195,7 +195,7 @@ export class Canvas extends TerraCompoment {
 
                     console.debug("Progress 100");
                 }).catch(rej);
-                PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
+                //PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
             })
 
             DB.then(DB => {
@@ -268,7 +268,7 @@ export class Canvas extends TerraCompoment {
             }
         });
 
-        new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node))
+        new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node,undefined,undefined,undefined,'canvas'))
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();
