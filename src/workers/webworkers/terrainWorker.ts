@@ -10,28 +10,28 @@ const facetSize = 250 * 250 * 4;
 let _facesOfVertices: number[][];
 let _groundFacesNormals: Float32Array[];
 let _subdivisionsOfVertices: any[];
-let heightMax = 500;
-let heightMin = -500;
+const heightMax = 500;
+const heightMin = -500;
 let _selectedVertices: { vertice: number, distance: number, col: number, row: number }[] = [];
 let _subdivisionsY: number;
 let _subdivisionsX: number;
 
 //@ts-ignore
-let boundingBox: {
+const boundingBox: {
     min: Float32Array,
     max: Float32Array
 } = {};
 //@ts-ignore
-let pickInfo: {
+const pickInfo: {
     point: Float32Array,
     distance: Float32Array
 } = {};
 
 const mousePosition: [number, number] = [0, 0]
 let _groundFacesNormalsView: Float32Array;
-let byteStride:number
+let byteStride: number
 let terrainPositionAndUvsAndNormalsCPUSwap: Float32Array;
-let methods2: { [index: string]: (e: WMessage<any>) => void } = {
+const methods2: { [index: string]: (e: WMessage<any>) => void } = {
     init: (e: WMessage<{
         positionsAndNormals: any,
         indices: any,
@@ -40,7 +40,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         boundingBox: SharedArrayBuffer,
         pickInfo: SharedArrayBuffer,
         _groundFacesNormalsBuffer: SharedArrayBuffer,
-        byteStride:number
+        byteStride: number
     }>) => {
         byteStride = e.data.byteStride
         terrainPositionAndUvsAndNormalsCPUSwap = new Float32Array(e.data.positionsAndNormals);
@@ -49,7 +49,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
 
         _groundFacesNormalsView = new Float32Array(e.data._groundFacesNormalsBuffer);
         for (let i = 0; i < faceCount; i++) {
-            _groundFacesNormals.push(new Float32Array(e.data._groundFacesNormalsBuffer, i << 4,4))
+            _groundFacesNormals.push(new Float32Array(e.data._groundFacesNormalsBuffer, i << 4, 4))
         }
         const verticesAmount = e.data.positionsAndNormals.byteLength / e.data.byteStride;
         if (normalsView.length == 0) {
@@ -82,19 +82,19 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         this.postMessage({ id: e.id, data: {} });
     },
     saveTexture: async (e: WMessage<ArrayBuffer>) => {
-        let c = new OffscreenCanvas(5120, 5120);
-        let ctx = c.getContext("2d");
+        const c = new OffscreenCanvas(5120, 5120);
+        const ctx = c.getContext("2d");
         if (!ctx)
             throw ('get 2d context failed');
         ctx.putImageData(new ImageData(new Uint8ClampedArray(e.data), c.width, c.height), 0, 0);
-        let blob = await c.convertToBlob({ type: "image/webp", quality: 1 });
-        let response = new Response(blob);
+        const blob = await c.convertToBlob({ type: "image/webp", quality: 1 });
+        const response = new Response(blob);
         response.headers.set('content-length', blob.size.toString());
         (await caches.open('save')).put(new Request('/terrainTexture.webp'), response);
 
     },
     elevateFaces: (e: WMessage<{ radius: number, height: number, direction: number }>) => {
-        if (pickInfo.distance[0] == NaN)
+        if (isNaN(pickInfo.distance[0]))
             return;
 
         // Impact zone
@@ -103,15 +103,15 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
             mousePosition[1] = pickInfo.point[2];
             _selectedVertices = [];
 
-            let radiusPow = Math.pow(e.data.radius, 2);
+            const radiusPow = Math.pow(e.data.radius, 2);
 
-            let length = terrainPositionAndUvsAndNormalsCPUSwap.length;
+            const length = terrainPositionAndUvsAndNormalsCPUSwap.length;
             for (let index = 0; index < length; index += 12) {
-                let distance = Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index] - pickInfo.point[0], 2) + Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index+2] - pickInfo.point[2], 2)
+                const distance = Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index] - pickInfo.point[0], 2) + Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index + 2] - pickInfo.point[2], 2)
                 if (distance < radiusPow) {
                     _selectedVertices.push({
                         col: 250 / (10000 / (5000 + terrainPositionAndUvsAndNormalsCPUSwap[index])) | 0,
-                        row: 250 / (10000 / (5000 - terrainPositionAndUvsAndNormalsCPUSwap[index+2])) | 0,
+                        row: 250 / (10000 / (5000 - terrainPositionAndUvsAndNormalsCPUSwap[index + 2])) | 0,
                         vertice: index,
                         distance: Math.sqrt(distance)
                     });
@@ -120,21 +120,17 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
         }
 
         // Elevate vertices
-        let faces: {
-            faceID: number,
-            indices: Uint32Array
-        }[] = [];
-        let v1v2 = new Float32Array(3);
-        let v3v2 = new Float32Array(3);
+        const v1v2 = new Float32Array(3);
+        const v3v2 = new Float32Array(3);
         let faceOfVertices: number[] = [];
         const half = _groundFacesNormals.length >> 1;
         let v1: Float32Array
         let v2: Float32Array
         let v3: Float32Array
 
-        
+
         _selectedVertices.forEach(sv => {
-            let positiony = terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice+1];
+            let positiony = terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1];
             var fullHeight = e.data.height * e.data.direction;
 
             if (sv.distance < e.data.radius * 0.3) {
@@ -149,12 +145,10 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 positiony = heightMin;
             terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
 
-
-            faceOfVertices = _facesOfVertices[sv.vertice/12];
-            
+            faceOfVertices = _facesOfVertices[sv.vertice / 12];
 
             for (let index = 0; index < faceOfVertices.length; index++) {
-                let indices = new Uint32Array(terrainIndices.buffer, (faceOfVertices[index] * 3) << 2, 3);
+                const indices = new Uint32Array(terrainIndices.buffer, (faceOfVertices[index] * 3) << 2, 3);
 
                 indices.forEach(vertexIndex => {
                     var faces = _facesOfVertices[vertexIndex];
@@ -172,17 +166,17 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                         norm[1] += facenormal[1];
                         norm[2] += facenormal[2];
                     }
-                    let fc = 1.0 / faces.length;
+                    const fc = 1.0 / faces.length;
                     norm[0] *= fc;
                     norm[1] *= fc;
                     norm[2] *= fc;
                     //Normalize
-                    let scale = 1 / Math.hypot(norm[0], norm[1], norm[2]);
+                    const scale = 1 / Math.hypot(norm[0], norm[1], norm[2]);
                     norm[0] *= scale;
                     norm[1] *= scale;
                     norm[2] *= scale;
                 });
-            };
+            }
             ((ypos) => {
                 //let ypos = this.terrain.positions[vertexIndex * 3 + 1];
                 //for (var index = 0; index < this._subdivisionsOfVertices[vertexIndex].length; index++) {
@@ -239,7 +233,7 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 normalized[2] *= scale;
                 normalized[3] = -(normalized[0] * v2[0] + normalized[1] * v2[1] + normalized[2] * v2[2]);
             }
-        })        
+        })
 
         if (_selectedVertices.length) {
             self.postMessage({
@@ -247,9 +241,9 @@ let methods2: { [index: string]: (e: WMessage<any>) => void } = {
                     boundingBox: { minY: boundingBox.min[1], maxY: boundingBox.max[1] }
                 }
             });
-            let subvertices = _selectedVertices.map(sv => sv.vertice);
-            let min = Math.min(...subvertices) * 4;
-            let max = Math.max(...subvertices) * 4 + byteStride;
+            const subvertices = _selectedVertices.map(sv => sv.vertice);
+            const min = Math.min(...subvertices) * 4;
+            const max = Math.max(...subvertices) * 4 + byteStride;
             self.postMessage({ id: e.id, data: { min: min, max: max } });
         }
 
