@@ -91,12 +91,12 @@ export class Canvas extends TerraCompoment {
         }
         //@ts-ignore
         window.printRenderTarget2 = () => {
-            gpu.renderPassScreen.renderTargets.gRenderTargetDiffuse.toBitmap()
+            gpu.renderPassScreen.renderTargets.gRenderTargetPositions.toBitmap()
         }
 
         this.progress = 6;
         const shaders = ['simple.vert.wgsl', 'simple.frag.wgsl',
-            'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl',
+            'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl', 'UIColor.frag.wgsl',
             'plane.vert.wgsl', 'helper2.vert.wgsl',
             'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
             'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',

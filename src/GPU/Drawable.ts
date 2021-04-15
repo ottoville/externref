@@ -106,8 +106,6 @@ export abstract class Drawable {
             if(di) {
                 renderPass.setBindGroup(di, gpubindgroup_offset[0], [gpubindgroup_offset[1] * TerraNodeGPU.alignment]);
                 console.log('set dynamic bindgroup',di)
-            } else {
-                debugger;
             }
         });
         this.staticBuffers && renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers)

@@ -23,7 +23,7 @@ function getRenderPipeline(scene: Scene, terrain: Terrain) : RenderPipeline {
         return renderPipeline;
     }
 
-    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(new VertexShader(scene.engine.gpu,"helper2.vert.wgsl"),new Shader(scene.engine.gpu,'color.frag.wgsl'),{
+    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(new VertexShader(scene.engine.gpu,"helper2.vert.wgsl"),new Shader(scene.engine.gpu,'UIColor.frag.wgsl'),{
         primitive: {
             topology: 'triangle-list',
             cullMode: 'none'
