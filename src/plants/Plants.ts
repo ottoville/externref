@@ -19,7 +19,7 @@ import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
  */
 
 export class Plants {
-    public numBlades: number = 4000000;
+    public numBlades = 4000000;
     public opts = {
         radius: 86
     }
@@ -40,7 +40,7 @@ export class Plants {
     }
     constructor(
         scene: Scene,
-        terrainP: Promise<[Terrain, Promise<GPUBuffer>]>,
+        terrainP: Promise<Terrain>,
     ) {
         const planstPipeline = scene.gpu.rootCameralayout.addRenderPipeline(new VertexShader(scene.engine.gpu, 'grass/grass.vert.wgsl', 'main', [{
             arrayStride: 4 * 4,
@@ -77,8 +77,8 @@ export class Plants {
         drawable.setVertexBuffer(1, shapeGPU);
 
 
-        let shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * this.numBlades);
-        let noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
+        const shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * this.numBlades);
+        const noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
 
         this.ready = this.worker.message(WorkerReturn.Promise, 'init', {
             //  positions: this.offset,
@@ -86,7 +86,7 @@ export class Plants {
             noises: noises,
         });
         terrainP.then((arr) => {
-            const terrain = arr[0];
+            const terrain = arr;
 
             const computePipeline = scene.gpu.createComputePipeline("grass/getHeightAtCoordinates.comp.wgsl");
             const layout = computePipeline.getBindGroupLayout(0);

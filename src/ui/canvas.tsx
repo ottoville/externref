@@ -151,52 +151,10 @@ export class Canvas extends TerraCompoment {
             const b = new Box(terrascene);
             b.update_scale(200, 200, 200);
             new Human(terrascene)
+            const terrainInited = Terrain.loadFromTexture(terrascene);
 
-            const ready = new Promise((res, rej) => {
-                const terrainInited = Terrain.loadFromTexture(terrascene);
-                terrainInited.then(async r => {
-
-                    const ground = r[0];
-                    res([ground, sea])
-                    const gpuBuffer = await r[1];
-                    this.progress = 76;
-
-
-                    const commandEncoder = device.createCommandEncoder({});
-                    this.progress = 80;
-
-                    const bufferView = {
-                        buffer: gpuBuffer,
-                        bytesPerRow: ground.textureSize[0] * 4,
-                        rowsPerImage: 0,
-                        offset: 0,
-                    };
-                    this.progress = 85;
-
-
-                    commandEncoder.copyBufferToTexture(bufferView,
-                        {
-                            texture: ground.texture,
-                            origin: {
-                                x: 0,
-                                y: 0,
-                                z: Math.max(-1, 0)
-                            },
-                            mipLevel: 0,
-                        }, ground.textureExtent);
-                    this.progress = 90;
-
-
-                    device.queue.submit([commandEncoder.finish()]);
-                    this.progress = 95;
-
-                    bufferView.buffer.destroy();
-                    this.progress = 100;
-
-                    console.debug("Progress 100");
-                }).catch(rej);
-                PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
-            })
+            const ready =  terrainInited.then(async ground => [ground, sea]);
+            PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
 
             DB.then(DB => {
                 DB.transaction("save").objectStore("save").get(0).onsuccess = async (evt) => {
@@ -228,7 +186,8 @@ export class Canvas extends TerraCompoment {
                         l.eval(500);
                     });
                 }
-            })
+            });
+            this.progress = 100;
             return [sun.gpu_alignment, ready];
         });
         const debugscene = new Scene('static', gpu, terraEngine, [mainCamera], (scene) => {

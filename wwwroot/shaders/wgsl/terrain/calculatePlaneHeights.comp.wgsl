@@ -6,7 +6,6 @@
     [[offset(32)]] maxXZ : vec2<i32>;
 };
 
-
 [[block]] struct Vertice {
   [[offset(0)]] position : vec3<f32>;
   [[offset(16)]] normals : vec3<f32>;

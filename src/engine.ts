@@ -122,12 +122,9 @@ export class Engine {
         })
     }
 
-
-
-
     static async initEngine(gpu: GPU, DB: Promise<EarthDatabase>, canvas: HTMLCanvasElement): Promise<Engine> {
 
-        const memory = new WebAssembly.Memory({ initial: 300 });
+        const memory = new WebAssembly.Memory({ initial: 600 });
 
         const wasmRequest = await fetch('collider/colliderO.wasm');
         const obj = await WebAssembly.instantiateStreaming(wasmRequest, {

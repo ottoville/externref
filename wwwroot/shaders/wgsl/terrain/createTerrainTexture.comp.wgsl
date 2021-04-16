@@ -1,18 +1,11 @@
-const minX:i32 = 5000;
-const minZ:i32 = 5000;
+[[block]] struct Settings {
+    [[offset(0)]] size : vec2<u32>;
+    [[offset(8)]] bufferSize : vec2<u32>;
+    [[offset(16)]] subdivisions : u32;
+    [[offset(20)]] heightMinMax : vec2<i32>;
+    [[offset(32)]] max : vec2<i32>;
+};
 
-const maxX:i32 = 5000;
-const maxZ:i32 = 5000;
-
-const subdivisionsX:i32 = 250;
-const subdivisionsY:i32 = 250;
-
-//const facetSize:u32= 250 * 250 * 4;
-const facetSize:u32 = 62500; // 250 * 250;
-
-
-const width:u32 = 10000;
-const height:u32 = 10000;
 
 [[block]] struct Plane {
   [[offset(0)]] norm : vec3<f32>;
@@ -28,25 +21,27 @@ const height:u32 = 10000;
 [[binding(0), group(0)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
 [[binding(1), group(0)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
 [[binding(0), group(1)]] var<storage_buffer> resultMatrix : [[access(write)]] IntArray;
+[[binding(1), group(1)]] var<storage_buffer> settings : [[access(read)]] Settings;
 
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 
 [[stage(compute)]]
 fn main() -> void {
+    const facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
 
-    var cx:i32 = i32(f32(GlobalInvocationID.x) * 1.95 - 5000.0);
-    var cz:i32 = i32(f32(GlobalInvocationID.y) * 1.95 - 5000.0);
+    var cx:i32 = i32(f32(GlobalInvocationID.x) * 1.95 - f32(settings.size.x/u32(2)));
+    var cz:i32 = i32(f32(GlobalInvocationID.y) * 1.95 - f32(settings.size.y/u32(2)));
 
-    var col:i32 = i32(floor(f32((cx + maxX) * subdivisionsX) / f32(width)));
-    var row:i32 = i32(floor(- f32((cz + maxZ) * subdivisionsY) / f32(height) + f32(subdivisionsY)));
-    var slope:i32 = slopes.numbers[row * 250 + col];
+    var col:u32 = u32(floor(f32((cx + settings.max.x) * i32(settings.subdivisions)) / f32(settings.size.x)));
+    var row:u32 = u32(floor(- f32((cz + settings.max.y) * i32(settings.subdivisions)) / f32(settings.size.y) + f32(settings.subdivisions)));
+    var slope:i32 = slopes.numbers[row * settings.subdivisions + col];
     var norm:vec3<f32>;
     var d:f32;
     if(cz < -1 * cx + slope) {
-        norm = facet12.plane[row * 250 + col].norm;
-        d = facet12.plane[row * 250 + col].d;
+        norm = facet12.plane[row * settings.subdivisions + col].norm;
+        d = facet12.plane[row * settings.subdivisions + col].d;
     } else {
-        var index:u32 = facetSize + u32(row * 250 + col);
+        var index:u32 = facetSize + (row * settings.subdivisions + col);
         norm = facet12.plane[index].norm;
         d = facet12.plane[index].d;
     }

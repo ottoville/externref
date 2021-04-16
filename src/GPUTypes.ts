@@ -102,15 +102,17 @@ interface BindGroupFourBinding extends GPUBindGroup {
 interface BindGroupFiveBinding extends GPUBindGroup {
     numBindings: 'five';
 }
+type storageBindGroupLayout = {
+    binding: number;
+    resource: GPUSampler | GPUTextureView | {
+        buffer: GPUStorageBuffer;
+        offset?: number;
+        size?: number;
+    }
+}
+
 interface TerraGPUComputePipeLine extends GPUComputePipeline {
-    createBindGroup(layout: number | GPUBindGroupLayout, entries: Iterable<{
-        binding: number;
-        resource: GPUSampler | GPUTextureView | {
-            buffer: GPUStorageBuffer;
-            offset?: number;
-            size?: number;
-        }
-    }>): GPUBindGroup
+    createBindGroup(layout: number | GPUBindGroupLayout, entries: Iterable<storageBindGroupLayout>): GPUBindGroup
 }
 interface TerraGPUCommandEncoder extends GPUCommandEncoder {
     copyBufferToBuffer(

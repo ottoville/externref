@@ -100,12 +100,10 @@ export abstract class Drawable {
     }
     abstract render: (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => void
     draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex:number[]) {
-        console.log('dynamic buffers ',this.dynamicBuffers, dynamicIndex)
         this.dynamicBuffers.forEach((gpubindgroup_offset, i) => {
-            let di=dynamicIndex[i];
+            const di=dynamicIndex[i];
             if(di) {
                 renderPass.setBindGroup(di, gpubindgroup_offset[0], [gpubindgroup_offset[1] * TerraNodeGPU.alignment]);
-                console.log('set dynamic bindgroup',di)
             }
         });
         this.staticBuffers && renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers)

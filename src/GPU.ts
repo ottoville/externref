@@ -84,16 +84,7 @@ export class GPU {
 
     //viewprojection and camera position
 
-    singleWritableStorageLayout = this.device.createBindGroupLayout({
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.COMPUTE,
-                buffer: {
-                    type: "storage"
-                }
-            }]
-    })
+
 
     shaderModules: Map<string, GPUShaderModule> = new Map();
     //Todo: Remove COPY_SRC
