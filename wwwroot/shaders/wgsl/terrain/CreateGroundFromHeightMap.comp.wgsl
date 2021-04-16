@@ -6,7 +6,6 @@ const filt:vec3<f32> = vec3<f32>(0.3, 0.59, 0.11);
     [[offset(16)]] subdivisions : u32;
     [[offset(20)]] heightMinMax : vec2<i32>;
     [[offset(32)]] maxXZ : vec2<i32>;
-    [[offset(40)]] pixels : [[stride(4)]] array<u32>;
 };
 [[block]] struct Vertice {
   [[offset(0)]] position : vec3<f32>;
@@ -16,8 +15,12 @@ const filt:vec3<f32> = vec3<f32>(0.3, 0.59, 0.11);
 [[block]] struct Vertices {
     [[offset(0)]] vert : [[stride(48)]] array<Vertice>;
 };
+[[block]] struct Pixels {
+    [[offset(0)]] pixels : [[stride(4)]] array<u32>;
+};
 [[binding(0), group(0)]] var<storage_buffer> img : [[access(read)]] Image;
 [[binding(1), group(0)]] var<storage_buffer> positions : [[access(write)]] Vertices;
+[[binding(2), group(0)]] var<storage_buffer> pixels : [[access(read)]] Pixels;
 
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 
@@ -33,7 +36,7 @@ fn main() -> void {
    );
    var pos:u32 = u32(heightmap.x + heightmap.y * i32(img.bufferSize.x));
   
-   var pixel:u32= img.pixels[pos];
+   var pixel:u32= pixels.pixels[pos];
    var normalized:vec3<f32> = (vec3<f32>(vec3<i32>(i32(pixel) & 0xff, i32(pixel>>u32(8)) & 0xff, i32(pixel>>u32(16)) & 0xff))) / vec3<f32>(255.0,255.0,255.0);
   
    var filtered:vec3<f32> = normalized * filt;

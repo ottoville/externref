@@ -5,16 +5,11 @@ let terrainIndices: Uint32Array;
 const normalsView: Float32Array[] = [];
 const positionsView: Float32Array[] = [];
 
-const facetSize = 250 * 250 * 4;
-
 let _facesOfVertices: number[][];
 let _groundFacesNormals: Float32Array[];
-let _subdivisionsOfVertices: any[];
 const heightMax = 500;
 const heightMin = -500;
 let _selectedVertices: { vertice: number, distance: number, col: number, row: number }[] = [];
-let _subdivisionsY: number;
-let _subdivisionsX: number;
 
 //@ts-ignore
 const boundingBox: {
@@ -26,28 +21,30 @@ const pickInfo: {
     point: Float32Array,
     distance: Float32Array
 } = {};
+let subdivisionsX: number;
+let subdivisionsY: number;
 
 const mousePosition: [number, number] = [0, 0]
-let _groundFacesNormalsView: Float32Array;
 let byteStride: number
 let terrainPositionAndUvsAndNormalsCPUSwap: Float32Array;
 const methods2: { [index: string]: (e: WMessage<any>) => void } = {
     init: (e: WMessage<{
         positionsAndNormals: any,
         indices: any,
-        subdivisionsX: any,
-        subdivisionsY: any,
+        subdivisionsX: number,
+        subdivisionsY: number,
         boundingBox: SharedArrayBuffer,
         pickInfo: SharedArrayBuffer,
         _groundFacesNormalsBuffer: SharedArrayBuffer,
         byteStride: number
     }>) => {
+        subdivisionsX=e.data.subdivisionsX;
+        subdivisionsY=e.data.subdivisionsY;
         byteStride = e.data.byteStride
         terrainPositionAndUvsAndNormalsCPUSwap = new Float32Array(e.data.positionsAndNormals);
         const faceCount = e.data._groundFacesNormalsBuffer.byteLength / 4 / 4;
         _groundFacesNormals = [];
 
-        _groundFacesNormalsView = new Float32Array(e.data._groundFacesNormalsBuffer);
         for (let i = 0; i < faceCount; i++) {
             _groundFacesNormals.push(new Float32Array(e.data._groundFacesNormalsBuffer, i << 4, 4))
         }
@@ -59,8 +56,6 @@ const methods2: { [index: string]: (e: WMessage<any>) => void } = {
             }
         }
         terrainIndices = new Uint32Array(e.data.indices);
-        _subdivisionsX = e.data.subdivisionsX;
-        _subdivisionsY = e.data.subdivisionsY;
 
         boundingBox.min = new Float32Array(e.data.boundingBox, 0, 3);
         boundingBox.max = new Float32Array(e.data.boundingBox, 3 * 4, 3);
@@ -70,11 +65,9 @@ const methods2: { [index: string]: (e: WMessage<any>) => void } = {
 
         _facesOfVertices = [];
 
-        _subdivisionsOfVertices = [];
-        var index;
+        let index: number;
         for (index = 0; index < verticesAmount; index++) {
             _facesOfVertices[index] = [];
-            _subdivisionsOfVertices[index] = [];
         }
         for (index = 0; index < terrainIndices.length; index++) {
             _facesOfVertices[terrainIndices[index]].push((index / 3) | 0);
@@ -110,8 +103,8 @@ const methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 const distance = Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index] - pickInfo.point[0], 2) + Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index + 2] - pickInfo.point[2], 2)
                 if (distance < radiusPow) {
                     _selectedVertices.push({
-                        col: 250 / (10000 / (5000 + terrainPositionAndUvsAndNormalsCPUSwap[index])) | 0,
-                        row: 250 / (10000 / (5000 - terrainPositionAndUvsAndNormalsCPUSwap[index + 2])) | 0,
+                        col: subdivisionsX / (10000 / (5000 + terrainPositionAndUvsAndNormalsCPUSwap[index])) | 0,
+                        row: subdivisionsY / (10000 / (5000 - terrainPositionAndUvsAndNormalsCPUSwap[index + 2])) | 0,
                         vertice: index,
                         distance: Math.sqrt(distance)
                     });

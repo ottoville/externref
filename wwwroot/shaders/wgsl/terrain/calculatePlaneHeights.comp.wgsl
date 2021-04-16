@@ -1,7 +1,11 @@
-const subdivisions:u32 = 250;
-const subdivisions_plus_one:u32 = 251;
-//const facetSize:u32 = 250000; // 250 * 250 * 4;
-const facetSize:u32 = 62500; // 250 * 250;
+[[block]] struct Settings {
+    [[offset(0)]] size : vec2<u32>;
+    [[offset(8)]] bufferSize : vec2<u32>;
+    [[offset(16)]] subdivisions : u32;
+    [[offset(20)]] heightMinMax : vec2<i32>;
+    [[offset(32)]] maxXZ : vec2<i32>;
+};
+
 
 [[block]] struct Vertice {
   [[offset(0)]] position : vec3<f32>;
@@ -15,9 +19,6 @@ const facetSize:u32 = 62500; // 250 * 250;
     [[offset(0)]] vert : [[stride(48)]] array<Vertice>;
 };
 
-[[binding(0), group(0)]] var<storage_buffer> vertices : [[access(read)]] Vertices;
-[[binding(0), group(1)]] var<storage_buffer> slopes : [[access(write)]] IntArray;
-
 [[block]] struct Plane {
   [[offset(0)]] norm : vec3<f32>;
   [[offset(12)]] d : f32;
@@ -25,6 +26,9 @@ const facetSize:u32 = 62500; // 250 * 250;
 [[block]] struct PlaneArray {
   [[offset(0)]] plane : [[stride(16)]] array<Plane>;
 };
+[[binding(0), group(0)]] var<storage_buffer> vertices : [[access(read)]] Vertices;
+[[binding(1), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
+[[binding(0), group(1)]] var<storage_buffer> slopes : [[access(write)]] IntArray;
 [[binding(1), group(1)]] var<storage_buffer> facet12 : [[access(write)]] PlaneArray;
 
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
@@ -32,6 +36,9 @@ const facetSize:u32 = 62500; // 250 * 250;
 const cd: f32 = -1.0;
 [[stage(compute)]]
 fn main() -> void {
+  const subdivisions_plus_one:u32 = settings.subdivisions + u32(1);
+  const facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
+
     const next_x:u32=GlobalInvocationID.x + u32(1);
     const next_y:u32=GlobalInvocationID.y + u32(1);
 
@@ -68,13 +75,13 @@ fn main() -> void {
     var norm2:vec3<f32> = normalize(cross(v1v2, v1v4));
 
 
-    slopes.numbers[GlobalInvocationID.x * subdivisions + GlobalInvocationID.y] = h;
+    slopes.numbers[GlobalInvocationID.x * settings.subdivisions + GlobalInvocationID.y] = h;
 
-    facet12.plane[(GlobalInvocationID.x * subdivisions +  GlobalInvocationID.y)].norm = norm1;
-    facet12.plane[(GlobalInvocationID.x * subdivisions +  GlobalInvocationID.y)].d = dot(norm1,v1arr) * -1.0;
+    facet12.plane[(GlobalInvocationID.x * settings.subdivisions +  GlobalInvocationID.y)].norm = norm1;
+    facet12.plane[(GlobalInvocationID.x * settings.subdivisions +  GlobalInvocationID.y)].d = dot(norm1,v1arr) * -1.0;
 
-    facet12.plane[facetSize +  (GlobalInvocationID.x * subdivisions +  GlobalInvocationID.y)].norm = norm2;
-    facet12.plane[facetSize + (GlobalInvocationID.x * subdivisions +  GlobalInvocationID.y)].d = dot(norm2,v2arr) * -1.0;
+    facet12.plane[facetSize +  (GlobalInvocationID.x * settings.subdivisions +  GlobalInvocationID.y)].norm = norm2;
+    facet12.plane[facetSize + (GlobalInvocationID.x * settings.subdivisions +  GlobalInvocationID.y)].d = dot(norm2,v2arr) * -1.0;
 
     return;
  }
