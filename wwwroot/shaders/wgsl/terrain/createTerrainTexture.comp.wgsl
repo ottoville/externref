@@ -17,11 +17,10 @@
 [[block]] struct IntArray {
   [[offset(0)]] numbers : [[stride(4)]] array<i32>;
 };
-
-[[binding(0), group(0)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
-[[binding(1), group(0)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
-[[binding(0), group(1)]] var<storage_buffer> resultMatrix : [[access(write)]] IntArray;
-[[binding(1), group(1)]] var<storage_buffer> settings : [[access(read)]] Settings;
+[[binding(0), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
+[[binding(0), group(1)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
+[[binding(1), group(1)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
+[[binding(0), group(2)]] var<storage_buffer> resultMatrix : [[access(write)]] IntArray;
 
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 

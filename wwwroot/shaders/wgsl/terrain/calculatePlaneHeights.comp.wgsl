@@ -25,10 +25,10 @@
 [[block]] struct PlaneArray {
   [[offset(0)]] plane : [[stride(16)]] array<Plane>;
 };
-[[binding(0), group(0)]] var<storage_buffer> vertices : [[access(read)]] Vertices;
-[[binding(1), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
-[[binding(0), group(1)]] var<storage_buffer> slopes : [[access(write)]] IntArray;
-[[binding(1), group(1)]] var<storage_buffer> facet12 : [[access(write)]] PlaneArray;
+[[binding(0), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
+[[binding(0), group(1)]] var<storage_buffer> vertices : [[access(read)]] Vertices;
+[[binding(0), group(2)]] var<storage_buffer> slopes : [[access(write)]] IntArray;
+[[binding(1), group(2)]] var<storage_buffer> facet12 : [[access(write)]] PlaneArray;
 
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 

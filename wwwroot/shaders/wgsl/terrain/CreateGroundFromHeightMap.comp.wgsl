@@ -1,6 +1,6 @@
 const filt:vec3<f32> = vec3<f32>(0.3, 0.59, 0.11);
 
-[[block]] struct Image {
+[[block]] struct Settings {
     [[offset(0)]] size : vec2<u32>;
     [[offset(8)]] bufferSize : vec2<u32>;
     [[offset(16)]] subdivisions : u32;
@@ -18,9 +18,9 @@ const filt:vec3<f32> = vec3<f32>(0.3, 0.59, 0.11);
 [[block]] struct Pixels {
     [[offset(0)]] pixels : [[stride(4)]] array<u32>;
 };
-[[binding(0), group(0)]] var<storage_buffer> img : [[access(read)]] Image;
-[[binding(1), group(0)]] var<storage_buffer> positions : [[access(write)]] Vertices;
-[[binding(2), group(0)]] var<storage_buffer> pixels : [[access(read)]] Pixels;
+[[binding(0), group(0)]] var<storage_buffer> img : [[access(read)]] Settings;
+[[binding(0), group(1)]] var<storage_buffer> positions : [[access(write)]] Vertices;
+[[binding(1), group(1)]] var<storage_buffer> pixels : [[access(read)]] Pixels;
 
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 

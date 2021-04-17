@@ -8,8 +8,8 @@
     [[offset(20)]] heightMinMax : vec2<i32>;
     [[offset(32)]] maxXZ : vec2<i32>;
 };
-[[binding(0), group(0)]] var<storage_buffer> indices : [[access(write)]] Indices;
-[[binding(1), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
+[[binding(0), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
+[[binding(0), group(1)]] var<storage_buffer> indices : [[access(write)]] Indices;
 
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 

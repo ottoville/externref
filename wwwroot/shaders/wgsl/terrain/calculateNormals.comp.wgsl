@@ -13,10 +13,11 @@ const stride : u32 = 12;
     [[offset(20)]] heightMinMax : vec2<i32>;
     [[offset(32)]] maxXZ : vec2<i32>;
 };
-[[binding(0), group(0)]] var<storage_buffer> normals : [[access(write)]] FloatArray;
-[[binding(1), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
-[[binding(0), group(1)]] var<storage_buffer> slopes : [[access(read)]] Slopes;
-[[binding(1), group(1)]] var<storage_buffer> facet12 : [[access(read)]] FloatArray;
+[[binding(0), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
+
+[[binding(0), group(1)]] var<storage_buffer> normals : [[access(write)]] FloatArray;
+[[binding(0), group(2)]] var<storage_buffer> slopes : [[access(read)]] Slopes;
+[[binding(1), group(2)]] var<storage_buffer> facet12 : [[access(read)]] FloatArray;
 
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 

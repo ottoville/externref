@@ -42,12 +42,12 @@ const vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
 //const PI:f32 = 3.1415926535897932384626433832795;
 const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
 
-const facetSize:u32 = 62500; //250 * 250;
+const facetSize:u32 = 67600; //250 * 250;
 const maxX:u32 = 5000;
 const maxZ:u32 = 5000;
 
-const subdivisionsX:u32 = 250;
-const subdivisionsY:u32 = 250;
+const subdivisionsX:u32 = 260;
+const subdivisionsY:u32 = 260;
 
 const width:u32 = 10000;
 const height:u32 = 10000;
