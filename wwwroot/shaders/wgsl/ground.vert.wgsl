@@ -20,12 +20,6 @@
 //[[binding(0), set(1)]] var<uniform> lights : Lights;
 [[binding(0), group(1)]] var<uniform> worldposition : WorldPosition;
 
-
-
-[[location(0)]] var<in> position : vec3<f32>;
-[[location(1)]] var<in> uv : vec2<f32>;
-[[location(2)]] var<in> normal : vec3<f32>;
-
 [[builtin(position)]] var<out> Position : vec4<f32>;
 
 [[location(0)]] var<out> v_uv : vec2<f32>;
@@ -36,7 +30,9 @@
 [[location(3)]] var<out> idOut : u32;
 
 [[stage(vertex)]]
-fn main() -> void {
+fn main([[location(0)]] position : vec3<f32>,
+        [[location(1)]] uv : vec2<f32>,
+        [[location(2)]] normal : vec3<f32> ) -> void {
   Position = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
   //shading = dot(normal, lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;

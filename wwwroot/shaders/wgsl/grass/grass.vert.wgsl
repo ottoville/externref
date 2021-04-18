@@ -1,8 +1,8 @@
 
 
 
-const bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
-const rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(vec2<f32>(0.0,0.0), vec2<f32>(0.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0));
+let bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
+let rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(vec2<f32>(0.0,0.0), vec2<f32>(0.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0));
 
 [[block]] struct Scene {
   [[offset(0)]] viewProjection : mat4x4<f32>;
@@ -24,8 +24,6 @@ const rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(vec2<f32>(0.0,0.0), vec2<f3
 };
 //[[binding(0), group(1)]] var<uniform> lights : Lights;
 
-[[location(0)]] var<in> positions : vec4<f32>; //position xyz + rotate
-[[location(1)]] var<in> shape : vec4<f32>; // {x:scale, y:baseAngle, z:curve, w:color} (blade's shape properties)
 
 [[location(0)]] var<out> color : vec3<f32>;
 //[[location(1)]] var<out> shading : f32;
@@ -53,7 +51,10 @@ const vertices : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
 );
 
 [[stage(vertex)]]
-fn main() -> void {
+fn main(
+  [[location(0)]] positions : vec4<f32>, //position xyz + rotate
+  [[location(1)]] shape : vec4<f32> // {x:scale, y:baseAngle, z:curve, w:color} (blade's shape properties)
+) -> void {
  //ambient = lights.ambient;
   var vertice:vec3<f32> = vec3<f32>(vertices[VertexIndex].xy,0.0);
   var windRotate:f32 = rot[VertexIndex].x;

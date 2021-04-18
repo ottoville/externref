@@ -26,7 +26,6 @@
 [[binding(0), group(2)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
 [[binding(1), group(2)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
 
-[[location(0)]] var<in> position : vec3<f32>;
 [[builtin(position)]] var<out> Position : vec4<f32>;
 
 const facetSize:u32= 62500; //250 * 250;
@@ -60,7 +59,7 @@ fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
  }
 
 [[stage(vertex)]]
-fn main() -> void {
+fn main([[location(0)]] position : vec3<f32>) -> void {
     var worldPos:vec4<f32> = world.position * vec4<f32>(position.x, 0.0, position.y, 1.0);
     worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz);
     Position = scene.viewProjection * worldPos;
