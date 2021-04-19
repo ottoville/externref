@@ -1,5 +1,4 @@
 
-[[location(0)]] var<out> outColor : vec4<f32>;
 
 [[block]] struct Lights {
   [[offset(48)]] sunDirection : vec3<f32>;
@@ -17,21 +16,23 @@
 [[binding(4), group(0)]] var<storage_buffer> lights : [[access(read)]] LightsArray;
 
 
-
+struct Output {
+  [[location(0)]] Color : vec4<f32>;
+};
 [[stage(fragment)]]
-fn main([[location(0)]] position:vec2<f32>) -> void {
-
-const sunOffset:u32 = u32(0);
+fn main([[location(0)]] position:vec2<f32>) -> Output {
+  var output:Output;
+  const sunOffset:u32 = u32(0);
 
   const diffuse:vec4<f32> = textureSample(diffuseTexture, mySampler, position.xy);
   if(diffuse.w == 0.0) {
-    outColor=vec4<f32>(diffuse.xyz,1.0);
-    return;
+    output.Color=vec4<f32>(diffuse.xyz,1.0);
+    return output;
   }
   const normal:vec4<f32> = normalize(textureSample(normalTexture, mySampler, position.xy));
 
   const shading :f32 = dot(normal.xyz, lights.light[sunOffset].sunDirection)*lights.light[sunOffset].shadow;
-  outColor = vec4<f32>(lights.light[sunOffset].ambient + (diffuse.xyz * shading),1.0);
+  output.Color = vec4<f32>(lights.light[sunOffset].ambient + (diffuse.xyz * shading),1.0);
 
-  return;
+  return output;
 }

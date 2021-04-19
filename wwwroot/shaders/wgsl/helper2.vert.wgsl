@@ -1,4 +1,3 @@
-[[location(0)]] var<out> color : vec3<f32>;
 
 const vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
     vec2<f32>( -0.5,  2.0),
@@ -52,9 +51,6 @@ const subdivisionsY:u32 = 260;
 const width:u32 = 10000;
 const height:u32 = 10000;
 
-[[builtin(instance_index)]] var<in> instanceIdx : i32;
-[[builtin(vertex_idx)]] var<in> VertexIndex : i32;
-[[builtin(position)]] var<out> Position : vec4<f32>;
 
 fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
     var cx:f32 = xz.x;
@@ -75,9 +71,17 @@ fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
     }
     return -(norm.x * f32(cx) + norm.z * f32(cz) + d) / norm.y;
  }
+struct Output {
+  [[location(0)]] color : vec3<f32>;
+  [[builtin(position)]] Position : vec4<f32>;
+};
 
 [[stage(vertex)]]
-fn main() -> void {
+fn main(
+  [[builtin(instance_index)]] instanceIdx : i32,
+[[builtin(vertex_idx)]] VertexIndex : i32) -> Output {
+    var output:Output;
+
     var angle:f32 = (f32(time.time) * 0.001) + f32(instanceIdx) * angleStep;
     var c:f32 = cos(angle);
     var s:f32 = sin(angle);
@@ -88,7 +92,7 @@ fn main() -> void {
 
     var worldPos:vec4<f32> = world.position * vec4<f32>(offset.x, position.y, offset.y, 1.0);
     worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 3.0;
-    Position = scene.viewProjection * worldPos;
-    color = vec3<f32>(1.0,1.0,1.0);
-    return;
+    output.Position = scene.viewProjection * worldPos;
+    output.color = vec3<f32>(1.0,1.0,1.0);
+    return output;
 }

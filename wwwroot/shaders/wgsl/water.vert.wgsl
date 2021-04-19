@@ -1,24 +1,24 @@
 [[block]] struct Uniforms {
-  [[offset(0)]] modelViewProjectionMatrix : mat4x4<f32>;
-  [[offset(64)]] view : mat4x4<f32>;
-  [[offset(128)]] viewPosition : vec3<f32>;
+  modelViewProjectionMatrix : mat4x4<f32>;
+  view : mat4x4<f32>;
+  viewPosition : vec3<f32>;
 };
 
 [[block]] struct Time {
-  [[offset(0)]] time : u32;
-  [[offset(4)]] delta : f32;
+  time : u32;
+  [[align(4)]] delta : f32;
 };
 [[block]] struct WorldPosition {
-  [[offset(0)]] world : mat4x4<f32>;
-  [[offset(64)]] delta : vec3<f32>;
-  [[offset(80)]] custom : vec3<f32>;
-  [[offset(96)]] acceleration : vec3<f32>;
-  [[offset(112)]] id : u32;
+  world : mat4x4<f32>;
+  delta : vec3<f32>;
+  custom : vec3<f32>;
+  acceleration : vec3<f32>;
+  id : u32;
 };
 [[block]] struct Lights {
-  [[offset(48)]] sunDirection : vec3<f32>;
-  [[offset(80)]] ambient : vec3<f32>;
-  [[offset(92)]] shadow : f32;
+  sunDirection : vec3<f32>;
+  ambient : vec3<f32>;
+  shadow : f32;
 };
 
 [[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
@@ -27,32 +27,33 @@
 
 //[[binding(0), set(1)]] var<uniform> lights : Lights;
 
-const pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
+let pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
     vec3<f32>(-50000.0,     3.0,   -50000.0),
     vec3<f32>(50000.0,      3.0,   -50000.0),
     vec3<f32>(-50000.0,     3.0,   50000.0),
     vec3<f32>(50000.0,      3.0,   50000.0)
     );
 
-[[builtin(position)]] var<out> Position : vec4<f32>;
 
-[[builtin(vertex_idx)]] var<in> VertexIndex : i32;
 
 //[[location(0)]] var<out> shading : f32;
 //[[location(1)]] var<out> ambient : vec3<f32>;
-[[location(0)]] var<out> v_uv : vec4<f32>;
-[[location(1)]] var<out> positionOut : vec3<f32>;
-[[location(2)]] var<out> idOut : u32;
-
+struct Output {
+  [[builtin(position)]] Position : vec4<f32>;
+  [[location(0)]] v_uv : vec4<f32>;
+  [[location(1)]] position : vec3<f32>;
+  [[location(2)]] id : u32;
+};
 
 [[stage(vertex)]]
-fn main() -> void {
-  Position = uniforms.modelViewProjectionMatrix * vec4<f32>(pos[VertexIndex], 1.0);
-  v_uv = Position;
-  positionOut=pos[VertexIndex];
-  idOut=worldposition.id;
+fn main([[builtin(vertex_idx)]] VertexIndex : i32) -> Output {
+  var output:Output;
+  output.Position = uniforms.modelViewProjectionMatrix * vec4<f32>(pos[VertexIndex], 1.0);
+  output.v_uv = output.Position;
+  output.position=pos[VertexIndex];
+  output.id=worldposition.id;
 
   //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;
-  return;
+  return output;
 }

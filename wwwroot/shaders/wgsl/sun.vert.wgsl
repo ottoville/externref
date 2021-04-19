@@ -37,14 +37,17 @@ const vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(
             vec2<f32>(  6824.0, -1557.0)
     );
 
-[[builtin(position)]] var<out> Position : vec4<f32>;
-[[builtin(vertex_idx)]] var<in> VertexIndex : i32;
 
 //[[location(0)]] var<out> ambient : vec4<f32>;
 
-[[stage(vertex)]]
-fn main() -> void {
+struct Output {
+  [[builtin(position)]] Position : vec4<f32>;
+};
 
+
+[[stage(vertex)]]
+fn main([[builtin(vertex_idx)]] VertexIndex : i32) -> Output {
+  var output:Output;
   //const curPos : vec3<f32> =worldposition.world[3].xyz+worldposition.delta*times.delta;
   //fix
   const curPos : vec3<f32> = vec3<f32>(0.0,1.0,0.0);
@@ -55,8 +58,8 @@ fn main() -> void {
  
   const transformbill : vec3<f32> =  transform  + CameraRight_worldspace * vertices[VertexIndex].x + CameraUp_worldspace * vertices[VertexIndex].y;
 
-  Position = uniforms.modelViewProjectionMatrix * vec4<f32>(transformbill.xyz, 1.0);
-  Position.z=1.0;
+  output.Position = uniforms.modelViewProjectionMatrix * vec4<f32>(transformbill.xyz, 1.0);
+  output.Position.z=1.0;
   //ambient=vec4<f32>(1.0,clamp(curPos.y*4.0,0.1,1.0),(max(curPos.y,0.0)),1.0);
-  return;
+  return output;
 }

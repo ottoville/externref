@@ -20,26 +20,32 @@
 //[[binding(0), set(1)]] var<uniform> lights : Lights;
 [[binding(0), group(1)]] var<uniform> worldposition : WorldPosition;
 
-[[builtin(position)]] var<out> Position : vec4<f32>;
 
-[[location(0)]] var<out> v_uv : vec2<f32>;
-//[[location(1)]] var<out> shading : f32;
-//[[location(1)]] var<out> ambient : vec3<f32>;
-[[location(1)]] var<out> normalOut : vec3<f32>;
-[[location(2)]] var<out> positionOut : vec3<f32>;
-[[location(3)]] var<out> idOut : u32;
+
+
+struct Output {
+  [[builtin(position)]] Position : vec4<f32>;
+  [[location(0)]] v_uv : vec2<f32>;
+  //[[location(1)]] var<out> shading : f32;
+  //[[location(1)]] var<out> ambient : vec3<f32>;
+  [[location(1)]] normal : vec3<f32>;
+  [[location(2)]] position : vec3<f32>;
+  [[location(3)]] id : u32;
+ };
+
 
 [[stage(vertex)]]
 fn main([[location(0)]] position : vec3<f32>,
         [[location(1)]] uv : vec2<f32>,
-        [[location(2)]] normal : vec3<f32> ) -> void {
-  Position = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
+        [[location(2)]] normal : vec3<f32> ) -> Output {
+  var output : Output;
+  output.Position = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
   //shading = dot(normal, lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;
   //TODO: precompute
-  v_uv=(position.xz + vec2<f32>(5000.0, 5000.0)) * 0.0001; 
-  normalOut=normal;
-  positionOut=position;
-  idOut=worldposition.id;
-  return;
+  output.v_uv=(position.xz + vec2<f32>(5000.0, 5000.0)) * 0.0001; 
+  output.normal=normal;
+  output.position=position;
+  output.id=worldposition.id;
+  return output;
 }

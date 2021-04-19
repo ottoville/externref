@@ -22,23 +22,27 @@
 [[binding(1), group(0)]] var<uniform> times : Time;
 
 
-[[builtin(position)]] var<out> Position : vec4<f32>;
 
-[[builtin(vertex_idx)]] var<in> VertexIndex : i32;
 
-;
+
 //[[location(0)]] var<out> shading : f32;
 //[[location(1)]] var<out> ambient : vec3<f32>;
 
-
+struct Output {
+  [[builtin(position)]] Position : vec4<f32>;
+};
 [[stage(vertex)]]
-fn main([[location(0)]] pos : vec3<f32>) -> void {
+fn main(
+  [[builtin(vertex_idx)]] VertexIndex : i32,
+  [[location(0)]] pos : vec3<f32>
+) -> Output {
+  var output:Output;
   var curPos : mat4x4<f32> = worldposition.world;
   curPos[3] = worldposition.world[3] + vec4<f32>(worldposition.delta,1.0) * times.delta;
   curPos[3].w=1.0;
-  Position = uniforms.modelViewProjectionMatrix * curPos * vec4<f32>(pos, 1.0);
+  output.Position = uniforms.modelViewProjectionMatrix * curPos * vec4<f32>(pos, 1.0);
 
   //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;
-  return;
+  return output;
 }
