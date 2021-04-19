@@ -1,4 +1,3 @@
-[[location(0)]] var<in> position:vec2<f32>;
 
 [[location(0)]] var<out> outColor : vec4<f32>;
 
@@ -20,7 +19,7 @@
 
 
 [[stage(fragment)]]
-fn main() -> void {
+fn main([[location(0)]] position:vec2<f32>) -> void {
 
 const sunOffset:u32 = u32(0);
 

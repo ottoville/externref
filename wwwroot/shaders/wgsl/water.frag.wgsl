@@ -9,12 +9,11 @@
 
 //[[location(0)]] var<in> shading:f32;
 //[[location(1)]] var<in> ambient: vec3<f32>;
-[[location(0)]] var<in> v_uv : vec4<f32>;
-[[location(1)]] var<in> position : vec3<f32>;
-[[location(2)]] var<in> id : u32;
 
 [[stage(fragment)]]
-fn main() -> void {
+fn main([[location(0)]] v_uv : vec4<f32>,
+[[location(1)]] position : vec3<f32>,
+[[location(2)]] id : u32) -> void {
   const uv : vec2<f32> = vec2<f32>(v_uv.x/v_uv.w , (v_uv.y/v_uv.w))*0.5+vec2<f32>(0.5,0.5);
 
   outNormals=textureSample(normalTexture, mySampler, uv);
