@@ -10,10 +10,10 @@
 };
 [[block]] struct WorldPosition {
   world : mat4x4<f32>;
-  delta : vec3<f32>;
-  custom : vec3<f32>;
-  acceleration : vec3<f32>;
-  id : u32;
+  [[size(16)]] delta : vec3<f32>;
+  [[size(16)]] custom : vec3<f32>;
+  [[size(16)]] acceleration : vec3<f32>;
+   id : u32;
 };
 [[block]] struct Lights {
   sunDirection : vec3<f32>;

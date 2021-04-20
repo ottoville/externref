@@ -1,14 +1,14 @@
 
-const vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
+let vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
     vec2<f32>( -0.5,  2.0),
     vec2<f32>( -0.5, -2.0),
     vec2<f32>( 0.5,  3.0),
     vec2<f32>( 0.5, -3.0)
 );
 [[block]] struct Scene {
-  [[offset(0)]] viewProjection : mat4x4<f32>;
-  [[offset(64)]] view : mat4x4<f32>;
-  [[offset(128)]] cameraPosition : vec3<f32>;
+   viewProjection : mat4x4<f32>;
+   view : mat4x4<f32>;
+   cameraPosition : vec3<f32>;
 };
 
 [[block]] struct Time {
@@ -29,48 +29,56 @@ const vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
 };
 
 [[block]] struct WorldPosition {
-  [[offset(0)]] position : mat4x4<f32>;
+  position : mat4x4<f32>;
+  [[size(16)]] delta : vec3<f32>;
+  [[size(16)]] custom : vec3<f32>;
+  [[size(16)]] acceleration : vec3<f32>;
+   id : u32;
+};
+[[block]] struct Settings {
+     size : vec2<u32>;
+     bufferSize : vec2<u32>;
+     subdivisions : u32;
+     heightMinMax : vec2<i32>;
+    [[align(32)]] max : vec2<i32>;
 };
 [[binding(0), group(0)]] var<uniform> scene : Scene;
 [[binding(1), group(0)]] var<uniform> time : Time;
 [[binding(0), group(1)]] var<uniform> world : WorldPosition;
 [[binding(0), group(2)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
 [[binding(1), group(2)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
+[[binding(2), group(2)]] var<storage_buffer> settings : [[access(read)]] Settings;
 
 
-//const PI:f32 = 3.1415926535897932384626433832795;
-const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
+//let PI:f32 = 3.1415926535897932384626433832795;
+let angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
 
-const facetSize:u32 = 67600; //250 * 250;
-const maxX:u32 = 5000;
-const maxZ:u32 = 5000;
+let maxX:u32 = 5000;
+let maxZ:u32 = 5000;
 
-const subdivisionsX:u32 = 260;
-const subdivisionsY:u32 = 260;
+let subdivisionsX:u32 = 260;
+let subdivisionsY:u32 = 260;
 
-const width:u32 = 10000;
-const height:u32 = 10000;
+let width:u32 = 10000;
+let height:u32 = 10000;
 
 
-fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
-    var cx:f32 = xz.x;
-    var cz:f32 = xz.y;
-
-    var col:i32 = i32(floor((cx + f32(maxX)) * f32(subdivisionsX) / f32(width)));
-    var row:i32 = i32(floor(- (cz + f32(maxZ)) * f32(subdivisionsY) / f32(height) + f32(subdivisionsY)));
-    var slope:i32 = slopes.numbers[row * 250 + col];
+fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
+    let col:u32 = u32(floor((xz.x + f32(settings.max.x)) * f32(settings.subdivisions) / f32(width)));
+    let row:u32 = u32(floor(- (xz.y + f32(settings.max.z)) * f32(settings.subdivisions) / f32(height) + f32(settings.subdivisions)));
+    let slope:f32 = f32(slopes.numbers[row * settings.subdivisions + col]);
     var norm:vec3<f32>;
     var d:f32;
-    if(cz < -1.0 * cx + f32(slope)) {
-        norm = facet12.plane[row * 250 + col].norm;
-        d = facet12.plane[row * 250 + col].d;
+    if(xz.y < -1.0 * xz.x + slope) {
+        norm = facet12.plane[row * settings.subdivisions + col].norm;
+        d = facet12.plane[row * settings.subdivisions + col].d;
     } else {
-        var index:u32 = facetSize + u32(row * 250 + col);
+        var index:u32=facetSize + u32(row * settings.subdivisions + col);
         norm = facet12.plane[index].norm;
         d = facet12.plane[index].d;
     }
-    return -(norm.x * f32(cx) + norm.z * f32(cz) + d) / norm.y;
- }
+    return -(norm.x * f32(xz.x) + norm.z * f32(xz.y) + d) / norm.y;
+ };
 struct Output {
   [[location(0)]] color : vec3<f32>;
   [[builtin(position)]] Position : vec4<f32>;
@@ -81,6 +89,7 @@ fn main(
   [[builtin(instance_index)]] instanceIdx : i32,
 [[builtin(vertex_idx)]] VertexIndex : i32) -> Output {
     var output:Output;
+    let facetSize:u32 = settings.subdivisions * settings.subdivisions; //250 * 250;
 
     var angle:f32 = (f32(time.time) * 0.001) + f32(instanceIdx) * angleStep;
     var c:f32 = cos(angle);
@@ -91,7 +100,7 @@ fn main(
 
 
     var worldPos:vec4<f32> = world.position * vec4<f32>(offset.x, position.y, offset.y, 1.0);
-    worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz) + 3.0;
+    worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz, facetSize) + 3.0;
     output.Position = scene.viewProjection * worldPos;
     output.color = vec3<f32>(1.0,1.0,1.0);
     return output;

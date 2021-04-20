@@ -4,8 +4,11 @@
   [[offset(128)]] viewPosition : vec3<f32>;
 };
 [[block]] struct WorldPosition {
-  [[offset(0)]] world : mat4x4<f32>;
-  [[offset(64)]] delta : vec3<f32>;
+  world : mat4x4<f32>;
+  [[size(16)]] delta : vec3<f32>;
+  [[size(16)]] custom : vec3<f32>;
+  [[size(16)]] acceleration : vec3<f32>;
+   id : u32;
 };
 [[block]] struct Lights {
   [[offset(48)]] sunDirection : vec3<f32>;

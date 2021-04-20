@@ -1,9 +1,9 @@
 [[block]] struct Settings {
-    [[offset(0)]] size : vec2<u32>;
-    [[offset(8)]] bufferSize : vec2<u32>;
-    [[offset(16)]] subdivisions : u32;
-    [[offset(20)]] heightMinMax : vec2<i32>;
-    [[offset(32)]] max : vec2<i32>;
+     size : vec2<u32>;
+     bufferSize : vec2<u32>;
+     subdivisions : u32;
+     heightMinMax : vec2<i32>;
+    [[align(32)]] max : vec2<i32>;
 };
 
 
@@ -26,7 +26,7 @@
 
 [[stage(compute)]]
 fn main() -> void {
-    const facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
+    let facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
 
     var cx:i32 = i32(f32(GlobalInvocationID.x) * 1.95 - f32(settings.size.x/u32(2)));
     var cz:i32 = i32(f32(GlobalInvocationID.y) * 1.95 - f32(settings.size.y/u32(2)));

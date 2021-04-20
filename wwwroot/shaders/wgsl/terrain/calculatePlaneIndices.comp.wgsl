@@ -2,11 +2,11 @@
   [[offset(0)]] numbers : [[stride(4)]] array<u32>;
 };
 [[block]] struct Settings {
-    [[offset(0)]] size : vec2<u32>;
-    [[offset(8)]] bufferSize : vec2<u32>;
-    [[offset(16)]] subdivisions : u32;
-    [[offset(20)]] heightMinMax : vec2<i32>;
-    [[offset(32)]] maxXZ : vec2<i32>;
+     size : vec2<u32>;
+     bufferSize : vec2<u32>;
+     subdivisions : u32;
+     heightMinMax : vec2<i32>;
+    [[align(32)]] max : vec2<i32>;
 };
 [[binding(0), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
 [[binding(0), group(1)]] var<storage_buffer> indices : [[access(write)]] Indices;

@@ -1,9 +1,9 @@
 [[block]] struct Settings {
-    [[offset(0)]] size : vec2<u32>;
-    [[offset(8)]] bufferSize : vec2<u32>;
-    [[offset(16)]] subdivisions : u32;
-    [[offset(20)]] heightMinMax : vec2<i32>;
-    [[offset(32)]] maxXZ : vec2<i32>;
+     size : vec2<u32>;
+     bufferSize : vec2<u32>;
+     subdivisions : u32;
+     heightMinMax : vec2<i32>;
+    [[align(32)]] max : vec2<i32>;
 };
 
 [[block]] struct Vertice {
@@ -32,25 +32,24 @@
 
 [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 
-const cd: f32 = -1.0;
+let cd: f32 = -1.0;
 [[stage(compute)]]
 fn main() -> void {
-  const subdivisions_plus_one:u32 = settings.subdivisions + u32(1);
-  const facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
+  let subdivisions_plus_one:u32 = settings.subdivisions + u32(1);
+  let facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
 
-    const next_x:u32=GlobalInvocationID.x + u32(1);
-    const next_y:u32=GlobalInvocationID.y + u32(1);
+    let next:vec2<u32> = vec2<u32>(GlobalInvocationID.x + u32(1),GlobalInvocationID.y + u32(1));
 
-    var idx1:u32 = (next_x + next_y * subdivisions_plus_one);
-    var idx2:u32 = (next_x + GlobalInvocationID.y * subdivisions_plus_one);
+    var idx1:u32 = (next.x + next.y * subdivisions_plus_one);
+    var idx2:u32 = (next.x + GlobalInvocationID.y * subdivisions_plus_one);
     var idx3:u32 = (GlobalInvocationID.x + GlobalInvocationID.y * subdivisions_plus_one);
-    var idx4:u32 = (GlobalInvocationID.x + next_y * subdivisions_plus_one);
+    var idx4:u32 = (GlobalInvocationID.x + next.y * subdivisions_plus_one);
 
 
     //calculateHeightSquad(row, col);
     var i:u32 = GlobalInvocationID.y;
     var j:u32 = GlobalInvocationID.x * subdivisions_plus_one;
-    var k:u32 = next_x * subdivisions_plus_one;
+    var k:u32 = next.x * subdivisions_plus_one;
 
 
     var v1arr:vec3<f32> = vertices.vert[j + i].position;

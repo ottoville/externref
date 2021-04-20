@@ -18,9 +18,9 @@
 [[binding(1), group(0)]] var<uniform> times : Time;
 //[[binding(0), set(1)]] var<uniform> worldposition : WorldPosition;
 
-const sunDistance: f32= 1495000.0;  //divided by 100000 correct one
+let sunDistance: f32= 1495000.0;  //divided by 100000 correct one
 
-const vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(
+let vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(
             vec2<f32>( -6824.0,  1557.0),
             vec2<f32>( -6824.0, -1557.0),
             vec2<f32>( -5472.0,  4364.0),
@@ -48,15 +48,15 @@ struct Output {
 [[stage(vertex)]]
 fn main([[builtin(vertex_idx)]] VertexIndex : i32) -> Output {
   var output:Output;
-  //const curPos : vec3<f32> =worldposition.world[3].xyz+worldposition.delta*times.delta;
+  //let curPos : vec3<f32> =worldposition.world[3].xyz+worldposition.delta*times.delta;
   //fix
-  const curPos : vec3<f32> = vec3<f32>(0.0,1.0,0.0);
-  const transform : vec3<f32> = curPos * sunDistance;
-  const CameraRight_worldspace : vec3<f32> = vec3<f32>(uniforms.view[0].x, uniforms.view[1].x, uniforms.view[2].x);
-  const CameraUp_worldspace : vec3<f32>  = vec3<f32>(uniforms.view[0].y, uniforms.view[1].y, uniforms.view[2].y);
+  let curPos : vec3<f32> = vec3<f32>(0.0,1.0,0.0);
+  let transform : vec3<f32> = curPos * sunDistance;
+  let CameraRight_worldspace : vec3<f32> = vec3<f32>(uniforms.view[0].x, uniforms.view[1].x, uniforms.view[2].x);
+  let CameraUp_worldspace : vec3<f32>  = vec3<f32>(uniforms.view[0].y, uniforms.view[1].y, uniforms.view[2].y);
  
  
-  const transformbill : vec3<f32> =  transform  + CameraRight_worldspace * vertices[VertexIndex].x + CameraUp_worldspace * vertices[VertexIndex].y;
+  let transformbill : vec3<f32> =  transform  + CameraRight_worldspace * vertices[VertexIndex].x + CameraUp_worldspace * vertices[VertexIndex].y;
 
   output.Position = uniforms.modelViewProjectionMatrix * vec4<f32>(transformbill.xyz, 1.0);
   output.Position.z=1.0;

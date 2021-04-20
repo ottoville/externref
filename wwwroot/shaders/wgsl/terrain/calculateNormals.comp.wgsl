@@ -1,4 +1,4 @@
-const stride : u32 = 12;
+let stride : u32 = 12;
 
 [[block]] struct FloatArray {
   [[offset(0)]] numbers : [[stride(4)]] array<f32>;
@@ -7,11 +7,11 @@ const stride : u32 = 12;
   [[offset(0)]] numbers : [[stride(4)]] array<i32>;
 };
 [[block]] struct Settings {
-    [[offset(0)]] size : vec2<u32>;
-    [[offset(8)]] bufferSize : vec2<u32>;
-    [[offset(16)]] subdivisions : u32;
-    [[offset(20)]] heightMinMax : vec2<i32>;
-    [[offset(32)]] maxXZ : vec2<i32>;
+     size : vec2<u32>;
+     bufferSize : vec2<u32>;
+     subdivisions : u32;
+     heightMinMax : vec2<i32>;
+    [[align(32)]] max : vec2<i32>;
 };
 [[binding(0), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
 
@@ -23,13 +23,13 @@ const stride : u32 = 12;
 
 [[stage(compute)]]
 fn main() -> void {
-  const facetSize : u32 = settings.subdivisions * settings.subdivisions * u32(4); //250*250* 4;
+  let facetSize : u32 = settings.subdivisions * settings.subdivisions * u32(4); //250*250* 4;
 
     var i:u32 = GlobalInvocationID.y * stride;
     var j:u32 = GlobalInvocationID.x * (settings.subdivisions + u32(1)) * stride;
 
-    const rows:u32 = GlobalInvocationID.x * settings.subdivisions;
-    const last_y:u32=GlobalInvocationID.y - u32(1);
+    let rows:u32 = GlobalInvocationID.x * settings.subdivisions;
+    let last_y:u32=GlobalInvocationID.y - u32(1);
     var index:u32 = (rows +  GlobalInvocationID.y) * u32(4);
     var norm1:vec3<f32> =vec3<f32>(
         facet12.numbers[index],
@@ -48,7 +48,7 @@ fn main() -> void {
         facet12.numbers[index + u32(1)],
         facet12.numbers[index + u32(2)]
     );
-    const last_x:u32 = GlobalInvocationID.x - u32(1);
+    let last_x:u32 = GlobalInvocationID.x - u32(1);
   index = (last_x * settings.subdivisions +  (GlobalInvocationID.y)) * u32(4);
     var norm5:vec3<f32> =vec3<f32>(
         facet12.numbers[index],

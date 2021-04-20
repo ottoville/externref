@@ -85,56 +85,63 @@ export class Plants {
             shape: shapes,
             noises: noises,
         });
-        terrainP.then((arr) => {
-            const terrain = arr;
+        terrainP.then(terrain => {
 
             const computePipeline = scene.gpu.createComputePipeline("grass/getHeightAtCoordinates.comp.wgsl");
             const layout = computePipeline.getBindGroupLayout(0);
-
+            const bindGroup = scene.gpu.device.createBindGroup({
+                layout, entries: [
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: terrain.slopeArrGPUBuffer
+                    }
+                },
+                {
+                    binding: 1,
+                    resource: {
+                        buffer: terrain.facet12ArrGPUBuffer
+                    }
+                },
+                {
+                    binding: 2,
+                    resource: {
+                        buffer: positionGPUSwap
+                    }
+                },
+                {
+                    binding: 3,
+                    resource: {
+                        buffer: shapeGPUSwap
+                    }
+                },
+                {
+                    binding: 4,
+                    resource: {
+                        buffer: terrain.settingsGPU
+                    }
+                }]
+            });
             this.worker.subscribe('updated', async (data: { buffer: SharedArrayBuffer }) => {
 
                 const commandEncoder = scene.gpu.device.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipeline);
 
-
                 const worldCopyGPU = scene.gpu.createGPUBuffer(this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], true);
-                const worldSetArr = worldCopyGPU.getMappedRange();
-                new Float32Array(worldSetArr).set(new Float32Array(data.buffer));
-                worldCopyGPU.unmap();
-                const bindGroup = scene.gpu.device.createBindGroup({
-                    layout, entries: [{
+                const bindGroup2 = scene.gpu.device.createBindGroup({
+                    layout:computePipeline.getBindGroupLayout(1), entries: [{
                         binding: 0,
                         resource: {
                             buffer: worldCopyGPU
                         }
-                    },
-                    {
-                        binding: 1,
-                        resource: {
-                            buffer: terrain.slopeArrGPUBuffer
-                        }
-                    },
-                    {
-                        binding: 2,
-                        resource: {
-                            buffer: terrain.facet12ArrGPUBuffer
-                        }
-                    },
-                    {
-                        binding: 4,
-                        resource: {
-                            buffer: positionGPUSwap
-                        }
-                    },
-                    {
-                        binding: 5,
-                        resource: {
-                            buffer: shapeGPUSwap
-                        }
-                    }]
-                });
+                    }]});
+                const worldSetArr = worldCopyGPU.getMappedRange();
+                new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
+                worldCopyGPU.unmap();
+
                 passEncoder.setBindGroup(0, bindGroup);
+                passEncoder.setBindGroup(1, bindGroup2);
                 passEncoder.dispatch(this.numBlades);
                 passEncoder.endPass();
                 commandEncoder.copyBufferToBuffer(
@@ -152,10 +159,6 @@ export class Plants {
 
 
         return;
-
-
-
-
 
 
         //continue from here;

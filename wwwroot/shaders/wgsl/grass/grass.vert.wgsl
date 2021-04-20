@@ -29,18 +29,18 @@ let rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(vec2<f32>(0.0,0.0), vec2<f32>
 //[[location(1)]] var<out> shading : f32;
 //[[location(2)]] var<out> ambient : vec3<f32>;
 
-//const PI:f32 = 3.141592653589793;
+//let PI:f32 = 3.141592653589793;
 
 fn rand(co:vec2<f32>) -> f32 {
     return fract(sin(dot(co.xy ,vec2<f32>(12.9898,78.233))) * 43758.5453);
 }
 
-const windDirection:f32 = 0.0;
+let windDirection:f32 = 0.0;
 
 [[builtin(vertex_idx)]] var<in> VertexIndex : i32;
 [[builtin(position)]] var<out> Position : vec4<f32>;
 
-const vertices : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
+let vertices : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
     vec2<f32>(0.02,  0.0),
     vec2<f32>(-0.02, 0.0),
     vec2<f32>(0.014,  0.29),

@@ -22,16 +22,16 @@ struct Output {
 [[stage(fragment)]]
 fn main([[location(0)]] position:vec2<f32>) -> Output {
   var output:Output;
-  const sunOffset:u32 = u32(0);
+  let sunOffset:u32 = u32(0);
 
-  const diffuse:vec4<f32> = textureSample(diffuseTexture, mySampler, position.xy);
+  let diffuse:vec4<f32> = textureSample(diffuseTexture, mySampler, position.xy);
   if(diffuse.w == 0.0) {
     output.Color=vec4<f32>(diffuse.xyz,1.0);
     return output;
   }
-  const normal:vec4<f32> = normalize(textureSample(normalTexture, mySampler, position.xy));
+  let normal:vec4<f32> = normalize(textureSample(normalTexture, mySampler, position.xy));
 
-  const shading :f32 = dot(normal.xyz, lights.light[sunOffset].sunDirection)*lights.light[sunOffset].shadow;
+  let shading :f32 = dot(normal.xyz, lights.light[sunOffset].sunDirection)*lights.light[sunOffset].shadow;
   output.Color = vec4<f32>(lights.light[sunOffset].ambient + (diffuse.xyz * shading),1.0);
 
   return output;

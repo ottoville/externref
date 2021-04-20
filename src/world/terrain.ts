@@ -36,8 +36,8 @@ export class Terrain {
     public slopeArr = new Int32Array(this.slopeArrBuffer);
 
     mesh: TerrainMesh;
-
-    heightsBindGroupEntries: [storageBindGroupLayout, storageBindGroupLayout] = [
+    settingsGPU = this.scene.gpu.createGPUBuffer(40, [GPUBufferUsage.STORAGE], true);
+    #heightsBindGroupEntries: [storageBindGroupLayout, storageBindGroupLayout] = [
         {
             binding: 0,
             resource: {
@@ -51,10 +51,30 @@ export class Terrain {
             }
         }
     ];
+    heightsBindGroupEntries: [GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry] = [
+        {
+            binding: 0,
+            resource: {
+                buffer: this.slopeArrGPUBuffer
+            }
+        },
+        {
+            binding: 1,
+            resource: {
+                buffer: this.facet12ArrGPUBuffer
+            }
+        },
+        {
+            binding: 2,
+            resource: {
+                buffer: this.settingsGPU
+            }
+        }
+    ];
     heightsLayout = this.scene.gpu.createBindGroupLayout({
         entries: [{
             binding: 0,
-            visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
+            visibility: GPUShaderStage.VERTEX,
             buffer: {
                 type: "read-only-storage"
             }
@@ -62,14 +82,20 @@ export class Terrain {
         },
         {
             binding: 1,
-            visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX,
+            visibility: GPUShaderStage.VERTEX,
+            buffer: {
+                type: "read-only-storage"
+            }
+        },
+        {
+            binding: 2,
+            visibility: GPUShaderStage.VERTEX,
             buffer: {
                 type: "read-only-storage"
             }
         }]
     })
     TerrainHeightsbindGroupTree = this.scene.gpu.positionBindGroupTimeWGSL.addChildBindGroup(this.scene.gpu.createBindGroup(this.heightsLayout, this.heightsBindGroupEntries));
-    settingsGPU = this.scene.gpu.createGPUBuffer(40, [GPUBufferUsage.STORAGE], true);
 
     //TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpu.BindGroupPosition, true)
 
@@ -327,7 +353,7 @@ export class Terrain {
         const bindGroupPositions = computePlaneHeights.createBindGroup(1, bgroup);
         const bindGroupHeights = scene.gpu.device.createBindGroup({
             layout: computePlaneHeights.getBindGroupLayout(2),
-            entries: this.heightsBindGroupEntries
+            entries: this.#heightsBindGroupEntries
         });
 
         const bindGroupPositionsRead = scene.gpu.device.createBindGroup({
@@ -337,7 +363,7 @@ export class Terrain {
 
         const bindGroupHeightsRead = scene.gpu.device.createBindGroup({
             layout: computePipelineNormals.getBindGroupLayout(2),
-            entries: this.heightsBindGroupEntries
+            entries: this.#heightsBindGroupEntries
         });
 
         //todo: remove unneeded flags
@@ -401,7 +427,7 @@ export class Terrain {
                         buffer: this.settingsGPU
                     }
                 }]);
-                const bindGroup0 = createTexturePipeline.createBindGroup(1, this.heightsBindGroupEntries);
+                const bindGroup0 = createTexturePipeline.createBindGroup(1, this.#heightsBindGroupEntries);
 
                 const bindGroup1 = createTexturePipeline.createBindGroup(2, [
                     {

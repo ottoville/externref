@@ -1,48 +1,49 @@
-const facetSize:u32 = 62500; //250 * 250 * 4;
-
-const maxX:u32 =5000;
-const maxZ:u32 =5000;
-
-const subdivisionsX:u32 = 250;
-const subdivisionsY:u32 = 250;
-
-const width:u32 = 10000;
-const height:u32 = 10000;
+let width:u32 = 10000;
+let height:u32 = 10000;
 
 [[block]] struct Vec2Array {
-  [[offset(0)]] vectors : [[stride(8)]] array<vec2<f32>>;
+  vectors : [[stride(8)]] array<vec2<f32>>;
 };
-[[binding(0), group(0)]] var<storage_buffer> positions : [[access(read)]] Vec2Array;
 
 [[block]] struct IntArray {
-  [[offset(0)]] numbers : [[stride(4)]] array<i32>;
+   numbers : [[stride(4)]] array<i32>;
 };
-[[binding(1), group(0)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
 
 [[block]] struct Plane {
-  [[offset(0)]] norm : vec3<f32>;
-  [[offset(12)]] d : f32;
+  norm : vec3<f32>;
+  d : f32;
 };
 [[block]] struct PlaneArray {
-  [[offset(0)]] plane : [[stride(16)]] array<Plane>;
+   plane : [[stride(16)]] array<Plane>;
 };
-[[binding(2), group(0)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
 [[block]] struct FloatArray {
-  [[offset(0)]] numbers : [[stride(4)]] array<f32>;
+  numbers : [[stride(4)]] array<f32>;
 };
 [[block]] struct PositionAndRotate {
-  [[offset(0)]] position : vec3<f32>;
-  [[offset(12)]] rotation : f32;
+   position : vec3<f32>;
+   rotation : f32;
 };
 [[block]] struct PositionAndRotateArray {
-  [[offset(0)]] arr : [[stride(16)]] array<PositionAndRotate>;
-
+   arr : [[stride(16)]] array<PositionAndRotate>;
 };
-[[binding(4), group(0)]] var<storage_buffer> positionAndRotate : [[access(write)]] PositionAndRotateArray;
-[[binding(5), group(0)]] var<storage_buffer> shapes : [[access(write)]] FloatArray;
+
+[[block]] struct Settings {
+     size : vec2<u32>;
+     bufferSize : vec2<u32>;
+     subdivisions : u32;
+     heightMinMax : vec2<i32>;
+    [[align(32)]] max : vec2<i32>;
+};
+
+[[binding(0), group(0)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
+[[binding(1), group(0)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
+[[binding(2), group(0)]] var<storage_buffer> positionAndRotate : [[access(write)]] PositionAndRotateArray;
+[[binding(3), group(0)]] var<storage_buffer> shapes : [[access(write)]] FloatArray;
+[[binding(4), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
+[[binding(0), group(1)]] var<storage_buffer> positions : [[access(read)]] Vec2Array;
 
 
-const PI:f32 = 3.141592653589793;
+let PI:f32 = 3.141592653589793;
 //
 // Description : Array and textureless GLSL 2D simplex noise function.
 //      Author : Ian McEwan, Ashima Arts.
@@ -63,7 +64,7 @@ fn permute(x:vec3<f32>) -> vec3<f32> {
     return mod289_v3(((x * vec3<f32>(34.0,34.0,34.0)) + vec3<f32>(1.0,1.0,1.0)) * x);
 }
 fn snoise(v:vec2<f32>) -> f32 {
-    const C:vec4<f32> = vec4<f32>(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
+    let C:vec4<f32> = vec4<f32>(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
                         0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
                         -0.577350269189626,  // -1.0 + 2.0 * C.x
                         0.024390243902439); // 1.0 / 41.0
@@ -123,33 +124,32 @@ fn snoise(v:vec2<f32>) -> f32 {
 fn rand(co:vec2<f32>) -> f32 {
     return fract(sin(dot(co.xy ,vec2<f32>(12.9898,78.233))) * 43758.5453);
 }
-fn getHeightAtCoordinates(xz:vec2<f32>) -> f32 {
-    var cx:f32 = xz.x;
-    var cz:f32 = xz.y;
-
-    var col:i32 = i32(floor((cx + f32(maxX)) * f32(subdivisionsX) / f32(width)));
-    var row:i32 = i32(floor(- (cz + f32(maxZ)) * f32(subdivisionsY) / f32(height) + f32(subdivisionsY)));
-    var slope:i32 = slopes.numbers[row * 250 + col];
+fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
+    let col:u32 = u32(floor((xz.x + f32(settings.max.x)) * f32(settings.subdivisions) / f32(width)));
+    let row:u32 = u32(floor(- (xz.y + f32(settings.max.z)) * f32(settings.subdivisions) / f32(height) + f32(settings.subdivisions)));
+    let slope:f32 = f32(slopes.numbers[row * settings.subdivisions + col]);
     var norm:vec3<f32>;
     var d:f32;
-    if(cz < -1.0 * cx + f32(slope)) {
-        norm = facet12.plane[row * 250 + col].norm;
-        d = facet12.plane[row * 250 + col].d;
+    if(xz.y < -1.0 * xz.x + slope) {
+        norm = facet12.plane[row * settings.subdivisions + col].norm;
+        d = facet12.plane[row * settings.subdivisions + col].d;
     } else {
-        var index:u32 = facetSize + u32(row * 250 + col);
+        var index:u32=facetSize + u32(row * settings.subdivisions + col);
         norm = facet12.plane[index].norm;
         d = facet12.plane[index].d;
     }
-    return -(norm.x * f32(cx) + norm.z * f32(cz) + d) / norm.y;
- }
+    return -(norm.x * f32(xz.x) + norm.z * f32(xz.y) + d) / norm.y;
+ };
 
 
-[[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 
 [[stage(compute)]]
-fn main() -> void {
-    var flatpos:vec2<f32> = positions.vectors[GlobalInvocationID.x]; 
-    var y:f32 = getHeightAtCoordinates(flatpos);
+fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) -> void {
+    let facetSize:u32 = settings.subdivisions * settings.subdivisions; //250 * 250;
+
+
+    let flatpos:vec2<f32> = positions.vectors[GlobalInvocationID.x]; 
+    let y:f32 = getHeightAtCoordinates(flatpos, facetSize);
     positionAndRotate.arr[GlobalInvocationID.x].position = vec3<f32>(flatpos.x,y,flatpos.y);
     positionAndRotate.arr[GlobalInvocationID.x].rotation = 3.145 * rand(flatpos);
     var index:u32 = GlobalInvocationID.x * u32(4);

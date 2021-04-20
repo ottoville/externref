@@ -1,20 +1,21 @@
 [[block]] struct Uniforms {
-  [[offset(0)]] modelViewProjectionMatrix : mat4x4<f32>;
-  [[offset(64)]] view : mat4x4<f32>;
-  [[offset(128)]] viewPosition : vec3<f32>;
+   modelViewProjectionMatrix : mat4x4<f32>;
+  view : mat4x4<f32>;
+  viewPosition : vec3<f32>;
 };
 [[block]] struct WorldPosition {
-  [[offset(0)]] world : mat4x4<f32>;
-  [[offset(64)]] delta : vec3<f32>;
-  [[offset(80)]] custom : vec3<f32>;
-  [[offset(96)]] acceleration : vec3<f32>;
-  [[offset(112)]] id : u32;
+  world : mat4x4<f32>;
+  [[size(16)]] delta : vec3<f32>;
+  [[size(16)]] custom : vec3<f32>;
+  [[size(16)]] acceleration : vec3<f32>;
+   id : u32;
 };
-[[block]] struct Lights {
-  [[offset(48)]] sunDirection : vec3<f32>;
-  [[offset(80)]] ambient : vec3<f32>;
-  [[offset(92)]] shadow : f32;
-};
+
+//[[block]] struct Lights {
+//  [[offset(48)]] sunDirection : vec3<f32>;
+//  [[offset(80)]] ambient : vec3<f32>;
+//  [[offset(92)]] shadow : f32;
+//};
 
 [[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
 //[[binding(0), set(1)]] var<uniform> lights : Lights;

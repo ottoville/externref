@@ -14,7 +14,7 @@ export abstract class MainNode extends Mesh {
     isStatic = false;
     static uniqueID = 1;
     static Meshes:Map<number, MainNode>=new Map();
-    readonly acceleration=new Float32Array(this.engine.memory.buffer,this.gpu_pointer+ 24 * Float32Array.BYTES_PER_ELEMENT, 4);;
+    readonly acceleration=new Float32Array(this.engine.memory.buffer,this.gpu_pointer+ 24 * Float32Array.BYTES_PER_ELEMENT, 4);
     get_transformation= () => new TerraMatrix(this.engine.memory.buffer,this.gpu_pointer)//new TerraMatrix(this.data.buffer);
 
     get_velocity = () => {
@@ -62,7 +62,7 @@ export abstract class MainNode extends Mesh {
         this.#onUpdate();
     }*/
 
-    constructor(public engine: Engine, hasBounding:boolean, vertices_amount:number=0,vertices_stride=3) {
+    constructor(public engine: Engine, hasBounding:boolean, vertices_amount=0,vertices_stride=3) {
         super(engine.rustEngine, MainNode.uniqueID++, hasBounding,true,vertices_amount,vertices_stride);
         MainNode.Meshes.set(this.id,this);
         queueMicrotask(() => {
@@ -96,7 +96,7 @@ export class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
     Drawable: T;
     
-    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number, createDrawable: (node:TerraNodeGPU<T>) => T, hasBounding:boolean=false, vertices_stride:number=3) {
+    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number, createDrawable: (node:TerraNodeGPU<T>) => T, hasBounding=false, vertices_stride=3) {
         super(engine, hasBounding,verticesCount, vertices_stride);
 
         this.Drawable = createDrawable(this);
@@ -163,7 +163,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         if (this.indicesView) {
             if (this.strip) {
                 this.indicesView.forEach((indice:number) => {
-                    let vector = this.#colliderVertices[indice];
+                    const vector = this.#colliderVertices[indice];
                     if (!vector) {
                         throw ('position not found');
                     }
@@ -258,9 +258,9 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         scene.gpu.boundables.add(this);1
         for (let i = 0; i < positionCount; i++) {
             //let pos = new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT)
-            let pos = new TerraVector3(scene.engine.memory.buffer, this.vertices_pointer() + i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
+            const pos = new TerraVector3(scene.engine.memory.buffer, this.vertices_pointer() + i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
 
-            let colPos = new TerraVector4(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer + i * 4 * Float32Array.BYTES_PER_ELEMENT);
+            const colPos = new TerraVector4(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer + i * 4 * Float32Array.BYTES_PER_ELEMENT);
             this.#colliderVertices.push(colPos);
             this.#positionsAndCollider.push([pos, colPos])
         }
@@ -295,7 +295,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
             
             this.#lastColliderTransformMatrix = this.myCollisionsTransformMatrix.clone();
 
-            let timer = performance.now();
+            const timer = performance.now();
 
             this.#positionsAndCollider.forEach((posAndCol, i) => {
                 this.getPosition(i).multiply2Ref(this.myCollisionsTransformMatrix, posAndCol[1]);
