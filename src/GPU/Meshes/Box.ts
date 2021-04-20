@@ -1,5 +1,7 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { SimpleMesh } from "../RenderPipeLines/Simple.js";
+import { GPUBufferUsage } from "../../GPU.js";
+
 const positions = new Float32Array([
     // Left face
     -1.0, 1.0, -1.0,

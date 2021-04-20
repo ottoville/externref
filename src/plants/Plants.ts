@@ -7,6 +7,7 @@ import type { PTDresult } from "../types/interfaces/index.js";
 
 import type { Scene } from "../Scene.js";
 import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { GPUBufferUsage } from "../GPU.js"
 
 
 
@@ -25,7 +26,7 @@ export class Plants {
     }
     //private offset: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 2 * this.numBlades);
     private worker = new WorkerThread('/js/workers/webworkers/grass.js');
-    private ready: Promise<any>;
+    private ready: Promise<void>;
     public fillArea(area: PTDresult) {
         //let amount = 100000
 

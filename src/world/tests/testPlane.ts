@@ -1,6 +1,7 @@
-﻿import { DrawableSimple } from "GPU/Drawable";
-import { Scene } from "../../Scene";
-import { BoundableNode } from "../../TerraNode";
+﻿import type { DrawableSimple } from "GPU/Drawable";
+import type { Scene } from "../../Scene";
+import type { BoundableNode } from "../../TerraNode";
+import { GPUBufferUsage } from "../../GPU.js"
 const vertices = new Float32Array([
     0, 0, 0,
     1, 0, 0,

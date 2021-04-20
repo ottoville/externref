@@ -37,7 +37,7 @@ export class RenderPipeline {
         this.bindgroupdrawable.renderPipeLines.delete(this);
     }
     draw(   renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder,
-            renderPass: RenderPass<{}>,
+            renderPass: RenderPass,
             BindGroupsStart: number,
             dynamicIndices:number[]=[]): number {
 
@@ -56,13 +56,13 @@ export class RenderPipeline {
         drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart,dynamicIndices));
         return drawables.size;
     }
-    addDrawableIndirect<T extends GPUIndirectBuffer>(scene: Scene | undefined, renderPasses: Set<RenderPass<{}>>, buffer: T, label='unnamed') {
+    addDrawableIndirect<T extends GPUIndirectBuffer>(scene: Scene | undefined, renderPasses: Set<RenderPass>, buffer: T, label='unnamed') {
         return new DrawableIndirect(this, renderPasses, buffer,label, scene);
     }
-    addDrawableSimple(scene: Scene | undefined, renderPasses: Set<RenderPass<{}>>, node: TerraNodeGPU<DrawableSimple>, instanceCount = 1, firstVertex = 0, firstInstance = 0, label='unnamed'): DrawableSimple {
+    addDrawableSimple(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: TerraNodeGPU<DrawableSimple>, instanceCount = 1, firstVertex = 0, firstInstance = 0, label='unnamed'): DrawableSimple {
         return new DrawableSimple(this, renderPasses, node, label, scene, instanceCount, firstVertex, firstInstance)
     }
-    addDrawableIndexed(scene: Scene | undefined, renderPasses: Set<RenderPass<{}>>, node: TerraNodeGPU<DrawableIndexed>, indexBuffer?: GPUIndexBuffer, baseVertex: number = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0,label='unnamed'): DrawableIndexed {
+    addDrawableIndexed(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: TerraNodeGPU<DrawableIndexed>, indexBuffer?: GPUIndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0,label='unnamed'): DrawableIndexed {
         return new DrawableIndexed(this, renderPasses, node, indexBuffer, label, scene, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
     }
 }

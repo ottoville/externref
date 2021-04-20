@@ -10,6 +10,7 @@ import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU";
+import { GPUBufferUsage } from "../gpu.js"
 
 const terrainWorker = new WorkerThread('/js/workers/webworkers/terrainWorker.js');
 

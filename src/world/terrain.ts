@@ -1,7 +1,7 @@
 ﻿import { Scene } from "../Scene.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { TerrainMesh } from "../GPU/RenderPipeLines/TerrainRenderPipeline.js";
-
+import { GPUBufferUsage } from "../GPU.js"
 export class Terrain {
     /*
 
@@ -394,8 +394,6 @@ export class Terrain {
         passEncoder.endPass();
 
         const [gpuReadBufferPositions, gpuReadBufferIndices] = scene.gpu.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
-
-
 
         caches.match(new Request('/terrainTexture.webp')).then(async (cachedtexture) => {
             if (cachedtexture) {

@@ -2,6 +2,7 @@
 
 import { ObjectWorkerThread } from "./WorkerThread.js";
 import type { GPU } from "./GPU.js";
+import { GPUBufferUsage } from "./GPU.js";
 import type { Engine } from "./engine.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 

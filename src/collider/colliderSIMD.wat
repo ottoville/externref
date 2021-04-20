@@ -31,7 +31,7 @@
         (i32.store (i32.const 0) (i32.const 8))  ;; iov.iov_base - This is a pointer to the start of the 'hello world\n' string
         (i32.store (i32.const 4) (i32.const 12))  ;; iov.iov_len - The length of the 'hello world\n' string
     )
-  (func $constructor
+  (func $construct
       (param $collisionNotFoundPointer i32)
       (param $interSectionPoint i32)
       (param $nearestDistanceSquared i32)
@@ -936,5 +936,5 @@
   (export "getLowestRoot" (func $getLowestRoot))
   (export "testTriangles" (func $testTriangles))
   (export "_initialize" (func $_initialize))
-  (export "constructor" (func $constructor))
+  (export "construct" (func $construct))
 )

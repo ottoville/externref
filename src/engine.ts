@@ -5,20 +5,20 @@ import { Collider } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import { TerraVector3, Vector3 } from "./Math.js";
 import init, {Engine as RustEngine } from "/js/engine/engine.js";
-
+import { GPUBufferUsage } from "./GPU.js";
 
 const CollisionsEpsilon = 0.001;
 const closeDistance = CollisionsEpsilon * 10.0;
 const closeDistanceSquared = closeDistance * closeDistance
 export interface ColliderWasm {
-    constructor(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer:number, collidedMeshPointer:number):void;
+    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer:number, collidedMeshPointer:number):void;
     memory: {buffer: ArrayBuffer}
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
     testTriangles: (position: number, length: number, meshID:number) => void
     _initialize: (velocity:number, basePoint: number) => void
 }
 export interface ColliderWasmSIMD {
-    constructor(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number): void;
+    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number): void;
     memory: { buffer: ArrayBuffer }
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
     testTriangles: (position: number, planePositionHorizontal:number, length: number, meshID: number) => void
@@ -44,7 +44,6 @@ export class Engine {
     
     malloc(byteLength: number): number {
         if (byteLength % 4 != 0) {
-            debugger;
             throw ('malloc should be called with length divitable with four')
         }
         const available = this.freeMemoryBlocks.findIndex(arr => arr.byteLength == byteLength)
@@ -166,9 +165,9 @@ export class Engine {
     collidedMeshSIMD = this.mallocView(4);
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasmSIMD, public memory: WebAssembly.Memory, public rustEngine: RustEngine) {
 
-        wasm.constructor(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
-      // wasmSIMD.constructor(this.collisionNotFoundSIMD.byteOffset, this.intersectionPointWasmSIMD.byteOffset, this.nearestDistanceSquaredSIMD.byteOffset, this.collidedMeshSIMD.byteOffset)
-      //  wasmSIMD.constructor(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
+        wasm.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
+      // wasmSIMD.construct(this.collisionNotFoundSIMD.byteOffset, this.intersectionPointWasmSIMD.byteOffset, this.nearestDistanceSquaredSIMD.byteOffset, this.collidedMeshSIMD.byteOffset)
+      //  wasmSIMD.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
 
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
         canvas.addEventListener('pointermove', (e) => {

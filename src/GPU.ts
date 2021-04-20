@@ -5,6 +5,19 @@ import { RenderTarget } from "./GPU/RenderTarget.js";
 import { DrawableDirect } from "./GPU/Drawable.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 
+export const GPUBufferUsage = {
+    MAP_READ: 0x0001,
+    MAP_WRITE: 0x0002,
+    COPY_SRC: 0x0004,
+    COPY_DST: 0x0008,
+    INDEX: 0x0010,
+    VERTEX: 0x0020,
+    UNIFORM: 0x0040,
+    STORAGE: 0x0080,
+    INDIRECT: 0x0100,
+    QUERY_RESOLVE: 0x0200
+} as const
+
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
 };
@@ -30,8 +43,6 @@ interface TerraGPUBindGroupLayoutDescriptorFive
     extends GPUBindGroupLayoutDescriptor {
     entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry];
 }
-
-
 
 export class GPU {
     #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
@@ -365,6 +376,7 @@ export class GPU {
             return GPUBuffer;
         return [CPUBuffer, GPUBuffer]
     }
+
     //uniform
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
@@ -414,10 +426,9 @@ export class GPU {
         }
         else if (usage & GPUBufferUsage.COPY_SRC)
             this.#bufferSizes.set(buff, size);
-
-
         return buff;
     }
+
     createGPUTexture(size: GPUExtent3DStrict, format: GPUTextureFormat, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount?: number): GPUTextureSampled
     createGPUTexture(size: GPUExtent3DStrict, format: GPUTextureFormat, usages: number[], sampleCount?: number): GPUTexture
     createGPUTexture(size: GPUExtent3DStrict, format: GPUTextureFormat, usages: number[], sampleCount = 1): GPUTexture {

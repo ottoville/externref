@@ -3,22 +3,23 @@ import type { GPU } from "../GPU.js";
 import type { RenderPass } from "./RenderPass.js";
 import type { Scene } from "../Scene.js";
 import { TerraNodeGPU } from "../TerraNode.js";
+import { GPUBufferUsage } from "../GPU.js"
 type DrawableLike = typeof RenderPipeline;
 export interface DrawableLikeClass extends DrawableLike {
     Meshes: Set<RenderPipeline>;
     Layouts: Map<GPU, GPUPipelineLayout>;
     createLayout(scene: GPU): GPUPipelineLayout;
-};
+}
 
 export abstract class Drawable {
     abstract label:string;
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     dynamicBuffers: [GPUBindGroup, number][] = [];
-    #renderList: Map<RenderPass<{}>, Set<Drawable>> = new Map();
+    #renderList: Map<RenderPass, Set<Drawable>> = new Map();
     #scene?: Scene;
     constructor(
         protected renderPipeline: RenderPipeline,
-        private renderPasses: Set<RenderPass<{}>>,
+        private renderPasses: Set<RenderPass>,
         scene?: Scene) {
         this.scene = scene;
         this.clearBundles();
@@ -82,7 +83,7 @@ export abstract class Drawable {
     setVertexBuffer<T extends GPUVertexBuffer>(index: number, buffer: T, destroyOld?: boolean, offset?: number, size?: number): T
     setVertexBuffer(index: number, buffer: ArrayBufferView | GPUVertexBuffer, destroyOld = true, offset?: number, size?: number): GPUVertexBuffer {
         if (destroyOld) {
-            let Tbuffer = this.#vertexBuffers.get(index);
+            const Tbuffer = this.#vertexBuffers.get(index);
             if (Tbuffer) {
                 Tbuffer.buffer.destroy();
                 this.clearBundles();
@@ -116,7 +117,7 @@ export abstract class DrawableDirect extends Drawable {
     #instanceCount: number;
     constructor(
         renderPipeline: RenderPipeline,
-        renderPasses: Set<RenderPass<{}>>,
+        renderPasses: Set<RenderPass>,
         public node: TerraNodeGPU<DrawableDirect>,
         scene?: Scene,
         instanceCount = 1) {
@@ -139,7 +140,7 @@ export abstract class DrawableDirect extends Drawable {
 export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
     constructor(
         renderPipeline: RenderPipeline,
-        renderPasses: Set<RenderPass<{}>>,
+        renderPasses: Set<RenderPass>,
         readonly buffer: T,
         public label='unnamed',
         scene?: Scene,) {
@@ -152,7 +153,7 @@ export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
 export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
-        renderPasses: Set<RenderPass<{}>>,
+        renderPasses: Set<RenderPass>,
         node: TerraNodeGPU<DrawableSimple>,
         public label='unnamed',
         scene?: Scene,
@@ -169,7 +170,7 @@ export class DrawableSimple extends DrawableDirect {
 export class DrawableIndexed extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
-        renderPasses: Set<RenderPass<{}>>,
+        renderPasses: Set<RenderPass>,
         node: TerraNodeGPU<DrawableIndexed>,
         private indexBuffer?: GPUIndexBuffer,
         public label='unnamed',
