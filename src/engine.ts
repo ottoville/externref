@@ -7,7 +7,6 @@ import { TerraVector3, Vector3 } from "./Math.js";
 import init, {Engine as RustEngine } from "/js/engine/engine.js";
 
 
-
 const CollisionsEpsilon = 0.001;
 const closeDistance = CollisionsEpsilon * 10.0;
 const closeDistanceSquared = closeDistance * closeDistance

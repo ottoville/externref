@@ -52,7 +52,7 @@ export class TerraCamera {
     }
 
 
-    constructor(public renderPass: RenderPass<{}>, public projection: SharedArrayBuffer, private gpu: GPU, engine: Engine, main: boolean = true, parent?: TerraCamera) {
+    constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, engine: Engine, main = true, parent?: TerraCamera) {
         const thistarget = this.#target
         const thisposition = this.#position
         this.target = {
@@ -107,7 +107,7 @@ export class TerraCamera {
         if (xSquareLength === 0) {
             this.viewArr[0] = 1.0;
         } else {
-            let len = Math.sqrt(xSquareLength);
+            const len = Math.sqrt(xSquareLength);
             if (!(len === 0 || len === 1.0)) {
                 const scale = 1.0 / len;
                 this.viewArr[0] *= scale;

@@ -11,12 +11,12 @@ interface RenderPipelineVariant2 {
     drawables: Map<Scene, Set<Drawable>>
     rootDrawables: Set<Drawable>
 }
-export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
+export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } = { [index: string]: RenderTarget<GPUTexture> }> {
     cameras: Set<TerraCamera> = new Set();
     scenes: Set<Scene> = new Set();
     #depthTextureView?: GPUTextureView
     #depthTexture?: GPUTexture
-    #depthFormat: GPUTextureFormat='depth24plus-stencil8';
+    #depthFormat: GPUTextureFormat = 'depth24plus-stencil8';
     bundles: GPURenderBundle[] = [];
     colorFormats: GPUTextureFormat[] = [];
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
@@ -32,10 +32,10 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
         public size: { width: number, height: number },
         private _onResize: (width: number, height: number) => [number, number],
         private usage: number = 0) {
-        for(const key in renderTargets) {
+        for (const key in renderTargets) {
             this.colorFormats.push(renderTargets[key]!.format);
             renderTargets[key]!.renderPasses.add(this);
-            renderTargets[key]!.writableRenderPass=this;
+            renderTargets[key]!.writableRenderPass = this;
             renderTargets[key]!.createTexture();
         }
 
@@ -46,12 +46,14 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
     }
     decoratePipeline(renderpipeline: RenderPipeline): GPURenderPipeline {
         const renderPipelineDescriptor = renderpipeline.renderPipelineDescriptor as GPURenderPipelineDescriptor;
-        renderPipelineDescriptor.vertex=renderpipeline.vertexShader;
-        renderPipelineDescriptor.fragment={...renderpipeline.fragmentShader, targets: this.colorFormats.map(cf => {
-            return {
-                format: cf
-            }
-        })};
+        renderPipelineDescriptor.vertex = renderpipeline.vertexShader;
+        renderPipelineDescriptor.fragment = {
+            ...renderpipeline.fragmentShader, targets: this.colorFormats.map(cf => {
+                return {
+                    format: cf
+                }
+            })
+        };
         if (!this.#depthTexture)
             renderPipelineDescriptor.depthStencil = undefined
         else if (!renderPipelineDescriptor.depthStencil) {
@@ -61,8 +63,8 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
                 format: this.#depthFormat,
             }
         }
-        if(this.sampleCount > 1)
-            renderPipelineDescriptor.multisample= { count: this.sampleCount};
+        if (this.sampleCount > 1)
+            renderPipelineDescriptor.multisample = { count: this.sampleCount };
 
         return this.gpu.device.createRenderPipeline(renderPipelineDescriptor)
     }
@@ -74,7 +76,7 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
             format,
             usage: GPUTextureUsage.RENDER_ATTACHMENT | this.usage //: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.SAMPLED
         });
-    };
+    }
 
     onResize(width: number, height: number) {
         [this.size.width, this.size.height] = this._onResize(width, height);
@@ -84,13 +86,13 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
             this.#depthTexture = this.createTexture(this.#depthFormat);
             this.#depthTextureView = this.#depthTexture.createView();
         }
-        for(const key in this.renderTargets) {
+        for (const key in this.renderTargets) {
             this.renderTargets[key]!.createTexture();
         }
     }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const colorAttachments: GPURenderPassColorAttachmentDescriptor[] = []
-        if(typeof this.renderTargets.swap !=='undefined') {
+        if (typeof this.renderTargets.swap !== 'undefined') {
             colorAttachments.push(this.sampleCount > 1 ? {
                 attachment: this.renderTargets.swap.view,
                 resolveTarget: this.gpu.swapChain.getCurrentTexture().createView(),
@@ -99,9 +101,9 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
                 attachment: this.gpu.swapChain.getCurrentTexture().createView(),
                 loadValue: this.renderTargets.swap.loadValue
             });
-            
-            for(const key in this.renderTargets) {
-                if(key === 'swap')
+
+            for (const key in this.renderTargets) {
+                if (key === 'swap')
                     continue;
                 colorAttachments.push({
                     attachment: this.renderTargets[key]!.view,
@@ -110,7 +112,7 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
                 })
             }
         } else {
-            for(const key in this.renderTargets) {
+            for (const key in this.renderTargets) {
                 colorAttachments.push({
                     attachment: this.renderTargets[key]!.view,
                     loadValue: this.renderTargets[key]!.loadValue,
@@ -131,77 +133,72 @@ export class RenderPass<T extends {[index:string]: RenderTarget<GPUTexture>}> {
         return this.#renderPassDescriptor as GPURenderPassDescriptor;
     }
 
-    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass:RenderPass<{}>) => GPUBindGroup), rootLayout: PipelineLayout) {
-        try {
-            const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
-            if (!this.bundles.length) {
-                const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder({
-                    colorFormats: this.colorFormats,
-                    sampleCount: this.sampleCount,
-                    depthStencilFormat: this.#depthTexture ? this.#depthFormat : undefined
-                });
-                //@ts-ignore
-                let drawedMeshes = 0;
-                const dynamicIndices:number[]=[];
+    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass: RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {
+        const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
+        if (!this.bundles.length) {
+            const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder({
+                colorFormats: this.colorFormats,
+                sampleCount: this.sampleCount,
+                depthStencilFormat: this.#depthTexture ? this.#depthFormat : undefined
+            });
+            //@ts-ignore
+            let drawedMeshes = 0;
+            const dynamicIndices: number[] = [];
 
-                renderBundleEncoder.setBindGroup(0, typeof(rootBindGroup)==='function'?rootBindGroup(this):rootBindGroup);
-                rootLayout.renderPipeLines.forEach(renderPipeline => {
-                    drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
-                });
-               /* rootLayout.subBindGroups.forEach(pipelineLayout => {
-                    if (pipelineLayout.sharedBindgroup) {
-                        renderBundleEncoder.setBindGroup(1, pipelineLayout.sharedBindgroup);
-                    } else {
-                        debugger;
-                    }
-                    pipelineLayout.renderPipeLines.forEach(renderPipeline => {
-                        drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1+dynamicIndices.length,dynamicIndices);
-                    });
-                });*/
-
+            renderBundleEncoder.setBindGroup(0, typeof (rootBindGroup) === 'function' ? rootBindGroup(this) : rootBindGroup);
+            rootLayout.renderPipeLines.forEach(renderPipeline => {
+                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
+            });
+            /* rootLayout.subBindGroups.forEach(pipelineLayout => {
+                 if (pipelineLayout.sharedBindgroup) {
+                     renderBundleEncoder.setBindGroup(1, pipelineLayout.sharedBindgroup);
+                 } else {
+                     debugger;
+                 }
+                 pipelineLayout.renderPipeLines.forEach(renderPipeline => {
+                     drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1+dynamicIndices.length,dynamicIndices);
+                 });
+             });*/
 
 
-               // this.gpu.drawBindGroups2(renderBundleEncoder,this.gpu.positionBindGroupTimeWGSL,this,1);
-                
-                //POSITION
-                if(this.gpu.positionBindGroupTimeWGSL.bindGroupLayout.dynamicIndices) {
-                    dynamicIndices.push(1);
-                }
-                this.gpu.positionBindGroupTimeWGSL.renderPipeLines.forEach(renderPipeline => {
-                    drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1, dynamicIndices);
-                });
-                this.gpu.positionBindGroupTimeWGSL.subBindGroups.forEach(pipelineLayout => {
-                    if(pipelineLayout.sharedBindgroup) {
-                        renderBundleEncoder.setBindGroup(2, pipelineLayout.sharedBindgroup);
-                    }
-                    pipelineLayout.renderPipeLines.forEach(renderPipeline => {
-                        if(pipelineLayout.sharedBindgroup) {
-                            console.log('draw with shared bindgroup');
-                        }
-                        drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1+dynamicIndices.length,dynamicIndices);
-                    });
-                });
-                dynamicIndices.length=0;
-                //SUN
-                if(this.gpu.positionBindGroupTime.bindGroupLayout.dynamicIndices) {
-                    dynamicIndices.push(1);
-                }
-                this.gpu.positionBindGroupTime.renderPipeLines.forEach(renderPipeline => {
-                    drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1, dynamicIndices);
-                });
-                this.gpu.positionBindGroupTime.subBindGroups.forEach(bindGroup => {
-                    bindGroup.renderPipeLines.forEach(renderPipeline => {
-                        drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1+dynamicIndices.length,dynamicIndices);
-                    });
-                });
 
-                this.bundles.push(renderBundleEncoder.finish());
+            // this.gpu.drawBindGroups2(renderBundleEncoder,this.gpu.positionBindGroupTimeWGSL,this,1);
+
+            //POSITION
+            if (this.gpu.positionBindGroupTimeWGSL.bindGroupLayout.dynamicIndices) {
+                dynamicIndices.push(1);
             }
-            passEncoder.executeBundles(this.bundles);
-            passEncoder.endPass();
-        } catch (e) {
-            console.error(e);
-            debugger;
+            this.gpu.positionBindGroupTimeWGSL.renderPipeLines.forEach(renderPipeline => {
+                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1, dynamicIndices);
+            });
+            this.gpu.positionBindGroupTimeWGSL.subBindGroups.forEach(pipelineLayout => {
+                if (pipelineLayout.sharedBindgroup) {
+                    renderBundleEncoder.setBindGroup(2, pipelineLayout.sharedBindgroup);
+                }
+                pipelineLayout.renderPipeLines.forEach(renderPipeline => {
+                    if (pipelineLayout.sharedBindgroup) {
+                        console.log('draw with shared bindgroup');
+                    }
+                    drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1 + dynamicIndices.length, dynamicIndices);
+                });
+            });
+            dynamicIndices.length = 0;
+            //SUN
+            if (this.gpu.positionBindGroupTime.bindGroupLayout.dynamicIndices) {
+                dynamicIndices.push(1);
+            }
+            this.gpu.positionBindGroupTime.renderPipeLines.forEach(renderPipeline => {
+                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1, dynamicIndices);
+            });
+            this.gpu.positionBindGroupTime.subBindGroups.forEach(bindGroup => {
+                bindGroup.renderPipeLines.forEach(renderPipeline => {
+                    drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1 + dynamicIndices.length, dynamicIndices);
+                });
+            });
+
+            this.bundles.push(renderBundleEncoder.finish());
         }
+        passEncoder.executeBundles(this.bundles);
+        passEncoder.endPass();
     }
 }

@@ -181,7 +181,7 @@ export class GPU {
     timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
-    BindGroupCanvas: (renderPass: RenderPass<{[index:string]:any}>) => GPUBindGroup;
+    BindGroupCanvas: (renderPass: RenderPass) => GPUBindGroup;
 
     createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorOne): BindGroupLayout<[GPUBindGroupEntry]>
     createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorTwo): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry]>
@@ -198,7 +198,7 @@ export class GPU {
         }
         return layout;*/
     }
-    createBindGroupForRenderPass<T extends BindGroupLayout<GPUBindGroupEntry[]>>(layout: T, renderPass: RenderPass<{[index:string]:any}>, entries: MapToGPUBindGroupEntry<extractGeneric<T>>): GPUBindGroup {
+    createBindGroupForRenderPass<T extends BindGroupLayout<GPUBindGroupEntry[]>>(layout: T, renderPass: RenderPass, entries: MapToGPUBindGroupEntry<extractGeneric<T>>): GPUBindGroup {
         //createBindGroupForRenderPass(layout:  BindGroupLayout<[GPUBindGroupEntry,GPUBindGroupEntry]>, renderPass: RenderPass<{}>, entries: [(GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })]): GPUBindGroup {
         const bindGroup = this.device.createBindGroup({
             //@ts-expect-error
@@ -247,7 +247,7 @@ export class GPU {
         (w, h) => {
             return [w, h]
         });
-    renderPasses: Set<RenderPass<{}>>;
+    renderPasses: Set<RenderPass>;
 
     readonly scale = {
         x: 1,
@@ -273,7 +273,7 @@ export class GPU {
             magFilter: "linear",
             minFilter: "linear",
         });
-        this.BindGroupCanvas = (renderPass: RenderPass<{}>) => this.createBindGroupForRenderPass(this.#BindGroupLayoutCanvas, renderPass,
+        this.BindGroupCanvas = (renderPass: RenderPass) => this.createBindGroupForRenderPass(this.#BindGroupLayoutCanvas, renderPass,
             [{
                 binding: 0,
                 resource: canvasSampler
@@ -398,7 +398,7 @@ export class GPU {
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean): GPUCopySRCBuffer
 
 
-    createGPUBuffer(size: number, usages: number[], mappedAtCreation: boolean = false): GPUBuffer {
+    createGPUBuffer(size: number, usages: number[], mappedAtCreation = false): GPUBuffer {
         if (size === 0)
             throw (new Error('Cannot create zero sized buffer'));
         const usage = usages.reduce((prev, curr) => prev | curr, 0);
@@ -483,7 +483,7 @@ export class GPU {
     }
     readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
     pendingCommandBuffers: GPUCommandBuffer[] = [];
-    drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass<{}>, index: number) {
+    drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass, index: number) {
         let drawedMeshes = 0;
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
             if (bgt.sharedBindgroup && this.#DynamicBindGroups.has(bgt.sharedBindgroup)) {
@@ -507,7 +507,7 @@ export class GPU {
         return drawedMeshes;
     }
     //Without shared bindgroups
-    drawBindGroups2(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, pipelineLayout: PipelineLayout, renderPass: RenderPass<{}>, index: number, dynamicIndices: number[] = []) {
+    drawBindGroups2(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, pipelineLayout: PipelineLayout, renderPass: RenderPass, index: number, dynamicIndices: number[] = []) {
         let drawedMeshes = 0;
         if (pipelineLayout.renderPipeLines.size || pipelineLayout.subBindGroups.size) {
 

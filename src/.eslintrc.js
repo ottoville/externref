@@ -26,6 +26,7 @@ module.exports = {
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "no-var": "off",
+        "no-cond-assign": "off"
 
     }
 };

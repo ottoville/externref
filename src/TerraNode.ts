@@ -13,23 +13,23 @@ import type { DrawableDirect } from "./GPU/Drawable.js";
 export abstract class MainNode extends Mesh {
     isStatic = false;
     static uniqueID = 1;
-    static Meshes:Map<number, MainNode>=new Map();
-    readonly acceleration=new Float32Array(this.engine.memory.buffer,this.gpu_pointer+ 24 * Float32Array.BYTES_PER_ELEMENT, 4);
-    get_transformation= () => new TerraMatrix(this.engine.memory.buffer,this.gpu_pointer)//new TerraMatrix(this.data.buffer);
+    static Meshes: Map<number, MainNode> = new Map();
+    readonly acceleration = new Float32Array(this.engine.memory.buffer, this.gpu_pointer + 24 * Float32Array.BYTES_PER_ELEMENT, 4);
+    get_transformation = () => new TerraMatrix(this.engine.memory.buffer, this.gpu_pointer)//new TerraMatrix(this.data.buffer);
 
     get_velocity = () => {
-        return new TerraVector3(this.engine.memory.buffer,this.gpu_pointer+ 16 * Float32Array.BYTES_PER_ELEMENT)
+        return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer + 16 * Float32Array.BYTES_PER_ELEMENT)
     }
     get_translation = () => {
-        return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer+12 * Float32Array.BYTES_PER_ELEMENT);
+        return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer + 12 * Float32Array.BYTES_PER_ELEMENT);
     }
 
-    update_scale = (x:number,y:number,z:number) => {
-        super.update_scale(x,y,z)
+    update_scale = (x: number, y: number, z: number) => {
+        super.update_scale(x, y, z)
         this.#onUpdate();
     }
     update_scale_and_rotation = (x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number) => {
-        super.update_scale_and_rotation(x,y,z,rx,ry,rz,rw);
+        super.update_scale_and_rotation(x, y, z, rx, ry, rz, rw);
         this.#onUpdate();
     }
     #onUpdate = (): void => {
@@ -62,9 +62,9 @@ export abstract class MainNode extends Mesh {
         this.#onUpdate();
     }*/
 
-    constructor(public engine: Engine, hasBounding:boolean, vertices_amount=0,vertices_stride=3) {
-        super(engine.rustEngine, MainNode.uniqueID++, hasBounding,true,vertices_amount,vertices_stride);
-        MainNode.Meshes.set(this.id,this);
+    constructor(public engine: Engine, hasBounding: boolean, vertices_amount = 0, vertices_stride = 3) {
+        super(engine.rustEngine, MainNode.uniqueID++, hasBounding, true, vertices_amount, vertices_stride);
+        MainNode.Meshes.set(this.id, this);
         queueMicrotask(() => {
             if (this.#hasPhysics()) {
                 engine.physics.tickables.add(this);
@@ -88,22 +88,22 @@ export abstract class MainNode extends Mesh {
     }
 }
 export class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
-    
-   // abstract Drawable:DrawableDirect
+
+    // abstract Drawable:DrawableDirect
     static GPUDataSize = 16 + 4 + 4 + 4 + 4;
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
     Drawable: T;
-    
-    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount:number, createDrawable: (node:TerraNodeGPU<T>) => T, hasBounding=false, vertices_stride=3) {
-        super(engine, hasBounding,verticesCount, vertices_stride);
+
+    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public verticesCount: number, createDrawable: (node: TerraNodeGPU<T>) => T, hasBounding = false, vertices_stride = 3) {
+        super(engine, hasBounding, verticesCount, vertices_stride);
 
         this.Drawable = createDrawable(this);
         this.Drawable.dynamicBuffers.push([engine.gpu.BindGroupPosition, this.gpu_alignment]);
 
-        if(renderPipeline.dynamicBindGroupOffset.length)
-            renderPipeline.dynamicBindGroupOffset[0]=this.gpu_alignment;
+        if (renderPipeline.dynamicBindGroupOffset.length)
+            renderPipeline.dynamicBindGroupOffset[0] = this.gpu_alignment;
     }
 
 }
@@ -118,7 +118,7 @@ const worker = new ObjectWorkerThread('/js/workers/webworkers/mesh.js');
 class pickInfo {
     buffer = new SharedArrayBuffer(6 * 4);
     point = new TerraVector3(this.buffer);
-    #distance=new DataView(this.buffer,3*4,4)
+    #distance = new DataView(this.buffer, 3 * 4, 4)
     getDistance() {
         return this.#distance.getFloat32(0, true);
     }
@@ -139,30 +139,26 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
     facesBufferColliderPointerParallel: number;
     verticesBuffesSize: number;
     #positionsAndCollider: [TerraVector3, TerraVector4][] = [];
-    #faceQuatros: [Triangle, Triangle, Triangle, Triangle][]=[];
+    #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
 
     #addVectors = (faceIndex: number, vectors: [TerraVector4, TerraVector4, TerraVector4]) => {
-        try {
-            if (vectors.length != 3)
-                throw('less than 3 vector')
-            const t = new Triangle(
-                vectors as [TerraVector4, TerraVector4, TerraVector4],
-                new TerraVector4(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer + faceIndex * 4 * 7)
-            );
-            t.pointers = new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,3); //4 is from plane
-            t.pointers.set(vectors.map(v => v.byteOffset) as [number, number, number]);
-            this.#faces[faceIndex] = t;
-        } catch (e) {
-            console.log(e);
-            debugger;
-        }
+        if (vectors.length != 3)
+            throw ('less than 3 vector')
+        const t = new Triangle(
+            vectors as [TerraVector4, TerraVector4, TerraVector4],
+            new TerraVector4(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer + faceIndex * 4 * 7)
+        );
+        t.pointers = new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT, 3); //4 is from plane
+        t.pointers.set(vectors.map(v => v.byteOffset) as [number, number, number]);
+        this.#faces[faceIndex] = t;
+
     }
     #rebuildTrianglePlanes = () => {
         let vectors: TerraVector4[] = [];
         let faceIndex = 0;
         if (this.indicesView) {
             if (this.strip) {
-                this.indicesView.forEach((indice:number) => {
+                this.indicesView.forEach((indice: number) => {
                     const vector = this.#colliderVertices[indice];
                     if (!vector) {
                         throw ('position not found');
@@ -194,7 +190,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
                     vectors = [(vectors as [TerraVector4, TerraVector4, TerraVector4])[1], (vectors as [TerraVector4, TerraVector4, TerraVector4])[2]];
                 });
             } else {
-                
+
                 this.#colliderVertices.forEach(vector => {
                     if (vectors.push(vector) == 3) {
                         this.#addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
@@ -223,22 +219,22 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         this.#rebuildTrianglePlanes();
     }
     verticesView = () => {
-        return new Float32Array(this.engine.memory.buffer,this.vertices_pointer(), this.positionCount * this.verticesPositionStride);
+        return new Float32Array(this.engine.memory.buffer, this.vertices_pointer(), this.positionCount * this.verticesPositionStride);
     }
-    getPosition=(index:number) => {
+    getPosition = (index: number) => {
         return new TerraVector3(this.engine.memory.buffer, this.vertices_pointer() + index * this.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
     }
     constructor(
         scene: Scene,
         renderPipeline: RenderPipeline,
         public positionCount: number,
-        createDrawable: (node:TerraNodeGPU<T>) => T,
+        createDrawable: (node: TerraNodeGPU<T>) => T,
         public verticesPositionStride: number = 3,
         private indicesView?: Uint32Array | Uint16Array,
         private strip = false,
-        
+
     ) {
-        super(scene.engine, renderPipeline, indicesView ? indicesView.length : positionCount, createDrawable,true,verticesPositionStride);
+        super(scene.engine, renderPipeline, indicesView ? indicesView.length : positionCount, createDrawable, true, verticesPositionStride);
 
         this.verticesBuffesSize = positionCount * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
         if (this.strip) {
@@ -250,12 +246,12 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         this.facesBuffer = new SharedArrayBuffer(this.#faces.length * 4 * Float32Array.BYTES_PER_ELEMENT);
 
         this.facesBufferColliderPointer = scene.engine.malloc(this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT);
-        this.facesBufferColliderPointerParallel = scene.engine.malloc(this.#faces.length * (16+12) * Float32Array.BYTES_PER_ELEMENT);
+        this.facesBufferColliderPointerParallel = scene.engine.malloc(this.#faces.length * (16 + 12) * Float32Array.BYTES_PER_ELEMENT);
 
         this.lastColliderWorldVectorsPointer = scene.engine.malloc(positionCount * 4 * Float32Array.BYTES_PER_ELEMENT);
-        
+
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
-        scene.gpu.boundables.add(this);1
+        scene.gpu.boundables.add(this); 1
         for (let i = 0; i < positionCount; i++) {
             //let pos = new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT)
             const pos = new TerraVector3(scene.engine.memory.buffer, this.vertices_pointer() + i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
@@ -266,8 +262,8 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         }
         this.#rebuildTrianglePlanes();
 
-            //Run this on microtask so the scope who called
-            //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
+        //Run this on microtask so the scope who called
+        //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
 
         queueMicrotask(() => {
             //worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
@@ -275,12 +271,12 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
             //this.boundingBox.initMax();
         });
     }
-    intersectsRay=(ray: Float32Array): Promise<void> => {
+    intersectsRay = (ray: Float32Array): Promise<void> => {
         return worker.message(this.id, 'intersectsRay', [ray.buffer]);
     }
     //collisionsScalingMatrix = new TerraMatrix();
     myCollisionsTransformMatrix = new TerraMatrix();
-    public checkCollision=async (collider: Collider) => {
+    public checkCollision = async (collider: Collider) => {
         if (this.#faces.length % 4 != 0) //TODO
             return
         if (!collider._canDoCollision(this.bounding_min as TerraVector3, this.bounding_max as TerraVector3)) {
@@ -292,7 +288,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
 
         this.get_transformation().multiplyToRef(this.myCollisionsTransformMatrix, this.myCollisionsTransformMatrix);
         if (!this.#lastColliderTransformMatrix.equals(this.myCollisionsTransformMatrix)) {
-            
+
             this.#lastColliderTransformMatrix = this.myCollisionsTransformMatrix.clone();
 
             const timer = performance.now();
@@ -316,25 +312,25 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
             })
 
         }
-        
+
         //let timer = performance.now();
-     /*   this.#faces.forEach(triangle => {
-            collider._testTriangle(triangle);
-        });*/
-       // console.log('cpu took', performance.now() - timer);
-       // let timer = performance.now();
-       // for (let i = 0; i < 20;i++)
+        /*   this.#faces.forEach(triangle => {
+               collider._testTriangle(triangle);
+           });*/
+        // console.log('cpu took', performance.now() - timer);
+        // let timer = performance.now();
+        // for (let i = 0; i < 20;i++)
 
         this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id)
-       // console.log('wasm took', performance.now() - timer);
-      //  timer = performance.now();
-       // for (let i = 0; i < 20; i++)
+        // console.log('wasm took', performance.now() - timer);
+        //  timer = performance.now();
+        // for (let i = 0; i < 20; i++)
         //this.engine.wasmSIMD.testTriangles(this.facesBufferColliderPointer, this.facesBufferColliderPointerParallel, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.uniqueID)
-     //   console.log('simd took', performance.now() - timer);
+        //   console.log('simd took', performance.now() - timer);
     }
 }
 export class PositionNode extends MainNode {
     constructor(engine: Engine) {
-        super(engine,false);
+        super(engine, false);
     }
 }

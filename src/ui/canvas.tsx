@@ -70,8 +70,8 @@ export class Canvas extends TerraCompoment {
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
     async initalize(): Promise<[Scene, ArcRotateCamera]> {
-        if(!window.navigator.gpu)
-            throw('no webgpu support');
+        if (!window.navigator.gpu)
+            throw ('no webgpu support');
         const adapter = await window.navigator.gpu.requestAdapter();
         this.progress = 4;
 
@@ -153,7 +153,7 @@ export class Canvas extends TerraCompoment {
             new Human(terrascene)
             const terrainInited = Terrain.loadFromTexture(terrascene);
 
-            const ready =  terrainInited.then(async ground => [ground, sea]);
+            const ready = terrainInited.then(async ground => [ground, sea]);
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
 
             DB.then(DB => {
@@ -218,7 +218,7 @@ export class Canvas extends TerraCompoment {
 
         let startTime = 0;
 
-        
+
         const canvasPipeline = gpu.rootLayout.addRenderPipeline(new VertexShader(gpu, 'canvas.vert.wgsl'), new Shader(gpu, 'texture.frag.wgsl'), {
             label: 'canvas',
             primitive: {
@@ -230,8 +230,8 @@ export class Canvas extends TerraCompoment {
                 format: "depth24plus-stencil8",
             }
         });
-    
-        new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node,undefined,undefined,undefined,'canvas'))
+
+        new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node, undefined, undefined, undefined, 'canvas'))
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();
@@ -270,9 +270,13 @@ export class Canvas extends TerraCompoment {
                 deltaView.set([physicDelta]);
 
             gpu.device.queue.writeBuffer(gpu.timeBuffer, 0, timeAndDeltaBuffer);
-            TerraCameras.forEach(camera => {
-                camera.render(renderEncoder)
-            });
+            try {
+                TerraCameras.forEach(camera => {
+                    camera.render(renderEncoder)
+                });
+            } catch (e) {
+                console.error(e);
+            }
 
             gpu.renderPassCanvas.render(renderEncoder, gpu.BindGroupCanvas, gpu.rootLayout);
 
@@ -288,8 +292,8 @@ export class Canvas extends TerraCompoment {
             height: 1080
         }
         const ro = new window.ResizeObserver(entries => {
-            const entry=entries[0];
-            if(!entry)
+            const entry = entries[0];
+            if (!entry)
                 return;
             window.cancelAnimationFrame(renderFrame)
             clearTimeout(resizeHandler);
