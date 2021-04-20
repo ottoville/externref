@@ -1,5 +1,5 @@
 [[block]] struct Indices {
-  [[offset(0)]] numbers : [[stride(4)]] array<u32>;
+  numbers : [[stride(4)]] array<u32>;
 };
 [[block]] struct Settings {
      size : vec2<u32>;
@@ -11,15 +11,14 @@
 [[binding(0), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
 [[binding(0), group(1)]] var<storage_buffer> indices : [[access(write)]] Indices;
 
-[[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 
 [[stage(compute)]]
-fn main() -> void {
-  var idx1: u32 = (GlobalInvocationID.x + u32(1) + (GlobalInvocationID.y + u32(1)) * (settings.subdivisions + u32(1)));
-  var idx2: u32 = (GlobalInvocationID.x + u32(1) + GlobalInvocationID.y * (settings.subdivisions + u32(1)));
-  var idx3: u32 = (GlobalInvocationID.x + GlobalInvocationID.y * (settings.subdivisions + u32(1)));
-  var idx4: u32 = (GlobalInvocationID.x + (GlobalInvocationID.y + u32(1)) * (settings.subdivisions + u32(1)));
-  var index:u32 = GlobalInvocationID.y*settings.subdivisions*u32(6) + GlobalInvocationID.x*u32(6);
+fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) -> void {
+  let idx1: u32 = (GlobalInvocationID.x + u32(1) + (GlobalInvocationID.y + u32(1)) * (settings.subdivisions + u32(1)));
+  let idx2: u32 = (GlobalInvocationID.x + u32(1) + GlobalInvocationID.y * (settings.subdivisions + u32(1)));
+  let idx3: u32 = (GlobalInvocationID.x + GlobalInvocationID.y * (settings.subdivisions + u32(1)));
+  let idx4: u32 = (GlobalInvocationID.x + (GlobalInvocationID.y + u32(1)) * (settings.subdivisions + u32(1)));
+  let index:u32 = GlobalInvocationID.y*settings.subdivisions*u32(6) + GlobalInvocationID.x*u32(6);
   indices.numbers[index] = idx1;
   indices.numbers[index+u32(1)]=idx2;
   indices.numbers[index+u32(2)]=idx3;

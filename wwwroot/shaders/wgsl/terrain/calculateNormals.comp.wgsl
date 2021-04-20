@@ -1,10 +1,10 @@
 let stride : u32 = 12;
 
 [[block]] struct FloatArray {
-  [[offset(0)]] numbers : [[stride(4)]] array<f32>;
+   numbers : [[stride(4)]] array<f32>;
 };
 [[block]] struct Slopes {
-  [[offset(0)]] numbers : [[stride(4)]] array<i32>;
+   numbers : [[stride(4)]] array<i32>;
 };
 [[block]] struct Settings {
      size : vec2<u32>;
@@ -19,56 +19,55 @@ let stride : u32 = 12;
 [[binding(0), group(2)]] var<storage_buffer> slopes : [[access(read)]] Slopes;
 [[binding(1), group(2)]] var<storage_buffer> facet12 : [[access(read)]] FloatArray;
 
-[[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
 
 [[stage(compute)]]
-fn main() -> void {
+fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
   let facetSize : u32 = settings.subdivisions * settings.subdivisions * u32(4); //250*250* 4;
 
-    var i:u32 = GlobalInvocationID.y * stride;
-    var j:u32 = GlobalInvocationID.x * (settings.subdivisions + u32(1)) * stride;
+    let i:u32 = GlobalInvocationID.y * stride;
+    let j:u32 = GlobalInvocationID.x * (settings.subdivisions + u32(1)) * stride;
 
     let rows:u32 = GlobalInvocationID.x * settings.subdivisions;
     let last_y:u32=GlobalInvocationID.y - u32(1);
     var index:u32 = (rows +  GlobalInvocationID.y) * u32(4);
-    var norm1:vec3<f32> =vec3<f32>(
+    let norm1:vec3<f32> =vec3<f32>(
         facet12.numbers[index],
         facet12.numbers[index + u32(1)],
         facet12.numbers[index + u32(2)]
     );
     index= facetSize +  ((rows +  GlobalInvocationID.y) * u32(4));
-    var norm2:vec3<f32> =vec3<f32>(
+    let norm2:vec3<f32> =vec3<f32>(
         facet12.numbers[index],
         facet12.numbers[index + u32(1)],
         facet12.numbers[index + u32(2)]
     );
     index = facetSize +  ((rows +  last_y) * u32(4));
-    var norm4:vec3<f32> =vec3<f32>(
+    let norm4:vec3<f32> =vec3<f32>(
         facet12.numbers[index],
         facet12.numbers[index + u32(1)],
         facet12.numbers[index + u32(2)]
     );
     let last_x:u32 = GlobalInvocationID.x - u32(1);
   index = (last_x * settings.subdivisions +  (GlobalInvocationID.y)) * u32(4);
-    var norm5:vec3<f32> =vec3<f32>(
+    let norm5:vec3<f32> =vec3<f32>(
         facet12.numbers[index],
         facet12.numbers[index + u32(1)],
         facet12.numbers[index + u32(1)]
     );
     index=(last_x * settings.subdivisions +  last_y) * u32(4);
-    var norm7:vec3<f32> =vec3<f32>(
+    let norm7:vec3<f32> =vec3<f32>(
        facet12.numbers[index],
        facet12.numbers[index + u32(1)],
        facet12.numbers[index + u32(2)]
     );
     index=facetSize +  ((last_x * settings.subdivisions +  last_y) * u32(4));
-    var norm8:vec3<f32> =vec3<f32>(
+    let norm8:vec3<f32> =vec3<f32>(
         facet12.numbers[index],
         facet12.numbers[index + u32(1)],
         facet12.numbers[index + u32(2)]
     );
 
-    var normalized:vec3<f32> = normalize(norm1 + norm2 + norm4 + norm5 + norm7 + norm8);
+    let normalized:vec3<f32> = normalize(norm1 + norm2 + norm4 + norm5 + norm7 + norm8);
     
     //1 and 2
     //1 and 3   close   1

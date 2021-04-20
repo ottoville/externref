@@ -5,27 +5,26 @@ let bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
 let rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(vec2<f32>(0.0,0.0), vec2<f32>(0.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0));
 
 [[block]] struct Scene {
-  [[offset(0)]] viewProjection : mat4x4<f32>;
-  [[offset(64)]] view : mat4x4<f32>;
-  [[offset(128)]] cameraPosition : vec3<f32>;
+  viewProjection : mat4x4<f32>;
+  view : mat4x4<f32>;
+  cameraPosition : vec3<f32>;
 };
 [[binding(0), group(0)]] var<uniform> scene : Scene;
 
 [[block]] struct Time {
-  [[offset(0)]] time : u32;
+  time : u32;
   [[offset(4)]] delta : f32;
 };
 [[binding(1), group(0)]] var<uniform> time : Time;
 
-[[block]] struct Lights {
-  [[offset(48)]] sunDirection : vec3<f32>;
-  [[offset(80)]] ambient : vec3<f32>;
-  [[offset(92)]] shadow : f32;
-};
+//[[block]] struct Lights {
+//  [[offset(48)]] sunDirection : vec3<f32>;
+//  [[offset(80)]] ambient : vec3<f32>;
+//  [[offset(92)]] shadow : f32;
+//};
 //[[binding(0), group(1)]] var<uniform> lights : Lights;
 
 
-[[location(0)]] var<out> color : vec3<f32>;
 //[[location(1)]] var<out> shading : f32;
 //[[location(2)]] var<out> ambient : vec3<f32>;
 
@@ -36,9 +35,10 @@ fn rand(co:vec2<f32>) -> f32 {
 }
 
 let windDirection:f32 = 0.0;
-
-[[builtin(vertex_idx)]] var<in> VertexIndex : i32;
-[[builtin(position)]] var<out> Position : vec4<f32>;
+struct Output {
+  [[builtin(position)]] Position : vec4<f32>;
+  [[location(0)]] color : vec3<f32>;
+};
 
 let vertices : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
     vec2<f32>(0.02,  0.0),
@@ -52,12 +52,14 @@ let vertices : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
 
 [[stage(vertex)]]
 fn main(
+  [[builtin(vertex_idx)]] VertexIndex : i32,
   [[location(0)]] positions : vec4<f32>, //position xyz + rotate
   [[location(1)]] shape : vec4<f32> // {x:scale, y:baseAngle, z:curve, w:color} (blade's shape properties)
-) -> void {
+) -> Output {
+  var output:Output;
  //ambient = lights.ambient;
   var vertice:vec3<f32> = vec3<f32>(vertices[VertexIndex].xy,0.0);
-  var windRotate:f32 = rot[VertexIndex].x;
+  let windRotate:f32 = rot[VertexIndex].x;
 
   //How fast wind direction and intensivy change
 
@@ -95,12 +97,12 @@ fn main(
    
    var worldPos:vec4<f32> = vec4<f32>(positions.xyz, 1.0) + vec4<f32>(scaled.x, scaled.y, scaled.z, 0.0);
    var viewDirectionW:vec3<f32> = normalize(scene.cameraPosition - worldPos.xyz);
-   normal = normal * sign(dot(viewDirectionW, normal));
+   //normal = normal * sign(dot(viewDirectionW, normal));
 
    //var diffuse:f32 = dot(normal, lights.sunDirection)*lights.shadow;
 
-   Position = scene.viewProjection * worldPos;
+   output.Position = scene.viewProjection * worldPos;
 
-   color = vec3<f32>(clamp(shape.w,0.0,1.0),1.0,0.0);//*diffuse;
-    return;
+   output.color = vec3<f32>(clamp(shape.w,0.0,1.0),1.0,0.0);//*diffuse;
+    return output;
 }

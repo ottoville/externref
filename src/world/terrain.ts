@@ -287,7 +287,7 @@ export class Terrain {
         new Uint32Array(sourcearrSettings, 8).set([Terrain.subdivisionsX, Terrain.subdivisionsY,   //buffer width and height
         Terrain.subdivisionsX,        //subdivisions
         ]);
-        new Int32Array(sourcearrSettings, 20).set([this.#minY, this.#maxY]); //min and max height,
+        new Int32Array(sourcearrSettings, 24).set([this.#minY, this.#maxY]); //min and max height,
         new Int32Array(sourcearrSettings, 32).set([this.#maxX, this.#maxZ]); //maxX, maxZ
         new Uint32Array(sourcePixels.getMappedRange()).set(new Uint32Array(buffer));
 
