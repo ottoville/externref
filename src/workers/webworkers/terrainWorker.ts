@@ -24,6 +24,12 @@ const pickInfo: {
 let subdivisionsX: number;
 let subdivisionsY: number;
 
+let width: number;
+let height: number;
+
+let widthHalf: number;
+let heightHalf: number;
+
 const mousePosition: [number, number] = [0, 0]
 let byteStride: number
 let terrainPositionAndUvsAndNormalsCPUSwap: Float32Array;
@@ -36,10 +42,16 @@ const methods2: { [index: string]: (e: WMessage<any>) => void } = {
         boundingBox: SharedArrayBuffer,
         pickInfo: SharedArrayBuffer,
         _groundFacesNormalsBuffer: SharedArrayBuffer,
-        byteStride: number
+        byteStride: number,
+        width:number,
+        height:number
     }>) => {
         subdivisionsX=e.data.subdivisionsX;
         subdivisionsY=e.data.subdivisionsY;
+        width=e.data.width
+        height=e.data.height
+        widthHalf=e.data.width*0.5;
+        heightHalf=e.data.height*0.5;
         byteStride = e.data.byteStride
         terrainPositionAndUvsAndNormalsCPUSwap = new Float32Array(e.data.positionsAndNormals);
         const faceCount = e.data._groundFacesNormalsBuffer.byteLength / 4 / 4;
@@ -103,8 +115,8 @@ const methods2: { [index: string]: (e: WMessage<any>) => void } = {
                 const distance = Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index] - pickInfo.point[0], 2) + Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index + 2] - pickInfo.point[2], 2)
                 if (distance < radiusPow) {
                     _selectedVertices.push({
-                        col: subdivisionsX / (10000 / (5000 + terrainPositionAndUvsAndNormalsCPUSwap[index])) | 0,
-                        row: subdivisionsY / (10000 / (5000 - terrainPositionAndUvsAndNormalsCPUSwap[index + 2])) | 0,
+                        col: subdivisionsX / (width / (widthHalf + terrainPositionAndUvsAndNormalsCPUSwap[index])) | 0,
+                        row: subdivisionsY / (height / (heightHalf - terrainPositionAndUvsAndNormalsCPUSwap[index + 2])) | 0,
                         vertice: index,
                         distance: Math.sqrt(distance)
                     });

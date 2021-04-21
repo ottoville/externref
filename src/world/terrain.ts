@@ -36,7 +36,7 @@ export class Terrain {
     public slopeArr = new Int32Array(this.slopeArrBuffer);
 
     mesh: TerrainMesh;
-    settingsGPU = this.scene.gpu.createGPUBuffer(40, [GPUBufferUsage.STORAGE], true);
+    settingsGPU = this.scene.gpu.createGPUBuffer(48, [GPUBufferUsage.STORAGE], true);
     #heightsBindGroupEntries: [storageBindGroupLayout, storageBindGroupLayout] = [
         {
             binding: 0,
@@ -283,12 +283,13 @@ export class Terrain {
         Terrain.instance = this;
         const sourcePixels = scene.gpu.createGPUBuffer(buffer.byteLength, [GPUBufferUsage.STORAGE], true);
         const sourcearrSettings = this.settingsGPU.getMappedRange();
-        new Uint32Array(sourcearrSettings).set([10000, 10000]);   // terrain width and height
+        new Uint32Array(sourcearrSettings).set([this.width, this.height]);   // terrain width and height
         new Uint32Array(sourcearrSettings, 8).set([Terrain.subdivisionsX, Terrain.subdivisionsY,   //buffer width and height
         Terrain.subdivisionsX,        //subdivisions
         ]);
         new Int32Array(sourcearrSettings, 24).set([this.#minY, this.#maxY]); //min and max height,
         new Int32Array(sourcearrSettings, 32).set([this.#maxX, this.#maxZ]); //maxX, maxZ
+        new Int32Array(sourcearrSettings, 40).set([5120, 5120]); //texture size
         new Uint32Array(sourcePixels.getMappedRange()).set(new Uint32Array(buffer));
 
         this.settingsGPU.unmap();

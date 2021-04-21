@@ -69,7 +69,9 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
                 slopeArr: terrain.slopeArrBuffer,
                 pickInfo: terrain.mesh.pickInfo.buffer,
                 _groundFacesNormalsBuffer: terrain.mesh.facesBuffer,
-                byteStride: 48
+                byteStride: 48,
+                width:terrain.width,
+                height:terrain.height
             });
 */
 

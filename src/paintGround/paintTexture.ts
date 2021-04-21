@@ -10,8 +10,6 @@ import { TerraVector2 } from "../Math.js";
 export class paintTexture extends paintGround {
     private subTextureCache: subTexture = { x: 0, z: 0, width: 0, height: 0, imageData: null };
     private height = 0;
-    private centerX: number;
-    private centerZ: number;
     onMainPointerUp(height: number): void {
         this.height = height;
         this.subTextureCache = { x: 0, z: 0, width: 0, height: 0, imageData: null }
@@ -19,8 +17,8 @@ export class paintTexture extends paintGround {
     #offsetX = 0;
     #offsetY = 0;
     onMainPointerDown(startingPoint: TerraVector2): void {
-        this.#offsetX = this.centerX + startingPoint[0] / this.ratio;
-        this.#offsetY = this.centerZ + startingPoint[1] / this.ratio;
+        this.#offsetX = this.textureWidth*0.5 + startingPoint[0] / this.ratio;
+        this.#offsetY = this.textureHeight*0.5 + startingPoint[1] / this.ratio;
     }
     constructor(
         protected scene: Scene,
@@ -28,21 +26,14 @@ export class paintTexture extends paintGround {
         protected ground: Terrain,
         protected sea: Sea,
         protected zonedt: GPUTexture,
-        textureWidth: number,
-        textureHeight: number,
+        private textureWidth: number,
+        private textureHeight: number,
         uitab: hasCanvasListener,
         private ratio:number,
         callback: PTResultF
     ) {
         super(scene, camera, ground, sea, uitab,callback);
-        this.centerX = textureWidth / 2;
-        this.centerZ = textureHeight / 2;
-
-        
     }
-    /*public activate(callback: PTResultF) {
-        super.activate(callback);
-    }*/
     async onAreaDraw(width: number): Promise<void> {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {
             throw ('onAreaDraw non numeric width or height');

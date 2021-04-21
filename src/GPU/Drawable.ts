@@ -164,7 +164,6 @@ export class DrawableSimple extends DrawableDirect {
     }
     render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
         renderPass.draw(this.node.verticesCount, this.instanceCount, this.firstVertex, this.firstInstance);
-        console.log('drawsimple',this.label, this.node.verticesCount, this.instanceCount, this.firstVertex, this.firstInstance);
     }
 }
 export class DrawableIndexed extends DrawableDirect {

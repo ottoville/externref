@@ -33,13 +33,9 @@
 [[binding(1), group(2)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
 [[binding(2), group(2)]] var<storage_buffer> settings : [[access(read)]] Settings;
 
-
-let width:u32 = 10000;
-let height:u32 = 10000;
-
 fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
-    let col:u32 = u32(floor((xz.x + f32(settings.max.x)) * f32(settings.subdivisions) / f32(width)));
-    let row:u32 = u32(floor(- (xz.y + f32(settings.max.z)) * f32(settings.subdivisions) / f32(height) + f32(settings.subdivisions)));
+    let col:u32 = u32(floor((xz.x + f32(settings.max.x)) * f32(settings.subdivisions) / f32(settings.size.x)));
+    let row:u32 = u32(floor(- (xz.y + f32(settings.max.z)) * f32(settings.subdivisions) / f32(settings.size.y) + f32(settings.subdivisions)));
     let slope:f32 = f32(slopes.numbers[row * settings.subdivisions + col]);
     var norm:vec3<f32>;
     var d:f32;

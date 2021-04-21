@@ -4,6 +4,7 @@
      subdivisions : u32;
      heightMinMax : vec2<i32>;
     [[align(32)]] max : vec2<i32>;
+     textureSize:vec2<u32>;
 };
 
 
@@ -27,8 +28,8 @@
 fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) -> void {
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
 
-    let cx:i32 = i32(f32(GlobalInvocationID.x) * 1.95 - f32(settings.size.x/u32(2)));
-    let cz:i32 = i32(f32(GlobalInvocationID.y) * 1.95 - f32(settings.size.y/u32(2)));
+    let cx:i32 = i32(f32(GlobalInvocationID.x) * (f32(settings.size.x)/f32(settings.textureSize.x)) - f32(settings.size.x/u32(2)));
+    let cz:i32 = i32(f32(GlobalInvocationID.y) * (f32(settings.size.y)/f32(settings.textureSize.y)) - f32(settings.size.y/u32(2)));
 
     let col:u32 = u32(floor(f32((cx + settings.max.x) * i32(settings.subdivisions)) / f32(settings.size.x)));
     let row:u32 = u32(floor(- f32((cz + settings.max.y) * i32(settings.subdivisions)) / f32(settings.size.y) + f32(settings.subdivisions)));
@@ -46,9 +47,9 @@ fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) -> voi
 
     let y:f32 = -(norm.x * f32(cx) + norm.z * f32(cz) + d) / norm.y;
     if( y > 3.0 ) {
-        resultMatrix.numbers[GlobalInvocationID.y * u32(5120) + GlobalInvocationID.x]=-16711936; //Int32 represation of uint8 0, 255, 0, 255
+        resultMatrix.numbers[GlobalInvocationID.y * settings.textureSize.y + GlobalInvocationID.x]=-16711936; //Int32 represation of uint8 0, 255, 0, 255
      } else {
-        resultMatrix.numbers[GlobalInvocationID.y * u32(5120) + GlobalInvocationID.x]=-16711681; //Int32 represation of uint8 255, 255, 0, 255
+        resultMatrix.numbers[GlobalInvocationID.y * settings.textureSize.y + GlobalInvocationID.x]=-16711681; //Int32 represation of uint8 255, 255, 0, 255
      }
     return;
   }

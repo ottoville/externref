@@ -44,8 +44,6 @@ fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) -> voi
    position.y = f32(img.heightMinMax.x) + f32( img.heightMinMax.y -  img.heightMinMax.x) * gradient;
    positions.vert[GlobalInvocationID.y * (img.subdivisions + u32(1)) + GlobalInvocationID.x].position = position;
   
-   positions.vert[GlobalInvocationID.y * (img.subdivisions + u32(1)) + GlobalInvocationID.x].uv.x = (position.x + f32(img.maxXZ.x)) / f32(img.size.x);
-   positions.vert[GlobalInvocationID.y * (img.subdivisions + u32(1)) + GlobalInvocationID.x].uv.y = (position.z + f32(img.maxXZ.y)) / f32(img.size.y);
-
+   positions.vert[GlobalInvocationID.y * (img.subdivisions + u32(1)) + GlobalInvocationID.x].uv = (position.xz + vec2<f32>(img.maxXZ)) / vec2<f32>(img.size);
     return;
   }

@@ -1,5 +1,4 @@
-let width:u32 = 10000;
-let height:u32 = 10000;
+
 
 [[block]] struct Vec2Array {
   vectors : [[stride(8)]] array<vec2<f32>>;
@@ -125,8 +124,8 @@ fn rand(co:vec2<f32>) -> f32 {
     return fract(sin(dot(co.xy ,vec2<f32>(12.9898,78.233))) * 43758.5453);
 }
 fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
-    let col:u32 = u32(floor((xz.x + f32(settings.max.x)) * f32(settings.subdivisions) / f32(width)));
-    let row:u32 = u32(floor(- (xz.y + f32(settings.max.z)) * f32(settings.subdivisions) / f32(height) + f32(settings.subdivisions)));
+    let col:u32 = u32(floor((xz.x + f32(settings.max.x)) * f32(settings.subdivisions) / f32(settings.size.x)));
+    let row:u32 = u32(floor(- (xz.y + f32(settings.max.z)) * f32(settings.subdivisions) / f32(settings.size.y) + f32(settings.subdivisions)));
     let slope:f32 = f32(slopes.numbers[row * settings.subdivisions + col]);
     var norm:vec3<f32>;
     var d:f32;
@@ -144,7 +143,7 @@ fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
 
 
 [[stage(compute)]]
-fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) -> void {
+fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; //250 * 250;
 
 
