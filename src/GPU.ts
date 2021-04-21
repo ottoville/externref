@@ -478,7 +478,7 @@ export class GPU {
         if (!shaderModule)
             throw (new Error('Shader ' + shader + ' not found'));
         const desc: GPUComputePipelineDescriptor = {
-            computeStage: {
+            compute: {
                 module: shaderModule,
                 entryPoint
             }

@@ -91,22 +91,24 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
         }
     }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
-        const colorAttachments: GPURenderPassColorAttachmentDescriptor[] = []
+        const colorAttachments: GPURenderPassColorAttachment[] = []
         if (typeof this.renderTargets.swap !== 'undefined') {
             colorAttachments.push(this.sampleCount > 1 ? {
-                attachment: this.renderTargets.swap.view,
+                view: this.renderTargets.swap.view,
                 resolveTarget: this.gpu.swapChain.getCurrentTexture().createView(),
-                loadValue: this.renderTargets.swap.loadValue
+                loadValue: this.renderTargets.swap.loadValue,
+                storeOp: "store"
             } : {
-                attachment: this.gpu.swapChain.getCurrentTexture().createView(),
-                loadValue: this.renderTargets.swap.loadValue
+                view: this.gpu.swapChain.getCurrentTexture().createView(),
+                loadValue: this.renderTargets.swap.loadValue,
+                storeOp: "store"
             });
 
             for (const key in this.renderTargets) {
                 if (key === 'swap')
                     continue;
                 colorAttachments.push({
-                    attachment: this.renderTargets[key]!.view,
+                    view: this.renderTargets[key]!.view,
                     loadValue: this.renderTargets[key]!.loadValue,
                     storeOp: "store" as const,
                 })
@@ -114,7 +116,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
         } else {
             for (const key in this.renderTargets) {
                 colorAttachments.push({
-                    attachment: this.renderTargets[key]!.view,
+                    view: this.renderTargets[key]!.view,
                     loadValue: this.renderTargets[key]!.loadValue,
                     storeOp: "store" as const,
                 })
@@ -122,7 +124,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
         }
         if (this.#depthTextureView) {
             this.#renderPassDescriptor.depthStencilAttachment = {
-                attachment: this.#depthTextureView,
+                view: this.#depthTextureView,
                 depthLoadValue: 1,
                 depthStoreOp: "store",
                 stencilLoadValue: 0,
