@@ -8,23 +8,22 @@
             partcount: number,
             partnumber: number,
             align: number } = e.data;
-        const width = data.bitmap.width;
 
-        const split = (data.bitmap.height / data.partcount) | 0;
-        const totalbuffer = new Uint8ClampedArray(data.buffer);
-        const totalWidth = data.subdivisionsX;
-        const buffersplit = split * totalWidth * 4;
+        const split = (data.subdivisionsY / data.partcount) | 0;
+        const sourceSplit = (data.bitmap.height / data.partcount) | 0;
 
-        const canvas = new OffscreenCanvas(totalWidth, split);
+        const buffersplit = split * data.subdivisionsX * 4;
+
+        const canvas = new OffscreenCanvas(data.subdivisionsX, split);
         const ctx = canvas.getContext("2d")
         if (!ctx)
-            throw ('Unable to get 2d context on bitmapworker ' + totalWidth + ' ' + split);
+            throw ('Unable to get 2d context on bitmapworker ' + data.subdivisionsX + ' ' + split);
 
-        ctx.drawImage(data.bitmap, 0, split * data.partnumber, width, split, data.align, 0, width, split);
+        ctx.drawImage(data.bitmap, 0, sourceSplit*data.partnumber, data.bitmap.width, data.bitmap.height, data.align, 0, data.subdivisionsX, data.subdivisionsY);
         self.postMessage({ type: 'init', bitmap: data.bitmap }, [data.bitmap]);
-        const imgdata = ctx.getImageData(0, 0, totalWidth, split).data;
+        const imgdata = ctx.getImageData(0, 0, data.subdivisionsX, split).data;
 
-        totalbuffer.set(imgdata, ((data.align * totalWidth * 4)) + buffersplit * data.partnumber);
+        new Uint8ClampedArray(data.buffer).set(imgdata, ((data.align * data.subdivisionsX * 4)) + buffersplit * data.partnumber);
         self.postMessage({ type: 'ready' });
         self.close();
         

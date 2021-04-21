@@ -10,8 +10,8 @@ export class Terrain {
 
      * */
 
-    static subdivisionsX = 260;
-    static subdivisionsY = 260;
+    static subdivisionsX = 250;
+    static subdivisionsY = 250;
 
     width = 10000;
     height = 10000;
@@ -106,7 +106,7 @@ export class Terrain {
         let bitmap = await createImageBitmap(b);
         const buffer = new SharedArrayBuffer(Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT);
         console.log('bitmap.width', bitmap.width)
-        const align = (Terrain.subdivisionsX - bitmap.width) / 2
+        const align = Math.max((Terrain.subdivisionsX - bitmap.width) / 2,0);
 
         const partcount = 2;
         let readycount = 0;
