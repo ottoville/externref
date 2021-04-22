@@ -45,20 +45,16 @@ interface TerraGPUBindGroupLayoutDescriptorFive
 }
 
 export class GPU {
-    #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
-    GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
-    #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
-    swapChain: GPUSwapChain;
+    readonly #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
+    readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
+    readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
+    readonly swapChain: GPUSwapChain;
+    readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
+    readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
 
-    addTarget(format: GPUTextureFormat, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount?: number): RenderTarget<GPUTextureSampled>
-    addTarget(format: GPUTextureFormat, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureRenderAttachment>
-    addTarget(format: GPUTextureFormat, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment>
-    addTarget(format: GPUTextureFormat, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount?: number): RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment | GPUTextureCopySrc>
-    addTarget(format: GPUTextureFormat, loadValue: GPULoadOp | GPUColor, usages: GPUTextureUsageFlags[], sampleCount = 1): RenderTarget<GPUTexture> {
-        return new RenderTarget(this, format, loadValue, usages.reduce((prev, curr) => prev | curr, GPUTextureUsage.RENDER_ATTACHMENT), sampleCount)
-    }
-    boundables: Set<BoundableNode<DrawableDirect>> = new Set();
-    uniformBindGroupLayoutWithTime = this.createBindGroupLayout({
+
+    readonly boundables: Set<BoundableNode<DrawableDirect>> = new Set();
+    readonly uniformBindGroupLayoutWithTime = this.createBindGroupLayout({
         label: 'uniformBindGroupLayoutWithTime',
         entries:
             [
@@ -77,10 +73,8 @@ export class GPU {
                     }
                 }
             ]
-    }
-
-    );
-    uniformBindGroupLayoutLightsWGSL2 = this.createBindGroupLayout({
+    });
+    readonly uniformBindGroupLayoutLightsWGSL2 = this.createBindGroupLayout({
         label: 'uniformBindGroupLayoutLightsWGSL2',
         entries: [{
             binding: 0,
@@ -90,18 +84,18 @@ export class GPU {
             }
         }]
     });
-    rootCameralayout = new PipelineLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
+    readonly rootCameralayout = new PipelineLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
     //rootSceneLayout = new PipelineLayout(this, this.uniformBindGroupLayoutLightsWGSL2, this.rootCameralayout, undefined, false);
 
     //viewprojection and camera position
 
 
 
-    shaderModules: Map<string, GPUShaderModule> = new Map();
+    readonly shaderModules: Map<string, GPUShaderModule> = new Map();
     //Todo: Remove COPY_SRC
-    GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+    readonly GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
-    #BindGroupLayoutCanvas = this.createBindGroupLayout({
+    readonly #BindGroupLayoutCanvas = this.createBindGroupLayout({
         entries: [
             {
                 binding: 0,
@@ -141,8 +135,8 @@ export class GPU {
     );
 
 
-    rootLayout = new PipelineLayout(this, this.#BindGroupLayoutCanvas);
-    BindGroupLayoutPosition = this.createBindGroupLayout({
+    readonly rootLayout = new PipelineLayout(this, this.#BindGroupLayoutCanvas);
+    readonly BindGroupLayoutPosition = this.createBindGroupLayout({
         label: 'BindGroupLayoutPosition',
         entries: [
             {
@@ -154,9 +148,9 @@ export class GPU {
                 }
             }]
     });
-    positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout(this.BindGroupLayoutPosition);
+    readonly positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout(this.BindGroupLayoutPosition);
 
-    lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout(this.createBindGroupLayout({
+    readonly lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout(this.createBindGroupLayout({
         label: 'lightsBindGroupTexture2',
         entries: [
             {
@@ -179,7 +173,7 @@ export class GPU {
         ]
     }));
 
-    BindGroupPosition = this.createBindGroup(this.BindGroupLayoutPosition, [
+    readonly BindGroupPosition = this.createBindGroup(this.BindGroupLayoutPosition, [
         {
             binding: 0,
             resource: {
@@ -188,58 +182,16 @@ export class GPU {
                 size: TerraNodeGPU.GPUDataSize * 4
             }
         }]);
-    positionBindGroupTime = this.rootCameralayout.addChildBindGroup(this.BindGroupPosition, true);
-    timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
-    timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
+    readonly positionBindGroupTime = this.rootCameralayout.addChildBindGroup(this.BindGroupPosition, true);
+    readonly timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
+    readonly timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
-    BindGroupCanvas: (renderPass: RenderPass) => GPUBindGroup;
-
-    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorOne): BindGroupLayout<[GPUBindGroupEntry]>
-    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorTwo): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry]>
-    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorThree): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
-    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFour): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
-    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFive): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
-    createBindGroupLayout<T extends TerraGPUBindGroupLayoutDescriptorFive>(entry: T,): BindGroupLayout<GPUBindGroupEntry[]> {
-        return new BindGroupLayout<[GPUBindGroupEntry]>(this, entry)
-        /*const layout = this.device.createBindGroupLayout(entry) as TerraBindGroupLayout;
-        layout.createBindGroup = (...entries: GPUBindGroupEntry[]) => {
-            const bindGroup = this.device.createBindGroup({ layout, entries });
-            this.GPUBindGroupLayouts.set(bindGroup, layout);
-            return bindGroup
-        }
-        return layout;*/
-    }
-    createBindGroupForRenderPass<T extends BindGroupLayout<GPUBindGroupEntry[]>>(layout: T, renderPass: RenderPass, entries: MapToGPUBindGroupEntry<extractGeneric<T>>): GPUBindGroup {
-        //createBindGroupForRenderPass(layout:  BindGroupLayout<[GPUBindGroupEntry,GPUBindGroupEntry]>, renderPass: RenderPass<{}>, entries: [(GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })]): GPUBindGroup {
-        const bindGroup = this.device.createBindGroup({
-            //@ts-expect-error
-            layout: layout.layout, entries: (entries as GPUBindGroupEntry[]).map<GPUBindGroupEntry>(entry => {
-                if (entry.resource instanceof RenderTarget) {
-                    entry.resource.renderPasses.add(renderPass);
-                    entry.resource = entry.resource.view;
-                }
-                return entry as GPUBindGroupEntry;
-            })
-        });
-        this.GPUBindGroupLayouts.set(bindGroup, layout);
-        return bindGroup
-    }
-    createBindGroup<T extends BindGroupLayout<GPUBindGroupEntry[]>>(layout: T, entries: MapToGPUBindGroupEntry<extractGeneric<T>>): GPUBindGroup {
-        //createBindGroup(layout: BindGroupLayout<GPUBindGroupEntry[]>, ...entries: GPUBindGroupEntry[]): GPUBindGroup {
-
-        const bindGroup = this.device.createBindGroup({
-            //@ts-expect-error
-            layout: layout.layout, entries
-        });
-        this.GPUBindGroupLayouts.set(bindGroup, layout);
-        return bindGroup
-    }
-
+    readonly BindGroupCanvas: (renderPass: RenderPass) => GPUBindGroup;
     static instance: GPU;
 
-    queue: Map<Float32Array, number> = new Map();
+    readonly queue: Map<Float32Array, number> = new Map();
 
-    renderPassScreen = new RenderPass(this, {
+    readonly renderPassScreen = new RenderPass(this, {
         gRenderTargetNormals: this.addTarget("bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
         gRenderTargetPositions: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED, GPUTextureUsage.COPY_SRC]),
         gRenderTargetDiffuse: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
@@ -247,18 +199,18 @@ export class GPU {
         (w, h) => {
             return [w, h]
         });
-    renderPassWater = new RenderPass(this, {
+    readonly renderPassWater = new RenderPass(this, {
         normals: this.addTarget("bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
         position: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED]),
         diffuse: this.addTarget("bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
     }, 1, false, { width: this.canvas.width, height: this.canvas.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED)
-    renderPassCanvas = new RenderPass(this, {
+    readonly renderPassCanvas = new RenderPass(this, {
         swap: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT], 1)
     }, 1, false, { width: this.canvas.width, height: this.canvas.height },
         (w, h) => {
             return [w, h]
         });
-    renderPasses: Set<RenderPass>;
+    readonly renderPasses: Set<RenderPass>;
 
     readonly scale = {
         x: 1,
@@ -309,9 +261,6 @@ export class GPU {
             }]
         );
 
-
-
-
         this.#DynamicBindGroups.add(this.BindGroupPosition);
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
@@ -323,6 +272,56 @@ export class GPU {
         }
         GPU.instance = this;
     }
+    addTarget(format: GPUTextureFormat, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount?: number): RenderTarget<GPUTextureSampled>
+    addTarget(format: GPUTextureFormat, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureRenderAttachment>
+    addTarget(format: GPUTextureFormat, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment>
+    addTarget(format: GPUTextureFormat, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount?: number): RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment | GPUTextureCopySrc>
+    addTarget(format: GPUTextureFormat, loadValue: GPULoadOp | GPUColor, usages: GPUTextureUsageFlags[], sampleCount = 1): RenderTarget<GPUTexture> {
+        return new RenderTarget(this, format, loadValue, usages.reduce((prev, curr) => prev | curr, GPUTextureUsage.RENDER_ATTACHMENT), sampleCount)
+    }
+
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorOne): BindGroupLayout<[GPUBindGroupEntry]>
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorTwo): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry]>
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorThree): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFour): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFive): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    createBindGroupLayout<T extends TerraGPUBindGroupLayoutDescriptorFive>(entry: T,): BindGroupLayout<GPUBindGroupEntry[]> {
+        return new BindGroupLayout<[GPUBindGroupEntry]>(this, entry)
+        /*const layout = this.device.createBindGroupLayout(entry) as TerraBindGroupLayout;
+        layout.createBindGroup = (...entries: GPUBindGroupEntry[]) => {
+            const bindGroup = this.device.createBindGroup({ layout, entries });
+            this.GPUBindGroupLayouts.set(bindGroup, layout);
+            return bindGroup
+        }
+        return layout;*/
+    }
+    createBindGroupForRenderPass<T extends BindGroupLayout<GPUBindGroupEntry[]>>(layout: T, renderPass: RenderPass, entries: MapToGPUBindGroupEntry<extractGeneric<T>>): GPUBindGroup {
+        //createBindGroupForRenderPass(layout:  BindGroupLayout<[GPUBindGroupEntry,GPUBindGroupEntry]>, renderPass: RenderPass<{}>, entries: [(GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })]): GPUBindGroup {
+        const bindGroup = this.device.createBindGroup({
+            //@ts-expect-error
+            layout: layout.layout, entries: (entries as GPUBindGroupEntry[]).map<GPUBindGroupEntry>(entry => {
+                if (entry.resource instanceof RenderTarget) {
+                    entry.resource.renderPasses.add(renderPass);
+                    entry.resource = entry.resource.view;
+                }
+                return entry as GPUBindGroupEntry;
+            })
+        });
+        this.GPUBindGroupLayouts.set(bindGroup, layout);
+        return bindGroup
+    }
+    createBindGroup<T extends BindGroupLayout<GPUBindGroupEntry[]>>(layout: T, entries: MapToGPUBindGroupEntry<extractGeneric<T>>): GPUBindGroup {
+        //createBindGroup(layout: BindGroupLayout<GPUBindGroupEntry[]>, ...entries: GPUBindGroupEntry[]): GPUBindGroup {
+
+        const bindGroup = this.device.createBindGroup({
+            //@ts-expect-error
+            layout: layout.layout, entries
+        });
+        this.GPUBindGroupLayouts.set(bindGroup, layout);
+        return bindGroup
+    }
+
+    
     updateBufferRaw(commandEncoder: GPUCommandEncoder, destination: GPUCopyDSTBuffer, data: ArrayBuffer) {
         const tempBuffer = this.createGPUBuffer(data.byteLength, [GPUBufferUsage.COPY_SRC], true);
         new Int8Array(tempBuffer.getMappedRange()).set(new Int8Array(data));
@@ -388,7 +387,7 @@ export class GPU {
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean): GPUIndexBuffer & GPUStorageBuffer & GPUCopySRCBuffer
     //vertex
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.VERTEX], mappedAtCreation?: boolean): GPUVertexBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUVertexBuffer & GPUStorageBuffer
+    createGPUBuffer(size: number, uusages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUVertexBuffer & GPUStorageBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean): GPUVertexBuffer & GPUCopyDSTBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUVertexBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
     //indirect
@@ -492,8 +491,6 @@ export class GPU {
         });
         return pipeline
     }
-    readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
-    pendingCommandBuffers: GPUCommandBuffer[] = [];
     drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass, index: number) {
         let drawedMeshes = 0;
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {

@@ -31,7 +31,7 @@ export class Zones extends UITAB {
     public canvasListener = new canvasListener(this);
     private PT: paintTexture;
     #size = 5120;
-    #ratio = this.ground.width / this.#size //texture coordinates
+    #ratio = this.ground.size[0] / this.#size //texture coordinates
     zoneTexture = this.scene.gpu.device.createTexture({
         size: [5120, 5120, 1],
         format: "rgba8unorm",

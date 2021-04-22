@@ -27,7 +27,6 @@ export class PipelineLayout {
         }
         if(debug) {
             console.log(layoutTree);
-            debugger;
         }
 
         this.layout = this.gpuscene.device.createPipelineLayout({ bindGroupLayouts: layoutTree });

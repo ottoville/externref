@@ -47,7 +47,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
 
-    facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisionsX * Terrain.subdivisionsY * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+    facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
 
     constructor(
         public scene:Scene,
@@ -81,8 +81,8 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.#canvasListener.addListener("pointermove", this.#mouseListener, { lazy: 15 });
 
     }
-    static saveTexture(arrayBuffer: ArrayBuffer) {
-        terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
+    static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number,number]) {
+        terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', {buffer:arrayBuffer, size:size}, [arrayBuffer]);
     }
     //TERRAIN EDITING DISABLED
     //private direction = 0;
