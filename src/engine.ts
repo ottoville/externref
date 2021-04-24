@@ -12,15 +12,12 @@ function Dot(left: [number, number, number] | Float32Array | Vector3, right: [nu
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 }
 
-const CollisionsEpsilon = 0.001;
-const closeDistance = CollisionsEpsilon * 10.0;
-const closeDistanceSquared = closeDistance * closeDistance
 export interface ColliderWasm {
-    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer:number, collidedMeshPointer:number):void;
+    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer:number, collidedMeshPointer:number, velocity:number, basePoint: number):void;
     memory: {buffer: ArrayBuffer}
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
     testTriangles: (position: number, length: number, meshID:number) => void
-    _initialize: (velocity:number, basePoint: number) => void
+    _initialize: () => void
 }
 export interface ColliderWasmSIMD {
     construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number): void;
@@ -31,6 +28,10 @@ export interface ColliderWasmSIMD {
 }
 
 export class Engine {
+    readonly CollisionsEpsilon = 0.001;
+    readonly closeDistance = this.CollisionsEpsilon * 10.0;
+    readonly closeDistanceSquared = this.closeDistance * this.closeDistance
+
     freeMemoryBlocks: { byteOffset: number, byteLength: number }[] = []
     allocatedSize = 0;
     registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
@@ -172,7 +173,7 @@ export class Engine {
     collidedMeshSIMD = this.mallocView(4);
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasmSIMD, public memory: WebAssembly.Memory, public rustEngine: RustEngine) {
 
-        wasm.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
+        wasm.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset, this.collisionCoordinator.scaledVelocity.byteOffset, this.collisionCoordinator.scaledPosition.byteOffset)
       // wasmSIMD.construct(this.collisionNotFoundSIMD.byteOffset, this.intersectionPointWasmSIMD.byteOffset, this.nearestDistanceSquaredSIMD.byteOffset, this.collidedMeshSIMD.byteOffset)
       //  wasmSIMD.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
 
@@ -222,11 +223,11 @@ export class Engine {
         // Check if this is a mesh else camera or -1
         //var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
 
-        this.collider._initialize(position, velocity, closeDistance);
+        this.collider._initialize(position, velocity, this.closeDistance);
 
         //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
-        this.wasm._initialize(velocity.byteOffset, position.byteOffset)
-        this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
+        this.wasm._initialize()
+       // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
        // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
         await Promise.all([...this.gpu.boundables].map(mesh => mesh.checkCollision(this.collider)));
@@ -241,7 +242,7 @@ export class Engine {
         }
         if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
             //this.collider._getResponse(position, velocity);
-
+            // https://arxiv.org/ftp/arxiv/papers/1211/1211.0059.pdf
             let scale = this.nearestDistanceSquared.getFloat32(0,true) / (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]);
            // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
            velocity[0] *= scale;
@@ -294,7 +295,7 @@ export class Engine {
         }
 
        // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
-        if (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2] <= closeDistanceSquared) {
+        if (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2] <= this.closeDistanceSquared) {
             //finalPosition.copyFrom(position);
             finalPosition[0] = position[0];
             finalPosition[1] = position[1];

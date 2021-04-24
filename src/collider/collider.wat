@@ -19,6 +19,11 @@
   (global $found (mut i32) (i32.const 0))
 
   (global $basePoint (mut v128) (v128.const i32x4 0 0 0 0))
+
+  (global $basePointPointer (mut i32) (i32.const 0))
+  (global $velocityPointer (mut i32) (i32.const 0))
+
+
   (func $main (export "_start")
       ;; Creating a new io vector within linear memory
       (i32.store (i32.const 0) (i32.const 8))  ;; iov.iov_base - This is a pointer to the start of the 'hello world\n' string
@@ -29,6 +34,9 @@
       (param $interSectionPoint i32)
       (param $nearestDistanceSquared i32)
       (param $collidedMesh i32)
+      (param $velocityPointer i32)
+      (param $basePointPointer i32)
+
       (global.set $intersectionPointer
         (local.get $interSectionPoint)
       )
@@ -44,23 +52,37 @@
       global.get $nearestDistanceSquaredPointer
       f32.const 9999999
       f32.store
-  )
-  (func $_initialize
-    (param $velocity i32)
-    (param $basePointPointer i32)
 
+      (global.set $velocityPointer
+          (local.get $velocityPointer)
+      )
+      
+      (global.set $basePointPointer
+        (local.get $basePointPointer)
+      )
+  )
+
+  (func $_initialize
     (local $temp v128)
     (local $len f32)
+
+
+      (global.set $velocity
+        (v128.load
+          (global.get $velocityPointer)
+        )
+      )
+      (global.set $basePoint
+        (v128.load
+          (global.get $basePointPointer)
+        )
+      )
+      
 
     global.get $collisionNotFoundPointer
     i32.const 1
     i32.store
 
-    (global.set $velocity
-      (v128.load
-        (local.get $velocity)
-      )
-    )
     (local.tee $temp
       (f32x4.mul
         (global.get $velocity)
@@ -106,9 +128,7 @@
           end
       end
 
-    local.get $basePointPointer
-    v128.load
-    global.set $basePoint
+
 
   )
 

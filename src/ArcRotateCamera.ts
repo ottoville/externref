@@ -1,8 +1,8 @@
 ﻿import type { Engine } from "./engine.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { TerraCamera } from "./TerraCamera.js";
-let pointerDownButton: number = 0;
-const panningSensibility: number = 20;
+let pointerDownButton = 0;
+const panningSensibility = 20;
 const angularSensibilityX = 3000;
 const angularSensibilityY = 3000;
 
@@ -48,14 +48,14 @@ export class ArcRotateCamera {
     * Define the current direction the camera is moving to
     */
     #cameraDirection = new TerraVector3();
-    #collisionTriggered: boolean = false;
+    #collisionTriggered = false;
     constructor(public alpha: number, public beta: number, public radius:number, private engine: Engine, public camera:TerraCamera) {
         engine.canvas.addEventListener('pointerup', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
         engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
     }
     #cameraMove = (e: PointerEvent) => {
         e.preventDefault();
-        if (panningSensibility !== 0 && pointerDownButton == 2) {
+        if (pointerDownButton == 2) {
             this.inertialPanningX += -e.movementX / panningSensibility;
             this.inertialPanningY += e.movementY / panningSensibility;
         } else {

@@ -40,13 +40,16 @@ const collisionNotFound=new Uint32Array(memory,0,1);
 const intersectionPointWasm=new Float32Array(memory,4,4);
 const nearestDistanceSquared=new Float32Array(memory, 20, 1);
 const collidedMesh=new Uint32Array(memory,24,1);
-instance.exports.construct(collisionNotFound.byteOffset, intersectionPointWasm.byteOffset, nearestDistanceSquared.byteOffset, collidedMesh.byteOffset);
 
 const velocity=new Float32Array(memory,28, 4)
 velocity.set([3.71044921875, -174.03759765625, -0.5966796875]);
 const position=new Float32Array(memory,44, 4)
 position.set([3384.10498046875, 143.2760772705078, -5874.26806640625]);
-instance.exports._initialize(velocity.byteOffset, position.byteOffset);
+
+
+instance.exports.construct(collisionNotFound.byteOffset, intersectionPointWasm.byteOffset, nearestDistanceSquared.byteOffset, collidedMesh.byteOffset, velocity.byteOffset, position.byteOffset);
+
+instance.exports._initialize();
 
 new Float32Array(memory, 7872,4).set([0, 31.435291290283203, -10000, 0]);
 new Float32Array(memory, 7888,4).set([10000, 3.8745102882385254, -10000, 0]);
