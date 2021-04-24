@@ -406,8 +406,6 @@ export class Collider {
                         this.#collisionPoint[0] = p[0] + this._edge[0] * f;
                         this.#collisionPoint[1] = p[1] + this._edge[1] * f;
                         this.#collisionPoint[2] = p[2] + this._edge[2] * f;
-                            
-
                     }
                 }
                 i--;

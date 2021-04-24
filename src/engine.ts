@@ -4,7 +4,7 @@ import { TerraNodeGPU } from "./TerraNode.js";
 import { Collider } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import { TerraVector3, Vector3 } from "./Math.js";
-import init, {Engine as RustEngine } from "/js/engine/engine.js";
+import init, { Engine as RustEngine } from "/js/engine/engine.js";
 import { GPUBufferUsage } from "./GPU.js";
 
 
@@ -13,17 +13,17 @@ function Dot(left: [number, number, number] | Float32Array | Vector3, right: [nu
 }
 
 export interface ColliderWasm {
-    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer:number, collidedMeshPointer:number, velocity:number, basePoint: number):void;
-    memory: {buffer: ArrayBuffer}
+    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number, velocity: number, basePoint: number): void;
+    memory: { buffer: ArrayBuffer }
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
-    testTriangles: (position: number, length: number, meshID:number) => void
+    testTriangles: (position: number, length: number, meshID: number) => void
     _initialize: () => void
 }
 export interface ColliderWasmSIMD {
     construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number): void;
     memory: { buffer: ArrayBuffer }
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
-    testTriangles: (position: number, planePositionHorizontal:number, length: number, meshID: number) => void
+    testTriangles: (position: number, planePositionHorizontal: number, length: number, meshID: number) => void
     _initialize: (velocity: number, basePoint: number) => void
 }
 
@@ -38,7 +38,7 @@ export class Engine {
 
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
-    
+
     #tempBuffer?: GPUCopySRCBuffer;
     collider = new Collider(this);
 
@@ -46,10 +46,10 @@ export class Engine {
     mousePosition = new Uint16Array(this.mousePositionBuffer);
 
     mouseOffsetBuffer = new SharedArrayBuffer(8);
-    destinationPoint:[number, number, number]=[0,0,0];
-    displacementVector: [number, number, number]=[0,0,0];
-    
-    
+    destinationPoint: [number, number, number] = [0, 0, 0];
+    displacementVector: [number, number, number] = [0, 0, 0];
+
+
     malloc(byteLength: number): number {
         if (byteLength % 4 != 0) {
             throw ('malloc should be called with length divitable with four')
@@ -68,7 +68,7 @@ export class Engine {
             const offset = this.allocatedSize;
             this.allocatedSize += byteLength;
             if (this.allocatedSize > this.wasm.memory.buffer.byteLength)
-                throw('Out of memory')
+                throw ('Out of memory')
             return offset;
         }
     }
@@ -91,11 +91,11 @@ export class Engine {
     }
     mallocVector3(x?: number, y?: number, z?: number): Vector3 {
         const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(16));
-        if(x)
+        if (x)
             arr[0] = x;
-        if(y)
+        if (y)
             arr[1] = y;
-        if(z)
+        if (z)
             arr[2] = z;
         this.registry.register(arr, { byteOffset: arr.byteOffset, byteLength: arr.byteLength });
         return arr;
@@ -124,7 +124,7 @@ export class Engine {
                 byteOffset = previousBlock.byteOffset;
                 return;
             }
-            this.freeMemoryBlocks.push({ byteOffset, byteLength});
+            this.freeMemoryBlocks.push({ byteOffset, byteLength });
         })
     }
 
@@ -174,13 +174,13 @@ export class Engine {
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasmSIMD, public memory: WebAssembly.Memory, public rustEngine: RustEngine) {
 
         wasm.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset, this.collisionCoordinator.scaledVelocity.byteOffset, this.collisionCoordinator.scaledPosition.byteOffset)
-      // wasmSIMD.construct(this.collisionNotFoundSIMD.byteOffset, this.intersectionPointWasmSIMD.byteOffset, this.nearestDistanceSquaredSIMD.byteOffset, this.collidedMeshSIMD.byteOffset)
-      //  wasmSIMD.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
+        // wasmSIMD.construct(this.collisionNotFoundSIMD.byteOffset, this.intersectionPointWasmSIMD.byteOffset, this.nearestDistanceSquaredSIMD.byteOffset, this.collidedMeshSIMD.byteOffset)
+        //  wasmSIMD.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
 
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
         canvas.addEventListener('pointermove', (e) => {
-            Atomics.store(this.mousePosition, 0, e.clientX*gpu.scale.x)
-            Atomics.store(this.mousePosition, 1, e.clientY*gpu.scale.y)
+            Atomics.store(this.mousePosition, 0, e.clientX * gpu.scale.x)
+            Atomics.store(this.mousePosition, 1, e.clientY * gpu.scale.y)
             Atomics.notify(new Int32Array(this.mousePositionBuffer), 0);
         });
         gpu.onRenders2.push(() => {
@@ -196,7 +196,7 @@ export class Engine {
                 new Float32Array(this.#tempBuffer!.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(matrix);
                 commandEncoder.copyBufferToBuffer(
                     this.#tempBuffer!, tempOffset++ * dataSizeBytes,
-                    gpu.GPUData, bufferOffset*256,
+                    gpu.GPUData, bufferOffset * 256,
                     dataSizeBytes);
             });
             this.#tempBuffer.unmap();
@@ -209,100 +209,91 @@ export class Engine {
         scaledVelocity: this.callocVector3(),
         finalPosition: new TerraVector3(),
     }
-    async collideWithWorld(position: Vector3, velocity: Vector3, maximumRetry: number, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): Promise<void> {
+    async collideWithWorld(position: Vector3, velocity: Vector3, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): Promise<void> {
         //TODO: Call only when camera position change
-        
-        if (this.collider._retry >= maximumRetry) {
-            finalPosition[0] = position[0];
-            finalPosition[1] = position[1];
-            finalPosition[2] = position[2];
-            // finalPosition.copyFrom(position);
-            return;
-        }
+        for (let i = 0; i < 3; i++) {
+            // Check if this is a mesh else camera or -1
+            //var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
 
-        // Check if this is a mesh else camera or -1
-        //var collisionMask = (excludedMesh ? excludedMesh.collisionMask : collider.collisionMask);
+            this.collider._initialize(position, velocity, this.closeDistance);
 
-        this.collider._initialize(position, velocity, this.closeDistance);
+            //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
+            this.wasm._initialize()
+            // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
-        //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
-        this.wasm._initialize()
-       // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
+            // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
+            await Promise.all([...this.gpu.boundables].map(mesh => mesh.checkCollision(this.collider)));
 
-       // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-        await Promise.all([...this.gpu.boundables].map(mesh => mesh.checkCollision(this.collider)));
 
-        this.destinationPoint[0] = position[0] + velocity[0],
-        this.destinationPoint[1] =     position[1] + velocity[1];
-        this.destinationPoint[2] =     position[2] + velocity[2];
+            this.destinationPoint[0] = position[0] + velocity[0],
+                this.destinationPoint[1] = position[1] + velocity[1];
+            this.destinationPoint[2] = position[2] + velocity[2];
 
-        if (this.collisionNotFound.getUint32(0,true)) {
-            finalPosition.set(this.destinationPoint);
-            return;
-        }
-        if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
-            //this.collider._getResponse(position, velocity);
-            // https://arxiv.org/ftp/arxiv/papers/1211/1211.0059.pdf
-            let scale = this.nearestDistanceSquared.getFloat32(0,true) / (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]);
-           // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
-           velocity[0] *= scale;
-            velocity[1] *= scale;
-            velocity[2] *= scale;
-    
-            position[0] = this.collider.basePoint[0] + velocity[0];
-            position[1] = this.collider.basePoint[1] + velocity[1];
-            position[2] = this.collider.basePoint[2] + velocity[2];
-
-            this.collider._slidePlaneNormal[0] = position[0] - this.intersectionPointWasm[0];
-            this.collider._slidePlaneNormal[1] = position[1] - this.intersectionPointWasm[1];
-            this.collider._slidePlaneNormal[2] = position[2] - this.intersectionPointWasm[2];
-    
-            const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
-            if (!(length === 0 || length === 1.0)) {
-                const norm = 1 / length;
-                this.collider._slidePlaneNormal[0] *= norm;
-                this.collider._slidePlaneNormal[1] *= norm;
-                this.collider._slidePlaneNormal[2] *= norm;
+            if (this.collisionNotFound.getUint32(0, true)) {
+                finalPosition.set(this.destinationPoint);
+                return;
             }
-    
-            // this._slidePlaneNormal.normalize();
-    
-            // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
-            this.displacementVector[0] = this.collider._slidePlaneNormal[0] * this.collider.epsilon;
-            this.displacementVector[1] = this.collider._slidePlaneNormal[1] * this.collider.epsilon,
-            this.displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
-    
-            // pos.addInPlace(this._displacementVector);
-            position[0] += this.displacementVector[0];
-            position[1] += this.displacementVector[1];
-            position[2] += this.displacementVector[2];
-            //this.intersectionPoint.addInPlace(this._displacementVector);
-            this.intersectionPointWasm[0] += this.displacementVector[0];
-            this.intersectionPointWasm[1] += this.displacementVector[1];
-            this.intersectionPointWasm[2] += this.displacementVector[2];
-    
-            var d = -(this.collider._slidePlaneNormal[0] * this.intersectionPointWasm[0] + this.collider._slidePlaneNormal[1] * this.intersectionPointWasm[1] + this.collider._slidePlaneNormal[2] * this.intersectionPointWasm[2]);
-            scale = Dot(this.destinationPoint, this.collider._slidePlaneNormal) + d;
-    
-            //this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
-            this.destinationPoint[0] -= this.collider._slidePlaneNormal[0] * scale;
-            this.destinationPoint[1] -= this.collider._slidePlaneNormal[1] * scale;
-            this.destinationPoint[2] -= this.collider._slidePlaneNormal[2] * scale
-            //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
-            velocity[0] = this.destinationPoint[0] - this.intersectionPointWasm[0];
-            velocity[1] = this.destinationPoint[1] - this.intersectionPointWasm[1];
-            velocity[2] = this.destinationPoint[2] - this.intersectionPointWasm[2];
-        }
+            if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
+                //this.collider._getResponse(position, velocity);
+                // https://arxiv.org/ftp/arxiv/papers/1211/1211.0059.pdf
+                let scale = this.nearestDistanceSquared.getFloat32(0, true) / (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]);
+                // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+                velocity[0] *= scale;
+                velocity[1] *= scale;
+                velocity[2] *= scale;
 
-       // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
-        if (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2] <= this.closeDistanceSquared) {
-            //finalPosition.copyFrom(position);
-            finalPosition[0] = position[0];
-            finalPosition[1] = position[1];
-            finalPosition[2] = position[2];
-            return;
+                position[0] = this.collider.basePoint[0] + velocity[0];
+                position[1] = this.collider.basePoint[1] + velocity[1];
+                position[2] = this.collider.basePoint[2] + velocity[2];
+
+                this.collider._slidePlaneNormal[0] = position[0] - this.intersectionPointWasm[0];
+                this.collider._slidePlaneNormal[1] = position[1] - this.intersectionPointWasm[1];
+                this.collider._slidePlaneNormal[2] = position[2] - this.intersectionPointWasm[2];
+
+                const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
+                if (!(length === 0 || length === 1.0)) {
+                    const norm = 1 / length;
+                    this.collider._slidePlaneNormal[0] *= norm;
+                    this.collider._slidePlaneNormal[1] *= norm;
+                    this.collider._slidePlaneNormal[2] *= norm;
+                }
+
+                // this._slidePlaneNormal.normalize();
+
+                // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
+                this.displacementVector[0] = this.collider._slidePlaneNormal[0] * this.collider.epsilon;
+                this.displacementVector[1] = this.collider._slidePlaneNormal[1] * this.collider.epsilon,
+                    this.displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
+
+                // pos.addInPlace(this._displacementVector);
+                position[0] += this.displacementVector[0];
+                position[1] += this.displacementVector[1];
+                position[2] += this.displacementVector[2];
+                //this.intersectionPoint.addInPlace(this._displacementVector);
+                this.intersectionPointWasm[0] += this.displacementVector[0];
+                this.intersectionPointWasm[1] += this.displacementVector[1];
+                this.intersectionPointWasm[2] += this.displacementVector[2];
+
+                const d = -(this.collider._slidePlaneNormal[0] * this.intersectionPointWasm[0] + this.collider._slidePlaneNormal[1] * this.intersectionPointWasm[1] + this.collider._slidePlaneNormal[2] * this.intersectionPointWasm[2]);
+                scale = Dot(this.destinationPoint, this.collider._slidePlaneNormal) + d;
+
+                //this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
+                this.destinationPoint[0] -= this.collider._slidePlaneNormal[0] * scale;
+                this.destinationPoint[1] -= this.collider._slidePlaneNormal[1] * scale;
+                this.destinationPoint[2] -= this.collider._slidePlaneNormal[2] * scale
+                //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
+                velocity[0] = this.destinationPoint[0] - this.intersectionPointWasm[0];
+                velocity[1] = this.destinationPoint[1] - this.intersectionPointWasm[1];
+                velocity[2] = this.destinationPoint[2] - this.intersectionPointWasm[2];
+            }
+
+            // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
+            if (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2] <= this.closeDistanceSquared) {
+                //finalPosition.copyFrom(position);
+                finalPosition[0] = position[0];
+                finalPosition[1] = position[1];
+                finalPosition[2] = position[2];
+            }
         }
-        this.collider._retry++;
-        await this.collideWithWorld(position, velocity, maximumRetry, finalPosition);
     }
 }

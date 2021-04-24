@@ -133,7 +133,7 @@ export class ArcRotateCamera {
 
         //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
         //let starttime=performance.now();
-        await this.engine.collideWithWorld(this.engine.collisionCoordinator.scaledPosition, this.engine.collisionCoordinator.scaledVelocity, 3, this.engine.collisionCoordinator.finalPosition);
+        await this.engine.collideWithWorld(this.engine.collisionCoordinator.scaledPosition, this.engine.collisionCoordinator.scaledVelocity, this.engine.collisionCoordinator.finalPosition);
 
 
         //coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
