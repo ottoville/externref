@@ -6,7 +6,7 @@
     [[align(32)]] max : vec2<i32>;
 };
 
-[[block]] struct Vertice {
+struct Vertice {
    position : vec3<f32>;
   [[offset(16)]] normals : vec3<f32>;
   [[offset(32)]] uv : vec2<f32>;
@@ -18,12 +18,12 @@
      vert : [[stride(48)]] array<Vertice>;
 };
 
-[[block]] struct Plane {
+ struct Plane {
    norm : vec3<f32>;
   [[offset(12)]] d : f32;
 };
 [[block]] struct PlaneArray {
-  [[offset(0)]] plane : [[stride(16)]] array<Plane>;
+  plane : [[stride(16)]] array<Plane>;
 };
 [[binding(0), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
 [[binding(0), group(1)]] var<storage_buffer> vertices : [[access(read)]] Vertices;

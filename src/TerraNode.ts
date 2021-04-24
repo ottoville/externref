@@ -141,17 +141,16 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
     #positionsAndCollider: [TerraVector3, TerraVector4][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
 
+
     #addVectors = (faceIndex: number, vectors: [TerraVector4, TerraVector4, TerraVector4]) => {
+        const memory = this.engine.wasm.memory.buffer;
         if (vectors.length != 3)
             throw ('less than 3 vector')
-        const t = new Triangle(
+        this.#faces[faceIndex] = new Triangle(
             vectors as [TerraVector4, TerraVector4, TerraVector4],
-            new TerraVector4(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer + faceIndex * 4 * 7)
+            new TerraVector4(memory, this.facesBufferColliderPointer + faceIndex * 4 * 7)
         );
-        t.pointers = new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT, 3); //4 is from plane
-        t.pointers.set(vectors.map(v => v.byteOffset) as [number, number, number]);
-        this.#faces[faceIndex] = t;
-
+        new Uint32Array(memory, this.facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT, 3).set(vectors.map(v => v.byteOffset)); //4 is from plane
     }
     #rebuildTrianglePlanes = () => {
         let vectors: TerraVector4[] = [];
@@ -322,6 +321,10 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         // for (let i = 0; i < 20;i++)
 
         this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id)
+       /* if (!this.engine.collisionNotFound.getUint32(0, false)) {
+            console.log(new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer, this.#faces.length * 7)) //4 is for simd
+            debugger;
+        }*/
         // console.log('wasm took', performance.now() - timer);
         //  timer = performance.now();
         // for (let i = 0; i < 20; i++)

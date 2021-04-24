@@ -261,39 +261,36 @@ export class Angle {
             return this.rad - rad % 360
     }
     distance(rad: number): Angle {
-        let phi = (rad - this.rad) % fullRad;       // This is either the distance or 360 - distance
-        let distance = phi > Math.PI ? fullRad - phi : phi;
-        return new Angle(distance);
+        const phi = (rad - this.rad) % fullRad;       // This is either the distance or 360 - distance
+        return new Angle(phi > Math.PI ? fullRad - phi : phi);
     }
 }
 
 export class Triangle {
-    pointers!: Uint32Array;
     updatePlane() {
         const v0 = this.vectors[0];
         const v1 = this.vectors[1];
         const v2 = this.vectors[2];
-        var x1 = v1[0] - v2[0];
-        var y1 = v1[1] - v2[1];
-        var z1 = v1[2] - v2[2];
-        var x2 = v0[0] - v2[0];
-        var y2 = v0[1] - v2[1];
-        var z2 = v0[2] - v2[2];
-        var yz = (y1 * z2) - (z1 * y2);
-        var xz = (z1 * x2) - (x1 * z2);
-        var xy = (x1 * y2) - (y1 * x2);
-        var pyth = Math.sqrt(yz * yz + xz * xz + xy * xy);
-        var invPyth;
+        const x1 = v1[0] - v2[0];
+        const y1 = v1[1] - v2[1];
+        const z1 = v1[2] - v2[2];
+        const x2 = v0[0] - v2[0];
+        const y2 = v0[1] - v2[1];
+        const z2 = v0[2] - v2[2];
+        const yz = (y1 * z2) - (z1 * y2);
+        const xz = (z1 * x2) - (x1 * z2);
+        const xy = (x1 * y2) - (y1 * x2);
+        const pyth = Math.sqrt(yz * yz + xz * xz + xy * xy);
 
         if (pyth !== 0) {
-            invPyth = 1.0 / pyth;
+            var invPyth = 1.0 / pyth;
         }
         else {
-            invPyth = 0.0;
+            var invPyth = 0.0;
         }
-        let normal_x = yz * invPyth
-        let normal_y = xz * invPyth
-        let normal_z = xy * invPyth;
+        const normal_x = yz * invPyth
+        const normal_y = xz * invPyth
+        const normal_z = xy * invPyth;
         this.planeCollider.set([normal_x, normal_y, normal_z, -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))]);
     }
     constructor(

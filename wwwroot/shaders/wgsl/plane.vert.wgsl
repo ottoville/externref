@@ -9,7 +9,7 @@
    numbers : [[stride(4)]] array<i32>;
 };
 
-[[block]] struct Plane {
+struct Plane {
    norm : vec3<f32>;
    d : f32;
 };

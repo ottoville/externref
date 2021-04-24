@@ -8,7 +8,7 @@
 };
 
 
-[[block]] struct Plane {
+ struct Plane {
   norm : vec3<f32>;
   [[offset(12)]] d : f32;
 };

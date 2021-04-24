@@ -7,7 +7,7 @@ let filt:vec3<f32> = vec3<f32>(0.3, 0.59, 0.11);
     heightMinMax : vec2<i32>;
     maxXZ : vec2<i32>;
 };
-[[block]] struct Vertice {
+struct Vertice {
   position : vec3<f32>;
   [[offset(16)]] normals : vec3<f32>;
   [[offset(32)]] uv : vec2<f32>;

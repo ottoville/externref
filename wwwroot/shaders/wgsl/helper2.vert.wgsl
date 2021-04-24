@@ -20,7 +20,7 @@ let vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
   numbers : [[stride(4)]] array<i32>;
 };
 
-[[block]] struct Plane {
+struct Plane {
   norm : vec3<f32>;
   [[offset(12)]] d : f32;
 };

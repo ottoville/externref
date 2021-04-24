@@ -8,7 +8,7 @@
    numbers : [[stride(4)]] array<i32>;
 };
 
-[[block]] struct Plane {
+ struct Plane {
   norm : vec3<f32>;
   d : f32;
 };
@@ -18,7 +18,7 @@
 [[block]] struct FloatArray {
   numbers : [[stride(4)]] array<f32>;
 };
-[[block]] struct PositionAndRotate {
+struct PositionAndRotate {
    position : vec3<f32>;
    rotation : f32;
 };
