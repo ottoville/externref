@@ -65,7 +65,7 @@ if(intersectionPointWasm[0]!==3386.90673828125 || intersectionPointWasm[1] !== 1
     console.error('faulty intersectionPointWasm',intersectionPointWasm)
     process.exit(1)
 }
-if(nearestDistanceSquared[0] == 17312.14453125) {
+if(nearestDistanceSquared[0] !== 17312.14453125) {
     console.error('faulty nearesDistanceSquared',nearestDistanceSquared[0])
     process.exit(1)
 }
