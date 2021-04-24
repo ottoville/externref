@@ -70,7 +70,7 @@ export class Collider {
         }
 
         return 0;
-    };
+    }
     /** Define if a collision was found */
     public collisionFound = false;
 
@@ -93,9 +93,9 @@ export class Collider {
     #tempVector4: [x: number, y: number, z: number] = [0, 0, 0];
     private _edge: [x: number, y: number, z: number] = [0, 0, 0];
     private _baseToVertex: [x: number, y: number, z: number] = [0, 0, 0];
-    private _destinationPoint: [x: number, y: number, z: number] = [0, 0, 0];
-    private _slidePlaneNormal: [x: number, y: number, z: number] = [0, 0, 0];
-    private _displacementVector: [x: number, y: number, z: number] = [0, 0, 0];
+    _destinationPoint: [x: number, y: number, z: number] = [0, 0, 0];
+    _slidePlaneNormal: [x: number, y: number, z: number] = [0, 0, 0];
+    _displacementVector: [x: number, y: number, z: number] = [0, 0, 0];
     radius: { 0: number; 1: number; 2: number; };
 
     collisionsScalingMatrix = new TerraMatrix([
@@ -137,8 +137,8 @@ export class Collider {
     /** @hidden */
     public _retry = 0;
     #velocity!:Vector3;
-    #basePoint!: Vector3;
-    #epsilon = 0;
+    basePoint!: Vector3;
+    epsilon = 0;
     /** @hidden */
     public _velocityWorldLength = 0;
     /** @hidden */
@@ -183,7 +183,7 @@ export class Collider {
             this.#normalizedVelocity[1] = dir[1] * scale
             this.#normalizedVelocity[2] = dir[2] * scale
         }
-        this.#basePoint = source
+        this.basePoint = source
         /*this.#basePoint[0] = source[0];
         this.#basePoint[1] = source[1];
         this.#basePoint[2] = source[2];*/
@@ -198,7 +198,7 @@ export class Collider {
         this.#velocityWorld[2] = dir[2] * this._radius[2];
         this._velocityWorldLength = Math.sqrt(this.#velocityWorld[0] * this.#velocityWorld[0] + this.#velocityWorld[1] * this.#velocityWorld[1] + this.#velocityWorld[2] * this.#velocityWorld[2]);
 
-        this.#epsilon = e;
+        this.epsilon = e;
         this.collisionFound = false;
     }
 
@@ -266,7 +266,7 @@ export class Collider {
             return
         }
 
-        var signedDistToTrianglePlane = Dot(this.#basePoint, triangle.planeCollider) + triangle.planeCollider[3]; //trianglePlane.signedDistanceTo(this._basePoint);
+        var signedDistToTrianglePlane = Dot(this.basePoint, triangle.planeCollider) + triangle.planeCollider[3]; //trianglePlane.signedDistanceTo(this._basePoint);
         var normalDotVelocity = Dot(triangle.planeCollider, this.#velocity);
 
        // let t0=0;
@@ -299,9 +299,9 @@ export class Collider {
                 t0 = 0;
             }
             //TODO: Use simd
-            this.#planeIntersectionPoint[0] = this.#basePoint[0] - triangle.planeCollider[0] + this.#velocity[0] * t0;
-            this.#planeIntersectionPoint[1] = this.#basePoint[1] - triangle.planeCollider[1] + this.#velocity[1] * t0;
-            this.#planeIntersectionPoint[2] = this.#basePoint[2] - triangle.planeCollider[2] + this.#velocity[2] * t0;
+            this.#planeIntersectionPoint[0] = this.basePoint[0] - triangle.planeCollider[0] + this.#velocity[0] * t0;
+            this.#planeIntersectionPoint[1] = this.basePoint[1] - triangle.planeCollider[1] + this.#velocity[1] * t0;
+            this.#planeIntersectionPoint[2] = this.basePoint[2] - triangle.planeCollider[2] + this.#velocity[2] * t0;
            // console.log(this.#planeIntersectionPoint[0])
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             // this._velocity.scaleToRef(t0, this._tempVector);
@@ -341,9 +341,9 @@ export class Collider {
                 if (!p)
                     continue;
 
-                this.#tempVector[0] = this.#basePoint[0] - p[0];
-                this.#tempVector[1] = this.#basePoint[1] - p[1];
-                this.#tempVector[2] = this.#basePoint[2] - p[2];
+                this.#tempVector[0] = this.basePoint[0] - p[0];
+                this.#tempVector[1] = this.basePoint[1] - p[1];
+                this.#tempVector[2] = this.basePoint[2] - p[2];
                 b = 2.0 * (Dot(this.#velocity, this.#tempVector));
                 c = (this.#tempVector[0] * this.#tempVector[0] + this.#tempVector[1] * this.#tempVector[1] + this.#tempVector[2] * this.#tempVector[2]) - 1.0;
                 lowestRoot = this.getLowestRoot(this.#velocitySquaredLength, b, c, t);
@@ -373,9 +373,9 @@ export class Collider {
                 this._edge[1] = p2[1] - p[1];
                 this._edge[2] = p2[2] - p[2];
 
-                this._baseToVertex[0] = p[0] - this.#basePoint[0];
-                this._baseToVertex[1] = p[1] - this.#basePoint[1];
-                this._baseToVertex[2] = p[2] - this.#basePoint[2];
+                this._baseToVertex[0] = p[0] - this.basePoint[0];
+                this._baseToVertex[1] = p[1] - this.basePoint[1];
+                this._baseToVertex[2] = p[2] - this.basePoint[2];
 
                 //var edgeSquaredLength = this._edge.lengthSquared();
                 var edgeSquaredLength = this._edge[0] * this._edge[0] + this._edge[1] * this._edge[1] + this._edge[2] * this._edge[2]
@@ -423,9 +423,7 @@ export class Collider {
                 this.intersectionPoint[1] = this.#collisionPoint[1];
                 this.intersectionPoint[2] = this.#collisionPoint[2];
                 this.#nearestDistanceSquared = distToCollisionSquared;
-                //@ts-ignore
-                if(window.debug)
-                    debugger;
+
               //  console.log('nearestDistanceSquared',this.#nearestDistanceSquared)
                 this.collisionFound = true;
                 this.collidedMesh = "hostMesh";
@@ -434,6 +432,7 @@ export class Collider {
     }
 
     /** @hidden */
+    /*
     public _getResponse(pos: Vector3, vel: Vector3): void {
         this._destinationPoint[0] = pos[0] + vel[0];
         this._destinationPoint[1] = pos[1] + vel[1];
@@ -444,12 +443,10 @@ export class Collider {
         vel[1] *= scale;
         vel[2] *= scale;
 
-        pos[0] = this.#basePoint[0] + vel[0];
-        pos[1] = this.#basePoint[1] + vel[1];
-        pos[2] = this.#basePoint[2] + vel[2];
-      /*  console.log(this.intersectionPoint)
-        console.log(this.intersectionPointWasm);
-        debugger;*/
+        pos[0] = this.basePoint[0] + vel[0];
+        pos[1] = this.basePoint[1] + vel[1];
+        pos[2] = this.basePoint[2] + vel[2];
+
         this._slidePlaneNormal[0] = pos[0] - this.engine.intersectionPointWasm[0];
         this._slidePlaneNormal[1] = pos[1] - this.engine.intersectionPointWasm[1];
         this._slidePlaneNormal[2] = pos[2] - this.engine.intersectionPointWasm[2];
@@ -465,9 +462,9 @@ export class Collider {
         // this._slidePlaneNormal.normalize();
 
         // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
-        this._displacementVector[0] = this._slidePlaneNormal[0] * this.#epsilon;
-        this._displacementVector[1] = this._slidePlaneNormal[1] * this.#epsilon;
-        this._displacementVector[2] = this._slidePlaneNormal[2] * this.#epsilon;
+        this._displacementVector[0] = this._slidePlaneNormal[0] * this.epsilon;
+        this._displacementVector[1] = this._slidePlaneNormal[1] * this.epsilon;
+        this._displacementVector[2] = this._slidePlaneNormal[2] * this.epsilon;
 
         // pos.addInPlace(this._displacementVector);
         pos[0] += this._displacementVector[0];
@@ -489,5 +486,5 @@ export class Collider {
         vel[0] = this._destinationPoint[0] - this.engine.intersectionPointWasm[0];
         vel[1] = this._destinationPoint[1] - this.engine.intersectionPointWasm[1];
         vel[2] = this._destinationPoint[2] - this.engine.intersectionPointWasm[2];
-    }
+    }*/
 }

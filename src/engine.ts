@@ -7,6 +7,11 @@ import { TerraVector3, Vector3 } from "./Math.js";
 import init, {Engine as RustEngine } from "/js/engine/engine.js";
 import { GPUBufferUsage } from "./GPU.js";
 
+
+function Dot(left: [number, number, number] | Float32Array | Vector3, right: [number, number, number] | Float32Array | Vector3): number {
+    return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
+}
+
 const CollisionsEpsilon = 0.001;
 const closeDistance = CollisionsEpsilon * 10.0;
 const closeDistanceSquared = closeDistance * closeDistance
@@ -40,6 +45,8 @@ export class Engine {
     mousePosition = new Uint16Array(this.mousePositionBuffer);
 
     mouseOffsetBuffer = new SharedArrayBuffer(8);
+    destinationPoint:[number, number, number]=[0,0,0];
+    displacementVector: [number, number, number]=[0,0,0];
     
     
     malloc(byteLength: number): number {
@@ -223,17 +230,67 @@ export class Engine {
 
        // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
         await Promise.all([...this.gpu.boundables].map(mesh => mesh.checkCollision(this.collider)));
-        if (this.collisionNotFound.getUint32(0,true)) {
-        //    if (!this.collider.collisionFound) {
 
-            //position.addToRef(velocity, finalPosition);
-            finalPosition[0] = position[0] + velocity[0];
-            finalPosition[1] = position[1] + velocity[1];
-            finalPosition[2] = position[2] + velocity[2];
+        this.destinationPoint[0] = position[0] + velocity[0],
+        this.destinationPoint[1] =     position[1] + velocity[1];
+        this.destinationPoint[2] =     position[2] + velocity[2];
+
+        if (this.collisionNotFound.getUint32(0,true)) {
+            finalPosition.set(this.destinationPoint);
             return;
         }
         if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
-            this.collider._getResponse(position, velocity);
+            //this.collider._getResponse(position, velocity);
+
+            let scale = this.nearestDistanceSquared.getFloat32(0,true) / (velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]);
+           // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+           velocity[0] *= scale;
+            velocity[1] *= scale;
+            velocity[2] *= scale;
+    
+            position[0] = this.collider.basePoint[0] + velocity[0];
+            position[1] = this.collider.basePoint[1] + velocity[1];
+            position[2] = this.collider.basePoint[2] + velocity[2];
+
+            this.collider._slidePlaneNormal[0] = position[0] - this.intersectionPointWasm[0];
+            this.collider._slidePlaneNormal[1] = position[1] - this.intersectionPointWasm[1];
+            this.collider._slidePlaneNormal[2] = position[2] - this.intersectionPointWasm[2];
+    
+            const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
+            if (!(length === 0 || length === 1.0)) {
+                const norm = 1 / length;
+                this.collider._slidePlaneNormal[0] *= norm;
+                this.collider._slidePlaneNormal[1] *= norm;
+                this.collider._slidePlaneNormal[2] *= norm;
+            }
+    
+            // this._slidePlaneNormal.normalize();
+    
+            // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
+            this.displacementVector[0] = this.collider._slidePlaneNormal[0] * this.collider.epsilon;
+            this.displacementVector[1] = this.collider._slidePlaneNormal[1] * this.collider.epsilon,
+            this.displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
+    
+            // pos.addInPlace(this._displacementVector);
+            position[0] += this.displacementVector[0];
+            position[1] += this.displacementVector[1];
+            position[2] += this.displacementVector[2];
+            //this.intersectionPoint.addInPlace(this._displacementVector);
+            this.intersectionPointWasm[0] += this.displacementVector[0];
+            this.intersectionPointWasm[1] += this.displacementVector[1];
+            this.intersectionPointWasm[2] += this.displacementVector[2];
+    
+            var d = -(this.collider._slidePlaneNormal[0] * this.intersectionPointWasm[0] + this.collider._slidePlaneNormal[1] * this.intersectionPointWasm[1] + this.collider._slidePlaneNormal[2] * this.intersectionPointWasm[2]);
+            scale = Dot(this.destinationPoint, this.collider._slidePlaneNormal) + d;
+    
+            //this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
+            this.destinationPoint[0] -= this.collider._slidePlaneNormal[0] * scale;
+            this.destinationPoint[1] -= this.collider._slidePlaneNormal[1] * scale;
+            this.destinationPoint[2] -= this.collider._slidePlaneNormal[2] * scale
+            //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
+            velocity[0] = this.destinationPoint[0] - this.intersectionPointWasm[0];
+            velocity[1] = this.destinationPoint[1] - this.intersectionPointWasm[1];
+            velocity[2] = this.destinationPoint[2] - this.intersectionPointWasm[2];
         }
 
        // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
