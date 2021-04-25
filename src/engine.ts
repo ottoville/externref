@@ -40,7 +40,23 @@ export class Engine {
     scenes: Map<string, Scene> = new Map();
 
     #tempBuffer?: GPUCopySRCBuffer;
-    collider = new Collider(this);
+    
+    collisionCoordinator = {
+        scaledPosition: this.callocVector3(),
+        scaledVelocity: this.callocVector3(),
+        finalPosition: new TerraVector3(),
+    }
+    intersectionPointWasm = this.callocVector3()
+    intersectionPointWasmSIMD = this.callocVector3()
+    collisionNotFound = this.mallocView(4);
+    collisionNotFoundSIMD = this.mallocView(4);
+    nearestDistanceSquared = this.mallocView(4);
+    nearestDistanceSquaredSIMD = this.mallocView(4);
+    collidedMesh = this.mallocView(4);
+    collidedMeshSIMD = this.mallocView(4);
+    //@ts-ignore
+    collider = new Collider(this.collisionCoordinator,
+        this.nearestDistanceSquared,this.collisionNotFound,this.intersectionPointWasm);
 
     mousePositionBuffer = new SharedArrayBuffer(4);
     mousePosition = new Uint16Array(this.mousePositionBuffer);
@@ -163,14 +179,6 @@ export class Engine {
         const rust = await init();
         return new Engine(gpu, DB, canvas, wasm, wasmSIMD, rust.memory, new RustEngine());
     }
-    intersectionPointWasm = this.callocVector3()
-    intersectionPointWasmSIMD = this.callocVector3()
-    collisionNotFound = this.mallocView(4);
-    collisionNotFoundSIMD = this.mallocView(4);
-    nearestDistanceSquared = this.mallocView(4);
-    nearestDistanceSquaredSIMD = this.mallocView(4);
-    collidedMesh = this.mallocView(4);
-    collidedMeshSIMD = this.mallocView(4);
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasmSIMD, public memory: WebAssembly.Memory, public rustEngine: RustEngine) {
 
         wasm.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset, this.collisionCoordinator.scaledVelocity.byteOffset, this.collisionCoordinator.scaledPosition.byteOffset)
@@ -204,11 +212,6 @@ export class Engine {
             return commandEncoder.finish();
         })
     }
-    collisionCoordinator = {
-        scaledPosition: this.callocVector3(),
-        scaledVelocity: this.callocVector3(),
-        finalPosition: new TerraVector3(),
-    }
     async collideWithWorld(position: Vector3, velocity: Vector3, finalPosition: Float32Array/*, excludedMesh: Nullable<any> = null*/): Promise<void> {
         //TODO: Call only when camera position change
         for (let i = 0; i < 3; i++) {
@@ -225,12 +228,14 @@ export class Engine {
             await Promise.all([...this.gpu.boundables].map(mesh => mesh.checkCollision(this.collider)));
 
 
-            this.destinationPoint[0] = position[0] + velocity[0],
-                this.destinationPoint[1] = position[1] + velocity[1];
+            this.destinationPoint[0] = position[0] + velocity[0];
+            this.destinationPoint[1] = position[1] + velocity[1];
             this.destinationPoint[2] = position[2] + velocity[2];
+            
 
             if (this.collisionNotFound.getUint32(0, true)) {
                 finalPosition.set(this.destinationPoint);
+                console.log('no collision',  velocity[0],velocity[1],velocity[2])
                 return;
             }
             if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
@@ -242,9 +247,9 @@ export class Engine {
                 velocity[1] *= scale;
                 velocity[2] *= scale;
 
-                position[0] = this.collider.basePoint[0] + velocity[0];
-                position[1] = this.collider.basePoint[1] + velocity[1];
-                position[2] = this.collider.basePoint[2] + velocity[2];
+                position[0] += velocity[0];
+                position[1] += velocity[1];
+                position[2] += velocity[2];
 
                 this.collider._slidePlaneNormal[0] = position[0] - this.intersectionPointWasm[0];
                 this.collider._slidePlaneNormal[1] = position[1] - this.intersectionPointWasm[1];
@@ -262,8 +267,8 @@ export class Engine {
 
                 // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
                 this.displacementVector[0] = this.collider._slidePlaneNormal[0] * this.collider.epsilon;
-                this.displacementVector[1] = this.collider._slidePlaneNormal[1] * this.collider.epsilon,
-                    this.displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
+                this.displacementVector[1] = this.collider._slidePlaneNormal[1] * this.collider.epsilon;
+                this.displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
 
                 // pos.addInPlace(this._displacementVector);
                 position[0] += this.displacementVector[0];
@@ -293,6 +298,7 @@ export class Engine {
                 finalPosition[0] = position[0];
                 finalPosition[1] = position[1];
                 finalPosition[2] = position[2];
+                return;
             }
         }
     }
