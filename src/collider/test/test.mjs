@@ -6,7 +6,7 @@ const wasi = new WASI.WASI({
 });
 
 
-const memoryImport = new WebAssembly.Memory({ initial: 600 });
+const memoryImport = new WebAssembly.Memory({ initial: 6000 });
 const importObject = {
     wasi_snapshot_preview1: wasi.wasiImport,
         console: {

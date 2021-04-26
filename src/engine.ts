@@ -16,7 +16,7 @@ export interface ColliderWasm {
     construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number, velocity: number, basePoint: number): void;
     memory: { buffer: ArrayBuffer }
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
-    testTriangles: (position: number, length: number, meshID: number) => void
+    testTriangles: (position: number, positionParallel:number, length: number, meshID: number) => void
     _initialize: () => void
 }
 export interface ColliderWasmSIMD {
@@ -146,7 +146,7 @@ export class Engine {
 
     static async initEngine(gpu: GPU, DB: Promise<EarthDatabase>, canvas: HTMLCanvasElement): Promise<Engine> {
 
-        const memory = new WebAssembly.Memory({ initial: 600 });
+        const memory = new WebAssembly.Memory({ initial: 6000 });
 
         const wasmRequest = await fetch('collider/colliderO.wasm');
         const obj = await WebAssembly.instantiateStreaming(wasmRequest, {

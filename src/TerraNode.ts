@@ -130,7 +130,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
     #colliderVertices: TerraVector4[] = [];
 
 
-    #faces: Triangle[];
+    readonly #faces: Triangle[];
     #lastColliderTransformMatrix = new TerraMatrix();
 
     facesBuffer: SharedArrayBuffer;
@@ -147,7 +147,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         if (vectors.length != 3)
             throw ('less than 3 vector')
         this.#faces[faceIndex] = new Triangle(
-            vectors as [TerraVector4, TerraVector4, TerraVector4],
+            vectors,
             new TerraVector4(memory, this.facesBufferColliderPointer + faceIndex * 4 * 7)
         );
         new Uint32Array(memory, this.facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT, 3).set(vectors.map(v => v.byteOffset)); //4 is from plane
@@ -199,6 +199,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
             }
         }
         if (this.#faces.length % 4 === 0) {
+            this.#faceQuatros.length=0;
             let faceQuatro: Triangle[] = [];
             this.#faces.forEach(face => {
                 if (faceQuatro.push(face) === 4) {
@@ -236,12 +237,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         super(scene.engine, renderPipeline, indicesView ? indicesView.length : positionCount, createDrawable, true, verticesPositionStride);
 
         this.verticesBuffesSize = positionCount * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
-        if (this.strip) {
-            this.#faces = new Array(this.verticesCount - 2)
-        }
-        else {
-            this.#faces = new Array(this.verticesCount / 3);
-        }
+        this.#faces = new Array(this.strip?this.verticesCount - 2:this.verticesCount / 3)
         this.facesBuffer = new SharedArrayBuffer(this.#faces.length * 4 * Float32Array.BYTES_PER_ELEMENT);
 
         this.facesBufferColliderPointer = scene.engine.malloc(this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT);
@@ -302,17 +298,25 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
                 quatro[1].updatePlane();
                 quatro[2].updatePlane();
                 quatro[3].updatePlane();
-                new Float32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointerParallel + i * 4 * 4 * 12, 12).set([
-                    quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0],
-                    quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1],
-                    quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2]
+
+                const a = quatro[0].vectors.map(v => v.byteOffset) as [number,number,number];
+                const b=quatro[1].vectors.map(v => v.byteOffset) as [number,number,number];
+                const c=quatro[2].vectors.map(v => v.byteOffset) as [number,number,number];
+                const d=quatro[3].vectors.map(v => v.byteOffset) as [number,number,number];
+
+                new Float32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointerParallel + i * 4 * 28, 28).set([
+                    quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
+                    quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
+                    quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
+                    quatro[0].planeCollider[3], quatro[1].planeCollider[3], quatro[2].planeCollider[3], quatro[3].planeCollider[3], // d
+                    a[0], b[0], c[0], d[0],
+                    a[1], b[1], c[1], d[1],
+                    a[2], b[2], c[2], d[2],
                 ]);
-
-            })
-
+            });
         }
 
-        //let timer = performance.now();
+        const timer = performance.now();
         /*   this.#faces.forEach(triangle => {
                collider._testTriangle(triangle);
            });*/
@@ -320,12 +324,12 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         // let timer = performance.now();
         // for (let i = 0; i < 20;i++)
 
-        this.engine.wasm.testTriangles(this.facesBufferColliderPointer, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id)
+        console.log(this.engine.wasm.testTriangles(this.facesBufferColliderPointer,this.facesBufferColliderPointerParallel, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id));
        /* if (!this.engine.collisionNotFound.getUint32(0, false)) {
             console.log(new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer, this.#faces.length * 7)) //4 is for simd
             debugger;
         }*/
-        // console.log('wasm took', performance.now() - timer);
+         console.log('wasm took', performance.now() - timer);
         //  timer = performance.now();
         // for (let i = 0; i < 20; i++)
         //this.engine.wasmSIMD.testTriangles(this.facesBufferColliderPointer, this.facesBufferColliderPointerParallel, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.uniqueID)

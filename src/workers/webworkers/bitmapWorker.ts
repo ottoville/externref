@@ -19,11 +19,11 @@
         if (!ctx)
             throw ('Unable to get 2d context on bitmapworker ' + data.subdivisionsX + ' ' + split);
 
-        ctx.drawImage(data.bitmap, 0, sourceSplit*data.partnumber, data.bitmap.width, data.bitmap.height, data.align, 0, data.subdivisionsX, data.subdivisionsY);
+        ctx.drawImage(data.bitmap, 0, sourceSplit*data.partnumber, data.bitmap.width, data.bitmap.height, /*data.align*/ 0, 0, data.subdivisionsX, data.subdivisionsY);
         self.postMessage({ type: 'init', bitmap: data.bitmap }, [data.bitmap]);
         const imgdata = ctx.getImageData(0, 0, data.subdivisionsX, split).data;
 
-        new Uint8ClampedArray(data.buffer).set(imgdata, ((data.align * data.subdivisionsX * 4)) + buffersplit * data.partnumber);
+        new Uint8ClampedArray(data.buffer).set(imgdata, /*((data.align * data.subdivisionsX * 4)) + */ buffersplit * data.partnumber);
         self.postMessage({ type: 'ready' });
         self.close();
         

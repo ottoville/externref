@@ -9,7 +9,8 @@ TODO
 
      * */
 
-    static readonly subdivisions = [250, 250] as const;
+        // 1000 * 1000: 40 - 50ms when no collision
+    static readonly subdivisions = [1000, 1000] as const;
     readonly size = [10000, 10000] as const;
     readonly #maxXZ=[this.size[0] / 2.0,this.size[1] / 2.0] as const;
     readonly #minmax=[-2, 500] as const;

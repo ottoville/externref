@@ -1,6 +1,6 @@
 (module
   (import "console" "log" (func $log (param f32)))
-  (import "env" "memory" (memory 600))
+  (import "env" "memory" (memory 6000))
   (export "memory" (memory 0))
 
   ;;(import "env" "memory" (memory $mem 31 32))
@@ -127,9 +127,6 @@
             global.set $normalizedVelocity
           end
       end
-
-
-
   )
 
   (func $v3_dot
