@@ -272,8 +272,9 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
     //collisionsScalingMatrix = new TerraMatrix();
     myCollisionsTransformMatrix = new TerraMatrix();
     public checkCollision = async (collider: Collider) => {
-        if (this.#faces.length % 4 != 0) //TODO
+        if (this.#faces.length % 4 != 0) {  //TODO
             return
+        }
         if (!collider._canDoCollision(this.bounding_min as TerraVector3, this.bounding_max as TerraVector3)) {
             return;
         }
@@ -325,10 +326,10 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         // for (let i = 0; i < 20;i++)
 
         console.log(this.engine.wasm.testTriangles(this.facesBufferColliderPointer,this.facesBufferColliderPointerParallel, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id));
-       /* if (!this.engine.collisionNotFound.getUint32(0, false)) {
-            console.log(new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer, this.#faces.length * 7)) //4 is for simd
-            debugger;
-        }*/
+        if (!this.engine.collisionNotFound.getUint32(0, false)) {
+            //console.log(new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer, this.#faces.length * 7)) //4 is for simd
+            console.log('collided')
+        }
          console.log('wasm took', performance.now() - timer);
         //  timer = performance.now();
         // for (let i = 0; i < 20; i++)

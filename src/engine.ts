@@ -181,9 +181,13 @@ export class Engine {
     }
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public wasmSIMD: ColliderWasmSIMD, public memory: WebAssembly.Memory, public rustEngine: RustEngine) {
 
-        wasm.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset, this.collisionCoordinator.scaledVelocity.byteOffset, this.collisionCoordinator.scaledPosition.byteOffset)
-        // wasmSIMD.construct(this.collisionNotFoundSIMD.byteOffset, this.intersectionPointWasmSIMD.byteOffset, this.nearestDistanceSquaredSIMD.byteOffset, this.collidedMeshSIMD.byteOffset)
-        //  wasmSIMD.construct(this.collisionNotFound.byteOffset, this.intersectionPointWasm.byteOffset, this.nearestDistanceSquared.byteOffset, this.collidedMesh.byteOffset)
+        wasm.construct( this.collisionNotFound.byteOffset,
+                        this.intersectionPointWasm.byteOffset,
+                        this.nearestDistanceSquared.byteOffset,
+                        this.collidedMesh.byteOffset,
+                        this.collisionCoordinator.scaledVelocity.byteOffset,
+                        this.collisionCoordinator.scaledPosition.byteOffset)
+
 
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
         canvas.addEventListener('pointermove', (e) => {
