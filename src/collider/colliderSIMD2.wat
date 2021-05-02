@@ -337,9 +337,9 @@
     (param $t0 f32)
     (param $t1 f32)
     (param $signedDistToTrianglePlane f32)
+    (param $normalDotVelocity f32)
 
     (local $planeCollider v128)
-    (local $normalDotVelocity f32)
     (local $temp_t f32)
     (local $curLowestRoot f32)
     
@@ -369,16 +369,9 @@
     ;;end
     ;;Dot(this.#basePoint, triangle.planeCollider) + triangle.planeCollider[3];
 
-    (local.tee $normalDotVelocity
-        (call $v3_dot
-          (local.tee $planeCollider
-              (v128.load
-                (local.get $planePosition)
-              )
-          )
-          (global.get $velocity)
-        )
-    )
+
+
+    local.get $normalDotVelocity
     f32.const 0
     f32.eq
     if
@@ -390,6 +383,12 @@
           return
         end
     end
+
+    (local.set $planeCollider
+      (v128.load
+        (local.get $planePosition)
+      )
+    )
 
     f32.const 1.0
     global.set $lowestRoot
@@ -930,6 +929,9 @@
           (f32x4.extract_lane 0
             (local.get $signedDistToTrianglePlane)
           )
+          (f32x4.extract_lane 0
+            (local.get $normalDotVelocity)
+          )
         )
         (call $testTriangle
           (i32.add
@@ -945,6 +947,9 @@
           )
           (f32x4.extract_lane 1
             (local.get $signedDistToTrianglePlane)
+          )
+          (f32x4.extract_lane 1
+            (local.get $normalDotVelocity)
           )
         )
         (call $testTriangle
@@ -962,6 +967,9 @@
           (f32x4.extract_lane 2
             (local.get $signedDistToTrianglePlane)
           )
+         (f32x4.extract_lane 2
+            (local.get $normalDotVelocity)
+          )
         )
         (call $testTriangle
             (i32.add
@@ -977,6 +985,9 @@
           )
           (f32x4.extract_lane 3
             (local.get $signedDistToTrianglePlane)
+          )
+          (f32x4.extract_lane 3
+            (local.get $normalDotVelocity)
           )
         )
       ;;else
