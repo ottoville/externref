@@ -230,8 +230,6 @@
     (param $v2 v128)
     (result i32)
 
-
-
     (local $shuffled_cross v128)
 
     (local $temp_v1 v128)
@@ -377,12 +375,6 @@
         end
     end
 
-    (local.set $planeCollider
-      (v128.load
-        (local.get $planePosition)
-      )
-    )
-
     f32.const 1.0
     global.set $lowestRoot
 
@@ -418,8 +410,6 @@
       )
     )
     global.get $isMoving
-    i32.const 0
-    i32.ne
     if
       (local.get $t0)  ;;t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
       (local.get $t1)   ;; t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
@@ -451,7 +441,11 @@
           (f32x4.add
             (f32x4.sub
               (global.get $basePoint)
-              (local.get $planeCollider)
+              (local.tee $planeCollider
+                (v128.load
+                  (local.get $planePosition)
+                )
+              )
             )
             (f32x4.mul
               (global.get $velocity)
@@ -776,9 +770,7 @@
     (param $planePositionHorizontal i32)
     (param $length i32)
     (param $meshID i32)
-    (result i32)
 
-    (local $debug i32)
     (local $end i32)
     (local $v0 v128)
 
@@ -811,13 +803,6 @@
     local.set $planePositionHorizontal
 
     loop $for-loop|0
-      ;;(local.set $planePosition
-      ;;  (i32.add
-      ;;    (local.get $planePosition)
-      ;;    (i32.const 112) ;; 7*4 = 28; 28*4=112
-      ;;  )
-      ;;)
-
       (local.tee $v0
         (f32x4.le
           (call $simd_dot
@@ -856,68 +841,65 @@
       )
       v128.any_true
       if
-         (local.set $t0
-          (f32x4.div
-            (f32x4.sub
-              (f32x4.splat
-                (f32.const -1)
-              )
-              (local.tee $signedDistToTrianglePlane
-                      ;;0x4401C90F 0x4401C90F 0x4401C90F 0x4401C90F
-                (f32x4.add
-                  (v128.load
-                    (i32.add
-                      (local.get $planePositionHorizontal)
-                      (i32.const 48)
-                    )
-                  )
-                  (call $simd_dot
-                    (global.get $basePointX)
-                    (local.get $planeX)
-                    
-                    (global.get $basePointY)
-                    (local.get $planeY)
-                    
-                    (global.get $basePointZ)
-                    (local.get $planeZ)
-                  )
-                )
-              )
-            )
-            (local.tee $normalDotVelocity
-              (call $simd_dot
-                (local.get $planeX)
-                (global.get $velocityX)
-
-                (local.get $planeY)
-                (global.get $velocityY)
-
-                (local.get $planeZ)
-                (global.get $velocityZ)
-              )
-            )
-          )
-        )
-        (local.set $t1
-          (f32x4.div
-            (f32x4.sub
-              (f32x4.splat
-                (f32.const 1)
-              )
-              (local.get $signedDistToTrianglePlane)
-            )
-            (local.get $normalDotVelocity)
-          )
-        )
-
         (call $testTriangle
           (local.get $planePosition)
           (local.get $meshID)
           (f32x4.extract_lane 0
-           (local.get $t0)
+           (local.tee $t0
+            (f32x4.div
+              (f32x4.sub
+                (f32x4.splat
+                  (f32.const -1)
+                )
+                (local.tee $signedDistToTrianglePlane
+                        ;;0x4401C90F 0x4401C90F 0x4401C90F 0x4401C90F
+                  (f32x4.add
+                    (v128.load
+                      (i32.add
+                        (local.get $planePositionHorizontal)
+                        (i32.const 48)
+                      )
+                    )
+                    (call $simd_dot
+                      (global.get $basePointX)
+                      (local.get $planeX)
+                      
+                      (global.get $basePointY)
+                      (local.get $planeY)
+                      
+                      (global.get $basePointZ)
+                      (local.get $planeZ)
+                    )
+                  )
+                )
+              )
+              (local.tee $normalDotVelocity
+                (call $simd_dot
+                  (local.get $planeX)
+                  (global.get $velocityX)
+
+                  (local.get $planeY)
+                  (global.get $velocityY)
+
+                  (local.get $planeZ)
+                  (global.get $velocityZ)
+                )
+              )
+            )
+           )
           )
           (f32x4.extract_lane 0
-            (local.get $t1)
+            (local.tee $t1
+            (f32x4.div
+              (f32x4.sub
+                (f32x4.splat
+                  (f32.const 1)
+                )
+                (local.get $signedDistToTrianglePlane)
+              )
+              (local.get $normalDotVelocity)
+            )
+          )
           )
           (f32x4.extract_lane 0
             (local.get $signedDistToTrianglePlane)
@@ -971,14 +953,6 @@
             (local.get $signedDistToTrianglePlane)
           )
         )
-      ;;else
-      ;;  (local.set $debug
-      ;;    (i32.add
-      ;;      (i32.const 1)
-      ;;      (local.get $debug)
-      ;;    )          
-      ;;  )
-
       end
       (local.tee $planePosition
         (i32.add
@@ -990,7 +964,6 @@
       i32.lt_u
       br_if $for-loop|0
     end
-    local.get $debug
   )
   (func $getLowestRoot (param $a f32) (param $b f32) (param $c f32) (param $maxR f32) (result f32)
     ;;var determinant = b * b - 4.0 * a * c;

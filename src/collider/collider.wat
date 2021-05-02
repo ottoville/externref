@@ -284,7 +284,6 @@
     (local $planeIntersectionPoint v128)
     (local $distToCollisionSquared f32)
 
-
     (local $triangle0 v128)
     (local $triangle1 v128)
     (local $triangle2 v128)
