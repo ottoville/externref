@@ -149,7 +149,7 @@ export class Canvas extends TerraCompoment {
             //new testPlane(terrascene);
 
             const b = new Box(terrascene);
-            b.update_scale(200, 200, 200);
+            b.update_scale(500, 500, 500);
             new Human(terrascene)
             const terrainInited = Terrain.loadFromTexture(terrascene);
 

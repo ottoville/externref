@@ -336,9 +336,9 @@
     (param $meshID i32)
     (param $t0 f32)
     (param $t1 f32)
-    
+    (param $signedDistToTrianglePlane f32)
+
     (local $planeCollider v128)
-    (local $signedDistToTrianglePlane f32)
     (local $normalDotVelocity f32)
     (local $temp_t f32)
     (local $curLowestRoot f32)
@@ -368,22 +368,14 @@
     ;;  return
     ;;end
     ;;Dot(this.#basePoint, triangle.planeCollider) + triangle.planeCollider[3];
-    (local.set $signedDistToTrianglePlane  
-      (f32.add
-        (f32x4.extract_lane 3 (local.get $planeCollider))
-        (call $v3_dot
-          (global.get $basePoint)
-          (local.tee $planeCollider
-            (v128.load
-              (local.get $planePosition)
-            )
-          )
-        )
-      )
-    )
+
     (local.tee $normalDotVelocity
         (call $v3_dot
-          (local.get $planeCollider)
+          (local.tee $planeCollider
+              (v128.load
+                (local.get $planePosition)
+              )
+          )
           (global.get $velocity)
         )
     )
@@ -801,8 +793,6 @@
     (local $planeX v128)
     (local $planeY v128)
     (local $planeZ v128)
-    (local $planeD v128)
-
 
     (local $signedDistToTrianglePlane v128)
     (local $normalDotVelocity v128)
@@ -881,13 +871,12 @@
                 (f32.const -1)
               )
               (local.tee $signedDistToTrianglePlane
+                      ;;0x4401C90F 0x4401C90F 0x4401C90F 0x4401C90F
                 (f32x4.add
-                  (local.tee $planeD
-                    (v128.load
-                      (i32.add
-                        (local.get $planePositionHorizontal)
-                        (i32.const 48)
-                      )
+                  (v128.load
+                    (i32.add
+                      (local.get $planePositionHorizontal)
+                      (i32.const 48)
                     )
                   )
                   (call $simd_dot
@@ -898,7 +887,7 @@
                     (local.get $planeY)
                     
                     (global.get $basePointZ)
-                     (local.get $planeZ)
+                    (local.get $planeZ)
                   )
                 )
               )
@@ -938,6 +927,9 @@
           (f32x4.extract_lane 0
             (local.get $t1)
           )
+          (f32x4.extract_lane 0
+            (local.get $signedDistToTrianglePlane)
+          )
         )
         (call $testTriangle
           (i32.add
@@ -950,6 +942,9 @@
           )
           (f32x4.extract_lane 1
             (local.get $t1)
+          )
+          (f32x4.extract_lane 1
+            (local.get $signedDistToTrianglePlane)
           )
         )
         (call $testTriangle
@@ -964,6 +959,9 @@
           (f32x4.extract_lane 2
             (local.get $t1)
           )
+          (f32x4.extract_lane 2
+            (local.get $signedDistToTrianglePlane)
+          )
         )
         (call $testTriangle
             (i32.add
@@ -976,6 +974,9 @@
           )
           (f32x4.extract_lane 3
             (local.get $t1)
+          )
+          (f32x4.extract_lane 3
+            (local.get $signedDistToTrianglePlane)
           )
         )
       ;;else
