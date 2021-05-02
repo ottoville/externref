@@ -712,6 +712,8 @@
   
   (func $testTriangles
     (param $planePosition i32)
+    (param $planePositionHorizontal i32)
+
     (param $length i32)
     (param $meshID i32)
 

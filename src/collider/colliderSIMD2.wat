@@ -1,5 +1,5 @@
 (module
-  (import "console" "log" (func $log (param f32)))
+  (import "console" "log" (func $log (param i32)))
   (import "env" "memory" (memory 6000))
   (export "memory" (memory 0))
 
@@ -437,24 +437,10 @@
     f32.const 0
     f32.ne
     if
-      (local.tee $t0  ;;t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
-        (f32.div
-          (f32.sub
-            (f32.const -1)
-            (local.get $signedDistToTrianglePlane)
-          )
-          (local.get $normalDotVelocity)
-        )
-      )
-      (local.tee $t1   ;; t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
-        (f32.div
-          (f32.sub
-            (f32.const 1)
-            (local.get $signedDistToTrianglePlane)
-          )
-          (local.get $normalDotVelocity)
-        )
-      )
+      (local.get $t0)  ;;t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+      (local.get $t1)   ;; t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+    
+      
       f32.gt
       if
           local.get $t0
@@ -776,10 +762,10 @@
   )
   (func $simd_dot
     (param $x1 v128)
-    (param $y1 v128)
-    (param $z1 v128)
     (param $x2 v128)
+    (param $y1 v128)
     (param $y2 v128)
+    (param $z1 v128)
     (param $z2 v128)
 
     (result v128)
@@ -815,6 +801,7 @@
     (local $planeX v128)
     (local $planeY v128)
     (local $planeZ v128)
+    (local $planeD v128)
 
 
     (local $signedDistToTrianglePlane v128)
@@ -885,25 +872,34 @@
           (v128.const i32x4 0 0 0 0)
         )
       )
-      drop
-      ;;v128.any_true
-      ;;if
-        (local.set $t0
+      v128.any_true
+      if
+         (local.set $t0
           (f32x4.div
             (f32x4.sub
               (f32x4.splat
                 (f32.const -1)
               )
               (local.tee $signedDistToTrianglePlane
-                (call $simd_dot
-                  (local.get $planeX)
-                  (global.get $basePointX)
-
-                  (local.get $planeY)
-                  (global.get $basePointY)
-
-                  (local.get $planeZ)
-                  (global.get $basePointZ)
+                (f32x4.add
+                  (local.tee $planeD
+                    (v128.load
+                      (i32.add
+                        (local.get $planePositionHorizontal)
+                        (i32.const 48)
+                      )
+                    )
+                  )
+                  (call $simd_dot
+                    (global.get $basePointX)
+                    (local.get $planeX)
+                    
+                    (global.get $basePointY)
+                    (local.get $planeY)
+                    
+                    (global.get $basePointZ)
+                     (local.get $planeZ)
+                  )
                 )
               )
             )
@@ -990,7 +986,7 @@
       ;;    )          
       ;;  )
 
-     ;; end
+      end
       (local.tee $planePosition
         (i32.add
             (local.get $planePosition)
