@@ -37,6 +37,7 @@
   (global $basePointPointer (mut i32) (i32.const 0))
   (global $velocityPointer (mut i32) (i32.const 0))
 
+  (global $isMoving (mut i32) (i32.const 0))
 
   (func $main (export "_start")
       ;; Creating a new io vector within linear memory
@@ -85,6 +86,18 @@
         (global.get $velocityPointer)
       )
     )
+    (global.set $isMoving
+      (v128.any_true
+        (global.get $velocity)
+      )
+    )
+    global.get $isMoving
+    i32.eqz
+    if
+      i32.const 0
+      drop
+    end
+
     (global.set $basePoint
       (v128.load
         (global.get $basePointPointer)
@@ -337,7 +350,6 @@
     (param $t0 f32)
     (param $t1 f32)
     (param $signedDistToTrianglePlane f32)
-    (param $normalDotVelocity f32)
 
     (local $planeCollider v128)
     (local $temp_t f32)
@@ -353,27 +365,8 @@
     i32.const 0
     global.set $found
 
-    ;;(call $v3_dot
-    ;;  (local.tee $planeCollider
-    ;;    (v128.load
-    ;;     (local.get $planePosition)
-    ;;   )
-    ;;  )
-    ;;  (global.get $normalizedVelocity)
-    ;;)
-
-    ;;f32.const 0
-    ;;f32.gt
-    ;;if
-    ;;  return
-    ;;end
-    ;;Dot(this.#basePoint, triangle.planeCollider) + triangle.planeCollider[3];
-
-
-
-    local.get $normalDotVelocity
-    f32.const 0
-    f32.eq
+    global.get $isMoving
+    i32.eqz
     if
         local.get $signedDistToTrianglePlane
         f32.abs
@@ -424,9 +417,9 @@
         )
       )
     )
-    local.get $normalDotVelocity
-    f32.const 0
-    f32.ne
+    global.get $isMoving
+    i32.const 0
+    i32.ne
     if
       (local.get $t0)  ;;t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
       (local.get $t1)   ;; t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
@@ -929,9 +922,6 @@
           (f32x4.extract_lane 0
             (local.get $signedDistToTrianglePlane)
           )
-          (f32x4.extract_lane 0
-            (local.get $normalDotVelocity)
-          )
         )
         (call $testTriangle
           (i32.add
@@ -947,9 +937,6 @@
           )
           (f32x4.extract_lane 1
             (local.get $signedDistToTrianglePlane)
-          )
-          (f32x4.extract_lane 1
-            (local.get $normalDotVelocity)
           )
         )
         (call $testTriangle
@@ -967,9 +954,6 @@
           (f32x4.extract_lane 2
             (local.get $signedDistToTrianglePlane)
           )
-         (f32x4.extract_lane 2
-            (local.get $normalDotVelocity)
-          )
         )
         (call $testTriangle
             (i32.add
@@ -985,9 +969,6 @@
           )
           (f32x4.extract_lane 3
             (local.get $signedDistToTrianglePlane)
-          )
-          (f32x4.extract_lane 3
-            (local.get $normalDotVelocity)
           )
         )
       ;;else

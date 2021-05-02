@@ -10,7 +10,7 @@
     "buildWasm-prod": "wat2wasm.exe collider\\colliderSIMD2.wat -o ..\\wwwroot\\collider\\collider.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\collider.wasm -o ..\\wwwroot\\collider\\colliderO.wasm -O3 --enable-simd --always-inline-max-function-size 100",
     "buildWasmSIMD": "wat2wasm.exe collider\\colliderSIMD.wat -o ..\\wwwroot\\collider\\colliderSIMD.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\colliderSIMD.wasm -o ..\\wwwroot\\collider\\colliderSIMDO.wasm -O3 --enable-simd --always-inline-max-function-size 100",
     "build": "npm run buildRust && tsc -b  && npm run buildWasm",
-    "build-prod": "npm run buildRust && tsc -b  && npm run buildWasm",
+    "build-prod": "npm run buildRust && tsc -b  && npm run buildWasm-prod",
     "publish": "tsc && dotnet build ../BlazorApp1.csproj && dotnet publish ../BlazorApp1.csproj",
     "test": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs"
   },
