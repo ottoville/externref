@@ -299,20 +299,11 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
                 quatro[1].updatePlane();
                 quatro[2].updatePlane();
                 quatro[3].updatePlane();
-
-                const a = quatro[0].vectors.map(v => v.byteOffset) as [number,number,number];
-                const b=quatro[1].vectors.map(v => v.byteOffset) as [number,number,number];
-                const c=quatro[2].vectors.map(v => v.byteOffset) as [number,number,number];
-                const d=quatro[3].vectors.map(v => v.byteOffset) as [number,number,number];
-
-                new Float32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointerParallel + i * 4 * 28, 28).set([
+                new Float32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointerParallel + i * 4 * 16, 16).set([
                     quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
                     quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
                     quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
-                    quatro[0].planeCollider[3], quatro[1].planeCollider[3], quatro[2].planeCollider[3], quatro[3].planeCollider[3], // d
-                    a[0], b[0], c[0], d[0],
-                    a[1], b[1], c[1], d[1],
-                    a[2], b[2], c[2], d[2],
+                    quatro[0].planeCollider[3], quatro[1].planeCollider[3], quatro[2].planeCollider[3], quatro[3].planeCollider[3], //d
                 ]);
             });
         }

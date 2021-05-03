@@ -787,18 +787,10 @@
     local.get $planePosition
     local.get $length 
     i32.add   ;;112
-   ;; i32.const 28  ;;84
-   ;; i32.sub       ;; Subtract one length from end because $i variable is always position-28
     local.set $end
 
-    ;;local.get $planePosition
-    ;;i32.const 112
-    ;;i32.sub
-    ;;local.set $planePosition
-
-
     local.get $planePositionHorizontal
-    i32.const 112
+    i32.const 64
     i32.sub
     local.set $planePositionHorizontal
 
@@ -811,7 +803,7 @@
                 (local.tee $planePositionHorizontal
                   (i32.add
                     (local.get $planePositionHorizontal)
-                    (i32.const 112)
+                    (i32.const 64)
                   )
                 )
               )
@@ -852,7 +844,6 @@
                   (f32.const -1)
                 )
                 (local.tee $signedDistToTrianglePlane
-                        ;;0x4401C90F 0x4401C90F 0x4401C90F 0x4401C90F
                   (f32x4.add
                     (v128.load
                       (i32.add
