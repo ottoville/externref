@@ -7,7 +7,7 @@
     "serve": "npm run publish && http-server ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\ -S -o",
     "buildRust": "wasm-pack build engine --target web --out-dir ../../wwwroot/js/engine",
     "buildWasm": "wat2wasm.exe collider\\colliderSIMD2.wat --debug-names -o ..\\wwwroot\\collider\\colliderO.wasm --enable-simd",
-    "buildWasm-prod": "wat2wasm.exe collider\\colliderSIMD2.wat -o ..\\wwwroot\\collider\\collider.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\collider.wasm -o ..\\wwwroot\\collider\\colliderO.wasm -O3 --enable-simd --always-inline-max-function-size 100",
+    "buildWasm-prod": "wat2wasm.exe collider\\colliderSIMD2.wat -o ..\\wwwroot\\collider\\collider.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\collider.wasm -o ..\\wwwroot\\collider\\colliderO.wasm -O3 --enable-simd --always-inline-max-function-size 200",
     "buildWasmSIMD": "wat2wasm.exe collider\\colliderSIMD.wat -o ..\\wwwroot\\collider\\colliderSIMD.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\colliderSIMD.wasm -o ..\\wwwroot\\collider\\colliderSIMDO.wasm -O3 --enable-simd --always-inline-max-function-size 100",
     "build": "npm run buildRust && tsc -b  && npm run buildWasm",
     "build-prod": "npm run buildRust && tsc -b  && npm run buildWasm-prod",

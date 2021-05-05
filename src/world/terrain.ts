@@ -173,11 +173,11 @@ TODO
     //readonly terrainPositionAndUvsAndNormalsCPUSwap = new SharedArrayBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength);
     //readonly terrainPositionAndUvsAndNormalsCPUSwapView = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap);
 
-    #indices: Uint32Array = new Uint32Array(this.indicesBuffer);
+    indices: Uint32Array = new Uint32Array(this.indicesBuffer);
     autosave = 0;
-    updateSwap2(offset = 0, length: number, terrainPositionAndUvsAndNormalsCPUSwap: ArrayBuffer, nofaces = false) {
-        const b1 = this.scene.gpu.createGPUBuffer(length, [GPUBufferUsage.COPY_SRC], true);
-        new Float32Array(b1.getMappedRange()).set(new Float32Array(terrainPositionAndUvsAndNormalsCPUSwap, offset, length / 4))
+    updateSwap2(offset = 0, terrainPositionAndUvsAndNormalsCPUSwap: Float32Array, nofaces = false) {
+        const b1 = this.scene.gpu.createGPUBuffer(terrainPositionAndUvsAndNormalsCPUSwap.byteLength, [GPUBufferUsage.COPY_SRC], true);
+        new Float32Array(b1.getMappedRange()).set(terrainPositionAndUvsAndNormalsCPUSwap)
         b1.unmap();
         const commandEncoder = this.scene.gpu.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
@@ -185,7 +185,7 @@ TODO
             0, //source offset
             this.terrainPositionAndUvsAndNormalsGPU, //destination buffer
             offset, //destination offset
-            length);
+            terrainPositionAndUvsAndNormalsCPUSwap.byteLength);
         let b2: GPUCopySRCBuffer;
         if (!nofaces) {
             b2 = this.scene.gpu.createGPUBuffer(this.mesh.facesBuffer.byteLength, [GPUBufferUsage.COPY_SRC], true);
@@ -229,8 +229,8 @@ TODO
             response.headers.set('content-type', 'application/octet-stream');
 
 
-            const response2 = new Response(this.#indices.buffer);
-            response2.headers.set('content-length', this.#indices.buffer.byteLength.toString());
+            const response2 = new Response(this.indices.buffer);
+            response2.headers.set('content-length', this.indices.buffer.byteLength.toString());
             response2.headers.set('content-type', 'application/octet-stream');
 
 
@@ -507,7 +507,7 @@ TODO
             })*/
 
             //this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
-            this.updateSwap2(0, readbuff.byteLength, readbuff, true);
+            this.updateSwap2(0, new Float32Array(readbuff), true);
             this.serialize();
         });
         gpuReadBufferIndices.readAndDestroy(async (buff) => {

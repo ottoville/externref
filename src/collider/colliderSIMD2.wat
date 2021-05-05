@@ -534,8 +534,6 @@
         (local.get $triangle2)
         (local.get $triangle0)
       )
-
-      ;;var velocitySquaredLength = this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2];
     end
 
 

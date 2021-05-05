@@ -58,8 +58,18 @@ new Float32Array(memory, 7824,4).set([0, 3.8745102882385254, 0, 0]);
 const data=[2147483648, 1065353216, 0, 3229087738, 7824, 7776, 7760, 0, 1065353216, 0, 3229087738, 7808, 7824, 7760, 3162570751, 1065351136, 0, 3229085723, 7840, 7792, 7776, 3162570751, 1065351136, 0, 3229085723, 7824, 7840, 7776, 2147483648, 1065353152, 993304356, 3229087676, 7872, 7824, 7808, 0, 1065353152, 993304356, 3229087676, 7856, 7872, 7808, 3162569703, 1065349056, 3162569703, 3229083709, 7888, 7840, 7824, 993304311, 1065353089, 993304311, 3229087615, 7872, 7888, 7824];
 const facesBufferCollider=new Uint32Array(memory,60, data.length);
 facesBufferCollider.set(data);
+const facesBufferColliderFloats=new Float32Array(memory,60, data.length);
+const facesBufferColliderParallel=new Float32Array(memory,60+data.length, 16).set([
+    facesBufferColliderFloats[0],   facesBufferColliderFloats[28],  facesBufferColliderFloats[56],  facesBufferColliderFloats[84],
+    facesBufferColliderFloats[1],   facesBufferColliderFloats[29],  facesBufferColliderFloats[57],  facesBufferColliderFloats[85],
+    facesBufferColliderFloats[2],   facesBufferColliderFloats[30],  facesBufferColliderFloats[58],  facesBufferColliderFloats[86],
+    facesBufferColliderFloats[3],   facesBufferColliderFloats[31],  facesBufferColliderFloats[59],  facesBufferColliderFloats[87]
+])
 
-instance.exports.testTriangles(facesBufferCollider.byteOffset, facesBufferCollider.byteLength,8*7*4);
+
+
+
+instance.exports.testTriangles(facesBufferCollider.byteOffset,facesBufferColliderParallel.byteOffset, facesBufferCollider.byteLength,8*7*4);
 if(!collisionNotFound[0]===0) {
     console.error('faulty collisionNotFound',collisionNotFound)
     process.exit(1)
