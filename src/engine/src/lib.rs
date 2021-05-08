@@ -4,8 +4,11 @@ mod engine;
 mod geometry;
 mod mesh;
 mod boundingbox;
+mod terrain;
+
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
+pub use crate::terrain::elevator::Elevator;
 
 pub struct Vec4<T> {
     x: T,

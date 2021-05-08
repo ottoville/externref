@@ -7,6 +7,7 @@ pub use crate::Vec4;
 pub use crate::GPUMesh;
 pub use crate::geometry::Geometry;
 pub use crate::boundingbox::BoundingBox;
+pub use crate::terrain::elevator::Elevator;
 
 #[wasm_bindgen]
 pub struct Mesh {
@@ -23,6 +24,9 @@ pub struct Mesh {
 
 #[wasm_bindgen]
 impl Mesh {
+    pub fn create_elevator(&self) -> Vec<f32> {
+        Elevator::new(&self)
+    }
     #[wasm_bindgen(method, getter)]
     pub fn bounding_min(&mut self) -> Vec<f32> {
 

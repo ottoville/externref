@@ -159,15 +159,12 @@ TODO
     }
 
 
-    readonly #terrainPositionsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisions[0] + 1) * (Terrain.subdivisions[1] + 1) * 4;
-    readonly #terrainNormalsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisions[0] + 1) * (Terrain.subdivisions[1] + 1) * 4;
+
 
     readonly #terrainIndicesLength = Uint32Array.BYTES_PER_ELEMENT * (Terrain.subdivisions[0] * Terrain.subdivisions[1] * 6);
 
     readonly indicesBuffer: SharedArrayBuffer = new SharedArrayBuffer(this.#terrainIndicesLength);
 
-
-    readonly #terrainUvsLength = Float32Array.BYTES_PER_ELEMENT * (Terrain.subdivisions[0] + 1) * (Terrain.subdivisions[1] + 1) * 4;
     readonly terrainPositionAndUvsAndNormalsGPU: GPUVertexBuffer & GPUCopyDSTBuffer;
 
     //readonly terrainPositionAndUvsAndNormalsCPUSwap = new SharedArrayBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength);
@@ -293,11 +290,21 @@ TODO
         const commandEncoder = scene.gpu.createCommandEncoder();
         const passEncoder = commandEncoder.beginComputePass();
         passEncoder.setBindGroup(0, bindGroupSettings);
+        const positionsCount =  ((size:number) => {
+            while(size%4 !== 0)
+                size++;
+            return size;
+        })( (Terrain.subdivisions[0] + 1) * (Terrain.subdivisions[1] + 1));
+               
+        const positionsLength = Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
+        const uvsLength =       Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
+        const normalsLength =   Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
+        const verticesBufferSize = positionsLength + uvsLength + normalsLength
 
         if (algorithm) {
-            var terrainPositionAndUvsAndNormalsGPUTemp = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+            var terrainPositionAndUvsAndNormalsGPUTemp = this.scene.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
-            this.terrainPositionAndUvsAndNormalsGPU = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST])
+            this.terrainPositionAndUvsAndNormalsGPU = this.scene.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST])
 
             const computePipeline = scene.gpu.createComputePipeline(algorithm);
             const sourceBindGroup = computePipeline.createBindGroup(1, [
@@ -318,11 +325,11 @@ TODO
             passEncoder.setBindGroup(1, sourceBindGroup);
             passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
         } else {
-            var terrainPositionAndUvsAndNormalsGPUTemp = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], true);
+            var terrainPositionAndUvsAndNormalsGPUTemp = this.scene.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], true);
             new Uint8Array(terrainPositionAndUvsAndNormalsGPUTemp.getMappedRange()).set(new Uint8Array(buffer));
             terrainPositionAndUvsAndNormalsGPUTemp.unmap();
 
-            this.terrainPositionAndUvsAndNormalsGPU = this.scene.gpu.createGPUBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], true)
+            this.terrainPositionAndUvsAndNormalsGPU = this.scene.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], true)
             new Uint8Array(this.terrainPositionAndUvsAndNormalsGPU.getMappedRange()).set(new Uint8Array(buffer));
             this.terrainPositionAndUvsAndNormalsGPU.unmap();
         }
@@ -489,7 +496,6 @@ TODO
 
         const gpuCommands = commandEncoder.finish();
         scene.gpu.device.queue.submit([gpuCommands]);
-        const positionsCount = (Terrain.subdivisions[0] + 1) * (Terrain.subdivisions[1] + 1)
         this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, positionsCount, new Uint32Array(this.indicesBuffer), 12);
 
 

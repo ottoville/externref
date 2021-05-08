@@ -63,6 +63,9 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     ) {
         super(scene.engine, getRenderPipeline(scene, terrain),4,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), node, 8, 0,undefined,'TerrainTool'));
         scene.TerraCameras[0].subscribePickingRay();
+        console.time('elevator')
+        this.terrain.mesh.create_elevator();
+        console.timeEnd('elevator');
         //TERRAIN EDITING DISABLED
         /*
         terrainWorker.message(WorkerReturn.Promise, 'init',
@@ -110,12 +113,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         }
         terrain.indices.forEach((index, i)=> {
             this.#facesOfVertices[index]!.push((i / 3) | 0);
-        });
-       // console.log(this.#facesOfVertices)
-       // console.log(this.#facesOfVertices2)
-        /*for (index = 0; index < terrain.indices.length; index++) {
-            this.#facesOfVertices[terrain.indices[index]!]!.push((index / 3) | 0);
-        }*/
+        });        
     }
     static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number,number]) {
         terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', {buffer:arrayBuffer, size:size}, [arrayBuffer]);
