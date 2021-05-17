@@ -1,5 +1,5 @@
-use wasm_bindgen::prelude::*;
 
+use wasm_bindgen::prelude::*;
 pub use crate::mesh::Mesh;
 
 #[wasm_bindgen]
@@ -9,10 +9,16 @@ pub struct Elevator {
 }
 #[wasm_bindgen]
 impl Elevator {
-    //pub fn get_vertices(&self) -> Vec<f32> {
-    //    &self.vertices_horizontal
-   // }
-    pub fn new (mesh:&Mesh) -> Vec<f32> {
+    #[cfg(target_arch = "wasm32")]
+    #[target_feature(enable = "simd128")]    
+    unsafe fn elevate(&self) {
+        use std::arch::wasm32::*;
+        let iter2 = self.vertices_horizontal.chunks(4).skip(1).step_by(3);
+        for val in iter2 {
+            let a = v128_load(val.as_ptr() as *const v128);
+        }
+    }
+    pub fn new (mesh:&Mesh) -> Elevator {
         let mut vertices = Vec::new();
         let iter = mesh.geometry.vertices.chunks(mesh.geometry.vertices_stride * 4);
         for val in iter {
@@ -23,9 +29,8 @@ impl Elevator {
             ];
             vertices.append(&mut v);
         }
-        vertices
-        //Elevator {
-        //    vertices_horizontal:vertices,
-        //}
+        Elevator {
+            vertices_horizontal:vertices,
+        }
     }
 }

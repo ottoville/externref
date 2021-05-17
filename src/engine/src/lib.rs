@@ -1,3 +1,6 @@
+#![feature(wasm_target_feature)]
+#![feature(wasm_simd)]
+
 extern crate wasm_bindgen;
 
 mod engine;
@@ -35,7 +38,10 @@ impl Vec3<f32> {
 
     }
 }
-
+pub struct Vec2<T> {
+    x: T,
+    y: T
+}
 #[repr(align(8))]
 pub struct GPUMesh {
     transformation: Vec4<Vec4<f32>>,

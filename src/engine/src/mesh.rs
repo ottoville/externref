@@ -24,7 +24,7 @@ pub struct Mesh {
 
 #[wasm_bindgen]
 impl Mesh {
-    pub fn create_elevator(&self) -> Vec<f32> {
+    pub fn create_elevator(&self) -> Elevator {
         Elevator::new(&self)
     }
     #[wasm_bindgen(method, getter)]

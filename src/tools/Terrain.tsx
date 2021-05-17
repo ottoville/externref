@@ -53,7 +53,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
     facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
     readonly #facesOfVertices: number[][]=[]
-    terrainPositionAndUvsAndNormalsCPUSwap: Float32Array;
+    readonly #terrainPositionAndUvsAndNormalsCPUSwap = this.terrain.mesh.verticesView();
 
     constructor(
         public scene:Scene,
@@ -91,8 +91,6 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
 
 
-
-        this.terrainPositionAndUvsAndNormalsCPUSwap = this.terrain.mesh.verticesView();
 
         const faceCount = terrain.mesh.facesBuffer.byteLength / 4 / 4;
         for (let i = 0; i < faceCount; i++) {
@@ -202,7 +200,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
         //if (isNaN(pickInfo.distance[0]))
         //    return;
-        const length = this.terrainPositionAndUvsAndNormalsCPUSwap.length;
+        const length = this.#terrainPositionAndUvsAndNormalsCPUSwap.length;
 
         // Impact zone
         if (this.#mousePosition[0] != this.#pick.position[0] || this.#mousePosition[1] != this.#pick.position[2]) {
@@ -213,7 +211,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
             const radiusPow = Math.pow(radius, 2);
             
             for (let index = 0; index < length; index += 12) {
-                const distance = Math.pow(this.terrainPositionAndUvsAndNormalsCPUSwap[index]! - this.#pick.position[0], 2) + Math.pow(this.terrainPositionAndUvsAndNormalsCPUSwap[index + 2]! - this.#pick.position[2], 2)
+                const distance = Math.pow(this.#terrainPositionAndUvsAndNormalsCPUSwap[index]! - this.#pick.position[0], 2) + Math.pow(this.#terrainPositionAndUvsAndNormalsCPUSwap[index + 2]! - this.#pick.position[2], 2)
                 if (distance < radiusPow) {
                     this.#selectedVertices.push({
                         vertice: index,
@@ -230,23 +228,25 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         let v1: Float32Array
         let v2: Float32Array
         let v3: Float32Array
-    
+        
+        const radiusNear = radius * 0.3;
+        const radiusFar = radius * 0.7;
     
         this.#selectedVertices.forEach(sv => {
-            let positiony = this.terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1]!;
+            let positiony = this.#terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1]!;
             var fullHeight = height * direction;
     
-            if (sv.distance < radius * 0.3) {
+            if (sv.distance < radiusNear) {
                 positiony += fullHeight;
             } else {
-                positiony += fullHeight * (1.0 - (sv.distance - radius * 0.3) / (radius * 0.7));
+                positiony += fullHeight * (1.0 - (sv.distance - radiusNear) / radiusFar);
             }
     
             if (positiony > heightMax)
                 positiony = heightMax;
             else if (positiony < heightMin)
                 positiony = heightMin;
-            this.terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
+            this.#terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
     
             faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
     
@@ -326,7 +326,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
                 const length = max - min;
 
-                this.terrain.updateSwap2(min, new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap.buffer,this.terrainPositionAndUvsAndNormalsCPUSwap.byteOffset+min, length/4))
+                this.terrain.updateSwap2(min, new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap.buffer,this.#terrainPositionAndUvsAndNormalsCPUSwap.byteOffset+min, length/4))
 
         }
     
