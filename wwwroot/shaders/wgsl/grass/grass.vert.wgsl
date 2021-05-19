@@ -13,7 +13,7 @@ let rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(vec2<f32>(0.0,0.0), vec2<f32>
 
 [[block]] struct Time {
   time : u32;
-  [[offset(4)]] delta : f32;
+  delta : f32;
 };
 [[binding(1), group(0)]] var<uniform> time : Time;
 

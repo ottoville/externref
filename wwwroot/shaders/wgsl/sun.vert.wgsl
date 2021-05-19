@@ -5,8 +5,8 @@
 };
 
 [[block]] struct Time {
-  [[offset(0)]] time : u32;
-  [[offset(4)]] delta : f32;
+  time : u32;
+  delta : f32;
 };
 
 [[block]] struct WorldPosition {

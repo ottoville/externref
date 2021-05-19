@@ -20,7 +20,7 @@ struct Vertice {
 
  struct Plane {
    norm : vec3<f32>;
-  [[offset(12)]] d : f32;
+   d : f32;
 };
 [[block]] struct PlaneArray {
   plane : [[stride(16)]] array<Plane>;

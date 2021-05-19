@@ -1,4 +1,3 @@
-let stride : u32 = 12;
 
 [[block]] struct FloatArray {
    numbers : [[stride(4)]] array<f32>;
@@ -22,7 +21,8 @@ let stride : u32 = 12;
 
 [[stage(compute)]]
 fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
-  let facetSize : u32 = settings.subdivisions * settings.subdivisions * u32(4); //250*250* 4;
+    let stride : u32 = u32(12);
+    let facetSize : u32 = settings.subdivisions * settings.subdivisions * u32(4); //250*250* 4;
 
     let i:u32 = GlobalInvocationID.y * stride;
     let j:u32 = GlobalInvocationID.x * (settings.subdivisions + u32(1)) * stride;

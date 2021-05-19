@@ -13,7 +13,7 @@ let vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
 
 [[block]] struct Time {
   time : u32;
-  [[offset(4)]] delta : f32;
+  delta : f32;
 };
 
 [[block]] struct IntArray {
@@ -22,7 +22,7 @@ let vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
 
 struct Plane {
   norm : vec3<f32>;
-  [[offset(12)]] d : f32;
+  d : f32;
 };
 [[block]] struct PlaneArray {
   plane : [[stride(16)]] array<Plane>;
@@ -52,9 +52,6 @@ struct Plane {
 
 //let PI:f32 = 3.1415926535897932384626433832795;
 let angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
-
-let maxX:u32 = 5000;
-let maxZ:u32 = 5000;
 
 
 
