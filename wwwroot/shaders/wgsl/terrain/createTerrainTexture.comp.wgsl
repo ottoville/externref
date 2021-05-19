@@ -25,7 +25,7 @@
 
 
 [[stage(compute)]]
-fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) -> void {
+fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
 
     let cx:i32 = i32(f32(GlobalInvocationID.x) * (f32(settings.size.x)/f32(settings.textureSize.x)) - f32(settings.size.x/u32(2)));

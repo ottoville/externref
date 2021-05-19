@@ -1,11 +1,12 @@
 let filt:vec3<f32> = vec3<f32>(0.3, 0.59, 0.11);
 
 [[block]] struct Settings {
-    size : vec2<u32>;
-    bufferSize : vec2<u32>;
-    subdivisions : u32;
-    heightMinMax : vec2<i32>;
-    maxXZ : vec2<i32>;
+     size : vec2<u32>;
+     bufferSize : vec2<u32>;
+     subdivisions : u32;
+     heightMinMax : vec2<i32>;
+    [[align(32)]] max : vec2<i32>;
+     textureSize:vec2<u32>;
 };
 struct Vertice {
   position : vec3<f32>;
@@ -24,7 +25,7 @@ struct Vertice {
 
 
 [[stage(compute)]]
-fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) -> void {
+fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
     var position: vec3<f32> = vec3<f32>(f32(GlobalInvocationID.x * img.size.x) / f32(img.subdivisions) - (f32(img.size.x) / 2.0),
     0.0,
     f32((img.subdivisions - GlobalInvocationID.y) * img.size.y) / f32(img.subdivisions) - (f32(img.size.y) / 2.0));
@@ -44,6 +45,6 @@ fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) -> voi
    position.y = f32(img.heightMinMax.x) + f32( img.heightMinMax.y -  img.heightMinMax.x) * gradient;
    positions.vert[GlobalInvocationID.y * (img.subdivisions + u32(1)) + GlobalInvocationID.x].position = position;
   
-   positions.vert[GlobalInvocationID.y * (img.subdivisions + u32(1)) + GlobalInvocationID.x].uv = (position.xz + vec2<f32>(img.maxXZ)) / vec2<f32>(img.size);
+   positions.vert[GlobalInvocationID.y * (img.subdivisions + u32(1)) + GlobalInvocationID.x].uv = (position.xz + vec2<f32>(img.max)) / vec2<f32>(img.size);
     return;
   }

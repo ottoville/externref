@@ -4,6 +4,7 @@
      subdivisions : u32;
      heightMinMax : vec2<i32>;
     [[align(32)]] max : vec2<i32>;
+     textureSize:vec2<u32>;
 };
 
 struct Vertice {
