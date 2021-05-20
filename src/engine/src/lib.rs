@@ -1,4 +1,4 @@
-#![feature(wasm_target_feature)]
+#![cfg(target_arch = "wasm32")]
 #![feature(wasm_simd)]
 
 extern crate wasm_bindgen;
