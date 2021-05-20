@@ -10,12 +10,19 @@ pub struct Elevator {
     #[wasm_bindgen(skip)]
     pub old_mouse_position:[f32;3],
     #[wasm_bindgen(skip)]
-    pub selected_vertices:Vec<(usize,f32)>
+    pub selected_vertices:Vec<(usize,f32)>,
+    #[wasm_bindgen(skip)]
+    pub faces_of_vertices:Vec<u32>
+
 }
 #[wasm_bindgen]
 impl Elevator {
     unsafe fn _elevate(&mut self, mesh:&mut Mesh, radius:f32, full_height:f32) {
         use std::arch::wasm32::*;
+
+        let height_max = 500.0;
+        let height_min = -500.0;
+
 
         if self.old_mouse_position[0] != self.mouse_position[0] || self.old_mouse_position[2] != self.mouse_position[2] {
             self.old_mouse_position[0]=self.mouse_position[0];
@@ -29,7 +36,9 @@ impl Elevator {
             let mouse_x=f32x4_splat(self.mouse_position[0]);
             let mouse_z=f32x4_splat(self.mouse_position[2]);
             self.selected_vertices.clear();
-            let Elevator { selected_vertices, .. } = self;
+          //  let Elevator { selected_vertices, .. } = self;
+
+            let selected_vertices = &mut self.selected_vertices;
 
             let enumers=self.vertices_horizontal.chunks(4).zip(self.vertices_horizontal.chunks(4).skip(2)).step_by(3).enumerate();
             enumers.for_each(|(i,(x, z))| {
@@ -72,7 +81,8 @@ impl Elevator {
             } else {
                 positiony += full_height * (1.0 - (sv.1 - radius_near) / radius_far);
             }
-            mesh.geometry.vertices[sv.0 * mesh.geometry.vertices_stride +1] = positiony
+            
+            mesh.geometry.vertices[sv.0 * mesh.geometry.vertices_stride +1] = f32::clamp(positiony,height_min,height_max)
         }
 
     }
@@ -96,11 +106,23 @@ impl Elevator {
             ];
             vertices.append(&mut v);
         }
+
+     /*   let index: number;
+        for (index = 0; index < terrain.mesh.positionCount; index++) {
+            this.#facesOfVertices[index] = [];
+        }
+        terrain.indices.forEach((index, i)=> {
+            this.#facesOfVertices[index]!.push((i / 3) | 0);
+        });  
+*/
+
+
         Elevator {
             vertices_horizontal:vertices,
             mouse_position:[0.0,0.0,0.0],
             old_mouse_position:[0.0,0.0,0.0],
-            selected_vertices:Vec::new()
+            selected_vertices:Vec::new(),
+            faces_of_vertices:Vec::with_capacity(mesh.positions_count)
         }
     }
 }

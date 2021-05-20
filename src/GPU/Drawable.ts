@@ -163,7 +163,7 @@ export class DrawableSimple extends DrawableDirect {
         super(renderPipeline, renderPasses, node, scene, instanceCount);
     }
     render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
-        renderPass.draw(this.node.verticesCount, this.instanceCount, this.firstVertex, this.firstInstance);
+        renderPass.draw(this.node.positions_count, this.instanceCount, this.firstVertex, this.firstInstance);
     }
 }
 export class DrawableIndexed extends DrawableDirect {
@@ -178,7 +178,9 @@ export class DrawableIndexed extends DrawableDirect {
         instanceCount = 1,
         public firstIndex = 0,
         public firstInstance = 0,
-        private GPUIndexFormat: GPUIndexFormat = 'uint16') {
+        private GPUIndexFormat: GPUIndexFormat = 'uint16',
+        public indicesCount = 0
+        ) {
         super(renderPipeline, renderPasses, node, scene, instanceCount);
     }
     destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {
@@ -214,7 +216,7 @@ export class DrawableIndexed extends DrawableDirect {
     render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
         if (this.indexBuffer) {
             renderPass.setIndexBuffer(this.indexBuffer, this.GPUIndexFormat);
-            renderPass.drawIndexed(this.node.verticesCount, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);
+            renderPass.drawIndexed(this.node.verticesCount_deprecated, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);
         }
     }
 }

@@ -17,7 +17,7 @@ import type { Engine } from "engine.js";
 
 class PlaneMesh extends TerraNodeGPU<DrawableIndexed> {
     constructor(engine: Engine, renderPipeline: RenderPipeline, verticesCount: number) {
-        super(engine, renderPipeline, verticesCount, (node) => renderPipeline.addDrawableIndexed(undefined, new Set([engine.gpu.renderPassScreen]), node, undefined, 0, 1, 0))
+        super(engine, renderPipeline, verticesCount, (node) => renderPipeline.addDrawableIndexed(undefined, new Set([engine.gpu.renderPassScreen]), node, undefined, 0, 1, 0),undefined,undefined,verticesCount)
     }
 }
 
@@ -57,7 +57,7 @@ export class paintPlane extends paintGround {
             callback(p);
         });
         this.#mesh.Drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
-    };
+    }
     #mesh = new PlaneMesh(this.scene.engine, getRenderPipeline(this.scene, this.ground), 0);
     #startingPoint = new TerraVector2(2);
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
@@ -145,7 +145,7 @@ export class paintPlane extends paintGround {
         if (newValues) {
             this.#mesh.Drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
             this.#mesh.Drawable.setIndexBuffer(new Uint32Array(newValues.indices));
-            this.#mesh.verticesCount = newValues.indices.length;
+            this.#mesh.verticesCount_deprecated = newValues.indices.length;
             // this.#mesh.Drawable.indexCount = newValues.indices.length;
         }
     }

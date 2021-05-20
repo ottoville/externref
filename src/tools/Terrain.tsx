@@ -54,18 +54,15 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
     readonly #facesOfVertices: number[][]=[]
     readonly #terrainPositionAndUvsAndNormalsCPUSwap = this.terrain.mesh.verticesView();
-
+    elevator = this.terrain.mesh.create_elevator();
     constructor(
         public scene:Scene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea,
     ) {
-        super(scene.engine, getRenderPipeline(scene, terrain),4,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), node, 8, 0,undefined,'TerrainTool'));
+        super(scene.engine, getRenderPipeline(scene, terrain),4,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), node, 8, 0,undefined,'TerrainTool'),undefined,undefined,4);
         scene.TerraCameras[0].subscribePickingRay();
-        console.time('elevator')
-        this.terrain.mesh.create_elevator();
-        console.timeEnd('elevator');
         //TERRAIN EDITING DISABLED
         /*
         terrainWorker.message(WorkerReturn.Promise, 'init',
@@ -98,7 +95,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         }
         const byteStride = terrain.mesh.verticesPositionStride*Float32Array.BYTES_PER_ELEMENT;
         if (this.#normalsView.length == 0) {
-            for (let i = 0; i < terrain.mesh.positionCount; i++) {
+            for (let i = 0; i < terrain.mesh.positions_count; i++) {
                 this.#positionsView.push(terrain.mesh.getPosition(i));
                 this.#normalsView.push(new TerraVector3(this.engine.memory.buffer, this.terrain.mesh.vertices_pointer() + i * byteStride+16))
             }
@@ -106,7 +103,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
         
         let index: number;
-        for (index = 0; index < terrain.mesh.positionCount; index++) {
+        for (index = 0; index < terrain.mesh.positions_count; index++) {
             this.#facesOfVertices[index] = [];
         }
         terrain.indices.forEach((index, i)=> {
@@ -117,7 +114,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', {buffer:arrayBuffer, size:size}, [arrayBuffer]);
     }
     //TERRAIN EDITING DISABLED
-    private direction = 0;
+    private direction:1 | 0 |-1 = 0;
     private mouseinterval = 0;
 
     #pointerdownf = (evt: PointerEvent): void => {
@@ -128,8 +125,9 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.camera.detachControl();
        
         this.mouseinterval = setInterval(() => {
+            this.elevator.elevate(this.terrain.mesh,50,5*this.direction);
             console.time('elevatFaces');
-            this.elevateFaces(50,5,this.direction)
+            this.elevateFaces(50,5*this.direction)
             console.timeEnd('elevatFaces');
             //TERRAIN EDITING DISABLED
             //terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
@@ -155,7 +153,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         super.destroy();
         renderPipelines.delete(this.engine.gpu);
     };
-    #pick:{ position: TerraVector3, meshId: number }={position:new TerraVector3(),meshId:0};
+    readonly #pick:{ readonly position: TerraVector3, meshId: number }={position:new TerraVector3(this.engine.memory.buffer, this.elevator.mouse_position_pointer()),meshId:0};
     #mouseListener = (): void => {
         /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
             this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
@@ -163,7 +161,9 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
         this.scene.pickPosition(pickInfo => {
             this.#pick.meshId=pickInfo.meshId;
-            this.#pick.position=pickInfo.position.clone();
+            this.#pick.position[0]=pickInfo.position[0];
+            this.#pick.position[1]=pickInfo.position[1];
+            this.#pick.position[2]=pickInfo.position[2];
             this.SetTranslation([pickInfo.position[0], 0, pickInfo.position[2]]);
         });
 
@@ -177,6 +177,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
     }
     lower = (): void => {
+        
         //TERRAIN EDITING DISABLED
         this.direction = -1;
         this.#canvasListener.removeListener("pointerdown", this.#pointerdownf);
@@ -190,7 +191,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     readonly #normalsView: Float32Array[] = [];
     readonly #positionsView: Float32Array[] = [];
     
-    elevateFaces = (radius: number, height: number, direction: number):void => {
+    elevateFaces = (radius: number, fullHeight: number):void => {
         //TODO: Move to init
 
         const heightMax = 500;
@@ -231,10 +232,10 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         
         const radiusNear = radius * 0.3;
         const radiusFar = radius * 0.7;
-    
+
         this.#selectedVertices.forEach(sv => {
             let positiony = this.#terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1]!;
-            var fullHeight = height * direction;
+            
     
             if (sv.distance < radiusNear) {
                 positiony += fullHeight;
@@ -246,7 +247,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
                 positiony = heightMax;
             else if (positiony < heightMin)
                 positiony = heightMin;
-            this.#terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
+            //this.#terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
     
             faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
     

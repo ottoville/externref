@@ -231,7 +231,7 @@ export class Canvas extends TerraCompoment {
             }
         });
 
-        new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node, undefined, undefined, undefined, 'canvas'))
+        new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node, undefined, undefined, undefined, 'canvas'),undefined,undefined,6)
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();

@@ -19,7 +19,8 @@ pub struct Mesh {
     rotation: Vec4<f32>,
     scaling: Vec3<f32>,
     #[wasm_bindgen(skip)]
-    pub geometry:Geometry
+    pub geometry:Geometry,
+    pub positions_count:usize
 }
 
 #[wasm_bindgen]
@@ -159,7 +160,7 @@ impl Mesh {
         self.geometry.update_vertices(vertices);
     }
     #[wasm_bindgen(constructor)]
-    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, vertices_amount:usize , vertices_stride:usize) -> Self {
+    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize) -> Self {
         let m = Mesh {
             id,
             engine: engine,
@@ -176,7 +177,7 @@ impl Mesh {
                 acceleration: [0.0, 0.0, 0.0, 0.0],
                 id
             },
-            geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, vertices_amount),
+            geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count),
             rotation: Vec4 {
                 x: 0.0,
                 y: 0.0,
@@ -188,6 +189,7 @@ impl Mesh {
                 y: 1.0,
                 z: 1.0,
             },
+            positions_count
         };
         return m;
     }
