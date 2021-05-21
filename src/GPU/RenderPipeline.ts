@@ -2,7 +2,7 @@
 import type { PipelineLayout } from "./PipelineLayout.js";
 import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
 import type { RenderPass } from "./RenderPass.js";
-import { TerraNodeGPU } from "../TerraNode.js";
+import { IndexedNode, TerraNodeGPU } from "../TerraNode.js";
 import type { GPU } from "../GPU.js";
 
 export class Shader {
@@ -62,7 +62,7 @@ export class RenderPipeline {
     addDrawableSimple(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: TerraNodeGPU<DrawableSimple>, instanceCount = 1, firstVertex = 0, firstInstance = 0, label='unnamed'): DrawableSimple {
         return new DrawableSimple(this, renderPasses, node, label, scene, instanceCount, firstVertex, firstInstance)
     }
-    addDrawableIndexed(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: TerraNodeGPU<DrawableIndexed>, indexBuffer?: GPUIndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0,label='unnamed'): DrawableIndexed {
+    addDrawableIndexed(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: IndexedNode, indexBuffer?: GPUIndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0,label='unnamed'): DrawableIndexed {
         return new DrawableIndexed(this, renderPasses, node, indexBuffer, label, scene, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
     }
 }

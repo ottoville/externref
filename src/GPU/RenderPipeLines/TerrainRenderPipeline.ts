@@ -48,8 +48,9 @@ export class TerrainMesh extends BoundableNodeIndexed {
     setTextureView = (textureview: GPUTextureView) => {
         this.Drawable.setStaticBuffer(this.sampler, textureview);
     }
+    Drawable = this.renderPipeline.addDrawableIndexed(this.scene, new Set([this.scene.gpu.renderPassScreen, this.scene.gpu.renderPassWater]), this, undefined, 0, 1);
     constructor(
-        scene: Scene,
+        private scene: Scene,
         public initialTexture: GPUTextureView,
         public vBuffer: GPUVertexBuffer,
         public iBuffer: GPUIndexBuffer,
@@ -57,7 +58,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
         indicesView: Uint32Array,
         verticesPositionStride = 3
     ) {
-        super(scene, TerrainRenderPipeline(scene.gpu), positionsCount, (node) => node.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), node, undefined, 0, 1), verticesPositionStride, indicesView);
+        super(scene, TerrainRenderPipeline(scene.gpu), positionsCount, verticesPositionStride, indicesView);
         this.Drawable.setStaticBuffer(this.sampler, initialTexture);
         this.Drawable.setVertexBuffer(0, this.vBuffer);
         this.Drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');

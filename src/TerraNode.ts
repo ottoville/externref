@@ -87,23 +87,25 @@ export abstract class MainNode extends Mesh {
         return 'lightType' in this;
     }
 }
-export class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
+export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
 
     // abstract Drawable:DrawableDirect
     static GPUDataSize = 16 + 4 + 4 + 4 + 4;
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
-    Drawable: T;
+    abstract Drawable: T;
 
-    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public positionsCount: number, createDrawable: (node: TerraNodeGPU<T>) => T, hasBounding = false, vertices_stride = 3,public verticesCount_deprecated: number) {
+    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public positionsCount: number, hasBounding = false, vertices_stride = 3) {
         super(engine, hasBounding, positionsCount, vertices_stride);
 
-        this.Drawable = createDrawable(this);
-        this.Drawable.dynamicBuffers.push([engine.gpu.BindGroupPosition, this.gpu_alignment]);
-
+        //this.Drawable = createDrawable(this);
+        queueMicrotask(() => {
+            this.Drawable.dynamicBuffers.push([engine.gpu.BindGroupPosition, this.gpu_alignment]);
+        })
         if (renderPipeline.dynamicBindGroupOffset.length)
             renderPipeline.dynamicBindGroupOffset[0] = this.gpu_alignment;
+        
     }
 
 }
@@ -146,13 +148,12 @@ abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T> {
         scene: Scene,
         renderPipeline: RenderPipeline,
         positionCount: number,
-        createDrawable: (node: TerraNodeGPU<T>) => T,
         indicesCount:number,
         public verticesPositionStride: number,
         protected strip = false,
 
     ) {
-        super(scene.engine, renderPipeline, positionCount, createDrawable, true, verticesPositionStride,indicesCount);
+        super(scene.engine, renderPipeline, positionCount, true, verticesPositionStride);
 
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             //@ts-expect-error
@@ -293,17 +294,21 @@ abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T> {
     }
 }
 
-export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> {
+export interface IndexedNode extends TerraNodeGPU<DrawableIndexed> {
+    indices_count: number
+}
+
+export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> implements IndexedNode {
+    indices_count = this.indicesView.length;
     constructor(
         scene: Scene,
         renderPipeline: RenderPipeline,
         positionCount: number,
-        createDrawable: (node: TerraNodeGPU<DrawableIndexed>) => DrawableIndexed,
         verticesPositionStride = 3,
-        private indicesView: Uint32Array | Uint16Array,
+        public indicesView: Uint32Array | Uint16Array,
         strip = false,
     ) {
-        super(scene, renderPipeline, positionCount, createDrawable, indicesView.length,verticesPositionStride, strip);
+        super(scene, renderPipeline, positionCount, indicesView.length,verticesPositionStride, strip);
         Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
             //@ts-expect-error
             this[prop] = BoundableNodeIndexed.prototype[prop].bind(this);
@@ -353,11 +358,10 @@ export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
         scene: Scene,
         renderPipeline: RenderPipeline,
         positionCount: number,
-        createDrawable: (node: TerraNodeGPU<DrawableSimple>) => DrawableSimple,
         verticesPositionStride = 3,
         strip = false,
     ) {
-        super(scene, renderPipeline, positionCount, createDrawable,positionCount, verticesPositionStride, strip);
+        super(scene, renderPipeline, positionCount,positionCount, verticesPositionStride, strip);
         this.rebuildTrianglePlanes();
     }
     rebuildTrianglePlanes = () => {

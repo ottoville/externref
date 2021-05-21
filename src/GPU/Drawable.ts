@@ -2,7 +2,7 @@
 import type { GPU } from "../GPU.js";
 import type { RenderPass } from "./RenderPass.js";
 import type { Scene } from "../Scene.js";
-import { TerraNodeGPU } from "../TerraNode.js";
+import { IndexedNode, TerraNodeGPU } from "../TerraNode.js";
 import { GPUBufferUsage } from "../GPU.js"
 type DrawableLike = typeof RenderPipeline;
 export interface DrawableLikeClass extends DrawableLike {
@@ -118,7 +118,6 @@ export abstract class DrawableDirect extends Drawable {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        public node: TerraNodeGPU<DrawableDirect>,
         scene?: Scene,
         instanceCount = 1) {
 
@@ -154,13 +153,13 @@ export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        node: TerraNodeGPU<DrawableSimple>,
+        private node: TerraNodeGPU<DrawableSimple>,
         public label='unnamed',
         scene?: Scene,
         instanceCount = 1,
         public firstVertex = 0,
         public firstInstance = 0) {
-        super(renderPipeline, renderPasses, node, scene, instanceCount);
+        super(renderPipeline, renderPasses, scene, instanceCount);
     }
     render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
         renderPass.draw(this.node.positions_count, this.instanceCount, this.firstVertex, this.firstInstance);
@@ -170,7 +169,7 @@ export class DrawableIndexed extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
-        node: TerraNodeGPU<DrawableIndexed>,
+        private node: IndexedNode,
         private indexBuffer?: GPUIndexBuffer,
         public label='unnamed',
         scene?: Scene,
@@ -179,9 +178,8 @@ export class DrawableIndexed extends DrawableDirect {
         public firstIndex = 0,
         public firstInstance = 0,
         private GPUIndexFormat: GPUIndexFormat = 'uint16',
-        public indicesCount = 0
         ) {
-        super(renderPipeline, renderPasses, node, scene, instanceCount);
+        super(renderPipeline, renderPasses, scene, instanceCount);
     }
     destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {
         super.destroy(preserveVerticeBuffers);
@@ -216,7 +214,7 @@ export class DrawableIndexed extends DrawableDirect {
     render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
         if (this.indexBuffer) {
             renderPass.setIndexBuffer(this.indexBuffer, this.GPUIndexFormat);
-            renderPass.drawIndexed(this.node.verticesCount_deprecated, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);
+            renderPass.drawIndexed(this.node.indices_count, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);
         }
     }
 }

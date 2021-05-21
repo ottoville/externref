@@ -23,7 +23,7 @@ import { Human } from "../human.js";
 import { savedCamera } from "../types/interfaces/index.js";
 
 import { DrawableSimple } from "GPU/Drawable.js";
-import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 /*
 const tools: {
     name: string,
@@ -61,7 +61,12 @@ const tools: {
      elem: <div></div>
 }]*/
 
-
+class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
+    Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([this.engine.gpu.renderPassCanvas]), this, undefined, undefined, undefined, 'canvas')
+    constructor(engine:Engine, canvaspipeline: RenderPipeline,positionsCount:number) {
+        super(engine,canvaspipeline,positionsCount)
+    }
+}
 
 export class Canvas extends TerraCompoment {
     #progressBar: HTMLProgressElement = <progress min="0" max="100" value="0"></progress>;
@@ -230,8 +235,8 @@ export class Canvas extends TerraCompoment {
                 format: "depth24plus-stencil8",
             }
         });
-
-        new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node, undefined, undefined, undefined, 'canvas'),undefined,undefined,6)
+        new CanvasMesh(terraEngine,canvasPipeline,6);
+        //new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node, undefined, undefined, undefined, 'canvas'),undefined,undefined,6)
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
             startTime = performance.now();

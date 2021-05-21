@@ -2,7 +2,7 @@
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
-import { TerraNodeGPU } from "../TerraNode.js";
+import { IndexedNode, TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
@@ -15,9 +15,11 @@ import type { Engine } from "engine.js";
 
 
 
-class PlaneMesh extends TerraNodeGPU<DrawableIndexed> {
+class PlaneMesh extends TerraNodeGPU<DrawableIndexed> implements IndexedNode {
+    indices_count=0;
+    Drawable=this.renderPipeline.addDrawableIndexed(undefined, new Set([this.engine.gpu.renderPassScreen]),this, undefined, 0, 1, 0);
     constructor(engine: Engine, renderPipeline: RenderPipeline, verticesCount: number) {
-        super(engine, renderPipeline, verticesCount, (node) => renderPipeline.addDrawableIndexed(undefined, new Set([engine.gpu.renderPassScreen]), node, undefined, 0, 1, 0),undefined,undefined,verticesCount)
+        super(engine, renderPipeline, verticesCount)
     }
 }
 
@@ -145,8 +147,7 @@ export class paintPlane extends paintGround {
         if (newValues) {
             this.#mesh.Drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
             this.#mesh.Drawable.setIndexBuffer(new Uint32Array(newValues.indices));
-            this.#mesh.verticesCount_deprecated = newValues.indices.length;
-            // this.#mesh.Drawable.indexCount = newValues.indices.length;
+            this.#mesh.indices_count = newValues.indices.length;
         }
     }
 }

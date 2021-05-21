@@ -55,13 +55,14 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     readonly #facesOfVertices: number[][]=[]
     readonly #terrainPositionAndUvsAndNormalsCPUSwap = this.terrain.mesh.verticesView();
     elevator = this.terrain.mesh.create_elevator();
+    Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([this.scene.gpu.renderPassScreen]), this, 8, 0,undefined,'TerrainTool');
     constructor(
         public scene:Scene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea,
     ) {
-        super(scene.engine, getRenderPipeline(scene, terrain),4,(node) => node.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), node, 8, 0,undefined,'TerrainTool'),undefined,undefined,4);
+        super(scene.engine, getRenderPipeline(scene, terrain),4);
         scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*
