@@ -2,7 +2,6 @@
 import { RenderPass } from "./GPU/RenderPass.js";
 import { PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
-import { DrawableDirect } from "./GPU/Drawable.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 
 export const GPUBufferUsage = {
@@ -53,7 +52,7 @@ export class GPU {
     readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
 
 
-    readonly boundables: Set<BoundableNode<DrawableDirect>> = new Set();
+    readonly boundables: Set<BoundableNode> = new Set();
     readonly uniformBindGroupLayoutWithTime = this.createBindGroupLayout({
         label: 'uniformBindGroupLayoutWithTime',
         entries:

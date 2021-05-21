@@ -1,8 +1,7 @@
-﻿import { BoundableNode } from "../TerraNode.js";
+﻿import { BoundableNodeSimple } from "../TerraNode.js";
 import type { Scene } from "../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
-import { DrawableSimple } from "GPU/Drawable.js";
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
@@ -74,9 +73,9 @@ function getRenderPipeline(gpu: GPU) {
 }
 
 
-export class Sea extends BoundableNode<DrawableSimple> {
+export class Sea extends BoundableNodeSimple {
     worldPosition = undefined
     constructor(scene: Scene) {
-        super(scene, getRenderPipeline(scene.gpu), 4, (node) => node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node,undefined,undefined,undefined,'water'), undefined, undefined, true); //48
+        super(scene, getRenderPipeline(scene.gpu), 4, (node) => node.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), node,undefined,undefined,undefined,'water'),undefined,true); //48
     }
 }

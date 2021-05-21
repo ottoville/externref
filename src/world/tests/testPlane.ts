@@ -1,6 +1,5 @@
-﻿import type { DrawableSimple } from "GPU/Drawable";
-import type { Scene } from "../../Scene";
-import type { BoundableNode } from "../../TerraNode";
+﻿import type { Scene } from "../../Scene.js";
+import {  BoundableNodeSimple } from "../../TerraNode.js";
 import { GPUBufferUsage } from "../../GPU.js"
 const vertices = new Float32Array([
     0, 0, 0,
@@ -12,7 +11,7 @@ const vertices = new Float32Array([
     0, 3, 0]);
 
 //@ts-ignore
-export class testPlane extends BoundableNode<DrawableSimple> {
+export class testPlane extends BoundableNodeSimple {
 
     constructor(scene: Scene) {
         //@ts-ignore

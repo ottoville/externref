@@ -4,7 +4,6 @@ import type { GPU } from "./GPU.js";
 import type { Engine } from "./engine.js";
 import type { TerraCamera } from "./TerraCamera.js";
 import { TerraVector3 } from "./Math.js";
-import { DrawableDirect } from "GPU/Drawable.js";
 export class Scene {
 
 
@@ -23,11 +22,11 @@ export class Scene {
         this.ready = groundAndSea;
         this.lights = new Light(gpu, sunBufferOffsetBytes);
     }
-    async collissionCheck(rayFunction: (mesh: BoundableNode<DrawableDirect>) => any, boundables: IterableIterator<BoundableNode<DrawableDirect>>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode<DrawableDirect>) => boolean): Promise<PickingInfo | null> {
+    async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
         if (fastCheck) {
             throw ('TODO: fastcheck');
         }
-        let boundableMesh: BoundableNode<DrawableDirect>;
+        let boundableMesh: BoundableNode;
         do {
             const boundable = boundables.next();
             if (boundable.done)
@@ -99,7 +98,7 @@ export class Scene {
         //@ts-ignore
         const ray = this.TerraCameras[0].createPickingRay(x, y);
         const rayArr = new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]])
-        const pickingRays: Map<BoundableNode<DrawableDirect>, Float32Array> = new Map();
+        const pickingRays: Map<BoundableNode, Float32Array> = new Map();
         this.gpu.boundables.forEach(boundable => {
             if (boundable.isStatic)
                 return pickingRays.set(boundable, rayArr);
@@ -112,7 +111,7 @@ export class Scene {
             results.push(boundable.intersectsRay(ray));
         })
         //await Promise.all(results);
-        let minimum: BoundableNode<DrawableDirect> | null = null;
+        let minimum: BoundableNode | null = null;
 
         this.gpu.boundables.forEach(boundable => {
             if (!minimum || boundable.pickInfo.getDistance() < minimum.pickInfo.getDistance())

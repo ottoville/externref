@@ -1,8 +1,7 @@
 ﻿import type { GPU } from "../../GPU.js";
-import { BoundableNode } from "../../TerraNode.js";
+import { BoundableNodeIndexed } from "../../TerraNode.js";
 import type { Scene } from "../../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../RenderPipeline.js";
-import type { DrawableIndexed } from "../Drawable.js";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 
@@ -41,7 +40,7 @@ function TerrainRenderPipeline(gpu: GPU) {
     renderPipelines.set(gpu, renderPipeLine);
     return renderPipeLine;
 }
-export class TerrainMesh extends BoundableNode<DrawableIndexed> {
+export class TerrainMesh extends BoundableNodeIndexed {
     sampler = this.engine.gpu.device.createSampler({
         magFilter: "linear",
         minFilter: "linear",

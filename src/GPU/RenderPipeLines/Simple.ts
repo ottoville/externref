@@ -1,8 +1,7 @@
 ﻿import type { GPU } from "../../GPU.js";
-import { BoundableNode } from "../../TerraNode.js";
+import { BoundableNodeIndexed } from "../../TerraNode.js";
 import type { Scene } from "../../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../RenderPipeline.js";
-import { DrawableIndexed } from "GPU/Drawable.js";
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
@@ -27,7 +26,7 @@ function Simple(gpu: GPU) {
     renderPipelines.set(gpu, renderPipeline);
     return renderPipeline
 }
-export abstract class SimpleMesh extends BoundableNode<DrawableIndexed> {
+export abstract class SimpleMesh extends BoundableNodeIndexed {
     constructor(
         scene: Scene,
         positionsCount: number,

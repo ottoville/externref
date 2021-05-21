@@ -8,7 +8,7 @@ import type { hasPhysics } from "./physics.js";
 import type { Scene } from "./Scene.js";
 import { ObjectWorkerThread } from "./WorkerThread.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
-import type { DrawableDirect } from "./GPU/Drawable.js";
+import type { DrawableDirect, DrawableIndexed, DrawableSimple } from "./GPU/Drawable.js";
 
 export abstract class MainNode extends Mesh {
     isStatic = false;
@@ -33,7 +33,7 @@ export abstract class MainNode extends Mesh {
         this.#onUpdate();
     }
     #onUpdate = (): void => {
-        if (this instanceof BoundableNode) {
+        if (this instanceof DataNode) {
             this.set_bounding_need_dirty_min();
             this.set_bounding_need_dirty_max();
         }
@@ -110,7 +110,7 @@ export class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
 export interface PickingInfo {
     hit: boolean,
     pickedPoint: { x: number, y: number, z: number },
-    pickedMesh: BoundableNode<DrawableDirect>,
+    pickedMesh: DataNode<DrawableDirect>,
     distance: number
 }
 const worker = new ObjectWorkerThread('/js/workers/webworkers/mesh.js');
@@ -123,17 +123,18 @@ class pickInfo {
         return this.#distance.getFloat32(0, true);
     }
 }
-export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeGPU<T> {
+export type BoundableNode=DataNode<DrawableDirect>;
+abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T> {
 
     readonly pickInfo = new pickInfo();
 
-    #colliderVertices: TerraVector4[] = [];
+    protected readonly colliderVertices: TerraVector4[] = [];
 
 
     readonly #faces: Triangle[];
     #lastColliderTransformMatrix = new TerraMatrix();
 
-    facesBuffer: SharedArrayBuffer;
+    readonly facesBuffer: SharedArrayBuffer;
     facesBufferColliderPointer: number;
     lastColliderWorldVectorsPointer: number;
     facesBufferColliderPointerParallel: number;
@@ -146,23 +147,21 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         renderPipeline: RenderPipeline,
         positionCount: number,
         createDrawable: (node: TerraNodeGPU<T>) => T,
-        public verticesPositionStride: number = 3,
-        private indicesView?: (Uint32Array | Uint16Array),
-        private strip = false,
+        indicesCount:number,
+        public verticesPositionStride: number,
+        protected strip = false,
 
     ) {
-        super(scene.engine, renderPipeline, positionCount, createDrawable, true, verticesPositionStride,indicesView ? indicesView.length : positionCount);
+        super(scene.engine, renderPipeline, positionCount, createDrawable, true, verticesPositionStride,indicesCount);
 
-       /* Object.getOwnPropertyNames(BoundableNode.prototype).forEach(prop =>  {
-            console.log('set',prop)
+        Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             //@ts-expect-error
-            this[prop] = BoundableNode.prototype[prop].bind(this);
-        })*/
+            this[prop] = DataNode.prototype[prop].bind(this);
+        })
     
 
 
         this.verticesBuffesSize = positionCount * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
-        const indicesCount=indicesView ? indicesView.length : positionCount;
         this.#faces = new Array(this.strip?indicesCount - 2:indicesCount / 3)
         this.facesBuffer = new SharedArrayBuffer(this.#faces.length * 4 * Float32Array.BYTES_PER_ELEMENT);
 
@@ -178,10 +177,9 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
             const pos = new TerraVector3(scene.engine.memory.buffer, this.vertices_pointer() + i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
 
             const colPos = new TerraVector4(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer + i * 4 * Float32Array.BYTES_PER_ELEMENT);
-            this.#colliderVertices.push(colPos);
+            this.colliderVertices.push(colPos);
             this.#positionsAndCollider.push([pos, colPos])
         }
-        this.#rebuildTrianglePlanes();
 
         //Run this on microtask so the scope who called
         //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
@@ -192,7 +190,7 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
             //this.boundingBox.initMax();
         });
     }
-    #addVectors = (faceIndex: number, vectors: [TerraVector4, TerraVector4, TerraVector4]) => {
+    addVectors = (faceIndex: number, vectors: [TerraVector4, TerraVector4, TerraVector4]) => {
         const memory = this.engine.wasm.memory.buffer;
         if (vectors.length != 3)
             throw ('less than 3 vector')
@@ -202,72 +200,9 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         );
         new Uint32Array(memory, this.facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT, 3).set(vectors.map(v => v.byteOffset)); //4 is from plane
     }
-    #rebuildTrianglePlanes = () => {
-        let vectors: TerraVector4[] = [];
-        let faceIndex = 0;
-        if (this.indicesView) {
-            if (this.strip) {
-                this.indicesView.forEach((indice: number) => {
-                    const vector = this.#colliderVertices[indice];
-                    if (!vector) {
-                        throw ('position not found');
-                    }
-                    if (vectors.push(vector) < 3)
-                        return;
-                    this.#addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4]);
-                    vectors = [(vectors as [TerraVector4, TerraVector4, TerraVector4])[1], (vectors as [TerraVector4, TerraVector4, TerraVector4])[2]];
-                });
-            } else {
-                this.indicesView.forEach((indice: number) => {
-                    //const position = this.#lastColliderWorldVectorsViewIndexed.get(indice);
-                    const position = this.#colliderVertices[indice]
-                    if (!position) {
-                        throw ('position ' + indice + ' not found');
-                    }
-                    if (vectors.push(position) == 3) {
-                        this.#addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
-                        vectors = [];
-                    }
-                });
-            }
-        } else {
-            if (this.strip) {
-                this.#colliderVertices.forEach(vector => {
-                    if (vectors.push(vector) < 3)
-                        return;
-                    this.#addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
-                    vectors = [(vectors as [TerraVector4, TerraVector4, TerraVector4])[1], (vectors as [TerraVector4, TerraVector4, TerraVector4])[2]];
-                });
-            } else {
+    abstract rebuildTrianglePlanes: () => void
 
-                this.#colliderVertices.forEach(vector => {
-                    if (vectors.push(vector) == 3) {
-                        this.#addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
-                        vectors = [];
-                    }
-                });
-            }
-        }
-        if (this.#faces.length % 4 === 0) {
-            this.#faceQuatros.length=0;
-            let faceQuatro: Triangle[] = [];
-            this.#faces.forEach(face => {
-                if (faceQuatro.push(face) === 4) {
-                    this.#faceQuatros.push(faceQuatro as [Triangle, Triangle, Triangle, Triangle])
-                    faceQuatro = [];
-                }
-            })
-        }
-    }
 
-    setIndices = (indices: ArrayLike<number>) => {
-        if (this.indicesView) {
-            this.indicesView.set(indices);
-        } else {
-            this.indicesView = new Uint32Array(indices);
-        }
-        this.#rebuildTrianglePlanes();
-    }
     verticesView = () => {
         return new Float32Array(this.engine.memory.buffer, this.vertices_pointer(), this.positions_count * this.verticesPositionStride);
     }
@@ -344,7 +279,109 @@ export abstract class BoundableNode<T extends DrawableDirect> extends TerraNodeG
         //this.engine.wasmSIMD.testTriangles(this.facesBufferColliderPointer, this.facesBufferColliderPointerParallel, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.uniqueID)
         //   console.log('simd took', performance.now() - timer);
     }
+    protected buildFaceQuatros() {
+        if (this.#faces.length % 4 === 0) {
+            this.#faceQuatros.length=0;
+            let faceQuatro: Triangle[] = [];
+            this.#faces.forEach(face => {
+                if (faceQuatro.push(face) === 4) {
+                    this.#faceQuatros.push(faceQuatro as [Triangle, Triangle, Triangle, Triangle])
+                    faceQuatro = [];
+                }
+            })
+        }
+    }
 }
+
+export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> {
+    constructor(
+        scene: Scene,
+        renderPipeline: RenderPipeline,
+        positionCount: number,
+        createDrawable: (node: TerraNodeGPU<DrawableIndexed>) => DrawableIndexed,
+        verticesPositionStride = 3,
+        private indicesView: Uint32Array | Uint16Array,
+        strip = false,
+    ) {
+        super(scene, renderPipeline, positionCount, createDrawable, indicesView.length,verticesPositionStride, strip);
+        Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
+            //@ts-expect-error
+            this[prop] = BoundableNodeIndexed.prototype[prop].bind(this);
+        })
+        this.rebuildTrianglePlanes();
+    }
+    setIndices(indices: ArrayLike<number>) {
+        if (this.indicesView) {
+            this.indicesView.set(indices);
+        } else {
+            this.indicesView = new Uint32Array(indices);
+        }
+        this.rebuildTrianglePlanes();
+    }
+    rebuildTrianglePlanes = () => {
+        let vectors: TerraVector4[] = [];
+        let faceIndex = 0;
+        if (this.strip) {
+            this.indicesView.forEach((indice: number) => {
+                const vector = this.colliderVertices[indice];
+                if (!vector) {
+                    throw ('position not found');
+                }
+                if (vectors.push(vector) < 3)
+                    return;
+                this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4]);
+                vectors = [(vectors as [TerraVector4, TerraVector4, TerraVector4])[1], (vectors as [TerraVector4, TerraVector4, TerraVector4])[2]];
+            });
+        } else {
+            this.indicesView.forEach((indice: number) => {
+                //const position = this.#lastColliderWorldVectorsViewIndexed.get(indice);
+                const position = this.colliderVertices[indice]
+                if (!position) {
+                    throw ('position ' + indice + ' not found');
+                }
+                if (vectors.push(position) == 3) {
+                    this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
+                    vectors = [];
+                }
+            });
+        }
+        this.buildFaceQuatros();
+    }
+}
+export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
+    constructor(
+        scene: Scene,
+        renderPipeline: RenderPipeline,
+        positionCount: number,
+        createDrawable: (node: TerraNodeGPU<DrawableSimple>) => DrawableSimple,
+        verticesPositionStride = 3,
+        strip = false,
+    ) {
+        super(scene, renderPipeline, positionCount, createDrawable,positionCount, verticesPositionStride, strip);
+        this.rebuildTrianglePlanes();
+    }
+    rebuildTrianglePlanes = () => {
+        let vectors: TerraVector4[] = [];
+        let faceIndex = 0;
+        if (this.strip) {
+            this.colliderVertices.forEach(vector => {
+                if (vectors.push(vector) < 3)
+                    return;
+                this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
+                vectors = [(vectors as [TerraVector4, TerraVector4, TerraVector4])[1], (vectors as [TerraVector4, TerraVector4, TerraVector4])[2]];
+            });
+        } else {
+            this.colliderVertices.forEach(vector => {
+                if (vectors.push(vector) == 3) {
+                    this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4])
+                    vectors = [];
+                }
+            });
+        }
+        this.buildFaceQuatros();
+    }
+}
+
 export class PositionNode extends MainNode {
     constructor(engine: Engine) {
         super(engine, false);
