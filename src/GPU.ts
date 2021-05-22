@@ -1,8 +1,9 @@
-﻿import { BoundableNode, TerraNodeGPU } from "./TerraNode.js";
+﻿import { TerraNodeGPU } from "./TerraNode.js";
 import { RenderPass } from "./GPU/RenderPass.js";
 import { PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
+import type { BoundableNode } from "./DataNode.js";
 
 export const GPUBufferUsage = {
     MAP_READ: 0x0001,

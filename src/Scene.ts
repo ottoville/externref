@@ -1,5 +1,6 @@
 ﻿import { Light } from "./lights.js";
-import { BoundableNode, MainNode, PickingInfo } from "./TerraNode.js";
+import { MainNode } from "./TerraNode.js";
+import type { BoundableNode,PickingInfo } from "./DataNode.js";
 import type { GPU } from "./GPU.js";
 import type { Engine } from "./engine.js";
 import type { TerraCamera } from "./TerraCamera.js";

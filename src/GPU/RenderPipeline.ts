@@ -2,8 +2,9 @@
 import type { PipelineLayout } from "./PipelineLayout.js";
 import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
 import type { RenderPass } from "./RenderPass.js";
-import { IndexedNode, TerraNodeGPU } from "../TerraNode.js";
+import { TerraNodeGPU } from "../TerraNode.js";
 import type { GPU } from "../GPU.js";
+import type { IndexedNode } from "../DataNode.js";
 
 export class Shader {
     module:GPUShaderModule;

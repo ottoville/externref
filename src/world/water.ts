@@ -1,4 +1,4 @@
-﻿import { BoundableNodeSimple } from "../TerraNode.js";
+﻿import { BoundableNodeSimple } from "../DataNode.js";
 import type { Scene } from "../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";

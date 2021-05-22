@@ -2,8 +2,9 @@
 import type { GPU } from "../GPU.js";
 import type { RenderPass } from "./RenderPass.js";
 import type { Scene } from "../Scene.js";
-import { IndexedNode, TerraNodeGPU } from "../TerraNode.js";
+import { TerraNodeGPU } from "../TerraNode.js";
 import { GPUBufferUsage } from "../GPU.js"
+import type { IndexedNode } from "../DataNode.js";
 type DrawableLike = typeof RenderPipeline;
 export interface DrawableLikeClass extends DrawableLike {
     Meshes: Set<RenderPipeline>;

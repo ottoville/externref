@@ -2,7 +2,7 @@
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
-import { IndexedNode, TerraNodeGPU } from "../TerraNode.js";
+import { TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
@@ -12,6 +12,7 @@ import type { GPU } from "../GPU.js";
 import { TerraVector2 } from "../Math.js";
 import { DrawableIndexed } from "GPU/Drawable.js";
 import type { Engine } from "engine.js";
+import type { IndexedNode } from "../DataNode.js";
 
 
 

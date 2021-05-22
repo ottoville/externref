@@ -1,5 +1,5 @@
 ﻿import type { GPU } from "../../GPU.js";
-import { BoundableNodeIndexed } from "../../TerraNode.js";
+import { BoundableNodeIndexed } from "../../DataNode.js";
 import type { Scene } from "../../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../RenderPipeline.js";
 

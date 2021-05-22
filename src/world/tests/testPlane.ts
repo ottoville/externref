@@ -1,5 +1,5 @@
 ﻿import type { Scene } from "../../Scene.js";
-import {  BoundableNodeSimple } from "../../TerraNode.js";
+import type {  BoundableNodeSimple } from "../../DataNode.js";
 import { GPUBufferUsage } from "../../GPU.js"
 const vertices = new Float32Array([
     0, 0, 0,
