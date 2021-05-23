@@ -167,10 +167,7 @@ TODO
 
     readonly terrainPositionAndUvsAndNormalsGPU: GPUVertexBuffer & GPUCopyDSTBuffer;
 
-    //readonly terrainPositionAndUvsAndNormalsCPUSwap = new SharedArrayBuffer(this.#terrainPositionsLength + this.#terrainUvsLength + this.#terrainNormalsLength);
-    //readonly terrainPositionAndUvsAndNormalsCPUSwapView = new Float32Array(this.terrainPositionAndUvsAndNormalsCPUSwap);
-
-    indices: Uint32Array = new Uint32Array(this.indicesBuffer);
+    readonly #indices: Uint32Array = new Uint32Array(this.indicesBuffer);
     autosave = 0;
     updateSwap2(offset = 0, terrainPositionAndUvsAndNormalsCPUSwap: Float32Array, nofaces = false) {
         const b1 = this.scene.gpu.createGPUBuffer(terrainPositionAndUvsAndNormalsCPUSwap.byteLength, [GPUBufferUsage.COPY_SRC], true);
@@ -226,8 +223,8 @@ TODO
             response.headers.set('content-type', 'application/octet-stream');
 
 
-            const response2 = new Response(this.indices.buffer);
-            response2.headers.set('content-length', this.indices.buffer.byteLength.toString());
+            const response2 = new Response(this.#indices.buffer);
+            response2.headers.set('content-length', this.#indices.byteLength.toString());
             response2.headers.set('content-type', 'application/octet-stream');
 
 
@@ -389,7 +386,7 @@ TODO
         passEncoder.setBindGroup(2, bindGroupHeightsRead)
         passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
 
-        this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, positionsCount, new Uint32Array(this.indicesBuffer), 12);
+        this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, positionsCount, this.#indices, 12);
 
         caches.match(new Request('/terrainTexture.webp')).then(async (cachedtexture) => {
             const textureSizeBytes = Int32Array.BYTES_PER_ELEMENT * (this.textureSize[0] * this.textureSize[1]);

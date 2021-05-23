@@ -198,28 +198,33 @@ export interface IndexedNode extends TerraNodeGPU<DrawableIndexed> {
 }
 
 export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> implements IndexedNode {
-    indices_count = this.indicesView.length;
+    indicesView!:Uint32Array;
+    get indices_count() { return this.indicesView.length; }
     constructor(
         scene: Scene,
         renderPipeline: RenderPipeline,
         positionCount: number,
         verticesPositionStride = 3,
-        public indicesView: Uint32Array | Uint16Array,
+        indicesView: Uint32Array,
         strip = false,
     ) {
         super(scene, renderPipeline, positionCount, indicesView.length,verticesPositionStride, strip);
         Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
-            //@ts-expect-error
-            this[prop] = BoundableNodeIndexed.prototype[prop].bind(this);
+            if(prop !== 'indices_count') {
+                //@ts-expect-error
+                this[prop] = BoundableNodeIndexed.prototype[prop].bind(this);
+            }
         })
+        Object.defineProperty(this, 'indices_count', {
+            get: function() { return this.indicesView.length }
+          });
+          
+        this.setIndices(indicesView)
         this.rebuildTrianglePlanes();
     }
-    setIndices(indices: ArrayLike<number>) {
-        if (this.indicesView) {
-            this.indicesView.set(indices);
-        } else {
-            this.indicesView = new Uint32Array(indices);
-        }
+    setIndices(indices: Uint32Array) {
+        this.indices=indices;
+        this.indicesView = new Uint32Array(this.engine.memory.buffer,this.indices_pointer,indices.length);
         this.rebuildTrianglePlanes();
     }
     rebuildTrianglePlanes = () => {

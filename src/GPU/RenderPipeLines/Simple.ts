@@ -31,7 +31,7 @@ export abstract class SimpleMesh extends BoundableNodeIndexed {
     constructor(
         private scene: Scene,
         positionsCount: number,
-        indicesView: Uint32Array | Uint16Array,
+        indicesView: Uint32Array,
         iBuffer: GPUIndexBuffer,
         vBuffer: GPUVertexBuffer) {
 

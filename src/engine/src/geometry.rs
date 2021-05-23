@@ -6,6 +6,7 @@ pub struct Geometry {
     pub bounding_box:BoundingBox,
     pub vertices:Vec<f32>,
     pub vertices_stride: usize,
+    pub indices:Option<Vec<usize>>
 }
 impl Geometry {
     pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, vertices_amount:usize) -> Self {
@@ -13,6 +14,7 @@ impl Geometry {
             has_geometry,
             bounding_box:BoundingBox::new(has_bounding),
             vertices:Vec::with_capacity(vertices_amount*vertices_stride),
+            indices:None,
             vertices_stride,
         }
     }
@@ -60,5 +62,8 @@ impl Geometry {
         self.vertices=vertices;
         self.bounding_box.need_init_min = true;
         self.bounding_box.need_init_max = true;
+    }
+    pub fn set_indices(&mut self, indices: Vec<usize>) {
+        self.indices = Some(indices);
     }
 }

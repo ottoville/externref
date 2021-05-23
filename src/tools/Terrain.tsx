@@ -107,9 +107,10 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         for (index = 0; index < terrain.mesh.positions_count; index++) {
             this.#facesOfVertices[index] = [];
         }
-        terrain.indices.forEach((index, i)=> {
+        
+        terrain.mesh.indicesView.forEach((index:number, i:number)=> {
             this.#facesOfVertices[index]!.push((i / 3) | 0);
-        });        
+        });
     }
     static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number,number]) {
         terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', {buffer:arrayBuffer, size:size}, [arrayBuffer]);
@@ -198,8 +199,6 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         const heightMax = 500;
         const heightMin = -500;
 
-        const terrainIndices = new Uint32Array(this.terrain.indicesBuffer);
-
         //if (isNaN(pickInfo.distance[0]))
         //    return;
         const length = this.#terrainPositionAndUvsAndNormalsCPUSwap.length;
@@ -253,7 +252,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
             faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
     
             for (let index = 0; index < faceOfVertices.length; index++) {
-                const indices = new Uint32Array(terrainIndices.buffer, (faceOfVertices[index]! * 3) << 2, 3);
+                const indices = new Uint32Array(this.terrain.indicesBuffer, (faceOfVertices[index]! * 3) << 2, 3);
     
                 indices.forEach(vertexIndex => {
                     var faces = this.#facesOfVertices[vertexIndex]!;
@@ -285,7 +284,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.#selectedVertices.forEach(sv => {
             faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
             for (let index = 0; index < faceOfVertices.length; index++) {
-                var indices = new Uint32Array(terrainIndices.buffer, (faceOfVertices[index]! * 3) << 2, 3);
+                var indices = new Uint32Array(this.terrain.indicesBuffer, (faceOfVertices[index]! * 3) << 2, 3);
     
                 v1 = this.#positionsView[indices[0]!]!;
                 v2 = this.#positionsView[indices[1]!]!;

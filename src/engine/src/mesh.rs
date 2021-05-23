@@ -25,6 +25,24 @@ pub struct Mesh {
 
 #[wasm_bindgen]
 impl Mesh {
+    #[wasm_bindgen(setter)]
+    pub fn set_indices(&mut self, indices: Vec<usize>) {
+        &self.geometry.set_indices(indices);
+    }
+    #[wasm_bindgen(getter)]
+    pub fn indices_pointer(&self) -> *const usize {
+        match &self.geometry.indices {
+            None => panic!("Geometry has no indices"),
+            Some(indices) => indices.as_ptr(),
+        }
+    }
+    pub fn vertices_pointer(&self) -> *const f32 {
+        self.geometry.vertices.as_ptr()
+    }
+    pub fn update_vertices(&mut self, vertices:Vec<f32>) {
+        self.geometry.update_vertices(vertices);
+    }
+
     pub fn create_elevator(&self) -> Elevator {
         Elevator::new(&self)
     }
@@ -155,12 +173,7 @@ impl Mesh {
     pub fn gpu_alignment(&self) -> u32 {
         self.gpu_alignment
     }
-    pub fn vertices_pointer(&self) -> *const f32 {
-        self.geometry.vertices.as_ptr()
-    }
-    pub fn update_vertices(&mut self, vertices:Vec<f32>) {
-        self.geometry.update_vertices(vertices);
-    }
+
     #[wasm_bindgen(constructor)]
     pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize) -> Self {
         let m = Mesh {

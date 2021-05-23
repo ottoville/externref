@@ -115,7 +115,6 @@ impl Elevator {
             this.#facesOfVertices[index]!.push((i / 3) | 0);
         });  
 */
-        let len=10;
 
         Elevator {
             vertices_horizontal:vertices,
