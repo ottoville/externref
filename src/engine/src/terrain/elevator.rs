@@ -12,7 +12,7 @@ pub struct Elevator {
     #[wasm_bindgen(skip)]
     pub selected_vertices:Vec<(usize,f32)>,
     #[wasm_bindgen(skip)]
-    pub faces_of_vertices:Vec<u32>
+    pub faces_of_vertices:Vec<Vec<u32>>
 
 }
 #[wasm_bindgen]
@@ -115,14 +115,14 @@ impl Elevator {
             this.#facesOfVertices[index]!.push((i / 3) | 0);
         });  
 */
-
+        let len=10;
 
         Elevator {
             vertices_horizontal:vertices,
             mouse_position:[0.0,0.0,0.0],
             old_mouse_position:[0.0,0.0,0.0],
             selected_vertices:Vec::new(),
-            faces_of_vertices:Vec::with_capacity(mesh.positions_count)
+            faces_of_vertices:vec![Vec::with_capacity(6);mesh.positions_count]
         }
     }
 }

@@ -30,32 +30,34 @@ impl Mesh {
     }
     #[wasm_bindgen(method, getter)]
     pub fn bounding_min(&mut self) -> Vec<f32> {
-
+        if self.geometry.vertices.len() < 3 {
+            return vec![0.0,0.0,0.0];
+        }
         if self.geometry.bounding_box.need_init_min {
-            BoundingBox::init_min(self);
+            self.geometry.bounding_box.min_original = self.geometry.min();
+            self.geometry.bounding_box.need_init_min = false;
+            self.geometry.bounding_box.transform_min(&self.gpu_mesh.transformation);
         }
         else if self.geometry.bounding_box.dirty_min {
-            self.geometry.bounding_box.min_original.transform_to_ref(&mut self.gpu_mesh.transformation,&mut self.geometry.bounding_box.min);
-            self.geometry.bounding_box.dirty_min = false;
+            self.geometry.bounding_box.transform_min(&self.gpu_mesh.transformation);
         }
         return vec![self.geometry.bounding_box.min.x, self.geometry.bounding_box.min.y, self.geometry.bounding_box.min.z];
     }
     #[wasm_bindgen(method, getter)]
     pub fn bounding_max(&mut self) -> Vec<f32> {
         if self.geometry.bounding_box.need_init_max {
-            BoundingBox::init_max(self);
+            self.geometry.bounding_box.max_original = self.geometry.max();
+            self.geometry.bounding_box.need_init_max=false;
+            self.geometry.bounding_box.transform_max(&self.gpu_mesh.transformation)
         }
         else if self.geometry.bounding_box.dirty_max {
-            self.geometry.bounding_box.max_original.transform_to_ref(&mut self.gpu_mesh.transformation,&mut self.geometry.bounding_box.max);
-            self.geometry.bounding_box.dirty_max = false;
+            self.geometry.bounding_box.transform_max(&self.gpu_mesh.transformation)
         }
         return vec![self.geometry.bounding_box.max.x, self.geometry.bounding_box.max.y, self.geometry.bounding_box.max.z];
     }
-    //#[wasm_bindgen(method, setter)]
     pub fn set_bounding_need_init_min(&mut self) {
         self.geometry.bounding_box.need_init_min = true;
     }
-    //#[wasm_bindgen(method, setter)]
     pub fn set_bounding_need_init_max(&mut self) {
         self.geometry.bounding_box.need_init_max = true;
     }

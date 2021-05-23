@@ -36,59 +36,13 @@ impl BoundingBox {
             need_init_max:true
         }
     }
-
-    pub fn init_min(mesh:&mut Mesh) {
-        if mesh.geometry.vertices.len() < 3 {
-            return;
-        }
-        mesh.geometry.bounding_box.min_original.x= mesh.geometry.vertices[0];
-        mesh.geometry.bounding_box.min_original.y= mesh.geometry.vertices[1];
-        mesh.geometry.bounding_box.min_original.z= mesh.geometry.vertices[2];
-
-        let positions=mesh.geometry.vertices.chunks(mesh.geometry.vertices_stride);
-        for position in positions {
-            if position[0] < mesh.geometry.bounding_box.min_original.x {
-                mesh.geometry.bounding_box.min_original.x = position[0]
-            }
-            if position[1] < mesh.geometry.bounding_box.min_original.y {
-                mesh.geometry.bounding_box.min_original.y = position[1]
-            }
-            if position[2] < mesh.geometry.bounding_box.min_original.z {
-                mesh.geometry.bounding_box.min_original.z = position[2]
-            }
-        }
-        mesh.geometry.bounding_box.need_init_min = false;
-        BoundingBox::update_min(mesh);
+    pub fn transform_min(&mut self, transformation: &Vec4<Vec4<f32>>) {
+        self.min_original.transform_to_ref(transformation,&mut self.min);
+        self.dirty_min=false;
     }
-    fn update_min(mesh:&mut Mesh) {
-        mesh.geometry.bounding_box.min_original.transform_to_ref(&mesh.gpu_mesh.transformation, &mut mesh.geometry.bounding_box.min);
-        mesh.geometry.bounding_box.dirty_min = false;
-    }
-    pub fn init_max(mesh:&mut Mesh) {
-        if mesh.geometry.vertices.len() < 3 {
-            return;
-        }
-        mesh.geometry.bounding_box.max_original.x= mesh.geometry.vertices[0];
-        mesh.geometry.bounding_box.max_original.y= mesh.geometry.vertices[1];
-        mesh.geometry.bounding_box.max_original.z= mesh.geometry.vertices[2];
+    pub fn transform_max(&mut self, transformation: &Vec4<Vec4<f32>>) {
+        self.max_original.transform_to_ref(transformation,&mut self.max);
+        self.dirty_max=false;
 
-        let positions=mesh.geometry.vertices.chunks(mesh.geometry.vertices_stride);
-        for position in positions {
-            if position[0] > mesh.geometry.bounding_box.max_original.x {
-                mesh.geometry.bounding_box.max_original.x = position[0]
-            }
-            if position[1] > mesh.geometry.bounding_box.max_original.y {
-                mesh.geometry.bounding_box.max_original.y = position[1]
-            }
-            if position[2] > mesh.geometry.bounding_box.max_original.z {
-                mesh.geometry.bounding_box.max_original.z = position[2]
-            }
-        }
-        mesh.geometry.bounding_box.need_init_max=false;
-        Self::update_max(mesh);
-    }
-    fn update_max(mesh:&mut Mesh) {
-        mesh.geometry.bounding_box.max_original.transform_to_ref(&mut mesh.gpu_mesh.transformation, &mut mesh.geometry.bounding_box.max);
-        mesh.geometry.bounding_box.dirty_max = false;
     }
 }
