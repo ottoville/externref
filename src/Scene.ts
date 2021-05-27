@@ -105,7 +105,7 @@ export class Scene {
                 return pickingRays.set(boundable, rayArr);
             //@ts-ignore
             const ray = this.TerraCameras[0].createPickingRay(x, y, boundable.get_transformation());
-            pickingRays.set(boundable, new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]]));
+            return pickingRays.set(boundable, new Float32Array([ray.origin[0], ray.origin[1], ray.origin[2], ray.direction[0], ray.direction[1], ray.direction[2]]));
         });
         const results: Promise<void>[] = [];
         pickingRays.forEach((ray, boundable) => {

@@ -1,7 +1,7 @@
 ﻿importScripts("/js/commonMath.js");
 importScripts("/js/workers/webworkers/ray.js");
 
-let meshes: Map<number, Mesh> = new Map();
+const meshes: Map<number, Mesh> = new Map();
 interface pickInfo {
     pickMesh?: number;
     faceId?: number;
@@ -71,7 +71,7 @@ class Mesh {
 
 
         //const boundingInfo = this._boundingInfo;
-        let ray = new Ray(new Float32Array(rayArrBuff, 0, 3) as unknown as [number, number, number], new Float32Array(rayArrBuff, 3 * 4) as unknown as [number, number, number]);
+        const ray = new Ray(new Float32Array(rayArrBuff, 0, 3) as unknown as [number, number, number], new Float32Array(rayArrBuff, 3 * 4) as unknown as [number, number, number]);
         
         if (!ray.intersectsBoxMinMax({ x: this.#boundingBox[0], y: this.#boundingBox[1], z: this.#boundingBox[2] }, { x: this.#boundingBox[3], y: this.#boundingBox[4], z: this.#boundingBox[5] })) {
             return; // pickingInfo;
@@ -79,9 +79,9 @@ class Mesh {
         var intersectInfo: IntersectionInfo | null = null;
 
         // Triangles test
-        let p0: [number, number, number] = [0,0,0]
-        let p1: [number, number, number] = [0, 0, 0]
-        let p2: [number, number, number] = [0, 0, 0]
+        const p0: [number, number, number] = [0,0,0]
+        const p1: [number, number, number] = [0, 0, 0]
+        const p2: [number, number, number] = [0, 0, 0]
         if (!this.#indicesView) {
             console.error('Intersection with non indexed mesh not coded');
             return; // pickingInfo;
@@ -401,14 +401,14 @@ onmessage = async (e: WorkerMessageObject<{ objId?: number, args: any[] }, Mesh>
         let mesh: Mesh | undefined;
         if (mesh = meshes.get(e.data.data.objId!)) {
             //@ts-ignore
-            let r = mesh[e.data.action](...e.data.data.args);
+            const r = mesh[e.data.action](...e.data.data.args);
             if (typeof (e.data.id) !== 'undefined') {
                 self.postMessage({ id: e.data.id, data: r });
             }
         }
     } else {
         //@ts-ignore
-        let r = Mesh[e.data.action](...e.data.data.args);
+        const r = Mesh[e.data.action](...e.data.data.args);
         if (typeof (e.data.id) !== 'undefined')
             self.postMessage({ id: e.data.id, data: r });
     }

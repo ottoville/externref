@@ -3,7 +3,7 @@
     "composite": true,
     "outDir": "../wwwroot/js",
     "module": "esnext",
-    "target": "esnext",
+    "target": "ES2020",
     "lib": [ "esnext", "webworker" ],
     "sourceMap": false,
     "strictNullChecks": true,
