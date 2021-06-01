@@ -59,8 +59,8 @@ export abstract class MainNode extends Mesh {
         this.#onUpdate();
     }*/
 
-    constructor(public engine: Engine, private hasBounding: boolean, positionsCount = 0, vertices_stride = 3) {
-        super(engine.rustEngine, MainNode.uniqueID++, hasBounding, true, positionsCount, vertices_stride);
+    constructor(public engine: Engine, private hasBounding: boolean, positionsCount = 0, vertices_stride = 3, faces_count=0) {
+        super(engine.rustEngine, MainNode.uniqueID++, hasBounding, true, positionsCount, vertices_stride, faces_count);
         MainNode.Meshes.set(this.id, this);
         queueMicrotask(() => {
             if (this.#hasPhysics()) {
@@ -93,8 +93,8 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
     abstract Drawable: T;
 
-    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public positionsCount: number, hasBounding = false, vertices_stride = 3) {
-        super(engine, hasBounding, positionsCount, vertices_stride);
+    constructor(public engine: Engine, public renderPipeline: RenderPipeline, public positionsCount: number, hasBounding = false, vertices_stride = 3, faces_count=0) {
+        super(engine, hasBounding, positionsCount, vertices_stride, faces_count);
 
         //this.Drawable = createDrawable(this);
         queueMicrotask(() => {

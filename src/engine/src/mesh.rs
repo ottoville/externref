@@ -20,9 +20,16 @@ pub struct Mesh {
     scaling: Vec3<f32>,
     #[wasm_bindgen(skip)]
     pub geometry:Geometry,
-    pub positions_count:usize
+    pub positions_count:usize,
+    pub faces_count:usize
 }
-
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+    #[wasm_bindgen(js_namespace = console)]
+    fn error(s: &str);
+}
 #[wasm_bindgen]
 impl Mesh {
     #[wasm_bindgen(setter)]
@@ -32,7 +39,10 @@ impl Mesh {
     #[wasm_bindgen(getter)]
     pub fn indices_pointer(&self) -> *const usize {
         match &self.geometry.indices {
-            None => panic!("Geometry has no indices"),
+            None => {
+                error("Geometry has no indices");
+                panic!("Geometry has no indices")
+            },
             Some(indices) => indices.as_ptr(),
         }
     }
@@ -175,7 +185,7 @@ impl Mesh {
     }
 
     #[wasm_bindgen(constructor)]
-    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize) -> Self {
+    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize, faces_count:usize) -> Self {
         let m = Mesh {
             id,
             engine: engine,
@@ -204,7 +214,8 @@ impl Mesh {
                 y: 1.0,
                 z: 1.0,
             },
-            positions_count
+            positions_count,
+            faces_count
         };
         return m;
     }

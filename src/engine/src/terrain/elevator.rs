@@ -12,8 +12,15 @@ pub struct Elevator {
     #[wasm_bindgen(skip)]
     pub selected_vertices:Vec<(usize,f32)>,
     #[wasm_bindgen(skip)]
-    pub faces_of_vertices:Vec<Vec<u32>>
+    pub faces_of_vertices:Vec<Vec<usize>>,
 
+}
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+    #[wasm_bindgen(js_namespace = console)]
+    fn error(s: &str);
 }
 #[wasm_bindgen]
 impl Elevator {
@@ -72,6 +79,13 @@ impl Elevator {
         let radius_near = radius * 0.3;
         let radius_far = radius * 0.7;
 
+        let indices:&Vec<usize> = match &mesh.geometry.indices {
+            None => {
+                error("Elevator needs indices");
+                panic!("Elevator needs indices")
+            },
+            Some(indices) => indices
+        };
 
         let selected_iter = self.selected_vertices.iter();
         for sv in selected_iter {
@@ -82,7 +96,53 @@ impl Elevator {
                 positiony += full_height * (1.0 - (sv.1 - radius_near) / radius_far);
             }
             
-            mesh.geometry.vertices[sv.0 * mesh.geometry.vertices_stride +1] = f32::clamp(positiony,height_min,height_max)
+            mesh.geometry.vertices[sv.0 * mesh.geometry.vertices_stride +1] = f32::clamp(positiony,height_min,height_max);
+            let face_of_vertices=&self.faces_of_vertices[sv.0 / 12];
+            for index in face_of_vertices {
+
+                let end = *index * 3 + 3;
+                let indices_slice = &indices[*index * 3..end];
+                for vertexIndex in indices_slice.iter() {
+                    //var faces = this.#facesOfVertices[vertexIndex]!;
+                    let faces=&self.faces_of_vertices[*vertexIndex];
+                    //const norm = this.#normalsView[vertexIndex]!;
+                   
+                    let norm_ptr:*const f32 = &mesh.geometry.vertices[mesh.geometry.vertices_stride*vertexIndex+4];
+                    let norm_v = f32x4_splat(0.0);
+                    for face in faces.iter() {
+                        /*
+                        if (faces[index2]! % 2 == 0) {
+                            var facenormal = this.#groundFacesNormals[faces[index2]! >> 1]!;
+                        } else {
+                            var facenormal = this.#groundFacesNormals[half + (faces[index2]! >> 1)]!;
+                        }
+                        */
+                        if face % 2 == 0 {
+                            //let facenormal = 
+                        }
+
+                    }
+                }
+
+
+                let v1_ptr: *const f32 = &mesh.geometry.vertices[indices[*index * 3]];
+                let v1 = v128_load(v1_ptr as *const v128);
+               
+                let v2_ptr: *const f32 = &mesh.geometry.vertices[indices[*index * 3+1]];
+                let v2 = v128_load(v2_ptr as *const v128);
+
+                let v3_ptr: *const f32 = &mesh.geometry.vertices[indices[*index * 3+2]];
+                let v3 = v128_load(v3_ptr as *const v128);
+                
+                //                v1v2[0] = v1[0]! - v2[0]!;
+                let v1v2=f32x4_sub(v1,v2);
+                //                v3v2[0] = v3[0]! - v2[0]!;
+                let v3v2=f32x4_sub(v3,v2);
+
+                //if ((face_of_vertices[index]! & 1) == 0)
+
+            }
+
         }
 
     }
@@ -106,22 +166,23 @@ impl Elevator {
             ];
             vertices.append(&mut v);
         }
-
-     /*   let index: number;
-        for (index = 0; index < terrain.mesh.positionCount; index++) {
-            this.#facesOfVertices[index] = [];
-        }
-        terrain.indices.forEach((index, i)=> {
-            this.#facesOfVertices[index]!.push((i / 3) | 0);
-        });  
-*/
-
+        let mut faces_of_vertices:Vec<Vec<usize>> = vec![Vec::with_capacity(6);mesh.positions_count];
+        let indices:&Vec<usize> = match &mesh.geometry.indices {
+            None => {
+                error("Elevator needs indices");
+                panic!("Elevator needs indices")
+            },
+            Some(indices) => indices
+        };
+        for (i, indice) in indices.iter().enumerate() {
+            faces_of_vertices[*indice].push(i/3);
+        };
         Elevator {
             vertices_horizontal:vertices,
             mouse_position:[0.0,0.0,0.0],
             old_mouse_position:[0.0,0.0,0.0],
             selected_vertices:Vec::new(),
-            faces_of_vertices:vec![Vec::with_capacity(6);mesh.positions_count]
+            faces_of_vertices,
         }
     }
 }

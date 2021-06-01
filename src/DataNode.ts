@@ -32,14 +32,14 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     protected readonly colliderVertices: TerraVector4[] = [];
 
 
-    readonly #faces: Triangle[];
+    readonly #faces: Triangle[] = new Array(this.faces_count);
     #lastColliderTransformMatrix = new TerraMatrix();
 
-    readonly facesBuffer: SharedArrayBuffer;
+    readonly facesBuffer = new SharedArrayBuffer(this.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT);
     facesBufferColliderPointer: number;
     lastColliderWorldVectorsPointer: number;
     facesBufferColliderPointerParallel: number;
-    verticesBuffesSize: number;
+    verticesBuffesSize = this.positions_count * Float32Array.BYTES_PER_ELEMENT * this.verticesPositionStride;
     #positionsAndCollider: [TerraVector3, TerraVector4][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
 
@@ -52,21 +52,15 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         protected strip = false,
 
     ) {
-        super(scene.engine, renderPipeline, positionCount, true, verticesPositionStride);
+        super(scene.engine, renderPipeline, positionCount, true, verticesPositionStride,strip?indicesCount - 2:indicesCount / 3);
 
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             //@ts-expect-error
             this[prop] = DataNode.prototype[prop].bind(this);
         })
     
-
-
-        this.verticesBuffesSize = positionCount * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
-        this.#faces = new Array(this.strip?indicesCount - 2:indicesCount / 3)
-        this.facesBuffer = new SharedArrayBuffer(this.#faces.length * 4 * Float32Array.BYTES_PER_ELEMENT);
-
-        this.facesBufferColliderPointer = scene.engine.malloc(this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT);
-        this.facesBufferColliderPointerParallel = scene.engine.malloc(this.#faces.length * (16 + 12) * Float32Array.BYTES_PER_ELEMENT);
+        this.facesBufferColliderPointer = scene.engine.malloc(this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT);
+        this.facesBufferColliderPointerParallel = scene.engine.malloc(this.faces_count * (16 + 12) * Float32Array.BYTES_PER_ELEMENT);
 
         this.lastColliderWorldVectorsPointer = scene.engine.malloc(positionCount * 4 * Float32Array.BYTES_PER_ELEMENT);
 
@@ -118,7 +112,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     //collisionsScalingMatrix = new TerraMatrix();
     myCollisionsTransformMatrix = new TerraMatrix();
     public checkCollision = async (collider: Collider) => {
-        if (this.#faces.length % 4 != 0) {  //TODO
+        if (this.faces_count % 4 != 0) {  //TODO
             return
         }
         if (!collider._canDoCollision(this.bounding_min as TerraVector3, this.bounding_max as TerraVector3)) {
@@ -169,7 +163,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         // let timer = performance.now();
         // for (let i = 0; i < 20;i++)
 
-        this.engine.wasm.testTriangles(this.facesBufferColliderPointer,this.facesBufferColliderPointerParallel, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id);
+        this.engine.wasm.testTriangles(this.facesBufferColliderPointer,this.facesBufferColliderPointerParallel, this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id);
         if (!this.engine.collisionNotFound.getUint32(0, false)) {
             //console.log(new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer, this.#faces.length * 7)) //4 is for simd
             console.log('collided')
@@ -180,7 +174,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         //   console.log('simd took', performance.now() - timer);
     }
     protected buildFaceQuatros() {
-        if (this.#faces.length % 4 === 0) {
+        if (this.faces_count % 4 === 0) {
             this.#faceQuatros.length=0;
             let faceQuatro: Triangle[] = [];
             this.#faces.forEach(face => {
@@ -198,7 +192,16 @@ export interface IndexedNode extends TerraNodeGPU<DrawableIndexed> {
 }
 
 export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> implements IndexedNode {
-    indicesView!:Uint32Array;
+    private indicesCount=0;
+    get indicesView(): Uint32Array {
+        return new Uint32Array(this.engine.memory.buffer,this.indices_pointer,this.indicesCount);
+    }
+    set indicesView(indices: Uint32Array) {
+        this.indicesCount=indices.length;
+        this.indices=indices;
+        //this.indicesView = new Uint32Array(this.engine.memory.buffer,this.indices_pointer,indices.length);
+        this.rebuildTrianglePlanes();
+    }
     get indices_count() { return this.indicesView.length; }
     constructor(
         scene: Scene,
@@ -210,23 +213,15 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
     ) {
         super(scene, renderPipeline, positionCount, indicesView.length,verticesPositionStride, strip);
         Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
-            if(prop !== 'indices_count') {
-                //@ts-expect-error
-                this[prop] = BoundableNodeIndexed.prototype[prop].bind(this);
-            }
+            const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeIndexed.prototype, prop);
+            if(propDesc)
+                Object.defineProperty(this, prop, propDesc);
         })
-        Object.defineProperty(this, 'indices_count', {
-            get: function() { return this.indicesView.length }
-          });
           
-        this.setIndices(indicesView)
+        this.indicesView = indicesView
         this.rebuildTrianglePlanes();
     }
-    setIndices(indices: Uint32Array) {
-        this.indices=indices;
-        this.indicesView = new Uint32Array(this.engine.memory.buffer,this.indices_pointer,indices.length);
-        this.rebuildTrianglePlanes();
-    }
+
     rebuildTrianglePlanes = () => {
         let vectors: TerraVector4[] = [];
         let faceIndex = 0;

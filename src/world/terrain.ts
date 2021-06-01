@@ -493,7 +493,7 @@ TODO
                 this.serialize();
             });
             gpuReadBufferIndices.readAndDestroy(async (buff) => {
-                this.mesh.setIndices(new Uint32Array(buff));
+                this.mesh.indicesView=new Uint32Array(buff);
             });
         })
     }
