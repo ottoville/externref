@@ -12,6 +12,7 @@ import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU";
 import { GPUBufferUsage } from "../gpu.js"
 import { TerraVector3 } from "../Math.js";
+import type { Elevator } from "/js/engine/engine.js";
 
 
 
@@ -53,9 +54,10 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
     facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
     readonly #facesOfVertices: number[][]=[]
-    readonly #terrainPositionAndUvsAndNormalsCPUSwap = this.terrain.mesh.verticesView();
-    elevator = this.terrain.mesh.create_elevator();
-    Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([this.scene.gpu.renderPassScreen]), this, 8, 0,undefined,'TerrainTool');
+    elevator:Elevator
+    Drawable: DrawableSimple;
+    readonly #pick:{ readonly position: TerraVector3, meshId: number };
+
     constructor(
         public scene:Scene,
         public terrain: Terrain,
@@ -63,6 +65,10 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         public sea: Sea,
     ) {
         super(scene.engine, getRenderPipeline(scene, terrain),4);
+        
+        this.elevator=terrain.mesh.create_elevator();
+        this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), this, 8, 0,undefined,'TerrainTool');
+        this.#pick = {position:new TerraVector3(this.engine.memory.buffer, this.elevator.mouse_position_pointer()),meshId:0};
         scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*
@@ -127,10 +133,10 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.camera.detachControl();
        
         this.mouseinterval = setInterval(() => {
-            this.elevator.elevate(this.terrain.mesh,50,5*this.direction);
-            console.time('elevatFaces');
+           // this.elevator.elevate(this.terrain.mesh,50,5*this.direction);
+            //console.time('elevatFaces');
             this.elevateFaces(50,5*this.direction)
-            console.timeEnd('elevatFaces');
+            //console.timeEnd('elevatFaces');
             //TERRAIN EDITING DISABLED
             //terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
                 //const range = e as { min: number, max: number };
@@ -155,7 +161,6 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         super.destroy();
         renderPipelines.delete(this.engine.gpu);
     };
-    readonly #pick:{ readonly position: TerraVector3, meshId: number }={position:new TerraVector3(this.engine.memory.buffer, this.elevator.mouse_position_pointer()),meshId:0};
     #mouseListener = (): void => {
         /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
             this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
@@ -194,6 +199,11 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     readonly #positionsView: Float32Array[] = [];
     
     elevateFaces = (radius: number, fullHeight: number):void => {
+
+        const terrainPositionAndUvsAndNormalsCPUSwap=this.terrain.mesh.vertices;
+
+
+
         //TODO: Move to init
 
         const heightMax = 500;
@@ -201,7 +211,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
         //if (isNaN(pickInfo.distance[0]))
         //    return;
-        const length = this.#terrainPositionAndUvsAndNormalsCPUSwap.length;
+        const length = terrainPositionAndUvsAndNormalsCPUSwap.length;
 
         // Impact zone
         if (this.#mousePosition[0] != this.#pick.position[0] || this.#mousePosition[1] != this.#pick.position[2]) {
@@ -212,7 +222,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
             const radiusPow = Math.pow(radius, 2);
             
             for (let index = 0; index < length; index += 12) {
-                const distance = Math.pow(this.#terrainPositionAndUvsAndNormalsCPUSwap[index]! - this.#pick.position[0], 2) + Math.pow(this.#terrainPositionAndUvsAndNormalsCPUSwap[index + 2]! - this.#pick.position[2], 2)
+                const distance = Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index]! - this.#pick.position[0], 2) + Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index + 2]! - this.#pick.position[2], 2)
                 if (distance < radiusPow) {
                     this.#selectedVertices.push({
                         vertice: index,
@@ -234,7 +244,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         const radiusFar = radius * 0.7;
 
         this.#selectedVertices.forEach(sv => {
-            let positiony = this.#terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1]!;
+            let positiony = terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1]!;
             
     
             if (sv.distance < radiusNear) {
@@ -247,8 +257,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
                 positiony = heightMax;
             else if (positiony < heightMin)
                 positiony = heightMin;
-            //this.#terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
-    
+            terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
             faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
     
             for (let index = 0; index < faceOfVertices.length; index++) {
@@ -327,7 +336,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
                 const length = max - min;
 
-                this.terrain.updateSwap2(min, new Float32Array(this.#terrainPositionAndUvsAndNormalsCPUSwap.buffer,this.#terrainPositionAndUvsAndNormalsCPUSwap.byteOffset+min, length/4))
+                this.terrain.updateSwap2(min, new Float32Array(terrainPositionAndUvsAndNormalsCPUSwap.buffer,terrainPositionAndUvsAndNormalsCPUSwap.byteOffset+min, length/4))
 
         }
     

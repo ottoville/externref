@@ -53,10 +53,10 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
 
     ) {
         super(scene.engine, renderPipeline, positionCount, true, verticesPositionStride,strip?indicesCount - 2:indicesCount / 3);
-
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
-            //@ts-expect-error
-            this[prop] = DataNode.prototype[prop].bind(this);
+            const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
+            if(propDesc)
+                Object.defineProperty(this, prop, propDesc);
         })
     
         this.facesBufferColliderPointer = scene.engine.malloc(this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT);
@@ -97,7 +97,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     abstract rebuildTrianglePlanes: () => void
 
 
-    verticesView = () => {
+    get vertices() {
         return new Float32Array(this.engine.memory.buffer, this.vertices_pointer(), this.positions_count * this.verticesPositionStride);
     }
     getPosition = (index: number) => {
