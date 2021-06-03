@@ -14,22 +14,16 @@ import { GPUBufferUsage } from "../gpu.js"
 import { TerraVector3 } from "../Math.js";
 import type { Elevator } from "/js/engine/engine.js";
 
-
-
-
 const terrainWorker = new WorkerThread('/js/workers/webworkers/terrainWorker.js');
-
-
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(scene: Scene, terrain: Terrain) : RenderPipeline {
-
+function getRenderPipeline(scene: Scene, terrain: Terrain): RenderPipeline {
     let renderPipeline = renderPipelines.get(scene.gpu);
     if (renderPipeline) {
         return renderPipeline;
     }
 
-    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(new VertexShader(scene.engine.gpu,"helper2.vert.wgsl"),new Shader(scene.engine.gpu,'UIColor.frag.wgsl'),{
+    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(new VertexShader(scene.engine.gpu, "helper2.vert.wgsl"), new Shader(scene.engine.gpu, 'UIColor.frag.wgsl'), {
         primitive: {
             topology: 'triangle-list',
             cullMode: 'none'
@@ -45,30 +39,35 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     static menuElem = (instance: TerrainTool) => <div><legend style="background-color:white">Terrain</legend>
         <button class="w3-bar-item w3-button" onClick={() => instance.raise()}>⇫</button>
         <button class="w3-bar-item w3-button" style="transform: rotate(-180deg);" onClick={() => instance.lower()} >⇫</button >
-        </div>;
-    traits:Set<Trait> = new Set();
+    </div>;
+    traits: Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
-    
+
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
 
     facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-    readonly #facesOfVertices: number[][]=[]
-    elevator:Elevator
+    readonly #facesOfVertices: number[][] = []
+    elevator: Elevator
     Drawable: DrawableSimple;
-    readonly #pick:{ readonly position: TerraVector3, meshId: number };
+    readonly #pick: { readonly position: TerraVector3, meshId: number };
 
     constructor(
-        public scene:Scene,
+        public scene: Scene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea,
     ) {
-        super(scene.engine, getRenderPipeline(scene, terrain),4);
-        
-        this.elevator=terrain.mesh.create_elevator();
-        this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), this, 8, 0,undefined,'TerrainTool');
-        this.#pick = {position:new TerraVector3(this.engine.memory.buffer, this.elevator.mouse_position_pointer()),meshId:0};
+        super(scene.engine, getRenderPipeline(scene, terrain), 4);
+        Object.getOwnPropertyNames(TerrainTool.prototype).forEach(prop =>  {
+            const propDesc=Object.getOwnPropertyDescriptor(TerrainTool.prototype, prop);
+            if(propDesc)
+                Object.defineProperty(this, prop, propDesc);
+        });
+
+        this.elevator = terrain.mesh.create_elevator();
+        this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), this, 8, 0, undefined, 'TerrainTool');
+        this.#pick = { position: new TerraVector3(this.engine.memory.buffer, this.elevator.mouse_position_pointer()), meshId: 0 };
         scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*
@@ -100,29 +99,29 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         for (let i = 0; i < faceCount; i++) {
             this.#groundFacesNormals.push(new Float32Array(terrain.mesh.facesBuffer, i << 4, 4))
         }
-        const byteStride = terrain.mesh.verticesPositionStride*Float32Array.BYTES_PER_ELEMENT;
+        const byteStride = terrain.mesh.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT;
         if (this.#normalsView.length == 0) {
             for (let i = 0; i < terrain.mesh.positions_count; i++) {
                 this.#positionsView.push(terrain.mesh.getPosition(i));
-                this.#normalsView.push(new TerraVector3(this.engine.memory.buffer, this.terrain.mesh.vertices_pointer() + i * byteStride+16))
+                this.#normalsView.push(new TerraVector3(this.engine.memory.buffer, this.terrain.mesh.vertices_pointer() + i * byteStride + 16))
             }
         }
 
-        
+
         let index: number;
         for (index = 0; index < terrain.mesh.positions_count; index++) {
             this.#facesOfVertices[index] = [];
         }
-        
-        terrain.mesh.indicesView.forEach((index:number, i:number)=> {
+
+        terrain.mesh.indicesView.forEach((index: number, i: number) => {
             this.#facesOfVertices[index]!.push((i / 3) | 0);
         });
     }
-    static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number,number]) {
-        terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', {buffer:arrayBuffer, size:size}, [arrayBuffer]);
+    static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number, number]) {
+        terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', { buffer: arrayBuffer, size: size }, [arrayBuffer]);
     }
     //TERRAIN EDITING DISABLED
-    private direction:1 | 0 |-1 = 0;
+    private direction: 1 | 0 | -1 = 0;
     private mouseinterval = 0;
 
     #pointerdownf = (evt: PointerEvent): void => {
@@ -131,18 +130,18 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         }
         this.#canvasListener.addListener("pointerup", this.pointerupf, { once: true });
         this.camera.detachControl();
-       
+
         this.mouseinterval = setInterval(() => {
-           // this.elevator.elevate(this.terrain.mesh,50,5*this.direction);
+            // this.elevator.elevate(this.terrain.mesh,50,5*this.direction);
             //console.time('elevatFaces');
-            this.elevateFaces(50,5*this.direction)
+            this.elevateFaces(50, 5 * this.direction)
             //console.timeEnd('elevatFaces');
             //TERRAIN EDITING DISABLED
             //terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
-                //const range = e as { min: number, max: number };
-               // const length = range.max - range.min;
+            //const range = e as { min: number, max: number };
+            // const length = range.max - range.min;
 
-                //this.terrain.updateSwap2(range.min, length, this.terrain.mesh.verticesPositionBuffer)
+            //this.terrain.updateSwap2(range.min, length, this.terrain.mesh.verticesPositionBuffer)
             //});
         }, 17);
     }
@@ -167,10 +166,10 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         });*/
 
         this.scene.pickPosition(pickInfo => {
-            this.#pick.meshId=pickInfo.meshId;
-            this.#pick.position[0]=pickInfo.position[0];
-            this.#pick.position[1]=pickInfo.position[1];
-            this.#pick.position[2]=pickInfo.position[2];
+            this.#pick.meshId = pickInfo.meshId;
+            this.#pick.position[0] = pickInfo.position[0];
+            this.#pick.position[1] = pickInfo.position[1];
+            this.#pick.position[2] = pickInfo.position[2];
             this.SetTranslation([pickInfo.position[0], 0, pickInfo.position[2]]);
         });
 
@@ -184,7 +183,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
     }
     lower = (): void => {
-        
+
         //TERRAIN EDITING DISABLED
         this.direction = -1;
         this.#canvasListener.removeListener("pointerdown", this.#pointerdownf);
@@ -192,17 +191,14 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     }
 
 
-    #mousePosition:[number,number]=[0,0];
-    #selectedVertices: { vertice: number, distance: number }[]=[]
-    #groundFacesNormals: Float32Array[]=[];
+    #mousePosition: [number, number] = [0, 0];
+    #selectedVertices: { vertice: number, distance: number }[] = []
+    #groundFacesNormals: Float32Array[] = [];
     readonly #normalsView: Float32Array[] = [];
     readonly #positionsView: Float32Array[] = [];
-    
-    elevateFaces = (radius: number, fullHeight: number):void => {
 
-        const terrainPositionAndUvsAndNormalsCPUSwap=this.terrain.mesh.vertices;
-
-
+    elevateFaces(radius: number, fullHeight: number): void {
+        const terrainPositionAndUvsAndNormalsCPUSwap = this.terrain.mesh.vertices;
         //TODO: Move to init
 
         const heightMax = 500;
@@ -217,9 +213,9 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
             this.#mousePosition[0] = this.#pick.position[0];
             this.#mousePosition[1] = this.#pick.position[2];
             this.#selectedVertices = [];
-    
+
             const radiusPow = Math.pow(radius, 2);
-            
+
             for (let index = 0; index < length; index += 12) {
                 const distance = Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index]! - this.#pick.position[0], 2) + Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index + 2]! - this.#pick.position[2], 2)
                 if (distance < radiusPow) {
@@ -238,106 +234,105 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         let v1: Float32Array
         let v2: Float32Array
         let v3: Float32Array
-        
+
         const radiusNear = radius * 0.3;
         const radiusFar = radius * 0.7;
 
+        const selectedFaces: Set<number> = new Set();
+
         this.#selectedVertices.forEach(sv => {
             let positiony = terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1]!;
-            
-    
+
+
             if (sv.distance < radiusNear) {
                 positiony += fullHeight;
             } else {
                 positiony += fullHeight * (1.0 - (sv.distance - radiusNear) / radiusFar);
             }
-    
+
             if (positiony > heightMax)
                 positiony = heightMax;
             else if (positiony < heightMin)
                 positiony = heightMin;
             terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
             faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
-    
-            for (let index = 0; index < faceOfVertices.length; index++) {
-               // const indices = new Uint32Array(this.terrain.indicesBuffer, (faceOfVertices[index]! * 3) << 2, 3);
-                const indices = new Uint32Array(this.engine.memory.buffer,this.terrain.mesh.indices_pointer + ((faceOfVertices[index]! * 3) << 2), 3);
-                indices.forEach(vertexIndex => {
-                    var faces = this.#facesOfVertices[vertexIndex]!;
-                    const norm = this.#normalsView[vertexIndex]!;
-                    norm.set([0, 0, 0]);
-                    for (let index2 = 0; index2 < faces.length; index2++) {
-                        if (faces[index2]! % 2 == 0) {
-                            var facenormal = this.#groundFacesNormals[faces[index2]! >> 1]!;
-                        } else {
-                            var facenormal = this.#groundFacesNormals[half + (faces[index2]! >> 1)]!;
-                        }
-                        norm[0] += facenormal[0]!;
-                        norm[1] += facenormal[1]!;
-                        norm[2] += facenormal[2]!;
-                    }
-                    const fc = 1.0 / faces.length;
-                    norm[0] *= fc;
-                    norm[1] *= fc;
-                    norm[2] *= fc;
-                    //Normalize
-                    const scale = 1 / Math.hypot(norm[0]!, norm[1]!, norm[2]!);
-                    norm[0] *= scale;
-                    norm[1] *= scale;
-                    norm[2] *= scale;
-                });
-            }
+            faceOfVertices.forEach(faceId => {
+                selectedFaces.add(faceId)
+            });
         });
-    
-        this.#selectedVertices.forEach(sv => {
-            faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
-            for (let index = 0; index < faceOfVertices.length; index++) {
-                const indices = new Uint32Array(this.engine.memory.buffer,this.terrain.mesh.indices_pointer + ((faceOfVertices[index]! * 3) << 2), 3);
-    
-                v1 = this.#positionsView[indices[0]!]!;
-                v2 = this.#positionsView[indices[1]!]!;
-                v3 = this.#positionsView[indices[2]!]!;
-    
-                v1v2[0] = v1[0]! - v2[0]!;
-                v1v2[1] = v1[1]! - v2[1]!;
-                v1v2[2] = v1[2]! - v2[2]!;
-    
-                v3v2[0] = v3[0]! - v2[0]!;
-                v3v2[1] = v3[1]! - v2[1]!;
-                v3v2[2] = v3[2]! - v2[2]!;
-    
-                if ((faceOfVertices[index]! & 1) == 0)
-                    var normalized = this.#groundFacesNormals[half + (faceOfVertices[index]! >> 1)]!;
-                else
-                    var normalized = this.#groundFacesNormals[faceOfVertices[index]! >> 1]!;
-                normalized[0] = v1v2[1]! * v3v2[2]! - v1v2[2]! * v3v2[1]!
-                normalized[1] = v1v2[2]! * v3v2[0]! - v1v2[0]! * v3v2[2]!
-                normalized[2] = v1v2[0]! * v3v2[1]! - v1v2[1]! * v3v2[0]!
-    
-                const scale = 1 / Math.hypot(normalized[0], normalized[1], normalized[2]);
-                normalized[0] *= scale;
-                normalized[1] *= scale;
-                normalized[2] *= scale;
-                normalized[3] = -(normalized[0] * v2[0]! + normalized[1] * v2[1]! + normalized[2] * v2[2]!);
-            }
-        })
-    
-        if (this.#selectedVertices.length) {
-           /* self.postMessage({
-                type: 'bounding', data: {
-                    boundingBox: { minY: boundingBox.min[1], maxY: boundingBox.max[1] }
+        selectedFaces.forEach(faceId => {
+            const indices = new Uint32Array(this.engine.memory.buffer, this.terrain.mesh.indices_pointer + ((faceId * 3) << 2), 3);
+            indices.forEach(vertexIndex => {
+                var faces = this.#facesOfVertices[vertexIndex]!;
+                const norm = this.#normalsView[vertexIndex]!;
+                norm.set([0, 0, 0]);
+                for (let index2 = 0; index2 < faces.length; index2++) {
+                    if (faces[index2]! % 2 == 0) {
+                        var facenormal = this.#groundFacesNormals[faces[index2]! >> 1]!;
+                    } else {
+                        var facenormal = this.#groundFacesNormals[half + (faces[index2]! >> 1)]!;
+                    }
+                    norm[0] += facenormal[0]!;
+                    norm[1] += facenormal[1]!;
+                    norm[2] += facenormal[2]!;
                 }
-            });*/
+                const fc = 1.0 / faces.length;
+                norm[0] *= fc;
+                norm[1] *= fc;
+                norm[2] *= fc;
+                //Normalize
+                const scale = 1 / Math.hypot(norm[0]!, norm[1]!, norm[2]!);
+                norm[0] *= scale;
+                norm[1] *= scale;
+                norm[2] *= scale;
+            });
+        })
+        selectedFaces.forEach(faceId => {
+            const indices = new Uint32Array(this.engine.memory.buffer, this.terrain.mesh.indices_pointer + ((faceId * 3) << 2), 3);
+
+            v1 = this.#positionsView[indices[0]!]!;
+            v2 = this.#positionsView[indices[1]!]!;
+            v3 = this.#positionsView[indices[2]!]!;
+
+            v1v2[0] = v1[0]! - v2[0]!;
+            v1v2[1] = v1[1]! - v2[1]!;
+            v1v2[2] = v1[2]! - v2[2]!;
+
+            v3v2[0] = v3[0]! - v2[0]!;
+            v3v2[1] = v3[1]! - v2[1]!;
+            v3v2[2] = v3[2]! - v2[2]!;
+
+            if ((faceId & 1) == 0)
+                var normalized = this.#groundFacesNormals[half + (faceId >> 1)]!;
+            else
+                var normalized = this.#groundFacesNormals[faceId >> 1]!;
+            normalized[0] = v1v2[1]! * v3v2[2]! - v1v2[2]! * v3v2[1]!
+            normalized[1] = v1v2[2]! * v3v2[0]! - v1v2[0]! * v3v2[2]!
+            normalized[2] = v1v2[0]! * v3v2[1]! - v1v2[1]! * v3v2[0]!
+
+            const scale = 1 / Math.hypot(normalized[0], normalized[1], normalized[2]);
+            normalized[0] *= scale;
+            normalized[1] *= scale;
+            normalized[2] *= scale;
+            normalized[3] = -(normalized[0] * v2[0]! + normalized[1] * v2[1]! + normalized[2] * v2[2]!);
+        })
+
+        if (this.#selectedVertices.length) {
+            /* self.postMessage({
+                 type: 'bounding', data: {
+                     boundingBox: { minY: boundingBox.min[1], maxY: boundingBox.max[1] }
+                 }
+             });*/
             const subvertices = this.#selectedVertices.map(sv => sv.vertice);
             const min = Math.min(...subvertices) * 4;
-            const max = Math.max(...subvertices) * 4 + this.terrain.mesh.verticesPositionStride*Float32Array.BYTES_PER_ELEMENT;
-          //  self.postMessage({ id: e.id, data: { min: min, max: max } });
+            const max = Math.max(...subvertices) * 4 + this.terrain.mesh.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT;
+            //  self.postMessage({ id: e.id, data: { min: min, max: max } });
 
-                const length = max - min;
+            const length = max - min;
 
-                this.terrain.updateSwap2(min, new Float32Array(terrainPositionAndUvsAndNormalsCPUSwap.buffer,terrainPositionAndUvsAndNormalsCPUSwap.byteOffset+min, length/4))
+            this.terrain.updateSwap2(min, new Float32Array(terrainPositionAndUvsAndNormalsCPUSwap.buffer, terrainPositionAndUvsAndNormalsCPUSwap.byteOffset + min, length / 4))
 
         }
-    
+
     }
 }
