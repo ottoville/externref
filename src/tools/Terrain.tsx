@@ -203,7 +203,6 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         const terrainPositionAndUvsAndNormalsCPUSwap=this.terrain.mesh.vertices;
 
 
-
         //TODO: Move to init
 
         const heightMax = 500;
@@ -261,8 +260,8 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
             faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
     
             for (let index = 0; index < faceOfVertices.length; index++) {
-                const indices = new Uint32Array(this.terrain.indicesBuffer, (faceOfVertices[index]! * 3) << 2, 3);
-    
+               // const indices = new Uint32Array(this.terrain.indicesBuffer, (faceOfVertices[index]! * 3) << 2, 3);
+                const indices = new Uint32Array(this.engine.memory.buffer,this.terrain.mesh.indices_pointer + ((faceOfVertices[index]! * 3) << 2), 3);
                 indices.forEach(vertexIndex => {
                     var faces = this.#facesOfVertices[vertexIndex]!;
                     const norm = this.#normalsView[vertexIndex]!;
@@ -293,7 +292,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.#selectedVertices.forEach(sv => {
             faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
             for (let index = 0; index < faceOfVertices.length; index++) {
-                var indices = new Uint32Array(this.terrain.indicesBuffer, (faceOfVertices[index]! * 3) << 2, 3);
+                const indices = new Uint32Array(this.engine.memory.buffer,this.terrain.mesh.indices_pointer + ((faceOfVertices[index]! * 3) << 2), 3);
     
                 v1 = this.#positionsView[indices[0]!]!;
                 v2 = this.#positionsView[indices[1]!]!;

@@ -178,9 +178,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
                     renderBundleEncoder.setBindGroup(2, pipelineLayout.sharedBindgroup);
                 }
                 pipelineLayout.renderPipeLines.forEach(renderPipeline => {
-                    if (pipelineLayout.sharedBindgroup) {
-                        console.log('draw with shared bindgroup');
-                    }
                     drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1 + dynamicIndices.length, dynamicIndices);
                 });
             });

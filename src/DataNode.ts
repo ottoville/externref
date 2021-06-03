@@ -148,7 +148,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
                 ]);
             });
         }
-        console.time('faceQuatros');
+       /* console.time('faceQuatros');
         for(let i=0; i<this.#faceQuatros.length;i++) {
             new Float32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointerParallel + i * 4 * 16, 16).set([
                 this.#faceQuatros[i]![0].planeCollider[0], this.#faceQuatros[i]![1].planeCollider[0], this.#faceQuatros[i]![2].planeCollider[0], this.#faceQuatros[i]![3].planeCollider[0], //x
@@ -157,7 +157,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
                 this.#faceQuatros[i]![0].planeCollider[3], this.#faceQuatros[i]![1].planeCollider[3], this.#faceQuatros[i]![2].planeCollider[3], this.#faceQuatros[i]![3].planeCollider[3], //d
             ]);
         }
-        console.timeEnd('faceQuatros')
+        console.timeEnd('faceQuatros')*/
         /*   this.#faces.forEach(triangle => {
                collider._testTriangle(triangle);
            });*/
