@@ -2,6 +2,7 @@
 import { BoundableNodeIndexed } from "../../DataNode.js";
 import type { Scene } from "../../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../RenderPipeline.js";
+import type { DrawableIndexed } from "GPU/Drawable.js";
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
@@ -27,15 +28,17 @@ function Simple(gpu: GPU) {
     return renderPipeline
 }
 export abstract class SimpleMesh extends BoundableNodeIndexed {
-    Drawable =  this.renderPipeline.addDrawableIndexed(this.scene, new Set([this.scene.gpu.renderPassScreen]),this)
+    Drawable:DrawableIndexed;
     constructor(
-        private scene: Scene,
+        scene: Scene,
         positionsCount: number,
         indicesView: Uint32Array,
         iBuffer: GPUIndexBuffer,
         vBuffer: GPUVertexBuffer) {
 
         super(scene, Simple(scene.gpu), positionsCount, 3, indicesView);
+        this.Drawable =  this.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen]),this)
+
         this.Drawable.setVertexBuffer(0, vBuffer);
         this.Drawable.setIndexBuffer(iBuffer, undefined, undefined, indicesView.BYTES_PER_ELEMENT == 4 ? 'uint32' : 'uint16');
 

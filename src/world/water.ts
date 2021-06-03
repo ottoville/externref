@@ -2,6 +2,7 @@
 import type { Scene } from "../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
+import type { DrawableSimple } from "GPU/Drawable.js";
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
@@ -75,9 +76,9 @@ function getRenderPipeline(gpu: GPU) {
 
 export class Sea extends BoundableNodeSimple {
     worldPosition = undefined
-    Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), this,undefined,undefined,undefined,'water');
-    constructor(private scene: Scene) {
+    Drawable:DrawableSimple;
+    constructor(scene: Scene) {
         super(scene, getRenderPipeline(scene.gpu), 4, undefined,true); //48
-        
+        this.Drawable=this.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), this,undefined,undefined,undefined,'water');
     }
 }

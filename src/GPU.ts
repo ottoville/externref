@@ -1,6 +1,6 @@
 ﻿import { TerraNodeGPU } from "./TerraNode.js";
 import { RenderPass } from "./GPU/RenderPass.js";
-import { PipelineLayout } from "./GPU/PipelineLayout.js";
+import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import type { BoundableNode } from "./DataNode.js";
@@ -54,38 +54,8 @@ export class GPU {
 
 
     readonly boundables: Set<BoundableNode> = new Set();
-    readonly uniformBindGroupLayoutWithTime = this.createBindGroupLayout({
-        label: 'uniformBindGroupLayoutWithTime',
-        entries:
-            [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: {
-                        type: "uniform"
-                    }
-                },
-                {
-                    binding: 1,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: {
-                        type: "uniform"
-                    }
-                }
-            ]
-    });
-    readonly uniformBindGroupLayoutLightsWGSL2 = this.createBindGroupLayout({
-        label: 'uniformBindGroupLayoutLightsWGSL2',
-        entries: [{
-            binding: 0,
-            visibility: GPUShaderStage.VERTEX,
-            buffer: {
-                type: "uniform"
-            }
-        }]
-    });
-    readonly rootCameralayout = new PipelineLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
-    //rootSceneLayout = new PipelineLayout(this, this.uniformBindGroupLayoutLightsWGSL2, this.rootCameralayout, undefined, false);
+    
+    readonly rootCameralayout:PipelineLayout;
 
     //viewprojection and camera position
 
@@ -93,96 +63,17 @@ export class GPU {
 
     readonly shaderModules: Map<string, GPUShaderModule> = new Map();
     //Todo: Remove COPY_SRC
-    readonly GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+    readonly GPUData: GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer;
+    readonly rootLayout:PipelineLayout;
+    readonly positionBindGroupTimeWGSL:LayoutGroupDrawable<[GPUBindGroupEntry]>;
 
-    readonly #BindGroupLayoutCanvas = this.createBindGroupLayout({
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.FRAGMENT,
-                sampler: {
+    readonly uniformBindGroupLayoutWithTime : BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry]>;
+    readonly uniformBindGroupLayoutLightsWGSL2 : BindGroupLayout<[GPUBindGroupEntry]>;
 
-                }
-            },
-            {
-                binding: 1,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {
+    readonly lightsBindGroupTexture2 : LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
 
-                }
-            }, {
-                binding: 2,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {
-
-                }
-            },
-            {
-                binding: 3,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {
-
-                }
-            }, {
-                binding: 4,
-                visibility: GPUShaderStage.FRAGMENT,
-                buffer: {
-                    type: "read-only-storage"
-                }
-            }
-        ]
-    }
-    );
-
-
-    readonly rootLayout = new PipelineLayout(this, this.#BindGroupLayoutCanvas);
-    readonly BindGroupLayoutPosition = this.createBindGroupLayout({
-        label: 'BindGroupLayoutPosition',
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX,
-                buffer: {
-                    type: "uniform",
-                    hasDynamicOffset: true
-                }
-            }]
-    });
-    readonly positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout(this.BindGroupLayoutPosition);
-
-    readonly lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout(this.createBindGroupLayout({
-        label: 'lightsBindGroupTexture2',
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.FRAGMENT,
-                sampler: {},
-            }, {
-                binding: 1,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {}
-            }/*,
-            {
-                binding: 2,
-                visibility: GPUShaderStage.VERTEX,
-                buffer: {
-                    type: "uniform",
-                    hasDynamicOffset: true
-                }
-            }*/
-        ]
-    }));
-
-    readonly BindGroupPosition = this.createBindGroup(this.BindGroupLayoutPosition, [
-        {
-            binding: 0,
-            resource: {
-                buffer: this.GPUData,
-                offset: 0,
-                size: TerraNodeGPU.GPUDataSize * 4
-            }
-        }]);
-    readonly positionBindGroupTime = this.rootCameralayout.addChildBindGroup(this.BindGroupPosition, true);
+    readonly BindGroupPosition:GPUBindGroup;
+    readonly positionBindGroupTime:PipelineLayout;
     readonly timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     readonly timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
@@ -191,32 +82,161 @@ export class GPU {
 
     readonly queue: Map<Float32Array, number> = new Map();
 
-    readonly renderPassScreen = new RenderPass(this, {
-        gRenderTargetNormals: this.addTarget("bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
-        gRenderTargetPositions: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED, GPUTextureUsage.COPY_SRC]),
-        gRenderTargetDiffuse: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
-    }, 1, true, { width: this.canvas.width, height: this.canvas.height },
-        (w, h) => {
-            return [w, h]
-        });
-    readonly renderPassWater = new RenderPass(this, {
-        normals: this.addTarget("bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
-        position: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED]),
-        diffuse: this.addTarget("bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
-    }, 1, false, { width: this.canvas.width, height: this.canvas.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED)
-    readonly renderPassCanvas = new RenderPass(this, {
-        swap: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT], 1)
-    }, 1, false, { width: this.canvas.width, height: this.canvas.height },
-        (w, h) => {
-            return [w, h]
-        });
     readonly renderPasses: Set<RenderPass>;
 
     readonly scale = {
         x: 1,
         y: 1
     }
+    readonly renderPassScreen: RenderPass<{
+        gRenderTargetNormals: RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment>;
+        gRenderTargetPositions: RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment | GPUTextureCopySrc>;
+        gRenderTargetDiffuse: RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment>;
+    }>;
+    readonly renderPassWater: RenderPass<{
+        normals: RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment>;
+        position: RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment>;
+        diffuse: RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment>;
+    }>;
+    readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<GPUTextureSampled>; }>;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
+        this.GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+
+        this.uniformBindGroupLayoutWithTime  = this.createBindGroupLayout({
+            label: 'uniformBindGroupLayoutWithTime',
+            entries:
+                [
+                    {
+                        binding: 0,
+                        visibility: GPUShaderStage.VERTEX,
+                        buffer: {
+                            type: "uniform"
+                        }
+                    },
+                    {
+                        binding: 1,
+                        visibility: GPUShaderStage.VERTEX,
+                        buffer: {
+                            type: "uniform"
+                        }
+                    }
+                ]
+        });
+        this.rootCameralayout = new PipelineLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
+
+        this.uniformBindGroupLayoutLightsWGSL2 = this.createBindGroupLayout({
+            label: 'uniformBindGroupLayoutLightsWGSL2',
+            entries: [{
+                binding: 0,
+                visibility: GPUShaderStage.VERTEX,
+                buffer: {
+                    type: "uniform"
+                }
+            }]
+        });
+        const BindGroupLayoutCanvas = this.createBindGroupLayout(
+            {
+                entries: [
+                    {
+                        binding: 0,
+                        visibility: GPUShaderStage.FRAGMENT,
+                        sampler: {
+        
+                        }
+                    },
+                    {
+                        binding: 1,
+                        visibility: GPUShaderStage.FRAGMENT,
+                        texture: {
+        
+                        }
+                    }, {
+                        binding: 2,
+                        visibility: GPUShaderStage.FRAGMENT,
+                        texture: {
+        
+                        }
+                    },
+                    {
+                        binding: 3,
+                        visibility: GPUShaderStage.FRAGMENT,
+                        texture: {
+        
+                        }
+                    }, {
+                        binding: 4,
+                        visibility: GPUShaderStage.FRAGMENT,
+                        buffer: {
+                            type: "read-only-storage"
+                        }
+                    }
+                ]
+            }
+        );
+        this.rootLayout = new PipelineLayout(this, BindGroupLayoutCanvas);
+        const BindGroupLayoutPosition= this.createBindGroupLayout({
+            label: 'BindGroupLayoutPosition',
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.VERTEX,
+                    buffer: {
+                        type: "uniform",
+                        hasDynamicOffset: true
+                    }
+                }]
+        });
+        this.BindGroupPosition = this.createBindGroup(BindGroupLayoutPosition, [
+            {
+                binding: 0,
+                resource: {
+                    buffer: this.GPUData,
+                    offset: 0,
+                    size: TerraNodeGPU.GPUDataSize * 4
+                }
+            }]);
+        this.positionBindGroupTime = this.rootCameralayout.addChildBindGroup(this.BindGroupPosition, true);
+
+        this.positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout(BindGroupLayoutPosition);
+        this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout(this.createBindGroupLayout({
+            label: 'lightsBindGroupTexture2',
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {},
+                }, {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                }
+            ]
+        }));
+
+
+        this.renderPassScreen = new RenderPass(this, {
+            gRenderTargetNormals: this.addTarget("bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
+            gRenderTargetPositions: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED, GPUTextureUsage.COPY_SRC]),
+            gRenderTargetDiffuse: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
+        }, 1, true, { width: canvas.width, height: canvas.height },
+            (w, h) => {
+                return [w, h]
+            });
+        this.renderPassWater = new RenderPass(this, {
+            normals: this.addTarget("bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
+            position: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED]),
+            diffuse: this.addTarget("bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
+        }, 1, false, { width: canvas.width, height: canvas.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED)
+        this.renderPassCanvas = new RenderPass(this, {
+            swap: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT], 1)
+        }, 1, false, { width: canvas.width, height: canvas.height },
+            (w, h) => {
+                return [w, h]
+            });
+
+
+
+
         const context = canvas.getContext('gpupresent');
         if (!context)
             throw ('Unable to get webgpu context')
@@ -236,7 +256,7 @@ export class GPU {
             magFilter: "linear",
             minFilter: "linear",
         });
-        this.BindGroupCanvas = (renderPass: RenderPass) => this.createBindGroupForRenderPass(this.#BindGroupLayoutCanvas, renderPass,
+        this.BindGroupCanvas = (renderPass: RenderPass) => this.createBindGroupForRenderPass(BindGroupLayoutCanvas, renderPass,
             [{
                 binding: 0,
                 resource: canvasSampler

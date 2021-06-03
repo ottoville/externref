@@ -29,20 +29,13 @@ export class TerraCamera {
 
 
     #position = new TerraVector3(this.#viewProjectionPositionBuffer, 128);
-    projectionArr = new TerraMatrix(this.projection);
+    readonly #projectionArr:TerraMatrix;
 
     #pickingRayBuffer = new SharedArrayBuffer(6 * 4); // origin: vec3, direction: vec3
     pickingRay = new Float32Array(this.#pickingRayBuffer);
 
-    #uniformBuffer = this.gpu.createGPUBuffer(this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
-    #uniformBindGroup = this.gpu.createBindGroup(
-        this.gpu.uniformBindGroupLayoutWithTime,
-        [{
-            binding: 0,
-            resource: {
-                buffer: this.#uniformBuffer
-            }
-        }, this.gpu.timeGroup]);
+    readonly #uniformBuffer:GPUUniformBuffer & GPUCopyDSTBuffer; //Todo: set to private
+    readonly #uniformBindGroup:GPUBindGroup;
     onRender?: () => void;
     target: { readonly 0: number; readonly 1: number; readonly 2: number; };
     position: { readonly 0: number; readonly 1: number; readonly 2: number; };
@@ -54,6 +47,17 @@ export class TerraCamera {
 
 
     constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, engine: Engine, main = true, parent?: TerraCamera) {
+        this.#projectionArr = new TerraMatrix(projection);
+        this.#uniformBuffer= gpu.createGPUBuffer(this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
+        this.#uniformBindGroup = this.gpu.createBindGroup(
+            gpu.uniformBindGroupLayoutWithTime,
+            [{
+                binding: 0,
+                resource: {
+                    buffer: this.#uniformBuffer
+                }
+            }, gpu.timeGroup]);
+        
         const thistarget = this.#target
         const thisposition = this.#position
         this.target = {
@@ -128,7 +132,7 @@ export class TerraCamera {
         this.viewArr[13] = -(this.viewArr[1] * this.#position[0] + this.viewArr[5] * this.#position[1] + this.viewArr[9] * this.#position[2])
         //z
         this.viewArr[14] = -(this.viewArr[2] * this.#position[0] + this.viewArr[6] * this.#position[1] + this.viewArr[10] * this.#position[2]);
-        this.viewArr.multiplyToRef(this.projectionArr, this.#projectionViewArr)
+        this.viewArr.multiplyToRef(this.#projectionArr, this.#projectionViewArr)
 
         const tempBuffer = this.gpu.createGPUBuffer(this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], true);
         new Float32Array(tempBuffer.getMappedRange()).set(this.#viewAndProjection);
@@ -177,7 +181,7 @@ export class TerraCamera {
         } else {
             var matrix = this.viewArr.clone();
         }
-        matrix.multiplyToRef(this.projectionArr, matrix);
+        matrix.multiplyToRef(this.#projectionArr, matrix);
         //TODO use matrixMultiply64 and matrixInvert64
 
         const inverted = new TerraMatrix();

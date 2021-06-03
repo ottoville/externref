@@ -31,12 +31,8 @@ export class Zones extends UITAB {
     public canvasListener = new canvasListener(this);
     private PT: paintTexture;
     #size = 5120;
-    #ratio = this.ground.size[0] / this.#size //texture coordinates
-    zoneTexture = this.scene.gpu.device.createTexture({
-        size: [5120, 5120, 1],
-        format: "rgba8unorm",
-        usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
-    });
+    readonly #ratio:number //texture coordinates
+    readonly #zoneTexture:GPUTexture;
     constructor(
         public scene: Scene,
         public ground: Terrain,
@@ -44,6 +40,12 @@ export class Zones extends UITAB {
         sea: Sea,
     ) {
         super(scene, ground, camera, sea);
+        this.#ratio = this.ground.size[0] / this.#size //texture coordinates
+        this.#zoneTexture = this.scene.gpu.device.createTexture({
+            size: [5120, 5120, 1],
+            format: "rgba8unorm",
+            usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+        });
 
         const texture = new OffscreenCanvas(5120, 5120);
         const ctx = texture.getContext('2d');
@@ -69,14 +71,14 @@ export class Zones extends UITAB {
                 });
                 ctx.stroke();
                 const bitmap = texture.transferToImageBitmap();
-                scene.gpu.device.queue.copyImageBitmapToTexture({ imageBitmap: bitmap }, { texture: this.zoneTexture }, [5120, 5120, 1]);
+                scene.gpu.device.queue.copyImageBitmapToTexture({ imageBitmap: bitmap }, { texture: this.#zoneTexture }, [5120, 5120, 1]);
                 bitmap.close();
             }
         })();
         
-        ground.mesh.setTextureView(this.zoneTexture.createView());
+        ground.mesh.setTextureView(this.#zoneTexture.createView());
         ground.mesh.Drawable.scene = scene.engine.scenes.get('static');
-        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.zoneTexture, 5120, 5120, this, this.#ratio, async (response) => {
+        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.#zoneTexture, 5120, 5120, this, this.#ratio, async (response) => {
             (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
         });
         /*this.PT.activate(async (response) => {
@@ -86,7 +88,7 @@ export class Zones extends UITAB {
     destroy = (): void => {
         this.ground.mesh.Drawable.scene = this.scene;
         this.ground.mesh.setTextureView(this.ground.texture.createView());
-        this.zoneTexture.destroy();
+        this.#zoneTexture.destroy();
         this.PT.destroy();
         this.traits.forEach(trait => trait.destroy());
     }

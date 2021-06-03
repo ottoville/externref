@@ -39,7 +39,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     facesBufferColliderPointer: number;
     lastColliderWorldVectorsPointer: number;
     facesBufferColliderPointerParallel: number;
-    verticesBuffesSize = this.positions_count * Float32Array.BYTES_PER_ELEMENT * this.verticesPositionStride;
+    readonly verticesBuffesSize:number;
     #positionsAndCollider: [TerraVector3, TerraVector4][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
 
@@ -57,7 +57,9 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
             if(propDesc)
                 Object.defineProperty(this, prop, propDesc);
-        })
+        });
+        this.verticesBuffesSize = this.positions_count * Float32Array.BYTES_PER_ELEMENT * verticesPositionStride;
+
     
         this.facesBufferColliderPointer = scene.engine.malloc(this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT);
         this.facesBufferColliderPointerParallel = scene.engine.malloc(this.faces_count * (16 + 12) * Float32Array.BYTES_PER_ELEMENT);

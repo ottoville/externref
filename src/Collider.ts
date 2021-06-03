@@ -98,17 +98,18 @@ export class Collider {
     _displacementVector: [x: number, y: number, z: number] = [0, 0, 0];
     radius: { 0: number; 1: number; 2: number; };
 
-    collisionsScalingMatrix = new TerraMatrix([
-        1.0 / this._radius[0],   0.0,                   0.0,                    0.0,
-        0.0,                     1.0 / this._radius[1], 0.0,                    0.0,
-        0.0,                     0.0,                   1.0 / this._radius[2],  0.0,
-        0.0, 0.0, 0.0, 1.0]);
+    readonly collisionsScalingMatrix:TerraMatrix;
     constructor(private collisionCoordinator: {
         scaledPosition: [number, number, number],
         scaledVelocity: [number, number, number],
         finalPosition: [number, number, number],
     }, private nearestDistanceSquared:DataView, private collisionNotFound:DataView, private intersectionPointWasm:[number, number, number],private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
 
+        this.collisionsScalingMatrix = new TerraMatrix([
+            1.0 / _radius[0],   0.0,                   0.0,                    0.0,
+            0.0,                     1.0 / _radius[1], 0.0,                    0.0,
+            0.0,                     0.0,                   1.0 / _radius[2],  0.0,
+            0.0, 0.0, 0.0, 1.0]);
 
         const me = this;
         this.radius = {

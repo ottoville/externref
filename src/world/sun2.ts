@@ -5,7 +5,7 @@ import { TerraNodeGPU } from "../TerraNode.js";
 import { Angle } from "../Math.js";
 import type { GPU } from "../GPU.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
-import { DrawableSimple } from "GPU/Drawable.js";
+import type { DrawableSimple } from "GPU/Drawable.js";
 
 //const sundistance = 149600000000;
 
@@ -76,9 +76,10 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics, is
        // this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
         this.updateDynamicBuffer();
     }
-    // Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), this);
-    Drawable=this.renderPipeline.addDrawableSimple(this.scene, new Set([this.scene.gpu.renderPassScreen]), this,undefined,undefined,undefined,'sun');
-    constructor(private scene: Scene) {
+    Drawable:DrawableSimple;
+    constructor(scene: Scene) {
         super(scene.engine, getRenderPipeline(scene.gpu), 14);
+        this.Drawable=this.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), this,undefined,undefined,undefined,'sun');
+
     }
 }

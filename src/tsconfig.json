@@ -16,7 +16,7 @@
     "jsx": "react",
     "jsxFactory": "TerraUI.createElement",
     //"strict": true,
-    "target": "ES2020",
+    "target": "ESNext",
     "module": "ESNext",
     "lib": [
       "dom",

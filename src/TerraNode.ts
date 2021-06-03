@@ -11,7 +11,7 @@ export abstract class MainNode extends Mesh {
     isStatic = false;
     static uniqueID = 1;
     static Meshes: Map<number, MainNode> = new Map();
-    readonly acceleration = new Float32Array(this.engine.memory.buffer, this.gpu_pointer + 24 * Float32Array.BYTES_PER_ELEMENT, 4);
+    readonly acceleration:Float32Array;
     get_transformation = () => new TerraMatrix(this.engine.memory.buffer, this.gpu_pointer)//new TerraMatrix(this.data.buffer);
 
     get_velocity = () => {
@@ -61,6 +61,7 @@ export abstract class MainNode extends Mesh {
 
     constructor(public engine: Engine, private hasBounding: boolean, positionsCount = 0, vertices_stride = 3, faces_count=0) {
         super(engine.rustEngine, MainNode.uniqueID++, hasBounding, true, positionsCount, vertices_stride, faces_count);
+        this.acceleration = new Float32Array(this.engine.memory.buffer, this.gpu_pointer + 24 * Float32Array.BYTES_PER_ELEMENT, 4);
         MainNode.Meshes.set(this.id, this);
         queueMicrotask(() => {
             if (this.#hasPhysics()) {

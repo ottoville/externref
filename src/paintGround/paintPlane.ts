@@ -47,11 +47,12 @@ function getRenderPipeline(scene: Scene, ground: Terrain): RenderPipeline {
     return renderPipeline
 }
 export class paintPlane extends paintGround {
+    #mesh:PlaneMesh
     constructor(
-        protected scene: Scene,
-        protected camera: ArcRotateCamera,
-        protected ground: Terrain,
-        protected sea: Sea,
+        scene: Scene,
+        camera: ArcRotateCamera,
+        ground: Terrain,
+        sea: Sea,
         uitab: hasCanvasListener,
         callback: PTResultF
     ) {
@@ -59,9 +60,9 @@ export class paintPlane extends paintGround {
             this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0)
             callback(p);
         });
+        this.#mesh = new PlaneMesh(this.scene.engine, getRenderPipeline(scene, ground), 0);
         this.#mesh.Drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
     }
-    #mesh = new PlaneMesh(this.scene.engine, getRenderPipeline(this.scene, this.ground), 0);
     #startingPoint = new TerraVector2(2);
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
         const positions: number[] = [0, 0, 0, 1];
