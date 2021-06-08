@@ -1,6 +1,9 @@
 #![cfg(target_arch = "wasm32")]
 #![feature(wasm_simd)]
 
+#![feature(vec_into_raw_parts)]
+
+
 extern crate wasm_bindgen;
 
 mod engine;

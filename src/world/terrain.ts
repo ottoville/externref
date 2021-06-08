@@ -123,15 +123,21 @@ TODO
             terrainPositionAndUvsAndNormalsCPUSwap.byteLength);
         let b2: GPUCopySRCBuffer;
         if (!nofaces) {
-            b2 = this.scene.gpu.createGPUBuffer(this.mesh.facesBuffer.byteLength, [GPUBufferUsage.COPY_SRC], true);
-            new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.facesBuffer))
+            const facesByteLength = this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
+            b2 = this.scene.gpu.createGPUBuffer(facesByteLength, [GPUBufferUsage.COPY_SRC], true);
+           // new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.facesBuffer))
+            new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.engine.memory.buffer, this.mesh.faces_pointer, this.mesh.faces_count * 4))
+
+
+
+
             b2.unmap();
             commandEncoder.copyBufferToBuffer(
                 b2, // source buffer
                 0, //source offset
                 this.facet12ArrGPUBuffer, //destination buffer
                 0, //destination offset
-                this.mesh.facesBuffer.byteLength);
+                facesByteLength);
         }
         this.scene.gpu.device.queue.submit([commandEncoder.finish()]);
         b1.destroy();
@@ -484,7 +490,8 @@ TODO
             }
             scene.gpu.GPU2CPU(async (buff) => {
                 await buff.mapAsync(GPUMapMode.READ);
-                new Float32Array(this.mesh.facesBuffer).set(new Float32Array(buff.getMappedRange()));
+                //new Float32Array(this.mesh.facesBuffer).set(new Float32Array(buff.getMappedRange()));
+                this.mesh.faces=new Float32Array(buff.getMappedRange());
             }, this.facet12ArrGPUBuffer)
     
             terrainPositionAndUvsAndNormalsGPUTemp.destroy();

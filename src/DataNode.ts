@@ -35,7 +35,8 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     readonly #faces: Triangle[] = new Array(this.faces_count);
     #lastColliderTransformMatrix = new TerraMatrix();
 
-    readonly facesBuffer = new SharedArrayBuffer(this.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT);
+    //readonly facesBuffer = new SharedArrayBuffer(this.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT);
+
     facesBufferColliderPointer: number;
     lastColliderWorldVectorsPointer: number;
     facesBufferColliderPointerParallel: number;
@@ -70,7 +71,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         scene.gpu.boundables.add(this); 1
         for (let i = 0; i < positionCount; i++) {
             //let pos = new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT)
-            const pos = new TerraVector3(scene.engine.memory.buffer, this.vertices_pointer() + i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
+            const pos = new TerraVector3(scene.engine.memory.buffer, this.vertices_pointer + i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
 
             const colPos = new TerraVector4(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer + i * 4 * Float32Array.BYTES_PER_ELEMENT);
             this.colliderVertices.push(colPos);
@@ -100,13 +101,13 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
 
 
     get vertices() {
-        return new Float32Array(this.engine.memory.buffer, this.vertices_pointer(), this.positions_count * this.verticesPositionStride);
+        return new Float32Array(this.engine.memory.buffer, this.vertices_pointer, this.positions_count * this.verticesPositionStride);
     }
     getPosition = (index: number) => {
         if(index > this.positions_count) {
             throw new Error('Tried to access vertice out of boundary')
         }
-        return new TerraVector3(this.engine.memory.buffer, this.vertices_pointer() + index * this.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
+        return new TerraVector3(this.engine.memory.buffer, this.vertices_pointer + index * this.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
     }
     intersectsRay = (ray: Float32Array): Promise<void> => {
         return worker.message(this.id, 'intersectsRay', [ray.buffer]);

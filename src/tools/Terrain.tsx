@@ -95,15 +95,16 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
 
 
-        const faceCount = terrain.mesh.facesBuffer.byteLength / 4 / 4;
-        for (let i = 0; i < faceCount; i++) {
-            this.#groundFacesNormals.push(new Float32Array(terrain.mesh.facesBuffer, i << 4, 4))
+        //const faceCount = terrain.mesh.facesBuffer.byteLength / 4 / 4;
+        for (let i = 0; i < terrain.mesh.faces_count; i++) {
+            //this.#groundFacesNormals.push(new Float32Array(terrain.mesh.facesBuffer, i << 4, 4))
+            this.#groundFacesNormals.push(new Float32Array(this.engine.memory.buffer, terrain.mesh.faces_pointer + (i << 4), 4))
         }
         const byteStride = terrain.mesh.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT;
         if (this.#normalsView.length == 0) {
             for (let i = 0; i < terrain.mesh.positions_count; i++) {
                 this.#positionsView.push(terrain.mesh.getPosition(i));
-                this.#normalsView.push(new TerraVector3(this.engine.memory.buffer, this.terrain.mesh.vertices_pointer() + i * byteStride + 16))
+                this.#normalsView.push(new TerraVector3(this.engine.memory.buffer, this.terrain.mesh.vertices_pointer + i * byteStride + 16))
             }
         }
 
@@ -260,33 +261,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
                 selectedFaces.add(faceId)
             });
         });
-        selectedFaces.forEach(faceId => {
-            const indices = new Uint32Array(this.engine.memory.buffer, this.terrain.mesh.indices_pointer + ((faceId * 3) << 2), 3);
-            indices.forEach(vertexIndex => {
-                var faces = this.#facesOfVertices[vertexIndex]!;
-                const norm = this.#normalsView[vertexIndex]!;
-                norm.set([0, 0, 0]);
-                for (let index2 = 0; index2 < faces.length; index2++) {
-                    if (faces[index2]! % 2 == 0) {
-                        var facenormal = this.#groundFacesNormals[faces[index2]! >> 1]!;
-                    } else {
-                        var facenormal = this.#groundFacesNormals[half + (faces[index2]! >> 1)]!;
-                    }
-                    norm[0] += facenormal[0]!;
-                    norm[1] += facenormal[1]!;
-                    norm[2] += facenormal[2]!;
-                }
-                const fc = 1.0 / faces.length;
-                norm[0] *= fc;
-                norm[1] *= fc;
-                norm[2] *= fc;
-                //Normalize
-                const scale = 1 / Math.hypot(norm[0]!, norm[1]!, norm[2]!);
-                norm[0] *= scale;
-                norm[1] *= scale;
-                norm[2] *= scale;
-            });
-        })
+        //Calculate normals for planes
         selectedFaces.forEach(faceId => {
             const indices = new Uint32Array(this.engine.memory.buffer, this.terrain.mesh.indices_pointer + ((faceId * 3) << 2), 3);
 
@@ -315,7 +290,35 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
             normalized[1] *= scale;
             normalized[2] *= scale;
             normalized[3] = -(normalized[0] * v2[0]! + normalized[1] * v2[1]! + normalized[2] * v2[2]!);
+        });
+        selectedFaces.forEach(faceId => {
+            const indices = new Uint32Array(this.engine.memory.buffer, this.terrain.mesh.indices_pointer + ((faceId * 3) << 2), 3);
+            indices.forEach(vertexIndex => {
+                var faces = this.#facesOfVertices[vertexIndex]!;
+                const norm = this.#normalsView[vertexIndex]!;
+                norm.set([0, 0, 0]);
+                for (let index2 = 0; index2 < faces.length; index2++) {
+                    if (faces[index2]! % 2 == 0) {
+                        var facenormal = this.#groundFacesNormals[faces[index2]! >> 1]!;
+                    } else {
+                        var facenormal = this.#groundFacesNormals[half + (faces[index2]! >> 1)]!;
+                    }
+                    norm[0] += facenormal[0]!;
+                    norm[1] += facenormal[1]!;
+                    norm[2] += facenormal[2]!;
+                }
+                const fc = 1.0 / faces.length;
+                norm[0] *= fc;
+                norm[1] *= fc;
+                norm[2] *= fc;
+                //Normalize
+                const scale = 1 / Math.hypot(norm[0]!, norm[1]!, norm[2]!);
+                norm[0] *= scale;
+                norm[1] *= scale;
+                norm[2] *= scale;
+            });
         })
+
 
         if (this.#selectedVertices.length) {
             /* self.postMessage({

@@ -1,12 +1,12 @@
 pub use crate::Vec3;
 pub use crate::boundingbox::BoundingBox;
-
 pub struct Geometry {
     pub has_geometry:bool,
     pub bounding_box:BoundingBox,
     pub vertices:Vec<f32>,
     pub vertices_stride: usize,
-    pub indices:Option<Vec<usize>>
+    pub indices:Option<Vec<usize>>,
+    pub faces:Faces
 }
 impl Geometry {
     pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, vertices_amount:usize) -> Self {
@@ -16,6 +16,7 @@ impl Geometry {
             vertices:Vec::with_capacity(vertices_amount*vertices_stride),
             indices:None,
             vertices_stride,
+            faces:Faces::new()
         }
     }
     pub fn min(&self) -> Vec3<f32> {
@@ -65,5 +66,29 @@ impl Geometry {
     }
     pub fn set_indices(&mut self, indices: Vec<usize>) {
         self.indices = Some(indices);
+    }
+}
+pub struct Faces {
+    pub planes:Vec<Plane>
+}
+
+pub struct Plane {
+    norm:[f32;3],
+    d:f32
+}
+impl Faces {
+    pub fn new() -> Faces {
+        Faces {
+            planes:Vec::new()
+        }
+    }
+    pub fn set(&mut self, planes:Vec<f32>) {
+        let (ptr, len, cap) = planes.into_raw_parts();
+        self.planes = unsafe {
+            // We can now make changes to the components, such as
+            // transmuting the raw pointer to a compatible type.
+            let ptr = ptr as *mut Plane;
+            Vec::from_raw_parts(ptr, len, cap)
+        };
     }
 }

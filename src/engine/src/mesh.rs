@@ -6,6 +6,7 @@ pub use crate::Vec3;
 pub use crate::Vec4;
 pub use crate::GPUMesh;
 pub use crate::geometry::Geometry;
+pub use crate::geometry::Plane;
 pub use crate::boundingbox::BoundingBox;
 pub use crate::terrain::elevator::Elevator;
 
@@ -46,13 +47,23 @@ impl Mesh {
             Some(indices) => indices.as_ptr(),
         }
     }
+    #[wasm_bindgen(getter)]
     pub fn vertices_pointer(&self) -> *const f32 {
         self.geometry.vertices.as_ptr()
     }
+
     pub fn update_vertices(&mut self, vertices:Vec<f32>) {
         self.geometry.update_vertices(vertices);
     }
 
+    #[wasm_bindgen(getter)]
+    pub fn faces_pointer(&self) -> *const Plane {
+        self.geometry.faces.planes.as_ptr()
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_faces(&mut self, planes:Vec<f32>) {
+        self.geometry.faces.set(planes);
+    }
     pub fn create_elevator(&self) -> Elevator {
         Elevator::new(&self)
     }
