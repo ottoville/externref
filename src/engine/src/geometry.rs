@@ -73,8 +73,8 @@ pub struct Faces {
 }
 
 pub struct Plane {
-    norm:[f32;3],
-    d:f32
+    pub norm:[f32;3],
+    pub d:f32
 }
 impl Faces {
     pub fn new() -> Faces {
@@ -88,7 +88,7 @@ impl Faces {
             // We can now make changes to the components, such as
             // transmuting the raw pointer to a compatible type.
             let ptr = ptr as *mut Plane;
-            Vec::from_raw_parts(ptr, len, cap)
+            Vec::from_raw_parts(ptr, len / 4, cap / 4)
         };
     }
 }

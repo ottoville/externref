@@ -240,42 +240,39 @@
     (local $temp_v3_shuffle v128)
     (call $v3_dot
       (i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
-        (local.get $shuffled_cross
-          (local.tee $shuffled_cross
-            (f32x4.sub
-              (f32x4.mul
-                (local.tee $temp_v2
-                  (f32x4.sub
-                    (local.get $v1)
-                    (local.get $point)
-                  )
-                )
-                (local.tee $temp_v1_shuffle
-                  (i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
-                    (local.get $temp_v1
-                      (local.tee $temp_v1
-                        (f32x4.sub
-                          (local.get $v2)
-                          (local.get $point)
-                        )
-                      )
-                    )
-                  )
+        (local.tee $shuffled_cross
+          (f32x4.sub
+            (f32x4.mul
+              (local.tee $temp_v2
+                (f32x4.sub
+                  (local.get $v1)
+                  (local.get $point)
                 )
               )
-              (f32x4.mul
-                (local.get $temp_v1)
-                (local.tee $temp_v2_shuffle
-                  (i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
-                    (local.get $temp_v2
-                      (local.get $temp_v2)
+              (local.tee $temp_v1_shuffle
+                (i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
+                  (local.tee $temp_v1
+                    (f32x4.sub
+                      (local.get $v2)
+                      (local.get $point)
                     )
                   )
+                  (local.get $temp_v1)
+                )
+              )
+            )
+            (f32x4.mul
+              (local.get $temp_v1)
+              (local.tee $temp_v2_shuffle
+                (i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
+                  (local.get $temp_v2)
+                  (local.get $temp_v2)
                 )
               )
             )
           )
         )
+        (local.get $shuffled_cross)
       )
       (local.get $planeCollider)
     )
@@ -287,30 +284,29 @@
     end
     (call $v3_dot
       (i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
-        (local.get $shuffled_cross
-          (local.tee $shuffled_cross
-            (f32x4.sub
-              (f32x4.mul
-                (local.tee $temp_v3
-                  (f32x4.sub
-                    (local.get $v0)
-                    (local.get $point)
-                  )
+        (local.tee $shuffled_cross
+          (f32x4.sub
+            (f32x4.mul
+              (local.tee $temp_v3
+                (f32x4.sub
+                  (local.get $v0)
+                  (local.get $point)
                 )
-                (local.get $temp_v2_shuffle)
               )
-              (f32x4.mul
-                (local.get $temp_v2)
-                (local.tee $temp_v3_shuffle
-                  (i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
-                    (local.get $temp_v3)
-                    (local.get $temp_v3)
-                  )
+              (local.get $temp_v2_shuffle)
+            )
+            (f32x4.mul
+              (local.get $temp_v2)
+              (local.tee $temp_v3_shuffle
+                (i8x16.shuffle 8 9 10 11 0 1 2 3 4 5 6 7 0 0 0 0
+                  (local.get $temp_v3)
+                  (local.get $temp_v3)
                 )
               )
             )
           )
         )
+        (local.get $shuffled_cross)
       )
       (local.get $planeCollider)
     )

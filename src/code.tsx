@@ -59,7 +59,7 @@ declare global {
 }
 declare var BlazorRouter: DotNet.BlazorInstance;
 
-let loadelem = document.body.appendChild(document.createElement("div"));
+const loadelem = document.body.appendChild(document.createElement("div"));
 //let progelem = loadelem.appendChild(document.createElement("progress"))
 loadelem.style.position = 'absolute';
 loadelem.style.right = '30%';

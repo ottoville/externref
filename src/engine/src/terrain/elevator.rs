@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use wasm_bindgen::prelude::*;
 pub use crate::mesh::Mesh;
 
@@ -88,63 +89,116 @@ impl Elevator {
         };
 
         let selected_iter = self.selected_vertices.iter();
+        let mut selected_faces:HashSet<usize> = HashSet::new();
         for sv in selected_iter {
-            let mut positiony = mesh.geometry.vertices[sv.0 * mesh.geometry.vertices_stride +1];
+            let vertice=sv.0 * mesh.geometry.vertices_stride;
+            let mut positiony = mesh.geometry.vertices[vertice +1];
             if sv.1 < radius_near {
                 positiony += full_height;
             } else {
                 positiony += full_height * (1.0 - (sv.1 - radius_near) / radius_far);
             }
             
-            mesh.geometry.vertices[sv.0 * mesh.geometry.vertices_stride +1] = f32::clamp(positiony,height_min,height_max);
-            let face_of_vertices=&self.faces_of_vertices[sv.0 / 12];
+            mesh.geometry.vertices[vertice +1] = f32::clamp(positiony,height_min,height_max);
+            //log(&f32::clamp(positiony,height_min,height_max).to_string());
+            let face_of_vertices=&self.faces_of_vertices[vertice / 12];
             for index in face_of_vertices {
-
-                let end = *index * 3 + 3;
-                let indices_slice = &indices[*index * 3..end];
-                for vertexIndex in indices_slice.iter() {
-                    //var faces = this.#facesOfVertices[vertexIndex]!;
-                    let faces=&self.faces_of_vertices[*vertexIndex];
-                    //const norm = this.#normalsView[vertexIndex]!;
-                   
-                    let norm_ptr:*const f32 = &mesh.geometry.vertices[mesh.geometry.vertices_stride*vertexIndex+4];
-                    let norm_v = f32x4_splat(0.0);
-                    for face in faces.iter() {
-                        /*
-                        if (faces[index2]! % 2 == 0) {
-                            var facenormal = this.#groundFacesNormals[faces[index2]! >> 1]!;
-                        } else {
-                            var facenormal = this.#groundFacesNormals[half + (faces[index2]! >> 1)]!;
-                        }
-                        */
-                        if face % 2 == 0 {
-                            //let facenormal = 
-                        }
-
-                    }
-                }
-
-
-                let v1_ptr: *const f32 = &mesh.geometry.vertices[indices[*index * 3]];
-                let v1 = v128_load(v1_ptr as *const v128);
-               
-                let v2_ptr: *const f32 = &mesh.geometry.vertices[indices[*index * 3+1]];
-                let v2 = v128_load(v2_ptr as *const v128);
-
-                let v3_ptr: *const f32 = &mesh.geometry.vertices[indices[*index * 3+2]];
-                let v3 = v128_load(v3_ptr as *const v128);
-                
-                //                v1v2[0] = v1[0]! - v2[0]!;
-                let v1v2=f32x4_sub(v1,v2);
-                //                v3v2[0] = v3[0]! - v2[0]!;
-                let v3v2=f32x4_sub(v3,v2);
-
-                //if ((face_of_vertices[index]! & 1) == 0)
-
+                selected_faces.insert(*index);
             }
 
         }
 
+        let half = mesh.geometry.faces.planes.len()/2;
+        let stride=&mesh.geometry.vertices_stride;
+        for face_index in selected_faces.iter() {
+            
+            //let v1_ptr: *const f32 = &mesh.geometry.vertices[indices[face_index * 3]*stride];
+            let v1_ptr: *const f32 = std::slice::from_ref(&mesh.geometry.vertices[indices[face_index * 3]*stride]).as_ptr();
+            let v1 = v128_load(v1_ptr as *const v128);
+           // log(&mesh.geometry.vertices[indices[face_index * 3]*stride].to_string());
+           let v2_ptr: *const f32 = std::slice::from_ref(&mesh.geometry.vertices[indices[face_index * 3 +1]*stride]).as_ptr();
+
+           // let v2_ptr: *const f32 = &mesh.geometry.vertices[indices[face_index * 3 + 1]*8];
+            let v2 = v128_load(v2_ptr as *const v128);
+
+            let v3_ptr: *const f32 = std::slice::from_ref(&mesh.geometry.vertices[indices[face_index * 3 + 2]*stride]).as_ptr();
+
+           // let v3_ptr: *const f32 = &mesh.geometry.vertices[indices[*face_index * 3 + 2]*8];
+            let v3 = v128_load(v3_ptr as *const v128);
+
+
+
+            
+            //                v1v2[0] = v1[0]! - v2[0]!;
+            let v1v2=f32x4_sub(v1,v2);
+            //                v3v2[0] = v3[0]! - v2[0]!;
+            let v3v2=f32x4_sub(v3,v2);
+
+            let mut plane = if (face_index & 1) == 0 {
+               /* mesh.geometry.faces.planes[half + (face_index >> 1)].norm[0]=-1.0;
+                mesh.geometry.faces.planes[half + (face_index >> 1)].norm[1]=-1.0;
+                mesh.geometry.faces.planes[half + (face_index >> 1)].norm[2]=-1.0;
+                mesh.geometry.faces.planes[half + (face_index >> 1)].d=-1.0;*/
+                &mut mesh.geometry.faces.planes[half + (face_index >> 1)] //.norm.as_ptr() as *mut v128
+            } else {
+               /* mesh.geometry.faces.planes[(face_index >> 1)].norm[0]=-1.0;
+                mesh.geometry.faces.planes[(face_index >> 1)].norm[1]=-1.0;
+                mesh.geometry.faces.planes[(face_index >> 1)].norm[2]=-1.0;
+                mesh.geometry.faces.planes[(face_index >> 1)].d=-1.0;*/
+
+                &mut mesh.geometry.faces.planes[face_index >> 1]//.norm.as_ptr() as *mut v128
+            };
+            //let v3v2_shuffled_yzxw=i32x4_shuffle::<1,2,0,3>(v3v2,v3v2);
+
+            let v3v2_shuffled_yzxw=i32x4_shuffle::<1,2,0,3>(v3v2,v3v2);
+            let v1v2_shuffled_yzxw=i32x4_shuffle::<1,2,0,3>(v1v2,v1v2);
+
+
+
+            let cross_shuffled = f32x4_sub(
+                f32x4_mul(v1v2, v3v2_shuffled_yzxw),
+                f32x4_mul(v1v2_shuffled_yzxw, v3v2)
+                
+            );
+
+            let cross = i32x4_shuffle::<1,2,0,3>(cross_shuffled,cross_shuffled);
+            //log(&f32x4_extract_lane::<0>(cross).to_string());
+
+
+            let squared=f32x4_mul(cross,cross);
+            let squared_x = f32x4_extract_lane::<0>(squared);
+            let squared_y = f32x4_extract_lane::<1>(squared);
+            let squared_z = f32x4_extract_lane::<2>(squared);
+            let scale = f32x4_splat(1.0/f32::sqrt(squared_x+squared_y+squared_z));
+            let normalized=f32x4_mul(cross, scale);
+            let dot=f32x4_mul(normalized, v2);
+
+
+            //let normalized_ready=f32x4_replace_lane::<3>(normalized, -(f32x4_extract_lane::<0>(dot) + f32x4_extract_lane::<1>(dot) + f32x4_extract_lane::<2>(dot)));
+            v128_store(plane.norm.as_ptr() as *mut v128,normalized);
+            plane.d=-(f32x4_extract_lane::<0>(dot) + f32x4_extract_lane::<1>(dot) + f32x4_extract_lane::<2>(dot));
+            //log(&plane.d.to_string());
+            //v128_store(normalized_ptr,normalized_ready);
+            //            const scale = 1 / Math.hypot(normalized[0], normalized[1], normalized[2]);
+
+            
+            /*let end = face_index * 3 + 3;
+            let indices_slice = &indices[face_index * 3..end];
+            for vertex_index in indices_slice.iter() {
+                //var faces = this.#facesOfVertices[vertexIndex]!;
+                let faces=&self.faces_of_vertices[*vertex_index];
+                //const norm = this.#normalsView[vertexIndex]!;
+               
+                let norm_ptr:*const f32 = &mesh.geometry.vertices[mesh.geometry.vertices_stride*vertex_index+4];
+                let norm_v = f32x4_splat(0.0);
+                for face in faces.iter() {
+                    if face % 2 == 0 {
+                        //let facenormal = 
+                    }
+
+                }
+            }*/
+        }
     }
     #[wasm_bindgen] 
     pub fn elevate(&mut self,mesh:&mut Mesh,radius:f32,height:f32) {

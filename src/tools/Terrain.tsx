@@ -133,7 +133,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.camera.detachControl();
 
         this.mouseinterval = setInterval(() => {
-            // this.elevator.elevate(this.terrain.mesh,50,5*this.direction);
+            this.elevator.elevate(this.terrain.mesh,50,5*this.direction);
             //console.time('elevatFaces');
             this.elevateFaces(50, 5 * this.direction)
             //console.timeEnd('elevatFaces');
@@ -228,14 +228,16 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
             }
         }
         // Elevate vertices
-        const v1v2 = new Float32Array(3);
-        const v3v2 = new Float32Array(3);
         let faceOfVertices: number[] = [];
         const half = this.#groundFacesNormals.length >> 1;
+
+/*
+       const v1v2 = new Float32Array(3);
+        const v3v2 = new Float32Array(3);
         let v1: Float32Array
         let v2: Float32Array
         let v3: Float32Array
-
+*/
         const radiusNear = radius * 0.3;
         const radiusFar = radius * 0.7;
 
@@ -255,17 +257,30 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
                 positiony = heightMax;
             else if (positiony < heightMin)
                 positiony = heightMin;
-            terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
+            //terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
             faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
             faceOfVertices.forEach(faceId => {
                 selectedFaces.add(faceId)
             });
         });
+        //console.log(selectedFaces);
+        /*selectedFaces.forEach(faceId => {
+            if ((faceId & 1) == 0) {
+                var normalized = this.#groundFacesNormals[half + (faceId >> 1)]!;
+                console.log(this.#groundFacesNormals.length)
+            }
+            else
+                var normalized = this.#groundFacesNormals[faceId >> 1]!;
+                normalized.set([-1,-1,-1,-1])
+
+        })*/
+        /*
         //Calculate normals for planes
         selectedFaces.forEach(faceId => {
             const indices = new Uint32Array(this.engine.memory.buffer, this.terrain.mesh.indices_pointer + ((faceId * 3) << 2), 3);
 
             v1 = this.#positionsView[indices[0]!]!;
+
             v2 = this.#positionsView[indices[1]!]!;
             v3 = this.#positionsView[indices[2]!]!;
 
@@ -277,20 +292,23 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
             v3v2[1] = v3[1]! - v2[1]!;
             v3v2[2] = v3[2]! - v2[2]!;
 
+
+
             if ((faceId & 1) == 0)
                 var normalized = this.#groundFacesNormals[half + (faceId >> 1)]!;
             else
                 var normalized = this.#groundFacesNormals[faceId >> 1]!;
+            normalized[2] = v1v2[0]! * v3v2[1]! - v1v2[1]! * v3v2[0]!
             normalized[0] = v1v2[1]! * v3v2[2]! - v1v2[2]! * v3v2[1]!
             normalized[1] = v1v2[2]! * v3v2[0]! - v1v2[0]! * v3v2[2]!
-            normalized[2] = v1v2[0]! * v3v2[1]! - v1v2[1]! * v3v2[0]!
 
             const scale = 1 / Math.hypot(normalized[0], normalized[1], normalized[2]);
             normalized[0] *= scale;
             normalized[1] *= scale;
             normalized[2] *= scale;
             normalized[3] = -(normalized[0] * v2[0]! + normalized[1] * v2[1]! + normalized[2] * v2[2]!);
-        });
+            console.log(normalized[3]);
+        });*/
         selectedFaces.forEach(faceId => {
             const indices = new Uint32Array(this.engine.memory.buffer, this.terrain.mesh.indices_pointer + ((faceId * 3) << 2), 3);
             indices.forEach(vertexIndex => {
