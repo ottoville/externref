@@ -14,6 +14,8 @@ pub struct Elevator {
     pub selected_vertices:Vec<(usize,f32)>,
     #[wasm_bindgen(skip)]
     pub faces_of_vertices:Vec<Vec<usize>>,
+    pub offset:usize,
+    pub length:usize
 
 }
 #[wasm_bindgen]
@@ -25,6 +27,15 @@ extern "C" {
 }
 #[wasm_bindgen]
 impl Elevator {
+    unsafe fn normalize(v:std::arch::wasm32::v128) -> std::arch::wasm32::v128 {
+        use std::arch::wasm32::*;
+        let squared=f32x4_mul(v,v);
+        let squared_x = f32x4_extract_lane::<0>(squared);
+        let squared_y = f32x4_extract_lane::<1>(squared);
+        let squared_z = f32x4_extract_lane::<2>(squared);
+        let scale = f32x4_splat(1.0/f32::sqrt(squared_x+squared_y+squared_z));
+        f32x4_mul(v, scale)
+    }
     unsafe fn _elevate(&mut self, mesh:&mut Mesh, radius:f32, full_height:f32) {
         use std::arch::wasm32::*;
 
@@ -44,7 +55,8 @@ impl Elevator {
             let mouse_x=f32x4_splat(self.mouse_position[0]);
             let mouse_z=f32x4_splat(self.mouse_position[2]);
             self.selected_vertices.clear();
-          //  let Elevator { selected_vertices, .. } = self;
+            self.offset=0;
+            self.length=0;
 
             let selected_vertices = &mut self.selected_vertices;
 
@@ -90,6 +102,7 @@ impl Elevator {
 
         let selected_iter = self.selected_vertices.iter();
         let mut selected_faces:HashSet<usize> = HashSet::new();
+        let mut selected_indices:HashSet<usize> = HashSet::new();
         for sv in selected_iter {
             let vertice=sv.0 * mesh.geometry.vertices_stride;
             let mut positiony = mesh.geometry.vertices[vertice +1];
@@ -112,48 +125,30 @@ impl Elevator {
         let stride=&mesh.geometry.vertices_stride;
         for face_index in selected_faces.iter() {
             
-            //let v1_ptr: *const f32 = &mesh.geometry.vertices[indices[face_index * 3]*stride];
-            let v1_ptr: *const f32 = std::slice::from_ref(&mesh.geometry.vertices[indices[face_index * 3]*stride]).as_ptr();
-            let v1 = v128_load(v1_ptr as *const v128);
-           // log(&mesh.geometry.vertices[indices[face_index * 3]*stride].to_string());
-           let v2_ptr: *const f32 = std::slice::from_ref(&mesh.geometry.vertices[indices[face_index * 3 +1]*stride]).as_ptr();
+            selected_indices.insert(indices[face_index * 3]);
+            selected_indices.insert(indices[face_index * 3 + 1]);
+            selected_indices.insert(indices[face_index * 3 + 2]);
 
-           // let v2_ptr: *const f32 = &mesh.geometry.vertices[indices[face_index * 3 + 1]*8];
-            let v2 = v128_load(v2_ptr as *const v128);
+            let v1_ptr = std::slice::from_ref(&mesh.geometry.vertices[indices[face_index * 3]*stride]).as_ptr() as *mut v128;
+            let v1 = v128_load(v1_ptr);
 
-            let v3_ptr: *const f32 = std::slice::from_ref(&mesh.geometry.vertices[indices[face_index * 3 + 2]*stride]).as_ptr();
+            let v2_ptr = std::slice::from_ref(&mesh.geometry.vertices[indices[face_index * 3 +1]*stride]).as_ptr()  as *mut v128;
+            let v2 = v128_load(v2_ptr);
 
-           // let v3_ptr: *const f32 = &mesh.geometry.vertices[indices[*face_index * 3 + 2]*8];
-            let v3 = v128_load(v3_ptr as *const v128);
+            let v3_ptr = std::slice::from_ref(&mesh.geometry.vertices[indices[face_index * 3 + 2]*stride]).as_ptr()  as *mut v128;
+            let v3 = v128_load(v3_ptr);
 
-
-
-            
-            //                v1v2[0] = v1[0]! - v2[0]!;
             let v1v2=f32x4_sub(v1,v2);
-            //                v3v2[0] = v3[0]! - v2[0]!;
             let v3v2=f32x4_sub(v3,v2);
 
             let mut plane = if (face_index & 1) == 0 {
-               /* mesh.geometry.faces.planes[half + (face_index >> 1)].norm[0]=-1.0;
-                mesh.geometry.faces.planes[half + (face_index >> 1)].norm[1]=-1.0;
-                mesh.geometry.faces.planes[half + (face_index >> 1)].norm[2]=-1.0;
-                mesh.geometry.faces.planes[half + (face_index >> 1)].d=-1.0;*/
-                &mut mesh.geometry.faces.planes[half + (face_index >> 1)] //.norm.as_ptr() as *mut v128
+                &mut mesh.geometry.faces.planes[half + (face_index >> 1)]
             } else {
-               /* mesh.geometry.faces.planes[(face_index >> 1)].norm[0]=-1.0;
-                mesh.geometry.faces.planes[(face_index >> 1)].norm[1]=-1.0;
-                mesh.geometry.faces.planes[(face_index >> 1)].norm[2]=-1.0;
-                mesh.geometry.faces.planes[(face_index >> 1)].d=-1.0;*/
-
-                &mut mesh.geometry.faces.planes[face_index >> 1]//.norm.as_ptr() as *mut v128
+                &mut mesh.geometry.faces.planes[face_index >> 1]
             };
-            //let v3v2_shuffled_yzxw=i32x4_shuffle::<1,2,0,3>(v3v2,v3v2);
 
             let v3v2_shuffled_yzxw=i32x4_shuffle::<1,2,0,3>(v3v2,v3v2);
             let v1v2_shuffled_yzxw=i32x4_shuffle::<1,2,0,3>(v1v2,v1v2);
-
-
 
             let cross_shuffled = f32x4_sub(
                 f32x4_mul(v1v2, v3v2_shuffled_yzxw),
@@ -161,43 +156,37 @@ impl Elevator {
                 
             );
 
-            let cross = i32x4_shuffle::<1,2,0,3>(cross_shuffled,cross_shuffled);
-            //log(&f32x4_extract_lane::<0>(cross).to_string());
 
-
-            let squared=f32x4_mul(cross,cross);
-            let squared_x = f32x4_extract_lane::<0>(squared);
-            let squared_y = f32x4_extract_lane::<1>(squared);
-            let squared_z = f32x4_extract_lane::<2>(squared);
-            let scale = f32x4_splat(1.0/f32::sqrt(squared_x+squared_y+squared_z));
-            let normalized=f32x4_mul(cross, scale);
+            let normalized = Elevator::normalize(i32x4_shuffle::<1,2,0,3>(cross_shuffled,cross_shuffled));
             let dot=f32x4_mul(normalized, v2);
 
-
-            //let normalized_ready=f32x4_replace_lane::<3>(normalized, -(f32x4_extract_lane::<0>(dot) + f32x4_extract_lane::<1>(dot) + f32x4_extract_lane::<2>(dot)));
             v128_store(plane.norm.as_ptr() as *mut v128,normalized);
             plane.d=-(f32x4_extract_lane::<0>(dot) + f32x4_extract_lane::<1>(dot) + f32x4_extract_lane::<2>(dot));
-            //log(&plane.d.to_string());
-            //v128_store(normalized_ptr,normalized_ready);
-            //            const scale = 1 / Math.hypot(normalized[0], normalized[1], normalized[2]);
 
-            
-            /*let end = face_index * 3 + 3;
-            let indices_slice = &indices[face_index * 3..end];
-            for vertex_index in indices_slice.iter() {
-                //var faces = this.#facesOfVertices[vertexIndex]!;
-                let faces=&self.faces_of_vertices[*vertex_index];
-                //const norm = this.#normalsView[vertexIndex]!;
-               
-                let norm_ptr:*const f32 = &mesh.geometry.vertices[mesh.geometry.vertices_stride*vertex_index+4];
-                let norm_v = f32x4_splat(0.0);
-                for face in faces.iter() {
-                    if face % 2 == 0 {
-                        //let facenormal = 
-                    }
+        }
+        for vertex_index in selected_indices.iter() {
+            let faces=&self.faces_of_vertices[*vertex_index];
+            let norm_ptr = std::slice::from_ref(&mesh.geometry.vertices[vertex_index*stride+4]).as_ptr() as *mut v128;
 
-                }
-            }*/
+            let mut norm_v = f32x4_splat(0.0);
+            for face_index in faces.iter() {
+                let plane = if (face_index & 1) == 0 {
+                    &mut mesh.geometry.faces.planes[half + (face_index >> 1)]
+                } else {
+                    &mut mesh.geometry.faces.planes[face_index >> 1]
+                };
+                let plane_vector=v128_load(plane.norm.as_ptr() as *mut v128);
+                norm_v = f32x4_add(norm_v, plane_vector)
+            }
+
+            let fc = f32x4_splat(1.0 / faces.len() as f32);
+            let normalized = Elevator::normalize(f32x4_mul(norm_v, fc));
+            v128_store(norm_ptr,normalized);
+        }
+        if self.selected_vertices.len() > 0 {
+            self.offset = self.selected_vertices.iter().min_by(|x, y| x.0.cmp(&y.0) ).unwrap().0 * stride;
+            let max = self.selected_vertices.iter().max_by(|x, y| x.0.cmp(&y.0) ).unwrap().0 * stride + stride;
+            self.length = max-self.offset;
         }
     }
     #[wasm_bindgen] 
@@ -237,6 +226,8 @@ impl Elevator {
             old_mouse_position:[0.0,0.0,0.0],
             selected_vertices:Vec::new(),
             faces_of_vertices,
+            offset:0,
+            length:0
         }
     }
 }

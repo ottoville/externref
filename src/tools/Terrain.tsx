@@ -47,7 +47,6 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
 
     facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-    readonly #facesOfVertices: number[][] = []
     elevator: Elevator
     Drawable: DrawableSimple;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
@@ -92,31 +91,6 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
         this.#canvasListener.addListener("pointermove", this.#mouseListener, { lazy: 15 });
 
-
-
-
-        //const faceCount = terrain.mesh.facesBuffer.byteLength / 4 / 4;
-        for (let i = 0; i < terrain.mesh.faces_count; i++) {
-            //this.#groundFacesNormals.push(new Float32Array(terrain.mesh.facesBuffer, i << 4, 4))
-            this.#groundFacesNormals.push(new Float32Array(this.engine.memory.buffer, terrain.mesh.faces_pointer + (i << 4), 4))
-        }
-        const byteStride = terrain.mesh.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT;
-        if (this.#normalsView.length == 0) {
-            for (let i = 0; i < terrain.mesh.positions_count; i++) {
-                this.#positionsView.push(terrain.mesh.getPosition(i));
-                this.#normalsView.push(new TerraVector3(this.engine.memory.buffer, this.terrain.mesh.vertices_pointer + i * byteStride + 16))
-            }
-        }
-
-
-        let index: number;
-        for (index = 0; index < terrain.mesh.positions_count; index++) {
-            this.#facesOfVertices[index] = [];
-        }
-
-        terrain.mesh.indicesView.forEach((index: number, i: number) => {
-            this.#facesOfVertices[index]!.push((i / 3) | 0);
-        });
     }
     static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number, number]) {
         terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', { buffer: arrayBuffer, size: size }, [arrayBuffer]);
@@ -134,16 +108,9 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
         this.mouseinterval = setInterval(() => {
             this.elevator.elevate(this.terrain.mesh,50,5*this.direction);
-            //console.time('elevatFaces');
-            this.elevateFaces(50, 5 * this.direction)
-            //console.timeEnd('elevatFaces');
-            //TERRAIN EDITING DISABLED
-            //terrainWorker.message(WorkerReturn.Promise, 'elevateFaces', { radius: 50, height: 5, direction: this.direction }).then(async e => {
-            //const range = e as { min: number, max: number };
-            // const length = range.max - range.min;
-
-            //this.terrain.updateSwap2(range.min, length, this.terrain.mesh.verticesPositionBuffer)
-            //});
+            if(this.elevator.length > 0) {
+                this.terrain.updateSwap2(this.elevator.offset*Float32Array.BYTES_PER_ELEMENT,this.elevator.length*Float32Array.BYTES_PER_ELEMENT)
+            }
         }, 17);
     }
     pointerupf = (): void => {
@@ -189,171 +156,5 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.direction = -1;
         this.#canvasListener.removeListener("pointerdown", this.#pointerdownf);
         this.#canvasListener.addListener("pointerdown", this.#pointerdownf);
-    }
-
-
-    #mousePosition: [number, number] = [0, 0];
-    #selectedVertices: { vertice: number, distance: number }[] = []
-    #groundFacesNormals: Float32Array[] = [];
-    readonly #normalsView: Float32Array[] = [];
-    readonly #positionsView: Float32Array[] = [];
-
-    elevateFaces(radius: number, fullHeight: number): void {
-        const terrainPositionAndUvsAndNormalsCPUSwap = this.terrain.mesh.vertices;
-        //TODO: Move to init
-
-        const heightMax = 500;
-        const heightMin = -500;
-
-        //if (isNaN(pickInfo.distance[0]))
-        //    return;
-        const length = terrainPositionAndUvsAndNormalsCPUSwap.length;
-
-        // Impact zone
-        if (this.#mousePosition[0] != this.#pick.position[0] || this.#mousePosition[1] != this.#pick.position[2]) {
-            this.#mousePosition[0] = this.#pick.position[0];
-            this.#mousePosition[1] = this.#pick.position[2];
-            this.#selectedVertices = [];
-
-            const radiusPow = Math.pow(radius, 2);
-
-            for (let index = 0; index < length; index += 12) {
-                const distance = Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index]! - this.#pick.position[0], 2) + Math.pow(terrainPositionAndUvsAndNormalsCPUSwap[index + 2]! - this.#pick.position[2], 2)
-                if (distance < radiusPow) {
-                    this.#selectedVertices.push({
-                        vertice: index,
-                        distance: Math.sqrt(distance)
-                    });
-                }
-            }
-        }
-        // Elevate vertices
-        let faceOfVertices: number[] = [];
-        const half = this.#groundFacesNormals.length >> 1;
-
-/*
-       const v1v2 = new Float32Array(3);
-        const v3v2 = new Float32Array(3);
-        let v1: Float32Array
-        let v2: Float32Array
-        let v3: Float32Array
-*/
-        const radiusNear = radius * 0.3;
-        const radiusFar = radius * 0.7;
-
-        const selectedFaces: Set<number> = new Set();
-
-        this.#selectedVertices.forEach(sv => {
-            let positiony = terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1]!;
-
-
-            if (sv.distance < radiusNear) {
-                positiony += fullHeight;
-            } else {
-                positiony += fullHeight * (1.0 - (sv.distance - radiusNear) / radiusFar);
-            }
-
-            if (positiony > heightMax)
-                positiony = heightMax;
-            else if (positiony < heightMin)
-                positiony = heightMin;
-            //terrainPositionAndUvsAndNormalsCPUSwap[sv.vertice + 1] = positiony;
-            faceOfVertices = this.#facesOfVertices[sv.vertice / 12]!;
-            faceOfVertices.forEach(faceId => {
-                selectedFaces.add(faceId)
-            });
-        });
-        //console.log(selectedFaces);
-        /*selectedFaces.forEach(faceId => {
-            if ((faceId & 1) == 0) {
-                var normalized = this.#groundFacesNormals[half + (faceId >> 1)]!;
-                console.log(this.#groundFacesNormals.length)
-            }
-            else
-                var normalized = this.#groundFacesNormals[faceId >> 1]!;
-                normalized.set([-1,-1,-1,-1])
-
-        })*/
-        /*
-        //Calculate normals for planes
-        selectedFaces.forEach(faceId => {
-            const indices = new Uint32Array(this.engine.memory.buffer, this.terrain.mesh.indices_pointer + ((faceId * 3) << 2), 3);
-
-            v1 = this.#positionsView[indices[0]!]!;
-
-            v2 = this.#positionsView[indices[1]!]!;
-            v3 = this.#positionsView[indices[2]!]!;
-
-            v1v2[0] = v1[0]! - v2[0]!;
-            v1v2[1] = v1[1]! - v2[1]!;
-            v1v2[2] = v1[2]! - v2[2]!;
-
-            v3v2[0] = v3[0]! - v2[0]!;
-            v3v2[1] = v3[1]! - v2[1]!;
-            v3v2[2] = v3[2]! - v2[2]!;
-
-
-
-            if ((faceId & 1) == 0)
-                var normalized = this.#groundFacesNormals[half + (faceId >> 1)]!;
-            else
-                var normalized = this.#groundFacesNormals[faceId >> 1]!;
-            normalized[2] = v1v2[0]! * v3v2[1]! - v1v2[1]! * v3v2[0]!
-            normalized[0] = v1v2[1]! * v3v2[2]! - v1v2[2]! * v3v2[1]!
-            normalized[1] = v1v2[2]! * v3v2[0]! - v1v2[0]! * v3v2[2]!
-
-            const scale = 1 / Math.hypot(normalized[0], normalized[1], normalized[2]);
-            normalized[0] *= scale;
-            normalized[1] *= scale;
-            normalized[2] *= scale;
-            normalized[3] = -(normalized[0] * v2[0]! + normalized[1] * v2[1]! + normalized[2] * v2[2]!);
-            console.log(normalized[3]);
-        });*/
-        selectedFaces.forEach(faceId => {
-            const indices = new Uint32Array(this.engine.memory.buffer, this.terrain.mesh.indices_pointer + ((faceId * 3) << 2), 3);
-            indices.forEach(vertexIndex => {
-                var faces = this.#facesOfVertices[vertexIndex]!;
-                const norm = this.#normalsView[vertexIndex]!;
-                norm.set([0, 0, 0]);
-                for (let index2 = 0; index2 < faces.length; index2++) {
-                    if (faces[index2]! % 2 == 0) {
-                        var facenormal = this.#groundFacesNormals[faces[index2]! >> 1]!;
-                    } else {
-                        var facenormal = this.#groundFacesNormals[half + (faces[index2]! >> 1)]!;
-                    }
-                    norm[0] += facenormal[0]!;
-                    norm[1] += facenormal[1]!;
-                    norm[2] += facenormal[2]!;
-                }
-                const fc = 1.0 / faces.length;
-                norm[0] *= fc;
-                norm[1] *= fc;
-                norm[2] *= fc;
-                //Normalize
-                const scale = 1 / Math.hypot(norm[0]!, norm[1]!, norm[2]!);
-                norm[0] *= scale;
-                norm[1] *= scale;
-                norm[2] *= scale;
-            });
-        })
-
-
-        if (this.#selectedVertices.length) {
-            /* self.postMessage({
-                 type: 'bounding', data: {
-                     boundingBox: { minY: boundingBox.min[1], maxY: boundingBox.max[1] }
-                 }
-             });*/
-            const subvertices = this.#selectedVertices.map(sv => sv.vertice);
-            const min = Math.min(...subvertices) * 4;
-            const max = Math.max(...subvertices) * 4 + this.terrain.mesh.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT;
-            //  self.postMessage({ id: e.id, data: { min: min, max: max } });
-
-            const length = max - min;
-
-            this.terrain.updateSwap2(min, new Float32Array(terrainPositionAndUvsAndNormalsCPUSwap.buffer, terrainPositionAndUvsAndNormalsCPUSwap.byteOffset + min, length / 4))
-
-        }
-
     }
 }

@@ -110,9 +110,11 @@ TODO
     readonly terrainPositionAndUvsAndNormalsGPU: GPUVertexBuffer & GPUCopyDSTBuffer;
 
     autosave = 0;
-    updateSwap2(offset = 0, terrainPositionAndUvsAndNormalsCPUSwap: Float32Array, nofaces = false) {
-        const b1 = this.scene.gpu.createGPUBuffer(terrainPositionAndUvsAndNormalsCPUSwap.byteLength, [GPUBufferUsage.COPY_SRC], true);
-        new Float32Array(b1.getMappedRange()).set(terrainPositionAndUvsAndNormalsCPUSwap)
+    updateSwap2(offset = 0, byteLength:number, nofaces = false) {
+        const b1 = this.scene.gpu.createGPUBuffer(byteLength, [GPUBufferUsage.COPY_SRC], true);
+        new Float32Array(b1.getMappedRange()).set(
+            new Float32Array(this.mesh.engine.memory.buffer, this.mesh.vertices_pointer+offset, byteLength/4)
+        )
         b1.unmap();
         const commandEncoder = this.scene.gpu.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
@@ -120,17 +122,13 @@ TODO
             0, //source offset
             this.terrainPositionAndUvsAndNormalsGPU, //destination buffer
             offset, //destination offset
-            terrainPositionAndUvsAndNormalsCPUSwap.byteLength);
+            byteLength);
         let b2: GPUCopySRCBuffer;
         if (!nofaces) {
             const facesByteLength = this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
             b2 = this.scene.gpu.createGPUBuffer(facesByteLength, [GPUBufferUsage.COPY_SRC], true);
            // new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.facesBuffer))
             new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.engine.memory.buffer, this.mesh.faces_pointer, this.mesh.faces_count * 4))
-
-
-
-
             b2.unmap();
             commandEncoder.copyBufferToBuffer(
                 b2, // source buffer
@@ -503,7 +501,7 @@ TODO
                 })*/
     
                 //this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
-                this.updateSwap2(0, new Float32Array(readbuff), true);
+                this.updateSwap2(0, readbuff.byteLength, true);
                 this.serialize();
             });
             gpuReadBufferIndices.readAndDestroy(async (buff) => {
