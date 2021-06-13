@@ -48,7 +48,7 @@ export class GPU {
     readonly #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
     readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
-    readonly swapChain: GPUSwapChain;
+    swapChain: GPUSwapChain;
     readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
     readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
 
@@ -99,6 +99,7 @@ export class GPU {
         diffuse: RenderTarget<GPUTextureSampled | GPUTextureRenderAttachment>;
     }>;
     readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<GPUTextureSampled>; }>;
+    context: GPUCanvasContext;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
         this.GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
@@ -239,8 +240,11 @@ export class GPU {
 
         const context = canvas.getContext('gpupresent');
         if (!context)
-            throw ('Unable to get webgpu context')
-        this.swapChain = context.configureSwapChain({
+            throw ('Unable to get webgpu context');
+        this.context = context
+
+        //@ts-expect-error
+        this.swapChain = context.configure({
             device: device,
             format: "bgra8unorm",
             usage: GPUTextureUsage.RENDER_ATTACHMENT

@@ -95,11 +95,13 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
         if (typeof this.renderTargets.swap !== 'undefined') {
             colorAttachments.push(this.sampleCount > 1 ? {
                 view: this.renderTargets.swap.view,
-                resolveTarget: this.gpu.swapChain.getCurrentTexture().createView(),
+                //@ts-expect-error
+                resolveTarget: this.gpu.context.getCurrentTexture().createView(),
                 loadValue: this.renderTargets.swap.loadValue,
                 storeOp: "store"
             } : {
-                view: this.gpu.swapChain.getCurrentTexture().createView(),
+                //@ts-expect-error
+                view: this.gpu.context.getCurrentTexture().createView(),
                 loadValue: this.renderTargets.swap.loadValue,
                 storeOp: "store"
             });
