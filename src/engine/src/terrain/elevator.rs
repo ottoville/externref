@@ -4,16 +4,13 @@ pub use crate::mesh::Mesh;
 
 #[wasm_bindgen]
 pub struct Elevator {
-    #[wasm_bindgen(skip)]
-    pub vertices_horizontal:Vec<f32>,
-    #[wasm_bindgen(skip)]
-    pub mouse_position:[f32;3],
-    #[wasm_bindgen(skip)]
-    pub old_mouse_position:[f32;3],
-    #[wasm_bindgen(skip)]
-    pub selected_vertices:Vec<(usize,f32)>,
-    #[wasm_bindgen(skip)]
-    pub faces_of_vertices:Vec<Vec<usize>>,
+    vertices_horizontal:Vec<f32>,
+    mouse_position:[f32;3],
+    old_mouse_position:[f32;3],
+    selected_vertices:Vec<(usize,f32)>,
+    selected_faces:HashSet<usize>,
+    selected_indices:HashSet<usize>,
+    faces_of_vertices:Vec<Vec<usize>>,
     pub offset:usize,
     pub length:usize
 
@@ -41,9 +38,13 @@ impl Elevator {
 
         let height_max = 500.0;
         let height_min = -500.0;
-
+        let mut new_position=false;
 
         if self.old_mouse_position[0] != self.mouse_position[0] || self.old_mouse_position[2] != self.mouse_position[2] {
+            new_position=true;
+            self.selected_indices.clear();
+            self.selected_faces.clear();
+
             self.old_mouse_position[0]=self.mouse_position[0];
             self.old_mouse_position[1]=self.mouse_position[1];
             self.old_mouse_position[2]=self.mouse_position[2];
@@ -99,11 +100,7 @@ impl Elevator {
             },
             Some(indices) => indices
         };
-
-        let selected_iter = self.selected_vertices.iter();
-        let mut selected_faces:HashSet<usize> = HashSet::new();
-        let mut selected_indices:HashSet<usize> = HashSet::new();
-        for sv in selected_iter {
+        for sv in self.selected_vertices.iter() {
             let vertice=sv.0 * mesh.geometry.vertices_stride;
             let mut positiony = mesh.geometry.vertices[vertice +1];
             if sv.1 < radius_near {
@@ -113,22 +110,23 @@ impl Elevator {
             }
             
             mesh.geometry.vertices[vertice +1] = f32::clamp(positiony,height_min,height_max);
-            //log(&f32::clamp(positiony,height_min,height_max).to_string());
-            let face_of_vertices=&self.faces_of_vertices[vertice / 12];
-            for index in face_of_vertices {
-                selected_faces.insert(*index);
+            if new_position {
+                let face_of_vertices=&self.faces_of_vertices[vertice / 12];
+                for index in face_of_vertices {
+                    self.selected_faces.insert(*index);
+                }
             }
 
         }
 
         let half = mesh.geometry.faces.planes.len()/2;
         let stride=&mesh.geometry.vertices_stride;
-        for face_index in selected_faces.iter() {
-            
-            selected_indices.insert(indices[face_index * 3]);
-            selected_indices.insert(indices[face_index * 3 + 1]);
-            selected_indices.insert(indices[face_index * 3 + 2]);
-
+        for face_index in self.selected_faces.iter() {
+            if new_position {
+                self.selected_indices.insert(indices[face_index * 3]);
+                self.selected_indices.insert(indices[face_index * 3 + 1]);
+                self.selected_indices.insert(indices[face_index * 3 + 2]);
+            }
             let v1_ptr = std::slice::from_ref(&mesh.geometry.vertices[indices[face_index * 3]*stride]).as_ptr() as *mut v128;
             let v1 = v128_load(v1_ptr);
 
@@ -164,7 +162,7 @@ impl Elevator {
             plane.d=-(f32x4_extract_lane::<0>(dot) + f32x4_extract_lane::<1>(dot) + f32x4_extract_lane::<2>(dot));
 
         }
-        for vertex_index in selected_indices.iter() {
+        for vertex_index in self.selected_indices.iter() {
             let faces=&self.faces_of_vertices[*vertex_index];
             let norm_ptr = std::slice::from_ref(&mesh.geometry.vertices[vertex_index*stride+4]).as_ptr() as *mut v128;
 
@@ -225,6 +223,9 @@ impl Elevator {
             mouse_position:[0.0,0.0,0.0],
             old_mouse_position:[0.0,0.0,0.0],
             selected_vertices:Vec::new(),
+            selected_faces: HashSet::new(),
+            selected_indices: HashSet::new(),
+
             faces_of_vertices,
             offset:0,
             length:0

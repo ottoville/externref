@@ -1,5 +1,4 @@
 #![cfg(target_arch = "wasm32")]
-#![feature(wasm_simd)]
 
 #![feature(vec_into_raw_parts)]
 
