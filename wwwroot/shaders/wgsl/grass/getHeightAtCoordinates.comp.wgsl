@@ -34,12 +34,12 @@ struct PositionAndRotate {
     [[align(32)]] max : vec2<i32>;
 };
 
-[[binding(0), group(0)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
-[[binding(1), group(0)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
-[[binding(2), group(0)]] var<storage_buffer> positionAndRotate : [[access(write)]] PositionAndRotateArray;
-[[binding(3), group(0)]] var<storage_buffer> shapes : [[access(write)]] FloatArray;
-[[binding(4), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
-[[binding(0), group(1)]] var<storage_buffer> positions : [[access(read)]] Vec2Array;
+[[binding(0), group(0)]] var<storage, read> slopes : IntArray;
+[[binding(1), group(0)]] var<storage, read> facet12 : PlaneArray;
+[[binding(2), group(0)]] var<storage, write> positionAndRotate : PositionAndRotateArray;
+[[binding(3), group(0)]] var<storage, write> shapes : FloatArray;
+[[binding(4), group(0)]] var<storage, read> settings : Settings;
+[[binding(0), group(1)]] var<storage, read> positions : Vec2Array;
 
 
 let PI:f32 = 3.141592653589793;

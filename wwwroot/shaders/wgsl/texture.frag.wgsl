@@ -1,9 +1,10 @@
 
-
 struct Lights {
-  [[offset(48)]] sunDirection : vec3<f32>;
-  [[offset(80)]] ambient : vec3<f32>;
-  [[offset(92)]] shadow : f32;
+  [[size(48)]] x: f32;  //padding
+  sunDirection : vec3<f32>;
+  [[size(16)]] y: f32;  //padding
+  ambient : vec3<f32>;
+  shadow : f32;
 };
 [[block]] struct LightsArray {
    light : [[stride(256)]] array<Lights>;
@@ -13,7 +14,7 @@ struct Lights {
 [[binding(2), group(0)]] var positionTexture: texture_2d<f32>;
 [[binding(3), group(0)]] var diffuseTexture: texture_2d<f32>;
 
-[[binding(4), group(0)]] var<storage_buffer> lights : [[access(read)]] LightsArray;
+[[binding(4), group(0)]] var<storage, read> lights : LightsArray;
 
 
 struct Output {

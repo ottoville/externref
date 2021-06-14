@@ -8,9 +8,9 @@
 };
 
 struct Vertice {
-   position : vec3<f32>;
-  [[offset(16)]] normals : vec3<f32>;
-  [[offset(32)]] uv : vec2<f32>;
+  [[size(16)]] position : vec3<f32>;
+  [[size(16)]] normals : vec3<f32>;
+  uv : vec2<f32>;
 };
 [[block]] struct IntArray {
    numbers : [[stride(4)]] array<i32>;
@@ -26,10 +26,10 @@ struct Vertice {
 [[block]] struct PlaneArray {
   plane : [[stride(16)]] array<Plane>;
 };
-[[binding(0), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
-[[binding(0), group(1)]] var<storage_buffer> vertices : [[access(read)]] Vertices;
-[[binding(0), group(2)]] var<storage_buffer> slopes : [[access(write)]] IntArray;
-[[binding(1), group(2)]] var<storage_buffer> facet12 : [[access(write)]] PlaneArray;
+[[binding(0), group(0)]] var<storage, read> settings : Settings;
+[[binding(0), group(1)]] var<storage, read> vertices : Vertices;
+[[binding(0), group(2)]] var<storage, write> slopes :  IntArray;
+[[binding(1), group(2)]] var<storage, write> facet12 : PlaneArray;
 
 
 let cd: f32 = -1.0;

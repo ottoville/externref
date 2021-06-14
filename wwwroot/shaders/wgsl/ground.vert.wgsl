@@ -1,5 +1,5 @@
 [[block]] struct Uniforms {
-   modelViewProjectionMatrix : mat4x4<f32>;
+  modelViewProjectionMatrix : mat4x4<f32>;
   view : mat4x4<f32>;
   viewPosition : vec3<f32>;
 };

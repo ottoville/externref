@@ -9,8 +9,8 @@
     [[align(32)]] max : vec2<i32>;
      textureSize:vec2<u32>;
 };
-[[binding(0), group(0)]] var<storage_buffer> settings : [[access(read)]] Settings;
-[[binding(0), group(1)]] var<storage_buffer> indices : [[access(write)]] Indices;
+[[binding(0), group(0)]] var<storage,read> settings : Settings;
+[[binding(0), group(1)]] var<storage,write> indices : Indices;
 
 
 [[stage(compute)]]

@@ -29,9 +29,9 @@ struct Plane {
 };
 [[binding(0), group(0)]] var<uniform> scene : Scene;
 [[binding(0), group(1)]] var<uniform> world : WorldPosition;
-[[binding(0), group(2)]] var<storage_buffer> slopes : [[access(read)]] IntArray;
-[[binding(1), group(2)]] var<storage_buffer> facet12 : [[access(read)]] PlaneArray;
-[[binding(2), group(2)]] var<storage_buffer> settings : [[access(read)]] Settings;
+[[binding(0), group(2)]] var<storage, read> slopes : IntArray;
+[[binding(1), group(2)]] var<storage, read> facet12 : PlaneArray;
+[[binding(2), group(2)]] var<storage, read> settings : Settings;
 
 fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
     let col:u32 = u32(floor((xz.x + f32(settings.max.x)) * f32(settings.subdivisions) / f32(settings.size.x)));
