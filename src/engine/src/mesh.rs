@@ -106,10 +106,6 @@ impl Mesh {
     pub fn set_bounding_need_dirty_max(&mut self) {
         self.geometry.bounding_box.dirty_max = true;
     }
-    fn update(&mut self, callback : Box<dyn FnOnce(&Vec3<f32>, &Vec4<f32>)>) {
-        callback(&self.scaling, &self.rotation);
-        self.on_update();
-    }
     fn on_update(&mut self) {
         self.update_matrix();
         unsafe {

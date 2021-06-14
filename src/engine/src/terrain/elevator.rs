@@ -181,7 +181,7 @@ impl Elevator {
             let normalized = Elevator::normalize(f32x4_mul(norm_v, fc));
             v128_store(norm_ptr,normalized);
         }
-        if self.selected_vertices.len() > 0 {
+        if new_position && self.selected_vertices.len() > 0 {
             self.offset = self.selected_vertices.iter().min_by(|x, y| x.0.cmp(&y.0) ).unwrap().0 * stride;
             let max = self.selected_vertices.iter().max_by(|x, y| x.0.cmp(&y.0) ).unwrap().0 * stride + stride;
             self.length = max-self.offset;

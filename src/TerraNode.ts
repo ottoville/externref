@@ -1,17 +1,15 @@
 ﻿import type { Engine } from "./engine.js";
 import { Mesh } from "/js/engine/engine.js";
 
-import type { isLight } from "./lights.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { hasPhysics } from "./physics.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import type { DrawableDirect } from "./GPU/Drawable.js";
 
-export abstract class MainNode extends Mesh {
+export class MainNode extends Mesh {
     isStatic = false;
     static uniqueID = 1;
     static Meshes: Map<number, MainNode> = new Map();
-    readonly acceleration:Float32Array;
     get_transformation = () => new TerraMatrix(this.engine.memory.buffer, this.gpu_pointer)//new TerraMatrix(this.data.buffer);
 
     get_velocity = () => {
@@ -45,30 +43,13 @@ export abstract class MainNode extends Mesh {
         this.get_translation().set(value);
         this.#onUpdate();
     }
-    /*
-    setTranslationX = (value: number) => {
-        this.translation[0] = value;
-        this.#onUpdate();
-    }
-    setTranslationY = (value: number) => {
-        this.translation[1] = value;
-        this.#onUpdate();
-    }
-    setTranslationZ = (value: number) => {
-        this.translation[2] = value;
-        this.#onUpdate();
-    }*/
 
     constructor(public engine: Engine, private hasBounding: boolean, positionsCount = 0, vertices_stride = 3, faces_count=0) {
         super(engine.rustEngine, MainNode.uniqueID++, hasBounding, true, positionsCount, vertices_stride, faces_count);
-        this.acceleration = new Float32Array(this.engine.memory.buffer, this.gpu_pointer + 24 * Float32Array.BYTES_PER_ELEMENT, 4);
         MainNode.Meshes.set(this.id, this);
         queueMicrotask(() => {
             if (this.#hasPhysics()) {
                 engine.physics.tickables.add(this);
-            }
-            if (this.#isLight()) {
-                //scene.lights.add(this);
             }
         });
         this.updateDynamicBuffer();
@@ -80,9 +61,6 @@ export abstract class MainNode extends Mesh {
 
     #hasPhysics = (): this is hasPhysics => {
         return 'hasGravity' in this && 'onPhysicTick' in this;
-    }
-    #isLight = (): this is isLight => {
-        return 'lightType' in this;
     }
 }
 export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
@@ -104,13 +82,5 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
         if (renderPipeline.dynamicBindGroupOffset.length)
             renderPipeline.dynamicBindGroupOffset[0] = this.gpu_alignment;
         
-    }
-}
-
-
-
-export class PositionNode extends MainNode {
-    constructor(engine: Engine) {
-        super(engine, false);
     }
 }

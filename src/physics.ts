@@ -15,7 +15,7 @@ export class Physics {
     #lastTickTimeMs: number = new Date().getTime();
     #lastStateChangeTime = new Date().getTime();
     #gameSpeed = 0;
-    #interval: number = 0;
+    #interval = 0;
     #lastStateChangeGameTime = BigInt(21600000); //21600 * 1000; //6 hours
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;

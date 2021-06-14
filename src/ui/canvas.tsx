@@ -17,7 +17,7 @@ import { LazyEval } from "../LazyEval.js";
 import { Box } from "../GPU/Meshes/Box.js";
 import { Sun2 } from "../world/sun2.js";
 
-import { PositionNode, TerraNodeGPU } from "../TerraNode.js";
+import { MainNode, TerraNodeGPU } from "../TerraNode.js";
 import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 import { savedCamera } from "../types/interfaces/index.js";
@@ -196,7 +196,7 @@ export class Canvas extends TerraCompoment {
             return [sun.gpu_alignment, ready];
         });
         const debugscene = new Scene('static', gpu, terraEngine, [mainCamera], (scene) => {
-            const sun = new PositionNode(scene.engine);
+            const sun = new MainNode(scene.engine, false);
             sun.get_translation().set([0, 1, 0]);
             sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
