@@ -22,7 +22,6 @@ pub struct Mesh {
     #[wasm_bindgen(skip)]
     pub geometry:Geometry,
     pub positions_count:usize,
-    pub faces_count:usize
 }
 #[wasm_bindgen]
 extern "C" {
@@ -60,6 +59,10 @@ impl Mesh {
     pub fn faces_pointer(&self) -> *const Plane {
         self.geometry.faces.planes.as_ptr()
     }
+    #[wasm_bindgen(getter)]
+    pub fn faces_count(&self) -> usize {
+        self.geometry.faces.planes.len()
+    }
     #[wasm_bindgen(setter)]
     pub fn set_faces(&mut self, planes:Vec<f32>) {
         self.geometry.faces.set(planes);
@@ -84,6 +87,9 @@ impl Mesh {
     }
     #[wasm_bindgen(method, getter)]
     pub fn bounding_max(&mut self) -> Vec<f32> {
+        if self.geometry.vertices.len() < 3 {
+            return vec![0.0,0.0,0.0];
+        }
         if self.geometry.bounding_box.need_init_max {
             self.geometry.bounding_box.max_original = self.geometry.max();
             self.geometry.bounding_box.need_init_max=false;
@@ -192,7 +198,7 @@ impl Mesh {
     }
 
     #[wasm_bindgen(constructor)]
-    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize, faces_count:usize) -> Self {
+    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize) -> Self {
         let m = Mesh {
             id,
             engine: engine,
@@ -222,7 +228,6 @@ impl Mesh {
                 z: 1.0,
             },
             positions_count,
-            faces_count
         };
         return m;
     }
