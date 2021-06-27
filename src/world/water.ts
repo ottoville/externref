@@ -17,7 +17,7 @@ function getRenderPipeline(gpu: GPU) {
         minFilter: "linear",
     });
     const bindGroupTextureWater = gpu.positionBindGroupTimeWGSL.addChildLayout(gpu.createBindGroupLayout({
-        label:'water',
+        label: 'water',
         entries: [
             {
                 binding: 0,
@@ -46,9 +46,24 @@ function getRenderPipeline(gpu: GPU) {
             }
         ]
     }));
-    renderPipeline = bindGroupTextureWater.addRenderPipeline(new VertexShader(gpu, 'water.vert.wgsl'), new Shader(gpu, 'water.frag.wgsl'), {
-        primitive: { topology: 'triangle-strip', stripIndexFormat: 'uint16' }
-    }, () =>
+    renderPipeline = bindGroupTextureWater.addRenderPipeline(
+        new VertexShader(gpu, 'water.vert.wgsl', 'main', [{
+            arrayStride: 12,
+            stepMode: 'vertex',
+            attributes: [{
+                // position
+                shaderLocation: 0,
+                offset: 0,
+                format: "float32x3"
+            }]
+        }]),
+        new Shader(gpu, 'water.frag.wgsl'),
+        {
+            primitive: {
+                topology: 'triangle-strip',
+                stripIndexFormat: 'uint16'
+            }
+        }, () =>
         [
             {
                 binding: 0,
@@ -75,10 +90,13 @@ function getRenderPipeline(gpu: GPU) {
 
 
 export class Sea extends BoundableNodeSimple {
-    worldPosition = undefined
-    Drawable:DrawableSimple;
+    Drawable: DrawableSimple;
     constructor(scene: Scene) {
-        super(scene, getRenderPipeline(scene.gpu), 4, undefined,true); //48
-        this.Drawable=this.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), this,undefined,undefined,undefined,'water');
+        super(scene, getRenderPipeline(scene.gpu), 4, undefined, true); //48
+        this.Drawable = this.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), this, undefined, undefined, undefined, 'water');
+        this.Drawable.setVertexBuffer(0, new Float32Array([-50000.0, 3.0, -50000.0,
+            50000.0, 3.0, -50000.0,
+            -50000.0, 3.0, 50000.0,
+            50000.0, 3.0, 50000.0]))
     }
 }

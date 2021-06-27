@@ -2,7 +2,14 @@
 
 
 let bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
-let rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(vec2<f32>(0.0,0.0), vec2<f32>(0.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0), vec2<f32>(1.0,0.0));
+let rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(
+  vec2<f32>(0.0,0.0),
+  vec2<f32>(0.0,0.0),
+  vec2<f32>(1.0,0.0),
+  vec2<f32>(1.0,0.0),
+  vec2<f32>(1.0,0.0),
+  vec2<f32>(1.0,0.0),
+  vec2<f32>(1.0,0.0));
 
 [[block]] struct Scene {
   viewProjection : mat4x4<f32>;
@@ -52,14 +59,16 @@ let vertices : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
 
 [[stage(vertex)]]
 fn main(
-  [[builtin(vertex_idx)]] VertexIndex : i32,
+  [[location(2)]] vertices : vec3<f32>,
   [[location(0)]] positions : vec4<f32>, //position xyz + rotate
   [[location(1)]] shape : vec4<f32> // {x:scale, y:baseAngle, z:curve, w:color} (blade's shape properties)
 ) -> Output {
   var output:Output;
  //ambient = lights.ambient;
-  var vertice:vec3<f32> = vec3<f32>(vertices[VertexIndex].xy,0.0);
-  let windRotate:f32 = rot[VertexIndex].x;
+  var vertice:vec3<f32> = vec3<f32>(vertices.xy,0.0);
+  //let windRotate:f32 = rot[VertexIndex].x;
+  //TODO
+  let windRotate:f32 = 0.0;
 
   //How fast wind direction and intensivy change
 

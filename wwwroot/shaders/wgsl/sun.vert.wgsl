@@ -46,7 +46,7 @@ struct Output {
 
 
 [[stage(vertex)]]
-fn main([[builtin(vertex_idx)]] VertexIndex : i32) -> Output {
+fn main([[location(0)]] position : vec3<f32>) -> Output {
   var output:Output;
   //let curPos : vec3<f32> =worldposition.world[3].xyz+worldposition.delta*times.delta;
   //fix
@@ -56,7 +56,7 @@ fn main([[builtin(vertex_idx)]] VertexIndex : i32) -> Output {
   let CameraUp_worldspace : vec3<f32>  = vec3<f32>(uniforms.view[0].y, uniforms.view[1].y, uniforms.view[2].y);
  
  
-  let transformbill : vec3<f32> =  transform  + CameraRight_worldspace * vertices[VertexIndex].x + CameraUp_worldspace * vertices[VertexIndex].y;
+  let transformbill : vec3<f32> =  transform  + CameraRight_worldspace * position.x + CameraUp_worldspace * position.y;
 
   output.Position = uniforms.modelViewProjectionMatrix * vec4<f32>(transformbill.xyz, 1.0);
   output.Position.z=1.0;

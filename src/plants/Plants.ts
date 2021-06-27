@@ -45,17 +45,16 @@ export class Plants {
     ) {
         const planstPipeline = scene.gpu.rootCameralayout.addRenderPipeline(new VertexShader(scene.engine.gpu, 'grass/grass.vert.wgsl', 'main', [{
             arrayStride: 4 * 4,
-            stepMode: "instance" as GPUInputStepMode,
+            stepMode: "instance",
             attributes: [{ // position
                 shaderLocation: 0,
                 offset: 0,
                 format: "float32x4"
-            }
-            ]
+            }]
         },
         {
             arrayStride: 4 * 4,
-            stepMode: "instance" as GPUInputStepMode,
+            stepMode: "instance",
             attributes: [
                 {  // shape
                     shaderLocation: 1,
@@ -63,6 +62,15 @@ export class Plants {
                     format: "float32x4"
                 }
             ]
+        },{
+            arrayStride: 12,
+            stepMode: 'vertex',
+            attributes: [{
+                // vertex position
+                shaderLocation: 2,
+                offset: 0,
+                format: "float32x3"
+            }]
         }]), new Shader(scene.engine.gpu, 'color.frag.wgsl'), {
             primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }
         });
@@ -76,6 +84,15 @@ export class Plants {
 
         drawable.setVertexBuffer(0, positionGPU)
         drawable.setVertexBuffer(1, shapeGPU);
+        drawable.setVertexBuffer(2, new Float32Array([
+            0.02,  0.0,
+            -0.02, 0.0,
+            0.014,  0.29,
+            -0.014, 0.29,
+            0.007, 0.57,
+            -0.007, 0.57,
+            0.0, 1.0
+        ]));
 
 
         const shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * this.numBlades);
@@ -92,36 +109,36 @@ export class Plants {
             const layout = computePipeline.getBindGroupLayout(0);
             const bindGroup = scene.gpu.device.createBindGroup({
                 layout, entries: [
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: terrain.slopeArrGPUBuffer
-                    }
-                },
-                {
-                    binding: 1,
-                    resource: {
-                        buffer: terrain.facet12ArrGPUBuffer
-                    }
-                },
-                {
-                    binding: 2,
-                    resource: {
-                        buffer: positionGPUSwap
-                    }
-                },
-                {
-                    binding: 3,
-                    resource: {
-                        buffer: shapeGPUSwap
-                    }
-                },
-                {
-                    binding: 4,
-                    resource: {
-                        buffer: terrain.settingsGPU
-                    }
-                }]
+                    {
+                        binding: 0,
+                        resource: {
+                            buffer: terrain.slopeArrGPUBuffer
+                        }
+                    },
+                    {
+                        binding: 1,
+                        resource: {
+                            buffer: terrain.facet12ArrGPUBuffer
+                        }
+                    },
+                    {
+                        binding: 2,
+                        resource: {
+                            buffer: positionGPUSwap
+                        }
+                    },
+                    {
+                        binding: 3,
+                        resource: {
+                            buffer: shapeGPUSwap
+                        }
+                    },
+                    {
+                        binding: 4,
+                        resource: {
+                            buffer: terrain.settingsGPU
+                        }
+                    }]
             });
             this.worker.subscribe('updated', async (data: { buffer: SharedArrayBuffer }) => {
 
@@ -131,12 +148,13 @@ export class Plants {
 
                 const worldCopyGPU = scene.gpu.createGPUBuffer(this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], true);
                 const bindGroup2 = scene.gpu.device.createBindGroup({
-                    layout:computePipeline.getBindGroupLayout(1), entries: [{
+                    layout: computePipeline.getBindGroupLayout(1), entries: [{
                         binding: 0,
                         resource: {
                             buffer: worldCopyGPU
                         }
-                    }]});
+                    }]
+                });
                 const worldSetArr = worldCopyGPU.getMappedRange();
                 new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
                 worldCopyGPU.unmap();

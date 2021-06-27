@@ -15,11 +15,6 @@
   [[size(16)]] acceleration : vec3<f32>;
    id : u32;
 };
-[[block]] struct Lights {
-  sunDirection : vec3<f32>;
-  ambient : vec3<f32>;
-  shadow : f32;
-};
 
 [[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
 [[binding(1), group(0)]] var<uniform> times : Time;
@@ -46,11 +41,11 @@ struct Output {
 };
 
 [[stage(vertex)]]
-fn main([[builtin(vertex_idx)]] VertexIndex : i32) -> Output {
+fn main([[location(0)]] position : vec3<f32>) -> Output {
   var output:Output;
-  output.Position = uniforms.modelViewProjectionMatrix * vec4<f32>(pos[VertexIndex], 1.0);
+  output.Position = uniforms.modelViewProjectionMatrix * vec4<f32>(position, 1.0);
   output.v_uv = output.Position;
-  output.position=pos[VertexIndex];
+  output.position=position;
   output.id=worldposition.id;
 
   //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;

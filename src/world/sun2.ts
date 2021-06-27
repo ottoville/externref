@@ -20,7 +20,18 @@ function getRenderPipeline(gpu: GPU) {
     let renderPipeline: RenderPipeline | undefined = renderPipelines.get(gpu);
     if (renderPipeline)
         return renderPipeline;
-    renderPipeline = gpu.positionBindGroupTime.addRenderPipeline(new VertexShader(gpu,'sun.vert.wgsl'), new Shader(gpu,'sun.frag.wgsl'), {
+    renderPipeline = gpu.positionBindGroupTime.addRenderPipeline(
+        new VertexShader(gpu,'sun.vert.wgsl','main', [{
+            arrayStride: 12,
+            stepMode: 'vertex',
+            attributes: [{
+                // position
+                shaderLocation: 0,
+                offset: 0,
+                format: "float32x3"
+            }]
+        }]),
+        new Shader(gpu,'sun.frag.wgsl'), {
         depthStencil: {
             format: 'depth24plus-stencil8',
             depthWriteEnabled: false,
@@ -80,6 +91,21 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics, is
     constructor(scene: Scene) {
         super(scene.engine, getRenderPipeline(scene.gpu), 14);
         this.Drawable=this.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), this,undefined,undefined,undefined,'sun');
-
+        this.Drawable.setVertexBuffer(0, new Float32Array([
+            -6824.0,  1557.0,
+            -6824.0, -1557.0,
+            -5472.0,  4364.0,
+            -5472.0, -4364.0,
+            -3037.0,  6306.0,
+            -3037.0, -6306.0,
+            0.0,  7000.0,
+            0.0, -7000.0,
+            3037.0,  6306.0,
+            3037.0, -6306.0,
+            5472.0,  4364.0,
+            5472.0, -4364.0,
+            6824.0,  1557.0,
+            6824.0, -1557.0
+        ]))
     }
 }

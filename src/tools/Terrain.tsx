@@ -23,7 +23,18 @@ function getRenderPipeline(scene: Scene, terrain: Terrain): RenderPipeline {
         return renderPipeline;
     }
 
-    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(new VertexShader(scene.engine.gpu, "helper2.vert.wgsl"), new Shader(scene.engine.gpu, 'UIColor.frag.wgsl'), {
+    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
+        new VertexShader(scene.engine.gpu, "helper2.vert.wgsl",'main',  [{
+            arrayStride: 12,
+            stepMode: 'vertex',
+            attributes: [{
+                // position
+                shaderLocation: 0,
+                offset: 0,
+                format: "float32x3"
+            }]
+        }]),
+        new Shader(scene.engine.gpu, 'UIColor.frag.wgsl'), {
         primitive: {
             topology: 'triangle-list',
             cullMode: 'none'
@@ -66,6 +77,12 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
         this.elevator = terrain.mesh.create_elevator();
         this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), this, 8, 0, undefined, 'TerrainTool');
+        this.Drawable.setVertexBuffer(0, new Float32Array([
+            -0.5,  2.0,
+            -0.5, -2.0,
+            0.5,  3.0,
+            0.5, -3.0
+        ]))
         this.#pick = { position: new TerraVector3(this.engine.memory.buffer, this.elevator.mouse_position_pointer()), meshId: 0 };
         scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
@@ -107,7 +124,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.camera.detachControl();
 
         this.mouseinterval = setInterval(() => {
-            this.elevator.elevate(this.terrain.mesh,50,5*this.direction);
+            this.elevator.elevate(this.terrain.mesh,200,5*this.direction);
             if(this.elevator.length > 0) {
                 this.terrain.updateSwap2(this.elevator.offset*Float32Array.BYTES_PER_ELEMENT,this.elevator.length*Float32Array.BYTES_PER_ELEMENT)
             }

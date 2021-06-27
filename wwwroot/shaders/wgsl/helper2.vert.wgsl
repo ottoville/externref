@@ -78,15 +78,15 @@ struct Output {
 
 [[stage(vertex)]]
 fn main(
-  [[builtin(instance_index)]] instanceIdx : i32,
-[[builtin(vertex_idx)]] VertexIndex : i32) -> Output {
+  [[builtin(instance_index)]] instanceIdx : u32,
+[[location(0)]] vertices : vec3<f32>) -> Output {
     var output:Output;
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; //250 * 250;
 
     var angle:f32 = (f32(time.time) * 0.001) + f32(instanceIdx) * angleStep;
     var c:f32 = cos(angle);
     var s:f32 = sin(angle);
-    var position:vec3<f32> =vec3<f32>(vertices[VertexIndex].x,1.5,vertices[VertexIndex].y);
+    var position:vec3<f32> =vec3<f32>(vertices.x,1.5,vertices.y);
     var rotated:vec2<f32> =vec2<f32>(position.x * c - position.z * s, position.x * s + position.z * c);
     var offset:vec2<f32> = rotated + vec2<f32>(10.0 * c, 10.0 * s);
 

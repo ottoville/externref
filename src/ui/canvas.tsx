@@ -1,4 +1,5 @@
-﻿import { GPU } from "../GPU.js";
+﻿import { GPU, GPUBufferUsage } from "../GPU.js";
+
 import { TerraCamera } from "../TerraCamera.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { Engine } from "../engine.js";
@@ -24,6 +25,7 @@ import { savedCamera } from "../types/interfaces/index.js";
 
 import { DrawableSimple } from "GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { TerraMatrix } from "../Math.js";
 /*
 const tools: {
     name: string,
@@ -64,7 +66,16 @@ const tools: {
 class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
     Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([this.engine.gpu.renderPassCanvas]), this, undefined, undefined, undefined, 'canvas')
     constructor(engine:Engine, canvaspipeline: RenderPipeline,positionsCount:number) {
-        super(engine,canvaspipeline,positionsCount)
+        super(engine,canvaspipeline,positionsCount);
+        this.Drawable.setVertexBuffer(0,new Float32Array([
+            -1.0, 1.0,
+            1.0, -1.0,
+            1.0, 1.0,
+        
+            -1.0,  -1.0,
+            1.0, -1.0,
+            -1.0,  1.0
+        ]))
     }
 }
 
@@ -105,7 +116,7 @@ export class Canvas extends TerraCompoment {
             'plane.vert.wgsl', 'helper2.vert.wgsl',
             'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
             'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',
-            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl', 'canvas.vert.wgsl', 'texture.frag.wgsl'];
+            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl','deferred.vert.wgsl', 'deferred.frag.wgsl', 'clusters.comp.wgsl'];
         await Promise.all(shaders.map(async u => {
             const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
             gpu.shaderModules.set(u, device.createShaderModule({ code: compiled }));
@@ -114,7 +125,7 @@ export class Canvas extends TerraCompoment {
         this.progress = 10;
 
         const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
-        const projectionmatrix = new Float32Array(projectionmatrixBuffer);
+        const projectionmatrix = new TerraMatrix(projectionmatrixBuffer);
         this.progress = 13;
 
         const terraEngine = await Engine.initEngine(gpu, DB, this.#canvasElem);
@@ -203,14 +214,22 @@ export class Canvas extends TerraCompoment {
             return [sun.gpu_alignment]
         });
 
-        const b2 = new Box(debugscene);
+        const b2 = new Box(debugscene,100);
+        //const b3 = new Box(debugscene,100);
         //b2.update(scale => scale.set([200, 200, 200]));
-        b2.update_scale(200, 200, 200);
-        const translation = b2.get_translation();
-        b2.SetTranslation([500, translation[1], translation[2]])
+        b2.update_scale(30, 30, 30);
+        //b3.update_scale(30, 30, 30);
+        //const translation = b2.get_translation();
+        b2.SetTranslation([1000, 400, 0])
+        //b3.SetTranslation([-1000, 400, 0])
         //b2.setTranslationX(500);
-
-
+        let x=1000;
+        //let x2=-1000;
+        setInterval(() => {
+            b2.SetTranslation([x--, 400, 0])
+            //b3.SetTranslation([x2++, 400, 0])
+        },10);
+        
         let renderFrame = 0;
         let resizeHandler = 0;
 
@@ -224,7 +243,18 @@ export class Canvas extends TerraCompoment {
         let startTime = 0;
 
 
-        const canvasPipeline = gpu.rootLayout.addRenderPipeline(new VertexShader(gpu, 'canvas.vert.wgsl'), new Shader(gpu, 'texture.frag.wgsl'), {
+        const canvasPipeline = gpu.rootLayout.addRenderPipeline(
+            new VertexShader(gpu, 'deferred.vert.wgsl','main',[{
+                arrayStride: 8,
+                stepMode: 'vertex',
+                attributes: [{
+                    // position
+                    shaderLocation: 0,
+                    offset: 0,
+                    format: "float32x2"
+                }]
+            }]),
+            new Shader(gpu, 'deferred.frag.wgsl'), {
             label: 'canvas',
             primitive: {
                 topology: 'triangle-list'
@@ -323,7 +353,6 @@ export class Canvas extends TerraCompoment {
                     usage: GPUTextureUsage.RENDER_ATTACHMENT
                 })
                 gpu.renderPasses.forEach(renderPass => {
-                    console.log('canvas resize', this.#canvasElem.width, this.#canvasElem.height)
                     renderPass.onResize(this.#canvasElem.width, this.#canvasElem.height)
                 })
 
@@ -346,7 +375,58 @@ export class Canvas extends TerraCompoment {
                     0.0, 0.0, c, 1.0,
                     0.0, 0.0, d, 0.0,
                 ]);
+                
+                const computePipelineClusters = gpu.createComputePipeline('clusters.comp.wgsl');
 
+                const clustersInRow=10;
+                const clusterSizeinBytes= clustersInRow * clustersInRow * clustersInRow * 4 * 8;
+                const clusterArrayBuffer=gpu.createGPUBuffer(clusterSizeinBytes, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+                
+                const clusterArrayBufferDst=gpu.createGPUBuffer(clusterSizeinBytes, [GPUBufferUsage.MAP_READ,GPUBufferUsage.COPY_DST]);
+                const screenToViewBuffer=gpu.createGPUBuffer(80, [GPUBufferUsage.UNIFORM], true);
+                const gpuBuffer=screenToViewBuffer.getMappedRange();
+                const inverted=new TerraMatrix(gpuBuffer);
+                new Float32Array(gpuBuffer,64,4).set([100,100,100,0])
+                projectionmatrix.invertToRef(inverted);
+                screenToViewBuffer.unmap();
+               
+                gpu.projectionUniformsBuffer.destroy();
+                gpu.projectionUniformsBuffer=gpu.createGPUBuffer(16, [GPUBufferUsage.UNIFORM], true);
+                const uniformbuffer=gpu.projectionUniformsBuffer.getMappedRange();
+                new Float32Array(uniformbuffer).set([n,f,this.#canvasElem.width,this.#canvasElem.height]);
+                gpu.projectionUniformsBuffer.unmap();
+                const bindGroup = gpu.device.createBindGroup({
+                    layout: computePipelineClusters.getBindGroupLayout(0),
+                    entries: [ {
+                        binding: 0,
+                        resource: {
+                            buffer: clusterArrayBuffer
+                        }
+                    },
+                    {
+                        binding: 1,
+                        resource: {
+                            buffer: screenToViewBuffer
+                        }
+                    },
+                    {
+                        binding: 2,
+                        resource: {
+                            buffer: gpu.projectionUniformsBuffer
+                        }
+                    }]
+                });
+                const commandEncoder = gpu.createCommandEncoder();
+                const passEncoder = commandEncoder.beginComputePass();
+                passEncoder.setPipeline(computePipelineClusters);
+                passEncoder.setBindGroup(0,bindGroup)
+                passEncoder.dispatch(clustersInRow,clustersInRow,clustersInRow);
+                passEncoder.endPass();
+                commandEncoder.copyBufferToBuffer(clusterArrayBuffer,0,clusterArrayBufferDst,0,clusterSizeinBytes);
+                gpu.device.queue.submit([commandEncoder.finish()]);
+                await clusterArrayBufferDst.mapAsync(GPUMapMode.READ);
+                const buffer=clusterArrayBufferDst.getMappedRange();
+                
                 renderFrame = window.requestAnimationFrame(renderLoop);
             }, 500)
         });
