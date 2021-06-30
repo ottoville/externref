@@ -48,11 +48,12 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         scene: Scene,
         renderPipeline: RenderPipeline,
         positionCount: number,
-        public verticesPositionStride: number,
+        verticesPositionStride: number,
         protected strip = false,
+        point_light = 0
 
     ) {
-        super(scene.engine, renderPipeline, positionCount, true, verticesPositionStride);
+        super(scene.engine, renderPipeline, positionCount, true, verticesPositionStride, point_light);
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
             if(propDesc)
@@ -77,13 +78,12 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     initCollider() {
         this.facesBufferColliderPointer = this.engine.mallocView(this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT);
         this.facesBufferColliderPointerParallel = this.engine.mallocView(this.faces_count * (16 + 12) * Float32Array.BYTES_PER_ELEMENT);
-        console.log('rebuildTrianglePlanes',this.faces_count)
         this.#positionsAndCollider.length=0;
         this.colliderVertices.length=0;
         this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
         for (let i = 0; i < this.positions_count; i++) {
             //let pos = new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT)
-            const pos = new TerraVector3(this.engine.memory.buffer, this.vertices_pointer + i * this.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
+            const pos = new TerraVector3(this.engine.memory.buffer, this.vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT);
 
             const colPos = new TerraVector4(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer.byteOffset + i * 4 * Float32Array.BYTES_PER_ELEMENT);
             this.colliderVertices.push(colPos);
@@ -104,14 +104,11 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     abstract rebuildTrianglePlanes: () => void
 
 
-    get vertices() {
-        return new Float32Array(this.engine.memory.buffer, this.vertices_pointer, this.positions_count * this.verticesPositionStride);
-    }
     getPosition = (index: number) => {
         if(index > this.positions_count) {
             throw new Error('Tried to access vertice out of boundary')
         }
-        return new TerraVector3(this.engine.memory.buffer, this.vertices_pointer + index * this.verticesPositionStride * Float32Array.BYTES_PER_ELEMENT);
+        return new TerraVector3(this.engine.memory.buffer, this.vertices_pointer + index * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT);
     }
     intersectsRay = (ray: Float32Array): Promise<void> => {
         return worker.message(this.id, 'intersectsRay', [ray.buffer]);
@@ -171,8 +168,11 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         // console.log('cpu took', performance.now() - timer);
         // let timer = performance.now();
         // for (let i = 0; i < 20;i++)
-
-        this.engine.wasm.testTriangles(this.facesBufferColliderPointer.byteOffset,this.facesBufferColliderPointerParallel.byteOffset, this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id);
+        try {
+            this.engine.wasm.testTriangles(this.facesBufferColliderPointer.byteOffset,this.facesBufferColliderPointerParallel.byteOffset, this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id);
+        } catch(e) {
+            console.error(e);
+        }
         if (!this.engine.collisionNotFound.getUint32(0, false)) {
             //console.log(new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer, this.#faces.length * 7)) //4 is for simd
             console.log('collided')
@@ -219,8 +219,9 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
         verticesPositionStride = 3,
         indicesView: Uint32Array,
         strip = false,
+        point_light = 0
     ) {
-        super(scene, renderPipeline, positionCount,verticesPositionStride, strip);
+        super(scene, renderPipeline, positionCount,verticesPositionStride, strip, point_light);
         Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeIndexed.prototype, prop);
             if(propDesc)

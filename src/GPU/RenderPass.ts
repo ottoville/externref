@@ -44,6 +44,19 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
             this.#depthTextureView = this.#depthTexture.createView();
         }
     }
+    getVariant(renderPipeline:RenderPipeline) {
+        let variant = this.renderPipelines.get(renderPipeline)
+        if (!variant) {
+            const renderpipeline = this.decoratePipeline(renderPipeline);
+            variant = {
+                renderpipeline: renderpipeline,
+                drawables: new Map(),
+                rootDrawables: new Set()
+            }
+            this.renderPipelines.set(renderPipeline, variant)
+        }
+        return variant;
+    }
     decoratePipeline(renderpipeline: RenderPipeline): GPURenderPipeline {
         const renderPipelineDescriptor = renderpipeline.renderPipelineDescriptor as GPURenderPipelineDescriptor;
         renderPipelineDescriptor.vertex = renderpipeline.vertexShader;

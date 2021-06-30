@@ -54,7 +54,7 @@ export class RenderPipeline {
         if(this.createSharedBindGroups) {
             this.createSharedBindGroups().forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
          }
-        drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart,dynamicIndices));
+        drawables.forEach(drawable => drawable.draw(renderPass, renderPassEncoder, BindGroupsStart,dynamicIndices));
         return drawables.size;
     }
     addDrawableIndirect<T extends GPUIndirectBuffer>(scene: Scene | undefined, renderPasses: Set<RenderPass>, buffer: T, label='unnamed') {

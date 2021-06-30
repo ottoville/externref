@@ -7,12 +7,12 @@ const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 
 
-function TerrainRenderPipeline(gpu: GPU) {
+function TerrainRenderPipeline(gpu: GPU, entryPoint='main', topology:GPUPrimitiveTopology='triangle-list') {
     const renderPipeline = renderPipelines.get(gpu);
     if (renderPipeline)
         return renderPipeline;
 
-    const renderPipeLine = gpu.lightsBindGroupTexture2.addRenderPipeline(new VertexShader(gpu,'ground.vert.wgsl', 'main', [{
+    const renderPipeLine = gpu.lightsBindGroupTexture2.addRenderPipeline(new VertexShader(gpu,'ground.vert.wgsl', entryPoint, [{
         arrayStride: 48,
         stepMode: "vertex",
         attributes: [{
@@ -34,9 +34,9 @@ function TerrainRenderPipeline(gpu: GPU) {
             format: "float32x2"
         }
         ]
-    }]), new Shader(gpu,'ground.frag.wgsl'), {
+    }]), new Shader(gpu,'ground.frag.wgsl',entryPoint), {
         label: 'terrain',
-        primitive: { topology: 'triangle-list' }
+        primitive: { topology }
     });
     renderPipelines.set(gpu, renderPipeLine);
     return renderPipeLine;
@@ -61,10 +61,10 @@ export class TerrainMesh extends BoundableNodeIndexed {
     ) {
         super(scene, TerrainRenderPipeline(scene.gpu), positionsCount, verticesPositionStride, indicesView);
         this.Drawable = this.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), this, undefined, 0, 1);
-
+        //@ts-expect-error
+        window.debugTerrain=() => this.Drawable.debug_render_normals();
         this.Drawable.setStaticBuffer(this.sampler, initialTexture);
         this.Drawable.setVertexBuffer(0, this.vBuffer);
         this.Drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
     }
-
 }

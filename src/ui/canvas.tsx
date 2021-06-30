@@ -116,7 +116,7 @@ export class Canvas extends TerraCompoment {
             'plane.vert.wgsl', 'helper2.vert.wgsl',
             'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
             'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',
-            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl','deferred.vert.wgsl', 'deferred.frag.wgsl', 'clusters.comp.wgsl'];
+            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl','deferred.vert.wgsl', 'deferred.frag.wgsl', 'clusters.comp.wgsl', 'debug_normals.vert.wgsl'];
         await Promise.all(shaders.map(async u => {
             const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
             gpu.shaderModules.set(u, device.createShaderModule({ code: compiled }));
@@ -425,6 +425,7 @@ export class Canvas extends TerraCompoment {
                 commandEncoder.copyBufferToBuffer(clusterArrayBuffer,0,clusterArrayBufferDst,0,clusterSizeinBytes);
                 gpu.device.queue.submit([commandEncoder.finish()]);
                 await clusterArrayBufferDst.mapAsync(GPUMapMode.READ);
+                //@ts-expect-error
                 const buffer=clusterArrayBufferDst.getMappedRange();
                 
                 renderFrame = window.requestAnimationFrame(renderLoop);

@@ -29,7 +29,8 @@ TODO
 
     public slopeArr = new Int32Array(this.slopeArrBuffer);
 
-    mesh: TerrainMesh;
+    readonly mesh: TerrainMesh;
+
     settingsGPU:GPUStorageBuffer;
     TerrainHeightsbindGroupTree : PipelineLayout;
     //TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpu.BindGroupPosition, true)
@@ -288,7 +289,6 @@ TODO
         sourcePixels.unmap();
 
         const computePipelineIndices = scene.gpu.createComputePipeline('terrain/calculatePlaneIndices.comp.wgsl');
-        
         const bindGroupSettings = computePipelineIndices.createBindGroup(0, [{
             binding: 0,
             resource: {
@@ -496,11 +496,6 @@ TODO
 
             gpuReadBufferPositions.readAndDestroy(async (readbuff) => {
                 this.mesh.update_vertices(new Float32Array(readbuff));
-                /*this.mesh.updateVertices(buff => {
-                    new Uint8Array(buff).set(new Uint8Array(readbuff));
-                })*/
-    
-                //this.terrainPositionAndUvsAndNormalsCPUSwapView.set(new Float32Array(buff));
                 this.updateSwap2(0, readbuff.byteLength, true);
                 this.serialize();
             });

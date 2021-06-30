@@ -50,7 +50,10 @@ impl Mesh {
     pub fn vertices_pointer(&self) -> *const f32 {
         self.geometry.vertices.as_ptr()
     }
-
+    #[wasm_bindgen(getter)]
+    pub fn vertices_stride(&self) -> usize {
+        self.geometry.vertices_stride
+    }
     pub fn update_vertices(&mut self, vertices:Vec<f32>) {
         self.geometry.update_vertices(vertices);
     }
@@ -198,7 +201,7 @@ impl Mesh {
     }
 
     #[wasm_bindgen(constructor)]
-    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize) -> Self {
+    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize, point_light:f32) -> Self {
         let m = Mesh {
             id,
             engine: engine,
@@ -213,7 +216,8 @@ impl Mesh {
                 delta: [0.0, 0.0, 0.0, 0.0],
                 custom: [0.0, 0.0, 0.0, 0.0],
                 acceleration: [0.0, 0.0, 0.0, 0.0],
-                id
+                id,
+                point_light
             },
             geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count),
             rotation: Vec4 {
@@ -229,6 +233,9 @@ impl Mesh {
             },
             positions_count,
         };
+        if point_light > 0.0 {
+            engine.lights.push(m.gpu_alignment());
+        }
         return m;
     }
     pub fn destroy(self) {

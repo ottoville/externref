@@ -1,4 +1,4 @@
-﻿import type { RenderPipeline } from "./RenderPipeline.js";
+﻿import { RenderPipeline, Shader, VertexShader } from "./RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 import type { RenderPass } from "./RenderPass.js";
 import type { Scene } from "../Scene.js";
@@ -20,7 +20,7 @@ export abstract class Drawable {
     #scene?: Scene;
     constructor(
         protected renderPipeline: RenderPipeline,
-        private renderPasses: Set<RenderPass>,
+        protected renderPasses: Set<RenderPass>,
         scene?: Scene) {
         this.scene = scene;
         this.clearBundles();
@@ -31,34 +31,19 @@ export abstract class Drawable {
             this.#renderList.forEach(Drawables => Drawables.delete(this));
         }
         this.#scene = scene;
+        this.createPipelinesForRenderPasses();
+    }
+    createPipelinesForRenderPasses() {
         this.renderPasses.forEach(rp => {
-
-            let variant = rp.renderPipelines.get(this.renderPipeline)
-            if (!variant) {
-                const renderpipeline = rp.decoratePipeline(this.renderPipeline);
-                variant = {
-                    renderpipeline: renderpipeline,
-                    drawables: new Map(),
-                    rootDrawables: new Set()
-                }
-                rp.renderPipelines.set(this.renderPipeline, variant)
-            }
-            /*if (scene) {
-                let sceneDrawables = variant.drawables.get(scene);
-                if (!sceneDrawables) {
-                    sceneDrawables = new Set()
-                    variant.drawables.set(scene, sceneDrawables);
-                }
-                this.#renderList.set(rp, sceneDrawables.add(this));
-            } else*/
-                this.#renderList.set(rp, variant.rootDrawables.add(this));
+            const variant = rp.getVariant(this.renderPipeline);
+            this.#renderList.set(rp, variant.rootDrawables.add(this));
         });
         this.clearBundles();
     }
     staticBuffers?:GPUBindGroup;
     setStaticBuffer(...staticBuffers:(GPUSampler | GPUTextureView)[]) {
         this.clearBundles();
-        this.staticBuffers= this.renderPipeline.bindgroupdrawable.gpuscene.device.createBindGroup(
+        this.staticBuffers= this.renderPipeline.bindgroupdrawable.gpu.device.createBindGroup(
             {
                 layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout.layout,
                 entries: staticBuffers.map((resource, binding) => {
@@ -93,25 +78,25 @@ export abstract class Drawable {
         if (buffer instanceof GPUBuffer)
             var Tbuffer = buffer;
         else {
-            var Tbuffer = this.renderPipeline.bindgroupdrawable.gpuscene.createGPUBuffer(buffer.byteLength, [GPUBufferUsage.VERTEX], true)
+            var Tbuffer = this.renderPipeline.bindgroupdrawable.gpu.createGPUBuffer(buffer.byteLength, [GPUBufferUsage.VERTEX], true)
             new Uint8Array(Tbuffer.getMappedRange()).set(new Uint8Array(buffer.buffer));
             Tbuffer.unmap();
         }
         this.#vertexBuffers.set(index, { buffer: Tbuffer, offset, size });
         return Tbuffer;
     }
-    abstract render: (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => void
-    draw(renderPass: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex:number[]) {
+    abstract render: (renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass) => void
+    draw(renderPass: RenderPass, renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex:number[]) {
         this.dynamicBuffers.forEach((gpubindgroup_offset, i) => {
             const di=dynamicIndex[i];
             if(di) {
-                renderPass.setBindGroup(di, gpubindgroup_offset[0], [gpubindgroup_offset[1] * TerraNodeGPU.alignment]);
+                renderEncoder.setBindGroup(di, gpubindgroup_offset[0], [gpubindgroup_offset[1] * TerraNodeGPU.alignment]);
             }
         });
-        this.staticBuffers && renderPass.setBindGroup(BindGroupsStart++, this.staticBuffers)
+        this.staticBuffers && renderEncoder.setBindGroup(BindGroupsStart++, this.staticBuffers)
 
-        this.#vertexBuffers.forEach((buffer, index) => renderPass.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
-        this.render(renderPass);
+        this.#vertexBuffers.forEach((buffer, index) => renderEncoder.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
+        this.render(renderEncoder, renderPass);
     }
 }
 export abstract class DrawableDirect extends Drawable {
@@ -146,8 +131,8 @@ export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
         scene?: Scene,) {
         super(renderPipeline, renderPasses, scene);
     }
-    render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
-        renderPass.drawIndirect(this.buffer, 0);
+    render = (renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) => {
+        renderEncoder.drawIndirect(this.buffer, 0);
     }
 }
 export class DrawableSimple extends DrawableDirect {
@@ -162,11 +147,45 @@ export class DrawableSimple extends DrawableDirect {
         public firstInstance = 0) {
         super(renderPipeline, renderPasses, scene, instanceCount);
     }
-    render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
-        renderPass.draw(this.node.positions_count, this.instanceCount, this.firstVertex, this.firstInstance);
+    render = (renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) => {
+        renderEncoder.draw(this.node.positions_count, this.instanceCount, this.firstVertex, this.firstInstance);
     }
 }
+
+const renderPipelines: Map<GPU, RenderPipeline> = new Map();
+function DebugNormalsPipeline(gpu: GPU, entryPoint='main', topology:GPUPrimitiveTopology='line-list') {
+    const renderPipeline = renderPipelines.get(gpu);
+    if (renderPipeline)
+        return renderPipeline;
+
+    const renderPipeLine = gpu.lightsBindGroupTexture2.addRenderPipeline(new VertexShader(gpu,'debug_normals.vert.wgsl', entryPoint, [{
+        arrayStride: 48,
+        stepMode: "vertex",
+        attributes: [{
+            // position
+            shaderLocation: 0,
+            offset: 0,
+            format: "float32x3"
+        },
+        {
+            // normals
+            shaderLocation: 1,
+            offset: 16,
+            format: "float32x3"
+        }
+        ]
+    }]), new Shader(gpu,'ground.frag.wgsl',entryPoint), {
+        label: 'terrain',
+        primitive: { topology }
+    });
+    renderPipelines.set(gpu, renderPipeLine);
+    return renderPipeLine;
+}
+
 export class DrawableIndexed extends DrawableDirect {
+    normalsPipeline?: RenderPipeline;
+    debugMode=false;
+    debug_render_normals_vertexBuffer?: GPUVertexBuffer;
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
@@ -181,6 +200,23 @@ export class DrawableIndexed extends DrawableDirect {
         private GPUIndexFormat: GPUIndexFormat = 'uint16',
         ) {
         super(renderPipeline, renderPasses, scene, instanceCount);
+    }
+    debug_render_normals() {
+        const gpu = this.renderPipeline.bindgroupdrawable.gpu;
+        this.normalsPipeline=DebugNormalsPipeline(gpu,'normals');
+        const vertices = this.node.verticesArray;
+        const stride=this.node.vertices_stride;
+
+        this.debug_render_normals_vertexBuffer = gpu.createGPUBuffer(this.node.positions_count*stride*2*Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], true);
+        const view = new Float32Array( this.debug_render_normals_vertexBuffer.getMappedRange());
+        vertices.forEach((v,i) => {
+            view.set(v,i*stride*2)
+            view.set(v,i*stride*2+stride)
+        })
+        this.debug_render_normals_vertexBuffer.unmap();
+        this.debugMode=true;
+        this.clearBundles();
+
     }
     destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {
         super.destroy(preserveVerticeBuffers);
@@ -200,7 +236,7 @@ export class DrawableIndexed extends DrawableDirect {
             GPUIndexFormat && (this.GPUIndexFormat = GPUIndexFormat);
         }
         else {
-            this.indexBuffer = this.renderPipeline.bindgroupdrawable.gpuscene.createGPUBuffer(buffer.byteLength, [GPUBufferUsage.INDEX], true);
+            this.indexBuffer = this.renderPipeline.bindgroupdrawable.gpu.createGPUBuffer(buffer.byteLength, [GPUBufferUsage.INDEX], true);
             if (buffer.BYTES_PER_ELEMENT == 4) {
                 new Uint32Array(this.indexBuffer.getMappedRange()).set(buffer);
                 this.GPUIndexFormat = 'uint32';
@@ -212,10 +248,16 @@ export class DrawableIndexed extends DrawableDirect {
         }
         return this.indexBuffer;
     }
-    render = (renderPass: GPURenderBundleEncoder | GPURenderPassEncoder) => {
+    render = (renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass:RenderPass) => {
         if (this.indexBuffer) {
-            renderPass.setIndexBuffer(this.indexBuffer, this.GPUIndexFormat);
-            renderPass.drawIndexed(this.node.indices_count, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);
+            renderEncoder.setIndexBuffer(this.indexBuffer, this.GPUIndexFormat);
+            renderEncoder.drawIndexed(this.node.indices_count, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);
+            if(this.debugMode) {
+                renderEncoder.setPipeline(renderPass.getVariant(this.normalsPipeline!).renderpipeline);
+                renderEncoder.setVertexBuffer(0,this.debug_render_normals_vertexBuffer!);
+                renderEncoder.draw(this.node.positions_count*2, this.instanceCount, this.firstIndex,this.baseVertex);
+                console.log('draw in debugMode',this.node.positions_count*2,this.instanceCount,this.firstIndex,this.baseVertex, this.firstInstance)
+            }
         }
     }
 }
