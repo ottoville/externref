@@ -20,12 +20,12 @@ export class paintLine extends paintGround {
     async onAreaDraw(): Promise<void> {
     }
     constructor(
-        protected scene: Scene,
-        protected camera: ArcRotateCamera,
-        protected ground: Terrain,
-        protected sea: Sea,
+        scene: Scene,
+        camera: ArcRotateCamera,
+        ground: Terrain,
+        sea: Sea,
         uitab: hasCanvasListener
     ) {
         super(scene, camera, ground, sea, uitab, () => null);
-    };
+    }
 }

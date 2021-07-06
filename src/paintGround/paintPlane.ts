@@ -97,7 +97,7 @@ export class paintPlane extends paintGround {
     /*public activate(callback: PTResultF) {
         super.activate(callback);
     }*/
-    public destroy() {
+    override destroy() {
         super.destroy();
         this.#mesh.destroy();
         this.#mesh.Drawable.destroy();

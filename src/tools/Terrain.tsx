@@ -134,7 +134,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.camera.attachControl();
         clearInterval(this.mouseinterval);
     }
-    destroy = (): void => {
+    override destroy = (): void => {
         terrainWorker.unsubscribe('heights');
         this.Drawable.destroy();
         this.scene.TerraCameras[0].unSubscribePickingRay();

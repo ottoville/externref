@@ -36,7 +36,7 @@ export class PipelineLayout {
     }
     addChildBindGroup(sharedBindgroup: (GPUBindGroup), isDynamic: boolean): DynamicPipelineLayout
     addChildBindGroup(sharedBindgroup: (GPUBindGroup)): PipelineLayout
-    addChildBindGroup(sharedBindgroup: (GPUBindGroup), isDynamic?: boolean): any {
+    addChildBindGroup(sharedBindgroup: (GPUBindGroup), isDynamic?: boolean): PipelineLayout {
         for(const bg of this.subBindGroups) {
             if(bg.sharedBindgroup === sharedBindgroup) {
                 return bg;
@@ -52,14 +52,14 @@ export class PipelineLayout {
     }
 }
 export class DynamicPipelineLayout extends PipelineLayout {
-    addRenderPipeline = (vertexShader:VertexShader, fragmentShader:Shader,renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>): RenderPipeline => {
+    override addRenderPipeline(vertexShader:VertexShader, fragmentShader:Shader,renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>): RenderPipeline {
         const d = super.addRenderPipeline(vertexShader,fragmentShader,renderPipeline);
         d.dynamicBindGroupOffset = [0];
         return d;
     }
 }
 export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends PipelineLayout {
-    addRenderPipeline = (vertexShader:VertexShader, fragmentShader:Shader, renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>, bindGroups?: () => T): RenderPipeline => {
+    override addRenderPipeline(vertexShader:VertexShader, fragmentShader:Shader, renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>, bindGroups?: () => T): RenderPipeline {
         const RP = super.addRenderPipeline(vertexShader,fragmentShader,renderPipeline);
         if (bindGroups) {
             RP.createSharedBindGroups = (): Set<GPUBindGroup> => {

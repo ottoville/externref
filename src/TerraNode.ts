@@ -19,11 +19,11 @@ export class MainNode extends Mesh {
         return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer + 12 * Float32Array.BYTES_PER_ELEMENT);
     }
 
-    update_scale = (x: number, y: number, z: number) => {
+    override update_scale = (x: number, y: number, z: number) => {
         super.update_scale(x, y, z)
         this.#onUpdate();
     }
-    update_scale_and_rotation = (x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number) => {
+    override update_scale_and_rotation = (x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number) => {
         super.update_scale_and_rotation(x, y, z, rx, ry, rz, rw);
         this.#onUpdate();
     }
@@ -72,7 +72,7 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
     abstract Drawable: T;
 
-    constructor(public engine: Engine, public renderPipeline: RenderPipeline, positionsCount: number, hasBounding = false, vertices_stride = 3, point_light = 0) {
+    constructor(engine: Engine, public renderPipeline: RenderPipeline, positionsCount: number, hasBounding = false, vertices_stride = 3, point_light = 0) {
         super(engine, hasBounding, positionsCount, vertices_stride, point_light);
         Object.getOwnPropertyNames(TerraNodeGPU.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(TerraNodeGPU.prototype, prop);

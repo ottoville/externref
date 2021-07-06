@@ -21,10 +21,10 @@ export class paintTexture extends paintGround {
         this.#offsetY = this.textureHeight*0.5 + startingPoint[1] / this.ratio;
     }
     constructor(
-        protected scene: Scene,
-        protected camera: ArcRotateCamera,
-        protected ground: Terrain,
-        protected sea: Sea,
+        scene: Scene,
+        camera: ArcRotateCamera,
+        ground: Terrain,
+        sea: Sea,
         protected zonedt: GPUTexture,
         private textureWidth: number,
         private textureHeight: number,

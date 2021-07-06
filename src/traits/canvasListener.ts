@@ -13,7 +13,7 @@ export interface hasCanvasListener extends UITAB {
 
 export class canvasListener extends Trait {
     //abstract deactivate: () => void;
-    public destroy() {
+    override destroy() {
         this.#listeners.forEach((map, type) => {
             map.forEach((proxy, listener) => {
                 GPU.instance.canvas.removeEventListener(type, proxy || listener);
@@ -43,10 +43,10 @@ export class canvasListener extends Trait {
                 return;
             }
             if (options && options.lazy !== undefined) {
-                let lazyf = new LazyEval((e) => {
+                const lazyf = new LazyEval((e) => {
                     listener.call(GPU.instance.canvas, e);
                 });
-                let proxyf = (e: HTMLElementEventMap[K]) => {
+                const proxyf = (e: HTMLElementEventMap[K]) => {
                     lazyf.eval(options.lazy!, e);
                 };
                 map.set(listener, proxyf);

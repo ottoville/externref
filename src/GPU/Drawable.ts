@@ -218,7 +218,7 @@ export class DrawableIndexed extends DrawableDirect {
         this.clearBundles();
 
     }
-    destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {
+    override destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {
         super.destroy(preserveVerticeBuffers);
         if (!preserveIndexBuffer && this.indexBuffer)
             this.indexBuffer.destroy();

@@ -5,7 +5,6 @@ struct Output {
 
 [[stage(vertex)]]
 fn main(
-    [[location(0)]] vertices_ : vec2<f32>,
     [[builtin(vertex_idx)]] VertexIndex : u32) -> Output {
     var vertices = array<vec2<f32>, 6>(
         vec2<f32>(-1.0, -1.0), vec2<f32>(1.0, -1.0), vec2<f32>(-1.0, 1.0),

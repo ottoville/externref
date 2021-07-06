@@ -145,7 +145,7 @@ export class Engine {
         const wasmRequest = await fetch('collider/colliderO.wasm');
         const obj = await WebAssembly.instantiateStreaming(wasmRequest, {
             console: {
-                log: function (arg: any) {
+                log: function (arg: string) {
                     console.log(arg);
                 }
             },

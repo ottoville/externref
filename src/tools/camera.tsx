@@ -7,15 +7,16 @@ export class CameraTAB extends UITAB {
     static menuElem = <button class="w3-bar-item w3-button">Debug camera</button>;
     static label = 'Camera';
     constructor(
-        public scene: Scene,
-        public terrain: Terrain,
-        public camera: ArcRotateCamera,
+        scene: Scene,
+        terrain: Terrain,
+        camera: ArcRotateCamera,
         sea: Sea
     ) {
         super(scene, terrain, camera, sea);
 
     }
-    destroy = (): void => {
+    override destroy = (): void => {
+        throw(new Error('not implemented'))
      }
     /* activate = (): void => {
         this.activated=true;

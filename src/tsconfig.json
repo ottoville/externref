@@ -13,6 +13,7 @@
     "noUnusedParameters": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
+    "noImplicitOverride": true,
     "jsx": "react",
     "jsxFactory": "TerraUI.createElement",
     //"strict": true,

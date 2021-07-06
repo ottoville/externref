@@ -34,13 +34,13 @@ export class Zones extends UITAB {
     readonly #ratio:number //texture coordinates
     readonly #zoneTexture:GPUTexture;
     constructor(
-        public scene: Scene,
-        public ground: Terrain,
-        public camera: ArcRotateCamera,
+        scene: Scene,
+        terrain: Terrain,
+        camera: ArcRotateCamera,
         sea: Sea,
     ) {
-        super(scene, ground, camera, sea);
-        this.#ratio = this.ground.size[0] / this.#size //texture coordinates
+        super(scene, terrain, camera, sea);
+        this.#ratio = this.terrain.size[0] / this.#size //texture coordinates
         this.#zoneTexture = this.scene.gpu.device.createTexture({
             size: [5120, 5120, 1],
             format: "rgba8unorm",
@@ -76,9 +76,9 @@ export class Zones extends UITAB {
             }
         })();
         
-        ground.mesh.setTextureView(this.#zoneTexture.createView());
-        ground.mesh.Drawable.scene = scene.engine.scenes.get('static');
-        this.PT = new paintTexture(this.scene, this.camera, this.ground, sea, this.#zoneTexture, 5120, 5120, this, this.#ratio, async (response) => {
+        terrain.mesh.setTextureView(this.#zoneTexture.createView());
+        terrain.mesh.Drawable.scene = scene.engine.scenes.get('static');
+        this.PT = new paintTexture(this.scene, this.camera, this.terrain, sea, this.#zoneTexture, 5120, 5120, this, this.#ratio, async (response) => {
             (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
         });
         /*this.PT.activate(async (response) => {
@@ -86,8 +86,8 @@ export class Zones extends UITAB {
         });*/
     }
     destroy = (): void => {
-        this.ground.mesh.Drawable.scene = this.scene;
-        this.ground.mesh.setTextureView(this.ground.texture.createView());
+        this.terrain.mesh.Drawable.scene = this.scene;
+        this.terrain.mesh.setTextureView(this.terrain.texture.createView());
         this.#zoneTexture.destroy();
         this.PT.destroy();
         this.traits.forEach(trait => trait.destroy());

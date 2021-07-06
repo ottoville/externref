@@ -29,9 +29,9 @@ export class PlantsUI extends UITAB {
 
 
     constructor(
-        public scene: Scene,
-        public terrain: Terrain,
-        public camera: ArcRotateCamera,
+        scene: Scene,
+        terrain: Terrain,
+        camera: ArcRotateCamera,
         sea: Sea,
     ) {
         super(scene, terrain, camera, sea);
