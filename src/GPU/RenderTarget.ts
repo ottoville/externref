@@ -5,8 +5,8 @@ export class RenderTarget<T extends GPUTexture> {
     view: TerraGPUTextureView<T>;
     texture: GPUTextureSampled | GPUTexture;
     #debug = false;
-    renderPasses: Set<RenderPass<{}>> = new Set();
-    writableRenderPass?:RenderPass<{}>;
+    renderPasses: Set<RenderPass> = new Set();
+    writableRenderPass?:RenderPass;
     createTexture() {
         if (this.texture) {
             this.texture.destroy();
@@ -39,7 +39,7 @@ export class RenderTarget<T extends GPUTexture> {
 
     }
     toBitmap() {
-        const renderPass: RenderPass<{}> = this.renderPasses.values().next().value;
+        const renderPass: RenderPass = this.renderPasses.values().next().value;
 
         //Use for debugging purpose.
         this.#debug = true;
@@ -68,9 +68,9 @@ export class RenderTarget<T extends GPUTexture> {
                 [renderPass.size.width, renderPass.size.height, 1]);
                 this.gpu.device.queue.submit([encoder.finish()]);
             buffer.mapAsync(GPUMapMode.READ).then(() => {
-                let c = new OffscreenCanvas(renderPass.size.width, renderPass.size.height);
-                let ctx = c.getContext('2d');
-                let imageData = ctx!.createImageData(c.width, c.height);
+                const c = new OffscreenCanvas(renderPass.size.width, renderPass.size.height);
+                const ctx = c.getContext('2d');
+                const imageData = ctx!.createImageData(c.width, c.height);
                 let data:Uint8ClampedArray;
                 if(bytes_per_fixel > 4) {
                     const floatData=new Float32Array(buffer.getMappedRange());

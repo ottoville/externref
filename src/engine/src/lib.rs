@@ -47,4 +47,5 @@ pub struct GPUMesh {
     custom: [f32; 4],
     acceleration: [f32; 4],
     id: u32,
+    point_light:f32
 }

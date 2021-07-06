@@ -12,12 +12,17 @@ function Simple(gpu: GPU) {
         return renderPipeline;
     renderPipeline = gpu.positionBindGroupTimeWGSL.addRenderPipeline(
         new VertexShader(gpu, 'simple.vert.wgsl', 'main', [{
-            arrayStride: 3 * 4,
+            arrayStride: 6 * 4,
             stepMode: "vertex",
             attributes: [{
                 // position
                 shaderLocation: 0,
                 offset: 0,
+                format: "float32x3",
+            }, {
+                // normals
+                shaderLocation: 1,
+                offset: 12,
                 format: "float32x3"
             }]
         }]), new Shader(gpu, 'simple.frag.wgsl'), {
@@ -34,9 +39,10 @@ export abstract class SimpleMesh extends BoundableNodeIndexed {
         positionsCount: number,
         indicesView: Uint32Array,
         iBuffer: GPUIndexBuffer,
-        vBuffer: GPUVertexBuffer) {
+        vBuffer: GPUVertexBuffer,
+        point_light=0) {
 
-        super(scene, Simple(scene.gpu), positionsCount, 3, indicesView);
+        super(scene, Simple(scene.gpu), positionsCount, 6, indicesView,undefined, point_light);
         this.Drawable =  this.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen]),this)
 
         this.Drawable.setVertexBuffer(0, vBuffer);

@@ -43,7 +43,14 @@ interface TerraGPUBindGroupLayoutDescriptorFive
     extends GPUBindGroupLayoutDescriptor {
     entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry];
 }
-
+interface TerraGPUBindGroupLayoutDescriptorSix
+    extends GPUBindGroupLayoutDescriptor {
+    entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry];
+}
+interface TerraGPUBindGroupLayoutDescriptorSeven
+    extends GPUBindGroupLayoutDescriptor {
+    entries: [GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry, GPUBindGroupLayoutEntry];
+}
 export class GPU {
     readonly #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
@@ -64,6 +71,7 @@ export class GPU {
     readonly shaderModules: Map<string, GPUShaderModule> = new Map();
     //Todo: Remove COPY_SRC
     readonly GPUData: GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer;
+    readonly GPULightsArray: GPUStorageBuffer & GPUCopyDSTBuffer;
     readonly rootLayout:PipelineLayout;
     readonly positionBindGroupTimeWGSL:LayoutGroupDrawable<[GPUBindGroupEntry]>;
 
@@ -100,9 +108,10 @@ export class GPU {
     }>;
     readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<GPUTextureSampled>; }>;
     context: GPUCanvasContext;
+    projectionUniformsBuffer: GPUUniformBuffer;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
         this.GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-
+        this.GPULightsArray = this.createGPUBuffer(100*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
         this.uniformBindGroupLayoutWithTime  = this.createBindGroupLayout({
             label: 'uniformBindGroupLayoutWithTime',
             entries:
@@ -170,6 +179,18 @@ export class GPU {
                         buffer: {
                             type: "read-only-storage"
                         }
+                    },  {
+                        binding: 5,
+                        visibility: GPUShaderStage.FRAGMENT,
+                        buffer: {
+                            type: "read-only-storage"
+                        }
+                    },{
+                        binding: 6,
+                        visibility: GPUShaderStage.FRAGMENT,
+                        buffer: {
+                            type: "uniform"
+                        }
                     }
                 ]
             }
@@ -216,8 +237,8 @@ export class GPU {
 
 
         this.renderPassScreen = new RenderPass(this, {
-            gRenderTargetNormals: this.addTarget("bgra8unorm", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
-            gRenderTargetPositions: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED, GPUTextureUsage.COPY_SRC]),
+            gRenderTargetNormals: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
+            gRenderTargetPositions: this.addTarget("rgba32float", { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED, GPUTextureUsage.COPY_SRC]),
             gRenderTargetDiffuse: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
         }, 1, true, { width: canvas.width, height: canvas.height },
             (w, h) => {
@@ -260,6 +281,8 @@ export class GPU {
             magFilter: "linear",
             minFilter: "linear",
         });
+        this.projectionUniformsBuffer=this.createGPUBuffer(16, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], true);
+
         this.BindGroupCanvas = (renderPass: RenderPass) => this.createBindGroupForRenderPass(BindGroupLayoutCanvas, renderPass,
             [{
                 binding: 0,
@@ -281,6 +304,18 @@ export class GPU {
                 binding: 4,
                 resource: {
                     buffer: this.GPUData
+                }
+            },
+            {
+                binding: 5,
+                resource: {
+                    buffer: this.GPULightsArray
+                }
+            },
+            {
+                binding: 6,
+                resource: {
+                    buffer: this.projectionUniformsBuffer
                 }
             }]
         );
@@ -309,6 +344,8 @@ export class GPU {
     createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorThree): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
     createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFour): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
     createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorFive): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorSix): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
+    createBindGroupLayout(entry: TerraGPUBindGroupLayoutDescriptorSeven): BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>
     createBindGroupLayout<T extends TerraGPUBindGroupLayoutDescriptorFive>(entry: T,): BindGroupLayout<GPUBindGroupEntry[]> {
         return new BindGroupLayout<[GPUBindGroupEntry]>(this, entry)
         /*const layout = this.device.createBindGroupLayout(entry) as TerraBindGroupLayout;
@@ -401,6 +438,7 @@ export class GPU {
     }
 
     //uniform
+    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM], mappedAtCreation?: boolean): GPUUniformBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
     createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean): GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer

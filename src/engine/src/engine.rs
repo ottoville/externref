@@ -7,6 +7,8 @@ pub struct Engine {
     #[wasm_bindgen(skip)]
     pub gpu_queue: Vec<(*const GPUMesh, u32)>,
     gpu_next_available_address: u32,
+    #[wasm_bindgen(skip)]
+    pub lights:Vec<u32>
 }
 
 //const GPU_QUEUE: Vec<(* const GPUMesh, u32)> = Vec::new();
@@ -19,8 +21,12 @@ impl Engine {
             gpu_next_available_address: 0,
             gpu_slots: Vec::new(),
             gpu_queue: Vec::new(),
+            lights: Vec::new(),
         };
         return e;
+    }
+    pub fn get_lights(&self) ->Vec<u32> {
+        self.lights.clone()
     }
     pub fn allocate_gpu(&mut self) -> u32 {
         let o = self.gpu_slots.pop();

@@ -10,8 +10,8 @@ let filt:vec3<f32> = vec3<f32>(0.3, 0.59, 0.11);
 };
 struct Vertice {
   position : vec3<f32>;
-  [[offset(16)]] normals : vec3<f32>;
-  [[offset(32)]] uv : vec2<f32>;
+  normals : vec3<f32>;
+  uv : vec2<f32>;
 };
 [[block]] struct Vertices {
     vert : [[stride(48)]] array<Vertice>;
@@ -19,9 +19,9 @@ struct Vertice {
 [[block]] struct Pixels {
     pixels : [[stride(4)]] array<u32>;
 };
-[[binding(0), group(0)]] var<storage_buffer> img : [[access(read)]] Settings;
-[[binding(0), group(1)]] var<storage_buffer> positions : [[access(write)]] Vertices;
-[[binding(1), group(1)]] var<storage_buffer> pixels : [[access(read)]] Pixels;
+[[binding(0), group(0)]] var<storage, read> img : Settings;
+[[binding(0), group(1)]] var<storage, write> positions : Vertices;
+[[binding(1), group(1)]] var<storage, read> pixels : Pixels;
 
 
 [[stage(compute)]]

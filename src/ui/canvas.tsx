@@ -26,56 +26,11 @@ import { savedCamera } from "../types/interfaces/index.js";
 import { DrawableSimple } from "GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { TerraMatrix } from "../Math.js";
-/*
-const tools: {
-    name: string,
-    icon: string,
-    class: string
-    elem: HTMLElement
-}[] = [{
-    name: 'Zones',
-    icon: '▧',
-    class: 'Zones',
-    elem: <div></div>
-},
-{
-    name: 'Plants',
-    icon: '🌲',
-    class: 'Buildings',
-    elem: <div></div>
-},
-{
-    name: 'Buildings',
-    icon: '🏠',
-    class: 'Buildings',
-    elem: <div></div>
-},
-{
-    name: 'Camera',
-    icon: '📷', 
-    class: 'Camera',
-    elem: <div></div>
-},
-{
-    name: 'Terrain',
-    icon: '🗻',
-    class: 'TerrainTool',
-     elem: <div></div>
-}]*/
 
 class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
     Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([this.engine.gpu.renderPassCanvas]), this, undefined, undefined, undefined, 'canvas')
     constructor(engine:Engine, canvaspipeline: RenderPipeline,positionsCount:number) {
         super(engine,canvaspipeline,positionsCount);
-        this.Drawable.setVertexBuffer(0,new Float32Array([
-            -1.0, 1.0,
-            1.0, -1.0,
-            1.0, 1.0,
-        
-            -1.0,  -1.0,
-            1.0, -1.0,
-            -1.0,  1.0
-        ]))
     }
 }
 
@@ -223,10 +178,14 @@ export class Canvas extends TerraCompoment {
         b2.SetTranslation([1000, 400, 0])
         //b3.SetTranslation([-1000, 400, 0])
         //b2.setTranslationX(500);
-        let x=1000;
+        const x=-3000;
+       // let z = 0;
+        b2.SetTranslation([x, 400, 0])
         //let x2=-1000;
+        let a=0;
         setInterval(() => {
-            b2.SetTranslation([x--, 400, 0])
+            b2.SetTranslation([x*Math.cos(a), 400,x*Math.sin(a)])
+            a+=0.005;
             //b3.SetTranslation([x2++, 400, 0])
         },10);
         
@@ -244,16 +203,7 @@ export class Canvas extends TerraCompoment {
 
 
         const canvasPipeline = gpu.rootLayout.addRenderPipeline(
-            new VertexShader(gpu, 'deferred.vert.wgsl','main',[{
-                arrayStride: 8,
-                stepMode: 'vertex',
-                attributes: [{
-                    // position
-                    shaderLocation: 0,
-                    offset: 0,
-                    format: "float32x2"
-                }]
-            }]),
+            new VertexShader(gpu, 'deferred.vert.wgsl'),
             new Shader(gpu, 'deferred.frag.wgsl'), {
             label: 'canvas',
             primitive: {

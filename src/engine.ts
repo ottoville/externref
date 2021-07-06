@@ -219,6 +219,17 @@ export class Engine {
             });
             this.#tempBuffer.unmap();
             gpu.queue.clear();
+
+            const lights=this.rustEngine.get_lights();
+            
+            const tempLightsBuffer = gpu.createGPUBuffer(lights.byteLength+4, [GPUBufferUsage.COPY_SRC], true);
+            new Uint32Array(tempLightsBuffer.getMappedRange()).set([lights.length, ...lights]);
+            tempLightsBuffer.unmap();
+            commandEncoder.copyBufferToBuffer(
+                tempLightsBuffer, 0,
+                gpu.GPULightsArray, 0,
+                lights.byteLength+4);
+
             return commandEncoder.finish();
         })
     }
