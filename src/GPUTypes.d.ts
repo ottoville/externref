@@ -33,9 +33,9 @@ interface GPUTextureSampled<FORMAT extends GPUTextureFormat = 'bgra8unorm'> exte
     sampled: 'true';
     createView(descriptor?: GPUTextureViewDescriptor): TerraGPUTextureView<GPUTextureSampled<FORMAT>>
 }
-interface GPUTextureRenderAttachment extends GPUTexture {
+interface GPUTextureRenderAttachment<FORMAT extends GPUTextureFormat = 'bgra8unorm'> extends GPUTexture {
     RenderAttachment: 'true';
-    createView(descriptor?: GPUTextureViewDescriptor): TerraGPUTextureView<GPUTextureRenderAttachment>
+    createView(descriptor?: GPUTextureViewDescriptor): TerraGPUTextureView<GPUTextureRenderAttachment<FORMAT>>
 }
 interface GPUTextureCopySrc extends GPUTexture {
     CopySrc: 'true';

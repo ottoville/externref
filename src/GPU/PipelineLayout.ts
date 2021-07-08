@@ -59,7 +59,11 @@ export class DynamicPipelineLayout extends PipelineLayout {
     }
 }
 export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends PipelineLayout {
-    override addRenderPipeline(vertexShader:VertexShader, fragmentShader:Shader, renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>, bindGroups?: () => T): RenderPipeline {
+    override addRenderPipeline(
+        vertexShader:VertexShader,
+        fragmentShader:Shader,
+        renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>,
+        bindGroups?: () => T): RenderPipeline {
         const RP = super.addRenderPipeline(vertexShader,fragmentShader,renderPipeline);
         if (bindGroups) {
             RP.createSharedBindGroups = (): Set<GPUBindGroup> => {

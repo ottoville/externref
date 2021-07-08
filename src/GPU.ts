@@ -79,14 +79,14 @@ export class GPU {
         y: 1
     }
     readonly renderPassScreen: RenderPass<{
-        gRenderTargetNormals: RenderTarget<GPUTextureSampled<'rgba32float'> | GPUTextureRenderAttachment>;
-        gRenderTargetPositions: RenderTarget<GPUTextureSampled<'rgba32float'> | GPUTextureRenderAttachment | GPUTextureCopySrc>;
-        gRenderTargetDiffuse: RenderTarget<GPUTextureSampled<'bgra8unorm'> | GPUTextureRenderAttachment>;
+        gRenderTargetNormals: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'>>;
+        gRenderTargetPositions: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'> & GPUTextureCopySrc>;
+        gRenderTargetDiffuse: RenderTarget<GPUTextureSampled<'bgra8unorm'> & GPUTextureRenderAttachment<'bgra8unorm'>>;
     }>;
     readonly renderPassWater: RenderPass<{
-        normals: RenderTarget<GPUTextureSampled<'rgba32float'> | GPUTextureRenderAttachment>;
-        position: RenderTarget<GPUTextureSampled<'rgba32float'> | GPUTextureRenderAttachment>;
-        diffuse: RenderTarget<GPUTextureSampled<'bgra8unorm'> | GPUTextureRenderAttachment>;
+        normals: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'>>;
+        position: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'>>;
+        diffuse: RenderTarget<GPUTextureSampled<'bgra8unorm'> & GPUTextureRenderAttachment<'bgra8unorm'>>;
     }>;
     readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<GPUTextureSampled<'bgra8unorm'>>; }>;
     context: GPUCanvasContext;
@@ -304,9 +304,9 @@ export class GPU {
         GPU.instance = this;
     }
     addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount?: number): RenderTarget<GPUTextureSampled<F>>
-    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureRenderAttachment>
-    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureSampled<F> | GPUTextureRenderAttachment>
-    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount?: number): RenderTarget<GPUTextureSampled<F> | GPUTextureRenderAttachment | GPUTextureCopySrc>
+    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureRenderAttachment<F>>
+    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureSampled<F> & GPUTextureRenderAttachment<F>>
+    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount?: number): RenderTarget<GPUTextureSampled<F> & GPUTextureRenderAttachment<F> & GPUTextureCopySrc>
     addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: GPUTextureUsageFlags[], sampleCount = 1): RenderTarget<GPUTexture> {
         return new RenderTarget(this, format, loadValue, usages.reduce((prev, curr) => prev | curr, GPUTextureUsage.RENDER_ATTACHMENT), sampleCount)
     }
