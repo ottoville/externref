@@ -246,8 +246,8 @@ TODO
                 }
             }
         ];
-        const heightsLayout = this.scene.gpu.createBindGroupLayout({
-            entries: [{
+        const heightsLayout = this.scene.gpu.createBindGroupLayout('terrain',
+            {
                 binding: 0,
                 visibility: GPUShaderStage.VERTEX,
                 buffer: {
@@ -268,8 +268,8 @@ TODO
                 buffer: {
                     type: "read-only-storage"
                 }
-            }]
-        })
+            }
+        )
         this.TerrainHeightsbindGroupTree = scene.gpu.positionBindGroupTimeWGSL.addChildBindGroup(scene.gpu.createBindGroup(heightsLayout, heightsBindGroupEntries));
         
 
@@ -405,7 +405,6 @@ TODO
             const bufferView = {
                 buffer: gpuBuffer,
                 bytesPerRow: this.textureSize[0] * 4,
-                rowsPerImage: 0,
                 offset: 0,
             };
             const destinationTextureView={

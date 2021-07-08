@@ -29,9 +29,9 @@ interface GPUCopyDSTBuffer extends GPUBuffer {
 interface TerraGPUTextureView<T extends GPUTexture> extends GPUTextureView {
     brand:T
 }
-interface GPUTextureSampled extends GPUTexture {
+interface GPUTextureSampled<FORMAT extends GPUTextureFormat = 'bgra8unorm'> extends GPUTexture {
     sampled: 'true';
-    createView(descriptor?: GPUTextureViewDescriptor): TerraGPUTextureView<GPUTextureSampled>
+    createView(descriptor?: GPUTextureViewDescriptor): TerraGPUTextureView<GPUTextureSampled<FORMAT>>
 }
 interface GPUTextureRenderAttachment extends GPUTexture {
     RenderAttachment: 'true';

@@ -16,36 +16,34 @@ function getRenderPipeline(gpu: GPU) {
         magFilter: "linear",
         minFilter: "linear",
     });
-    const bindGroupTextureWater = gpu.positionBindGroupTimeWGSL.addChildLayout(gpu.createBindGroupLayout({
-        label: 'water',
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.FRAGMENT,
-                sampler: {
+    const bindGroupTextureWater = gpu.positionBindGroupTimeWGSL.addChildLayout(gpu.createBindGroupLayout(
+        'water',
+        {
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            sampler: {
 
-                }
-            }, {
-                binding: 1,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {
-
-                }
-            }, {
-                binding: 2,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {
-
-                }
-            }, {
-                binding: 3,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {
-
-                }
             }
-        ]
-    }));
+        }, {
+            binding: 1,
+            visibility: GPUShaderStage.FRAGMENT,
+            texture: {
+                sampleType:'unfilterable-float'
+            }
+        }, {
+            binding: 2,
+            visibility: GPUShaderStage.FRAGMENT,
+            texture: {
+                sampleType:'unfilterable-float'
+            }
+        }, {
+            binding: 3,
+            visibility: GPUShaderStage.FRAGMENT,
+            texture: {
+
+            }
+        }
+    ));
     renderPipeline = bindGroupTextureWater.addRenderPipeline(
         new VertexShader(gpu, 'water.vert.wgsl', 'main', [{
             arrayStride: 12,

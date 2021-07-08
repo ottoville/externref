@@ -166,21 +166,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
             rootLayout.renderPipeLines.forEach(renderPipeline => {
                 drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
             });
-            /* rootLayout.subBindGroups.forEach(pipelineLayout => {
-                 if (pipelineLayout.sharedBindgroup) {
-                     renderBundleEncoder.setBindGroup(1, pipelineLayout.sharedBindgroup);
-                 } else {
-                     debugger;
-                 }
-                 pipelineLayout.renderPipeLines.forEach(renderPipeline => {
-                     drawedMeshes+=renderPipeline.draw(renderBundleEncoder,this,1+dynamicIndices.length,dynamicIndices);
-                 });
-             });*/
-
-
-
-            // this.gpu.drawBindGroups2(renderBundleEncoder,this.gpu.positionBindGroupTimeWGSL,this,1);
-
             //POSITION
             if (this.gpu.positionBindGroupTimeWGSL.bindGroupLayout.dynamicIndices) {
                 dynamicIndices.push(1);
