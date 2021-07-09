@@ -33,7 +33,7 @@ struct Vertice {
 
 
 let cd: f32 = -1.0;
-[[stage(compute)]]
+[[stage(compute), workgroup_size(1)]]
 fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
   let subdivisions_plus_one:u32 = settings.subdivisions + u32(1);
   let facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;

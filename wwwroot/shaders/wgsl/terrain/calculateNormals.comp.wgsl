@@ -20,7 +20,7 @@
 [[binding(1), group(2)]] var<storage, read> facet12 : FloatArray;
 
 
-[[stage(compute)]]
+[[stage(compute), workgroup_size(1)]]
 fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
     let stride : u32 = u32(12);
     let facetSize : u32 = settings.subdivisions * settings.subdivisions * u32(4); //250*250* 4;

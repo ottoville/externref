@@ -39,7 +39,7 @@ struct Output {
 };
 [[stage(vertex)]]
 fn main(
-  [[builtin(vertex_idx)]] VertexIndex : u32,
+  [[builtin(vertex_index)]] VertexIndex : u32,
   [[location(0)]] pos : vec3<f32>,
   [[location(1)]] normal : vec3<f32>
 ) -> Output {

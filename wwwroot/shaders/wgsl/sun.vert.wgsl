@@ -30,7 +30,7 @@ struct Output {
 
 
 [[stage(vertex)]]
-fn main([[builtin(vertex_idx)]] VertexIndex : u32) -> Output {
+fn main([[builtin(vertex_index)]] VertexIndex : u32) -> Output {
   var vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(
             vec2<f32>( -6824.0,  1557.0),
             vec2<f32>( -6824.0, -1557.0),

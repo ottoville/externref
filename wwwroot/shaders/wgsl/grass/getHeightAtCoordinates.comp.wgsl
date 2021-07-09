@@ -142,7 +142,7 @@ fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
 
 
 
-[[stage(compute)]]
+[[stage(compute), workgroup_size(1)]]
 fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; //250 * 250;
 

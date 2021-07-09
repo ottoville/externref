@@ -172,15 +172,13 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             this.engine.wasm.testTriangles(this.facesBufferColliderPointer.byteOffset,this.facesBufferColliderPointerParallel.byteOffset, this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id);
         } catch(e) {
             console.error(e);
+            console.log(this.engine.wasm.memory.buffer)
         }
         if (!this.engine.collisionNotFound.getUint32(0, false)) {
             //console.log(new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer, this.#faces.length * 7)) //4 is for simd
             console.log('collided')
         }
-        //  timer = performance.now();
-        // for (let i = 0; i < 20; i++)
-        //this.engine.wasmSIMD.testTriangles(this.facesBufferColliderPointer, this.facesBufferColliderPointerParallel, this.#faces.length * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.uniqueID)
-        //   console.log('simd took', performance.now() - timer);
+        
     }
     protected buildFaceQuatros() {
         if (this.faces_count % 4 === 0) {

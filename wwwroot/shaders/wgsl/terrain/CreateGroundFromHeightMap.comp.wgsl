@@ -24,7 +24,7 @@ struct Vertice {
 [[binding(1), group(1)]] var<storage, read> pixels : Pixels;
 
 
-[[stage(compute)]]
+[[stage(compute), workgroup_size(1)]]
 fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
     var position: vec3<f32> = vec3<f32>(f32(GlobalInvocationID.x * img.size.x) / f32(img.subdivisions) - (f32(img.size.x) / 2.0),
     0.0,
