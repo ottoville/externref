@@ -69,15 +69,15 @@ function getRenderPipeline(gpu: GPU) {
             },
             {
                 binding: 1,
-                resource: gpu.renderPassWater.renderTargets.normals.texture.view
+                resource: gpu.renderPassWater.renderTargets.normals.view
             },
             {
                 binding: 2,
-                resource: gpu.renderPassWater.renderTargets.position.texture.view
+                resource: gpu.renderPassWater.renderTargets.position.view
             },
             {
                 binding: 3,
-                resource: gpu.renderPassWater.renderTargets.diffuse.texture.view
+                resource: gpu.renderPassWater.renderTargets.diffuse.view
             }
         ]
 

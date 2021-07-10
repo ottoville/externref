@@ -5,8 +5,14 @@ export type GPUTextureUsageLiterals= 'COPY_SRC' | 'COPY_DST' | 'SAMPLED' | 'STOR
 
 export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLiterals[]> {
     texture: GPUTexture;
-    view: GPUTextureView;
     renderPasses: Set<RenderPass> = new Set();
+    views:Map<symbol, GPUTextureView> = new Map();
+    createView(descriptor?: GPUTextureViewDescriptor) {
+        const view = this.texture.createView(descriptor);
+        const s=Symbol()
+        this.views.set(s, view);
+        return [s, view] as const;
+    }
     createTexture(debug=false) {
         if (this.texture) {
             this.texture.destroy();
@@ -22,8 +28,8 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
             size:this.size, sampleCount:this.sampleCount, format:this.format,
             usage:this.usages.reduce((prev, curr) => prev | GPUTextureUsage[curr], 0),
         });
-        this.view = this.texture.createView();
-        return [this.view, this.texture] as const;
+        this.views.clear();
+        return this.texture;
     }
     static create<U extends ['SAMPLED'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U, sampleCount:number): Texture<F, U>
     static create<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U, sampleCount:number): Texture<F,U>
@@ -38,7 +44,7 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
         private sampleCount = 1,
         public usages: U,
         public size: GPUExtent3DStrict = {width:300,height:300}) {
-            [this.view, this.texture] = this.createTexture();
+            this.texture = this.createTexture();
         }
         toBitmap() {
             const renderPass: RenderPass = this.renderPasses.values().next().value;

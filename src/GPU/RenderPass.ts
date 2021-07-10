@@ -109,7 +109,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         const colorAttachments: GPURenderPassColorAttachment[] = []
         if (typeof this.renderTargets.swap !== 'undefined') {
             colorAttachments.push(this.sampleCount > 1 ? {
-                view: this.renderTargets.swap.texture.view,
+                view: this.renderTargets.swap.view,
                 resolveTarget: this.gpu.context.getCurrentTexture().createView(),
                 loadValue: this.renderTargets.swap.loadValue,
                 storeOp: "store"
@@ -123,7 +123,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 if (key === 'swap')
                     continue;
                 colorAttachments.push({
-                    view: this.renderTargets[key]!.texture.view,
+                    view: this.renderTargets[key]!.view,
                     loadValue: this.renderTargets[key]!.loadValue,
                     storeOp: "store" as const,
                 })
@@ -131,7 +131,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         } else {
             for (const key in this.renderTargets) {
                 colorAttachments.push({
-                    view: this.renderTargets[key]!.texture.view,
+                    view: this.renderTargets[key]!.view,
                     loadValue: this.renderTargets[key]!.loadValue,
                     storeOp: "store" as const,
                 })
