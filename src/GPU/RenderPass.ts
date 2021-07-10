@@ -30,13 +30,14 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         public renderTargets: T,
         public sampleCount: number = 1,
         depthStencil = false,
-        public size: { width: number, height: number },
+        public size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
         private _onResize: (width: number, height: number) => [number, number],
         private usage: number = 0) {
         for (const key in renderTargets) {
             this.colorFormats.push(renderTargets[key]!.texture.format);
             renderTargets[key]!.texture.renderPasses.add(this);
-            renderTargets[key]!.texture.size=this.size;
+            renderTargets[key]!.texture.size[0]=this.size[0];
+            renderTargets[key]!.texture.size[1]=this.size[1];
             renderTargets[key]!.texture.createTexture();
         }
 
@@ -93,15 +94,16 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     }
 
     onResize(width: number, height: number) {
-        [this.size.width, this.size.height] = this._onResize(width, height);
-        this.cameras.forEach(camera => camera.onResize(this.size.width, this.size.height));
+        [this.size[0], this.size[1]] = this._onResize(width, height);
+        this.cameras.forEach(camera => camera.onResize(this.size[0], this.size[1]));
         if (this.#depthTexture) {
             this.#depthTexture.destroy();
             this.#depthTexture = this.createTexture(this.#depthFormat);
             this.#depthTextureView = this.#depthTexture.createView();
         }
         for (const key in this.renderTargets) {
-            this.renderTargets[key]!.texture.size=this.size;
+            this.renderTargets[key]!.texture.size[0]=this.size[0];
+            this.renderTargets[key]!.texture.size[1]=this.size[1];
             this.renderTargets[key]!.texture.createTexture();
         }
     }

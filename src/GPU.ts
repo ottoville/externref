@@ -80,7 +80,7 @@ export class GPU {
         y: 1
     }
     readonly renderPassScreen: RenderPass<{
-        gRenderTargetNormals: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "SAMPLED"]>>;
+        gRenderTargetNormals: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "SAMPLED", "COPY_SRC"]>>;
         gRenderTargetPositions: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "SAMPLED", "COPY_SRC"]>>;
         gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "SAMPLED"]>>;
     }>;
@@ -209,33 +209,32 @@ export class GPU {
                 texture: {}
             }
         ));
+        const normalAndPositionTexture = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED','COPY_SRC'],[300,300,2])
+        const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'SAMPLED'])
 
-        const normalTexture = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED'],1)
-        const positionTexture = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED', 'COPY_SRC'],1)
-        const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'SAMPLED'],1)
         this.renderPassScreen = new RenderPass(this, {
-            gRenderTargetNormals: this.addTarget(normalTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
-            gRenderTargetPositions: this.addTarget(positionTexture, { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }),
-            gRenderTargetDiffuse: this.addTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 })
-        }, 1, true, { width: canvas.width, height: canvas.height },
+            gRenderTargetNormals: new RenderTarget(normalAndPositionTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 }),
+            gRenderTargetPositions: new RenderTarget(normalAndPositionTexture, { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },{ baseArrayLayer: 1, arrayLayerCount: 1 }),
+            gRenderTargetDiffuse: new RenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 })
+        }, 1, true, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
             });
-        const normalTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED'],1)
-        const positionTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED'],1)
-        const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'SAMPLED'],1)
+        const normalTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED'])
+        const positionTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED'])
+        const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'SAMPLED'])
     
         this.renderPassWater = new RenderPass(this, {
-            normals: this.addTarget(normalTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
-            position: this.addTarget(positionTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
-            diffuse: this.addTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
-        }, 1, false, { width: canvas.width, height: canvas.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED);
+            normals: new RenderTarget(normalTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
+            position: new RenderTarget(positionTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
+            diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
+        }, 1, false, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED);
        
-        const canvasTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT'],1)
+        const canvasTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT'])
 
         this.renderPassCanvas = new RenderPass(this, {
-            swap: this.addTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 })
-        }, 1, false, { width: canvas.width, height: canvas.height },
+            swap: new RenderTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 })
+        }, 1, false, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
             });
@@ -313,9 +312,6 @@ export class GPU {
             }
         }
         GPU.instance = this;
-    }
-    addTarget<T extends Texture<GPUTextureFormat, [...GPUTextureUsageLiterals[],'RENDER_ATTACHMENT'] |  ['RENDER_ATTACHMENT', ...GPUTextureUsageLiterals[]]>>(texture:T, loadValue: GPULoadOp | GPUColor): RenderTarget<T> {
-        return new RenderTarget(texture, loadValue)
     }
 
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(label:string,...entries: T): BindGroupLayout<{ [K in keyof T]: T[K] extends {texture:GPUTextureBindingLayout} ? GPUBindGroupTextureEntry<T[K]['texture']['sampleType']>:GPUBindGroupEntry }>{

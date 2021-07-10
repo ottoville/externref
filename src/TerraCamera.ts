@@ -189,8 +189,8 @@ export class TerraCamera {
         /* this.nearScreenSource[0] = x / viewport.width * 2 - 1;
          this.nearScreenSource[1] = -(y / viewport.height * 2 - 1);
          this.nearScreenSource[2] = -1.0;*/
-        this.#nearVec3[0] = x / this.renderPass.size.width * 2 - 1;
-        this.#nearVec3[1] = -(y / this.renderPass.size.height * 2 - 1);
+        this.#nearVec3[0] = x / this.renderPass.size[0] * 2 - 1;
+        this.#nearVec3[1] = -(y / this.renderPass.size[1] * 2 - 1);
         this.#nearVec3[2] = -1.0;
         // var farScreenSource = (new Vector3()).copyFromFloats(this.nearScreenSource[0], this.nearScreenSource[1], 1.0);
         this.#farVec3 = new TerraVector3([this.#nearVec3[0], this.#nearVec3[1], 1.0]);

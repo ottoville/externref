@@ -59,7 +59,7 @@ export class Scene {
         encoder.copyTextureToBuffer(
             {
                 texture: this.gpu.renderPassScreen.renderTargets.gRenderTargetPositions.texture.texture,
-                origin: { x: this.engine.mousePosition[0], y: this.engine.mousePosition[1] }
+                origin: { x: this.engine.mousePosition[0], y: this.engine.mousePosition[1], z: 1 }
             },
             {
                 buffer,

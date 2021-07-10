@@ -5,6 +5,7 @@ export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLit
     constructor(
         public readonly texture: T,
         public loadValue: GPULoadOp | GPUColor,
+        private textureViewDescriptor?: GPUTextureViewDescriptor
     ) {
     }
     get view(): GPUTextureView {
@@ -13,7 +14,7 @@ export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLit
             if(view)
                 return view;
         }
-        const SymbolAndView = this.texture.createView();
+        const SymbolAndView = this.texture.createView(this.textureViewDescriptor);
         this.viewSymbol = SymbolAndView[0]
         return SymbolAndView[1];
     }

@@ -25,28 +25,30 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
         if (debug)
             this.usages.push('COPY_SRC');
         this.texture = this.gpu.device.createTexture({
-            size:this.size, sampleCount:this.sampleCount, format:this.format,
+            size:this.size,
+            sampleCount:this.sampleCount,
+            format:this.format,
             usage:this.usages.reduce((prev, curr) => prev | GPUTextureUsage[curr], 0),
         });
         this.views.clear();
         return this.texture;
     }
-    static create<U extends ['SAMPLED'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U, sampleCount:number): Texture<F, U>
-    static create<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U, sampleCount:number): Texture<F,U>
-    static create<U extends ['SAMPLED' | 'RENDER_ATTACHMENT', 'SAMPLED' | 'RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U, sampleCount:number): Texture<F, U>
-    static create<U extends ['SAMPLED' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'SAMPLED' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'SAMPLED' | 'RENDER_ATTACHMENT' | 'COPY_SRC'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U, sampleCount:number): Texture<F, U>
-    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: GPUTextureUsageLiterals[], sampleCount = 1): Texture<F, GPUTextureUsageLiterals[]> {
-        return new Texture(gpu, format,sampleCount,usages)
+    static create<U extends ['SAMPLED'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate], sampleCount?:number): Texture<F, U>
+    static create<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate], sampleCount?:number): Texture<F,U>
+    static create<U extends ['SAMPLED' | 'RENDER_ATTACHMENT', 'SAMPLED' | 'RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate], sampleCount?:number): Texture<F, U>
+    static create<U extends ['SAMPLED' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'SAMPLED' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'SAMPLED' | 'RENDER_ATTACHMENT' | 'COPY_SRC'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate], sampleCount?:number): Texture<F, U>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: GPUTextureUsageLiterals[], size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate] = [300,300,1], sampleCount = 1): Texture<F, GPUTextureUsageLiterals[]> {
+        return new Texture(gpu, format,sampleCount,usages,size)
     }
     constructor(
         public gpu:GPU,
         public format: F,
         private sampleCount = 1,
         public usages: U,
-        public size: GPUExtent3DStrict = {width:300,height:300}) {
+        public readonly size: [number,number,number] = [300,300,1]) {
             this.texture = this.createTexture();
         }
-        toBitmap() {
+        toBitmap(depth=0) {
             const renderPass: RenderPass = this.renderPasses.values().next().value;
     
             //Use for debugging purpose.
@@ -67,22 +69,28 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
             setTimeout(() => {
                 const encoder = this.gpu.device.createCommandEncoder();
                 const buffer = this.gpu.device.createBuffer({
-                    size: renderPass.size.height * renderPass.size.width * bytes_per_fixel,
+                    size: renderPass.size[0] * renderPass.size[1] * bytes_per_fixel,
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
                 })
                 encoder.copyTextureToBuffer({
-                    texture: this.texture
-                }, { buffer: buffer, bytesPerRow: renderPass.size.width * bytes_per_fixel },
-                    [renderPass.size.width, renderPass.size.height, 1]);
+                    texture: this.texture,
+                    origin:[0,0,depth]
+                },
+                {
+                    buffer: buffer,
+                    bytesPerRow: renderPass.size[0] * bytes_per_fixel,
+                    rowsPerImage:renderPass.size[1]
+                },
+                    [renderPass.size[0], renderPass.size[1]]);
                     this.gpu.device.queue.submit([encoder.finish()]);
                 buffer.mapAsync(GPUMapMode.READ).then(() => {
-                    const c = new OffscreenCanvas(renderPass.size.width, renderPass.size.height);
+                    const c = new OffscreenCanvas(renderPass.size[0], renderPass.size[1]);
                     const ctx = c.getContext('2d');
                     const imageData = ctx!.createImageData(c.width, c.height);
                     let data:Uint8ClampedArray;
                     if(bytes_per_fixel > 4) {
                         const floatData=new Float32Array(buffer.getMappedRange());
-                        data = new Uint8ClampedArray(renderPass.size.width * renderPass.size.height * 4);
+                        data = new Uint8ClampedArray(renderPass.size[0] * renderPass.size[1] * 4);
                         for(let i=0;i<data.length;i+=4) {
                             const index=i;
                             const length=Math.sqrt(floatData[index]!*floatData[index]! + floatData[index+1]!*floatData[index+1]! + floatData[index+2]!*floatData[index+2]!);
