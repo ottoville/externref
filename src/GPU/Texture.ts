@@ -1,9 +1,9 @@
 import { RenderPass } from "./RenderPass.js";
 import { GPU } from "../GPU.js";
-import { GPUTextureUsage } from "../GPU.js";
-export class Texture<F extends GPUTextureFormat, U = {}> {
-    //@ts-ignore
-    _usages:U
+
+export type GPUTextureUsageLiterals= 'COPY_SRC' | 'COPY_DST' | 'SAMPLED' | 'STORAGE' | 'RENDER_ATTACHMENT';
+
+export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLiterals[]> {
     texture: GPUTexture;
     view: GPUTextureView;
     renderPasses: Set<RenderPass> = new Set();
@@ -17,27 +17,26 @@ export class Texture<F extends GPUTextureFormat, U = {}> {
         }
 
         if (debug)
-            this.usages.push(GPUTextureUsage.COPY_SRC);
-
+            this.usages.push('COPY_SRC');
         this.texture = this.gpu.device.createTexture({
             size:this.size, sampleCount:this.sampleCount, format:this.format,
-            usage:this.usages.reduce((prev, curr) => prev | curr, 0),
+            usage:this.usages.reduce((prev, curr) => prev | GPUTextureUsage[curr], 0),
         });
         this.view = this.texture.createView();
         return [this.view, this.texture] as const;
     }
-    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount:number): Texture<F, GPUTextureSampled>
-    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount:number): Texture<F,GPUTextureRenderAttachment>
-    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount:number): Texture<F, GPUTextureSampled & GPUTextureRenderAttachment>
-    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount:number): Texture<F, GPUTextureSampled & GPUTextureRenderAttachment & GPUTextureCopySrc>
-    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: number[], sampleCount = 1): Texture<F> {
-        return new Texture<F>(gpu, format,sampleCount,usages)
+    static create<U extends ['SAMPLED'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U, sampleCount:number): Texture<F, U>
+    static create<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U, sampleCount:number): Texture<F,U>
+    static create<U extends ['SAMPLED' | 'RENDER_ATTACHMENT', 'SAMPLED' | 'RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U, sampleCount:number): Texture<F, U>
+    static create<U extends ['SAMPLED' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'SAMPLED' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'SAMPLED' | 'RENDER_ATTACHMENT' | 'COPY_SRC'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U, sampleCount:number): Texture<F, U>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: GPUTextureUsageLiterals[], sampleCount = 1): Texture<F, GPUTextureUsageLiterals[]> {
+        return new Texture(gpu, format,sampleCount,usages)
     }
     constructor(
         public gpu:GPU,
         public format: F,
         private sampleCount = 1,
-        public usages: number[],
+        public usages: U,
         public size: GPUExtent3DStrict = {width:300,height:300}) {
             [this.view, this.texture] = this.createTexture();
         }
@@ -109,13 +108,4 @@ export class Texture<F extends GPUTextureFormat, U = {}> {
                 }, 100)
             }, 100)
         }
-}
-export interface GPUTextureSampled {
-    sampled: 'true';
-}
-export interface GPUTextureRenderAttachment {
-    RenderAttachment: 'true';
-}
-export interface GPUTextureCopySrc {
-    CopySrc: 'true';
 }

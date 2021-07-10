@@ -5,14 +5,14 @@ import type { RenderPipeline } from "./RenderPipeline.js";
 import type { Drawable } from "./Drawable.js";
 import { RenderTarget } from "./RenderTarget.js";
 import { PipelineLayout } from "./PipelineLayout.js";
-import { Texture } from "./texture.js";
+import { GPUTextureUsageLiterals, Texture } from "./texture.js";
 
 interface RenderPipelineVariant2 {
     renderpipeline: GPURenderPipeline;
     drawables: Map<Scene, Set<Drawable>>
     rootDrawables: Set<Drawable>
 }
-export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTextureFormat>> } = { [index: string]: RenderTarget<Texture<GPUTextureFormat>> }> {
+export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> } = { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> }> {
     cameras: Set<TerraCamera> = new Set();
     scenes: Set<Scene> = new Set();
     #depthTextureView?: GPUTextureView
