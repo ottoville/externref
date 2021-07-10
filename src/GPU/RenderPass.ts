@@ -110,12 +110,10 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         if (typeof this.renderTargets.swap !== 'undefined') {
             colorAttachments.push(this.sampleCount > 1 ? {
                 view: this.renderTargets.swap.texture.view,
-                //@ts-expect-error
                 resolveTarget: this.gpu.context.getCurrentTexture().createView(),
                 loadValue: this.renderTargets.swap.loadValue,
                 storeOp: "store"
             } : {
-                //@ts-expect-error
                 view: this.gpu.context.getCurrentTexture().createView(),
                 loadValue: this.renderTargets.swap.loadValue,
                 storeOp: "store"

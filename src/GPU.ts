@@ -38,7 +38,7 @@ export class GPU {
     readonly #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
     readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
-    swapChain: GPUSwapChain;
+
     readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
     readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
 
@@ -91,7 +91,7 @@ export class GPU {
     }>;
 
     readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<'bgra8unorm',['RENDER_ATTACHMENT']>>; }>;
-    context: GPUCanvasContext;
+    context: GPUPresentationContext;
     projectionUniformsBuffer: GPUUniformBuffer;
 
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
@@ -248,8 +248,7 @@ export class GPU {
             throw ('Unable to get webgpu context');
         this.context = context
 
-        //@ts-expect-error
-        this.swapChain = context.configure({
+        context.configure({
             device: device,
             format: "bgra8unorm",
             usage: GPUTextureUsage.RENDER_ATTACHMENT

@@ -26,9 +26,6 @@ interface GPUCopyDSTBuffer extends GPUBuffer {
     CopyDST: 'true';
 }
 
-interface TerraGPUTextureView<T extends GPUTexture> extends GPUTextureView {
-    brand:T
-}
 type storageBindGroupLayout = {
     binding: number;
     resource: GPUSampler | GPUTextureView | {

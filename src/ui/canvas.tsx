@@ -296,8 +296,7 @@ export class Canvas extends TerraCompoment {
                 gpu.scale.x = this.#canvasElem.width / entry.contentRect.width;
                 gpu.scale.y = this.#canvasElem.height / entry.contentRect.height;
                 // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
-                //@ts-expect-error
-                gpu.swapChain = gpu.context.configure({
+                gpu.context.configure({
                     device: device,
                     format: "bgra8unorm",
                     usage: GPUTextureUsage.RENDER_ATTACHMENT
