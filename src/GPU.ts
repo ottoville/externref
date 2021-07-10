@@ -88,16 +88,17 @@ export class GPU {
         y: 1
     }
     readonly renderPassScreen: RenderPass<{
-        gRenderTargetNormals: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'>>;
-        gRenderTargetPositions: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'> & GPUTextureCopySrc<'rgba32float'>>;
-        gRenderTargetDiffuse: RenderTarget<GPUTextureSampled<'bgra8unorm'> & GPUTextureRenderAttachment<'bgra8unorm'>>;
+        gRenderTargetNormals: RenderTarget<Texture<'rgba32float', GPUTextureSampled & GPUTextureRenderAttachment>>;
+        gRenderTargetPositions: RenderTarget<Texture<'rgba32float', GPUTextureSampled & GPUTextureRenderAttachment & GPUTextureCopySrc>>;
+        gRenderTargetDiffuse: RenderTarget<Texture<'bgra8unorm', GPUTextureSampled & GPUTextureRenderAttachment>>;
     }>;
     readonly renderPassWater: RenderPass<{
-        normals: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'>>;
-        position: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'>>;
-        diffuse: RenderTarget<GPUTextureSampled<'bgra8unorm'> & GPUTextureRenderAttachment<'bgra8unorm'>>;
+        normals: RenderTarget<Texture<"rgba32float", GPUTextureSampled & GPUTextureRenderAttachment>>;
+        position: RenderTarget<Texture<"rgba32float", GPUTextureSampled & GPUTextureRenderAttachment>>;
+        diffuse: RenderTarget<Texture<"bgra8unorm", GPUTextureSampled & GPUTextureRenderAttachment>>;
     }>;
-    readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<GPUTextureRenderAttachment<'bgra8unorm'>>; }>;
+
+    readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<'bgra8unorm',GPUTextureRenderAttachment>>; }>;
     context: GPUCanvasContext;
     projectionUniformsBuffer: GPUUniformBuffer;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
@@ -239,6 +240,10 @@ export class GPU {
        
         const canvasTexture = Texture.create(this,"bgra8unorm",[GPUTextureUsage.RENDER_ATTACHMENT],1)
 
+      /*  const testf=(t: Texture<"bgra8unorm", GPUTextureRenderAttachment>) => {
+            console.log(t);
+        }
+        testf(canvasTexture)*/
         this.renderPassCanvas = new RenderPass(this, {
             swap: this.addTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 })
         }, 1, false, { width: canvas.width, height: canvas.height },

@@ -1,7 +1,9 @@
 import { RenderPass } from "./RenderPass.js";
 import { GPU } from "../GPU.js";
 import { GPUTextureUsage } from "../GPU.js";
-export class Texture<F extends GPUTextureFormat> {
+export class Texture<F extends GPUTextureFormat, U = {}> {
+    //@ts-ignore
+    _usages:U
     texture: GPUTexture;
     view: GPUTextureView;
     renderPasses: Set<RenderPass> = new Set();
@@ -24,10 +26,10 @@ export class Texture<F extends GPUTextureFormat> {
         this.view = this.texture.createView();
         return [this.view, this.texture] as const;
     }
-    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount:number): GPUTextureSampled<F>
-    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount:number): GPUTextureRenderAttachment<F>
-    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount:number): GPUTextureSampled<F> & GPUTextureRenderAttachment<F>
-    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount:number): GPUTextureSampled<F> & GPUTextureRenderAttachment<F> & GPUTextureCopySrc<F>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount:number): Texture<F, GPUTextureSampled>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount:number): Texture<F,GPUTextureRenderAttachment>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount:number): Texture<F, GPUTextureSampled & GPUTextureRenderAttachment>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount:number): Texture<F, GPUTextureSampled & GPUTextureRenderAttachment & GPUTextureCopySrc>
     static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: number[], sampleCount = 1): Texture<F> {
         return new Texture<F>(gpu, format,sampleCount,usages)
     }
@@ -108,12 +110,12 @@ export class Texture<F extends GPUTextureFormat> {
             }, 100)
         }
 }
-export interface GPUTextureSampled<F extends GPUTextureFormat> extends Texture<F> {
+export interface GPUTextureSampled {
     sampled: 'true';
 }
-export interface GPUTextureRenderAttachment<F extends GPUTextureFormat> extends Texture<F> {
+export interface GPUTextureRenderAttachment {
     RenderAttachment: 'true';
 }
-export interface GPUTextureCopySrc <F extends GPUTextureFormat> extends Texture<F> {
+export interface GPUTextureCopySrc {
     CopySrc: 'true';
 }
