@@ -1,9 +1,8 @@
 import { Texture } from "./texture";
-//@ts-ignore
-export class RenderTarget<T extends GPUTexture> {
+export class RenderTarget<T extends Texture<GPUTextureFormat>> {
 
     constructor(
-        public readonly texture: Texture<GPUTextureFormat>,
+        public readonly texture: T,
         public loadValue: GPULoadOp | GPUColor,
     ) {
 

@@ -4,7 +4,7 @@ import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import type { BoundableNode } from "./DataNode.js";
-import { Texture } from "./GPU/texture.js";
+import { GPUTextureCopySrc, GPUTextureRenderAttachment, GPUTextureSampled, Texture } from "./GPU/texture.js";
 
 export const GPUBufferUsage = {
     MAP_READ: 0x0001,
@@ -19,13 +19,21 @@ export const GPUBufferUsage = {
     QUERY_RESOLVE: 0x0200
 } as const
 
+export const GPUTextureUsage = {
+    COPY_SRC: 0x0001,
+    COPY_DST:  0x0002,
+    SAMPLED: 0x0004,
+    STORAGE: 0x0008,
+    RENDER_ATTACHMENT:0x0010
+  } as const;
+
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
 };
 type RenderTargetView =
 {
     binding: number,
-    resource: RenderTarget<GPUTexture>
+    resource: RenderTarget<Texture<GPUTextureFormat>>
 };
 type MapToGPUBindGroupEntry<T> = { [K in keyof T]:  T[K] extends GPUBindGroupTextureEntry ? RenderTargetView : GPUBindGroupEntry };
 type extractGeneric<Type> = Type extends BindGroupLayout<infer X> ? X : never
@@ -81,7 +89,7 @@ export class GPU {
     }
     readonly renderPassScreen: RenderPass<{
         gRenderTargetNormals: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'>>;
-        gRenderTargetPositions: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'> & GPUTextureCopySrc>;
+        gRenderTargetPositions: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'> & GPUTextureCopySrc<'rgba32float'>>;
         gRenderTargetDiffuse: RenderTarget<GPUTextureSampled<'bgra8unorm'> & GPUTextureRenderAttachment<'bgra8unorm'>>;
     }>;
     readonly renderPassWater: RenderPass<{
@@ -89,7 +97,7 @@ export class GPU {
         position: RenderTarget<GPUTextureSampled<'rgba32float'> & GPUTextureRenderAttachment<'rgba32float'>>;
         diffuse: RenderTarget<GPUTextureSampled<'bgra8unorm'> & GPUTextureRenderAttachment<'bgra8unorm'>>;
     }>;
-    readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<GPUTextureSampled<'bgra8unorm'>>; }>;
+    readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<GPUTextureRenderAttachment<'bgra8unorm'>>; }>;
     context: GPUCanvasContext;
     projectionUniformsBuffer: GPUUniformBuffer;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
@@ -208,22 +216,31 @@ export class GPU {
             }
         ));
 
-
+        const normalTexture = Texture.create(this,"rgba32float",[GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED],1)
+        const positionTexture = Texture.create(this,"rgba32float",[GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED, GPUTextureUsage.COPY_SRC],1)
+        const diffuseTexture = Texture.create(this,"bgra8unorm",[GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED],1)
         this.renderPassScreen = new RenderPass(this, {
-            gRenderTargetNormals: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
-            gRenderTargetPositions: this.addTarget("rgba32float", { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED, GPUTextureUsage.COPY_SRC]),
-            gRenderTargetDiffuse: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
+            gRenderTargetNormals: this.addTarget(normalTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
+            gRenderTargetPositions: this.addTarget(positionTexture, { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }),
+            gRenderTargetDiffuse: this.addTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 })
         }, 1, true, { width: canvas.width, height: canvas.height },
             (w, h) => {
                 return [w, h]
             });
+        const normalTextureWater = Texture.create(this,"rgba32float",[GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED],1)
+        const positionTextureWater = Texture.create(this,"rgba32float",[GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED],1)
+        const diffuseTextureWater = Texture.create(this,"bgra8unorm",[GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED],1)
+    
         this.renderPassWater = new RenderPass(this, {
-            normals: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1),
-            position: this.addTarget("rgba32float", { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED]),
-            diffuse: this.addTarget("bgra8unorm", { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT, GPUTextureUsage.SAMPLED], 1)
-        }, 1, false, { width: canvas.width, height: canvas.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED)
+            normals: this.addTarget(normalTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
+            position: this.addTarget(positionTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
+            diffuse: this.addTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
+        }, 1, false, { width: canvas.width, height: canvas.height }, (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED);
+       
+        const canvasTexture = Texture.create(this,"bgra8unorm",[GPUTextureUsage.RENDER_ATTACHMENT],1)
+
         this.renderPassCanvas = new RenderPass(this, {
-            swap: this.addTarget("bgra8unorm", { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, [GPUTextureUsage.RENDER_ATTACHMENT], 1)
+            swap: this.addTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 })
         }, 1, false, { width: canvas.width, height: canvas.height },
             (w, h) => {
                 return [w, h]
@@ -304,12 +321,7 @@ export class GPU {
         }
         GPU.instance = this;
     }
-    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount?: number): RenderTarget<GPUTextureSampled<F>>
-    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureRenderAttachment<F>>
-    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureSampled<F> & GPUTextureRenderAttachment<F>>
-    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount?: number): RenderTarget<GPUTextureSampled<F> & GPUTextureRenderAttachment<F> & GPUTextureCopySrc>
-    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: GPUTextureUsageFlags[] = [GPUTextureUsage.RENDER_ATTACHMENT], sampleCount = 1): RenderTarget<GPUTexture> {
-        const texture = new Texture(this,{width:300,height:300},format,sampleCount,usages)
+    addTarget<T extends Texture<GPUTextureFormat>>(texture:T, loadValue: GPULoadOp | GPUColor): RenderTarget<T> {
         return new RenderTarget(texture, loadValue)
     }
 
@@ -450,13 +462,6 @@ export class GPU {
             this.#bufferSizes.set(buff, size);
         return buff;
     }
-
-    createGPUTexture<F extends GPUTextureFormat>(size: GPUExtent3DStrict, format: F, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount?: number): Texture<F>
-    createGPUTexture<F extends GPUTextureFormat>(size: GPUExtent3DStrict, format: F, usages: number[], sampleCount?: number): Texture<F>
-    createGPUTexture<F extends GPUTextureFormat>(size: GPUExtent3DStrict, format: F, usages: number[], sampleCount = 1): Texture<F> {
-        return new Texture(this,size,format,sampleCount,usages)
-    }
-
 
     createCopy<T extends GPUCopySRCBuffer[]>(commandEncoder: GPUCommandEncoder, ...buffers: T): CopyBuffers<T> {
         const readBuffers: (GPUMapReadBuffer & GPUCopyDSTBuffer)[] = [];

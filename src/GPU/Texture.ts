@@ -1,8 +1,8 @@
 import { RenderPass } from "./RenderPass.js";
 import { GPU } from "../GPU.js";
-
+import { GPUTextureUsage } from "../GPU.js";
 export class Texture<F extends GPUTextureFormat> {
-    texture: GPUTextureSampled | GPUTexture;
+    texture: GPUTexture;
     view: GPUTextureView;
     renderPasses: Set<RenderPass> = new Set();
     createTexture(debug=false) {
@@ -24,13 +24,19 @@ export class Texture<F extends GPUTextureFormat> {
         this.view = this.texture.createView();
         return [this.view, this.texture] as const;
     }
-
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount:number): GPUTextureSampled<F>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount:number): GPUTextureRenderAttachment<F>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount:number): GPUTextureSampled<F> & GPUTextureRenderAttachment<F>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount:number): GPUTextureSampled<F> & GPUTextureRenderAttachment<F> & GPUTextureCopySrc<F>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: number[], sampleCount = 1): Texture<F> {
+        return new Texture<F>(gpu, format,sampleCount,usages)
+    }
     constructor(
         public gpu:GPU,
-        public size: GPUExtent3DStrict,
         public format: F,
         private sampleCount = 1,
-        public usages: number[]) {
+        public usages: number[],
+        public size: GPUExtent3DStrict = {width:300,height:300}) {
             [this.view, this.texture] = this.createTexture();
         }
         toBitmap() {
@@ -101,4 +107,13 @@ export class Texture<F extends GPUTextureFormat> {
                 }, 100)
             }, 100)
         }
+}
+export interface GPUTextureSampled<F extends GPUTextureFormat> extends Texture<F> {
+    sampled: 'true';
+}
+export interface GPUTextureRenderAttachment<F extends GPUTextureFormat> extends Texture<F> {
+    RenderAttachment: 'true';
+}
+export interface GPUTextureCopySrc <F extends GPUTextureFormat> extends Texture<F> {
+    CopySrc: 'true';
 }
