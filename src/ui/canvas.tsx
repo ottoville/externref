@@ -58,11 +58,11 @@ export class Canvas extends TerraCompoment {
 
         //@ts-ignore
         window.printRenderTarget = () => {
-            gpu.renderPassScreen.renderTargets.gRenderTargetNormals.toBitmap()
+            gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.toBitmap()
         }
         //@ts-ignore
         window.printRenderTarget2 = () => {
-            gpu.renderPassScreen.renderTargets.gRenderTargetPositions.toBitmap()
+            gpu.renderPassScreen.renderTargets.gRenderTargetPositions.texture.toBitmap()
         }
 
         this.progress = 6;

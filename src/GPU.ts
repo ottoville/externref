@@ -4,6 +4,7 @@ import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import type { BoundableNode } from "./DataNode.js";
+import { Texture } from "./GPU/texture.js";
 
 export const GPUBufferUsage = {
     MAP_READ: 0x0001,
@@ -307,8 +308,9 @@ export class GPU {
     addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureRenderAttachment<F>>
     addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT], sampleCount?: number): RenderTarget<GPUTextureSampled<F> & GPUTextureRenderAttachment<F>>
     addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: [typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC, typeof GPUTextureUsage.SAMPLED | typeof GPUTextureUsage.RENDER_ATTACHMENT | typeof GPUTextureUsage.COPY_SRC], sampleCount?: number): RenderTarget<GPUTextureSampled<F> & GPUTextureRenderAttachment<F> & GPUTextureCopySrc>
-    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: GPUTextureUsageFlags[], sampleCount = 1): RenderTarget<GPUTexture> {
-        return new RenderTarget(this, format, loadValue, usages.reduce((prev, curr) => prev | curr, GPUTextureUsage.RENDER_ATTACHMENT), sampleCount)
+    addTarget<F extends GPUTextureFormat>(format: F, loadValue: GPULoadOp | GPUColor, usages: GPUTextureUsageFlags[] = [GPUTextureUsage.RENDER_ATTACHMENT], sampleCount = 1): RenderTarget<GPUTexture> {
+        const texture = new Texture(this,{width:300,height:300},format,sampleCount,usages)
+        return new RenderTarget(texture, loadValue)
     }
 
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(label:string,...entries: T): BindGroupLayout<{ [K in keyof T]: T[K] extends {texture:GPUTextureBindingLayout} ? GPUBindGroupTextureEntry<T[K]['texture']['sampleType']>:GPUBindGroupEntry }>{
@@ -321,8 +323,8 @@ export class GPU {
             //@ts-expect-error
             layout: layout.layout, entries: (entries as GPUBindGroupEntry[]).map<GPUBindGroupEntry>(entry => {
                 if (entry.resource instanceof RenderTarget) {
-                    entry.resource.renderPasses.add(renderPass);
-                    entry.resource = entry.resource.view;
+                    entry.resource.texture.renderPasses.add(renderPass);
+                    entry.resource = entry.resource.texture.view;
                 }
                 return entry as GPUBindGroupEntry;
             })
@@ -449,15 +451,12 @@ export class GPU {
         return buff;
     }
 
-    createGPUTexture<F extends GPUTextureFormat>(size: GPUExtent3DStrict, format: GPUTextureFormat, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount?: number): GPUTextureSampled<F>
-    createGPUTexture(size: GPUExtent3DStrict, format: GPUTextureFormat, usages: number[], sampleCount?: number): GPUTexture
-    createGPUTexture(size: GPUExtent3DStrict, format: GPUTextureFormat, usages: number[], sampleCount = 1): GPUTexture {
-        const usage = usages.reduce((prev, curr) => prev | curr, 0);
-        return this.device.createTexture({
-            size, sampleCount, format,
-            usage,
-        });
+    createGPUTexture<F extends GPUTextureFormat>(size: GPUExtent3DStrict, format: F, usages: [typeof GPUTextureUsage.SAMPLED], sampleCount?: number): Texture<F>
+    createGPUTexture<F extends GPUTextureFormat>(size: GPUExtent3DStrict, format: F, usages: number[], sampleCount?: number): Texture<F>
+    createGPUTexture<F extends GPUTextureFormat>(size: GPUExtent3DStrict, format: F, usages: number[], sampleCount = 1): Texture<F> {
+        return new Texture(this,size,format,sampleCount,usages)
     }
+
 
     createCopy<T extends GPUCopySRCBuffer[]>(commandEncoder: GPUCommandEncoder, ...buffers: T): CopyBuffers<T> {
         const readBuffers: (GPUMapReadBuffer & GPUCopyDSTBuffer)[] = [];

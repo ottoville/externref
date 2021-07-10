@@ -33,10 +33,10 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
         private _onResize: (width: number, height: number) => [number, number],
         private usage: number = 0) {
         for (const key in renderTargets) {
-            this.colorFormats.push(renderTargets[key]!.format);
-            renderTargets[key]!.renderPasses.add(this);
-            renderTargets[key]!.writableRenderPass = this;
-            renderTargets[key]!.createTexture();
+            this.colorFormats.push(renderTargets[key]!.texture.format);
+            renderTargets[key]!.texture.renderPasses.add(this);
+            renderTargets[key]!.texture.size=this.size;
+            renderTargets[key]!.texture.createTexture();
         }
 
         if (depthStencil) {
@@ -100,14 +100,15 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
             this.#depthTextureView = this.#depthTexture.createView();
         }
         for (const key in this.renderTargets) {
-            this.renderTargets[key]!.createTexture();
+            this.renderTargets[key]!.texture.size=this.size;
+            this.renderTargets[key]!.texture.createTexture();
         }
     }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const colorAttachments: GPURenderPassColorAttachment[] = []
         if (typeof this.renderTargets.swap !== 'undefined') {
             colorAttachments.push(this.sampleCount > 1 ? {
-                view: this.renderTargets.swap.view,
+                view: this.renderTargets.swap.texture.view,
                 //@ts-expect-error
                 resolveTarget: this.gpu.context.getCurrentTexture().createView(),
                 loadValue: this.renderTargets.swap.loadValue,
@@ -123,7 +124,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
                 if (key === 'swap')
                     continue;
                 colorAttachments.push({
-                    view: this.renderTargets[key]!.view,
+                    view: this.renderTargets[key]!.texture.view,
                     loadValue: this.renderTargets[key]!.loadValue,
                     storeOp: "store" as const,
                 })
@@ -131,7 +132,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<GPUTexture> } 
         } else {
             for (const key in this.renderTargets) {
                 colorAttachments.push({
-                    view: this.renderTargets[key]!.view,
+                    view: this.renderTargets[key]!.texture.view,
                     loadValue: this.renderTargets[key]!.loadValue,
                     storeOp: "store" as const,
                 })
