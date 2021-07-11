@@ -64,21 +64,28 @@ fn getClusterIndex(pixelCoord:vec3<f32>) -> u32 {
                         (numClusters.x * numClusters.y) * clusters.z;
     return clusterIndex;
 }
-fn getTile(fragCoord : vec4<f32>) -> vec3<u32> {
+fn getTile(fragCoord : vec3<f32>) -> vec3<u32> {
   // TODO: move to uniform
-  let tileCount:vec3<u32>=vec3<u32>(u32(100),u32(100),u32(100));
+  let tileCount:vec3<f32>=vec3<f32>(100.0,100.0,100.0);
 
   // TODO: scale and bias calculation can be moved outside the shader to save cycles.
-  let sliceScale : f32 = f32(tileCount.z) / log2(projection.zFar / projection.zNear);
-  let sliceBias : f32 = -(f32(tileCount.z) * log2(projection.zNear) / log2(projection.zFar / projection.zNear));
-  let zTile : u32 = u32(max(log2(fragCoord.z) * sliceScale + sliceBias, 0.0));
+  let sliceScale = tileCount.z / log2(projection.zFar / projection.zNear);
+  let sliceBias = -(tileCount.z * log2(projection.zNear) / log2(projection.zFar / projection.zNear));
+  //let zTile = u32(max(log2(fragCoord.z) * sliceScale + sliceBias, 0.0));
   // For logarithmic z buffer use linearDepth
-  //let zTile : u32 = u32(max(log2(linearDepth(fragCoord.z)) * sliceScale + sliceBias, 0.0));
-  return vec3<u32>(u32(fragCoord.x / (f32(projection.screenDimensions.x) / f32(tileCount.x))),
-                   u32(fragCoord.y / (f32(projection.screenDimensions.y) / f32(tileCount.y))),
-                   zTile);
+  let zTile : u32 = u32(max(log2(linearDepth(fragCoord.z)) * sliceScale + sliceBias, 0.0));
+  let pos: vec2<f32> = fragCoord.xy / (projection.screenDimensions / tileCount.xy);
+  return vec3<u32>(u32(pos.x),u32(pos.y),zTile);
+
+  //return vec3<u32>(u32(fragCoord.x / (f32(projection.screenDimensions.x) / f32(tileCount.x))),
+   //                u32(fragCoord.y / (f32(projection.screenDimensions.y) / f32(tileCount.y))),
+   //                zTile);
 }
-  let colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
+
+[[stage(fragment)]]
+fn main([[builtin(position)]] fragCoord : vec4<f32>, [[location(0)]] uv:vec2<f32>) -> Output {
+
+  var colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
       vec3<f32>(1.0, 0.0, 0.0),
       vec3<f32>(1.0, 0.5, 0.0),
       vec3<f32>(0.5, 1.0, 0.0),
@@ -89,8 +96,7 @@ fn getTile(fragCoord : vec4<f32>) -> vec3<u32> {
       vec3<f32>(0.5, 0.0, 1.0),
       vec3<f32>(1.0, 0.0, 0.5)
     );
-[[stage(fragment)]]
-fn main([[location(0)]] uv:vec2<f32>) -> Output {
+
   var output:Output;
   let sunOffset:u32 = 0u;
 
@@ -99,8 +105,7 @@ fn main([[location(0)]] uv:vec2<f32>) -> Output {
     output.Color=vec4<f32>(diffuse.xyz,1.0);
     return output;
   }
-  let normal:vec4<f32> = normalize(textureSample(normalTexture, mySampler, uv));
-  let normal2:vec3<f32> = textureSample(normalTexture, mySampler, uv).xyz;
+  let normal:vec4<f32> = textureSample(normalTexture, mySampler, uv);
 
   let shadingDun :f32 = dot(normal.xyz,meshes.mesh[sunOffset].position[12].xyz)*meshes.mesh[sunOffset].shadow;
   //output.Color = vec4<f32>(lights.light[sunOffset].ambient + (diffuse.xyz * shadingDun),1.0);
@@ -111,18 +116,19 @@ fn main([[location(0)]] uv:vec2<f32>) -> Output {
   for (var lightPointerIndex : u32 = 0u; lightPointerIndex < lights.lights_count; lightPointerIndex = lightPointerIndex + 1u) {
       let lightIndex:u32 = lights.light[lightPointerIndex];
       var light:vec3<f32> = meshes.mesh[lightIndex].position[12].xyz;
-      //light.y=400.0;
 
       var lightDir:vec3<f32> = light - frust_position;
-      shading = max(dot(normal2.xyz, normalize(lightDir)),0.0);
+      shading = max(dot(normal.xyz, normalize(lightDir)),0.0);
       color=color+ vec3<f32>(shading, shading, shading);
   }
-  //var tile : vec3<u32> = getTile(frust_position);
-  //output.Color = vec4<f32>(colorSet[tile.z % 9u], 1.0);
   //output.Color=vec4<f32>(color,1.0);
   let testAmbient=vec3<f32>(0.0,0.0,0.0);
   //output.Color=vec4<f32>(testAmbient+(diffuse.xyz*color),1.0);
   output.Color=vec4<f32>(testAmbient+(vec3<f32>(0.0,1.0,0.0)*color),1.0);
+
+  //let tile : vec3<u32> = getTile(vec3<f32>(fragCoord.xy,normal.w));
+  //output.Color = vec4<f32>(colorSet[tile.z % 9u], 1.0);
+
 
   return output;
 }

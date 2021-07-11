@@ -21,9 +21,6 @@
 //[[binding(0), set(1)]] var<uniform> lights : Lights;
 [[binding(0), group(1)]] var<uniform> worldposition : WorldPosition;
 
-
-
-
 struct Output {
   [[builtin(position)]] Position : vec4<f32>;
   [[location(0)]] v_uv : vec2<f32>;
