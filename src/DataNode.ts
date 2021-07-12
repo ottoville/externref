@@ -32,7 +32,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     protected readonly colliderVertices: TerraVector4[] = [];
 
 
-    readonly #faces: Triangle[] = new Array(this.faces_count);
+    readonly #triangleFaces: Triangle[] = [];
     #lastColliderTransformMatrix = new TerraMatrix();
 
     //readonly facesBuffer = new SharedArrayBuffer(this.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT);
@@ -53,7 +53,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         point_light = 0
 
     ) {
-        super(scene.engine, renderPipeline, positionCount, true, verticesPositionStride, point_light);
+        super(scene.engine, renderPipeline, positionCount, true,true, verticesPositionStride, point_light);
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
             if(propDesc)
@@ -95,13 +95,13 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         const memory = this.engine.wasm.memory.buffer;
         if (vectors.length != 3)
             throw ('less than 3 vector')
-        this.#faces[faceIndex] = new Triangle(
+        this.#triangleFaces[faceIndex] = new Triangle(
             vectors,
             new TerraVector4(memory, facesBufferColliderPointer + faceIndex * 4 * 7)
         );
         new Uint32Array(memory, facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT, 3).set(vectors.map(v => v.byteOffset)); //4 is from plane
     }
-    abstract rebuildTrianglePlanes: () => void
+    abstract rebuildTrianglePlanes() : void
 
 
     getPosition = (index: number) => {
@@ -166,14 +166,13 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
                collider._testTriangle(triangle);
            });*/
         // console.log('cpu took', performance.now() - timer);
-        // let timer = performance.now();
-        // for (let i = 0; i < 20;i++)
-        try {
-            this.engine.wasm.testTriangles(this.facesBufferColliderPointer.byteOffset,this.facesBufferColliderPointerParallel.byteOffset, this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/, this.id);
-        } catch(e) {
-            console.error(e);
-            console.log(this.engine.wasm.memory.buffer)
-        }
+
+            this.engine.wasm.testTriangles(
+                this.facesBufferColliderPointer.byteOffset,
+                this.facesBufferColliderPointerParallel.byteOffset,
+                this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/,
+                this.id);
+
         if (!this.engine.collisionNotFound.getUint32(0, false)) {
             //console.log(new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer, this.#faces.length * 7)) //4 is for simd
             console.log('collided')
@@ -184,7 +183,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         if (this.faces_count % 4 === 0) {
             this.#faceQuatros.length=0;
             let faceQuatro: Triangle[] = [];
-            this.#faces.forEach(face => {
+            this.#triangleFaces.forEach(face => {
                 if (faceQuatro.push(face) === 4) {
                     this.#faceQuatros.push(faceQuatro as [Triangle, Triangle, Triangle, Triangle])
                     faceQuatro = [];
@@ -230,7 +229,7 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
         this.rebuildTrianglePlanes();
     }
 
-    rebuildTrianglePlanes = () => {
+    rebuildTrianglePlanes() {
         const facesBufferColliderPointer = this.initCollider();
         
         let vectors: TerraVector4[] = [];
@@ -271,9 +270,15 @@ export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
         strip = false,
     ) {
         super(scene, renderPipeline, positionCount,verticesPositionStride, strip);
+        Object.getOwnPropertyNames(BoundableNodeSimple.prototype).forEach(prop =>  {
+            const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeSimple.prototype, prop);
+            if(propDesc)
+                Object.defineProperty(this, prop, propDesc);
+        })
+
         this.rebuildTrianglePlanes();
     }
-    rebuildTrianglePlanes = () => {
+    rebuildTrianglePlanes() {
         const facesBufferColliderPointer = this.initCollider();
         let vectors: TerraVector4[] = [];
         let faceIndex = 0;

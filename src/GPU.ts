@@ -130,20 +130,20 @@ export class GPU {
                 binding: 0,
                 visibility: GPUShaderStage.FRAGMENT,
                 sampler: {
-
+                    type:'non-filtering'
                 }
             },
             {
                 binding: 1,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
-                    sampleType:'unfilterable-float'
-                }
+                    sampleType:'float'
+                },
             }, {
                 binding: 2,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
-                    sampleType:'unfilterable-float'
+                    sampleType:'float'
                 }
             },
             {
@@ -170,7 +170,7 @@ export class GPU {
                 buffer: {
                     type: "uniform"
                 }
-            }               
+            }
         );
         this.rootLayout = new PipelineLayout(this, BindGroupLayoutCanvas);
         const BindGroupLayoutPosition= this.createBindGroupLayout(

@@ -44,8 +44,8 @@ export class MainNode extends Mesh {
         this.#onUpdate();
     }
 
-    constructor(public engine: Engine, private hasBounding: boolean, positionsCount = 0, vertices_stride = 3, point_light=0) {
-        super(engine.rustEngine, MainNode.uniqueID++, hasBounding, true, positionsCount, vertices_stride, point_light);
+    constructor(public engine: Engine, private hasBounding: boolean, has_geometry:boolean, positionsCount = 0, vertices_stride = 3, point_light=0) {
+        super(engine.rustEngine, MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light);
         MainNode.Meshes.set(this.id, this);
         queueMicrotask(() => {
             if (this.#hasPhysics()) {
@@ -72,8 +72,8 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
     abstract Drawable: T;
 
-    constructor(engine: Engine, public renderPipeline: RenderPipeline, positionsCount: number, hasBounding = false, vertices_stride = 3, point_light = 0) {
-        super(engine, hasBounding, positionsCount, vertices_stride, point_light);
+    constructor(engine: Engine, public renderPipeline: RenderPipeline, positionsCount: number, hasBounding = false, has_geometry = false, vertices_stride = 3, point_light = 0) {
+        super(engine, hasBounding, has_geometry, positionsCount, vertices_stride, point_light);
         Object.getOwnPropertyNames(TerraNodeGPU.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(TerraNodeGPU.prototype, prop);
             if(propDesc)

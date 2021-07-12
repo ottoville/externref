@@ -57,13 +57,13 @@ export class RenderPipeline {
         drawables.forEach(drawable => drawable.draw(renderPass, renderPassEncoder, BindGroupsStart,dynamicIndices));
         return drawables.size;
     }
-    addDrawableIndirect<T extends GPUIndirectBuffer>(scene: Scene | undefined, renderPasses: Set<RenderPass>, buffer: T, label='unnamed') {
+    addDrawableIndirect<T extends GPUIndirectBuffer>(scene: Scene | undefined, renderPasses: Set<RenderPass>, buffer: T, label:string) {
         return new DrawableIndirect(this, renderPasses, buffer,label, scene);
     }
-    addDrawableSimple(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: TerraNodeGPU<DrawableSimple>, instanceCount = 1, firstVertex = 0, firstInstance = 0, label='unnamed'): DrawableSimple {
+    addDrawableSimple(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: TerraNodeGPU<DrawableSimple>, instanceCount = 1, firstVertex = 0, firstInstance = 0, label:string): DrawableSimple {
         return new DrawableSimple(this, renderPasses, node, label, scene, instanceCount, firstVertex, firstInstance)
     }
-    addDrawableIndexed(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: IndexedNode, indexBuffer?: GPUIndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0,label='unnamed'): DrawableIndexed {
-        return new DrawableIndexed(this, renderPasses, node, indexBuffer, label, scene, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
+    addDrawableIndexed(scene: Scene | undefined, renderPasses: Set<RenderPass>, node: IndexedNode, label:string, indexBuffer?: GPUIndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {
+        return new DrawableIndexed(this, renderPasses, node, label, indexBuffer, scene, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
     }
 }

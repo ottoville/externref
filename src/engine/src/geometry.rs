@@ -10,14 +10,18 @@ pub struct Geometry {
 }
 impl Geometry {
     pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, vertices_amount:usize) -> Self {
-        Geometry {
+        /*
+            TODO: faces_count should take account if mesh is indexed and if its is strip
+        */
+        let faces_count = if has_geometry { vertices_amount / 3} else {0};
+        return Geometry {
             has_geometry,
             bounding_box:BoundingBox::new(has_bounding),
             vertices:Vec::with_capacity(vertices_amount*vertices_stride),
             indices:None,
             vertices_stride,
-            faces:Faces::new()
-        }
+            faces:Faces::new(faces_count)
+        };
     }
     pub fn min(&self) -> Vec3<f32> {
         let mut min_original=Vec3 {
@@ -77,9 +81,9 @@ pub struct Plane {
     pub d:f32
 }
 impl Faces {
-    pub fn new() -> Faces {
+    pub fn new(amount:usize) -> Faces {
         Faces {
-            planes:Vec::new()
+            planes:Vec::with_capacity(amount)
         }
     }
     pub fn set(&mut self, planes:Vec<f32>) {

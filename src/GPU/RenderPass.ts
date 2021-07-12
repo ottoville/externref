@@ -80,7 +80,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         }
         if (this.sampleCount > 1)
             renderPipelineDescriptor.multisample = { count: this.sampleCount };
-
         return this.gpu.device.createRenderPipeline(renderPipelineDescriptor)
     }
 

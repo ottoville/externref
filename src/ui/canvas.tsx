@@ -162,7 +162,7 @@ export class Canvas extends TerraCompoment {
             return [sun.gpu_alignment, ready];
         });
         const debugscene = new Scene('static', gpu, terraEngine, [mainCamera], (scene) => {
-            const sun = new MainNode(scene.engine, false);
+            const sun = new MainNode(scene.engine, false, false);
             sun.get_translation().set([0, 1, 0]);
             sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)

@@ -127,7 +127,7 @@ export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
         readonly buffer: T,
-        public label='unnamed',
+        public label: string,
         scene?: Scene,) {
         super(renderPipeline, renderPasses, scene);
     }
@@ -140,7 +140,7 @@ export class DrawableSimple extends DrawableDirect {
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
         private node: TerraNodeGPU<DrawableSimple>,
-        public label='unnamed',
+        public label:string,
         scene?: Scene,
         instanceCount = 1,
         public firstVertex = 0,
@@ -190,8 +190,8 @@ export class DrawableIndexed extends DrawableDirect {
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
         private node: IndexedNode,
+        public label:string,
         private indexBuffer?: GPUIndexBuffer,
-        public label='unnamed',
         scene?: Scene,
         public baseVertex = 0,
         instanceCount = 1,

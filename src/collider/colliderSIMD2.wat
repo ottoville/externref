@@ -778,6 +778,12 @@
     (local $t0 v128)
     (local $t1 v128)
 
+    local.get $length
+    i32.eqz
+    if
+      return
+    end
+
     local.get $planePosition
     local.get $length 
     i32.add   ;;112

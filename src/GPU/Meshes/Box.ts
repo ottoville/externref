@@ -57,7 +57,7 @@ export class Box extends SimpleMesh {
         scene: Scene,
         point_light = 0
     ) {
-        super(scene, ...create(scene),point_light);
+        super(scene, ...create(scene),'box',point_light);
         this.update_vertices(positions);
     }
 }

@@ -1,6 +1,7 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
+import { Engine } from "./engine.js";
 import { TerraMatrix, TerraVector3, Triangle, Vector3 } from "./Math.js";
 
 
@@ -44,6 +45,8 @@ var intersectBoxAASphere = (boxMin: TerraVector3, boxMax: TerraVector3, sphereCe
 export class Collider {
     //@ts-ignore
     #velocitySquaredLength!: number;
+    intersectionPointWasm: Vector3;
+    nearestDistanceSquared: DataView;
     getLowestRoot (a: number, b: number, c: number, maxR: number) {
 
         var determinant = b * b - 4.0 * a * c;
@@ -99,11 +102,13 @@ export class Collider {
     radius: { 0: number; 1: number; 2: number; };
 
     readonly collisionsScalingMatrix:TerraMatrix;
-    constructor(private collisionCoordinator: {
-        scaledPosition: [number, number, number],
-        scaledVelocity: [number, number, number],
-        finalPosition: [number, number, number],
-    }, private nearestDistanceSquared:DataView, private collisionNotFound:DataView, private intersectionPointWasm:[number, number, number],private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+    constructor(engine:Engine, private collisionCoordinator: {
+        scaledPosition: Vector3,
+        scaledVelocity: Vector3,
+        finalPosition: Vector3,
+    }, private collisionNotFound:DataView,private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+        this.intersectionPointWasm = engine.callocVector3();
+        this.nearestDistanceSquared = engine.mallocView(4);
 
         this.collisionsScalingMatrix = new TerraMatrix([
             1.0 / _radius[0],   0.0,                   0.0,                    0.0,
@@ -111,7 +116,8 @@ export class Collider {
             0.0,                     0.0,                   1.0 / _radius[2],  0.0,
             0.0, 0.0, 0.0, 1.0]);
 
-        const me = this;
+
+        const collisionsScalingMatrix = this.collisionsScalingMatrix
         this.radius = {
             get 0() {
                 return _radius[0]
@@ -124,15 +130,15 @@ export class Collider {
             },
             set 0(v: number) {
                 _radius[0] = v;
-                me.collisionsScalingMatrix[0] = 1.0 / v;
+                collisionsScalingMatrix[0] = 1.0 / v;
             },
             set 1(v: number) {
                 _radius[1] = v;
-                me.collisionsScalingMatrix[5] = 1.0 / v;
+                collisionsScalingMatrix[5] = 1.0 / v;
             },
             set 2(v: number) {
                 _radius[2] = v;
-                me.collisionsScalingMatrix[10] = 1.0 / v;
+                collisionsScalingMatrix[10] = 1.0 / v;
 
             }
         }

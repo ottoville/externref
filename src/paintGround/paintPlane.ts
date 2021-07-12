@@ -18,7 +18,7 @@ import type { IndexedNode } from "../DataNode.js";
 
 class PlaneMesh extends TerraNodeGPU<DrawableIndexed> implements IndexedNode {
     indices_count=0;
-    Drawable=this.renderPipeline.addDrawableIndexed(undefined, new Set([this.engine.gpu.renderPassScreen]),this, undefined, 0, 1, 0);
+    Drawable=this.renderPipeline.addDrawableIndexed(undefined, new Set([this.engine.gpu.renderPassScreen]),this, 'plane',undefined, 0, 1, 0);
     constructor(engine: Engine, renderPipeline: RenderPipeline, verticesCount: number) {
         super(engine, renderPipeline, verticesCount)
     }
