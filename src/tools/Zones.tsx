@@ -44,7 +44,7 @@ export class Zones extends UITAB {
         this.#zoneTexture = this.scene.gpu.device.createTexture({
             size: [5120, 5120, 1],
             format: "rgba8unorm",
-            usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+            usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
         });
 
         const texture = new OffscreenCanvas(5120, 5120);
@@ -70,9 +70,7 @@ export class Zones extends UITAB {
                     ctx.fillRect(0, 0, -(z.size.h / this.#ratio), -(z.size.w / this.#ratio));
                 });
                 ctx.stroke();
-                const bitmap = texture.transferToImageBitmap();
-                scene.gpu.device.queue.copyImageBitmapToTexture({ imageBitmap: bitmap }, { texture: this.#zoneTexture }, [5120, 5120, 1]);
-                bitmap.close();
+                scene.gpu.device.queue.copyExternalImageToTexture({source: texture}, { texture: this.#zoneTexture }, [5120, 5120, 1]);
             }
         })();
         
