@@ -57,7 +57,7 @@ export class paintPlane extends paintGround {
         callback: PTResultF
     ) {
         super(scene, camera, ground, sea, uitab,(p) => {
-            this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0)
+            this.#mesh.update_scale(this.scene.engine.rustEngine,this.#mesh.scale_x, this.#mesh.scale_y, 0)
             callback(p);
         });
         this.#mesh = new PlaneMesh(this.scene.engine, getRenderPipeline(scene, ground), 0);
@@ -99,7 +99,7 @@ export class paintPlane extends paintGround {
     }*/
     override destroy() {
         super.destroy();
-        this.#mesh.destroy();
+        this.#mesh.destroy(this.scene.engine.rustEngine);
         this.#mesh.Drawable.destroy();
         this.#columns = 0;
         this.#rows = 0;
@@ -127,7 +127,7 @@ export class paintPlane extends paintGround {
 
         const halfYaw = (this.ang360.rad - Math.PI) * 0.5;
 
-        this.#mesh.update_scale_and_rotation(
+        this.#mesh.update_scale_and_rotation(this.scene.engine.rustEngine,
             height / this.#columns, this.#mesh.scale_y, this.#mesh.scale_z,
             0, Math.sin(halfYaw), 0, Math.cos(halfYaw))
     }
@@ -144,7 +144,7 @@ export class paintPlane extends paintGround {
                 newValues = this.#rowGenerator.next().value;
             } while (++this.#rows < newRows);
         }
-        this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, width / this.#rows)
+        this.#mesh.update_scale(this.scene.engine.rustEngine,this.#mesh.scale_x, this.#mesh.scale_y, width / this.#rows)
 
         if (newValues) {
             this.#mesh.Drawable.setVertexBuffer(0, new Float32Array(newValues.positions));

@@ -120,7 +120,7 @@ export class Canvas extends TerraCompoment {
             //new testPlane(terrascene);
 
             const b = new Box(terrascene);
-            b.update_scale(500, 500, 500);
+            b.update_scale(terraEngine.rustEngine,500, 500, 500);
             new Human(terrascene)
             const terrainInited = Terrain.loadFromTexture(terrascene);
 
@@ -172,7 +172,7 @@ export class Canvas extends TerraCompoment {
         const b2 = new Box(debugscene,100);
         //const b3 = new Box(debugscene,100);
         //b2.update(scale => scale.set([200, 200, 200]));
-        b2.update_scale(30, 30, 30);
+        b2.update_scale(terraEngine.rustEngine,30, 30, 30);
         //b3.update_scale(30, 30, 30);
         //const translation = b2.get_translation();
         b2.SetTranslation([1000, 400, 0])
@@ -234,7 +234,7 @@ export class Canvas extends TerraCompoment {
             gpu.onRenders2.forEach(or => {
                 const buff = or();
                 if (buff)
-                    gpu.pendingCommandBuffers.push(buff);
+                    gpu.pendingCommandBuffers.add(buff);
             });
             if (camera.checkInputs()) {
                 //camera.camera.update(values => {
@@ -265,11 +265,11 @@ export class Canvas extends TerraCompoment {
 
             gpu.renderPassCanvas.render(renderEncoder, gpu.BindGroupCanvas, gpu.rootLayout);
 
-            gpu.pendingCommandBuffers.push(renderEncoder.finish())
+            gpu.pendingCommandBuffers.add(renderEncoder.finish())
             gpu.device.queue.submit(gpu.pendingCommandBuffers);
-            gpu.pendingCommandBuffers.length = 0;
+            gpu.pendingCommandBuffers.clear();
+            gpu.tempGPUBuffers.forEach(buff => buff.destroy())
             renderFrame = window.requestAnimationFrame(renderLoop);
-
         }
 
         const maxResolution = {

@@ -31,7 +31,6 @@ export class Engine {
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
 
-    #tempBuffer?: GPUCopySRCBuffer;
     
     readonly collisionCoordinator:{
         scaledPosition: Vector3;
@@ -176,27 +175,33 @@ export class Engine {
             Atomics.notify(new Int32Array(this.mousePositionBuffer), 0);
         });
         gpu.onRenders2.push(() => {
-            if (gpu.queue.size === 0)
+            const p=this.rustEngine.gpu_queue_pointer;
+
+            if (p[1] === 0)
                 return null
-            if (this.#tempBuffer)
-                this.#tempBuffer.destroy();
             const dataSizeBytes = TerraNodeGPU.GPUDataSize * 4; //4 * 16 + 3 * 4;
-            this.#tempBuffer = gpu.createGPUBuffer(dataSizeBytes * gpu.queue.size, [GPUBufferUsage.COPY_SRC], true);
-            let tempOffset = 0;
+            const pointers=new Uint32Array(this.memory.buffer, p[0],p[1]!/Uint32Array.BYTES_PER_ELEMENT);
+
+            const queueLength=p[1]!/Uint32Array.BYTES_PER_ELEMENT/2;
+            const tempBuffer = gpu.createGPUBuffer(dataSizeBytes * queueLength, [GPUBufferUsage.COPY_SRC], true);
             const commandEncoder = gpu.device.createCommandEncoder();
-            gpu.queue.forEach((bufferOffset, matrix) => {
-                new Float32Array(this.#tempBuffer!.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(matrix);
+            let tempOffset = 0;
+
+            for(let i=0;i<pointers.length;i+=2) {
+                const data=new Float32Array(this.memory.buffer, pointers[i], TerraNodeGPU.GPUDataSize)
+                new Float32Array(tempBuffer!.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
                 commandEncoder.copyBufferToBuffer(
-                    this.#tempBuffer!, tempOffset++ * dataSizeBytes,
-                    gpu.GPUData, bufferOffset * 256,
+                    tempBuffer!, tempOffset++ * dataSizeBytes,
+                    gpu.GPUData, pointers[i+1]! * 256,
                     dataSizeBytes);
-            });
-            this.#tempBuffer.unmap();
-            gpu.queue.clear();
+            }
+            this.rustEngine.clear_gpu_queue();
+            tempBuffer.unmap();
 
             const lights=this.rustEngine.get_lights();
             
             const tempLightsBuffer = gpu.createGPUBuffer(lights.byteLength+4, [GPUBufferUsage.COPY_SRC], true);
+            this.gpu.tempGPUBuffers.add(tempLightsBuffer).add(tempBuffer);
             new Uint32Array(tempLightsBuffer.getMappedRange()).set([lights.length, ...lights]);
             tempLightsBuffer.unmap();
             commandEncoder.copyBufferToBuffer(

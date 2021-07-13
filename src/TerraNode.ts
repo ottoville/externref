@@ -19,32 +19,25 @@ export class MainNode extends Mesh {
         return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer + 12 * Float32Array.BYTES_PER_ELEMENT);
     }
 
-    override update_scale = (x: number, y: number, z: number) => {
-        super.update_scale(x, y, z)
+    /*override update_scale = (x: number, y: number, z: number) => {
+        super.update_scale(this.engine.rustEngine,x, y, z)
         this.#onUpdate();
-    }
-    override update_scale_and_rotation = (x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number) => {
-        super.update_scale_and_rotation(x, y, z, rx, ry, rz, rw);
+    }*/
+    /*override update_scale_and_rotation = (x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number) => {
+        super.update_scale_and_rotation(this.engine.rustEngine,x, y, z, rx, ry, rz, rw);
         this.#onUpdate();
-    }
-    #onUpdate = (): void => {
-        if (this.hasBounding) {
-            this.set_bounding_need_dirty_min();
-            this.set_bounding_need_dirty_max();
-        }
-        this.updateDynamicBuffer();
-    }
+    }*/
     SetTranslationDelta = (value: [number, number, number] | TerraVector3) => {
         this.get_velocity().set(value);
-        this.updateDynamicBuffer();
+        this.update_dynamic_buffer(this.engine.rustEngine);
     }
 
     SetTranslation = (value: [number, number, number] | TerraVector3) => {
         this.get_translation().set(value);
-        this.#onUpdate();
+        this.update_dynamic_buffer(this.engine.rustEngine);
     }
 
-    constructor(public engine: Engine, private hasBounding: boolean, has_geometry:boolean, positionsCount = 0, vertices_stride = 3, point_light=0) {
+    constructor(public engine: Engine, hasBounding: boolean, has_geometry:boolean, positionsCount = 0, vertices_stride = 3, point_light=0) {
         super(engine.rustEngine, MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light);
         MainNode.Meshes.set(this.id, this);
         queueMicrotask(() => {
@@ -52,11 +45,7 @@ export class MainNode extends Mesh {
                 engine.physics.tickables.add(this);
             }
         });
-        this.updateDynamicBuffer();
-    }
-
-    updateDynamicBuffer = () => {
-        this.engine.gpu.queue.set(new Float32Array(this.engine.memory.buffer.slice(this.gpu_pointer, this.gpu_pointer + TerraNodeGPU.GPUDataSize * Float32Array.BYTES_PER_ELEMENT)), this.gpu_alignment);
+        this.update_dynamic_buffer(this.engine.rustEngine);
     }
 
     #hasPhysics = (): this is hasPhysics => {
@@ -66,7 +55,7 @@ export class MainNode extends Mesh {
 export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
 
     // abstract Drawable:DrawableDirect
-    static GPUDataSize = 16 + 4 + 4 + 4 + 4;
+    static GPUDataSize = 16 + 4 + 4 + 4 + 2;
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader

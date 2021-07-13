@@ -25,7 +25,7 @@ export class testPlane extends BoundableNodeSimple {
         const vBuffer = scene.gpu.createGPUBuffer(this.verticesBuffesSize, [GPUBufferUsage.VERTEX], true);
         new Float32Array(vBuffer.getMappedRange()).set(vertices);
         vBuffer.unmap();
-        this.update_scale(200, 200, 200);
+        this.update_scale(this.engine.rustEngine,200, 200, 200);
         /*const testPlaneRenderpipeline = this.scene.lightsBindGroup.addRenderPipeline({
             rasterizationState: {
                 cullMode: 'none',

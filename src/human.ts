@@ -9,7 +9,7 @@ export class Human extends Box implements hasPhysics {
         this.SetTranslation([translation[0], 300, 700]);
        // this.setTranslationY(300)
         //this.setTranslationZ(700)
-        this.update_scale(50, 50, 50);
+        this.update_scale(this.engine.rustEngine,50, 50, 50);
     }
     onPhysicTick = () => {
 

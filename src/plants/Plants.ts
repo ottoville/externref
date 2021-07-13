@@ -172,7 +172,7 @@ export class Plants {
                     shapeGPU, 0,
                     this.numBlades * 4 * 4);
                 scene.gpu.updateBufferRaw(commandEncoder, drawable.buffer, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
-                scene.gpu.pendingCommandBuffers.push(commandEncoder.finish())
+                scene.gpu.pendingCommandBuffers.add(commandEncoder.finish())
             });
         })
 

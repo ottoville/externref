@@ -1,4 +1,5 @@
 pub use crate::GPUMesh;
+pub use crate::mesh::Mesh;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -8,8 +9,9 @@ pub struct Engine {
     pub gpu_queue: Vec<(*const GPUMesh, u32)>,
     gpu_next_available_address: u32,
     #[wasm_bindgen(skip)]
-    pub lights:Vec<u32>
+    pub lights:Vec<u32>,
 }
+
 
 //const GPU_QUEUE: Vec<(* const GPUMesh, u32)> = Vec::new();
 //const MESHES: Vec<*const Mesh> = Vec::new();
@@ -17,13 +19,19 @@ pub struct Engine {
 impl Engine {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        let e = Engine {
+        Engine {
             gpu_next_available_address: 0,
             gpu_slots: Vec::new(),
             gpu_queue: Vec::new(),
             lights: Vec::new(),
-        };
-        return e;
+        }
+    }
+    #[wasm_bindgen(getter)]
+    pub fn gpu_queue_pointer(&self) -> Vec<usize> {
+        return vec![self.gpu_queue.as_ptr() as usize,std::mem::size_of_val(&self.gpu_queue[..])];
+    }
+    pub fn clear_gpu_queue(&mut self) {
+        self.gpu_queue.clear()
     }
     pub fn get_lights(&self) ->Vec<u32> {
         self.lights.clone()

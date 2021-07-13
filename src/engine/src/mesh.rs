@@ -13,7 +13,6 @@ pub use crate::terrain::elevator::Elevator;
 #[wasm_bindgen]
 pub struct Mesh {
     id:u32,
-    engine: *mut Engine,
     gpu_alignment: u32,
     #[wasm_bindgen(skip)]
     pub gpu_mesh: GPUMesh,
@@ -29,9 +28,47 @@ extern "C" {
     fn log(s: &str);
     #[wasm_bindgen(js_namespace = console)]
     fn error(s: &str);
+
 }
 #[wasm_bindgen]
 impl Mesh {
+    #[wasm_bindgen(constructor)]
+    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize, point_light:f32) -> Self {
+        let m = Mesh {
+            id,
+            gpu_alignment: engine.allocate_gpu(),
+            gpu_mesh: GPUMesh {
+                transformation: Vec4 {
+                    x: Vec4 { x:1.0, y:0.0, z:0.0, w:0.0},
+                    y: Vec4 { x:0.0, y:1.0, z:0.0, w:0.0},
+                    z: Vec4 { x:0.0, y:0.0, z:1.0, w:0.0},
+                    w: Vec4 { x:0.0, y:0.0, z:0.0, w:1.0},
+                },
+                delta: [0.0, 0.0, 0.0, 0.0],
+                custom: [0.0, 0.0, 0.0, 0.0],
+                acceleration: [0.0, 0.0, 0.0, 0.0],
+                id,
+                point_light
+            },
+            geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count),
+            rotation: Vec4 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                w: 0.0,
+            },
+            scaling: Vec3 {
+                x: 1.0,
+                y: 1.0,
+                z: 1.0,
+            },
+            positions_count,
+        };
+        if point_light > 0.0 {
+            engine.lights.push(m.gpu_alignment());
+        }
+        return m;
+    }
     #[wasm_bindgen(setter)]
     pub fn set_indices(&mut self, indices: Vec<usize>) {
         &self.geometry.set_indices(indices);
@@ -115,18 +152,21 @@ impl Mesh {
     pub fn set_bounding_need_dirty_max(&mut self) {
         self.geometry.bounding_box.dirty_max = true;
     }
-    fn on_update(&mut self) {
+    fn on_update(&mut self, engine:&mut Engine) {
         self.update_matrix();
-        unsafe {
-            let engine = &mut *self.engine;
-            engine.gpu_queue.push((&self.gpu_mesh, 1));
+        if self.gpu_mesh.point_light > 0.0 {
+            
         }
+        self.update_dynamic_buffer(engine);
         if self.geometry.bounding_box.has_bounding {
             self.geometry.bounding_box.dirty_max=true;
             self.geometry.bounding_box.dirty_min=true;
         }
     }
-    pub fn update_scale_and_rotation(&mut self, x: f32, y: f32, z: f32, rx: f32, ry: f32, rz: f32, rw: f32) {
+    pub fn update_dynamic_buffer(&mut self, engine:&mut Engine) {
+        engine.gpu_queue.push((&self.gpu_mesh, self.gpu_alignment));
+    }
+    pub fn update_scale_and_rotation(&mut self, engine:&mut Engine, x: f32, y: f32, z: f32, rx: f32, ry: f32, rz: f32, rw: f32) {
         self.scaling.x = x;
         self.scaling.y = y;
         self.scaling.z = z;
@@ -134,51 +174,45 @@ impl Mesh {
         self.rotation.y = ry;
         self.rotation.z = rz;
         self.rotation.w = rw;
-        self.on_update();
+        self.on_update(engine);
     }
-    pub fn update_scale(&mut self, x: f32, y: f32, z: f32) {
+    pub fn update_scale(&mut self,engine:&mut Engine, x: f32, y: f32, z: f32) {
         self.scaling.x = x;
         self.scaling.y = y;
         self.scaling.z = z;
         self.update_matrix();
-        unsafe {
-            let engine = &mut *self.engine;
-            engine.gpu_queue.push((&self.gpu_mesh, 1));
-        }
+        engine.gpu_queue.push((&self.gpu_mesh, self.gpu_alignment));
     }
-    #[wasm_bindgen(setter)]
-    pub fn set_scale_x(&mut self, x:f32) {
+    pub fn set_scale_x(&mut self,engine:&mut Engine, x:f32) {
         self.scaling.x=x;
-        self.on_update();
+        self.on_update(engine);
     }
     #[wasm_bindgen(getter)]
     pub fn scale_x(&mut self) -> f32 {
         self.scaling.x
     }
-    #[wasm_bindgen(setter)]
-    pub fn set_scale_y(&mut self, y:f32) {
+    pub fn set_scale_y(&mut self,engine:&mut Engine, y:f32) {
         self.scaling.y=y;
-        self.on_update();
+        self.on_update(engine);
     }
     #[wasm_bindgen(getter)]
     pub fn scale_y(&mut self) -> f32 {
         self.scaling.y
     }
-    #[wasm_bindgen(setter)]
-    pub fn set_scale_z(&mut self, z:f32) {
+    pub fn set_scale_z(&mut self, engine:&mut Engine, z:f32) {
         self.scaling.z=z;
-        self.on_update();
+        self.on_update(engine);
     }
     #[wasm_bindgen(getter)]
     pub fn scale_z(&mut self) -> f32 {
         self.scaling.z
     }
-    pub fn update_rotation(&mut self, x: f32, y: f32, z: f32, w: f32) {
+    pub fn update_rotation(&mut self, engine:&mut Engine, x: f32, y: f32, z: f32, w: f32) {
         self.rotation.x = x;
         self.rotation.y = y;
         self.rotation.z = z;
         self.rotation.w = w;
-        self.on_update();
+        self.on_update(engine);
     }
     #[wasm_bindgen(getter)]
     pub fn gpu_pointer(&self) -> *const Vec4<Vec4<f32>> {
@@ -200,48 +234,8 @@ impl Mesh {
         self.gpu_alignment
     }
 
-    #[wasm_bindgen(constructor)]
-    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize, point_light:f32) -> Self {
-        let m = Mesh {
-            id,
-            engine: engine,
-            gpu_alignment: engine.allocate_gpu(),
-            gpu_mesh: GPUMesh {
-                transformation: Vec4 {
-                    x: Vec4 { x:1.0, y:0.0, z:0.0, w:0.0},
-                    y: Vec4 { x:0.0, y:1.0, z:0.0, w:0.0},
-                    z: Vec4 { x:0.0, y:0.0, z:1.0, w:0.0},
-                    w: Vec4 { x:0.0, y:0.0, z:0.0, w:1.0},
-                },
-                delta: [0.0, 0.0, 0.0, 0.0],
-                custom: [0.0, 0.0, 0.0, 0.0],
-                acceleration: [0.0, 0.0, 0.0, 0.0],
-                id,
-                point_light
-            },
-            geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count),
-            rotation: Vec4 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-                w: 0.0,
-            },
-            scaling: Vec3 {
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-            },
-            positions_count,
-        };
-        if point_light > 0.0 {
-            engine.lights.push(m.gpu_alignment());
-        }
-        return m;
-    }
-    pub fn destroy(self) {
-        unsafe {
-            (*self.engine).de_allocate_gpu(self.gpu_alignment);
-        }
+    pub fn destroy(self, engine:&mut Engine) {
+        engine.de_allocate_gpu(self.gpu_alignment);
     }
     pub fn update_matrix(&mut self) {
         let x: f32 = self.rotation.x;

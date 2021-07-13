@@ -142,7 +142,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.traits.forEach(trait => trait.destroy());
 
         //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
-        super.destroy();
+        super.destroy(this.engine.rustEngine);
         renderPipelines.delete(this.engine.gpu);
     };
     #mouseListener = (): void => {

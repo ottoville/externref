@@ -40,7 +40,8 @@ export class GPU {
     readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
 
     readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
-    readonly pendingCommandBuffers: GPUCommandBuffer[] = [];
+    readonly pendingCommandBuffers: Set<GPUCommandBuffer> = new Set();
+    readonly tempGPUBuffers: Set<GPUBuffer> = new Set();
 
 
     readonly boundables: Set<BoundableNode> = new Set();
@@ -70,8 +71,6 @@ export class GPU {
 
     readonly BindGroupCanvas: (renderPass: RenderPass) => GPUBindGroup;
     static instance: GPU;
-
-    readonly queue: Map<Float32Array, number> = new Map();
 
     readonly renderPasses: Set<RenderPass>;
 
