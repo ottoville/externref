@@ -312,7 +312,6 @@ export class GPU {
         }
         GPU.instance = this;
     }
-
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(label:string,...entries: T): BindGroupLayout<{ [K in keyof T]: T[K] extends {texture:GPUTextureBindingLayout} ? GPUBindGroupTextureEntry<T[K]['texture']['sampleType']>:GPUBindGroupEntry }>{
         return new BindGroupLayout<[GPUBindGroupEntry]>(this, {label, entries})
     }

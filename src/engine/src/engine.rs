@@ -1,6 +1,7 @@
 pub use crate::GPUMesh;
 pub use crate::mesh::Mesh;
 use wasm_bindgen::prelude::*;
+use std::collections::HashSet;
 
 #[wasm_bindgen]
 pub struct Engine {
@@ -9,7 +10,7 @@ pub struct Engine {
     pub gpu_queue: Vec<(*const GPUMesh, u32)>,
     gpu_next_available_address: u32,
     #[wasm_bindgen(skip)]
-    pub lights:Vec<u32>,
+    pub lights:HashSet<u32>,
 }
 
 
@@ -23,7 +24,7 @@ impl Engine {
             gpu_next_available_address: 0,
             gpu_slots: Vec::new(),
             gpu_queue: Vec::new(),
-            lights: Vec::new(),
+            lights: HashSet::new(),
         }
     }
     #[wasm_bindgen(getter)]
@@ -33,8 +34,8 @@ impl Engine {
     pub fn clear_gpu_queue(&mut self) {
         self.gpu_queue.clear()
     }
-    pub fn get_lights(&self) ->Vec<u32> {
-        self.lights.clone()
+    pub fn get_lights(&self) -> Vec<u32> {
+        self.lights.clone().into_iter().collect()
     }
     pub fn allocate_gpu(&mut self) -> u32 {
         let o = self.gpu_slots.pop();

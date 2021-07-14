@@ -18,15 +18,6 @@ export class MainNode extends Mesh {
     get_translation = () => {
         return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer + 12 * Float32Array.BYTES_PER_ELEMENT);
     }
-
-    /*override update_scale = (x: number, y: number, z: number) => {
-        super.update_scale(this.engine.rustEngine,x, y, z)
-        this.#onUpdate();
-    }*/
-    /*override update_scale_and_rotation = (x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number) => {
-        super.update_scale_and_rotation(this.engine.rustEngine,x, y, z, rx, ry, rz, rw);
-        this.#onUpdate();
-    }*/
     SetTranslationDelta = (value: [number, number, number] | TerraVector3) => {
         this.get_velocity().set(value);
         this.update_dynamic_buffer(this.engine.rustEngine);

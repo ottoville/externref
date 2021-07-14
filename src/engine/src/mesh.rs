@@ -65,7 +65,7 @@ impl Mesh {
             positions_count,
         };
         if point_light > 0.0 {
-            engine.lights.push(m.gpu_alignment());
+            engine.lights.insert(m.gpu_alignment());
         }
         return m;
     }

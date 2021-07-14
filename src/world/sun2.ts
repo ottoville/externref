@@ -75,8 +75,8 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics, is
         //earth shadow
         const shadow = this.#clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
         this.gpu_custom_data=new Float32Array([ambientR, ambientGB, ambientGB, shadow]);
-       // this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
-       this.update_dynamic_buffer(this.engine.rustEngine);
+        // this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
+        this.update_dynamic_buffer(this.engine.rustEngine);
 
     }
     Drawable:DrawableSimple;

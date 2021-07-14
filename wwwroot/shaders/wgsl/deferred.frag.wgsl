@@ -19,7 +19,6 @@ struct Mesh {
   zNear : f32;
   zFar : f32;
   screenDimensions : vec2<f32>;
-  
 };
 [[binding(0), group(0)]] var mySampler: sampler;
 [[binding(1), group(0)]] var normalTexture: texture_2d<f32>;
@@ -41,14 +40,14 @@ fn linearDepth(depthSample : f32) -> f32 {
 
 fn getDepthSlice(fragCoordZ : f32) -> u32 {
   // TODO: move to uniform
-  let tileCount:vec3<u32>=vec3<u32>(u32(10),u32(10),u32(3));
+  let tileCount:vec3<f32>=vec3<f32>(100.0,100.0,100.0);
 
   // TODO: scale and bias calculation can be moved outside the shader to save cycles.
-  let sliceScale : f32 = f32(tileCount.z) / log2(projection.zFar / projection.zNear);
-  let sliceBias : f32 = -(f32(tileCount.z) * log2(projection.zNear) / log2(projection.zFar / projection.zNear));
-  return u32(max(log2(fragCoordZ) * sliceScale + sliceBias, 0.0));
+  let sliceScale : f32 = tileCount.z / log2(projection.zFar / projection.zNear);
+  let sliceBias : f32 = -(tileCount.z * log2(projection.zNear) / log2(projection.zFar / projection.zNear));
+  //return u32(max(log2(fragCoordZ) * sliceScale + sliceBias, 0.0));
     // For logarithmic z buffer use linearDepth
-  //return u32(max(log2(linearDepth(fragCoordZ)) * sliceScale + sliceBias, 0.0));
+  return u32(max(log2(linearDepth(fragCoordZ)) * sliceScale + sliceBias, 0.0));
 }
 fn getClusterIndex(pixelCoord:vec3<f32>) -> u32 {
     // TODO: move to uniform
@@ -112,7 +111,9 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>, [[location(0)]] uv:vec2<f32
   var frust_position:vec3<f32> = textureSample(positionTexture, mySampler, uv).xyz;
 //frust_position.y = frust_position.y - 300.0;
   var shading:f32;
-  var color:vec3<f32>=vec3<f32>(0.0,0.0,0.0);
+  //var color:vec3<f32>=vec3<f32>(0.0,0.0,0.0);
+  var color = vec3<f32>(meshes.mesh[sunOffset].ambient + (diffuse.xyz * shadingDun));
+
   for (var lightPointerIndex : u32 = 0u; lightPointerIndex < lights.lights_count; lightPointerIndex = lightPointerIndex + 1u) {
       let lightIndex:u32 = lights.light[lightPointerIndex];
       var light:vec3<f32> = meshes.mesh[lightIndex].position[12].xyz;
@@ -123,8 +124,7 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>, [[location(0)]] uv:vec2<f32
   }
   //output.Color=vec4<f32>(color,1.0);
   let testAmbient=vec3<f32>(0.0,0.0,0.0);
-  //output.Color=vec4<f32>(testAmbient+(diffuse.xyz*color),1.0);
-  output.Color=vec4<f32>(testAmbient+(vec3<f32>(0.0,1.0,0.0)*color),1.0);
+  output.Color=vec4<f32>(testAmbient+(diffuse.xyz*color),1.0);
 
   //let tile : vec3<u32> = getTile(vec3<f32>(fragCoord.xy,normal.w));
   //output.Color = vec4<f32>(colorSet[tile.z % 9u], 1.0);

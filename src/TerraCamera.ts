@@ -46,7 +46,7 @@ export class TerraCamera {
     }
 
 
-    constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, engine: Engine, main = true, parent?: TerraCamera) {
+    constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, private engine: Engine, main = true, parent?: TerraCamera) {
         this.#projectionArr = new TerraMatrix(projection);
         this.#uniformBuffer= gpu.createGPUBuffer(this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
         this.#uniformBindGroup = this.gpu.createBindGroup(
@@ -135,9 +135,18 @@ export class TerraCamera {
         this.viewArr.multiplyToRef(this.#projectionArr, this.#projectionViewArr)
 
         const tempBuffer = this.gpu.createGPUBuffer(this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], true);
+        this.gpu.tempGPUBuffers.add(tempBuffer);
         new Float32Array(tempBuffer.getMappedRange()).set(this.#viewAndProjection);
-        const commandBuffer = this.gpu.copyBufferToBuffer(tempBuffer, this.#uniformBuffer, this.#viewAndProjection.byteLength);
-        this.gpu.pendingCommandBuffers.push(commandBuffer);
+        tempBuffer.unmap()
+        const commandEncoder = this.gpu.device.createCommandEncoder();
+        commandEncoder.copyBufferToBuffer(
+            tempBuffer, 0,
+            this.#uniformBuffer, 0,
+            this.#viewAndProjection.byteLength);
+        this.engine.updateLights(commandEncoder);
+        const commandBuffer = commandEncoder.finish()
+
+        this.gpu.pendingCommandBuffers.add(commandBuffer);
 
     }
     beforeViewUpdate: Set<(position: TerraVector3, target: TerraVector3) => void> = new Set();
@@ -194,8 +203,6 @@ export class TerraCamera {
         this.#nearVec3[2] = -1.0;
         // var farScreenSource = (new Vector3()).copyFromFloats(this.nearScreenSource[0], this.nearScreenSource[1], 1.0);
         this.#farVec3 = new TerraVector3([this.#nearVec3[0], this.#nearVec3[1], 1.0]);
-
-        // const farVec3 = new Vector3();
 
         /*Vector3._UnprojectFromInvertedMatrixToRef(this.nearScreenSource, inverted, nearVec3);
                 Vector3.TransformCoordinatesToRef(source, matrix, result);
