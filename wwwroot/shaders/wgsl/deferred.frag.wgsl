@@ -123,8 +123,7 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>, [[location(0)]] uv:vec2<f32
       color=color+ vec3<f32>(shading, shading, shading);
   }
   //output.Color=vec4<f32>(color,1.0);
-  let testAmbient=vec3<f32>(0.0,0.0,0.0);
-  output.Color=vec4<f32>(testAmbient+(diffuse.xyz*color),1.0);
+  output.Color=vec4<f32>(diffuse.xyz*color,1.0);
 
   //let tile : vec3<u32> = getTile(vec3<f32>(fragCoord.xy,normal.w));
   //output.Color = vec4<f32>(colorSet[tile.z % 9u], 1.0);

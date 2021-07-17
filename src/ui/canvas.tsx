@@ -52,8 +52,20 @@ export class Canvas extends TerraCompoment {
         this.progress = 5;
         if (!device)
             throw ('no GPU device');
-
-        const gpu = new GPU(this.#canvasElem, device);
+        const shaderModules: Map<string, GPUShaderModule> = new Map();
+        const shaders = ['simple.vert.wgsl', 'simple.frag.wgsl',
+            'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl', 'UIColor.frag.wgsl',
+            'plane.vert.wgsl', 'helper2.vert.wgsl',
+            'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
+            'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',
+            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl','deferred.vert.wgsl', 'deferred.frag.wgsl', 'clusters.comp.wgsl', 'debug_normals.vert.wgsl',
+            'updateView.comp.wgsl'
+        ];
+        await Promise.all(shaders.map(async u => {
+            const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
+            shaderModules.set(u, device.createShaderModule({ code: compiled }));
+        }));
+        const gpu = new GPU(this.#canvasElem, device, shaderModules);
 
 
         //@ts-ignore
@@ -66,16 +78,7 @@ export class Canvas extends TerraCompoment {
         }
 
         this.progress = 6;
-        const shaders = ['simple.vert.wgsl', 'simple.frag.wgsl',
-            'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl', 'UIColor.frag.wgsl',
-            'plane.vert.wgsl', 'helper2.vert.wgsl',
-            'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
-            'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',
-            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl','deferred.vert.wgsl', 'deferred.frag.wgsl', 'clusters.comp.wgsl', 'debug_normals.vert.wgsl'];
-        await Promise.all(shaders.map(async u => {
-            const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
-            gpu.shaderModules.set(u, device.createShaderModule({ code: compiled }));
-        }));
+
 
         this.progress = 10;
 
@@ -188,6 +191,10 @@ export class Canvas extends TerraCompoment {
             a+=0.005;
             //b3.SetTranslation([x2++, 400, 0])
         },10);
+       /* setTimeout(() => {
+            clearInterval(intervalID);
+            b2.destroy(terraEngine.rustEngine);
+        },10000)*/
         
         let renderFrame = 0;
         let resizeHandler = 0;
@@ -259,6 +266,7 @@ export class Canvas extends TerraCompoment {
                 TerraCameras.forEach(camera => {
                     camera.render(renderEncoder)
                 });
+                terraEngine.updateLights=false;
             } catch (e) {
                 console.error(e);
             }
@@ -327,11 +335,8 @@ export class Canvas extends TerraCompoment {
                 
                 const computePipelineClusters = gpu.createComputePipeline('clusters.comp.wgsl');
 
-                const clustersInRow=10;
-                const clusterSizeinBytes= clustersInRow * clustersInRow * clustersInRow * 4 * 8;
-                const clusterArrayBuffer=gpu.createGPUBuffer(clusterSizeinBytes, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-                
-                const clusterArrayBufferDst=gpu.createGPUBuffer(clusterSizeinBytes, [GPUBufferUsage.MAP_READ,GPUBufferUsage.COPY_DST]);
+
+                const clusterArrayBufferDst=gpu.createGPUBuffer(gpu.clusterSizeinBytes, [GPUBufferUsage.MAP_READ,GPUBufferUsage.COPY_DST]);
                 const screenToViewBuffer=gpu.createGPUBuffer(80, [GPUBufferUsage.UNIFORM], true);
                 const gpuBuffer=screenToViewBuffer.getMappedRange();
                 const inverted=new TerraMatrix(gpuBuffer);
@@ -349,7 +354,7 @@ export class Canvas extends TerraCompoment {
                     entries: [ {
                         binding: 0,
                         resource: {
-                            buffer: clusterArrayBuffer
+                            buffer: gpu.clusterArrayBuffer
                         }
                     },
                     {
@@ -368,10 +373,11 @@ export class Canvas extends TerraCompoment {
                 const commandEncoder = gpu.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipelineClusters);
-                passEncoder.setBindGroup(0,bindGroup)
-                passEncoder.dispatch(clustersInRow,clustersInRow,clustersInRow);
+                passEncoder.setBindGroup(0,bindGroup);
+                const WORKGROUP_SIZE:[number,number,number] = [4, 2, 4];
+                passEncoder.dispatch(Math.ceil(gpu.clustersInRow[0]/WORKGROUP_SIZE[0]),Math.ceil(gpu.clustersInRow[1]/WORKGROUP_SIZE[1]),Math.ceil(gpu.clustersInRow[2]/WORKGROUP_SIZE[2]));
                 passEncoder.endPass();
-                commandEncoder.copyBufferToBuffer(clusterArrayBuffer,0,clusterArrayBufferDst,0,clusterSizeinBytes);
+                commandEncoder.copyBufferToBuffer(gpu.clusterArrayBuffer,0,clusterArrayBufferDst,0,gpu.clusterSizeinBytes);
                 gpu.device.queue.submit([commandEncoder.finish()]);
                 await clusterArrayBufferDst.mapAsync(GPUMapMode.READ);
                 //@ts-expect-error

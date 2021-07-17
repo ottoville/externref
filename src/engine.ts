@@ -48,7 +48,7 @@ export class Engine {
     destinationPoint: [number, number, number] = [0, 0, 0];
     displacementVector: [number, number, number] = [0, 0, 0];
 
-
+    updateLights=false;
     malloc(byteLength: number): number {
         if (byteLength % 4 != 0) {
             throw ('malloc should be called with length divitable with four')
@@ -186,67 +186,23 @@ export class Engine {
             const tempBuffer = gpu.createGPUBuffer(dataSizeBytes * queueLength, [GPUBufferUsage.COPY_SRC], true);
             const commandEncoder = gpu.device.createCommandEncoder();
             let tempOffset = 0;
-            let updateLights=false;
             for(let i=0;i<pointers.length;i+=2) {
                 const data=new Float32Array(this.memory.buffer, pointers[i], TerraNodeGPU.GPUDataSize);
                 //Point light
                 if(data[29]! > 0) {
-                    updateLights=true;
+                    this.updateLights=true;
                 }
                 new Float32Array(tempBuffer!.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
                 commandEncoder.copyBufferToBuffer(
-                    tempBuffer!, tempOffset++ * dataSizeBytes,
-                    gpu.GPUData, pointers[i+1]! * 256,
+                    tempBuffer, tempOffset++ * dataSizeBytes,
+                    gpu.GPUMeshes, pointers[i+1]! * 256,
                     dataSizeBytes);
             }
             this.rustEngine.clear_gpu_queue();
             tempBuffer.unmap();
             this.gpu.tempGPUBuffers.add(tempBuffer);
-
-            if(updateLights) {
-                this.updateLights(commandEncoder);
-            }
             return commandEncoder.finish();
         })
-    }
-    updateLights(commandEncoder: GPUCommandEncoder) {
-        const lights=this.rustEngine.get_lights();
-        const tempLightsBuffer = this.gpu.createGPUBuffer(lights.byteLength+4, [GPUBufferUsage.COPY_SRC], true);
-        this.gpu.tempGPUBuffers.add(tempLightsBuffer);
-        new Uint32Array(tempLightsBuffer.getMappedRange()).set([lights.length, ...lights]);
-        tempLightsBuffer.unmap();
-        commandEncoder.copyBufferToBuffer(
-            tempLightsBuffer, 0,
-            this.gpu.GPULightsArray, 0,
-            lights.byteLength+4);
-
-
-        /*
-        const updateViewPipeline=this.gpu.createComputePipeline('updateView.comp.wgsl');
-        updateViewPipeline.createBindGroup(0, 
-            [
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: tempLightsBuffer,
-                    },
-                },
-                {
-                    binding: 1,
-                    resource: {
-                        buffer: this.gpu.GPULightsArray,
-                    },
-                }
-            ]
-        )
-        
-        // Update lights position
-        const lightPass = commandEncoder.beginComputePass();
-        lightPass.setPipeline(lightUpdateComputePipeline);
-        lightPass.setBindGroup(0, lightsBufferComputeBindGroup);
-        lightPass.dispatch(Math.ceil(kMaxNumLights / 64));
-*/
-
     }
     async collideWithWorld(): Promise<void> {
         //TODO: Call only when camera position change

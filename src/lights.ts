@@ -27,7 +27,7 @@ export class Light {
             [{
                 binding: 0,
                 resource: {
-                    buffer: this.gpu.GPUData, //this.#lightsBuffer
+                    buffer: this.gpu.GPUMeshes, //this.#lightsBuffer
                     size: 256,
                     offset: byteoffset * TerraNodeGPU.alignment
                 }

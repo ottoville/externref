@@ -13,8 +13,9 @@ function getRenderPipeline(gpu: GPU) {
 
     //TODO: Reuse sampler with terrain.ts?
     const sampler = gpu.device.createSampler({
-        magFilter: "linear",
-        minFilter: "linear",
+        magFilter: "nearest",
+        minFilter: "nearest",
+        mipmapFilter:"nearest"
     });
     const bindGroupTextureWater = gpu.positionBindGroupTimeWGSL.addChildLayout(gpu.createBindGroupLayout(
         'water',
@@ -28,13 +29,13 @@ function getRenderPipeline(gpu: GPU) {
             binding: 1,
             visibility: GPUShaderStage.FRAGMENT,
             texture: {
-                sampleType:'float'
+                sampleType:'unfilterable-float'
             }
         }, {
             binding: 2,
             visibility: GPUShaderStage.FRAGMENT,
             texture: {
-                sampleType:'float'
+                sampleType:'unfilterable-float'
             }
         }, {
             binding: 3,

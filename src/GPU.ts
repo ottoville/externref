@@ -52,9 +52,9 @@ export class GPU {
 
 
 
-    readonly shaderModules: Map<string, GPUShaderModule> = new Map();
+    
     //Todo: Remove COPY_SRC
-    readonly GPUData: GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer;
+    readonly GPUMeshes: GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer;
     readonly GPULightsArray: GPUStorageBuffer & GPUCopyDSTBuffer;
     readonly rootLayout:PipelineLayout;
     readonly positionBindGroupTimeWGSL:LayoutGroupDrawable<[GPUBindGroupEntry]>;
@@ -92,10 +92,50 @@ export class GPU {
     readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<'bgra8unorm',['RENDER_ATTACHMENT']>>; }>;
     context: GPUPresentationContext;
     projectionUniformsBuffer: GPUUniformBuffer;
+    updateViewPipeline:TerraGPUComputePipeLine;
+    updateViewBindGroup: GPUBindGroup;
+    clusterArrayBuffer: GPUStorageBuffer & GPUCopySRCBuffer;
+    clusterLightsBuffer: GPUStorageBuffer;
+    readonly clustersInRow:[number,number,number]=[32, 18, 48];
+    clusterSizeinBytes: number;
 
-    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
-        this.GPUData = this.createGPUBuffer(TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-        this.GPULightsArray = this.createGPUBuffer(100*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
+
+
+    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, readonly shaderModules: Map<string, GPUShaderModule>) {
+        const totalClusters=this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
+        this.clusterSizeinBytes= totalClusters * 4 * 8;
+        this.clusterArrayBuffer=this.createGPUBuffer(this.clusterSizeinBytes, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+        const clusterLightsSize=totalClusters * 2 * Uint32Array.BYTES_PER_ELEMENT;
+        const maxLightsPerCluster=63
+        this.clusterLightsBuffer=this.createGPUBuffer(1 + clusterLightsSize +   maxLightsPerCluster*clusterLightsSize, [GPUBufferUsage.STORAGE]);
+        this.updateViewPipeline=this.createComputePipeline('updateView.comp.wgsl');
+
+
+        this.GPUMeshes = this.createGPUBuffer(TerraNodeGPU.alignment /* meshes count etc */ + TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+        this.GPULightsArray = this.createGPUBuffer(63*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
+        
+        this.updateViewBindGroup=this.updateViewPipeline.createBindGroup(0, 
+            [
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: this.GPUMeshes,
+                    },
+                },
+                {
+                    binding: 1,
+                    resource: {
+                        buffer: this.clusterArrayBuffer,
+                    },
+                },
+                {
+                    binding: 2,
+                    resource: {
+                        buffer: this.clusterLightsBuffer,
+                    },
+                }
+            ]
+        )
         this.uniformBindGroupLayoutWithTime  = this.createBindGroupLayout(
             'uniformBindGroupLayoutWithTime',
             {
@@ -136,13 +176,13 @@ export class GPU {
                 binding: 1,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
-                    sampleType:'float'
+                    sampleType:'unfilterable-float'
                 },
             }, {
                 binding: 2,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
-                    sampleType:'float'
+                    sampleType:'unfilterable-float'
                 }
             },
             {
@@ -187,7 +227,7 @@ export class GPU {
             {
                 binding: 0,
                 resource: {
-                    buffer: this.GPUData,
+                    buffer: this.GPUMeshes,
                     offset: 0,
                     size: TerraNodeGPU.GPUDataSize * 4
                 }
@@ -259,9 +299,10 @@ export class GPU {
         this.renderPasses = new Set([this.renderPassCanvas, this.renderPassScreen, this.renderPassWater]);
         //[this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
         const canvasSampler = device.createSampler({
-            magFilter: "linear",
-            minFilter: "linear",
-        });
+            magFilter: "nearest",
+            minFilter: "nearest",
+            mipmapFilter:"nearest"
+            });
         this.projectionUniformsBuffer=this.createGPUBuffer(16, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], true);
 
         this.BindGroupCanvas = (renderPass: RenderPass) => this.createBindGroupForRenderPass(BindGroupLayoutCanvas, renderPass,
@@ -284,7 +325,7 @@ export class GPU {
             {
                 binding: 4,
                 resource: {
-                    buffer: this.GPUData
+                    buffer: this.GPUMeshes
                 }
             },
             {

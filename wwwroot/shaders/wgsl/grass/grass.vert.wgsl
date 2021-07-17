@@ -47,7 +47,7 @@ struct Output {
   [[location(0)]] color : vec3<f32>;
 };
 
-let vertices : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
+let vertices_ : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
     vec2<f32>(0.02,  0.0),
     vec2<f32>(-0.02, 0.0),
     vec2<f32>(0.014,  0.29),

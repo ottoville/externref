@@ -39,6 +39,7 @@ export class TerraCamera {
     onRender?: () => void;
     target: { readonly 0: number; readonly 1: number; readonly 2: number; };
     position: { readonly 0: number; readonly 1: number; readonly 2: number; };
+    #updateViewBindGroup: GPUBindGroup;
 
     update(cb: (values: { position: TerraVector3, target: TerraVector3 }) => void) {
         cb({ position: this.#position, target: this.#target });
@@ -57,7 +58,16 @@ export class TerraCamera {
                     buffer: this.#uniformBuffer
                 }
             }, gpu.timeGroup]);
-        
+        this.#updateViewBindGroup=this.gpu.updateViewPipeline.createBindGroup(1, 
+            [
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: this.#uniformBuffer,
+                    },
+                }
+            ]
+        )
         const thistarget = this.#target
         const thisposition = this.#position
         this.target = {
@@ -143,7 +153,6 @@ export class TerraCamera {
             tempBuffer, 0,
             this.#uniformBuffer, 0,
             this.#viewAndProjection.byteLength);
-        this.engine.updateLights(commandEncoder);
         const commandBuffer = commandEncoder.finish()
 
         this.gpu.pendingCommandBuffers.add(commandBuffer);
@@ -152,6 +161,44 @@ export class TerraCamera {
     beforeViewUpdate: Set<(position: TerraVector3, target: TerraVector3) => void> = new Set();
     render(renderEncoder: GPUCommandEncoder) {
         this.onRender && this.onRender();
+        if(this.#doUpdateView || this.engine.updateLights) {
+            const commandEncoder = this.gpu.device.createCommandEncoder();
+            const lights=this.engine.rustEngine.get_lights();
+            const tempLightsBuffer = this.gpu.createGPUBuffer(lights.byteLength+4, [GPUBufferUsage.COPY_SRC], true);
+            this.gpu.tempGPUBuffers.add(tempLightsBuffer);
+            new Uint32Array(tempLightsBuffer.getMappedRange()).set([lights.length, ...lights]);
+            tempLightsBuffer.unmap();
+            commandEncoder.copyBufferToBuffer(
+                tempLightsBuffer, 0,
+                this.gpu.GPULightsArray, 0,
+                lights.byteLength+4);
+            //TODO: update when new mesh is added or removed
+            const allocated=this.engine.rustEngine.allocated_gpu_memory;
+            const buffLength=Uint32Array.BYTES_PER_ELEMENT + allocated.byteLength;
+            const tempBuffer = this.gpu.createGPUBuffer(buffLength, [GPUBufferUsage.COPY_SRC], true);
+            new Uint8Array(tempBuffer.getMappedRange(0,buffLength)).set([allocated.length, ...allocated]);
+            tempBuffer.unmap();
+
+            commandEncoder.copyBufferToBuffer(
+                tempBuffer, 0,
+                this.gpu.GPUMeshes, 0,
+                buffLength);
+                        
+            
+            
+            // Update lights position
+            //TODO: share commandencoder and pipeline with all cameras
+           
+            const lightPass = commandEncoder.beginComputePass();
+            lightPass.setPipeline(this.gpu.updateViewPipeline);
+            lightPass.setBindGroup(0, this.gpu.updateViewBindGroup);
+            lightPass.setBindGroup(1, this.#updateViewBindGroup);
+            lightPass.dispatch(1);
+            lightPass.endPass();
+
+            //this.gpu.device.queue.submit([commandEncoder.finish()]);
+
+        }
         //TODO: use SIMD, use column major matrix?
         if (this.#doUpdateView) {
             this.childCameras.forEach(childCamera => {
