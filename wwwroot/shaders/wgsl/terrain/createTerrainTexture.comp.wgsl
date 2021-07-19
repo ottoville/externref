@@ -18,7 +18,7 @@
 [[block]] struct IntArray {
   numbers : [[stride(4)]] array<i32>;
 };
-[[binding(0), group(0)]] var<storage,read> settings : Settings;
+[[binding(0), group(0)]] var<uniform> settings : Settings;
 [[binding(0), group(1)]] var<storage,read> slopes : IntArray;
 [[binding(1), group(1)]] var<storage,read> facet12 : PlaneArray;
 [[binding(0), group(2)]] var<storage,write> resultMatrix : IntArray;

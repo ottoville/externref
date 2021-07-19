@@ -13,9 +13,11 @@
     [[align(32)]] max : vec2<i32>;
      textureSize:vec2<u32>;
 };
-[[binding(0), group(0)]] var<storage, read> settings : Settings;
 
-[[binding(0), group(1)]] var<storage, write> normals : FloatArray;
+[[binding(0), group(0)]] var<uniform> settings : Settings;
+
+[[binding(0), group(1)]] var<storage, read_write> normals : FloatArray;
+
 [[binding(0), group(2)]] var<storage, read> slopes : Slopes;
 [[binding(1), group(2)]] var<storage, read> facet12 : FloatArray;
 
@@ -103,5 +105,6 @@ fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
     normals.numbers[j + i + u32(4)]=normalized.x;
     normals.numbers[j + i + u32(5)]=normalized.y;
     normals.numbers[j + i + u32(6)]=normalized.z;
+   
     return;
  }
