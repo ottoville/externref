@@ -270,7 +270,7 @@ TODO
                 }
             }
         )
-        this.TerrainHeightsbindGroupTree = scene.gpu.positionBindGroupTimeWGSL.addChildBindGroup(scene.gpu.createBindGroup(heightsLayout, heightsBindGroupEntries));
+        this.TerrainHeightsbindGroupTree = scene.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', scene.gpu.createBindGroup(heightsLayout, heightsBindGroupEntries));
         
 
 

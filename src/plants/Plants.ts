@@ -43,38 +43,42 @@ export class Plants {
         scene: Scene,
         terrainP: Promise<Terrain>,
     ) {
-        const planstPipeline = scene.gpu.rootCameralayout.addRenderPipeline(new VertexShader(scene.engine.gpu, 'grass/grass.vert.wgsl', 'main', [{
-            arrayStride: 4 * 4,
-            stepMode: "instance",
-            attributes: [{ // position
-                shaderLocation: 0,
-                offset: 0,
-                format: "float32x4"
-            }]
-        },
-        {
-            arrayStride: 4 * 4,
-            stepMode: "instance",
-            attributes: [
-                {  // shape
-                    shaderLocation: 1,
-                    offset: 0,
-                    format: "float32x4"
+        const planstPipeline = scene.gpu.rootCameralayout.addRenderPipeline(
+            new VertexShader(scene.engine.gpu, 'grass/grass.vert.wgsl', 'main', [
+                {
+                    arrayStride: 4 * 4,
+                    stepMode: "instance",
+                    attributes: [{ // position
+                        shaderLocation: 0,
+                        offset: 0,
+                        format: "float32x4"
+                    }]
+                },
+                {
+                    arrayStride: 4 * 4,
+                    stepMode: "instance",
+                    attributes: [
+                        {  // shape
+                            shaderLocation: 1,
+                            offset: 0,
+                            format: "float32x4"
+                        }
+                    ]
+                }, {
+                    arrayStride: 12,
+                    stepMode: 'vertex',
+                    attributes: [{
+                        // vertex position
+                        shaderLocation: 2,
+                        offset: 0,
+                        format: "float32x3"
+                    }]
                 }
-            ]
-        },{
-            arrayStride: 12,
-            stepMode: 'vertex',
-            attributes: [{
-                // vertex position
-                shaderLocation: 2,
-                offset: 0,
-                format: "float32x3"
-            }]
-        }]), new Shader(scene.engine.gpu, 'color.frag.wgsl'), {
+            ]),
+            new Shader(scene.engine.gpu, 'color.frag.wgsl'), {
             primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }
         });
-        const drawable = planstPipeline.addDrawableIndirect(scene, new Set([scene.gpu.renderPassScreen]), scene.gpu.createGPUBuffer(4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST]),'Plants')
+        const drawable = planstPipeline.addDrawableIndirect(scene, new Set([scene.gpu.renderPassScreen]), scene.gpu.createGPUBuffer(4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST]), 'Plants')
         const positionGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
         const shapeGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
 
@@ -85,9 +89,9 @@ export class Plants {
         drawable.setVertexBuffer(0, positionGPU)
         drawable.setVertexBuffer(1, shapeGPU);
         drawable.setVertexBuffer(2, new Float32Array([
-            0.02,  0.0,
+            0.02, 0.0,
             -0.02, 0.0,
-            0.014,  0.29,
+            0.014, 0.29,
             -0.014, 0.29,
             0.007, 0.57,
             -0.007, 0.57,
@@ -239,16 +243,6 @@ export class Plants {
  
          let shapebuffer = new Buffer(engine, new Float32Array(shapes), true, 4, false, true);
          let geometry: Geometry | null;
-  
-         let l = new LazyEval(() => {
-             this.worker.message(WorkerReturn.Promise, 'get', {
-                 offset: this.offset,
-                 shape: shapes
-             })
-         }, true);
-         l.eval(4000);
-         this.camera.onViewMatrixChangedObservable.add(() => {
-             l.eval(4000);
-         }); */
+   */
     }
 }

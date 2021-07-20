@@ -17,7 +17,7 @@ function getRenderPipeline(gpu: GPU) {
         minFilter: "nearest",
         mipmapFilter:"nearest"
     });
-    const bindGroupTextureWater = gpu.positionBindGroupTimeWGSL.addChildLayout(gpu.createBindGroupLayout(
+    const bindGroupTextureWater = gpu.positionBindGroupTimeWGSL.addChildLayout('water', gpu.createBindGroupLayout(
         'water',
         {
             binding: 0,

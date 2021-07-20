@@ -374,8 +374,7 @@ export class Canvas extends TerraCompoment {
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipelineClusters);
                 passEncoder.setBindGroup(0,bindGroup);
-                const WORKGROUP_SIZE:[number,number,number] = [4, 2, 4];
-                passEncoder.dispatch(Math.ceil(gpu.clustersInRow[0]/WORKGROUP_SIZE[0]),Math.ceil(gpu.clustersInRow[1]/WORKGROUP_SIZE[1]),Math.ceil(gpu.clustersInRow[2]/WORKGROUP_SIZE[2]));
+                passEncoder.dispatch(...gpu.CLUSTER_DISPATCH_SIZE);
                 passEncoder.endPass();
                 commandEncoder.copyBufferToBuffer(gpu.clusterArrayBuffer,0,clusterArrayBufferDst,0,gpu.clusterSizeinBytes);
                 gpu.device.queue.submit([commandEncoder.finish()]);

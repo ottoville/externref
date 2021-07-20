@@ -97,24 +97,62 @@ export class GPU {
     clusterArrayBuffer: GPUStorageBuffer & GPUCopySRCBuffer;
     clusterLightsBuffer: GPUStorageBuffer;
     readonly clustersInRow:[number,number,number]=[32, 18, 48];
+
     clusterSizeinBytes: number;
 
 
-
+    readonly CLUSTER_WORKGROUP_SIZE:[number,number,number] = [4, 2, 4];
+    readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = this.clustersInRow.map((v,i) => Math.ceil(v/this.CLUSTER_WORKGROUP_SIZE[i]!)) as [number,number,number];
+    viewUniformsLayout: GPUBindGroupLayout;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, readonly shaderModules: Map<string, GPUShaderModule>) {
+
         const totalClusters=this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
         this.clusterSizeinBytes= totalClusters * 4 * 8;
         this.clusterArrayBuffer=this.createGPUBuffer(this.clusterSizeinBytes, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
         const clusterLightsSize=totalClusters * 2 * Uint32Array.BYTES_PER_ELEMENT;
         const maxLightsPerCluster=63
         this.clusterLightsBuffer=this.createGPUBuffer(1 + clusterLightsSize +   maxLightsPerCluster*clusterLightsSize, [GPUBufferUsage.STORAGE]);
-        this.updateViewPipeline=this.createComputePipeline('updateView.comp.wgsl');
+        const viewLayout=this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding:0,
+                    visibility:GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type:'read-only-storage'
+                    }
+                },{
+                    binding:1,
+                    visibility:GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type:'read-only-storage'
+                    }
+                },{
+                    binding:2,
+                    visibility:GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type:'storage'
+                    }
+                }
+            ]
+        });
+        this.viewUniformsLayout= this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding:0,
+                    visibility:GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type:'uniform'
+                    }
+                }
+            ]
+        });
+        this.updateViewPipeline=this.createComputePipeline('updateView.comp.wgsl',this.device.createPipelineLayout({bindGroupLayouts:[viewLayout, this.viewUniformsLayout]}));
 
 
         this.GPUMeshes = this.createGPUBuffer(TerraNodeGPU.alignment /* meshes count etc */ + TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
         this.GPULightsArray = this.createGPUBuffer(63*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
         
-        this.updateViewBindGroup=this.updateViewPipeline.createBindGroup(0, 
+        this.updateViewBindGroup=this.updateViewPipeline.createBindGroup(viewLayout, 
             [
                 {
                     binding: 0,
@@ -152,7 +190,7 @@ export class GPU {
                     type: "uniform"
                 }
             });
-        this.rootCameralayout = new PipelineLayout(this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
+        this.rootCameralayout = new PipelineLayout('rootCamera', this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
 
         this.uniformBindGroupLayoutLightsWGSL2 = this.createBindGroupLayout('uniformBindGroupLayoutLightsWGSL2',
             {
@@ -211,7 +249,7 @@ export class GPU {
                 }
             }
         );
-        this.rootLayout = new PipelineLayout(this, BindGroupLayoutCanvas);
+        this.rootLayout = new PipelineLayout('rootLayout', this, BindGroupLayoutCanvas);
         const BindGroupLayoutPosition= this.createBindGroupLayout(
             'BindGroupLayoutPosition',
             {
@@ -232,10 +270,10 @@ export class GPU {
                     size: TerraNodeGPU.GPUDataSize * 4
                 }
             }]);
-        this.positionBindGroupTime = this.rootCameralayout.addChildBindGroup(this.BindGroupPosition, true);
+        this.positionBindGroupTime = this.rootCameralayout.addChildBindGroup('positionBindGroupTime', this.BindGroupPosition, true);
 
-        this.positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout(BindGroupLayoutPosition);
-        this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout(this.createBindGroupLayout(
+        this.positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout('positionBindGroupTimeWGSL', BindGroupLayoutPosition);
+        this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout('lightsBindGroupTexture2', this.createBindGroupLayout(
         'lightsBindGroupTexture2',
             {
                 binding: 0,

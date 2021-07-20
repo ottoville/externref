@@ -16,7 +16,7 @@ export class PipelineLayout {
     renderPipeLines: Set<RenderPipeline> = new Set();
 
     layout: GPUPipelineLayout;
-    constructor(public gpu: GPU, public bindGroupLayout: BindGroupLayout<[]>, public parent?: PipelineLayout, public sharedBindgroup?: (GPUBindGroup), public isDynamic = false, isRoot = false, debug=false) {
+    constructor(label:string, public gpu: GPU, public bindGroupLayout: BindGroupLayout<[]>, public parent?: PipelineLayout, public sharedBindgroup?: (GPUBindGroup), public isDynamic = false, isRoot = false, debug=false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout.layout];
         if (!isRoot && parent) {
             let curparent: PipelineLayout | undefined = parent;
@@ -29,14 +29,14 @@ export class PipelineLayout {
             console.log(layoutTree);
         }
 
-        this.layout = this.gpu.device.createPipelineLayout({ bindGroupLayouts: layoutTree });
+        this.layout = this.gpu.device.createPipelineLayout({ bindGroupLayouts: layoutTree, label });
     }
-    addChildLayout<T extends BindGroupLayout<GPUBindGroupEntry[]>>(meshBindGroupLayout: T,debug?:boolean): LayoutGroupDrawable<extractGeneric<T>> {
-        return new LayoutGroupDrawable(this.gpu, meshBindGroupLayout, this, undefined,undefined,undefined,debug);
+    addChildLayout<T extends BindGroupLayout<GPUBindGroupEntry[]>>(label:string, meshBindGroupLayout: T,debug?:boolean): LayoutGroupDrawable<extractGeneric<T>> {
+        return new LayoutGroupDrawable(label, this.gpu, meshBindGroupLayout, this, undefined,undefined,undefined,debug);
     }
-    addChildBindGroup(sharedBindgroup: (GPUBindGroup), isDynamic: boolean): DynamicPipelineLayout
-    addChildBindGroup(sharedBindgroup: (GPUBindGroup)): PipelineLayout
-    addChildBindGroup(sharedBindgroup: (GPUBindGroup), isDynamic?: boolean): PipelineLayout {
+    addChildBindGroup(label:string, sharedBindgroup: (GPUBindGroup), isDynamic: boolean): DynamicPipelineLayout
+    addChildBindGroup(label:string, sharedBindgroup: (GPUBindGroup)): PipelineLayout
+    addChildBindGroup(label:string, sharedBindgroup: (GPUBindGroup), isDynamic?: boolean): PipelineLayout {
         for(const bg of this.subBindGroups) {
             if(bg.sharedBindgroup === sharedBindgroup) {
                 return bg;
@@ -44,9 +44,9 @@ export class PipelineLayout {
         }
         let r: PipelineLayout;
         if (!isDynamic)
-            r = new PipelineLayout(this.gpu, this.gpu.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
+            r = new PipelineLayout(label, this.gpu, this.gpu.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
         else
-            r = new DynamicPipelineLayout(this.gpu, this.gpu.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
+            r = new DynamicPipelineLayout(label, this.gpu, this.gpu.GPUBindGroupLayouts.get(sharedBindgroup)!, this, sharedBindgroup, isDynamic);
         this.subBindGroups.add(r);
         return r;
     }
