@@ -4,7 +4,7 @@
   maxPoint : vec4<f32>;
 };
 [[block]] struct clusterArray {
-  cluster : [[stride(32)]] array<VolumeTileAABB>;
+  cluster : [[stride(288)]] array<VolumeTileAABB>;
 };
 
 [[block]] struct screenToView {

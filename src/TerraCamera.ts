@@ -35,11 +35,11 @@ export class TerraCamera {
     pickingRay = new Float32Array(this.#pickingRayBuffer);
 
     readonly #uniformBuffer:GPUUniformBuffer & GPUCopyDSTBuffer; //Todo: set to private
-    readonly #uniformBindGroup:GPUBindGroup;
     onRender?: () => void;
     target: { readonly 0: number; readonly 1: number; readonly 2: number; };
     position: { readonly 0: number; readonly 1: number; readonly 2: number; };
     #updateViewBindGroup: GPUBindGroup;
+    readonly #uniformBindGroup: () => GPUBindGroup;
 
     update(cb: (values: { position: TerraVector3, target: TerraVector3 }) => void) {
         cb({ position: this.#position, target: this.#target });
@@ -50,15 +50,28 @@ export class TerraCamera {
     constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, private engine: Engine, main = true, parent?: TerraCamera) {
         this.#projectionArr = new TerraMatrix(projection);
         this.#uniformBuffer= gpu.createGPUBuffer(this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
-        this.#uniformBindGroup = this.gpu.createBindGroup(
+        this.#uniformBindGroup = () => this.gpu.createBindGroup(
             gpu.uniformBindGroupLayoutWithTime,
             [{
                 binding: 0,
                 resource: {
                     buffer: this.#uniformBuffer
                 }
-            }, gpu.timeGroup]);
-        this.#updateViewBindGroup=this.gpu.updateViewPipeline.createBindGroup(1, 
+            }, gpu.timeGroup,
+            {
+                binding: 2,
+                resource: {
+                    buffer: gpu.clusterArrayBuffer
+                }
+            },
+            {
+                binding: 3,
+                resource: {
+                    buffer: gpu.projectionUniformsBuffer
+                }
+            }
+        ]);
+        this.#updateViewBindGroup=this.gpu.updateViewPipeline.createBindGroup(this.gpu.viewUniformsLayout, 
             [
                 {
                     binding: 0,
@@ -102,9 +115,12 @@ export class TerraCamera {
     }
     #doUpdateView = false;
     updateView() {
-        this.viewArr[2] = this.target[0] - this.#position[0];
-        this.viewArr[6] = this.target[1] - this.#position[1];
-        this.viewArr[10] = this.target[2] - this.#position[2];
+        //for LHW this is target - position
+        this.viewArr[2] = this.#position[0] - this.target[0];
+        this.viewArr[6] = this.#position[1] - this.target[1];
+        this.viewArr[10] = this.#position[2] - this.target[2];
+
+
 
         const zLength = Math.sqrt(this.viewArr[2] * this.viewArr[2] + this.viewArr[6] * this.viewArr[6] + this.viewArr[10] * this.viewArr[10]);
         if (!(zLength === 0 || zLength === 1)) {
@@ -176,28 +192,23 @@ export class TerraCamera {
             const allocated=this.engine.rustEngine.allocated_gpu_memory;
             const buffLength=Uint32Array.BYTES_PER_ELEMENT + allocated.byteLength;
             const tempBuffer = this.gpu.createGPUBuffer(buffLength, [GPUBufferUsage.COPY_SRC], true);
-            new Uint8Array(tempBuffer.getMappedRange(0,buffLength)).set([allocated.length, ...allocated]);
+            new Uint32Array(tempBuffer.getMappedRange(0,buffLength)).set([allocated.length, ...allocated]);
             tempBuffer.unmap();
 
             commandEncoder.copyBufferToBuffer(
                 tempBuffer, 0,
                 this.gpu.GPUMeshes, 0,
                 buffLength);
-                        
-            
-            
             // Update lights position
             //TODO: share commandencoder and pipeline with all cameras
-           
             const lightPass = commandEncoder.beginComputePass();
             lightPass.setPipeline(this.gpu.updateViewPipeline);
             lightPass.setBindGroup(0, this.gpu.updateViewBindGroup);
             lightPass.setBindGroup(1, this.#updateViewBindGroup);
-            lightPass.dispatch(1);
+            lightPass.dispatch(...this.gpu.CLUSTER_DISPATCH_SIZE);
             lightPass.endPass();
 
-            //this.gpu.device.queue.submit([commandEncoder.finish()]);
-
+            this.gpu.device.queue.submit([commandEncoder.finish()]);
         }
         //TODO: use SIMD, use column major matrix?
         if (this.#doUpdateView) {

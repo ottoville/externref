@@ -43,7 +43,7 @@ export class Canvas extends TerraCompoment {
     async initalize(): Promise<[Scene, ArcRotateCamera]> {
         if (!window.navigator.gpu)
             throw ('no webgpu support');
-        const adapter = await window.navigator.gpu.requestAdapter();
+        const adapter = await window.navigator.gpu.requestAdapter({powerPreference:'high-performance'});
         this.progress = 4;
 
         if (!adapter)
@@ -100,13 +100,13 @@ export class Canvas extends TerraCompoment {
 
         this.progress = 18;
 
-        const waterCamera = new TerraCamera(gpu.renderPassWater, projectionmatrixBuffer, gpu, terraEngine, false, mainCamera);
+        /*const waterCamera = new TerraCamera(gpu.renderPassWater, projectionmatrixBuffer, gpu, terraEngine, false, mainCamera);
         waterCamera.beforeViewUpdate.add((position, target) => {
             position[1] -= (position[1] - 3) * 2;
             target[1] = -target[1];
-        });
+        });*/
 
-        const TerraCameras = [mainCamera, waterCamera]
+        const TerraCameras = [mainCamera/*, waterCamera*/]
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
         const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
@@ -115,11 +115,11 @@ export class Canvas extends TerraCompoment {
 
 
 
-        const mainScene = new Scene('main', gpu, terraEngine, [mainCamera, waterCamera], (terrascene) => {
+        const mainScene = new Scene('main', gpu, terraEngine, [mainCamera/*, waterCamera*/], (terrascene) => {
             const sun = new Sun2(terrascene);
             // Initial scene objects here
 
-            const sea = new Sea(terrascene);
+            //const sea = new Sea(terrascene);
             //new testPlane(terrascene);
 
             const b = new Box(terrascene);
@@ -127,7 +127,7 @@ export class Canvas extends TerraCompoment {
             new Human(terrascene)
             const terrainInited = Terrain.loadFromTexture(terrascene);
 
-            const ready = terrainInited.then(async ground => [ground, sea]);
+            const ready = terrainInited.then(async ground => [ground]);
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
 
             DB.then(DB => {
@@ -185,9 +185,11 @@ export class Canvas extends TerraCompoment {
        // let z = 0;
         b2.SetTranslation([x, 400, 0])
         //let x2=-1000;
+        //@ts-ignore
         let a=0;
         setInterval(() => {
-            b2.SetTranslation([x*Math.cos(a), 400,x*Math.sin(a)])
+            //b2.SetTranslation([x*Math.cos(a), 400,x*Math.sin(a)])
+            //@ts-ignore
             a+=0.005;
             //b3.SetTranslation([x2++, 400, 0])
         },10);
@@ -284,6 +286,7 @@ export class Canvas extends TerraCompoment {
             width: 1920,
             height: 1080
         }
+        const computePipelineClusters = gpu.createComputePipeline('clusters.comp.wgsl');
         const ro = new window.ResizeObserver(entries => {
             const entry = entries[0];
             if (!entry)
@@ -317,26 +320,25 @@ export class Canvas extends TerraCompoment {
                 //min view distance
                 const n = 1;
                 //max view distance
-                const f = 100000;
+                const farPlane = 100000;
                 //field of view?
-                const fov = 0.8
-                const t = 1.0 / (Math.tan(fov * 0.5));
-                const a = t;
-                const b = t * aspectRatio;
-                const c = (f + n) / (f - n);
-                const d = -2.0 * f * n / (f - n);
+                const fov = 0.4
 
+                const f = 1.0 / Math.tan(fov / 2);
+                const nf = 1 / (n - farPlane);
+                
                 projectionmatrix.set([
-                    a, 0.0, 0.0, 0.0,
-                    0.0, b, 0.0, 0.0,
-                    0.0, 0.0, c, 1.0,
-                    0.0, 0.0, d, 0.0,
+                    f / aspectRatio, 0.0, 0.0, 0.0,
+                    0.0, f, 0.0, 0.0,
+                    0.0, 0.0, farPlane * nf, -1.0,
+                    0.0, 0.0, farPlane * n * nf, 0.0,
                 ]);
                 
-                const computePipelineClusters = gpu.createComputePipeline('clusters.comp.wgsl');
+                if (farPlane == null || farPlane === Infinity) {
+                    projectionmatrix[10] = 1;
+                    projectionmatrix[14] = -n;
+                }
 
-
-                const clusterArrayBufferDst=gpu.createGPUBuffer(gpu.clusterSizeinBytes, [GPUBufferUsage.MAP_READ,GPUBufferUsage.COPY_DST]);
                 const screenToViewBuffer=gpu.createGPUBuffer(80, [GPUBufferUsage.UNIFORM], true);
                 const gpuBuffer=screenToViewBuffer.getMappedRange();
                 const inverted=new TerraMatrix(gpuBuffer);
@@ -345,9 +347,10 @@ export class Canvas extends TerraCompoment {
                 screenToViewBuffer.unmap();
                
                 gpu.projectionUniformsBuffer.destroy();
-                gpu.projectionUniformsBuffer=gpu.createGPUBuffer(16, [GPUBufferUsage.UNIFORM], true);
+                gpu.projectionUniformsBuffer=gpu.createGPUBuffer(16 + 64, [GPUBufferUsage.UNIFORM], true);
                 const uniformbuffer=gpu.projectionUniformsBuffer.getMappedRange();
-                new Float32Array(uniformbuffer).set([n,f,this.#canvasElem.width,this.#canvasElem.height]);
+                new Float32Array(uniformbuffer,0,4).set([n,farPlane,this.#canvasElem.width,this.#canvasElem.height]);
+                new Float32Array(uniformbuffer,4*Float32Array.BYTES_PER_ELEMENT, 16).set(projectionmatrix);
                 gpu.projectionUniformsBuffer.unmap();
                 const bindGroup = gpu.device.createBindGroup({
                     layout: computePipelineClusters.getBindGroupLayout(0),
@@ -376,11 +379,7 @@ export class Canvas extends TerraCompoment {
                 passEncoder.setBindGroup(0,bindGroup);
                 passEncoder.dispatch(...gpu.CLUSTER_DISPATCH_SIZE);
                 passEncoder.endPass();
-                commandEncoder.copyBufferToBuffer(gpu.clusterArrayBuffer,0,clusterArrayBufferDst,0,gpu.clusterSizeinBytes);
                 gpu.device.queue.submit([commandEncoder.finish()]);
-                await clusterArrayBufferDst.mapAsync(GPUMapMode.READ);
-                //@ts-expect-error
-                const buffer=clusterArrayBufferDst.getMappedRange();
                 
                 renderFrame = window.requestAnimationFrame(renderLoop);
             }, 500)

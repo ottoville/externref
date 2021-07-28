@@ -59,7 +59,7 @@ export class GPU {
     readonly rootLayout:PipelineLayout;
     readonly positionBindGroupTimeWGSL:LayoutGroupDrawable<[GPUBindGroupEntry]>;
 
-    readonly uniformBindGroupLayoutWithTime : BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry]>;
+
     readonly uniformBindGroupLayoutLightsWGSL2 : BindGroupLayout<[GPUBindGroupEntry]>;
 
     readonly lightsBindGroupTexture2 : LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
@@ -83,11 +83,12 @@ export class GPU {
         gRenderTargetPositions: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "SAMPLED", "COPY_SRC"]>>;
         gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "SAMPLED"]>>;
     }>;
+    /*
     readonly renderPassWater: RenderPass<{
         normals: RenderTarget<Texture<"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED']>>;
         position: RenderTarget<Texture<"rgba32float", ['RENDER_ATTACHMENT', 'SAMPLED']>>;
         diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'SAMPLED']>>;
-    }>;
+    }>;*/
 
     readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<'bgra8unorm',['RENDER_ATTACHMENT']>>; }>;
     context: GPUPresentationContext;
@@ -95,7 +96,6 @@ export class GPU {
     updateViewPipeline:TerraGPUComputePipeLine;
     updateViewBindGroup: GPUBindGroup;
     clusterArrayBuffer: GPUStorageBuffer & GPUCopySRCBuffer;
-    clusterLightsBuffer: GPUStorageBuffer;
     readonly clustersInRow:[number,number,number]=[32, 18, 48];
 
     clusterSizeinBytes: number;
@@ -104,14 +104,12 @@ export class GPU {
     readonly CLUSTER_WORKGROUP_SIZE:[number,number,number] = [4, 2, 4];
     readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = this.clustersInRow.map((v,i) => Math.ceil(v/this.CLUSTER_WORKGROUP_SIZE[i]!)) as [number,number,number];
     viewUniformsLayout: GPUBindGroupLayout;
+    uniformBindGroupLayoutWithTime: BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, readonly shaderModules: Map<string, GPUShaderModule>) {
 
         const totalClusters=this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
-        this.clusterSizeinBytes= totalClusters * 4 * 8;
-        this.clusterArrayBuffer=this.createGPUBuffer(this.clusterSizeinBytes, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-        const clusterLightsSize=totalClusters * 2 * Uint32Array.BYTES_PER_ELEMENT;
-        const maxLightsPerCluster=63
-        this.clusterLightsBuffer=this.createGPUBuffer(1 + clusterLightsSize +   maxLightsPerCluster*clusterLightsSize, [GPUBufferUsage.STORAGE]);
+        this.clusterSizeinBytes= totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
+        this.clusterArrayBuffer=this.createGPUBuffer(this.clusterSizeinBytes + 16 /* debug */, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
         const viewLayout=this.device.createBindGroupLayout({
             entries: [
                 {
@@ -122,12 +120,6 @@ export class GPU {
                     }
                 },{
                     binding:1,
-                    visibility:GPUShaderStage.COMPUTE,
-                    buffer: {
-                        type:'read-only-storage'
-                    }
-                },{
-                    binding:2,
                     visibility:GPUShaderStage.COMPUTE,
                     buffer: {
                         type:'storage'
@@ -165,12 +157,6 @@ export class GPU {
                     resource: {
                         buffer: this.clusterArrayBuffer,
                     },
-                },
-                {
-                    binding: 2,
-                    resource: {
-                        buffer: this.clusterLightsBuffer,
-                    },
                 }
             ]
         )
@@ -178,7 +164,7 @@ export class GPU {
             'uniformBindGroupLayoutWithTime',
             {
                 binding: 0,
-                visibility: GPUShaderStage.VERTEX,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                 buffer: {
                     type: "uniform"
                 }
@@ -186,6 +172,20 @@ export class GPU {
             {
                 binding: 1,
                 visibility: GPUShaderStage.VERTEX,
+                buffer: {
+                    type: "uniform"
+                }
+            },
+            {
+                binding: 2,
+                visibility: GPUShaderStage.FRAGMENT,
+                buffer: {
+                    type: 'read-only-storage'
+                }
+            },
+            {
+                binding: 3,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                 buffer: {
                     type: "uniform"
                 }
@@ -247,6 +247,13 @@ export class GPU {
                 buffer: {
                     type: "uniform"
                 }
+            },
+            {
+                binding: 7,
+                visibility: GPUShaderStage.FRAGMENT,
+                buffer: {
+                    type: "read-only-storage"
+                }
             }
         );
         this.rootLayout = new PipelineLayout('rootLayout', this, BindGroupLayoutCanvas);
@@ -297,16 +304,16 @@ export class GPU {
             (w, h) => {
                 return [w, h]
             });
-        const normalTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED'])
-        const positionTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED'])
-        const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'SAMPLED'])
-    
+        //const normalTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED'])
+        //const positionTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED'])
+        //const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'SAMPLED'])
+    /*
         this.renderPassWater = new RenderPass(this, {
             normals: new RenderTarget(normalTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
             position: new RenderTarget(positionTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
             diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
         }, 1, false, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED);
-       
+      */ 
         const canvasTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT'])
 
         this.renderPassCanvas = new RenderPass(this, {
@@ -334,7 +341,7 @@ export class GPU {
 
         //water color { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }
 
-        this.renderPasses = new Set([this.renderPassCanvas, this.renderPassScreen, this.renderPassWater]);
+        this.renderPasses = new Set([this.renderPassCanvas, this.renderPassScreen/*, this.renderPassWater*/]);
         //[this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
         const canvasSampler = device.createSampler({
             magFilter: "nearest",
@@ -343,7 +350,8 @@ export class GPU {
             });
         this.projectionUniformsBuffer=this.createGPUBuffer(16, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], true);
 
-        this.BindGroupCanvas = (renderPass: RenderPass) => this.createBindGroupForRenderPass(BindGroupLayoutCanvas, renderPass,
+        this.BindGroupCanvas = (renderPass: RenderPass) =>  {
+            return this.createBindGroupForRenderPass(BindGroupLayoutCanvas, renderPass,
             [{
                 binding: 0,
                 resource: canvasSampler
@@ -377,9 +385,15 @@ export class GPU {
                 resource: {
                     buffer: this.projectionUniformsBuffer
                 }
+            },
+            {
+                binding: 7,
+                resource: {
+                    buffer: this.clusterArrayBuffer
+                }
             }]
         );
-
+        }
         this.#DynamicBindGroups.add(this.BindGroupPosition);
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
