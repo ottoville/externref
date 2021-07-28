@@ -339,10 +339,9 @@ export class Canvas extends TerraCompoment {
                     projectionmatrix[14] = -n;
                 }
 
-                const screenToViewBuffer=gpu.createGPUBuffer(80, [GPUBufferUsage.UNIFORM], true);
+                const screenToViewBuffer=gpu.createGPUBuffer(64, [GPUBufferUsage.UNIFORM], true);
                 const gpuBuffer=screenToViewBuffer.getMappedRange();
                 const inverted=new TerraMatrix(gpuBuffer);
-                new Float32Array(gpuBuffer,64,4).set([100,100,100,0])
                 projectionmatrix.invertToRef(inverted);
                 screenToViewBuffer.unmap();
                

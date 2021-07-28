@@ -24,10 +24,6 @@
 [[binding(0), group(1)]] var<uniform> worldposition : WorldPosition;
 [[binding(1), group(0)]] var<uniform> times : Time;
 
-
-
-
-
 //[[location(0)]] var<out> shading : f32;
 //[[location(1)]] var<out> ambient : vec3<f32>;
 

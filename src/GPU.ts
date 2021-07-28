@@ -109,7 +109,7 @@ export class GPU {
 
         const totalClusters=this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
         this.clusterSizeinBytes= totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
-        this.clusterArrayBuffer=this.createGPUBuffer(this.clusterSizeinBytes + 16 /* debug */, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+        this.clusterArrayBuffer=this.createGPUBuffer(this.clusterSizeinBytes, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
         const viewLayout=this.device.createBindGroupLayout({
             entries: [
                 {
