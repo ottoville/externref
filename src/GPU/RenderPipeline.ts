@@ -29,9 +29,11 @@ export class RenderPipeline {
 
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
         if(!renderPipelineDescriptor.primitive)
-            renderPipelineDescriptor.primitive={cullMode:'back'};
-        else if(!renderPipelineDescriptor.primitive.cullMode)
+            renderPipelineDescriptor.primitive={cullMode:'back', frontFace:'cw'};
+        if(!renderPipelineDescriptor.primitive.cullMode)
             renderPipelineDescriptor.primitive.cullMode='back';
+        if(!renderPipelineDescriptor.primitive.frontFace)
+            renderPipelineDescriptor.primitive.frontFace='cw';
 
     }
     destroy(): void {

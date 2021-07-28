@@ -216,7 +216,8 @@ export class Canvas extends TerraCompoment {
             new Shader(gpu, 'deferred.frag.wgsl'), {
             label: 'canvas',
             primitive: {
-                topology: 'triangle-list'
+                topology: 'triangle-list',
+                frontFace:'ccw'
             },
             depthStencil: {
                 depthWriteEnabled: false,
