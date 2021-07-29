@@ -11,17 +11,7 @@
    id : u32;
 };
 
-//[[block]] struct Lights {
-//  [[offset(48)]] sunDirection : vec3<f32>;
-//  [[offset(80)]] ambient : vec3<f32>;
-//  [[offset(92)]] shadow : f32;
-//};
-[[block]] struct Time {
-  time : u32;
-  delta : f32;
-};
 [[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
-[[binding(1), group(0)]] var<uniform> times : Time;
 
 
 //[[binding(0), set(1)]] var<uniform> lights : Lights;

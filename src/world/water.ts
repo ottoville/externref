@@ -60,7 +60,8 @@ function getRenderPipeline(gpu: GPU) {
         {
             primitive: {
                 topology: 'triangle-strip',
-                stripIndexFormat: 'uint16'
+                stripIndexFormat: 'uint16',
+                frontFace:'cw'
             }
         }, () =>
         [

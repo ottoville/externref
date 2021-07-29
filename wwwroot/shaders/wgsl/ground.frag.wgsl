@@ -4,6 +4,16 @@ struct Output {
   [[location(1)]] Positions : vec4<f32>;
   [[location(2)]] Diffuse : vec4<f32>;
 };
+struct Meshes {
+  position : mat4x4<f32>;
+  [[size(52)]] y: f32;  //padding
+  point_light : f32;
+};
+[[block]] struct MeshArray {
+  length:u32;
+  pointers: array<u32, 63>;
+  mesh : [[stride(256)]] array<Meshes>;
+};
 [[block]] struct Uniforms {
   zNear : f32;
   zFar : f32;
@@ -21,6 +31,7 @@ struct ClusterBounds {
 };
 [[binding(2), group(0)]] var<storage, read> clustersArray : Clusters;
 [[binding(3), group(0)]] var<uniform> projection : Uniforms;
+[[binding(4), group(0)]] var<storage, read> meshes : MeshArray;
 
 [[binding(0), group(2)]] var mySampler: sampler;
 [[binding(1), group(2)]] var myTexture: texture_2d<f32>;
@@ -95,18 +106,33 @@ fn main(
 
     let clusterIndex = getClusterIndex2(vec4<f32>(fragCoord.xyz, 1.0));
     let clusterLightsCount=clustersArray.lightsCount[clusterIndex];
-    //if(clusterLightsCount>0u) {
-    //  output.Diffuse = vec4<f32>(1.0, 0.0, 0.0, 0.0);
-    //}
+    var shading:f32;
+    var color:vec3<f32>=vec3<f32>(0.0,0.0,0.0);
+    if(clusterLightsCount>0u) {
+      for (var lightPointerIndex : u32 = 0u; lightPointerIndex < clusterLightsCount; lightPointerIndex = lightPointerIndex + 1u) {
+        let lightIndex:u32 = clustersArray.lights[clusterIndex*63u + lightPointerIndex];
+        let light = meshes.mesh[lightIndex];
+        let light_position:vec3<f32> = light.position[12].xyz;
+
+        var lightDir:vec3<f32> = light_position - position.xyz;
+        let light_distance_squared= dot(lightDir, lightDir);
+        let attenuation = max(1.0 - light_distance_squared / (light.point_light * light.point_light), 0.0);
+
+        shading = max(dot(normal.xyz, normalize(lightDir)),0.0) * attenuation;
+        
+        color=color+ vec3<f32>(shading, shading, shading);
+      }
+    }
+    output.Diffuse= output.Diffuse*vec4<f32>(color,0.0);
   //DEBUG distance
 
-    let midPoint : vec3<f32> = (clustersArray.bounds[clusterIndex].maxAABB - clustersArray.bounds[clusterIndex].minAABB) / vec3<f32>(2.0, 2.0, 2.0);
-    let center : vec3<f32> = clustersArray.bounds[clusterIndex].minAABB + midPoint;
-    let radius : f32 = length(midPoint);
+    //let midPoint : vec3<f32> = (clustersArray.bounds[clusterIndex].maxAABB - clustersArray.bounds[clusterIndex].minAABB) / vec3<f32>(2.0, 2.0, 2.0);
+    //let center : vec3<f32> = clustersArray.bounds[clusterIndex].minAABB + midPoint;
+    //let radius : f32 = length(midPoint);
 
-    let fragToBoundsCenter : vec3<f32> = viewPosition.xyz - center;
-    let distToBoundsCenter : f32 = length(fragToBoundsCenter);
-    let normDist : f32 = distToBoundsCenter / radius;
+    //let fragToBoundsCenter : vec3<f32> = viewPosition.xyz - center;
+    //let distToBoundsCenter : f32 = length(fragToBoundsCenter);
+    //let normDist : f32 = distToBoundsCenter / radius;
 
     //output.Diffuse = vec4<f32>(normDist, normDist, normDist, 0.0);
 

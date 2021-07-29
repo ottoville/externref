@@ -41,55 +41,13 @@ struct ClusterBounds {
 [[binding(3), group(0)]] var diffuseTexture: texture_2d<f32>;
 [[binding(4), group(0)]] var<storage, read> meshes : MeshArray;
 [[binding(5), group(0)]] var<storage, read> lights : LightsArray_deprecated;
-[[binding(6), group(0)]] var<uniform> projection : Uniforms;
-[[binding(7), group(0)]] var<storage, read> clustersArray : Clusters;
+
 
 
 struct Output {
   [[location(0)]] Color : vec4<f32>;
 };
 
-// TODO: move to uniform
-let tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
-let tileCountF :vec3<f32>=vec3<f32>(32.0,18.0,48.0);
-
-fn linearDepth(depthSample : f32) -> f32 {
-  let depthRange : f32 = 2.0 * depthSample - 1.0;
-  return 2.0 * projection.zNear * projection.zFar / (projection.zFar + projection.zNear - depthRange * (projection.zFar - projection.zNear));
-}
-
-fn getDepthSlice(fragCoordZ : f32) -> u32 {
-
-  // TODO: scale and bias calculation can be moved outside the shader to save cycles.
-  let sliceScale : f32 = tileCountF.z / log2(projection.zFar / projection.zNear);
-  let sliceBias : f32 = -(tileCountF.z * log2(projection.zNear) / log2(projection.zFar / projection.zNear));
-  //return u32(max(log2(fragCoordZ) * sliceScale + sliceBias, 0.0));
-    // For logarithmic z buffer use linearDepth
-  return u32(max(log2(linearDepth(fragCoordZ)) * sliceScale + sliceBias, 0.0));
-}
-
-fn getTile(fragCoord : vec3<f32>) -> vec3<u32> {
-
-  // TODO: scale and bias calculation can be moved outside the shader to save cycles.
-  let sliceScale = tileCountF.z / log2(projection.zFar / projection.zNear);
-  let sliceBias = -(tileCountF.z * log2(projection.zNear) / log2(projection.zFar / projection.zNear));
-  //let zTile = u32(max(log2(fragCoord.z) * sliceScale + sliceBias, 0.0));
-  // For logarithmic z buffer use linearDepth
-  let zTile : u32 = u32(max(log2(linearDepth(fragCoord.z)) * sliceScale + sliceBias, 0.0));
-  let pos: vec2<f32> = fragCoord.xy / (projection.screenDimensions / tileCountF.xy);
-  return vec3<u32>(u32(pos.x),u32(pos.y),zTile);
-
-  //return vec3<u32>(u32(fragCoord.x / (f32(projection.screenDimensions.x) / f32(tileCount.x))),
-   //                u32(fragCoord.y / (f32(projection.screenDimensions.y) / f32(tileCount.y))),
-   //                zTile);
-}
-fn getClusterIndex2(fragCoord : vec4<f32>) -> u32 {
-
-  let tile = getTile(fragCoord.xyz);
-  return tile.x +
-         tile.y * tileCount.x +
-         tile.z * tileCount.x * tileCount.y;
-}
 [[stage(fragment)]]
 fn main([[builtin(position)]] fragCoord : vec4<f32>, [[location(0)]] uv:vec2<f32>) -> Output {
 
@@ -124,27 +82,22 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>, [[location(0)]] uv:vec2<f32
   //var color = vec3<f32>(meshes.mesh[sunOffset].ambient + (diffuse.xyz * shadingDun));
 
 
-  let clusterIndex = getClusterIndex2(vec4<f32>(fragCoord.xy, normal.w, 1.0));
-  let cluster=clustersArray.bounds[clusterIndex];
-  let clusterLightsCount=clustersArray.lightsCount[clusterIndex];
-  let clusterLights=clustersArray.lights[clusterIndex];
+  //let clusterIndex = getClusterIndex2(vec4<f32>(fragCoord.xy, normal.w, 1.0));
+  //let cluster=clustersArray.bounds[clusterIndex];
+  //let clusterLightsCount=clustersArray.lightsCount[clusterIndex];
+  //let clusterLights=clustersArray.lights[clusterIndex];
 
-  for (var lightPointerIndex : u32 = 0u; lightPointerIndex < clusterLightsCount; lightPointerIndex = lightPointerIndex + 1u) {
+  //for (var lightPointerIndex : u32 = 0u; lightPointerIndex < clusterLightsCount; lightPointerIndex = lightPointerIndex + 1u) {
+  //    let lightIndex:u32 = clustersArray.lights[clusterIndex*63u + lightPointerIndex];
+  //    var light:vec3<f32> = meshes.mesh[lightIndex].position[12].xyz;
 
-      //color=color+ vec3<f32>(1.0, 1.0, 1.0);
-
-      let lightIndex:u32 = clustersArray.lights[clusterIndex*63u + lightPointerIndex];
-      var light:vec3<f32> = meshes.mesh[lightIndex].position[12].xyz;
-
-      var lightDir:vec3<f32> = light - frust_position;
-      shading = max(dot(normal.xyz, normalize(lightDir)),0.0);
-      color=color+ vec3<f32>(shading, shading, shading);
-  }
+  //    var lightDir:vec3<f32> = light - frust_position;
+  //    shading = max(dot(normal.xyz, normalize(lightDir)),0.0);
+  //    color=color+ vec3<f32>(shading, shading, shading);
+  //}
   //output.Color=vec4<f32>(color,1.0);
   output.Color=vec4<f32>(diffuse.xyz*color,1.0);
-  if(clusterLightsCount>0u) {
-    output.Color=vec4<f32>(1.0,1.0,1.0,1.0);
-  }
+
 
   //DEBUG depth slices
   //let tile : vec3<u32> = getTile(vec3<f32>(fragCoord.xy,normal.w));

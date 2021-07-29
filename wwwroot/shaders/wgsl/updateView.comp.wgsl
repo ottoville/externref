@@ -26,8 +26,8 @@ struct ClusterBounds {
 };
 
 [[binding(0), group(0)]] var<storage, read> meshes : MeshArray;
-[[binding(1), group(0)]] var<storage, read_write> clusters : Clusters;
-[[binding(0), group(1)]] var<uniform> viewUniforms : ViewUniforms;
+[[binding(0), group(1)]] var<storage, read_write> clusters : Clusters;
+[[binding(1), group(1)]] var<uniform> viewUniforms : ViewUniforms;
 
 
 
@@ -66,8 +66,10 @@ fn main(
     let meshIndex = meshes.pointers[pointerIndex];
     let mesh=meshes.mesh[meshIndex];
     var range = mesh.point_light;
+
+    // TODO: Preselect lights with CPU and multiply range already to squared
+
     if(range > 0.0) {
-      range=500.0;
       let lightViewPos = viewUniforms.view * vec4<f32>(mesh.position[12].xyz, 1.0);
       let sqDist = sqDistPointAABB(vec3<f32>(lightViewPos.xy, lightViewPos.z), cluster.minAABB.xyz, cluster.maxAABB.xyz);
 
@@ -81,11 +83,6 @@ fn main(
         }
       }
     }
-    
-    //var offset = atomicAdd(&clusterLights.offset, clusterLightCount);
-    //for(var i = 0u; i < clusterLightCount; i = i + 1u) {
-    //  clusterLights.indices[offset + i] = cluserLightIndices[i];
-    //}
   }
   clusters.lightsCount[tileIndex] = lightCount;
 }

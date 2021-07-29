@@ -21,7 +21,7 @@ fn main([[location(0)]] v_uv : vec4<f32>,
 
   output.Normals=textureSample(normalTexture, mySampler, uv);
   output.Diffuse=textureSample(diffuseTexture, mySampler, uv);
-
+  output.Diffuse.w=0.0;
   output.Positions=vec4<f32>(position.xyz, bitcast<f32>(id));
 
   return output;
