@@ -24,9 +24,7 @@ struct Output {
   //[[location(1)]] var<out> ambient : vec3<f32>;
   [[location(1)]] normal : vec3<f32>;
   [[location(2)]] position : vec3<f32>;
-  [[location(3)]] id : u32;
-  [[location(4)]] viewPosition : vec4<f32>;
-  
+  [[location(3)]] id : u32;  
  };
 
 
@@ -42,7 +40,7 @@ fn main([[location(0)]] position : vec3<f32>,
   output.v_uv=uv; 
   output.normal=normal;
   output.position=position;
-  output.viewPosition=uniforms.view  * vec4<f32>(position.xyz, 1.0);
+
   //let localPosition:vec4<f32> = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
   //output.position=localPosition.xyz;//position;
   output.id=worldposition.id;

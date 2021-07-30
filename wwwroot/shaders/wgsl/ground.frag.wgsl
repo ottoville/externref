@@ -71,8 +71,7 @@ fn main(
   [[location(0)]]  v_uv : vec2<f32>,
   [[location(1)]] normal : vec3<f32>,
   [[location(2)]]  position : vec3<f32>,
-  [[location(3)]]  id : u32,
-  [[location(4)]]  viewPosition : vec3<f32>) -> Output {
+  [[location(3)]]  id : u32,) -> Output {
 
   var colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
       vec3<f32>(1.0, 0.0, 0.0),
@@ -124,18 +123,6 @@ fn main(
       }
     }
     output.Diffuse= output.Diffuse*vec4<f32>(color,0.0);
-  //DEBUG distance
-
-    //let midPoint : vec3<f32> = (clustersArray.bounds[clusterIndex].maxAABB - clustersArray.bounds[clusterIndex].minAABB) / vec3<f32>(2.0, 2.0, 2.0);
-    //let center : vec3<f32> = clustersArray.bounds[clusterIndex].minAABB + midPoint;
-    //let radius : f32 = length(midPoint);
-
-    //let fragToBoundsCenter : vec3<f32> = viewPosition.xyz - center;
-    //let distToBoundsCenter : f32 = length(fragToBoundsCenter);
-    //let normDist : f32 = distToBoundsCenter / radius;
-
-    //output.Diffuse = vec4<f32>(normDist, normDist, normDist, 0.0);
-
   return output;
 }
 
