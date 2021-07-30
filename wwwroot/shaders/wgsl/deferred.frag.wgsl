@@ -35,12 +35,11 @@ struct ClusterBounds {
   lightsCount: [[stride(4)]] array<u32, 27648>;
   lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
 };
-[[binding(0), group(0)]] var mySampler: sampler;
-[[binding(1), group(0)]] var normalTexture: texture_2d<f32>;
-[[binding(2), group(0)]] var positionTexture: texture_2d<f32>;
-[[binding(3), group(0)]] var diffuseTexture: texture_2d<f32>;
-[[binding(4), group(0)]] var<storage, read> meshes : MeshArray;
-[[binding(5), group(0)]] var<storage, read> lights : LightsArray_deprecated;
+[[binding(0), group(0)]] var normalTexture: texture_2d<f32>;
+[[binding(1), group(0)]] var positionTexture: texture_2d<f32>;
+[[binding(2), group(0)]] var diffuseTexture: texture_2d<f32>;
+[[binding(3), group(0)]] var<storage, read> meshes : MeshArray;
+[[binding(4), group(0)]] var<storage, read> lights : LightsArray_deprecated;
 
 
 
@@ -49,7 +48,7 @@ struct Output {
 };
 
 [[stage(fragment)]]
-fn main([[builtin(position)]] fragCoord : vec4<f32>, [[location(0)]] uv:vec2<f32>) -> Output {
+fn main([[builtin(position)]] fragCoord : vec4<f32>) -> Output {
 
   var colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
       vec3<f32>(1.0, 0.0, 0.0),
@@ -65,17 +64,18 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>, [[location(0)]] uv:vec2<f32
 
   var output:Output;
   let sunOffset:u32 = 0u;
+  let fragCoordI=vec2<i32>(round(fragCoord.xy));
 
-  let diffuse:vec4<f32> = textureSample(diffuseTexture, mySampler, uv);
+  let diffuse:vec4<f32> = textureLoad(diffuseTexture, fragCoordI, 0);
   if(diffuse.w == 0.0) {
     output.Color=vec4<f32>(diffuse.xyz,1.0);
     return output;
   }
-  let normal:vec4<f32> = textureSample(normalTexture, mySampler, uv);
+  let normal:vec4<f32> = textureLoad(normalTexture, fragCoordI, 0);
 
   let shadingDun :f32 = dot(normal.xyz,meshes.mesh[sunOffset].position[12].xyz)*meshes.mesh[sunOffset].shadow;
   //output.Color = vec4<f32>(lights.light[sunOffset].ambient + (diffuse.xyz * shadingDun),1.0);
-  var frust_position:vec3<f32> = textureSample(positionTexture, mySampler, uv).xyz;
+  var frust_position:vec3<f32> = textureLoad(positionTexture, fragCoordI, 0).xyz;
 //frust_position.y = frust_position.y - 300.0;
   var shading:f32;
   var color:vec3<f32>=vec3<f32>(0.0,0.0,0.0);

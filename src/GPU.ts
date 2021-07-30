@@ -204,40 +204,33 @@ export class GPU {
         );
         const BindGroupLayoutCanvas = this.createBindGroupLayout('BindGroupLayoutCanvas',
 
-            {
+            {   //normal
                 binding: 0,
-                visibility: GPUShaderStage.FRAGMENT,
-                sampler: {
-                    type:'non-filtering'
-                }
-            },
-            {
-                binding: 1,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
                     sampleType:'unfilterable-float'
                 },
-            }, {
-                binding: 2,
+            }, {    //position
+                binding: 1,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
                     sampleType:'unfilterable-float'
                 }
             },
             {
-                binding: 3,
+                binding: 2,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
 
                 }
             }, {
-                binding: 4,
+                binding: 3,
                 visibility: GPUShaderStage.FRAGMENT,
                 buffer: {
                     type: "read-only-storage"
                 }
             },  {
-                binding: 5,
+                binding: 4,
                 visibility: GPUShaderStage.FRAGMENT,
                 buffer: {
                     type: "read-only-storage"
@@ -331,38 +324,30 @@ export class GPU {
 
         this.renderPasses = new Set([this.renderPassCanvas, this.renderPassScreen, this.renderPassWater]);
         //[this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
-        const canvasSampler = device.createSampler({
-            magFilter: "nearest",
-            minFilter: "nearest",
-            mipmapFilter:"nearest"
-            });
 
         this.BindGroupCanvas = (renderPass: RenderPass) =>  {
             return this.createBindGroupForRenderPass(BindGroupLayoutCanvas, renderPass,
-            [{
-                binding: 0,
-                resource: canvasSampler
-            },
+            [
             {
-                binding: 1,
+                binding: 0,
                 resource: this.renderPassScreen.renderTargets.gRenderTargetNormals
             },
             {
-                binding: 2,
+                binding: 1,
                 resource: this.renderPassScreen.renderTargets.gRenderTargetPositions
             },
             {
-                binding: 3,
+                binding: 2,
                 resource: this.renderPassScreen.renderTargets.gRenderTargetDiffuse
             },
             {
-                binding: 4,
+                binding: 3,
                 resource: {
                     buffer: this.GPUMeshes
                 }
             },
             {
-                binding: 5,
+                binding: 4,
                 resource: {
                     buffer: this.GPULightsArray
                 }

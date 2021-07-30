@@ -77,12 +77,6 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
         this.elevator = terrain.mesh.create_elevator();
         this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), this, 8, 0, undefined, 'TerrainTool');
-        this.Drawable.setVertexBuffer(0, new Float32Array([
-            -0.5,  2.0,
-            -0.5, -2.0,
-            0.5,  3.0,
-            0.5, -3.0
-        ]))
         this.#pick = { position: new TerraVector3(this.engine.memory.buffer, this.elevator.mouse_position_pointer()), meshId: 0 };
         scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED

@@ -1,10 +1,3 @@
-
-let vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
-    vec2<f32>( -0.5,  2.0),
-    vec2<f32>( -0.5, -2.0),
-    vec2<f32>( 0.5,  3.0),
-    vec2<f32>( 0.5, -3.0)
-);
 [[block]] struct Scene {
    viewProjection : mat4x4<f32>;
    view : mat4x4<f32>;
@@ -79,14 +72,20 @@ struct Output {
 [[stage(vertex)]]
 fn main(
   [[builtin(instance_index)]] instanceIdx : u32,
-[[location(0)]] vertices : vec3<f32>) -> Output {
+  [[builtin(vertex_index)]] VertexIndex : u32) -> Output {
+    var vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
+      vec2<f32>( -0.5,  2.0),
+      vec2<f32>( -0.5, -2.0),
+      vec2<f32>( 0.5,  3.0),
+      vec2<f32>( 0.5, -3.0)
+    );
     var output:Output;
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; //250 * 250;
 
     var angle:f32 = (f32(time.time) * 0.001) + f32(instanceIdx) * angleStep;
     var c:f32 = cos(angle);
     var s:f32 = sin(angle);
-    var position:vec3<f32> =vec3<f32>(vertices.x,1.5,vertices.y);
+    var position:vec3<f32> =vec3<f32>(vertices[VertexIndex].x,1.5,vertices[VertexIndex].y);
     var rotated:vec2<f32> =vec2<f32>(position.x * c - position.z * s, position.x * s + position.z * c);
     var offset:vec2<f32> = rotated + vec2<f32>(10.0 * c, 10.0 * s);
 

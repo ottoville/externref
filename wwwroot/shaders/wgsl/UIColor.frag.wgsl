@@ -2,6 +2,8 @@
 //Do not write position, only color.
 
 struct Output {
+  [[location(0)]] Normals : vec4<f32>;
+  [[location(1)]] Positions : vec4<f32>;
   [[location(2)]] Diffuse : vec4<f32>;
 };
 [[stage(fragment)]]
