@@ -19,7 +19,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     #depthTexture?: GPUTexture
     #depthFormat: GPUTextureFormat = 'depth24plus-stencil8';
     bundles: GPURenderBundle[] = [];
-    colorFormats: GPUTextureFormat[] = [];
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
     #renderPassDescriptor: Partial<GPURenderPassDescriptor> = {
         colorAttachments: undefined,
@@ -34,7 +33,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         private _onResize: (width: number, height: number) => [number, number],
         private usage: number = 0) {
         for (const key in renderTargets) {
-            this.colorFormats.push(renderTargets[key]!.texture.format);
             renderTargets[key]!.texture.renderPasses.add(this);
             renderTargets[key]!.texture.size[0]=this.size[0];
             renderTargets[key]!.texture.size[1]=this.size[1];
@@ -62,10 +60,14 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     decoratePipeline(renderpipeline: RenderPipeline): GPURenderPipeline {
         const renderPipelineDescriptor = renderpipeline.renderPipelineDescriptor as GPURenderPipelineDescriptor;
         renderPipelineDescriptor.vertex = renderpipeline.vertexShader;
+        
+
         renderPipelineDescriptor.fragment = {
-            ...renderpipeline.fragmentShader, targets: this.colorFormats.map(cf => {
+            ...renderpipeline.fragmentShader,
+            targets: Object.values(this.renderTargets).map(rt => {
                 return {
-                    format: cf
+                    format: rt.texture.format,
+                    writeMask:rt.writeMask
                 }
             })
         };
@@ -155,7 +157,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
         if (!this.bundles.length) {
             const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder({
-                colorFormats: this.colorFormats,
+                colorFormats: Object.values(this.renderTargets).map(rt => rt.texture.format),
                 sampleCount: this.sampleCount,
                 depthStencilFormat: this.#depthTexture ? this.#depthFormat : undefined
             });

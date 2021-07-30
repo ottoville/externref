@@ -5,7 +5,8 @@ export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLit
     constructor(
         public readonly texture: T,
         public loadValue: GPULoadOp | GPUColor,
-        private textureViewDescriptor?: GPUTextureViewDescriptor
+        private textureViewDescriptor?: GPUTextureViewDescriptor,
+        public writeMask: GPUColorWriteFlags = 0xF
     ) {
     }
     get view(): GPUTextureView {

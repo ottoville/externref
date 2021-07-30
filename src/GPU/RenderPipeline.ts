@@ -25,7 +25,7 @@ export class RenderPipeline {
     dynamicBindGroupOffset: number[] = [];
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
     public createSharedBindGroups?: () => Set<GPUBindGroup>
-    constructor(public vertexShader:VertexShader, public fragmentShader:Shader, public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'colorStates' | 'vertex' | 'fragment'>, public bindgroupdrawable: PipelineLayout) {
+    constructor(public vertexShader:VertexShader, public fragmentShader:Shader, public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'vertex' | 'fragment'>, public bindgroupdrawable: PipelineLayout) {
 
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
         if(!renderPipelineDescriptor.primitive)
