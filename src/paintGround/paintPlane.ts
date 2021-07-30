@@ -99,7 +99,7 @@ export class paintPlane extends paintGround {
     }*/
     override destroy() {
         super.destroy();
-        this.#mesh.destroy(this.scene.engine.rustEngine);
+        this.#mesh.destroy();
         this.#mesh.Drawable.destroy();
         this.#columns = 0;
         this.#rows = 0;

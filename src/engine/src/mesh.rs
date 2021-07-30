@@ -13,7 +13,7 @@ pub use crate::terrain::elevator::Elevator;
 #[wasm_bindgen]
 pub struct Mesh {
     id:u32,
-    gpu_alignment: u32,
+    gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
     #[wasm_bindgen(skip)]
     pub gpu_mesh: GPUMesh,
     rotation: Vec4<f32>,
@@ -34,7 +34,7 @@ extern "C" {
 impl Mesh {
     #[wasm_bindgen(constructor)]
     pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize, point_light:f32) -> Self {
-        let m = Mesh {
+        let mut m = Mesh {
             id,
             gpu_alignment: engine.allocate_gpu(),
             gpu_mesh: GPUMesh {
@@ -48,7 +48,7 @@ impl Mesh {
                 custom: [0.0, 0.0, 0.0, 0.0],
                 acceleration: [0.0, 0.0, 0.0, 0.0],
                 id,
-                point_light
+                point_light_squared: point_light * point_light
             },
             geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count),
             rotation: Vec4 {
@@ -65,8 +65,9 @@ impl Mesh {
             positions_count,
         };
         if point_light > 0.0 {
-            engine.lights.insert(m.gpu_alignment());
+            engine.lights.insert(m.gpu_alignment);
         }
+        m.update_dynamic_buffer(engine);
         return m;
     }
     #[wasm_bindgen(setter)]
@@ -154,9 +155,6 @@ impl Mesh {
     }
     fn on_update(&mut self, engine:&mut Engine) {
         self.update_matrix();
-        if self.gpu_mesh.point_light > 0.0 {
-            
-        }
         self.update_dynamic_buffer(engine);
         if self.geometry.bounding_box.has_bounding {
             self.geometry.bounding_box.dirty_max=true;
@@ -224,6 +222,15 @@ impl Mesh {
         self.gpu_mesh.custom[1]=data[1];
         self.gpu_mesh.custom[2]=data[2];
         self.gpu_mesh.custom[3]=data[3];
+    }
+    pub fn set_point_light(&mut self, engine:&mut Engine, range:f32) {
+        if range > 0.0 {
+            self.gpu_mesh.point_light_squared = range * range;
+            engine.lights.insert(self.gpu_alignment);
+        } else {
+            self.gpu_mesh.point_light_squared = 0.0;
+            engine.lights.remove(&self.gpu_alignment);
+        }
     }
     #[wasm_bindgen(getter)]
     pub fn id(& self) -> u32 {

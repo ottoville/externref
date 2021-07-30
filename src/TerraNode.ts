@@ -12,34 +12,42 @@ export class MainNode extends Mesh {
     static Meshes: Map<number, MainNode> = new Map();
     get_transformation = () => new TerraMatrix(this.engine.memory.buffer, this.gpu_pointer)//new TerraMatrix(this.data.buffer);
 
-    get_velocity = () => {
+    get_velocity() {
         return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer + 16 * Float32Array.BYTES_PER_ELEMENT)
     }
-    get_translation = () => {
+    get_translation() {
         return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer + 12 * Float32Array.BYTES_PER_ELEMENT);
     }
-    SetTranslationDelta = (value: [number, number, number] | TerraVector3) => {
+    SetTranslationDelta(value: [number, number, number] | TerraVector3) {
         this.get_velocity().set(value);
         this.update_dynamic_buffer(this.engine.rustEngine);
     }
 
-    SetTranslation = (value: [number, number, number] | TerraVector3) => {
+    SetTranslation(value: [number, number, number] | TerraVector3) {
         this.get_translation().set(value);
         this.update_dynamic_buffer(this.engine.rustEngine);
     }
 
     constructor(public engine: Engine, hasBounding: boolean, has_geometry:boolean, positionsCount = 0, vertices_stride = 3, point_light=0) {
         super(engine.rustEngine, MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light);
+        Object.getOwnPropertyNames(MainNode.prototype).forEach(prop =>  {
+            const propDesc=Object.getOwnPropertyDescriptor(MainNode.prototype, prop);
+            if(propDesc)
+                Object.defineProperty(this, prop, propDesc);
+        });
         MainNode.Meshes.set(this.id, this);
         queueMicrotask(() => {
             if (this.#hasPhysics()) {
                 engine.physics.tickables.add(this);
             }
         });
-        this.update_dynamic_buffer(this.engine.rustEngine);
+        this.engine.updateAllocatedMemory();
     }
-
-    #hasPhysics = (): this is hasPhysics => {
+    override destroy() {
+        super.destroy(this.engine.rustEngine);
+        this.engine.updateAllocatedMemory();
+    }
+    #hasPhysics(): this is hasPhysics {
         return 'hasGravity' in this && 'onPhysicTick' in this;
     }
 }

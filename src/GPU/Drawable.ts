@@ -90,7 +90,7 @@ export abstract class Drawable {
         this.dynamicBuffers.forEach((gpubindgroup_offset, i) => {
             const di=dynamicIndex[i];
             if(di) {
-                renderEncoder.setBindGroup(di, gpubindgroup_offset[0], [gpubindgroup_offset[1] * TerraNodeGPU.alignment]);
+                renderEncoder.setBindGroup(di, gpubindgroup_offset[0], [this.renderPipeline.bindgroupdrawable.gpu.gpu_memory_index_size + gpubindgroup_offset[1] * TerraNodeGPU.alignment]);
             }
         });
         this.staticBuffers && renderEncoder.setBindGroup(BindGroupsStart++, this.staticBuffers)

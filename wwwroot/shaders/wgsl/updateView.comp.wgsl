@@ -2,7 +2,7 @@
 struct Meshes {
   position : mat4x4<f32>;
   [[size(52)]] y: f32;  //padding
-  point_light : f32;
+  point_light_squared : f32;
 };
 [[block]] struct MeshArray {
   length:u32;
@@ -65,16 +65,12 @@ fn main(
   for(var pointerIndex:u32=0u; pointerIndex < meshes.length; pointerIndex = pointerIndex + 1u) {
     let meshIndex = meshes.pointers[pointerIndex];
     let mesh=meshes.mesh[meshIndex];
-    var range = mesh.point_light;
-
-    // TODO: Preselect lights with CPU and multiply range already to squared
-
-    if(range > 0.0) {
+    // TODO: Preselect lights with CPU
+    if(mesh.point_light_squared > 0.0) {
       let lightViewPos = viewUniforms.view * vec4<f32>(mesh.position[12].xyz, 1.0);
       let sqDist = sqDistPointAABB(vec3<f32>(lightViewPos.xy, lightViewPos.z), cluster.minAABB.xyz, cluster.maxAABB.xyz);
 
-      var lightInCluster = sqDist <= (range * range);
-      if (lightInCluster) {
+      if (sqDist <= mesh.point_light_squared) {
         // Light affects this cluster. Add it to the list.
         clusters.lights[tileIndex*63u + lightCount] = meshIndex;
         lightCount=lightCount+1u;

@@ -195,7 +195,7 @@ export class Engine {
                 new Float32Array(tempBuffer!.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
                 commandEncoder.copyBufferToBuffer(
                     tempBuffer, tempOffset++ * dataSizeBytes,
-                    gpu.GPUMeshes, pointers[i+1]! * 256,
+                    gpu.GPUMeshes, gpu.gpu_memory_index_size + pointers[i+1]! * 256,
                     dataSizeBytes);
             }
             this.rustEngine.clear_gpu_queue();
@@ -203,6 +203,20 @@ export class Engine {
             this.gpu.tempGPUBuffers.add(tempBuffer);
             return commandEncoder.finish();
         })
+    }
+    public updateAllocatedMemory() {
+        const renderEncoder = this.gpu.device.createCommandEncoder();
+        const allocated=this.rustEngine.allocated_gpu_memory;
+        const buffLength=Uint32Array.BYTES_PER_ELEMENT + allocated.byteLength;
+        const tempBuffer = this.gpu.createGPUBuffer(buffLength, [GPUBufferUsage.COPY_SRC], true);
+        new Uint32Array(tempBuffer.getMappedRange(0,buffLength)).set([allocated.length, ...allocated]);
+        tempBuffer.unmap();
+
+        renderEncoder.copyBufferToBuffer(
+            tempBuffer, 0,
+            this.gpu.GPUMeshes, 0,
+            buffLength);
+        this.gpu.pendingCommandBuffers.add(renderEncoder.finish())
     }
     async collideWithWorld(): Promise<void> {
         //TODO: Call only when camera position change

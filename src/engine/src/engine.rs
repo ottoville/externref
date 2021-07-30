@@ -7,7 +7,7 @@ use std::collections::HashSet;
 pub struct Engine {
     gpu_reserved_slots: u64,
     #[wasm_bindgen(skip)]
-    pub gpu_queue: Vec<(*const GPUMesh, u32)>,
+    pub gpu_queue: Vec<(*const GPUMesh, u32)>, //mesh + gpu alignment
     #[wasm_bindgen(skip)]
     pub lights:HashSet<u32>,
 }
@@ -50,6 +50,7 @@ impl Engine {
         //ZERO:Free, ONE: Reserved
         let free_index=self.gpu_reserved_slots.trailing_ones();
         if free_index < 60u32 {
+            //set bit to 1
             self.gpu_reserved_slots |= 1u64<<free_index;
         }
         else {
@@ -72,6 +73,7 @@ impl Engine {
     }
     pub fn de_allocate_gpu(&mut self, address: u32) {
         self.gpu_reserved_slots &= !(1u64<<address);
+        self.lights.remove(&address);
         /*
 
         if address == self.gpu_next_available_address - 1 {

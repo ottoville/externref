@@ -7,7 +7,7 @@ struct Output {
 struct Meshes {
   position : mat4x4<f32>;
   [[size(52)]] y: f32;  //padding
-  point_light : f32;
+  point_light_squared : f32;
 };
 [[block]] struct MeshArray {
   length:u32;
@@ -116,7 +116,7 @@ fn main(
 
         var lightDir:vec3<f32> = light_position - position.xyz;
         let light_distance_squared= dot(lightDir, lightDir);
-        let attenuation = max(1.0 - light_distance_squared / (light.point_light * light.point_light), 0.0);
+        let attenuation = max(1.0 - light_distance_squared / (light.point_light_squared), 0.0);
 
         shading = max(dot(normal.xyz, normalize(lightDir)),0.0) * attenuation;
         

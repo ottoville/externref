@@ -265,17 +265,7 @@ export class Canvas extends TerraCompoment {
 
             gpu.device.queue.writeBuffer(gpu.timeBuffer, 0, timeAndDeltaBuffer);
             try {
-            //TODO: update when new mesh is added or removed
-                const allocated=terraEngine.rustEngine.allocated_gpu_memory;
-                const buffLength=Uint32Array.BYTES_PER_ELEMENT + allocated.byteLength;
-                const tempBuffer = gpu.createGPUBuffer(buffLength, [GPUBufferUsage.COPY_SRC], true);
-                new Uint32Array(tempBuffer.getMappedRange(0,buffLength)).set([allocated.length, ...allocated]);
-                tempBuffer.unmap();
 
-                renderEncoder.copyBufferToBuffer(
-                    tempBuffer, 0,
-                    gpu.GPUMeshes, 0,
-                    buffLength);
                 const lightPass = renderEncoder.beginComputePass();
                 lightPass.setPipeline(gpu.updateViewPipeline);
                 lightPass.setBindGroup(0, gpu.updateViewBindGroup);
