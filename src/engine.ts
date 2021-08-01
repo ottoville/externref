@@ -175,14 +175,11 @@ export class Engine {
             Atomics.notify(new Int32Array(this.mousePositionBuffer), 0);
         });
         gpu.onRenders2.push(() => {
-            const p=this.rustEngine.gpu_queue_pointer;
-
-            if (p[1] === 0)
-                return null
             const dataSizeBytes = TerraNodeGPU.GPUDataSize * 4; //4 * 16 + 3 * 4;
-            const pointers=new Uint32Array(this.memory.buffer, p[0],p[1]!/Uint32Array.BYTES_PER_ELEMENT);
-
-            const queueLength=p[1]!/Uint32Array.BYTES_PER_ELEMENT/2;
+            const pointers=this.rustEngine.gpu_queue_pointer;
+            if(pointers.length === 0)
+                return null;
+            const queueLength=pointers.length/2;
             const tempBuffer = gpu.createGPUBuffer(dataSizeBytes * queueLength, [GPUBufferUsage.COPY_SRC], true);
             const commandEncoder = gpu.device.createCommandEncoder();
             let tempOffset = 0;
@@ -192,7 +189,7 @@ export class Engine {
                 if(data[29]! > 0) {
                     this.updateLights=true;
                 }
-                new Float32Array(tempBuffer!.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
+                new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
                 commandEncoder.copyBufferToBuffer(
                     tempBuffer, tempOffset++ * dataSizeBytes,
                     gpu.GPUMeshes, gpu.gpu_memory_index_size + pointers[i+1]! * 256,

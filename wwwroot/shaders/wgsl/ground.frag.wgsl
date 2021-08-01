@@ -6,8 +6,13 @@ struct Output {
 };
 struct Meshes {
   position : mat4x4<f32>;
-  [[size(52)]] y: f32;  //padding
+    [[size(16)]] y: f32;  //padding
+  ambient : vec3<f32>;
+  shadow : f32;
+  [[size(20)]] x: f32;  //padding
   point_light_squared : f32;
+  directional_light : f32;
+  scenes:u32;
 };
 [[block]] struct MeshArray {
   length:u32;
@@ -105,8 +110,21 @@ fn main(
 
     let clusterIndex = getClusterIndex2(vec4<f32>(fragCoord.xyz, 1.0));
     let clusterLightsCount=clustersArray.lightsCount[clusterIndex];
-    var shading:f32;
     var color:vec3<f32>=vec3<f32>(0.0,0.0,0.0);
+
+  var shading:f32;
+  var shading_rgb:vec3<f32>;
+  //TODO, preselect directional lights
+    for (var directionalLightPointerIndex : u32 = 0u; directionalLightPointerIndex < meshes.length; directionalLightPointerIndex = directionalLightPointerIndex + 1u) {
+      let mesh = meshes.mesh[directionalLightPointerIndex];
+      if(mesh.directional_light > 0.0) {
+          //Light reflect from athmosphere
+          shading_rgb = shading_rgb + mesh.ambient;
+          //Direct sunlight
+          shading = shading + max(dot(normal.xyz,mesh.position[12].xyz) * mesh.shadow, 0.0);
+      }
+    }
+
     if(clusterLightsCount>0u) {
       for (var lightPointerIndex : u32 = 0u; lightPointerIndex < clusterLightsCount; lightPointerIndex = lightPointerIndex + 1u) {
         let lightIndex:u32 = clustersArray.lights[clusterIndex*63u + lightPointerIndex];
@@ -117,12 +135,11 @@ fn main(
         let light_distance_squared= dot(lightDir, lightDir);
         let attenuation = max(1.0 - light_distance_squared / (light.point_light_squared), 0.0);
 
-        shading = max(dot(normal.xyz, normalize(lightDir)),0.0) * attenuation;
-        
-        color=color+ vec3<f32>(shading, shading, shading);
+        shading = shading + max(dot(normal.xyz, normalize(lightDir)),0.0) * attenuation;
       }
     }
-    output.Diffuse= output.Diffuse*vec4<f32>(color,0.0);
+    let total_shading=shading_rgb+vec3<f32>(shading,shading,shading);
+    output.Diffuse= output.Diffuse*vec4<f32>(total_shading,1.0);
   return output;
 }
 

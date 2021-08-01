@@ -2,12 +2,13 @@ pub use crate::GPUMesh;
 pub use crate::mesh::Mesh;
 use wasm_bindgen::prelude::*;
 use std::collections::HashSet;
+use std::collections::HashMap;
 
 #[wasm_bindgen]
 pub struct Engine {
     gpu_reserved_slots: u64,
     #[wasm_bindgen(skip)]
-    pub gpu_queue: Vec<(*const GPUMesh, u32)>, //mesh + gpu alignment
+    pub gpu_queue: HashMap<*const GPUMesh, u32>, //mesh + gpu alignment
     #[wasm_bindgen(skip)]
     pub lights:HashSet<u32>,
 }
@@ -21,13 +22,14 @@ impl Engine {
     pub fn new() -> Self {
         Engine {
             gpu_reserved_slots: 0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,  //ZERO:Free, ONE: Reserved
-            gpu_queue: Vec::new(),
+            gpu_queue: HashMap::new(),
             lights: HashSet::new(),
         }
     }
     #[wasm_bindgen(getter)]
-    pub fn gpu_queue_pointer(&self) -> Vec<usize> {
-        return vec![self.gpu_queue.as_ptr() as usize,std::mem::size_of_val(&self.gpu_queue[..])];
+    pub fn gpu_queue_pointer(&self) -> Vec<u32> {
+        let as_vec:Vec<u32> = self.gpu_queue.clone().into_iter().map(|(gpu_mesh, alignment)| vec![gpu_mesh as u32,alignment]).flatten().into_iter().collect();//.collect();        
+        return as_vec;
     }
     pub fn clear_gpu_queue(&mut self) {
         self.gpu_queue.clear()

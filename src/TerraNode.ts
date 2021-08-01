@@ -28,8 +28,8 @@ export class MainNode extends Mesh {
         this.update_dynamic_buffer(this.engine.rustEngine);
     }
 
-    constructor(public engine: Engine, hasBounding: boolean, has_geometry:boolean, positionsCount = 0, vertices_stride = 3, point_light=0) {
-        super(engine.rustEngine, MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light);
+    constructor(public engine: Engine, hasBounding: boolean, has_geometry:boolean, positionsCount = 0, vertices_stride = 3, point_light=0, directional_light=0) {
+        super(engine.rustEngine, MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, 1);
         Object.getOwnPropertyNames(MainNode.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(MainNode.prototype, prop);
             if(propDesc)
@@ -54,14 +54,14 @@ export class MainNode extends Mesh {
 export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
 
     // abstract Drawable:DrawableDirect
-    static GPUDataSize = 16 + 4 + 4 + 4 + 2;
+    static GPUDataSize = /*transform matrix */16 /*delta */ +4 /*custom */ +4 /* acceleration */ +4 /*id */ +1 /*point_light */ +1 /*directional_light*/ +1 /*scenes*/+1;
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
     abstract Drawable: T;
 
-    constructor(engine: Engine, public renderPipeline: RenderPipeline, positionsCount: number, hasBounding = false, has_geometry = false, vertices_stride = 3, point_light = 0) {
-        super(engine, hasBounding, has_geometry, positionsCount, vertices_stride, point_light);
+    constructor(engine: Engine, public renderPipeline: RenderPipeline, positionsCount: number, hasBounding = false, has_geometry = false, vertices_stride = 3, point_light = 0, directional_light=0) {
+        super(engine, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light);
         Object.getOwnPropertyNames(TerraNodeGPU.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(TerraNodeGPU.prototype, prop);
             if(propDesc)

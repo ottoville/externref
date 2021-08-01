@@ -42,10 +42,13 @@ impl Vec3<f32> {
 }
 #[repr(align(8))]
 pub struct GPUMesh {
-    transformation: Vec4<Vec4<f32>>,
-    delta: [f32; 4],
-    custom: [f32; 4],
-    acceleration: [f32; 4],
-    id: u32,
-    point_light_squared:f32
+    transformation: Vec4<Vec4<f32>>, //16
+    delta: [f32; 4],                 //20
+    custom: [f32; 4],                //24
+    acceleration: [f32; 4],          //28
+    id: u32,                         //29
+    point_light_squared:f32,          //30
+    directional_light:f32,
+    scenes:u32, //bitmask
+    
 }

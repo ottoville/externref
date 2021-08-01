@@ -78,12 +78,9 @@ export class Canvas extends TerraCompoment {
         }
 
         this.progress = 6;
-
-
         this.progress = 10;
 
         const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
-        const projectionmatrix = new TerraMatrix(projectionmatrixBuffer);
         this.progress = 13;
 
         const terraEngine = await Engine.initEngine(gpu, DB, this.#canvasElem);
@@ -165,7 +162,7 @@ export class Canvas extends TerraCompoment {
             return [sun.gpu_alignment, ready];
         });
         const debugscene = new Scene('static', gpu, terraEngine, [mainCamera], (scene) => {
-            const sun = new MainNode(scene.engine, false, false);
+            const sun = new MainNode(scene.engine, false, false,undefined,undefined,0);
             sun.get_translation().set([0, 1, 0]);
             sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
@@ -188,7 +185,8 @@ export class Canvas extends TerraCompoment {
         //@ts-ignore
         let a = 0;
         setInterval(() => {
-            b2.SetTranslation([x*Math.cos(a), 400,x*Math.sin(a)])
+            //b2.SetTranslation([x*Math.cos(a), 400,x*Math.sin(a)])
+            //@ts-ignore
             a += 0.005;
             //b3.SetTranslation([x2++, 400, 0])
         }, 10);
@@ -332,41 +330,30 @@ export class Canvas extends TerraCompoment {
                 passEncoder.setPipeline(computePipelineClusters);
 
                 TerraCameras.forEach(camera => {
-                    //Create projection matrix
-                    //min view distance
-                    const n = 1;
-                    //max view distance
-                    const farPlane = 100000;
                     //field of view?
                     const fov = 0.4
 
                     const f = 1.0 / Math.tan(fov / 2);
-                    const nf = 1 / (n - farPlane);
+                    const nf = 1 / (camera.nearPlane - camera.farPlane);
 
-                    projectionmatrix.set([
+                    camera.projectionArr.set([
                         f / aspectRatio, 0.0, 0.0, 0.0,
                         0.0, f, 0.0, 0.0,
-                        0.0, 0.0, farPlane * nf, -1.0,
-                        0.0, 0.0, farPlane * n * nf, 0.0,
+                        0.0, 0.0, camera.farPlane * nf, -1.0,
+                        0.0, 0.0, camera.farPlane * camera.nearPlane * nf, 0.0,
                     ]);
 
-                    if (farPlane == null || farPlane === Infinity) {
-                        projectionmatrix[10] = 1;
-                        projectionmatrix[14] = -n;
+                    if (camera.farPlane == null || camera.farPlane === Infinity) {
+                        camera.projectionArr[10] = 1;
+                        camera.projectionArr[14] = -camera.nearPlane;
                     }
 
                     const screenToViewBuffer = gpu.createGPUBuffer(64, [GPUBufferUsage.UNIFORM], true);
                     const gpuBuffer = screenToViewBuffer.getMappedRange();
                     const inverted = new TerraMatrix(gpuBuffer);
-                    projectionmatrix.invertToRef(inverted);
+                    camera.projectionArr.invertToRef(inverted);
                     screenToViewBuffer.unmap();
-
-                    camera.projectionUniformsBuffer.destroy();
-                    camera.projectionUniformsBuffer = gpu.createGPUBuffer(16 + 64, [GPUBufferUsage.UNIFORM], true);
-                    const uniformbuffer = camera.projectionUniformsBuffer.getMappedRange();
-                    new Float32Array(uniformbuffer, 0, 4).set([n, farPlane, this.#canvasElem.width, this.#canvasElem.height]);
-                    new Float32Array(uniformbuffer, 4 * Float32Array.BYTES_PER_ELEMENT, 16).set(projectionmatrix);
-                    camera.projectionUniformsBuffer.unmap();
+                    camera.updateProjectionUniformsBuffer();
                     const bindGroup = gpu.device.createBindGroup({
                         layout: computePipelineClusters.getBindGroupLayout(0),
                         entries: [{

@@ -33,7 +33,7 @@ extern "C" {
 #[wasm_bindgen]
 impl Mesh {
     #[wasm_bindgen(constructor)]
-    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize, point_light:f32) -> Self {
+    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize, point_light:f32, directional_light:f32, scenes:u32) -> Self {
         let mut m = Mesh {
             id,
             gpu_alignment: engine.allocate_gpu(),
@@ -48,7 +48,10 @@ impl Mesh {
                 custom: [0.0, 0.0, 0.0, 0.0],
                 acceleration: [0.0, 0.0, 0.0, 0.0],
                 id,
-                point_light_squared: point_light * point_light
+                point_light_squared: point_light * point_light,
+                directional_light,
+                scenes,
+
             },
             geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count),
             rotation: Vec4 {
@@ -162,7 +165,7 @@ impl Mesh {
         }
     }
     pub fn update_dynamic_buffer(&mut self, engine:&mut Engine) {
-        engine.gpu_queue.push((&self.gpu_mesh, self.gpu_alignment));
+        engine.gpu_queue.insert(&self.gpu_mesh, self.gpu_alignment);
     }
     pub fn update_scale_and_rotation(&mut self, engine:&mut Engine, x: f32, y: f32, z: f32, rx: f32, ry: f32, rz: f32, rw: f32) {
         self.scaling.x = x;
@@ -179,7 +182,7 @@ impl Mesh {
         self.scaling.y = y;
         self.scaling.z = z;
         self.update_matrix();
-        engine.gpu_queue.push((&self.gpu_mesh, self.gpu_alignment));
+        engine.gpu_queue.insert(&self.gpu_mesh, self.gpu_alignment);
     }
     pub fn set_scale_x(&mut self,engine:&mut Engine, x:f32) {
         self.scaling.x=x;

@@ -1,11 +1,10 @@
 ﻿
 //import { TerraMatrix } from "/js/Math.js";
 import { TerraMatrix } from "../../Math.js";
-function WithinEpsilon(a: number, b: number, epsilon: number = 1.401298E-45): boolean {
+function WithinEpsilon(a: number, b: number, epsilon = 1.401298E-45): boolean {
     var num = a - b;
     return -epsilon <= num && num <= epsilon;
 }
-const epsilon = 1.401298E-45;
 
 function TransformCoordinatesToRef(source: [number, number, number], m: TerraMatrix, result: [number,number,number]): void {
     const x = source[0]
@@ -25,6 +24,7 @@ const cameras: Map<number, CameraWorker> = new Map();
 class CameraWorker {
     projectionViewArr: Float32Array;
     viewArr: TerraMatrix;
+    //@ts-expect-error
     tempView: TerraMatrix;
     cameraArr: Float32Array;
     projectionArr: TerraMatrix;
@@ -36,7 +36,7 @@ class CameraWorker {
         this.projectionViewArr = new Float32Array(viewProjectionPositionBuffer, 0, 16);
         this.viewArr = new TerraMatrix(viewProjectionPositionBuffer, 64);
         this.cameraArr = new Float32Array(viewProjectionPositionBuffer, 128, 3);
-        this.tempView = new TerraMatrix(viewProjectionPositionBuffer, 144);
+        //this.tempView = new TerraMatrix(viewProjectionPositionBuffer, 144);
         this.projectionArr = new TerraMatrix(projection);
 
         this.pickingRay = new Float32Array(pickingRayBuffer);
@@ -67,6 +67,7 @@ class CameraWorker {
 
     }
     updatePickingRay(worldPosition?: TerraMatrix) {
+        debugger;
         const nearScreenSource : [number, number, number] = [0, 0, 0];
         nearScreenSource[0] = this.mousePosition[0] / this.size.width * 2 - 1;
         nearScreenSource[1] = -(this.mousePosition[1] / this.size.height * 2 - 1);
@@ -149,7 +150,7 @@ onmessage = async (e: WorkerMessageObject<{ objId?: number, args: any[] }, Camer
             cameras.set(e.data.data.objId, new CameraWorker(...<[SharedArrayBuffer, SharedArrayBuffer, SharedArrayBuffer, SharedArrayBuffer, { width: number, height: number }]>e.data.data.args));
             //meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));
         } else {
-            let camera = cameras.get(e.data.data.objId);
+            const camera = cameras.get(e.data.data.objId);
             if (camera) {
                 //@ts-ignore
                 let r = camera[e.data.action](...e.data.data.args);

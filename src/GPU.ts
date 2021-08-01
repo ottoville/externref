@@ -36,7 +36,7 @@ interface GPUBindGroupTextureEntry<SampleType = 'float'> extends GPUBindGroupEnt
 
 export class GPU {
     readonly gpu_memory_index_size=256;
-
+    readonly gpu_projection_buffer_size= 80; //16 + 64;
     readonly #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
     readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();

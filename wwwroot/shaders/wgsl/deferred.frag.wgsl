@@ -73,13 +73,6 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>) -> Output {
   }
   let normal:vec4<f32> = textureLoad(normalTexture, fragCoordI, 0);
 
-  let shadingDun :f32 = dot(normal.xyz,meshes.mesh[sunOffset].position[12].xyz)*meshes.mesh[sunOffset].shadow;
-  //output.Color = vec4<f32>(lights.light[sunOffset].ambient + (diffuse.xyz * shadingDun),1.0);
-  var frust_position:vec3<f32> = textureLoad(positionTexture, fragCoordI, 0).xyz;
-//frust_position.y = frust_position.y - 300.0;
-  var shading:f32;
-  var color:vec3<f32>=vec3<f32>(0.0,0.0,0.0);
-  //var color = vec3<f32>(meshes.mesh[sunOffset].ambient + (diffuse.xyz * shadingDun));
 
 
   //let clusterIndex = getClusterIndex2(vec4<f32>(fragCoord.xy, normal.w, 1.0));
@@ -96,7 +89,7 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>) -> Output {
   //    color=color+ vec3<f32>(shading, shading, shading);
   //}
   //output.Color=vec4<f32>(color,1.0);
-  output.Color=vec4<f32>(diffuse.xyz*color,1.0);
+  output.Color=vec4<f32>(diffuse.xyz,1.0);
 
 
   //DEBUG depth slices
