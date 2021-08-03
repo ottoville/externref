@@ -67,11 +67,6 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>) -> Output {
   let fragCoordI=vec2<i32>(round(fragCoord.xy));
 
   let diffuse:vec4<f32> = textureLoad(diffuseTexture, fragCoordI, 0);
-  if(diffuse.w == 0.0) {
-    output.Color=vec4<f32>(diffuse.xyz,1.0);
-    return output;
-  }
-  let normal:vec4<f32> = textureLoad(normalTexture, fragCoordI, 0);
 
 
 
@@ -105,9 +100,6 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>) -> Output {
 //    let fragToBoundsCenter : vec3<f32> = frust_position - center;
 //    let distToBoundsCenter : f32 = length(fragToBoundsCenter);
 //    let normDist : f32 = distToBoundsCenter / radius;
-
-//    output.Color = vec4<f32>(normDist, normDist, normDist, 1.0);
-
 
   return output;
 }

@@ -221,7 +221,6 @@ export class GPU {
                 binding: 2,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
-
                 }
             }, {
                 binding: 3,
@@ -293,7 +292,7 @@ export class GPU {
             normals: new RenderTarget(normalTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
             position: new RenderTarget(positionTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
             diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
-        }, 1, false, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED);
+        }, 1, true, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2], GPUTextureUsage.SAMPLED);
       
         const canvasTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT'])
 
