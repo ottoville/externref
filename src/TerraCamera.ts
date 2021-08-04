@@ -13,59 +13,57 @@ let uniqueID = 0;
 
 export class TerraCamera {
     readonly #uniqueID: number = uniqueID++;
-    childCameras: Set<TerraCamera> = new Set();
+    readonly #childCameras: Set<TerraCamera> = new Set();
 
-    clusterArrayBuffer: GPUStorageBuffer
-    projectionUniformsBuffer: GPUUniformBuffer;
+    readonly #clusterArrayBuffer: GPUStorageBuffer
+    #projectionUniformsBuffer: GPUUniformBuffer;
 
-    #uniformBufferSize = /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ + 4 * 4;
-    #target = new TerraVector3([-500, 0, 0]);
-
-
-    #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
-
-    #projectionViewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 0);
-    viewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 64);
-
-    #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer, 0, 32);
+    readonly #uniformBufferSize = /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ + 4 * 4;
+    readonly #target = new TerraVector3([-500, 0, 0]);
 
 
-    #position = new TerraVector3(this.#viewProjectionPositionBuffer, 128);
-    readonly projectionArr:TerraMatrix;
+    readonly #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
 
-    #pickingRayBuffer = new SharedArrayBuffer(6 * 4); // origin: vec3, direction: vec3
-    pickingRay = new Float32Array(this.#pickingRayBuffer);
+    readonly #projectionViewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 0);
+    readonly viewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 64);
+
+    readonly #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer, 0, 32);
+
+
+    readonly #position = new TerraVector3(this.#viewProjectionPositionBuffer, 128);
+    readonly #projectionArr:TerraMatrix;
+
+    readonly #pickingRayBuffer = new SharedArrayBuffer(6 * 4); // origin: vec3, direction: vec3
 
     readonly #uniformBuffer:GPUUniformBuffer & GPUCopyDSTBuffer; //Todo: set to private
-    onRender?: () => void;
-    target: { readonly 0: number; readonly 1: number; readonly 2: number; };
-    position: { readonly 0: number; readonly 1: number; readonly 2: number; };
-    updateViewBindGroup: GPUBindGroup;
-    readonly #uniformBindGroup: () => GPUBindGroup;
+    readonly target: { readonly 0: number; readonly 1: number; readonly 2: number; };
+    readonly position: { readonly 0: number; readonly 1: number; readonly 2: number; };
+    readonly updateViewBindGroup: GPUBindGroup;
+    readonly uniformBindGroup: () => GPUBindGroup;
 
     update(cb: (values: { position: TerraVector3, target: TerraVector3 }) => void) {
         cb({ position: this.#position, target: this.#target });
         this.doUpdateView = true;
     }
-    farPlane = 100000;
-    nearPlane = 1;
+    readonly #farPlane = 100000;
+    readonly #nearPlane = 1;
     updateProjectionUniformsBuffer(initial=false) {
         if(!initial)
-            this.projectionUniformsBuffer.destroy();
-        this.projectionUniformsBuffer = this.gpu.createGPUBuffer(this.gpu.gpu_projection_buffer_size, [GPUBufferUsage.UNIFORM], true);
-        const uniformbuffer = this.projectionUniformsBuffer.getMappedRange();
-        new Float32Array(uniformbuffer, 0, 4).set([this.nearPlane, this.farPlane, this.gpu.canvas.width, this.gpu.canvas.height]);
-        new Float32Array(uniformbuffer, 4 * Float32Array.BYTES_PER_ELEMENT, 16).set(this.projectionArr);
-        this.projectionUniformsBuffer.unmap();
-        return this.projectionUniformsBuffer;
+            this.#projectionUniformsBuffer.destroy();
+        this.#projectionUniformsBuffer = this.gpu.createGPUBuffer(this.gpu.gpu_projection_buffer_size, [GPUBufferUsage.UNIFORM], true);
+        const uniformbuffer = this.#projectionUniformsBuffer.getMappedRange();
+        new Float32Array(uniformbuffer, 0, 4).set([this.#nearPlane, this.#farPlane, this.gpu.canvas.width, this.gpu.canvas.height]);
+        new Float32Array(uniformbuffer, 4 * Float32Array.BYTES_PER_ELEMENT, 16).set(this.#projectionArr);
+        this.#projectionUniformsBuffer.unmap();
+        return this.#projectionUniformsBuffer;
 
     }
     constructor(public renderPass: RenderPass, public projection: SharedArrayBuffer, private gpu: GPU, engine: Engine, main = true, parent?: TerraCamera) {
-        this.clusterArrayBuffer=gpu.createGPUBuffer(gpu.clusterSizeinBytes, [GPUBufferUsage.STORAGE]);
-        this.projectionArr = new TerraMatrix(projection);
-        this.projectionUniformsBuffer=this.updateProjectionUniformsBuffer(true);
+        this.#clusterArrayBuffer=gpu.createGPUBuffer(gpu.clusterSizeinBytes, [GPUBufferUsage.STORAGE]);
+        this.#projectionArr = new TerraMatrix(projection);
+        this.#projectionUniformsBuffer=this.updateProjectionUniformsBuffer(true);
         this.#uniformBuffer= gpu.createGPUBuffer(this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
-        this.#uniformBindGroup = () => this.gpu.createBindGroup(
+        this.uniformBindGroup = () => this.gpu.createBindGroup(
             gpu.uniformBindGroupLayoutWithTime,
             [{
                 binding: 0,
@@ -76,13 +74,13 @@ export class TerraCamera {
             {
                 binding: 2,
                 resource: {
-                    buffer: this.clusterArrayBuffer
+                    buffer: this.#clusterArrayBuffer
                 }
             },
             {   //projection
                 binding: 3,
                 resource: {
-                    buffer: this.projectionUniformsBuffer
+                    buffer: this.#projectionUniformsBuffer
                 }
             },
             {
@@ -97,7 +95,7 @@ export class TerraCamera {
                 {
                     binding:0,
                     resource: {
-                        buffer: this.clusterArrayBuffer
+                        buffer: this.#clusterArrayBuffer
                     }
                 },
                 {
@@ -135,13 +133,80 @@ export class TerraCamera {
 
         this.viewArr[15] = 1;
         if (parent)
-            parent.childCameras.add(this);
+            parent.#childCameras.add(this);
         renderPass.cameras.add(this);
         if (main)
             worker.message(this.#uniqueID, 'init', [this.#viewProjectionPositionBuffer, this.projection, this.#pickingRayBuffer, engine.mousePositionBuffer, renderPass.size]);
     }
+    updateProjection(passEncoder: GPUComputePassEncoder, aspectRatio:number, computePipelineClustersLayout: GPUBindGroupLayout) {
+         //field of view?
+         const fov = 0.4
+
+         const f = 1.0 / Math.tan(fov / 2);
+         const nf = 1 / (this.#nearPlane - this.#farPlane);
+
+         this.#projectionArr.set([
+             f / aspectRatio, 0.0, 0.0, 0.0,
+             0.0, f, 0.0, 0.0,
+             0.0, 0.0, this.#farPlane * nf, -1.0,
+             0.0, 0.0, this.#farPlane * this.#nearPlane * nf, 0.0,
+         ]);
+
+         if (this.#farPlane == null || this.#farPlane === Infinity) {
+             this.#projectionArr[10] = 1;
+             this.#projectionArr[14] = -this.#nearPlane;
+         }
+
+         const screenToViewBuffer = this.gpu.createGPUBuffer(64, [GPUBufferUsage.UNIFORM], true);
+         const gpuBuffer = screenToViewBuffer.getMappedRange();
+         const inverted = new TerraMatrix(gpuBuffer);
+         this.#projectionArr.invertToRef(inverted);
+         screenToViewBuffer.unmap();
+         this.updateProjectionUniformsBuffer();
+         const bindGroup = this.gpu.device.createBindGroup({
+             layout: computePipelineClustersLayout,
+             entries: [{
+                 binding: 0,
+                 resource: {
+                     buffer: this.#clusterArrayBuffer
+                 }
+             },
+             {
+                 binding: 1,
+                 resource: {
+                     buffer: screenToViewBuffer
+                 }
+             },
+             {
+                 binding: 2,
+                 resource: {
+                     buffer: this.#projectionUniformsBuffer
+                 }
+             }]
+         });
+         passEncoder.setBindGroup(0, bindGroup);
+         passEncoder.dispatch(...this.gpu.CLUSTER_DISPATCH_SIZE);
+    }
     doUpdateView = false;
-    updateView() {
+    viewUpdated=false;
+    updateView(commandEncoder: GPUCommandEncoder) {
+        if(!this.doUpdateView)
+            return;
+        this.doUpdateView=false;
+        this.viewUpdated=true;
+        this.#childCameras.forEach(childCamera => {
+            childCamera.update((values) => {
+                values.position[0] = this.#position[0]
+                values.position[1] = this.#position[1]
+                values.position[2] = this.#position[2]
+
+                values.target[0] = this.target[0]
+                values.target[1] = this.target[1]
+                values.target[2] = this.target[2];
+            });
+        });
+        this.beforeViewUpdate.forEach(cb => cb(this.#position, this.#target));
+
         //for LHW this is target - position
         this.viewArr[2] = this.#position[0] - this.target[0];
         this.viewArr[6] = this.#position[1] - this.target[1];
@@ -185,60 +250,19 @@ export class TerraCamera {
         this.viewArr[13] = -(this.viewArr[1] * this.#position[0] + this.viewArr[5] * this.#position[1] + this.viewArr[9] * this.#position[2])
         //z
         this.viewArr[14] = -(this.viewArr[2] * this.#position[0] + this.viewArr[6] * this.#position[1] + this.viewArr[10] * this.#position[2]);
-        this.viewArr.multiplyToRef(this.projectionArr, this.#projectionViewArr)
+        this.viewArr.multiplyToRef(this.#projectionArr, this.#projectionViewArr)
 
         const tempBuffer = this.gpu.createGPUBuffer(this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], true);
         this.gpu.tempGPUBuffers.add(tempBuffer);
         new Float32Array(tempBuffer.getMappedRange()).set(this.#viewAndProjection);
         tempBuffer.unmap()
-        const commandEncoder = this.gpu.device.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
             tempBuffer, 0,
             this.#uniformBuffer, 0,
             this.#viewAndProjection.byteLength);
-        const commandBuffer = commandEncoder.finish()
-
-        this.gpu.pendingCommandBuffers.add(commandBuffer);
-
     }
-    beforeViewUpdate: Set<(position: TerraVector3, target: TerraVector3) => void> = new Set();
-    render(renderEncoder: GPUCommandEncoder) {
-        this.onRender && this.onRender();
-        //if(this.doUpdateView || this.engine.updateLights) {
-           // const commandEncoder = this.gpu.device.createCommandEncoder();
-           // const lights=this.engine.rustEngine.get_lights();
-            //const tempLightsBuffer = this.gpu.createGPUBuffer(lights.byteLength+4, [GPUBufferUsage.COPY_SRC], true);
-            //this.gpu.tempGPUBuffers.add(tempLightsBuffer);
-            //new Uint32Array(tempLightsBuffer.getMappedRange()).set([lights.length, ...lights]);
-            //tempLightsBuffer.unmap();
-            /*commandEncoder.copyBufferToBuffer(
-                tempLightsBuffer, 0,
-                this.gpu.GPULightsArray, 0,
-                lights.byteLength+4);*/
-
-
-            //this.gpu.device.queue.submit([commandEncoder.finish()]);
-        //}
-        //TODO: use SIMD, use column major matrix?
-        if (this.doUpdateView) {
-            this.childCameras.forEach(childCamera => {
-                childCamera.update((values) => {
-                    values.position[0] = this.#position[0]
-                    values.position[1] = this.#position[1]
-                    values.position[2] = this.#position[2]
-
-                    values.target[0] = this.target[0]
-                    values.target[1] = this.target[1]
-                    values.target[2] = this.target[2];
-                });
-            })
-            this.beforeViewUpdate.forEach(cb => cb(this.#position, this.#target));
-            this.updateView();
-            this.doUpdateView = false;
-        }
-        this.renderPass.render(renderEncoder, this.#uniformBindGroup,this.gpu.rootCameralayout);
-    }
-    #nearVec3 = new TerraVector3();
+    readonly beforeViewUpdate: Set<(position: TerraVector3, target: TerraVector3) => void> = new Set();
+    readonly #nearVec3 = new TerraVector3();
     #farVec3 = new TerraVector3();
     createPickingRay(x: number, y: number, world?: TerraMatrix) {
         //Todo, reuse matrix and vector
@@ -257,7 +281,7 @@ export class TerraCamera {
         } else {
             var matrix = this.viewArr.clone();
         }
-        matrix.multiplyToRef(this.projectionArr, matrix);
+        matrix.multiplyToRef(this.#projectionArr, matrix);
         //TODO use matrixMultiply64 and matrixInvert64
 
         const inverted = new TerraMatrix();

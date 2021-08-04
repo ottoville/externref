@@ -64,7 +64,7 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>) -> Output {
 
   var output:Output;
   let sunOffset:u32 = 0u;
-  let fragCoordI=vec2<i32>(round(fragCoord.xy));
+  let fragCoordI=vec2<i32>(floor(fragCoord.xy));
 
   let diffuse:vec4<f32> = textureLoad(diffuseTexture, fragCoordI, 0);
 
@@ -85,21 +85,6 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>) -> Output {
   //}
   //output.Color=vec4<f32>(color,1.0);
   output.Color=vec4<f32>(diffuse.xyz,1.0);
-
-
-  //DEBUG depth slices
-  //let tile : vec3<u32> = getTile(vec3<f32>(fragCoord.xy,normal.w));
-  //output.Color = vec4<f32>(colorSet[tile.z % 9u], 1.0);
-
-  //DEBUG distance
-
-//    let midPoint : vec3<f32> = (clustersArray.bounds[clusterIndex].maxAABB - clustersArray.bounds[clusterIndex].minAABB) / vec3<f32>(2.0, 2.0, 2.0);
-//    let center : vec3<f32> = clustersArray.bounds[clusterIndex].minAABB + midPoint;
-//    let radius : f32 = length(midPoint);
-
-//    let fragToBoundsCenter : vec3<f32> = frust_position - center;
-//    let distToBoundsCenter : f32 = length(fragToBoundsCenter);
-//    let normDist : f32 = distToBoundsCenter / radius;
 
   return output;
 }

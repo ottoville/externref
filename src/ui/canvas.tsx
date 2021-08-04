@@ -1,4 +1,4 @@
-﻿import { GPU, GPUBufferUsage } from "../GPU.js";
+﻿import { GPU } from "../GPU.js";
 
 import { TerraCamera } from "../TerraCamera.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
@@ -25,7 +25,6 @@ import { savedCamera } from "../types/interfaces/index.js";
 
 import { DrawableSimple } from "GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
-import { TerraMatrix } from "../Math.js";
 
 class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
     Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([this.engine.gpu.renderPassCanvas]), this, undefined, undefined, undefined, 'canvas')
@@ -173,7 +172,7 @@ export class Canvas extends TerraCompoment {
             return [sun.gpu_alignment]
         });
 
-        const b2 = new Box(debugscene, 600);
+        const b2 = new Box(debugscene, 1000);
         //const b3 = new Box(debugscene,100);
         //b2.update(scale => scale.set([200, 200, 200]));
         b2.update_scale(terraEngine.rustEngine, 30, 30, 30);
@@ -184,7 +183,7 @@ export class Canvas extends TerraCompoment {
         //b2.setTranslationX(500);
         const x = -3000;
         // let z = 0;
-        b2.SetTranslation([x, 400, 0])
+        b2.SetTranslation([x, 400, 300])
         //let x2=-1000;
         //@ts-ignore
         let a = 0;
@@ -267,12 +266,15 @@ export class Canvas extends TerraCompoment {
 
             gpu.device.queue.writeBuffer(gpu.timeBuffer, 0, timeAndDeltaBuffer);
             try {
-
+                TerraCameras.forEach(camera => {
+                    camera.updateView(renderEncoder)
+                })
                 const lightPass = renderEncoder.beginComputePass();
                 lightPass.setPipeline(gpu.updateViewPipeline);
                 lightPass.setBindGroup(0, gpu.updateViewBindGroup);
                 TerraCameras.forEach(camera => {
-                    if(camera.doUpdateView || terraEngine.updateLights) {
+                    if(camera.viewUpdated || terraEngine.updateLights) {
+                        camera.viewUpdated=false;
                         lightPass.setBindGroup(1, camera.updateViewBindGroup);
                         lightPass.dispatch(...gpu.CLUSTER_DISPATCH_SIZE);
                     }
@@ -281,7 +283,7 @@ export class Canvas extends TerraCompoment {
                 terraEngine.updateLights = false;
 
                 TerraCameras.forEach(camera => {
-                    camera.render(renderEncoder)
+                    camera.renderPass.render(renderEncoder, camera.uniformBindGroup,gpu.rootCameralayout);
                 });
             } catch (e) {
                 console.error(e);
@@ -300,7 +302,8 @@ export class Canvas extends TerraCompoment {
             width: 1920,
             height: 1080
         }
-        const computePipelineClusters = gpu.createComputePipeline('clusters.comp.wgsl');
+        const computePipelineClusters       = gpu.createComputePipeline('clusters.comp.wgsl');
+        const computePipelineClustersLayout = computePipelineClusters.getBindGroupLayout(0)
         const ro = new window.ResizeObserver(entries => {
             const entry = entries[0];
             if (!entry)
@@ -334,54 +337,7 @@ export class Canvas extends TerraCompoment {
                 passEncoder.setPipeline(computePipelineClusters);
 
                 TerraCameras.forEach(camera => {
-                    //field of view?
-                    const fov = 0.4
-
-                    const f = 1.0 / Math.tan(fov / 2);
-                    const nf = 1 / (camera.nearPlane - camera.farPlane);
-
-                    camera.projectionArr.set([
-                        f / aspectRatio, 0.0, 0.0, 0.0,
-                        0.0, f, 0.0, 0.0,
-                        0.0, 0.0, camera.farPlane * nf, -1.0,
-                        0.0, 0.0, camera.farPlane * camera.nearPlane * nf, 0.0,
-                    ]);
-
-                    if (camera.farPlane == null || camera.farPlane === Infinity) {
-                        camera.projectionArr[10] = 1;
-                        camera.projectionArr[14] = -camera.nearPlane;
-                    }
-
-                    const screenToViewBuffer = gpu.createGPUBuffer(64, [GPUBufferUsage.UNIFORM], true);
-                    const gpuBuffer = screenToViewBuffer.getMappedRange();
-                    const inverted = new TerraMatrix(gpuBuffer);
-                    camera.projectionArr.invertToRef(inverted);
-                    screenToViewBuffer.unmap();
-                    camera.updateProjectionUniformsBuffer();
-                    const bindGroup = gpu.device.createBindGroup({
-                        layout: computePipelineClusters.getBindGroupLayout(0),
-                        entries: [{
-                            binding: 0,
-                            resource: {
-                                buffer: camera.clusterArrayBuffer
-                            }
-                        },
-                        {
-                            binding: 1,
-                            resource: {
-                                buffer: screenToViewBuffer
-                            }
-                        },
-                        {
-                            binding: 2,
-                            resource: {
-                                buffer: camera.projectionUniformsBuffer
-                            }
-                        }]
-                    });
-                    passEncoder.setBindGroup(0, bindGroup);
-                    passEncoder.dispatch(...gpu.CLUSTER_DISPATCH_SIZE);
-
+                    camera.updateProjection(passEncoder,aspectRatio,computePipelineClustersLayout)
                 })
                 passEncoder.endPass();
                 gpu.device.queue.submit([commandEncoder.finish()]);
