@@ -52,7 +52,7 @@ export class TerraCamera {
             this.#projectionUniformsBuffer.destroy();
         this.#projectionUniformsBuffer = this.gpu.createGPUBuffer(this.gpu.gpu_projection_buffer_size, [GPUBufferUsage.UNIFORM], true);
         const uniformbuffer = this.#projectionUniformsBuffer.getMappedRange();
-        new Float32Array(uniformbuffer, 0, 4).set([this.#nearPlane, this.#farPlane, this.gpu.canvas.width, this.gpu.canvas.height]);
+        new Float32Array(uniformbuffer, 0, 4).set([this.#nearPlane, this.#farPlane, this.renderPass.size[0], this.renderPass.size[1]]);
         new Float32Array(uniformbuffer, 4 * Float32Array.BYTES_PER_ELEMENT, 16).set(this.#projectionArr);
         this.#projectionUniformsBuffer.unmap();
         return this.#projectionUniformsBuffer;

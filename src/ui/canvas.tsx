@@ -329,16 +329,16 @@ export class Canvas extends TerraCompoment {
                     format: "bgra8unorm",
                     usage: GPUTextureUsage.RENDER_ATTACHMENT
                 })
-                gpu.renderPasses.forEach(renderPass => {
-                    renderPass.onResize(this.#canvasElem.width, this.#canvasElem.height)
-                })
                 const commandEncoder = gpu.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipelineClusters);
 
-                TerraCameras.forEach(camera => {
-                    camera.updateProjection(passEncoder,aspectRatio,computePipelineClustersLayout)
-                })
+                gpu.renderPasses.forEach(renderPass => {
+                    renderPass.onResize(this.#canvasElem.width, this.#canvasElem.height);
+                    renderPass.cameras.forEach(camera => {
+                        camera.updateProjection(passEncoder,aspectRatio,computePipelineClustersLayout)
+                    })
+                });
                 passEncoder.endPass();
                 gpu.device.queue.submit([commandEncoder.finish()]);
 
