@@ -8,8 +8,12 @@ type extractGeneric<Type> = Type extends BindGroupLayout<infer X> ? X : never
 export class PipelineLayout {
     subBindGroups: Set<PipelineLayout> = new Set();
 
-    addRenderPipeline(vertexShader:VertexShader, fragmentShader:Shader, renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>): RenderPipeline {
-        const d = new RenderPipeline(vertexShader,fragmentShader,renderPipeline, this)
+    addRenderPipeline(
+        vertexShader:VertexShader,
+        fragmentShader:Shader,
+        renderPipeline: Omit<GPURenderPipelineDescriptor, 'depthStencil' | 'fragment' | 'vertex'>,
+        depthBuffer?:{depthWriteEnabled:boolean,depthCompare:GPUCompareFunction }): RenderPipeline {
+        const d = new RenderPipeline(vertexShader,fragmentShader,renderPipeline, this,depthBuffer)
         this.renderPipeLines.add(d);
         return d;
     }
@@ -62,9 +66,11 @@ export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends Pipeline
     override addRenderPipeline(
         vertexShader:VertexShader,
         fragmentShader:Shader,
-        renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>,
-        bindGroups?: () => T): RenderPipeline {
-        const RP = super.addRenderPipeline(vertexShader,fragmentShader,renderPipeline);
+        renderPipeline: Omit<GPURenderPipelineDescriptor, 'depthStencil' | 'fragment' | 'vertex'>,
+        depthBuffer? : {depthWriteEnabled:boolean,depthCompare:GPUCompareFunction },
+        bindGroups?: () => T,
+        ): RenderPipeline {
+        const RP = super.addRenderPipeline(vertexShader,fragmentShader,renderPipeline,depthBuffer);
         if (bindGroups) {
             RP.createSharedBindGroups = (): Set<GPUBindGroup> => {
                 return new Set([this.gpu.device.createBindGroup(

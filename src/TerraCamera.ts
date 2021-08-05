@@ -143,19 +143,14 @@ export class TerraCamera {
          const fov = 0.4
 
          const f = 1.0 / Math.tan(fov / 2);
-         const nf = 1 / (this.#nearPlane - this.#farPlane);
 
          this.#projectionArr.set([
              f / aspectRatio, 0.0, 0.0, 0.0,
              0.0, f, 0.0, 0.0,
-             0.0, 0.0, this.#farPlane * nf, -1.0,
-             0.0, 0.0, this.#farPlane * this.#nearPlane * nf, 0.0,
+             0.0, 0.0, 0.0, -1.0,
+             0.0, 0.0, this.#nearPlane, 0.0,
          ]);
 
-         if (this.#farPlane == null || this.#farPlane === Infinity) {
-             this.#projectionArr[10] = 1;
-             this.#projectionArr[14] = -this.#nearPlane;
-         }
 
          const screenToViewBuffer = this.gpu.createGPUBuffer(64, [GPUBufferUsage.UNIFORM], true);
          const gpuBuffer = screenToViewBuffer.getMappedRange();

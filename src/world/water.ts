@@ -63,7 +63,7 @@ function getRenderPipeline(gpu: GPU) {
                 stripIndexFormat: 'uint16',
                 frontFace:'cw'
             }
-        }, () =>
+        },undefined, () =>
         [
             {
                 binding: 0,

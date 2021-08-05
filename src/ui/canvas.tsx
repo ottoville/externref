@@ -218,11 +218,6 @@ export class Canvas extends TerraCompoment {
             primitive: {
                 topology: 'triangle-list',
                 frontFace: 'ccw'
-            },
-            depthStencil: {
-                depthWriteEnabled: false,
-                depthCompare: "less",
-                format: "depth24plus-stencil8",
             }
         });
         new CanvasMesh(terraEngine, canvasPipeline, 6);

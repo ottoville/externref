@@ -22,7 +22,8 @@
     "lib": [
       "dom",
       "esnext",
-      "ES2017.SharedMemory"
+      "ES2017.SharedMemory",
+      "DOM.Iterable"
     ],
     "typeRoots": [ "./node_modules/@types/", "./node_modules/@webgpu/" ],
     "types": [

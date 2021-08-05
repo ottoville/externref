@@ -17,7 +17,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     scenes: Set<Scene> = new Set();
     #depthTextureView?: GPUTextureView
     #depthTexture?: GPUTexture
-    #depthFormat: GPUTextureFormat = 'depth24plus-stencil8';
+    #depthFormat: GPUTextureFormat = 'depth32float'; //depth32float
     bundles: GPURenderBundle[] = [];
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
     #renderPassDescriptor: Partial<GPURenderPassDescriptor> = {
@@ -60,7 +60,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     decoratePipeline(renderpipeline: RenderPipeline): GPURenderPipeline {
         const renderPipelineDescriptor = renderpipeline.renderPipelineDescriptor as GPURenderPipelineDescriptor;
         renderPipelineDescriptor.vertex = renderpipeline.vertexShader;
-        
 
         renderPipelineDescriptor.fragment = {
             ...renderpipeline.fragmentShader,
@@ -73,13 +72,14 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         };
         if (!this.#depthTexture)
             renderPipelineDescriptor.depthStencil = undefined
-        else if (!renderPipelineDescriptor.depthStencil) {
-            renderPipelineDescriptor.depthStencil = {
-                depthWriteEnabled: true,
-                depthCompare: "less",
-                format: this.#depthFormat,
+        else {
+            renderPipelineDescriptor.depthStencil= {
+                depthWriteEnabled:renderpipeline.depthBuffer?.depthWriteEnabled ?? true,
+                depthCompare:renderpipeline.depthBuffer?.depthCompare ?? 'greater',
+                format: this.#depthFormat
             }
         }
+             
         if (this.sampleCount > 1)
             renderPipelineDescriptor.multisample = { count: this.sampleCount };
         return this.gpu.device.createRenderPipeline(renderPipelineDescriptor)
@@ -132,18 +132,18 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 })
             }
         } else {
-            for (const key in this.renderTargets) {
-                colorAttachments.push({
-                    view: this.renderTargets[key]!.view,
-                    loadValue: this.renderTargets[key]!.loadValue,
+            colorAttachments.push(...Object.values(this.renderTargets).map(rendertarget => {
+                return {
+                    view: rendertarget.view,
+                    loadValue: rendertarget.loadValue,
                     storeOp: "store" as const,
-                })
-            }
+                }
+            }));
         }
         if (this.#depthTextureView) {
             this.#renderPassDescriptor.depthStencilAttachment = {
                 view: this.#depthTextureView,
-                depthLoadValue: 1,
+                depthLoadValue: 0.0,
                 depthStoreOp: "store",
                 stencilLoadValue: 0,
                 stencilStoreOp: "store",

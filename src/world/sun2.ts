@@ -22,18 +22,14 @@ function getRenderPipeline(gpu: GPU) {
         return renderPipeline;
     renderPipeline = gpu.positionBindGroupTime.addRenderPipeline(
         new VertexShader(gpu,'sun.vert.wgsl'),
-        new Shader(gpu,'sun.frag.wgsl'), {
-        depthStencil: {
-            format: 'depth24plus-stencil8',
-            depthWriteEnabled: false,
-            depthCompare: 'always'
-        },
-        primitive: {
-            topology: 'triangle-strip',
-            cullMode: 'none',
-            stripIndexFormat:'uint16'
-        }
-    });
+        new Shader(gpu,'sun.frag.wgsl'),
+        {
+            primitive: {
+                topology: 'triangle-strip',
+                cullMode: 'none',
+                stripIndexFormat:'uint16'
+            }
+    },{depthWriteEnabled:false, depthCompare:'always'});
     renderPipelines.set(gpu, renderPipeline);
     return renderPipeline
 }
