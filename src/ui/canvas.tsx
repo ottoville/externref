@@ -23,8 +23,9 @@ import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 import { savedCamera } from "../types/interfaces/index.js";
 
-import { DrawableSimple } from "GPU/Drawable.js";
+import type { DrawableSimple } from "GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { Projection } from "../GPU/Projection.js";
 
 class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
     Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([this.engine.gpu.renderPassCanvas]), this, undefined, undefined, undefined, 'canvas')
@@ -83,7 +84,7 @@ export class Canvas extends TerraCompoment {
         this.progress = 6;
         this.progress = 10;
 
-        const projectionmatrixBuffer = new SharedArrayBuffer(16 * 4);
+
         this.progress = 13;
 
         const terraEngine = await Engine.initEngine(gpu, DB, this.#canvasElem);
@@ -91,7 +92,8 @@ export class Canvas extends TerraCompoment {
 
 
         window.engine = terraEngine;
-        const mainCamera = new TerraCamera(gpu.renderPassScreen, projectionmatrixBuffer, gpu, terraEngine)
+        const projection = new Projection(gpu);
+        const mainCamera = new TerraCamera(gpu.renderPassScreen, projection, gpu)
         this.progress = 16;
 
         const camera = new ArcRotateCamera(0, 0, 10, terraEngine, mainCamera);
@@ -100,7 +102,7 @@ export class Canvas extends TerraCompoment {
 
         this.progress = 18;
 
-        const waterCamera = new TerraCamera(gpu.renderPassWater, projectionmatrixBuffer, gpu, terraEngine, false, mainCamera);
+        const waterCamera = new TerraCamera(gpu.renderPassWater, projection, gpu, mainCamera);
         waterCamera.beforeViewUpdate.add((position, target) => {
             position[1] -= (position[1] - 3) * 2;
             target[1] = -target[1];
@@ -327,12 +329,14 @@ export class Canvas extends TerraCompoment {
                 const commandEncoder = gpu.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipelineClusters);
+                
+                gpu.projections.forEach(projection => projection.update(aspectRatio))
 
                 gpu.renderPasses.forEach(renderPass => {
                     renderPass.onResize(this.#canvasElem.width, this.#canvasElem.height);
                     renderPass.cameras.forEach(camera => {
-                        camera.updateProjection(passEncoder,aspectRatio,computePipelineClustersLayout)
-                    })
+                        camera.updateProjection(passEncoder,computePipelineClustersLayout)
+                    });
                 });
                 passEncoder.endPass();
                 gpu.device.queue.submit([commandEncoder.finish()]);

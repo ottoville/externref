@@ -5,6 +5,7 @@ import { RenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import type { BoundableNode } from "./DataNode.js";
 import {GPUTextureUsageLiterals, Texture } from "./GPU/texture.js";
+import type { Projection } from "./GPU/Projection.js";
 
 export const GPUBufferUsage = {
     MAP_READ: 0x0001,
@@ -36,7 +37,7 @@ interface GPUBindGroupTextureEntry<SampleType = 'float'> extends GPUBindGroupEnt
 
 export class GPU {
     readonly gpu_memory_index_size=256;
-    readonly gpu_projection_buffer_size= 80; //16 + 64;
+    readonly gpu_screen_buffer_size= 8; //screen width and height
     readonly #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
     readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
@@ -50,10 +51,7 @@ export class GPU {
     
     readonly rootCameralayout:PipelineLayout;
 
-    //viewprojection and camera position
-
-
-
+    projections: Set<Projection> = new Set();
     
     //Todo: Remove COPY_SRC
     readonly GPUMeshes: GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer;
@@ -103,8 +101,9 @@ export class GPU {
 
     readonly CLUSTER_WORKGROUP_SIZE:[number,number,number] = [4, 2, 4];
     readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = this.clustersInRow.map((v,i) => Math.ceil(v/this.CLUSTER_WORKGROUP_SIZE[i]!)) as [number,number,number];
+   // readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = [1,1,1];
     viewUniformsLayout: GPUBindGroupLayout;
-    readonly uniformBindGroupLayoutWithTime: BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>;
+    readonly uniformBindGroupLayoutWithTime: BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, readonly shaderModules: Map<string, GPUShaderModule>) {
 
         const totalClusters=this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
@@ -177,7 +176,7 @@ export class GPU {
                     type: 'read-only-storage'
                 }
             },
-            {   //projection
+            {   //dimensions
                 binding: 3,
                 visibility: GPUShaderStage.FRAGMENT,
                 buffer: {
@@ -189,6 +188,13 @@ export class GPU {
                 visibility: GPUShaderStage.FRAGMENT,
                 buffer: {
                     type: "read-only-storage"
+                }
+            },
+            {   //projection
+                binding: 5,
+                visibility: GPUShaderStage.FRAGMENT,
+                buffer: {
+                    type: "uniform"
                 }
             });
         this.rootCameralayout = new PipelineLayout('rootCamera', this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);

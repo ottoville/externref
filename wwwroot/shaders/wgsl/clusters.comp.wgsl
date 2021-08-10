@@ -10,23 +10,25 @@
 
 };
 
-[[block]] struct screenToView {
-  inverseProjection : mat4x4<f32>;
+[[block]] struct Projection {
+  inversed_projection : mat4x4<f32>;
+  reversed_projection:mat4x4<f32>;
+  inversed_projection_farplane:mat4x4<f32>;
+  zNear : f32;
+  zFar : f32;
 };
 
 [[block]] struct Uniforms {
-  zNear : f32;
-  zFar : f32;
   screenDimensions : vec2<f32>;
 
 };
 [[binding(0), group(0)]] var<storage, write> clusters : clusterArray;
-[[binding(1), group(0)]] var<uniform> screentoview : screenToView;
+[[binding(1), group(0)]] var<uniform> screentoview : Projection;
 [[binding(2), group(0)]] var<uniform> uniforms : Uniforms;
 
  fn clipToView(clip : vec4<f32>) -> vec4<f32> {
    //View space transform
-    let view = screentoview.inverseProjection * clip;
+    let view = screentoview.inversed_projection * clip;
      //Perspective projection
     return view / view.w;
   }
@@ -56,9 +58,12 @@
 
 //Eye position is zero in view space
  let eyePos = vec3<f32>(0.0, 0.0, 0.0);
+
+ //let tileCount : vec3<u32> = vec3<u32>(1u, 1u, 1u);
  let tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
 
 [[stage(compute), workgroup_size(4,2,4)]]
+//[[stage(compute), workgroup_size(1,1,1)]]
   fn main([[builtin(global_invocation_id)]] global_id : vec3<u32>) {
     let tileIndex = global_id.x +
                     global_id.y * tileCount.x +
@@ -67,14 +72,14 @@
                              uniforms.screenDimensions.y / f32(tileCount.y));
     //Calculating the min and max point in screen space
 
-    let maxPoint_sS = vec4<f32>(vec2<f32>(f32(global_id.x+1u), f32(global_id.y+1u)) * tileSize, -1.0, 1.0);
-    let minPoint_sS = vec4<f32>(vec2<f32>(f32(global_id.x), f32(global_id.y)) * tileSize, -1.0, 1.0);
+    let maxPoint_sS = vec4<f32>(vec2<f32>(f32(global_id.x+1u), f32(global_id.y+1u)) * tileSize, 1.0, 1.0);
+    let minPoint_sS = vec4<f32>(vec2<f32>(f32(global_id.x), f32(global_id.y)) * tileSize, 1.0, 1.0);
     //Pass min and max to view space
     let maxPoint_vS = screen2View(maxPoint_sS).xyz;
     let minPoint_vS = screen2View(minPoint_sS).xyz;
     //Near and far values of the cluster in view space
-    let tileNear = -uniforms.zNear * pow(uniforms.zFar/ uniforms.zNear, f32(global_id.z)/f32(tileCount.z));
-    let tileFar = -uniforms.zNear * pow(uniforms.zFar/ uniforms.zNear, f32(global_id.z+1u)/f32(tileCount.z));
+    let tileNear = -screentoview.zNear * pow(screentoview.zFar/ screentoview.zNear, f32(global_id.z)/f32(tileCount.z));
+    let tileFar = -screentoview.zNear * pow(screentoview.zFar/ screentoview.zNear, f32(global_id.z+1u)/f32(tileCount.z));
     //Finding the 4 intersection points made from the maxPoint to the cluster near/far plane
     let minPointNear = lineIntersectionToZPlane(eyePos, minPoint_vS, tileNear);
     let minPointFar = lineIntersectionToZPlane(eyePos, minPoint_vS, tileFar);

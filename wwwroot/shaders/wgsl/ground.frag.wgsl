@@ -19,11 +19,15 @@ struct Meshes {
   pointers: array<u32, 63>;
   mesh : [[stride(256)]] array<Meshes>;
 };
-[[block]] struct Uniforms {
+[[block]] struct Projection {
+  inversed_projection : mat4x4<f32>;
+  reversed_projection:mat4x4<f32>;
+  projectionFarPlane:mat4x4<f32>;
   zNear : f32;
   zFar : f32;
+};
+[[block]] struct Uniforms {
   screenDimensions : vec2<f32>;
-  projection:mat4x4<f32>;
 };
 struct ClusterBounds {
   minAABB : vec3<f32>;
@@ -35,15 +39,16 @@ struct ClusterBounds {
   lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
 };
 [[binding(2), group(0)]] var<storage, read> clustersArray : Clusters;
-[[binding(3), group(0)]] var<uniform> projection : Uniforms;
+[[binding(3), group(0)]] var<uniform> dimensions : Uniforms;
 [[binding(4), group(0)]] var<storage, read> meshes : MeshArray;
+[[binding(5), group(0)]] var<uniform> projection : Projection;
 
 [[binding(0), group(2)]] var mySampler: sampler;
 [[binding(1), group(2)]] var myTexture: texture_2d<f32>;
 
 fn linearDepth(depthSample : f32) -> f32 {
-  let depthRange : f32 = 2.0 * depthSample - 1.0;
-  return 2.0 * projection.zNear * projection.zFar / (projection.zFar + projection.zNear - depthRange * (projection.zFar - projection.zNear));
+  //TODO: Many of these calculations can moved outside the shader
+  return projection.zFar*projection.zNear / fma(depthSample, projection.zFar-projection.zNear, projection.zNear);
 }
 fn getTile(fragCoord : vec3<f32>) -> vec3<u32> {
   // TODO: move to uniform
@@ -55,7 +60,7 @@ fn getTile(fragCoord : vec3<f32>) -> vec3<u32> {
   //let zTile = u32(max(log2(fragCoord.z) * sliceScale + sliceBias, 0.0));
   // For logarithmic z buffer use linearDepth
   let zTile : u32 = u32(max(log2(linearDepth(fragCoord.z)) * sliceScale + sliceBias, 0.0));
-  let pos: vec2<f32> = fragCoord.xy / (projection.screenDimensions / tileCount.xy);
+  let pos: vec2<f32> = fragCoord.xy / (dimensions.screenDimensions / tileCount.xy);
   return vec3<u32>(u32(pos.x),u32(pos.y),zTile);
 
   //return vec3<u32>(u32(fragCoord.x / (f32(projection.screenDimensions.x) / f32(tileCount.x))),
@@ -70,15 +75,7 @@ fn getClusterIndex2(fragCoord : vec4<f32>) -> u32 {
          tile.y * tileCount.x +
          tile.z * tileCount.x * tileCount.y;
 }
-[[stage(fragment)]]
-fn main(
-  [[builtin(position)]] fragCoord : vec4<f32>,
-  [[location(0)]]  v_uv : vec2<f32>,
-  [[location(1)]] normal : vec3<f32>,
-  [[location(2)]]  position : vec3<f32>,
-  [[location(3)]]  id : u32,) -> Output {
-
-  var colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
+    var<private> colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
       vec3<f32>(1.0, 0.0, 0.0),
       vec3<f32>(1.0, 0.5, 0.0),
       vec3<f32>(0.5, 1.0, 0.0),
@@ -89,6 +86,13 @@ fn main(
       vec3<f32>(0.5, 0.0, 1.0),
       vec3<f32>(1.0, 0.0, 0.5)
     );
+[[stage(fragment)]]
+fn main(
+  [[builtin(position)]] fragCoord : vec4<f32>,
+  [[location(0)]]  v_uv : vec2<f32>,
+  [[location(1)]] normal : vec3<f32>,
+  [[location(2)]]  position : vec3<f32>,
+  [[location(3)]]  id : u32,) -> Output {
 
     var output:Output;
   //outColor = vec4<f32>(ambient,0.0)+textureSample(myTexture, mySampler, v_uv) *  vec4<f32>(shading,shading,shading,1.0);
@@ -140,6 +144,9 @@ fn main(
     }
     let total_shading=shading_rgb+vec3<f32>(shading,shading,shading);
     output.Diffuse= output.Diffuse*vec4<f32>(total_shading,1.0);
+     // var tile : vec3<u32> = getTile(fragCoord.xyz);
+     // output.Diffuse=vec4<f32>(colorSet[tile.z % 9u],1.0);
+
   return output;
 }
 

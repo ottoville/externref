@@ -17,7 +17,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     scenes: Set<Scene> = new Set();
     #depthTextureView?: GPUTextureView
     #depthTexture?: GPUTexture
-    #depthFormat: GPUTextureFormat = 'depth32float'; //depth32float
+    #depthFormat: GPUTextureFormat = 'depth32float';
     bundles: GPURenderBundle[] = [];
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
     #renderPassDescriptor: Partial<GPURenderPassDescriptor> = {
@@ -60,7 +60,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     decoratePipeline(renderpipeline: RenderPipeline): GPURenderPipeline {
         const renderPipelineDescriptor = renderpipeline.renderPipelineDescriptor as GPURenderPipelineDescriptor;
         renderPipelineDescriptor.vertex = renderpipeline.vertexShader;
-
         renderPipelineDescriptor.fragment = {
             ...renderpipeline.fragmentShader,
             targets: Object.values(this.renderTargets).map(rt => {
