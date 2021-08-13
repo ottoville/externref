@@ -35,12 +35,11 @@ struct ClusterBounds {
   lightsCount: [[stride(4)]] array<u32, 27648>;
   lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
 };
+
 [[binding(0), group(0)]] var normalTexture: texture_2d<f32>;
 [[binding(1), group(0)]] var positionTexture: texture_2d<f32>;
 [[binding(2), group(0)]] var diffuseTexture: texture_2d<f32>;
 [[binding(3), group(0)]] var<storage, read> meshes : MeshArray;
-[[binding(4), group(0)]] var<storage, read> lights : LightsArray_deprecated;
-
 
 
 struct Output {
@@ -67,6 +66,7 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>) -> Output {
   let fragCoordI=vec2<i32>(floor(fragCoord.xy));
 
   let diffuse:vec4<f32> = textureLoad(diffuseTexture, fragCoordI, 0);
+ // let normal:vec3<f32> = textureLoad(normalTexture, fragCoordI, 0).xyz;
 
 
 
@@ -74,15 +74,21 @@ fn main([[builtin(position)]] fragCoord : vec4<f32>) -> Output {
   //let cluster=clustersArray.bounds[clusterIndex];
   //let clusterLightsCount=clustersArray.lightsCount[clusterIndex];
   //let clusterLights=clustersArray.lights[clusterIndex];
+//  var shading:f32;
+  //var shading_rgb:vec3<f32>;
 
-  //for (var lightPointerIndex : u32 = 0u; lightPointerIndex < clusterLightsCount; lightPointerIndex = lightPointerIndex + 1u) {
-  //    let lightIndex:u32 = clustersArray.lights[clusterIndex*63u + lightPointerIndex];
-  //    var light:vec3<f32> = meshes.mesh[lightIndex].position[12].xyz;
+ // for (var lightPointerIndex : u32 = 0u; lightPointerIndex < directional_lights.length; lightPointerIndex = lightPointerIndex + 1u) {
+   //   let lightIndex:u32 = directional_lights.pointers[lightPointerIndex];
+    //  var light:Mesh = meshes.mesh[lightIndex];
 
-  //    var lightDir:vec3<f32> = light - frust_position;
-  //    shading = max(dot(normal.xyz, normalize(lightDir)),0.0);
-  //    color=color+ vec3<f32>(shading, shading, shading);
+
+
+      //Light reflect from athmosphere
+      //shading_rgb = shading_rgb + light.ambient;
+      //Direct sunlight
+      //shading = shading + max(dot(normal.xyz,light.position[12].xyz) * light.shadow, 0.0);
   //}
+  //let total_shading=shading_rgb+vec3<f32>(shading,shading,shading);
   //output.Color=vec4<f32>(color,1.0);
   output.Color=vec4<f32>(diffuse.xyz,1.0);
 

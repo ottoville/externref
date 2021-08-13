@@ -3,14 +3,22 @@ pub use crate::mesh::Mesh;
 use wasm_bindgen::prelude::*;
 use std::collections::HashSet;
 use std::collections::HashMap;
-
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = engine)]
+    fn update_point_lights(lights: Vec<u32>);
+    #[wasm_bindgen(js_namespace = engine)]
+    fn update_directional_lights(lights: Vec<u32>);
+}
 #[wasm_bindgen]
 pub struct Engine {
     gpu_reserved_slots: u64,
     #[wasm_bindgen(skip)]
     pub gpu_queue: HashMap<*const GPUMesh, u32>, //mesh + gpu alignment
     #[wasm_bindgen(skip)]
-    pub lights:HashSet<u32>,
+    pub point_lights:HashSet<u32>,
+    #[wasm_bindgen(skip)]
+    pub directional_lights:HashSet<u32>
 }
 
 
@@ -23,7 +31,8 @@ impl Engine {
         Engine {
             gpu_reserved_slots: 0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,  //ZERO:Free, ONE: Reserved
             gpu_queue: HashMap::new(),
-            lights: HashSet::new(),
+            point_lights: HashSet::new(),
+            directional_lights: HashSet::new(),
         }
     }
     #[wasm_bindgen(getter)]
@@ -34,8 +43,11 @@ impl Engine {
     pub fn clear_gpu_queue(&mut self) {
         self.gpu_queue.clear()
     }
-    pub fn get_lights(&self) -> Vec<u32> {
-        self.lights.clone().into_iter().collect()
+    pub fn update_point_lights(&self) {
+        update_point_lights(self.point_lights.clone().into_iter().collect());
+    }
+    pub fn update_directional_lights(&self) {
+        update_directional_lights(self.directional_lights.clone().into_iter().collect())
     }
     #[wasm_bindgen(getter)]
     pub fn allocated_gpu_memory(&self) -> Vec<u32> {
@@ -75,7 +87,7 @@ impl Engine {
     }
     pub fn de_allocate_gpu(&mut self, address: u32) {
         self.gpu_reserved_slots &= !(1u64<<address);
-        self.lights.remove(&address);
+        self.point_lights.remove(&address);
         /*
 
         if address == self.gpu_next_available_address - 1 {

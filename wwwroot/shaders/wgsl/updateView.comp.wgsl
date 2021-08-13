@@ -9,7 +9,10 @@ struct Meshes {
   pointers: array<u32, 63>;
   mesh : [[stride(256)]] array<Meshes>;
 };
-
+[[block]] struct PointLights {
+  length:u32;
+  pointers: array<u32>;
+};
 [[block]] struct ViewUniforms {
   modelViewProjectionMatrix : mat4x4<f32>;
   view : mat4x4<f32>;
@@ -26,6 +29,7 @@ struct ClusterBounds {
 };
 
 [[binding(0), group(0)]] var<storage, read> meshes : MeshArray;
+[[binding(1), group(0)]] var<storage, read> point_lights : PointLights;
 [[binding(0), group(1)]] var<storage, read_write> clusters : Clusters;
 [[binding(1), group(1)]] var<uniform> viewUniforms : ViewUniforms;
 
@@ -62,8 +66,8 @@ fn main(
 
   let cluster=clusters.bounds[tileIndex];
   var lightCount=0u;
-  for(var pointerIndex:u32=0u; pointerIndex < meshes.length; pointerIndex = pointerIndex + 1u) {
-    let meshIndex = meshes.pointers[pointerIndex];
+  for(var pointerIndex:u32=0u; pointerIndex < point_lights.length; pointerIndex = pointerIndex + 1u) {
+    let meshIndex = point_lights.pointers[pointerIndex];
     let mesh=meshes.mesh[meshIndex];
     // TODO: Preselect lights with CPU
     if(mesh.point_light_squared > 0.0) {

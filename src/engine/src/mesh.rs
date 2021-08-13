@@ -28,7 +28,6 @@ extern "C" {
     fn log(s: &str);
     #[wasm_bindgen(js_namespace = console)]
     fn error(s: &str);
-
 }
 #[wasm_bindgen]
 impl Mesh {
@@ -68,7 +67,12 @@ impl Mesh {
             positions_count,
         };
         if point_light > 0.0 {
-            engine.lights.insert(m.gpu_alignment);
+            engine.point_lights.insert(m.gpu_alignment);
+            engine.update_point_lights();
+        }
+        if directional_light > 0.0 {
+            engine.directional_lights.insert(m.gpu_alignment);
+            engine.update_directional_lights();
         }
         m.update_dynamic_buffer(engine);
         return m;
@@ -229,11 +233,12 @@ impl Mesh {
     pub fn set_point_light(&mut self, engine:&mut Engine, range:f32) {
         if range > 0.0 {
             self.gpu_mesh.point_light_squared = range * range;
-            engine.lights.insert(self.gpu_alignment);
+            engine.point_lights.insert(self.gpu_alignment);
         } else {
             self.gpu_mesh.point_light_squared = 0.0;
-            engine.lights.remove(&self.gpu_alignment);
+            engine.point_lights.remove(&self.gpu_alignment);
         }
+        engine.update_point_lights();
     }
     #[wasm_bindgen(getter)]
     pub fn id(& self) -> u32 {

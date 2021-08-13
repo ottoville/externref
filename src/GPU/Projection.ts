@@ -32,12 +32,19 @@ export class Projection {
        ]);
         if(!initial)
             this.gpuBuffer.destroy();
-        this.gpuBuffer = this.gpu.createGPUBuffer(64+64+64+8, [GPUBufferUsage.UNIFORM], true);
+        this.gpuBuffer = this.gpu.createGPUBuffer(64+64+64+8+4+4+4+4, [GPUBufferUsage.UNIFORM], true);
         const gpuBuffer = this.gpuBuffer.getMappedRange();
         this.reversedProjection.invertToRef(new TerraMatrix(gpuBuffer));
         new TerraMatrix(gpuBuffer,64).set(this.reversedProjection);
         this.reversedProjectionFarPlane.invertToRef(new TerraMatrix(gpuBuffer,128));
-        new Float32Array(gpuBuffer, 192,2).set([this.nearPlane, this.farPlane]);
+        new Float32Array(gpuBuffer, 192,6).set([
+            this.nearPlane,
+            this.farPlane,
+            this.nearPlane*this.farPlane,
+            this.farPlane-this.nearPlane,
+            this.gpu.clustersInRow[2] / Math.log2(this.farPlane / this.nearPlane), //sliceScale
+            -(this.gpu.clustersInRow[2] * Math.log2(this.nearPlane) / Math.log2(this.farPlane / this.nearPlane)) //sliceBias
+        ]);
         this.gpuBuffer.unmap();
         return this.gpuBuffer;
    }

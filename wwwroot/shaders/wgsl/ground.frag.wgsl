@@ -25,9 +25,14 @@ struct Meshes {
   projectionFarPlane:mat4x4<f32>;
   zNear : f32;
   zFar : f32;
+  z_near_multiplied_far: f32;
+  z_near_substracted_far: f32;
+  slice_scale:f32;
+  slice_bias:f32;
 };
 [[block]] struct Uniforms {
   screenDimensions : vec2<f32>;
+  screendimensions_ratio:vec2<f32>;
 };
 struct ClusterBounds {
   minAABB : vec3<f32>;
@@ -47,25 +52,17 @@ struct ClusterBounds {
 [[binding(1), group(2)]] var myTexture: texture_2d<f32>;
 
 fn linearDepth(depthSample : f32) -> f32 {
-  //TODO: Many of these calculations can moved outside the shader
-  return projection.zFar*projection.zNear / fma(depthSample, projection.zFar-projection.zNear, projection.zNear);
+  return projection.z_near_multiplied_far / fma(depthSample, projection.z_near_substracted_far, projection.zNear);
 }
 fn getTile(fragCoord : vec3<f32>) -> vec3<u32> {
   // TODO: move to uniform
   let tileCount : vec3<f32> = vec3<f32>(32.0, 18.0, 48.0);
-
-  // TODO: scale and bias calculation can be moved outside the shader to save cycles.
-  let sliceScale = tileCount.z / log2(projection.zFar / projection.zNear);
-  let sliceBias = -(tileCount.z * log2(projection.zNear) / log2(projection.zFar / projection.zNear));
-  //let zTile = u32(max(log2(fragCoord.z) * sliceScale + sliceBias, 0.0));
-  // For logarithmic z buffer use linearDepth
-  let zTile : u32 = u32(max(log2(linearDepth(fragCoord.z)) * sliceScale + sliceBias, 0.0));
-  let pos: vec2<f32> = fragCoord.xy / (dimensions.screenDimensions / tileCount.xy);
+  
+  //TODO: zTile lookup can be hardcoded for speed
+  let zTile : u32 = u32(max(fma(log2(linearDepth(fragCoord.z)),projection.slice_scale,projection.slice_bias), 0.0));
+  let pos: vec2<f32> = fragCoord.xy / dimensions.screendimensions_ratio;
   return vec3<u32>(u32(pos.x),u32(pos.y),zTile);
 
-  //return vec3<u32>(u32(fragCoord.x / (f32(projection.screenDimensions.x) / f32(tileCount.x))),
-   //                u32(fragCoord.y / (f32(projection.screenDimensions.y) / f32(tileCount.y))),
-   //                zTile);
 }
 fn getClusterIndex2(fragCoord : vec4<f32>) -> u32 {
   let tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
@@ -121,12 +118,10 @@ fn main(
   //TODO, preselect directional lights
     for (var directionalLightPointerIndex : u32 = 0u; directionalLightPointerIndex < meshes.length; directionalLightPointerIndex = directionalLightPointerIndex + 1u) {
       let mesh = meshes.mesh[directionalLightPointerIndex];
-      if(mesh.directional_light > 0.0) {
-          //Light reflect from athmosphere
-          shading_rgb = shading_rgb + mesh.ambient;
-          //Direct sunlight
-          shading = shading + max(dot(normal.xyz,mesh.position[12].xyz) * mesh.shadow, 0.0);
-      }
+        //Light reflect from athmosphere
+        shading_rgb = shading_rgb + mesh.ambient;
+        //Direct sunlight
+        shading = shading + max(dot(normal.xyz,mesh.position[12].xyz) * mesh.shadow, 0.0);
     }
 
     if(clusterLightsCount>0u) {
@@ -142,8 +137,8 @@ fn main(
         shading = shading + max(dot(normal.xyz, normalize(lightDir)),0.0) * attenuation;
       }
     }
-    let total_shading=shading_rgb+vec3<f32>(shading,shading,shading);
-    output.Diffuse= output.Diffuse*vec4<f32>(total_shading,1.0);
+    let total_shading=vec3<f32>(shading,shading,shading);
+    output.Diffuse= output.Diffuse*max(vec4<f32>(total_shading,1.0),vec4<f32>(shading_rgb,0.0));
      // var tile : vec3<u32> = getTile(fragCoord.xyz);
      // output.Diffuse=vec4<f32>(colorSet[tile.z % 9u],1.0);
 

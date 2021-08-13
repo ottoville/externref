@@ -149,6 +149,7 @@ export class Engine {
         return new Engine(gpu, DB, canvas, wasm, rust.memory, new RustEngine());
     }
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public memory: WebAssembly.Memory, public rustEngine: RustEngine) {
+        window.engine=this;
         this.collisionNotFound = this.mallocView(4);
         this.#collidedMesh = this.mallocView(4);
 
@@ -200,6 +201,18 @@ export class Engine {
             this.gpu.tempGPUBuffers.add(tempBuffer);
             return commandEncoder.finish();
         })
+    }
+    update_point_lights(lights: Uint32Array) {
+        const commandEncoder = this.gpu.device.createCommandEncoder();
+         //TODO: Potential buffer overflow
+        this.gpu.updateBufferRaw(commandEncoder,this.gpu.GPUPointLights,new Uint32Array([lights.length, ...lights]).buffer);
+        this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
+    }
+    update_directional_lights(lights: Uint32Array) {
+        const commandEncoder = this.gpu.device.createCommandEncoder();
+         //TODO: Potential buffer overflow
+        this.gpu.updateBufferRaw(commandEncoder,this.gpu.GPUDirectionalLights,new Uint32Array([lights.length, ...lights]).buffer);
+        this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
     public updateAllocatedMemory() {
         const renderEncoder = this.gpu.device.createCommandEncoder();

@@ -37,7 +37,7 @@ interface GPUBindGroupTextureEntry<SampleType = 'float'> extends GPUBindGroupEnt
 
 export class GPU {
     readonly gpu_memory_index_size=256;
-    readonly gpu_screen_buffer_size= 8; //screen width and height
+    readonly gpu_screen_buffer_size= 16; //screen width and height and ratio
     readonly #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
     readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
@@ -55,7 +55,8 @@ export class GPU {
     
     //Todo: Remove COPY_SRC
     readonly GPUMeshes: GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer;
-    readonly GPULightsArray: GPUStorageBuffer & GPUCopyDSTBuffer;
+    readonly GPUPointLights: GPUStorageBuffer & GPUCopyDSTBuffer;
+    readonly GPUDirectionalLights: GPUStorageBuffer & GPUCopyDSTBuffer;
     readonly rootLayout:PipelineLayout;
     readonly positionBindGroupTimeWGSL:LayoutGroupDrawable<[GPUBindGroupEntry]>;
 
@@ -91,7 +92,7 @@ export class GPU {
     }>;
 
     readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<'bgra8unorm',['RENDER_ATTACHMENT']>>; }>;
-    context: GPUPresentationContext;
+    context: GPUCanvasContext;
     updateViewPipeline:TerraGPUComputePipeLine;
     updateViewBindGroup: GPUBindGroup;
     readonly clustersInRow:[number,number,number]=[32, 18, 48];
@@ -112,6 +113,13 @@ export class GPU {
             entries: [
                 {
                     binding:0,
+                    visibility:GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type:'read-only-storage'
+                    }
+                },
+                {
+                    binding:1,
                     visibility:GPUShaderStage.COMPUTE,
                     buffer: {
                         type:'read-only-storage'
@@ -141,7 +149,9 @@ export class GPU {
 
 
         this.GPUMeshes = this.createGPUBuffer(TerraNodeGPU.alignment /* meshes count etc */ + TerraNodeGPU.alignment * TerraNodeGPU.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-        this.GPULightsArray = this.createGPUBuffer(63*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
+        this.GPUPointLights = this.createGPUBuffer(63*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
+        this.GPUDirectionalLights = this.createGPUBuffer(63*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
+        
         
         this.updateViewBindGroup=this.updateViewPipeline.createBindGroup(viewLayout, 
             [
@@ -149,6 +159,12 @@ export class GPU {
                     binding: 0,
                     resource: {
                         buffer: this.GPUMeshes,
+                    },
+                },
+                {
+                    binding: 1,
+                    resource: {
+                        buffer: this.GPUPointLights,
                     },
                 }
             ]
@@ -234,12 +250,6 @@ export class GPU {
                 buffer: {
                     type: "read-only-storage"
                 }
-            },  {
-                binding: 4,
-                visibility: GPUShaderStage.FRAGMENT,
-                buffer: {
-                    type: "read-only-storage"
-                }
             }
         );
         this.rootLayout = new PipelineLayout('rootLayout', this, BindGroupLayoutCanvas);
@@ -308,11 +318,7 @@ export class GPU {
             (w, h) => {
                 return [w, h]
             });
-
-
-
-        //@ts-expect-error
-        const context:GPUPresentationContext|null = canvas.getContext('webgpu');
+        const context:GPUCanvasContext | null = canvas.getContext('webgpu');
         if (!context)
             throw ('Unable to get webgpu context');
         this.context = context
@@ -350,12 +356,6 @@ export class GPU {
                 resource: {
                     buffer: this.GPUMeshes
                 }
-            },
-            {
-                binding: 4,
-                resource: {
-                    buffer: this.GPULightsArray
-                }
             }
             ]
         );
@@ -371,6 +371,7 @@ export class GPU {
         }
         GPU.instance = this;
     }
+
     createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(label:string,...entries: T): BindGroupLayout<{ [K in keyof T]: T[K] extends {texture:GPUTextureBindingLayout} ? GPUBindGroupTextureEntry<T[K]['texture']['sampleType']>:GPUBindGroupEntry }>{
         return new BindGroupLayout<[GPUBindGroupEntry]>(this, {label, entries})
     }

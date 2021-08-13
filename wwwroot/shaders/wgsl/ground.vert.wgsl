@@ -12,9 +12,6 @@
 };
 
 [[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
-
-
-//[[binding(0), set(1)]] var<uniform> lights : Lights;
 [[binding(0), group(1)]] var<uniform> worldposition : WorldPosition;
 
 struct Output {

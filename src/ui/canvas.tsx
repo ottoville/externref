@@ -90,8 +90,6 @@ export class Canvas extends TerraCompoment {
         const terraEngine = await Engine.initEngine(gpu, DB, this.#canvasElem);
         this.progress = 15;
 
-
-        window.engine = terraEngine;
         const projection = new Projection(gpu);
         const mainCamera = new TerraCamera(gpu.renderPassScreen, projection, gpu)
         this.progress = 16;
