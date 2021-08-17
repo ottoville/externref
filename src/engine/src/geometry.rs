@@ -1,27 +1,35 @@
 pub use crate::Vec3;
 pub use crate::boundingbox::BoundingBox;
+pub struct ColliderPlane {
+    plane: Plane,
+    vectors: [f32;3]
+}
 pub struct Geometry {
     pub has_geometry:bool,
     pub bounding_box:BoundingBox,
     pub vertices:Vec<f32>,
     pub vertices_stride: usize,
     pub indices:Option<Vec<usize>>,
-    pub faces:Faces
+    pub faces:Faces,
+    pub collider_planes: Vec<ColliderPlane>,
+    pub collider_planes_parallel: Vec<[f32;4]>, //lanes for x,y,z,d
+    pub static_faces: bool // Used for terrain
 }
 impl Geometry {
-    pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, vertices_amount:usize) -> Self {
-        /*
-            TODO: faces_count should take account if mesh is indexed and if its is strip
-        */
+    pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, vertices_amount:usize, static_faces:bool) -> Self {
+
         let faces_count = if has_geometry { vertices_amount / 3} else {0};
-        return Geometry {
+        Geometry {
             has_geometry,
             bounding_box:BoundingBox::new(has_bounding),
-            vertices:Vec::with_capacity(vertices_amount*vertices_stride),
+            vertices: Vec::with_capacity(vertices_amount*vertices_stride), //vec![0.0; vertices_amount*vertices_stride],
             indices:None,
             vertices_stride,
-            faces:Faces::new(faces_count)
-        };
+            faces:Faces::new(faces_count),
+            collider_planes:Vec::with_capacity(faces_count),
+            collider_planes_parallel:Vec::new(),
+            static_faces
+        }
     }
     pub fn min(&self) -> Vec3<f32> {
         let mut min_original=Vec3 {
@@ -67,6 +75,10 @@ impl Geometry {
         self.vertices=vertices;
         self.bounding_box.need_init_min = true;
         self.bounding_box.need_init_max = true;
+        if !self.static_faces {
+            self.faces.planes.clear();
+        }
+
     }
     pub fn set_indices(&mut self, indices: Vec<usize>) {
         self.indices = Some(indices);

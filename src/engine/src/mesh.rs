@@ -7,6 +7,7 @@ pub use crate::Vec4;
 pub use crate::GPUMesh;
 pub use crate::geometry::Geometry;
 pub use crate::geometry::Plane;
+pub use crate::geometry::ColliderPlane;
 pub use crate::boundingbox::BoundingBox;
 pub use crate::terrain::elevator::Elevator;
 
@@ -32,7 +33,18 @@ extern "C" {
 #[wasm_bindgen]
 impl Mesh {
     #[wasm_bindgen(constructor)]
-    pub fn new(engine: &mut Engine, id:u32, has_bounding:bool, has_geometry:bool, positions_count:usize , vertices_stride:usize, point_light:f32, directional_light:f32, scenes:u32) -> Self {
+    pub fn new(
+        engine: &mut Engine,
+        id:u32,
+        has_bounding:bool,
+        has_geometry:bool,
+        positions_count:usize,
+        vertices_stride:usize,
+        point_light:f32,
+        directional_light:f32,
+        scenes:u32,
+        static_faces:bool) -> Self {
+
         let mut m = Mesh {
             id,
             gpu_alignment: engine.allocate_gpu(),
@@ -52,7 +64,7 @@ impl Mesh {
                 scenes,
 
             },
-            geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count),
+            geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count, static_faces),
             rotation: Vec4 {
                 x: 0.0,
                 y: 0.0,
@@ -79,6 +91,9 @@ impl Mesh {
     }
     #[wasm_bindgen(setter)]
     pub fn set_indices(&mut self, indices: Vec<usize>) {
+        if !self.geometry.static_faces {
+            self.geometry.faces.planes.clear();
+        }
         &self.geometry.set_indices(indices);
     }
     #[wasm_bindgen(getter)]
@@ -102,10 +117,18 @@ impl Mesh {
     pub fn update_vertices(&mut self, vertices:Vec<f32>) {
         self.geometry.update_vertices(vertices);
     }
-
+    #[wasm_bindgen(getter)]
+    pub fn collider_faces_pointer(&self) -> *const ColliderPlane {
+        self.geometry.collider_planes.as_ptr()
+    }
     #[wasm_bindgen(getter)]
     pub fn faces_pointer(&self) -> *const Plane {
-        self.geometry.faces.planes.as_ptr()
+        if !self.geometry.static_faces && self.geometry.faces.planes.len() == 0 {
+            panic!("Not implemented yet, TODO: Generate faces");
+            //Remember to allocate memory for collider planes also
+            
+        }
+        return self.geometry.faces.planes.as_ptr();
     }
     #[wasm_bindgen(getter)]
     pub fn faces_count(&self) -> usize {
@@ -113,6 +136,7 @@ impl Mesh {
     }
     #[wasm_bindgen(setter)]
     pub fn set_faces(&mut self, planes:Vec<f32>) {
+        self.geometry.collider_planes=Vec::with_capacity(&planes.len()/4);
         self.geometry.faces.set(planes);
     }
     pub fn create_elevator(&self) -> Elevator {

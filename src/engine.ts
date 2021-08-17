@@ -100,6 +100,7 @@ export class Engine {
         return arr;
     }
     freeMemory(arr: { byteOffset: number, byteLength: number }) {
+        return;
         const end = arr.byteOffset + arr.byteLength;
         if (end == this.allocatedSize) {
             this.allocatedSize = arr.byteOffset;

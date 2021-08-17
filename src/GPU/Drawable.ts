@@ -104,10 +104,11 @@ export abstract class DrawableDirect extends Drawable {
     constructor(
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
+        dynamicIndex: number,
         scene?: Scene,
         instanceCount = 1) {
-
         super(renderPipeline, renderPasses, scene);
+        this.dynamicBuffers.push([this.renderPipeline.bindgroupdrawable.gpu.BindGroupPosition, dynamicIndex])
         if (instanceCount == 0)
             console.warn('Added drawable with 0 instances, nothing will be drawn');
         this.#instanceCount = instanceCount;
@@ -145,7 +146,7 @@ export class DrawableSimple extends DrawableDirect {
         instanceCount = 1,
         public firstVertex = 0,
         public firstInstance = 0) {
-        super(renderPipeline, renderPasses, scene, instanceCount);
+        super(renderPipeline, renderPasses,node.gpu_alignment, scene, instanceCount);
     }
     render = (renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) => {
         renderEncoder.draw(this.node.positions_count, this.instanceCount, this.firstVertex, this.firstInstance);
@@ -199,7 +200,7 @@ export class DrawableIndexed extends DrawableDirect {
         public firstInstance = 0,
         private GPUIndexFormat: GPUIndexFormat = 'uint16',
         ) {
-        super(renderPipeline, renderPasses, scene, instanceCount);
+        super(renderPipeline, renderPasses,node.gpu_alignment, scene, instanceCount);
     }
     debug_render_normals() {
         const gpu = this.renderPipeline.bindgroupdrawable.gpu;

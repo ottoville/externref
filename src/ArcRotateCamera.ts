@@ -38,7 +38,7 @@ export class ArcRotateCamera {
     * Current inertia value on the longitudinal axis.
     * The bigger this number the longer it will take for the camera to stop.
     */
-    inertialAlphaOffset = 0;
+    #inertialAlphaOffset = 0;
     /**
     * Current inertia value on the latitudinal axis.
     * The bigger this number the longer it will take for the camera to stop.
@@ -59,7 +59,7 @@ export class ArcRotateCamera {
             this.inertialPanningX += -e.movementX / panningSensibility;
             this.inertialPanningY += e.movementY / panningSensibility;
         } else {
-            this.inertialAlphaOffset -= e.movementX / angularSensibilityX;
+            this.#inertialAlphaOffset += e.movementX / angularSensibilityX;
             this.inertialBetaOffset -= e.movementY / angularSensibilityY;
         }
     }
@@ -209,19 +209,22 @@ export class ArcRotateCamera {
 
         //inputs.checkInputs();
         // Inertia
-        if (this.inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
-            let inertialAlphaOffset = this.inertialAlphaOffset;
-            if (this.beta <= 0) { inertialAlphaOffset *= -1; }
+        if (this.#inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
+            let inertialAlphaOffset = this.#inertialAlphaOffset;
+            if (this.beta <= 0) {
+                inertialAlphaOffset *= -1;
+            }
             this.alpha += inertialAlphaOffset;
 
             this.beta += this.inertialBetaOffset;
-
+            //useRightHandedSystem
+            inertialAlphaOffset *= -1;
             this.radius -= this.inertialRadiusOffset;
-            this.inertialAlphaOffset *= this.inertia;
+            this.#inertialAlphaOffset *= this.inertia;
             this.inertialBetaOffset *= this.inertia;
             this.inertialRadiusOffset *= this.inertia;
-            if (Math.abs(this.inertialAlphaOffset) < Epsilon) {
-                this.inertialAlphaOffset = 0;
+            if (Math.abs(this.#inertialAlphaOffset) < Epsilon) {
+                this.#inertialAlphaOffset = 0;
             }
             if (Math.abs(this.inertialBetaOffset) < Epsilon) {
                 this.inertialBetaOffset = 0;

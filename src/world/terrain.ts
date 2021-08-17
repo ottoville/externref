@@ -527,7 +527,6 @@ TODO
             }
             scene.gpu.GPU2CPU(async (buff) => {
                 await buff.mapAsync(GPUMapMode.READ);
-                //new Float32Array(this.mesh.facesBuffer).set(new Float32Array(buff.getMappedRange()));
                 this.mesh.faces=new Float32Array(buff.getMappedRange());
             }, this.facet12ArrGPUBuffer)
     

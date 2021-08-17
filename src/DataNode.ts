@@ -50,10 +50,11 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         positionCount: number,
         verticesPositionStride: number,
         protected strip = false,
-        point_light = 0
+        point_light = 0,
+        static_faces = false
 
     ) {
-        super(scene.engine, renderPipeline, positionCount, true,true, verticesPositionStride, point_light);
+        super(scene.engine, renderPipeline, positionCount, true,true, verticesPositionStride, point_light,undefined, static_faces);
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
             if(propDesc)
@@ -76,6 +77,9 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         });
     }
     initCollider() {
+        if(this.faces_count === 0)
+            return;
+        console.log('faces count',this.faces_count)
         this.facesBufferColliderPointer = this.engine.mallocView(this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT);
         this.facesBufferColliderPointerParallel = this.engine.mallocView(this.faces_count * (16 + 12) * Float32Array.BYTES_PER_ELEMENT);
         this.#positionsAndCollider.length=0;
@@ -92,6 +96,8 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         return this.facesBufferColliderPointer.byteOffset;
     }
     addVectors = (faceIndex: number, vectors: [TerraVector4, TerraVector4, TerraVector4],facesBufferColliderPointer:number ) => {
+
+        
         const memory = this.engine.wasm.memory.buffer;
         if (vectors.length != 3)
             throw ('less than 3 vector')
@@ -99,7 +105,19 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             vectors,
             new TerraVector4(memory, facesBufferColliderPointer + faceIndex * 4 * 7)
         );
-        new Uint32Array(memory, facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT, 3).set(vectors.map(v => v.byteOffset)); //4 is from plane
+        new Triangle(
+            vectors,
+            new Float32Array(this.engine.memory.buffer, this.collider_faces_pointer + faceIndex * 4 * 7,4) as TerraVector4
+        );
+        new Uint32Array(
+            memory,
+            facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
+            3).set(vectors.map(v => v.byteOffset)); //4 is from plane
+        /*new Uint32Array(
+            memory2,
+            facesBufferColliderPointer2 + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
+            3).set(vectors.map(v => v.byteOffset)); //4 is from plane
+    */
     }
     abstract rebuildTrianglePlanes() : void
 
@@ -125,9 +143,10 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
 
         // Transformation matrix
         this.myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
-        if(!this.facesBufferColliderPointerParallel || !this.facesBufferColliderPointer)
-        throw(new Error('Collider not initialized'));
-
+        if(!this.facesBufferColliderPointerParallel || !this.facesBufferColliderPointer) {
+            console.error('Collider not initialized');
+            return;
+        }
         this.get_transformation().multiplyToRef(this.myCollisionsTransformMatrix, this.myCollisionsTransformMatrix);
         if (!this.#lastColliderTransformMatrix.equals(this.myCollisionsTransformMatrix)) {
 
@@ -208,6 +227,10 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
         //this.indicesView = new Uint32Array(this.engine.memory.buffer,this.indices_pointer,indices.length);
         this.rebuildTrianglePlanes();
     }
+/*    set setFaces(faces:Float32Array) {
+        this.faces=faces;
+        this.rebuildTrianglePlanes();
+    }*/
     get indices_count() { return this.indicesView.length; }
     constructor(
         scene: Scene,
@@ -216,22 +239,23 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
         verticesPositionStride = 3,
         indicesView: Uint32Array,
         strip = false,
-        point_light = 0
+        point_light = 0,
+        static_faces = false
     ) {
-        super(scene, renderPipeline, positionCount,verticesPositionStride, strip, point_light);
+        super(scene, renderPipeline, positionCount,verticesPositionStride, strip, point_light,static_faces);
         Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeIndexed.prototype, prop);
             if(propDesc)
                 Object.defineProperty(this, prop, propDesc);
         })
-          
+        
         this.indicesView = indicesView
-        this.rebuildTrianglePlanes();
     }
 
     rebuildTrianglePlanes() {
         const facesBufferColliderPointer = this.initCollider();
-        
+        if(!facesBufferColliderPointer)
+            return;
         let vectors: TerraVector4[] = [];
         let faceIndex = 0;
         if (this.strip) {
@@ -258,6 +282,8 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
                 }
             });
         }
+        //console.log(new Uint32Array(this.engine.wasm.memory.buffer,facesBufferColliderPointer,1000));
+       // console.log(new Uint32Array(this.engine.memory.buffer,this.collider_faces_pointer,1000));
         this.buildFaceQuatros();
     }
 }
@@ -280,6 +306,9 @@ export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
     }
     rebuildTrianglePlanes() {
         const facesBufferColliderPointer = this.initCollider();
+        if(!facesBufferColliderPointer)
+        return;
+
         let vectors: TerraVector4[] = [];
         let faceIndex = 0;
         if (this.strip) {
