@@ -118,21 +118,34 @@ impl Mesh {
         self.geometry.update_vertices(vertices);
     }
     #[wasm_bindgen(getter)]
+    pub fn collider_planes_parallel_pointer(&self) -> *const [f32; 4] {
+        self.geometry.collider_planes_parallel.as_ptr()
+    }
+    #[wasm_bindgen(getter)]
     pub fn collider_faces_pointer(&self) -> *const ColliderPlane {
         self.geometry.collider_planes.as_ptr()
+    }
+    #[wasm_bindgen(getter)]
+    pub fn last_collider_world_vertices_pointer(&self) -> *const f32 {
+        self.geometry.last_collider_world_vertices.as_ptr()
     }
     #[wasm_bindgen(getter)]
     pub fn faces_pointer(&self) -> *const Plane {
         if !self.geometry.static_faces && self.geometry.faces.planes.len() == 0 {
             panic!("Not implemented yet, TODO: Generate faces");
-            //Remember to allocate memory for collider planes also
-            
+            //Remember to allocate memory for collider planes also and otger collider stuff also
         }
         return self.geometry.faces.planes.as_ptr();
     }
     #[wasm_bindgen(getter)]
     pub fn faces_count(&self) -> usize {
-        self.geometry.faces.planes.len()
+        if self.geometry.static_faces {
+            return self.geometry.faces.planes.len();
+        } else {
+            //TODO: Hand strip and indexed
+            let faces_count = if self.geometry.has_geometry { self.positions_count / 3} else {0};
+            return faces_count;
+        } 
     }
     #[wasm_bindgen(setter)]
     pub fn set_faces(&mut self, planes:Vec<f32>) {

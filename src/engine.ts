@@ -1,7 +1,7 @@
 ﻿import { Physics } from "./physics.js";
 import type { GPU } from "./GPU.js";
 import { TerraNodeGPU } from "./TerraNode.js";
-import { Collider } from "./Collider.js";
+import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import { TerraVector3, Vector3 } from "./Math.js";
 import init, { Engine as RustEngine } from "/js/engine/engine.js";
@@ -39,7 +39,7 @@ export class Engine {
     }
     readonly collisionNotFound:DataView
     readonly #collidedMesh:DataView
-    readonly collider:Collider;
+    readonly collider:ColliderJS;
 
     mousePositionBuffer = new SharedArrayBuffer(4);
     mousePosition = new Uint16Array(this.mousePositionBuffer);
@@ -160,7 +160,7 @@ export class Engine {
             finalPosition: new TerraVector3(),
         }
 
-        this.collider = new Collider(this,this.collisionCoordinator,this.collisionNotFound);
+        this.collider = new ColliderJS(this,this.collisionCoordinator,this.collisionNotFound);
 
         wasm.construct( this.collisionNotFound.byteOffset,
                         this.collider.intersectionPointWasm.byteOffset,

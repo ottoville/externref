@@ -3,6 +3,7 @@
 
 import { Engine } from "./engine.js";
 import { TerraMatrix, TerraVector3, Triangle, Vector3 } from "./Math.js";
+import { Collider } from "/js/engine/engine.js";
 
 
 
@@ -42,8 +43,8 @@ var intersectBoxAASphere = (boxMin: TerraVector3, boxMax: TerraVector3, sphereCe
 };
 
 
-export class Collider {
-    //@ts-ignore
+export class ColliderJS {
+    rust = new Collider();
     #velocitySquaredLength!: number;
     intersectionPointWasm: Vector3;
     nearestDistanceSquared: DataView;
@@ -109,6 +110,15 @@ export class Collider {
     }, private collisionNotFound:DataView,private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
         this.intersectionPointWasm = engine.callocVector3();
         this.nearestDistanceSquared = engine.mallocView(4);
+/*
+        console.log('intersection_point_pointer',new Float32Array(engine.memory.buffer, this.rust.intersection_point_pointer,3));
+        console.log('collision_not_found_pointer',new Uint32Array(engine.memory.buffer, this.rust.collision_not_found_pointer,1));
+        console.log('nearest_distance_squared_pointer',new Float32Array(engine.memory.buffer, this.rust.nearest_distance_squared_pointer,1));
+
+    console.log('scaled_position_pointer',new Float32Array(engine.memory.buffer, this.rust.scaled_position_pointer,4));
+    console.log('scaled_velocity_pointer',new Float32Array(engine.memory.buffer, this.rust.scaled_velocity_pointer,4));
+    console.log('collided_mesh_pointer',new Uint32Array(engine.memory.buffer, this.rust.collided_mesh_pointer,1));
+*/
 
         this.collisionsScalingMatrix = new TerraMatrix([
             1.0 / _radius[0],   0.0,                   0.0,                    0.0,

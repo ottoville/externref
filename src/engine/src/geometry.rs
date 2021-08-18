@@ -11,23 +11,27 @@ pub struct Geometry {
     pub vertices_stride: usize,
     pub indices:Option<Vec<usize>>,
     pub faces:Faces,
+
     pub collider_planes: Vec<ColliderPlane>,
     pub collider_planes_parallel: Vec<[f32;4]>, //lanes for x,y,z,d
+    pub last_collider_world_vertices:Vec<f32>,
+
     pub static_faces: bool // Used for terrain
 }
 impl Geometry {
-    pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, vertices_amount:usize, static_faces:bool) -> Self {
+    pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, positions_count:usize, static_faces:bool) -> Self {
 
-        let faces_count = if has_geometry { vertices_amount / 3} else {0};
+        let faces_count = if has_geometry { positions_count / 3} else {0};
         Geometry {
             has_geometry,
             bounding_box:BoundingBox::new(has_bounding),
-            vertices: Vec::with_capacity(vertices_amount*vertices_stride), //vec![0.0; vertices_amount*vertices_stride],
+            vertices: vec![0.0; positions_count*vertices_stride],
             indices:None,
             vertices_stride,
             faces:Faces::new(faces_count),
             collider_planes:Vec::with_capacity(faces_count),
-            collider_planes_parallel:Vec::new(),
+            collider_planes_parallel:Vec::with_capacity(faces_count*4usize),
+            last_collider_world_vertices:Vec::with_capacity(positions_count*4usize),
             static_faces
         }
     }

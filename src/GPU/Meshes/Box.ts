@@ -1,5 +1,5 @@
 ﻿import type { Scene } from "../../Scene.js";
-import { SimpleMesh } from "../RenderPipeLines/Simple.js";
+import { SimpleIndexedMesh } from "../RenderPipeLines/Simple.js";
 import { GPUBufferUsage } from "../../GPU.js";
 
 const positions = new Float32Array([
@@ -36,7 +36,7 @@ const positions = new Float32Array([
     1.0, -1.0, 1.0,    0.0,1.0,0.0,
     -1.0, -1.0, 1.0,   0.0,1.0,0.0,
 ])
-function create(scene: Scene): [number, Uint32Array, GPUIndexBuffer, GPUVertexBuffer] {
+function create(scene: Scene): [Uint32Array, GPUIndexBuffer, GPUVertexBuffer] {
     const [indicesBuffer, iBuffer] = scene.gpu.createInputBuffer(GPUBufferUsage.INDEX, new Uint32Array([
         0, 1, 2, 0, 2, 3,    // front
         4, 5, 6, 4, 6, 7,    // back
@@ -50,14 +50,14 @@ function create(scene: Scene): [number, Uint32Array, GPUIndexBuffer, GPUVertexBu
     new Float32Array(vBuffer.getMappedRange()).set(positions);
     vBuffer.unmap();
 
-    return [24, new Uint32Array(indicesBuffer), iBuffer, vBuffer]
+    return [new Uint32Array(indicesBuffer), iBuffer, vBuffer]
 }
-export class Box extends SimpleMesh {
+export class Box extends SimpleIndexedMesh {
     constructor(
         scene: Scene,
         point_light = 0
     ) {
-        super(scene, ...create(scene),'box',point_light);
-        this.update_vertices(positions);
+        super(scene,positions, ...create(scene),'box',point_light);
+        
     }
 }
