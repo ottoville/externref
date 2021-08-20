@@ -9,8 +9,9 @@ pub struct Geometry {
     pub bounding_box:BoundingBox,
     pub vertices:Vec<f32>,
     pub vertices_stride: usize,
-    pub indices:Option<Vec<usize>>,
+    pub indices:Vec<usize>,
     pub faces:Faces,
+    pub strip:bool,
 
     pub collider_planes: Vec<ColliderPlane>,
     pub collider_planes_parallel: Vec<[f32;4]>, //lanes for x,y,z,d
@@ -19,21 +20,43 @@ pub struct Geometry {
     pub static_faces: bool // Used for terrain
 }
 impl Geometry {
-    pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, positions_count:usize, static_faces:bool) -> Self {
+    //TODO: remove positions_count, it does not reflect reality
+    pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, positions_count:usize, static_faces:bool, strip:bool) -> Self {
 
         let faces_count = if has_geometry { positions_count / 3} else {0};
         Geometry {
             has_geometry,
             bounding_box:BoundingBox::new(has_bounding),
             vertices: vec![0.0; positions_count*vertices_stride],
-            indices:None,
+            indices:Vec::new(),
             vertices_stride,
             faces:Faces::new(faces_count),
             collider_planes:Vec::with_capacity(faces_count),
             collider_planes_parallel:Vec::with_capacity(faces_count*4usize),
             last_collider_world_vertices:Vec::with_capacity(positions_count*4usize),
-            static_faces
+            static_faces,
+            strip
         }
+    }
+    pub fn faces_count(&self) -> usize {
+        if self.static_faces {
+            return self.faces.planes.len();
+        } else {
+            //TODO: Hand strip and indexed
+            if self.has_geometry {
+                let position_count = if self.indices.len() > 0 {
+                    self.indices.len()
+                } else {
+                    self.vertices.len() / self.vertices_stride
+                };
+                if self.strip {
+                    position_count -2
+                } else {
+                    position_count / 3
+                }
+
+            } else {0}
+        } 
     }
     pub fn min(&self) -> Vec3<f32> {
         let mut min_original=Vec3 {
@@ -85,7 +108,7 @@ impl Geometry {
 
     }
     pub fn set_indices(&mut self, indices: Vec<usize>) {
-        self.indices = Some(indices);
+        self.indices = indices;
     }
 }
 pub struct Faces {

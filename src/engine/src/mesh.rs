@@ -22,6 +22,7 @@ pub struct Mesh {
     #[wasm_bindgen(skip)]
     pub geometry:Geometry,
     pub positions_count:usize,
+    pub strip:bool
 }
 #[wasm_bindgen]
 extern "C" {
@@ -43,7 +44,8 @@ impl Mesh {
         point_light:f32,
         directional_light:f32,
         scenes:u32,
-        static_faces:bool) -> Self {
+        static_faces:bool,
+        strip:bool) -> Self {
 
         let mut m = Mesh {
             id,
@@ -62,9 +64,8 @@ impl Mesh {
                 point_light_squared: point_light * point_light,
                 directional_light,
                 scenes,
-
             },
-            geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count, static_faces),
+            geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count, static_faces,strip),
             rotation: Vec4 {
                 x: 0.0,
                 y: 0.0,
@@ -77,6 +78,7 @@ impl Mesh {
                 z: 1.0,
             },
             positions_count,
+            strip
         };
         if point_light > 0.0 {
             engine.point_lights.insert(m.gpu_alignment);
@@ -98,13 +100,7 @@ impl Mesh {
     }
     #[wasm_bindgen(getter)]
     pub fn indices_pointer(&self) -> *const usize {
-        match &self.geometry.indices {
-            None => {
-                error("Geometry has no indices");
-                panic!("Geometry has no indices")
-            },
-            Some(indices) => indices.as_ptr(),
-        }
+        self.geometry.indices.as_ptr()
     }
     #[wasm_bindgen(getter)]
     pub fn vertices_pointer(&self) -> *const f32 {
@@ -139,13 +135,7 @@ impl Mesh {
     }
     #[wasm_bindgen(getter)]
     pub fn faces_count(&self) -> usize {
-        if self.geometry.static_faces {
-            return self.geometry.faces.planes.len();
-        } else {
-            //TODO: Hand strip and indexed
-            let faces_count = if self.geometry.has_geometry { self.positions_count / 3} else {0};
-            return faces_count;
-        } 
+        self.geometry.faces_count()
     }
     #[wasm_bindgen(setter)]
     pub fn set_faces(&mut self, planes:Vec<f32>) {

@@ -291,7 +291,12 @@ export class Triangle {
         const normal_x = yz * invPyth
         const normal_y = xz * invPyth
         const normal_z = xy * invPyth;
-        this.planeCollider.set([normal_x, normal_y, normal_z, -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))]);
+        this.planeCollider.set([
+            normal_x,
+            normal_y,
+            normal_z,
+            -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))
+        ]);
     }
     constructor(
         public vectors: [TerraVector4, TerraVector4, TerraVector4] = [new TerraVector4(), new TerraVector4(), new TerraVector4()],

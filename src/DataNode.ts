@@ -50,12 +50,12 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         renderPipeline: RenderPipeline,
         positionCount: number,
         verticesPositionStride: number,
-        protected strip = false,
+        strip = false,
         point_light = 0,
         static_faces = false
 
     ) {
-        super(scene.engine, renderPipeline, positionCount, true,true, verticesPositionStride, point_light,undefined, static_faces);
+        super(scene.engine, renderPipeline, positionCount, true,true, verticesPositionStride, point_light,undefined, static_faces,strip);
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
             if(propDesc)
