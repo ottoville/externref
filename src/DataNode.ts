@@ -26,21 +26,20 @@ class pickInfo {
 }
 
 export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T> {
-    memory=this.engine.wasm.memory;
+    memory=this.engine.memory;
     readonly pickInfo = new pickInfo();
 
     protected readonly colliderVerticesV4: number[] = [];
-    protected readonly colliderVertices2: TerraVector4[] = [];
 
 
     readonly #triangleFaces: Triangle[] = [];
     #lastColliderTransformMatrix = new TerraMatrix();
 
-    //readonly facesBuffer = new SharedArrayBuffer(this.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT);
 
-    facesBufferColliderPointer?: DataView;
-    lastColliderWorldVectorsPointer?: DataView;
-    facesBufferColliderPointerParallel?: DataView;
+    
+   // facesBufferColliderPointer?: DataView;
+    //lastColliderWorldVectorsPointer?: DataView;
+    //facesBufferColliderPointerParallel?: DataView;
     readonly verticesBuffesSize:number;
     #positionsAndCollider: [pointerToVec3:number, pointerToVec4:number][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
@@ -79,23 +78,24 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     }
     initCollider() {
         if(this.faces_count === 0)
-            return;
-        this.facesBufferColliderPointer = this.engine.mallocView(this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT);
-        this.facesBufferColliderPointerParallel = this.engine.mallocView(this.faces_count * 16 * Float32Array.BYTES_PER_ELEMENT);
+            return false;
+       // this.facesBufferColliderPointer = this.engine.mallocView(this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT);
+        //this.facesBufferColliderPointerParallel = this.engine.mallocView(this.faces_count * 16 * Float32Array.BYTES_PER_ELEMENT);
         this.#positionsAndCollider.length=0;
         this.colliderVerticesV4.length=0;
-        this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
+        //this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
         for (let i = 0; i < this.positions_count; i++) {
             //let pos = new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT)
+          //  const pos = new TerraVector3(this.engine.memory.buffer, this.vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT);
             const pos = this.vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT;
 
-            const colPos = this.lastColliderWorldVectorsPointer.byteOffset + i * 4 * Float32Array.BYTES_PER_ELEMENT;
-            const colPos2 = new TerraVector4(this.engine.memory.buffer, this.last_collider_world_vertices_pointer + i * 4 * Float32Array.BYTES_PER_ELEMENT);
+            //const colPos = new TerraVector4(this.engine.memory.buffer, this.last_collider_world_vertices_pointer + i * 4 * Float32Array.BYTES_PER_ELEMENT);
+            const colPos = this.last_collider_world_vertices_pointer + i * 4 * Float32Array.BYTES_PER_ELEMENT;
             this.colliderVerticesV4.push(colPos);
-            this.colliderVertices2.push(colPos2);
             this.#positionsAndCollider.push([pos, colPos])
         }
-        return this.facesBufferColliderPointer.byteOffset;
+        //return this.facesBufferColliderPointer.byteOffset;
+        return true;
     }
     addVectors = (faceIndex: number, vectors: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],facesBufferColliderPointer:number ) => {
 
@@ -107,18 +107,18 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             this.memory,
             () => facesBufferColliderPointer + faceIndex * 4 * 7
         );
-        new Triangle(
+       /* new Triangle(
             vectors,
-            this.engine.memory, () => this.collider_faces_pointer + faceIndex * 4 * 7
-        );
+            new Float32Array(this.engine.memory.buffer, this.collider_faces_pointer + faceIndex * 4 * 7,4) as TerraVector4
+        );*/
         new Uint32Array(
             this.memory.buffer,
             facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
             3).set(vectors); //4 is from plane
-        new Uint32Array(
+      /*  new Uint32Array(
             this.engine.memory.buffer,
             this.collider_faces_pointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
-            3).set(vectors); //4 is from plane
+            3).set(vectors.map(v => v.byteOffset)); //4 is from plane*/
     
     }
     abstract rebuildTrianglePlanes() : void
@@ -145,10 +145,10 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
 
         // Transformation matrix
         this.myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
-        if(!this.facesBufferColliderPointerParallel || !this.facesBufferColliderPointer) {
+        /*if(!this.facesBufferColliderPointerParallel || !this.facesBufferColliderPointer) {
             console.error('Collider not initialized');
             return;
-        }
+        }*/
         this.get_transformation().multiplyToRef(this.myCollisionsTransformMatrix, this.myCollisionsTransformMatrix);
         if (!this.#lastColliderTransformMatrix.equals(this.myCollisionsTransformMatrix)) {
 
@@ -165,13 +165,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
                 quatro[1].updatePlane();
                 quatro[2].updatePlane();
                 quatro[3].updatePlane();
-                new Float32Array(this.memory.buffer, this.facesBufferColliderPointerParallel!.byteOffset + i * 4 * 16, 16).set([
-                    quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
-                    quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
-                    quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
-                    quatro[0].planeCollider[3], quatro[1].planeCollider[3], quatro[2].planeCollider[3], quatro[3].planeCollider[3], //d
-                ]);
-                new Float32Array(this.engine.memory.buffer, this.collider_planes_parallel_pointer + i * 4 * 16, 16).set([
+                new Float32Array(this.memory.buffer, this.collider_planes_parallel_pointer + i * 4 * 16, 16).set([
                     quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
                     quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
                     quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
@@ -186,12 +180,12 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         // console.log('cpu took', performance.now() - timer);
 
             this.engine.wasm.testTriangles(
-                this.facesBufferColliderPointer.byteOffset,
-                this.facesBufferColliderPointerParallel.byteOffset,
+                this.collider_faces_pointer,
+                this.collider_planes_parallel_pointer,
                 this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/,
                 this.id);
-
-        if (!this.engine.collisionNotFound.getUint32(0, false)) {
+                
+        if (!this.engine.collider.collisionNotFound.getUint32(0, false)) {
             //console.log(new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer, this.#faces.length * 7)) //4 is for simd
             console.log('collided')
         }
@@ -253,9 +247,10 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
     }
 
     rebuildTrianglePlanes() {
-        const facesBufferColliderPointer = this.initCollider();
-        if(!facesBufferColliderPointer)
+        if(!this.initCollider())
             return;
+      //  if(!facesBufferColliderPointer)
+      //      return;
         let vectorsVec4: number[] = [];
         let faceIndex = 0;
         if (this.strip) {
@@ -266,7 +261,7 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
                 }
                 if (vectorsVec4.push(vector) < 3)
                     return;
-                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number],facesBufferColliderPointer);
+                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number],this.collider_faces_pointer);
                 vectorsVec4 = [(vectorsVec4 as [number, number, number])[1], (vectorsVec4 as [number, number, number])[2]];
             });
         } else {
@@ -277,7 +272,7 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
                     throw ('position ' + indice + ' not found');
                 }
                 if (vectorsVec4.push(position) == 3) {
-                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number],facesBufferColliderPointer)
+                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number],this.collider_faces_pointer)
                     vectorsVec4 = [];
                 }
             });
@@ -304,9 +299,9 @@ export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
         this.rebuildTrianglePlanes();
     }
     rebuildTrianglePlanes() {
-        const facesBufferColliderPointer = this.initCollider();
-        if(!facesBufferColliderPointer)
-        return;
+        if(!this.initCollider())
+            return;
+
 
         let vectorsVec4: number[] = [];
         let faceIndex = 0;
@@ -314,13 +309,13 @@ export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
             this.colliderVerticesV4.forEach(vector => {
                 if (vectorsVec4.push(vector) < 3)
                     return;
-                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number], facesBufferColliderPointer)
+                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number], this.collider_faces_pointer)
                 vectorsVec4 = [(vectorsVec4 as [number, number, number])[1], (vectorsVec4 as [number, number, number])[2]];
             });
         } else {
             this.colliderVerticesV4.forEach(vector => {
                 if (vectorsVec4.push(vector) == 3) {
-                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number], facesBufferColliderPointer)
+                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number], this.collider_faces_pointer)
                     vectorsVec4 = [];
                 }
             });

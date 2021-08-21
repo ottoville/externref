@@ -3,7 +3,7 @@ import type { GPU } from "./GPU.js";
 import { TerraNodeGPU } from "./TerraNode.js";
 import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
-import { TerraVector3, Vector3 } from "./Math.js";
+import { Vector3 } from "./Math.js";
 import init, { Engine as RustEngine } from "/js/engine/engine.js";
 import { GPUBufferUsage } from "./GPU.js";
 
@@ -26,12 +26,11 @@ export class Engine {
 
     freeMemoryBlocks: { byteOffset: number, byteLength: number }[] = []
     allocatedSize = 0;
-    registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
+   // registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
 
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
-
-    readonly collisionNotFound:DataView
+   // readonly collisionNotFound:DataView
     readonly #collidedMesh:DataView
     readonly collider:ColliderJS;
 
@@ -43,7 +42,7 @@ export class Engine {
     displacementVector: [number, number, number] = [0, 0, 0];
 
     updateLights=false;
-    malloc(byteLength: number): number {
+    /*malloc(byteLength: number): number {
         if (byteLength % 4 != 0) {
             throw ('malloc should be called with length divitable with four')
         }
@@ -64,25 +63,25 @@ export class Engine {
                 throw ('Out of memory')
             return offset;
         }
-    }
-    calloc(byteLength: number): number {
+    }*/
+    /*calloc(byteLength: number): number {
         const pointer = this.malloc(byteLength);
         new Uint8Array(this.wasm.memory.buffer, pointer, byteLength >> 2).fill(0)
         return pointer;
-    }
-    mallocView(byteLength: number): DataView {
+    }*/
+    /*mallocView(byteLength: number): DataView {
         const pointer = this.malloc(byteLength);
         const dv = new DataView(this.wasm.memory.buffer, pointer, byteLength);
         this.registry.register(dv, { byteOffset: dv.byteOffset, byteLength: dv.byteLength });
         return dv;
-    }
-    callocVector3(): Vector3 {
+    }*/
+   /* callocVector3(): Vector3 {
         const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(16));
         arr.fill(0);
         this.registry.register(arr, { byteOffset: arr.byteOffset, byteLength: arr.byteLength });
         return arr;
-    }
-    mallocVector3(x?: number, y?: number, z?: number): Vector3 {
+    }*/
+    /*mallocVector3(x?: number, y?: number, z?: number): Vector3 {
         const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(16));
         if (x)
             arr[0] = x;
@@ -121,10 +120,12 @@ export class Engine {
             this.freeMemoryBlocks.push({ byteOffset, byteLength });
         })
     }
-
+*/
     static async initEngine(gpu: GPU, DB: Promise<EarthDatabase>, canvas: HTMLCanvasElement): Promise<Engine> {
 
-        const memory = new WebAssembly.Memory({ initial: 6000 });
+        //const memory = new WebAssembly.Memory({ initial: 6000 });
+        //Init rust wasm
+        const rust = await init();
 
         const wasmRequest = await fetch('collider/colliderO.wasm');
         const obj = await WebAssembly.instantiateStreaming(wasmRequest, {
@@ -134,27 +135,28 @@ export class Engine {
                 }
             },
             env: {
-                memory: memory
+                memory: rust.memory
             }
         });
         const wasm: ColliderWasm = obj.instance.exports as any;
 
-        //Init rust wasm
-        const rust = await init();
         return new Engine(gpu, DB, canvas, wasm, rust.memory, new RustEngine());
     }
     constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public memory: WebAssembly.Memory, public rustEngine: RustEngine) {
         window.engine=this;
-        this.collisionNotFound = this.mallocView(4);
-        this.#collidedMesh = this.mallocView(4);
-        this.collider = new ColliderJS(this,this.collisionNotFound);
+       // this.collisionNotFound = this.mallocView(4);
 
-        wasm.construct( this.collisionNotFound.byteOffset,
+        this.collider = new ColliderJS(this);
+        
+        //TODO: this does not work after memory grow
+        this.#collidedMesh = new DataView(this.memory.buffer, this.collider.rust.collided_mesh_pointer, 4);
+
+        wasm.construct( this.collider.rust.collision_not_found_pointer,
                         this.collider.intersectionPointWasm.byteOffset,
                         this.collider.nearestDistanceSquared.byteOffset,
                         this.#collidedMesh.byteOffset,
-                        this.collider.scaledVelocity.byteOffset,
-                        this.collider.scaledPosition.byteOffset)
+                        this.collider.rust.scaled_velocity_pointer,
+                        this.collider.rust.scaled_position_pointer)
 
 
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
@@ -237,7 +239,7 @@ export class Engine {
             this.destinationPoint[2] = this.collider.scaledPosition[2] + this.collider.scaledVelocity[2];
             
 
-            if (this.collisionNotFound.getUint32(0, true)) {
+            if (this.collider.collisionNotFound.getUint32(0, true)) {
                 this.collider.finalPosition.set(this.destinationPoint);
                 return;
             }

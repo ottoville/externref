@@ -47,10 +47,6 @@ export class ColliderJS {
     rust = new Collider();
     #velocitySquaredLength!: number;
     finalPosition: TerraVector3;
-    intersectionPointWasm: Vector3;
-    nearestDistanceSquared: DataView;
-    scaledPosition: Vector3;
-    scaledVelocity: Vector3;
     getLowestRoot (a: number, b: number, c: number, maxR: number) {
 
         var determinant = b * b - 4.0 * a * c;
@@ -106,14 +102,24 @@ export class ColliderJS {
     radius: { 0: number; 1: number; 2: number; };
 
     readonly collisionsScalingMatrix:TerraMatrix;
+    get collisionNotFound() {
+        return new DataView(this.engine.memory.buffer, this.rust.collision_not_found_pointer,4);
+    }
+    get scaledPosition() {
+        return new Float32Array(this.engine.memory.buffer, this.rust.scaled_position_pointer, 4) as TerraVector3;
+    }
+    get scaledVelocity() {
+        return new Float32Array(this.engine.memory.buffer, this.rust.scaled_velocity_pointer, 4) as TerraVector3;
+    }
+    get intersectionPointWasm() {
+        return new Float32Array(this.engine.memory.buffer, this.rust.intersection_point_pointer, 4) as TerraVector3;
+    }
+    get nearestDistanceSquared() {
+        return  new DataView(this.engine.memory.buffer, this.rust.nearest_distance_squared_pointer,4);
+    }
+    constructor(private engine:Engine, private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+        this.finalPosition= new TerraVector3();
 
-    constructor(private engine:Engine, private collisionNotFound:DataView,private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
-        this.finalPosition= new TerraVector3(),
-        this.scaledPosition = this.engine.callocVector3();
-        this.scaledVelocity= this.engine.callocVector3();
-    
-        this.intersectionPointWasm = engine.callocVector3();
-        this.nearestDistanceSquared = engine.mallocView(4);
 /*
         console.log('intersection_point_pointer',new Float32Array(engine.memory.buffer, this.rust.intersection_point_pointer,3));
         console.log('collision_not_found_pointer',new Uint32Array(engine.memory.buffer, this.rust.collision_not_found_pointer,1));
