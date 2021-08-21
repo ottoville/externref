@@ -24,8 +24,6 @@ export class Engine {
     readonly closeDistance = this.CollisionsEpsilon * 10.0;
     readonly closeDistanceSquared = this.closeDistance * this.closeDistance
 
-    freeMemoryBlocks: { byteOffset: number, byteLength: number }[] = []
-    allocatedSize = 0;
    // registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
 
     physics = new Physics();
@@ -43,88 +41,8 @@ export class Engine {
     displacementVector: [number, number, number] = [0, 0, 0];
 
     updateLights=false;
-    /*malloc(byteLength: number): number {
-        if (byteLength % 4 != 0) {
-            throw ('malloc should be called with length divitable with four')
-        }
-        const available = this.freeMemoryBlocks.findIndex(arr => arr.byteLength == byteLength)
-        if (available > -1)
-            return this.freeMemoryBlocks.splice(available, 1)[0]!.byteOffset;
-        else {
-            const available2 = this.freeMemoryBlocks.find(arr => arr.byteLength < byteLength)
-            if (available2) {
-                const offset = available2.byteOffset;
-                available2.byteOffset += byteLength;
-                available2.byteLength -= byteLength;
-                return offset;
-            }
-            const offset = this.allocatedSize;
-            this.allocatedSize += byteLength;
-            if (this.allocatedSize > this.wasm.memory.buffer.byteLength)
-                throw ('Out of memory')
-            return offset;
-        }
-    }*/
-    /*calloc(byteLength: number): number {
-        const pointer = this.malloc(byteLength);
-        new Uint8Array(this.wasm.memory.buffer, pointer, byteLength >> 2).fill(0)
-        return pointer;
-    }*/
-    /*mallocView(byteLength: number): DataView {
-        const pointer = this.malloc(byteLength);
-        const dv = new DataView(this.wasm.memory.buffer, pointer, byteLength);
-        this.registry.register(dv, { byteOffset: dv.byteOffset, byteLength: dv.byteLength });
-        return dv;
-    }*/
-   /* callocVector3(): Vector3 {
-        const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(16));
-        arr.fill(0);
-        this.registry.register(arr, { byteOffset: arr.byteOffset, byteLength: arr.byteLength });
-        return arr;
-    }*/
-    /*mallocVector3(x?: number, y?: number, z?: number): Vector3 {
-        const arr = new TerraVector3(this.wasm.memory.buffer, this.malloc(16));
-        if (x)
-            arr[0] = x;
-        if (y)
-            arr[1] = y;
-        if (z)
-            arr[2] = z;
-        this.registry.register(arr, { byteOffset: arr.byteOffset, byteLength: arr.byteLength });
-        return arr;
-    }
-    freeMemory(arr: { byteOffset: number, byteLength: number }) {
-        return;
-        const end = arr.byteOffset + arr.byteLength;
-        if (end == this.allocatedSize) {
-            this.allocatedSize = arr.byteOffset;
-            const previousBlockIndex = this.freeMemoryBlocks.findIndex(parr => parr.byteOffset + parr.byteLength == arr.byteOffset)
-            if (previousBlockIndex > -1) {
-                this.allocatedSize = this.freeMemoryBlocks.splice(previousBlockIndex, 1)[0]!.byteOffset;
-            }
-            return;
-        }
-        queueMicrotask(() => {
-            let byteLength = arr.byteLength;
-            const nextBlock = this.freeMemoryBlocks.findIndex(arr => arr.byteOffset == end)
-            if (nextBlock > -1) {
-                byteLength += this.freeMemoryBlocks.splice(nextBlock, 1)[0]!.byteLength
-            }
-            let byteOffset = arr.byteOffset
-            const previousBlockIndex = this.freeMemoryBlocks.findIndex(arr => arr.byteOffset + arr.byteLength == byteOffset)
-            if (previousBlockIndex > -1) {
-                const previousBlock = this.freeMemoryBlocks.splice(previousBlockIndex, 1)[0]!
-                byteLength += previousBlock.byteLength
-                byteOffset = previousBlock.byteOffset;
-                return;
-            }
-            this.freeMemoryBlocks.push({ byteOffset, byteLength });
-        })
-    }
-*/
     static async initEngine(gpu: GPU, DB: Promise<EarthDatabase>, canvas: HTMLCanvasElement): Promise<Engine> {
 
-        //const memory = new WebAssembly.Memory({ initial: 6000 });
         //Init rust wasm
         const rust = await init();
 
