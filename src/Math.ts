@@ -298,9 +298,20 @@ export class Triangle {
             -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))
         ]);
     }
+    get planeCollider() {
+        return new TerraVector4(this.memory.buffer, this.pointerToVector4)
+    }
+    get vectors():[TerraVector4,TerraVector4,TerraVector4] {
+        return [
+            new TerraVector4(this.memory.buffer, this.vectorsPointers[0]),
+            new TerraVector4(this.memory.buffer, this.vectorsPointers[1]),
+            new TerraVector4(this.memory.buffer, this.vectorsPointers[2]),
+        ]
+    }
     constructor(
-        public vectors: [TerraVector4, TerraVector4, TerraVector4] = [new TerraVector4(), new TerraVector4(), new TerraVector4()],
-        public planeCollider: TerraVector4,
+        private vectorsPointers: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],
+        private memory: WebAssembly.Memory,
+        private pointerToVector4: number,
         ) {
     }
 

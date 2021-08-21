@@ -29,7 +29,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
 
     readonly pickInfo = new pickInfo();
 
-    protected readonly colliderVertices: TerraVector4[] = [];
+    protected readonly colliderVerticesV4: number[] = [];
     protected readonly colliderVertices2: TerraVector4[] = [];
 
 
@@ -42,7 +42,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     lastColliderWorldVectorsPointer?: DataView;
     facesBufferColliderPointerParallel?: DataView;
     readonly verticesBuffesSize:number;
-    #positionsAndCollider: [TerraVector3, TerraVector4][] = [];
+    #positionsAndCollider: [pointerToVec3:number, pointerToVec4:number][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
 
     constructor(
@@ -83,21 +83,21 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         this.facesBufferColliderPointer = this.engine.mallocView(this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT);
         this.facesBufferColliderPointerParallel = this.engine.mallocView(this.faces_count * 16 * Float32Array.BYTES_PER_ELEMENT);
         this.#positionsAndCollider.length=0;
-        this.colliderVertices.length=0;
+        this.colliderVerticesV4.length=0;
         this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
         for (let i = 0; i < this.positions_count; i++) {
             //let pos = new TerraVector3(this.verticesPositionBuffer, i * verticesPositionStride * Float32Array.BYTES_PER_ELEMENT)
-            const pos = new TerraVector3(this.engine.memory.buffer, this.vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT);
+            const pos = this.vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT;
 
-            const colPos = new TerraVector4(this.engine.wasm.memory.buffer, this.lastColliderWorldVectorsPointer.byteOffset + i * 4 * Float32Array.BYTES_PER_ELEMENT);
+            const colPos = this.lastColliderWorldVectorsPointer.byteOffset + i * 4 * Float32Array.BYTES_PER_ELEMENT;
             const colPos2 = new TerraVector4(this.engine.memory.buffer, this.last_collider_world_vertices_pointer + i * 4 * Float32Array.BYTES_PER_ELEMENT);
-            this.colliderVertices.push(colPos);
+            this.colliderVerticesV4.push(colPos);
             this.colliderVertices2.push(colPos2);
             this.#positionsAndCollider.push([pos, colPos])
         }
         return this.facesBufferColliderPointer.byteOffset;
     }
-    addVectors = (faceIndex: number, vectors: [TerraVector4, TerraVector4, TerraVector4],facesBufferColliderPointer:number ) => {
+    addVectors = (faceIndex: number, vectors: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],facesBufferColliderPointer:number ) => {
 
         
         const memory = this.engine.wasm.memory.buffer;
@@ -105,20 +105,21 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             throw ('less than 3 vector')
         this.#triangleFaces[faceIndex] = new Triangle(
             vectors,
-            new TerraVector4(memory, facesBufferColliderPointer + faceIndex * 4 * 7)
+            this.engine.wasm.memory,
+            facesBufferColliderPointer + faceIndex * 4 * 7
         );
         new Triangle(
             vectors,
-            new Float32Array(this.engine.memory.buffer, this.collider_faces_pointer + faceIndex * 4 * 7,4) as TerraVector4
+            this.engine.memory, this.collider_faces_pointer + faceIndex * 4 * 7
         );
         new Uint32Array(
             memory,
             facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
-            3).set(vectors.map(v => v.byteOffset)); //4 is from plane
+            3).set(vectors); //4 is from plane
         new Uint32Array(
             this.engine.memory.buffer,
             this.collider_faces_pointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
-            3).set(vectors.map(v => v.byteOffset)); //4 is from plane
+            3).set(vectors); //4 is from plane
     
     }
     abstract rebuildTrianglePlanes() : void
@@ -157,7 +158,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             const timer = performance.now();
 
             this.#positionsAndCollider.forEach((posAndCol, i) => {
-                this.getPosition(i).multiply2Ref(this.myCollisionsTransformMatrix, posAndCol[1]);
+                this.getPosition(i).multiply2Ref(this.myCollisionsTransformMatrix, new TerraVector4(this.engine.wasm.memory.buffer,posAndCol[1]));
             });
             console.log('recalculated collision vertices', performance.now() - timer);
             this.#faceQuatros.forEach((quatro, i) => {
@@ -256,29 +257,29 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
         const facesBufferColliderPointer = this.initCollider();
         if(!facesBufferColliderPointer)
             return;
-        let vectors: TerraVector4[] = [];
+        let vectorsVec4: number[] = [];
         let faceIndex = 0;
         if (this.strip) {
             this.indicesView.forEach((indice: number) => {
-                const vector = this.colliderVertices[indice];
+                const vector = this.colliderVerticesV4[indice];
                 if (!vector) {
                     throw ('position not found');
                 }
-                if (vectors.push(vector) < 3)
+                if (vectorsVec4.push(vector) < 3)
                     return;
-                this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4],facesBufferColliderPointer);
-                vectors = [(vectors as [TerraVector4, TerraVector4, TerraVector4])[1], (vectors as [TerraVector4, TerraVector4, TerraVector4])[2]];
+                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number],facesBufferColliderPointer);
+                vectorsVec4 = [(vectorsVec4 as [number, number, number])[1], (vectorsVec4 as [number, number, number])[2]];
             });
         } else {
             this.indicesView.forEach((indice: number) => {
                 //const position = this.#lastColliderWorldVectorsViewIndexed.get(indice);
-                const position = this.colliderVertices[indice]
+                const position = this.colliderVerticesV4[indice]
                 if (!position) {
                     throw ('position ' + indice + ' not found');
                 }
-                if (vectors.push(position) == 3) {
-                    this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4],facesBufferColliderPointer)
-                    vectors = [];
+                if (vectorsVec4.push(position) == 3) {
+                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number],facesBufferColliderPointer)
+                    vectorsVec4 = [];
                 }
             });
         }
@@ -310,20 +311,20 @@ export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
         if(!facesBufferColliderPointer)
         return;
 
-        let vectors: TerraVector4[] = [];
+        let vectorsVec4: number[] = [];
         let faceIndex = 0;
         if (this.strip) {
-            this.colliderVertices.forEach(vector => {
-                if (vectors.push(vector) < 3)
+            this.colliderVerticesV4.forEach(vector => {
+                if (vectorsVec4.push(vector) < 3)
                     return;
-                this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4], facesBufferColliderPointer)
-                vectors = [(vectors as [TerraVector4, TerraVector4, TerraVector4])[1], (vectors as [TerraVector4, TerraVector4, TerraVector4])[2]];
+                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number], facesBufferColliderPointer)
+                vectorsVec4 = [(vectorsVec4 as [number, number, number])[1], (vectorsVec4 as [number, number, number])[2]];
             });
         } else {
-            this.colliderVertices.forEach(vector => {
-                if (vectors.push(vector) == 3) {
-                    this.addVectors(faceIndex++, vectors as [TerraVector4, TerraVector4, TerraVector4], facesBufferColliderPointer)
-                    vectors = [];
+            this.colliderVerticesV4.forEach(vector => {
+                if (vectorsVec4.push(vector) == 3) {
+                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number], facesBufferColliderPointer)
+                    vectorsVec4 = [];
                 }
             });
         }

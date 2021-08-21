@@ -14,7 +14,7 @@ function Dot(left: [number, number, number] | Float32Array | Vector3, right: [nu
 
 export interface ColliderWasm {
     construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number, velocity: number, basePoint: number): void;
-    memory: { buffer: ArrayBuffer }
+    memory: WebAssembly.Memory
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
     testTriangles: (position: number, positionParallel:number, length: number, meshID: number) => void
     _initialize: () => void
