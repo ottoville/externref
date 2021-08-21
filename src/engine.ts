@@ -31,6 +31,7 @@ export class Engine {
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
    // readonly collisionNotFound:DataView
+   //@ts-ignore
     readonly #collidedMesh:DataView
     readonly collider:ColliderJS;
 
@@ -150,11 +151,10 @@ export class Engine {
         
         //TODO: this does not work after memory grow
         this.#collidedMesh = new DataView(this.memory.buffer, this.collider.rust.collided_mesh_pointer, 4);
-
         wasm.construct( this.collider.rust.collision_not_found_pointer,
-                        this.collider.intersectionPointWasm.byteOffset,
-                        this.collider.nearestDistanceSquared.byteOffset,
-                        this.#collidedMesh.byteOffset,
+                        this.collider.rust.intersection_point_pointer,
+                        this.collider.rust.nearest_distance_squared_pointer,
+                        this.collider.rust.collided_mesh_pointer,
                         this.collider.rust.scaled_velocity_pointer,
                         this.collider.rust.scaled_position_pointer)
 

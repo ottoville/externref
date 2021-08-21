@@ -19,9 +19,9 @@ impl Collider {
             intersection_point:[0.0,0.0,0.0,0.0],
             collision_not_found:1u32,
             nearest_distance_squared:0.0,
-            scaled_position:[7.0,8.0,9.0,10.0],
-            scaled_velocity:[11.0,12.0,13.0,14.0],
-            collided_mesh:15u32
+            scaled_position:[0.0,0.0,0.0,0.0],
+            scaled_velocity:[0.0,0.0,0.0,0.0],
+            collided_mesh:0u32
         }
     }
     #[wasm_bindgen(getter)]
@@ -34,7 +34,7 @@ impl Collider {
     }
     #[wasm_bindgen(getter)]
     pub fn nearest_distance_squared_pointer(&self) -> usize {
-        self.intersection_point.as_ptr() as usize + 16usize
+        self.intersection_point.as_ptr() as usize + 20usize
     }
     #[wasm_bindgen(getter)]
     pub fn scaled_position_pointer(&self) -> *const f32 {
