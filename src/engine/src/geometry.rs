@@ -24,7 +24,7 @@ impl Geometry {
     pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, positions_count:usize, static_faces:bool, strip:bool) -> Self {
 
         let faces_count = if has_geometry { positions_count / 3} else {0};
-        Geometry {
+        let mut g = Geometry {
             has_geometry,
             bounding_box:BoundingBox::new(has_bounding),
             vertices: vec![0.0; positions_count*vertices_stride],
@@ -36,7 +36,9 @@ impl Geometry {
             last_collider_world_vertices:Vec::with_capacity(positions_count*4usize),
             static_faces,
             strip
-        }
+        };
+        g.allocate_faces();
+        return g;
     }
     pub fn faces_count(&self) -> usize {
         if self.static_faces {
@@ -57,6 +59,15 @@ impl Geometry {
 
             } else {0}
         } 
+    }
+    pub fn allocate_faces(&mut self) {
+        if self.static_faces {
+            return;
+        }
+        let faces_count = self.faces_count();
+        self.faces=Faces::new(faces_count);
+        self.collider_planes=Vec::with_capacity(faces_count);
+        self.collider_planes_parallel=Vec::with_capacity(faces_count*4usize);
     }
     pub fn min(&self) -> Vec3<f32> {
         let mut min_original=Vec3 {
@@ -102,9 +113,7 @@ impl Geometry {
         self.vertices=vertices;
         self.bounding_box.need_init_min = true;
         self.bounding_box.need_init_max = true;
-        if !self.static_faces {
-            self.faces.planes.clear();
-        }
+        self.allocate_faces();
 
     }
     pub fn set_indices(&mut self, indices: Vec<usize>) {

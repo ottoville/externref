@@ -93,10 +93,8 @@ impl Mesh {
     }
     #[wasm_bindgen(setter)]
     pub fn set_indices(&mut self, indices: Vec<usize>) {
-        if !self.geometry.static_faces {
-            self.geometry.faces.planes.clear();
-        }
         &self.geometry.set_indices(indices);
+        self.geometry.allocate_faces();
     }
     #[wasm_bindgen(getter)]
     pub fn indices_pointer(&self) -> *const usize {
@@ -140,6 +138,7 @@ impl Mesh {
     #[wasm_bindgen(setter)]
     pub fn set_faces(&mut self, planes:Vec<f32>) {
         self.geometry.collider_planes=Vec::with_capacity(&planes.len()/4);
+        self.geometry.collider_planes_parallel=Vec::with_capacity(&planes.len()/4);
         self.geometry.faces.set(planes);
     }
     pub fn create_elevator(&self) -> Elevator {

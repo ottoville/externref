@@ -26,7 +26,7 @@ class pickInfo {
 }
 
 export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T> {
-
+    memory=this.engine.wasm.memory;
     readonly pickInfo = new pickInfo();
 
     protected readonly colliderVerticesV4: number[] = [];
@@ -100,12 +100,11 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     addVectors = (faceIndex: number, vectors: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],facesBufferColliderPointer:number ) => {
 
         
-        const memory = this.engine.wasm.memory.buffer;
         if (vectors.length != 3)
             throw ('less than 3 vector')
         this.#triangleFaces[faceIndex] = new Triangle(
             vectors,
-            this.engine.wasm.memory,
+            this.memory,
             facesBufferColliderPointer + faceIndex * 4 * 7
         );
         new Triangle(
@@ -113,7 +112,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             this.engine.memory, this.collider_faces_pointer + faceIndex * 4 * 7
         );
         new Uint32Array(
-            memory,
+            this.memory.buffer,
             facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
             3).set(vectors); //4 is from plane
         new Uint32Array(
@@ -158,7 +157,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             const timer = performance.now();
 
             this.#positionsAndCollider.forEach((posAndCol, i) => {
-                this.getPosition(i).multiply2Ref(this.myCollisionsTransformMatrix, new TerraVector4(this.engine.wasm.memory.buffer,posAndCol[1]));
+                this.getPosition(i).multiply2Ref(this.myCollisionsTransformMatrix, new TerraVector4(this.memory.buffer,posAndCol[1]));
             });
             console.log('recalculated collision vertices', performance.now() - timer);
             this.#faceQuatros.forEach((quatro, i) => {
@@ -166,7 +165,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
                 quatro[1].updatePlane();
                 quatro[2].updatePlane();
                 quatro[3].updatePlane();
-                new Float32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointerParallel!.byteOffset + i * 4 * 16, 16).set([
+                new Float32Array(this.memory.buffer, this.facesBufferColliderPointerParallel!.byteOffset + i * 4 * 16, 16).set([
                     quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
                     quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
                     quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
@@ -283,8 +282,6 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
                 }
             });
         }
-        //console.log(new Uint32Array(this.engine.wasm.memory.buffer,facesBufferColliderPointer,1000));
-       // console.log(new Uint32Array(this.engine.memory.buffer,this.collider_faces_pointer,1000));
         this.buildFaceQuatros();
     }
 }
