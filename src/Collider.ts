@@ -46,8 +46,11 @@ var intersectBoxAASphere = (boxMin: TerraVector3, boxMax: TerraVector3, sphereCe
 export class ColliderJS {
     rust = new Collider();
     #velocitySquaredLength!: number;
+    finalPosition: TerraVector3;
     intersectionPointWasm: Vector3;
     nearestDistanceSquared: DataView;
+    scaledPosition: Vector3;
+    scaledVelocity: Vector3;
     getLowestRoot (a: number, b: number, c: number, maxR: number) {
 
         var determinant = b * b - 4.0 * a * c;
@@ -103,11 +106,12 @@ export class ColliderJS {
     radius: { 0: number; 1: number; 2: number; };
 
     readonly collisionsScalingMatrix:TerraMatrix;
-    constructor(engine:Engine, private collisionCoordinator: {
-        scaledPosition: Vector3,
-        scaledVelocity: Vector3,
-        finalPosition: Vector3,
-    }, private collisionNotFound:DataView,private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+
+    constructor(private engine:Engine, private collisionNotFound:DataView,private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+        this.finalPosition= new TerraVector3(),
+        this.scaledPosition = this.engine.callocVector3();
+        this.scaledVelocity= this.engine.callocVector3();
+    
         this.intersectionPointWasm = engine.callocVector3();
         this.nearestDistanceSquared = engine.mallocView(4);
 /*
@@ -186,7 +190,7 @@ export class ColliderJS {
         //this.#nearestDistanceSquared = 9999999;
         this.nearestDistanceSquared.setFloat32(0,9999999,true);
         //this.#velocity = dir;
-        this.#velocitySquaredLength = this.collisionCoordinator.scaledVelocity[0] * this.collisionCoordinator.scaledVelocity[0] + this.collisionCoordinator.scaledVelocity[1] * this.collisionCoordinator.scaledVelocity[1] + this.collisionCoordinator.scaledVelocity[2] * this.collisionCoordinator.scaledVelocity[2];
+        this.#velocitySquaredLength = this.scaledVelocity[0] * this.scaledVelocity[0] + this.scaledVelocity[1] * this.scaledVelocity[1] + this.scaledVelocity[2] * this.scaledVelocity[2];
        /* this.#velocity[0] = dir[0];
         this.#velocity[1] = dir[1];
         this.#velocity[2] = dir[2];*/
@@ -292,8 +296,8 @@ export class ColliderJS {
             return
         }
 
-        var signedDistToTrianglePlane = Dot(this.collisionCoordinator.scaledPosition, triangle.planeCollider) + triangle.planeCollider[3]; //trianglePlane.signedDistanceTo(this._basePoint);
-        var normalDotVelocity = Dot(triangle.planeCollider, this.collisionCoordinator.scaledVelocity);
+        var signedDistToTrianglePlane = Dot(this.scaledPosition, triangle.planeCollider) + triangle.planeCollider[3]; //trianglePlane.signedDistanceTo(this._basePoint);
+        var normalDotVelocity = Dot(triangle.planeCollider, this.scaledVelocity);
 
        // let t0=0;
         // this._collisionPoint.copyFromFloats(0, 0, 0);
@@ -325,9 +329,9 @@ export class ColliderJS {
                 t0 = 0;
             }
             //TODO: Use simd
-            this.#planeIntersectionPoint[0] = this.collisionCoordinator.scaledPosition[0] - triangle.planeCollider[0] + this.collisionCoordinator.scaledVelocity[0] * t0;
-            this.#planeIntersectionPoint[1] = this.collisionCoordinator.scaledPosition[1] - triangle.planeCollider[1] + this.collisionCoordinator.scaledVelocity[1] * t0;
-            this.#planeIntersectionPoint[2] = this.collisionCoordinator.scaledPosition[2] - triangle.planeCollider[2] + this.collisionCoordinator.scaledVelocity[2] * t0;
+            this.#planeIntersectionPoint[0] = this.scaledPosition[0] - triangle.planeCollider[0] + this.scaledVelocity[0] * t0;
+            this.#planeIntersectionPoint[1] = this.scaledPosition[1] - triangle.planeCollider[1] + this.scaledVelocity[1] * t0;
+            this.#planeIntersectionPoint[2] = this.scaledPosition[2] - triangle.planeCollider[2] + this.scaledVelocity[2] * t0;
            // console.log(this.#planeIntersectionPoint[0])
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             // this._velocity.scaleToRef(t0, this._tempVector);
@@ -367,10 +371,10 @@ export class ColliderJS {
                 if (!p)
                     continue;
 
-                this.#tempVector[0] = this.collisionCoordinator.scaledPosition[0] - p[0];
-                this.#tempVector[1] = this.collisionCoordinator.scaledPosition[1] - p[1];
-                this.#tempVector[2] = this.collisionCoordinator.scaledPosition[2] - p[2];
-                b = 2.0 * (Dot(this.collisionCoordinator.scaledVelocity, this.#tempVector));
+                this.#tempVector[0] = this.scaledPosition[0] - p[0];
+                this.#tempVector[1] = this.scaledPosition[1] - p[1];
+                this.#tempVector[2] = this.scaledPosition[2] - p[2];
+                b = 2.0 * (Dot(this.scaledVelocity, this.#tempVector));
                 c = (this.#tempVector[0] * this.#tempVector[0] + this.#tempVector[1] * this.#tempVector[1] + this.#tempVector[2] * this.#tempVector[2]) - 1.0;
                 lowestRoot = this.getLowestRoot(this.#velocitySquaredLength, b, c, t);
                 if (lowestRoot) {
@@ -399,20 +403,20 @@ export class ColliderJS {
                 this._edge[1] = p2[1] - p[1];
                 this._edge[2] = p2[2] - p[2];
 
-                this._baseToVertex[0] = p[0] - this.collisionCoordinator.scaledPosition[0];
-                this._baseToVertex[1] = p[1] - this.collisionCoordinator.scaledPosition[1];
-                this._baseToVertex[2] = p[2] - this.collisionCoordinator.scaledPosition[2];
+                this._baseToVertex[0] = p[0] - this.scaledPosition[0];
+                this._baseToVertex[1] = p[1] - this.scaledPosition[1];
+                this._baseToVertex[2] = p[2] - this.scaledPosition[2];
 
                 //var edgeSquaredLength = this._edge.lengthSquared();
                 var edgeSquaredLength = this._edge[0] * this._edge[0] + this._edge[1] * this._edge[1] + this._edge[2] * this._edge[2]
-                var edgeDotVelocity = Dot(this._edge, this.collisionCoordinator.scaledVelocity);
+                var edgeDotVelocity = Dot(this._edge, this.scaledVelocity);
                 var edgeDotBaseToVertex = Dot(this._edge, this._baseToVertex);
 
                 //a = edgeSquaredLength * (-this.#velocitySquaredLength) + edgeDotVelocity * edgeDotVelocity;
                 a = edgeDotVelocity * edgeDotVelocity - edgeSquaredLength * this.#velocitySquaredLength;
               //  b = edgeSquaredLength * (2.0 * Dot(this.#velocity, this._baseToVertex)) - 2.0 * edgeDotVelocity * edgeDotBaseToVertex;
                 //b = 2 * edgeSquaredLength * Dot(this.#velocity, this._baseToVertex) - 2 * edgeDotVelocity * edgeDotBaseToVertex
-                b = 2*(edgeSquaredLength * Dot(this.collisionCoordinator.scaledVelocity, this._baseToVertex) - edgeDotVelocity * edgeDotBaseToVertex)
+                b = 2*(edgeSquaredLength * Dot(this.scaledVelocity, this._baseToVertex) - edgeDotVelocity * edgeDotBaseToVertex)
                 c = edgeSquaredLength * (1.0 - (this._baseToVertex[0] * this._baseToVertex[0] + this._baseToVertex[1] * this._baseToVertex[1] + this._baseToVertex[2] * this._baseToVertex[2])) + edgeDotBaseToVertex * edgeDotBaseToVertex;
 
                 lowestRoot = this.getLowestRoot(a, b, c, t);

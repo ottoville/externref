@@ -117,14 +117,14 @@ export class ArcRotateCamera {
         // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
 
         // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
-        this.engine.collisionCoordinator.scaledPosition[0] = this.camera.position[0] / this.engine.collider.radius[0];
-        this.engine.collisionCoordinator.scaledPosition[1] = this.camera.position[1] / this.engine.collider.radius[1];
-        this.engine.collisionCoordinator.scaledPosition[2] = this.camera.position[2] / this.engine.collider.radius[2];
+        this.engine.collider.scaledPosition[0] = this.camera.position[0] / this.engine.collider.radius[0];
+        this.engine.collider.scaledPosition[1] = this.camera.position[1] / this.engine.collider.radius[1];
+        this.engine.collider.scaledPosition[2] = this.camera.position[2] / this.engine.collider.radius[2];
        //this._newPosition.subtractToRef(this._position, this._collisionVelocity);
        // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
-        this.engine.collisionCoordinator.scaledVelocity[0] = (this.#newPosition[0] - this.camera.position[0]) / this.engine.collider.radius[0];
-        this.engine.collisionCoordinator.scaledVelocity[1] = (this.#newPosition[1] - this.camera.position[1]) / this.engine.collider.radius[1];
-        this.engine.collisionCoordinator.scaledVelocity[2] = (this.#newPosition[2] - this.camera.position[2]) / this.engine.collider.radius[2];
+        this.engine.collider.scaledVelocity[0] = (this.#newPosition[0] - this.camera.position[0]) / this.engine.collider.radius[0];
+        this.engine.collider.scaledVelocity[1] = (this.#newPosition[1] - this.camera.position[1]) / this.engine.collider.radius[1];
+        this.engine.collider.scaledVelocity[2] = (this.#newPosition[2] - this.camera.position[2]) / this.engine.collider.radius[2];
 
         this.engine.collider.collidedMesh = undefined;
         this.engine.collider._retry = 0;
@@ -137,9 +137,9 @@ export class ArcRotateCamera {
 
 
         //coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
-        this.engine.collisionCoordinator.finalPosition[0] *= this.engine.collider.radius[0]
-        this.engine.collisionCoordinator.finalPosition[1] *= this.engine.collider.radius[1]
-        this.engine.collisionCoordinator.finalPosition[2] *= this.engine.collider.radius[2]
+        this.engine.collider.finalPosition[0] *= this.engine.collider.radius[0]
+        this.engine.collider.finalPosition[1] *= this.engine.collider.radius[1]
+        this.engine.collider.finalPosition[2] *= this.engine.collider.radius[2]
         this.camera.update(values => {
             const position = values.position;
             const target = values.target;
@@ -158,10 +158,10 @@ export class ArcRotateCamera {
                 //}
                 //this._position.copyFrom(position);
 
-                if (position[0] != this.engine.collisionCoordinator.finalPosition[0] || position[1] != this.engine.collisionCoordinator.finalPosition[1] || position[2] != this.engine.collisionCoordinator.finalPosition[2]) {
-                    position[0] = this.engine.collisionCoordinator.finalPosition[0];
-                    position[1] = this.engine.collisionCoordinator.finalPosition[1];
-                    position[2] = this.engine.collisionCoordinator.finalPosition[2];
+                if (position[0] != this.engine.collider.finalPosition[0] || position[1] != this.engine.collider.finalPosition[1] || position[2] != this.engine.collider.finalPosition[2]) {
+                    position[0] = this.engine.collider.finalPosition[0];
+                    position[1] = this.engine.collider.finalPosition[1];
+                    position[2] = this.engine.collider.finalPosition[2];
 
                 }
 

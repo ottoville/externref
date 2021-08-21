@@ -31,12 +31,6 @@ export class Engine {
     physics = new Physics();
     scenes: Map<string, Scene> = new Map();
 
-    
-    readonly collisionCoordinator:{
-        scaledPosition: Vector3;
-        scaledVelocity: Vector3;
-        finalPosition: TerraVector3;
-    }
     readonly collisionNotFound:DataView
     readonly #collidedMesh:DataView
     readonly collider:ColliderJS;
@@ -153,21 +147,14 @@ export class Engine {
         window.engine=this;
         this.collisionNotFound = this.mallocView(4);
         this.#collidedMesh = this.mallocView(4);
-
-        this.collisionCoordinator = {
-            scaledPosition: this.callocVector3(),
-            scaledVelocity: this.callocVector3(),
-            finalPosition: new TerraVector3(),
-        }
-
-        this.collider = new ColliderJS(this,this.collisionCoordinator,this.collisionNotFound);
+        this.collider = new ColliderJS(this,this.collisionNotFound);
 
         wasm.construct( this.collisionNotFound.byteOffset,
                         this.collider.intersectionPointWasm.byteOffset,
                         this.collider.nearestDistanceSquared.byteOffset,
                         this.#collidedMesh.byteOffset,
-                        this.collisionCoordinator.scaledVelocity.byteOffset,
-                        this.collisionCoordinator.scaledPosition.byteOffset)
+                        this.collider.scaledVelocity.byteOffset,
+                        this.collider.scaledPosition.byteOffset)
 
 
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
@@ -245,31 +232,31 @@ export class Engine {
             await Promise.all([...this.gpu.boundables].map(mesh => mesh.checkCollision(this.collider)));
 
 
-            this.destinationPoint[0] = this.collisionCoordinator.scaledPosition[0] + this.collisionCoordinator.scaledVelocity[0];
-            this.destinationPoint[1] = this.collisionCoordinator.scaledPosition[1] + this.collisionCoordinator.scaledVelocity[1];
-            this.destinationPoint[2] = this.collisionCoordinator.scaledPosition[2] + this.collisionCoordinator.scaledVelocity[2];
+            this.destinationPoint[0] = this.collider.scaledPosition[0] + this.collider.scaledVelocity[0];
+            this.destinationPoint[1] = this.collider.scaledPosition[1] + this.collider.scaledVelocity[1];
+            this.destinationPoint[2] = this.collider.scaledPosition[2] + this.collider.scaledVelocity[2];
             
 
             if (this.collisionNotFound.getUint32(0, true)) {
-                this.collisionCoordinator.finalPosition.set(this.destinationPoint);
+                this.collider.finalPosition.set(this.destinationPoint);
                 return;
             }
-            if (this.collisionCoordinator.scaledVelocity[0] !== 0 || this.collisionCoordinator.scaledVelocity[1] !== 0 || this.collisionCoordinator.scaledVelocity[2] !== 0) {
+            if (this.collider.scaledVelocity[0] !== 0 || this.collider.scaledVelocity[1] !== 0 || this.collider.scaledVelocity[2] !== 0) {
                 //this.collider._getResponse(position, velocity);
                 // https://arxiv.org/ftp/arxiv/papers/1211/1211.0059.pdf
-                let scale = this.collider.nearestDistanceSquared.getFloat32(0, true) / (this.collisionCoordinator.scaledVelocity[0] * this.collisionCoordinator.scaledVelocity[0] + this.collisionCoordinator.scaledVelocity[1] * this.collisionCoordinator.scaledVelocity[1] + this.collisionCoordinator.scaledVelocity[2] * this.collisionCoordinator.scaledVelocity[2]);
+                let scale = this.collider.nearestDistanceSquared.getFloat32(0, true) / (this.collider.scaledVelocity[0] * this.collider.scaledVelocity[0] + this.collider.scaledVelocity[1] * this.collider.scaledVelocity[1] + this.collider.scaledVelocity[2] * this.collider.scaledVelocity[2]);
                 // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
-                this.collisionCoordinator.scaledVelocity[0] *= scale;
-                this.collisionCoordinator.scaledVelocity[1] *= scale;
-                this.collisionCoordinator.scaledVelocity[2] *= scale;
+                this.collider.scaledVelocity[0] *= scale;
+                this.collider.scaledVelocity[1] *= scale;
+                this.collider.scaledVelocity[2] *= scale;
 
-                this.collisionCoordinator.scaledPosition[0] += this.collisionCoordinator.scaledVelocity[0];
-                this.collisionCoordinator.scaledPosition[1] += this.collisionCoordinator.scaledVelocity[1];
-                this.collisionCoordinator.scaledPosition[2] += this.collisionCoordinator.scaledVelocity[2];
+                this.collider.scaledPosition[0] += this.collider.scaledVelocity[0];
+                this.collider.scaledPosition[1] += this.collider.scaledVelocity[1];
+                this.collider.scaledPosition[2] += this.collider.scaledVelocity[2];
 
-                this.collider._slidePlaneNormal[0] = this.collisionCoordinator.scaledPosition[0] - this.collider.intersectionPointWasm[0];
-                this.collider._slidePlaneNormal[1] = this.collisionCoordinator.scaledPosition[1] - this.collider.intersectionPointWasm[1];
-                this.collider._slidePlaneNormal[2] = this.collisionCoordinator.scaledPosition[2] - this.collider.intersectionPointWasm[2];
+                this.collider._slidePlaneNormal[0] = this.collider.scaledPosition[0] - this.collider.intersectionPointWasm[0];
+                this.collider._slidePlaneNormal[1] = this.collider.scaledPosition[1] - this.collider.intersectionPointWasm[1];
+                this.collider._slidePlaneNormal[2] = this.collider.scaledPosition[2] - this.collider.intersectionPointWasm[2];
 
                 const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
                 if (!(length === 0 || length === 1.0)) {
@@ -287,9 +274,9 @@ export class Engine {
                 this.displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
 
                 // pos.addInPlace(this._displacementVector);
-                this.collisionCoordinator.scaledPosition[0] += this.displacementVector[0];
-                this.collisionCoordinator.scaledPosition[1] += this.displacementVector[1];
-                this.collisionCoordinator.scaledPosition[2] += this.displacementVector[2];
+                this.collider.scaledPosition[0] += this.displacementVector[0];
+                this.collider.scaledPosition[1] += this.displacementVector[1];
+                this.collider.scaledPosition[2] += this.displacementVector[2];
                 //this.intersectionPoint.addInPlace(this._displacementVector);
                 this.collider.intersectionPointWasm[0] += this.displacementVector[0];
                 this.collider.intersectionPointWasm[1] += this.displacementVector[1];
@@ -303,17 +290,17 @@ export class Engine {
                 this.destinationPoint[1] -= this.collider._slidePlaneNormal[1] * scale;
                 this.destinationPoint[2] -= this.collider._slidePlaneNormal[2] * scale
                 //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
-                this.collisionCoordinator.scaledVelocity[0] = this.destinationPoint[0] - this.collider.intersectionPointWasm[0];
-                this.collisionCoordinator.scaledVelocity[1] = this.destinationPoint[1] - this.collider.intersectionPointWasm[1];
-                this.collisionCoordinator.scaledVelocity[2] = this.destinationPoint[2] - this.collider.intersectionPointWasm[2];
+                this.collider.scaledVelocity[0] = this.destinationPoint[0] - this.collider.intersectionPointWasm[0];
+                this.collider.scaledVelocity[1] = this.destinationPoint[1] - this.collider.intersectionPointWasm[1];
+                this.collider.scaledVelocity[2] = this.destinationPoint[2] - this.collider.intersectionPointWasm[2];
             }
 
             // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
-            if (this.collisionCoordinator.scaledVelocity[0] * this.collisionCoordinator.scaledVelocity[0] + this.collisionCoordinator.scaledVelocity[1] * this.collisionCoordinator.scaledVelocity[1] + this.collisionCoordinator.scaledVelocity[2] * this.collisionCoordinator.scaledVelocity[2] <= this.closeDistanceSquared) {
+            if (this.collider.scaledVelocity[0] * this.collider.scaledVelocity[0] + this.collider.scaledVelocity[1] * this.collider.scaledVelocity[1] + this.collider.scaledVelocity[2] * this.collider.scaledVelocity[2] <= this.closeDistanceSquared) {
                 //finalPosition.copyFrom(position);
-                this.collisionCoordinator.finalPosition[0] = this.collisionCoordinator.scaledPosition[0];
-                this.collisionCoordinator.finalPosition[1] = this.collisionCoordinator.scaledPosition[1];
-                this.collisionCoordinator.finalPosition[2] = this.collisionCoordinator.scaledPosition[2];
+                this.collider.finalPosition[0] = this.collider.scaledPosition[0];
+                this.collider.finalPosition[1] = this.collider.scaledPosition[1];
+                this.collider.finalPosition[2] = this.collider.scaledPosition[2];
                 return;
             }
         }
