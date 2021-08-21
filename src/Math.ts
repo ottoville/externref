@@ -299,7 +299,7 @@ export class Triangle {
         ]);
     }
     get planeCollider() {
-        return new TerraVector4(this.memory.buffer, this.pointerToVector4)
+        return new TerraVector4(this.memory.buffer, this.pointerToVector4())
     }
     get vectors():[TerraVector4,TerraVector4,TerraVector4] {
         return [
@@ -311,7 +311,7 @@ export class Triangle {
     constructor(
         private vectorsPointers: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],
         private memory: WebAssembly.Memory,
-        private pointerToVector4: number,
+        private pointerToVector4: () => number,
         ) {
     }
 

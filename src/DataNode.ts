@@ -105,11 +105,11 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         this.#triangleFaces[faceIndex] = new Triangle(
             vectors,
             this.memory,
-            facesBufferColliderPointer + faceIndex * 4 * 7
+            () => facesBufferColliderPointer + faceIndex * 4 * 7
         );
         new Triangle(
             vectors,
-            this.engine.memory, this.collider_faces_pointer + faceIndex * 4 * 7
+            this.engine.memory, () => this.collider_faces_pointer + faceIndex * 4 * 7
         );
         new Uint32Array(
             this.memory.buffer,
