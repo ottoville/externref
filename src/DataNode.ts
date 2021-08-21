@@ -97,7 +97,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         //return this.facesBufferColliderPointer.byteOffset;
         return true;
     }
-    addVectors = (faceIndex: number, vectors: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],facesBufferColliderPointer:number ) => {
+    addVectors = (faceIndex: number, vectors: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number] ) => {
 
         
         if (vectors.length != 3)
@@ -105,7 +105,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         this.#triangleFaces[faceIndex] = new Triangle(
             vectors,
             this.memory,
-            () => facesBufferColliderPointer + faceIndex * 4 * 7
+            () => this.collider_faces_pointer + faceIndex * 4 * 7
         );
        /* new Triangle(
             vectors,
@@ -113,7 +113,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         );*/
         new Uint32Array(
             this.memory.buffer,
-            facesBufferColliderPointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
+            this.collider_faces_pointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
             3).set(vectors); //4 is from plane
       /*  new Uint32Array(
             this.engine.memory.buffer,
@@ -261,7 +261,7 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
                 }
                 if (vectorsVec4.push(vector) < 3)
                     return;
-                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number],this.collider_faces_pointer);
+                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number]);
                 vectorsVec4 = [(vectorsVec4 as [number, number, number])[1], (vectorsVec4 as [number, number, number])[2]];
             });
         } else {
@@ -272,7 +272,7 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
                     throw ('position ' + indice + ' not found');
                 }
                 if (vectorsVec4.push(position) == 3) {
-                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number],this.collider_faces_pointer)
+                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number])
                     vectorsVec4 = [];
                 }
             });
@@ -309,13 +309,13 @@ export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
             this.colliderVerticesV4.forEach(vector => {
                 if (vectorsVec4.push(vector) < 3)
                     return;
-                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number], this.collider_faces_pointer)
+                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number])
                 vectorsVec4 = [(vectorsVec4 as [number, number, number])[1], (vectorsVec4 as [number, number, number])[2]];
             });
         } else {
             this.colliderVerticesV4.forEach(vector => {
                 if (vectorsVec4.push(vector) == 3) {
-                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number], this.collider_faces_pointer)
+                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number])
                     vectorsVec4 = [];
                 }
             });
