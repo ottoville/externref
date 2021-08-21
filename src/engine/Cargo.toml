@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-wasm-bindgen = "0.2.74"
+wasm-bindgen = "0.2.76"
 
 [package.metadata.wasm-pack.profile.dev]
 wasm-opt = false
