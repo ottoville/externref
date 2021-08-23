@@ -30,8 +30,7 @@
 struct Output {
   [[builtin(position)]] Position : vec4<f32>;
   [[location(0)]] normal : vec3<f32>;
-  [[location(1)]] position : vec3<f32>;
-
+  [[location(1)]] id : u32;
 };
 [[stage(vertex)]]
 fn main(
@@ -45,10 +44,9 @@ fn main(
   curPos[3] = worldposition.world[3] + vec4<f32>(worldposition.delta,1.0) * times.delta;
   curPos[3].w=1.0;
   var worldPos=curPos * vec4<f32>(pos, 1.0);
-  output.position = worldPos.xyz;
 
   output.Position = uniforms.modelViewProjectionMatrix * worldPos;
-
+  output.id=worldposition.id;
   //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;
   return output;

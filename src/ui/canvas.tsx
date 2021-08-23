@@ -73,10 +73,6 @@ export class Canvas extends TerraCompoment {
             gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.toBitmap(0)
         }
         //@ts-ignore
-        window.printRenderTarget2 = () => {
-            gpu.renderPassScreen.renderTargets.gRenderTargetPositions.texture.toBitmap(1)
-        }
-        //@ts-ignore
         window.printRenderTarget3 = () => {
             gpu.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture.toBitmap(0)
         }
@@ -132,9 +128,7 @@ export class Canvas extends TerraCompoment {
 
             DB.then(DB => {
                 DB.transaction("save").objectStore("save").get(0).onsuccess = async (evt) => {
-
                     if ((evt.target as IDBRequest).result) {
-
                         const restored = ((evt.target as IDBRequest).result as savedCamera).camera;
                         camera.alpha = restored.alpha;
                         camera.alpha = restored.alpha;

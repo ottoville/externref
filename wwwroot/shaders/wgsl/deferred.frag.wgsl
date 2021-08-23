@@ -37,9 +37,8 @@ struct ClusterBounds {
 };
 
 [[binding(0), group(0)]] var normalTexture: texture_2d<f32>;
-[[binding(1), group(0)]] var positionTexture: texture_2d<f32>;
-[[binding(2), group(0)]] var diffuseTexture: texture_2d<f32>;
-[[binding(3), group(0)]] var<storage, read> meshes : MeshArray;
+[[binding(1), group(0)]] var diffuseTexture: texture_2d<f32>;
+[[binding(2), group(0)]] var<storage, read> meshes : MeshArray;
 
 
 struct Output {

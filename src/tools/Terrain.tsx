@@ -78,7 +78,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         this.elevator = terrain.mesh.create_elevator();
         this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), this, 8, 0, undefined, 'TerrainTool');
         this.#pick = { position: new TerraVector3(this.engine.memory.buffer, this.elevator.mouse_position_pointer()), meshId: 0 };
-        scene.TerraCameras[0].subscribePickingRay();
+        //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*
         terrainWorker.message(WorkerReturn.Promise, 'init',
@@ -131,7 +131,6 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     override destroy = (): void => {
         terrainWorker.unsubscribe('heights');
         this.Drawable.destroy();
-        this.scene.TerraCameras[0].unSubscribePickingRay();
         this.facet12ArrGPUBufferSwap.destroy();
         this.traits.forEach(trait => trait.destroy());
 

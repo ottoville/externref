@@ -3,7 +3,7 @@ import type { GPU } from "../GPU.js";
 import { GPUBufferUsage } from "../GPU.js";
 
 export class Projection {
-    readonly reversedProjection=new TerraMatrix();
+    readonly projectionReversedZ=new TerraMatrix();
     readonly reversedProjectionFarPlane = new TerraMatrix();
     //field of view
     readonly #fov=0.4;
@@ -18,7 +18,7 @@ export class Projection {
         const f = 1.0 / Math.tan(this.#fov / 2);
         const nf = 1 / (this.nearPlane - this.farPlane);
 
-        this.reversedProjection.set([
+        this.projectionReversedZ.set([
             f / aspectRatio, 0.0, 0.0, 0.0,
             0.0, f, 0.0, 0.0,
             0.0, 0.0, 0.0, -1.0,
@@ -34,8 +34,8 @@ export class Projection {
             this.gpuBuffer.destroy();
         this.gpuBuffer = this.gpu.createGPUBuffer(64+64+64+8+4+4+4+4, [GPUBufferUsage.UNIFORM], true);
         const gpuBuffer = this.gpuBuffer.getMappedRange();
-        this.reversedProjection.invertToRef(new TerraMatrix(gpuBuffer));
-        new TerraMatrix(gpuBuffer,64).set(this.reversedProjection);
+        this.projectionReversedZ.invertToRef(new TerraMatrix(gpuBuffer));
+        new TerraMatrix(gpuBuffer,64).set(this.projectionReversedZ);
         this.reversedProjectionFarPlane.invertToRef(new TerraMatrix(gpuBuffer,128));
         new Float32Array(gpuBuffer, 192,6).set([
             this.nearPlane,

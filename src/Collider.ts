@@ -453,10 +453,7 @@ export class ColliderJS {
           //  console.log(this.collisionFound);
           
             if (this.collisionNotFound.getUint32(0,true) === 1 || distToCollisionSquared < this.nearestDistanceSquared.getFloat32(0,true)) {
-               
-                this.intersectionPointWasm[0] = this.#collisionPoint[0];
-                this.intersectionPointWasm[1] = this.#collisionPoint[1];
-                this.intersectionPointWasm[2] = this.#collisionPoint[2];
+                this.intersectionPointWasm.set(this.#collisionPoint);
                 this.nearestDistanceSquared.setFloat32(0,distToCollisionSquared,true);
 
               //  console.log('nearestDistanceSquared',this.#nearestDistanceSquared)

@@ -24,7 +24,9 @@ export class TerraCamera {
 
     readonly #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
 
-    readonly #projectionViewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 0);
+    readonly projectionViewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 0);
+    readonly projectionViewInverted:TerraMatrix=new TerraMatrix();
+    projectionViewInvertedIsDirty=false;
     readonly viewArr = new TerraMatrix(this.#viewProjectionPositionBuffer, 64);
 
     readonly #viewAndProjection = new Float32Array(this.#viewProjectionPositionBuffer, 0, 32);
@@ -232,8 +234,8 @@ export class TerraCamera {
         this.viewArr[13] = -(this.viewArr[1] * this.#position[0] + this.viewArr[5] * this.#position[1] + this.viewArr[9] * this.#position[2])
         //z
         this.viewArr[14] = -(this.viewArr[2] * this.#position[0] + this.viewArr[6] * this.#position[1] + this.viewArr[10] * this.#position[2]);
-        this.viewArr.multiplyToRef(this.projection.reversedProjection, this.#projectionViewArr)
-
+        this.viewArr.multiplyToRef(this.projection.projectionReversedZ, this.projectionViewArr)
+        this.projectionViewInvertedIsDirty=true;
         const tempBuffer = this.gpu.createGPUBuffer(this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], true);
         this.gpu.tempGPUBuffers.add(tempBuffer);
         new Float32Array(tempBuffer.getMappedRange()).set(this.#viewAndProjection);
@@ -263,7 +265,7 @@ export class TerraCamera {
         } else {
             var matrix = this.viewArr.clone();
         }
-        matrix.multiplyToRef(this.projection.reversedProjection, matrix);
+        matrix.multiplyToRef(this.projection.projectionReversedZ, matrix);
         //TODO use matrixMultiply64 and matrixInvert64
 
         const inverted = new TerraMatrix();
@@ -311,20 +313,6 @@ export class TerraCamera {
             direction: this.#farVec3.normalize()
         }
         // result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : camera.getViewMatrix(), camera.getProjectionMatrix());
-    }
-
-
-    subscribePickingRay() {
-        return worker.signal(this.#uniqueID, 'subscribePickingRay');
-    }
-    unSubscribePickingRay() {
-        return worker.signal(this.#uniqueID, 'unSubscribePickingRay');
-    }
-    /*createPickingRay(worldPosition: SharedArrayBuffer) {
-        return worker.message(this.#uniqueID, 'createPickingRay', [worldPosition]);
-    }*/
-    updatePickingRay() {
-        return worker.message(this.#uniqueID, 'updatePickingRay');
     }
     onResize(width: number, height: number) {
         console.log('terracamera onresize', [width, height]);

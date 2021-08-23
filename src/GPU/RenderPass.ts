@@ -16,7 +16,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     cameras: Set<TerraCamera> = new Set();
     scenes: Set<Scene> = new Set();
     #depthTextureView?: GPUTextureView
-    #depthTexture?: GPUTexture
     #depthFormat: GPUTextureFormat = 'depth32float';
     bundles: GPURenderBundle[] = [];
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
@@ -24,24 +23,26 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         colorAttachments: undefined,
         depthStencilAttachment: undefined
     }
+    depthTexture?: Texture<GPUTextureFormat, ("COPY_SRC" | "RENDER_ATTACHMENT")[]>;
     constructor(
         public gpu: GPU,
         public renderTargets: T,
         public sampleCount: number = 1,
         depthStencil = false,
         public size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
-        private _onResize: (width: number, height: number) => [number, number],
-        private usage: number = 0) {
-        for (const key in renderTargets) {
-            renderTargets[key]!.texture.renderPasses.add(this);
-            renderTargets[key]!.texture.size[0]=this.size[0];
-            renderTargets[key]!.texture.size[1]=this.size[1];
-            renderTargets[key]!.texture.createTexture();
+        private _onResize: (width: number, height: number) => [number, number]) {
+
+        for (const rt of Object.values(renderTargets)) {
+            rt.texture.renderPasses.add(this);
+            rt.texture.size[0]=this.size[0];
+            rt.texture.size[1]=this.size[1];
+            rt.texture.createTexture();
         }
 
         if (depthStencil) {
-            this.#depthTexture = this.createTexture(this.#depthFormat);
-            this.#depthTextureView = this.#depthTexture.createView();
+            this.depthTexture = new Texture(gpu,this.#depthFormat,this.sampleCount,['RENDER_ATTACHMENT', 'COPY_SRC'],this.size)
+           //TODO use renderTarget class
+            this.#depthTextureView = this.depthTexture.createView()[1];
         }
     }
     getVariant(renderPipeline:RenderPipeline) {
@@ -69,7 +70,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 }
             })
         };
-        if (!this.#depthTexture)
+        if (!this.depthTexture)
             renderPipelineDescriptor.depthStencil = undefined
         else {
             renderPipelineDescriptor.depthStencil= {
@@ -84,22 +85,14 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         return this.gpu.device.createRenderPipeline(renderPipelineDescriptor)
     }
 
-    private createTexture(format: GPUTextureFormat) {
-        return this.gpu.device.createTexture({
-            size: this.size,
-            sampleCount: this.sampleCount,
-            format,
-            usage: GPUTextureUsage.RENDER_ATTACHMENT | this.usage //: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.SAMPLED
-        });
-    }
-
     onResize(width: number, height: number) {
         [this.size[0], this.size[1]] = this._onResize(width, height);
         this.cameras.forEach(camera => camera.onResize(this.size[0], this.size[1]));
-        if (this.#depthTexture) {
-            this.#depthTexture.destroy();
-            this.#depthTexture = this.createTexture(this.#depthFormat);
-            this.#depthTextureView = this.#depthTexture.createView();
+        if (this.depthTexture) {
+            this.depthTexture.size[0]=this.size[0];
+            this.depthTexture.size[1]=this.size[1];
+            this.depthTexture.createTexture();
+            this.#depthTextureView = this.depthTexture.createView()[1];
         }
         for (const key in this.renderTargets) {
             this.renderTargets[key]!.texture.size[0]=this.size[0];
@@ -158,7 +151,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder({
                 colorFormats: Object.values(this.renderTargets).map(rt => rt.texture.format),
                 sampleCount: this.sampleCount,
-                depthStencilFormat: this.#depthTexture ? this.#depthFormat : undefined
+                depthStencilFormat: this.depthTexture ? this.#depthFormat : undefined
             });
             //@ts-ignore
             let drawedMeshes = 0;

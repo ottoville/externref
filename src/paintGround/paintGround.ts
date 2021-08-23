@@ -137,7 +137,6 @@ export abstract class paintGround {
     private finalClick = () => {
         //this.canvas.addEventListener('click', async () => {
         //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
-        this.scene.TerraCameras[0].unSubscribePickingRay();
         this.uitab.canvasListener.removeListener('pointermove', this.#mousemove);
         //this.canvas.removeEventListener('pointermove', this.mousemove, false);
 
@@ -182,7 +181,6 @@ export abstract class paintGround {
                 this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
                 this.onMainPointerDown(this.#start_position);
                 this.camera.detachControl();
-                this.scene.TerraCameras[0].subscribePickingRay();
                 this.uitab.canvasListener.addListener("pointermove", this.#drawArea, { lazy: 25 });
 
                 this.uitab.canvasListener.addListener("pointerup", this.#pointerUp, { once: true });

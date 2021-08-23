@@ -13,7 +13,7 @@ export class Scene {
 
     ready?: Promise<any>;
 
-    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [number, Promise<any>?]) {
+    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [sun:number, ready?: Promise<any>]) {
         engine.scenes.set(name, this);
         TerraCameras.forEach(camera => {
             camera.renderPass.scenes.add(this);
@@ -49,31 +49,57 @@ export class Scene {
             return result;
         else
             return this.collissionCheck(rayFunction, boundables, pickResult);*/
-    }
+    }//@ts-ignore
     pickPosition(cb: (pick: { position: TerraVector3, meshId: number }) => void): void {
         const encoder = this.gpu.device.createCommandEncoder();
-        const buffer = this.gpu.device.createBuffer({
-            size: 16,
+       const buffer = this.gpu.device.createBuffer({
+            size: 16+this.gpu.renderPassScreen.size[0]*this.gpu.renderPassScreen.size[1]*4,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
         })
         encoder.copyTextureToBuffer(
-            {
-                texture: this.gpu.renderPassScreen.renderTargets.gRenderTargetPositions.texture.texture,
-                origin: { x: this.engine.mousePosition[0], y: this.engine.mousePosition[1], z: 1 }
+            {  
+                texture: this.gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.texture,
+                origin: { x: this.engine.mousePosition[0], y: this.engine.mousePosition[1], z: 0 }
             },
             {
                 buffer,
                 bytesPerRow: 256,
                 offset: 0
             },
-            [1, 1, 1]);
-        this.gpu.device.queue.submit([encoder.finish()]);
+            [1, 1, 1]
+        );
+        encoder.copyTextureToBuffer(
+            {
+                texture: this.gpu.renderPassScreen.depthTexture!.texture,
+                aspect:"depth-only",
+                origin: { x: 0, y: 0, z: 0 }
+            },
+            {
+                buffer:buffer,
+                bytesPerRow: this.gpu.renderPassScreen.size[0]*4,
+                offset: 16
+            },
+            [this.gpu.renderPassScreen.size[0], this.gpu.renderPassScreen.size[1]]
+        );
 
+        this.gpu.device.queue.submit([encoder.finish()]);
+        const offset=(this.engine.mousePosition[1]!*this.gpu.renderPassScreen.size[0]  +this.engine.mousePosition[0]!)*4;
+        const camera=[...this.gpu.renderPassScreen.cameras][0]!;
+        if(camera.projectionViewInvertedIsDirty) {
+            camera.projectionViewArr.invertToRef(camera.projectionViewInverted);
+            camera.projectionViewInvertedIsDirty=false;
+        }
         buffer.mapAsync(GPUMapMode.READ).then(() => {
             const b = buffer.getMappedRange();
-            const meshId=new DataView(b).getUint32(12, true);
+            const z=new DataView(b).getFloat32(16+offset, true);
+            const result=new TerraVector3();
+            const x=this.engine.mousePosition[0]!/this.gpu.renderPassScreen.size[0]*2-1;
+            const y=-(this.engine.mousePosition[1]!/this.gpu.renderPassScreen.size[1]*2-1);
+            new TerraVector3([x,y,z]).multiply2Ref(camera.projectionViewInverted, result);
+
+            const meshId=new DataView(b).getUint32(12, true); //mesh id is after normals vec3
             if(meshId)
-                cb({ position: new TerraVector3(b), meshId });
+                cb({ position: result, meshId });
             buffer.destroy();
         });
     }
