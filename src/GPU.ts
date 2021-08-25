@@ -80,13 +80,13 @@ export class GPU {
         y: 1
     }
     readonly renderPassScreen: RenderPass<{
-        gRenderTargetNormals: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "SAMPLED", "COPY_SRC"]>>;
-        gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "SAMPLED"]>>;
+        gRenderTargetNormals: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>;
+        gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"]>>;
     }>;
     
     readonly renderPassWater: RenderPass<{
-        normals: RenderTarget<Texture<"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED']>>;
-        diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'SAMPLED']>>;
+        normals: RenderTarget<Texture<"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
+        diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
     }>;
 
     readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<'bgra8unorm',['RENDER_ATTACHMENT']>>; }>;
@@ -281,8 +281,8 @@ export class GPU {
                 texture: {}
             }
         ));
-        const normalAndPositionTexture = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED','COPY_SRC'],[300,300,1])
-        const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'SAMPLED'])
+        const normalAndPositionTexture = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'],[300,300,1])
+        const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
 
         this.renderPassScreen = new RenderPass(this, {
             gRenderTargetNormals: new RenderTarget(normalAndPositionTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 }),
@@ -291,8 +291,8 @@ export class GPU {
             (w, h) => {
                 return [w, h]
             });
-        const normalTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'SAMPLED'])
-        const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'SAMPLED'])
+        const normalTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
+        const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
     
         this.renderPassWater = new RenderPass(this, {
             normals: new RenderTarget(normalTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),

@@ -210,7 +210,7 @@ TODO
             mipLevelCount: 1,
             sampleCount: 1,
             size: this.textureSize,
-            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
+            usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
         });
         const _heightsBindGroupEntries: [storageBindGroupLayout, storageBindGroupLayout] = [
             {

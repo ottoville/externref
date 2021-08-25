@@ -44,7 +44,7 @@ export class Zones extends UITAB {
         this.#zoneTexture = this.scene.gpu.device.createTexture({
             size: [5120, 5120, 1],
             format: "rgba8unorm",
-            usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
         });
 
         const texture = new OffscreenCanvas(5120, 5120);
