@@ -84,8 +84,8 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             renderPipelineDescriptor.multisample = { count: this.sampleCount };
         return this.gpu.device.createRenderPipeline(renderPipelineDescriptor)
     }
-
-    onResize(width: number, height: number) {
+    onResize:Set<()=>void>=new Set();
+    resize(width: number, height: number) {
         [this.size[0], this.size[1]] = this._onResize(width, height);
         this.cameras.forEach(camera => camera.onResize(this.size[0], this.size[1]));
         if (this.depthTexture) {
@@ -99,6 +99,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             this.renderTargets[key]!.texture.size[1]=this.size[1];
             this.renderTargets[key]!.texture.createTexture();
         }
+        this.onResize.forEach(cb => cb());
     }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const colorAttachments: GPURenderPassColorAttachment[] = []

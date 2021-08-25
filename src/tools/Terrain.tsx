@@ -138,18 +138,17 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         super.destroy();
         renderPipelines.delete(this.engine.gpu);
     };
-    #mouseListener = (): void => {
+    #mouseListener = async () => {
         /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
             this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
         });*/
 
-        this.scene.pickPosition(pickInfo => {
-            this.#pick.meshId = pickInfo.meshId;
-            this.#pick.position[0] = pickInfo.position[0];
-            this.#pick.position[1] = pickInfo.position[1];
-            this.#pick.position[2] = pickInfo.position[2];
-            this.SetTranslation([pickInfo.position[0], 0, pickInfo.position[2]]);
-        });
+        const pickInfo = await this.scene.pickPosition();
+        this.#pick.meshId = pickInfo.meshId;
+        this.#pick.position[0] = pickInfo.position[0];
+        this.#pick.position[1] = pickInfo.position[1];
+        this.#pick.position[2] = pickInfo.position[2];
+        this.SetTranslation([pickInfo.position[0], 0, pickInfo.position[2]]);
 
 
     }

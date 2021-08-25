@@ -325,7 +325,7 @@ export class Canvas extends TerraCompoment {
                 gpu.projections.forEach(projection => projection.update(aspectRatio))
 
                 gpu.renderPasses.forEach(renderPass => {
-                    renderPass.onResize(this.#canvasElem.width, this.#canvasElem.height);
+                    renderPass.resize(this.#canvasElem.width, this.#canvasElem.height);
                     renderPass.cameras.forEach(camera => {
                         camera.updateProjection(passEncoder,computePipelineClustersLayout)
                     });
