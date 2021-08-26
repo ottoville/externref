@@ -3,6 +3,7 @@ import { BoundableNodeIndexed } from "../../DataNode.js";
 import type { Scene } from "../../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../RenderPipeline.js";
 import type { DrawableIndexed } from "GPU/Drawable.js";
+import { Engine } from "../../engine.js";
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
@@ -35,7 +36,8 @@ function Simple(gpu: GPU) {
 export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
     Drawable:DrawableIndexed;
     constructor(
-        scene: Scene,
+        engine:Engine,
+        scenes: Scene[],
         vBufferCPU: Float32Array,
         indicesView: Uint32Array,
         iBuffer: GPUIndexBuffer,
@@ -43,9 +45,9 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
         label:string,
         point_light=0) {
 
-        super(scene, Simple(scene.gpu), vBufferCPU, 6, indicesView,undefined, point_light);
+        super(engine,scenes, Simple(engine.gpu), vBufferCPU, 6, indicesView,undefined, point_light);
         this.update_vertices(vBufferCPU);
-        this.Drawable =  this.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen]),this,label)
+        this.Drawable =  this.renderPipeline.addDrawableIndexed(scenes[0], new Set([engine.gpu.renderPassScreen]),this,label)
 
         this.Drawable.setVertexBuffer(0, vBufferGPU);
         this.Drawable.setIndexBuffer(iBuffer, undefined, undefined, indicesView.BYTES_PER_ELEMENT == 4 ? 'uint32' : 'uint16');

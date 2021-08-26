@@ -1,19 +1,17 @@
-﻿import { Light } from "./lights.js";
-import { MainNode } from "./TerraNode.js";
+﻿import { MainNode } from "./TerraNode.js";
 import type { BoundableNode, PickingInfo } from "./DataNode.js";
 import type { GPU } from "./GPU.js";
 import type { Engine } from "./engine.js";
 import type { TerraCamera } from "./TerraCamera.js";
 import { TerraVector3 } from "./Math.js";
+
+let sceneID=1;
 export class Scene {
-
-
-    lights;
-
-
+    readonly id=sceneID;
     ready?: Promise<any>;
 
-    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [sun: number, ready?: Promise<any>]) {
+    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [ready?: Promise<any>]) {
+        sceneID<<=1;
         this.TerraCameras[0].renderPass.onResize.add(() => {
             const oldpickBuffer=this.pickBuffer;
             if(oldpickBuffer) {
@@ -31,9 +29,8 @@ export class Scene {
             camera.renderPass.scenes.add(this);
         })
 
-        const [sunBufferOffsetBytes, groundAndSea] = onRenderStart(this);
+        const [groundAndSea] = onRenderStart(this);
         this.ready = groundAndSea;
-        this.lights = new Light(gpu, sunBufferOffsetBytes);
     }
     async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
         if (fastCheck) {

@@ -3,6 +3,7 @@ import { TerrainTool } from "../tools/Terrain.js";
 import { TerrainMesh } from "../GPU/RenderPipeLines/TerrainRenderPipeline.js";
 import { GPUBufferUsage } from "../GPU.js"
 import type { PipelineLayout } from "GPU/PipelineLayout.js";
+import { Engine } from "../engine.js";
 export class Terrain {
     /*
 TODO
@@ -112,12 +113,12 @@ TODO
 
     autosave = 0;
     updateSwap2(offset = 0, byteLength:number, nofaces = false) {
-        const b1 = this.scene.gpu.createGPUBuffer(byteLength, [GPUBufferUsage.COPY_SRC], true);
+        const b1 = this.engine.gpu.createGPUBuffer(byteLength, [GPUBufferUsage.COPY_SRC], true);
         new Float32Array(b1.getMappedRange()).set(
             new Float32Array(this.mesh.engine.memory.buffer, this.mesh.vertices_pointer+offset, byteLength/4)
         )
         b1.unmap();
-        const commandEncoder = this.scene.gpu.createCommandEncoder();
+        const commandEncoder = this.engine.gpu.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
             b1, // source buffer
             0, //source offset
@@ -127,7 +128,7 @@ TODO
         let b2: GPUCopySRCBuffer;
         if (!nofaces) {
             const facesByteLength = this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
-            b2 = this.scene.gpu.createGPUBuffer(facesByteLength, [GPUBufferUsage.COPY_SRC], true);
+            b2 = this.engine.gpu.createGPUBuffer(facesByteLength, [GPUBufferUsage.COPY_SRC], true);
            // new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.facesBuffer))
             new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.engine.memory.buffer, this.mesh.faces_pointer, this.mesh.faces_count * 4))
             b2.unmap();
@@ -138,7 +139,7 @@ TODO
                 0, //destination offset
                 facesByteLength);
         }
-        this.scene.gpu.device.queue.submit([commandEncoder.finish()]);
+        this.engine.gpu.device.queue.submit([commandEncoder.finish()]);
         b1.destroy();
         if (!nofaces) {
             b2!.destroy();
@@ -148,14 +149,14 @@ TODO
 
     }
 
-    static async loadFromTexture(scene: Scene): Promise<Terrain> {
+    static async loadFromTexture(engine: Engine, scenes: Scene[]): Promise<Terrain> {
         const t = await caches.match(new Request('/terrain')).then(async cachedvertices => {
             if (cachedvertices) {
                 const buffer = await Terrain.fromSave(cachedvertices);
-                return new Terrain(scene, buffer);
+                return new Terrain(engine,scenes, buffer);
             } else {
                 const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp');
-                return new Terrain(scene, buffer, 'terrain/CreateGroundFromHeightMap.comp.wgsl');
+                return new Terrain(engine, scenes, buffer, 'terrain/CreateGroundFromHeightMap.comp.wgsl');
             }
         })
         return t;
@@ -199,12 +200,17 @@ TODO
 
 
     static instance: Terrain;
-    constructor(public scene: Scene, readonly buffer: ArrayBuffer | SharedArrayBuffer, algorithm?: string) {
-        this.slopeArrGPUBuffer = scene.gpu.createGPUBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1], [GPUBufferUsage.STORAGE]);
-        this.facet12ArrGPUBuffer = scene.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC]);
-        this.facet12ArrGPUBufferSwap = scene.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC]);
-        this.settingsGPU = scene.gpu.createGPUBuffer(48, [GPUBufferUsage.STORAGE, GPUBufferUsage.UNIFORM], true);
-        this.texture = scene.gpu.device.createTexture({
+    constructor(
+        private engine: Engine,
+        public scenes: Scene[],
+        readonly buffer: ArrayBuffer | SharedArrayBuffer,
+        algorithm?: string
+    ) {
+        this.slopeArrGPUBuffer = engine.gpu.createGPUBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1], [GPUBufferUsage.STORAGE]);
+        this.facet12ArrGPUBuffer = engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC]);
+        this.facet12ArrGPUBufferSwap = engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC]);
+        this.settingsGPU = engine.gpu.createGPUBuffer(48, [GPUBufferUsage.STORAGE, GPUBufferUsage.UNIFORM], true);
+        this.texture = engine.gpu.device.createTexture({
             dimension: '2d',
             format: "rgba8unorm",
             mipLevelCount: 1,
@@ -246,7 +252,7 @@ TODO
                 }
             }
         ];
-        const heightsLayout = this.scene.gpu.createBindGroupLayout('terrain',
+        const heightsLayout = engine.gpu.createBindGroupLayout('terrain',
             {
                 binding: 0,
                 visibility: GPUShaderStage.VERTEX,
@@ -270,12 +276,12 @@ TODO
                 }
             }
         )
-        this.TerrainHeightsbindGroupTree = scene.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', scene.gpu.createBindGroup(heightsLayout, heightsBindGroupEntries));
+        this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', engine.gpu.createBindGroup(heightsLayout, heightsBindGroupEntries));
         
 
 
         Terrain.instance = this;
-        const sourcePixels = scene.gpu.createGPUBuffer(buffer.byteLength, [GPUBufferUsage.STORAGE], true);
+        const sourcePixels = engine.gpu.createGPUBuffer(buffer.byteLength, [GPUBufferUsage.STORAGE], true);
         const sourcearrSettings = this.settingsGPU.getMappedRange();
         new Uint32Array(sourcearrSettings).set(this.size);   // terrain width and height
         new Uint32Array(sourcearrSettings, 8).set(Terrain.subdivisions);
@@ -288,7 +294,7 @@ TODO
         this.settingsGPU.unmap();
         sourcePixels.unmap();
 
-        const computePipelineIndices = scene.gpu.createComputePipeline('terrain/calculatePlaneIndices.comp.wgsl');
+        const computePipelineIndices = engine.gpu.createComputePipeline('terrain/calculatePlaneIndices.comp.wgsl');
         const bindGroupSettings = computePipelineIndices.createBindGroup(0, [{
             binding: 0,
             resource: {
@@ -307,16 +313,16 @@ TODO
         const normalsLength =   Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
         const verticesBufferSize = positionsLength + uvsLength + normalsLength
 
-        const commandEncoder = scene.gpu.createCommandEncoder();
+        const commandEncoder = engine.gpu.createCommandEncoder();
         const passEncoder = commandEncoder.beginComputePass();
         passEncoder.setBindGroup(0, bindGroupSettings);
 
         if (algorithm) {
-            var terrainPositionAndUvsAndNormalsGPUTemp = scene.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+            var terrainPositionAndUvsAndNormalsGPUTemp = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
-            this.terrainPositionAndUvsAndNormalsGPU = scene.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST])
+            this.terrainPositionAndUvsAndNormalsGPU = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST])
 
-            const computePipeline = scene.gpu.createComputePipeline(algorithm);
+            const computePipeline = engine.gpu.createComputePipeline(algorithm);
             const sourceBindGroup = computePipeline.createBindGroup(1, [
                 {
                     binding: 0,
@@ -335,15 +341,15 @@ TODO
             passEncoder.setBindGroup(1, sourceBindGroup);
             passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
         } else {
-            var terrainPositionAndUvsAndNormalsGPUTemp = scene.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], true);
+            var terrainPositionAndUvsAndNormalsGPUTemp = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], true);
             new Uint8Array(terrainPositionAndUvsAndNormalsGPUTemp.getMappedRange()).set(new Uint8Array(buffer));
             terrainPositionAndUvsAndNormalsGPUTemp.unmap();
 
-            this.terrainPositionAndUvsAndNormalsGPU = scene.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], true)
+            this.terrainPositionAndUvsAndNormalsGPU = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], true)
             new Uint8Array(this.terrainPositionAndUvsAndNormalsGPU.getMappedRange()).set(new Uint8Array(buffer));
             this.terrainPositionAndUvsAndNormalsGPU.unmap();
         }
-        const settingsLayout=scene.gpu.device.createBindGroupLayout({
+        const settingsLayout=engine.gpu.device.createBindGroupLayout({
             entries: [{
                 binding: 0,
                 visibility: GPUShaderStage.COMPUTE,
@@ -353,7 +359,7 @@ TODO
             }]
             
         });
-        const writableStorageLayout=scene.gpu.device.createBindGroupLayout({
+        const writableStorageLayout=engine.gpu.device.createBindGroupLayout({
             entries: [{
                 binding: 0,
                 visibility: GPUShaderStage.COMPUTE,
@@ -363,7 +369,7 @@ TODO
             }]
             
         });
-        const heightsLayout2 = scene.gpu.device.createBindGroupLayout({
+        const heightsLayout2 = engine.gpu.device.createBindGroupLayout({
             entries: [{
                 binding: 0,
                 visibility: GPUShaderStage.COMPUTE,
@@ -379,9 +385,9 @@ TODO
             }]
             
         });
-        const normalsLayout=scene.gpu.device.createPipelineLayout({bindGroupLayouts:[settingsLayout,writableStorageLayout, heightsLayout2]})
-        const computePipelineNormals = scene.gpu.createComputePipeline('terrain/calculateNormals.comp.wgsl', normalsLayout)
-        const computePlaneHeights = scene.gpu.createComputePipeline('terrain/calculatePlaneHeights.comp.wgsl');
+        const normalsLayout=engine.gpu.device.createPipelineLayout({bindGroupLayouts:[settingsLayout,writableStorageLayout, heightsLayout2]})
+        const computePipelineNormals = engine.gpu.createComputePipeline('terrain/calculateNormals.comp.wgsl', normalsLayout)
+        const computePlaneHeights = engine.gpu.createComputePipeline('terrain/calculatePlaneHeights.comp.wgsl');
 
         const bgroup = [
             {
@@ -392,7 +398,7 @@ TODO
             }
         ];
         const bindGroupPositions = computePlaneHeights.createBindGroup(1, bgroup);
-        const bindGroupHeights = scene.gpu.device.createBindGroup({
+        const bindGroupHeights = engine.gpu.device.createBindGroup({
             layout: computePlaneHeights.getBindGroupLayout(2),
             entries: _heightsBindGroupEntries
         });
@@ -402,17 +408,17 @@ TODO
                 buffer: this.settingsGPU
             }
         }]);
-        const bindGroupPositionsReadWrite = scene.gpu.device.createBindGroup({
+        const bindGroupPositionsReadWrite = engine.gpu.device.createBindGroup({
             layout: writableStorageLayout,
             entries: bgroup
         });
-        const bindGroupHeightsRead = scene.gpu.device.createBindGroup({
+        const bindGroupHeightsRead = engine.gpu.device.createBindGroup({
             layout: heightsLayout2,
             entries: _heightsBindGroupEntries
         });
 
         //todo: remove unneeded flags
-        const terrainIndicesGPU = scene.gpu.createGPUBuffer(this.#terrainIndicesLength, [GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
+        const terrainIndicesGPU = engine.gpu.createGPUBuffer(this.#terrainIndicesLength, [GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
 
         passEncoder.setPipeline(computePipelineIndices);
@@ -438,11 +444,11 @@ TODO
         passEncoder.setBindGroup(2, bindGroupHeightsRead)
         passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
 
-        this.mesh = new TerrainMesh(scene, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, new Float32Array(positionsCount*12), new Uint32Array(this.#terrainIndicesLength / 4), 12);
+        this.mesh = new TerrainMesh(this.engine, scenes, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, new Float32Array(positionsCount*12), new Uint32Array(this.#terrainIndicesLength / 4), 12);
 
         caches.match(new Request('/terrainTexture.webp')).then(async (cachedtexture) => {
             const textureSizeBytes = Int32Array.BYTES_PER_ELEMENT * (this.textureSize[0] * this.textureSize[1]);
-            const gpuBuffer = scene.gpu.createGPUBuffer(textureSizeBytes, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], cachedtexture !== undefined);
+            const gpuBuffer = engine.gpu.createGPUBuffer(textureSizeBytes, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], cachedtexture !== undefined);
             const bufferView = {
                 buffer: gpuBuffer,
                 bytesPerRow: this.textureSize[0] * 4,
@@ -459,7 +465,7 @@ TODO
             };
             if (cachedtexture) {
                 passEncoder.endPass();
-                var [gpuReadBufferPositions, gpuReadBufferIndices] = scene.gpu.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
+                var [gpuReadBufferPositions, gpuReadBufferIndices] = engine.gpu.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
 
                 const cacheimg = new Image();
                 cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
@@ -477,10 +483,10 @@ TODO
                 gpuBuffer.unmap();
 
                 commandEncoder.copyBufferToTexture(bufferView, destinationTextureView, this.textureSize);
-                scene.gpu.device.queue.submit([commandEncoder.finish()]);
+                engine.gpu.device.queue.submit([commandEncoder.finish()]);
 
             } else {    
-                const createTexturePipeline = this.scene.gpu.createComputePipeline("terrain/createTerrainTexture.comp.wgsl",this.scene.gpu.device.createPipelineLayout({bindGroupLayouts: [settingsLayout,heightsLayout2, writableStorageLayout]}) );
+                const createTexturePipeline = engine.gpu.createComputePipeline("terrain/createTerrainTexture.comp.wgsl",engine.gpu.device.createPipelineLayout({bindGroupLayouts: [settingsLayout,heightsLayout2, writableStorageLayout]}) );
                 const bindGroup1 = createTexturePipeline.createBindGroup(writableStorageLayout, [
                     {
                         binding: 0,
@@ -500,7 +506,7 @@ TODO
 
 
                 // Get a GPU buffer for reading in an unmapped state.
-                const gpuReadBuffer = scene.gpu.createGPUBuffer(textureSizeBytes, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ]);
+                const gpuReadBuffer = engine.gpu.createGPUBuffer(textureSizeBytes, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ]);
                 // Encode commands for copying buffer to buffer.
                 commandEncoder.copyBufferToBuffer(
                     gpuBuffer,
@@ -511,9 +517,9 @@ TODO
                 );
 
                 commandEncoder.copyBufferToTexture(bufferView,destinationTextureView, this.textureSize);
-                var [gpuReadBufferPositions, gpuReadBufferIndices] = scene.gpu.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
+                var [gpuReadBufferPositions, gpuReadBufferIndices] = engine.gpu.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
                 const gpuCommands = commandEncoder.finish();
-                scene.gpu.device.queue.submit([gpuCommands]);
+                engine.gpu.device.queue.submit([gpuCommands]);
                 gpuReadBuffer.mapAsync(GPUMapMode.READ).then(() => {
                     // Read buffer.
                     const arrayBuffer = gpuReadBuffer.getMappedRange()
@@ -525,7 +531,7 @@ TODO
                 //resultMatrixBuffer.destroy();
 
             }
-            scene.gpu.GPU2CPU(async (buff) => {
+            engine.gpu.GPU2CPU(async (buff) => {
                 await buff.mapAsync(GPUMapMode.READ);
                 this.mesh.faces=new Float32Array(buff.getMappedRange());
             }, this.facet12ArrGPUBuffer)

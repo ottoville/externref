@@ -1,6 +1,7 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { SimpleIndexedMesh } from "../RenderPipeLines/Simple.js";
-import { GPUBufferUsage } from "../../GPU.js";
+import { GPU, GPUBufferUsage } from "../../GPU.js";
+import { Engine } from "../../engine.js";
 
 const positions = new Float32Array([
     // Left face        //normals
@@ -36,8 +37,8 @@ const positions = new Float32Array([
     1.0, -1.0, 1.0,    0.0,1.0,0.0,
     -1.0, -1.0, 1.0,   0.0,1.0,0.0,
 ])
-function create(scene: Scene): [Uint32Array, GPUIndexBuffer, GPUVertexBuffer] {
-    const [indicesBuffer, iBuffer] = scene.gpu.createInputBuffer(GPUBufferUsage.INDEX, new Uint32Array([
+function create(gpu: GPU): [Uint32Array, GPUIndexBuffer, GPUVertexBuffer] {
+    const [indicesBuffer, iBuffer] = gpu.createInputBuffer(GPUBufferUsage.INDEX, new Uint32Array([
         0, 1, 2, 0, 2, 3,    // front
         4, 5, 6, 4, 6, 7,    // back
         8, 9, 10, 8, 10, 11,   // top
@@ -46,7 +47,7 @@ function create(scene: Scene): [Uint32Array, GPUIndexBuffer, GPUVertexBuffer] {
         20, 21, 22, 20, 22, 23,   // left
     ]));
     // const [verticesBuffer, vBuffer] = scene.gpu.createInputBuffer(GPUBufferUsage.VERTEX, new Float32Array());
-    const vBuffer = scene.gpu.device.createBuffer({ usage: GPUBufferUsage.VERTEX, size: positions.byteLength, mappedAtCreation: true }) as GPUVertexBuffer;
+    const vBuffer = gpu.device.createBuffer({ usage: GPUBufferUsage.VERTEX, size: positions.byteLength, mappedAtCreation: true }) as GPUVertexBuffer;
     new Float32Array(vBuffer.getMappedRange()).set(positions);
     vBuffer.unmap();
 
@@ -54,10 +55,10 @@ function create(scene: Scene): [Uint32Array, GPUIndexBuffer, GPUVertexBuffer] {
 }
 export class Box extends SimpleIndexedMesh {
     constructor(
-        scene: Scene,
+        engine:Engine,
+        scenes: Scene[],
         point_light = 0
     ) {
-        super(scene,positions, ...create(scene),'box',point_light);
-        
+        super(engine,scenes,positions, ...create(engine.gpu),'box',point_light);
     }
 }

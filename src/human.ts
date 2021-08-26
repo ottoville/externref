@@ -1,10 +1,11 @@
-﻿import { Box } from "./GPU/Meshes/Box.js";
+﻿import type { Engine } from "./engine.js";
+import { Box } from "./GPU/Meshes/Box.js";
 import type { hasPhysics } from "./physics.js";
 import type { Scene } from "./Scene.js";
 export class Human extends Box implements hasPhysics {
     hasGravity=true
-    constructor(scene: Scene) {
-        super(scene);
+    constructor(engine:Engine, scenes: Scene[]) {
+        super(engine, scenes);
         const translation=this.get_translation();
         this.SetTranslation([translation[0], 300, 700]);
        // this.setTranslationY(300)

@@ -3,6 +3,7 @@ import { BoundableNodeIndexed } from "../../DataNode.js";
 import type { Scene } from "../../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../RenderPipeline.js";
 import type { DrawableIndexed } from "GPU/Drawable.js";
+import type { Engine } from "../../engine.js";
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 
@@ -51,7 +52,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
     }
     Drawable:DrawableIndexed;
     constructor(
-        scene: Scene,
+        engine: Engine,
+        scenes: Scene[],
         public initialTexture: GPUTextureView,
         public vBuffer: GPUVertexBuffer,
         public iBuffer: GPUIndexBuffer,
@@ -59,8 +61,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
         indicesView: Uint32Array,
         verticesPositionStride = 3
     ) {
-        super(scene, TerrainRenderPipeline(scene.gpu), vertices, verticesPositionStride, indicesView,undefined,undefined,true);
-        this.Drawable = this.renderPipeline.addDrawableIndexed(scene, new Set([scene.gpu.renderPassScreen, scene.gpu.renderPassWater]), this, 'terrain', undefined, 0, 1);
+        super(engine, scenes, TerrainRenderPipeline(engine.gpu), vertices, verticesPositionStride, indicesView,undefined,undefined,true);
+        this.Drawable = this.renderPipeline.addDrawableIndexed(scenes[0]!, new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater]), this, 'terrain', undefined, 0, 1);
         //@ts-expect-error
         window.debugTerrain=() => this.Drawable.debug_render_normals();
         this.Drawable.setStaticBuffer(this.sampler, initialTexture);

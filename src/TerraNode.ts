@@ -5,6 +5,7 @@ import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { hasPhysics } from "./physics.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import type { DrawableDirect } from "./GPU/Drawable.js";
+import type { Scene } from "./Scene.js";
 
 export class MainNode extends Mesh {
     isStatic = false;
@@ -28,8 +29,19 @@ export class MainNode extends Mesh {
         this.update_dynamic_buffer(this.engine.rustEngine);
     }
 
-    constructor(public engine: Engine, hasBounding: boolean, has_geometry:boolean, positionsCount = 0, vertices_stride = 3, point_light=0, directional_light=0, static_faces=false, strip=false) {
-        super(engine.rustEngine, MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, 1, static_faces, strip);
+    constructor(
+        public engine: Engine,
+        hasBounding: boolean,
+        has_geometry:boolean,
+        positionsCount = 0,
+        vertices_stride = 3,
+        point_light=0,
+        directional_light=0,
+        static_faces=false,
+        strip=false,
+        scenes?:Scene[]) {
+        const sceneids=scenes?scenes.reduce((acc, scene) => acc | scene.id,0):1;
+        super(engine.rustEngine, MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, sceneids, static_faces, strip);
         Object.getOwnPropertyNames(MainNode.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(MainNode.prototype, prop);
             if(propDesc)
@@ -70,8 +82,9 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
         point_light = 0,
         directional_light=0,
         static_faces=false,
-        strip=false) {
-        super(engine, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, static_faces,strip);
+        strip=false,
+        scenes?:Scene[]) {
+        super(engine, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, static_faces,strip,scenes);
         Object.getOwnPropertyNames(TerraNodeGPU.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(TerraNodeGPU.prototype, prop);
             if(propDesc)

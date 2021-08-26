@@ -112,16 +112,16 @@ export class Canvas extends TerraCompoment {
 
 
         const mainScene = new Scene('main', gpu, terraEngine, [mainCamera, waterCamera], (terrascene) => {
-            const sun = new Sun2(terrascene);
+            new Sun2(terrascene);
             // Initial scene objects here
 
-            const sea = new Sea(terrascene);
+            const sea = new Sea(terraEngine,[terrascene]);
             //new testPlane(terrascene);
 
-            const b = new Box(terrascene);
+            const b = new Box(terraEngine, [terrascene]);
             b.update_scale(terraEngine.rustEngine, 500, 500, 500);
-            new Human(terrascene)
-            const terrainInited = Terrain.loadFromTexture(terrascene);
+            new Human(terraEngine,[terrascene])
+            const terrainInited = Terrain.loadFromTexture(terraEngine,[terrascene]);
 
             const ready = terrainInited.then(async ground => [ground, sea]);
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
@@ -156,17 +156,17 @@ export class Canvas extends TerraCompoment {
                 }
             });
             this.progress = 100;
-            return [sun.gpu_alignment, ready];
+            return [ready];
         });
         const debugscene = new Scene('static', gpu, terraEngine, [mainCamera], (scene) => {
-            const sun = new MainNode(scene.engine, false, false,undefined,undefined,0);
+            const sun = new MainNode(terraEngine, false, false,undefined,undefined,0,1,undefined,undefined,[scene]);
             sun.get_translation().set([0, 1, 0]);
             sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
-            return [sun.gpu_alignment]
+            return []
         });
 
-        const b2 = new Box(debugscene, 1000);
+        const b2 = new Box(terraEngine, [debugscene], 1000);
         //const b3 = new Box(debugscene,100);
         //b2.update(scale => scale.set([200, 200, 200]));
         b2.update_scale(terraEngine.rustEngine, 30, 30, 30);

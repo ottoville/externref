@@ -5,7 +5,7 @@ struct Output {
 };
 struct Meshes {
   position : mat4x4<f32>;
-    [[size(16)]] y: f32;  //padding
+  [[size(16)]] y: f32;  //padding
   ambient : vec3<f32>;
   shadow : f32;
   [[size(20)]] x: f32;  //padding
@@ -42,7 +42,7 @@ struct ClusterBounds {
   lightsCount: [[stride(4)]] array<u32, 27648>;
   lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
 };
-[[binding(2), group(0)]] var<storage, read> clustersArray : Clusters;
+[[binding(2), group(0)]] var<storage, read> clusters_array : Clusters;
 [[binding(3), group(0)]] var<uniform> dimensions : Uniforms;
 [[binding(4), group(0)]] var<storage, read> meshes : MeshArray;
 [[binding(5), group(0)]] var<uniform> projection : Projection;
@@ -88,7 +88,8 @@ fn main(
   [[location(0)]]  v_uv : vec2<f32>,
   [[location(1)]] normal : vec3<f32>,
   [[location(2)]]  position : vec3<f32>,
-  [[location(3)]]  id : u32) -> Output {
+  [[location(3)]]  id : u32,
+  [[location(4)]]  scenes : u32) -> Output {
 
     var output:Output;
   //outColor = vec4<f32>(ambient,0.0)+textureSample(myTexture, mySampler, v_uv) *  vec4<f32>(shading,shading,shading,1.0);
@@ -107,32 +108,36 @@ fn main(
 
 
 
-    let clusterIndex = getClusterIndex2(vec4<f32>(fragCoord.xyz, 1.0));
-    let clusterLightsCount=clustersArray.lightsCount[clusterIndex];
+    let cluster_index = getClusterIndex2(vec4<f32>(fragCoord.xyz, 1.0));
+    let cluster_lights_count=clusters_array.lightsCount[cluster_index];
     var color:vec3<f32>=vec3<f32>(0.0,0.0,0.0);
 
   var shading:f32;
   var shading_rgb:vec3<f32>;
   //TODO, preselect directional lights
-    for (var directionalLightPointerIndex : u32 = 0u; directionalLightPointerIndex < meshes.length; directionalLightPointerIndex = directionalLightPointerIndex + 1u) {
-      let mesh = meshes.mesh[directionalLightPointerIndex];
+    for (var directional_light_pointer_index : u32 = 0u; directional_light_pointer_index < meshes.length; directional_light_pointer_index = directional_light_pointer_index + 1u) {
+      let mesh = meshes.mesh[directional_light_pointer_index];
+      if((scenes & mesh.scenes) == scenes) {
         //Light reflect from athmosphere
         shading_rgb = shading_rgb + mesh.ambient;
         //Direct sunlight
         shading = shading + max(dot(normal.xyz,mesh.position[12].xyz) * mesh.shadow, 0.0);
+      }
     }
 
-    if(clusterLightsCount>0u) {
-      for (var lightPointerIndex : u32 = 0u; lightPointerIndex < clusterLightsCount; lightPointerIndex = lightPointerIndex + 1u) {
-        let lightIndex:u32 = clustersArray.lights[clusterIndex*63u + lightPointerIndex];
-        let light = meshes.mesh[lightIndex];
-        let light_position:vec3<f32> = light.position[12].xyz;
+    if(cluster_lights_count>0u) {
+      for (var light_pointer_index : u32 = 0u; light_pointer_index < cluster_lights_count; light_pointer_index = light_pointer_index + 1u) {
+        let light_index:u32 = clusters_array.lights[cluster_index*63u + light_pointer_index];
+        let light = meshes.mesh[light_index];
+        if((scenes & light.scenes) == scenes) {
+          let light_position:vec3<f32> = light.position[12].xyz;
 
-        var lightDir:vec3<f32> = light_position - position.xyz;
-        let light_distance_squared= dot(lightDir, lightDir);
-        let attenuation = max(1.0 - light_distance_squared / (light.point_light_squared), 0.0);
+          var light_dir:vec3<f32> = light_position - position.xyz;
+          let light_distance_squared= dot(light_dir, light_dir);
+          let attenuation = max(1.0 - light_distance_squared / (light.point_light_squared), 0.0);
 
-        shading = shading + max(dot(normal.xyz, normalize(lightDir)),0.0) * attenuation;
+          shading = shading + max(dot(normal.xyz, normalize(light_dir)),0.0) * attenuation;
+        }
       }
     }
     let total_shading=vec3<f32>(shading,shading,shading);
@@ -149,7 +154,8 @@ fn normals(
   [[location(0)]]  v_uv : vec2<f32>,
   [[location(1)]] normal : vec3<f32>,
   [[location(2)]]  position : vec3<f32>,
-  [[location(3)]]  id : u32) -> Output {
+  [[location(3)]]  id : u32,
+  [[location(4)]]  scenes : u32) -> Output {
     var output:Output;
   //outColor = vec4<f32>(ambient,0.0)+textureSample(myTexture, mySampler, v_uv) *  vec4<f32>(shading,shading,shading,1.0);
   //outColor.w=1.0;

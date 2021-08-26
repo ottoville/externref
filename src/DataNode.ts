@@ -5,6 +5,7 @@ import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
 import type { Scene } from "./Scene.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import type { ColliderJS } from "./Collider.js";
+import { Engine } from "./engine.js";
 
 export type BoundableNode=DataNode<DrawableDirect>;
 
@@ -45,7 +46,8 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
 
     constructor(
-        scene: Scene,
+        engine:Engine,
+        scenes: Scene[],
         renderPipeline: RenderPipeline,
         positionCount: number,
         verticesPositionStride: number,
@@ -54,7 +56,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         static_faces = false
 
     ) {
-        super(scene.engine, renderPipeline, positionCount, true,true, verticesPositionStride, point_light,undefined, static_faces,strip);
+        super(engine, renderPipeline, positionCount, true,true, verticesPositionStride, point_light,undefined, static_faces,strip,scenes);
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
             if(propDesc)
@@ -64,7 +66,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
 
 
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
-        scene.gpu.boundables.add(this);
+        engine.gpu.boundables.add(this);
 
 
         //Run this on microtask so the scope who called
@@ -226,7 +228,8 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
     }*/
     get indices_count() { return this.indicesView.length; }
     constructor(
-        scene: Scene,
+        engine:Engine,
+        scenes: Scene[],
         renderPipeline: RenderPipeline,
         vertices: Float32Array,
         verticesPositionStride = 3,
@@ -235,7 +238,7 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
         point_light = 0,
         static_faces = false
     ) {
-        super(scene, renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip, point_light,static_faces);
+        super(engine,scenes, renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip, point_light,static_faces);
         Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeIndexed.prototype, prop);
             if(propDesc)
@@ -282,13 +285,14 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
 }
 export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
     constructor(
-        scene: Scene,
+        engine:Engine,
+        scenes: Scene[],
         renderPipeline: RenderPipeline,
         vertices:Float32Array,
         verticesPositionStride = 3,
         strip = false,
     ) {
-        super(scene, renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip);
+        super(engine,scenes, renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip);
         this.update_vertices(vertices);
         Object.getOwnPropertyNames(BoundableNodeSimple.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeSimple.prototype, prop);

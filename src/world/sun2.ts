@@ -1,6 +1,5 @@
 ﻿import type { hasPhysics } from "../physics.js";
 import type { Scene } from "../Scene.js";
-import type { isLight } from "../lights.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 import { Angle } from "../Math.js";
 import type { GPU } from "../GPU.js";
@@ -35,9 +34,8 @@ function getRenderPipeline(gpu: GPU) {
 }
 
 
-export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics, isLight {
+export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics {
     hasGravity = false;
-    lightType: 'point' = 'point';
 
     #clamp = (value: number, min: number, max: number) => {
         return Math.min(Math.max(value, min), max);
