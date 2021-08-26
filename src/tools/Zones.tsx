@@ -1,13 +1,15 @@
 import { UITAB } from "../UITAB.js";
 import { paintTexture } from "../paintGround/paintTexture.js";
 import type { Terrain } from "../world/terrain.js";
-import type { PTDresult } from "../types/interfaces/index.js";
+import { PTDresult } from "../types/interfaces/index.js";
 import { canvasListener } from "../traits/canvasListener.js";
 
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
 import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
+import type { Engine } from "engine.js";
+declare const engine:Engine;
 
 export class Zones extends UITAB {
     static label = 'Zones';
@@ -58,7 +60,7 @@ export class Zones extends UITAB {
         const centerZ = this.#size / 2;
 
         (async () => {
-            (await this.scene.engine.DB).transaction("zones").objectStore("zones").getAll().onsuccess = (evt) => {
+            (await engine.DB).transaction("zones").objectStore("zones").getAll().onsuccess = (evt) => {
                 ctx.strokeStyle = "blue";
                 ctx.fillStyle = "blue";
                 ctx.lineWidth = 1;
@@ -75,9 +77,9 @@ export class Zones extends UITAB {
         })();
         
         terrain.mesh.setTextureView(this.#zoneTexture.createView());
-        terrain.mesh.Drawable.scene = scene.engine.scenes.get('static');
+        terrain.mesh.Drawable.scene = engine.scenes.get('static');
         this.PT = new paintTexture(this.scene, this.camera, this.terrain, sea, this.#zoneTexture, 5120, 5120, this, this.#ratio, async (response) => {
-            (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
+            (await engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
         });
         /*this.PT.activate(async (response) => {
             (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);

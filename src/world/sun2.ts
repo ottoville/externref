@@ -5,6 +5,8 @@ import { Angle } from "../Math.js";
 import type { GPU } from "../GPU.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { DrawableSimple } from "GPU/Drawable.js";
+import type { Engine } from "engine.js";
+declare const engine:Engine;
 
 //const sundistance = 149600000000;
 
@@ -48,7 +50,7 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics {
         //149597870000
 
         //let sundistance = 149600; //divided by 100000
-        const secondsOfDay = ~~((Number(this.engine.physics.tickTime * 60)) % 86400);
+        const secondsOfDay = ~~((Number(engine.physics.tickTime * 60)) % 86400);
         const minutesOfDay = secondsOfDay / 60;
         const sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
 
@@ -70,12 +72,12 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics {
         const shadow = this.#clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
         this.gpu_custom_data=new Float32Array([ambientR, ambientGB, ambientGB, shadow]);
         // this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
-        this.update_dynamic_buffer(this.engine.rustEngine);
+        this.update_dynamic_buffer(engine.rustEngine);
 
     }
     Drawable:DrawableSimple;
     constructor(scene: Scene) {
-        super(scene.engine, getRenderPipeline(scene.gpu), 14,undefined,undefined,undefined,undefined,1);
+        super(getRenderPipeline(engine.gpu), 14,undefined,undefined,undefined,undefined,1);
         this.Drawable=this.renderPipeline.addDrawableSimple(scene, new Set([scene.gpu.renderPassScreen]), this,undefined,undefined,undefined,'sun');
     }
 }

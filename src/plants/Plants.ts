@@ -3,11 +3,13 @@ import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
 import { Terrain } from "../world/terrain.js";
 //import simplex from '../simplex.js'
 
-import type { PTDresult } from "../types/interfaces/index.js";
+import { PTDresult } from "../types/interfaces/index.js";
 
 import type { Scene } from "../Scene.js";
 import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { GPUBufferUsage } from "../GPU.js"
+import { Engine } from "engine.js";
+declare const engine:Engine;
 
 
 
@@ -43,8 +45,8 @@ export class Plants {
         scene: Scene,
         terrainP: Promise<Terrain>,
     ) {
-        const planstPipeline = scene.gpu.rootCameralayout.addRenderPipeline(
-            new VertexShader(scene.engine.gpu, 'grass/grass.vert.wgsl', 'main', [
+        const planstPipeline = engine.gpu.rootCameralayout.addRenderPipeline(
+            new VertexShader(engine.gpu, 'grass/grass.vert.wgsl', 'main', [
                 {
                     arrayStride: 4 * 4,
                     stepMode: "instance",
@@ -75,7 +77,7 @@ export class Plants {
                     }]
                 }
             ]),
-            new Shader(scene.engine.gpu, 'color.frag.wgsl'), {
+            new Shader(engine.gpu, 'color.frag.wgsl'), {
             primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }
         });
         const drawable = planstPipeline.addDrawableIndirect(scene, new Set([scene.gpu.renderPassScreen]), scene.gpu.createGPUBuffer(4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST]), 'Plants')

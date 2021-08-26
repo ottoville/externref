@@ -1,6 +1,8 @@
 ﻿import type { Scene } from "../../Scene.js";
 import type {  BoundableNodeSimple } from "../../DataNode.js";
 import { GPUBufferUsage } from "../../GPU.js"
+import type { Engine } from "engine.js";
+declare const engine:Engine;
 const vertices = new Float32Array([
     0, 0, 0,
     1, 0, 0,
@@ -25,7 +27,7 @@ export class testPlane extends BoundableNodeSimple {
         const vBuffer = scene.gpu.createGPUBuffer(this.verticesBuffesSize, [GPUBufferUsage.VERTEX], true);
         new Float32Array(vBuffer.getMappedRange()).set(vertices);
         vBuffer.unmap();
-        this.update_scale(this.engine.rustEngine,200, 200, 200);
+        this.update_scale(engine.rustEngine,200, 200, 200);
         /*const testPlaneRenderpipeline = this.scene.lightsBindGroup.addRenderPipeline({
             rasterizationState: {
                 cullMode: 'none',

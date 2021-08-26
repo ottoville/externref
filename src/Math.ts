@@ -1,4 +1,6 @@
-﻿
+﻿import type { Engine } from "engine";
+declare const engine:Engine;
+
 export interface Vector3 extends Omit<TerraVector3, 'buffer'> {
     [0]: number
     [1]: number
@@ -191,7 +193,7 @@ export class TerraVector3 extends Float32Array {
         this[2] *= scale;
         return this;
     }
-    set(arr:[number,number,number] | TerraVector3 | Vector3) {
+    override set(arr:[number,number,number] | TerraVector3 | Vector3) {
         this[0] = arr[0];
         this[1] = arr[1];
         this[2] = arr[2];
@@ -299,18 +301,17 @@ export class Triangle {
         ]);
     }
     get planeCollider() {
-        return new TerraVector4(this.memory.buffer, this.pointerToVector4())
+        return new TerraVector4(engine.memory.buffer, this.pointerToVector4())
     }
     get vectors():[TerraVector4,TerraVector4,TerraVector4] {
         return [
-            new TerraVector4(this.memory.buffer, this.vectorsPointers[0]),
-            new TerraVector4(this.memory.buffer, this.vectorsPointers[1]),
-            new TerraVector4(this.memory.buffer, this.vectorsPointers[2]),
+            new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
+            new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
+            new TerraVector4(engine.memory.buffer, this.vectorsPointers[2]),
         ]
     }
     constructor(
         private vectorsPointers: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],
-        private memory: WebAssembly.Memory,
         private pointerToVector4: () => number,
         ) {
     }

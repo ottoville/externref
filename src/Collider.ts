@@ -1,9 +1,10 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
-import { Engine } from "./engine.js";
+import type { Engine } from "engine.js";
 import { TerraMatrix, TerraVector3, Triangle, Vector3 } from "./Math.js";
 import { Collider } from "/js/engine/engine.js";
+declare const engine:Engine;
 
 
 
@@ -103,21 +104,21 @@ export class ColliderJS {
 
     readonly collisionsScalingMatrix:TerraMatrix;
     get collisionNotFound() {
-        return new DataView(this.engine.memory.buffer, this.rust.collision_not_found_pointer,4);
+        return new DataView(engine.memory.buffer, this.rust.collision_not_found_pointer,4);
     }
     get scaledPosition() {
-        return new Float32Array(this.engine.memory.buffer, this.rust.scaled_position_pointer, 4) as TerraVector3;
+        return new Float32Array(engine.memory.buffer, this.rust.scaled_position_pointer, 4) as TerraVector3;
     }
     get scaledVelocity() {
-        return new Float32Array(this.engine.memory.buffer, this.rust.scaled_velocity_pointer, 4) as TerraVector3;
+        return new Float32Array(engine.memory.buffer, this.rust.scaled_velocity_pointer, 4) as TerraVector3;
     }
     get intersectionPointWasm() {
-        return new Float32Array(this.engine.memory.buffer, this.rust.intersection_point_pointer, 4) as TerraVector3;
+        return new Float32Array(engine.memory.buffer, this.rust.intersection_point_pointer, 4) as TerraVector3;
     }
     get nearestDistanceSquared() {
-        return  new DataView(this.engine.memory.buffer, this.rust.nearest_distance_squared_pointer,4);
+        return  new DataView(engine.memory.buffer, this.rust.nearest_distance_squared_pointer,4);
     }
-    constructor(private engine:Engine, private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+    constructor(private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
         this.finalPosition= new TerraVector3();
 
 /*

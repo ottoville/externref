@@ -1,7 +1,8 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { SimpleIndexedMesh } from "../RenderPipeLines/Simple.js";
 import { GPU, GPUBufferUsage } from "../../GPU.js";
-import { Engine } from "../../engine.js";
+import { Engine } from "engine.js";
+declare const engine:Engine;
 
 const positions = new Float32Array([
     // Left face        //normals
@@ -55,10 +56,9 @@ function create(gpu: GPU): [Uint32Array, GPUIndexBuffer, GPUVertexBuffer] {
 }
 export class Box extends SimpleIndexedMesh {
     constructor(
-        engine:Engine,
         scenes: Scene[],
         point_light = 0
     ) {
-        super(engine,scenes,positions, ...create(engine.gpu),'box',point_light);
+        super(scenes,positions, ...create(engine.gpu),'box',point_light);
     }
 }

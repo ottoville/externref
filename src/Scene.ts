@@ -1,16 +1,17 @@
 ﻿import { MainNode } from "./TerraNode.js";
 import type { BoundableNode, PickingInfo } from "./DataNode.js";
 import type { GPU } from "./GPU.js";
-import type { Engine } from "./engine.js";
 import type { TerraCamera } from "./TerraCamera.js";
 import { TerraVector3 } from "./Math.js";
+import type { Engine } from "engine.js";
+declare const engine:Engine;
 
 let sceneID=1;
 export class Scene {
     readonly id=sceneID;
     ready?: Promise<any>;
 
-    constructor(public name: string, public gpu: GPU, public engine: Engine, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [ready?: Promise<any>]) {
+    constructor(public name: string, public gpu: GPU, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => [ready?: Promise<any>]) {
         sceneID<<=1;
         this.TerraCameras[0].renderPass.onResize.add(() => {
             const oldpickBuffer=this.pickBuffer;
@@ -66,7 +67,7 @@ export class Scene {
             return this.pickPromise
         }
         const camera = this.TerraCameras[0];
-        const offset = (this.engine.mousePosition[1]! * this.gpu.renderPassScreen.size[0] + this.engine.mousePosition[0]!) * 4;
+        const offset = (engine.mousePosition[1]! * this.gpu.renderPassScreen.size[0] + engine.mousePosition[0]!) * 4;
         const padding = offset % 16;
 
         const buffer=this.pickBuffer!;
@@ -88,7 +89,7 @@ export class Scene {
         encoder.copyTextureToBuffer(
             {
                 texture: this.gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.texture,
-                origin: { x: this.engine.mousePosition[0], y: this.engine.mousePosition[1], z: 0 }
+                origin: { x: engine.mousePosition[0], y: engine.mousePosition[1], z: 0 }
             },
             {
                 buffer,
@@ -105,8 +106,8 @@ export class Scene {
             const z = new DataView(b).getFloat32(padding, true);
             
             const result = new TerraVector3();
-            const x = this.engine.mousePosition[0]! / this.gpu.renderPassScreen.size[0] * 2 - 1;
-            const y = -(this.engine.mousePosition[1]! / this.gpu.renderPassScreen.size[1] * 2 - 1);
+            const x = engine.mousePosition[0]! / this.gpu.renderPassScreen.size[0] * 2 - 1;
+            const y = -(engine.mousePosition[1]! / this.gpu.renderPassScreen.size[1] * 2 - 1);
             new TerraVector3([x, y, z]).multiply2Ref(camera.projectionViewInverted, result);
 
             const meshId = new DataView(b).getUint32(32 + 12, true); //mesh id is after normals vec3

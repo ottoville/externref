@@ -65,7 +65,7 @@ export class Engine {
         window.engine=this;
        // this.collisionNotFound = this.mallocView(4);
 
-        this.collider = new ColliderJS(this);
+        this.collider = new ColliderJS();
         
         //TODO: this does not work after memory grow
         this.#collidedMesh = new DataView(this.memory.buffer, this.collider.rust.collided_mesh_pointer, 4);

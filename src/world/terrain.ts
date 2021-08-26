@@ -3,7 +3,8 @@ import { TerrainTool } from "../tools/Terrain.js";
 import { TerrainMesh } from "../GPU/RenderPipeLines/TerrainRenderPipeline.js";
 import { GPUBufferUsage } from "../GPU.js"
 import type { PipelineLayout } from "GPU/PipelineLayout.js";
-import { Engine } from "../engine.js";
+import { Engine } from "engine.js";
+declare const engine:Engine;
 export class Terrain {
     /*
 TODO
@@ -113,12 +114,12 @@ TODO
 
     autosave = 0;
     updateSwap2(offset = 0, byteLength:number, nofaces = false) {
-        const b1 = this.engine.gpu.createGPUBuffer(byteLength, [GPUBufferUsage.COPY_SRC], true);
+        const b1 = engine.gpu.createGPUBuffer(byteLength, [GPUBufferUsage.COPY_SRC], true);
         new Float32Array(b1.getMappedRange()).set(
-            new Float32Array(this.mesh.engine.memory.buffer, this.mesh.vertices_pointer+offset, byteLength/4)
+            new Float32Array(engine.memory.buffer, this.mesh.vertices_pointer+offset, byteLength/4)
         )
         b1.unmap();
-        const commandEncoder = this.engine.gpu.createCommandEncoder();
+        const commandEncoder = engine.gpu.createCommandEncoder();
         commandEncoder.copyBufferToBuffer(
             b1, // source buffer
             0, //source offset
@@ -128,9 +129,9 @@ TODO
         let b2: GPUCopySRCBuffer;
         if (!nofaces) {
             const facesByteLength = this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
-            b2 = this.engine.gpu.createGPUBuffer(facesByteLength, [GPUBufferUsage.COPY_SRC], true);
+            b2 = engine.gpu.createGPUBuffer(facesByteLength, [GPUBufferUsage.COPY_SRC], true);
            // new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.facesBuffer))
-            new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.engine.memory.buffer, this.mesh.faces_pointer, this.mesh.faces_count * 4))
+            new Float32Array(b2.getMappedRange()).set(new Float32Array(engine.memory.buffer, this.mesh.faces_pointer, this.mesh.faces_count * 4))
             b2.unmap();
             commandEncoder.copyBufferToBuffer(
                 b2, // source buffer
@@ -139,7 +140,7 @@ TODO
                 0, //destination offset
                 facesByteLength);
         }
-        this.engine.gpu.device.queue.submit([commandEncoder.finish()]);
+        engine.gpu.device.queue.submit([commandEncoder.finish()]);
         b1.destroy();
         if (!nofaces) {
             b2!.destroy();
@@ -149,14 +150,14 @@ TODO
 
     }
 
-    static async loadFromTexture(engine: Engine, scenes: Scene[]): Promise<Terrain> {
+    static async loadFromTexture(scenes: Scene[]): Promise<Terrain> {
         const t = await caches.match(new Request('/terrain')).then(async cachedvertices => {
             if (cachedvertices) {
                 const buffer = await Terrain.fromSave(cachedvertices);
-                return new Terrain(engine,scenes, buffer);
+                return new Terrain(scenes, buffer);
             } else {
                 const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp');
-                return new Terrain(engine, scenes, buffer, 'terrain/CreateGroundFromHeightMap.comp.wgsl');
+                return new Terrain(scenes, buffer, 'terrain/CreateGroundFromHeightMap.comp.wgsl');
             }
         })
         return t;
@@ -201,7 +202,6 @@ TODO
 
     static instance: Terrain;
     constructor(
-        private engine: Engine,
         public scenes: Scene[],
         readonly buffer: ArrayBuffer | SharedArrayBuffer,
         algorithm?: string
@@ -444,7 +444,7 @@ TODO
         passEncoder.setBindGroup(2, bindGroupHeightsRead)
         passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
 
-        this.mesh = new TerrainMesh(this.engine, scenes, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, new Float32Array(positionsCount*12), new Uint32Array(this.#terrainIndicesLength / 4), 12);
+        this.mesh = new TerrainMesh(scenes, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, new Float32Array(positionsCount*12), new Uint32Array(this.#terrainIndicesLength / 4), 12);
 
         caches.match(new Request('/terrainTexture.webp')).then(async (cachedtexture) => {
             const textureSizeBytes = Int32Array.BYTES_PER_ELEMENT * (this.textureSize[0] * this.textureSize[1]);

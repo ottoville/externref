@@ -3,7 +3,8 @@ import type { Scene } from "../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 import type { DrawableSimple } from "GPU/Drawable.js";
-import type { Engine } from "../engine.js";
+import type { Engine } from "engine.js";
+declare const engine:Engine;
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
@@ -82,8 +83,8 @@ function getRenderPipeline(gpu: GPU) {
 
 export class Sea extends BoundableNodeSimple {
     Drawable: DrawableSimple;
-    constructor(engine:Engine, scenes: Scene[]) {
-        super(engine, scenes, getRenderPipeline(engine.gpu),new Float32Array([-50000.0, 3.0, -50000.0,
+    constructor(scenes: Scene[]) {
+        super(scenes, getRenderPipeline(engine.gpu),new Float32Array([-50000.0, 3.0, -50000.0,
             50000.0, 3.0, -50000.0,
             -50000.0, 3.0, 50000.0,
             50000.0, 3.0, 50000.0]), undefined, true); //48

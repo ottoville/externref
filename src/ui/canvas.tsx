@@ -23,14 +23,16 @@ import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 import { savedCamera } from "../types/interfaces/index.js";
 
+
 import type { DrawableSimple } from "GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { Projection } from "../GPU/Projection.js";
 
+declare const engine:Engine;
 class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
-    Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([this.engine.gpu.renderPassCanvas]), this, undefined, undefined, undefined, 'canvas')
-    constructor(engine: Engine, canvaspipeline: RenderPipeline, positionsCount: number) {
-        super(engine, canvaspipeline, positionsCount);
+    Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([engine.gpu.renderPassCanvas]), this, undefined, undefined, undefined, 'canvas')
+    constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
+        super(canvaspipeline, positionsCount);
     }
 }
 
@@ -111,17 +113,17 @@ export class Canvas extends TerraCompoment {
 
 
 
-        const mainScene = new Scene('main', gpu, terraEngine, [mainCamera, waterCamera], (terrascene) => {
+        const mainScene = new Scene('main', gpu, [mainCamera, waterCamera], (terrascene) => {
             new Sun2(terrascene);
             // Initial scene objects here
 
-            const sea = new Sea(terraEngine,[terrascene]);
+            const sea = new Sea([terrascene]);
             //new testPlane(terrascene);
 
-            const b = new Box(terraEngine, [terrascene]);
+            const b = new Box([terrascene]);
             b.update_scale(terraEngine.rustEngine, 500, 500, 500);
-            new Human(terraEngine,[terrascene])
-            const terrainInited = Terrain.loadFromTexture(terraEngine,[terrascene]);
+            new Human([terrascene])
+            const terrainInited = Terrain.loadFromTexture([terrascene]);
 
             const ready = terrainInited.then(async ground => [ground, sea]);
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
@@ -158,15 +160,15 @@ export class Canvas extends TerraCompoment {
             this.progress = 100;
             return [ready];
         });
-        const debugscene = new Scene('static', gpu, terraEngine, [mainCamera], (scene) => {
-            const sun = new MainNode(terraEngine, false, false,undefined,undefined,0,1,undefined,undefined,[scene]);
+        const debugscene = new Scene('static', gpu, [mainCamera], (scene) => {
+            const sun = new MainNode(false, false,undefined,undefined,0,1,undefined,undefined,[scene]);
             sun.get_translation().set([0, 1, 0]);
             sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
             return []
         });
 
-        const b2 = new Box(terraEngine, [debugscene], 1000);
+        const b2 = new Box([debugscene], 1000);
         //const b3 = new Box(debugscene,100);
         //b2.update(scale => scale.set([200, 200, 200]));
         b2.update_scale(terraEngine.rustEngine, 30, 30, 30);
@@ -214,7 +216,7 @@ export class Canvas extends TerraCompoment {
                 frontFace: 'ccw'
             }
         });
-        new CanvasMesh(terraEngine, canvasPipeline, 6);
+        new CanvasMesh(canvasPipeline, 6);
         //new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node, undefined, undefined, undefined, 'canvas'),undefined,undefined,6)
         function renderLoop(time: DOMHighResTimeStamp) {
             msPerFrame = performance.now() - startTime;
@@ -396,7 +398,7 @@ export class Canvas extends TerraCompoment {
         });
         this.initalize().then(async args => {
             setInterval(() => {
-                this.timeOfDay.value = new Date(Number(args[0].engine.physics.gameTime)).toUTCString();
+                this.timeOfDay.value = new Date(Number(engine.physics.gameTime)).toUTCString();
             }, 1000);
 
             const [terrain, sea]: [Terrain, Sea] = await args[0].ready;
@@ -416,22 +418,22 @@ export class Canvas extends TerraCompoment {
                 menuContainer.appendChild(tool.menuElem(instance));
                 this.openedMenu = [instance, menuContainer];
             }
-            this.gameState.appendChild(<div onChange={(e: Event) => { args[0].engine.physics.gameSpeed = parseInt((e.target as HTMLInputElement).value) }}>
+            this.gameState.appendChild(<div onChange={(e: Event) => { engine.physics.gameSpeed = parseInt((e.target as HTMLInputElement).value) }}>
                 <label>Time of day: {this.timeOfDay}</label>
                 <br />
-                <input name="time" type="radio" id="pause" value="-1" checked={args[0].engine.physics.gameSpeed === -1} />
+                <input name="time" type="radio" id="pause" value="-1" checked={engine.physics.gameSpeed === -1} />
                 <label for="pause">⏸️</label>
-                <input name="time" type="radio" id="play" value="0" checked={args[0].engine.physics.gameSpeed === 0} />
+                <input name="time" type="radio" id="play" value="0" checked={engine.physics.gameSpeed === 0} />
                 <label for="play">▶️</label>
-                <input name="time" type="radio" id="fastforward" value="1" checked={args[0].engine.physics.gameSpeed === 1} />
+                <input name="time" type="radio" id="fastforward" value="1" checked={engine.physics.gameSpeed === 1} />
                 <label for="fastforward">⏩</label>
-                <input name="time" type="radio" id="fastforward2" value="2" checked={args[0].engine.physics.gameSpeed === 2} />
+                <input name="time" type="radio" id="fastforward2" value="2" checked={engine.physics.gameSpeed === 2} />
                 <label for="fastforward2">4⏩</label>
-                <input name="time" type="radio" id="fastforward3" value="3" checked={args[0].engine.physics.gameSpeed === 3} />
+                <input name="time" type="radio" id="fastforward3" value="3" checked={engine.physics.gameSpeed === 3} />
                 <label for="fastforward3">8⏩</label>
-                <input name="time" type="radio" id="fastforward4" value="4" checked={args[0].engine.physics.gameSpeed === 4} />
+                <input name="time" type="radio" id="fastforward4" value="4" checked={engine.physics.gameSpeed === 4} />
                 <label for="fastforward4">16⏩</label>
-                <input name="time" type="radio" id="fastforward5" value="5" checked={args[0].engine.physics.gameSpeed === 5} />
+                <input name="time" type="radio" id="fastforward5" value="5" checked={engine.physics.gameSpeed === 5} />
                 <label for="fastforward5">32⏩</label>
             </div>)
         }).catch(e => {

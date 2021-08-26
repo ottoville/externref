@@ -13,18 +13,21 @@ import type { GPU } from "../GPU";
 import { GPUBufferUsage } from "../gpu.js"
 import { TerraVector3 } from "../Math.js";
 import type { Elevator } from "/js/engine/engine.js";
+import type { Engine } from "engine.js";
+declare const engine:Engine;
+
 
 const terrainWorker = new WorkerThread('/js/workers/webworkers/terrainWorker.js');
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(scene: Scene, terrain: Terrain): RenderPipeline {
-    let renderPipeline = renderPipelines.get(scene.gpu);
+function getRenderPipeline(terrain: Terrain): RenderPipeline {
+    let renderPipeline = renderPipelines.get(engine.gpu);
     if (renderPipeline) {
         return renderPipeline;
     }
 
     renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
-        new VertexShader(scene.engine.gpu, "helper2.vert.wgsl",'main',  [{
+        new VertexShader(engine.gpu, "helper2.vert.wgsl",'main',  [{
             arrayStride: 12,
             stepMode: 'vertex',
             attributes: [{
@@ -34,13 +37,13 @@ function getRenderPipeline(scene: Scene, terrain: Terrain): RenderPipeline {
                 format: "float32x3"
             }]
         }]),
-        new Shader(scene.engine.gpu, 'UIColor.frag.wgsl'), {
+        new Shader(engine.gpu, 'UIColor.frag.wgsl'), {
         primitive: {
             topology: 'triangle-list',
             cullMode: 'none'
         }
     })
-    renderPipelines.set(scene.gpu, renderPipeline);
+    renderPipelines.set(engine.gpu, renderPipeline);
     return renderPipeline
 }
 
@@ -57,7 +60,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
 
-    facet12ArrGPUBufferSwap = this.engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
+    facet12ArrGPUBufferSwap = engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
     elevator: Elevator
     Drawable: DrawableSimple;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
@@ -68,7 +71,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         public camera: ArcRotateCamera,
         public sea: Sea,
     ) {
-        super(scene.engine, getRenderPipeline(scene, terrain), 4);
+        super(getRenderPipeline(terrain), 4);
         Object.getOwnPropertyNames(TerrainTool.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(TerrainTool.prototype, prop);
             if(propDesc)
@@ -76,8 +79,8 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         });
 
         this.elevator = terrain.mesh.create_elevator();
-        this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([scene.gpu.renderPassScreen]), this, 8, 0, undefined, 'TerrainTool');
-        this.#pick = { position: new TerraVector3(this.engine.memory.buffer, this.elevator.mouse_position_pointer()), meshId: 0 };
+        this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([engine.gpu.renderPassScreen]), this, 8, 0, undefined, 'TerrainTool');
+        this.#pick = { position: new TerraVector3(engine.memory.buffer, this.elevator.mouse_position_pointer()), meshId: 0 };
         //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*
@@ -136,7 +139,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
         //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
         super.destroy();
-        renderPipelines.delete(this.engine.gpu);
+        renderPipelines.delete(engine.gpu);
     };
     #mouseListener = async () => {
         /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {

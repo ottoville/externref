@@ -1,5 +1,3 @@
-import type { DotNet } from "./types/interfaces/index.js";
-
 //import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 
 import { Engine } from "./engine.js";
@@ -54,11 +52,8 @@ declare global {
     interface Window {
         engine: Engine;
         login: (e: PointerEvent, method: "facebook" | "anomyous") => void;
-        Wasm: any
     }
 }
-declare var BlazorRouter: DotNet.BlazorInstance;
-
 const loadelem = document.body.appendChild(document.createElement("div"));
 //let progelem = loadelem.appendChild(document.createElement("progress"))
 loadelem.style.position = 'absolute';

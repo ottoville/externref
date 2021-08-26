@@ -1,36 +1,36 @@
-﻿import type { Engine } from "./engine.js";
-import { Mesh } from "/js/engine/engine.js";
+﻿import { Mesh } from "/js/engine/engine.js";
 
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { hasPhysics } from "./physics.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import type { DrawableDirect } from "./GPU/Drawable.js";
 import type { Scene } from "./Scene.js";
+import type { Engine } from "engine.js";
+declare const engine:Engine;
 
 export class MainNode extends Mesh {
     isStatic = false;
     static uniqueID = 1;
     static Meshes: Map<number, MainNode> = new Map();
-    get_transformation = () => new TerraMatrix(this.engine.memory.buffer, this.gpu_pointer)//new TerraMatrix(this.data.buffer);
+    get_transformation = () => new TerraMatrix(engine.memory.buffer, this.gpu_pointer)//new TerraMatrix(this.data.buffer);
 
     get_velocity() {
-        return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer + 16 * Float32Array.BYTES_PER_ELEMENT)
+        return new TerraVector3(engine.memory.buffer, this.gpu_pointer + 16 * Float32Array.BYTES_PER_ELEMENT)
     }
     get_translation() {
-        return new TerraVector3(this.engine.memory.buffer, this.gpu_pointer + 12 * Float32Array.BYTES_PER_ELEMENT);
+        return new TerraVector3(engine.memory.buffer, this.gpu_pointer + 12 * Float32Array.BYTES_PER_ELEMENT);
     }
     SetTranslationDelta(value: [number, number, number] | TerraVector3) {
         this.get_velocity().set(value);
-        this.update_dynamic_buffer(this.engine.rustEngine);
+        this.update_dynamic_buffer(engine.rustEngine);
     }
 
     SetTranslation(value: [number, number, number] | TerraVector3) {
         this.get_translation().set(value);
-        this.update_dynamic_buffer(this.engine.rustEngine);
+        this.update_dynamic_buffer(engine.rustEngine);
     }
 
     constructor(
-        public engine: Engine,
         hasBounding: boolean,
         has_geometry:boolean,
         positionsCount = 0,
@@ -53,11 +53,11 @@ export class MainNode extends Mesh {
                 engine.physics.tickables.add(this);
             }
         });
-        this.engine.updateAllocatedMemory();
+        engine.updateAllocatedMemory();
     }
     override destroy() {
-        super.destroy(this.engine.rustEngine);
-        this.engine.updateAllocatedMemory();
+        super.destroy(engine.rustEngine);
+        engine.updateAllocatedMemory();
     }
     #hasPhysics(): this is hasPhysics {
         return 'hasGravity' in this && 'onPhysicTick' in this;
@@ -73,7 +73,6 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     abstract Drawable: T;
 
     constructor(
-        engine: Engine,
         public renderPipeline: RenderPipeline,
         positionsCount: number,
         hasBounding = false,
@@ -84,7 +83,7 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
         static_faces=false,
         strip=false,
         scenes?:Scene[]) {
-        super(engine, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, static_faces,strip,scenes);
+        super(hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, static_faces,strip,scenes);
         Object.getOwnPropertyNames(TerraNodeGPU.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(TerraNodeGPU.prototype, prop);
             if(propDesc)
@@ -94,12 +93,12 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
             renderPipeline.dynamicBindGroupOffset[0] = this.gpu_alignment;
     }
     get vertices() {
-        return new Float32Array(this.engine.memory.buffer, this.vertices_pointer, this.positions_count * this.vertices_stride);
+        return new Float32Array(engine.memory.buffer, this.vertices_pointer, this.positions_count * this.vertices_stride);
     }
     get verticesArray() {
         const arr:Float32Array[] = [];
         for (let i=0; i< this.positions_count; i++) {
-            arr.push(new Float32Array(this.engine.memory.buffer, this.vertices_pointer + i*Float32Array.BYTES_PER_ELEMENT*this.vertices_stride, this.vertices_stride))
+            arr.push(new Float32Array(engine.memory.buffer, this.vertices_pointer + i*Float32Array.BYTES_PER_ELEMENT*this.vertices_stride, this.vertices_stride))
         }
         return arr;
     }
