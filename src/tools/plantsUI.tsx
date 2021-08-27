@@ -8,8 +8,9 @@ import type { PTDresult } from "../types/interfaces/index.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { Trait } from "../traits/trait.js";
 import { Sea } from "../world/water.js";
-import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
+import { Engine } from "engine.js";
+declare const engine:Engine;
 
 
 export class PlantsUI extends UITAB {
@@ -21,24 +22,26 @@ export class PlantsUI extends UITAB {
         </div>
     };
     traits: Set<Trait> = new Set();
-    static label = 'Plants';
+    static override label = 'Plants';
     public static instance: UITAB | null = null;
     static plantsMesh: Plants;
     private PT: paintPlane | null = null;
     canvasListener = new canvasListener(this);
-
+    scene=engine.scenes.get('main');
 
     constructor(
-        scene: Scene,
         terrain: Terrain,
         camera: ArcRotateCamera,
         sea: Sea,
     ) {
-        super(scene, terrain, camera, sea);
+        super(terrain, camera, sea);
+        if(!this.scene) {
+            throw('no scene');
+        }
     }
     activateDraw = () => {
         try {
-            this.PT = new paintPlane(this.scene, this.camera, this.terrain, this.sea, this, (response: PTDresult) => {
+            this.PT = new paintPlane(this.scene!, this.camera, this.terrain, this.sea, this, (response: PTDresult) => {
                 //this.PT && this.PT.destroy();
                 PlantsUI.plantsMesh.fillArea(response);
             });

@@ -30,7 +30,7 @@ import { Projection } from "../GPU/Projection.js";
 
 declare const engine:Engine;
 class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
-    Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([engine.gpu.renderPassCanvas]), this, undefined, undefined, undefined, 'canvas')
+    Drawable = this.renderPipeline.addDrawableSimple(new Set([engine.gpu.renderPassCanvas]), this, undefined, undefined, undefined, 'canvas')
     constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
         super(canvaspipeline, positionsCount);
     }
@@ -114,7 +114,7 @@ export class Canvas extends TerraCompoment {
 
 
         const mainScene = new Scene('main', gpu, [mainCamera, waterCamera], (terrascene) => {
-            new Sun2(terrascene);
+            new Sun2([terrascene]);
             // Initial scene objects here
 
             const sea = new Sea([terrascene]);
@@ -383,7 +383,7 @@ export class Canvas extends TerraCompoment {
     toolsContainer: HTMLFieldSetElement = <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;"></fieldset>
     gameState = <fieldset class="gameControl hidden" id="gameState"></fieldset>
 
-    uiTabs: UITABClassLike[] = [PlantsUI, BuildingsUI, CameraTAB, TerrainTool, Zones]
+    uiTabs: (UITABClassLike)[] = [PlantsUI, BuildingsUI, CameraTAB, TerrainTool, Zones]
     openedMenu?: [UITAB, HTMLFieldSetElement];
     timeOfDay: HTMLOutputElement = <output id="TODout" fow="TOD"></output>
     constructor() {
@@ -414,7 +414,7 @@ export class Canvas extends TerraCompoment {
                         }
                     }
                 }
-                const instance = new tool(args[0], terrain, args[1], sea);
+                const instance = new tool(terrain, args[1], sea);
                 menuContainer.appendChild(tool.menuElem(instance));
                 this.openedMenu = [instance, menuContainer];
             }

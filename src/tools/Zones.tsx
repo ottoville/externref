@@ -12,7 +12,7 @@ import type { Engine } from "engine.js";
 declare const engine:Engine;
 
 export class Zones extends UITAB {
-    static label = 'Zones';
+    static override label = 'Zones';
     static menuElem = () => <div><legend style="background-color:white"> Draw zone </legend>
         <label >
             Residental
@@ -35,15 +35,24 @@ export class Zones extends UITAB {
     #size = 5120;
     readonly #ratio:number //texture coordinates
     readonly #zoneTexture:GPUTexture;
+    scene: Scene;
     constructor(
-        scene: Scene,
         terrain: Terrain,
         camera: ArcRotateCamera,
         sea: Sea,
     ) {
-        super(scene, terrain, camera, sea);
+        super(terrain, camera, sea);
+        const initialScene=terrain.scenes[0];
+        if(!initialScene) {
+            throw(new Error('scene not found'))
+        }
+        this.scene=initialScene;
+        const staticScene=engine.scenes.get('static');
+        if(!staticScene) {
+            throw(new Error('staticScene not found'));
+        }
         this.#ratio = this.terrain.size[0] / this.#size //texture coordinates
-        this.#zoneTexture = this.scene.gpu.device.createTexture({
+        this.#zoneTexture = engine.gpu.device.createTexture({
             size: [5120, 5120, 1],
             format: "rgba8unorm",
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -72,12 +81,12 @@ export class Zones extends UITAB {
                     ctx.fillRect(0, 0, -(z.size.h / this.#ratio), -(z.size.w / this.#ratio));
                 });
                 ctx.stroke();
-                scene.gpu.device.queue.copyExternalImageToTexture({source: texture}, { texture: this.#zoneTexture }, [5120, 5120, 1]);
+                engine.gpu.device.queue.copyExternalImageToTexture({source: texture}, { texture: this.#zoneTexture }, [5120, 5120, 1]);
             }
         })();
         
         terrain.mesh.setTextureView(this.#zoneTexture.createView());
-        terrain.mesh.Drawable.scene = engine.scenes.get('static');
+        terrain.mesh.set_scenes(engine.rustEngine,staticScene.id)
         this.PT = new paintTexture(this.scene, this.camera, this.terrain, sea, this.#zoneTexture, 5120, 5120, this, this.#ratio, async (response) => {
             (await engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
         });
@@ -86,7 +95,7 @@ export class Zones extends UITAB {
         });*/
     }
     destroy = (): void => {
-        this.terrain.mesh.Drawable.scene = this.scene;
+        this.terrain.mesh.set_scenes(engine.rustEngine,this.scene.id)
         this.terrain.mesh.setTextureView(this.terrain.texture.createView());
         this.#zoneTexture.destroy();
         this.PT.destroy();

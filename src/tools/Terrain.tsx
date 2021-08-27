@@ -6,7 +6,6 @@ import type { DrawableSimple } from "../GPU/Drawable.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
-import type { Scene } from "../Scene.js";
 import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU";
@@ -14,6 +13,7 @@ import { GPUBufferUsage } from "../gpu.js"
 import { TerraVector3 } from "../Math.js";
 import type { Elevator } from "/js/engine/engine.js";
 import type { Engine } from "engine.js";
+import type { Scene } from "Scene.js";
 declare const engine:Engine;
 
 
@@ -64,14 +64,18 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
     elevator: Elevator
     Drawable: DrawableSimple;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
+    scene: Scene;
 
     constructor(
-        public scene: Scene,
         public terrain: Terrain,
         public camera: ArcRotateCamera,
         public sea: Sea,
     ) {
         super(getRenderPipeline(terrain), 4);
+        const scene=engine.scenes.get('main');
+        if(!scene)
+            throw(new Error('no scene'));
+        this.scene=scene;
         Object.getOwnPropertyNames(TerrainTool.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(TerrainTool.prototype, prop);
             if(propDesc)
@@ -79,7 +83,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         });
 
         this.elevator = terrain.mesh.create_elevator();
-        this.Drawable = this.renderPipeline.addDrawableSimple(undefined, new Set([engine.gpu.renderPassScreen]), this, 8, 0, undefined, 'TerrainTool');
+        this.Drawable = this.renderPipeline.addDrawableSimple(new Set([engine.gpu.renderPassScreen]), this, 8, 0, undefined, 'TerrainTool');
         this.#pick = { position: new TerraVector3(engine.memory.buffer, this.elevator.mouse_position_pointer()), meshId: 0 };
         //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED

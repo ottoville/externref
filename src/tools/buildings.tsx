@@ -6,12 +6,13 @@ import { Trait } from "../traits/trait.js";
 
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
-import type { Scene } from "../Scene.js";
-import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
+import { ArcRotateCamera } from "../ArcRotateCamera.js";
+import { Engine } from "engine.js";
+declare const engine:Engine;
 
 export class BuildingsUI extends UITAB {
-    static label = 'Buildings'
+    static override label = 'Buildings'
     static menuElem = <div><legend style="background-color:white">
         Buildings
 </legend>
@@ -23,16 +24,16 @@ export class BuildingsUI extends UITAB {
     };
     traits: Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
-    constructor(scene: Scene,
+    constructor(
         terrain: Terrain,
         camera: ArcRotateCamera,
         sea: Sea,
-    ) {//@ts-ignore
-        super(scene, terrain, camera, sea);
+    ) {
+        super(terrain, camera, sea);
 
     }
     public create = (type: string): void => {
-        let scene = this.scene;
+        const scene = engine.scenes.get('main');
 
         if (type == 'house') {
             this.#canvasListener.addListener("pointerdown", function doHouse() {
@@ -43,22 +44,22 @@ export class BuildingsUI extends UITAB {
                     return true;
                 })) {
                     if (pickInfo.pickedPoint) {
-                        let height = 500;
-                        var indices = new Uint32Array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23]);
-                        var basePositions = [1, -1, 1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1, 1, -1, -1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 1];
-                        var normals = new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0]);
+                        const height = 500;
+                        const indices = new Uint32Array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23]);
+                        const basePositions = [1, -1, 1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1, 1, -1, -1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, -1, -1, -1, -1, 1];
+                        const normals = new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0]);
 
-                        var width = 200;
-                        var depth = 200;
-                        var scaleArray = [width / 2, height / 2, depth / 2] as const;
+                        const width = 200;
+                        const depth = 200;
+                        const scaleArray = [width / 2, height / 2, depth / 2] as const;
 
-                        var positions = basePositions.reduce(
+                        const positions = basePositions.reduce(
                             //@ts-ignore
                             (accumulator: Array<number>, currentValue, currentIndex) => accumulator.concat(currentValue * scaleArray[currentIndex % 3]),
                             []
                         );
                         //@ts-ignore
-                        let building = new TerraMesh('building', new Float32Array(positions),indices,normals)
+                        const building = new TerraMesh('building', new Float32Array(positions),indices,normals)
                         building.checkCollisions = true;
                         building.position.x = pickInfo.pickedPoint.x;
                         building.position.z = pickInfo.pickedPoint.z;

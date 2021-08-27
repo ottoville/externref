@@ -43,7 +43,7 @@ impl Mesh {
         vertices_stride:usize,
         point_light:f32,
         directional_light:f32,
-        scenes:u32,
+        scenes:f32,
         static_faces:bool,
         strip:bool) -> Self {
 
@@ -63,7 +63,7 @@ impl Mesh {
                 id,
                 point_light_squared: point_light * point_light,
                 directional_light,
-                scenes,
+                scenes: scenes as u32,
             },
             geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count, static_faces,strip),
             rotation: Vec4 {
@@ -90,6 +90,10 @@ impl Mesh {
         }
         m.update_dynamic_buffer(engine);
         return m;
+    }
+    pub fn set_scenes(&mut self, engine: &mut Engine, scenes: u32) {
+        self.gpu_mesh.scenes = scenes;
+        self.update_dynamic_buffer(engine);
     }
     #[wasm_bindgen(setter)]
     pub fn set_indices(&mut self, indices: Vec<usize>) {

@@ -42,5 +42,6 @@ fn main([[location(0)]] position : vec3<f32>,
   //let localPosition:vec4<f32> = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
   //output.position=localPosition.xyz;//position;
   output.id=worldposition.id;
+  output.scenes=worldposition.scenes;
   return output;
 }

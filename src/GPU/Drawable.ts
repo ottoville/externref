@@ -1,7 +1,6 @@
 ﻿import { RenderPipeline, Shader, VertexShader } from "./RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 import type { RenderPass } from "./RenderPass.js";
-import type { Scene } from "../Scene.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 import { GPUBufferUsage } from "../GPU.js"
 import type { IndexedNode } from "../DataNode.js";
@@ -17,21 +16,11 @@ export abstract class Drawable {
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     dynamicBuffers: [GPUBindGroup, number][] = [];
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
-    #scene?: Scene;
     constructor(
         protected renderPipeline: RenderPipeline,
-        protected renderPasses: Set<RenderPass>,
-        scene?: Scene) {
-        this.scene = scene;
-        this.clearBundles();
-    }
-
-    set scene(scene: Scene | undefined) {
-        if (this.#scene) {
-            this.#renderList.forEach(Drawables => Drawables.delete(this));
-        }
-        this.#scene = scene;
+        protected renderPasses: Set<RenderPass>) {
         this.createPipelinesForRenderPasses();
+        this.clearBundles();
     }
     createPipelinesForRenderPasses() {
         this.renderPasses.forEach(rp => {
@@ -105,9 +94,8 @@ export abstract class DrawableDirect extends Drawable {
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
         dynamicIndex: number,
-        scene?: Scene,
         instanceCount = 1) {
-        super(renderPipeline, renderPasses, scene);
+        super(renderPipeline, renderPasses);
         this.dynamicBuffers.push([this.renderPipeline.bindgroupdrawable.gpu.BindGroupPosition, dynamicIndex])
         if (instanceCount == 0)
             console.warn('Added drawable with 0 instances, nothing will be drawn');
@@ -128,9 +116,8 @@ export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
         renderPipeline: RenderPipeline,
         renderPasses: Set<RenderPass>,
         readonly buffer: T,
-        public label: string,
-        scene?: Scene,) {
-        super(renderPipeline, renderPasses, scene);
+        public label: string) {
+        super(renderPipeline, renderPasses);
     }
     render = (renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) => {
         renderEncoder.drawIndirect(this.buffer, 0);
@@ -142,11 +129,10 @@ export class DrawableSimple extends DrawableDirect {
         renderPasses: Set<RenderPass>,
         private node: TerraNodeGPU<DrawableSimple>,
         public label:string,
-        scene?: Scene,
         instanceCount = 1,
         public firstVertex = 0,
         public firstInstance = 0) {
-        super(renderPipeline, renderPasses,node.gpu_alignment, scene, instanceCount);
+        super(renderPipeline, renderPasses,node.gpu_alignment, instanceCount);
     }
     render = (renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) => {
         renderEncoder.draw(this.node.positions_count, this.instanceCount, this.firstVertex, this.firstInstance);
@@ -193,14 +179,13 @@ export class DrawableIndexed extends DrawableDirect {
         private node: IndexedNode,
         public label:string,
         private indexBuffer?: GPUIndexBuffer,
-        scene?: Scene,
         public baseVertex = 0,
         instanceCount = 1,
         public firstIndex = 0,
         public firstInstance = 0,
         private GPUIndexFormat: GPUIndexFormat = 'uint16',
         ) {
-        super(renderPipeline, renderPasses,node.gpu_alignment, scene, instanceCount);
+        super(renderPipeline, renderPasses,node.gpu_alignment, instanceCount);
     }
     debug_render_normals() {
         const gpu = this.renderPipeline.bindgroupdrawable.gpu;

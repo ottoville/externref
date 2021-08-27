@@ -88,7 +88,7 @@ export class Sea extends BoundableNodeSimple {
             50000.0, 3.0, -50000.0,
             -50000.0, 3.0, 50000.0,
             50000.0, 3.0, 50000.0]), undefined, true); //48
-        this.Drawable = this.renderPipeline.addDrawableSimple(scenes[0], new Set([engine.gpu.renderPassScreen]), this, undefined, undefined, undefined, 'water');
+        this.Drawable = this.renderPipeline.addDrawableSimple(new Set([engine.gpu.renderPassScreen]), this, undefined, undefined, undefined, 'water');
         this.Drawable.setVertexBuffer(0, new Float32Array([-50000.0, 3.0, -50000.0,
             50000.0, 3.0, -50000.0,
             -50000.0, 3.0, 50000.0,

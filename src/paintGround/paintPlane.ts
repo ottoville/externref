@@ -19,7 +19,7 @@ declare const engine:Engine;
 
 class PlaneMesh extends TerraNodeGPU<DrawableIndexed> implements IndexedNode {
     indices_count=0;
-    Drawable=this.renderPipeline.addDrawableIndexed(undefined, new Set([engine.gpu.renderPassScreen]),this, 'plane',undefined, 0, 1, 0);
+    Drawable=this.renderPipeline.addDrawableIndexed(new Set([engine.gpu.renderPassScreen]),this, 'plane',undefined, 0, 1, 0);
     constructor(renderPipeline: RenderPipeline, verticesCount: number) {
         super(renderPipeline, verticesCount)
     }

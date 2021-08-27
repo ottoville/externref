@@ -117,7 +117,7 @@ fn main(
   //TODO, preselect directional lights
     for (var directional_light_pointer_index : u32 = 0u; directional_light_pointer_index < meshes.length; directional_light_pointer_index = directional_light_pointer_index + 1u) {
       let mesh = meshes.mesh[directional_light_pointer_index];
-      if((scenes & mesh.scenes) == scenes) {
+      if((scenes & mesh.scenes) != 0u) {
         //Light reflect from athmosphere
         shading_rgb = shading_rgb + mesh.ambient;
         //Direct sunlight
@@ -129,7 +129,7 @@ fn main(
       for (var light_pointer_index : u32 = 0u; light_pointer_index < cluster_lights_count; light_pointer_index = light_pointer_index + 1u) {
         let light_index:u32 = clusters_array.lights[cluster_index*63u + light_pointer_index];
         let light = meshes.mesh[light_index];
-        if((scenes & light.scenes) == scenes) {
+        if((scenes & light.scenes) != 0u) {
           let light_position:vec3<f32> = light.position[12].xyz;
 
           var light_dir:vec3<f32> = light_position - position.xyz;

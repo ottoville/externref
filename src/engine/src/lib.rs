@@ -49,7 +49,7 @@ pub struct GPUMesh {
     acceleration: [f32; 4],          //28
     id: u32,                         //29
     point_light_squared:f32,          //30
-    directional_light:f32,
+    directional_light:f32,          //31
     scenes:u32, //bitmask
     
 }
