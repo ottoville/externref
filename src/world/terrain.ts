@@ -13,11 +13,11 @@ TODO
      * */
 
         // 1000 * 1000: 40 - 50ms when no collision
-    static readonly subdivisions = [250, 250] as const;
-    readonly size = [10000, 10000] as const;
-    readonly #maxXZ=[this.size[0] / 2.0,this.size[1] / 2.0] as const;
-    readonly #minmax=[-2, 500] as const;
-    textureSize = [1024, 1024] as const;
+    static readonly subdivisions = [256, 256] as const;
+    static readonly size = [10000, 10000] as const;
+    static readonly maxXZ=[Terrain.size[0] / 2.0,Terrain.size[1] / 2.0] as const;
+    static readonly minmax=[-2, 500] as const;
+    static readonly textureSize = [1024, 1024] as const;
 
     slopeArrGPUBuffer:GPUStorageBuffer;
     //TODO: Remove copy_src
@@ -34,63 +34,9 @@ TODO
     readonly mesh: TerrainMesh;
 
     TerrainHeightsbindGroupTree : PipelineLayout;
-    settingsGPU: GPUUniformBuffer & GPUStorageBuffer;
+    
     //TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpu.BindGroupPosition, true)
 
-
-    public static async fromHeightMap(url: string): Promise<SharedArrayBuffer> {
-        const b = await (await fetch(url)).blob();
-
-        let bitmap = await createImageBitmap(b);
-        const buffer = new SharedArrayBuffer(Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT);
-        console.log('bitmap.width', bitmap.width)
-        const align = Math.max((Terrain.subdivisions[0] - bitmap.width) / 2, 0);
-
-        const partcount = 2;
-        let readycount = 0;
-        const workers: Worker[] = [];
-        //self.postMessage({ type: 'setProgress', data: { progress: 41 } });
-        await new Promise(function initWorker(res, rej) {
-            const worker = new Worker('/js/workers/webworkers/bitmapWorker.js');
-            workers.push(worker);
-            /* progress 42 and 43 are reserved for this */
-            // self.postMessage({ type: 'setProgress', data: { progress: 41 + (2 * (workers.length / partcount)) } });
-            worker.postMessage({
-                subdivisionsX: Terrain.subdivisions[0],
-                subdivisionsY: Terrain.subdivisions[1],
-                bitmap,
-                buffer,
-                partcount,
-                partnumber: workers.length - 1,
-                align
-            }, [bitmap]);
-            worker.onmessage = e => {
-                try {
-                    if (e.data.type == 'init') {
-                        if (workers.length < partcount) {
-                            bitmap = e.data.bitmap;
-                            initWorker(res, rej);
-                        } else {
-                            // self.postMessage({ type: 'setProgress', data: { progress: 45 } });
-                            bitmap.close();
-                            // self.postMessage({ type: 'setProgress', data: { progress: 46 } });
-                        }
-                    } else if (e.data.type == 'ready') {
-                        if (++readycount == partcount) {
-                            //  self.postMessage({ type: 'setProgress', data: { progress: 48 } });
-                            res(null)
-                            workers.forEach(w => w.terminate());
-                        }
-                    } else if (e.data.type == 'rejected') {
-                        rej(e.data.data);
-                    }
-                } catch (e) {
-                    rej(e)
-                }
-            }
-        });
-        return buffer;
-    }
     public static async fromSave(cachedvertices: Response): Promise<ArrayBuffer> {
         return cachedvertices.arrayBuffer();
         /* const cacheimg = new Image();
@@ -108,9 +54,6 @@ TODO
 
 
     readonly #terrainIndicesLength = Uint32Array.BYTES_PER_ELEMENT * (Terrain.subdivisions[0] * Terrain.subdivisions[1] * 6);
-
-
-    readonly terrainPositionAndUvsAndNormalsGPU: GPUVertexBuffer & GPUCopyDSTBuffer;
 
     autosave = 0;
     updateSwap2(offset = 0, byteLength:number, nofaces = false) {
@@ -151,14 +94,86 @@ TODO
     }
 
     static async loadFromTexture(scenes: Scene[]): Promise<Terrain> {
+        const settingsGPU = engine.gpu.createGPUBuffer(48, [GPUBufferUsage.STORAGE, GPUBufferUsage.UNIFORM], true);
+        const sourcearrSettings = settingsGPU.getMappedRange();
+        new Uint32Array(sourcearrSettings).set(this.size);   // terrain width and height
+        new Uint32Array(sourcearrSettings, 8).set(Terrain.subdivisions);
+        new Uint32Array(sourcearrSettings, 16).set([Terrain.subdivisions[0]]);       //subdivisions
+        new Int32Array(sourcearrSettings, 24).set(Terrain.minmax); //min and max height,
+        new Int32Array(sourcearrSettings, 32).set(Terrain.maxXZ); //maxX, maxZ
+        new Int32Array(sourcearrSettings, 40).set(Terrain.textureSize); //texture size
+        settingsGPU.unmap();
+
+
+
+        const positionsCount =  ((size:number) => {
+            while(size%4 !== 0)
+                size++;
+            return size;
+        })( (Terrain.subdivisions[0] + 1) * (Terrain.subdivisions[1] + 1));
+               
+        const positionsLength = Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
+        const uvsLength =       Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
+        const normalsLength =   Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
+        const verticesBufferSize = positionsLength + uvsLength + normalsLength
+
         const t = await caches.match(new Request('/terrain')).then(async cachedvertices => {
             if (cachedvertices) {
                 const buffer = await Terrain.fromSave(cachedvertices);
-                return new Terrain(scenes, buffer);
+
+                var terrainPositionAndUvsAndNormalsGPU = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], true)
+                new Uint8Array(terrainPositionAndUvsAndNormalsGPU.getMappedRange()).set(new Uint8Array(buffer));
+                terrainPositionAndUvsAndNormalsGPU.unmap();
+
             } else {
-                const buffer = await Terrain.fromHeightMap('/images/tenerife250.webp');
-                return new Terrain(scenes, buffer, 'terrain/CreateGroundFromHeightMap.comp.wgsl');
+                const bytesPerRow=Terrain.subdivisions[0] * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT;
+                const b = await (await fetch('/images/tenerife250.webp')).blob();
+
+                const bitmap = await createImageBitmap(b);
+                const texture = engine.gpu.device.createTexture({
+                    format: 'rgba8unorm',
+                    size:[Terrain.subdivisions[0],Terrain.subdivisions[1]],
+                    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+                })
+                engine.gpu.device.queue.copyExternalImageToTexture({source:bitmap},{texture},[bitmap.width,bitmap.height]);
+
+                const sourcePixels = engine.gpu.createGPUBuffer((Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT), [GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE])
+                const commandEncoder = engine.gpu.createCommandEncoder();
+                commandEncoder.copyTextureToBuffer({texture},{buffer:sourcePixels, bytesPerRow:bytesPerRow},[Terrain.subdivisions[0],Terrain.subdivisions[1]])
+
+                const computePipeline = engine.gpu.createComputePipeline('terrain/CreateGroundFromHeightMap.comp.wgsl');
+
+                const bindGroupSettings = computePipeline.createBindGroup(0, [{
+                    binding: 0,
+                    resource: {
+                        buffer: settingsGPU
+                    }
+                }]);
+                const passEncoder = commandEncoder.beginComputePass();
+                passEncoder.setBindGroup(0, bindGroupSettings);
+                var terrainPositionAndUvsAndNormalsGPU = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC])
+                    const sourceBindGroup = computePipeline.createBindGroup(1, [
+                    {
+                        binding: 0,
+                        resource: {
+                            buffer: terrainPositionAndUvsAndNormalsGPU
+                        }
+                    },
+                    {
+                        binding: 1,
+                        resource: {
+                            buffer: sourcePixels
+                        }
+                    }
+                ]);
+                passEncoder.setPipeline(computePipeline);
+                passEncoder.setBindGroup(1, sourceBindGroup);
+                passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
+                passEncoder.endPass();
+                engine.gpu.device.queue.submit([commandEncoder.finish()]);
             }
+            return new Terrain(scenes, settingsGPU, terrainPositionAndUvsAndNormalsGPU);
+
         })
         return t;
     }
@@ -181,12 +196,12 @@ TODO
             cache.put(new Request('/indices'), response2);
 
         } else {
-            const c = new OffscreenCanvas((Terrain.subdivisions[0] + 1) * 3, (Terrain.subdivisions[1] + 1));
+           /* const c = new OffscreenCanvas((Terrain.subdivisions[0] + 1) * 3, (Terrain.subdivisions[1] + 1));
             const ctx = c.getContext("2d");
             if (!ctx)
                 throw ('get 2d context failed');
             //disabled for now
-            /*
+            
             ctx.putImageData(new ImageData(new Uint8ClampedArray(this.#vertices.buffer), c.width, c.height), 0, 0);
             let blob = await c.convertToBlob({ type: "image/webp", quality: 1 });
             const response = new Response(blob);
@@ -197,25 +212,20 @@ TODO
 
     texture:GPUTexture;
 
-
-
-
-    static instance: Terrain;
     constructor(
         public scenes: Scene[],
-        readonly buffer: ArrayBuffer | SharedArrayBuffer,
-        algorithm?: string
+        public settingsGPU: GPUUniformBuffer & GPUStorageBuffer,
+        private terrainPositionAndUvsAndNormalsGPU: GPUStorageBuffer & GPUVertexBuffer & GPUCopyDSTBuffer & GPUCopySRCBuffer
     ) {
         this.slopeArrGPUBuffer = engine.gpu.createGPUBuffer(Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1], [GPUBufferUsage.STORAGE]);
         this.facet12ArrGPUBuffer = engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC]);
         this.facet12ArrGPUBufferSwap = engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC]);
-        this.settingsGPU = engine.gpu.createGPUBuffer(48, [GPUBufferUsage.STORAGE, GPUBufferUsage.UNIFORM], true);
         this.texture = engine.gpu.device.createTexture({
             dimension: '2d',
             format: "rgba8unorm",
             mipLevelCount: 1,
             sampleCount: 1,
-            size: this.textureSize,
+            size: Terrain.textureSize,
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
         });
         const _heightsBindGroupEntries: [storageBindGroupLayout, storageBindGroupLayout] = [
@@ -278,22 +288,6 @@ TODO
         )
         this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', engine.gpu.createBindGroup(heightsLayout, heightsBindGroupEntries));
         
-
-
-        Terrain.instance = this;
-        const sourcePixels = engine.gpu.createGPUBuffer(buffer.byteLength, [GPUBufferUsage.STORAGE], true);
-        const sourcearrSettings = this.settingsGPU.getMappedRange();
-        new Uint32Array(sourcearrSettings).set(this.size);   // terrain width and height
-        new Uint32Array(sourcearrSettings, 8).set(Terrain.subdivisions);
-        new Uint32Array(sourcearrSettings, 16).set([Terrain.subdivisions[0]]);       //subdivisions
-        new Int32Array(sourcearrSettings, 24).set(this.#minmax); //min and max height,
-        new Int32Array(sourcearrSettings, 32).set(this.#maxXZ); //maxX, maxZ
-        new Int32Array(sourcearrSettings, 40).set(this.textureSize); //texture size
-        new Uint32Array(sourcePixels.getMappedRange()).set(new Uint32Array(buffer));
-
-        this.settingsGPU.unmap();
-        sourcePixels.unmap();
-
         const computePipelineIndices = engine.gpu.createComputePipeline('terrain/calculatePlaneIndices.comp.wgsl');
         const bindGroupSettings = computePipelineIndices.createBindGroup(0, [{
             binding: 0,
@@ -308,47 +302,10 @@ TODO
             return size;
         })( (Terrain.subdivisions[0] + 1) * (Terrain.subdivisions[1] + 1));
                
-        const positionsLength = Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
-        const uvsLength =       Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
-        const normalsLength =   Float32Array.BYTES_PER_ELEMENT * positionsCount * 4;
-        const verticesBufferSize = positionsLength + uvsLength + normalsLength
 
         const commandEncoder = engine.gpu.createCommandEncoder();
         const passEncoder = commandEncoder.beginComputePass();
         passEncoder.setBindGroup(0, bindGroupSettings);
-
-        if (algorithm) {
-            var terrainPositionAndUvsAndNormalsGPUTemp = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-
-            this.terrainPositionAndUvsAndNormalsGPU = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST])
-
-            const computePipeline = engine.gpu.createComputePipeline(algorithm);
-            const sourceBindGroup = computePipeline.createBindGroup(1, [
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: terrainPositionAndUvsAndNormalsGPUTemp
-                    }
-                },
-                {
-                    binding: 1,
-                    resource: {
-                        buffer: sourcePixels
-                    }
-                }
-            ]);
-            passEncoder.setPipeline(computePipeline);
-            passEncoder.setBindGroup(1, sourceBindGroup);
-            passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
-        } else {
-            var terrainPositionAndUvsAndNormalsGPUTemp = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], true);
-            new Uint8Array(terrainPositionAndUvsAndNormalsGPUTemp.getMappedRange()).set(new Uint8Array(buffer));
-            terrainPositionAndUvsAndNormalsGPUTemp.unmap();
-
-            this.terrainPositionAndUvsAndNormalsGPU = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], true)
-            new Uint8Array(this.terrainPositionAndUvsAndNormalsGPU.getMappedRange()).set(new Uint8Array(buffer));
-            this.terrainPositionAndUvsAndNormalsGPU.unmap();
-        }
         const settingsLayout=engine.gpu.device.createBindGroupLayout({
             entries: [{
                 binding: 0,
@@ -393,7 +350,7 @@ TODO
             {
                 binding: 0,
                 resource: {
-                    buffer: terrainPositionAndUvsAndNormalsGPUTemp
+                    buffer: this.terrainPositionAndUvsAndNormalsGPU
                 }
             }
         ];
@@ -447,11 +404,11 @@ TODO
         this.mesh = new TerrainMesh(scenes, this.texture.createView(), this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, new Float32Array(positionsCount*12), new Uint32Array(this.#terrainIndicesLength / 4), 12);
 
         caches.match(new Request('/terrainTexture.webp')).then(async (cachedtexture) => {
-            const textureSizeBytes = Int32Array.BYTES_PER_ELEMENT * (this.textureSize[0] * this.textureSize[1]);
+            const textureSizeBytes = Int32Array.BYTES_PER_ELEMENT * (Terrain.textureSize[0] * Terrain.textureSize[1]);
             const gpuBuffer = engine.gpu.createGPUBuffer(textureSizeBytes, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], cachedtexture !== undefined);
             const bufferView = {
                 buffer: gpuBuffer,
-                bytesPerRow: this.textureSize[0] * 4,
+                bytesPerRow: Terrain.textureSize[0] * 4,
                 offset: 0,
             };
             const destinationTextureView={
@@ -465,24 +422,23 @@ TODO
             };
             if (cachedtexture) {
                 passEncoder.endPass();
-                var [gpuReadBufferPositions, gpuReadBufferIndices] = engine.gpu.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
+                var [gpuReadBufferPositions, gpuReadBufferIndices] = engine.gpu.createCopy(commandEncoder, this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU)
 
-                const cacheimg = new Image();
-                cacheimg.src = URL.createObjectURL(await cachedtexture.blob());
-                await cacheimg.decode()
-
-                const imgcanvas = new OffscreenCanvas(cacheimg.width, cacheimg.height);
+                const bitmap = await createImageBitmap(await cachedtexture.blob());
+                const imgcanvas=document.createElement('canvas');
+                imgcanvas.width=bitmap.width;
+                imgcanvas.height=bitmap.height;
                 const imgctx = imgcanvas.getContext('2d');
                 if (!imgctx)
                     throw (new Error('Unable to get 2d canvas'));
-                imgctx.drawImage(cacheimg, 0, 0);
+                imgctx.drawImage(bitmap, 0, 0);
                 //let pixels = imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data;
                 // const padding = pixels.byteLength % 4;
 
-                new Uint8ClampedArray(gpuBuffer.getMappedRange()).set(imgctx.getImageData(0, 0, cacheimg.width, cacheimg.height).data);
+                new Uint8ClampedArray(gpuBuffer.getMappedRange()).set(imgctx.getImageData(0, 0, bitmap.width, bitmap.height).data);
                 gpuBuffer.unmap();
 
-                commandEncoder.copyBufferToTexture(bufferView, destinationTextureView, this.textureSize);
+                commandEncoder.copyBufferToTexture(bufferView, destinationTextureView, Terrain.textureSize);
                 engine.gpu.device.queue.submit([commandEncoder.finish()]);
 
             } else {    
@@ -499,7 +455,7 @@ TODO
                 passEncoder.setPipeline(createTexturePipeline);
                 passEncoder.setBindGroup(1, bindGroupHeightsRead);
                 passEncoder.setBindGroup(2, bindGroup1);
-                passEncoder.dispatch(...this.textureSize);
+                passEncoder.dispatch(...Terrain.textureSize);
                 passEncoder.endPass();
 
                 console.timeEnd('Webgpu paint');
@@ -516,15 +472,27 @@ TODO
                     textureSizeBytes
                 );
 
-                commandEncoder.copyBufferToTexture(bufferView,destinationTextureView, this.textureSize);
-                var [gpuReadBufferPositions, gpuReadBufferIndices] = engine.gpu.createCopy(commandEncoder, terrainPositionAndUvsAndNormalsGPUTemp, terrainIndicesGPU)
+                commandEncoder.copyBufferToTexture(bufferView,destinationTextureView, Terrain.textureSize);
+                var [gpuReadBufferPositions, gpuReadBufferIndices] = engine.gpu.createCopy(commandEncoder, this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU)
                 const gpuCommands = commandEncoder.finish();
                 engine.gpu.device.queue.submit([gpuCommands]);
                 gpuReadBuffer.mapAsync(GPUMapMode.READ).then(() => {
                     // Read buffer.
-                    const arrayBuffer = gpuReadBuffer.getMappedRange()
-                    TerrainTool.saveTexture(arrayBuffer, this.textureSize);
-                    //  Terrain.terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', arrayBuffer, [arrayBuffer]);
+                    const arrayBuffer = gpuReadBuffer.getMappedRange();
+
+                    const c = document.createElement('canvas');
+                    c.width=Terrain.textureSize[0];
+                    c.height=Terrain.textureSize[1];
+                    const ctx = c.getContext("2d");
+                    if (!ctx)
+                        throw ('get 2d context failed');
+                    ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer), c.width, c.height), 0, 0);
+                    c.toBlob(async blob => {
+                        if(blob) {
+                            TerrainTool.saveTexture(await blob.arrayBuffer(), Terrain.textureSize);
+                         }                        
+                        
+                    },"image/webp", 1);
                     gpuReadBuffer.destroy();
 
                 })
@@ -536,8 +504,6 @@ TODO
                 this.mesh.faces=new Float32Array(buff.getMappedRange());
             }, this.facet12ArrGPUBuffer)
     
-            terrainPositionAndUvsAndNormalsGPUTemp.destroy();
-
             gpuReadBufferPositions.readAndDestroy(async (readbuff) => {
                 this.mesh.update_vertices(new Float32Array(readbuff));
                 this.updateSwap2(0, readbuff.byteLength, true);

@@ -1,6 +1,6 @@
 import { UITAB } from "../UITAB.js";
 import { paintTexture } from "../paintGround/paintTexture.js";
-import type { Terrain } from "../world/terrain.js";
+import { Terrain } from "../world/terrain.js";
 import { PTDresult } from "../types/interfaces/index.js";
 import { canvasListener } from "../traits/canvasListener.js";
 
@@ -51,14 +51,16 @@ export class Zones extends UITAB {
         if(!staticScene) {
             throw(new Error('staticScene not found'));
         }
-        this.#ratio = this.terrain.size[0] / this.#size //texture coordinates
+        this.#ratio = Terrain.size[0] / this.#size //texture coordinates
         this.#zoneTexture = engine.gpu.device.createTexture({
             size: [5120, 5120, 1],
             format: "rgba8unorm",
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
         });
 
-        const texture = new OffscreenCanvas(5120, 5120);
+        const texture = document.createElement('canvas');
+        texture.width=5120;
+        texture.height=5120;
         const ctx = texture.getContext('2d');
         if (!ctx)
             throw ('getting 2d context failed');

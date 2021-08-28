@@ -87,14 +87,8 @@ const methods2: { [index: string]: (e: WMessage<any>) => void } = {
         this.postMessage({ id: e.id, data: {} });
     },
     saveTexture: async (e: WMessage<{buffer:ArrayBuffer, size:[number, number]}>) => {
-        const c = new OffscreenCanvas(...e.data.size);
-        const ctx = c.getContext("2d");
-        if (!ctx)
-            throw ('get 2d context failed');
-        ctx.putImageData(new ImageData(new Uint8ClampedArray(e.data.buffer), c.width, c.height), 0, 0);
-        const blob = await c.convertToBlob({ type: "image/webp", quality: 1 });
-        const response = new Response(blob);
-        response.headers.set('content-length', blob.size.toString());
+        const response = new Response(e.data.buffer);
+        response.headers.set('content-length', e.data.buffer.byteLength.toString());
         (await caches.open('save')).put(new Request('/terrainTexture.webp'), response);
 
     },

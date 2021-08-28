@@ -68,7 +68,9 @@ export class paintTexture extends paintGround {
         const cwidth = maxX - minX;
         const missAlignment = (cwidth * 4) % 256;
         const alignment = missAlignment ? 256 - missAlignment : 0
-        const c = new OffscreenCanvas(cwidth + alignment / 4, maxZ - minZ);
+        const c = document.createElement('canvas');
+        c.width=cwidth + alignment / 4
+        c.height=maxZ - minZ;
         const buffersize = c.width * c.height * 4
 
         const ctx = c.getContext("2d");

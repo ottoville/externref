@@ -84,9 +84,15 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
                     [renderPass.size[0], renderPass.size[1]]);
                     this.gpu.device.queue.submit([encoder.finish()]);
                 buffer.mapAsync(GPUMapMode.READ).then(() => {
-                    const c = new OffscreenCanvas(renderPass.size[0], renderPass.size[1]);
+                    const c = document.createElement('canvas');
+                    c.width=renderPass.size[0];
+                    c.height=renderPass.size[1];
+
                     const ctx = c.getContext('2d');
-                    const imageData = ctx!.createImageData(c.width, c.height);
+                    if(!ctx) {
+                        throw(new Error('Cannot get context'));
+                    }
+                    const imageData = ctx.createImageData(c.width, c.height);
                     let data:Uint8ClampedArray;
                     if(bytes_per_fixel > 4) {
                         const floatData=new Float32Array(buffer.getMappedRange());
@@ -105,15 +111,12 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
                     }
                     imageData.data.set(data);
                     buffer.unmap();
-                    ctx!.putImageData(imageData, 0, 0);
-                    c.convertToBlob({
-                        type: "image/jpeg",
-                        quality: 0.95
-                    }).then(b => {
+                    ctx.putImageData(imageData, 0, 0);
+                    c.toBlob(b=>  {
                         console.log(URL.createObjectURL(b));
-                    }).finally(() => {
                         buffer.destroy();
-                    })
+                    },"image/jpeg",0.96);
+                    
                 });
                 setTimeout(() => {
                     //this.#debug = false;

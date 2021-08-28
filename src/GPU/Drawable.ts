@@ -19,16 +19,13 @@ export abstract class Drawable {
     constructor(
         protected renderPipeline: RenderPipeline,
         protected renderPasses: Set<RenderPass>) {
-        this.createPipelinesForRenderPasses();
-        this.clearBundles();
+            this.renderPasses.forEach(rp => {
+                const variant = rp.getVariant(this.renderPipeline);
+                this.#renderList.set(rp, variant.rootDrawables.add(this));
+            });
+            this.clearBundles();
     }
-    createPipelinesForRenderPasses() {
-        this.renderPasses.forEach(rp => {
-            const variant = rp.getVariant(this.renderPipeline);
-            this.#renderList.set(rp, variant.rootDrawables.add(this));
-        });
-        this.clearBundles();
-    }
+
     staticBuffers?:GPUBindGroup;
     setStaticBuffer(...staticBuffers:(GPUSampler | GPUTextureView)[]) {
         this.clearBundles();

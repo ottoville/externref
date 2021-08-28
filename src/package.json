@@ -20,12 +20,13 @@
     "@types/facebook-js-sdk": "^3.3.0",
     "@webgpu/types": "0.1.6",
     "esm": "^3.2.25",
+    "testem": "^3.4.3",
     "wasm-opt": "^1.1.1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "eslint": "^7.24.0",
-    "typescript": "^4.3.5"
+    "typescript": "^4.4.2"
   }
 }
