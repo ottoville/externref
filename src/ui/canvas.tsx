@@ -136,14 +136,8 @@ export class Canvas extends TerraCompoment {
                         camera.alpha = restored.alpha;
                         camera.beta = restored.beta;
                         camera.radius = restored.radius;
-                        mainCamera.update(values => {
-                            values.target[0] = restored.target[0];
-                            values.target[1] = restored.target[1];
-                            values.target[2] = restored.target[2];
-                            values.position[0] = restored.position[0];
-                            values.position[1] = restored.position[1];
-                            values.position[2] = restored.position[2];
-                        })
+                        mainCamera.target=restored.target;
+                        mainCamera.position=restored.position;
                     }
                     const l = new LazyEval(() => {
                         //console.log(this.camera.position.y);

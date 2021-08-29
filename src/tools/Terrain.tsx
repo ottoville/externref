@@ -149,7 +149,6 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
             this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
         });*/
-
         const pickInfo = await this.scene.pickPosition();
         this.#pick.meshId = pickInfo.meshId;
         this.#pick.position[0] = pickInfo.position[0];

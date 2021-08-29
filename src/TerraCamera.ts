@@ -20,7 +20,7 @@ export class TerraCamera {
 
     readonly #uniformBufferSize = /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ + 4 * 4;
     readonly #target = new TerraVector3([-500, 0, 0]);
-
+    #direction = new TerraVector3([0, 0, 0])
 
     readonly #viewProjectionPositionBuffer = new SharedArrayBuffer(this.#uniformBufferSize)
 
@@ -35,16 +35,15 @@ export class TerraCamera {
     readonly #position = new TerraVector3(this.#viewProjectionPositionBuffer, 128);
 
     readonly #uniformBuffer:GPUUniformBuffer & GPUCopyDSTBuffer; //Todo: set to private
-    readonly target: { readonly 0: number; readonly 1: number; readonly 2: number; };
-    readonly position: { readonly 0: number; readonly 1: number; readonly 2: number; };
     readonly updateViewBindGroup: GPUBindGroup;
     readonly uniformBindGroup: () => GPUBindGroup;
-
+/*
     update(cb: (values: { position: TerraVector3, target: TerraVector3 }) => void) {
         cb({ position: this.#position, target: this.#target });
-        this.doUpdateView = true;
+        this.updateDirection();
+        this.#doUpdateView = true;
     }
-    
+*/
     updateProjectionUniformsBuffer(initial=false) {
         if(!initial)
             this.#projectionUniformsBuffer.destroy();
@@ -113,20 +112,16 @@ export class TerraCamera {
                 }
             ]
         )
-        const thistarget = this.#target
+        
+        this.viewArr[15] = 1;
+        if (parent)
+            parent.#childCameras.add(this);
+        renderPass.cameras.add(this);
+        gpu.projections.add(this.projection);
+    }
+    get position() {
         const thisposition = this.#position
-        this.target = {
-            get 0() {
-                return thistarget[0]
-            },
-            get 1() {
-                return thistarget[1]
-            },
-            get 2() {
-                return thistarget[2]
-            }
-        }
-        this.position = {
+        return {
             get 0() {
                 return thisposition[0]
             },
@@ -137,14 +132,33 @@ export class TerraCamera {
                 return thisposition[2]
             }
         }
-
-        this.viewArr[15] = 1;
-        if (parent)
-            parent.#childCameras.add(this);
-        renderPass.cameras.add(this);
-        gpu.projections.add(this.projection);
     }
-
+    set position(position:[number, number, number] | {[0]:number, [1]:number, [2]:number}) {
+        this.#position[0]=position[0];
+        this.#position[1]=position[1];
+        this.#position[2]=position[2];
+        this.#directionIsDirty=true;
+    }
+    get target() {
+        const thistarget=this.#target;
+        return {
+            get 0() {
+                return thistarget[0]
+            },
+            get 1() {
+                return thistarget[1]
+            },
+            get 2() {
+                return thistarget[2]
+            }
+        }
+    }
+    set target(target:[number, number, number] | {[0]:number, [1]:number, [2]:number}) {
+        this.#target[0]=target[0];
+        this.#target[1]=target[1];
+        this.#target[2]=target[2];
+        this.#directionIsDirty=true;
+    }
     updateProjection(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: GPUBindGroupLayout) {
          this.updateProjectionUniformsBuffer();
          const bindGroup = this.gpu.device.createBindGroup({
@@ -171,41 +185,45 @@ export class TerraCamera {
          passEncoder.setBindGroup(0, bindGroup);
          passEncoder.dispatch(...this.gpu.CLUSTER_DISPATCH_SIZE);
     }
-    doUpdateView = false;
+    #doUpdateView = false;
     viewUpdated=false;
+    #directionIsDirty=true;
     updateView(commandEncoder: GPUCommandEncoder) {
-        if(!this.doUpdateView)
+        if(this.#directionIsDirty) {
+             //Camera direction
+            //for LHW this is target - position
+            this.#direction[0] = this.#position[0] - this.#target[0];
+            this.#direction[1] = this.#position[1] - this.#target[1];
+            this.#direction[2] = this.#position[2] - this.#target[2];
+            //Normalize direction
+            const zLength = Math.sqrt(this.#direction[0] * this.#direction[0] + this.#direction[1] * this.#direction[1] + this.#direction[2] * this.#direction[2]);
+            if (!(zLength === 0 || zLength === 1)) {
+                //zAxis.normalizeFromLength(xLength);
+                const scale = 1.0 / zLength;
+                this.#direction[0] *= scale;
+                this.#direction[1] *= scale;
+                this.#direction[2] *= scale;
+            }
+            if(this.viewArr[2] !== this.#direction[0] || this.viewArr[6] !== this.#direction[1] || this.viewArr[10] !== this.#direction[2]) {
+                this.#doUpdateView = true;
+            }
+            this.#directionIsDirty=false;
+        }
+        if(!this.#doUpdateView)
             return;
-        this.doUpdateView=false;
+        this.#doUpdateView=false;
         this.viewUpdated=true;
         this.#childCameras.forEach(childCamera => {
-            childCamera.update((values) => {
-                values.position[0] = this.#position[0]
-                values.position[1] = this.#position[1]
-                values.position[2] = this.#position[2]
-
-                values.target[0] = this.target[0]
-                values.target[1] = this.target[1]
-                values.target[2] = this.target[2];
-            });
+            childCamera.target=this.target;
+            childCamera.position=this.#position;
+            childCamera.target=this.#target;
         });
         this.beforeViewUpdate.forEach(cb => cb(this.#position, this.#target));
 
-        //for LHW this is target - position
-        this.viewArr[2] = this.#position[0] - this.target[0];
-        this.viewArr[6] = this.#position[1] - this.target[1];
-        this.viewArr[10] = this.#position[2] - this.target[2];
-
-
-
-        const zLength = Math.sqrt(this.viewArr[2] * this.viewArr[2] + this.viewArr[6] * this.viewArr[6] + this.viewArr[10] * this.viewArr[10]);
-        if (!(zLength === 0 || zLength === 1)) {
-            //zAxis.normalizeFromLength(xLength);
-            const scale = 1.0 / zLength;
-            this.viewArr[2] *= scale;
-            this.viewArr[6] *= scale;
-            this.viewArr[10] *= scale;
-        }
+        //Camera direction
+        this.viewArr[2] = this.#direction[0];
+        this.viewArr[6] = this.#direction[1];
+        this.viewArr[10] = this.#direction[2];
 
         this.viewArr[0] = this.viewArr[10];
         this.viewArr[8] = -this.viewArr[2];
