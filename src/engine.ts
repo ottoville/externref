@@ -3,7 +3,7 @@ import type { GPU } from "./GPU.js";
 import { TerraNodeGPU } from "./TerraNode.js";
 import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
-import { Vector3 } from "./Math.js";
+import { Uint16Vector2, Vector3 } from "./Math.js";
 import init, { Engine as RustEngine } from "/js/engine/engine.js";
 import { GPUBufferUsage } from "./GPU.js";
 
@@ -34,7 +34,7 @@ export class Engine {
     readonly collider:ColliderJS;
 
     mousePositionBuffer = new SharedArrayBuffer(4);
-    mousePosition = new Uint16Array(this.mousePositionBuffer);
+    mousePosition= new Uint16Vector2(this.mousePositionBuffer);
 
     mouseOffsetBuffer = new SharedArrayBuffer(8);
     destinationPoint: [number, number, number] = [0, 0, 0];

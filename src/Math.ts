@@ -148,6 +148,10 @@ export class TerraMatrix extends Float32Array {
         return this;
     }
 }
+export class Uint16Vector2 extends Uint16Array {
+    declare 0: number
+    declare 1: number
+} 
 export class TerraVector2 extends Float32Array {
     declare 0: number
     declare 1: number

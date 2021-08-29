@@ -19,10 +19,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     #depthFormat: GPUTextureFormat = 'depth32float';
     bundles: GPURenderBundle[] = [];
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
-    #renderPassDescriptor: Partial<GPURenderPassDescriptor> = {
-        colorAttachments: undefined,
-        depthStencilAttachment: undefined
-    }
     depthTexture?: Texture<GPUTextureFormat, ("COPY_SRC" | "RENDER_ATTACHMENT")[]>;
     constructor(
         public gpu: GPU,
@@ -133,8 +129,11 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 }
             }));
         }
+        const renderPassDescriptor: GPURenderPassDescriptor = {
+            colorAttachments,
+        }
         if (this.#depthTextureView) {
-            this.#renderPassDescriptor.depthStencilAttachment = {
+            renderPassDescriptor.depthStencilAttachment = {
                 view: this.#depthTextureView,
                 depthLoadValue: 0.0,
                 depthStoreOp: "store",
@@ -142,8 +141,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 stencilStoreOp: "store",
             }
         }
-        this.#renderPassDescriptor.colorAttachments = colorAttachments;
-        return this.#renderPassDescriptor as GPURenderPassDescriptor;
+        return renderPassDescriptor;
     }
 
     render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass: RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {

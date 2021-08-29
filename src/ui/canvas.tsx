@@ -158,14 +158,14 @@ export class Canvas extends TerraCompoment {
                 }
             });
             this.progress = 100;
-            return [ready];
+            return ready;
         });
         const debugscene = new Scene('static', gpu, [mainCamera], (scene) => {
             const sun = new MainNode(false, false,undefined,undefined,0,1,undefined,undefined,[scene]);
             sun.get_translation().set([0, 1, 0]);
             sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
-            return []
+            return undefined;
         });
 
         const b2 = new Box([debugscene], 1000);
