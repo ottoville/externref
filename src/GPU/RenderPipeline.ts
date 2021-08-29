@@ -15,7 +15,7 @@ export class Shader {
     }
 }
 export class VertexShader extends Shader {
-    constructor(gpu:GPU,shader:string, entrypoint='main', public buffers?:Iterable<GPUVertexBufferLayout>) {
+    constructor(gpu:GPU,shader:string, entrypoint='main', public buffers:Iterable<GPUVertexBufferLayout>=[]) {
         super(gpu,shader, entrypoint)
     }
 }

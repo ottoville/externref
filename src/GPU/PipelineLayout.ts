@@ -13,6 +13,7 @@ export class PipelineLayout {
         fragmentShader:Shader,
         renderPipeline: Omit<GPURenderPipelineDescriptor, 'depthStencil' | 'fragment' | 'vertex'>,
         depthBuffer?:{depthWriteEnabled:boolean,depthCompare:GPUCompareFunction }): RenderPipeline {
+
         const d = new RenderPipeline(vertexShader,fragmentShader,renderPipeline, this,depthBuffer)
         this.renderPipeLines.add(d);
         return d;

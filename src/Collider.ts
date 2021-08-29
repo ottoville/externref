@@ -86,7 +86,7 @@ export class ColliderJS {
     /**
      * Define last collided mesh
      */
-    public collidedMesh?: string;
+    public collidedMesh: string | undefined;
 
     #collisionPoint: [x: number, y: number, z: number] = [0, 0, 0];
     #planeIntersectionPoint: [x: number, y: number, z: number] = [0, 0, 0];

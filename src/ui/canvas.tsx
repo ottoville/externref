@@ -384,7 +384,7 @@ export class Canvas extends TerraCompoment {
     gameState = <fieldset class="gameControl hidden" id="gameState"></fieldset>
 
     uiTabs: (UITABClassLike)[] = [PlantsUI, BuildingsUI, CameraTAB, TerrainTool, Zones]
-    openedMenu?: [UITAB, HTMLFieldSetElement];
+    openedMenu: [UITAB, HTMLFieldSetElement] | undefined;
     timeOfDay: HTMLOutputElement = <output id="TODout" fow="TOD"></output>
     constructor() {
         super();

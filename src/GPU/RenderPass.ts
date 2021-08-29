@@ -66,9 +66,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 }
             })
         };
-        if (!this.depthTexture)
-            renderPipelineDescriptor.depthStencil = undefined
-        else {
+        if (this.depthTexture) {
             renderPipelineDescriptor.depthStencil= {
                 depthWriteEnabled:renderpipeline.depthBuffer?.depthWriteEnabled ?? true,
                 depthCompare:renderpipeline.depthBuffer?.depthCompare ?? 'greater',
@@ -147,11 +145,14 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass: RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {
         const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
         if (!this.bundles.length) {
-            const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder({
+            const renderDesc:GPURenderBundleEncoderDescriptor= {
                 colorFormats: Object.values(this.renderTargets).map(rt => rt.texture.format),
                 sampleCount: this.sampleCount,
-                depthStencilFormat: this.depthTexture ? this.#depthFormat : undefined
-            });
+            }
+            if(this.depthTexture) {
+                renderDesc.depthStencilFormat=this.#depthFormat;
+            }
+            const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder(renderDesc);
             //@ts-ignore
             let drawedMeshes = 0;
             const dynamicIndices: number[] = [];
