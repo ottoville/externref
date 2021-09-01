@@ -43,7 +43,7 @@ export class ArcRotateCamera {
     * Current inertia value on the latitudinal axis.
     * The bigger this number the longer it will take for the camera to stop.
     */
-    inertialBetaOffset = 0;
+    #inertialBetaOffset = 0;
     /**
     * Define the current direction the camera is moving to
     */
@@ -60,7 +60,7 @@ export class ArcRotateCamera {
             this.inertialPanningY += e.movementY / panningSensibility;
         } else {
             this.#inertialAlphaOffset += e.movementX / angularSensibilityX;
-            this.inertialBetaOffset -= e.movementY / angularSensibilityY;
+            this.#inertialBetaOffset -= e.movementY / angularSensibilityY;
         }
     }
     #cameraWheel = (e: WheelEvent) => {
@@ -74,6 +74,14 @@ export class ArcRotateCamera {
     }
     #cameraPointerDown = (e: PointerEvent) => {
         pointerDownButton = e.button;
+        if(pointerDownButton !== 2) {
+            this.camera.renderPass.pickPosition().then((position) => {
+                //this.camera.target=position.position;
+                this.targetMovingfrom=new TerraVector3([this.camera.target[0],this.camera.target[1],this.camera.target[2]]);
+                this.targetMovingTo=position.position;
+                this.targetLerpPosition=0;
+            })
+        }
         this.engine.canvas.addEventListener('pointermove', this.#cameraMove);
 
     }
@@ -112,8 +120,6 @@ export class ArcRotateCamera {
         this.engine.collider.radius[1] = this.#collisionRadius[1];
         this.engine.collider.radius[2] = this.#collisionRadius[2];
 
-
-
         // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
 
         // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
@@ -148,14 +154,10 @@ export class ArcRotateCamera {
             this.#previousPosition[2] = this.camera.position[2];
 
         } else {
-            //console.log('collide found ', performance.now() - starttime);
-            // this.setPosition(coordinator._finalPosition);
-            // if (this._position.equals(position)) {
-            //    return;
-            //}
             //this._position.copyFrom(position);
 
             if (this.camera.position[0] != this.engine.collider.finalPosition[0] || this.camera.position[1] != this.engine.collider.finalPosition[1] || this.camera.position[2] != this.engine.collider.finalPosition[2]) {
+                console.log('set finalpisition');
                 this.camera.position = this.engine.collider.finalPosition;
             }
 
@@ -189,7 +191,9 @@ export class ArcRotateCamera {
         this.#collisionTriggered = false;
 
     }
-
+    targetMovingfrom:TerraVector3 | null= null;
+    targetMovingTo:TerraVector3 | null= null;
+    targetLerpPosition=0;
     checkInputs = () => {
         if (this.#collisionTriggered) {
             return false;
@@ -199,25 +203,38 @@ export class ArcRotateCamera {
 
         //inputs.checkInputs();
         // Inertia
-        if (this.#inertialAlphaOffset !== 0 || this.inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
+        if (this.#inertialAlphaOffset !== 0 || this.#inertialBetaOffset !== 0 || this.inertialRadiusOffset !== 0) {
+
+            if(this.targetMovingfrom != null && this.targetMovingTo!=null) {
+                const newTarget=new TerraVector3();
+                this.targetMovingfrom.LerpToRef(this.targetMovingTo,this.targetLerpPosition,newTarget);
+                this.camera.target=newTarget;
+                this.targetLerpPosition+=0.01;
+                if(this.targetLerpPosition>1) {
+                    this.targetMovingfrom=null;
+                    this.targetMovingTo=null;
+                    this.targetLerpPosition=0;
+                }
+            }
+
             let inertialAlphaOffset = this.#inertialAlphaOffset;
             if (this.beta <= 0) {
                 inertialAlphaOffset *= -1;
             }
             this.alpha += inertialAlphaOffset;
 
-            this.beta += this.inertialBetaOffset;
+            this.beta += this.#inertialBetaOffset;
             //useRightHandedSystem
             inertialAlphaOffset *= -1;
             this.radius -= this.inertialRadiusOffset;
             this.#inertialAlphaOffset *= this.inertia;
-            this.inertialBetaOffset *= this.inertia;
+            this.#inertialBetaOffset *= this.inertia;
             this.inertialRadiusOffset *= this.inertia;
             if (Math.abs(this.#inertialAlphaOffset) < Epsilon) {
                 this.#inertialAlphaOffset = 0;
             }
-            if (Math.abs(this.inertialBetaOffset) < Epsilon) {
-                this.inertialBetaOffset = 0;
+            if (Math.abs(this.#inertialBetaOffset) < Epsilon) {
+                this.#inertialBetaOffset = 0;
             }
             if (Math.abs(this.inertialRadiusOffset) < this.speed * Epsilon) {
                 this.inertialRadiusOffset = 0;
@@ -227,6 +244,10 @@ export class ArcRotateCamera {
 
         // Panning inertia
         if (this.inertialPanningX !== 0 || this.inertialPanningY !== 0) {
+            this.targetMovingfrom=null;
+            this.targetMovingTo=null;
+
+
             this.camera.viewArr.invertToRef(this.#cameraTransformMatrix);
             this.#transformedDirection.set([this.#cameraTransformMatrix[0], this.#cameraTransformMatrix[1], this.#cameraTransformMatrix[2]]);
             const scaleX = panningAxis[0] * this.inertialPanningX;

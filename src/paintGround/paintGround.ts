@@ -9,6 +9,8 @@ import type { hasCanvasListener } from "../traits/canvasListener.js";
 import type { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import type { ArcRotateCamera } from "../ArcRotateCamera";
+import { Engine } from "../engine.js";
+declare const engine:Engine;
 
 //import { rotateMatrix, translate } from "./math.js";
 
@@ -49,7 +51,7 @@ export abstract class paintGround {
     #drawVector = new TerraVector2(2);
 
     #drawArea = async () => {
-        const pickInfo = await this.scene.pickMesh(undefined, mesh => { return mesh === this.ground.mesh });
+        const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh });
         if (pickInfo) {
             this.#end_position[0] = pickInfo.position[0];
             this.#end_position[1] = pickInfo.position[2];
@@ -83,7 +85,7 @@ export abstract class paintGround {
     #busy = false;
 
     #mousemove = async () => {
-        const pickInfo = await this.scene.pickMesh(undefined, mesh => { return mesh === this.ground.mesh })
+        const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh })
         if (pickInfo && this.#end_position) {
             //Distance from first point
             const p0 = this.#start_position[0] - pickInfo.position[0];
@@ -175,7 +177,7 @@ export abstract class paintGround {
         /*  var pickInfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY, mesh => {
               return mesh === this.ground
           }, false, this.camera);*/
-        const pickInfo = await this.scene.pickMesh(undefined, mesh => { return mesh === this.ground.mesh });
+        const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh });
         if (pickInfo) {
             this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
             this.onMainPointerDown(this.#start_position);

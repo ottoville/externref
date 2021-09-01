@@ -10,11 +10,14 @@ pub use crate::geometry::Plane;
 pub use crate::geometry::ColliderPlane;
 pub use crate::boundingbox::BoundingBox;
 pub use crate::terrain::elevator::Elevator;
+pub use crate::drawable::Drawable;
 
 #[wasm_bindgen]
 pub struct Mesh {
-    id:u32,
-    gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
+    #[wasm_bindgen(readonly)]
+    pub id:u32,
+    #[wasm_bindgen(readonly)]
+    pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
     #[wasm_bindgen(skip)]
     pub gpu_mesh: GPUMesh,
     rotation: Vec4<f32>,
@@ -30,6 +33,12 @@ extern "C" {
     fn log(s: &str);
     #[wasm_bindgen(js_namespace = console)]
     fn error(s: &str);
+}
+
+impl Drawable for Mesh {
+    fn draw(&self, render_pass: &JsValue) {
+
+    }
 }
 #[wasm_bindgen]
 impl Mesh {
@@ -276,15 +285,6 @@ impl Mesh {
         }
         engine.update_point_lights();
     }
-    #[wasm_bindgen(getter)]
-    pub fn id(& self) -> u32 {
-        self.id
-    }
-    #[wasm_bindgen(getter)]
-    pub fn gpu_alignment(&self) -> u32 {
-        self.gpu_alignment
-    }
-
     pub fn destroy(self, engine:&mut Engine) {
         engine.de_allocate_gpu(self.gpu_alignment);
     }

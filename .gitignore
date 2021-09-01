@@ -10,8 +10,11 @@
 *.userosscache
 *.sln.docstates
 
+#VSCode
+/src/.vscode
 #Rust
 .rustc_info.json
+*/**/CACHEDIR.TAG
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

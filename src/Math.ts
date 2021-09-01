@@ -174,6 +174,11 @@ export class TerraVector3 extends Float32Array {
             super(Arr, offset, 3);
         }
     }
+    LerpToRef(end: TerraVector3, amount: number, result: TerraVector3): void {
+        result[0] = this[0] + ((end[0] - this[0]) * amount);
+        result[1] = this[1] + ((end[1] - this[1]) * amount);
+        result[2] = this[2] + ((end[2] - this[2]) * amount);
+    }
     clone() {
         return new TerraVector3(this.buffer.slice(this.byteOffset, this.byteOffset+12));
     }

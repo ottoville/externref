@@ -11,6 +11,7 @@ mod mesh;
 mod boundingbox;
 mod terrain;
 mod collider;
+mod drawable;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;

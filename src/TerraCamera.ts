@@ -119,19 +119,8 @@ export class TerraCamera {
         renderPass.cameras.add(this);
         gpu.projections.add(this.projection);
     }
-    get position() {
-        const thisposition = this.#position
-        return {
-            get 0() {
-                return thisposition[0]
-            },
-            get 1() {
-                return thisposition[1]
-            },
-            get 2() {
-                return thisposition[2]
-            }
-        }
+    get position():  Readonly<{[0]:number, [1]:number, [2]:number}> {
+        return this.#position
     }
     set position(position:[number, number, number] | {[0]:number, [1]:number, [2]:number}) {
         this.#position[0]=position[0];
@@ -139,19 +128,9 @@ export class TerraCamera {
         this.#position[2]=position[2];
         this.#directionIsDirty=true;
     }
-    get target() {
-        const thistarget=this.#target;
-        return {
-            get 0() {
-                return thistarget[0]
-            },
-            get 1() {
-                return thistarget[1]
-            },
-            get 2() {
-                return thistarget[2]
-            }
-        }
+    get target(): Readonly<{[0]:number, [1]:number, [2]:number}> {
+        return this.#target;
+
     }
     set target(target:[number, number, number] | {[0]:number, [1]:number, [2]:number}) {
         this.#target[0]=target[0];
