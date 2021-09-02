@@ -169,6 +169,7 @@ export class TerraCamera {
     #directionIsDirty=true;
     updateView(commandEncoder: GPUCommandEncoder) {
         if(this.#directionIsDirty) {
+            this.beforeViewUpdate.forEach(cb => cb(this.#position, this.#target));
              //Camera direction
             //for LHW this is target - position
             this.#direction[0] = this.#position[0] - this.#target[0];
@@ -193,11 +194,9 @@ export class TerraCamera {
         this.#doUpdateView=false;
         this.viewUpdated=true;
         this.#childCameras.forEach(childCamera => {
-            childCamera.target=this.target;
             childCamera.position=this.#position;
             childCamera.target=this.#target;
         });
-        this.beforeViewUpdate.forEach(cb => cb(this.#position, this.#target));
 
         //Camera direction
         this.viewArr[2] = this.#direction[0];
