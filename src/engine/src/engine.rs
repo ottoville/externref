@@ -14,7 +14,8 @@ extern "C" {
 pub struct Engine {
     gpu_reserved_slots: u64,
     #[wasm_bindgen(skip)]
-    pub gpu_queue: HashMap<*const GPUMesh, u32>, //mesh + gpu alignment
+    pub gpu_queue2: Vec<(*const GPUMesh, u32)>, //mesh + gpu alignment
+    gpu_queue_raw_parts: [usize;2],
     #[wasm_bindgen(skip)]
     pub point_lights:HashSet<u32>,
     #[wasm_bindgen(skip)]
@@ -30,18 +31,24 @@ impl Engine {
     pub fn new() -> Self {
         Engine {
             gpu_reserved_slots: 0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,  //ZERO:Free, ONE: Reserved
-            gpu_queue: HashMap::new(),
+            gpu_queue2: Vec::new(),
+            gpu_queue_raw_parts: [0,0],
             point_lights: HashSet::new(),
             directional_lights: HashSet::new(),
         }
     }
     #[wasm_bindgen(getter)]
-    pub fn gpu_queue_pointer(&self) -> Vec<u32> {
-        let as_vec:Vec<u32> = self.gpu_queue.clone().into_iter().map(|(gpu_mesh, alignment)| vec![gpu_mesh as u32,alignment]).flatten().into_iter().collect();//.collect();        
-        return as_vec;
+    pub fn get_gpu_queue_raw_parts_ptr(&mut self) -> *const usize {
+        self.gpu_queue_raw_parts=[self.gpu_queue2.as_ptr() as usize, self.gpu_queue2.len() as usize];
+        return self.gpu_queue_raw_parts.as_ptr();
     }
-    pub fn clear_gpu_queue(&mut self) {
-        self.gpu_queue.clear()
+   
+    #[wasm_bindgen(getter)]
+    pub fn gpu_queue_pointer2(&self) -> *const (*const GPUMesh, u32) {
+        return self.gpu_queue2.as_ptr();
+    }
+        pub fn clear_gpu_queue(&mut self) {
+        self.gpu_queue2.clear()
     }
     pub fn update_point_lights(&self) {
         update_point_lights(self.point_lights.clone().into_iter().collect());

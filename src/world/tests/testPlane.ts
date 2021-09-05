@@ -19,11 +19,11 @@ export class testPlane extends BoundableNodeSimple {
         //@ts-ignore
         super(scene, new SharedArrayBuffer(7 * 3 * 4),7,undefined,undefined,true)
         //this.boundingBox.box.set([0, 0, 0, 200, 200, 0])
-        this.update_vertices(vertices);
+        this.set_vertices(vertices);
        /* this.updateVertices(buffer =>
             new Float32Array(buffer).set(vertices)
          )*/
-
+        //@ts-ignore
         const vBuffer = scene.gpu.createGPUBuffer(this.verticesBuffesSize, [GPUBufferUsage.VERTEX], true);
         new Float32Array(vBuffer.getMappedRange()).set(vertices);
         vBuffer.unmap();

@@ -1,5 +1,17 @@
+use wasm_bindgen::prelude::*;
+
 pub use crate::Vec3;
 pub use crate::boundingbox::BoundingBox;
+
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+    #[wasm_bindgen(js_namespace = console)]
+    fn error(s: &str);
+}
+
 pub struct ColliderPlane {
     plane: Plane,
     vectors: [f32;3]
@@ -23,17 +35,19 @@ impl Geometry {
     //TODO: remove positions_count, it does not reflect reality
     pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, positions_count:usize, static_faces:bool, strip:bool) -> Self {
 
-        let faces_count = if has_geometry { positions_count / 3} else {0};
+        //let faces_count = if has_geometry { positions_count / 3} else {0};
+        log("create capacity");
+        log(&(positions_count*4usize).to_string());
         let mut g = Geometry {
             has_geometry,
             bounding_box:BoundingBox::new(has_bounding),
-            vertices: vec![0.0; positions_count*vertices_stride],
+            vertices: Vec::new(),
             indices:Vec::new(),
             vertices_stride,
-            faces:Faces::new(faces_count),
-            collider_planes:Vec::with_capacity(faces_count),
-            collider_planes_parallel:Vec::with_capacity(faces_count*4usize),
-            last_collider_world_vertices:Vec::with_capacity(positions_count*4usize),
+            faces:Faces::new(0),
+            collider_planes:Vec::new(),
+            collider_planes_parallel:Vec::new(),
+            last_collider_world_vertices:Vec::new(),
             static_faces,
             strip
         };
@@ -48,19 +62,22 @@ impl Geometry {
             if self.has_geometry {
                 let position_count = if self.indices.len() > 0 {
                     self.indices.len()
-                } else {
+                } else{
                     self.vertices.len() / self.vertices_stride
                 };
-                if self.strip {
+                if position_count == 0 {
+                    return 0usize;
+                }
+                else if self.strip {
                     position_count -2
                 } else {
                     position_count / 3
                 }
-
             } else {0}
         } 
     }
     pub fn allocate_faces(&mut self) {
+        self.last_collider_world_vertices=Vec::with_capacity(self.vertices.len()/self.vertices_stride*4);
         if self.static_faces {
             return;
         }

@@ -2,7 +2,6 @@
 
 #![feature(vec_into_raw_parts)]
 
-
 extern crate wasm_bindgen;
 
 mod engine;

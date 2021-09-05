@@ -204,7 +204,12 @@ impl Elevator {
             ];
             vertices.append(&mut v);
         }
-        let mut faces_of_vertices:Vec<Vec<usize>> = vec![Vec::with_capacity(6);mesh.positions_count];
+        let positions_count = if mesh.geometry.indices.len() > 0 {
+            mesh.geometry.indices.len()
+        } else {
+            mesh.geometry.vertices.len() / mesh.geometry.vertices_stride
+        };
+        let mut faces_of_vertices:Vec<Vec<usize>> = vec![Vec::with_capacity(6);positions_count];
         if mesh.geometry.indices.len() == 0usize {
             error("Elevator needs indices");
             panic!("Elevator needs indices")

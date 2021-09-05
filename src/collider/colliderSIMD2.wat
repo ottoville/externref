@@ -339,6 +339,7 @@
     f32.gt
   )
   (func $testTriangle
+    (param $last_collider_world_vertices_pointer i32)
     (param $planePosition i32)
     (param $meshID i32)
     (param $t0 f32)
@@ -376,10 +377,14 @@
 
     (local.set $triangle0
       (v128.load
-        (i32.load
-          (i32.add
-            (i32.const 16)
-            (local.get $planePosition)
+        (i32.add
+          (local.get $last_collider_world_vertices_pointer)
+          ;;Tähän mukaan pointteri?
+          (i32.load
+            (i32.add
+              (i32.const 16)
+              (local.get $planePosition)
+            )
           )
         )
       )
@@ -387,20 +392,26 @@
 
     (local.set $triangle1
       (v128.load
-        (i32.load
-          (i32.add
-            (i32.const 20)
-            (local.get $planePosition)
+        (i32.add
+          (local.get $last_collider_world_vertices_pointer)
+          (i32.load
+            (i32.add
+              (i32.const 20)
+              (local.get $planePosition)
+            )
           )
         )
       )
     )
     (local.set $triangle2
       (v128.load 
-        (i32.load
-          (i32.add
-            (i32.const 24)
-            (local.get $planePosition)
+        (i32.add
+          (local.get $last_collider_world_vertices_pointer)
+          (i32.load
+            (i32.add
+              (i32.const 24)
+              (local.get $planePosition)
+            )
           )
         )
       )
@@ -760,6 +771,7 @@
     )
   )
   (func $testTriangles
+    (param $last_collider_world_vertices_pointer i32)
     (param $planePosition i32)
     (param $planePositionHorizontal i32)
     (param $length i32)
@@ -834,6 +846,7 @@
       v128.any_true
       if
         (call $testTriangle
+          (local.get $last_collider_world_vertices_pointer)
           (local.get $planePosition)
           (local.get $meshID)
           (f32x4.extract_lane 0
@@ -897,6 +910,7 @@
           )
         )
         (call $testTriangle
+          (local.get $last_collider_world_vertices_pointer)
           (i32.add
             (local.get $planePosition)
             (i32.const 28)
@@ -913,6 +927,7 @@
           )
         )
         (call $testTriangle
+          (local.get $last_collider_world_vertices_pointer)
           (i32.add
             (local.get $planePosition)
             (i32.const 56)
@@ -929,6 +944,7 @@
           )
         )
         (call $testTriangle
+          (local.get $last_collider_world_vertices_pointer)
             (i32.add
                 (local.get $planePosition)
                 (i32.const 84)

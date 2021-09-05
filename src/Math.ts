@@ -1,4 +1,5 @@
 ﻿import type { Engine } from "engine";
+import type { MainNode } from "TerraNode";
 declare const engine:Engine;
 
 export interface Vector3 extends Omit<TerraVector3, 'buffer'> {
@@ -313,15 +314,17 @@ export class Triangle {
         return new TerraVector4(engine.memory.buffer, this.pointerToVector4())
     }
     get vectors():[TerraVector4,TerraVector4,TerraVector4] {
+        const offset=this.node.last_collider_world_vertices_pointer
         return [
-            new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
-            new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
-            new TerraVector4(engine.memory.buffer, this.vectorsPointers[2]),
+            new TerraVector4(engine.memory.buffer, offset + this.vectorsPointers[0]),
+            new TerraVector4(engine.memory.buffer, offset + this.vectorsPointers[1]),
+            new TerraVector4(engine.memory.buffer, offset + this.vectorsPointers[2]),
         ]
     }
     constructor(
         private vectorsPointers: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],
         private pointerToVector4: () => number,
+        private node:MainNode
         ) {
     }
 

@@ -16,7 +16,7 @@ export interface ColliderWasm {
     construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number, velocity: number, basePoint: number): void;
     memory: WebAssembly.Memory
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
-    testTriangles: (position: number, positionParallel:number, length: number, meshID: number) => void
+    testTriangles: (last_collider_world_vertices_pointer:number, position: number, positionParallel:number, length: number, meshID: number) => void
     _initialize: () => void
 }
 export class Engine {
@@ -83,17 +83,23 @@ export class Engine {
             Atomics.store(this.mousePosition, 1, e.clientY * gpu.scale.y)
             Atomics.notify(new Int32Array(this.mousePositionBuffer), 0);
         });
+        const map = new Map<number,number>();
+
         gpu.onRenders2.push(() => {
             const dataSizeBytes = TerraNodeGPU.GPUDataSize * 4; //4 * 16 + 3 * 4;
-            const pointers=this.rustEngine.gpu_queue_pointer;
-            if(pointers.length === 0)
+            const pointers2=this.rustEngine.get_gpu_queue_raw_parts_ptr;
+            const vec_and_len =  new Uint32Array(this.memory.buffer, pointers2,2);
+            if(vec_and_len[1] === 0)
                 return null;
-            const queueLength=pointers.length/2;
-            const tempBuffer = gpu.createGPUBuffer(dataSizeBytes * queueLength, [GPUBufferUsage.COPY_SRC], true);
+            const pointers_to_gpumesh_and_alignment = new Uint32Array(this.memory.buffer, vec_and_len[0], vec_and_len[1]!*2);
+            for(let i=0;i<pointers_to_gpumesh_and_alignment.length;i+=2) {
+                map.set(pointers_to_gpumesh_and_alignment[i]!,pointers_to_gpumesh_and_alignment[i+1]!);
+            }
+            const tempBuffer = gpu.createGPUBuffer(dataSizeBytes * map.size, [GPUBufferUsage.COPY_SRC], true);
             const commandEncoder = gpu.device.createCommandEncoder();
             let tempOffset = 0;
-            for(let i=0;i<pointers.length;i+=2) {
-                const data=new Float32Array(this.memory.buffer, pointers[i], TerraNodeGPU.GPUDataSize);
+            map.forEach((alignment, gpumeshPointer) => {
+                const data=new Float32Array(this.memory.buffer, gpumeshPointer, TerraNodeGPU.GPUDataSize);
                 //Point light
                 if(data[29]! > 0) {
                     this.updateLights=true;
@@ -101,9 +107,10 @@ export class Engine {
                 new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
                 commandEncoder.copyBufferToBuffer(
                     tempBuffer, tempOffset++ * dataSizeBytes,
-                    gpu.GPUMeshes, gpu.gpu_memory_index_size + pointers[i+1]! * 256,
+                    gpu.GPUMeshes, gpu.gpu_memory_index_size + alignment * 256,
                     dataSizeBytes);
-            }
+            });
+            map.clear();
             this.rustEngine.clear_gpu_queue();
             tempBuffer.unmap();
             this.gpu.tempGPUBuffers.add(tempBuffer);

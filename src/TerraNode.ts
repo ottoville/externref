@@ -92,12 +92,10 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
         if (renderPipeline.dynamicBindGroupOffset.length)
             renderPipeline.dynamicBindGroupOffset[0] = this.gpu_alignment;
     }
-    get vertices() {
-        return new Float32Array(engine.memory.buffer, this.vertices_pointer, this.positions_count * this.vertices_stride);
-    }
+
     get verticesArray() {
         const arr:Float32Array[] = [];
-        for (let i=0; i< this.positions_count; i++) {
+        for (let i=0; i< this.vertices_count; i++) {
             arr.push(new Float32Array(engine.memory.buffer, this.vertices_pointer + i*Float32Array.BYTES_PER_ELEMENT*this.vertices_stride, this.vertices_stride))
         }
         return arr;

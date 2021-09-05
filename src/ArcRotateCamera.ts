@@ -157,7 +157,6 @@ export class ArcRotateCamera {
             //this._position.copyFrom(position);
 
             if (this.camera.position[0] != this.engine.collider.finalPosition[0] || this.camera.position[1] != this.engine.collider.finalPosition[1] || this.camera.position[2] != this.engine.collider.finalPosition[2]) {
-                console.log('set finalpisition');
                 this.camera.position = this.engine.collider.finalPosition;
             }
 

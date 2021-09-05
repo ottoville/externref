@@ -182,7 +182,7 @@ TODO
         const cacheP = caches.open('save');
         if (!compress) {
             const response = new Response(this.mesh.vertices);
-            response.headers.set('content-length', this.mesh.verticesBuffesSize.toString());
+            response.headers.set('content-length', (this.mesh.vertices_count * Float32Array.BYTES_PER_ELEMENT * this.mesh.vertices_stride).toString());
             response.headers.set('content-type', 'application/octet-stream');
 
             const indices=this.mesh.indicesView;
@@ -505,7 +505,7 @@ TODO
             }, this.facet12ArrGPUBuffer)
     
             gpuReadBufferPositions.readAndDestroy(async (readbuff) => {
-                this.mesh.update_vertices(new Float32Array(readbuff));
+                this.mesh.set_vertices(new Float32Array(readbuff));
                 this.updateSwap2(0, readbuff.byteLength, true);
                 this.serialize();
             });

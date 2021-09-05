@@ -11,6 +11,8 @@ pub use crate::geometry::ColliderPlane;
 pub use crate::boundingbox::BoundingBox;
 pub use crate::terrain::elevator::Elevator;
 pub use crate::drawable::Drawable;
+pub use crate::drawable::DrawCommand;
+pub use crate::drawable::DrawType;
 
 #[wasm_bindgen]
 pub struct Mesh {
@@ -25,7 +27,9 @@ pub struct Mesh {
     #[wasm_bindgen(skip)]
     pub geometry:Geometry,
     pub positions_count:usize,
-    pub strip:bool
+    pub strip:bool,
+    #[wasm_bindgen(skip)]
+    pub draw_command: DrawCommand
 }
 #[wasm_bindgen]
 extern "C" {
@@ -35,11 +39,13 @@ extern "C" {
     fn error(s: &str);
 }
 
-impl Drawable for Mesh {
-    fn draw(&self, render_pass: &JsValue) {
-
+#[wasm_bindgen]
+impl Mesh {
+    pub fn draw(&self) -> *const usize {
+        &self.draw_command as *const _ as *const usize
     }
 }
+
 #[wasm_bindgen]
 impl Mesh {
     #[wasm_bindgen(constructor)]
@@ -87,7 +93,18 @@ impl Mesh {
                 z: 1.0,
             },
             positions_count,
-            strip
+            strip,
+            draw_command: DrawCommand {
+                draw_type: DrawType::Simple,
+                vertex_count: 0,
+                instance_count: 0,
+                first_vertex: 0,
+                first_instance: 0,
+                index_count: 0,
+                first_index: 0,
+                base_vertex: 0
+            
+            }
         };
         if point_light > 0.0 {
             engine.point_lights.insert(m.gpu_alignment);
@@ -99,6 +116,16 @@ impl Mesh {
         }
         m.update_dynamic_buffer(engine);
         return m;
+    }
+    /*pub fn draw(&self) {
+
+    }*/
+    pub fn update_dynamic_buffer(&self, engine:&mut Engine) {
+        engine.gpu_queue2.push((&self.gpu_mesh, self.gpu_alignment));
+    }
+    #[wasm_bindgen(getter)]
+    pub fn vertices_count(&self) -> usize {
+        self.geometry.vertices.len() / self.geometry.vertices_stride
     }
     pub fn set_scenes(&mut self, engine: &mut Engine, scenes: u32) {
         self.gpu_mesh.scenes = scenes;
@@ -121,7 +148,7 @@ impl Mesh {
     pub fn vertices_stride(&self) -> usize {
         self.geometry.vertices_stride
     }
-    pub fn update_vertices(&mut self, vertices:Vec<f32>) {
+    pub fn set_vertices(&mut self, vertices:Vec<f32>) {
         self.geometry.update_vertices(vertices);
     }
     #[wasm_bindgen(getter)]
@@ -213,9 +240,6 @@ impl Mesh {
             self.geometry.bounding_box.dirty_min=true;
         }
     }
-    pub fn update_dynamic_buffer(&mut self, engine:&mut Engine) {
-        engine.gpu_queue.insert(&self.gpu_mesh, self.gpu_alignment);
-    }
     pub fn update_scale_and_rotation(&mut self, engine:&mut Engine, x: f32, y: f32, z: f32, rx: f32, ry: f32, rz: f32, rw: f32) {
         self.scaling.x = x;
         self.scaling.y = y;
@@ -231,7 +255,8 @@ impl Mesh {
         self.scaling.y = y;
         self.scaling.z = z;
         self.update_matrix();
-        engine.gpu_queue.insert(&self.gpu_mesh, self.gpu_alignment);
+        self.update_dynamic_buffer(engine);
+
     }
     pub fn set_scale_x(&mut self,engine:&mut Engine, x:f32) {
         self.scaling.x=x;
