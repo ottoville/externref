@@ -14,19 +14,21 @@ import { TerrainTool } from "../tools/Terrain.js";
 import { Zones } from "../tools/zones.js";
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
-import { LazyEval } from "../LazyEval.js";
+//import { LazyEval } from "../LazyEval.js";
 import { Box } from "../GPU/Meshes/Box.js";
 import { Sun2 } from "../world/sun2.js";
 
 import { MainNode, TerraNodeGPU } from "../TerraNode.js";
 import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
-import { savedCamera } from "../types/interfaces/index.js";
+//import { savedCamera } from "../types/interfaces/index.js";
 
 
 import type { DrawableSimple } from "GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { Projection } from "../GPU/Projection.js";
+//@ts-ignore
+import { PositionCamera } from "../positionCamera.js";
 
 declare const engine:Engine;
 class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
@@ -93,6 +95,7 @@ export class Canvas extends TerraCompoment {
         this.progress = 16;
 
         const camera = new ArcRotateCamera(0, 0, 10, terraEngine, mainCamera);
+       // const camera = new PositionCamera(terraEngine, mainCamera);
         this.progress = 17;
         camera.attachControl();
 
@@ -127,7 +130,7 @@ export class Canvas extends TerraCompoment {
 
             const ready = terrainInited.then(async ground => [ground, sea]);
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
-
+/*
             DB.then(DB => {
                 DB.transaction("save").objectStore("save").get(0).onsuccess = async (evt) => {
                     if ((evt.target as IDBRequest).result) {
@@ -150,7 +153,7 @@ export class Canvas extends TerraCompoment {
                         l.eval(500);
                     });
                 }
-            });
+            });*/
             this.progress = 100;
             return ready;
         });
@@ -372,6 +375,7 @@ export class Canvas extends TerraCompoment {
             gameControlsUI[i].classList.remove('hidden');
         }
         */
+       //@ts-ignore
         return [mainScene, camera];
     }
     toolsContainer: HTMLFieldSetElement = <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;"></fieldset>

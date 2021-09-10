@@ -5,8 +5,8 @@ pub use crate::mesh::Mesh;
 #[wasm_bindgen]
 pub struct Collider {
     intersection_point:[f32;4],
-    collision_not_found:u32,
-    nearest_distance_squared:f32,
+    pub collision_not_found:u32,
+    pub nearest_distance_squared:f32,
     scaled_position:[f32;4],
     scaled_velocity:[f32;4],
     collided_mesh:u32

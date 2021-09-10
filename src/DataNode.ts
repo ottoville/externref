@@ -122,8 +122,28 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     intersectsRay = (ray: Float32Array): Promise<void> => {
         return worker.message(this.id, 'intersectsRay', [ray.buffer]);
     }
+    #updateColliderPlanes() {
+        const timer = performance.now();
+        const offset=this.last_collider_world_vertices_pointer;
+        this.#positionsAndCollider.forEach((posAndCol, i) => {
+            this.getPosition(i).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer,offset + posAndCol[1]));
+        });
+        console.log('recalculated collision vertices', performance.now() - timer);
+        this.#faceQuatros.forEach((quatro, i) => {
+            quatro[0].updatePlane();
+            quatro[1].updatePlane();
+            quatro[2].updatePlane();
+            quatro[3].updatePlane();
+            new Float32Array(engine.memory.buffer, this.collider_planes_parallel_pointer + i * 4 * 16, 16).set([
+                quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
+                quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
+                quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
+                quatro[0].planeCollider[3], quatro[1].planeCollider[3], quatro[2].planeCollider[3], quatro[3].planeCollider[3], //d
+            ]);
+        });
+    }
     //collisionsScalingMatrix = new TerraMatrix();
-    myCollisionsTransformMatrix = new TerraMatrix();
+    #myCollisionsTransformMatrix = new TerraMatrix();
     public checkCollision = async (collider: ColliderJS) => {
         if (this.faces_count % 4 != 0) {  //TODO
             return
@@ -133,55 +153,22 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         }
 
         // Transformation matrix
-        this.myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
-        /*if(!this.facesBufferColliderPointerParallel || !this.facesBufferColliderPointer) {
-            console.error('Collider not initialized');
-            return;
-        }*/
-        this.get_transformation().multiplyToRef(this.myCollisionsTransformMatrix, this.myCollisionsTransformMatrix);
-        if (!this.#lastColliderTransformMatrix.equals(this.myCollisionsTransformMatrix)) {
+        this.#myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
 
-            this.#lastColliderTransformMatrix = this.myCollisionsTransformMatrix.clone();
-
-            const timer = performance.now();
-            const offset=this.last_collider_world_vertices_pointer;
-            this.#positionsAndCollider.forEach((posAndCol, i) => {
-                this.getPosition(i).multiply2Ref(this.myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer,offset + posAndCol[1]));
-            });
-            console.log('recalculated collision vertices', performance.now() - timer);
-            this.#faceQuatros.forEach((quatro, i) => {
-                quatro[0].updatePlane();
-                quatro[1].updatePlane();
-                quatro[2].updatePlane();
-                quatro[3].updatePlane();
-                new Float32Array(engine.memory.buffer, this.collider_planes_parallel_pointer + i * 4 * 16, 16).set([
-                    quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
-                    quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
-                    quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
-                    quatro[0].planeCollider[3], quatro[1].planeCollider[3], quatro[2].planeCollider[3], quatro[3].planeCollider[3], //d
-                ]);
-            });
+        this.get_transformation().multiplyToRef(this.#myCollisionsTransformMatrix, this.#myCollisionsTransformMatrix);
+        if (!this.#lastColliderTransformMatrix.equals(this.#myCollisionsTransformMatrix)) {
+            this.#lastColliderTransformMatrix = this.#myCollisionsTransformMatrix.clone();
+            this.#updateColliderPlanes();
         }
-
-        /*   this.#faces.forEach(triangle => {
-               collider._testTriangle(triangle);
-           });*/
-        // console.log('cpu took', performance.now() - timer);
-
              engine.wasm.testTriangles(
                 this.last_collider_world_vertices_pointer,
                 this.collider_faces_pointer,
                 this.collider_planes_parallel_pointer,
                 this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/,
                 this.id);
-                
-        if (!engine.collider.collisionNotFound.getUint32(0, false)) {
-            //console.log(new Uint32Array(this.engine.wasm.memory.buffer, this.facesBufferColliderPointer, this.#faces.length * 7)) //4 is for simd
-            console.log('collided')
-        }
         
     }
-    protected buildFaceQuatros() {
+    protected buildFaces() {
         if (this.faces_count % 4 === 0) {
             this.#faceQuatros.length=0;
             let faceQuatro: Triangle[] = [];
@@ -190,7 +177,8 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
                     this.#faceQuatros.push(faceQuatro as [Triangle, Triangle, Triangle, Triangle])
                     faceQuatro = [];
                 }
-            })
+            });
+            this.#updateColliderPlanes();
         }
     }
 }
@@ -268,7 +256,7 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
                 }
             });
         }
-        this.buildFaceQuatros();
+        this.buildFaces();
     }
 }
 export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
@@ -313,6 +301,6 @@ export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
                 }
             });
         }
-        this.buildFaceQuatros();
+        this.buildFaces();
     }
 }

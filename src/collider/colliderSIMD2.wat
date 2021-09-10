@@ -1,5 +1,6 @@
 (module
   (import "console" "log" (func $log (param i32)))
+  (import "console" "error" (func $console.error (param i32)))
   (import "env" "memory" (memory 17))
   (export "memory" (memory 0))
 
@@ -39,11 +40,8 @@
 
   (global $isMoving (mut i32) (i32.const 0))
 
-  (func $main (export "_start")
-      ;; Creating a new io vector within linear memory
-      (i32.store (i32.const 0) (i32.const 8))  ;; iov.iov_base - This is a pointer to the start of the 'hello world\n' string
-      (i32.store (i32.const 4) (i32.const 12))  ;; iov.iov_len - The length of the 'hello world\n' string
-  )
+  (global $isConstructed (mut i32) (i32.const 0))
+
   (func $construct
       (param $collisionNotFoundPointer i32)
       (param $interSectionPoint i32)
@@ -51,6 +49,10 @@
       (param $collidedMesh i32)
       (param $velocityPointer i32)
       (param $basePointPointer i32)
+      
+      (global.set $isConstructed
+        (i32.const 1)  
+      )
 
       (global.set $intersectionPointer
         (local.get $interSectionPoint)
@@ -80,6 +82,14 @@
   (func $_initialize
     (local $temp v128)
     (local $len f32)
+
+    global.get $isConstructed
+    i32.eqz
+    if
+      (call $console.error
+        (i32.const 96)
+      )
+    end
 
     (global.set $velocity
       (v128.load
@@ -132,27 +142,26 @@
       )
       (f32.const 0)
     )
-      if
-        global.get $velocity
-        global.set $normalizedVelocity
-      else
-        local.get $len
-        f32.const 1
-        f32.eq
-          if
-            global.get $velocity
-            global.set $normalizedVelocity
-          else
-            f32.const 1
-            local.get $len
-            f32.div
-            f32x4.splat
-            global.get $velocity
-            f32x4.mul
-            global.set $normalizedVelocity
-          end
-      end
-
+    if
+      global.get $velocity
+      global.set $normalizedVelocity
+    else
+      local.get $len
+      f32.const 1
+      f32.eq
+        if
+          global.get $velocity
+          global.set $normalizedVelocity
+        else
+          f32.const 1
+          local.get $len
+          f32.div
+          f32x4.splat
+          global.get $velocity
+          f32x4.mul
+          global.set $normalizedVelocity
+        end
+    end
 
     global.get $normalizedVelocity
     f32x4.extract_lane 0
@@ -200,8 +209,6 @@
     f32x4.extract_lane 2
     f32x4.splat
     global.set $velocityZ
-
-    
   )
 
   (func $v3_dot
@@ -339,12 +346,13 @@
     f32.gt
   )
   (func $testTriangle
-    (param $last_collider_world_vertices_pointer i32)
     (param $planePosition i32)
+    (param $triangle0 v128)
+    (param $triangle1 v128)
+    (param $triangle2 v128)
     (param $meshID i32)
     (param $t0 f32)
     (param $t1 f32)
-    (param $signedDistToTrianglePlane f32)
 
     (local $planeCollider v128)
     (local $temp_t f32)
@@ -352,76 +360,18 @@
     
     (local $planeIntersectionPoint v128)
     (local $distToCollisionSquared f32)
-
-    (local $triangle0 v128)
-    (local $triangle1 v128)
-    (local $triangle2 v128)
     
     i32.const 0
     global.set $found
 
-    global.get $isMoving
-    i32.eqz
-    if
-        local.get $signedDistToTrianglePlane
-        f32.abs
-        f32.const 1
-        f32.ge  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
-        if
-          return
-        end
-    end
-
     f32.const 1.0
     global.set $lowestRoot
 
-    (local.set $triangle0
-      (v128.load
-        (i32.add
-          (local.get $last_collider_world_vertices_pointer)
-          ;;Tähän mukaan pointteri?
-          (i32.load
-            (i32.add
-              (i32.const 16)
-              (local.get $planePosition)
-            )
-          )
-        )
-      )
-    )
-
-    (local.set $triangle1
-      (v128.load
-        (i32.add
-          (local.get $last_collider_world_vertices_pointer)
-          (i32.load
-            (i32.add
-              (i32.const 20)
-              (local.get $planePosition)
-            )
-          )
-        )
-      )
-    )
-    (local.set $triangle2
-      (v128.load 
-        (i32.add
-          (local.get $last_collider_world_vertices_pointer)
-          (i32.load
-            (i32.add
-              (i32.const 24)
-              (local.get $planePosition)
-            )
-          )
-        )
-      )
-    )
     global.get $isMoving
     if
       (local.get $t0)  ;;t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
       (local.get $t1)   ;; t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
-    
-      
+  
       f32.gt
       if
           local.get $t0
@@ -790,6 +740,8 @@
     (local $t0 v128)
     (local $t1 v128)
 
+    (local $doTest i32)
+
     local.get $length
     i32.eqz
     if
@@ -822,20 +774,14 @@
             )
             (global.get $normalizedVelocityX)
             (local.tee $planeY
-              (v128.load
-                (i32.add
+              (v128.load offset=16
                   (local.get $planePositionHorizontal)
-                  (i32.const 16)
-                )
               )
             )
             (global.get $normalizedVelocityY)
             (local.tee $planeZ
-              (v128.load
-                (i32.add
+              (v128.load offset=32
                   (local.get $planePositionHorizontal)
-                  (i32.const 32)
-                )
               )
             )
             (global.get $normalizedVelocityZ)
@@ -845,121 +791,301 @@
       )
       v128.any_true
       if
-        (call $testTriangle
-          (local.get $last_collider_world_vertices_pointer)
-          (local.get $planePosition)
-          (local.get $meshID)
-          (f32x4.extract_lane 0
-           (local.tee $t0
-            (f32x4.div
-              (f32x4.sub
-                (f32x4.splat
-                  (f32.const -1)
+        (local.set $signedDistToTrianglePlane ;;Todo: convert to "tee"
+          (f32x4.add
+            (v128.load offset=48
+                (local.get $planePositionHorizontal)
+            )
+            (call $simd_dot
+              (global.get $basePointX)
+              (local.get $planeX)
+              
+              (global.get $basePointY)
+              (local.get $planeY)
+              
+              (global.get $basePointZ)
+              (local.get $planeZ)
+            )
+          )
+        )
+        (local.set $doTest
+          (i32.const 1)
+        )
+        global.get $isMoving
+        i32.eqz
+        if
+            (f32x4.extract_lane 0
+              (local.get $signedDistToTrianglePlane)
+            )
+            f32.abs
+            f32.const 1
+            f32.ge  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
+            if
+              (local.set $doTest
+                (i32.const 0)
+              )
+            end
+        end
+        (local.get $doTest)
+        if
+          (call $testTriangle
+            (local.get $planePosition)
+
+            (v128.load
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                (i32.load offset=16
+                    (local.get $planePosition)
                 )
-                (local.tee $signedDistToTrianglePlane
-                  (f32x4.add
-                    (v128.load
-                      (i32.add
-                        (local.get $planePositionHorizontal)
-                        (i32.const 48)
-                      )
-                    )
-                    (call $simd_dot
-                      (global.get $basePointX)
-                      (local.get $planeX)
-                      
-                      (global.get $basePointY)
-                      (local.get $planeY)
-                      
-                      (global.get $basePointZ)
-                      (local.get $planeZ)
-                    )
+              )
+            )
+
+            (v128.load
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                (i32.load offset=20
+                    (local.get $planePosition)
+                )
+              )
+            )
+          
+            (v128.load 
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                (i32.load offset=24
+                    (local.get $planePosition)
+                )
+              )
+            )
+
+
+            (local.get $meshID)
+            (f32x4.extract_lane 0
+            (local.tee $t0
+              (f32x4.div
+                (f32x4.sub
+                  (f32x4.splat
+                    (f32.const -1)
+                  )
+                  (local.get $signedDistToTrianglePlane)
+                )
+                (local.tee $normalDotVelocity
+                  (call $simd_dot
+                    (local.get $planeX)
+                    (global.get $velocityX)
+
+                    (local.get $planeY)
+                    (global.get $velocityY)
+
+                    (local.get $planeZ)
+                    (global.get $velocityZ)
                   )
                 )
               )
-              (local.tee $normalDotVelocity
-                (call $simd_dot
-                  (local.get $planeX)
-                  (global.get $velocityX)
-
-                  (local.get $planeY)
-                  (global.get $velocityY)
-
-                  (local.get $planeZ)
-                  (global.get $velocityZ)
+            )
+            )
+            (f32x4.extract_lane 0
+              (local.tee $t1
+              (f32x4.div
+                (f32x4.sub
+                  (f32x4.splat
+                    (f32.const 1)
+                  )
+                  (local.get $signedDistToTrianglePlane)
                 )
+                (local.get $normalDotVelocity)
               )
             )
-           )
-          )
-          (f32x4.extract_lane 0
-            (local.tee $t1
-            (f32x4.div
-              (f32x4.sub
-                (f32x4.splat
-                  (f32.const 1)
-                )
-                (local.get $signedDistToTrianglePlane)
-              )
-              (local.get $normalDotVelocity)
             )
           )
-          )
-          (f32x4.extract_lane 0
-            (local.get $signedDistToTrianglePlane)
-          )
+        end
+        (local.set $doTest
+          (i32.const 1)
         )
-        (call $testTriangle
-          (local.get $last_collider_world_vertices_pointer)
-          (i32.add
-            (local.get $planePosition)
-            (i32.const 28)
-          )
-          (local.get $meshID)
-          (f32x4.extract_lane 1
-           (local.get $t0)
-          )
-          (f32x4.extract_lane 1
-            (local.get $t1)
-          )
-          (f32x4.extract_lane 1
-            (local.get $signedDistToTrianglePlane)
-          )
-        )
-        (call $testTriangle
-          (local.get $last_collider_world_vertices_pointer)
-          (i32.add
-            (local.get $planePosition)
-            (i32.const 56)
-          )
-          (local.get $meshID)
-          (f32x4.extract_lane 2
-           (local.get $t0)
-          )
-          (f32x4.extract_lane 2
-            (local.get $t1)
-          )
-          (f32x4.extract_lane 2
-            (local.get $signedDistToTrianglePlane)
-          )
-        )
-        (call $testTriangle
-          (local.get $last_collider_world_vertices_pointer)
+        global.get $isMoving
+        i32.eqz
+        if
+            (f32x4.extract_lane 1
+              (local.get $signedDistToTrianglePlane)
+            )
+            f32.abs
+            f32.const 1
+            f32.ge  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
+            if
+              (local.set $doTest
+                (i32.const 0)
+              )
+            end
+        end
+        (local.get $doTest)
+        if
+          (call $testTriangle
             (i32.add
-                (local.get $planePosition)
-                (i32.const 84)
+              (local.get $planePosition)
+              (i32.const 28)
             )
-          (local.get $meshID)
-          (f32x4.extract_lane 3
-           (local.get $t0)
+
+            (v128.load
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                ;;Tähän mukaan pointteri?
+                (i32.load offset=44
+                    (local.get $planePosition)
+                )
+              )
+            )             
+
+            (v128.load
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                (i32.load offset=48
+                    (local.get $planePosition)
+                )
+              )
+            )
+          
+            (v128.load 
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                (i32.load offset=52
+                    (local.get $planePosition)
+                )
+              )
+            )
+
+
+            (local.get $meshID)
+            (f32x4.extract_lane 1
+            (local.get $t0)
+            )
+            (f32x4.extract_lane 1
+              (local.get $t1)
+            )
           )
-          (f32x4.extract_lane 3
-            (local.get $t1)
-          )
-          (f32x4.extract_lane 3
-            (local.get $signedDistToTrianglePlane)
-          )
+        end
+        (local.set $doTest
+          (i32.const 1)
         )
+        global.get $isMoving
+        i32.eqz
+        if
+            (f32x4.extract_lane 2
+              (local.get $signedDistToTrianglePlane)
+            )
+            f32.abs
+            f32.const 1
+            f32.ge  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
+            if
+              (local.set $doTest
+                (i32.const 0)
+              )
+            end
+        end
+        (local.get $doTest)
+        if
+          (call $testTriangle
+            (i32.add
+              (local.get $planePosition)
+              (i32.const 56)
+            )
+            (v128.load
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                (i32.load offset=72
+                    (local.get $planePosition)
+                )
+              )
+            )
+              
+
+            (v128.load
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                (i32.load offset=76
+                    (local.get $planePosition)
+                )
+              )
+            )
+          
+            (v128.load 
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                (i32.load offset=80
+                    (local.get $planePosition)
+                )
+              )
+            )
+            (local.get $meshID)
+            (f32x4.extract_lane 2
+            (local.get $t0)
+            )
+            (f32x4.extract_lane 2
+              (local.get $t1)
+            )
+          )
+        end
+        (local.set $doTest
+          (i32.const 1)
+        )
+        global.get $isMoving
+        i32.eqz
+        if
+            (f32x4.extract_lane 3
+              (local.get $signedDistToTrianglePlane)
+            )
+            f32.abs
+            f32.const 1
+            f32.ge  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
+            if
+              (local.set $doTest
+                (i32.const 0)
+              )
+            end
+        end
+        (local.get $doTest)
+        if
+          (call $testTriangle
+              (i32.add
+                  (local.get $planePosition)
+                  (i32.const 84)
+              )
+            (v128.load
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                ;;Tähän mukaan pointteri?
+                (i32.load offset=100
+                    (local.get $planePosition)
+                )
+              )
+            )
+              
+
+            (v128.load
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                (i32.load offset=104
+                    (local.get $planePosition)
+                )
+              )
+            )
+          
+            (v128.load 
+              (i32.add
+                (local.get $last_collider_world_vertices_pointer)
+                (i32.load offset=108
+                    (local.get $planePosition)
+                )
+              )
+            )
+            (local.get $meshID)
+            (f32x4.extract_lane 3
+            (local.get $t0)
+            )
+            (f32x4.extract_lane 3
+              (local.get $t1)
+            )
+          )
+        end
       end
       (local.tee $planePosition
         (i32.add

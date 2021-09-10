@@ -103,9 +103,7 @@ export class ColliderJS {
     radius: { 0: number; 1: number; 2: number; };
 
     readonly collisionsScalingMatrix:TerraMatrix;
-    get collisionNotFound() {
-        return new DataView(engine.memory.buffer, this.rust.collision_not_found_pointer,4);
-    }
+
     get scaledPosition() {
         return new Float32Array(engine.memory.buffer, this.rust.scaled_position_pointer, 4) as TerraVector3;
     }
@@ -114,9 +112,6 @@ export class ColliderJS {
     }
     get intersectionPointWasm() {
         return new Float32Array(engine.memory.buffer, this.rust.intersection_point_pointer, 4) as TerraVector3;
-    }
-    get nearestDistanceSquared() {
-        return  new DataView(engine.memory.buffer, this.rust.nearest_distance_squared_pointer,4);
     }
     constructor(private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
         this.finalPosition= new TerraVector3();
@@ -195,9 +190,10 @@ export class ColliderJS {
     /** @hidden */
     public _initialize(source: Vector3, dir: Vector3, e: number): void {
         //this.#nearestDistanceSquared = 9999999;
-        this.nearestDistanceSquared.setFloat32(0,9999999,true);
+        this.rust.nearest_distance_squared=9999999;
         //this.#velocity = dir;
-        this.#velocitySquaredLength = this.scaledVelocity[0] * this.scaledVelocity[0] + this.scaledVelocity[1] * this.scaledVelocity[1] + this.scaledVelocity[2] * this.scaledVelocity[2];
+        const scaledVelocity=this.scaledVelocity;
+        this.#velocitySquaredLength = scaledVelocity[0] * scaledVelocity[0] + scaledVelocity[1] * scaledVelocity[1] + scaledVelocity[2] * scaledVelocity[2];
        /* this.#velocity[0] = dir[0];
         this.#velocity[1] = dir[1];
         this.#velocity[2] = dir[2];*/
@@ -232,8 +228,7 @@ export class ColliderJS {
 
         this.epsilon = e;
        // this.collisionFound = false;
-
-        this.collisionNotFound.setUint32(0,1, true);
+       this.rust.collision_not_found=1;
         //console.log('set collisionNotFound true')
 
 
@@ -336,9 +331,11 @@ export class ColliderJS {
                 t0 = 0;
             }
             //TODO: Use simd
-            this.#planeIntersectionPoint[0] = this.scaledPosition[0] - triangle.planeCollider[0] + this.scaledVelocity[0] * t0;
-            this.#planeIntersectionPoint[1] = this.scaledPosition[1] - triangle.planeCollider[1] + this.scaledVelocity[1] * t0;
-            this.#planeIntersectionPoint[2] = this.scaledPosition[2] - triangle.planeCollider[2] + this.scaledVelocity[2] * t0;
+            const scaledPosition=this.scaledPosition;
+            const scaledVelocity=this.scaledVelocity;
+            this.#planeIntersectionPoint[0] = scaledPosition[0] - triangle.planeCollider[0] + scaledVelocity[0] * t0;
+            this.#planeIntersectionPoint[1] = scaledPosition[1] - triangle.planeCollider[1] + scaledVelocity[1] * t0;
+            this.#planeIntersectionPoint[2] = scaledPosition[2] - triangle.planeCollider[2] + scaledVelocity[2] * t0;
            // console.log(this.#planeIntersectionPoint[0])
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             // this._velocity.scaleToRef(t0, this._tempVector);
@@ -453,13 +450,13 @@ export class ColliderJS {
             //var distToCollisionSquared = t * (this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
           //  console.log(this.collisionFound);
           
-            if (this.collisionNotFound.getUint32(0,true) === 1 || distToCollisionSquared < this.nearestDistanceSquared.getFloat32(0,true)) {
+            if (this.rust.collision_not_found === 1 || distToCollisionSquared < this.rust.nearest_distance_squared) {
                 this.intersectionPointWasm.set(this.#collisionPoint);
-                this.nearestDistanceSquared.setFloat32(0,distToCollisionSquared,true);
+                this.rust.nearest_distance_squared=distToCollisionSquared;
 
               //  console.log('nearestDistanceSquared',this.#nearestDistanceSquared)
                 //this.collisionFound = true;
-                this.collisionNotFound.setUint32(0,0,true);
+                this.rust.collision_not_found=0;
                 //console.log('set collisionNotFound 0', this.collisionNotFound.getUint32(0,true))
                 this.collidedMesh = "hostMesh";
             }
