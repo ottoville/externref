@@ -1,6 +1,5 @@
 type ObjStoreDetails = { version: number, parameters?: IDBObjectStoreParameters, indices?:ObjStoreIndex[] };
 type ObjStoreIndex= {version:number,name: string, keyPath: string | string[],options?: IDBIndexParameters}
-type ObjStores = { [id: string]: ObjStoreDetails }
 const ObjectStores = {
     zones: <ObjStoreDetails>{
         version: 1,
@@ -18,7 +17,7 @@ const ObjectStores = {
     },
     save: <ObjStoreDetails>{
         version: 3,
-        parameters: { keyPath: "id", autoIncrement: true }
+        parameters: { keyPath: ["type", "name"], autoIncrement: false }
     },
     maps: <ObjStoreDetails>{
         version:4,

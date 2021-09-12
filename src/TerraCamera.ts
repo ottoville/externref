@@ -1,18 +1,11 @@
 ﻿import type { RenderPass } from "./GPU/RenderPass.js";
 
-import { ObjectWorkerThread } from "./WorkerThread.js";
 import type { GPU } from "./GPU.js";
 import { GPUBufferUsage } from "./GPU.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Projection } from "./GPU/Projection.js";
 
-const worker = new ObjectWorkerThread('/js/workers/webworkers/cameraWorker.js', {
-    type: 'module'
-});
-let uniqueID = 0;
-
 export class TerraCamera {
-    readonly #uniqueID: number = uniqueID++;
     readonly #childCameras: Set<TerraCamera> = new Set();
 
     readonly #clusterArrayBuffer: GPUStorageBuffer
@@ -112,7 +105,7 @@ export class TerraCamera {
         renderPass.cameras.add(this);
         gpu.projections.add(this.projection);
     }
-    get position(): Readonly<{ [0]: number, [1]: number, [2]: number }> {
+    get position(): Readonly<{ [0]: number, [1]: number, [2]: number } > {
         return this.#position
     }
     set position(position: [number, number, number] | { [0]: number, [1]: number, [2]: number }) {
@@ -287,9 +280,4 @@ export class TerraCamera {
         }
         // result.update(x, y, viewport.width, viewport.height, world ? world : Matrix.IdentityReadOnly, cameraViewSpace ? Matrix.IdentityReadOnly : camera.getViewMatrix(), camera.getProjectionMatrix());
     }
-    onResize(width: number, height: number) {
-        console.log('terracamera onresize', [width, height]);
-        worker.signal(this.#uniqueID, 'onResize', [width, height]);
-    }
-
 }

@@ -2,13 +2,11 @@
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
 import type { Engine } from "engine.js";
-import { TerraMatrix, TerraVector3, Triangle, Vector3 } from "./Math.js";
+import { TerraMatrix, TerraVector3, Triangle } from "./Math.js";
 import { Collider } from "/js/engine/engine.js";
 declare const engine:Engine;
 
-
-
-function Dot(left: [number, number, number] | Float32Array | Vector3, right: [number, number, number] | Float32Array | Vector3): number {
+function Dot(left: [number, number, number] | Float32Array | TerraVector3, right: [number, number, number] | Float32Array | TerraVector3): number {
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 }
 function CrossToRef(left: [number, number, number], right: [number, number, number], result: [number, number, number]): void {
@@ -188,7 +186,7 @@ export class ColliderJS {
     }
     // Methods
     /** @hidden */
-    public _initialize(source: Vector3, dir: Vector3, e: number): void {
+    public _initialize(source: TerraVector3, dir: TerraVector3, e: number): void {
         //this.#nearestDistanceSquared = 9999999;
         this.rust.nearest_distance_squared=9999999;
         //this.#velocity = dir;

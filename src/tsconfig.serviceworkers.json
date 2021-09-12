@@ -15,7 +15,7 @@
       "node_modules"
     ],
   "include": [
-    "./workers/service-worker.ts",
-    "./workers/service-worker.published.ts"
+    "./service-worker.ts",
+    "./service-worker.published.ts"
   ]
 }

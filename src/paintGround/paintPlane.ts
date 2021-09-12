@@ -5,7 +5,6 @@ import { hasCanvasListener } from "../traits/canvasListener.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
-import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 
@@ -51,13 +50,12 @@ export class paintPlane extends paintGround {
     #mesh:PlaneMesh
     constructor(
         scene: Scene,
-        camera: ArcRotateCamera,
         ground: Terrain,
         sea: Sea,
         uitab: hasCanvasListener,
         callback: PTResultF
     ) {
-        super(scene, camera, ground, sea, uitab,(p) => {
+        super(scene, ground, sea, uitab,(p) => {
             this.#mesh.update_scale(engine.rustEngine,this.#mesh.scale_x, this.#mesh.scale_y, 0)
             callback(p);
         });

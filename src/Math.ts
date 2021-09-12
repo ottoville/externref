@@ -2,13 +2,6 @@
 import type { MainNode } from "TerraNode";
 declare const engine:Engine;
 
-export interface Vector3 extends Omit<TerraVector3, 'buffer'> {
-    [0]: number
-    [1]: number
-    [2]: number
-}
-
-export type Vector4 = Omit<TerraVector4, 'buffer'>;
 export class TerraMatrix extends Float32Array {
     view64: Float64Array;
     constructor(Arr?: ArrayBufferLike, offset?: number)
@@ -183,7 +176,7 @@ export class TerraVector3 extends Float32Array {
     clone() {
         return new TerraVector3(this.buffer.slice(this.byteOffset, this.byteOffset+12));
     }
-    multiply2Ref(m: TerraMatrix, ref: Vector3|Vector4): void {
+    multiply2Ref(m: TerraMatrix, ref: TerraVector3|TerraVector4): void {
         var rx = this[0] * m[0] + this[1] * m[4] + this[2] * m[8] + m[12];
         var ry = this[0] * m[1] + this[1] * m[5] + this[2] * m[9] + m[13];
         var rz = this[0] * m[2] + this[1] * m[6] + this[2] * m[10] + m[14];
@@ -203,7 +196,7 @@ export class TerraVector3 extends Float32Array {
         this[2] *= scale;
         return this;
     }
-    override set(arr:[number,number,number] | TerraVector3 | Vector3) {
+    override set(arr:[number,number,number] | TerraVector3 | ({0:number, 1:number, 2:number} & Float32Array)) {
         this[0] = arr[0];
         this[1] = arr[1];
         this[2] = arr[2];

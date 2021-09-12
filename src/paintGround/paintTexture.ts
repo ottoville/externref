@@ -4,7 +4,6 @@ import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
-import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { TerraVector2 } from "../Math.js";
 
 export class paintTexture extends paintGround {
@@ -22,7 +21,6 @@ export class paintTexture extends paintGround {
     }
     constructor(
         scene: Scene,
-        camera: ArcRotateCamera,
         ground: Terrain,
         sea: Sea,
         protected zonedt: GPUTexture,
@@ -32,7 +30,7 @@ export class paintTexture extends paintGround {
         private ratio:number,
         callback: PTResultF
     ) {
-        super(scene, camera, ground, sea, uitab,callback);
+        super(scene, ground, sea, uitab,callback);
     }
     async onAreaDraw(width: number): Promise<void> {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {

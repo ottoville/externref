@@ -3,12 +3,19 @@ import type { GPU } from "./GPU.js";
 import { TerraNodeGPU } from "./TerraNode.js";
 import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
-import { Uint16Vector2, Vector3 } from "./Math.js";
+import type { TerraVector3 } from "./Math.js";
+import { Uint16Vector2 } from "./Math.js";
 import init, { Engine as RustEngine } from "/js/engine/engine.js";
 import { GPUBufferUsage } from "./GPU.js";
+import { TerraCamera } from "./TerraCamera.js";
+import { Projection } from "./GPU/Projection.js";
+//@ts-ignore
+import { PositionCamera } from "./controllers/positionCamera.js";
+//@ts-ignore
+import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 
 
-function Dot(left: [number, number, number] | Float32Array | Vector3, right: [number, number, number] | Float32Array | Vector3): number {
+function Dot(left: [number, number, number] | Float32Array | TerraVector3, right: [number, number, number] | Float32Array | TerraVector3): number {
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 }
 
@@ -41,7 +48,10 @@ export class Engine {
     displacementVector: [number, number, number] = [0, 0, 0];
 
     updateLights=false;
+    mainCamera: TerraCamera;
+    inputManager: CameraController | null = null
     static async initEngine(gpu: GPU, DB: Promise<EarthDatabase>, canvas: HTMLCanvasElement): Promise<Engine> {
+        
         //Init rust wasm
         const rust = await init();
 
@@ -62,14 +72,35 @@ export class Engine {
         });
         const wasm: ColliderWasm = obj.instance.exports as any;
 
-        return new Engine(gpu, DB, canvas, wasm, rust.memory, new RustEngine());
+        return new Engine(gpu, await DB, canvas, wasm, rust.memory, new RustEngine());
     }
-    constructor(public gpu: GPU, public DB: Promise<EarthDatabase>, public canvas: HTMLCanvasElement, public wasm: ColliderWasm, public memory: WebAssembly.Memory, public rustEngine: RustEngine) {
+    attachCameraInput(initial=false) {
+        this.inputManager=  new ArcRotateCamera(this.mainCamera,initial);
+       // this.inputManager = new PositionCamera(this.mainCamera,initial);
+    } 
+    constructor(
+        public gpu: GPU,
+        public DB: EarthDatabase,
+        public canvas: HTMLCanvasElement,
+        public wasm: ColliderWasm,
+        public memory: WebAssembly.Memory,
+        public rustEngine: RustEngine
+    ) {
         window.engine=this;
-       // this.collisionNotFound = this.mallocView(4);
-
-        this.collider = new ColliderJS();
+        const projection = new Projection(gpu);
+        this.mainCamera = new TerraCamera(gpu.renderPassScreen, projection, gpu);
         
+        
+        this.collider = new ColliderJS();
+        this.attachCameraInput(true);
+
+        const saveControllerState=() => {
+            this.inputManager?.serialize();
+        };
+        document.addEventListener('visibilitychange', saveControllerState);
+        window.addEventListener('beforeunload', saveControllerState);
+
+
         //TODO: this does not work after memory grow
         this.#collidedMesh = new DataView(this.memory.buffer, this.collider.rust.collided_mesh_pointer, 4);
         wasm.construct( this.collider.rust.collision_not_found_pointer,

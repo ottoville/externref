@@ -1,11 +1,8 @@
 import { Terrain } from "./world/terrain.js";
 import type { Sea } from "./world/water.js";
-import { ArcRotateCamera } from "./ArcRotateCamera.js";
-
 export interface UITABClassLike {
     new (
         terrain: Terrain,
-        camera: ArcRotateCamera,
         sea: Sea): UITAB;
 
     label: string;
@@ -16,7 +13,6 @@ export abstract class UITAB {
     static label:string;
     constructor(
         public terrain: Terrain,
-        public camera: ArcRotateCamera,
         public sea: Sea
     ) {
 

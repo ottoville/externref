@@ -6,7 +6,6 @@ import type { DrawableSimple } from "../GPU/Drawable.js";
 import { TerraNodeGPU } from "../TerraNode.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
-import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU";
 import { GPUBufferUsage } from "../gpu.js"
@@ -68,7 +67,6 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
 
     constructor(
         public terrain: Terrain,
-        public camera: ArcRotateCamera,
         public sea: Sea,
     ) {
         super(getRenderPipeline(terrain), 4);
@@ -122,7 +120,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
             return;
         }
         this.#canvasListener.addListener("pointerup", this.pointerupf, { once: true });
-        this.camera.detachControl();
+        engine.inputManager?.destroy();
 
         this.mouseinterval = setInterval(() => {
             this.elevator.elevate(this.terrain.mesh,200,5*this.direction);
@@ -132,7 +130,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         }, 17);
     }
     pointerupf = (): void => {
-        this.camera.attachControl();
+        engine.attachCameraInput();
         clearInterval(this.mouseinterval);
     }
     override destroy = (): void => {

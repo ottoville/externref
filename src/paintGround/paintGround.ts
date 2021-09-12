@@ -8,7 +8,6 @@ import type { PTResultF } from "../types/interfaces/index.js";
 import type { hasCanvasListener } from "../traits/canvasListener.js";
 import type { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
-import type { ArcRotateCamera } from "../ArcRotateCamera";
 import { Engine } from "../engine.js";
 declare const engine:Engine;
 
@@ -30,7 +29,6 @@ export abstract class paintGround {
     #start_position = new TerraVector2(2);
     constructor(
         protected scene: Scene,
-        protected camera: ArcRotateCamera,
         protected ground: Terrain,
         protected sea: Sea,
         private uitab: hasCanvasListener,
@@ -44,7 +42,7 @@ export abstract class paintGround {
          this.resolve = callback;
      }*/
     public destroy() {
-        this.camera.attachControl();
+        engine.attachCameraInput();
         this.uitab.canvasListener.destroy();
     }
 
@@ -153,8 +151,7 @@ export abstract class paintGround {
     #pointerUp = () => {
 
         this.uitab.canvasListener.removeListener('pointermove', this.#drawArea);
-
-        this.camera.attachControl();
+        engine.attachCameraInput();
         //fix race condition
         if (this.#end_position[0] == 0)
             return;
@@ -181,7 +178,7 @@ export abstract class paintGround {
         if (pickInfo) {
             this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
             this.onMainPointerDown(this.#start_position);
-            this.camera.detachControl();
+            engine.inputManager?.destroy();
             this.uitab.canvasListener.addListener("pointermove", this.#drawArea, { lazy: 25 });
 
             this.uitab.canvasListener.addListener("pointerup", this.#pointerUp, { once: true });

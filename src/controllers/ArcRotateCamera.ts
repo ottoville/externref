@@ -1,13 +1,46 @@
-﻿import type { Engine } from "./engine.js";
-import { TerraMatrix, TerraVector3 } from "./Math.js";
-import type { TerraCamera } from "./TerraCamera.js";
+﻿import type { Engine } from "../engine.js";
+import { TerraMatrix, TerraVector3 } from "../Math.js";
+import type { TerraCamera } from "../TerraCamera.js";
 let pointerDownButton = 0;
 const panningSensibility = 20;
 const angularSensibilityX = 3000;
 const angularSensibilityY = 3000;
+declare const engine:Engine;
 
+interface serialized {
+    alpha: number,
+    beta: number,
+    radius: number,
+    target: {0:number, 1:number, 2:number} & Float32Array,
+    position: {0:number, 1:number, 2:number} & Float32Array
+}
 
-export class ArcRotateCamera {
+export class ArcRotateCamera implements CameraController {
+    #serializeRequested=false;
+
+    serialize(): void {
+        if(this.#serializeRequested)
+            return;
+        this.#serializeRequested=true;
+        const request=engine.DB.transaction("save", "readwrite").objectStore("save").put({
+            type: 'camera',
+            name: 'ArchRotateCamera',
+            data: {
+                alpha: this.alpha,
+                beta: this.beta,
+                radius: this.radius,
+                target:this.#target,
+                position:new Float32Array(engine.mainCamera.position as unknown as  number[]) as {0:number, 1:number, 2:number} & Float32Array
+            } as serialized
+        });
+        request.onsuccess=() => {
+            this.#serializeRequested    =false;
+        };
+        request.onerror =(e) => {
+            this.#serializeRequested    =false;
+            console.error(e);
+        };
+    }
 
     #computationVector = new Float32Array(3);
     //position = new Float32Array(3);
@@ -42,9 +75,30 @@ export class ArcRotateCamera {
     #inertialBetaOffset = 0;
     #collisionTriggered = false;
     #target=new TerraVector3([100,0,1000]);
-    constructor(public alpha: number, public beta: number, public radius: number, private engine: Engine, private camera: TerraCamera) {
-        engine.canvas.addEventListener('pointerup', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
-        engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove));
+    alpha=0;
+    beta=0;
+    radius=10;
+    constructor(private camera: TerraCamera,initial=false) {
+        engine.canvas.addEventListener('wheel', this.#cameraWheel);
+        engine.canvas.addEventListener('pointerdown', this.#cameraPointerDown);
+        if(initial) {
+            engine.DB.transaction("save").objectStore("save").get(["camera", "ArchRotateCamera"]).onsuccess = async (evt) => {
+                if ((evt.target as IDBRequest).result) {
+                    const restored = (evt.target as IDBRequest).result.data as serialized | undefined;
+                    if(restored) {
+                        this.alpha = restored.alpha;
+                        this.alpha = restored.alpha;
+                        this.beta = restored.beta;
+                        this.radius = restored.radius;
+                        this.#target.set(restored.target);
+                        camera.position=restored.position;
+                        this.#newPosition.set(restored.position);
+                        this.#calculateDirection();
+            
+                    }
+                }
+            }
+        }
     }
     #cameraMove = (e: PointerEvent) => {
         e.preventDefault();
@@ -75,18 +129,17 @@ export class ArcRotateCamera {
                 this.#targetLerpPosition=0;
             })
         }
-        this.engine.canvas.addEventListener('pointermove', this.#cameraMove);
+        engine.canvas.addEventListener('pointermove', this.#cameraMove);
+        engine.canvas.addEventListener('pointerup', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove), {once:true});
+        engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove), {once:true});
+
 
     }
 
-    attachControl(): void {
-        this.engine.canvas.addEventListener('wheel', this.#cameraWheel);
-        this.engine.canvas.addEventListener('pointerdown', this.#cameraPointerDown);
-    }
-    detachControl() {
-        this.engine.canvas.removeEventListener('pointerdown', this.#cameraPointerDown);
-        this.engine.canvas.removeEventListener('pointermove', this.#cameraMove);
-        this.engine.canvas.removeEventListener('wheel', this.#cameraWheel);
+    destroy() {
+        engine.canvas.removeEventListener('pointerdown', this.#cameraPointerDown);
+        engine.canvas.removeEventListener('pointermove', this.#cameraMove);
+        engine.canvas.removeEventListener('wheel', this.#cameraWheel);
     }
     async calculateCameraPositionAndTarget() {
 
@@ -109,45 +162,45 @@ export class ArcRotateCamera {
         this.#newPosition[1] = this.#target[1] + this.#computationVector[1];
         this.#newPosition[2] = this.#target[2] + this.#computationVector[2];
 
-        this.engine.collider.radius[0] = this.#collisionRadius[0];
-        this.engine.collider.radius[1] = this.#collisionRadius[1];
-        this.engine.collider.radius[2] = this.#collisionRadius[2];
+        engine.collider.radius[0] = this.#collisionRadius[0];
+        engine.collider.radius[1] = this.#collisionRadius[1];
+        engine.collider.radius[2] = this.#collisionRadius[2];
 
         // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
 
         // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
-        const scaledPosition = this.engine.collider.scaledPosition;
-        scaledPosition[0] = this.camera.position[0] / this.engine.collider.radius[0];
-        scaledPosition[1] = this.camera.position[1] / this.engine.collider.radius[1];
-        scaledPosition[2] = this.camera.position[2] / this.engine.collider.radius[2];
+        const scaledPosition = engine.collider.scaledPosition;
+        scaledPosition[0] = this.camera.position[0] / engine.collider.radius[0];
+        scaledPosition[1] = this.camera.position[1] / engine.collider.radius[1];
+        scaledPosition[2] = this.camera.position[2] / engine.collider.radius[2];
         //this._newPosition.subtractToRef(this._position, this._collisionVelocity);
         // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
-        const scaledVelocity=this.engine.collider.scaledVelocity;
-        scaledVelocity[0] = (this.#newPosition[0] - this.camera.position[0]) / this.engine.collider.radius[0];
-        scaledVelocity[1] = (this.#newPosition[1] - this.camera.position[1]) / this.engine.collider.radius[1];
-        scaledVelocity[2] = (this.#newPosition[2] - this.camera.position[2]) / this.engine.collider.radius[2];
+        const scaledVelocity=engine.collider.scaledVelocity;
+        scaledVelocity[0] = (this.#newPosition[0] - this.camera.position[0]) / engine.collider.radius[0];
+        scaledVelocity[1] = (this.#newPosition[1] - this.camera.position[1]) / engine.collider.radius[1];
+        scaledVelocity[2] = (this.#newPosition[2] - this.camera.position[2]) / engine.collider.radius[2];
 
-        this.engine.collider.collidedMesh = undefined;
-        this.engine.collider._retry = 0;
+        engine.collider.collidedMesh = undefined;
+        engine.collider._retry = 0;
 
         // terraEngine.collider._initialVelocity = coordinator._scaledVelocity;
 
         //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
         //let starttime=performance.now();
-        await this.engine.collideWithWorld();
+        await engine.collideWithWorld();
 
 
         //coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
-        this.engine.collider.finalPosition[0] *= this.engine.collider.radius[0]
-        this.engine.collider.finalPosition[1] *= this.engine.collider.radius[1]
-        this.engine.collider.finalPosition[2] *= this.engine.collider.radius[2]
+        engine.collider.finalPosition[0] *= engine.collider.radius[0]
+        engine.collider.finalPosition[1] *= engine.collider.radius[1]
+        engine.collider.finalPosition[2] *= engine.collider.radius[2]
         //run the callback
         // if (!this.engine.collider.collidedMesh) {
-        if (this.engine.collider.rust.collision_not_found) {
+        if (engine.collider.rust.collision_not_found) {
             //this._position.copyFrom(position);
 
-            if (this.camera.position[0] != this.engine.collider.finalPosition[0] || this.camera.position[1] != this.engine.collider.finalPosition[1] || this.camera.position[2] != this.engine.collider.finalPosition[2]) {
-                this.camera.position = this.engine.collider.finalPosition;
+            if (this.camera.position[0] != engine.collider.finalPosition[0] || this.camera.position[1] != engine.collider.finalPosition[1] || this.camera.position[2] != engine.collider.finalPosition[2]) {
+                this.camera.position = engine.collider.finalPosition;
             }
 
             this.rebuildAnglesAndRadius();

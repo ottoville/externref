@@ -6,7 +6,6 @@ import type { Terrain } from "../world/terrain.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
-import { ArcRotateCamera } from "../ArcRotateCamera.js";
 
 export class paintLine extends paintGround {
     onMainPointerUp(/*height: number, end_position: Float32Array*/): void {
@@ -21,11 +20,10 @@ export class paintLine extends paintGround {
     }
     constructor(
         scene: Scene,
-        camera: ArcRotateCamera,
         ground: Terrain,
         sea: Sea,
         uitab: hasCanvasListener
     ) {
-        super(scene, camera, ground, sea, uitab, () => null);
+        super(scene, ground, sea, uitab, () => null);
     }
 }

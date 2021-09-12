@@ -1,7 +1,6 @@
 ﻿import { GPU } from "../GPU.js";
 
 import { TerraCamera } from "../TerraCamera.js";
-import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { Engine } from "../engine.js";
 
 
@@ -26,9 +25,6 @@ import { Human } from "../human.js";
 
 import type { DrawableSimple } from "GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
-import { Projection } from "../GPU/Projection.js";
-//@ts-ignore
-import { PositionCamera } from "../positionCamera.js";
 
 declare const engine:Engine;
 class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
@@ -44,7 +40,7 @@ export class Canvas extends TerraCompoment {
     #canvasElem: HTMLCanvasElement = <canvas class="gameControl hidden"></canvas>
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
-    async initalize(): Promise<[Scene, ArcRotateCamera]> {
+    async initalize(): Promise<[Scene]> {
         if (!window.navigator.gpu)
             throw ('no webgpu support');
         const adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
@@ -70,8 +66,6 @@ export class Canvas extends TerraCompoment {
             shaderModules.set(u, device.createShaderModule({ code: compiled }));
         }));
         const gpu = new GPU(this.#canvasElem, device, shaderModules);
-
-
         //@ts-ignore
         window.printRenderTarget = () => {
             gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.toBitmap(0)
@@ -82,32 +76,18 @@ export class Canvas extends TerraCompoment {
         }
 
         this.progress = 6;
-        this.progress = 10;
-
-
-        this.progress = 13;
 
         const terraEngine = await Engine.initEngine(gpu, DB, this.#canvasElem);
         this.progress = 15;
 
-        const projection = new Projection(gpu);
-        const mainCamera = new TerraCamera(gpu.renderPassScreen, projection, gpu)
-        this.progress = 16;
 
-        const camera = new ArcRotateCamera(0, 0, 10, terraEngine, mainCamera);
-       // const camera = new PositionCamera(terraEngine, mainCamera);
-        this.progress = 17;
-        camera.attachControl();
-
-        this.progress = 18;
-
-        const waterCamera = new TerraCamera(gpu.renderPassWater, projection, gpu, mainCamera);
-        waterCamera.beforeViewUpdate.add((position, target) => {
+        const waterCamera = new TerraCamera(gpu.renderPassWater, engine.mainCamera.projection, gpu, engine.mainCamera);
+        waterCamera.beforeViewUpdate.add((position, direction) => {
             position[1] -= (position[1] - 3) * 2;
-            target[1] = -target[1];
+            direction[1] = -direction[1];
         });
 
-        const TerraCameras = [mainCamera, waterCamera]
+        const TerraCameras = [engine.mainCamera, waterCamera]
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
         const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
@@ -116,7 +96,7 @@ export class Canvas extends TerraCompoment {
 
 
 
-        const mainScene = new Scene('main', gpu, [mainCamera, waterCamera], (terrascene) => {
+        const mainScene = new Scene('main', gpu, [engine.mainCamera, waterCamera], (terrascene) => {
             new Sun2([terrascene]);
             // Initial scene objects here
 
@@ -130,34 +110,11 @@ export class Canvas extends TerraCompoment {
 
             const ready = terrainInited.then(async ground => [ground, sea]);
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
-/*
-            DB.then(DB => {
-                DB.transaction("save").objectStore("save").get(0).onsuccess = async (evt) => {
-                    if ((evt.target as IDBRequest).result) {
-                        const restored = ((evt.target as IDBRequest).result as savedCamera).camera;
-                        camera.alpha = restored.alpha;
-                        camera.alpha = restored.alpha;
-                        camera.beta = restored.beta;
-                        camera.radius = restored.radius;
-                        mainCamera.target=restored.target;
-                        mainCamera.position=restored.position;
-                    }
-                    const l = new LazyEval(() => {
-                        //console.log(this.camera.position.y);
-                        DB.transaction("save", "readwrite").objectStore("save").put({
-                            id: 0,
-                            camera: { alpha: camera.alpha, beta: camera.beta, radius: camera.radius, target: new Float32Array([mainCamera.target[0], mainCamera.target[1], mainCamera.target[2]]), position: new Float32Array([mainCamera.position[0], mainCamera.position[1], mainCamera.position[2]]) }
-                        } as savedCamera);
-                    })
-                    mainCamera.beforeViewUpdate.add(() => {
-                        l.eval(500);
-                    });
-                }
-            });*/
+
             this.progress = 100;
             return ready;
         });
-        const debugscene = new Scene('static', gpu, [mainCamera], (scene) => {
+        const debugscene = new Scene('static', gpu, [engine.mainCamera], (scene) => {
             const sun = new MainNode(false, false,undefined,undefined,0,1,undefined,undefined,[scene]);
             sun.get_translation().set([0, 1, 0]);
             sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
@@ -234,9 +191,9 @@ export class Canvas extends TerraCompoment {
                 if (buff)
                     gpu.pendingCommandBuffers.add(buff);
             });
-            if (camera.checkInputs()) {
+            if (terraEngine.inputManager?.checkInputs()) {
                 //camera.camera.update(values => {
-                camera.calculateCameraPositionAndTarget();
+                    terraEngine.inputManager.calculateCameraPositionAndTarget();
                 //})
             }
 
@@ -375,8 +332,7 @@ export class Canvas extends TerraCompoment {
             gameControlsUI[i].classList.remove('hidden');
         }
         */
-       //@ts-ignore
-        return [mainScene, camera];
+        return [mainScene];
     }
     toolsContainer: HTMLFieldSetElement = <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;"></fieldset>
     gameState = <fieldset class="gameControl hidden" id="gameState"></fieldset>
@@ -412,7 +368,7 @@ export class Canvas extends TerraCompoment {
                         }
                     }
                 }
-                const instance = new tool(terrain, args[1], sea);
+                const instance = new tool(terrain, sea);
                 menuContainer.appendChild(tool.menuElem(instance));
                 this.openedMenu = [instance, menuContainer];
             }

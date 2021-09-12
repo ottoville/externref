@@ -3,8 +3,8 @@
 
 self.importScripts('./service-worker-assets.js');
 ((service: ServiceWorkerGlobalScope): void => {
-    service.addEventListener('install', event => event.waitUntil(onInstall(event)));
-    service.addEventListener('activate', event => event.waitUntil(onActivate(event)));
+    service.addEventListener('install', event => event.waitUntil(onInstall()));
+    service.addEventListener('activate', event => event.waitUntil(onActivate()));
     service.addEventListener('fetch', event => event.respondWith(onFetch(event)));
 })(self as any);
 
@@ -14,7 +14,7 @@ const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
 const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/ ];
 const offlineAssetsExclude = [ /^service-worker\.js$/ ];
 
-async function onInstall(event) {
+async function onInstall() {
     console.info('Service worker: Install');
         // Fetch and cache all matching items from the assets manifest
     //@ts-ignore
@@ -25,7 +25,7 @@ async function onInstall(event) {
             await caches.open(cacheName).then(cache => cache.addAll(assetsRequests));
 }
 
-async function onActivate(event) {
+async function onActivate() {
     console.info('Service worker: Activate');
 
     // Delete unused caches
@@ -35,7 +35,7 @@ async function onActivate(event) {
         .map(key => caches.delete(key)));
 }
 
-async function onFetch(event) {
+async function onFetch(event: FetchEvent) {
     let cachedResponse = null;
     if (event.request.method === 'GET') {
         // For all navigation requests, try to serve index.html from cache

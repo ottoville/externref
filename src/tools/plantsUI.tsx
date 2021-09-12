@@ -8,7 +8,6 @@ import type { PTDresult } from "../types/interfaces/index.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { Trait } from "../traits/trait.js";
 import { Sea } from "../world/water.js";
-import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { Engine } from "engine.js";
 declare const engine:Engine;
 
@@ -31,17 +30,16 @@ export class PlantsUI extends UITAB {
 
     constructor(
         terrain: Terrain,
-        camera: ArcRotateCamera,
         sea: Sea,
     ) {
-        super(terrain, camera, sea);
+        super(terrain, sea);
         if(!this.scene) {
             throw('no scene');
         }
     }
     activateDraw = () => {
         try {
-            this.PT = new paintPlane(this.scene!, this.camera, this.terrain, this.sea, this, (response: PTDresult) => {
+            this.PT = new paintPlane(this.scene!, this.terrain, this.sea, this, (response: PTDresult) => {
                 //this.PT && this.PT.destroy();
                 PlantsUI.plantsMesh.fillArea(response);
             });

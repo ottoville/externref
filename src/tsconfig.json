@@ -40,7 +40,9 @@
   "exclude": [
     "node_modules",
     "workers",
-    "lib"
+    "lib",
+    "service-worker.ts",
+    "service-worker.published.ts"
   ],
   "references": [
     { "path": "./tsconfig.workers.json" },

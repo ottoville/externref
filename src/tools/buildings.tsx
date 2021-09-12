@@ -7,7 +7,6 @@ import { Trait } from "../traits/trait.js";
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
 
-import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import { Engine } from "engine.js";
 declare const engine:Engine;
 
@@ -26,10 +25,9 @@ export class BuildingsUI extends UITAB {
     #canvasListener = new canvasListener(this);
     constructor(
         terrain: Terrain,
-        camera: ArcRotateCamera,
         sea: Sea,
     ) {
-        super(terrain, camera, sea);
+        super(terrain, sea);
 
     }
     public create = (type: string): void => {

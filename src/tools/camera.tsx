@@ -1,16 +1,14 @@
 import { UITAB } from "../UITAB.js";
 import type { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
-import { ArcRotateCamera } from "../ArcRotateCamera.js";
 export class CameraTAB extends UITAB {
     static menuElem = <button class="w3-bar-item w3-button">Debug camera</button>;
     static override label = 'Camera';
     constructor(
         terrain: Terrain,
-        camera: ArcRotateCamera,
         sea: Sea
     ) {
-        super(terrain, camera, sea);
+        super(terrain, sea);
 
     }
     override destroy = (): void => {

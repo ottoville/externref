@@ -84,7 +84,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     onResize:Set<()=>void>=new Set();
     resize(width: number, height: number) {
         [this.size[0], this.size[1]] = this._onResize(width, height);
-        this.cameras.forEach(camera => camera.onResize(this.size[0], this.size[1]));
         if (this.depthTexture) {
             this.depthTexture.size[0]=this.size[0];
             this.depthTexture.size[1]=this.size[1];

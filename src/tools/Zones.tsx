@@ -7,7 +7,6 @@ import { canvasListener } from "../traits/canvasListener.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
 import type { Scene } from "../Scene.js";
-import { ArcRotateCamera } from "../ArcRotateCamera.js";
 import type { Engine } from "engine.js";
 declare const engine:Engine;
 
@@ -38,10 +37,9 @@ export class Zones extends UITAB {
     scene: Scene;
     constructor(
         terrain: Terrain,
-        camera: ArcRotateCamera,
         sea: Sea,
     ) {
-        super(terrain, camera, sea);
+        super(terrain, sea);
         const initialScene=terrain.scenes[0];
         if(!initialScene) {
             throw(new Error('scene not found'))
@@ -69,28 +67,25 @@ export class Zones extends UITAB {
         ctx.fillRect(0, 0, 5120, 5120);
         const centerX = this.#size / 2;
         const centerZ = this.#size / 2;
-
-        (async () => {
-            (await engine.DB).transaction("zones").objectStore("zones").getAll().onsuccess = (evt) => {
-                ctx.strokeStyle = "blue";
-                ctx.fillStyle = "blue";
-                ctx.lineWidth = 1;
-                //@ts-ignore
-                ((evt.target.result) as PTDresult[]).forEach(z => {
-                    ctx.setTransform(1, 0, 0, 1, 0, 0);
-                    ctx.translate(centerX + z.coord[0] / this.#ratio, centerZ + z.coord[1] / this.#ratio );
-                    ctx.rotate(-z.rad);
-                    ctx.fillRect(0, 0, -(z.size.h / this.#ratio), -(z.size.w / this.#ratio));
-                });
-                ctx.stroke();
-                engine.gpu.device.queue.copyExternalImageToTexture({source: texture}, { texture: this.#zoneTexture }, [5120, 5120, 1]);
-            }
-        })();
+        engine.DB.transaction("zones").objectStore("zones").getAll().onsuccess = (evt) => {
+            ctx.strokeStyle = "blue";
+            ctx.fillStyle = "blue";
+            ctx.lineWidth = 1;
+            //@ts-ignore
+            ((evt.target.result) as PTDresult[]).forEach(z => {
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.translate(centerX + z.coord[0] / this.#ratio, centerZ + z.coord[1] / this.#ratio );
+                ctx.rotate(-z.rad);
+                ctx.fillRect(0, 0, -(z.size.h / this.#ratio), -(z.size.w / this.#ratio));
+            });
+            ctx.stroke();
+            engine.gpu.device.queue.copyExternalImageToTexture({source: texture}, { texture: this.#zoneTexture }, [5120, 5120, 1]);
+        }
         
         terrain.mesh.setTextureView(this.#zoneTexture.createView());
         terrain.mesh.set_scenes(engine.rustEngine,staticScene.id)
-        this.PT = new paintTexture(this.scene, this.camera, this.terrain, sea, this.#zoneTexture, 5120, 5120, this, this.#ratio, async (response) => {
-            (await engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
+        this.PT = new paintTexture(this.scene, this.terrain, sea, this.#zoneTexture, 5120, 5120, this, this.#ratio, (response) => {
+            engine.DB.transaction("zones", 'readwrite').objectStore("zones").put(response);
         });
         /*this.PT.activate(async (response) => {
             (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);
