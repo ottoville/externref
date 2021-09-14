@@ -28,7 +28,7 @@ export class ArcRotateCamera implements CameraController {
             data: {
                 alpha: this.alpha,
                 beta: this.beta,
-                radius: this.radius,
+                radius: this.#radius,
                 target:this.#target,
                 position:new Float32Array(engine.mainCamera.position as unknown as  number[]) as {0:number, 1:number, 2:number} & Float32Array
             } as serialized
@@ -77,7 +77,7 @@ export class ArcRotateCamera implements CameraController {
     #target=new TerraVector3([100,0,1000]);
     alpha=0;
     beta=0;
-    radius=10;
+    #radius=10;
     constructor(private camera: TerraCamera,initial=false) {
         engine.canvas.addEventListener('wheel', this.#cameraWheel);
         engine.canvas.addEventListener('pointerdown', this.#cameraPointerDown);
@@ -87,17 +87,23 @@ export class ArcRotateCamera implements CameraController {
                     const restored = (evt.target as IDBRequest).result.data as serialized | undefined;
                     if(restored) {
                         this.alpha = restored.alpha;
-                        this.alpha = restored.alpha;
                         this.beta = restored.beta;
-                        this.radius = restored.radius;
+                        this.#radius = restored.radius;
                         this.#target.set(restored.target);
                         camera.position=restored.position;
                         this.#newPosition.set(restored.position);
                         this.#calculateDirection();
-            
                     }
                 }
             }
+        } else {
+            this.#target.set([
+                this.camera.position[0]-this.camera.direction[0]*100,
+                this.camera.position[1]-this.camera.direction[1]*100,
+                this.camera.position[2]-this.camera.direction[2]*100,
+            ]);
+            this.#rebuildAnglesAndRadius();
+            this.#newPosition.set(this.camera.position as [number,number,number]);
         }
     }
     #cameraMove = (e: PointerEvent) => {
@@ -140,28 +146,29 @@ export class ArcRotateCamera implements CameraController {
         engine.canvas.removeEventListener('pointerdown', this.#cameraPointerDown);
         engine.canvas.removeEventListener('pointermove', this.#cameraMove);
         engine.canvas.removeEventListener('wheel', this.#cameraWheel);
+        this.serialize();
     }
-    async calculateCameraPositionAndTarget() {
-
-        this.#collisionTriggered = true;
-        var cosa = Math.cos(this.alpha);
-        var sina = Math.sin(this.alpha);
-        var cosb = Math.cos(this.beta);
-        var sinb = Math.sin(this.beta);
+    #calculatePosition() {
+        let sinb = Math.sin(this.beta);
         if (sinb === 0) {
             sinb = 0.0001;
         }
-
         //this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
-        this.#computationVector[0] = this.radius * cosa * sinb;
-        this.#computationVector[1] = this.radius * cosb;
-        this.#computationVector[2] = this.radius * sina * sinb;
+        this.#computationVector[0] = this.#radius * Math.cos(this.alpha) * sinb;
+        this.#computationVector[1] = this.#radius * Math.cos(this.beta);
+        this.#computationVector[2] = this.#radius * Math.sin(this.alpha) * sinb;
 
         // target.addToRef(this._computationVector, this._newPosition);
         this.#newPosition[0] = this.#target[0] + this.#computationVector[0];
         this.#newPosition[1] = this.#target[1] + this.#computationVector[1];
         this.#newPosition[2] = this.#target[2] + this.#computationVector[2];
+        
+    }
+    async calculateCameraPositionAndTarget() {
 
+        this.#collisionTriggered = true;
+
+        this.#calculatePosition()
         engine.collider.radius[0] = this.#collisionRadius[0];
         engine.collider.radius[1] = this.#collisionRadius[1];
         engine.collider.radius[2] = this.#collisionRadius[2];
@@ -198,34 +205,14 @@ export class ArcRotateCamera implements CameraController {
         // if (!this.engine.collider.collidedMesh) {
         if (engine.collider.rust.collision_not_found) {
             //this._position.copyFrom(position);
-
             if (this.camera.position[0] != engine.collider.finalPosition[0] || this.camera.position[1] != engine.collider.finalPosition[1] || this.camera.position[2] != engine.collider.finalPosition[2]) {
                 this.camera.position = engine.collider.finalPosition;
             }
-
-            this.rebuildAnglesAndRadius();
+            this.#rebuildAnglesAndRadius();
         }
 
         // Recompute because of constraints
-        var cosa = Math.cos(this.alpha);
-        var sina = Math.sin(this.alpha);
-        var cosb = Math.cos(this.beta);
-        var sinb = Math.sin(this.beta);
-
-        if (sinb === 0) {
-            sinb = 0.0001;
-        }
-
-        //  this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
-        this.#computationVector[0] = this.radius * cosa * sinb
-        this.#computationVector[1] = this.radius * cosb
-        this.#computationVector[2] = this.radius * sina * sinb
-
-
-        // target.addToRef(this._computationVector, this._newPosition);
-        this.#newPosition[0] = this.#target[0] + this.#computationVector[0]
-        this.#newPosition[1] = this.#target[1] + this.#computationVector[1]
-        this.#newPosition[2] = this.#target[2] + this.#computationVector[2]
+        this.#calculatePosition()
 
 
         // this._position.copyFrom(this._newPosition);
@@ -286,7 +273,7 @@ export class ArcRotateCamera implements CameraController {
             this.beta += this.#inertialBetaOffset;
             //useRightHandedSystem
             inertialAlphaOffset *= -1;
-            this.radius -= this.inertialRadiusOffset;
+            this.#radius -= this.inertialRadiusOffset;
             this.#inertialAlphaOffset *= this.#inertia;
             this.#inertialBetaOffset *= this.#inertia;
             this.inertialRadiusOffset *= this.#inertia;
@@ -349,17 +336,17 @@ export class ArcRotateCamera implements CameraController {
         return updateView;
     }
     // Rebuilds angles (alpha, beta) and radius from the give position and target
-    private rebuildAnglesAndRadius(): void {
+    #rebuildAnglesAndRadius(): void {
         // this._position.subtractToRef(this._getTargetPosition(), this._computationVector);
         this.#computationVector[0] = this.camera.position[0] - this.#target[0];
         this.#computationVector[1] = this.camera.position[1] - this.#target[1];
         this.#computationVector[2] = this.camera.position[2] - this.#target[2];
 
         // this.radius = this._computationVector.length();
-        this.radius = Math.sqrt(this.#computationVector[0] * this.#computationVector[0] + this.#computationVector[1] * this.#computationVector[1] + this.#computationVector[2] * this.#computationVector[2])
+        this.#radius = Math.sqrt(this.#computationVector[0] * this.#computationVector[0] + this.#computationVector[1] * this.#computationVector[1] + this.#computationVector[2] * this.#computationVector[2])
 
-        if (this.radius === 0) {
-            this.radius = 0.0001; // Just to avoid division by zero
+        if (this.#radius === 0) {
+            this.#radius = 0.0001; // Just to avoid division by zero
         }
 
         // Alpha
@@ -374,10 +361,10 @@ export class ArcRotateCamera implements CameraController {
         }
 
         // Beta
-        this.beta = Math.acos(this.#computationVector[1] / this.radius);
+        this.beta = Math.acos(this.#computationVector[1] / this.#radius);
 
         this.checkLimits();
-    }
+        }
 
     // Minimum allowed angle on the latitudinal axis.
     // This can help limiting how the Camera is able to move in the scene.
@@ -426,12 +413,12 @@ export class ArcRotateCamera implements CameraController {
             this.alpha = this.upperAlphaLimit;
         }
 
-        if (this.lowerRadiusLimit !== null && this.radius < this.lowerRadiusLimit) {
-            this.radius = this.lowerRadiusLimit;
+        if (this.lowerRadiusLimit !== null && this.#radius < this.lowerRadiusLimit) {
+            this.#radius = this.lowerRadiusLimit;
             this.inertialRadiusOffset = 0;
         }
-        if (this.upperRadiusLimit !== null && this.radius > this.upperRadiusLimit) {
-            this.radius = this.upperRadiusLimit;
+        if (this.upperRadiusLimit !== null && this.#radius > this.upperRadiusLimit) {
+            this.#radius = this.upperRadiusLimit;
             this.inertialRadiusOffset = 0;
         }
     }

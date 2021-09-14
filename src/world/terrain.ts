@@ -289,12 +289,6 @@ TODO
         this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', engine.gpu.createBindGroup(heightsLayout, heightsBindGroupEntries));
         
         const computePipelineIndices = engine.gpu.createComputePipeline('terrain/calculatePlaneIndices.comp.wgsl');
-        const bindGroupSettings = computePipelineIndices.createBindGroup(0, [{
-            binding: 0,
-            resource: {
-                buffer: this.settingsGPU
-            }
-        }]);
 
         const positionsCount =  ((size:number) => {
             while(size%4 !== 0)
@@ -305,7 +299,7 @@ TODO
 
         const commandEncoder = engine.gpu.createCommandEncoder();
         const passEncoder = commandEncoder.beginComputePass();
-        passEncoder.setBindGroup(0, bindGroupSettings);
+
         const settingsLayout=engine.gpu.device.createBindGroupLayout({
             entries: [{
                 binding: 0,
@@ -314,7 +308,6 @@ TODO
                     type: "uniform"
                 }
             }]
-            
         });
         const writableStorageLayout=engine.gpu.device.createBindGroupLayout({
             entries: [{
@@ -354,31 +347,21 @@ TODO
                 }
             }
         ];
-        const bindGroupPositions = computePlaneHeights.createBindGroup(1, bgroup);
-        const bindGroupHeights = engine.gpu.device.createBindGroup({
-            layout: computePlaneHeights.getBindGroupLayout(2),
-            entries: _heightsBindGroupEntries
-        });
-        const bindGroupSettings2 = computePipelineNormals.createBindGroup(settingsLayout, [{
-            binding: 0,
-            resource: {
-                buffer: this.settingsGPU
-            }
-        }]);
-        const bindGroupPositionsReadWrite = engine.gpu.device.createBindGroup({
-            layout: writableStorageLayout,
-            entries: bgroup
-        });
         const bindGroupHeightsRead = engine.gpu.device.createBindGroup({
             layout: heightsLayout2,
             entries: _heightsBindGroupEntries
         });
-
         //todo: remove unneeded flags
         const terrainIndicesGPU = engine.gpu.createGPUBuffer(this.#terrainIndicesLength, [GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
 
 
         passEncoder.setPipeline(computePipelineIndices);
+        passEncoder.setBindGroup(0, computePipelineIndices.createBindGroup(0, [{
+            binding: 0,
+            resource: {
+                buffer: this.settingsGPU
+            }
+        }]));
         passEncoder.setBindGroup(1, computePipelineIndices.createBindGroup(1,
             [{
                 binding: 0,
@@ -391,13 +374,30 @@ TODO
         passEncoder.dispatch(...Terrain.subdivisions);
 
         passEncoder.setPipeline(computePlaneHeights);
-        passEncoder.setBindGroup(1, bindGroupPositions);
-        passEncoder.setBindGroup(2, bindGroupHeights);
+        passEncoder.setBindGroup(0, computePlaneHeights.createBindGroup(0, [{
+            binding: 0,
+            resource: {
+                buffer: this.settingsGPU
+            }
+        }]));
+        passEncoder.setBindGroup(1, computePlaneHeights.createBindGroup(1, bgroup));
+        passEncoder.setBindGroup(2, engine.gpu.device.createBindGroup({
+            layout: computePlaneHeights.getBindGroupLayout(2),
+            entries: _heightsBindGroupEntries
+        }));
         passEncoder.dispatch(...Terrain.subdivisions);
 
         passEncoder.setPipeline(computePipelineNormals);
-        passEncoder.setBindGroup(0, bindGroupSettings2)
-        passEncoder.setBindGroup(1, bindGroupPositionsReadWrite)
+        passEncoder.setBindGroup(0, computePipelineNormals.createBindGroup(settingsLayout, [{
+            binding: 0,
+            resource: {
+                buffer: this.settingsGPU
+            }
+        }]))
+        passEncoder.setBindGroup(1, engine.gpu.device.createBindGroup({
+            layout: writableStorageLayout,
+            entries: bgroup
+        }))
         passEncoder.setBindGroup(2, bindGroupHeightsRead)
         passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
 
@@ -521,7 +521,6 @@ TODO
         let facet: Float32Array;
         let col = ((x + this.#maxX) * this.#ratioX) | 0;
         let row = (-(z + this.#maxZ) * this.#ratioY + Terrain.subdivisionsY) | 0;
-        debugger;
         console.log(col, row);
         let pos: number = row * Terrain.subdivisionsX + col;
         try {

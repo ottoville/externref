@@ -44,8 +44,11 @@ export class PositionCamera implements CameraController {
                      syncCamera();
                 }
             }
+        } else {
+            this.#position.set(this.camera.position as TerraVector3);
+            this.#angle=Math.acos(this.camera.direction[0]);
         }
-        syncCamera();
+        //syncCamera();
         engine.collider.radius[0] = 0.5;
         engine.collider.radius[1] = 0.5;
         engine.collider.radius[2] = 0.5;
