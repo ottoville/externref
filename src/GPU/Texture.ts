@@ -7,11 +7,11 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
     texture: GPUTexture;
     renderPasses: Set<RenderPass> = new Set();
     views:Map<symbol, GPUTextureView> = new Map();
-    createView(descriptor?: GPUTextureViewDescriptor) {
+    createView(descriptor?: GPUTextureViewDescriptor):[symbol, GPUTextureView] {
         const view = this.texture.createView(descriptor);
         const s=Symbol()
         this.views.set(s, view);
-        return [s, view] as const;
+        return [s, view];
     }
     createTexture(debug=false) {
         if (this.texture) {

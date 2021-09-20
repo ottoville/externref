@@ -1,6 +1,4 @@
-﻿import { GPU } from "../GPU.js";
-
-import { TerraCamera } from "../TerraCamera.js";
+﻿import { TerraCamera } from "../TerraCamera.js";
 import { Engine } from "../engine.js";
 
 
@@ -41,47 +39,16 @@ export class Canvas extends TerraCompoment {
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
     async initalize(): Promise<[Scene]> {
-        if (!window.navigator.gpu)
-            throw ('no webgpu support');
-        const adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
-        this.progress = 4;
+ 
 
-        if (!adapter)
-            throw ('No adapter');
-        const device = await adapter.requestDevice();
-        this.progress = 5;
-        if (!device)
-            throw ('no GPU device');
-        const shaderModules: Map<string, GPUShaderModule> = new Map();
-        const shaders = ['simple.vert.wgsl', 'simple.frag.wgsl',
-            'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl', 'UIColor.frag.wgsl',
-            'plane.vert.wgsl', 'helper2.vert.wgsl',
-            'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
-            'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',
-            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl', 'deferred.vert.wgsl', 'deferred.frag.wgsl', 'clusters.comp.wgsl', 'debug_normals.vert.wgsl',
-            'updateView.comp.wgsl'
-        ];
-        await Promise.all(shaders.map(async u => {
-            const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
-            shaderModules.set(u, device.createShaderModule({ code: compiled }));
-        }));
-        const gpu = new GPU(this.#canvasElem, device, shaderModules);
-        //@ts-ignore
-        window.printRenderTarget = () => {
-            gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.toBitmap(0)
-        }
-        //@ts-ignore
-        window.printRenderTarget3 = () => {
-            gpu.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture.toBitmap(0)
-        }
 
         this.progress = 6;
 
-        const terraEngine = await Engine.initEngine(gpu, DB, this.#canvasElem);
+        const terraEngine = await Engine.initEngine(this.#canvasElem);
         this.progress = 15;
 
 
-        const waterCamera = new TerraCamera(gpu.renderPassWater, engine.mainCamera.projection, gpu, engine.mainCamera);
+        const waterCamera = new TerraCamera(terraEngine.gpu.renderPassWater, engine.mainCamera.projection, terraEngine.gpu, engine.mainCamera);
         waterCamera.beforeViewUpdate.add((position, direction) => {
             position[1] -= (position[1] - 3) * 2;
             direction[1] = -direction[1];
@@ -96,7 +63,7 @@ export class Canvas extends TerraCompoment {
 
 
 
-        const mainScene = new Scene('main', gpu, [engine.mainCamera, waterCamera], (terrascene) => {
+        const mainScene = new Scene('main', terraEngine.gpu, [engine.mainCamera, waterCamera], (terrascene) => {
             new Sun2([terrascene]);
             // Initial scene objects here
 
@@ -114,7 +81,7 @@ export class Canvas extends TerraCompoment {
             this.progress = 100;
             return ready;
         });
-        const debugscene = new Scene('static', gpu, [engine.mainCamera], (scene) => {
+        const debugscene = new Scene('static', terraEngine.gpu, [engine.mainCamera], (scene) => {
             const sun = new MainNode(false, false,undefined,undefined,0,1,undefined,undefined,[scene]);
             sun.get_translation().set([0, 1, 0]);
             sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
@@ -161,9 +128,9 @@ export class Canvas extends TerraCompoment {
         let startTime = 0;
 
 
-        const canvasPipeline = gpu.rootLayout.addRenderPipeline(
-            new VertexShader(gpu, 'deferred.vert.wgsl'),
-            new Shader(gpu, 'deferred.frag.wgsl'), {
+        const canvasPipeline = terraEngine.gpu.rootLayout.addRenderPipeline(
+            new VertexShader(terraEngine.gpu, 'deferred.vert.wgsl'),
+            new Shader(terraEngine.gpu, 'deferred.frag.wgsl'), {
             label: 'canvas',
             primitive: {
                 topology: 'triangle-list',
@@ -186,10 +153,10 @@ export class Canvas extends TerraCompoment {
             //performance.mark('renderloopStart');
 
 
-            gpu.onRenders2.forEach(or => {
+            terraEngine.gpu.onRenders2.forEach(or => {
                 const buff = or();
                 if (buff)
-                    gpu.pendingCommandBuffers.add(buff);
+                terraEngine.gpu.pendingCommandBuffers.add(buff);
             });
             if (terraEngine.inputManager?.checkInputs()) {
                 //camera.camera.update(values => {
@@ -197,7 +164,7 @@ export class Canvas extends TerraCompoment {
                 //})
             }
 
-            const renderEncoder = gpu.device.createCommandEncoder();
+            const renderEncoder = terraEngine.gpu.device.createCommandEncoder();
 
             timeView.set([time]);
             let physicDelta: number | null;
@@ -209,37 +176,37 @@ export class Canvas extends TerraCompoment {
             if (physicDelta !== null)
                 deltaView.set([physicDelta]);
 
-            gpu.device.queue.writeBuffer(gpu.timeBuffer, 0, timeAndDeltaBuffer);
+            terraEngine.gpu.device.queue.writeBuffer(terraEngine.gpu.timeBuffer, 0, timeAndDeltaBuffer);
             try {
                 TerraCameras.forEach(camera => {
                     camera.updateView(renderEncoder)
                 })
                 const lightPass = renderEncoder.beginComputePass();
-                lightPass.setPipeline(gpu.updateViewPipeline);
-                lightPass.setBindGroup(0, gpu.updateViewBindGroup);
+                lightPass.setPipeline(terraEngine.gpu.updateViewPipeline);
+                lightPass.setBindGroup(0, terraEngine.gpu.updateViewBindGroup);
                 TerraCameras.forEach(camera => {
                     if(camera.viewUpdated || terraEngine.updateLights) {
                         camera.viewUpdated=false;
                         lightPass.setBindGroup(1, camera.updateViewBindGroup);
-                        lightPass.dispatch(...gpu.CLUSTER_DISPATCH_SIZE);
+                        lightPass.dispatch(...terraEngine.gpu.CLUSTER_DISPATCH_SIZE);
                     }
                 });
                 lightPass.endPass();
                 terraEngine.updateLights = false;
 
                 TerraCameras.forEach(camera => {
-                    camera.renderPass.render(renderEncoder, camera.uniformBindGroup,gpu.rootCameralayout);
+                    camera.renderPass.render(renderEncoder, camera.uniformBindGroup,terraEngine.gpu.rootCameralayout);
                 });
             } catch (e) {
                 console.error(e);
             }
 
-            gpu.renderPassCanvas.render(renderEncoder, gpu.BindGroupCanvas, gpu.rootLayout);
+            terraEngine.gpu.renderPassCanvas.render(renderEncoder, terraEngine.gpu.BindGroupCanvas, terraEngine.gpu.rootLayout);
 
-            gpu.pendingCommandBuffers.add(renderEncoder.finish())
-            gpu.device.queue.submit(gpu.pendingCommandBuffers);
-            gpu.pendingCommandBuffers.clear();
-            gpu.tempGPUBuffers.forEach(buff => buff.destroy())
+            terraEngine.gpu.pendingCommandBuffers.add(renderEncoder.finish())
+            terraEngine.gpu.device.queue.submit(terraEngine.gpu.pendingCommandBuffers);
+            terraEngine.gpu.pendingCommandBuffers.clear();
+            terraEngine.gpu.tempGPUBuffers.forEach(buff => buff.destroy())
             renderFrame = window.requestAnimationFrame(renderLoop);
         }
 
@@ -247,7 +214,7 @@ export class Canvas extends TerraCompoment {
             width: 1920,
             height: 1080
         }
-        const computePipelineClusters       = gpu.createComputePipeline('clusters.comp.wgsl');
+        const computePipelineClusters       = terraEngine.gpu.createComputePipeline('clusters.comp.wgsl');
         const computePipelineClustersLayout = computePipelineClusters.getBindGroupLayout(0)
         const ro = new window.ResizeObserver(entries => {
             const entry = entries[0];
@@ -266,28 +233,28 @@ export class Canvas extends TerraCompoment {
                     this.#canvasElem.width = this.#canvasElem.height * aspectRatio;
                 }
 
-                gpu.scale.x = this.#canvasElem.width / entry.contentRect.width;
-                gpu.scale.y = this.#canvasElem.height / entry.contentRect.height;
+                terraEngine.gpu.scale.x = this.#canvasElem.width / entry.contentRect.width;
+                terraEngine.gpu.scale.y = this.#canvasElem.height / entry.contentRect.height;
                 // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
-                gpu.context.configure({
-                    device: device,
+                terraEngine.gpu.context.configure({
+                    device: terraEngine.gpu.device,
                     format: "bgra8unorm",
                     usage: GPUTextureUsage.RENDER_ATTACHMENT
                 })
-                const commandEncoder = gpu.createCommandEncoder();
+                const commandEncoder = terraEngine.gpu.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipelineClusters);
                 
-                gpu.projections.forEach(projection => projection.update(aspectRatio))
+                terraEngine.gpu.projections.forEach(projection => projection.update(aspectRatio))
 
-                gpu.renderPasses.forEach(renderPass => {
+                terraEngine.gpu.renderPasses.forEach(renderPass => {
                     renderPass.resize(this.#canvasElem.width, this.#canvasElem.height);
                     renderPass.cameras.forEach(camera => {
                         camera.updateProjection(passEncoder,computePipelineClustersLayout)
                     });
                 });
                 passEncoder.endPass();
-                gpu.device.queue.submit([commandEncoder.finish()]);
+                terraEngine.gpu.device.queue.submit([commandEncoder.finish()]);
 
                 renderFrame = window.requestAnimationFrame(renderLoop);
             }, 500)

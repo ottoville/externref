@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "declaration": false,
     "experimentalDecorators": true,
     "outDir": "../wwwroot/js",
     "strictNullChecks": true,
@@ -26,7 +27,8 @@
       "ES2017.SharedMemory",
       "DOM.Iterable"
     ],
-    "typeRoots": [ "./node_modules/@types/", "./node_modules/@webgpu/" ],
+    "typeRoots": [ "./node_modules/@types/", "./node_modules/@webgpu/"],
+    
     "moduleResolution": "node",
     "allowJs": true,
     "incremental": true,
@@ -42,10 +44,13 @@
     "workers",
     "lib",
     "service-worker.ts",
-    "service-worker.published.ts"
+    "service-worker.published.ts",
+    "test-build",
+    "runTest.ts",
+    "**/*.test.ts"
   ],
   "references": [
     { "path": "./tsconfig.workers.json" },
-    { "path": "./tsconfig.serviceworkers.json" }
+    { "path": "./tsconfig.serviceworkers.json" },
   ]
 }

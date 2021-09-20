@@ -3,6 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+#test-build
+/src/test-build/js/*
+/src/test-build/browserified.js
+/src/test-build/collider/*
+
 # User-specific files
 *.rsuser
 *.suo

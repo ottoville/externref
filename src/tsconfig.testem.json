@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports":true,
+    "outDir": "./test-build/js",
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": [
+      "dom",
+      "esnext",
+      "ES2017.SharedMemory",
+      "DOM.Iterable"
+    ],
+    "jsx": "react",
+    "jsxFactory": "TerraUI.createElement",
+    "sourceMap": false,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    //"strict": true,
+    "tsBuildInfoFile": "tsconfig.testbuild.tsbuildinfo",
+    "incremental": true,
+    "typeRoots": [ "./node_modules/@types/", "./node_modules/@webgpu/", "./test-build/node_modules/@types/"],
+    "types": ["types", "facebook-js-sdk", "mocha"],
+    "paths": {
+      "/js/*": ["./*"],
+      "/js/engine/*": ["../wwwroot/js/engine/*"],
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "workers",
+    "lib",
+    "service-worker.ts",
+    "service-worker.published.ts",
+  ],
+  
+  "include": [ "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "./runTest.ts"],
+
+}

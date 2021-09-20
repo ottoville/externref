@@ -1,0 +1,10 @@
+{
+  "framework": "mocha",
+  "serve_files": [ "browserified.js" ],
+  "before_tests": "browserify js/runTest.js -o browserified.js",
+  "src_files": [
+    "./**/*.test.ts"
+  ],
+  "cert":"certificate.crt",
+  "key":"privatekey.key"
+}
