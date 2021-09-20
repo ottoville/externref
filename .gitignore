@@ -7,6 +7,7 @@
 /src/test-build/js/*
 /src/test-build/browserified.js
 /src/test-build/collider/*
+/src/test-build/test_report.txt
 
 # User-specific files
 *.rsuser
