@@ -16,6 +16,7 @@ ARROW_KEYS.LEFT_AND_RIGHT
 
 
 export class PositionCamera implements CameraController {
+    name='PositionCamera';
     #angle=Math.PI;
     #position=new TerraVector3([-3000,200,0]);
     #velocity=0.5;
@@ -148,7 +149,7 @@ export class PositionCamera implements CameraController {
     async calculateCameraPositionAndTarget() {
         this.#busy=true;
         //TODO: apply gravity alwaus not only on input
-        this.#position[1]-=0.3
+        //this.#position[1]-=0.3
 
         const scaledPosition=engine.collider.scaledPosition;
         scaledPosition[0] = this.camera.position[0] / engine.collider.radius[0];

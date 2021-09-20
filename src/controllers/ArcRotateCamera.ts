@@ -16,6 +16,7 @@ interface serialized {
 }
 
 export class ArcRotateCamera implements CameraController {
+    name='ArcRotateCamera'
     #serializeRequested = false;
 
     serialize(): void {
