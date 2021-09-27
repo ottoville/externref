@@ -22,8 +22,8 @@ export class Physics {
 
     tickables: Set<MainNode & hasPhysics> = new Set();
     tickTime = 21600;  //6 hours
-    tickIntervalMs = 1000;
-
+    tickIntervalMs = 100;
+    #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
     get physicTime() {
         if (this.#gameSpeed >= 0) {
             const timestamp = new Date().getTime();
@@ -36,25 +36,25 @@ export class Physics {
         else
             var delta = (this.#lastStateChangeTime - this.#lastTickTimeMs) << this.#gameSpeed;
 
-        return (this.tickTime + (delta/1000));
+        return (this.tickTime + (delta/this.#realMSingameSecond));
     }
-    private tick(me: Physics) {
+    #tick = () => {
         const timestamp = new Date().getTime();
-        if (me.#lastStateChangeTime > me.#lastTickTimeMs) {
-            var delta = ((timestamp - me.#lastStateChangeTime) << me.#gameSpeed) + me.#tickDeltaWhenStateChange
+        if (this.#lastStateChangeTime > this.#lastTickTimeMs) {
+            var delta = ((timestamp - this.#lastStateChangeTime) << this.#gameSpeed) + this.#tickDeltaWhenStateChange
         } else {
-            var delta = (timestamp - me.#lastTickTimeMs) << me.#gameSpeed; // get the delta time since last tick
+            var delta = (timestamp - this.#lastTickTimeMs) << this.#gameSpeed; // get the delta time since last tick
         }
-        me.#lastTickTimeMs = timestamp;
-        me.tickTime += delta / 1000;
+        this.#lastTickTimeMs = timestamp;
+        this.tickTime += delta / this.#realMSingameSecond;
 
-        me.tickables.forEach(tickable => {
+        this.tickables.forEach(tickable => {
             tickable.onPhysicTick(delta);
             const velocity=tickable.get_velocity();
             if (tickable.hasGravity) {
                 tickable.SetTranslationDelta([
                     velocity[0],
-                    velocity[1] - (9.81*(delta/1000)),
+                    Math.max(velocity[1] - 9.81/1000 * delta,-1),  //TODO: Take account game speed //TODO Remove cap
                     velocity[2]]
                 )
             }
@@ -73,12 +73,12 @@ export class Physics {
         if (timeToFirstTick != this.tickIntervalMs) {
             const firstTickMs = timeToFirstTick >> speed;
             setTimeout(() => {
-                this.tick(this);
-                this.#interval = setInterval(this.tick, this.tickIntervalMs >> speed, this)
+                this.#tick();
+                this.#interval = setInterval(this.#tick, this.tickIntervalMs >> speed)
             }, firstTickMs);
         }
         else
-            this.#interval = setInterval(this.tick , timeToFirstTick >> speed, this);
+            this.#interval = setInterval(this.#tick , timeToFirstTick >> speed);
     }
     get gameTime() {
         if (this.gameSpeed < 0)
