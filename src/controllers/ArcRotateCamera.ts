@@ -27,8 +27,8 @@ export class ArcRotateCamera implements CameraController {
             type: 'camera',
             name: 'ArchRotateCamera',
             data: {
-                alpha: this.alpha,
-                beta: this.beta,
+                alpha: this.#alpha,
+                beta: this.#beta,
                 radius: this.#radius,
                 target: this.#target,
                 position: new Float32Array(engine.mainCamera.position as unknown as number[]) as { 0: number, 1: number, 2: number } & Float32Array
@@ -76,8 +76,8 @@ export class ArcRotateCamera implements CameraController {
     #inertialBetaOffset = 0;
     #collisionTriggered = false;
     #target = new TerraVector3([100, 0, 1000]);
-    alpha = 0;
-    beta = 0;
+    #alpha = 0;
+    #beta = 0;
     #radius = 10;
     constructor(private camera: TerraCamera, initial = false) {
         engine.canvas.addEventListener('wheel', this.#cameraWheel);
@@ -87,8 +87,8 @@ export class ArcRotateCamera implements CameraController {
                 if ((evt.target as IDBRequest).result) {
                     const restored = (evt.target as IDBRequest).result.data as serialized | undefined;
                     if (restored) {
-                        this.alpha = restored.alpha;
-                        this.beta = restored.beta;
+                        this.#alpha = restored.alpha;
+                        this.#beta = restored.beta;
                         this.#radius = restored.radius;
                         this.#target.set(restored.target);
                         camera.position = restored.position;
@@ -129,17 +129,16 @@ export class ArcRotateCamera implements CameraController {
         pointerDownButton = e.button;
         if (pointerDownButton !== 2) {
             this.camera.renderPass.pickPosition().then((position) => {
-                //this.camera.target=position.position;
-                this.#targetMovingfrom = new TerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
-                this.#targetMovingTo = position.position;
-                this.#targetLerpPosition = 0;
+                if(position.position) {
+                    this.#targetMovingfrom = new TerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
+                    this.#targetMovingTo = position.position;
+                    this.#targetLerpPosition = 0;
+                }
             })
         }
         engine.canvas.addEventListener('pointermove', this.#cameraMove);
         engine.canvas.addEventListener('pointerup', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove), { once: true });
         engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove), { once: true });
-
-
     }
 
     destroy() {
@@ -149,20 +148,19 @@ export class ArcRotateCamera implements CameraController {
         this.serialize();
     }
     #calculatePosition() {
-        let sinb = Math.sin(this.beta);
+        let sinb = Math.sin(this.#beta);
         if (sinb === 0) {
             sinb = 0.0001;
         }
         //this._computationVector.copyFromFloats(this.radius * cosa * sinb, this.radius * cosb, this.radius * sina * sinb);
-        this.#computationVector[0] = this.#radius * Math.cos(this.alpha) * sinb;
-        this.#computationVector[1] = this.#radius * Math.cos(this.beta);
-        this.#computationVector[2] = this.#radius * Math.sin(this.alpha) * sinb;
+        this.#computationVector[0] = this.#radius * Math.cos(this.#alpha) * sinb;
+        this.#computationVector[1] = this.#radius * Math.cos(this.#beta);
+        this.#computationVector[2] = this.#radius * Math.sin(this.#alpha) * sinb;
 
         // target.addToRef(this._computationVector, this._newPosition);
         this.#newPosition[0] = this.#target[0] + this.#computationVector[0];
         this.#newPosition[1] = this.#target[1] + this.#computationVector[1];
         this.#newPosition[2] = this.#target[2] + this.#computationVector[2];
-
     }
     async calculateCameraPositionAndTarget() {
 
@@ -265,12 +263,12 @@ export class ArcRotateCamera implements CameraController {
             }
 
             let inertialAlphaOffset = this.#inertialAlphaOffset;
-            if (this.beta <= 0) {
+            if (this.#beta <= 0) {
                 inertialAlphaOffset *= -1;
             }
-            this.alpha += inertialAlphaOffset;
+            this.#alpha += inertialAlphaOffset;
 
-            this.beta += this.#inertialBetaOffset;
+            this.#beta += this.#inertialBetaOffset;
             //useRightHandedSystem
             inertialAlphaOffset *= -1;
             this.#radius -= this.inertialRadiusOffset;
@@ -309,8 +307,8 @@ export class ArcRotateCamera implements CameraController {
             // this.#transformedDirection[1] += panningAxis[1] * this.#inertialPanningY;
 
             // panning on Z axis
-            this.#transformedDirection[0] -= Math.cos(this.alpha) * scaleZ;
-            this.#transformedDirection[2] -= Math.sin(this.alpha) * scaleZ;
+            this.#transformedDirection[0] -= Math.cos(this.#alpha) * scaleZ;
+            this.#transformedDirection[2] -= Math.sin(this.#alpha) * scaleZ;
             //this._target.addInPlace(this._transformedDirection);
             this.#target[0] += this.#transformedDirection[0]
             this.#target[1] += this.#transformedDirection[1]
@@ -351,18 +349,16 @@ export class ArcRotateCamera implements CameraController {
 
         // Alpha
         if (this.#computationVector[0] === 0 && this.#computationVector[2] === 0) {
-            this.alpha = Math.PI / 2; // avoid division by zero when looking along up axis, and set to acos(0)
+            this.#alpha = Math.PI / 2; // avoid division by zero when looking along up axis, and set to acos(0)
         } else {
-            this.alpha = Math.acos(this.#computationVector[0] / Math.sqrt(Math.pow(this.#computationVector[0], 2) + Math.pow(this.#computationVector[2], 2)));
+            this.#alpha = Math.acos(this.#computationVector[0] / Math.sqrt(Math.pow(this.#computationVector[0], 2) + Math.pow(this.#computationVector[2], 2)));
         }
-
         if (this.#computationVector[2] < 0) {
-            this.alpha = 2 * Math.PI - this.alpha;
+            this.#alpha = 2 * Math.PI - this.#alpha;
         }
 
         // Beta
-        this.beta = Math.acos(this.#computationVector[1] / this.#radius);
-
+        this.#beta = Math.acos(this.#computationVector[1] / this.#radius);
         this.checkLimits();
     }
 
@@ -395,22 +391,22 @@ export class ArcRotateCamera implements CameraController {
     upperRadiusLimit: number | null = null;
     private checkLimits() {
         if (!(this.lowerBetaLimit === null || this.lowerBetaLimit === undefined)) {
-            if (this.beta < this.lowerBetaLimit) {
-                this.beta = this.lowerBetaLimit;
+            if (this.#beta < this.lowerBetaLimit) {
+                this.#beta = this.lowerBetaLimit;
             }
         }
 
         if (!(this.upperBetaLimit === null || this.upperBetaLimit === undefined)) {
-            if (this.beta > this.upperBetaLimit) {
-                this.beta = this.upperBetaLimit;
+            if (this.#beta > this.upperBetaLimit) {
+                this.#beta = this.upperBetaLimit;
             }
         }
 
-        if (this.lowerAlphaLimit !== null && this.alpha < this.lowerAlphaLimit) {
-            this.alpha = this.lowerAlphaLimit;
+        if (this.lowerAlphaLimit !== null && this.#alpha < this.lowerAlphaLimit) {
+            this.#alpha = this.lowerAlphaLimit;
         }
-        if (this.upperAlphaLimit !== null && this.alpha > this.upperAlphaLimit) {
-            this.alpha = this.upperAlphaLimit;
+        if (this.upperAlphaLimit !== null && this.#alpha > this.upperAlphaLimit) {
+            this.#alpha = this.upperAlphaLimit;
         }
 
         if (this.lowerRadiusLimit !== null && this.#radius < this.lowerRadiusLimit) {
