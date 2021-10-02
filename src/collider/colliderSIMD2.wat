@@ -92,7 +92,7 @@
     end
 
     (global.set $velocity
-      (v128.load
+      (v128.load align=2
         (global.get $velocityPointer)
       )
     )
@@ -721,7 +721,6 @@
     )
   )
   (func $testTriangles
-    (param $last_collider_world_vertices_pointer i32)
     (param $planePosition i32)
     (param $planePositionHorizontal i32)
     (param $length i32)
@@ -832,32 +831,22 @@
             (local.get $planePosition)
 
             (v128.load
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
                 (i32.load offset=16
                     (local.get $planePosition)
                 )
-              )
             )
 
             (v128.load
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
                 (i32.load offset=20
                     (local.get $planePosition)
                 )
-              )
             )
           
             (v128.load 
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
                 (i32.load offset=24
                     (local.get $planePosition)
                 )
-              )
             )
-
 
             (local.get $meshID)
             (f32x4.extract_lane 0
@@ -926,33 +915,22 @@
             )
 
             (v128.load
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
-                ;;Tähän mukaan pointteri?
-                (i32.load offset=44
-                    (local.get $planePosition)
-                )
-              )
+              (i32.load offset=44
+                (local.get $planePosition)
+              )              
             )             
 
             (v128.load
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
                 (i32.load offset=48
-                    (local.get $planePosition)
+                  (local.get $planePosition)
                 )
-              )
             )
           
             (v128.load 
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
                 (i32.load offset=52
                     (local.get $planePosition)
                 )
-              )
             )
-
 
             (local.get $meshID)
             (f32x4.extract_lane 1
@@ -989,31 +967,22 @@
               (i32.const 56)
             )
             (v128.load
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
                 (i32.load offset=72
-                    (local.get $planePosition)
+                  (local.get $planePosition)
                 )
-              )
             )
               
 
             (v128.load
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
                 (i32.load offset=76
-                    (local.get $planePosition)
+                  (local.get $planePosition)
                 )
-              )
             )
           
             (v128.load 
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
                 (i32.load offset=80
-                    (local.get $planePosition)
+                  (local.get $planePosition)
                 )
-              )
             )
             (local.get $meshID)
             (f32x4.extract_lane 2
@@ -1050,32 +1019,21 @@
                   (i32.const 84)
               )
             (v128.load
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
-                ;;Tähän mukaan pointteri?
                 (i32.load offset=100
-                    (local.get $planePosition)
+                  (local.get $planePosition)
                 )
-              )
             )
-              
 
             (v128.load
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
                 (i32.load offset=104
-                    (local.get $planePosition)
+                  (local.get $planePosition)
                 )
-              )
             )
           
             (v128.load 
-              (i32.add
-                (local.get $last_collider_world_vertices_pointer)
                 (i32.load offset=108
                     (local.get $planePosition)
                 )
-              )
             )
             (local.get $meshID)
             (f32x4.extract_lane 3

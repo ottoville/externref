@@ -49,7 +49,8 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         verticesPositionStride: number,
         strip = false,
         point_light = 0,
-        static_faces = false
+        static_faces = false,
+        public label:string,
 
     ) {
         super(renderPipeline, positionCount, true,true, verticesPositionStride, point_light,undefined, static_faces,strip,scenes);
@@ -61,8 +62,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
 
 
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
-        engine.gpu.boundables.add(this);
-
+        engine.boundables.set(label, this);
 
         //Run this on microtask so the scope who called
         //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
@@ -73,6 +73,10 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             //this.boundingBox.initMax();
         });
     }
+    override destroy() {
+        engine.boundables.delete(this.label)
+        super.destroy()
+    }
     initCollider() {
         //TODO: Calculate on demand
         if(this.faces_count === 0 || this.vertices_count===0)
@@ -82,7 +86,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         //this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
         for (let i = 0; i < this.vertices_count; i++) {
             const pos = this.vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT;
-            const colPos = i * 4 * Float32Array.BYTES_PER_ELEMENT;
+            const colPos = this.last_collider_world_vertices_pointer + i * 4 * Float32Array.BYTES_PER_ELEMENT;
             this.colliderVerticesV4.push(colPos);
             this.#positionsAndCollider.push([pos, colPos])
         }
@@ -94,8 +98,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             throw ('less than 3 vector')
         this.#triangleFaces[faceIndex] = new Triangle(
             vectors,
-            () => this.collider_faces_pointer + faceIndex * 4 * 7, this
-        );
+            () => this.collider_faces_pointer + faceIndex * 4 * 7);
        /* new Triangle(
             vectors,
             new Float32Array(this.engine.memory.buffer, this.collider_faces_pointer + faceIndex * 4 * 7,4) as TerraVector4
@@ -123,12 +126,9 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         return worker.message(this.id, 'intersectsRay', [ray.buffer]);
     }
     #updateColliderPlanes() {
-        const timer = performance.now();
-        const offset=this.last_collider_world_vertices_pointer;
         this.#positionsAndCollider.forEach((posAndCol, i) => {
-            this.getPosition(i).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer,offset + posAndCol[1]));
+            this.getPosition(i).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer,posAndCol[1]));
         });
-        console.log('recalculated collision vertices', performance.now() - timer);
         this.#faceQuatros.forEach((quatro, i) => {
             quatro[0].updatePlane();
             quatro[1].updatePlane();
@@ -148,7 +148,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         if (this.faces_count % 4 != 0) {  //TODO
             return
         }
-        if (!collider._canDoCollision(this.bounding_min as TerraVector3, this.bounding_max as TerraVector3)) {
+        if (!collider._canDoCollision(this.bounding_min as TerraVector3, this.bounding_max)) {
             return;
         }
 
@@ -160,11 +160,15 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
             this.#lastColliderTransformMatrix = this.#myCollisionsTransformMatrix.clone();
             this.#updateColliderPlanes();
         }
+            /*const scaledPosition=collider.scaledPosition;
+            const scaledVelocity=collider.scaledVelocity
+            this.#triangleFaces.forEach(triangle => {
+               collider._testTriangle(triangle, scaledPosition, scaledVelocity);
+            });*/
              engine.wasm.testTriangles(
-                this.last_collider_world_vertices_pointer,
                 this.collider_faces_pointer,
                 this.collider_planes_parallel_pointer,
-                this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT /*  plane + vector pointers*/,
+                this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
                 this.id);
         
     }
@@ -211,9 +215,10 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
         indicesView: Uint32Array,
         strip = false,
         point_light = 0,
-        static_faces = false
+        static_faces = false,
+        label:string
     ) {
-        super(scenes, renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip, point_light,static_faces);
+        super(scenes, renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip, point_light,static_faces,label);
         Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeIndexed.prototype, prop);
             if(propDesc)
@@ -266,8 +271,9 @@ export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
         vertices:Float32Array,
         verticesPositionStride = 3,
         strip = false,
+        label:string
     ) {
-        super(scenes, renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip);
+        super(scenes, renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip, undefined, undefined, label);
         Object.getOwnPropertyNames(BoundableNodeSimple.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeSimple.prototype, prop);
             if(propDesc)
