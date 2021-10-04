@@ -1,6 +1,6 @@
 (module
   (import "console" "log" (func $log (param f32)))
-  (import "env" "memory" (memory 6000))
+  (import "env" "memory" (memory 17))
   (export "memory" (memory 0))
 
   ;;(import "env" "memory" (memory $mem 31 32))
@@ -287,7 +287,6 @@
     (local $triangle0 v128)
     (local $triangle1 v128)
     (local $triangle2 v128)
-    
     i32.const 0
     global.set $found
 
@@ -299,7 +298,6 @@
       )
       (global.get $normalizedVelocity)
     )
-
     f32.const 0
     f32.gt
     if
@@ -338,32 +336,23 @@
 
     (local.set $triangle0
       (v128.load
-        (i32.load
-          (i32.add
-            (i32.const 16)
+        (i32.load offset=16
             (local.get $planePosition)
-          )
         )
       )
     )
 
     (local.set $triangle1
       (v128.load
-        (i32.load
-          (i32.add
-            (i32.const 20)
-            (local.get $planePosition)
-          )
+        (i32.load offset=20
+           (local.get $planePosition)
         )
       )
     )
     (local.set $triangle2
       (v128.load 
-        (i32.load
-          (i32.add
-            (i32.const 24)
+        (i32.load offset=24
             (local.get $planePosition)
-          )
         )
       )
     )

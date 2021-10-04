@@ -55,27 +55,71 @@ new Float32Array(memory, 7872,4).set([0, 31.435291290283203, -10000, 0]);
 new Float32Array(memory, 7888,4).set([10000, 3.8745102882385254, -10000, 0]);
 new Float32Array(memory, 7824,4).set([0, 3.8745102882385254, 0, 0]);
 
-const data=[2147483648, 1065353216, 0, 3229087738, 7824, 7776, 7760, 0, 1065353216, 0, 3229087738, 7808, 7824, 7760, 3162570751, 1065351136, 0, 3229085723, 7840, 7792, 7776, 3162570751, 1065351136, 0, 3229085723, 7824, 7840, 7776, 2147483648, 1065353152, 993304356, 3229087676, 7872, 7824, 7808, 0, 1065353152, 993304356, 3229087676, 7856, 7872, 7808, 3162569703, 1065349056, 3162569703, 3229083709, 7888, 7840, 7824, 993304311, 1065353089, 993304311, 3229087615, 7872, 7888, 7824];
+new Float32Array(memory, 7776,4).set([0, 0, 0, 0]);
+new Float32Array(memory, 7760,4).set([0, 0, 0, 0]);
+new Float32Array(memory, 7808,4).set([0, 0, 0, 0]);
+new Float32Array(memory, 7840,4).set([0, 0, 0, 0]);
+new Float32Array(memory, 7792,4).set([0, 0, 0, 0]);
+new Float32Array(memory, 7792,4).set([0, 0, 0, 0]);
+new Float32Array(memory, 7856,4).set([0, 0, 0, 0]);
+
+const data=[
+    //norm +d
+    2147483648, 1065353216, 0, 3229087738,
+    //vectors
+    7824, 7776, 7760,
+    //norm + d
+    0, 1065353216, 0, 3229087738,
+    //vectors
+    7808, 7824, 7760,
+    //norm + d
+    3162570751, 1065351136, 0, 3229085723,
+    //vectors
+    7840, 7792, 7776,
+    //norm + d
+    3162570751, 1065351136, 0, 3229085723,
+    //vectors
+    7824, 7840, 7776,
+    //norm +d
+    2147483648, 1065353152, 993304356, 3229087676,
+    //vectors
+    7872, 7824, 7808,
+    0, 1065353152, 993304356, 3229087676,
+    7856, 7872, 7808,
+    3162569703, 1065349056, 3162569703, 3229083709,
+    7888, 7840, 7824,
+    993304311, 1065353089, 993304311, 3229087615,
+    7872, 7888, 7824];
 const facesBufferCollider=new Uint32Array(memory,60, data.length);
 facesBufferCollider.set(data);
 const facesBufferColliderFloats=new Float32Array(memory,60, data.length);
-const facesBufferColliderParallel=new Float32Array(memory,60+data.length, 16).set([
-    facesBufferColliderFloats[0],   facesBufferColliderFloats[28],  facesBufferColliderFloats[56],  facesBufferColliderFloats[84],
-    facesBufferColliderFloats[1],   facesBufferColliderFloats[29],  facesBufferColliderFloats[57],  facesBufferColliderFloats[85],
-    facesBufferColliderFloats[2],   facesBufferColliderFloats[30],  facesBufferColliderFloats[58],  facesBufferColliderFloats[86],
-    facesBufferColliderFloats[3],   facesBufferColliderFloats[31],  facesBufferColliderFloats[59],  facesBufferColliderFloats[87]
+const facesBufferColliderParallel=new Float32Array(memory,60+facesBufferCollider.byteLength, 32);
+
+facesBufferColliderParallel.set([
+    facesBufferColliderFloats[0],   facesBufferColliderFloats[7],  facesBufferColliderFloats[14],  facesBufferColliderFloats[21],
+    facesBufferColliderFloats[1],   facesBufferColliderFloats[8],  facesBufferColliderFloats[15],  facesBufferColliderFloats[22],
+    facesBufferColliderFloats[2],   facesBufferColliderFloats[9],  facesBufferColliderFloats[16],  facesBufferColliderFloats[23],
+    facesBufferColliderFloats[3],   facesBufferColliderFloats[10],  facesBufferColliderFloats[17],  facesBufferColliderFloats[24],
+
+
+    facesBufferColliderFloats[28],   facesBufferColliderFloats[35],  facesBufferColliderFloats[42],  facesBufferColliderFloats[49],
+    facesBufferColliderFloats[29],   facesBufferColliderFloats[36],  facesBufferColliderFloats[43],  facesBufferColliderFloats[50],
+    facesBufferColliderFloats[30],   facesBufferColliderFloats[37],  facesBufferColliderFloats[44],  facesBufferColliderFloats[51],
+    facesBufferColliderFloats[31],   facesBufferColliderFloats[38],  facesBufferColliderFloats[45],  facesBufferColliderFloats[52]
 ])
 
 
-
-
-instance.exports.testTriangles(facesBufferCollider.byteOffset,facesBufferColliderParallel.byteOffset, facesBufferCollider.byteLength,8*7*4);
+instance.exports.testTriangles(
+    facesBufferCollider.byteOffset,
+    facesBufferColliderParallel.byteOffset,
+    facesBufferCollider.byteLength,
+    8*7*4);
 if(!collisionNotFound[0]===0) {
     console.error('faulty collisionNotFound',collisionNotFound)
     process.exit(1)
 }
 if(intersectionPointWasm[0]!==3386.90673828125 || intersectionPointWasm[1] !== 10.731124877929688 || intersectionPointWasm[2] !== -5874.72216796875) {
-    console.error('faulty intersectionPointWasm',intersectionPointWasm)
+    console.error('faulty intersectionPointWasm',intersectionPointWasm);
     process.exit(1)
 }
 if(nearestDistanceSquared[0] !== 17312.14453125) {
