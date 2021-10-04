@@ -50,7 +50,7 @@ export abstract class paintGround {
 
     #drawArea = async () => {
         const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh });
-        if (pickInfo && pickInfo.position) {
+        if (pickInfo) {
             this.#end_position[0] = pickInfo.position[0];
             this.#end_position[1] = pickInfo.position[2];
             this.#drawVector[0] = this.#start_position[0] - this.#end_position[0];
@@ -84,7 +84,7 @@ export abstract class paintGround {
 
     #mousemove = async () => {
         const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh })
-        if (pickInfo && pickInfo.position && this.#end_position) {
+        if (pickInfo && this.#end_position) {
             //Distance from first point
             const p0 = this.#start_position[0] - pickInfo.position[0];
             const p1 = this.#start_position[1] - pickInfo.position[2];
@@ -175,7 +175,7 @@ export abstract class paintGround {
               return mesh === this.ground
           }, false, this.camera);*/
         const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh });
-        if (pickInfo && pickInfo.position) {
+        if (pickInfo) {
             this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
             this.onMainPointerDown(this.#start_position);
             engine.inputManager?.destroy();

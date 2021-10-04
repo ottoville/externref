@@ -148,7 +148,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
             this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
         });*/
         const pickInfo = await engine.gpu.renderPassScreen.pickPosition(true);
-        if(pickInfo.position) {
+        if(pickInfo) {
             this.#pick.meshId = pickInfo.meshId;
             this.#pick.position[0] = pickInfo.position[0];
             this.#pick.position[1] = pickInfo.position[1];

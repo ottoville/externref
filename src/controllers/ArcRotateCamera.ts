@@ -128,8 +128,8 @@ export class ArcRotateCamera implements CameraController {
     #cameraPointerDown = (e: PointerEvent) => {
         pointerDownButton = e.button;
         if (pointerDownButton !== 2) {
-            this.camera.renderPass.pickPosition().then((position) => {
-                if(position.position) {
+            this.camera.renderPass.pickPosition().then(position => {
+                if(position) {
                     this.#targetMovingfrom = new TerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
                     this.#targetMovingTo = position.position;
                     this.#targetLerpPosition = 0;

@@ -54,11 +54,13 @@ function create(gpu: GPU): [Uint32Array, GPUIndexBuffer, GPUVertexBuffer] {
 
     return [new Uint32Array(indicesBuffer), iBuffer, vBuffer]
 }
+let uid=0;
 export class Box extends SimpleIndexedMesh {
     constructor(
         scenes: Scene[],
-        point_light = 0
+        point_light = 0,
+        label='box'+(uid++)
     ) {
-        super(scenes,positions, ...create(engine.gpu),'box',point_light);
+        super(scenes,positions, ...create(engine.gpu),label,point_light);
     }
 }

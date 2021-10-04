@@ -156,12 +156,12 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         }
         return renderPassDescriptor;
     }
-    pickPromise: Promise<{ position: TerraVector3 | null, meshId?: number }> | null = null;
+    pickPromise: Promise<{ position: TerraVector3, meshId?: number } | null> | null = null;
     pickBuffer: GPUBuffer | null = null
 
-    pickPosition(): Promise<{ position: TerraVector3 | null }>
-    pickPosition(mesh:true): Promise<{ position: TerraVector3 | null, meshId: number }>
-    pickPosition(mesh=false): Promise<{ position: TerraVector3 | null }> | Promise<{ position: TerraVector3 | null, meshId: number }> {
+    pickPosition(): Promise<{ position: TerraVector3 } | null>
+    pickPosition(mesh:true): Promise<{ position: TerraVector3, meshId: number } | null>
+    pickPosition(mesh=false): Promise<{ position: TerraVector3 } | null> | Promise<{ position: TerraVector3, meshId: number } | null> {
         if (this.pickPromise) {
             return this.pickPromise
         }
@@ -205,13 +205,13 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         this.pickPromise = buffer.mapAsync(GPUMapMode.READ,offset - padding,padding + 32 + 16).then(() => {
             const b = buffer.getMappedRange(offset - padding,padding + 32 + 16);
             const z = new DataView(b).getFloat32(padding, true);
-            let result: TerraVector3 | null = null;
-            if(z !== 0) { // Z is 0 when did not hit anything, far plane value
-                result = new TerraVector3();
-                const x = engine.mousePosition[0] / this.size[0] * 2 - 1;
-                const y = -(engine.mousePosition[1] / this.size[1] * 2 - 1);
-                new TerraVector3([x, y, z]).multiply2Ref(camera.projectionViewInverted, result);
+            if(z === 0) { // Z is 0 when did not hit anything, far plane value
+                return null;
             }
+            const result = new TerraVector3();
+            const x = engine.mousePosition[0] / this.size[0] * 2 - 1;
+            const y = -(engine.mousePosition[1] / this.size[1] * 2 - 1);
+            new TerraVector3([x, y, z]).multiply2Ref(camera.projectionViewInverted, result);
 
             this.pickPromise = null;
 
@@ -230,9 +230,9 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         }
         return this.pickPromise;
     }
-    async pickMesh(wantedMeshIds?: Set<number>, predicate?: (mesh: MainNode) => boolean): Promise<{ position: TerraVector3 | null, mesh: MainNode } | null> {
+    async pickMesh(wantedMeshIds?: Set<number>, predicate?: (mesh: MainNode) => boolean): Promise<{ position: TerraVector3, mesh: MainNode } | null> {
         const pickInfo = await this.pickPosition(true);
-        if (wantedMeshIds && !wantedMeshIds.has(pickInfo.meshId)) {
+        if (!pickInfo || (wantedMeshIds && !wantedMeshIds.has(pickInfo.meshId))) {
             return null;
         }
         else {
@@ -246,6 +246,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 return { position: pickInfo.position, mesh };
             }
         }
+        
     }
     render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass: RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {
         const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
