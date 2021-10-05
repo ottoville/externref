@@ -10,9 +10,12 @@ import { GPUBufferUsage } from "./GPU.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { Projection } from "./GPU/Projection.js";
 //@ts-ignore
-import { PositionCamera } from "./controllers/positionCamera.js";
+import { PositionCamera } from "./controllers/PositionCamera.js";
 //@ts-ignore
 import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
+import { BoundableNode } from "./DataNode.js";
+//@ts-ignore
+import { MeshCamera } from "./controllers/MeshCamera.js";
 
 
 function Dot(left: [number, number, number] | Float32Array | TerraVector3, right: [number, number, number] | Float32Array | TerraVector3): number {
@@ -57,11 +60,12 @@ export interface ColliderWasm {
     construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number, velocity: number, basePoint: number): void;
     memory: WebAssembly.Memory
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
-    testTriangles: (last_collider_world_vertices_pointer: number, position: number, positionParallel: number, length: number, meshID: number) => void
+    testTriangles: (position: number, positionParallel: number, length: number, meshID: number) => void
     _initialize: () => void
 }
 export class Engine {
-    static gpu: GPU;
+    readonly boundables: Map<string,BoundableNode> = new Map();
+
     readonly CollisionsEpsilon = 0.001;
     readonly closeDistance = this.CollisionsEpsilon * 10.0;
     readonly closeDistanceSquared = this.closeDistance * this.closeDistance
@@ -145,20 +149,19 @@ export class Engine {
             const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
             shaderModules.set(u, device.createShaderModule({ code: compiled }));
         }));
-        this.gpu = new GPU(canvas, device, shaderModules);
+        const gpu = new GPU(canvas, device, shaderModules);
         //@ts-ignore
         window.printRenderTarget = () => {
-            this.gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.toBitmap(0)
+            gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.toBitmap(0)
         }
         //@ts-ignore
         window.printRenderTarget3 = () => {
-            this.gpu.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture.toBitmap(0)
+            gpu.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture.toBitmap(0)
         }
         //Init rust wasm
         const rust = await init();
 
-        const wasmRequest = await fetch('collider/colliderO.wasm');
-        const obj = await WebAssembly.instantiateStreaming(wasmRequest, {
+        const obj = await WebAssembly.instantiateStreaming(await fetch('collider/colliderO.wasm'), {
             console: {
                 log: function (arg: string) {
                     console.log(arg);
@@ -174,11 +177,11 @@ export class Engine {
         });
         const wasm: ColliderWasm = obj.instance.exports as any;
 
-        return new Engine(this.gpu, await DB, canvas, wasm, rust.memory, new RustEngine());
+        return new Engine(gpu, await DB, canvas, wasm, rust.memory, new RustEngine());
     }
     attachCameraInput(initial = false) {
-        this.inputManager = new ArcRotateCamera(this.mainCamera, initial);
-        // this.inputManager = new PositionCamera(this.mainCamera,initial);
+    this.inputManager = new ArcRotateCamera(this.mainCamera, initial);
+       //  this.inputManager = new PositionCamera(this.mainCamera,initial);
     }
     constructor(
         public gpu: GPU,
@@ -281,18 +284,23 @@ export class Engine {
     }
     async collideWithWorld(): Promise<void> {
         //TODO: Call only when camera position change
+        const scaledPosition = this.collider.scaledPosition;
+        const scaledVelocity = this.collider.scaledVelocity;
+
+
+
         for (let i = 0; i < 3; i++) {
-            //this.collider._initialize(this.collisionCoordinator.scaledPosition, this.collisionCoordinator.scaledVelocity, this.closeDistance);
+            //TODO: really, here inside the loop?
+            //TODO: Remove this JS initialize
+            this.collider._initialize(scaledPosition, scaledVelocity, this.closeDistance);
 
             //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
             this.wasm._initialize();
             // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-            await Promise.all([...this.gpu.boundables].map(mesh => mesh.checkCollision(this.collider)));
+            await Promise.all([...this.boundables.values()].map(mesh => mesh.checkCollision(this.collider)));
 
-            const scaledPosition = this.collider.scaledPosition;
-            const scaledVelocity = this.collider.scaledVelocity;
             const intersectionPoint = this.collider.intersectionPointWasm;
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
             this.#destinationPoint[1] = scaledPosition[1] + scaledVelocity[1];

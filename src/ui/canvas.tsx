@@ -159,9 +159,8 @@ export class Canvas extends TerraCompoment {
                 terraEngine.gpu.pendingCommandBuffers.add(buff);
             });
             if (terraEngine.inputManager?.checkInputs()) {
-                //camera.camera.update(values => {
+                if(terraEngine.inputManager.calculateCameraPositionAndTarget)
                     terraEngine.inputManager.calculateCameraPositionAndTarget();
-                //})
             }
 
             const renderEncoder = terraEngine.gpu.device.createCommandEncoder();

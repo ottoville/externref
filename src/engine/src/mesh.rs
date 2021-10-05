@@ -203,10 +203,7 @@ impl Mesh {
         }
     }
     #[wasm_bindgen(method, getter)]
-    pub fn bounding_max(&mut self) -> Vec<f32> {
-        if self.geometry.vertices.len() < 3 {
-            return vec![0.0,0.0,0.0];
-        }
+    pub fn bounding_max_pointer(&mut self) -> *const Vec3<f32> {
         if self.geometry.bounding_box.need_init_max {
             self.geometry.bounding_box.max_original = self.geometry.max();
             self.geometry.bounding_box.need_init_max=false;
@@ -215,10 +212,12 @@ impl Mesh {
         else if self.geometry.bounding_box.dirty_max {
             self.geometry.bounding_box.transform_max(&self.gpu_mesh.transformation)
         }
-        let ptr=&mut self.geometry.bounding_box.max as *mut Vec3<f32> as *mut f32; 
+        let p = (&self.geometry.bounding_box.max) as *const Vec3<f32>;
+        return p;
+        /*let ptr=&mut self.geometry.bounding_box.max as *mut Vec3<f32> as *mut f32; 
         unsafe {
             Vec::from_raw_parts(ptr, 3, 3)
-        }
+        }*/
     }
     pub fn set_bounding_need_init_min(&mut self) {
         self.geometry.bounding_box.need_init_min = true;

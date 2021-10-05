@@ -3,7 +3,6 @@ import { RenderPass } from "./GPU/RenderPass.js";
 import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
-import type { BoundableNode } from "./DataNode.js";
 import {GPUTextureUsageLiterals, Texture } from "./GPU/texture.js";
 import type { Projection } from "./GPU/Projection.js";
 
@@ -45,9 +44,6 @@ export class GPU {
     readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
     readonly pendingCommandBuffers: Set<GPUCommandBuffer> = new Set();
     readonly tempGPUBuffers: Set<GPUBuffer> = new Set();
-
-
-    readonly boundables: Set<BoundableNode> = new Set();
     
     readonly rootCameralayout:PipelineLayout;
 

@@ -29,7 +29,10 @@ export class MainNode extends Mesh {
         this.get_translation().set(value);
         this.update_dynamic_buffer(engine.rustEngine);
     }
-
+    get bounding_max() {
+        return new TerraVector3(engine.memory.buffer,super.bounding_max_pointer);
+    }
+   
     constructor(
         hasBounding: boolean,
         has_geometry:boolean,

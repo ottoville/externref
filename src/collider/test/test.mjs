@@ -12,6 +12,10 @@ const importObject = {
         console: {
                 log: function (arg) {
                     console.log(arg);
+                },
+                error: function (line) {
+                    console.error('Some error in webassembly on line', line)
+                    throw (new Error('Some error in webassembly on line ' + line));
                 }
                
             }, env: {
@@ -19,7 +23,7 @@ const importObject = {
             }
          };
 
-const wasm = await WebAssembly.compile(fs.readFileSync("../wwwroot/collider/colliderO.wasm"));
+const wasm = await WebAssembly.compile(fs.readFileSync("../wwwroot/collider/colliderSIMDO.wasm"));
 const instance = await WebAssembly.instantiate(wasm, importObject);
 
 const memory=instance.exports.memory.buffer

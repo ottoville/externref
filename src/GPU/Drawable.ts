@@ -71,7 +71,7 @@ export abstract class Drawable {
         this.#vertexBuffers.set(index, { buffer: Tbuffer, offset, size });
         return Tbuffer;
     }
-    abstract render: (renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass) => void
+    abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass: RenderPass) : void
     draw(renderPass: RenderPass, renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex:number[]) {
         this.dynamicBuffers.forEach((gpubindgroup_offset, i) => {
             const di=dynamicIndex[i];
@@ -231,7 +231,7 @@ export class DrawableIndexed extends DrawableDirect {
         }
         return this.indexBuffer;
     }
-    render = (renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass:RenderPass) => {
+    render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, renderPass:RenderPass) {
         if (this.indexBuffer) {
             renderEncoder.setIndexBuffer(this.indexBuffer, this.GPUIndexFormat);
             renderEncoder.drawIndexed(this.node.indices_count, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);

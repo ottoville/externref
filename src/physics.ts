@@ -1,9 +1,12 @@
 ﻿import type { MainNode } from "./TerraNode.js";
+import type { Engine } from "engine";
+declare const engine:Engine;
 
 //let Epsilon = 0.001;
 export interface hasPhysics {
     onPhysicTick: (time: number) => void
-    hasGravity:boolean
+    hasGravity:boolean;
+    checkCollide?(): Promise<void>;
 }
 /*
  * One real life second = One game minute
@@ -48,7 +51,7 @@ export class Physics {
         this.#lastTickTimeMs = timestamp;
         this.tickTime += delta / this.#realMSingameSecond;
 
-        this.tickables.forEach(tickable => {
+        this.tickables.forEach(async tickable => {
             tickable.onPhysicTick(delta);
             const velocity=tickable.get_velocity();
             if (tickable.hasGravity) {
@@ -59,12 +62,21 @@ export class Physics {
                 )
             }
             const currentTranslation = tickable.get_translation();
-            if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
-                currentTranslation.set([
-                    currentTranslation[0] + velocity[0],
-                    currentTranslation[1] + velocity[1],
-                    currentTranslation[2] + velocity[2]
-                ]);
+            if(tickable.checkCollide) {
+                await tickable.checkCollide();
+                if (engine.collider.rust.collision_not_found) {
+                    currentTranslation.set(engine.collider.finalPosition); //TODO now it only supports one collider.
+                    //engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
+                }
+            }
+            else {
+                if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
+                    currentTranslation.set([
+                        currentTranslation[0] + velocity[0],
+                        currentTranslation[1] + velocity[1],
+                        currentTranslation[2] + velocity[2]
+                    ]);
+                }
             }
         });
     }

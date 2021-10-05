@@ -18,7 +18,7 @@ ARROW_KEYS.LEFT_AND_RIGHT
 export class PositionCamera implements CameraController {
     name='PositionCamera';
     #angle=Math.PI;
-    #position=new TerraVector3([-3000,200,0]);
+    #position=new TerraVector3([-3000,300,0]);
     #velocity=0.5;
     #arrowKeysDown=0;
 
@@ -57,7 +57,6 @@ export class PositionCamera implements CameraController {
         document.addEventListener('keyup', this.#keyupfunction);
     }
     #serializeRequested=false;
-
     serialize = () => {
         if(this.#serializeRequested)
             return;
