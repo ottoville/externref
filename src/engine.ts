@@ -16,6 +16,7 @@ import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 import { BoundableNode } from "./DataNode.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
+import type { PickableRenderPass } from "GPU/RenderPass.js";
 
 
 function Dot(left: [number, number, number] | Float32Array | TerraVector3, right: [number, number, number] | Float32Array | TerraVector3): number {
@@ -72,23 +73,23 @@ export class Engine {
 
     // registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
 
-    physics = new Physics();
-    scenes: Map<string, Scene> = new Map();
+    readonly physics = new Physics();
+    readonly scenes: Map<string, Scene> = new Map();
     // readonly collisionNotFound:DataView
     //@ts-ignore
     readonly #collidedMesh: DataView
     readonly collider: ColliderJS;
 
-    mousePositionBuffer = new SharedArrayBuffer(4);
-    mousePosition = new Uint16Vector2(this.mousePositionBuffer);
+    readonly #mousePositionBuffer = new SharedArrayBuffer(4);
+    readonly mousePosition = new Uint16Vector2(this.#mousePositionBuffer);
 
-    mouseOffsetBuffer = new SharedArrayBuffer(8);
-    #destinationPoint: [number, number, number] = [0, 0, 0];
-    displacementVector: [number, number, number] = [0, 0, 0];
+    readonly #destinationPoint: [number, number, number] = [0, 0, 0];
+    readonly #displacementVector: [number, number, number] = [0, 0, 0];
 
-    updateLights = false;
-    mainCamera: TerraCamera;
+    #updateLights = false;
     inputManager: CameraController | null = null
+    #renderFrame = 0;
+    readonly mainCamera: TerraCamera<PickableRenderPass>;
     static async initEngine(canvas: HTMLCanvasElement): Promise<Engine> {
         const DB = new Promise<EarthDatabase>(function (res) {
             var IDB = indexedDB.open("City", 6);
@@ -183,6 +184,79 @@ export class Engine {
     this.inputManager = new ArcRotateCamera(this.mainCamera, initial);
        //  this.inputManager = new PositionCamera(this.mainCamera,initial);
     }
+    readonly #timeAndDeltaBuffer = new ArrayBuffer(8);
+    readonly #timeView = new Uint32Array(this.#timeAndDeltaBuffer, 0, 1);
+    readonly deltaView = new Float32Array(this.#timeAndDeltaBuffer, 4, 1);
+    readonly cameras:Set<TerraCamera>=new Set();
+    readonly #renderLoop = (time: DOMHighResTimeStamp) => {
+        //msPerFrame = performance.now() - startTime;
+        //startTime = performance.now();
+
+        //const nowSecond = (Date.now() / 500) | 0;
+        /*if (nowSecond !== curSecond) {
+            rendertime = framecount * 2;
+            curSecond = nowSecond;
+            framecount = 0;
+        }
+        framecount++;*/
+        //performance.mark('renderloopStart');
+
+
+        this.gpu.onRenders2.forEach(or => {
+            const buff = or();
+            if (buff)
+            this.gpu.pendingCommandBuffers.add(buff);
+        });
+        if (this.inputManager?.checkInputs()) {
+            if(this.inputManager.calculateCameraPositionAndTarget)
+            this.inputManager.calculateCameraPositionAndTarget();
+        }
+
+        const renderEncoder = this.gpu.device.createCommandEncoder();
+
+        this.#timeView.set([time]);
+        let physicDelta: number | null;
+        if (this.physics.gameSpeed == -1)
+            physicDelta = null;
+        else
+            physicDelta = (this.physics.physicTime - this.physics.tickTime) / ((this.physics.tickIntervalMs))
+
+        if (physicDelta !== null)
+            this.deltaView.set([physicDelta]);
+
+        this.gpu.device.queue.writeBuffer(this.gpu.timeBuffer, 0, this.#timeAndDeltaBuffer);
+        try {
+            this.cameras.forEach(camera => {
+                camera.updateView(renderEncoder)
+            })
+            const lightPass = renderEncoder.beginComputePass();
+            lightPass.setPipeline(this.gpu.updateViewPipeline);
+            lightPass.setBindGroup(0, this.gpu.updateViewBindGroup);
+            this.cameras.forEach(camera => {
+                if(camera.viewUpdated || this.#updateLights) {
+                    camera.viewUpdated=false;
+                    lightPass.setBindGroup(1, camera.updateViewBindGroup);
+                    lightPass.dispatch(...this.gpu.CLUSTER_DISPATCH_SIZE);
+                }
+            });
+            lightPass.endPass();
+            this.#updateLights = false;
+
+            this.cameras.forEach(camera => {
+                camera.renderPass.render(renderEncoder, camera.uniformBindGroup,this.gpu.rootCameralayout);
+            });
+        } catch (e) {
+            console.error(e);
+        }
+
+        this.gpu.renderPassCanvas.render(renderEncoder, this.gpu.BindGroupCanvas, this.gpu.rootLayout);
+
+        this.gpu.pendingCommandBuffers.add(renderEncoder.finish())
+        this.gpu.device.queue.submit(this.gpu.pendingCommandBuffers);
+        this.gpu.pendingCommandBuffers.clear();
+        this.gpu.tempGPUBuffers.forEach(buff => buff.destroy())
+        this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
+    }
     constructor(
         public gpu: GPU,
         public DB: EarthDatabase,
@@ -220,7 +294,7 @@ export class Engine {
         canvas.addEventListener('pointermove', (e) => {
             Atomics.store(this.mousePosition, 0, e.clientX * gpu.scale.x)
             Atomics.store(this.mousePosition, 1, e.clientY * gpu.scale.y)
-            Atomics.notify(new Int32Array(this.mousePositionBuffer), 0);
+            Atomics.notify(new Int32Array(this.#mousePositionBuffer), 0);
         });
         const map = new Map<number, number>();
 
@@ -241,7 +315,7 @@ export class Engine {
                 const data = new Float32Array(this.memory.buffer, gpumeshPointer, TerraNodeGPU.GPUDataSize);
                 //Point light
                 if (data[29]! > 0) {
-                    this.updateLights = true;
+                    this.#updateLights = true;
                 }
                 new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
                 commandEncoder.copyBufferToBuffer(
@@ -254,7 +328,65 @@ export class Engine {
             tempBuffer.unmap();
             this.gpu.tempGPUBuffers.add(tempBuffer);
             return commandEncoder.finish();
-        })
+        });
+        let resizeHandler = 0;
+        const maxResolution = {
+            width: 1920,
+            height: 1080
+        }
+        const computePipelineClusters       = gpu.createComputePipeline('clusters.comp.wgsl');
+        const computePipelineClustersLayout = computePipelineClusters.getBindGroupLayout(0)
+        if(!canvas.parentElement) {
+            throw new Error('Canvas must have parent element');
+        }
+        console.log('create ResizeObserver')
+        const ro = new window.ResizeObserver(entries => {
+            console.log('ResizeObserver0')
+
+            const entry = entries[0];
+            if (!entry)
+                return;
+            console.log('ResizeObserver1')
+            window.cancelAnimationFrame(this.#renderFrame)
+            clearTimeout(resizeHandler);
+            resizeHandler = setTimeout(async () => {
+                const aspectRatio = entry.contentRect.width / entry.contentRect.height
+                canvas.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
+
+                canvas.height = canvas.width / aspectRatio
+
+                if (canvas.height > maxResolution.height) {
+                    canvas.height = maxResolution.height;
+                    canvas.width = canvas.height * aspectRatio;
+                }
+
+                gpu.scale.x = canvas.width / entry.contentRect.width;
+                gpu.scale.y = canvas.height / entry.contentRect.height;
+                // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
+                gpu.context.configure({
+                    device: gpu.device,
+                    format: "bgra8unorm",
+                    usage: GPUTextureUsage.RENDER_ATTACHMENT
+                })
+                const commandEncoder = gpu.createCommandEncoder();
+                const passEncoder = commandEncoder.beginComputePass();
+                passEncoder.setPipeline(computePipelineClusters);
+                
+                gpu.projections.forEach(projection => projection.update(aspectRatio))
+
+                gpu.renderPasses.forEach(renderPass => {
+                    renderPass.resize(canvas.width, canvas.height);
+                    renderPass.cameras.forEach(camera => {
+                        camera.updateProjection(passEncoder,computePipelineClustersLayout)
+                    });
+                });
+                passEncoder.endPass();
+                gpu.device.queue.submit([commandEncoder.finish()]);
+
+                this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
+            }, 500)
+        });
+        ro.observe(canvas.parentElement)
     }
     update_point_lights(lights: Uint32Array) {
         const commandEncoder = this.gpu.device.createCommandEncoder();
@@ -341,18 +473,18 @@ export class Engine {
                 // this._slidePlaneNormal.normalize();
 
                 // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
-                this.displacementVector[0] = this.collider._slidePlaneNormal[0] * this.collider.epsilon;
-                this.displacementVector[1] = this.collider._slidePlaneNormal[1] * this.collider.epsilon;
-                this.displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
+                this.#displacementVector[0] = this.collider._slidePlaneNormal[0] * this.collider.epsilon;
+                this.#displacementVector[1] = this.collider._slidePlaneNormal[1] * this.collider.epsilon;
+                this.#displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
 
                 // pos.addInPlace(this._displacementVector);
-                scaledPosition[0] += this.displacementVector[0];
-                scaledPosition[1] += this.displacementVector[1];
-                scaledPosition[2] += this.displacementVector[2];
+                scaledPosition[0] += this.#displacementVector[0];
+                scaledPosition[1] += this.#displacementVector[1];
+                scaledPosition[2] += this.#displacementVector[2];
                 //this.intersectionPoint.addInPlace(this._displacementVector);
-                intersectionPoint[0] += this.displacementVector[0];
-                intersectionPoint[1] += this.displacementVector[1];
-                intersectionPoint[2] += this.displacementVector[2];
+                intersectionPoint[0] += this.#displacementVector[0];
+                intersectionPoint[1] += this.#displacementVector[1];
+                intersectionPoint[2] += this.#displacementVector[2];
 
                 const d = -(this.collider._slidePlaneNormal[0] * intersectionPoint[0] + this.collider._slidePlaneNormal[1] * intersectionPoint[1] + this.collider._slidePlaneNormal[2] * intersectionPoint[2]);
                 scale = Dot(this.#destinationPoint, this.collider._slidePlaneNormal) + d;

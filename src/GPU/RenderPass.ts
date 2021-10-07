@@ -27,7 +27,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     constructor(
         public gpu: GPU,
         public renderTargets: T,
-        public sampleCount: number = 1,
+        public sampleCount = 1,
         depthStencil = false,
         public size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
         private _onResize: (width: number, height: number) => [number, number]) {
@@ -95,19 +95,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             this.renderTargets[key]!.texture.size[1]=this.size[1];
             this.renderTargets[key]!.texture.createTexture();
         }
-
-        //update picking
-        const oldpickBuffer=this.pickBuffer;
-        if(oldpickBuffer) {
-            setTimeout(() => {
-                oldpickBuffer.destroy();
-            },1000);
-        }
-        this.pickBuffer = this.gpu.device.createBuffer({
-            size: this.gpu.renderPassScreen.size[0] * this.gpu.renderPassScreen.size[1] * 4,
-            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-        });
-
         this.onResize.forEach(cb => cb());
     }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
@@ -156,8 +143,95 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         }
         return renderPassDescriptor;
     }
+ 
+    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass: RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {
+        const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
+        if (!this.bundles.length) {
+            const renderDesc:GPURenderBundleEncoderDescriptor= {
+                colorFormats: Object.values(this.renderTargets).map(rt => rt.texture.format),
+                sampleCount: this.sampleCount,
+            }
+            if(this.depthTexture) {
+                renderDesc.depthStencilFormat=this.#depthFormat;
+            }
+            const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder(renderDesc);
+            //@ts-ignore
+            let drawedMeshes = 0;
+            const dynamicIndices: number[] = [];
+
+            renderBundleEncoder.setBindGroup(0, typeof (rootBindGroup) === 'function' ? rootBindGroup(this) : rootBindGroup);
+            rootLayout.renderPipeLines.forEach(renderPipeline => {
+                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
+            });
+            //POSITION
+            if (this.gpu.positionBindGroupTimeWGSL.bindGroupLayout.dynamicIndices) {
+                dynamicIndices.push(1);
+            }
+            this.gpu.positionBindGroupTimeWGSL.renderPipeLines.forEach(renderPipeline => {
+                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1, dynamicIndices);
+            });
+            this.gpu.positionBindGroupTimeWGSL.subBindGroups.forEach(pipelineLayout => {
+                if (pipelineLayout.sharedBindgroup) {
+                    renderBundleEncoder.setBindGroup(2, pipelineLayout.sharedBindgroup);
+                }
+                pipelineLayout.renderPipeLines.forEach(renderPipeline => {
+                    drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1 + dynamicIndices.length, dynamicIndices);
+                });
+            });
+            dynamicIndices.length = 0;
+            //SUN
+            if (this.gpu.positionBindGroupTime.bindGroupLayout.dynamicIndices) {
+                dynamicIndices.push(1);
+            }
+            this.gpu.positionBindGroupTime.renderPipeLines.forEach(renderPipeline => {
+                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1, dynamicIndices);
+            });
+            this.gpu.positionBindGroupTime.subBindGroups.forEach(bindGroup => {
+                bindGroup.renderPipeLines.forEach(renderPipeline => {
+                    drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1 + dynamicIndices.length, dynamicIndices);
+                });
+            });
+
+            this.bundles.push(renderBundleEncoder.finish());
+        }
+        passEncoder.executeBundles(this.bundles);
+        passEncoder.endPass();
+    }
+}
+
+export class PickableRenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> } = { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> }> extends RenderPass<T> {
+    pickBuffer: GPUBuffer;
+    constructor(gpu: GPU,
+        renderTargets: T,
+        sampleCount = 1,
+        depthStencil = false,
+        size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
+        _onResize: (width: number, height: number) => [number, number]) {
+            super(gpu,renderTargets,sampleCount,depthStencil,size,_onResize);
+            this.pickBuffer = this.gpu.device.createBuffer({
+                size: this.size[0] * this.size[1] * 4,
+                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+            });
+    }
+    override resize(width: number, height: number) {
+        super.resize(width, height);
+
+        //update picking
+        const oldpickBuffer=this.pickBuffer;
+        if(oldpickBuffer) {
+            setTimeout(() => {
+                oldpickBuffer.destroy();
+            },1000);
+        }
+        this.pickBuffer = this.gpu.device.createBuffer({
+            size: this.size[0] * this.size[1] * 4,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+        });
+
+        this.onResize.forEach(cb => cb());
+    }
     pickPromise: Promise<{ position: TerraVector3, meshId?: number } | null> | null = null;
-    pickBuffer: GPUBuffer | null = null
+    
 
     pickPosition(): Promise<{ position: TerraVector3 } | null>
     pickPosition(mesh:true): Promise<{ position: TerraVector3, meshId: number } | null>
@@ -169,7 +243,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         const offset = (engine.mousePosition[1] * this.size[0] + engine.mousePosition[0]) * 4;
         const padding = offset % 16;
 
-        const buffer=this.pickBuffer!;
+        const buffer=this.pickBuffer;
 
         const encoder = this.gpu.device.createCommandEncoder();
         encoder.copyTextureToBuffer(
@@ -246,59 +320,5 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 return { position: pickInfo.position, mesh };
             }
         }
-        
-    }
-    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass: RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {
-        const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
-        if (!this.bundles.length) {
-            const renderDesc:GPURenderBundleEncoderDescriptor= {
-                colorFormats: Object.values(this.renderTargets).map(rt => rt.texture.format),
-                sampleCount: this.sampleCount,
-            }
-            if(this.depthTexture) {
-                renderDesc.depthStencilFormat=this.#depthFormat;
-            }
-            const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder(renderDesc);
-            //@ts-ignore
-            let drawedMeshes = 0;
-            const dynamicIndices: number[] = [];
-
-            renderBundleEncoder.setBindGroup(0, typeof (rootBindGroup) === 'function' ? rootBindGroup(this) : rootBindGroup);
-            rootLayout.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
-            });
-            //POSITION
-            if (this.gpu.positionBindGroupTimeWGSL.bindGroupLayout.dynamicIndices) {
-                dynamicIndices.push(1);
-            }
-            this.gpu.positionBindGroupTimeWGSL.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1, dynamicIndices);
-            });
-            this.gpu.positionBindGroupTimeWGSL.subBindGroups.forEach(pipelineLayout => {
-                if (pipelineLayout.sharedBindgroup) {
-                    renderBundleEncoder.setBindGroup(2, pipelineLayout.sharedBindgroup);
-                }
-                pipelineLayout.renderPipeLines.forEach(renderPipeline => {
-                    drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1 + dynamicIndices.length, dynamicIndices);
-                });
-            });
-            dynamicIndices.length = 0;
-            //SUN
-            if (this.gpu.positionBindGroupTime.bindGroupLayout.dynamicIndices) {
-                dynamicIndices.push(1);
-            }
-            this.gpu.positionBindGroupTime.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1, dynamicIndices);
-            });
-            this.gpu.positionBindGroupTime.subBindGroups.forEach(bindGroup => {
-                bindGroup.renderPipeLines.forEach(renderPipeline => {
-                    drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1 + dynamicIndices.length, dynamicIndices);
-                });
-            });
-
-            this.bundles.push(renderBundleEncoder.finish());
-        }
-        passEncoder.executeBundles(this.bundles);
-        passEncoder.endPass();
     }
 }

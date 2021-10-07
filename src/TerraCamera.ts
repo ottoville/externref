@@ -4,8 +4,10 @@ import type { GPU } from "./GPU.js";
 import { GPUBufferUsage } from "./GPU.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Projection } from "./GPU/Projection.js";
+import type { Engine } from "engine.js";
+declare const engine:Engine;
 
-export class TerraCamera {
+export class TerraCamera<T extends RenderPass = RenderPass> {
     readonly #childCameras: Set<TerraCamera> = new Set();
 
     readonly #clusterArrayBuffer: GPUStorageBuffer
@@ -45,7 +47,7 @@ export class TerraCamera {
         return this.#projectionUniformsBuffer;
 
     }
-    constructor(public renderPass: RenderPass, public projection: Projection, private gpu: GPU, parent?: TerraCamera) {
+    constructor(public renderPass: T, public projection: Projection, private gpu: GPU, parent?: TerraCamera) {
         this.#clusterArrayBuffer = gpu.createGPUBuffer(gpu.clusterSizeinBytes, [GPUBufferUsage.STORAGE]);
         this.#projectionUniformsBuffer = this.updateProjectionUniformsBuffer(true);
         this.#uniformBuffer = gpu.createGPUBuffer(this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
@@ -104,6 +106,7 @@ export class TerraCamera {
             parent.#childCameras.add(this);
         renderPass.cameras.add(this);
         gpu.projections.add(this.projection);
+        engine.cameras.add(this);
     }
     get position(): Readonly<{ [0]: number, [1]: number, [2]: number } > {
         return this.#position

@@ -13,7 +13,6 @@
       "--enable-unsafe-webgpu", "--enable-features=SharedArrayBuffer"
     ]
   },
-  "single_run":true,
   "report_file":"test_report.txt",
   "tap_failed_tests_only":true
 }

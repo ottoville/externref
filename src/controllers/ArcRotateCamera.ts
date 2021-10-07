@@ -1,4 +1,5 @@
-﻿import type { Engine } from "../engine.js";
+﻿import type { PickableRenderPass } from "GPU/RenderPass.js";
+import type { Engine } from "../engine.js";
 import { TerraMatrix, TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 let pointerDownButton = 0;
@@ -79,7 +80,7 @@ export class ArcRotateCamera implements CameraController {
     #alpha = 0;
     #beta = 0;
     #radius = 10;
-    constructor(private camera: TerraCamera, initial = false) {
+    constructor(private camera: TerraCamera<PickableRenderPass>, initial = false) {
         engine.canvas.addEventListener('wheel', this.#cameraWheel);
         engine.canvas.addEventListener('pointerdown', this.#cameraPointerDown);
         if (initial) {

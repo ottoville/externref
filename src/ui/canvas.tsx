@@ -54,11 +54,7 @@ export class Canvas extends TerraCompoment {
             direction[1] = -direction[1];
         });
 
-        const TerraCameras = [engine.mainCamera, waterCamera]
-        const timeAndDeltaBuffer = new ArrayBuffer(8);
-        const timeView = new Uint32Array(timeAndDeltaBuffer, 0, 1);
-        const deltaView = new Float32Array(timeAndDeltaBuffer, 4, 1);
-
+      
         this.progress = 19;
 
 
@@ -115,19 +111,6 @@ export class Canvas extends TerraCompoment {
              b2.destroy(terraEngine.rustEngine);
          },10000)*/
 
-        let renderFrame = 0;
-        let resizeHandler = 0;
-
-        let curSecond = (Date.now() / 500) | 0;
-        let framecount = 0;
-        //@ts-ignore
-        let rendertime = 0;
-        //@ts-ignore
-        let msPerFrame = 0;
-
-        let startTime = 0;
-
-
         const canvasPipeline = terraEngine.gpu.rootLayout.addRenderPipeline(
             new VertexShader(terraEngine.gpu, 'deferred.vert.wgsl'),
             new Shader(terraEngine.gpu, 'deferred.frag.wgsl'), {
@@ -138,127 +121,7 @@ export class Canvas extends TerraCompoment {
             }
         });
         new CanvasMesh(canvasPipeline, 6);
-        //new TerraNodeGPU<DrawableSimple>(terraEngine, canvasPipeline, 6, (node) => node.renderPipeline.addDrawableSimple(undefined, new Set([gpu.renderPassCanvas]), node, undefined, undefined, undefined, 'canvas'),undefined,undefined,6)
-        function renderLoop(time: DOMHighResTimeStamp) {
-            msPerFrame = performance.now() - startTime;
-            startTime = performance.now();
 
-            const nowSecond = (Date.now() / 500) | 0;
-            if (nowSecond !== curSecond) {
-                rendertime = framecount * 2;
-                curSecond = nowSecond;
-                framecount = 0;
-            }
-            framecount++;
-            //performance.mark('renderloopStart');
-
-
-            terraEngine.gpu.onRenders2.forEach(or => {
-                const buff = or();
-                if (buff)
-                terraEngine.gpu.pendingCommandBuffers.add(buff);
-            });
-            if (terraEngine.inputManager?.checkInputs()) {
-                if(terraEngine.inputManager.calculateCameraPositionAndTarget)
-                    terraEngine.inputManager.calculateCameraPositionAndTarget();
-            }
-
-            const renderEncoder = terraEngine.gpu.device.createCommandEncoder();
-
-            timeView.set([time]);
-            let physicDelta: number | null;
-            if (terraEngine.physics.gameSpeed == -1)
-                physicDelta = null;
-            else
-                physicDelta = (terraEngine.physics.physicTime - terraEngine.physics.tickTime) / ((terraEngine.physics.tickIntervalMs / 1000) << terraEngine.physics.gameSpeed)
-
-            if (physicDelta !== null)
-                deltaView.set([physicDelta]);
-
-            terraEngine.gpu.device.queue.writeBuffer(terraEngine.gpu.timeBuffer, 0, timeAndDeltaBuffer);
-            try {
-                TerraCameras.forEach(camera => {
-                    camera.updateView(renderEncoder)
-                })
-                const lightPass = renderEncoder.beginComputePass();
-                lightPass.setPipeline(terraEngine.gpu.updateViewPipeline);
-                lightPass.setBindGroup(0, terraEngine.gpu.updateViewBindGroup);
-                TerraCameras.forEach(camera => {
-                    if(camera.viewUpdated || terraEngine.updateLights) {
-                        camera.viewUpdated=false;
-                        lightPass.setBindGroup(1, camera.updateViewBindGroup);
-                        lightPass.dispatch(...terraEngine.gpu.CLUSTER_DISPATCH_SIZE);
-                    }
-                });
-                lightPass.endPass();
-                terraEngine.updateLights = false;
-
-                TerraCameras.forEach(camera => {
-                    camera.renderPass.render(renderEncoder, camera.uniformBindGroup,terraEngine.gpu.rootCameralayout);
-                });
-            } catch (e) {
-                console.error(e);
-            }
-
-            terraEngine.gpu.renderPassCanvas.render(renderEncoder, terraEngine.gpu.BindGroupCanvas, terraEngine.gpu.rootLayout);
-
-            terraEngine.gpu.pendingCommandBuffers.add(renderEncoder.finish())
-            terraEngine.gpu.device.queue.submit(terraEngine.gpu.pendingCommandBuffers);
-            terraEngine.gpu.pendingCommandBuffers.clear();
-            terraEngine.gpu.tempGPUBuffers.forEach(buff => buff.destroy())
-            renderFrame = window.requestAnimationFrame(renderLoop);
-        }
-
-        const maxResolution = {
-            width: 1920,
-            height: 1080
-        }
-        const computePipelineClusters       = terraEngine.gpu.createComputePipeline('clusters.comp.wgsl');
-        const computePipelineClustersLayout = computePipelineClusters.getBindGroupLayout(0)
-        const ro = new window.ResizeObserver(entries => {
-            const entry = entries[0];
-            if (!entry)
-                return;
-            window.cancelAnimationFrame(renderFrame)
-            clearTimeout(resizeHandler);
-            resizeHandler = setTimeout(async () => {
-                const aspectRatio = entry.contentRect.width / entry.contentRect.height
-                this.#canvasElem.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
-
-                this.#canvasElem.height = this.#canvasElem.width / aspectRatio
-
-                if (this.#canvasElem.height > maxResolution.height) {
-                    this.#canvasElem.height = maxResolution.height;
-                    this.#canvasElem.width = this.#canvasElem.height * aspectRatio;
-                }
-
-                terraEngine.gpu.scale.x = this.#canvasElem.width / entry.contentRect.width;
-                terraEngine.gpu.scale.y = this.#canvasElem.height / entry.contentRect.height;
-                // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
-                terraEngine.gpu.context.configure({
-                    device: terraEngine.gpu.device,
-                    format: "bgra8unorm",
-                    usage: GPUTextureUsage.RENDER_ATTACHMENT
-                })
-                const commandEncoder = terraEngine.gpu.createCommandEncoder();
-                const passEncoder = commandEncoder.beginComputePass();
-                passEncoder.setPipeline(computePipelineClusters);
-                
-                terraEngine.gpu.projections.forEach(projection => projection.update(aspectRatio))
-
-                terraEngine.gpu.renderPasses.forEach(renderPass => {
-                    renderPass.resize(this.#canvasElem.width, this.#canvasElem.height);
-                    renderPass.cameras.forEach(camera => {
-                        camera.updateProjection(passEncoder,computePipelineClustersLayout)
-                    });
-                });
-                passEncoder.endPass();
-                terraEngine.gpu.device.queue.submit([commandEncoder.finish()]);
-
-                renderFrame = window.requestAnimationFrame(renderLoop);
-            }, 500)
-        });
-        ro.observe(this.#canvasElem.parentElement!)
 
 
         this.progress = 20;

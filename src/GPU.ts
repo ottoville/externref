@@ -1,5 +1,5 @@
 ﻿import { TerraNodeGPU } from "./TerraNode.js";
-import { RenderPass } from "./GPU/RenderPass.js";
+import { PickableRenderPass, RenderPass } from "./GPU/RenderPass.js";
 import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
@@ -75,7 +75,7 @@ export class GPU {
         x: 1,
         y: 1
     }
-    readonly renderPassScreen: RenderPass<{
+    readonly renderPassScreen: PickableRenderPass<{
         gRenderTargetNormals: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>;
         gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"]>>;
     }>;
@@ -280,7 +280,7 @@ export class GPU {
         const normalAndPositionTexture = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'],[300,300,1])
         const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
 
-        this.renderPassScreen = new RenderPass(this, {
+        this.renderPassScreen = new PickableRenderPass(this, {
             gRenderTargetNormals: new RenderTarget(normalAndPositionTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 }),
             gRenderTargetDiffuse: new RenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 })
         }, 1, true, [canvas.width,canvas.height,1],

@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "testem": "testem --file testem_config.json",
+    "testem-ci": "testem --file testem_config_ci.json",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest",
     "browserify": "browserify js/runTest.js -o browserified.js && browserify js/engine.js -o js/engine.js"
   },

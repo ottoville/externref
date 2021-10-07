@@ -1,0 +1,19 @@
+{
+  "framework": "mocha",
+  "serve_files": [ "browserified.js" ],
+  "before_tests": "browserify js/runTest.js -o browserified.js",
+  "src_files": [
+    "./**/*.test.ts"
+  ],
+  "cert":"certificate.crt",
+  "key":"privatekey.key",
+  "launch_in_dev": [ "Chrome Canary" ],
+  "browser_args": {
+    "Chrome Canary": [
+      "--enable-unsafe-webgpu", "--enable-features=SharedArrayBuffer"
+    ]
+  },
+  "single_run":true,
+  "report_file":"test_report.txt",
+  "tap_failed_tests_only":true
+}
