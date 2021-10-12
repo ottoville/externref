@@ -18,10 +18,7 @@
 
 struct Output {
   [[builtin(position)]] Position : vec4<f32>;
-  [[location(0)]] v_uv : vec2<f32>;
-  [[location(1)]] normal : vec3<f32>;
-  [[location(2)]] position : vec3<f32>;
-  [[location(3)]] id : u32;
+  [[location(0)]] color : vec3<f32>;
  };
 
 [[stage(vertex)]]
@@ -32,11 +29,8 @@ fn normals([[location(0)]] position : vec3<f32>,
     var vertexPosition:vec4<f32> = vec4<f32>(position.xyz, 1.0);
     if(gl_VertexIndex % 2u == 1u) {
         vertexPosition = vertexPosition + vec4<f32>(normal*30.0, 0.0);
-        //output.Position = vec4<f32>(0.0,0.0,0.0,1.0);
     }
     output.Position = uniforms.modelViewProjectionMatrix * vertexPosition;
-    output.normal=normal;
-    output.position=position;
-    output.id=worldposition.id;
+    output.color=vec3<f32>(0.0,1.0,0.0);
     return output;
   }

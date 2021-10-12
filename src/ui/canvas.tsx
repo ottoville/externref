@@ -26,7 +26,7 @@ import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 
 declare const engine:Engine;
 class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
-    Drawable = this.renderPipeline.addDrawableSimple(new Set([engine.gpu.renderPassCanvas]), this, undefined, undefined, undefined, 'canvas')
+    drawable = this.renderPipeline.addDrawableSimple(this, undefined, undefined, undefined, 'canvas',new Set([engine.gpu.renderPassCanvas]))
     constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
         super(canvaspipeline, positionsCount);
     }
@@ -66,8 +66,12 @@ export class Canvas extends TerraCompoment {
             const sea = new Sea([terrascene]);
             //new testPlane(terrascene);
 
-            const b = new Box([terrascene]);
+            const b = new Box([terrascene],undefined,'bigbox');
             b.update_scale(terraEngine.rustEngine, 500, 500, 500);
+            b.update_rotation(terraEngine.rustEngine,Math.sin(1),0,0,Math.cos(1));
+            //@ts-expect-error
+            window.debugBB=() => b.drawable.debug_bounding_box();
+
             new Human([terrascene])
             const terrainInited = Terrain.loadFromTexture([terrascene]);
 

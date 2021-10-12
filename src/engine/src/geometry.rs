@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 pub use crate::Vec3;
+pub use crate::Vec4;
 pub use crate::boundingbox::BoundingBox;
 
 
@@ -35,9 +36,6 @@ impl Geometry {
     //TODO: remove positions_count, it does not reflect reality
     pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, positions_count:usize, static_faces:bool, strip:bool) -> Self {
 
-        //let faces_count = if has_geometry { positions_count / 3} else {0};
-        log("create capacity");
-        log(&(positions_count*4usize).to_string());
         let mut g = Geometry {
             has_geometry,
             bounding_box:BoundingBox::new(has_bounding),
@@ -86,50 +84,18 @@ impl Geometry {
         self.collider_planes=Vec::with_capacity(faces_count);
         self.collider_planes_parallel=Vec::with_capacity(faces_count*4usize);
     }
-    pub fn min(&self) -> Vec3<f32> {
-        let mut min_original=Vec3 {
-            x:self.vertices[0],
-            y:self.vertices[1],
-            z:self.vertices[2]
-        };
-        let positions=self.vertices.chunks(self.vertices_stride);
-        for position in positions {
-            if position[0] < min_original.x {
-                min_original.x = position[0]
-            }
-            if position[1] < min_original.y {
-                min_original.y = position[1]
-            }
-            if position[2] < min_original.z {
-                min_original.z = position[2]
-            }
+    pub fn update_bounding_box(&mut self, transformation:&Vec4<Vec4<f32>>) {
+        if self.bounding_box.need_init {
+            self.bounding_box.init(&self.vertices,self.vertices_stride);
+            self.bounding_box.transform(transformation);
         }
-        return min_original;
-    }
-    pub fn max(&self) -> Vec3<f32> {
-        let mut original=Vec3 {
-            x:self.vertices[0],
-            y:self.vertices[1],
-            z:self.vertices[2]
-        };
-        let positions=self.vertices.chunks(self.vertices_stride);
-        for position in positions {
-            if position[0] > original.x {
-                original.x = position[0]
-            }
-            if position[1] > original.y {
-                original.y = position[1]
-            }
-            if position[2] > original.z {
-                original.z = position[2]
-            }
+        else if self.bounding_box.dirty {
+            self.bounding_box.transform(transformation);
         }
-        return original;
     }
     pub fn update_vertices(&mut self, vertices:Vec<f32>) {
         self.vertices=vertices;
-        self.bounding_box.need_init_min = true;
-        self.bounding_box.need_init_max = true;
+        self.bounding_box.need_init = true;
         self.allocate_faces();
 
     }

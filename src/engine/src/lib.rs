@@ -1,5 +1,4 @@
-#![cfg(target_arch = "wasm32")]
-
+#!cfg(target_arch = "wasm32")]
 #![feature(vec_into_raw_parts)]
 
 extern crate wasm_bindgen;
@@ -23,6 +22,7 @@ pub struct Vec4<T> {
     w: T,
 }
 #[derive(Copy, Clone)]
+#[repr(C, align(16))]
 pub struct Vec3<T> {
     x: T,
     y: T,
@@ -38,7 +38,6 @@ impl Vec3<f32> {
         other.x = rx * rw;
         other.y = ry * rw;
         other.z = rz * rw;
-
     }
 }
 #[repr(align(8))]

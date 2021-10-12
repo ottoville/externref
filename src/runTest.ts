@@ -2,8 +2,9 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const assert:typeof import('assert') = require('assert');
 describe('Enviroment', function() {
+  this.timeout(0);
   describe('Engine', function() {
-    it('should init the Engine', async function() {
+    it('should init the Engine', async function(done) {
       const {Engine} = await import('/js/engine.js');
       const canvasContainer=document.body.appendChild(document.createElement('div'));
       await Engine.initEngine(canvasContainer.appendChild(document.createElement('canvas')));
@@ -11,7 +12,7 @@ describe('Enviroment', function() {
       await cameratest.run(assert);
       const renderloopTest = await import('/js/renderloop.test.js');
       await renderloopTest.run(assert)
-
+      done();
     });
   });
 });

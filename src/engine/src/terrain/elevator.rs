@@ -225,7 +225,6 @@ impl Elevator {
             selected_vertices:Vec::new(),
             selected_faces: HashSet::new(),
             selected_indices: HashSet::new(),
-
             faces_of_vertices,
             offset:0,
             length:0

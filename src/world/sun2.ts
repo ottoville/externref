@@ -75,9 +75,9 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics {
         this.update_dynamic_buffer(engine.rustEngine);
 
     }
-    Drawable:DrawableSimple;
+    drawable:DrawableSimple;
     constructor(scenes: Scene[]) {
         super(getRenderPipeline(engine.gpu), 14,undefined,undefined,undefined,undefined,1,undefined,undefined,scenes);
-        this.Drawable=this.renderPipeline.addDrawableSimple(new Set([engine.gpu.renderPassScreen]), this,undefined,undefined,undefined,'sun');
+        this.drawable=this.renderPipeline.addDrawableSimple(this,undefined,undefined,undefined,'sun');
     }
 }

@@ -144,14 +144,14 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     }
     //collisionsScalingMatrix = new TerraMatrix();
     #myCollisionsTransformMatrix = new TerraMatrix();
-    public checkCollision = async (collider: ColliderJS) => {
+    public async checkCollision (collider: ColliderJS) {
         if (this.faces_count % 4 != 0) {  //TODO
             return
         }
-        if (!collider._canDoCollision(this.bounding_min as TerraVector3, this.bounding_max)) {
+        //console.log(this.label, this.bounding_min, this.bounding_max)
+        if (!collider._canDoCollision(this.bounding_min, this.bounding_max)) {
             return;
         }
-
         // Transformation matrix
         this.#myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
 

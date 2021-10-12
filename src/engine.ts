@@ -18,7 +18,6 @@ import { BoundableNode } from "./DataNode.js";
 import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "GPU/RenderPass.js";
 
-
 function Dot(left: [number, number, number] | Float32Array | TerraVector3, right: [number, number, number] | Float32Array | TerraVector3): number {
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 }
@@ -144,7 +143,7 @@ export class Engine {
             'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
             'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',
             'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl', 'deferred.vert.wgsl', 'deferred.frag.wgsl', 'clusters.comp.wgsl', 'debug_normals.vert.wgsl',
-            'updateView.comp.wgsl'
+            'updateView.comp.wgsl', 'debug_boundingbox.vert.wgsl'
         ];
         await Promise.all(shaders.map(async u => {
             const compiled = await (await fetch('/shaders/wgsl/' + u)).text();

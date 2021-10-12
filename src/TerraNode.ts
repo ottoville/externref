@@ -29,6 +29,9 @@ export class MainNode extends Mesh {
         this.get_translation().set(value);
         this.update_dynamic_buffer(engine.rustEngine);
     }
+    get bounding_min() {
+        return new TerraVector3(engine.memory.buffer,super.bounding_min_pointer);
+    }
     get bounding_max() {
         return new TerraVector3(engine.memory.buffer,super.bounding_max_pointer);
     }
@@ -73,7 +76,7 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
     static alignment = 256;
     /* Todo: make dynamic with treshold values */
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
-    abstract Drawable: T;
+    abstract drawable: T;
 
     constructor(
         public renderPipeline: RenderPipeline,

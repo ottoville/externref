@@ -60,16 +60,16 @@ export class RenderPipeline {
         if(this.createSharedBindGroups) {
             this.createSharedBindGroups().forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
          }
-        drawables.forEach(drawable => drawable.draw(renderPass, renderPassEncoder, BindGroupsStart,dynamicIndices));
+        drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart,dynamicIndices));
         return drawables.size;
     }
-    addDrawableIndirect<T extends GPUIndirectBuffer>(renderPasses: Set<RenderPass>, buffer: T, label:string) {
-        return new DrawableIndirect(this, renderPasses, buffer,label);
+    addDrawableIndirect<T extends GPUIndirectBuffer>(buffer: T, label:string, renderPasses?: Set<RenderPass>) {
+        return new DrawableIndirect(this, buffer,label,renderPasses);
     }
-    addDrawableSimple(renderPasses: Set<RenderPass>, node: TerraNodeGPU<DrawableSimple>, instanceCount = 1, firstVertex = 0, firstInstance = 0, label:string): DrawableSimple {
-        return new DrawableSimple(this, renderPasses, node, label, instanceCount, firstVertex, firstInstance)
+    addDrawableSimple(node: TerraNodeGPU<DrawableSimple>, instanceCount = 1, firstVertex = 0, firstInstance = 0, label:string, renderPasses?: Set<RenderPass>): DrawableSimple {
+        return new DrawableSimple(this, node, label, renderPasses, instanceCount, firstVertex, firstInstance)
     }
-    addDrawableIndexed(renderPasses: Set<RenderPass>, node: IndexedNode, label:string, indexBuffer?: GPUIndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {
-        return new DrawableIndexed(this, renderPasses, node, label, indexBuffer, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
+    addDrawableIndexed(node: IndexedNode, label:string, renderPasses?: Set<RenderPass>, indexBuffer?: GPUIndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {
+        return new DrawableIndexed(this, node, label,renderPasses, indexBuffer, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
     }
 }

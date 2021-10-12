@@ -18,7 +18,7 @@ declare const engine:Engine;
 
 class PlaneMesh extends TerraNodeGPU<DrawableIndexed> implements IndexedNode {
     indices_count=0;
-    Drawable=this.renderPipeline.addDrawableIndexed(new Set([engine.gpu.renderPassScreen]),this, 'plane',undefined, 0, 1, 0);
+    drawable=this.renderPipeline.addDrawableIndexed(this, 'plane',undefined,undefined, 0, 1, 0);
     constructor(renderPipeline: RenderPipeline, verticesCount: number) {
         super(renderPipeline, verticesCount)
     }
@@ -60,7 +60,7 @@ export class paintPlane extends paintGround {
             callback(p);
         });
         this.#mesh = new PlaneMesh(getRenderPipeline(scene, ground), 0);
-        this.#mesh.Drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
+        this.#mesh.drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
     }
     #startingPoint = new TerraVector2(2);
     private * createTiledGround(width: number): Generator<{ positions: number[], indices: number[] }, null, { positions: number[], indices: number[] }> {
@@ -99,7 +99,7 @@ export class paintPlane extends paintGround {
     override destroy() {
         super.destroy();
         this.#mesh.destroy();
-        this.#mesh.Drawable.destroy();
+        this.#mesh.drawable.destroy();
         this.#columns = 0;
         this.#rows = 0;
     }
@@ -146,8 +146,8 @@ export class paintPlane extends paintGround {
         this.#mesh.update_scale(engine.rustEngine,this.#mesh.scale_x, this.#mesh.scale_y, width / this.#rows)
 
         if (newValues) {
-            this.#mesh.Drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
-            this.#mesh.Drawable.setIndexBuffer(new Uint32Array(newValues.indices));
+            this.#mesh.drawable.setVertexBuffer(0, new Float32Array(newValues.positions));
+            this.#mesh.drawable.setIndexBuffer(new Uint32Array(newValues.indices));
             this.#mesh.indices_count = newValues.indices.length;
         }
     }

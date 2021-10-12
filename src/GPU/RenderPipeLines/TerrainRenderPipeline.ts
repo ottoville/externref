@@ -47,9 +47,9 @@ export class TerrainMesh extends BoundableNodeIndexed {
         minFilter: "linear",
     })
     setTextureView = (textureview: GPUTextureView) => {
-        this.Drawable.setStaticBuffer(this.sampler, textureview);
+        this.drawable.setStaticBuffer(this.sampler, textureview);
     }
-    Drawable:DrawableIndexed;
+    drawable:DrawableIndexed;
     constructor(
         scenes: Scene[],
         public initialTexture: GPUTextureView,
@@ -60,11 +60,11 @@ export class TerrainMesh extends BoundableNodeIndexed {
         verticesPositionStride = 3
     ) {
         super(scenes, TerrainRenderPipeline(engine.gpu), vertices, verticesPositionStride, indicesView,undefined,undefined,true,'terrain');
-        this.Drawable = this.renderPipeline.addDrawableIndexed(new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater]), this, 'terrain', undefined, 0, 1);
+        this.drawable = this.renderPipeline.addDrawableIndexed(this, 'terrain', new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater]), undefined, 0, 1);
         //@ts-expect-error
-        window.debugTerrain=() => this.Drawable.debug_render_normals();
-        this.Drawable.setStaticBuffer(this.sampler, initialTexture);
-        this.Drawable.setVertexBuffer(0, this.vBuffer);
-        this.Drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
+        window.debugTerrain=() => this.drawable.debug_render_normals();
+        this.drawable.setStaticBuffer(this.sampler, initialTexture);
+        this.drawable.setVertexBuffer(0, this.vBuffer);
+        this.drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
     }
 }

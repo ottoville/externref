@@ -185,58 +185,25 @@ impl Mesh {
         Elevator::new(&self)
     }
     #[wasm_bindgen(method, getter)]
-    pub fn bounding_min(&mut self) -> Vec<f32> {
-        if self.geometry.vertices.len() < 3 {
-            return vec![0.0,0.0,0.0];
-        }
-        if self.geometry.bounding_box.need_init_min {
-            self.geometry.bounding_box.min_original = self.geometry.min();
-            self.geometry.bounding_box.need_init_min = false;
-            self.geometry.bounding_box.transform_min(&self.gpu_mesh.transformation);
-        }
-        else if self.geometry.bounding_box.dirty_min {
-            self.geometry.bounding_box.transform_min(&self.gpu_mesh.transformation);
-        }
-        let ptr=&mut self.geometry.bounding_box.min as *mut Vec3<f32> as *mut f32; 
-        unsafe {
-            Vec::from_raw_parts(ptr, 3, 3)
-        }
+    pub fn bounding_vectors_pointer(&mut self) -> *const [Vec3<f32>;8] {
+        self.geometry.update_bounding_box(&self.gpu_mesh.transformation);
+        (&self.geometry.bounding_box.vectors) as *const [Vec3<f32>;8]
+    }
+    #[wasm_bindgen(method, getter)]
+    pub fn bounding_min_pointer(&mut self) -> *const Vec3<f32> {
+        self.geometry.update_bounding_box(&self.gpu_mesh.transformation);
+        (&self.geometry.bounding_box.min) as *const Vec3<f32>
     }
     #[wasm_bindgen(method, getter)]
     pub fn bounding_max_pointer(&mut self) -> *const Vec3<f32> {
-        if self.geometry.bounding_box.need_init_max {
-            self.geometry.bounding_box.max_original = self.geometry.max();
-            self.geometry.bounding_box.need_init_max=false;
-            self.geometry.bounding_box.transform_max(&self.gpu_mesh.transformation)
-        }
-        else if self.geometry.bounding_box.dirty_max {
-            self.geometry.bounding_box.transform_max(&self.gpu_mesh.transformation)
-        }
-        let p = (&self.geometry.bounding_box.max) as *const Vec3<f32>;
-        return p;
-        /*let ptr=&mut self.geometry.bounding_box.max as *mut Vec3<f32> as *mut f32; 
-        unsafe {
-            Vec::from_raw_parts(ptr, 3, 3)
-        }*/
-    }
-    pub fn set_bounding_need_init_min(&mut self) {
-        self.geometry.bounding_box.need_init_min = true;
-    }
-    pub fn set_bounding_need_init_max(&mut self) {
-        self.geometry.bounding_box.need_init_max = true;
-    }
-    pub fn set_bounding_need_dirty_min(&mut self) {
-        self.geometry.bounding_box.dirty_min = true;
-    }
-    pub fn set_bounding_need_dirty_max(&mut self) {
-        self.geometry.bounding_box.dirty_max = true;
+        self.geometry.update_bounding_box(&self.gpu_mesh.transformation);
+        (&self.geometry.bounding_box.max) as *const Vec3<f32>
     }
     fn on_update(&mut self, engine:&mut Engine) {
         self.update_matrix();
         self.update_dynamic_buffer(engine);
         if self.geometry.bounding_box.has_bounding {
-            self.geometry.bounding_box.dirty_max=true;
-            self.geometry.bounding_box.dirty_min=true;
+            self.geometry.bounding_box.dirty=true;
         }
     }
     pub fn update_scale_and_rotation(&mut self, engine:&mut Engine, x: f32, y: f32, z: f32, rx: f32, ry: f32, rz: f32, rw: f32) {
@@ -253,9 +220,7 @@ impl Mesh {
         self.scaling.x = x;
         self.scaling.y = y;
         self.scaling.z = z;
-        self.update_matrix();
-        self.update_dynamic_buffer(engine);
-
+        self.on_update(engine);
     }
     pub fn set_scale_x(&mut self,engine:&mut Engine, x:f32) {
         self.scaling.x=x;

@@ -55,18 +55,19 @@ export class Physics {
             tickable.onPhysicTick(delta);
             const velocity=tickable.get_velocity();
             if (tickable.hasGravity) {
-                tickable.SetTranslationDelta([
+                /*tickable.SetTranslationDelta([
                     velocity[0],
                     Math.max(velocity[1] - 9.81/1000 * delta,-1),  //TODO: Take account game speed //TODO Remove cap
                     velocity[2]]
-                )
+                )*/
             }
             const currentTranslation = tickable.get_translation();
             if(tickable.checkCollide) {
-                await tickable.checkCollide();
+                // TODO: Only check collision if some of both object has moved
+                //await tickable.checkCollide();
                 if (engine.collider.rust.collision_not_found) {
                     currentTranslation.set(engine.collider.finalPosition); //TODO now it only supports one collider.
-                    //engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
+             //       engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
                 }
             }
             else {
