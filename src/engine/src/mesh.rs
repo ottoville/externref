@@ -3,6 +3,7 @@ use wasm_bindgen::prelude::*;
 
 pub use crate::engine::Engine;
 pub use crate::Vec3;
+pub use crate::Vec3_f32;
 pub use crate::Vec4;
 pub use crate::GPUMesh;
 pub use crate::geometry::Geometry;
@@ -62,7 +63,7 @@ impl Mesh {
         static_faces:bool,
         strip:bool) -> Self {
 
-        let mut m = Mesh {
+        let m = Mesh {
             id,
             gpu_alignment: engine.allocate_gpu(),
             gpu_mesh: GPUMesh {
@@ -185,19 +186,19 @@ impl Mesh {
         Elevator::new(&self)
     }
     #[wasm_bindgen(method, getter)]
-    pub fn bounding_vectors_pointer(&mut self) -> *const [Vec3<f32>;8] {
+    pub fn bounding_vectors_pointer_simd(&mut self) -> *const Vec3<Vec4<f32>> {
         self.geometry.update_bounding_box(&self.gpu_mesh.transformation);
-        (&self.geometry.bounding_box.vectors) as *const [Vec3<f32>;8]
+        (&self.geometry.bounding_box.vectors_simd) as *const Vec3<Vec4<f32>>
     }
     #[wasm_bindgen(method, getter)]
-    pub fn bounding_min_pointer(&mut self) -> *const Vec3<f32> {
+    pub fn bounding_min_pointer(&mut self) -> *const Vec3_f32 {
         self.geometry.update_bounding_box(&self.gpu_mesh.transformation);
-        (&self.geometry.bounding_box.min) as *const Vec3<f32>
+        (&self.geometry.bounding_box.min) as *const Vec3_f32
     }
     #[wasm_bindgen(method, getter)]
-    pub fn bounding_max_pointer(&mut self) -> *const Vec3<f32> {
+    pub fn bounding_max_pointer(&mut self) -> *const Vec3_f32 {
         self.geometry.update_bounding_box(&self.gpu_mesh.transformation);
-        (&self.geometry.bounding_box.max) as *const Vec3<f32>
+        (&self.geometry.bounding_box.max) as *const Vec3_f32
     }
     fn on_update(&mut self, engine:&mut Engine) {
         self.update_matrix();

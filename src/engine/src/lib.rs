@@ -14,6 +14,7 @@ mod drawable;
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
+#[derive(Copy, Clone)]
 
 pub struct Vec4<T> {
     x: T,
@@ -22,15 +23,20 @@ pub struct Vec4<T> {
     w: T,
 }
 #[derive(Copy, Clone)]
-#[repr(C, align(16))]
 pub struct Vec3<T> {
     x: T,
     y: T,
     z: T,
 }
-
-impl Vec3<f32> {
-    fn transform_to_ref(&self, m: &Vec4<Vec4<f32>>, other: &mut Vec3<f32>) {
+#[repr(C, align(16))]
+#[derive(Copy, Clone)]
+pub struct Vec3_f32 {
+    x: f32,
+    y: f32,
+    z: f32,
+}
+impl Vec3_f32 {
+    fn transform_to_ref(&self, m: &Vec4<Vec4<f32>>, other: &mut Vec3_f32) {
         let rx = self.x * m.x.x + self.y * m.y.x + self.z * m.z.x + m.w.x;
         let ry = self.x * m.x.y + self.y * m.y.y + self.z * m.z.y + m.w.y;
         let rz = self.x * m.x.z + self.y * m.y.z + self.z * m.z.z + m.w.z;
@@ -38,6 +44,53 @@ impl Vec3<f32> {
         other.x = rx * rw;
         other.y = ry * rw;
         other.z = rz * rw;
+    }
+}
+
+impl Vec4<f32> {
+    fn get_min(&self) -> f32 {
+        self.x.min(self.y.min(self.z.min(self.w)))
+    }
+    fn get_max(&self) -> f32 {
+        self.x.max(self.y.max(self.z.max(self.w)))
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    fn min(&self, other: &Vec4<f32>) -> Vec4<f32> {
+        Vec4 {
+            x:self.x.min(other.x),
+            y:self.y.min(other.y),
+            z:self.z.min(other.z),
+            w:self.w.min(other.w)
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    fn max(&self, other: &Vec4<f32>) -> Vec4<f32> {
+        Vec4 {
+            x:self.x.max(other.x),
+            y:self.y.max(other.y),
+            z:self.z.max(other.z),
+            w:self.w.max(other.w)
+        }
+    }
+    #[cfg(target_arch = "wasm32")]
+    fn min(&self, other: &Vec4<f32>) -> Vec4<f32> {
+        use std::arch::wasm32::*;
+        unsafe {
+            let v0 = v128_load(self as *const Vec4<f32> as *const v128);
+            let v1 = v128_load(other as *const Vec4<f32> as *const v128);
+            let res=f32x4_pmin(v0,v1);
+            return std::mem::transmute::<v128, Vec4<f32>>(res);
+        }
+    }
+    #[cfg(target_arch = "wasm32")]
+    fn max(&self, other: &Vec4<f32>) -> Vec4<f32> {
+        use std::arch::wasm32::*;
+        unsafe {
+            let v0 = v128_load(self as *const Vec4<f32> as *const v128);
+            let v1 = v128_load(other as *const Vec4<f32> as *const v128);
+            let res=f32x4_pmax(v0,v1);
+            return std::mem::transmute::<v128, Vec4<f32>>(res);
+        }
     }
 }
 #[repr(align(8))]

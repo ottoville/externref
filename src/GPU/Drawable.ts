@@ -124,7 +124,18 @@ export abstract class DrawableDirect extends Drawable {
         mesh.drawable.setVertexBuffer(0,debug_render_normals_vertexBuffer)
     }
     debug_bounding_box() {
-        const vectors=new Float32Array(engine.memory.buffer, this.node.bounding_vectors_pointer, 8*4)
+        const vectors_simd=new Float32Array(engine.memory.buffer, this.node.bounding_vectors_pointer_simd, 3*4*2);
+        const vectors = new Float32Array([
+            vectors_simd[0]!,vectors_simd[4]!, vectors_simd[8]!, 0,
+            vectors_simd[1]!,vectors_simd[5]!, vectors_simd[9]!, 0,
+            vectors_simd[2]!,vectors_simd[6]!, vectors_simd[10]!, 0,
+            vectors_simd[3]!,vectors_simd[7]!, vectors_simd[11]!, 0,
+
+            vectors_simd[12]!,vectors_simd[16]!, vectors_simd[20]!, 0,
+            vectors_simd[13]!,vectors_simd[17]!, vectors_simd[21]!, 0,
+            vectors_simd[14]!,vectors_simd[18]!, vectors_simd[22]!, 0,
+            vectors_simd[15]!,vectors_simd[19]!, vectors_simd[23]!, 0,
+        ]);
         const positions_amount=26;
         const gpu = this.renderPipeline.bindgroupdrawable.gpu;
         const debug_render_boundingbox_vertexBuffer = gpu.createGPUBuffer(positions_amount*4*Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], true);
