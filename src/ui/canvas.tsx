@@ -68,7 +68,8 @@ export class Canvas extends TerraCompoment {
 
             const b = new Box([terrascene],undefined,'bigbox');
             b.update_scale(terraEngine.rustEngine, 500, 500, 500);
-            b.update_rotation(terraEngine.rustEngine,Math.sin(1),0,0,Math.cos(1));
+            b.SetTranslation([123,1000,123]);
+            b.update_rotation(terraEngine.rustEngine,Math.sin(1.1),0,0,Math.cos(1.1));
             //@ts-expect-error
             window.debugBB=() => b.drawable.debug_bounding_box();
 

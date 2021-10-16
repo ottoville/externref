@@ -38,15 +38,15 @@ function Simple(gpu: GPU) {
 export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
     drawable:DrawableIndexed;
     constructor(
-        scenes: Scene[],
         vBufferCPU: Float32Array,
         indicesView: Uint32Array,
         iBuffer: GPUIndexBuffer,
         vBufferGPU: GPUVertexBuffer,
         label:string,
-        point_light=0) {
+        point_light=0,
+        scenes?: Scene[]) {
 
-        super(scenes, Simple(engine.gpu), vBufferCPU, 6, indicesView,undefined, point_light,undefined,label);
+        super(Simple(engine.gpu), vBufferCPU, 6, indicesView,undefined, point_light,undefined,label,scenes);
         this.drawable =  this.renderPipeline.addDrawableIndexed(this,label)
 
         this.drawable.setVertexBuffer(0, vBufferGPU);

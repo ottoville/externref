@@ -43,7 +43,6 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
     }
  
     constructor(
-        scenes: Scene[],
         renderPipeline: RenderPipeline,
         positionCount: number,
         verticesPositionStride: number,
@@ -51,7 +50,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         point_light = 0,
         static_faces = false,
         public label:string,
-
+        scenes?: Scene[],
     ) {
         super(renderPipeline, positionCount, true,true, verticesPositionStride, point_light,undefined, static_faces,strip,scenes);
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
@@ -123,6 +122,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
         return new TerraVector3(engine.memory.buffer, this.vertices_pointer + index * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT);
     }
     intersectsRay = (ray: Float32Array): Promise<void> => {
+        //@ts-expect-error wasm-bindgen
         return worker.message(this.id, 'intersectsRay', [ray.buffer]);
     }
     #updateColliderPlanes() {
@@ -169,6 +169,7 @@ export abstract class DataNode<T extends DrawableDirect> extends TerraNodeGPU<T>
                 this.collider_faces_pointer,
                 this.collider_planes_parallel_pointer,
                 this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
+                //@ts-expect-error wasm-bindgen
                 this.id);
         
     }
@@ -208,7 +209,6 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
     }*/
     get indices_count() { return this.indicesView.length; }
     constructor(
-        scenes: Scene[],
         renderPipeline: RenderPipeline,
         vertices: Float32Array,
         verticesPositionStride = 3,
@@ -216,9 +216,10 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
         strip = false,
         point_light = 0,
         static_faces = false,
-        label:string
+        label:string,
+        scenes?: Scene[],
     ) {
-        super(scenes, renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip, point_light,static_faces,label);
+        super(renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip, point_light,static_faces,label, scenes);
         Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeIndexed.prototype, prop);
             if(propDesc)
@@ -273,7 +274,7 @@ export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
         strip = false,
         label:string
     ) {
-        super(scenes, renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip, undefined, undefined, label);
+        super(renderPipeline, vertices.length/verticesPositionStride,verticesPositionStride, strip, undefined, undefined, label, scenes);
         Object.getOwnPropertyNames(BoundableNodeSimple.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeSimple.prototype, prop);
             if(propDesc)

@@ -8,10 +8,10 @@ describe('Enviroment', function() {
       const {Engine} = await import('/js/engine.js');
       const canvasContainer=document.body.appendChild(document.createElement('div'));
       await Engine.initEngine(canvasContainer.appendChild(document.createElement('canvas')));
-      const cameratest = await import('/js/controllers/camera.test.js');
-      await cameratest.run(assert);
-      const renderloopTest = await import('/js/renderloop.test.js');
-      await renderloopTest.run(assert)
+
+      const tests = await (await fetch('/tests.json').then(response=> response.json())).map(testAsset => import(testAsset).then(test => test.run(assert)))
+
+      await Promise.all(tests);
       done();
     });
   });

@@ -53,6 +53,7 @@ export class MainNode extends Mesh {
             if(propDesc)
                 Object.defineProperty(this, prop, propDesc);
         });
+        //@ts-expect-error wasm-bindgen
         MainNode.Meshes.set(this.id, this);
         queueMicrotask(() => {
             if (this.#hasPhysics()) {
@@ -95,7 +96,7 @@ export abstract class TerraNodeGPU<T extends DrawableDirect> extends MainNode {
             if(propDesc)
                 Object.defineProperty(this, prop, propDesc);
         });
-        if (renderPipeline.dynamicBindGroupOffset.length)
+        if (renderPipeline.dynamicBindGroupOffset.length) //@ts-expect-error wasm-bindgen
             renderPipeline.dynamicBindGroupOffset[0] = this.gpu_alignment;
     }
 

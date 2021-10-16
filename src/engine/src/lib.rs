@@ -78,7 +78,7 @@ impl Vec4<f32> {
         unsafe {
             let v0 = v128_load(self as *const Vec4<f32> as *const v128);
             let v1 = v128_load(other as *const Vec4<f32> as *const v128);
-            let res=f32x4_pmin(v0,v1);
+            let res=f32x4_pmin(v0, v1);
             return std::mem::transmute::<v128, Vec4<f32>>(res);
         }
     }
@@ -88,7 +88,7 @@ impl Vec4<f32> {
         unsafe {
             let v0 = v128_load(self as *const Vec4<f32> as *const v128);
             let v1 = v128_load(other as *const Vec4<f32> as *const v128);
-            let res=f32x4_pmax(v0,v1);
+            let res=f32x4_pmax(v0, v1);
             return std::mem::transmute::<v128, Vec4<f32>>(res);
         }
     }

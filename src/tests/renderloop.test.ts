@@ -1,4 +1,4 @@
-import type { Engine } from "./engine.js";
+import type { Engine } from "../engine.js";
 declare const engine: Engine;
 
 /*

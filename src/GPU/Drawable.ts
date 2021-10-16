@@ -196,7 +196,8 @@ export class DrawableSimple extends DrawableDirect {
         instanceCount = 1,
         public firstVertex = 0,
         public firstInstance = 0) {
-        super(renderPipeline, node.gpu_alignment, renderPasses, instanceCount);
+            //@ts-expect-error wasm-bindgen
+            super(renderPipeline, node.gpu_alignment, renderPasses, instanceCount);
     }
     render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) {
         renderEncoder.draw(this.node.positions_count, this.instanceCount, this.firstVertex, this.firstInstance);
@@ -216,6 +217,7 @@ export class DrawableIndexed extends DrawableDirect {
         public firstInstance = 0,
         private GPUIndexFormat: GPUIndexFormat = 'uint16',
         ) {
+            //@ts-expect-error wasm-bindgen
         super(renderPipeline,node.gpu_alignment, renderPasses, instanceCount);
     }
 
