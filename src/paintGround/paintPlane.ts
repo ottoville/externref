@@ -2,7 +2,7 @@
 import type { Terrain } from "../world/terrain.js";
 import { PTResultF } from "../types/interfaces/index.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
-import { TerraNodeGPU } from "../TerraNode.js";
+import { MainNode } from "../MainNode.js";
 import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
@@ -16,11 +16,12 @@ declare const engine:Engine;
 
 
 
-class PlaneMesh extends TerraNodeGPU<DrawableIndexed> implements IndexedNode {
+class PlaneMesh extends MainNode<DrawableIndexed> implements IndexedNode {
     indices_count=0;
-    drawable=this.renderPipeline.addDrawableIndexed(this, 'plane',undefined,undefined, 0, 1, 0);
+    drawable:DrawableIndexed;
     constructor(renderPipeline: RenderPipeline, verticesCount: number) {
-        super(renderPipeline, verticesCount)
+        super(undefined, undefined, verticesCount);
+        this.drawable=renderPipeline.addDrawableIndexed(this, 'plane',undefined,undefined, 0, 1, 0);
     }
 }
 

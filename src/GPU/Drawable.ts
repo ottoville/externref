@@ -1,7 +1,7 @@
 ﻿import { RenderPipeline } from "./RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 import type { RenderPass } from "./RenderPass.js";
-import { TerraNodeGPU } from "../TerraNode.js";
+import { MainNode } from "../MainNode.js";
 import { GPUBufferUsage } from "../GPU.js"
 import type { IndexedNode } from "../DataNode.js";
 import { NormalsMesh } from "./RenderPipeLines/debug/normals.js";
@@ -83,7 +83,7 @@ export abstract class Drawable {
         this.dynamicBuffers.forEach((gpubindgroup_offset, i) => {
             const di=dynamicIndex[i];
             if(di) {
-                renderEncoder.setBindGroup(di, gpubindgroup_offset[0], [this.renderPipeline.bindgroupdrawable.gpu.gpu_memory_index_size + gpubindgroup_offset[1] * TerraNodeGPU.alignment]);
+                renderEncoder.setBindGroup(di, gpubindgroup_offset[0], [this.renderPipeline.bindgroupdrawable.gpu.gpu_memory_index_size + gpubindgroup_offset[1] * MainNode.alignment]);
             }
         });
         this.staticBuffers && renderEncoder.setBindGroup(BindGroupsStart++, this.staticBuffers)
@@ -94,7 +94,7 @@ export abstract class Drawable {
 }
 export abstract class DrawableDirect extends Drawable {
     #instanceCount: number;
-    abstract node: TerraNodeGPU<DrawableDirect>
+    abstract node: MainNode<DrawableDirect>
 
     constructor(
         renderPipeline: RenderPipeline,
@@ -190,7 +190,7 @@ export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
 export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
-        public node: TerraNodeGPU<DrawableSimple>,
+        public node: MainNode<DrawableSimple>,
         public label:string,
         renderPasses?: Set<RenderPass>,
         instanceCount = 1,

@@ -8,7 +8,7 @@ import { PipelineLayout } from "./PipelineLayout.js";
 import { GPUTextureUsageLiterals, Texture } from "./texture.js";
 import { TerraVector3 } from "../Math.js";
 import type { Engine } from "engine.js";
-import { MainNode } from "../TerraNode.js";
+import { MainNode } from "../MainNode.js";
 declare const engine:Engine;
 
 interface RenderPipelineVariant2 {

@@ -84,11 +84,12 @@ function getRenderPipeline(gpu: GPU) {
 export class Sea extends BoundableNodeSimple {
     drawable: DrawableSimple;
     constructor(scenes: Scene[]) {
-        super(scenes, getRenderPipeline(engine.gpu),new Float32Array([-50000.0, 3.0, -50000.0,
+        super(scenes,new Float32Array([-50000.0, 3.0, -50000.0,
             50000.0, 3.0, -50000.0,
             -50000.0, 3.0, 50000.0,
             50000.0, 3.0, 50000.0]), undefined, true,'water'); //48
-        this.drawable = this.renderPipeline.addDrawableSimple(this, undefined, undefined, undefined, 'water');
+        const renderPipeline=getRenderPipeline(engine.gpu);
+        this.drawable = renderPipeline.addDrawableSimple(this, undefined, undefined, undefined, 'water');
         this.drawable.setVertexBuffer(0, new Float32Array([-50000.0, 3.0, -50000.0,
             50000.0, 3.0, -50000.0,
             -50000.0, 3.0, 50000.0,

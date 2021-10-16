@@ -1,6 +1,6 @@
 ﻿import type { hasPhysics } from "../physics.js";
 import type { Scene } from "../Scene.js";
-import { TerraNodeGPU } from "../TerraNode.js";
+import { MainNode } from "../MainNode.js";
 import { Angle } from "../Math.js";
 import type { GPU } from "../GPU.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
@@ -36,7 +36,7 @@ function getRenderPipeline(gpu: GPU) {
 }
 
 
-export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics {
+export class Sun2 extends MainNode<DrawableSimple> implements hasPhysics {
     hasGravity = false;
 
     #clamp = (value: number, min: number, max: number) => {
@@ -77,7 +77,8 @@ export class Sun2 extends TerraNodeGPU<DrawableSimple> implements hasPhysics {
     }
     drawable:DrawableSimple;
     constructor(scenes: Scene[]) {
-        super(getRenderPipeline(engine.gpu), 14,undefined,undefined,undefined,undefined,1,undefined,undefined,scenes);
-        this.drawable=this.renderPipeline.addDrawableSimple(this,undefined,undefined,undefined,'sun');
+        super(undefined, undefined, 14,undefined,undefined,1,undefined,undefined,scenes);
+        const renderPipeline=getRenderPipeline(engine.gpu);
+        this.drawable=renderPipeline.addDrawableSimple(this,undefined,undefined,undefined,'sun');
     }
 }

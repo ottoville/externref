@@ -1,6 +1,3 @@
-//[[location(0)]] var<out> outColor : vec4<f32>;
-
-
 struct Output {
   [[location(0)]] Normals : vec4<f32>;
   [[location(1)]] Diffuse : vec4<f32>;

@@ -97,7 +97,7 @@ impl Vec4<f32> {
 pub struct GPUMesh {
     transformation: Vec4<Vec4<f32>>, //16
     delta: [f32; 4],                 //20
-    custom: [f32; 4],                //24
+    custom: [f32; 4],                //24 user for color in simple.vert
     acceleration: [f32; 4],          //28
     id: u32,                         //29
     point_light_squared:f32,          //30

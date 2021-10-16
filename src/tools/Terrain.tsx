@@ -3,7 +3,7 @@ import { Terrain } from "../world/terrain.js";
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import type { DrawableSimple } from "../GPU/Drawable.js";
-import { TerraNodeGPU } from "../TerraNode.js";
+import { MainNode } from "../MainNode.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
@@ -46,7 +46,7 @@ function getRenderPipeline(terrain: Terrain): RenderPipeline {
     return renderPipeline
 }
 
-export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
+export class TerrainTool extends MainNode<DrawableSimple> {
     static label = 'Terrain';
     public static instance: UITAB | null = null;
     static menuElem = (instance: TerrainTool) => <div><legend style="background-color:white">Terrain</legend>
@@ -69,7 +69,8 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         public terrain: Terrain,
         public sea: Sea,
     ) {
-        super(getRenderPipeline(terrain), 4);
+        super(undefined, undefined, 4);
+        const renderPipeline=getRenderPipeline(terrain);
         const scene=engine.scenes.get('main');
         if(!scene)
             throw(new Error('no scene'));
@@ -81,7 +82,7 @@ export class TerrainTool extends TerraNodeGPU<DrawableSimple> {
         });
 
         this.elevator = terrain.mesh.create_elevator();
-        this.drawable = this.renderPipeline.addDrawableSimple(this, 8, 0, undefined, 'TerrainTool');
+        this.drawable = renderPipeline.addDrawableSimple(this, 8, 0, undefined, 'TerrainTool');
         this.#pick = { position: new TerraVector3(engine.memory.buffer, this.elevator.mouse_position_pointer()), meshId: 0 };
         //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED

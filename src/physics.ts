@@ -1,4 +1,4 @@
-﻿import type { MainNode } from "./TerraNode.js";
+﻿import type { MainNode } from "./MainNode.js";
 import type { Engine } from "engine";
 declare const engine:Engine;
 
@@ -67,7 +67,7 @@ export class Physics {
                 //await tickable.checkCollide();
                 if (engine.collider.rust.collision_not_found) {
                     currentTranslation.set(engine.collider.finalPosition); //TODO now it only supports one collider.
-             //       engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
+                   // engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
                 }
             }
             else {

@@ -59,8 +59,10 @@ export class Box extends SimpleIndexedMesh {
     constructor(
         scenes?: Scene[],
         point_light = 0,
-        label='box'+(uid++)
+        label='box'+(uid++),
+        color:[number,number,number,number]=[1,0,0,0]
     ) {
         super(positions, ...create(engine.gpu),label,point_light, scenes);
+        this.gpu_custom_data=new Float32Array(color);
     }
 }

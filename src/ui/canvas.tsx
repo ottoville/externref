@@ -15,7 +15,7 @@ import { Sea } from "../world/water.js";
 import { Box } from "../GPU/Meshes/Box.js";
 import { Sun2 } from "../world/sun2.js";
 
-import { MainNode, TerraNodeGPU } from "../TerraNode.js";
+import { MainNode } from "../MainNode.js";
 import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 //import { savedCamera } from "../types/interfaces/index.js";
@@ -25,10 +25,19 @@ import type { DrawableSimple } from "GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 
 declare const engine:Engine;
-class CanvasMesh extends TerraNodeGPU<DrawableSimple> {
-    drawable = this.renderPipeline.addDrawableSimple(this, undefined, undefined, undefined, 'canvas',new Set([engine.gpu.renderPassCanvas]))
+class CanvasMesh extends MainNode<DrawableSimple> {
+    drawable:DrawableSimple;
     constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
-        super(canvaspipeline, positionsCount);
+        super(undefined, undefined, positionsCount);
+        this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, 'canvas',new Set([engine.gpu.renderPassCanvas]))
+
+    }
+}
+
+class Light extends MainNode {
+    drawable=undefined;
+    constructor(scene:Scene) {
+        super(false, false,undefined,undefined,0,1,undefined,undefined,[scene]);
     }
 }
 
@@ -83,30 +92,32 @@ export class Canvas extends TerraCompoment {
             return ready;
         });
         const debugscene = new Scene('static', terraEngine.gpu, [engine.mainCamera], (scene) => {
-            const sun = new MainNode(false, false,undefined,undefined,0,1,undefined,undefined,[scene]);
+            const sun = new Light(scene);
             sun.get_translation().set([0, 1, 0]);
             sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
             return undefined;
         });
 
-        const b2 = new Box([debugscene], 1000);
+        const b2 = new Box([debugscene], 1000,'greenbox',[0,1,0,0]);
         //const b3 = new Box(debugscene,100);
         //b2.update(scale => scale.set([200, 200, 200]));
         b2.update_scale(terraEngine.rustEngine, 30, 30, 30);
         //b3.update_scale(30, 30, 30);
         //const translation = b2.get_translation();
-        b2.SetTranslation([1000, 400, 0])
         //b3.SetTranslation([-1000, 400, 0])
         //b2.setTranslationX(500);
-        const x = -3000;
+        const x = 500;
+        const z = 800;
         // let z = 0;
-        b2.SetTranslation([x, 400, 300])
+        b2.SetTranslation([x, 1200, z]);
+       const velocity=b2.get_velocity();
+       b2.SetTranslationDelta([velocity[0],velocity[1],3])
         //let x2=-1000;
         //@ts-ignore
         let a = 0;
         setInterval(() => {
-            //b2.SetTranslation([x*Math.cos(a), 400,x*Math.sin(a)])
+           // b2.SetTranslation([x,1200])
             //@ts-ignore
             a += 0.005;
             //b3.SetTranslation([x2++, 400, 0])

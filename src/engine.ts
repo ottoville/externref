@@ -1,6 +1,6 @@
 ﻿import { Physics } from "./physics.js";
 import { GPU } from "./GPU.js";
-import { TerraNodeGPU } from "./TerraNode.js";
+import { MainNode } from "./MainNode.js";
 import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import type { TerraVector3 } from "./Math.js";
@@ -298,7 +298,7 @@ export class Engine {
         const map = new Map<number, number>();
 
         gpu.onRenders2.push(() => {
-            const dataSizeBytes = TerraNodeGPU.GPUDataSize * 4; //4 * 16 + 3 * 4;
+            const dataSizeBytes = MainNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
             const pointers2 = this.rustEngine.get_gpu_queue_raw_parts_ptr;
             const vec_and_len = new Uint32Array(this.memory.buffer, pointers2, 2);
             if (vec_and_len[1] === 0)
@@ -311,7 +311,7 @@ export class Engine {
             const commandEncoder = gpu.device.createCommandEncoder();
             let tempOffset = 0;
             map.forEach((alignment, gpumeshPointer) => {
-                const data = new Float32Array(this.memory.buffer, gpumeshPointer, TerraNodeGPU.GPUDataSize);
+                const data = new Float32Array(this.memory.buffer, gpumeshPointer, MainNode.GPUDataSize);
                 //Point light
                 if (data[29]! > 0) {
                     this.#updateLights = true;
