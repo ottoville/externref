@@ -26,7 +26,8 @@ class pickInfo {
     }
 }
 
-export abstract class DataNode<T extends DrawableDirect> extends MainNode<T> {
+export abstract class DataNode<T extends DrawableDirect> extends MainNode {
+    abstract drawable:T
     readonly pickInfo = new pickInfo();
     protected readonly colliderVerticesV4: number[] = [];
     readonly #triangleFaces: Triangle[] = [];
@@ -186,7 +187,7 @@ export abstract class DataNode<T extends DrawableDirect> extends MainNode<T> {
     }
 }
 
-export interface IndexedNode extends MainNode<DrawableIndexed> {
+export interface IndexedNode extends MainNode {
     indices_count: number
 }
 

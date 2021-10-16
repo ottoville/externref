@@ -36,7 +36,7 @@ function getRenderPipeline(gpu: GPU) {
 }
 
 
-export class Sun2 extends MainNode<DrawableSimple> implements hasPhysics {
+export class Sun2 extends MainNode implements hasPhysics {
     hasGravity = false;
 
     #clamp = (value: number, min: number, max: number) => {

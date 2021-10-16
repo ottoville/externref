@@ -4,8 +4,8 @@ import type { RenderPass } from "./RenderPass.js";
 import { MainNode } from "../MainNode.js";
 import { GPUBufferUsage } from "../GPU.js"
 import type { IndexedNode } from "../DataNode.js";
-import { NormalsMesh } from "./RenderPipeLines/debug/normals.js";
-import { BoundingBoxMesh } from "./RenderPipeLines/debug/boundingbox.js";
+import { NormalsMesh } from "./RenderPipeLines/helpers/normals.js";
+import { BoundingBoxMesh } from "./RenderPipeLines/helpers/boundingbox.js";
 
 import type { Engine } from "engine.js";
 declare const engine:Engine;
@@ -94,7 +94,7 @@ export abstract class Drawable {
 }
 export abstract class DrawableDirect extends Drawable {
     #instanceCount: number;
-    abstract node: MainNode<DrawableDirect>
+    abstract node: MainNode
 
     constructor(
         renderPipeline: RenderPipeline,
@@ -190,7 +190,7 @@ export class DrawableIndirect<T extends GPUIndirectBuffer> extends Drawable {
 export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
-        public node: MainNode<DrawableSimple>,
+        public node: MainNode,
         public label:string,
         renderPasses?: Set<RenderPass>,
         instanceCount = 1,

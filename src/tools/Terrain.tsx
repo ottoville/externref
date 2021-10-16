@@ -46,7 +46,7 @@ function getRenderPipeline(terrain: Terrain): RenderPipeline {
     return renderPipeline
 }
 
-export class TerrainTool extends MainNode<DrawableSimple> {
+export class TerrainTool extends MainNode {
     static label = 'Terrain';
     public static instance: UITAB | null = null;
     static menuElem = (instance: TerrainTool) => <div><legend style="background-color:white">Terrain</legend>

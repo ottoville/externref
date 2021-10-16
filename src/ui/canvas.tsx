@@ -25,7 +25,7 @@ import type { DrawableSimple } from "GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 
 declare const engine:Engine;
-class CanvasMesh extends MainNode<DrawableSimple> {
+class CanvasMesh extends MainNode {
     drawable:DrawableSimple;
     constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
         super(undefined, undefined, positionsCount);
@@ -35,7 +35,6 @@ class CanvasMesh extends MainNode<DrawableSimple> {
 }
 
 class Light extends MainNode {
-    drawable=undefined;
     constructor(scene:Scene) {
         super(false, false,undefined,undefined,0,1,undefined,undefined,[scene]);
     }

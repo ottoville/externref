@@ -2,13 +2,11 @@
 
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { hasPhysics } from "./physics.js";
-import type { DrawableDirect } from "./GPU/Drawable.js";
 import type { Scene } from "./Scene.js";
 import type { Engine } from "engine.js";
 declare const engine:Engine;
 
-export abstract class MainNode<T extends DrawableDirect | undefined = DrawableDirect | undefined> extends Mesh {
-    abstract drawable?: T;
+export class MainNode extends Mesh {
     isStatic = false;
     static uniqueID = 1;
     static Meshes: Map<number, MainNode> = new Map();

@@ -16,7 +16,7 @@ declare const engine:Engine;
 
 
 
-class PlaneMesh extends MainNode<DrawableIndexed> implements IndexedNode {
+class PlaneMesh extends MainNode implements IndexedNode {
     indices_count=0;
     drawable:DrawableIndexed;
     constructor(renderPipeline: RenderPipeline, verticesCount: number) {
