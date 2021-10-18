@@ -1,4 +1,3 @@
-import type { DrawableDirect, DrawableIndexed, DrawableSimple } from "GPU/Drawable";
 import { ObjectWorkerThread } from "./WorkerThread.js";
 import { MainNode } from "./MainNode.js";
 import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
@@ -7,14 +6,11 @@ import type { ColliderJS } from "./Collider.js";
 import type { Engine } from "engine.js";
 declare const engine:Engine;
 
-export type BoundableNode=DataNode<DrawableDirect>;
-
-
 const worker = new ObjectWorkerThread('/js/workers/webworkers/mesh.js');
 export interface PickingInfo {
     hit: boolean,
     pickedPoint: { x: number, y: number, z: number },
-    pickedMesh: DataNode<DrawableDirect>,
+    pickedMesh: DataNode,
     distance: number
 }
 class pickInfo {
@@ -26,8 +22,7 @@ class pickInfo {
     }
 }
 
-export abstract class DataNode<T extends DrawableDirect> extends MainNode {
-    abstract drawable:T
+export abstract class DataNode extends MainNode {
     readonly pickInfo = new pickInfo();
     protected readonly colliderVerticesV4: number[] = [];
     readonly #triangleFaces: Triangle[] = [];
@@ -191,7 +186,7 @@ export interface IndexedNode extends MainNode {
     indices_count: number
 }
 
-export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> implements IndexedNode {
+export abstract class BoundableNodeIndexed extends DataNode implements IndexedNode {
     private indicesCount=0;
     get indicesView(): Uint32Array {
         return new Uint32Array(engine.memory.buffer,this.indices_pointer,this.indicesCount);
@@ -263,7 +258,7 @@ export abstract class BoundableNodeIndexed extends DataNode<DrawableIndexed> imp
         this.buildFaces();
     }
 }
-export abstract class BoundableNodeSimple extends DataNode<DrawableSimple> {
+export abstract class BoundableNodeSimple extends DataNode {
     constructor(
         scenes: Scene[],
         vertices:Float32Array,

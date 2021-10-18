@@ -1,4 +1,4 @@
-﻿import type { BoundableNode, PickingInfo } from "./DataNode.js";
+﻿import type { DataNode, PickingInfo } from "./DataNode.js";
 import type { GPU } from "./GPU.js";
 import type { TerraCamera } from "./TerraCamera.js";
 import type { Engine } from "engine.js";
@@ -19,11 +19,11 @@ export class Scene {
         const groundAndSea = onRenderStart(this);
         this.ready = groundAndSea;
     }
-    async collissionCheck(rayFunction: (mesh: BoundableNode) => any, boundables: IterableIterator<BoundableNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: BoundableNode) => boolean): Promise<PickingInfo | null> {
+    async collissionCheck(rayFunction: (mesh: DataNode) => any, boundables: IterableIterator<DataNode>, pickResult: PickingInfo | null, fastCheck?: boolean, predicate?: (mesh: DataNode) => boolean): Promise<PickingInfo | null> {
         if (fastCheck) {
             throw ('TODO: fastcheck');
         }
-        let boundableMesh: BoundableNode;
+        let boundableMesh: DataNode;
         do {
             const boundable = boundables.next();
             if (boundable.done)

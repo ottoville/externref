@@ -1,5 +1,4 @@
 ﻿import { RenderPipeline } from "./RenderPipeline.js";
-import type { GPU } from "../GPU.js";
 import type { RenderPass } from "./RenderPass.js";
 import { MainNode } from "../MainNode.js";
 import { GPUBufferUsage } from "../GPU.js"
@@ -10,13 +9,6 @@ import { BoundingBoxMesh } from "./RenderPipeLines/helpers/boundingbox.js";
 import type { Engine } from "engine.js";
 declare const engine:Engine;
 
-
-type DrawableLike = typeof RenderPipeline;
-export interface DrawableLikeClass extends DrawableLike {
-    Meshes: Set<RenderPipeline>;
-    Layouts: Map<GPU, GPUPipelineLayout>;
-    createLayout(scene: GPU): GPUPipelineLayout;
-}
 
 export abstract class Drawable {
     abstract label:string;
@@ -92,7 +84,7 @@ export abstract class Drawable {
         this.render(renderEncoder);
     }
 }
-export abstract class DrawableDirect extends Drawable {
+abstract class DrawableDirect extends Drawable {
     #instanceCount: number;
     abstract node: MainNode
 

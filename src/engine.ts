@@ -13,7 +13,7 @@ import { Projection } from "./GPU/Projection.js";
 import { PositionCamera } from "./controllers/PositionCamera.js";
 //@ts-ignore
 import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
-import { BoundableNode } from "./DataNode.js";
+import { DataNode } from "./DataNode.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "GPU/RenderPass.js";
@@ -64,7 +64,7 @@ export interface ColliderWasm {
     _initialize: () => void
 }
 export class Engine {
-    readonly boundables: Map<string,BoundableNode> = new Map();
+    readonly boundables: Map<string,DataNode> = new Map();
 
     readonly CollisionsEpsilon = 0.001;
     readonly closeDistance = this.CollisionsEpsilon * 10.0;
