@@ -21,7 +21,7 @@ export class PipelineLayout {
     renderPipeLines: Set<RenderPipeline> = new Set();
 
     layout: GPUPipelineLayout;
-    constructor(label:string, public gpu: GPU, public bindGroupLayout: BindGroupLayout<[]>, public parent?: PipelineLayout, public sharedBindgroup?: (GPUBindGroup), public isDynamic = false, isRoot = false, debug=false) {
+    constructor(label:string, public gpu: GPU, public bindGroupLayout: BindGroupLayout, public parent?: PipelineLayout, public sharedBindgroup?: (GPUBindGroup), public isDynamic = false, isRoot = false, debug=false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout.layout];
         if (!isRoot && parent) {
             let curparent: PipelineLayout | undefined = parent;

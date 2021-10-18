@@ -9,6 +9,7 @@ import init, { Engine as RustEngine } from "/js/engine/engine.js";
 import { GPUBufferUsage } from "./GPU.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { Projection } from "./GPU/Projection.js";
+import type { CameraController } from "./controllers/CameraController.js";
 //@ts-ignore
 import { PositionCamera } from "./controllers/PositionCamera.js";
 //@ts-ignore

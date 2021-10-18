@@ -4,6 +4,7 @@ import { TerrainMesh } from "../GPU/RenderPipeLines/TerrainRenderPipeline.js";
 import { GPUBufferUsage } from "../GPU.js"
 import type { PipelineLayout } from "GPU/PipelineLayout.js";
 import { Engine } from "engine.js";
+import { BindGroupLayout } from "../GPU/BindGroupLayout.js";
 declare const engine:Engine;
 export class Terrain {
     /*
@@ -262,7 +263,7 @@ TODO
                 }
             }
         ];
-        const heightsLayout = engine.gpu.createBindGroupLayout('terrain',
+        const heightsLayout = BindGroupLayout.create(engine.gpu,'terrain',
             {
                 binding: 0,
                 visibility: GPUShaderStage.VERTEX,
@@ -286,7 +287,7 @@ TODO
                 }
             }
         )
-        this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', engine.gpu.createBindGroup(heightsLayout, heightsBindGroupEntries));
+        this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', heightsLayout.createBindGroup(heightsBindGroupEntries));
         
         const computePipelineIndices = engine.gpu.createComputePipeline('terrain/calculatePlaneIndices.comp.wgsl');
 

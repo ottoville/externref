@@ -51,8 +51,7 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
         this.#clusterArrayBuffer = gpu.createGPUBuffer(gpu.clusterSizeinBytes, [GPUBufferUsage.STORAGE]);
         this.#projectionUniformsBuffer = this.updateProjectionUniformsBuffer(true);
         this.#uniformBuffer = gpu.createGPUBuffer(this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
-        this.uniformBindGroup = () => this.gpu.createBindGroup(
-            gpu.uniformBindGroupLayoutWithTime,
+        this.uniformBindGroup = () => gpu.uniformBindGroupLayoutWithTime.createBindGroup(
             [{
                 binding: 0,
                 resource: {

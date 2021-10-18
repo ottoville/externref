@@ -4,6 +4,7 @@ import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 import type { DrawableSimple } from "GPU/Drawable.js";
 import type { Engine } from "engine.js";
+import { BindGroupLayout } from "../GPU/BindGroupLayout.js";
 declare const engine:Engine;
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
@@ -19,7 +20,8 @@ function getRenderPipeline(gpu: GPU) {
         minFilter: "nearest",
         mipmapFilter:"nearest"
     });
-    const bindGroupTextureWater = gpu.positionBindGroupTimeWGSL.addChildLayout('water', gpu.createBindGroupLayout(
+    const bindGroupTextureWater = gpu.positionBindGroupTimeWGSL.addChildLayout('water', BindGroupLayout.create(
+        gpu,
         'water',
         {
             binding: 0,

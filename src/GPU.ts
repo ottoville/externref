@@ -3,7 +3,7 @@ import { PickableRenderPass, RenderPass } from "./GPU/RenderPass.js";
 import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
-import {GPUTextureUsageLiterals, Texture } from "./GPU/texture.js";
+import {Texture } from "./GPU/texture.js";
 import type { Projection } from "./GPU/Projection.js";
 
 export const GPUBufferUsage = {
@@ -22,17 +22,6 @@ export const GPUBufferUsage = {
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
 };
-type RenderTargetView =
-{
-    binding: number,
-    resource: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>
-};
-type MapToGPUBindGroupEntry<T> = { [K in keyof T]:  T[K] extends GPUBindGroupTextureEntry ? RenderTargetView : GPUBindGroupEntry };
-type extractGeneric<Type> = Type extends BindGroupLayout<infer X> ? X : never
-//@ts-ignore
-interface GPUBindGroupTextureEntry<SampleType = 'float'> extends GPUBindGroupEntry {
-    resource: GPUTextureView;
-}
 
 export class GPU {
     readonly gpu_memory_index_size=256;
@@ -163,7 +152,7 @@ export class GPU {
                 }
             ]
         )
-        this.uniformBindGroupLayoutWithTime  = this.createBindGroupLayout(
+        this.uniformBindGroupLayoutWithTime  = BindGroupLayout.create(this,
             'uniformBindGroupLayoutWithTime',
             {
                 binding: 0,
@@ -209,7 +198,7 @@ export class GPU {
             });
         this.rootCameralayout = new PipelineLayout('rootCamera', this, this.uniformBindGroupLayoutWithTime, undefined, undefined, false, true);
 
-        this.uniformBindGroupLayoutLightsWGSL2 = this.createBindGroupLayout('uniformBindGroupLayoutLightsWGSL2',
+        this.uniformBindGroupLayoutLightsWGSL2 = BindGroupLayout.create(this,'uniformBindGroupLayoutLightsWGSL2',
             {
                 binding: 0,
                 visibility: GPUShaderStage.VERTEX,
@@ -218,7 +207,7 @@ export class GPU {
                 }
             }
         );
-        const BindGroupLayoutCanvas = this.createBindGroupLayout('BindGroupLayoutCanvas',
+        const BindGroupLayoutCanvas = BindGroupLayout.create(this,'BindGroupLayoutCanvas',
 
             {   //normal
                 binding: 0,
@@ -241,7 +230,7 @@ export class GPU {
             }
         );
         this.rootLayout = new PipelineLayout('rootLayout', this, BindGroupLayoutCanvas);
-        const BindGroupLayoutPosition= this.createBindGroupLayout(
+        const BindGroupLayoutPosition= BindGroupLayout.create(this,
             'BindGroupLayoutPosition',
             {
                 binding: 0,
@@ -252,7 +241,7 @@ export class GPU {
                 }
             }
         );
-        this.BindGroupPosition = this.createBindGroup(BindGroupLayoutPosition, [
+        this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup([
             {
                 binding: 0,
                 resource: {
@@ -264,7 +253,7 @@ export class GPU {
         this.positionBindGroupTime = this.rootCameralayout.addChildBindGroup('positionBindGroupTime', this.BindGroupPosition, true);
 
         this.positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout('positionBindGroupTimeWGSL', BindGroupLayoutPosition);
-        this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout('lightsBindGroupTexture2', this.createBindGroupLayout(
+        this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout('lightsBindGroupTexture2', BindGroupLayout.create(this,
         'lightsBindGroupTexture2',
             {
                 binding: 0,
@@ -322,7 +311,7 @@ export class GPU {
         //[this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
 
         this.BindGroupCanvas = (renderPass: RenderPass) =>  {
-            return this.createBindGroupForRenderPass(BindGroupLayoutCanvas, renderPass,
+            return BindGroupLayoutCanvas.createBindGroupForRenderPass(renderPass,
             [
             {
                 binding: 0,
@@ -352,38 +341,6 @@ export class GPU {
         }
         GPU.instance = this;
     }
-
-    createBindGroupLayout<T extends GPUBindGroupLayoutEntry[]>(label:string,...entries: T): BindGroupLayout<{ [K in keyof T]: T[K] extends {texture:GPUTextureBindingLayout} ? GPUBindGroupTextureEntry<T[K]['texture']['sampleType']>:GPUBindGroupEntry }>{
-        return new BindGroupLayout<[GPUBindGroupEntry]>(this, {label, entries})
-    }
-
-    createBindGroupForRenderPass<T extends BindGroupLayout<GPUBindGroupEntry[]>>(layout: T, renderPass: RenderPass, entries: MapToGPUBindGroupEntry<extractGeneric<T>>): GPUBindGroup {
-        //createBindGroupForRenderPass(layout:  BindGroupLayout<[GPUBindGroupEntry,GPUBindGroupEntry]>, renderPass: RenderPass<{}>, entries: [(GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })]): GPUBindGroup {
-        const bindGroup = this.device.createBindGroup({
-            //@ts-expect-error
-            layout: layout.layout, entries: (entries as GPUBindGroupEntry[]).map<GPUBindGroupEntry>(entry => {
-                if (entry.resource instanceof RenderTarget) {
-                    entry.resource.texture.renderPasses.add(renderPass);
-                    entry.resource = entry.resource.view;
-                }
-                return entry as GPUBindGroupEntry;
-            })
-        });
-        this.GPUBindGroupLayouts.set(bindGroup, layout);
-        return bindGroup
-    }
-    createBindGroup<T extends BindGroupLayout<GPUBindGroupEntry[]>>(layout: T, entries: MapToGPUBindGroupEntry<extractGeneric<T>>): GPUBindGroup {
-        //createBindGroup(layout: BindGroupLayout<GPUBindGroupEntry[]>, ...entries: GPUBindGroupEntry[]): GPUBindGroup {
-
-        const bindGroup = this.device.createBindGroup({
-            //@ts-expect-error
-            layout: layout.layout, entries
-        });
-        this.GPUBindGroupLayouts.set(bindGroup, layout);
-        return bindGroup
-    }
-
-    
     updateBufferRaw(commandEncoder: GPUCommandEncoder, destination: GPUCopyDSTBuffer, data: ArrayBuffer) {
         const tempBuffer = this.createGPUBuffer(data.byteLength, [GPUBufferUsage.COPY_SRC], true);
         new Int8Array(tempBuffer.getMappedRange()).set(new Int8Array(data));

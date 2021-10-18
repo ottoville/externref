@@ -2,6 +2,7 @@
 import type { Engine } from "../engine.js";
 import { TerraMatrix, TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
+import type { CameraController } from "./CameraController.js";
 let pointerDownButton = 0;
 const panningSensibility = 20;
 const angularSensibilityX = 3000;

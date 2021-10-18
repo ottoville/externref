@@ -155,7 +155,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 renderDesc.depthStencilFormat=this.#depthFormat;
             }
             const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder(renderDesc);
-            //@ts-ignore
             let drawedMeshes = 0;
             const dynamicIndices: number[] = [];
 
@@ -191,7 +190,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                     drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1 + dynamicIndices.length, dynamicIndices);
                 });
             });
-
+            console.log('Meshes draw',drawedMeshes)
             this.bundles.push(renderBundleEncoder.finish());
         }
         passEncoder.executeBundles(this.bundles);

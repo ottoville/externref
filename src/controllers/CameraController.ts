@@ -1,4 +1,4 @@
-abstract class CameraController {
+export abstract class CameraController {
     abstract readonly name: string;
     abstract destroy() : void;
     abstract checkInputs() : void
