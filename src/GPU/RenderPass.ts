@@ -230,13 +230,18 @@ export class PickableRenderPass<T extends { [index: string]: RenderTarget<Textur
 
         this.onResize.forEach(cb => cb());
     }
-    pickPromise: Promise<{ position: TerraVector3, meshId?: number } | null> | null = null;
+
+    pickPromise: Promise<{ position: TerraVector3 } | null> | null = null;
+    pickPromiseMesh: Promise<{ position: TerraVector3, meshId: number } | null> | null = null;
     
 
     pickPosition(): Promise<{ position: TerraVector3 } | null>
     pickPosition(mesh:true): Promise<{ position: TerraVector3, meshId: number } | null>
     pickPosition(mesh=false): Promise<{ position: TerraVector3 } | null> | Promise<{ position: TerraVector3, meshId: number } | null> {
-        if (this.pickPromise) {
+        if (mesh && this.pickPromiseMesh) {
+            return this.pickPromiseMesh
+        }
+        else if (!mesh && this.pickPromise) {
             return this.pickPromise
         }
         const camera = [...this.cameras][0]!;
@@ -276,7 +281,7 @@ export class PickableRenderPass<T extends { [index: string]: RenderTarget<Textur
 
         this.gpu.device.queue.submit([encoder.finish()]);
         
-        this.pickPromise = buffer.mapAsync(GPUMapMode.READ,offset - padding,padding + 32 + 16).then(() => {
+        const promise = buffer.mapAsync(GPUMapMode.READ,offset - padding,padding + 32 + 16).then(() => {
             const b = buffer.getMappedRange(offset - padding,padding + 32 + 16);
             const z = new DataView(b).getFloat32(padding, true);
             if(z === 0) { // Z is 0 when did not hit anything, far plane value
@@ -287,13 +292,15 @@ export class PickableRenderPass<T extends { [index: string]: RenderTarget<Textur
             const y = -(engine.mousePosition[1] / this.size[1] * 2 - 1);
             new TerraVector3([x, y, z]).multiply2Ref(camera.projectionViewInverted, result);
 
-            this.pickPromise = null;
 
             if(mesh) {
+                this.pickPromiseMesh = null;
                 const meshId = new DataView(b).getUint32(32 + 12, true); //mesh id is after normals vec3
                 buffer.unmap();
                 return { position: result, meshId };
-            }
+            } else
+                this.pickPromise = null;
+
             buffer.unmap();
             return { position: result };
         });
@@ -302,7 +309,17 @@ export class PickableRenderPass<T extends { [index: string]: RenderTarget<Textur
             camera.projectionViewArr.invertToRef(camera.projectionViewInverted);
             camera.projectionViewInvertedIsDirty = false;
         }
-        return this.pickPromise;
+        if(mesh) {
+            this.pickPromiseMesh=promise as Promise<{
+                position: TerraVector3;
+                meshId: number;
+            }>;
+            return this.pickPromiseMesh;
+        }
+        else {
+            this.pickPromise=promise;
+            return this.pickPromise;
+        }
     }
     async pickMesh(wantedMeshIds?: Set<number>, predicate?: (mesh: MainNode) => boolean): Promise<{ position: TerraVector3, mesh: MainNode } | null> {
         const pickInfo = await this.pickPosition(true);

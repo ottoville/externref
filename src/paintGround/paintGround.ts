@@ -35,6 +35,7 @@ export abstract class paintGround {
         public resolve: PTResultF
     ) {
         this.uitab.canvasListener.addListener("pointerdown", this.#mainPointerDown, { once: true });
+        engine.inputManager?.destroy();
     }
     //public resolve: PTResultF = () => null;
     /* public activate(callback: PTResultF) {
@@ -78,10 +79,6 @@ export abstract class paintGround {
     abstract onMainPointerDown(startingPoint: Float32Array): void;
     abstract onMainPointerUp(height: number, end_position: Float32Array): void;
     abstract onAreaDraw(width: number): Promise<void>;
-    #nextDrawWidth = 0;
-    #drawqueue = false;
-    #busy = false;
-
     #mousemove = async () => {
         const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh })
         if (pickInfo && this.#end_position) {
@@ -114,24 +111,7 @@ export abstract class paintGround {
 
             if (p1 * this.#drawVector[0] + p0 * this.#drawVector[1] < 0)  //Dot product
                 width *= -1;
-
-            this.#nextDrawWidth = width;
-            const me = this;
-            if (!this.#busy) {
-                this.#busy = true
-                queueMicrotask(async function q() {
-                    me.#drawqueue = false;
-                    await me.onAreaDraw(me.#nextDrawWidth);
-                    if (me.#drawqueue)
-                        queueMicrotask(q);
-                    else
-                        me.#busy = false
-                });
-            } else
-                this.#drawqueue = true;
-
-            // console.log('onAreaDraw took ', new Date().getTime() - timed);
-
+            this.onAreaDraw(width);
         }
     }
     private finalClick = () => {
@@ -176,6 +156,7 @@ export abstract class paintGround {
           }, false, this.camera);*/
         const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh });
         if (pickInfo) {
+            console.log(pickInfo)
             this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
             this.onMainPointerDown(this.#start_position);
             engine.inputManager?.destroy();

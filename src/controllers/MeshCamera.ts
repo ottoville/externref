@@ -1,4 +1,4 @@
-import type { BoundableNode } from "DataNode.js";
+import type { DataNode } from "DataNode.js";
 import { TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import type { Engine } from "engine";
@@ -21,7 +21,7 @@ export class MeshCamera implements CameraController {
     #angle=Math.PI;
     #velocity=0.5;
     #arrowKeysDown=0;
-    #mesh: BoundableNode;
+    #mesh: DataNode;
     constructor(private camera: TerraCamera, initial=false) {
         const mesh=engine.boundables.get('human');
         if(!mesh)
@@ -118,7 +118,7 @@ export class MeshCamera implements CameraController {
     lastTranslation=new TerraVector3();
     checkInputs() {
         const translation = this.#mesh.get_translation();
-
+        console.log(translation)
 
         if(this.lastTranslation[1] === translation[1] && this.#arrowKeysDown === 0)
             return false;

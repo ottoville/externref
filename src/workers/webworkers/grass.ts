@@ -5,13 +5,13 @@ declare var DB: Promise<IDBDatabase>;
 importScripts("/js/DB.js");
 importScripts("/js/commonMath.js");
 const numBlades = 70000;
-const BLADE_WIDTH: number = 0.0025;
+const BLADE_WIDTH = 0.0025;
 const BLADE_HEIGHT_MIN = 0.3
 const BLADE_HEIGHT_MAX = 0.8
 const buffer = new SharedArrayBuffer(2 * 4);
 let grasspositions= new Float32Array(buffer);
 let noises: Float32Array;
-let bladecount: number = 0;
+let bladecount = 0;
 const cacheP = caches.open('save');
 interface PlantI {
     family: string,
@@ -49,22 +49,22 @@ let methods = {
         grasspositions = new Float32Array(data.data.positions);
     },
     save: async (data: WMessage<{ angle: number, area: { size: any, coord: Float32Array } }>) => {
-        let grassPerSquareMeter=8
-        let amount = Math.abs(data.data.area.size.h * data.data.area.size.w) * grassPerSquareMeter
+        const grassPerSquareMeter=8
+        const amount = Math.abs(data.data.area.size.h * data.data.area.size.w) * grassPerSquareMeter
         if (amount === 0)
             return;
        // var d = new Date().getTime();
-        let db = await DB;
-        let trans = db.transaction("plantae");
+        const db = await DB;
+        const trans = db.transaction("plantae");
       //  var objstore = trans.objectStore("plantae");
-        let objs: PlantI[] = [];
+        const objs: PlantI[] = [];
         trans.onerror = function (err) {
             console.log(err)
         }
         //console.log('creating grass, amount', amount, data)
 
         //let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
-        let offsets = new Float32Array(amount * 2);
+        const offsets = new Float32Array(amount * 2);
 
         const cos = Math.cos(data.data.angle);
         const sin = Math.sin(data.data.angle);

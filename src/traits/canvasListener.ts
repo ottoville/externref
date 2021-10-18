@@ -23,13 +23,11 @@ export class canvasListener extends Trait {
     }
     #listeners: Map<
         keyof HTMLElementEventMap,
-        Map<(ev: any) => any, ((e: any) => void) | null>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        Map<(ev: (any)) => void, ((e: any) => void) | null>
     > = new Map();
-    /*public getInstance() {
-        return this;
-    }*/
-    public addListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: canvasListener | HTMLCanvasElement, ev: HTMLElementEventMap[K]) => any, options?: addListenerOptions) {
-        let map: Map<(ev: HTMLElementEventMap[K]) => any, ((e: HTMLElementEventMap[K]) => void) | null> | undefined;
+    public addListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: canvasListener | HTMLCanvasElement, ev: HTMLElementEventMap[K]) => void, options?: addListenerOptions) {
+        let map: Map<(ev: HTMLElementEventMap[K]) => void, ((e: HTMLElementEventMap[K]) => void) | null> | undefined;
         if (!(map = this.#listeners.get(type))) {
             map = new Map();
             this.#listeners.set(type, map);
@@ -57,8 +55,8 @@ export class canvasListener extends Trait {
             }
         }
     }
-    public removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (ev: HTMLElementEventMap[K]) => any) {
-        let map: Map<(ev: HTMLElementEventMap[K]) => any, ((e: HTMLElementEventMap[K]) => void) | null> | undefined;
+    public removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (ev: HTMLElementEventMap[K]) => void) {
+        let map: Map<(ev: HTMLElementEventMap[K]) => void, ((e: HTMLElementEventMap[K]) => void) | null> | undefined;
         if (map = this.#listeners.get(type)) {
             GPU.instance.canvas.removeEventListener(type, map.get(listener) || listener);
             if (!map.delete(listener))
