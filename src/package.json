@@ -7,16 +7,17 @@
     "serve": "npm run publish && http-server ..\\bin\\Debug\\netstandard2.0\\publish\\BlazorApp1\\dist\\ -S -o",
     "buildRust": "wasm-pack build engine --target web --out-dir ../../wwwroot/js/engine -- -Z build-std=panic_abort,std",
     "buildRust-testem": "wasm-pack build engine --target web --out-dir ../test-build/js/engine -- -Z build-std=panic_abort,std",
-    "buildWasm":              "wat2wasm.exe collider\\collider.wat --debug-names -o ..\\wwwroot\\collider\\colliderO.wasm --enable-simd",
-    "buildWasmSimd":          "wat2wasm.exe collider\\colliderSIMD2.wat --debug-names -o ..\\wwwroot\\collider\\colliderSimdO.wasm --enable-simd",
-    "buildWasmSimd-testem":   "wat2wasm.exe collider\\colliderSIMD2.wat --debug-names -o .\\test-build\\collider\\colliderSimdO.wasm --enable-simd",
-    "buildWasmSimd-prod":     "wat2wasm.exe collider\\colliderSIMD2.wat -o ..\\wwwroot\\collider\\colliderSimd.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\colliderSimd.wasm -o ..\\wwwroot\\collider\\colliderSimdO.wasm -O3 --enable-simd --always-inline-max-function-size 200",
+    "buildWasm": "wat2wasm.exe collider\\collider.wat --debug-names -o ..\\wwwroot\\collider\\colliderO.wasm --enable-simd",
+    "buildWasmSimd": "wat2wasm.exe collider\\colliderSIMD2.wat --debug-names -o ..\\wwwroot\\collider\\colliderSimdO.wasm --enable-simd",
+    "buildWasmSimd-testem": "wat2wasm.exe collider\\colliderSIMD2.wat --debug-names -o .\\test-build\\collider\\colliderSimdO.wasm --enable-simd",
+    "buildWasmSimd-prod": "wat2wasm.exe collider\\colliderSIMD2.wat -o ..\\wwwroot\\collider\\colliderSimd.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\colliderSimd.wasm -o ..\\wwwroot\\collider\\colliderSimdO.wasm -O3 --enable-simd --always-inline-max-function-size 200",
     "build": "npm run buildRust && tsc -b  && npm run buildWasmSimd",
     "build-prod": "npm run buildRust && tsc -b  && npm run buildWasmSimd-prod",
     "publish": "tsc && dotnet build ../BlazorApp1.csproj && dotnet publish ../BlazorApp1.csproj",
     "test": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs",
     "testem": "tsc --project tsconfig.testem.json && npm run buildRust-testem && npm run buildWasmSimd-testem && npm run testem --prefix ./test-build",
-    "testem-ci": "tsc --project tsconfig.testem.json && npm run buildRust-testem && npm run buildWasmSimd-testem && npm run testem-ci --prefix ./test-build"
+    "testem-ci": "tsc --project tsconfig.testem.json && npm run buildRust-testem && npm run buildWasmSimd-testem && npm run testem-ci --prefix ./test-build",
+    "eslint": "eslint ./*/**.ts"
   },
   "author": "",
   "license": "ISC",
@@ -27,9 +28,9 @@
     "wasm-opt": "^1.1.1"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^4.22.0",
-    "@typescript-eslint/parser": "^4.22.0",
-    "eslint": "^7.32.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.1",
     "typescript": "^4.4.3"
   }
 }

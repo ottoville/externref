@@ -28,7 +28,7 @@ declare const engine:Engine;
 class CanvasMesh extends MainNode {
     drawable:DrawableSimple;
     constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
-        super(undefined, undefined, positionsCount);
+        super(undefined, undefined, false, positionsCount);
         this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, 'canvas',new Set([engine.gpu.renderPassCanvas]))
 
     }
@@ -36,7 +36,7 @@ class CanvasMesh extends MainNode {
 
 class Light extends MainNode {
     constructor(scene:Scene) {
-        super(false, false,undefined,undefined,0,1,undefined,undefined,[scene]);
+        super(false, false, false, undefined,undefined,0,1,undefined,undefined,[scene]);
     }
 }
 
@@ -47,9 +47,6 @@ export class Canvas extends TerraCompoment {
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
     async initalize(): Promise<[Scene]> {
- 
-
-
         this.progress = 6;
 
         const terraEngine = await Engine.initEngine(this.#canvasElem);
@@ -74,7 +71,7 @@ export class Canvas extends TerraCompoment {
             const sea = new Sea([terrascene]);
             //new testPlane(terrascene);
 
-            const b = new Box([terrascene],undefined,'bigbox');
+            const b = new Box([terrascene],undefined,false,'bigbox');
             b.update_scale(terraEngine.rustEngine, 500, 500, 500);
             b.SetTranslation([123,1000,123]);
             b.update_rotation(terraEngine.rustEngine,Math.sin(1.1),0,0,Math.cos(1.1));
@@ -98,7 +95,7 @@ export class Canvas extends TerraCompoment {
             return undefined;
         });
 
-        const b2 = new Box([debugscene], 1000,'greenbox',[0,1,0,0]);
+        const b2 = new Box([debugscene], 1000,true,'greenbox',[0,1,0,0]);
         //const b3 = new Box(debugscene,100);
         //b2.update(scale => scale.set([200, 200, 200]));
         b2.update_scale(terraEngine.rustEngine, 30, 30, 30);

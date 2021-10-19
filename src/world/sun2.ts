@@ -1,5 +1,4 @@
-﻿import type { hasPhysics } from "../physics.js";
-import type { Scene } from "../Scene.js";
+﻿import type { Scene } from "../Scene.js";
 import { MainNode } from "../MainNode.js";
 import { Angle } from "../Math.js";
 import type { GPU } from "../GPU.js";
@@ -36,14 +35,12 @@ function getRenderPipeline(gpu: GPU) {
 }
 
 
-export class Sun2 extends MainNode implements hasPhysics {
-    hasGravity = false;
-
+export class Sun2 extends MainNode {
     #clamp = (value: number, min: number, max: number) => {
         return Math.min(Math.max(value, min), max);
     }
 
-    onPhysicTick = (/*delta: number*/) => {
+    override onPhysicTick = (/*delta: number*/) => {
         const anglePerMinute = (Math.PI * 2) / 1439;
         //let meridian: number = Math.PI * 0.1;
         const meridian: number = Math.PI * 0.5;
@@ -77,7 +74,7 @@ export class Sun2 extends MainNode implements hasPhysics {
     }
     drawable:DrawableSimple;
     constructor(scenes: Scene[]) {
-        super(undefined, undefined, 14,undefined,undefined,1,undefined,undefined,scenes);
+        super(undefined, undefined, true, 14,undefined,undefined,1,undefined,undefined,scenes);
         const renderPipeline=getRenderPipeline(engine.gpu);
         this.drawable=renderPipeline.addDrawableSimple(this,undefined,undefined,undefined,'sun');
     }

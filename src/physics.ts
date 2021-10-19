@@ -3,11 +3,7 @@ import type { Engine } from "engine";
 declare const engine:Engine;
 
 //let Epsilon = 0.001;
-export interface hasPhysics {
-    onPhysicTick: (time: number) => void
-    hasGravity:boolean;
-    checkCollide?(): Promise<void>;
-}
+
 /*
  * One real life second = One game minute
  * Gametime is saved in minutes.
@@ -23,7 +19,7 @@ export class Physics {
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
 
-    tickables: Set<MainNode & hasPhysics> = new Set();
+    tickables: Set<MainNode> = new Set();
     tickTime = 21600;  //6 hours
     tickIntervalMs = 100;
     #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
@@ -52,7 +48,8 @@ export class Physics {
         this.tickTime += delta / this.#realMSingameSecond;
 
         this.tickables.forEach(async tickable => {
-            tickable.onPhysicTick(delta);
+            if(tickable.onPhysicTick)
+                tickable.onPhysicTick(delta);
             const velocity=tickable.get_velocity();
             if (tickable.hasGravity) {
                 /*tickable.SetTranslationDelta([

@@ -1,12 +1,14 @@
 ﻿import { Mesh } from "/js/engine/engine.js";
 
 import { TerraMatrix, TerraVector3 } from "./Math.js";
-import type { hasPhysics } from "./physics.js";
 import type { Scene } from "./Scene.js";
 import type { Engine } from "engine.js";
 declare const engine:Engine;
 
-export class MainNode extends Mesh {
+export abstract class MainNode extends Mesh {
+    onPhysicTick?: (time: number) => void;
+    hasGravity = false;
+    checkCollide?(): Promise<void>;
     isStatic = false;
     static uniqueID = 1;
     static Meshes: Map<number, MainNode> = new Map();
@@ -48,6 +50,7 @@ export class MainNode extends Mesh {
     constructor(
         hasBounding = false,
         has_geometry = false,
+        has_physic = false,
         positionsCount = 0,
         vertices_stride = 3,
         point_light=0,
@@ -64,18 +67,12 @@ export class MainNode extends Mesh {
         });
         //@ts-expect-error wasm-bindgen
         MainNode.Meshes.set(this.id, this);
-        queueMicrotask(() => {
-            if (this.#hasPhysics()) {
-                engine.physics.tickables.add(this);
-            }
-        });
+        if(has_physic)
+            engine.physics.tickables.add(this);
         engine.updateAllocatedMemory();
     }
     override destroy() {
         super.destroy(engine.rustEngine);
         engine.updateAllocatedMemory();
-    }
-    #hasPhysics(): this is hasPhysics {
-        return 'hasGravity' in this && 'onPhysicTick' in this;
     }
 }

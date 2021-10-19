@@ -40,13 +40,14 @@ export abstract class DataNode extends MainNode {
     constructor(
         positionCount: number,
         verticesPositionStride: number,
+        has_physic = false,
         strip = false,
         point_light = 0,
         static_faces = false,
         public label:string,
         scenes?: Scene[],
     ) {
-        super(true,true, positionCount, verticesPositionStride, point_light,undefined, static_faces,strip,scenes);
+        super(true, true, has_physic, positionCount, verticesPositionStride, point_light,undefined, static_faces,strip,scenes);
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
             if(propDesc)
@@ -206,13 +207,14 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
         vertices: Float32Array,
         verticesPositionStride = 3,
         indicesView: Uint32Array,
+        has_physic = false,
         strip = false,
         point_light = 0,
         static_faces = false,
         label:string,
         scenes?: Scene[],
     ) {
-        super(vertices.length/verticesPositionStride,verticesPositionStride, strip, point_light,static_faces,label, scenes);
+        super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip, point_light,static_faces,label, scenes);
         Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeIndexed.prototype, prop);
             if(propDesc)
@@ -266,7 +268,7 @@ export abstract class BoundableNodeSimple extends DataNode {
         strip = false,
         label:string
     ) {
-        super(vertices.length/verticesPositionStride,verticesPositionStride, strip, undefined, undefined, label, scenes);
+        super(vertices.length/verticesPositionStride,verticesPositionStride, false, strip,  undefined, undefined, label, scenes);
         Object.getOwnPropertyNames(BoundableNodeSimple.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeSimple.prototype, prop);
             if(propDesc)

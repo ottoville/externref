@@ -97,7 +97,6 @@ export class Engine {
                 console.log('IDBVersionChangeEvent',e);
                 // Save the IDBDatabase interface 
                 var db: EarthDatabase = this.result;
-                
         
                 (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach((objstore) => {
                     let createdStore :IDBObjectStore 
@@ -339,14 +338,10 @@ export class Engine {
         if(!canvas.parentElement) {
             throw new Error('Canvas must have parent element');
         }
-        console.log('create ResizeObserver')
         const ro = new window.ResizeObserver(entries => {
-            console.log('ResizeObserver0')
-
             const entry = entries[0];
             if (!entry)
                 return;
-            console.log('ResizeObserver1')
             window.cancelAnimationFrame(this.#renderFrame)
             clearTimeout(resizeHandler);
             resizeHandler = setTimeout(async () => {
