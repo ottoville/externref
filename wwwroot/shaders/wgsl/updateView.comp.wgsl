@@ -3,6 +3,7 @@ struct Meshes {
   position : mat4x4<f32>;
   [[size(52)]] y: f32;  //padding
   point_light_squared : f32;
+  directional_light : f32;
 };
 [[block]] struct MeshArray {
   length:u32;
@@ -30,6 +31,7 @@ struct ClusterBounds {
 
 [[binding(0), group(0)]] var<storage, read> meshes : MeshArray;
 [[binding(1), group(0)]] var<storage, read> point_lights : PointLights;
+[[binding(2), group(0)]] var<storage, read> directional_lights : PointLights;
 [[binding(0), group(1)]] var<storage, read_write> clusters : Clusters;
 [[binding(1), group(1)]] var<uniform> viewUniforms : ViewUniforms;
 
@@ -66,23 +68,32 @@ fn main(
 
   let cluster=clusters.bounds[tileIndex];
   var lightCount=0u;
+  for(var pointerIndex:u32=0u; pointerIndex < directional_lights.length; pointerIndex = pointerIndex + 1u) {
+    let meshIndex = directional_lights.pointers[pointerIndex];
+    let mesh=meshes.mesh[meshIndex];
+    clusters.lights[tileIndex*63u + lightCount] = meshIndex;
+    lightCount=lightCount+1u;
+    if(lightCount==63u) {
+      break;
+    }
+  }
   for(var pointerIndex:u32=0u; pointerIndex < point_lights.length; pointerIndex = pointerIndex + 1u) {
     let meshIndex = point_lights.pointers[pointerIndex];
     let mesh=meshes.mesh[meshIndex];
     // TODO: Preselect lights with CPU
-    if(mesh.point_light_squared > 0.0) {
-      let lightViewPos = viewUniforms.view * vec4<f32>(mesh.position[12].xyz, 1.0);
-      let sqDist = sqDistPointAABB(vec3<f32>(lightViewPos.xy, lightViewPos.z), cluster.minAABB.xyz, cluster.maxAABB.xyz);
+    let lightViewPos = viewUniforms.view * vec4<f32>(mesh.position[12].xyz, 1.0);
+    let sqDist = sqDistPointAABB(vec3<f32>(lightViewPos.xy, lightViewPos.z), cluster.minAABB.xyz, cluster.maxAABB.xyz);
 
-      if (sqDist <= mesh.point_light_squared) {
-        // Light affects this cluster. Add it to the list.
-        clusters.lights[tileIndex*63u + lightCount] = meshIndex;
-        lightCount=lightCount+1u;
-        if(lightCount==63u) {
-          break;
-        }
+    if (sqDist <= mesh.point_light_squared) {
+      // Light affects this cluster. Add it to the list.
+      clusters.lights[tileIndex*63u + lightCount] = meshIndex;
+      lightCount=lightCount+1u;
+      //TODO: lightCount might already be max because of directional lights
+      if(lightCount==63u) {
+        break;
       }
     }
+
   }
   clusters.lightsCount[tileIndex] = lightCount;
 }

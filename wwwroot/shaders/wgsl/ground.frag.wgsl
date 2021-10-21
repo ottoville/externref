@@ -114,16 +114,6 @@ fn main(
 
   var shading:f32;
   var shading_rgb:vec3<f32>;
-  //TODO, preselect directional lights
-    for (var directional_light_pointer_index : u32 = 0u; directional_light_pointer_index < meshes.length; directional_light_pointer_index = directional_light_pointer_index + 1u) {
-      let mesh = meshes.mesh[directional_light_pointer_index];
-      if((scenes & mesh.scenes) != 0u) {
-        //Light reflect from athmosphere
-        shading_rgb = shading_rgb + mesh.ambient;
-        //Direct sunlight
-        shading = shading + max(dot(normal.xyz,mesh.position[12].xyz) * mesh.shadow, 0.0);
-      }
-    }
 
     if(cluster_lights_count>0u) {
       for (var light_pointer_index : u32 = 0u; light_pointer_index < cluster_lights_count; light_pointer_index = light_pointer_index + 1u) {
@@ -131,12 +121,18 @@ fn main(
         let light = meshes.mesh[light_index];
         if((scenes & light.scenes) != 0u) {
           let light_position:vec3<f32> = light.position[12].xyz;
+          if(light.point_light_squared > 0.0) {
+            var light_dir:vec3<f32> = light_position - position.xyz;
+            let light_distance_squared= dot(light_dir, light_dir);
+            let attenuation = max(1.0 - light_distance_squared / (light.point_light_squared), 0.0);
 
-          var light_dir:vec3<f32> = light_position - position.xyz;
-          let light_distance_squared= dot(light_dir, light_dir);
-          let attenuation = max(1.0 - light_distance_squared / (light.point_light_squared), 0.0);
-
-          shading = shading + max(dot(normal.xyz, normalize(light_dir)),0.0) * attenuation;
+            shading = shading + max(dot(normal.xyz, normalize(light_dir)),0.0) * attenuation;
+          } else {
+              //Light reflect from athmosphere
+              shading_rgb = shading_rgb + light.ambient;
+              //Direct sunlight
+              shading = shading + max(dot(normal.xyz,light_position) * light.shadow, 0.0);
+          }
         }
       }
     }

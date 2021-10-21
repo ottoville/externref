@@ -108,11 +108,11 @@ impl Mesh {
             }
         };
         if point_light > 0.0 {
-            engine.point_lights.insert(m.gpu_alignment);
+            engine.point_lights.push(m.gpu_alignment);
             engine.update_point_lights();
         }
         if directional_light > 0.0 {
-            engine.directional_lights.insert(m.gpu_alignment);
+            engine.directional_lights.push(m.gpu_alignment);
             engine.update_directional_lights();
         }
         m.update_dynamic_buffer(engine);
@@ -266,16 +266,22 @@ impl Mesh {
         self.gpu_mesh.custom[3]=data[3];
     }
     pub fn set_point_light(&mut self, engine:&mut Engine, range:f32) {
-        if range > 0.0 {
-            self.gpu_mesh.point_light_squared = range * range;
-            engine.point_lights.insert(self.gpu_alignment);
-        } else {
-            self.gpu_mesh.point_light_squared = 0.0;
-            engine.point_lights.remove(&self.gpu_alignment);
-        }
-        engine.update_point_lights();
+        self.gpu_mesh.set_point_light(engine, range, self.gpu_alignment);
+    }
+    pub fn set_directional_light(&mut self, engine:&mut Engine, range:f32) {
+        self.gpu_mesh.set_directional_light(engine, range, self.gpu_alignment);
     }
     pub fn destroy(self, engine:&mut Engine) {
+        if self.gpu_mesh.point_light_squared > 0.0 {
+            let index = engine.point_lights.iter().position(|x| *x == self.gpu_alignment).unwrap();
+            engine.point_lights.swap_remove(index);
+            engine.update_point_lights();
+        }
+        if self.gpu_mesh.directional_light > 0.0 {
+            let index = engine.directional_lights.iter().position(|x| *x == self.gpu_alignment).unwrap();
+            engine.directional_lights.swap_remove(index);
+            engine.update_directional_lights();
+        }
         engine.de_allocate_gpu(self.gpu_alignment);
     }
     pub fn update_matrix(&mut self) {

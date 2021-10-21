@@ -93,7 +93,6 @@ impl Vec4<f32> {
         }
     }
 }
-#[repr(align(8))]
 pub struct GPUMesh {
     transformation: Vec4<Vec4<f32>>, //16
     delta: [f32; 4],                 //20
@@ -103,5 +102,40 @@ pub struct GPUMesh {
     point_light_squared:f32,          //30
     directional_light:f32,          //31
     scenes:u32, //bitmask
-    
+}
+impl GPUMesh {
+    pub fn set_point_light(&mut self, engine:&mut Engine, range:f32, gpu_alignment:u32) {
+        let old_value = self.point_light_squared;
+        if range > 0.0 {
+            self.point_light_squared = range * range;
+            if old_value == 0.0 {
+                engine.point_lights.push(gpu_alignment);
+                engine.update_point_lights();
+            }
+        } else {
+            self.point_light_squared = 0.0;
+            if old_value > 0.0 {
+                let index = engine.point_lights.iter().position(|x| *x == gpu_alignment).unwrap();
+                engine.point_lights.swap_remove(index);
+                engine.update_point_lights();
+            }
+        }
+    }
+    pub fn set_directional_light(&mut self, engine:&mut Engine, range:f32, gpu_alignment:u32) {
+        let old_value = self.directional_light;
+        if range > 0.0 {
+            self.directional_light = range;
+            if old_value == 0.0 {
+                engine.directional_lights.push(gpu_alignment);
+                engine.update_directional_lights();
+            }
+        } else {
+            self.directional_light = 0.0;
+            if old_value > 0.0 {
+                let index = engine.directional_lights.iter().position(|x| *x == gpu_alignment).unwrap();
+                engine.directional_lights.swap_remove(index);
+                engine.update_directional_lights();
+            }
+        }
+    }
 }

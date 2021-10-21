@@ -26,6 +26,8 @@ type CopyBuffers<T> = {
 export class GPU {
     readonly gpu_memory_index_size=256;
     readonly gpu_screen_buffer_size= 16; //screen width and height and ratio
+    readonly gpu_max_point_lights=63;
+
     readonly #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
     readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
@@ -92,24 +94,29 @@ export class GPU {
 
         const totalClusters=this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
         this.clusterSizeinBytes= totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
-        const viewLayout=this.device.createBindGroupLayout({
-            entries: [
-                {
-                    binding:0,
-                    visibility:GPUShaderStage.COMPUTE,
-                    buffer: {
-                        type:'read-only-storage'
-                    }
-                },
-                {
-                    binding:1,
-                    visibility:GPUShaderStage.COMPUTE,
-                    buffer: {
-                        type:'read-only-storage'
-                    }
+        const viewLayout=BindGroupLayout.create(this,'view',
+            {
+                binding:0,
+                visibility:GPUShaderStage.COMPUTE,
+                buffer: {
+                    type:'read-only-storage'
                 }
-            ]
-        });
+            },
+            {
+                binding:1,
+                visibility:GPUShaderStage.COMPUTE,
+                buffer: {
+                    type:'read-only-storage'
+                }
+            },
+            {
+                binding:2,
+                visibility:GPUShaderStage.COMPUTE,
+                buffer: {
+                    type:'read-only-storage'
+                }
+            }
+        )
         this.viewUniformsLayout= this.device.createBindGroupLayout({
             entries: [
                 {
@@ -128,30 +135,33 @@ export class GPU {
                 }
             ]
         });
-        this.updateViewPipeline=this.createComputePipeline('updateView.comp.wgsl',this.device.createPipelineLayout({bindGroupLayouts:[viewLayout, this.viewUniformsLayout]}));
+        this.updateViewPipeline=this.createComputePipeline('updateView.comp.wgsl',
+            this.device.createPipelineLayout({bindGroupLayouts:[viewLayout.layout, this.viewUniformsLayout]}));
 
 
         this.GPUMeshes = this.createGPUBuffer(MainNode.alignment /* meshes count etc */ + MainNode.alignment * MainNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-        this.GPUPointLights = this.createGPUBuffer(63*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
+        this.GPUPointLights = this.createGPUBuffer(this.gpu_max_point_lights*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
         this.GPUDirectionalLights = this.createGPUBuffer(63*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
         
         
-        this.updateViewBindGroup=this.updateViewPipeline.createBindGroup(viewLayout, 
-            [
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: this.GPUMeshes,
-                    },
-                },
-                {
-                    binding: 1,
-                    resource: {
-                        buffer: this.GPUPointLights,
-                    },
-                }
-            ]
-        )
+        this.updateViewBindGroup=viewLayout.createBindGroup([{
+            binding: 0,
+            resource: {
+                buffer: this.GPUMeshes,
+            },
+        },
+        {
+            binding: 1,
+            resource: {
+                buffer: this.GPUPointLights,
+            },
+        },
+        {
+            binding: 2,
+            resource: {
+                buffer: this.GPUDirectionalLights,
+            },
+        }]);
         this.uniformBindGroupLayoutWithTime  = BindGroupLayout.create(this,
             'uniformBindGroupLayoutWithTime',
             {

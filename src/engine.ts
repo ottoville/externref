@@ -383,16 +383,36 @@ export class Engine {
         });
         ro.observe(canvas.parentElement)
     }
-    update_point_lights(lights: Uint32Array) {
+    update_point_lights(pointer:number, length:number) {
+        const lights = new Uint32Array(this.memory.buffer, pointer, length);
         const commandEncoder = this.gpu.device.createCommandEncoder();
         //TODO: Potential buffer overflow
-        this.gpu.updateBufferRaw(commandEncoder, this.gpu.GPUPointLights, new Uint32Array([lights.length, ...lights]).buffer);
+        const byteLength = 4 + lights.byteLength;
+        const tempBuffer = this.gpu.createGPUBuffer(byteLength, [GPUBufferUsage.COPY_SRC], true);
+        const gpu_buffer=new Uint32Array(tempBuffer.getMappedRange());
+        gpu_buffer[0] = lights.length;
+        gpu_buffer.set(lights,1);
+        tempBuffer.unmap();
+        commandEncoder.copyBufferToBuffer(
+            tempBuffer, 0,
+            this.gpu.GPUPointLights, 0,
+            byteLength)
         this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
-    update_directional_lights(lights: Uint32Array) {
+    update_directional_lights(pointer:number, length:number) {
+        const lights = new Uint32Array(this.memory.buffer, pointer, length);
         const commandEncoder = this.gpu.device.createCommandEncoder();
         //TODO: Potential buffer overflow
-        this.gpu.updateBufferRaw(commandEncoder, this.gpu.GPUDirectionalLights, new Uint32Array([lights.length, ...lights]).buffer);
+        const byteLength = 4 + lights.byteLength;
+        const tempBuffer = this.gpu.createGPUBuffer(byteLength, [GPUBufferUsage.COPY_SRC], true);
+        const gpu_buffer=new Uint32Array(tempBuffer.getMappedRange());
+        gpu_buffer[0] = lights.length;
+        gpu_buffer.set(lights,1);
+        tempBuffer.unmap();
+        commandEncoder.copyBufferToBuffer(
+            tempBuffer, 0,
+            this.gpu.GPUDirectionalLights, 0,
+            byteLength)
         this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
     public updateAllocatedMemory() {

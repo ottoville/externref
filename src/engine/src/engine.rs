@@ -1,14 +1,12 @@
 pub use crate::GPUMesh;
 pub use crate::mesh::Mesh;
 use wasm_bindgen::prelude::*;
-use std::collections::HashSet;
-use std::collections::HashMap;
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = engine)]
-    fn update_point_lights(lights: Vec<u32>);
+    fn update_point_lights(pointer: *const u32, length:usize);
     #[wasm_bindgen(js_namespace = engine)]
-    fn update_directional_lights(lights: Vec<u32>);
+    fn update_directional_lights(pointer: *const u32, length:usize);
 }
 #[wasm_bindgen]
 pub struct Engine {
@@ -17,9 +15,9 @@ pub struct Engine {
     pub gpu_queue2: Vec<(*const GPUMesh, u32)>, //mesh + gpu alignment
     gpu_queue_raw_parts: [usize;2],
     #[wasm_bindgen(skip)]
-    pub point_lights:HashSet<u32>,
+    pub point_lights:Vec<u32>,
     #[wasm_bindgen(skip)]
-    pub directional_lights:HashSet<u32>
+    pub directional_lights:Vec<u32>
 }
 
 
@@ -33,8 +31,8 @@ impl Engine {
             gpu_reserved_slots: 0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,  //ZERO:Free, ONE: Reserved
             gpu_queue2: Vec::new(),
             gpu_queue_raw_parts: [0,0],
-            point_lights: HashSet::new(),
-            directional_lights: HashSet::new(),
+            point_lights: Vec::new(),
+            directional_lights: Vec::new(),
         }
     }
     #[wasm_bindgen(getter)]
@@ -51,10 +49,10 @@ impl Engine {
         self.gpu_queue2.clear()
     }
     pub fn update_point_lights(&self) {
-        update_point_lights(self.point_lights.clone().into_iter().collect());
+        update_point_lights(self.point_lights.as_ptr(), self.point_lights.len());
     }
     pub fn update_directional_lights(&self) {
-        update_directional_lights(self.directional_lights.clone().into_iter().collect())
+        update_directional_lights(self.directional_lights.as_ptr(),self.directional_lights.len());
     }
     #[wasm_bindgen(getter)]
     pub fn allocated_gpu_memory(&self) -> Vec<u32> {
@@ -94,7 +92,6 @@ impl Engine {
     }
     pub fn de_allocate_gpu(&mut self, address: u32) {
         self.gpu_reserved_slots &= !(1u64<<address);
-        self.point_lights.remove(&address);
         /*
 
         if address == self.gpu_next_available_address - 1 {
