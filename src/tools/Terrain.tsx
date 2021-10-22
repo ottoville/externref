@@ -69,7 +69,7 @@ export class TerrainTool extends MainNode {
         public terrain: Terrain,
         public sea: Sea,
     ) {
-        super(undefined, undefined, false, 4);
+        super(undefined, undefined, false, 4, undefined, undefined, undefined, undefined, undefined, 'TerrainTool');
         const renderPipeline=getRenderPipeline(terrain);
         const scene=engine.scenes.get('main');
         if(!scene)
@@ -82,7 +82,7 @@ export class TerrainTool extends MainNode {
         });
 
         this.elevator = terrain.mesh.create_elevator();
-        this.drawable = renderPipeline.addDrawableSimple(this, 8, 0, undefined, 'TerrainTool');
+        this.drawable = renderPipeline.addDrawableSimple(this, 8, 0, undefined);
         this.#pick = { position: new TerraVector3(engine.memory.buffer, this.elevator.mouse_position_pointer()), meshId: 0 };
         //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED

@@ -28,15 +28,15 @@ declare const engine:Engine;
 class CanvasMesh extends MainNode {
     drawable:DrawableSimple;
     constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
-        super(undefined, undefined, false, positionsCount);
-        this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, 'canvas',new Set([engine.gpu.renderPassCanvas]))
+        super(undefined, undefined, false, positionsCount,undefined, undefined, undefined, undefined, undefined, 'canvas');
+        this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([engine.gpu.renderPassCanvas]))
 
     }
 }
 
 class Light extends MainNode {
     constructor(scene:Scene) {
-        super(false, false, false, undefined,undefined,0,1,undefined,undefined,[scene]);
+        super(false, false, false, undefined,undefined,0,1,undefined,undefined,'Light',[scene]);
     }
 }
 
@@ -87,6 +87,7 @@ export class Canvas extends TerraCompoment {
             this.progress = 100;
             return ready;
         });
+        //@ts-ignore
         const debugscene = new Scene('static', terraEngine.gpu, [engine.mainCamera], (scene) => {
             const sun = new Light(scene);
             sun.get_translation().set([0, 1, 0]);
@@ -95,20 +96,16 @@ export class Canvas extends TerraCompoment {
             return undefined;
         });
 
-        const b2 = new Box([debugscene], 1000,true,'greenbox',[0,1,0,0]);
-        //const b3 = new Box(debugscene,100);
-        //b2.update(scale => scale.set([200, 200, 200]));
+        const b2 = new Box([mainScene], 300,true,'greenbox',[0,1,0,0]);
+
         b2.update_scale(terraEngine.rustEngine, 30, 30, 30);
-        //b3.update_scale(30, 30, 30);
-        //const translation = b2.get_translation();
-        //b3.SetTranslation([-1000, 400, 0])
-        //b2.setTranslationX(500);
+
         const x = 500;
         const z = 800;
         // let z = 0;
         b2.SetTranslation([x, 1200, z]);
-       const velocity=b2.get_velocity();
-       b2.SetTranslationDelta([velocity[0],velocity[1],3])
+       //const velocity=b2.get_velocity();
+       //b2.SetTranslationDelta([velocity[0],velocity[1],3])
         //let x2=-1000;
         //@ts-ignore
         let a = 0;

@@ -39,8 +39,8 @@ function DebugNormalsPipeline(entryPoint='main', topology:GPUPrimitiveTopology='
 export class NormalsMesh extends MainNode {
     drawable:DrawableSimple;
     constructor(positionsCount: number, stride=12) {        
-        super(false, false, false, positionsCount,stride);
+        super(false, false, false, positionsCount,stride, undefined, undefined, undefined, undefined, 'NormalsDebug');
         const renderPipeline=DebugNormalsPipeline('normals');
-        this.drawable=renderPipeline.addDrawableSimple(this,undefined,undefined,undefined,'NormalsDebug');
+        this.drawable=renderPipeline.addDrawableSimple(this,undefined,undefined,undefined);
     }
 }

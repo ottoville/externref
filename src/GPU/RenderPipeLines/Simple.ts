@@ -49,7 +49,7 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
 
         super(vBufferCPU, 6, indicesView,has_physic, undefined, point_light,undefined,label,scenes);
         const renderPipeline=Simple(engine.gpu);
-        this.drawable =  renderPipeline.addDrawableIndexed(this,label)
+        this.drawable =  renderPipeline.addDrawableIndexed(this)
 
         this.drawable.setVertexBuffer(0, vBufferGPU);
         this.drawable.setIndexBuffer(iBuffer, undefined, undefined, indicesView.BYTES_PER_ELEMENT == 4 ? 'uint32' : 'uint16');

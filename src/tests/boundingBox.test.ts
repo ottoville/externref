@@ -10,7 +10,7 @@ export const run = (asr: typeof assert) => {
     
     describe('Bounding box ', function () {
       it('Update scale, translation and rotation', function () {
-        const b = new Box(undefined, undefined,'bigbox');
+        const b = new Box(undefined, undefined,false,'bigbox');
         b.update_scale(engine.rustEngine, 500, 500, 500);
         b.SetTranslation([123,1000,123]);
         b.update_rotation(engine.rustEngine,Math.sin(1.1),0,0,Math.cos(1.1));

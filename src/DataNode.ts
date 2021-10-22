@@ -44,10 +44,10 @@ export abstract class DataNode extends MainNode {
         strip = false,
         point_light = 0,
         static_faces = false,
-        public label:string,
+        label:string,
         scenes?: Scene[],
     ) {
-        super(true, true, has_physic, positionCount, verticesPositionStride, point_light,undefined, static_faces,strip,scenes);
+        super(true, true, has_physic, positionCount, verticesPositionStride, point_light,undefined, static_faces,strip,label,scenes);
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
             if(propDesc)

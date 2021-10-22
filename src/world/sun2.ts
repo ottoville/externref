@@ -74,8 +74,8 @@ export class Sun2 extends MainNode {
     }
     drawable:DrawableSimple;
     constructor(scenes: Scene[]) {
-        super(undefined, undefined, true, 14,undefined,undefined,1,undefined,undefined,scenes);
+        super(undefined, undefined, true, 14,undefined,undefined,1,undefined,undefined,'sun',scenes);
         const renderPipeline=getRenderPipeline(engine.gpu);
-        this.drawable=renderPipeline.addDrawableSimple(this,undefined,undefined,undefined,'sun');
+        this.drawable=renderPipeline.addDrawableSimple(this,undefined,undefined,undefined);
     }
 }

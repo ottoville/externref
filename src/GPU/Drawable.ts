@@ -91,8 +91,11 @@ abstract class DrawableDirect extends Drawable {
     constructor(
         renderPipeline: RenderPipeline,
         dynamicIndex: number,
+        public label:string,
         renderPasses?: Set<RenderPass>,
-        instanceCount = 1) {
+        
+        instanceCount = 1,
+        ) {
         super(renderPipeline, renderPasses);
         this.dynamicBuffers.push([this.renderPipeline.bindgroupdrawable.gpu.BindGroupPosition, dynamicIndex])
         if (instanceCount == 0)
@@ -183,13 +186,12 @@ export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         public node: MainNode,
-        public label:string,
         renderPasses?: Set<RenderPass>,
         instanceCount = 1,
         public firstVertex = 0,
         public firstInstance = 0) {
             //@ts-expect-error wasm-bindgen
-            super(renderPipeline, node.gpu_alignment, renderPasses, instanceCount);
+            super(renderPipeline, node.gpu_alignment, node.label, renderPasses, instanceCount);
     }
     render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) {
         renderEncoder.draw(this.node.positions_count, this.instanceCount, this.firstVertex, this.firstInstance);
@@ -200,7 +202,6 @@ export class DrawableIndexed extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
         public node: IndexedNode,
-        public label:string,
         renderPasses?: Set<RenderPass>,
         private indexBuffer?: GPUIndexBuffer,
         public baseVertex = 0,
@@ -210,7 +211,7 @@ export class DrawableIndexed extends DrawableDirect {
         private GPUIndexFormat: GPUIndexFormat = 'uint16',
         ) {
             //@ts-expect-error wasm-bindgen
-        super(renderPipeline,node.gpu_alignment, renderPasses, instanceCount);
+        super(renderPipeline,node.gpu_alignment, node.label, renderPasses, instanceCount);
     }
 
     override destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {

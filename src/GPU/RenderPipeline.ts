@@ -66,10 +66,10 @@ export class RenderPipeline {
     addDrawableIndirect<T extends GPUIndirectBuffer>(buffer: T, label:string, renderPasses?: Set<RenderPass>) {
         return new DrawableIndirect(this, buffer,label,renderPasses);
     }
-    addDrawableSimple(node: MainNode, instanceCount = 1, firstVertex = 0, firstInstance = 0, label:string, renderPasses?: Set<RenderPass>): DrawableSimple {
-        return new DrawableSimple(this, node, label, renderPasses, instanceCount, firstVertex, firstInstance)
+    addDrawableSimple(node: MainNode, instanceCount = 1, firstVertex = 0, firstInstance = 0, renderPasses?: Set<RenderPass>): DrawableSimple {
+        return new DrawableSimple(this, node, renderPasses, instanceCount, firstVertex, firstInstance)
     }
-    addDrawableIndexed(node: IndexedNode, label:string, renderPasses?: Set<RenderPass>, indexBuffer?: GPUIndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {
-        return new DrawableIndexed(this, node, label,renderPasses, indexBuffer, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
+    addDrawableIndexed(node: IndexedNode, renderPasses?: Set<RenderPass>, indexBuffer?: GPUIndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {
+        return new DrawableIndexed(this, node, renderPasses, indexBuffer, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
     }
 }

@@ -57,7 +57,9 @@ export abstract class MainNode extends Mesh {
         directional_light=0,
         static_faces=false,
         strip=false,
-        scenes?:Scene[]) {
+        public label:string,
+        scenes?:Scene[],
+        ) {
         const sceneids=scenes?scenes.reduce((acc, scene) => acc | scene.id,0):1;
         super(engine.rustEngine, MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, sceneids, static_faces, strip);
         Object.getOwnPropertyNames(MainNode.prototype).forEach(prop =>  {
