@@ -32,7 +32,7 @@ export class paintTexture extends paintGround {
     ) {
         super(scene, ground, sea, uitab,callback);
     }
-    async onAreaDraw(width: number): Promise<void> {
+    onAreaDraw(width: number) {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {
             throw ('onAreaDraw non numeric width or height');
         }

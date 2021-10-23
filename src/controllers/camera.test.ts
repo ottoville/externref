@@ -18,7 +18,7 @@ export const run = async (assert: assertionType) => {
     const newDirection = new Float32Array(engine.mainCamera.direction as [number, number, number])
 
     describe('Camera controller '+cameraControllers[i].name, function () {
-      it('position should be same', async function () {
+      it('position should be same', function () {
           assert.strictEqual(originalPosition[0], newPosition[0])
           assert.strictEqual(originalPosition[1], newPosition[1])
           assert.strictEqual(originalPosition[2], newPosition[2])

@@ -78,7 +78,7 @@ export abstract class paintGround {
 
     abstract onMainPointerDown(startingPoint: Float32Array): void;
     abstract onMainPointerUp(height: number, end_position: Float32Array): void;
-    abstract onAreaDraw(width: number): Promise<void>;
+    abstract onAreaDraw(width: number): void;
     #mousemove = async () => {
         const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh })
         if (pickInfo && this.#end_position) {

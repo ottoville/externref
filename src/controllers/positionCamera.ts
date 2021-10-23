@@ -34,7 +34,7 @@ export class PositionCamera implements CameraController {
             });
         }
         if(initial) {
-            engine.DB.transaction("save").objectStore("save").get(["camera", "PositionCamera"]).onsuccess = async (evt) => {
+            engine.DB.transaction("save").objectStore("save").get(["camera", "PositionCamera"]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
                     const restored = ((evt.target as IDBRequest).result as {
                         data: {

@@ -16,7 +16,7 @@ export class paintLine extends paintGround {
         //this.startingPoint = startingPoint;
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    async onAreaDraw(): Promise<void> {
+    onAreaDraw() {
     }
     constructor(
         scene: Scene,

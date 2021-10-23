@@ -452,10 +452,11 @@ export class GPU {
         const buff = this.device.createBuffer({ usage, size, mappedAtCreation });
 
         if (usage & GPUBufferUsage.MAP_READ) {
-            (buff as GPUMapReadBuffer).readAndDestroy = (callback: (buff: ArrayBuffer) => Promise<void>): Promise<void> => {
+            (buff as GPUMapReadBuffer).readAndDestroy = (callback: (buff: ArrayBuffer) => void): Promise<void> => {
                 return buff.mapAsync(GPUMapMode.READ).then(() => {
                     const arrbuff = buff.getMappedRange();
-                    callback(arrbuff).finally(() => buff.destroy())
+                    callback(arrbuff);
+                    buff.destroy();
                 });
             }
         }

@@ -132,7 +132,7 @@ export class paintPlane extends paintGround {
             0, Math.sin(halfYaw), 0, Math.cos(halfYaw))
     }
 
-    async onAreaDraw(width: number): Promise<void> {
+    onAreaDraw(width: number) {
         let newValues: { positions: number[], indices: number[] } | null = null;
         if (!this.#rowGenerator) {
             this.#rowGenerator = this.createTiledGround(this.#columns);

@@ -46,7 +46,7 @@ export class Physics {
         }
         this.#lastTickTimeMs = timestamp;
         this.tickTime += delta / this.#realMSingameSecond;
-        this.tickables.forEach(async tickable => {
+        this.tickables.forEach(tickable => {
             if(tickable.onPhysicTick)
                 tickable.onPhysicTick(delta);
             const velocity=tickable.get_velocity();

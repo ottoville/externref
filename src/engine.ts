@@ -341,7 +341,7 @@ export class Engine {
                 return;
             window.cancelAnimationFrame(this.#renderFrame)
             clearTimeout(resizeHandler);
-            resizeHandler = setTimeout(async () => {
+            resizeHandler = setTimeout(() => {
                 const aspectRatio = entry.contentRect.width / entry.contentRect.height
                 canvas.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
 
@@ -426,7 +426,7 @@ export class Engine {
             buffLength);
         this.gpu.pendingCommandBuffers.add(renderEncoder.finish())
     }
-    async collideWithWorld(): Promise<void> {
+    collideWithWorld() {
         //TODO: Call only when camera position change
         const scaledPosition = this.collider.scaledPosition;
         const scaledVelocity = this.collider.scaledVelocity;
@@ -443,9 +443,7 @@ export class Engine {
             // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-            const promises:Promise<void>[]=[]
-            this.physics.tickables.forEach(mesh => promises.push(mesh.checkCollision(this.collider)))
-            await Promise.all(promises);
+            this.physics.tickables.forEach(mesh => mesh.checkCollision(this.collider))
 
             const intersectionPoint = this.collider.intersectionPointWasm;
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];

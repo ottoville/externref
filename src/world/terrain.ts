@@ -38,7 +38,7 @@ TODO
     
     //TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpu.BindGroupPosition, true)
 
-    public static async fromSave(cachedvertices: Response): Promise<ArrayBuffer> {
+    public static fromSave(cachedvertices: Response): Promise<ArrayBuffer> {
         return cachedvertices.arrayBuffer();
         /* const cacheimg = new Image();
          cacheimg.src = URL.createObjectURL(await cachedvertices.blob());
@@ -505,12 +505,12 @@ TODO
                 this.mesh.faces=new Float32Array(buff.getMappedRange());
             }, this.facet12ArrGPUBuffer)
     
-            gpuReadBufferPositions.readAndDestroy(async (readbuff) => {
+            gpuReadBufferPositions.readAndDestroy(readbuff => {
                 this.mesh.set_vertices(new Float32Array(readbuff));
                 this.updateSwap2(0, readbuff.byteLength, true);
                 this.serialize();
             });
-            gpuReadBufferIndices.readAndDestroy(async (buff) => {
+            gpuReadBufferIndices.readAndDestroy(buff => {
                 this.mesh.indicesView=new Uint32Array(buff);
             });
         })

@@ -81,7 +81,7 @@ export class Canvas extends TerraCompoment {
             new Human([terrascene])
             const terrainInited = Terrain.loadFromTexture([terrascene]);
 
-            const ready = terrainInited.then(async ground => [ground, sea]);
+            const ready = terrainInited.then(ground => [ground, sea]);
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
 
             this.progress = 100;
@@ -139,7 +139,7 @@ export class Canvas extends TerraCompoment {
 
 
         const webSocket = new WebSocket('ws://localhost:8081');
-        webSocket.onopen = async () => {
+        webSocket.onopen = () => {
             console.log('websocket onopen');
             // progelem.value = 30;
             try {
@@ -157,7 +157,7 @@ export class Canvas extends TerraCompoment {
                 // sceneInitedrej(e);
             }
         }
-        webSocket.onerror = async () => {
+        webSocket.onerror = () => {
             console.log('websocket onerror');
             try {
                 console.debug('initing without websocket connection');

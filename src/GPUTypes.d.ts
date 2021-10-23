@@ -14,7 +14,7 @@ interface GPUStorageBuffer extends GPUBuffer {
     storage: 'true';
 }
 interface GPUMapReadBuffer extends GPUBuffer {
-    readAndDestroy: (callback: (buff: ArrayBuffer) => Promise<void>) => Promise<void>;
+    readAndDestroy: (callback: (buff: ArrayBuffer) => void) => Promise<void>;
 }
 interface GPUMapWriteBuffer extends GPUBuffer {
     mapread: boolean

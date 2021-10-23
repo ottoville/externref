@@ -141,7 +141,7 @@ export abstract class DataNode extends MainNode {
     }
     //collisionsScalingMatrix = new TerraMatrix();
     #myCollisionsTransformMatrix = new TerraMatrix();
-    public async checkCollision (collider: ColliderJS) {
+    public checkCollision (collider: ColliderJS) {
         if (this.faces_count % 4 != 0) {  //TODO
             return
         }

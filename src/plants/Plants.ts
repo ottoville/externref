@@ -146,7 +146,7 @@ export class Plants {
                         }
                     }]
             });
-            this.worker.subscribe('updated', async (data: { buffer: SharedArrayBuffer }) => {
+            this.worker.subscribe('updated', (data: { buffer: SharedArrayBuffer }) => {
 
                 const commandEncoder = scene.gpu.device.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();

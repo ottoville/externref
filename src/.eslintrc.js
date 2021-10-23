@@ -28,6 +28,7 @@ module.exports = {
         "@typescript-eslint/no-non-null-assertion": "off",
         "no-var": "off",
         "no-cond-assign": "off",
-        "no-this-alias":"off"
+        "no-this-alias":"off",
+        "require-await":2
     }
 };

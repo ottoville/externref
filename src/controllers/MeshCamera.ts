@@ -37,7 +37,7 @@ export class MeshCamera implements CameraController {
             });
         }
         if(initial) {
-            engine.DB.transaction("save").objectStore("save").get(["camera", "MeshCamera"]).onsuccess = async (evt) => {
+            engine.DB.transaction("save").objectStore("save").get(["camera", "MeshCamera"]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
                     const restored = ((evt.target as IDBRequest).result as {
                         data: {

@@ -6,7 +6,7 @@ declare const engine: Engine;
 */
 
 type assertionType = typeof assert;
-export const run = async (assert: assertionType) => {
+export const run = (assert: assertionType) => {
     
     describe('Physic time ', function () {
       it('Delta has changed', async function () {

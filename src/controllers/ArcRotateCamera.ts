@@ -85,7 +85,7 @@ export class ArcRotateCamera implements CameraController {
         engine.canvas.addEventListener('wheel', this.#cameraWheel);
         engine.canvas.addEventListener('pointerdown', this.#cameraPointerDown);
         if (initial) {
-            engine.DB.transaction("save").objectStore("save").get(["camera", "ArchRotateCamera"]).onsuccess = async (evt) => {
+            engine.DB.transaction("save").objectStore("save").get(["camera", "ArchRotateCamera"]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
                     const restored = (evt.target as IDBRequest).result.data as serialized | undefined;
                     if (restored) {
