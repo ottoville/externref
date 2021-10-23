@@ -50,7 +50,6 @@ export abstract class MainNode extends Mesh {
     constructor(
         hasBounding = false,
         has_geometry = false,
-        has_physic = false,
         positionsCount = 0,
         vertices_stride = 3,
         point_light=0,
@@ -69,8 +68,6 @@ export abstract class MainNode extends Mesh {
         });
         //@ts-expect-error wasm-bindgen
         MainNode.Meshes.set(this.id, this);
-        if(has_physic)
-            engine.physics.tickables.add(this);
         engine.updateAllocatedMemory();
     }
     override destroy() {

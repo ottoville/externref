@@ -14,7 +14,6 @@ import type { CameraController } from "./controllers/CameraController.js";
 import { PositionCamera } from "./controllers/PositionCamera.js";
 //@ts-ignore
 import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
-import { DataNode } from "./DataNode.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "GPU/RenderPass.js";
@@ -65,8 +64,6 @@ export interface ColliderWasm {
     _initialize: () => void
 }
 export class Engine {
-    readonly boundables: Map<string,DataNode> = new Map();
-
     readonly CollisionsEpsilon = 0.001;
     readonly closeDistance = this.CollisionsEpsilon * 10.0;
     readonly closeDistanceSquared = this.closeDistance * this.closeDistance
@@ -446,7 +443,9 @@ export class Engine {
             // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-            await Promise.all([...this.boundables.values()].map(mesh => mesh.checkCollision(this.collider)));
+            const promises:Promise<void>[]=[]
+            this.physics.tickables.forEach(mesh => promises.push(mesh.checkCollision(this.collider)))
+            await Promise.all(promises);
 
             const intersectionPoint = this.collider.intersectionPointWasm;
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
@@ -455,6 +454,8 @@ export class Engine {
 
 
             if (this.collider.rust.collision_not_found) {
+                //console.log('set finalposition',...this.#destinationPoint)
+
                 this.collider.finalPosition.set(this.#destinationPoint);
                 return;
             }

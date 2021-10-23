@@ -69,7 +69,7 @@ export class TerrainTool extends MainNode {
         public terrain: Terrain,
         public sea: Sea,
     ) {
-        super(undefined, undefined, false, 4, undefined, undefined, undefined, undefined, undefined, 'TerrainTool');
+        super(undefined, undefined, 4, undefined, undefined, undefined, undefined, undefined, 'TerrainTool');
         const renderPipeline=getRenderPipeline(terrain);
         const scene=engine.scenes.get('main');
         if(!scene)

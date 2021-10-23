@@ -35,7 +35,7 @@ function DebugBoundingPipeline(entryPoint = 'main', topology: GPUPrimitiveTopolo
 export class BoundingBoxMesh extends MainNode {
     drawable:DrawableSimple;
     constructor() {         
-        super(false, false, false, 26,4,undefined,undefined,undefined,undefined,'BoundingBoxDebug');
+        super(false, false, 26,4,undefined,undefined,undefined,undefined,'BoundingBoxDebug');
         const renderPipeline=DebugBoundingPipeline(undefined,'line-strip');
         this.drawable=renderPipeline.addDrawableSimple(this,undefined,undefined,undefined);
     }

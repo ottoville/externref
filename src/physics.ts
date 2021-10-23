@@ -1,5 +1,5 @@
-﻿import type { MainNode } from "./MainNode.js";
-import type { Engine } from "engine";
+﻿import type { Engine } from "engine";
+import { DataNode } from "DataNode.js";
 declare const engine:Engine;
 
 //let Epsilon = 0.001;
@@ -19,7 +19,7 @@ export class Physics {
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
 
-    tickables: Set<MainNode> = new Set();
+    tickables: Set<DataNode> = new Set();
     tickTime = 21600;  //6 hours
     tickIntervalMs = 100;
     #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
@@ -46,7 +46,6 @@ export class Physics {
         }
         this.#lastTickTimeMs = timestamp;
         this.tickTime += delta / this.#realMSingameSecond;
-
         this.tickables.forEach(async tickable => {
             if(tickable.onPhysicTick)
                 tickable.onPhysicTick(delta);
@@ -58,22 +57,30 @@ export class Physics {
                     velocity[2]]
                 )*/
             }
-            const currentTranslation = tickable.get_translation();
+            
             if(tickable.checkCollide) {
                 // TODO: Only check collision if some of both object has moved
-                //await tickable.checkCollide();
+               /* await tickable.checkCollide();
                 if (engine.collider.rust.collision_not_found) {
+                    const currentTranslation = tickable.get_translation();
+                    const oldX=currentTranslation[0];
+                    if(oldX===500 && engine.collider.finalPosition[0]!==500) {
+                        debugger;
+                    }
                     currentTranslation.set(engine.collider.finalPosition); //TODO now it only supports one collider.
-                   // engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
-                }
+                    tickable.update_dynamic_buffer(engine.rustEngine);
+                    // engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
+                }*/
             }
             else {
                 if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
+                    const currentTranslation = tickable.get_translation();
                     currentTranslation.set([
                         currentTranslation[0] + velocity[0],
                         currentTranslation[1] + velocity[1],
                         currentTranslation[2] + velocity[2]
                     ]);
+                    tickable.update_dynamic_buffer(engine.rustEngine);
                 }
             }
         });

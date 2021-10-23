@@ -65,5 +65,41 @@ export class Box extends SimpleIndexedMesh {
     ) {
         super(positions, ...create(engine.gpu),label,point_light,has_physic, scenes);
         this.gpu_custom_data=new Float32Array(color);
+        Object.getOwnPropertyNames(Box.prototype).forEach(prop =>  {
+            const propDesc=Object.getOwnPropertyDescriptor(Box.prototype, prop);
+            if(propDesc)
+                Object.defineProperty(this, prop, propDesc);
+        });
+    }
+    
+    override async checkCollide() {
+        const translation = this.get_translation();
+        const translationDelta = this.get_velocity();
+     //   console.log('checkCollide',...translationDelta)
+     //   console.log('translation',...translation)
+        const scaledPosition=engine.collider.scaledPosition;
+        scaledPosition[0] = translation[0] / engine.collider.radius[0];
+        scaledPosition[1] = translation[1] / engine.collider.radius[1];
+        scaledPosition[2] = translation[2] / engine.collider.radius[2];
+        const scaledVelocity=engine.collider.scaledVelocity;
+
+        const newPosition= [
+            translation[0]+translationDelta[0],
+            translation[1]+translationDelta[1],
+            translation[2]+translationDelta[2]
+        ] as const
+
+
+        scaledVelocity[0] = (newPosition[0]-translation[0])/engine.collider.radius[0];
+        scaledVelocity[1] = (newPosition[1]-translation[1])/engine.collider.radius[1];
+        scaledVelocity[2] = (newPosition[2]-translation[2])/engine.collider.radius[2];
+        engine.collider.collidedMesh = undefined;
+        engine.collider._retry = 0;
+
+        await engine.collideWithWorld();
+
+        engine.collider.finalPosition[0] *= engine.collider.radius[0]
+        engine.collider.finalPosition[1] *= engine.collider.radius[1]
+        engine.collider.finalPosition[2] *= engine.collider.radius[2]
     }
 }

@@ -1,8 +1,8 @@
-import type { DataNode } from "DataNode.js";
 import { TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import type { CameraController } from "./CameraController.js";
 import type { Engine } from "engine";
+import { MainNode } from "MainNode.js";
 declare const engine:Engine;
 
 const enum ARROW_KEYS  {
@@ -22,9 +22,9 @@ export class MeshCamera implements CameraController {
     #angle=Math.PI;
     #velocity=0.5;
     #arrowKeysDown=0;
-    #mesh: DataNode;
+    #mesh: MainNode;
     constructor(private camera: TerraCamera, initial=false) {
-        const mesh=engine.boundables.get('human');
+        const mesh=[...MainNode.Meshes.values()].find(mesh => mesh.label==='human');
         if(!mesh)
             throw new Error('Mesh not found');
         this.#mesh = mesh;

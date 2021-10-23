@@ -28,7 +28,7 @@ declare const engine:Engine;
 class CanvasMesh extends MainNode {
     drawable:DrawableSimple;
     constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
-        super(undefined, undefined, false, positionsCount,undefined, undefined, undefined, undefined, undefined, 'canvas');
+        super(undefined, undefined, positionsCount,undefined, undefined, undefined, undefined, undefined, 'canvas');
         this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([engine.gpu.renderPassCanvas]))
 
     }
@@ -36,7 +36,7 @@ class CanvasMesh extends MainNode {
 
 class Light extends MainNode {
     constructor(scene:Scene) {
-        super(false, false, false, undefined,undefined,0,1,undefined,undefined,'Light',[scene]);
+        super(false, false, undefined,undefined,0,1,undefined,undefined,'Light',[scene]);
     }
 }
 
@@ -97,15 +97,17 @@ export class Canvas extends TerraCompoment {
         });
 
         const b2 = new Box([mainScene], 300,true,'greenbox',[0,1,0,0]);
-
+        b2.onPhysicTick=() => {
+            console.log(...b2.get_translation());
+        }
         b2.update_scale(terraEngine.rustEngine, 30, 30, 30);
 
         const x = 500;
         const z = 800;
         // let z = 0;
         b2.SetTranslation([x, 1200, z]);
-       //const velocity=b2.get_velocity();
-       //b2.SetTranslationDelta([velocity[0],velocity[1],3])
+       const velocity=b2.get_velocity();
+       b2.SetTranslationDelta([velocity[0],velocity[1],-3])
         //let x2=-1000;
         //@ts-ignore
         let a = 0;

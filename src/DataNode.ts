@@ -47,7 +47,7 @@ export abstract class DataNode extends MainNode {
         label:string,
         scenes?: Scene[],
     ) {
-        super(true, true, has_physic, positionCount, verticesPositionStride, point_light,undefined, static_faces,strip,label,scenes);
+        super(true, true, positionCount, verticesPositionStride, point_light,undefined, static_faces,strip,label,scenes);
         Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
             if(propDesc)
@@ -56,7 +56,9 @@ export abstract class DataNode extends MainNode {
 
 
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
-        engine.boundables.set(label, this);
+        if(has_physic)
+            engine.physics.tickables.add(this);
+
 
         //Run this on microtask so the scope who called
         //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
@@ -68,7 +70,7 @@ export abstract class DataNode extends MainNode {
         });
     }
     override destroy() {
-        engine.boundables.delete(this.label)
+        engine.physics.tickables.delete(this)
         super.destroy()
     }
     initCollider() {
