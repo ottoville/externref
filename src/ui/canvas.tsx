@@ -71,7 +71,7 @@ export class Canvas extends TerraCompoment {
             const sea = new Sea([terrascene]);
             //new testPlane(terrascene);
 
-            const b = new Box([terrascene],undefined,false,'bigbox');
+            const b = new Box([terrascene],undefined,true,'bigbox');
             b.update_scale(terraEngine.rustEngine, 500, 500, 500);
             b.SetTranslation([123,1000,123]);
             b.update_rotation(terraEngine.rustEngine,Math.sin(1.1),0,0,Math.cos(1.1));
@@ -97,9 +97,9 @@ export class Canvas extends TerraCompoment {
         });
 
         const b2 = new Box([mainScene], 300,true,'greenbox',[0,1,0,0]);
-        b2.onPhysicTick=() => {
+   /*     b2.onPhysicTick=() => {
             console.log(...b2.get_translation());
-        }
+        }*/
         b2.update_scale(terraEngine.rustEngine, 30, 30, 30);
 
         const x = 500;

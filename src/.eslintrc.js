@@ -29,6 +29,7 @@ module.exports = {
         "no-var": "off",
         "no-cond-assign": "off",
         "no-this-alias":"off",
-        "require-await":2
+        "require-await":2,
+        "require-atomic-updates":"2"
     }
 };

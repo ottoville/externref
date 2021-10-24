@@ -77,5 +77,6 @@ export class Sun2 extends MainNode {
         super(undefined, undefined, 14,undefined,undefined,1,undefined,undefined,'sun',scenes);
         const renderPipeline=getRenderPipeline(engine.gpu);
         this.drawable=renderPipeline.addDrawableSimple(this,undefined,undefined,undefined);
+        engine.physics.movables.push(this);
     }
 }

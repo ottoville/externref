@@ -72,7 +72,7 @@ export class Box extends SimpleIndexedMesh {
         });
     }
     
-    override async checkCollide() {
+    override checkCollide() {
         const translation = this.get_translation();
         const translationDelta = this.get_velocity();
      //   console.log('checkCollide',...translationDelta)
@@ -95,8 +95,7 @@ export class Box extends SimpleIndexedMesh {
         scaledVelocity[2] = (newPosition[2]-translation[2])/engine.collider.radius[2];
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
-
-        await engine.collideWithWorld();
+        engine.collideWithWorld();
 
         engine.collider.finalPosition[0] *= engine.collider.radius[0]
         engine.collider.finalPosition[1] *= engine.collider.radius[1]

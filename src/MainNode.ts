@@ -8,7 +8,6 @@ declare const engine:Engine;
 export abstract class MainNode extends Mesh {
     onPhysicTick?: (time: number) => void;
     hasGravity = false;
-    checkCollide?(): Promise<void>;
     isStatic = false;
     static uniqueID = 1;
     static Meshes: Map<number, MainNode> = new Map();

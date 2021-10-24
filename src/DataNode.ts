@@ -23,6 +23,10 @@ class pickInfo {
 }
 
 export abstract class DataNode extends MainNode {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    checkCollide():void {
+        // TODO: Generic collision check, object shape is not known
+    }
     readonly pickInfo = new pickInfo();
     protected readonly colliderVerticesV4: number[] = [];
     readonly #triangleFaces: Triangle[] = [];
@@ -57,7 +61,7 @@ export abstract class DataNode extends MainNode {
 
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
         if(has_physic)
-            engine.physics.tickables.add(this);
+            engine.physics.tickables.push(this);
 
 
         //Run this on microtask so the scope who called
@@ -70,7 +74,15 @@ export abstract class DataNode extends MainNode {
         });
     }
     override destroy() {
-        engine.physics.tickables.delete(this)
+        let idx = engine.physics.tickables.indexOf(this);
+        // TODO: save index to property
+        if(idx>=0) {
+            engine.physics.tickables.splice(idx,1);
+        }
+        idx = engine.physics.movables.indexOf(this);
+        if(idx) {
+            engine.physics.movables.splice(idx,1);
+        }
         super.destroy()
     }
     initCollider() {
