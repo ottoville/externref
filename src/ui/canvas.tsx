@@ -97,17 +97,18 @@ export class Canvas extends TerraCompoment {
         });
 
         const b2 = new Box([mainScene], 300,true,'greenbox',[0,1,0,0]);
-   /*     b2.onPhysicTick=() => {
-            console.log(...b2.get_translation());
-        }*/
+        b2.hasGravity=true;
+        b2.onPhysicTick=() => {
+            const velocity=b2.get_velocity();
+            b2.SetTranslationDelta([velocity[0],velocity[1],-3])
+     
+        }
         b2.update_scale(terraEngine.rustEngine, 30, 30, 30);
 
         const x = 500;
         const z = 800;
         // let z = 0;
         b2.SetTranslation([x, 1200, z]);
-       const velocity=b2.get_velocity();
-       b2.SetTranslationDelta([velocity[0],velocity[1],-3])
         //let x2=-1000;
         //@ts-ignore
         let a = 0;

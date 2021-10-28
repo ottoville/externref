@@ -63,7 +63,7 @@ export class Box extends SimpleIndexedMesh {
         label='box'+(uid++),
         color:[number,number,number,number]=[1,0,0,0]
     ) {
-        super(positions, ...create(engine.gpu),label,point_light,has_physic, scenes);
+        super(positions, ...create(engine.gpu), label, point_light, has_physic, scenes);
         this.gpu_custom_data=new Float32Array(color);
         Object.getOwnPropertyNames(Box.prototype).forEach(prop =>  {
             const propDesc=Object.getOwnPropertyDescriptor(Box.prototype, prop);
@@ -72,9 +72,8 @@ export class Box extends SimpleIndexedMesh {
         });
     }
     
-    override checkCollide() {
+    override checkCollide(newPosition:[number,number,number]) {
         const translation = this.get_translation();
-        const translationDelta = this.get_velocity();
      //   console.log('checkCollide',...translationDelta)
      //   console.log('translation',...translation)
         const scaledPosition=engine.collider.scaledPosition;
@@ -82,12 +81,6 @@ export class Box extends SimpleIndexedMesh {
         scaledPosition[1] = translation[1] / engine.collider.radius[1];
         scaledPosition[2] = translation[2] / engine.collider.radius[2];
         const scaledVelocity=engine.collider.scaledVelocity;
-
-        const newPosition= [
-            translation[0]+translationDelta[0],
-            translation[1]+translationDelta[1],
-            translation[2]+translationDelta[2]
-        ] as const
 
 
         scaledVelocity[0] = (newPosition[0]-translation[0])/engine.collider.radius[0];

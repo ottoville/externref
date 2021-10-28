@@ -30,6 +30,7 @@ module.exports = {
         "no-cond-assign": "off",
         "no-this-alias":"off",
         "require-await":2,
-        "require-atomic-updates":"2"
+        "require-atomic-updates":2,
+        "no-promise-executor-return":2
     }
 };

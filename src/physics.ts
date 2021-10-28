@@ -20,7 +20,7 @@ export class Physics {
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
     movables:MainNode[] = []; //Stuff that moves without physic, eg. sun.
-    tickables: ({ checkCollide(): void } & DataNode)[] = []; //Stuff that moves and have collision check
+    tickables: ({ checkCollide(newPosition:readonly [number,number,number]): void } & DataNode)[] = []; //Stuff that moves and have collision check
     tickTime = 21600;  //6 hours
     tickIntervalMs = 100;
     #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
@@ -38,6 +38,11 @@ export class Physics {
 
         return (this.tickTime + (delta/this.#realMSingameSecond));
     }
+    /*
+        There is a flaw in #tick function.
+        When tab is background its not getting called and delta is growing very large.
+        Large delta results large gravity, collision detector will see bigger impact.
+    */
     #tick = () => {
         const timestamp = new Date().getTime();
         if (this.#lastStateChangeTime > this.#lastTickTimeMs) {
@@ -45,6 +50,7 @@ export class Physics {
         } else {
             var delta = (timestamp - this.#lastTickTimeMs) << this.#gameSpeed; // get the delta time since last tick
         }
+        //console.log('delta',new Date().getSeconds(), delta);
         this.#lastTickTimeMs = timestamp;
         this.tickTime += delta / this.#realMSingameSecond;
         this.movables.forEach(movable => {
@@ -66,19 +72,40 @@ export class Physics {
                 tickable.onPhysicTick(delta);
             //@ts-ignore
             const velocity=tickable.get_velocity();
+            const currentTranslation = tickable.get_translation();
+
             if (tickable.hasGravity) {
-                /*tickable.SetTranslationDelta([
+                tickable.SetTranslationDelta([
                     velocity[0],
-                    Math.max(velocity[1] - 9.81/1000 * delta,-1),  //TODO: Take account game speed //TODO Remove cap
+                    Math.max(velocity[1] - 9.81/1000 * delta,-1000),  //TODO: Take account game speed //TODO Set cap to some realistic value
                     velocity[2]]
-                )*/
+                )
             }
             
                 // TODO: Only check collision if some of both object has moved
-                const currentTranslation = tickable.get_translation();
                 if(currentTranslation[0]!==0 || currentTranslation[1]!==0 || currentTranslation[2]!==0) {
-                    tickable.checkCollide();
+                    const newPosition= [
+                        currentTranslation[0]+velocity[0]/1000*delta,
+                        currentTranslation[1]+velocity[1]/1000*delta,
+                        currentTranslation[2]+velocity[2]/1000*delta
+                    ] as const
+                    tickable.checkCollide(newPosition);
+                    //TODO: What if collision is found (collider cannot resolve position without collision)
                     if (engine.collider.rust.collision_not_found) {
+                        //Velocity in m/delta, not m/s
+                        //TODO: If the was not collision at all, these calculations are not needed
+                        const newVelocity = [
+                            engine.collider.finalPosition[0]-currentTranslation[0],
+                            engine.collider.finalPosition[1]-currentTranslation[1],
+                            engine.collider.finalPosition[2]-currentTranslation[2]
+                        ] as const
+                        velocity.set([
+                            newVelocity[0]*1000/delta,
+                            newVelocity[1]*1000/delta,
+                            newVelocity[2]*1000/delta
+                        ])
+                        if(tickable.label==='greenbox')
+                        console.log('velocity', ...velocity);
                         currentTranslation.set(engine.collider.finalPosition); //TODO now it only supports one collider.
                         tickable.update_dynamic_buffer(engine.rustEngine);
                         // engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
