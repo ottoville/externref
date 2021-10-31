@@ -1,8 +1,8 @@
 ﻿import type { Engine } from "engine";
 import type { DataNode } from "DataNode.js";
 import type { MainNode } from "MainNode.js";
-declare const engine:Engine;
-
+declare const engine: Engine;
+const MIN_TICK_DELTA = 110;
 //let Epsilon = 0.001;
 
 /*
@@ -19,8 +19,8 @@ export class Physics {
     #lastStateChangeGameTime = BigInt(21600000); //21600 * 1000; //6 hours
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
-    movables:MainNode[] = []; //Stuff that moves without physic, eg. sun.
-    tickables: ({ checkCollide(newPosition:readonly [number,number,number]): void } & DataNode)[] = []; //Stuff that moves and have collision check
+    movables: MainNode[] = []; //Stuff that moves without physic, eg. sun.
+    tickables: ({ checkCollide(velocityPerDelta: readonly [number, number, number]): void } & DataNode)[] = []; //Stuff that moves and have collision check
     tickTime = 21600;  //6 hours
     tickIntervalMs = 100;
     #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
@@ -28,7 +28,7 @@ export class Physics {
         if (this.#gameSpeed >= 0) {
             const timestamp = new Date().getTime();
             if (this.#lastStateChangeTime > this.#lastTickTimeMs) {
-                var delta = (timestamp - this.#lastStateChangeTime << this.#gameSpeed)+ this.#tickDeltaWhenStateChange
+                var delta = (timestamp - this.#lastStateChangeTime << this.#gameSpeed) + this.#tickDeltaWhenStateChange
             } else {
                 var delta = (timestamp - this.#lastTickTimeMs) << this.#gameSpeed // get the delta time since last tick
             }
@@ -36,27 +36,39 @@ export class Physics {
         else
             var delta = (this.#lastStateChangeTime - this.#lastTickTimeMs) << this.#gameSpeed;
 
-        return (this.tickTime + (delta/this.#realMSingameSecond));
+        return (this.tickTime + (delta / this.#realMSingameSecond));
     }
+
     /*
         There is a flaw in #tick function.
         When tab is background its not getting called and delta is growing very large.
         Large delta results large gravity, collision detector will see bigger impact.
     */
     #tick = () => {
-        const timestamp = new Date().getTime();
+        const timestamp = Date.now();
         if (this.#lastStateChangeTime > this.#lastTickTimeMs) {
-            var delta = ((timestamp - this.#lastStateChangeTime) << this.#gameSpeed) + this.#tickDeltaWhenStateChange
+            var realDeltaInGameTime = ((timestamp - this.#lastStateChangeTime) << this.#gameSpeed) + this.#tickDeltaWhenStateChange
         } else {
-            var delta = (timestamp - this.#lastTickTimeMs) << this.#gameSpeed; // get the delta time since last tick
+            var realDeltaInGameTime = (timestamp - this.#lastTickTimeMs) << this.#gameSpeed; // get the delta time since last tick
         }
-        //console.log('delta',new Date().getSeconds(), delta);
-        this.#lastTickTimeMs = timestamp;
+        if (realDeltaInGameTime > MIN_TICK_DELTA) {
+            var delta = 100;
+            this.#lastTickTimeMs += delta;
+            const queueLength = realDeltaInGameTime / 100;
+            console.log('queue length', queueLength)
+            /*if(queueLength > 100) {
+                delta = realDeltaInGameTime;
+            }*/
+        } else {
+            var delta = realDeltaInGameTime;
+            this.#lastTickTimeMs = timestamp;
+        }
+
         this.tickTime += delta / this.#realMSingameSecond;
         this.movables.forEach(movable => {
-            if(movable.onPhysicTick)
+            if (movable.onPhysicTick)
                 movable.onPhysicTick(delta);
-            const velocity=movable.get_velocity();
+            const velocity = movable.get_velocity();
             if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
                 const currentTranslation = movable.get_translation();
                 currentTranslation.set([
@@ -68,50 +80,111 @@ export class Physics {
             }
         });
         this.tickables.forEach(tickable => {
-            if(tickable.onPhysicTick)
+            if (tickable.onPhysicTick)
                 tickable.onPhysicTick(delta);
-            //@ts-ignore
-            const velocity=tickable.get_velocity();
+
+            const velocity = tickable.get_velocity();
+            const velocityPerDelta: [number, number, number] = [
+                velocity[0] * delta / 1000,
+                velocity[1] * delta / 1000,
+                velocity[2] * delta / 1000
+            ]
             const currentTranslation = tickable.get_translation();
 
-            if (tickable.hasGravity) {
-                tickable.SetTranslationDelta([
-                    velocity[0],
-                    Math.max(velocity[1] - 9.81/1000 * delta,-1000),  //TODO: Take account game speed //TODO Set cap to some realistic value
-                    velocity[2]]
-                )
-            }
-            
-                // TODO: Only check collision if some of both object has moved
-                if(currentTranslation[0]!==0 || currentTranslation[1]!==0 || currentTranslation[2]!==0) {
-                    const newPosition= [
-                        currentTranslation[0]+velocity[0]/1000*delta,
-                        currentTranslation[1]+velocity[1]/1000*delta,
-                        currentTranslation[2]+velocity[2]/1000*delta
-                    ] as const
-                    tickable.checkCollide(newPosition);
-                    //TODO: What if collision is found (collider cannot resolve position without collision)
-                    if (engine.collider.rust.collision_not_found) {
-                        //Velocity in m/delta, not m/s
-                        //TODO: If the was not collision at all, these calculations are not needed
-                        const newVelocity = [
-                            engine.collider.finalPosition[0]-currentTranslation[0],
-                            engine.collider.finalPosition[1]-currentTranslation[1],
-                            engine.collider.finalPosition[2]-currentTranslation[2]
-                        ] as const
-                        velocity.set([
-                            newVelocity[0]*1000/delta,
-                            newVelocity[1]*1000/delta,
-                            newVelocity[2]*1000/delta
-                        ])
-                        if(tickable.label==='greenbox')
-                        console.log('velocity', ...velocity);
-                        currentTranslation.set(engine.collider.finalPosition); //TODO now it only supports one collider.
-                        tickable.update_dynamic_buffer(engine.rustEngine);
-                        // engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
-                    }
+            // TODO: Only check collision if some of both object has moved
+            if (currentTranslation[0] !== 0 || currentTranslation[1] !== 0 || currentTranslation[2] !== 0) {
+
+                if (tickable.hasGravity) {
+                    var freeFallSpeed = 0.5 * 9.81 * Math.pow(delta / 1000, 2);
+                    var velocityY = velocityPerDelta[1] - freeFallSpeed
+                } else {
+                    var velocityY = velocityPerDelta[1]
                 }
+                const scaledVelocity = [
+                    velocityPerDelta[0] / engine.collider.radius[0],
+                    velocityY / engine.collider.radius[1],
+                    velocityPerDelta[2] / engine.collider.radius[2]
+                ] as const
+                tickable.checkCollide(scaledVelocity);
+
+                //TODO: What if collision is found (collider cannot resolve position without collision)
+                if (engine.collider.rust.collision_not_found) {
+                    const newPositionY = engine.collider.scaledPosition[1] + velocityY;
+                    //TODO: Figure out where floating point number loses its accuracy
+                    const freeFall = tickable.hasGravity && Math.abs(engine.collider.finalPosition[1] - newPositionY) < 0.001;
+
+                    engine.collider.finalPosition[0] *= engine.collider.radius[0]
+                    engine.collider.finalPosition[1] *= engine.collider.radius[1]
+                    engine.collider.finalPosition[2] *= engine.collider.radius[2]
+
+
+                    //Velocity in m/delta, not m/s
+                    //TODO: If the was not collision at all, these calculations are not needed
+                    const newVelocity = [
+                        engine.collider.finalPosition[0] - currentTranslation[0],
+                        engine.collider.finalPosition[1] - currentTranslation[1],
+                        engine.collider.finalPosition[2] - currentTranslation[2]
+                    ] as const
+                    if (tickable.label === 'human') {
+                        console.log('finalposition', ...engine.collider.finalPosition)
+                        console.log('newVelocity', ...newVelocity)
+                        if (newVelocity[1] < -9.8) {
+                            // debugger;
+                        }
+                    }
+                    if (freeFall) {
+                        var veloctyYGravity = velocity[1] - delta / 1000 * 9.81
+                    } else {
+                        var veloctyYGravity = newVelocity[1] * 1000 / delta;
+                    }
+                    if (tickable.label === 'human') {
+                        console.log('veloctyYGravity', veloctyYGravity)
+                    }
+                    const finalVelocity: [number, number, number] = [
+                        newVelocity[0] * 1000 / delta,
+                        veloctyYGravity,
+                        newVelocity[2] * 1000 / delta,
+                    ];
+                    tickable.SetTranslationDelta(finalVelocity)
+
+
+                    const translation = tickable.get_translation();
+                    translation.set([
+                        translation[0] + newVelocity[0],
+                        translation[1] + newVelocity[1],
+                        translation[2] + newVelocity[2]
+                    ])
+                    //currentTranslation.set(engine.collider.finalPosition);
+                    tickable.update_dynamic_buffer(engine.rustEngine);
+                    // engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
+                }
+            }
+            /*if(tickable.label==='human') {
+                console.log('velocity',new Date().getSeconds(), ...velocity)
+                console.log('translation',...currentTranslation)
+            }*/
+
+            /* if (tickable.hasGravity) {
+                 //tickable.SetTranslationDelta([
+                 //    velocity[0],
+                 //    Math.max(velocity[1] - 9.81 / 1000 * delta, -1000),
+                 //    velocity[2]]
+                 //)
+                 const newVelocity2:[number,number,number] = [
+                     velocity[0] * delta/1000,
+                     velocity[1] * delta/1000,
+                     velocity[2] * delta/1000
+                 ]
+                 this.checkCollision(currentTranslation, [
+                     newVelocity2[0], newVelocity2[1] -9.81 * delta/1000,newVelocity2[2]
+                 ], delta, tickable);
+             }*/
         });
+        if (realDeltaInGameTime > MIN_TICK_DELTA) {
+            this.#tick();
+        } else {
+            this.#interval = setTimeout(this.#tick, this.tickIntervalMs - (Date.now() - timestamp))
+        }
     }
 
     private createLoop(speed: number, timeToFirstTick = this.tickIntervalMs) {
@@ -119,11 +192,10 @@ export class Physics {
             const firstTickMs = timeToFirstTick >> speed;
             setTimeout(() => {
                 this.#tick();
-                this.#interval = setInterval(this.#tick, this.tickIntervalMs >> speed)
             }, firstTickMs);
         }
         else
-            this.#interval = setInterval(this.#tick , timeToFirstTick >> speed);
+            this.#interval = setTimeout(this.#tick, timeToFirstTick);
     }
     get gameTime() {
         if (this.gameSpeed < 0)
@@ -143,14 +215,14 @@ export class Physics {
         this.#lastStateChangeGameTime = this.gameTime;
         this.#lastStateChangeTime = new Date().getTime();
 
-        clearInterval(this.#interval);
+        clearTimeout(this.#interval);
         this.#timeUntillTick = this.tickIntervalMs - this.#tickDeltaWhenStateChange;
         if (this.#gameSpeed >= 0) {
             this.#tickDeltaWhenStateChange = (new Date().getTime() - this.#lastTickTimeMs) << this.#gameSpeed
         }
         this.#gameSpeed = value;
         if (value >= 0)
-            this.createLoop(0,this.#timeUntillTick); //for now psysic is always run on constant speed
+            this.createLoop(0, this.#timeUntillTick); //for now psysic is always run on constant speed
     }
     get gameSpeed() {
         return this.#gameSpeed;

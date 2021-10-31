@@ -72,7 +72,7 @@ export class Box extends SimpleIndexedMesh {
         });
     }
     
-    override checkCollide(newPosition:[number,number,number]) {
+    override checkCollide(velocityPerDelta:readonly [number,number,number]) {
         const translation = this.get_translation();
      //   console.log('checkCollide',...translationDelta)
      //   console.log('translation',...translation)
@@ -81,17 +81,11 @@ export class Box extends SimpleIndexedMesh {
         scaledPosition[1] = translation[1] / engine.collider.radius[1];
         scaledPosition[2] = translation[2] / engine.collider.radius[2];
         const scaledVelocity=engine.collider.scaledVelocity;
-
-
-        scaledVelocity[0] = (newPosition[0]-translation[0])/engine.collider.radius[0];
-        scaledVelocity[1] = (newPosition[1]-translation[1])/engine.collider.radius[1];
-        scaledVelocity[2] = (newPosition[2]-translation[2])/engine.collider.radius[2];
+        scaledVelocity[0] = velocityPerDelta[0];
+        scaledVelocity[1] = velocityPerDelta[1];
+        scaledVelocity[2] = velocityPerDelta[2];
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
         engine.collideWithWorld();
-
-        engine.collider.finalPosition[0] *= engine.collider.radius[0]
-        engine.collider.finalPosition[1] *= engine.collider.radius[1]
-        engine.collider.finalPosition[2] *= engine.collider.radius[2]
     }
 }

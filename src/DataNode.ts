@@ -24,7 +24,8 @@ class pickInfo {
 
 export abstract class DataNode extends MainNode {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    checkCollide():void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    checkCollide(_velocityPerDelta:[number,number,number]):void {
         // TODO: Generic collision check, object shape is not known
     }
     readonly pickInfo = new pickInfo();
