@@ -3,6 +3,10 @@ import type { DataNode } from "DataNode.js";
 import type { MainNode } from "MainNode.js";
 declare const engine: Engine;
 const MIN_TICK_DELTA = 110;
+
+const GRAVITY = 9.80665;
+const HALF_GRAVITY = 0.5*GRAVITY;
+
 //let Epsilon = 0.001;
 
 /*
@@ -65,6 +69,9 @@ export class Physics {
         }
 
         this.tickTime += delta / this.#realMSingameSecond;
+        const dt = delta / 1000;
+        const dt_gravity = dt * GRAVITY;
+        const delta_multiplier = 1000 / delta;
         this.movables.forEach(movable => {
             if (movable.onPhysicTick)
                 movable.onPhysicTick(delta);
@@ -85,9 +92,9 @@ export class Physics {
 
             const velocity = tickable.get_velocity();
             const velocityPerDelta: [number, number, number] = [
-                velocity[0] * delta / 1000,
-                velocity[1] * delta / 1000,
-                velocity[2] * delta / 1000
+                velocity[0] * dt,
+                velocity[1] * dt,
+                velocity[2] * dt
             ]
             const currentTranslation = tickable.get_translation();
 
@@ -95,7 +102,7 @@ export class Physics {
             if (currentTranslation[0] !== 0 || currentTranslation[1] !== 0 || currentTranslation[2] !== 0) {
 
                 if (tickable.hasGravity) {
-                    var freeFallSpeed = 0.5 * 9.81 * Math.pow(delta / 1000, 2);
+                    var freeFallSpeed = HALF_GRAVITY * dt * dt;
                     var velocityY = velocityPerDelta[1] - freeFallSpeed
                 } else {
                     var velocityY = velocityPerDelta[1]
@@ -125,25 +132,15 @@ export class Physics {
                         engine.collider.finalPosition[1] - currentTranslation[1],
                         engine.collider.finalPosition[2] - currentTranslation[2]
                     ] as const
-                    if (tickable.label === 'human') {
-                        console.log('finalposition', ...engine.collider.finalPosition)
-                        console.log('newVelocity', ...newVelocity)
-                        if (newVelocity[1] < -9.8) {
-                            // debugger;
-                        }
-                    }
                     if (freeFall) {
-                        var veloctyYGravity = velocity[1] - delta / 1000 * 9.81
+                        var veloctyYGravity = velocity[1] - dt_gravity;
                     } else {
-                        var veloctyYGravity = newVelocity[1] * 1000 / delta;
-                    }
-                    if (tickable.label === 'human') {
-                        console.log('veloctyYGravity', veloctyYGravity)
+                        var veloctyYGravity = newVelocity[1] * delta_multiplier;
                     }
                     const finalVelocity: [number, number, number] = [
-                        newVelocity[0] * 1000 / delta,
+                        newVelocity[0] * delta_multiplier,
                         veloctyYGravity,
-                        newVelocity[2] * 1000 / delta,
+                        newVelocity[2] * delta_multiplier,
                     ];
                     tickable.SetTranslationDelta(finalVelocity)
 
@@ -159,26 +156,6 @@ export class Physics {
                     // engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
                 }
             }
-            /*if(tickable.label==='human') {
-                console.log('velocity',new Date().getSeconds(), ...velocity)
-                console.log('translation',...currentTranslation)
-            }*/
-
-            /* if (tickable.hasGravity) {
-                 //tickable.SetTranslationDelta([
-                 //    velocity[0],
-                 //    Math.max(velocity[1] - 9.81 / 1000 * delta, -1000),
-                 //    velocity[2]]
-                 //)
-                 const newVelocity2:[number,number,number] = [
-                     velocity[0] * delta/1000,
-                     velocity[1] * delta/1000,
-                     velocity[2] * delta/1000
-                 ]
-                 this.checkCollision(currentTranslation, [
-                     newVelocity2[0], newVelocity2[1] -9.81 * delta/1000,newVelocity2[2]
-                 ], delta, tickable);
-             }*/
         });
         if (realDeltaInGameTime > MIN_TICK_DELTA) {
             this.#tick();
