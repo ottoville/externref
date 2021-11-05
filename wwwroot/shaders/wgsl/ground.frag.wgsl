@@ -88,8 +88,8 @@ fn main(
   [[location(0)]]  v_uv : vec2<f32>,
   [[location(1)]] normal : vec3<f32>,
   [[location(2)]]  position : vec3<f32>,
-  [[location(3)]]  id : u32,
-  [[location(4)]]  scenes : u32) -> Output {
+  [[location(3), interpolate(flat)]]  id : u32,
+  [[location(4), interpolate(flat)]]  scenes : u32) -> Output {
 
     var output:Output;
   //outColor = vec4<f32>(ambient,0.0)+textureSample(myTexture, mySampler, v_uv) *  vec4<f32>(shading,shading,shading,1.0);

@@ -37,7 +37,7 @@ struct Output {
   [[builtin(position)]] Position : vec4<f32>;
   [[location(0)]] v_uv : vec4<f32>;
   [[location(1)]] position : vec3<f32>;
-  [[location(2)]] id : u32;
+  [[location(2), interpolate(flat)]] id : u32;
 };
 
 [[stage(vertex)]]

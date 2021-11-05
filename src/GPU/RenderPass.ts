@@ -104,7 +104,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 view: this.renderTargets.swap.view,
                 resolveTarget: this.gpu.context.getCurrentTexture().createView(),
                 loadValue: this.renderTargets.swap.loadValue,
-                storeOp: "store"
+                storeOp: "store" //TODO: this can be discard?
             } : {
                 view: this.gpu.context.getCurrentTexture().createView(),
                 loadValue: this.renderTargets.swap.loadValue,

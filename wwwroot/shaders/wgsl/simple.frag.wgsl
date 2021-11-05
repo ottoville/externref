@@ -6,7 +6,7 @@ struct Output {
 [[stage(fragment)]]
 fn main(
   [[location(0)]]  normal : vec3<f32>,
-  [[location(1)]]  id : u32,
+  [[location(1), interpolate(flat)]]  id : u32,
   [[location(2)]] color:vec3<f32>
 ) -> Output {
   var output:Output;
