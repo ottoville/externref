@@ -158,7 +158,7 @@ export class Engine {
         //Init rust wasm
         const rust = await init();
 
-        const obj = await WebAssembly.instantiateStreaming(await fetch('collider/colliderO.wasm'), {
+        const obj = await WebAssembly.instantiateStreaming(await fetch('collider/colliderSIMDO.wasm'), {
             console: {
                 log: function (arg: string) {
                     console.log(arg);

@@ -5,7 +5,6 @@ declare const engine: Engine;
 const MIN_TICK_DELTA = 110;
 
 const GRAVITY = 9.80665;
-const HALF_GRAVITY = 0.5*GRAVITY;
 
 //let Epsilon = 0.001;
 
@@ -48,6 +47,7 @@ export class Physics {
         When tab is background its not getting called and delta is growing very large.
         Large delta results large gravity, collision detector will see bigger impact.
     */
+    #deltaOld=1
     #tick = () => {
         const timestamp = Date.now();
         if (this.#lastStateChangeTime > this.#lastTickTimeMs) {
@@ -70,7 +70,7 @@ export class Physics {
 
         this.tickTime += delta / this.#realMSingameSecond;
         const dt = delta / 1000;
-        const dt_gravity = dt * GRAVITY;
+
         const delta_multiplier = 1000 / delta;
         this.movables.forEach(movable => {
             if (movable.onPhysicTick)
@@ -102,8 +102,8 @@ export class Physics {
             if (currentTranslation[0] !== 0 || currentTranslation[1] !== 0 || currentTranslation[2] !== 0) {
 
                 if (tickable.hasGravity) {
-                    var freeFallSpeed = HALF_GRAVITY * dt * dt;
-                    var velocityY = velocityPerDelta[1] - freeFallSpeed
+                    // Todo: Use general acceleration for all calculations
+                    var velocityY = tickable.lastVelocityDelta[1]*(dt/this.#deltaOld) + -GRAVITY*dt*dt
                 } else {
                     var velocityY = velocityPerDelta[1]
                 }
@@ -116,47 +116,33 @@ export class Physics {
 
                 //TODO: What if collision is found (collider cannot resolve position without collision)
                 if (engine.collider.rust.collision_not_found) {
-                    const newPositionY = engine.collider.scaledPosition[1] + velocityY;
-                    //TODO: Figure out where floating point number loses its accuracy
-                    const freeFall = tickable.hasGravity && Math.abs(engine.collider.finalPosition[1] - newPositionY) < 0.001;
-
                     engine.collider.finalPosition[0] *= engine.collider.radius[0]
                     engine.collider.finalPosition[1] *= engine.collider.radius[1]
                     engine.collider.finalPosition[2] *= engine.collider.radius[2]
 
-
-                    //Velocity in m/delta, not m/s
                     //TODO: If the was not collision at all, these calculations are not needed
-                    const newVelocity = [
+                    tickable.lastVelocityDelta = [
                         engine.collider.finalPosition[0] - currentTranslation[0],
                         engine.collider.finalPosition[1] - currentTranslation[1],
                         engine.collider.finalPosition[2] - currentTranslation[2]
                     ] as const
-                    if (freeFall) {
-                        var veloctyYGravity = velocity[1] - dt_gravity;
-                    } else {
-                        var veloctyYGravity = newVelocity[1] * delta_multiplier;
-                    }
-                    const finalVelocity: [number, number, number] = [
-                        newVelocity[0] * delta_multiplier,
-                        veloctyYGravity,
-                        newVelocity[2] * delta_multiplier,
-                    ];
-                    tickable.SetTranslationDelta(finalVelocity)
-
-
+                    tickable.SetTranslationDelta([
+                        tickable.lastVelocityDelta[0] * delta_multiplier,
+                        tickable.lastVelocityDelta[1] * delta_multiplier,
+                        tickable.lastVelocityDelta[2] * delta_multiplier,
+                    ])
                     const translation = tickable.get_translation();
                     translation.set([
-                        translation[0] + newVelocity[0],
-                        translation[1] + newVelocity[1],
-                        translation[2] + newVelocity[2]
+                        translation[0] + tickable.lastVelocityDelta[0],
+                        translation[1] + tickable.lastVelocityDelta[1],
+                        translation[2] + tickable.lastVelocityDelta[2]
                     ])
                     //currentTranslation.set(engine.collider.finalPosition);
                     tickable.update_dynamic_buffer(engine.rustEngine);
-                    // engine.mainCamera.position=engine.collider.finalPosition; //TODO: move to human.ts
                 }
             }
         });
+        this.#deltaOld=dt;
         if (realDeltaInGameTime > MIN_TICK_DELTA) {
             this.#tick();
         } else {
