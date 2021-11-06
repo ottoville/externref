@@ -28,7 +28,7 @@
       "DOM.Iterable"
     ],
     "typeRoots": [ "./node_modules/@types/", "./node_modules/@webgpu/"],
-    
+    "resolveJsonModule": true,
     "moduleResolution": "node",
     "allowJs": true,
     "incremental": true,
