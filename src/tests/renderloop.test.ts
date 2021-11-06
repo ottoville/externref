@@ -11,7 +11,7 @@ export const run = (assert: assertionType) => {
     describe('Physic time ', function () {
       it('Delta has changed', async function () {
         const value0=engine.deltaView[0];
-        await new Promise(res => setTimeout(res,1234));
+        await new Promise(res => {setTimeout(res,1234)});
         const value1=engine.deltaView[0];
 
         assert.ok(Number.isFinite(value1));

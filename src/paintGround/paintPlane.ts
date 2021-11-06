@@ -116,7 +116,7 @@ export class paintPlane extends paintGround {
         this.#rowGenerator = null;
         this.#rows = 0;
         this.#columns = Math.floor(height / 10);
-        this.#mesh.get_translation().set([this.#startingPoint[0] - 0.5,5, this.#startingPoint[1] - 1])
+        this.#mesh.translation = [this.#startingPoint[0] - 0.5,5, this.#startingPoint[1] - 1];
        /* this.#mesh.translation[0] = this.#startingPoint[0] - 0.5
         this.#mesh.translation[1] = 5;
         this.#mesh.translation[2] = this.#startingPoint[1] - 1;*/
