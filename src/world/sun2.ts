@@ -58,8 +58,8 @@ export class Sun2 extends MainNode {
 
 
         sunPositionY = sunPositionY * yAngle;
-        const translation=this.get_translation();
-        this.SetTranslationDelta([sunPositionX - translation[0], sunPositionY - translation[1], sunPositionZ - translation[2]]);
+        const translation=this.translation;
+        this.velocity = [sunPositionX - translation[0], sunPositionY - translation[1], sunPositionZ - translation[2]];
         //const ambientR = this.clamp((sunPositionY * 2 + 0.4) * 0.8, 0.05, 0.3);
         const ambientR = this.#clamp((sunPositionY + 0.4) * 0.8, 0.05, 0.3);
         const ambientGB = this.#clamp((sunPositionY + 0.1) * 0.4 - 0.1, 0.05, 0.3);

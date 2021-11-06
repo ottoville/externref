@@ -1,6 +1,6 @@
 ﻿import { Mesh } from "/js/engine/engine.js";
 
-import { TerraMatrix, TerraVector3 } from "./Math.js";
+import { ReadOnlyTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Scene } from "./Scene.js";
 import type { Engine } from "engine.js";
 declare const engine:Engine;
@@ -18,20 +18,27 @@ export abstract class MainNode extends Mesh {
 
     get_transformation = () => new TerraMatrix(engine.memory.buffer, this.gpu_pointer)//new TerraMatrix(this.data.buffer);
 
-    get_velocity() {
-        return new TerraVector3(engine.memory.buffer, this.gpu_pointer + 16 * Float32Array.BYTES_PER_ELEMENT)
-    }
-    get_translation() {
-        return new TerraVector3(engine.memory.buffer, this.gpu_pointer + 12 * Float32Array.BYTES_PER_ELEMENT);
-    }
-    SetTranslationDelta(value: [number, number, number] | TerraVector3) {
-        this.get_velocity().set(value);
-        this.update_dynamic_buffer(engine.rustEngine);
-    }
 
-    SetTranslation(value: [number, number, number] | TerraVector3) {
-        this.get_translation().set(value);
+    get translation(): ReadOnlyTerraVector3 {
+        return new ReadOnlyTerraVector3(engine.memory.buffer, this.translation_pointer);
+    }
+    set translation(value: [number, number, number] | TerraVector3) {
+        const translation =  new TerraVector3(engine.memory.buffer, this.gpu_pointer + 12 * Float32Array.BYTES_PER_ELEMENT);
+        translation.set(value);
         this.update_dynamic_buffer(engine.rustEngine);
+    }
+    get velocity(): ReadOnlyTerraVector3 {
+        return new TerraVector3(engine.memory.buffer, this.velocity_pointer)
+    }
+    set velocity(value: [number, number, number] | TerraVector3) {
+        this.velocity.set(value);
+        this.update_dynamic_buffer(engine.rustEngine);
+    }
+    get acceleration(): ReadOnlyTerraVector3 {
+        return new TerraVector3(engine.memory.buffer, this.acceleration_pointer)
+    }
+    set acceleration(value: [number, number, number] | TerraVector3) {
+        this.acceleration.set(value);
     }
     get bounding_min() {
         return new TerraVector3(engine.memory.buffer,super.bounding_min_pointer);

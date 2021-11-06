@@ -14,13 +14,12 @@ export class Human extends Box {
             if(propDesc)
                 Object.defineProperty(this, prop, propDesc);
         });
-        this.SetTranslation([-239.37437438964844, 1400, 910.1807250976562]);
+        this.translation = [-239.37437438964844, 1400, 910.1807250976562];
         this.update_scale(engine.rustEngine,50, 50, 50);
-       // engine.inputManager?.destroy();
-       // engine.inputManager=new MeshCamera(engine.mainCamera);
+        engine.inputManager?.destroy();
+        engine.inputManager=new MeshCamera(engine.mainCamera);
     }
     override onPhysicTick = () => {
-
-       // this.worldPosition.SetTranslationDelta([0,-1,0])
+        engine.mainCamera.position=this.translation; //TODO: move to human.ts
     }
 }

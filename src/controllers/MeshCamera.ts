@@ -118,33 +118,38 @@ export class MeshCamera implements CameraController {
     }
     lastTranslation=new TerraVector3();
     checkInputs() {
-        const translation = this.#mesh.get_translation();
-        console.log(translation)
+        const translation = this.#mesh.translation;
 
         if(this.lastTranslation[1] === translation[1] && this.#arrowKeysDown === 0)
             return false;
         //TODO update velocity, not translation
-        const translationDelta = this.#mesh.get_velocity();
+        const translationDelta = this.#mesh.velocity;
 
         if((this.#arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
             const direction=this.camera.direction;
-            translationDelta[0]-=(direction[0]*this.#velocity)
-            translationDelta[1]-=(direction[1]*this.#velocity)
-            translationDelta[2]-=(direction[2]*this.#velocity)
+            this.#mesh.velocity=[
+                translationDelta[0] - (direction[0]*this.#velocity),
+                translationDelta[1] - (direction[1]*this.#velocity),
+                translationDelta[2] - (direction[2]*this.#velocity)
+            ]
         }
         if((this.#arrowKeysDown & ARROW_KEYS.DOWN) === ARROW_KEYS.DOWN) {
             const direction=this.camera.direction;
-            translationDelta[0]+=(direction[0]*this.#velocity)
-            translationDelta[1]+=(direction[1]*this.#velocity)
-            translationDelta[2]+=(direction[2]*this.#velocity)
+            this.#mesh.velocity=[
+                translationDelta[0] + (direction[0]*this.#velocity),
+                translationDelta[1] + (direction[1]*this.#velocity),
+                translationDelta[2] + (direction[2]*this.#velocity)
+            ]
         }
 
         //Limit speed to 1
         const length=Math.sqrt(translationDelta[0]*translationDelta[0] + translationDelta[1]*translationDelta[1] + translationDelta[2]*translationDelta[2])
         if(length>10) {
-            translationDelta[0]/=10;
-            translationDelta[1]/=10;
-            translationDelta[2]/=10;
+            this.#mesh.velocity=[
+                translationDelta[0] / 10,
+                translationDelta[1] / 10,
+                translationDelta[2] / 10
+            ]
         }
 
         
@@ -170,8 +175,8 @@ export class MeshCamera implements CameraController {
     #busy=false;
     async calculateCameraPositionAndTarget_deprecated() {
         this.#busy=true;
-        const translation = this.#mesh.get_translation();
-        const translationDelta = this.#mesh.get_velocity();
+        const translation = this.#mesh.translation;
+        const translationDelta = this.#mesh.velocity;
         
         //TODO: apply gravity alwaus not only on input
         //this.#position[1]-=0.3
@@ -220,11 +225,9 @@ export class MeshCamera implements CameraController {
                 scaledVelocity[2] = (translation[2] - engine.collider.finalPosition[2])
         */
                 
-                
-                
                 console.log('finalposition',...engine.collider.finalPosition)
                 this.camera.position=engine.collider.finalPosition;
-                translation.set(engine.collider.finalPosition)
+                this.#mesh.translation = engine.collider.finalPosition;
                 this.lastTranslation.set(engine.collider.finalPosition);
             }
         } else {

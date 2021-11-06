@@ -73,7 +73,7 @@ export class Box extends SimpleIndexedMesh {
     }
     
     override checkCollide(velocityPerDelta:readonly [number,number,number]) {
-        const translation = this.get_translation();
+        const translation = this.translation;
      //   console.log('checkCollide',...translationDelta)
      //   console.log('translation',...translation)
         const scaledPosition=engine.collider.scaledPosition;

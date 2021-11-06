@@ -265,6 +265,18 @@ impl Mesh {
         self.gpu_mesh.custom[2]=data[2];
         self.gpu_mesh.custom[3]=data[3];
     }
+    #[wasm_bindgen(getter)]
+    pub fn translation_pointer(&self) -> *const Vec4<f32> {
+        &self.gpu_mesh.transformation.w
+    }
+    #[wasm_bindgen(getter)]
+    pub fn velocity_pointer(&self) -> *const [f32; 4] {
+        &self.gpu_mesh.delta
+    }
+    #[wasm_bindgen(getter)]
+    pub fn acceleration_pointer(&self) -> *const [f32; 4] {
+        &self.gpu_mesh.acceleration
+    }
     pub fn set_point_light(&mut self, engine:&mut Engine, range:f32) {
         self.gpu_mesh.set_point_light(engine, range, self.gpu_alignment);
     }

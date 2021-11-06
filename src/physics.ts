@@ -75,9 +75,9 @@ export class Physics {
         this.movables.forEach(movable => {
             if (movable.onPhysicTick)
                 movable.onPhysicTick(delta);
-            const velocity = movable.get_velocity();
+            const velocity = movable.velocity;
             if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
-                const currentTranslation = movable.get_translation();
+                const currentTranslation = movable.translation;
                 currentTranslation.set([
                     currentTranslation[0] + velocity[0],
                     currentTranslation[1] + velocity[1],
@@ -90,13 +90,13 @@ export class Physics {
             if (tickable.onPhysicTick)
                 tickable.onPhysicTick(delta);
 
-            const velocity = tickable.get_velocity();
+            const velocity = tickable.velocity;
             const velocityPerDelta: [number, number, number] = [
                 velocity[0] * dt,
                 velocity[1] * dt,
                 velocity[2] * dt
             ]
-            const currentTranslation = tickable.get_translation();
+            const currentTranslation = tickable.translation;
 
             // TODO: Only check collision if some of both object has moved
             if (currentTranslation[0] !== 0 || currentTranslation[1] !== 0 || currentTranslation[2] !== 0) {
@@ -126,12 +126,12 @@ export class Physics {
                         engine.collider.finalPosition[1] - currentTranslation[1],
                         engine.collider.finalPosition[2] - currentTranslation[2]
                     ] as const
-                    tickable.SetTranslationDelta([
+                    tickable.velocity =[
                         tickable.lastVelocityDelta[0] * delta_multiplier,
                         tickable.lastVelocityDelta[1] * delta_multiplier,
                         tickable.lastVelocityDelta[2] * delta_multiplier,
-                    ])
-                    const translation = tickable.get_translation();
+                    ]
+                    const translation = tickable.translation;
                     translation.set([
                         translation[0] + tickable.lastVelocityDelta[0],
                         translation[1] + tickable.lastVelocityDelta[1],

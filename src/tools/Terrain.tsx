@@ -154,7 +154,7 @@ export class TerrainTool extends MainNode {
             this.#pick.position[0] = pickInfo.position[0];
             this.#pick.position[1] = pickInfo.position[1];
             this.#pick.position[2] = pickInfo.position[2];
-            this.SetTranslation([pickInfo.position[0], 0, pickInfo.position[2]]);
+            this.translation = [pickInfo.position[0], 0, pickInfo.position[2]];
         }
 
     }

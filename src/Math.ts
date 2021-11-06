@@ -205,6 +205,11 @@ export class TerraVector3 extends Float32Array {
 
     }
 }
+export class ReadOnlyTerraVector3 extends TerraVector3 {
+    declare readonly 0: number
+    declare readonly 1: number
+    declare readonly 2: number
+}
 export class TerraVector4 extends Float32Array {
     declare 0: number
     declare 1: number
