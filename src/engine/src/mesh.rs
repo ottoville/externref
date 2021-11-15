@@ -1,7 +1,7 @@
 
-use wasm_bindgen::prelude::*;
 
 pub use crate::engine::Engine;
+pub use crate::engine::ENGINE;
 pub use crate::Vec3;
 pub use crate::Vec3_f32;
 pub use crate::Vec4;
@@ -15,43 +15,203 @@ pub use crate::drawable::Drawable;
 pub use crate::drawable::DrawCommand;
 pub use crate::drawable::DrawType;
 
-#[wasm_bindgen]
 pub struct Mesh {
-    #[wasm_bindgen(readonly)]
     pub id:u32,
-    #[wasm_bindgen(readonly)]
     pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
-    #[wasm_bindgen(skip)]
     pub gpu_mesh: GPUMesh,
     rotation: Vec4<f32>,
     scaling: Vec3<f32>,
-    #[wasm_bindgen(skip)]
     pub geometry:Geometry,
     pub positions_count:usize,
     pub strip:bool,
-    #[wasm_bindgen(skip)]
     pub draw_command: DrawCommand
 }
-#[wasm_bindgen]
+/*
 extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
-    #[wasm_bindgen(js_namespace = console)]
     fn error(s: &str);
 }
-
-#[wasm_bindgen]
+*/
+#[no_mangle]
+pub unsafe extern "C" fn new_mesh(
+    id:u32,
+    has_bounding:bool,
+    has_geometry:bool,
+    positions_count:usize,
+    vertices_stride:usize,
+    point_light:f32,
+    directional_light:f32,
+    scenes:f32,
+    static_faces:bool,
+    strip:bool) -> *mut Mesh {
+        let mesh = Box::new(Mesh::new(id, has_bounding, has_geometry,positions_count,vertices_stride,point_light,directional_light,scenes,static_faces,strip));
+        let ptr=Box::leak(mesh);
+        (*ptr).update_dynamic_buffer();
+        return ptr;
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_vertices(mesh:*mut Mesh, ptr:*mut f32, length:usize) {
+    let vertices=Vec::from_raw_parts(ptr, length, length);
+    (*mesh).geometry.update_vertices(vertices);
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_indices(mesh:*mut Mesh, ptr:*mut usize, length:usize) {
+    let indices=Vec::from_raw_parts(ptr, length, length);
+    (*mesh).geometry.indices=indices;
+    (*mesh).geometry.allocate_faces();
+}
+#[no_mangle]
+pub unsafe extern "C" fn vertices_pointer(mesh: *const Mesh) -> *const f32 {
+    (*mesh).geometry.vertices.as_ptr()
+}
+#[no_mangle]
+pub unsafe extern "C" fn last_collider_world_vertices_pointer(mesh: *const Mesh) -> *const f32 {
+    (*mesh).geometry.last_collider_world_vertices.as_ptr()
+}
+#[no_mangle]
+pub unsafe extern "C" fn vertices_count(mesh_ptr:*const Mesh) -> usize {
+    (*mesh_ptr).geometry.vertices.len() / (*mesh_ptr).geometry.vertices_stride
+}
+#[no_mangle]
+pub unsafe extern "C" fn faces_count(mesh_ptr:*const Mesh) -> usize {
+    (*mesh_ptr).geometry.faces_count()
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_scale(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32) {
+    (*mesh_ptr).scaling.x = x;
+    (*mesh_ptr).scaling.y = y;
+    (*mesh_ptr).scaling.z = z;
+    (*mesh_ptr).on_update();
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_dynamic_buffer(mesh_ptr:*const Mesh) {
+    (*mesh_ptr).update_dynamic_buffer();
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_rotation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32, w: f32) {
+    (*mesh_ptr).rotation.x = x;
+    (*mesh_ptr).rotation.y = y;
+    (*mesh_ptr).rotation.z = z;
+    (*mesh_ptr).rotation.w = w;
+    (*mesh_ptr).on_update();
+}
+#[no_mangle]
+pub unsafe extern "C" fn indices_pointer(mesh_ptr:*const Mesh) -> *const usize {
+    (*mesh_ptr).geometry.indices.as_ptr()
+}
+#[no_mangle]
+pub unsafe extern "C" fn gpu_alignment(mesh_ptr:*const Mesh) -> u32 {
+    (*mesh_ptr).gpu_alignment
+}
+#[no_mangle]
+pub unsafe extern "C" fn positions_count(mesh_ptr:*const Mesh) -> usize {
+    (*mesh_ptr).positions_count
+}
+#[no_mangle]
+pub unsafe extern "C" fn id(mesh_ptr:*const Mesh) -> u32 {
+    (*mesh_ptr).id
+}
+#[no_mangle]
+pub unsafe extern "C" fn strip(mesh_ptr:*const Mesh) -> bool {
+    (*mesh_ptr).strip
+}
+#[no_mangle]
+pub unsafe extern "C" fn collider_planes_parallel_pointer(mesh_ptr:*const Mesh) -> *const [f32; 4] {
+    (*mesh_ptr).geometry.collider_planes_parallel.as_ptr()
+}
+#[no_mangle]
+pub unsafe extern "C" fn gpu_pointer(mesh_ptr:*const Mesh) -> *const Vec4<Vec4<f32>> {
+    &(*mesh_ptr).gpu_mesh.transformation
+}
+#[no_mangle]
+pub unsafe extern "C" fn translation_pointer(mesh_ptr:*const Mesh) -> *const Vec4<f32> {
+    &(*mesh_ptr).gpu_mesh.transformation.w
+}
+#[no_mangle]
+pub unsafe extern "C" fn velocity_pointer(mesh_ptr:*const Mesh) -> *const [f32; 4] {
+    &(*mesh_ptr).gpu_mesh.delta
+}
+#[no_mangle]
+pub unsafe extern "C" fn bounding_min_pointer(mesh_ptr:*mut Mesh) -> *const Vec3_f32 {
+    (*mesh_ptr).geometry.update_bounding_box(&(*mesh_ptr).gpu_mesh.transformation);
+    (&(*mesh_ptr).geometry.bounding_box.min) as *const Vec3_f32
+}
+#[no_mangle]
+pub unsafe extern "C" fn bounding_max_pointer(mesh_ptr:*mut Mesh) -> *const Vec3_f32 {
+    (*mesh_ptr).geometry.update_bounding_box(&(*mesh_ptr).gpu_mesh.transformation);
+    (&(*mesh_ptr).geometry.bounding_box.max) as *const Vec3_f32
+}
+#[no_mangle]
+pub unsafe extern "C" fn scale_x(mesh_ptr:*mut Mesh) -> f32 {
+    (*mesh_ptr).scaling.x
+}
+#[no_mangle]
+pub unsafe extern "C" fn scale_y(mesh_ptr:*mut Mesh) -> f32 {
+    (*mesh_ptr).scaling.y
+}
+#[no_mangle]
+pub unsafe extern "C" fn scale_z(mesh_ptr:*mut Mesh) -> f32 {
+    (*mesh_ptr).scaling.z
+}
+#[no_mangle]
+pub unsafe extern "C" fn vertices_stride(mesh_ptr:*mut Mesh) -> usize {
+    (*mesh_ptr).geometry.vertices_stride
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_faces(mesh_ptr:*mut Mesh, ptr:*mut Plane, length:usize) {
+    let planes=Vec::from_raw_parts(ptr, length/4, length/4);
+    (*mesh_ptr).geometry.collider_planes=Vec::with_capacity(planes.len());
+    (*mesh_ptr).geometry.collider_planes_parallel=Vec::with_capacity(planes.len());
+    (*mesh_ptr).geometry.faces.planes=planes;
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_gpu_custom_data(mesh_ptr:*mut Mesh, data_0:f32, data_1:f32,data_2:f32,data_3:f32) {
+    (*mesh_ptr).gpu_mesh.custom[0]=data_0;
+    (*mesh_ptr).gpu_mesh.custom[1]=data_1;
+    (*mesh_ptr).gpu_mesh.custom[2]=data_2;
+    (*mesh_ptr).gpu_mesh.custom[3]=data_3;
+}
+#[no_mangle]
+pub unsafe extern "C" fn collider_faces_pointer(mesh_ptr:*mut Mesh) -> *const ColliderPlane {
+    (*mesh_ptr).geometry.collider_planes.as_ptr()
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_scenes(mesh_ptr:*mut Mesh, scenes: u32) {
+    (*mesh_ptr).gpu_mesh.scenes = scenes;
+    (*mesh_ptr).update_dynamic_buffer();
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_scale_and_rotation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32, rx: f32, ry: f32, rz: f32, rw: f32) {
+    (*mesh_ptr).scaling.x = x;
+    (*mesh_ptr).scaling.y = y;
+    (*mesh_ptr).scaling.z = z;
+    (*mesh_ptr).rotation.x = rx;
+    (*mesh_ptr).rotation.y = ry;
+    (*mesh_ptr).rotation.z = rz;
+    (*mesh_ptr).rotation.w = rw;
+    (*mesh_ptr).on_update();
+}
+#[no_mangle]
+pub unsafe extern "C" fn faces_pointer(mesh_ptr:*mut Mesh) -> *const Plane {
+    if !(*mesh_ptr).geometry.static_faces && (*mesh_ptr).geometry.faces.planes.len() == 0 {
+        panic!("Not implemented yet, TODO: Generate faces");
+        //Remember to allocate memory for collider planes also and otger collider stuff also
+    }
+    return (*mesh_ptr).geometry.faces.planes.as_ptr();
+}
+#[no_mangle]
+pub unsafe extern "C" fn bounding_vectors_pointer_simd(mesh_ptr:*mut Mesh) -> *const Vec3<Vec4<f32>> {
+    (*mesh_ptr).geometry.update_bounding_box(&(*mesh_ptr).gpu_mesh.transformation);
+    (&(*mesh_ptr).geometry.bounding_box.vectors_simd) as *const Vec3<Vec4<f32>>
+}
 impl Mesh {
     pub fn draw(&self) -> *const usize {
         &self.draw_command as *const _ as *const usize
     }
 }
 
-#[wasm_bindgen]
 impl Mesh {
-    #[wasm_bindgen(constructor)]
-    pub fn new(
-        engine: &mut Engine,
+    pub unsafe fn new(
         id:u32,
         has_bounding:bool,
         has_geometry:bool,
@@ -65,7 +225,7 @@ impl Mesh {
 
         let m = Mesh {
             id,
-            gpu_alignment: engine.allocate_gpu(),
+            gpu_alignment: ENGINE.allocate_gpu(),
             gpu_mesh: GPUMesh {
                 transformation: Vec4 {
                     x: Vec4 { x:1.0, y:0.0, z:0.0, w:0.0},
@@ -108,172 +268,48 @@ impl Mesh {
             }
         };
         if point_light > 0.0 {
-            engine.point_lights.push(m.gpu_alignment);
-            engine.update_point_lights();
+            ENGINE.point_lights.push(m.gpu_alignment);
+            ENGINE.update_point_lights();
         }
         if directional_light > 0.0 {
-            engine.directional_lights.push(m.gpu_alignment);
-            engine.update_directional_lights();
+            ENGINE.directional_lights.push(m.gpu_alignment);
+            ENGINE.update_directional_lights();
         }
-        m.update_dynamic_buffer(engine);
         return m;
     }
     /*pub fn draw(&self) {
 
     }*/
-    pub fn update_dynamic_buffer(&self, engine:&mut Engine) {
-        engine.gpu_queue2.push((&self.gpu_mesh, self.gpu_alignment));
+    pub unsafe fn update_dynamic_buffer(&self) {
+        ENGINE.gpu_queue2.push((&self.gpu_mesh, self.gpu_alignment));
     }
-    #[wasm_bindgen(getter)]
-    pub fn vertices_count(&self) -> usize {
-        self.geometry.vertices.len() / self.geometry.vertices_stride
-    }
-    pub fn set_scenes(&mut self, engine: &mut Engine, scenes: u32) {
-        self.gpu_mesh.scenes = scenes;
-        self.update_dynamic_buffer(engine);
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_indices(&mut self, indices: Vec<usize>) {
-        &self.geometry.set_indices(indices);
-        self.geometry.allocate_faces();
-    }
-    #[wasm_bindgen(getter)]
-    pub fn indices_pointer(&self) -> *const usize {
-        self.geometry.indices.as_ptr()
-    }
-    #[wasm_bindgen(getter)]
-    pub fn vertices_pointer(&self) -> *const f32 {
-        self.geometry.vertices.as_ptr()
-    }
-    #[wasm_bindgen(getter)]
-    pub fn vertices_stride(&self) -> usize {
-        self.geometry.vertices_stride
-    }
-    pub fn set_vertices(&mut self, vertices:Vec<f32>) {
-        self.geometry.update_vertices(vertices);
-    }
-    #[wasm_bindgen(getter)]
-    pub fn collider_planes_parallel_pointer(&self) -> *const [f32; 4] {
-        self.geometry.collider_planes_parallel.as_ptr()
-    }
-    #[wasm_bindgen(getter)]
-    pub fn collider_faces_pointer(&self) -> *const ColliderPlane {
-        self.geometry.collider_planes.as_ptr()
-    }
-    #[wasm_bindgen(getter)]
-    pub fn last_collider_world_vertices_pointer(&self) -> *const f32 {
-        self.geometry.last_collider_world_vertices.as_ptr()
-    }
-    #[wasm_bindgen(getter)]
-    pub fn faces_pointer(&self) -> *const Plane {
-        if !self.geometry.static_faces && self.geometry.faces.planes.len() == 0 {
-            panic!("Not implemented yet, TODO: Generate faces");
-            //Remember to allocate memory for collider planes also and otger collider stuff also
-        }
-        return self.geometry.faces.planes.as_ptr();
-    }
-    #[wasm_bindgen(getter)]
-    pub fn faces_count(&self) -> usize {
-        self.geometry.faces_count()
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_faces(&mut self, planes:Vec<f32>) {
-        self.geometry.collider_planes=Vec::with_capacity(&planes.len()/4);
-        self.geometry.collider_planes_parallel=Vec::with_capacity(&planes.len()/4);
-        self.geometry.faces.set(planes);
-    }
-    pub fn create_elevator(&self) -> Elevator {
-        Elevator::new(&self)
-    }
-    #[wasm_bindgen(method, getter)]
-    pub fn bounding_vectors_pointer_simd(&mut self) -> *const Vec3<Vec4<f32>> {
-        self.geometry.update_bounding_box(&self.gpu_mesh.transformation);
-        (&self.geometry.bounding_box.vectors_simd) as *const Vec3<Vec4<f32>>
-    }
-    #[wasm_bindgen(method, getter)]
-    pub fn bounding_min_pointer(&mut self) -> *const Vec3_f32 {
-        self.geometry.update_bounding_box(&self.gpu_mesh.transformation);
-        (&self.geometry.bounding_box.min) as *const Vec3_f32
-    }
-    #[wasm_bindgen(method, getter)]
-    pub fn bounding_max_pointer(&mut self) -> *const Vec3_f32 {
-        self.geometry.update_bounding_box(&self.gpu_mesh.transformation);
-        (&self.geometry.bounding_box.max) as *const Vec3_f32
-    }
-    fn on_update(&mut self, engine:&mut Engine) {
+
+
+    fn on_update(&mut self) {
         self.update_matrix();
-        self.update_dynamic_buffer(engine);
+        unsafe {
+            self.update_dynamic_buffer();
+        }
         if self.geometry.bounding_box.has_bounding {
             self.geometry.bounding_box.dirty=true;
         }
     }
-    pub fn update_scale_and_rotation(&mut self, engine:&mut Engine, x: f32, y: f32, z: f32, rx: f32, ry: f32, rz: f32, rw: f32) {
-        self.scaling.x = x;
-        self.scaling.y = y;
-        self.scaling.z = z;
-        self.rotation.x = rx;
-        self.rotation.y = ry;
-        self.rotation.z = rz;
-        self.rotation.w = rw;
-        self.on_update(engine);
-    }
-    pub fn update_scale(&mut self,engine:&mut Engine, x: f32, y: f32, z: f32) {
-        self.scaling.x = x;
-        self.scaling.y = y;
-        self.scaling.z = z;
-        self.on_update(engine);
-    }
-    pub fn set_scale_x(&mut self,engine:&mut Engine, x:f32) {
+
+
+    pub fn set_scale_x(&mut self, x:f32) {
         self.scaling.x=x;
-        self.on_update(engine);
+        self.on_update();
     }
-    #[wasm_bindgen(getter)]
-    pub fn scale_x(&mut self) -> f32 {
-        self.scaling.x
-    }
-    pub fn set_scale_y(&mut self,engine:&mut Engine, y:f32) {
+    pub fn set_scale_y(&mut self, y:f32) {
         self.scaling.y=y;
-        self.on_update(engine);
+        self.on_update();
     }
-    #[wasm_bindgen(getter)]
-    pub fn scale_y(&mut self) -> f32 {
-        self.scaling.y
-    }
-    pub fn set_scale_z(&mut self, engine:&mut Engine, z:f32) {
+
+    pub fn set_scale_z(&mut self, z:f32) {
         self.scaling.z=z;
-        self.on_update(engine);
+        self.on_update();
     }
-    #[wasm_bindgen(getter)]
-    pub fn scale_z(&mut self) -> f32 {
-        self.scaling.z
-    }
-    pub fn update_rotation(&mut self, engine:&mut Engine, x: f32, y: f32, z: f32, w: f32) {
-        self.rotation.x = x;
-        self.rotation.y = y;
-        self.rotation.z = z;
-        self.rotation.w = w;
-        self.on_update(engine);
-    }
-    #[wasm_bindgen(getter)]
-    pub fn gpu_pointer(&self) -> *const Vec4<Vec4<f32>> {
-        &self.gpu_mesh.transformation
-    }
-    #[wasm_bindgen(setter)]
-    pub fn set_gpu_custom_data(&mut self, data:Vec<f32>) {
-        self.gpu_mesh.custom[0]=data[0];
-        self.gpu_mesh.custom[1]=data[1];
-        self.gpu_mesh.custom[2]=data[2];
-        self.gpu_mesh.custom[3]=data[3];
-    }
-    #[wasm_bindgen(getter)]
-    pub fn translation_pointer(&self) -> *const Vec4<f32> {
-        &self.gpu_mesh.transformation.w
-    }
-    #[wasm_bindgen(getter)]
-    pub fn velocity_pointer(&self) -> *const [f32; 4] {
-        &self.gpu_mesh.delta
-    }
-    #[wasm_bindgen(getter)]
+
     pub fn acceleration_pointer(&self) -> *const [f32; 4] {
         &self.gpu_mesh.acceleration
     }

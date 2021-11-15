@@ -58,8 +58,7 @@ export class Physics {
         if (realDeltaInGameTime > MIN_TICK_DELTA) {
             var delta = 100;
             this.#lastTickTimeMs += delta;
-            const queueLength = realDeltaInGameTime / 100;
-            console.log('queue length', queueLength)
+            //const queueLength = realDeltaInGameTime / 100;
             /*if(queueLength > 100) {
                 delta = realDeltaInGameTime;
             }*/
@@ -78,12 +77,13 @@ export class Physics {
             const velocity = movable.velocity;
             if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
                 const currentTranslation = movable.translation;
+                ///console.log('currentTranslation',...currentTranslation)
                 currentTranslation.set([
                     currentTranslation[0] + velocity[0],
                     currentTranslation[1] + velocity[1],
                     currentTranslation[2] + velocity[2]
                 ]);
-                movable.update_dynamic_buffer(engine.rustEngine);
+                movable.update_dynamic_buffer();
             }
         });
         this.tickables.forEach(tickable => {
@@ -115,7 +115,7 @@ export class Physics {
                 tickable.checkCollide(scaledVelocity);
 
                 //TODO: What if collision is found (collider cannot resolve position without collision)
-                if (engine.collider.rust.collision_not_found) {
+                if (engine.collider.collision_not_found) {
                     engine.collider.finalPosition[0] *= engine.collider.radius[0]
                     engine.collider.finalPosition[1] *= engine.collider.radius[1]
                     engine.collider.finalPosition[2] *= engine.collider.radius[2]
@@ -138,7 +138,7 @@ export class Physics {
                         translation[2] + tickable.lastVelocityDelta[2]
                     ])
                     //currentTranslation.set(engine.collider.finalPosition);
-                    tickable.update_dynamic_buffer(engine.rustEngine);
+                    tickable.update_dynamic_buffer();
                 }
             }
         });

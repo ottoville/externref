@@ -1,9 +1,8 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
-import type { Engine } from "engine.js";
+import type { Engine, rustWasm } from "engine.js";
 import { TerraMatrix, TerraVector3, Triangle } from "./Math.js";
-import { Collider } from "/js/engine/engine.js";
 declare const engine:Engine;
 
 function Dot(left: [number, number, number] | Float32Array | TerraVector3, right: [number, number, number] | Float32Array | TerraVector3): number {
@@ -43,9 +42,9 @@ var intersectBoxAASphere = (boxMin: TerraVector3, boxMax: TerraVector3, sphereCe
 
 
 export class ColliderJS {
-    rust = new Collider();
     #velocitySquaredLength!: number;
     finalPosition: TerraVector3;
+    collider_ptr: number;
     getLowestRoot (a: number, b: number, c: number, maxR: number) {
 
         var determinant = b * b - 4.0 * a * c;
@@ -103,15 +102,31 @@ export class ColliderJS {
     readonly collisionsScalingMatrix:TerraMatrix;
 
     get scaledPosition() {
-        return new Float32Array(engine.memory.buffer, this.rust.scaled_position_pointer, 4) as TerraVector3;
+        return new Float32Array(engine.memory.buffer, engine.rust.scaled_position_pointer(this.collider_ptr), 4) as TerraVector3;
     }
     get scaledVelocity() {
-        return new Float32Array(engine.memory.buffer, this.rust.scaled_velocity_pointer, 4) as TerraVector3;
+        return new Float32Array(engine.memory.buffer, engine.rust.scaled_velocity_pointer(this.collider_ptr), 4) as TerraVector3;
     }
     get intersectionPointWasm() {
-        return new Float32Array(engine.memory.buffer, this.rust.intersection_point_pointer, 4) as TerraVector3;
+        return new Float32Array(engine.memory.buffer, engine.rust.intersection_point_pointer(this.collider_ptr), 4) as TerraVector3;
     }
-    constructor(private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+    set nearest_distance_squared(val:number) {
+        new Float32Array(engine.memory.buffer, engine.rust.nearest_distance_squared_pointer(this.collider_ptr), 1).set([val]);
+    }
+    get nearest_distance_squared() {
+        return new Float32Array(engine.memory.buffer, engine.rust.nearest_distance_squared_pointer(this.collider_ptr), 1)[0]!
+    }
+    set collision_not_found(val:number) {
+        new Float32Array(engine.memory.buffer, engine.rust.collision_not_found_pointer(this.collider_ptr), 1).set([val]);
+    }
+    get collision_not_found() {
+        return new Float32Array(engine.memory.buffer, engine.rust.collision_not_found_pointer(this.collider_ptr), 1)[0]!
+    }
+    constructor(rustExports:rustWasm, private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+
+        this.collider_ptr = rustExports.collider();
+
+
         this.finalPosition= new TerraVector3();
 
 /*
@@ -188,7 +203,7 @@ export class ColliderJS {
     /** @hidden */
     public _initialize(source: TerraVector3, dir: TerraVector3, e: number): void {
         //this.#nearestDistanceSquared = 9999999;
-        this.rust.nearest_distance_squared=9999999;
+        this.nearest_distance_squared=9999999;
         //this.#velocity = dir;
         const scaledVelocity=this.scaledVelocity;
         this.#velocitySquaredLength = scaledVelocity[0] * scaledVelocity[0] + scaledVelocity[1] * scaledVelocity[1] + scaledVelocity[2] * scaledVelocity[2];
@@ -226,7 +241,7 @@ export class ColliderJS {
 
         this.epsilon = e;
        // this.collisionFound = false;
-       this.rust.collision_not_found=1;
+       this.collision_not_found=1;
         //console.log('set collisionNotFound true')
 
 
@@ -341,9 +356,6 @@ export class ColliderJS {
             //this._planeIntersectionPoint.addInPlace(this._tempVector);
             if (this._checkPointInTriangle(this.#planeIntersectionPoint, triangle)) {
                 found = true;
-                 //@ts-ignore
-                 //   window.debug = true;
-               // console.log('t', t, 't0', t0, 'this.#planeIntersectionPoint', this.#planeIntersectionPoint[0], this.#planeIntersectionPoint[1], this.#planeIntersectionPoint[2], 'normalDotVelocity', normalDotVelocity, 'signedDistToTrianglePlane', signedDistToTrianglePlane)
                 t = t0;
                 this.#collisionPoint[0] = this.#planeIntersectionPoint[0];
                 this.#collisionPoint[1] = this.#planeIntersectionPoint[1];
@@ -381,10 +393,6 @@ export class ColliderJS {
                 c = (this.#tempVector[0] * this.#tempVector[0] + this.#tempVector[1] * this.#tempVector[1] + this.#tempVector[2] * this.#tempVector[2]) - 1.0;
                 lowestRoot = this.getLowestRoot(this.#velocitySquaredLength, b, c, t);
                 if (lowestRoot) {
-                    //@ts-ignore
-                 //   window.debug = true;
-               //     debugger;
-                 //   console.log('b', b, 'c', c, 'lowestRoot', lowestRoot, 'i',i)
                     t = lowestRoot;
                     found = true;
                     this.#collisionPoint[0] = p[0]
@@ -426,10 +434,6 @@ export class ColliderJS {
                 if (lowestRoot) {
                     var f = (edgeDotVelocity * lowestRoot - edgeDotBaseToVertex) / edgeSquaredLength;
                     if (f >= 0.0 && f <= 1.0) {
-                       //@ts-ignore
-                   //     window.debug = true;
-                    //    debugger;
-                    //    console.log(a, b, c, 'curLowestRoot', lowestRoot, 'lowestRoot', t, 'f', f, 'edgeDotVelocity', edgeDotVelocity, 'edgeDotBaseToVertex', edgeDotBaseToVertex, 'edgeSquaredLength', edgeSquaredLength, 'i', i);
                         t = lowestRoot;
                         found = true;
                         // this._edge.scaleInPlace(f);
@@ -449,13 +453,13 @@ export class ColliderJS {
             //var distToCollisionSquared = t * (this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
           //  console.log(this.collisionFound);
           
-            if (this.rust.collision_not_found === 1 || distToCollisionSquared < this.rust.nearest_distance_squared) {
+            if (this.collision_not_found === 1 || distToCollisionSquared < this.nearest_distance_squared) {
                 this.intersectionPointWasm.set(this.#collisionPoint);
-                this.rust.nearest_distance_squared=distToCollisionSquared;
+                this.nearest_distance_squared=distToCollisionSquared;
 
               //  console.log('nearestDistanceSquared',this.#nearestDistanceSquared)
                 //this.collisionFound = true;
-                this.rust.collision_not_found=0;
+                this.collision_not_found=0;
                 //console.log('set collisionNotFound 0', this.collisionNotFound.getUint32(0,true))
                 this.collidedMesh = "hostMesh";
             }

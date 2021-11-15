@@ -64,12 +64,7 @@ export class Box extends SimpleIndexedMesh {
         color:[number,number,number,number]=[1,0,0,0]
     ) {
         super(positions, ...create(engine.gpu), label, point_light, has_physic, scenes);
-        this.gpu_custom_data=new Float32Array(color);
-        Object.getOwnPropertyNames(Box.prototype).forEach(prop =>  {
-            const propDesc=Object.getOwnPropertyDescriptor(Box.prototype, prop);
-            if(propDesc)
-                Object.defineProperty(this, prop, propDesc);
-        });
+        this.gpu_custom_data=color;
     }
     
     override checkCollide(velocityPerDelta:readonly [number,number,number]) {

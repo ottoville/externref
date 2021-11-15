@@ -60,7 +60,7 @@ TODO
     updateSwap2(offset = 0, byteLength:number, nofaces = false) {
         const b1 = engine.gpu.createGPUBuffer(byteLength, [GPUBufferUsage.COPY_SRC], true);
         new Float32Array(b1.getMappedRange()).set(
-            new Float32Array(engine.memory.buffer, this.mesh.vertices_pointer+offset, byteLength/4)
+            new Float32Array(engine.memory.buffer, engine.rust.vertices_pointer(this.mesh.ptr)+offset, byteLength/4)
         )
         b1.unmap();
         const commandEncoder = engine.gpu.createCommandEncoder();
@@ -75,7 +75,7 @@ TODO
             const facesByteLength = this.mesh.faces_count * 4 * Float32Array.BYTES_PER_ELEMENT;
             b2 = engine.gpu.createGPUBuffer(facesByteLength, [GPUBufferUsage.COPY_SRC], true);
            // new Float32Array(b2.getMappedRange()).set(new Float32Array(this.mesh.facesBuffer))
-            new Float32Array(b2.getMappedRange()).set(new Float32Array(engine.memory.buffer, this.mesh.faces_pointer, this.mesh.faces_count * 4))
+            new Float32Array(b2.getMappedRange()).set(new Float32Array(engine.memory.buffer, engine.rust.faces_pointer(this.mesh.ptr), this.mesh.faces_count * 4))
             b2.unmap();
             commandEncoder.copyBufferToBuffer(
                 b2, // source buffer
@@ -186,7 +186,7 @@ TODO
             response.headers.set('content-length', (this.mesh.vertices_count * Float32Array.BYTES_PER_ELEMENT * this.mesh.vertices_stride).toString());
             response.headers.set('content-type', 'application/octet-stream');
 
-            const indices=this.mesh.indicesView;
+            const indices=this.mesh.indices;
             const response2 = new Response(indices);
             response2.headers.set('content-length', indices.byteLength.toString());
             response2.headers.set('content-type', 'application/octet-stream');
@@ -511,7 +511,7 @@ TODO
                 this.serialize();
             });
             gpuReadBufferIndices.readAndDestroy(buff => {
-                this.mesh.indicesView=new Uint32Array(buff);
+                this.mesh.indices=new Uint32Array(buff);
             });
         })
     }

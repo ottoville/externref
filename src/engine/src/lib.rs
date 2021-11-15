@@ -1,7 +1,4 @@
 #!cfg(target_arch = "wasm32")]
-#![feature(vec_into_raw_parts)]
-
-extern crate wasm_bindgen;
 
 mod engine;
 mod geometry;
@@ -14,8 +11,19 @@ mod drawable;
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
-#[derive(Copy, Clone)]
 
+#[no_mangle]
+pub extern "C" fn alloc_vector_f32(size:usize) -> *mut f32 {
+    let mut buf = std::mem::ManuallyDrop::new(vec![0.0;size]);
+    buf.as_mut_ptr()
+}
+#[no_mangle]
+pub extern "C" fn alloc_vector_usize(size:usize) -> *mut usize {
+    let mut buf = std::mem::ManuallyDrop::new(vec![0;size]);
+    buf.as_mut_ptr()
+}
+
+#[derive(Copy, Clone)]
 pub struct Vec4<T> {
     x: T,
     y: T,
@@ -35,6 +43,7 @@ pub struct Vec3_f32 {
     y: f32,
     z: f32,
 }
+
 impl Vec3_f32 {
     fn transform_to_ref(&self, m: &Vec4<Vec4<f32>>, other: &mut Vec3_f32) {
         let rx = self.x * m.x.x + self.y * m.y.x + self.z * m.z.x + m.w.x;
@@ -93,6 +102,7 @@ impl Vec4<f32> {
         }
     }
 }
+
 pub struct GPUMesh {
     transformation: Vec4<Vec4<f32>>, //16
     delta: [f32; 4],                 //20

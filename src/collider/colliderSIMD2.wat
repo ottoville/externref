@@ -1,7 +1,7 @@
 (module
   (import "console" "log" (func $log (param i32)))
   (import "console" "error" (func $console.error (param i32)))
-  (import "env" "memory" (memory 17))
+  (import "env" "memory" (memory 16))
   (export "memory" (memory 0))
 
   ;;(import "env" "memory" (memory $mem 31 32))

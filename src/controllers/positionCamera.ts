@@ -172,7 +172,7 @@ export class PositionCamera implements CameraController {
         engine.collider.finalPosition[2] *= engine.collider.radius[2]
         //run the callback
         // if (!this.engine.collider.collidedMesh) {
-        if (engine.collider.rust.collision_not_found) {
+        if (engine.collider.collision_not_found) {
             //this._position.copyFrom(position);
             if (this.camera.position[0] != engine.collider.finalPosition[0] || this.camera.position[1] != engine.collider.finalPosition[1] || this.camera.position[2] != engine.collider.finalPosition[2]) {      
                 this.camera.position=engine.collider.finalPosition;

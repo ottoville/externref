@@ -72,9 +72,9 @@ export class Canvas extends TerraCompoment {
             //new testPlane(terrascene);
 
             const b = new Box([terrascene],undefined,true,'bigbox');
-            b.update_scale(terraEngine.rustEngine, 500, 500, 500);
+            b.update_scale(500, 500, 500);
             b.translation = [123,1000,123];
-            b.update_rotation(terraEngine.rustEngine,Math.sin(1.1),0,0,Math.cos(1.1));
+            b.update_rotation(Math.sin(1.1),0,0,Math.cos(1.1));
             //@ts-expect-error
             window.debugBB=() => b.drawable.debug_bounding_box();
 
@@ -91,7 +91,7 @@ export class Canvas extends TerraCompoment {
         const debugscene = new Scene('static', terraEngine.gpu, [engine.mainCamera], (scene) => {
             const sun = new Light(scene);
             sun.translation.set([0, 1, 0]);
-            sun.gpu_custom_data = new Float32Array([0, 0, 0, 1]); //shadow to 1 (no shadow)
+            sun.gpu_custom_data = [0, 0, 0, 1]; //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
             return undefined;
         });
@@ -103,7 +103,7 @@ export class Canvas extends TerraCompoment {
             b2.velocity = [velocity[0],velocity[1],-3]
      
         }
-        b2.update_scale(terraEngine.rustEngine, 30, 30, 30);
+        b2.update_scale(30, 30, 30);
 
         const x = 500;
         const z = 800;

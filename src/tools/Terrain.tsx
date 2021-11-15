@@ -10,7 +10,7 @@ import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU";
 import { GPUBufferUsage } from "../gpu.js"
 import { TerraVector3 } from "../Math.js";
-import type { Elevator } from "/js/engine/engine.js";
+
 import type { Engine } from "engine.js";
 import type { Scene } from "Scene.js";
 declare const engine:Engine;
@@ -60,7 +60,7 @@ export class TerrainTool extends MainNode {
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
 
     facet12ArrGPUBufferSwap = engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-    elevator: Elevator
+    elevator: number
     drawable: DrawableSimple;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
     scene: Scene;
@@ -75,15 +75,10 @@ export class TerrainTool extends MainNode {
         if(!scene)
             throw(new Error('no scene'));
         this.scene=scene;
-        Object.getOwnPropertyNames(TerrainTool.prototype).forEach(prop =>  {
-            const propDesc=Object.getOwnPropertyDescriptor(TerrainTool.prototype, prop);
-            if(propDesc)
-                Object.defineProperty(this, prop, propDesc);
-        });
-
-        this.elevator = terrain.mesh.create_elevator();
+        
+        this.elevator = engine.rust.create_elevator(terrain.mesh.ptr);
         this.drawable = renderPipeline.addDrawableSimple(this, 8, 0, undefined);
-        this.#pick = { position: new TerraVector3(engine.memory.buffer, this.elevator.mouse_position_pointer()), meshId: 0 };
+        this.#pick = { position: new TerraVector3(engine.memory.buffer, engine.rust.mouse_position_pointer(this.elevator)), meshId: 0 };
         //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED
         /*
@@ -124,9 +119,10 @@ export class TerrainTool extends MainNode {
         engine.inputManager?.destroy();
 
         this.mouseinterval = setInterval(() => {
-            this.elevator.elevate(this.terrain.mesh,200,5*this.direction);
-            if(this.elevator.length > 0) {
-                this.terrain.updateSwap2(this.elevator.offset*Float32Array.BYTES_PER_ELEMENT,this.elevator.length*Float32Array.BYTES_PER_ELEMENT)
+            engine.rust.elevate(this.elevator,this.terrain.mesh.ptr,200,5*this.direction);
+            const elevator_length=engine.rust.get_length(this.elevator);
+            if(elevator_length > 0) {
+                this.terrain.updateSwap2(engine.rust.get_offset(this.elevator)*Float32Array.BYTES_PER_ELEMENT,elevator_length*Float32Array.BYTES_PER_ELEMENT)
             }
         }, 17);
     }

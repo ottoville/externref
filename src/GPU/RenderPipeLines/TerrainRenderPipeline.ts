@@ -63,7 +63,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
         const renderPipeline=TerrainRenderPipeline(engine.gpu);
         this.drawable = renderPipeline.addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater]), undefined, 0, 1);
         //@ts-expect-error
-        window.debugTerrain=() => this.drawable.debug_render_normals();
+        window.debugTerrain=() => this.drawable.debug_render_normals(this);
         this.drawable.setStaticBuffer(this.sampler, initialTexture);
         this.drawable.setVertexBuffer(0, this.vBuffer);
         this.drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');

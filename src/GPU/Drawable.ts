@@ -2,7 +2,7 @@
 import type { RenderPass } from "./RenderPass.js";
 import { MainNode } from "../MainNode.js";
 import { GPUBufferUsage } from "../GPU.js"
-import type { IndexedNode } from "../DataNode.js";
+import type { DataNode, IndexedNode } from "../DataNode.js";
 import { NormalsMesh } from "./RenderPipeLines/helpers/normals.js";
 import { BoundingBoxMesh } from "./RenderPipeLines/helpers/boundingbox.js";
 
@@ -13,7 +13,7 @@ declare const engine:Engine;
 export abstract class Drawable {
     abstract label:string;
     #vertexBuffers: Map<number, { buffer: GPUBuffer, offset: number | undefined, size: number | undefined }> = new Map();
-    dynamicBuffers: [GPUBindGroup, number][] = [];
+    protected dynamicBuffers: [GPUBindGroup, number][] = [];
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
     constructor(
         protected renderPipeline: RenderPipeline,
@@ -93,7 +93,6 @@ abstract class DrawableDirect extends Drawable {
         dynamicIndex: number,
         public label:string,
         renderPasses?: Set<RenderPass>,
-        
         instanceCount = 1,
         ) {
         super(renderPipeline, renderPasses);
@@ -102,9 +101,9 @@ abstract class DrawableDirect extends Drawable {
             console.warn('Added drawable with 0 instances, nothing will be drawn');
         this.#instanceCount = instanceCount;
     }
-    debug_render_normals() {
+    debug_render_normals(node: DataNode) {
         const gpu = this.renderPipeline.bindgroupdrawable.gpu;
-        const vertices = this.node.verticesArray;
+        const vertices = node.verticesArray;
         const stride=this.node.vertices_stride;
 
         const debug_render_normals_vertexBuffer = gpu.createGPUBuffer(this.node.positions_count*stride*2*Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], true);
@@ -119,7 +118,7 @@ abstract class DrawableDirect extends Drawable {
         mesh.drawable.setVertexBuffer(0,debug_render_normals_vertexBuffer)
     }
     debug_bounding_box() {
-        const vectors_simd=new Float32Array(engine.memory.buffer, this.node.bounding_vectors_pointer_simd, 3*4*2);
+        const vectors_simd=new Float32Array(engine.memory.buffer, engine.rust.bounding_vectors_pointer_simd(this.node.ptr), 3*4*2);
         const vectors = new Float32Array([
             vectors_simd[0]!,vectors_simd[4]!, vectors_simd[8]!, 0,
             vectors_simd[1]!,vectors_simd[5]!, vectors_simd[9]!, 0,
@@ -190,8 +189,7 @@ export class DrawableSimple extends DrawableDirect {
         instanceCount = 1,
         public firstVertex = 0,
         public firstInstance = 0) {
-            //@ts-expect-error wasm-bindgen
-            super(renderPipeline, node.gpu_alignment, node.label, renderPasses, instanceCount);
+            super(renderPipeline, engine.rust.gpu_alignment(node.ptr), node.label, renderPasses, instanceCount);
     }
     render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) {
         renderEncoder.draw(this.node.positions_count, this.instanceCount, this.firstVertex, this.firstInstance);
@@ -210,8 +208,7 @@ export class DrawableIndexed extends DrawableDirect {
         public firstInstance = 0,
         private GPUIndexFormat: GPUIndexFormat = 'uint16',
         ) {
-            //@ts-expect-error wasm-bindgen
-        super(renderPipeline,node.gpu_alignment, node.label, renderPasses, instanceCount);
+        super(renderPipeline,engine.rust.gpu_alignment(node.ptr), node.label, renderPasses, instanceCount);
     }
 
     override destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {

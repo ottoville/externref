@@ -1,15 +1,11 @@
-use wasm_bindgen::prelude::*;
 
 pub use crate::Vec3;
 pub use crate::Vec4;
 pub use crate::boundingbox::BoundingBox;
 
 
-#[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
-    #[wasm_bindgen(js_namespace = console)]
     fn error(s: &str);
 }
 
@@ -99,9 +95,6 @@ impl Geometry {
         self.allocate_faces();
 
     }
-    pub fn set_indices(&mut self, indices: Vec<usize>) {
-        self.indices = indices;
-    }
 }
 pub struct Faces {
     pub planes:Vec<Plane>
@@ -116,14 +109,5 @@ impl Faces {
         Faces {
             planes:Vec::with_capacity(amount)
         }
-    }
-    pub fn set(&mut self, planes:Vec<f32>) {
-        let (ptr, len, cap) = planes.into_raw_parts();
-        self.planes = unsafe {
-            // We can now make changes to the components, such as
-            // transmuting the raw pointer to a compatible type.
-            let ptr = ptr as *mut Plane;
-            Vec::from_raw_parts(ptr, len / 4, cap / 4)
-        };
     }
 }

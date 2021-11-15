@@ -1,8 +1,6 @@
 use std::collections::HashSet;
-use wasm_bindgen::prelude::*;
 pub use crate::mesh::Mesh;
 
-#[wasm_bindgen]
 pub struct Elevator {
     vertices_horizontal:Vec<f32>,
     mouse_position:[f32;3],
@@ -15,14 +13,35 @@ pub struct Elevator {
     pub length:usize
 
 }
-#[wasm_bindgen]
+/*
 extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
-    #[wasm_bindgen(js_namespace = console)]
     fn error(s: &str);
 }
-#[wasm_bindgen]
+*/
+
+#[no_mangle]
+pub unsafe extern "C" fn create_elevator(mesh_ptr:*const Mesh) -> *mut Elevator {
+    Box::leak(Box::new(Elevator::new(&(*mesh_ptr))))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn mouse_position_pointer(elevator_ptr:*const Elevator) -> *const f32 {
+    (*elevator_ptr).mouse_position.as_ptr()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn elevate(elevator_ptr:*mut Elevator,mesh_ptr:*mut Mesh,radius:f32,height:f32) {
+    (*elevator_ptr)._elevate(&mut (*mesh_ptr),radius,height)
+}
+#[no_mangle]
+pub unsafe extern "C" fn get_length(elevator_ptr:*const Elevator) -> usize {
+    (*elevator_ptr).length
+}
+#[no_mangle]
+pub unsafe extern "C" fn get_offset(elevator_ptr:*const Elevator) -> usize {
+    (*elevator_ptr).offset
+}
 impl Elevator {
     unsafe fn normalize(v:std::arch::wasm32::v128) -> std::arch::wasm32::v128 {
         use std::arch::wasm32::*;
@@ -93,7 +112,7 @@ impl Elevator {
         let radius_near = radius * 0.3;
         let radius_far = radius * 0.7;
         if mesh.geometry.indices.len() == 0 {
-            error("Elevator needs indices");
+           // error("Elevator needs indices");
             panic!("Elevator needs indices")
 
         }
@@ -184,15 +203,7 @@ impl Elevator {
             self.length = max-self.offset;
         }
     }
-    #[wasm_bindgen] 
-    pub fn elevate(&mut self,mesh:&mut Mesh,radius:f32,height:f32) {
-        unsafe {
-            self._elevate(mesh,radius,height)
-        }
-    }
-    pub fn mouse_position_pointer(&self) -> *const f32 {
-        self.mouse_position.as_ptr()
-    }
+
     pub fn new (mesh:&Mesh) -> Elevator {
         let mut vertices = Vec::with_capacity(mesh.geometry.vertices.len()/mesh.geometry.vertices_stride*3);
         let iter = mesh.geometry.vertices.chunks(mesh.geometry.vertices_stride * 4);
@@ -211,7 +222,9 @@ impl Elevator {
         };
         let mut faces_of_vertices:Vec<Vec<usize>> = vec![Vec::with_capacity(6);positions_count];
         if mesh.geometry.indices.len() == 0usize {
-            error("Elevator needs indices");
+            unsafe {
+               // error("Elevator needs indices");
+            }
             panic!("Elevator needs indices")
 
         }

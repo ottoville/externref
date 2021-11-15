@@ -40,7 +40,7 @@ export abstract class DataNode extends MainNode {
     #positionsAndCollider: [pointerToVec3:number, pointerToVec4:number][] = [];
     #faceQuatros: [Triangle, Triangle, Triangle, Triangle][] = [];
     get vertices() {
-        return new Float32Array(engine.memory.buffer, this.vertices_pointer, this.vertices_count * this.vertices_stride);
+        return new Float32Array(engine.memory.buffer, engine.rust.vertices_pointer(this.ptr), this.vertices_count * this.vertices_stride);
     }
  
     constructor(
@@ -54,12 +54,6 @@ export abstract class DataNode extends MainNode {
         scenes?: Scene[],
     ) {
         super(true, true, positionCount, verticesPositionStride, point_light,undefined, static_faces,strip,label,scenes);
-        Object.getOwnPropertyNames(DataNode.prototype).forEach(prop =>  {
-            const propDesc=Object.getOwnPropertyDescriptor(DataNode.prototype, prop);
-            if(propDesc)
-                Object.defineProperty(this, prop, propDesc);
-        });
-
 
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
         if(has_physic)
@@ -74,6 +68,14 @@ export abstract class DataNode extends MainNode {
             //this.boundingBox.initMin();
             //this.boundingBox.initMax();
         });
+    }
+    get verticesArray() {
+        const arr:Float32Array[] = [];
+        const vertices_pointer=engine.rust.vertices_pointer(this.ptr);
+        for (let i=0; i< this.vertices_count; i++) {
+            arr.push(new Float32Array(engine.memory.buffer, vertices_pointer + i*Float32Array.BYTES_PER_ELEMENT*this.vertices_stride, this.vertices_stride))
+        }
+        return arr;
     }
     override destroy() {
         let idx = engine.physics.tickables.indexOf(this);
@@ -94,8 +96,9 @@ export abstract class DataNode extends MainNode {
         this.#positionsAndCollider.length=0;
         this.colliderVerticesV4.length=0;
         //this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
+        const vertices_pointer=engine.rust.vertices_pointer(this.ptr);
         for (let i = 0; i < this.vertices_count; i++) {
-            const pos = this.vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT;
+            const pos = vertices_pointer + i * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT;
             const colPos = this.last_collider_world_vertices_pointer + i * 4 * Float32Array.BYTES_PER_ELEMENT;
             this.colliderVerticesV4.push(colPos);
             this.#positionsAndCollider.push([pos, colPos])
@@ -105,17 +108,18 @@ export abstract class DataNode extends MainNode {
     }
     addVectors = (faceIndex: number, vectors: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number] ) => {
         if (vectors.length != 3)
-            throw ('less than 3 vector')
+            throw ('less than 3 vector');
+        const collider_faces_pointer = engine.rust.collider_faces_pointer(this.ptr); 
         this.#triangleFaces[faceIndex] = new Triangle(
             vectors,
-            () => this.collider_faces_pointer + faceIndex * 4 * 7);
+            () => collider_faces_pointer + faceIndex * 4 * 7);
        /* new Triangle(
             vectors,
             new Float32Array(this.engine.memory.buffer, this.collider_faces_pointer + faceIndex * 4 * 7,4) as TerraVector4
         );*/
         new Uint32Array(
             engine.memory.buffer,
-            this.collider_faces_pointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
+            collider_faces_pointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
             3).set(vectors); //4 is from plane
       /*  new Uint32Array(
             this.engine.memory.buffer,
@@ -130,22 +134,22 @@ export abstract class DataNode extends MainNode {
         if(index > this.positions_count) {
             throw new Error('Tried to access vertice out of boundary')
         }
-        return new TerraVector3(engine.memory.buffer, this.vertices_pointer + index * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT);
+        return new TerraVector3(engine.memory.buffer, engine.rust.vertices_pointer(this.ptr) + index * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT);
     }
     intersectsRay = (ray: Float32Array): Promise<void> => {
-        //@ts-expect-error wasm-bindgen
         return worker.message(this.id, 'intersectsRay', [ray.buffer]);
     }
     #updateColliderPlanes() {
         this.#positionsAndCollider.forEach((posAndCol, i) => {
             this.getPosition(i).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer,posAndCol[1]));
         });
+        const collider_planes_parallel_pointer=engine.rust.collider_planes_parallel_pointer(this.ptr);
         this.#faceQuatros.forEach((quatro, i) => {
             quatro[0].updatePlane();
             quatro[1].updatePlane();
             quatro[2].updatePlane();
             quatro[3].updatePlane();
-            new Float32Array(engine.memory.buffer, this.collider_planes_parallel_pointer + i * 4 * 16, 16).set([
+            new Float32Array(engine.memory.buffer, collider_planes_parallel_pointer + i * 4 * 16, 16).set([
                 quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
                 quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
                 quatro[0].planeCollider[2], quatro[1].planeCollider[2], quatro[2].planeCollider[2], quatro[3].planeCollider[2], //z
@@ -177,10 +181,9 @@ export abstract class DataNode extends MainNode {
                collider._testTriangle(triangle, scaledPosition, scaledVelocity);
             });*/
              engine.wasm.testTriangles(
-                this.collider_faces_pointer,
-                this.collider_planes_parallel_pointer,
+                engine.rust.collider_faces_pointer(this.ptr),
+                engine.rust.collider_planes_parallel_pointer(this.ptr),
                 this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
-                //@ts-expect-error wasm-bindgen
                 this.id);
         
     }
@@ -204,21 +207,23 @@ export interface IndexedNode extends MainNode {
 }
 
 export abstract class BoundableNodeIndexed extends DataNode implements IndexedNode {
-    private indicesCount=0;
-    get indicesView(): Uint32Array {
-        return new Uint32Array(engine.memory.buffer,this.indices_pointer,this.indicesCount);
-    }
-    set indicesView(indices: Uint32Array) {
-        this.indicesCount=indices.length;
-        this.indices=indices;
-        //this.indicesView = new Uint32Array(this.engine.memory.buffer,this.indices_pointer,indices.length);
+    indices_count=0;
+    set indices(indices:Uint32Array) {
+        this.indices_count=indices.length;
+        const ptr = engine.rust.alloc_vector_usize(indices.length);
+        new Uint32Array(engine.rust.memory.buffer,ptr,indices.length).set(indices);
+        engine.rust.set_indices(this.ptr, ptr, indices.length);
         this.rebuildTrianglePlanes();
     }
+    get indices() {
+        const ptr = engine.rust.indices_pointer(this.ptr);
+        return new Uint32Array(engine.rust.memory.buffer, ptr, this.indices_count);
+    }
+
 /*    set setFaces(faces:Float32Array) {
         this.faces=faces;
         this.rebuildTrianglePlanes();
     }*/
-    get indices_count() { return this.indicesView.length; }
     constructor(
         vertices: Float32Array,
         verticesPositionStride = 3,
@@ -231,12 +236,8 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
         scenes?: Scene[],
     ) {
         super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip, point_light,static_faces,label, scenes);
-        Object.getOwnPropertyNames(BoundableNodeIndexed.prototype).forEach(prop =>  {
-            const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeIndexed.prototype, prop);
-            if(propDesc)
-                Object.defineProperty(this, prop, propDesc);
-        });
-        this.indicesView = indicesView;
+
+        this.indices = indicesView;
         this.set_vertices(vertices);
     }
     override set_vertices(vertices:Float32Array) {
@@ -250,8 +251,9 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
       //      return;
         let vectorsVec4: number[] = [];
         let faceIndex = 0;
+        const indices=this.indices
         if (this.strip) {
-            this.indicesView.forEach((indice: number) => {
+            indices.forEach((indice: number) => {
                 const vector = this.colliderVerticesV4[indice];
                 if (typeof(vector) === 'undefined') {
                     throw ('position not found');
@@ -262,7 +264,7 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
                 vectorsVec4 = [(vectorsVec4 as [number, number, number])[1], (vectorsVec4 as [number, number, number])[2]];
             });
         } else {
-            this.indicesView.forEach((indice: number) => {
+            indices.forEach((indice: number) => {
                 const position = this.colliderVerticesV4[indice]
                 if (typeof(position) === 'undefined') {
                     throw ('position ' + indice + ' not found');
@@ -285,11 +287,6 @@ export abstract class BoundableNodeSimple extends DataNode {
         label:string
     ) {
         super(vertices.length/verticesPositionStride,verticesPositionStride, false, strip,  undefined, undefined, label, scenes);
-        Object.getOwnPropertyNames(BoundableNodeSimple.prototype).forEach(prop =>  {
-            const propDesc=Object.getOwnPropertyDescriptor(BoundableNodeSimple.prototype, prop);
-            if(propDesc)
-                Object.defineProperty(this, prop, propDesc);
-        })
         this.set_vertices(vertices);
     }
     override set_vertices(vertices:Float32Array) {

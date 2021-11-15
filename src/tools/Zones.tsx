@@ -83,7 +83,7 @@ export class Zones extends UITAB {
         }
         
         terrain.mesh.setTextureView(this.#zoneTexture.createView());
-        terrain.mesh.set_scenes(engine.rustEngine,staticScene.id)
+        terrain.mesh.set_scenes(staticScene.id)
         this.PT = new paintTexture(this.scene, this.terrain, sea, this.#zoneTexture, 5120, 5120, this, this.#ratio, (response) => {
             engine.DB.transaction("zones", 'readwrite').objectStore("zones").put(response);
         });
@@ -92,7 +92,7 @@ export class Zones extends UITAB {
         });*/
     }
     destroy = (): void => {
-        this.terrain.mesh.set_scenes(engine.rustEngine,this.scene.id)
+        this.terrain.mesh.set_scenes(this.scene.id)
         this.terrain.mesh.setTextureView(this.terrain.texture.createView());
         this.#zoneTexture.destroy();
         this.PT.destroy();

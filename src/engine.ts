@@ -5,7 +5,6 @@ import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import type { TerraVector3 } from "./Math.js";
 import { Uint16Vector2 } from "./Math.js";
-import init, { Engine as RustEngine } from "/js/engine/engine.js";
 import { GPUBufferUsage } from "./GPU.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { Projection } from "./GPU/Projection.js";
@@ -17,6 +16,73 @@ import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "GPU/RenderPass.js";
+declare const engine:Engine;
+
+let GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
+
+export type rustWasm = {
+    collider():number,
+    intersection_point_pointer(collider_ptr:number):number
+    collision_not_found_pointer(collider_ptr:number):number
+    nearest_distance_squared_pointer(collider_ptr:number):number
+    scaled_position_pointer(collider_ptr:number):number
+    scaled_velocity_pointer(collider_ptr:number):number
+    collided_mesh_pointer(collider_ptr:number):number
+
+    allocated_gpu_memory():number,
+    handle_gpu_queue_rust():void,
+
+    new_mesh(id:number, has_bounding:boolean,
+        has_geometry:boolean,
+        positions_count:number,
+        vertices_stride:number,
+        point_light:number,
+        directional_light:number,
+        scenes:number,
+        static_faces:boolean,
+        strip:boolean): number
+    memory: WebAssembly.Memory,
+    update_vertices(mesh_ptr:number, ptr:number, length:number):void,
+    set_indices(mesh_ptr:number, ptr:number, length:number):void,
+    vertices_pointer(mesh_ptr:number):number,
+    indices_pointer(mesh_ptr:number):number,
+    last_collider_world_vertices_pointer(mesh_ptr:number):number,
+    vertices_count(mesh_ptr:number):number,
+    faces_count(mesh_ptr:number):number,
+    alloc_vector_f32(size:number):number,
+    alloc_vector_usize(size:number):number,
+    update_scale(mesh_ptr:number, x:number, y:number, z:number):void,
+    update_rotation(mesh_ptr:number, x:number, y:number, z:number, w:number):void,
+    update_dynamic_buffer(mesh_ptr:number):void,
+    gpu_alignment(mesh_ptr:number):number,
+    positions_count(mesh_ptr:number):number,
+    id(mesh_ptr:number):number,
+    strip(mesh_ptr:number):number,
+    collider_planes_parallel_pointer(mesh_ptr:number):number,
+    gpu_pointer(mesh_ptr:number):number,
+    translation_pointer(mesh_ptr:number):number,
+    velocity_pointer(mesh_ptr:number):number,
+    bounding_min_pointer(mesh_ptr:number):number,
+    bounding_max_pointer(mesh_ptr:number):number,
+    scale_x(mesh_ptr:number):number,
+    scale_y(mesh_ptr:number):number,
+    scale_z(mesh_ptr:number):number,
+    vertices_stride(mesh_ptr:number):number,
+    set_faces(mesh_ptr:number, ptr:number, length:number):void,
+    set_gpu_custom_data(mesh_ptr:number, d0:number,d1:number,d2:number,d3:number):void,
+    collider_faces_pointer(mesh_ptr:number):number,
+    set_scenes(mesh_ptr:number, scenes:number):void,
+    update_scale_and_rotation(mesh_ptr:number, x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number):void
+    faces_pointer(mesh_ptr:number):number,
+    bounding_vectors_pointer_simd(mesh_ptr:number):number,
+
+    create_elevator(mesh_ptr:number):number,
+    mouse_position_pointer(elevator_ptr:number):number
+    elevate(elevator_ptr:number,mesh_ptr:number, radius:number, height:number):void
+    get_length(elevator_ptr:number):number
+    get_offset(elevator_ptr:number):number
+
+}
 
 function Dot(left: [number, number, number] | Float32Array | TerraVector3, right: [number, number, number] | Float32Array | TerraVector3): number {
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
@@ -87,6 +153,7 @@ export class Engine {
     inputManager: CameraController | null = null
     #renderFrame = 0;
     readonly mainCamera: TerraCamera<PickableRenderPass>;
+    memory: WebAssembly.Memory;
     static async initEngine(canvas: HTMLCanvasElement): Promise<Engine> {
         const DB = new Promise<EarthDatabase>(function (res) {
             var IDB = indexedDB.open("City", 6);
@@ -155,9 +222,48 @@ export class Engine {
         window.printRenderTarget3 = () => {
             gpu.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture.toBitmap(0)
         }
-        //Init rust wasm
-        const rust = await init();
+        const map = new Map<number, number>();
+        const dataSizeBytes = MainNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
 
+        //Init rust wasm
+        const rust = await WebAssembly.instantiateStreaming(await fetch('/js/engine/engine.wasm'), {
+            env: {
+                update_point_lights:(pointer: number, length: number) => {
+                    engine.update_point_lights(pointer, length)
+                },
+                update_directional_lights:(pointer: number, length: number) => {
+                    engine.update_directional_lights(pointer, length)
+                },
+                handle_gpu_queue:(pointerVec:number, length:number) => {
+                    GPUQueueCommandEncoder=gpu.device.createCommandEncoder();
+                    const pointers_to_gpumesh_and_alignment = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
+                    for (let i = 0; i < pointers_to_gpumesh_and_alignment.length; i += 2) {
+                        map.set(pointers_to_gpumesh_and_alignment[i]!, pointers_to_gpumesh_and_alignment[i + 1]!);
+                    }
+                    const tempBuffer = gpu.createGPUBuffer(dataSizeBytes * map.size, [GPUBufferUsage.COPY_SRC], true);
+                    let tempOffset = 0;
+                    map.forEach((alignment, gpumeshPointer) => {
+                        const data = new Float32Array(engine.memory.buffer, gpumeshPointer, MainNode.GPUDataSize);
+                        //Point light
+                        if (data[29]! > 0) {
+                            engine.#updateLights = true;
+        
+                        }
+                        new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
+                        GPUQueueCommandEncoder!.copyBufferToBuffer(
+                            tempBuffer, tempOffset++ * dataSizeBytes,
+                            gpu.GPUMeshes, gpu.gpu_memory_index_size + alignment * 256,
+                            dataSizeBytes);
+                    });
+                    map.clear();
+                    tempBuffer.unmap();
+                    engine.gpu.tempGPUBuffers.add(tempBuffer);
+                }
+            }
+        });
+        if(!rust.instance.exports.memory) {
+            throw(new Error('No memory exported'));
+        }
         const obj = await WebAssembly.instantiateStreaming(await fetch('collider/colliderSIMDO.wasm'), {
             console: {
                 log: function (arg: string) {
@@ -169,12 +275,11 @@ export class Engine {
                 }
             },
             env: {
-                memory: rust.memory
+                memory: rust.instance.exports.memory
             }
         });
         const wasm: ColliderWasm = obj.instance.exports as any;
-
-        return new Engine(gpu, await DB, canvas, wasm, rust.memory, new RustEngine());
+        return new Engine(gpu, await DB, canvas, wasm, rust.instance.exports as rustWasm);
     }
     attachCameraInput(initial = false) {
     this.inputManager = new ArcRotateCamera(this.mainCamera, initial);
@@ -258,15 +363,15 @@ export class Engine {
         public DB: EarthDatabase,
         public canvas: HTMLCanvasElement,
         public wasm: ColliderWasm,
-        public memory: WebAssembly.Memory,
-        public rustEngine: RustEngine
+        public rust: rustWasm
     ) {
+        this.memory = rust.memory;
         window.engine = this;
         const projection = new Projection(gpu);
         this.mainCamera = new TerraCamera(gpu.renderPassScreen, projection, gpu);
 
 
-        this.collider = new ColliderJS();
+        this.collider = new ColliderJS(rust);
         this.attachCameraInput(true);
 
         const saveControllerState = () => {
@@ -277,13 +382,13 @@ export class Engine {
 
 
         //TODO: this does not work after memory grow
-        this.#collidedMesh = new DataView(this.memory.buffer, this.collider.rust.collided_mesh_pointer, 4);
-        wasm.construct(this.collider.rust.collision_not_found_pointer,
-            this.collider.rust.intersection_point_pointer,
-            this.collider.rust.nearest_distance_squared_pointer,
-            this.collider.rust.collided_mesh_pointer,
-            this.collider.rust.scaled_velocity_pointer,
-            this.collider.rust.scaled_position_pointer)
+        this.#collidedMesh = new DataView(this.memory.buffer, engine.rust.collided_mesh_pointer(this.collider.collider_ptr), 4);
+        wasm.construct(engine.rust.collision_not_found_pointer(this.collider.collider_ptr),
+            engine.rust.intersection_point_pointer(this.collider.collider_ptr),
+            engine.rust.nearest_distance_squared_pointer(this.collider.collider_ptr),
+            engine.rust.collided_mesh_pointer(this.collider.collider_ptr),
+            engine.rust.scaled_velocity_pointer(this.collider.collider_ptr),
+            engine.rust.scaled_position_pointer(this.collider.collider_ptr))
 
 
         //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
@@ -292,38 +397,12 @@ export class Engine {
             Atomics.store(this.mousePosition, 1, e.clientY * gpu.scale.y)
             Atomics.notify(new Int32Array(this.#mousePositionBuffer), 0);
         });
-        const map = new Map<number, number>();
-
+        
         gpu.onRenders2.push(() => {
-            const dataSizeBytes = MainNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
-            const pointers2 = this.rustEngine.get_gpu_queue_raw_parts_ptr;
-            const vec_and_len = new Uint32Array(this.memory.buffer, pointers2, 2);
-            if (vec_and_len[1] === 0)
-                return null;
-            const pointers_to_gpumesh_and_alignment = new Uint32Array(this.memory.buffer, vec_and_len[0], vec_and_len[1]! * 2);
-            for (let i = 0; i < pointers_to_gpumesh_and_alignment.length; i += 2) {
-                map.set(pointers_to_gpumesh_and_alignment[i]!, pointers_to_gpumesh_and_alignment[i + 1]!);
-            }
-            const tempBuffer = gpu.createGPUBuffer(dataSizeBytes * map.size, [GPUBufferUsage.COPY_SRC], true);
-            const commandEncoder = gpu.device.createCommandEncoder();
-            let tempOffset = 0;
-            map.forEach((alignment, gpumeshPointer) => {
-                const data = new Float32Array(this.memory.buffer, gpumeshPointer, MainNode.GPUDataSize);
-                //Point light
-                if (data[29]! > 0) {
-                    this.#updateLights = true;
-                }
-                new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
-                commandEncoder.copyBufferToBuffer(
-                    tempBuffer, tempOffset++ * dataSizeBytes,
-                    gpu.GPUMeshes, gpu.gpu_memory_index_size + alignment * 256,
-                    dataSizeBytes);
-            });
-            map.clear();
-            this.rustEngine.clear_gpu_queue();
-            tempBuffer.unmap();
-            this.gpu.tempGPUBuffers.add(tempBuffer);
-            return commandEncoder.finish();
+            GPUQueueCommandEncoder=null;
+            engine.rust.handle_gpu_queue_rust();
+            //@ts-ignore bug in TS
+            return GPUQueueCommandEncoder?.finish() ?? null;
         });
         let resizeHandler = 0;
         const maxResolution = {
@@ -382,6 +461,8 @@ export class Engine {
     }
     update_point_lights(pointer:number, length:number) {
         const lights = new Uint32Array(this.memory.buffer, pointer, length);
+        console.log('lights',...lights)
+
         const commandEncoder = this.gpu.device.createCommandEncoder();
         //TODO: Potential buffer overflow
         const byteLength = 4 + lights.byteLength;
@@ -414,10 +495,11 @@ export class Engine {
     }
     public updateAllocatedMemory() {
         const renderEncoder = this.gpu.device.createCommandEncoder();
-        const allocated = this.rustEngine.allocated_gpu_memory;
-        const buffLength = Uint32Array.BYTES_PER_ELEMENT + allocated.byteLength;
+        const ptr=this.rust.allocated_gpu_memory();
+        const length = new DataView(this.rust.memory.buffer,ptr, 4).getUint32(0, true);
+        const buffLength = Uint32Array.BYTES_PER_ELEMENT * (length+1);
         const tempBuffer = this.gpu.createGPUBuffer(buffLength, [GPUBufferUsage.COPY_SRC], true);
-        new Uint32Array(tempBuffer.getMappedRange(0, buffLength)).set([allocated.length, ...allocated]);
+        new Uint32Array(tempBuffer.getMappedRange(0, buffLength)).set(new Uint32Array(this.rust.memory.buffer, ptr, length));
         tempBuffer.unmap();
 
         renderEncoder.copyBufferToBuffer(
@@ -451,7 +533,7 @@ export class Engine {
             this.#destinationPoint[2] = scaledPosition[2] + scaledVelocity[2];
 
 
-            if (this.collider.rust.collision_not_found) {
+            if (this.collider.collision_not_found) {
                 //console.log('set finalposition',...this.#destinationPoint)
 
                 this.collider.finalPosition.set(this.#destinationPoint);
@@ -461,7 +543,7 @@ export class Engine {
             if (scaledVelocity[0] !== 0 || scaledVelocity[1] !== 0 || scaledVelocity[2] !== 0) {
                 //this.collider._getResponse(position, velocity);
                 // https://arxiv.org/ftp/arxiv/papers/1211/1211.0059.pdf
-                let scale = this.collider.rust.nearest_distance_squared / (scaledVelocity[0] * scaledVelocity[0] + scaledVelocity[1] * scaledVelocity[1] + scaledVelocity[2] * scaledVelocity[2]);
+                let scale = this.collider.nearest_distance_squared / (scaledVelocity[0] * scaledVelocity[0] + scaledVelocity[1] * scaledVelocity[1] + scaledVelocity[2] * scaledVelocity[2]);
                 // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
                 scaledVelocity[0] *= scale;
                 scaledVelocity[1] *= scale;
