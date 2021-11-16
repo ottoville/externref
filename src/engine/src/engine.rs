@@ -4,6 +4,7 @@ extern "C" {
     fn update_point_lights(pointer: *const u32, length:usize);
     fn update_directional_lights(pointer: *const u32, length:usize);
     fn handle_gpu_queue(pointerVec:*const (*const GPUMesh, u32), length:usize);
+    fn updateAllocatedMemory(ptr:*const u32, length: usize);
 }
 pub struct Engine {
     gpu_reserved_slots: u64,
@@ -19,19 +20,7 @@ pub static mut ENGINE:Engine = Engine {
     directional_lights: Vec::new(),
     allocated_gpu_memory: Vec::new(),
 };
-#[no_mangle]
-pub unsafe extern "C" fn allocated_gpu_memory () -> *const u32 {
-    ENGINE.allocated_gpu_memory.clear();
-    ENGINE.allocated_gpu_memory.push(0);
-    for i in 0..60 {
-        let bit = (ENGINE.gpu_reserved_slots >> i) & 1u64;
-        if bit == 1u64 {
-            ENGINE.allocated_gpu_memory.push(i)
-        }
-    }
-    ENGINE.allocated_gpu_memory[0] = ENGINE.allocated_gpu_memory.len() as u32;
-    return ENGINE.allocated_gpu_memory.as_ptr();
-}
+
 #[no_mangle]
 pub unsafe extern "C" fn handle_gpu_queue_rust() {
     if ENGINE.gpu_queue2.len() > 0 {
@@ -43,6 +32,20 @@ pub unsafe extern "C" fn handle_gpu_queue_rust() {
 //const GPU_QUEUE: Vec<(* const GPUMesh, u32)> = Vec::new();
 //const MESHES: Vec<*const Mesh> = Vec::new();
 impl Engine {
+    pub fn allocated_gpu_memory (&mut self) {
+        self.allocated_gpu_memory.clear();
+        self.allocated_gpu_memory.push(0);
+        for i in 0..60 {
+            let bit = (self.gpu_reserved_slots >> i) & 1u64;
+            if bit == 1u64 {
+                self.allocated_gpu_memory.push(i)
+            }
+        }
+        self.allocated_gpu_memory[0] = self.allocated_gpu_memory.len() as u32;
+        unsafe {
+            updateAllocatedMemory(self.allocated_gpu_memory.as_ptr(),self.allocated_gpu_memory.len());
+        }
+    }
     pub fn gpu_queue_pointer2(&self) -> *const (*const GPUMesh, u32) {
         return self.gpu_queue2.as_ptr();
     }
@@ -71,5 +74,6 @@ impl Engine {
     }
     pub fn de_allocate_gpu(&mut self, address: u32) {
         self.gpu_reserved_slots &= !(1u64<<address);
+        self.allocated_gpu_memory();
     }
 }

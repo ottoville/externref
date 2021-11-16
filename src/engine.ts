@@ -29,7 +29,6 @@ export type rustWasm = {
     scaled_velocity_pointer(collider_ptr:number):number
     collided_mesh_pointer(collider_ptr:number):number
 
-    allocated_gpu_memory():number,
     handle_gpu_queue_rust():void,
 
     new_mesh(id:number, has_bounding:boolean,
@@ -258,6 +257,20 @@ export class Engine {
                     map.clear();
                     tempBuffer.unmap();
                     engine.gpu.tempGPUBuffers.add(tempBuffer);
+                },
+                //TODO: Queue this call and do it only once per frame
+                updateAllocatedMemory(allocated_gpu_memory_ptr:number, length:number) {
+                    const renderEncoder = engine.gpu.device.createCommandEncoder();
+                    const buffLength = Uint32Array.BYTES_PER_ELEMENT * length;
+                    const tempBuffer = engine.gpu.createGPUBuffer(buffLength, [GPUBufferUsage.COPY_SRC], true);
+                    new Uint32Array(tempBuffer.getMappedRange(0, buffLength)).set(new Uint32Array(engine.rust.memory.buffer, allocated_gpu_memory_ptr, length));
+                    tempBuffer.unmap();
+            
+                    renderEncoder.copyBufferToBuffer(
+                        tempBuffer, 0,
+                        engine.gpu.GPUMeshes, 0,
+                        buffLength);
+                        engine.gpu.pendingCommandBuffers.add(renderEncoder.finish())
                 }
             }
         });
@@ -493,21 +506,7 @@ export class Engine {
             byteLength)
         this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
-    public updateAllocatedMemory() {
-        const renderEncoder = this.gpu.device.createCommandEncoder();
-        const ptr=this.rust.allocated_gpu_memory();
-        const length = new DataView(this.rust.memory.buffer,ptr, 4).getUint32(0, true);
-        const buffLength = Uint32Array.BYTES_PER_ELEMENT * (length+1);
-        const tempBuffer = this.gpu.createGPUBuffer(buffLength, [GPUBufferUsage.COPY_SRC], true);
-        new Uint32Array(tempBuffer.getMappedRange(0, buffLength)).set(new Uint32Array(this.rust.memory.buffer, ptr, length));
-        tempBuffer.unmap();
 
-        renderEncoder.copyBufferToBuffer(
-            tempBuffer, 0,
-            this.gpu.GPUMeshes, 0,
-            buffLength);
-        this.gpu.pendingCommandBuffers.add(renderEncoder.finish())
-    }
     collideWithWorld() {
         //TODO: Call only when camera position change
         const scaledPosition = this.collider.scaledPosition;

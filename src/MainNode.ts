@@ -124,10 +124,8 @@ export abstract class MainNode {
         this.ptr=engine.rust.new_mesh(MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, sceneids, static_faces, strip)
        
         MainNode.Meshes.set(this.id, this);
-        engine.updateAllocatedMemory();
     }
     destroy() {
-        //super.destroy(engine.rustEngine);
-        engine.updateAllocatedMemory();
+        // TODO
     }
 }
