@@ -218,21 +218,13 @@ export class GPU {
             }
         );
         const BindGroupLayoutCanvas = BindGroupLayout.create(this,'BindGroupLayoutCanvas',
-
-            {   //normal
-                binding: 0,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {
-                    sampleType:'unfilterable-float'
-                },
-            },
             {   //diffuse
-                binding: 1,
+                binding: 0,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
                 }
             }, {    //meshes
-                binding: 2,
+                binding: 1,
                 visibility: GPUShaderStage.FRAGMENT,
                 buffer: {
                     type: "read-only-storage"
@@ -325,14 +317,10 @@ export class GPU {
             [
             {
                 binding: 0,
-                resource: this.renderPassScreen.renderTargets.gRenderTargetNormals
-            },
-            {
-                binding: 1,
                 resource: this.renderPassScreen.renderTargets.gRenderTargetDiffuse
             },
             {
-                binding: 2,
+                binding: 1,
                 resource: {
                     buffer: this.GPUMeshes
                 }
