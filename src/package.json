@@ -8,6 +8,7 @@
     "buildRust": "cargo rustc --lib --manifest-path ./engine/Cargo.toml  --target wasm32-unknown-unknown --target-dir ../wwwroot/js/engine -Z build-std=panic_abort,std -- -C target-feature=+simd128,+multivalue",
     "buildRust2": "rustc --edition=2018 -o ../wwwroot/js/engine/engine.wasm --crate-type=cdylib -C target-feature=+simd128,+reference-types --target=wasm32-unknown-unknown ./engine/src/lib.rs",
     "buildRust-testem": "wasm-pack build engine --target web --out-dir ../test-build/js/engine -- -Z build-std=panic_abort,std",
+    "buildRust-testem2": "rustc --edition=2018 -o ./test-build/js/engine/engine.wasm --crate-type=cdylib -C target-feature=+simd128,+reference-types --target=wasm32-unknown-unknown ./engine/src/lib.rs",
     "buildWasm": "wat2wasm.exe collider\\collider.wat --debug-names -o ..\\wwwroot\\collider\\colliderO.wasm --enable-simd",
     "buildWasmSimd": "wat2wasm.exe collider\\colliderSIMD2.wat --debug-names -o ..\\wwwroot\\collider\\colliderSimdO.wasm --enable-simd",
     "buildWasmSimd-testem": "wat2wasm.exe collider\\colliderSIMD2.wat --debug-names -o .\\test-build\\collider\\colliderSimdO.wasm --enable-simd",
@@ -16,8 +17,8 @@
     "build-prod": "npm run buildRust && tsc -b  && npm run buildWasmSimd-prod",
     "publish": "tsc && dotnet build ../BlazorApp1.csproj && dotnet publish ../BlazorApp1.csproj",
     "test": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs",
-    "testem": "tsc --project tsconfig.testem.json && npm run buildRust-testem && npm run buildWasmSimd-testem && npm run testem --prefix ./test-build",
-    "testem-ci": "tsc --project tsconfig.testem.json && npm run buildRust-testem && npm run buildWasmSimd-testem && npm run testem-ci --prefix ./test-build",
+    "testem": "tsc --project tsconfig.testem.json && npm run buildRust-testem2 && npm run buildWasmSimd-testem && npm run testem --prefix ./test-build",
+    "testem-ci": "tsc --project tsconfig.testem.json && npm run buildRust-testem2 && npm run buildWasmSimd-testem && npm run testem-ci --prefix ./test-build",
     "eslint": "eslint ./*/**.ts"
   },
   "author": "",
