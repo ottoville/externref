@@ -44,7 +44,7 @@ export class RenderPipeline {
         this.bindgroupdrawable.renderPipeLines.delete(this);
     }
     draw(   renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder,
-            renderPass: RenderPass,
+            renderPass: RenderPass<1|4>,
             BindGroupsStart: number,
             dynamicIndices:number[]=[]): number {
 

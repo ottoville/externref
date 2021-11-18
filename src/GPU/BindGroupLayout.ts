@@ -13,7 +13,7 @@ interface GPUBindGroupTextureEntry<SampleType = 'float'> extends GPUBindGroupEnt
 type RenderTargetView =
 {
     binding: number,
-    resource: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>
+    resource: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[], 1|4>>
 };
 type MapToGPUBindGroupEntry<T> = { [K in keyof T]:  T[K] extends GPUBindGroupTextureEntry ? RenderTargetView : GPUBindGroupEntry };
 export class BindGroupLayout<T extends GPUBindGroupEntry[] = GPUBindGroupEntry[]> {

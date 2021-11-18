@@ -12,7 +12,8 @@ function TerrainRenderPipeline(gpu: GPU, entryPoint='main', topology:GPUPrimitiv
     if (renderPipeline)
         return renderPipeline;
 
-    const renderPipeLine = gpu.lightsBindGroupTexture2.addRenderPipeline(new VertexShader(gpu,'ground.vert.wgsl', entryPoint, [{
+    const renderPipeLine = gpu.lightsBindGroupTexture2.addRenderPipeline(new VertexShader(gpu,'ground.vert.wgsl', entryPoint, [
+        {
         arrayStride: 48,
         stepMode: "vertex",
         attributes: [{

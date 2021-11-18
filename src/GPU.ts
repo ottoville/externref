@@ -60,23 +60,23 @@ export class GPU {
     readonly BindGroupCanvas: (renderPass: RenderPass) => GPUBindGroup;
     static instance: GPU;
 
-    readonly renderPasses: Set<RenderPass>;
+    readonly renderPasses: Set<RenderPass<1|4>>;
 
     readonly scale = {
         x: 1,
         y: 1
     }
-    readonly renderPassScreen: PickableRenderPass<{
-        gRenderTargetNormals: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>;
-        gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"]>>;
+    readonly renderPassScreen: PickableRenderPass<1,{
+        gRenderTargetNormals: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"],1>>;
+        gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"],1>>;
     }>;
     
-    readonly renderPassWater: RenderPass<{
-        normals: RenderTarget<Texture<"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
-        diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
+    readonly renderPassWater: RenderPass<1,{
+        normals: RenderTarget<Texture<"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],1>>;
+        diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],1>>;
     }>;
 
-    readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<'bgra8unorm',['RENDER_ATTACHMENT']>>; }>;
+    readonly renderPassCanvas: RenderPass<1,{ swap: RenderTarget<Texture<'bgra8unorm',['RENDER_ATTACHMENT'],1>>; }>;
     context: GPUCanvasContext;
     updateViewPipeline:TerraGPUComputePipeLine;
     updateViewBindGroup: GPUBindGroup;
@@ -270,7 +270,6 @@ export class GPU {
         ));
         const normalAndPositionTexture = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'],[300,300,1])
         const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
-
         this.renderPassScreen = new PickableRenderPass(this, {
             gRenderTargetNormals: new RenderTarget(normalAndPositionTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 }),
             gRenderTargetDiffuse: new RenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 })

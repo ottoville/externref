@@ -30,7 +30,7 @@ function Simple(gpu: GPU) {
             }]
         }]), new Shader(gpu, 'simple.frag.wgsl'), {
         label: 'simple',
-        primitive: { topology: 'triangle-list' }
+        primitive: { topology: 'triangle-list' },
     });
     renderPipelines.set(gpu, renderPipeline);
     return renderPipeline

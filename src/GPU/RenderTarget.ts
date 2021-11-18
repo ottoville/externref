@@ -1,5 +1,5 @@
 import { GPUTextureUsageLiterals, Texture } from "./texture";
-export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> {
+export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLiterals[], 1|4>> {
 
     viewSymbol:symbol | null = null;
     constructor(
