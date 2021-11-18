@@ -3,9 +3,9 @@ import { GPU } from "../GPU.js";
 
 export type GPUTextureUsageLiterals= 'COPY_SRC' | 'COPY_DST' | 'TEXTURE_BINDING' | 'STORAGE_BINDING' | 'RENDER_ATTACHMENT';
 
-export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLiterals[], S extends 1|4> {
+export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLiterals[]> {
     texture: GPUTexture;
-    renderPasses: Set<RenderPass<1|4>> = new Set();
+    renderPasses: Set<RenderPass> = new Set();
     views:Map<symbol, GPUTextureView> = new Map();
     createView(descriptor?: GPUTextureViewDescriptor):[symbol, GPUTextureView] {
         const view = this.texture.createView(descriptor);
@@ -13,7 +13,7 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
         this.views.set(s, view);
         return [s, view];
     }
-    createTexture(debug=false) {
+    createTexture(sampleCount:1|4 = 1, debug=false) {
         if (this.texture) {
             this.texture.destroy();
             this.renderPasses.forEach(rp => {
@@ -26,24 +26,23 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
             this.usages.push('COPY_SRC');
         this.texture = this.gpu.device.createTexture({
             size:this.size,
-            sampleCount:this.sampleCount,
+            sampleCount:sampleCount,
             format:this.format,
             usage:this.usages.reduce((prev, curr) => prev | GPUTextureUsage[curr], 0),
         });
         this.views.clear();
         return this.texture;
     }
-    static create<U extends ['TEXTURE_BINDING'], F extends GPUTextureFormat, S extends 1|4 = 1>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate], sampleCount?:S): Texture<F, U, S>
-    static create<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat, S extends 1|4 = 1>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate], sampleCount?:S): Texture<F,U, S>
-    static create<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT'], F extends GPUTextureFormat, S extends 1|4 = 1>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate], sampleCount?:S): Texture<F, U, S>
-    static create<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC'], F extends GPUTextureFormat, S extends 1|4 = 1>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate], sampleCount?:S): Texture<F, U, S>
-    static create<F extends GPUTextureFormat, S extends 1|4 = 1>(gpu:GPU, format: F, usages: GPUTextureUsageLiterals[], size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate] = [300,300,1], sampleCount:S): Texture<F, GPUTextureUsageLiterals[], S> {
-        return new Texture(gpu, format,sampleCount,usages,size)
+    static create<U extends ['TEXTURE_BINDING'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate]): Texture<F, U>
+    static create<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate]): Texture<F,U>
+    static create<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate]): Texture<F, U>
+    static create<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate]): Texture<F, U>
+    static create<F extends GPUTextureFormat>(gpu:GPU, format: F, usages: GPUTextureUsageLiterals[], size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate] = [300,300,1]): Texture<F, GPUTextureUsageLiterals[]> {
+        return new Texture(gpu, format,usages,size)
     }
     constructor(
         public gpu:GPU,
         public format: F,
-        public sampleCount:S,
         public usages: U,
         public readonly size: [number,number,number] = [300,300,1]) {
             this.texture = this.createTexture();
@@ -56,7 +55,7 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
             const oldSampleCount = renderPass.sampleCount;
     
             renderPass.sampleCount = 1
-            this.createTexture(true);
+            this.createTexture(1,true);
             let bytes_per_fixel: number;
             switch (this.format) {
                 case 'bgra8unorm':

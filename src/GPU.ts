@@ -60,23 +60,23 @@ export class GPU {
     readonly BindGroupCanvas: (renderPass: RenderPass) => GPUBindGroup;
     static instance: GPU;
 
-    readonly renderPasses: Set<RenderPass<1|4>>;
+    readonly renderPasses: Set<RenderPass>;
 
     readonly scale = {
         x: 1,
         y: 1
     }
-    readonly renderPassScreen: PickableRenderPass<1,{
-        gRenderTargetNormals: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"],1>>;
-        gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"],1>>;
+    readonly renderPassScreen: PickableRenderPass<{
+        gRenderTargetNormals: RenderTarget<Texture<"rgba32float", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>;
+        gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"]>>;
     }>;
     
-    readonly renderPassWater: RenderPass<1,{
-        normals: RenderTarget<Texture<"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],1>>;
-        diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],1>>;
+    readonly renderPassWater: RenderPass<{
+        normals: RenderTarget<Texture<"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
+        diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
     }>;
 
-    readonly renderPassCanvas: RenderPass<1,{ swap: RenderTarget<Texture<'bgra8unorm',['RENDER_ATTACHMENT'],1>>; }>;
+    readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<'bgra8unorm',['RENDER_ATTACHMENT']>>; }>;
     context: GPUCanvasContext;
     updateViewPipeline:TerraGPUComputePipeLine;
     updateViewBindGroup: GPUBindGroup;

@@ -16,18 +16,18 @@ interface RenderPipelineVariant2 {
     drawables: Map<Scene, Set<Drawable>>
     rootDrawables: Set<Drawable>
 }
-export class RenderPass<S extends 1|4 = 1, T extends { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[], S>> } = { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[], S>> }> {
+export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> } = { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> }> {
     cameras: Set<TerraCamera> = new Set();
     scenes: Set<Scene> = new Set();
     #depthTextureView?: GPUTextureView
     #depthFormat: GPUTextureFormat = 'depth32float';
     bundles: GPURenderBundle[] = [];
     renderPipelines: Map<RenderPipeline, RenderPipelineVariant2> = new Map();
-    depthTexture?: Texture<GPUTextureFormat, ("COPY_SRC" | "RENDER_ATTACHMENT")[], S>;
+    depthTexture?: Texture<GPUTextureFormat, ("COPY_SRC" | "RENDER_ATTACHMENT")[]>;
     constructor(
         public gpu: GPU,
         public renderTargets: T,
-        public sampleCount:S,
+        public sampleCount: 1 | 4,
         depthStencil = false,
         public size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
         private _onResize: (width: number, height: number) => [number, number]) {
@@ -39,7 +39,7 @@ export class RenderPass<S extends 1|4 = 1, T extends { [index: string]: RenderTa
         }
 
         if (depthStencil) {
-            this.depthTexture = new Texture(gpu,this.#depthFormat,this.sampleCount,['RENDER_ATTACHMENT', 'COPY_SRC'],this.size)
+            this.depthTexture = new Texture(gpu,this.#depthFormat,['RENDER_ATTACHMENT', 'COPY_SRC'],this.size)
            //TODO use renderTarget class
             this.#depthTextureView = this.depthTexture.createView()[1];
         }
@@ -144,7 +144,7 @@ export class RenderPass<S extends 1|4 = 1, T extends { [index: string]: RenderTa
         return renderPassDescriptor;
     }
  
-    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass: RenderPass<S>) => GPUBindGroup), rootLayout: PipelineLayout) {
+    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass: RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {
         const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
         if (!this.bundles.length) {
             const renderDesc:GPURenderBundleEncoderDescriptor= {
@@ -198,11 +198,11 @@ export class RenderPass<S extends 1|4 = 1, T extends { [index: string]: RenderTa
     }
 }
 
-export class PickableRenderPass<S extends 1|4 = 1 , T extends { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[], S>> } = { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[], S>> }> extends RenderPass<S, T> {
+export class PickableRenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> } = { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> }> extends RenderPass<T> {
     pickBuffer: GPUBuffer;
     constructor(gpu: GPU,
         renderTargets: T,
-        sampleCount:S,
+        sampleCount: 1|4,
         depthStencil = false,
         size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
         _onResize: (width: number, height: number) => [number, number]) {
