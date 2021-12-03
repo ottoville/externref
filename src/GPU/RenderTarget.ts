@@ -43,10 +43,11 @@ export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLit
         const obj:GPURenderPassColorAttachment = {
             view:this.view,
             loadValue:this.loadValue,
-            storeOp:"store"
+            storeOp: "store"
         }
         if(this.texture.resolveTexture) {
             obj.resolveTarget = this.resolveTargetView;
+            obj.storeOp = "discard"
         }
         return obj;
     }
@@ -66,14 +67,14 @@ export class SwapRenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsag
             var obj:GPURenderPassColorAttachment = {
                 view:this.view,
                 loadValue:this.loadValue,
-                storeOp:"store",
-                resolveTarget: this.resolveTargetView
+                resolveTarget: engine.gpu.context.getCurrentTexture().createView(),
+                storeOp: "discard",
             }            
         } else {
             var obj:GPURenderPassColorAttachment = {
                 view:engine.gpu.context.getCurrentTexture().createView(),
                 loadValue:this.loadValue,
-                storeOp:"store"
+                storeOp: "store"
             }
         }
         return obj
