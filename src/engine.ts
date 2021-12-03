@@ -218,6 +218,10 @@ export class Engine {
             gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.toBitmap(0)
         }
         //@ts-ignore
+        window.printRenderTarget2 = () => {
+            gpu.renderPassScreen.depthTexture!.toBitmap(0)
+        }
+        //@ts-ignore
         window.printRenderTarget3 = () => {
             gpu.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture.toBitmap(0)
         }

@@ -25,7 +25,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/facebook-js-sdk": "^3.3.0",
-    "@webgpu/types": "0.1.6",
+    "@webgpu/types": "0.1.7",
     "esm": "^3.2.25",
     "wasm-opt": "^1.1.1"
   },

@@ -1,7 +1,6 @@
 import type { GPU } from "../GPU.js";
 import { RenderTarget } from "../GPU/RenderTarget.js";
 import {GPUTextureUsageLiterals, Texture } from "../GPU/texture.js";
-import { RenderPass } from "../GPU/RenderPass.js";
 
 
 //TODO: Merge layoutgroupdrawable here
@@ -13,13 +12,15 @@ interface GPUBindGroupTextureEntry<SampleType = 'float'> extends GPUBindGroupEnt
 type RenderTargetView =
 {
     binding: number,
-    resource: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>
+    resource: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> | GPUTextureView
 };
-type MapToGPUBindGroupEntry<T> = { [K in keyof T]:  T[K] extends GPUBindGroupTextureEntry ? RenderTargetView : GPUBindGroupEntry };
+type MapToGPUBindGroupEntry<T> = {
+    [K in keyof T]:  T[K] extends GPUBindGroupTextureEntry ? RenderTargetView : GPUBindGroupEntry };
 export class BindGroupLayout<T extends GPUBindGroupEntry[] = GPUBindGroupEntry[]> {
     layout: GPUBindGroupLayout;
     dynamicIndices=false;
-    static create<T extends GPUBindGroupLayoutEntry[]>(gpu:GPU, label:string,...entries: T):BindGroupLayout<{ [K in keyof T]: T[K] extends {texture:GPUTextureBindingLayout} ? GPUBindGroupTextureEntry<T[K]['texture']['sampleType']>:GPUBindGroupEntry }> {
+    static create<T extends GPUBindGroupLayoutEntry[]>(gpu:GPU, label:string,...entries: T):
+        BindGroupLayout<{ [K in keyof T]: T[K] extends {texture:GPUTextureBindingLayout} ? GPUBindGroupTextureEntry<T[K]['texture']['sampleType']>:GPUBindGroupEntry }> {
         return new BindGroupLayout(gpu, {label, entries})
     }
     constructor(private gpu:GPU, entry:GPUBindGroupLayoutDescriptor) {
@@ -39,12 +40,10 @@ export class BindGroupLayout<T extends GPUBindGroupEntry[] = GPUBindGroupEntry[]
         this.gpu.GPUBindGroupLayouts.set(bindGroup, this);
         return bindGroup
     }
-    createBindGroupForRenderPass(renderPass: RenderPass, entries: MapToGPUBindGroupEntry<T>): GPUBindGroup {
-        //createBindGroupForRenderPass(layout:  BindGroupLayout<[GPUBindGroupEntry,GPUBindGroupEntry]>, renderPass: RenderPass<{}>, entries: [(GPUBindGroupEntry | { binding: number, resource: RenderTarget<GPUTexture> })]): GPUBindGroup {
+    createBindGroupForRenderPass(entries: MapToGPUBindGroupEntry<T>): GPUBindGroup {
         const bindGroup = this.gpu.device.createBindGroup({
             layout: this.layout, entries: (entries as GPUBindGroupEntry[]).map<GPUBindGroupEntry>(entry => {
                 if (entry.resource instanceof RenderTarget) {
-                    entry.resource.texture.renderPasses.add(renderPass);
                     entry.resource = entry.resource.view;
                 }
                 return entry as GPUBindGroupEntry;

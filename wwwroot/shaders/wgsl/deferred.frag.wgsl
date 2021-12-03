@@ -36,9 +36,8 @@ struct ClusterBounds {
   lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
 };
 
-[[binding(0), group(0)]] var normalTexture: texture_2d<f32>;
-[[binding(1), group(0)]] var diffuseTexture: texture_2d<f32>;
-[[binding(2), group(0)]] var<storage, read> meshes : MeshArray;
+[[binding(0), group(0)]] var diffuseTexture: texture_2d<f32>;
+[[binding(1), group(0)]] var<storage, read> meshes : MeshArray;
 
 
 struct Output {

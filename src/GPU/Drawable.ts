@@ -16,8 +16,8 @@ export abstract class Drawable {
     protected dynamicBuffers: [GPUBindGroup, number][] = [];
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
     constructor(
-        protected renderPipeline: RenderPipeline,
-        protected renderPasses: Set<RenderPass> = new Set([engine.gpu.renderPassScreen])) {
+        protected renderPipeline: Readonly<RenderPipeline>,
+        private renderPasses: Set<RenderPass> = new Set([engine.gpu.renderPassScreen])) {
             this.renderPasses.forEach(rp => {
                 const variant = rp.getVariant(this.renderPipeline);
                 this.#renderList.set(rp, variant.rootDrawables.add(this));

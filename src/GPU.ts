@@ -1,7 +1,7 @@
 ﻿import { MainNode } from "./MainNode.js";
 import { PickableRenderPass, RenderPass } from "./GPU/RenderPass.js";
 import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
-import { RenderTarget } from "./GPU/RenderTarget.js";
+import { RenderTarget, SwapRenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import {Texture } from "./GPU/texture.js";
 import type { Projection } from "./GPU/Projection.js";
@@ -57,7 +57,7 @@ export class GPU {
     readonly timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     readonly timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
-    readonly BindGroupCanvas: (renderPass: RenderPass) => GPUBindGroup;
+    readonly BindGroupCanvas: () => GPUBindGroup;
     static instance: GPU;
 
     readonly renderPasses: Set<RenderPass>;
@@ -222,7 +222,7 @@ export class GPU {
                 binding: 0,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
-                }
+                } as GPUTextureBindingLayout
             }, {    //meshes
                 binding: 1,
                 visibility: GPUShaderStage.FRAGMENT,
@@ -268,31 +268,36 @@ export class GPU {
                 texture: {}
             }
         ));
+
         const normalAndPositionTexture = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'],[300,300,1])
-        const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
+        const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING']) //TODO: remove texture binding
+
+        const gRenderTargetNormals = new RenderTarget(normalAndPositionTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 });
+        const gRenderTargetDiffuse = new RenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 });
+
         this.renderPassScreen = new PickableRenderPass(this, {
-            gRenderTargetNormals: new RenderTarget(normalAndPositionTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 }),
-            gRenderTargetDiffuse: new RenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 })
-        }, 1, true, [canvas.width,canvas.height,1],
+            gRenderTargetNormals,
+            gRenderTargetDiffuse
+        }, 4, true, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
-            });
+            },'renderPassScreen');
         const normalTextureWater = Texture.create(this,"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
         const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
     
         this.renderPassWater = new RenderPass(this, {
             normals: new RenderTarget(normalTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
             diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
-        }, 1, true, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2]);
+        }, 1, true, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2],'renderPassWater');
       
         const canvasTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT'])
 
         this.renderPassCanvas = new RenderPass(this, {
-            swap: new RenderTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 })
-        }, 1, false, [canvas.width,canvas.height,1],
+            swap: new SwapRenderTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 })
+        },1, false, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
-            });
+            },'renderPassCanvas');
         const context:GPUCanvasContext | null = canvas.getContext('webgpu');
         if (!context)
             throw ('Unable to get webgpu context');
@@ -311,12 +316,10 @@ export class GPU {
         this.renderPasses = new Set([this.renderPassCanvas, this.renderPassScreen, this.renderPassWater]);
         //[this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
 
-        this.BindGroupCanvas = (renderPass: RenderPass) =>  {
-            return BindGroupLayoutCanvas.createBindGroupForRenderPass(renderPass,
-            [
+        this.BindGroupCanvas = () =>  BindGroupLayoutCanvas.createBindGroupForRenderPass([
             {
                 binding: 0,
-                resource: this.renderPassScreen.renderTargets.gRenderTargetDiffuse
+                resource: this.renderPassScreen.renderTargets.gRenderTargetDiffuse.viewOrResolve
             },
             {
                 binding: 1,
@@ -326,7 +329,7 @@ export class GPU {
             }
             ]
         );
-        }
+        
         this.#DynamicBindGroups.add(this.BindGroupPosition);
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
