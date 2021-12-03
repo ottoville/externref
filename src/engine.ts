@@ -212,7 +212,7 @@ export class Engine {
             const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
             shaderModules.set(u, device.createShaderModule({ code: compiled }));
         }));
-        const gpu = new GPU(canvas, device, shaderModules);
+        const gpu = new GPU(canvas, adapter, device, shaderModules);
         //@ts-ignore
         window.printRenderTarget = () => {
             gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.toBitmap(0)
@@ -453,7 +453,7 @@ export class Engine {
                 // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
                 gpu.context.configure({
                     device: gpu.device,
-                    format: "bgra8unorm",
+                    format: gpu.presentationFormat,
                     usage: GPUTextureUsage.RENDER_ATTACHMENT
                 })
                 const commandEncoder = gpu.createCommandEncoder();

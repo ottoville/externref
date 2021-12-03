@@ -75,8 +75,8 @@ export class GPU {
         normals: RenderTarget<Texture<"rgba32float",['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
         diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
     }>;
+    readonly renderPassCanvas: RenderPass<{ swap: SwapRenderTarget<Texture<GPUTextureFormat, ["RENDER_ATTACHMENT"]>>; }>;
 
-    readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<'bgra8unorm',['RENDER_ATTACHMENT']>>; }>;
     context: GPUCanvasContext;
     updateViewPipeline:TerraGPUComputePipeLine;
     updateViewBindGroup: GPUBindGroup;
@@ -90,7 +90,8 @@ export class GPU {
    // readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = [1,1,1];
     viewUniformsLayout: GPUBindGroupLayout;
     readonly uniformBindGroupLayoutWithTime: BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>;
-    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice, readonly shaderModules: Map<string, GPUShaderModule>) {
+    readonly presentationFormat: GPUTextureFormat;
+    constructor(public canvas: HTMLCanvasElement, adapter:GPUAdapter, public device: GPUDevice, readonly shaderModules: Map<string, GPUShaderModule>) {
 
         const totalClusters=this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
         this.clusterSizeinBytes= totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
@@ -290,7 +291,19 @@ export class GPU {
             diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
         }, 1, true, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2],'renderPassWater');
       
-        const canvasTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT'])
+
+        const context:GPUCanvasContext | null = canvas.getContext('webgpu');
+        if (!context)
+            throw ('Unable to get webgpu context');
+        this.context = context
+        this.presentationFormat = context.getPreferredFormat(adapter);
+        context.configure({
+            device: device,
+            format: this.presentationFormat,
+            usage: GPUTextureUsage.RENDER_ATTACHMENT
+        });
+
+        const canvasTexture = Texture.create(this,this.presentationFormat,['RENDER_ATTACHMENT'])
 
         this.renderPassCanvas = new RenderPass(this, {
             swap: new SwapRenderTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 })
@@ -298,16 +311,7 @@ export class GPU {
             (w, h) => {
                 return [w, h]
             },'renderPassCanvas');
-        const context:GPUCanvasContext | null = canvas.getContext('webgpu');
-        if (!context)
-            throw ('Unable to get webgpu context');
-        this.context = context
 
-        context.configure({
-            device: device,
-            format: "bgra8unorm",
-            usage: GPUTextureUsage.RENDER_ATTACHMENT
-        })
         //Scene layoyt is iterated manually so remove it not to iterate it twise.
         //this.rootCameralayout.subBindGroups.delete(this.rootSceneLayout);
 
