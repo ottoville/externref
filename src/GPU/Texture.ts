@@ -150,6 +150,9 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
                     buffer.unmap();
                     ctx.putImageData(imageData, 0, 0);
                     c.toBlob(b=>  {
+                        if(!b) {
+                            throw new Error('Blob creation failed');
+                        }
                         console.log(URL.createObjectURL(b));
                         buffer.destroy();
                     },"image/jpeg",0.96);
