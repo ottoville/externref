@@ -1,52 +1,32 @@
 import { GPUTextureUsageLiterals, Texture } from "./texture";
 import type { Engine } from "engine.js";
+import { TextureView } from "./TextureView.js";
 declare const engine:Engine;
 
 export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> {
-    viewSymbol:symbol | null = null;
-    resolveTargetViewSymbol:symbol | null = null;
+
+    view: TextureView;
     constructor(
         public readonly texture: T,
         public loadValue: GPULoadOp | GPUColor,
-        private textureViewDescriptor?: GPUTextureViewDescriptor,
+        textureViewDescriptor?: GPUTextureViewDescriptor,
         public writeMask: GPUColorWriteFlags = 0xF
     ) {
-    }
-    get view(): GPUTextureView {
-        if(this.viewSymbol) {
-            const view = this.texture.views.get(this.viewSymbol);
-            if(view)
-                return view;
-        }
-        const SymbolAndView = this.texture.createView(this.textureViewDescriptor);
-        this.viewSymbol = SymbolAndView[0]
-        return SymbolAndView[1];
-    }
-    get resolveTargetView(): GPUTextureView {
-        if(this.resolveTargetViewSymbol) {
-            const view = this.texture.resolveViews.get(this.resolveTargetViewSymbol);
-            if(view)
-                return view;
-        }
-        const SymbolAndView = this.texture.createResolveView(this.textureViewDescriptor);
-        this.viewSymbol = SymbolAndView[0]
-        return SymbolAndView[1];
+        this.view = new TextureView(texture, textureViewDescriptor);
+
     }
     get viewOrResolve(): GPUTextureView {
-        if(this.texture.resolveTexture) {
-            return this.resolveTargetView;
-        }
-        return this.view;
+        return this.view.resolveView ?? this.view.view;
     }
 
     createColorAttachment() {
         const obj:GPURenderPassColorAttachment = {
-            view:this.view,
+            view: this.view.view,
             loadValue:this.loadValue,
             storeOp: "store"
         }
-        if(this.texture.resolveTexture) {
-            obj.resolveTarget = this.resolveTargetView;
+        if(this.view.resolveView) {
+            obj.resolveTarget = this.view.resolveView;
             obj.storeOp = "discard"
         }
         return obj;
@@ -65,8 +45,8 @@ export class SwapRenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsag
     override createColorAttachment() {
         if(this.texture.resolveTexture) {
             var obj:GPURenderPassColorAttachment = {
-                view:this.view,
-                loadValue:this.loadValue,
+                view: this.view.view,
+                loadValue: this.loadValue,
                 resolveTarget: engine.gpu.context.getCurrentTexture().createView(),
                 storeOp: "discard",
             }            

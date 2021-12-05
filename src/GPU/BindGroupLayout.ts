@@ -1,6 +1,4 @@
 import type { GPU } from "../GPU.js";
-import { RenderTarget } from "../GPU/RenderTarget.js";
-import {GPUTextureUsageLiterals, Texture } from "../GPU/texture.js";
 
 
 //TODO: Merge layoutgroupdrawable here
@@ -9,13 +7,9 @@ import {GPUTextureUsageLiterals, Texture } from "../GPU/texture.js";
 interface GPUBindGroupTextureEntry<SampleType = 'float'> extends GPUBindGroupEntry {
     resource: GPUTextureView;
 }
-type RenderTargetView =
-{
-    binding: number,
-    resource: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> | GPUTextureView
-};
 type MapToGPUBindGroupEntry<T> = {
-    [K in keyof T]:  T[K] extends GPUBindGroupTextureEntry ? RenderTargetView : GPUBindGroupEntry };
+    [K in keyof T]:  T[K] extends GPUBindGroupTextureEntry ? {binding: GPUIndex32, resource: GPUTextureView} : GPUBindGroupEntry };
+    
 export class BindGroupLayout<T extends GPUBindGroupEntry[] = GPUBindGroupEntry[]> {
     layout: GPUBindGroupLayout;
     dynamicIndices=false;
@@ -33,23 +27,10 @@ export class BindGroupLayout<T extends GPUBindGroupEntry[] = GPUBindGroupEntry[]
         }
     }
     createBindGroup(entries: MapToGPUBindGroupEntry<T>): GPUBindGroup {
-        //createBindGroup(layout: BindGroupLayout<GPUBindGroupEntry[]>, ...entries: GPUBindGroupEntry[]): GPUBindGroup {
         const bindGroup = this.gpu.device.createBindGroup({
             layout: this.layout, entries
         });
         this.gpu.GPUBindGroupLayouts.set(bindGroup, this);
         return bindGroup
-    }
-    createBindGroupForRenderPass(entries: MapToGPUBindGroupEntry<T>): GPUBindGroup {
-        const bindGroup = this.gpu.device.createBindGroup({
-            layout: this.layout, entries: (entries as GPUBindGroupEntry[]).map<GPUBindGroupEntry>(entry => {
-                if (entry.resource instanceof RenderTarget) {
-                    entry.resource = entry.resource.view;
-                }
-                return entry as GPUBindGroupEntry;
-            })
-        });
-        this.gpu.GPUBindGroupLayouts.set(bindGroup, this);
-        return bindGroup
-    }    
+    } 
 }

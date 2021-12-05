@@ -320,7 +320,7 @@ export class GPU {
         this.renderPasses = new Set([this.renderPassCanvas, this.renderPassScreen, this.renderPassWater]);
         //[this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
 
-        this.BindGroupCanvas = () =>  BindGroupLayoutCanvas.createBindGroupForRenderPass([
+        this.BindGroupCanvas = () =>  BindGroupLayoutCanvas.createBindGroup([
             {
                 binding: 0,
                 resource: this.renderPassScreen.renderTargets.gRenderTargetDiffuse.viewOrResolve

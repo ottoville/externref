@@ -9,6 +9,7 @@ import { GPUTextureUsageLiterals, Texture } from "./texture.js";
 import { TerraVector3 } from "../Math.js";
 import type { Engine } from "engine.js";
 import { MainNode } from "../MainNode.js";
+import { TextureView } from "./TextureView.js";
 declare const engine:Engine;
 
 interface RenderPipelineVariant2 {
@@ -19,11 +20,11 @@ interface RenderPipelineVariant2 {
 export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> } = { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> }> {
     cameras: Set<TerraCamera> = new Set();
     scenes: Set<Scene> = new Set();
-    #depthTextureView?: GPUTextureView
     #depthFormat: GPUTextureFormat = 'depth32float';
     bundles: GPURenderBundle[] = [];
     renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant2> = new Map();
     depthTexture?: Texture<GPUTextureFormat, ("COPY_SRC" | "RENDER_ATTACHMENT")[]>;
+    depthTextureView?: TextureView;
     constructor(
         public gpu: GPU,
         public renderTargets: T,
@@ -41,9 +42,8 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         }
 
         if (depthStencil) {
-            this.depthTexture = new Texture(gpu,this.#depthFormat,['RENDER_ATTACHMENT', 'COPY_SRC'],this.size)
-           //TODO use renderTarget class
-            this.#depthTextureView = this.depthTexture.createView()[1];
+            this.depthTexture = new Texture(gpu,this.#depthFormat,['RENDER_ATTACHMENT', 'COPY_SRC'],this.size,false)
+            this.depthTextureView = new TextureView(this.depthTexture);
         }
     }
     getVariant(renderPipeline:Readonly<RenderPipeline>) {
@@ -95,7 +95,6 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             this.depthTexture.size[0]=this.size[0];
             this.depthTexture.size[1]=this.size[1];
             this.depthTexture.createTexture(this.sampleCount);
-            this.#depthTextureView = this.depthTexture.createView()[1];
         }
         for (const key in this.renderTargets) {
             this.renderTargets[key]!.texture.size[0]=this.size[0];
@@ -112,9 +111,9 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         const renderPassDescriptor: GPURenderPassDescriptor = {
             colorAttachments,
         }
-        if (this.#depthTextureView) {
+        if (this.depthTextureView) {
             renderPassDescriptor.depthStencilAttachment = {
-                view: this.#depthTextureView,
+                view: this.depthTextureView.view,
                 depthLoadValue: 0.0,
                 depthStoreOp: "store",
                 stencilLoadValue: 0,
@@ -232,6 +231,36 @@ export class PickableRenderPass<T extends { [index: string]: RenderTarget<Textur
         const buffer=this.pickBuffer;
 
         const encoder = this.gpu.device.createCommandEncoder();
+
+        if(this.sampleCount > 1) {
+/*
+            const viewLayout=BindGroupLayout.create(engine.gpu,'view',
+                {
+                    binding:0,
+                    visibility:GPUShaderStage.COMPUTE,
+                    texture: {
+                        
+                    }
+                }
+            )
+            const updateViewBindGroup=viewLayout.createBindGroup([{
+                binding: 0,
+                resource: {
+                    texture: this.depthTexture!.createView()[1],
+                },
+            }]);
+            const pickPositionPipeline=engine.gpu.createComputePipeline('updateView.comp.wgsl',
+                engine.gpu.device.createPipelineLayout({bindGroupLayouts:[viewLayout.layout]}));
+
+            const pickPass = encoder.beginComputePass();
+            pickPass.setPipeline(pickPositionPipeline);
+            pickPass.setBindGroup(0, updateViewBindGroup);
+            pickPass.dispatch(...this.gpu.CLUSTER_DISPATCH_SIZE);
+            pickPass.endPass();*/
+        }
+
+
+
         encoder.copyTextureToBuffer(
             {
                 texture: this.depthTexture!.resolveTexture ?? this.depthTexture!.texture,

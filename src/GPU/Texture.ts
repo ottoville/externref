@@ -1,29 +1,16 @@
 import { RenderPass } from "./RenderPass.js";
 import { GPU } from "../GPU.js";
+import { TextureView } from "./TextureView.js";
 
 export type GPUTextureUsageLiterals= 'COPY_SRC' | 'COPY_DST' | 'TEXTURE_BINDING' | 'STORAGE_BINDING' | 'RENDER_ATTACHMENT';
 
-export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLiterals[]> {
+export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GPUTextureUsageLiterals[] = GPUTextureUsageLiterals[]> {
     texture: GPUTexture;
+    views:Set<TextureView> = new Set();
+    resolveViews:Set<TextureView> = new Set();
     resolveTexture?: GPUTexture;
     renderPasses: Set<RenderPass> = new Set();
-    views:Map<symbol, GPUTextureView> = new Map();
-    resolveViews:Map<symbol, GPUTextureView> = new Map();
-    createView(descriptor?: GPUTextureViewDescriptor):[symbol, GPUTextureView] {
-        const view = this.texture.createView(descriptor);
-        const s=Symbol()
-        this.views.set(s, view);
-        return [s, view];
-    }
-    createResolveView(descriptor?: GPUTextureViewDescriptor):[symbol, GPUTextureView] {
-        if(!this.resolveTexture) {
-            throw new Error('Tried to create view on resolve texture that does not exists');
-        }
-        const view = this.resolveTexture.createView(descriptor);
-        const s=Symbol()
-        this.resolveViews.set(s, view);
-        return [s, view];
-    }
+
     createTexture(sampleCount:1|4 = 1, debug=false) {
         
         //Texture is undefined on initial call from constructor
@@ -45,9 +32,9 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
             format:this.format,
             usage:usages,
         });
-        this.views.clear();
+        this.views.forEach(view => view.reCreate());
 
-        if(sampleCount > 1) {
+        if(sampleCount > 1 && this.createResolver) {
             this.createResolveTexture();
 
         }
@@ -64,7 +51,7 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
             format:this.format,
             usage:usages,
         });
-        this.resolveViews.clear();
+        this.resolveViews.forEach(view => view.reCreate());
     }
     static create<U extends ['TEXTURE_BINDING'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate]): Texture<F, U>
     static create<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu:GPU, format: F, usages: U,size?: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate]): Texture<F,U>
@@ -77,7 +64,9 @@ export class Texture<F extends GPUTextureFormat, U extends GPUTextureUsageLitera
         public gpu:GPU,
         public format: F,
         public usages: U,
-        public readonly size: [number,number,number] = [300,300,1]) {
+        public readonly size: [number,number,number] = [300,300,1],
+        private createResolver=true
+        ) {
             this.texture = this.createTexture();
         }
         toBitmap(depth=0) {
