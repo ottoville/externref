@@ -33,12 +33,6 @@ function getRenderPipeline(gpu: GPU) {
             binding: 1,
             visibility: GPUShaderStage.FRAGMENT,
             texture: {
-                sampleType:'unfilterable-float'
-            }
-        }, {
-            binding: 2,
-            visibility: GPUShaderStage.FRAGMENT,
-            texture: {
 
             }
         }
@@ -69,10 +63,6 @@ function getRenderPipeline(gpu: GPU) {
             },
             {
                 binding: 1,
-                resource: gpu.renderPassWater.renderTargets.normals.view.view
-            },
-            {
-                binding: 2,
                 resource: gpu.renderPassWater.renderTargets.diffuse.view.view
             }
         ]

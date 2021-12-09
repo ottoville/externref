@@ -206,7 +206,7 @@ export class Engine {
             'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
             'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',
             'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl', 'deferred.vert.wgsl', 'deferred.frag.wgsl', 'clusters.comp.wgsl', 'debug_normals.vert.wgsl',
-            'updateView.comp.wgsl', 'debug_boundingbox.vert.wgsl'
+            'updateView.comp.wgsl', 'debug_boundingbox.vert.wgsl', 'readDepth.comp.wgsl'
         ];
         await Promise.all(shaders.map(async u => {
             const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
@@ -215,7 +215,7 @@ export class Engine {
         const gpu = new GPU(canvas, adapter, device, shaderModules);
         //@ts-ignore
         window.printRenderTarget = () => {
-            gpu.renderPassScreen.renderTargets.gRenderTargetNormals.texture.toBitmap(0)
+            gpu.renderPassScreen.renderTargets.gRenderTargetId.texture.toBitmap(0)
         }
         //@ts-ignore
         window.printRenderTarget2 = () => {

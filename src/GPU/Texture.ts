@@ -27,10 +27,10 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
             usages|=GPUTextureUsage['COPY_SRC'];
         }
         this.texture = this.gpu.device.createTexture({
-            size:this.size,
+            size: this.size,
             sampleCount: sampleCount,
-            format:this.format,
-            usage:usages,
+            format: this.format,
+            usage: usages,
         });
         this.views.forEach(view => view.reCreate());
 

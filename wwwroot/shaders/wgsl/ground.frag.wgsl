@@ -1,6 +1,6 @@
 //[[location(0)]] var<out> outColor : vec4<f32>;
 struct Output {
-  [[location(0)]] Normals : vec4<f32>;
+  [[location(0)]] ID : u32;
   [[location(1)]] Diffuse : vec4<f32>;
 };
 struct Meshes {
@@ -92,9 +92,10 @@ fn main(
   [[location(4), interpolate(flat)]]  scenes : u32) -> Output {
 
     var output:Output;
-  //outColor = vec4<f32>(ambient,0.0)+textureSample(myTexture, mySampler, v_uv) *  vec4<f32>(shading,shading,shading,1.0);
-  //outColor.w=1.0;
-  output.Normals=vec4<f32>(normal.xyz, bitcast<f32>(id));
+
+//  output.Normals=vec4<f32>(normal.xyz, bitcast<f32>(id));
+
+  output.ID=id;
 
 
   //outPositions=vec4<f32>(position.xyz, 1.0);

@@ -1,5 +1,5 @@
 struct Output {
-  [[location(0)]] Normals : vec4<f32>;
+  [[location(0)]] ID : u32;
   [[location(1)]] Diffuse : vec4<f32>;
 };
 
@@ -10,7 +10,7 @@ fn main(
   [[location(2)]] color:vec3<f32>
 ) -> Output {
   var output:Output;
-  output.Normals = vec4<f32>(normal,bitcast<f32>(id));
+  output.ID = id;
   output.Diffuse = vec4<f32>(color,1.0);
   return output;
 }
