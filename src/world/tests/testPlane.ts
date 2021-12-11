@@ -1,7 +1,7 @@
 ﻿import type { Scene } from "../../Scene.js";
 import type {  BoundableNodeSimple } from "../../DataNode.js";
 import { GPUBufferUsage } from "../../GPU.js"
-import type { Engine } from "engine.js";
+import type { Engine } from "../../engine.js";
 declare const engine:Engine;
 const vertices = new Float32Array([
     0, 0, 0,

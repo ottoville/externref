@@ -1,6 +1,6 @@
 ﻿import { ReadOnlyTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Scene } from "./Scene.js";
-import type { Engine } from "engine.js";
+import type { Engine } from "./engine.js";
 declare const engine:Engine;
 
 export abstract class MainNode {

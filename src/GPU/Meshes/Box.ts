@@ -1,7 +1,7 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { SimpleIndexedMesh } from "../RenderPipeLines/Simple.js";
 import { GPU, GPUBufferUsage } from "../../GPU.js";
-import { Engine } from "engine.js";
+import { Engine } from "../../engine.js";
 declare const engine:Engine;
 
 const positions = new Float32Array([

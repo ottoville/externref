@@ -4,18 +4,19 @@ import type { RenderPass } from "./RenderPass.js";
 import { MainNode } from "../MainNode.js";
 import type { GPU } from "../GPU.js";
 import type { IndexedNode } from "../DataNode.js";
+import type shaders from "../shaders.json";
 
 export class Shader {
     module:GPUShaderModule;
-    constructor(gpu:GPU, shader:string, public entryPoint='main') {
-        const module=gpu.shaderModules.get(shader);
+    constructor(gpu:GPU, shader:keyof typeof shaders, public entryPoint='main') {
+        const module=gpu.shaderModules[shader];
         if(!module)
             throw(new Error('shader '+shader+' not found'));
         this.module = module;
     }
 }
 export class VertexShader extends Shader {
-    constructor(gpu:GPU,shader:string, entrypoint='main', public buffers:Iterable<GPUVertexBufferLayout>=[]) {
+    constructor(gpu:GPU,shader:keyof typeof shaders, entrypoint='main', public buffers:Iterable<GPUVertexBufferLayout>=[]) {
         super(gpu,shader, entrypoint)
     }
 }

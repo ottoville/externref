@@ -1,10 +1,9 @@
-import { Shader, VertexShader } from "../../RenderPipeline.js";
-import type { RenderPipeline } from "GPU/RenderPipeline.js";
+import { Shader, VertexShader, type RenderPipeline } from "../../RenderPipeline.js";
 import type { GPU } from "../../../GPU.js";
 import { MainNode } from "../../../MainNode.js";
-import { DrawableSimple } from "GPU/Drawable.js";
+import { DrawableSimple } from "../../Drawable.js";
 
-import type { Engine } from "engine.js";
+import type { Engine } from "../../../engine.js";
 declare const engine:Engine;
 
 const DebugNormalsRenderPipelines: Map<GPU, RenderPipeline> = new Map();

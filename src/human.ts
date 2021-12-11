@@ -1,6 +1,6 @@
 ﻿//@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
-import type { Engine } from "engine.js";
+import type { Engine } from "./engine.js";
 import { Box } from "./GPU/Meshes/Box.js";
 import type { Scene } from "./Scene.js";
 declare const engine:Engine;

@@ -2,8 +2,8 @@
 import { TerrainTool } from "../tools/Terrain.js";
 import { TerrainMesh } from "../GPU/RenderPipeLines/TerrainRenderPipeline.js";
 import { GPUBufferUsage } from "../GPU.js"
-import type { PipelineLayout } from "GPU/PipelineLayout.js";
-import { Engine } from "engine.js";
+import type { PipelineLayout } from "../GPU/PipelineLayout.js";
+import { Engine } from "../engine.js";
 import { BindGroupLayout } from "../GPU/BindGroupLayout.js";
 declare const engine:Engine;
 export class Terrain {

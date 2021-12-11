@@ -12,10 +12,12 @@ export const run = (asr: typeof assert) => {
     
     describe('Bounding box ', function () {
       it('Update scale, translation and rotation', function () {
-        engine.mainCamera.updateDirection(v => v.set([0,-1,0]));
+        /*engine.mainCamera.updateDirection(v => v.set([0,-1,0]));
         const b = new Box(undefined, undefined,false,'bigbox');
         b.update_scale(engine.rustEngine, 1000, 10, 1000);
         b.SetTranslation([0,-100,0]);
+*/
+
         /*const pickInfo0 = await engine.gpu.renderPassScreen.pickPosition(true);
         const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined);
         console.log(pickInfo0)

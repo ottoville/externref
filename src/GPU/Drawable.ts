@@ -6,7 +6,7 @@ import type { DataNode, IndexedNode } from "../DataNode.js";
 import { NormalsMesh } from "./RenderPipeLines/helpers/normals.js";
 import { BoundingBoxMesh } from "./RenderPipeLines/helpers/boundingbox.js";
 
-import type { Engine } from "engine.js";
+import type { Engine } from "../engine.js";
 declare const engine:Engine;
 
 

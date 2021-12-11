@@ -4,7 +4,7 @@ import type { GPU } from "./GPU.js";
 import { GPUBufferUsage } from "./GPU.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Projection } from "./GPU/Projection.js";
-import type { Engine } from "engine.js";
+import type { Engine } from "./engine.js";
 declare const engine:Engine;
 
 export class TerraCamera<T extends RenderPass = RenderPass> {

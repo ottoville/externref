@@ -8,7 +8,7 @@ import { PTDresult } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
 import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { GPUBufferUsage } from "../GPU.js"
-import { Engine } from "engine.js";
+import { Engine } from "../engine.js";
 declare const engine:Engine;
 
 

@@ -2,8 +2,8 @@
 import { BoundableNodeIndexed } from "../../DataNode.js";
 import type { Scene } from "../../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../RenderPipeline.js";
-import type { DrawableIndexed } from "GPU/Drawable.js";
-import { Engine } from "engine.js";
+import type { DrawableIndexed } from "../Drawable.js";
+import { Engine } from "../../engine.js";
 declare const engine:Engine;
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();

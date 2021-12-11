@@ -7,7 +7,7 @@ import { Trait } from "../traits/trait.js";
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
 
-import { Engine } from "engine.js";
+import { Engine } from "../engine.js";
 declare const engine:Engine;
 
 export class BuildingsUI extends UITAB {

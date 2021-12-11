@@ -1,7 +1,7 @@
 import { TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import type { CameraController } from "./CameraController.js";
-import type { Engine } from "engine";
+import type { Engine } from "../engine";
 import { MainNode } from "../MainNode.js";
 declare const engine:Engine;
 

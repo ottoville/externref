@@ -11,8 +11,8 @@ import type { GPU } from "../GPU";
 import { GPUBufferUsage } from "../gpu.js"
 import { TerraVector3 } from "../Math.js";
 
-import type { Engine } from "engine.js";
-import type { Scene } from "Scene.js";
+import type { Engine } from "../engine.js";
+import type { Scene } from "../Scene.js";
 declare const engine:Engine;
 
 

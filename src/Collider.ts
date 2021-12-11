@@ -1,7 +1,7 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
-import type { Engine, rustWasm } from "engine.js";
+import type { Engine, rustWasm } from "./engine.js";
 import { TerraMatrix, TerraVector3, Triangle } from "./Math.js";
 declare const engine:Engine;
 

@@ -21,7 +21,7 @@ import { Human } from "../human.js";
 //import { savedCamera } from "../types/interfaces/index.js";
 
 
-import type { DrawableSimple } from "GPU/Drawable.js";
+import type { DrawableSimple } from "../GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 
 declare const engine:Engine;

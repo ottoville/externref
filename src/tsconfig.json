@@ -35,8 +35,9 @@
     "tsBuildInfoFile": "tsconfig.main.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "/js/engine/*": ["../wwwroot/js/engine/*"],
-    }
+      "/js/engine/*": ["../wwwroot/js/engine/*"]
+    },
+    "allowSyntheticDefaultImports": true
   },
   "include": [ "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "code.tsx" ],
   "exclude": [

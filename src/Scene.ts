@@ -1,7 +1,7 @@
 ﻿import type { DataNode, PickingInfo } from "./DataNode.js";
 import type { GPU } from "./GPU.js";
 import type { TerraCamera } from "./TerraCamera.js";
-import type { Engine } from "engine.js";
+import type { Engine } from "./engine.js";
 declare const engine:Engine;
 
 let sceneID=1;

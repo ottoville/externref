@@ -1,6 +1,6 @@
-﻿import type { Engine } from "engine";
-import type { DataNode } from "DataNode.js";
-import type { MainNode } from "MainNode.js";
+﻿import type { Engine } from "./engine";
+import type { DataNode } from "./DataNode.js";
+import type { MainNode } from "./MainNode.js";
 declare const engine: Engine;
 const MIN_TICK_DELTA = 110;
 

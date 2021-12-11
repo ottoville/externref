@@ -1,4 +1,4 @@
-import type { Engine } from "engine";
+import type { Engine } from "../engine";
 import { TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import type { CameraController } from "./CameraController.js";

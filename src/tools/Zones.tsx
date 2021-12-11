@@ -7,7 +7,7 @@ import { canvasListener } from "../traits/canvasListener.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
 import type { Scene } from "../Scene.js";
-import type { Engine } from "engine.js";
+import type { Engine } from "../engine.js";
 declare const engine:Engine;
 
 export class Zones extends UITAB {

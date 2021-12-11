@@ -23,7 +23,9 @@
     "paths": {
       "/js/*": ["./*"],
       "/js/engine/*": ["./test-build/js/engine/*"],
-    }
+    },
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
   },
   "exclude": [
     "node_modules",

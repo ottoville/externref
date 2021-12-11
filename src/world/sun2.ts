@@ -3,8 +3,8 @@ import { MainNode } from "../MainNode.js";
 import { Angle } from "../Math.js";
 import type { GPU } from "../GPU.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
-import type { DrawableSimple } from "GPU/Drawable.js";
-import type { Engine } from "engine.js";
+import type { DrawableSimple } from "../GPU/Drawable.js";
+import type { Engine } from "../engine.js";
 declare const engine:Engine;
 
 //const sundistance = 149600000000;

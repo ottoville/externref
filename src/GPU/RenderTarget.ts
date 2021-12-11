@@ -1,5 +1,5 @@
 import { GPUTextureUsageLiterals, Texture } from "./texture";
-import type { Engine } from "engine.js";
+import type { Engine } from "../engine.js";
 import { TextureView } from "./TextureView.js";
 declare const engine:Engine;
 

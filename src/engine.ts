@@ -15,7 +15,8 @@ import { PositionCamera } from "./controllers/PositionCamera.js";
 import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
-import type { PickableRenderPass } from "GPU/RenderPass.js";
+import type { PickableRenderPass } from "./GPU/RenderPass.js";
+
 declare const engine:Engine;
 
 let GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
@@ -199,20 +200,8 @@ export class Engine {
         //this.progress = 5;
         if (!device)
             throw ('no GPU device');
-        const shaderModules: Map<string, GPUShaderModule> = new Map();
-        const shaders = ['simple.vert.wgsl', 'simple.frag.wgsl',
-            'water.vert.wgsl', 'water.frag.wgsl', 'ground.vert.wgsl', 'ground.frag.wgsl', 'sun.vert.wgsl', 'sun.frag.wgsl', 'color.frag.wgsl', 'UIColor.frag.wgsl',
-            'plane.vert.wgsl', 'helper2.vert.wgsl',
-            'terrain/calculatePlaneIndices.comp.wgsl', 'terrain/calculateNormals.comp.wgsl', 'terrain/calculatePlaneHeights.comp.wgsl',
-            'terrain/CreateGroundFromHeightMap.comp.wgsl', 'terrain/createTerrainTexture.comp.wgsl',
-            'grass/getHeightAtCoordinates.comp.wgsl', 'grass/grass.vert.wgsl', 'deferred.vert.wgsl', 'deferred.frag.wgsl', 'clusters.comp.wgsl', 'debug_normals.vert.wgsl',
-            'updateView.comp.wgsl', 'debug_boundingbox.vert.wgsl', 'readDepth.comp.wgsl'
-        ];
-        await Promise.all(shaders.map(async u => {
-            const compiled = await (await fetch('/shaders/wgsl/' + u)).text();
-            shaderModules.set(u, device.createShaderModule({ code: compiled }));
-        }));
-        const gpu = new GPU(canvas, adapter, device, shaderModules);
+
+        const gpu = new GPU(canvas, adapter, device);
         //@ts-ignore
         window.printRenderTarget = () => {
             gpu.renderPassScreen.renderTargets.gRenderTargetId.texture.toBitmap(0)

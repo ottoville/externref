@@ -3,7 +3,7 @@ import { MainNode } from "./MainNode.js";
 import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
 import type { Scene } from "./Scene.js";
 import type { ColliderJS } from "./Collider.js";
-import type { Engine } from "engine.js";
+import type { Engine } from "./engine.js";
 declare const engine:Engine;
 
 const worker = new ObjectWorkerThread('/js/workers/webworkers/mesh.js');

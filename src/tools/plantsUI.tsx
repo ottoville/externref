@@ -8,7 +8,7 @@ import type { PTDresult } from "../types/interfaces/index.js";
 import { canvasListener } from "../traits/canvasListener.js";
 import { Trait } from "../traits/trait.js";
 import { Sea } from "../world/water.js";
-import { Engine } from "engine.js";
+import { Engine } from "../engine.js";
 declare const engine:Engine;
 
 

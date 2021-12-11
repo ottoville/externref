@@ -5,6 +5,7 @@ import { RenderTarget, SwapRenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import {Texture } from "./GPU/texture.js";
 import type { Projection } from "./GPU/Projection.js";
+import shaders from "./shaders.json" assert { type: "json" };
 
 export const GPUBufferUsage = {
     MAP_READ: 0x0001,
@@ -22,7 +23,6 @@ export const GPUBufferUsage = {
 type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
 };
-
 export class GPU {
     readonly gpu_memory_index_size=256;
     readonly gpu_screen_buffer_size= 16; //screen width and height and ratio
@@ -91,8 +91,14 @@ export class GPU {
     viewUniformsLayout: GPUBindGroupLayout;
     readonly uniformBindGroupLayoutWithTime: BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>;
     readonly presentationFormat: GPUTextureFormat;
-    constructor(public canvas: HTMLCanvasElement, adapter:GPUAdapter, public device: GPUDevice, readonly shaderModules: Map<string, GPUShaderModule>) {
+    readonly shaderModules = {} as { [K in keyof typeof shaders]: GPUShaderModule }
 
+    constructor(public canvas: HTMLCanvasElement, adapter:GPUAdapter, public device: GPUDevice) {
+
+        for(const key in shaders) {
+            const k=key as keyof typeof shaders;
+            this.shaderModules[k] = device.createShaderModule({ code: shaders[k] });
+        }
         const totalClusters=this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
         this.clusterSizeinBytes= totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
         const viewLayout=BindGroupLayout.create(this,'view',
@@ -493,8 +499,8 @@ export class GPU {
         this.device.queue.submit([commandEncoder.finish()]);
         callback(...readBuffers).finally(() => readBuffers.forEach(gpuReadBuffer => gpuReadBuffer.destroy()));
     }
-    createComputePipeline(shader: string, layout?: GPUPipelineLayout, entryPoint = 'main'): TerraGPUComputePipeLine {
-        const shaderModule = this.shaderModules.get(shader);
+    createComputePipeline(shader: keyof typeof shaders, layout?: GPUPipelineLayout, entryPoint = 'main'): TerraGPUComputePipeLine {
+        const shaderModule = this.shaderModules[shader];
         if (!shaderModule)
             throw (new Error('Shader ' + shader + ' not found'));
         const desc: GPUComputePipelineDescriptor = {

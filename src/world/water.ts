@@ -2,8 +2,8 @@
 import type { Scene } from "../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
-import type { DrawableSimple } from "GPU/Drawable.js";
-import type { Engine } from "engine.js";
+import type { DrawableSimple } from "../GPU/Drawable.js";
+import type { Engine } from "../engine.js";
 import { BindGroupLayout } from "../GPU/BindGroupLayout.js";
 declare const engine:Engine;
 

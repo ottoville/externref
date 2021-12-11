@@ -8,7 +8,7 @@ import { RenderTarget } from "./RenderTarget.js";
 import { PipelineLayout } from "./PipelineLayout.js";
 import { GPUTextureUsageLiterals, Texture } from "./texture.js";
 import { TerraVector3 } from "../Math.js";
-import type { Engine } from "engine.js";
+import type { Engine } from "../engine.js";
 import { MainNode } from "../MainNode.js";
 import { TextureView } from "./TextureView.js";
 //import { BindGroupLayout } from "./BindGroupLayout.js";
