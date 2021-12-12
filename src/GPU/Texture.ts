@@ -12,7 +12,6 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
     renderPasses: Set<RenderPass> = new Set();
 
     createTexture(sampleCount:1|4 = 1, debug=false) {
-        
         //Texture is undefined on initial call from constructor
         if (this.texture) {
             this.texture.destroy();

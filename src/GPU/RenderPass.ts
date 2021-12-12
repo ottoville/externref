@@ -1,7 +1,6 @@
 ﻿import type { Scene } from "../Scene.js";
 import type { TerraCamera } from "../TerraCamera.js";
-import type { GPU } from "../GPU.js";
-import { GPUBufferUsage } from "../GPU.js";
+import { GPUBufferUsage, type GPU } from "../GPU.js";
 import type { RenderPipeline } from "./RenderPipeline.js";
 import type { Drawable } from "./Drawable.js";
 import { RenderTarget } from "./RenderTarget.js";
@@ -11,7 +10,7 @@ import { TerraVector3 } from "../Math.js";
 import type { Engine } from "../engine.js";
 import { MainNode } from "../MainNode.js";
 import { TextureView } from "./TextureView.js";
-//import { BindGroupLayout } from "./BindGroupLayout.js";
+
 declare const engine:Engine;
 
 interface RenderPipelineVariant2 {
@@ -22,30 +21,21 @@ interface RenderPipelineVariant2 {
 export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> } = { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> }> {
     cameras: Set<TerraCamera> = new Set();
     scenes: Set<Scene> = new Set();
-    #depthFormat: GPUTextureFormat = 'depth32float';
     bundles: GPURenderBundle[] = [];
     renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant2> = new Map();
-    depthTexture?: Texture<GPUTextureFormat, ['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING']>;
-    depthTextureView?: TextureView;
     constructor(
         public gpu: GPU,
         public renderTargets: T,
         public sampleCount: 1 | 4,
-        depthStencil = false,
         public size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
         private _onResize: (width: number, height: number) => [number, number],
-        private label:string
+        protected label:string
         ) {
         for (const rt of Object.values(renderTargets)) {
             rt.texture.renderPasses.add(this);
             rt.texture.size[0]=this.size[0];
             rt.texture.size[1]=this.size[1];
             rt.texture.createTexture(this.sampleCount);
-        }
-
-        if (depthStencil) {
-            this.depthTexture = new Texture(gpu,this.#depthFormat,['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING'],this.size,false)
-            this.depthTextureView = new TextureView(this.depthTexture);
         }
     }
     getVariant(renderPipeline:Readonly<RenderPipeline>) {
@@ -61,9 +51,10 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         }
         return variant;
     }
-    decoratePipeline(renderpipeline: Readonly<RenderPipeline>): GPURenderPipeline {
+
+    onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>):GPURenderPipelineDescriptor {
         const renderPipelineDescriptor:GPURenderPipelineDescriptor = {
-            vertex : renderpipeline.vertexShader,
+            vertex: renderpipeline.vertexShader,
             fragment: {
                 ...renderpipeline.fragmentShader,
                 targets: Object.values(this.renderTargets).map(rt => {
@@ -74,30 +65,22 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 })
             }
         }
-        if (this.depthTexture) {
-            renderPipelineDescriptor.depthStencil= {
-                depthWriteEnabled:renderpipeline.depthBuffer?.depthWriteEnabled ?? true,
-                depthCompare:renderpipeline.depthBuffer?.depthCompare ?? 'greater',
-                format: this.#depthFormat
-            }
-        }
         if (this.sampleCount > 1)
             renderPipelineDescriptor.multisample = { count: this.sampleCount };
+        return renderPipelineDescriptor;
+    }
+    decoratePipeline(
+        renderpipeline: Readonly<RenderPipeline>): GPURenderPipeline {
         return this.gpu.device.createRenderPipeline(
             {
                 ...renderpipeline.renderPipelineDescriptor,
-                ...renderPipelineDescriptor,
+                ...this.onDecoratePipeline(renderpipeline)
             }
         )
     }
     onResize:Set<()=>void>=new Set();
     resize(width: number, height: number) {
         [this.size[0], this.size[1]] = this._onResize(width, height);
-        if (this.depthTexture) {
-            this.depthTexture.size[0]=this.size[0];
-            this.depthTexture.size[1]=this.size[1];
-            this.depthTexture.createTexture(this.sampleCount);
-        }
         for (const key in this.renderTargets) {
             this.renderTargets[key]!.texture.size[0]=this.size[0];
             this.renderTargets[key]!.texture.size[1]=this.size[1];
@@ -113,29 +96,19 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         const renderPassDescriptor: GPURenderPassDescriptor = {
             colorAttachments,
         }
-        if (this.depthTextureView) {
-            renderPassDescriptor.depthStencilAttachment = {
-                view: this.depthTextureView.view,
-                depthLoadValue: 0.0,
-                depthStoreOp: "store",
-                stencilLoadValue: 0,
-                stencilStoreOp: "store",
-            }
-        }
         return renderPassDescriptor;
     }
- 
+    get GPURenderBundleEncoderDescriptor(): GPURenderBundleEncoderDescriptor {
+        return {
+            colorFormats: Object.values(this.renderTargets).map(rt => rt.texture.format),
+            sampleCount: this.sampleCount,
+            label: this.label
+        }
+    }
     render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | (() => GPUBindGroup), rootLayout: PipelineLayout) {
         const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
         if (!this.bundles.length) {
-            const renderDesc:GPURenderBundleEncoderDescriptor= {
-                colorFormats: Object.values(this.renderTargets).map(rt => rt.texture.format),
-                sampleCount: this.sampleCount,
-                label: this.label
-            }
-            if(this.depthTexture) {
-                renderDesc.depthStencilFormat=this.#depthFormat;
-            }
+            const renderDesc=this.GPURenderBundleEncoderDescriptor;
             const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder(renderDesc);
             let drawedMeshes = 0;
             const dynamicIndices: number[] = [];
@@ -179,6 +152,62 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         passEncoder.endPass();
     }
 }
+export class DepthRenderPass<T extends {
+    [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
+} = {
+    [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
+}
+> extends RenderPass<T> {
+    depthTexture: Texture<GPUTextureFormat, ['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING']>;
+    depthTextureView: TextureView;
+    #depthFormat: GPUTextureFormat = 'depth32float';
+    constructor(gpu: GPU,
+        renderTargets: T,
+        sampleCount: 1|4,
+        size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
+        _onResize: (width: number, height: number) => [number, number],
+        label:string) {
+            super(gpu,renderTargets,sampleCount,size,_onResize,label);
+            this.depthTexture = new Texture(gpu,this.#depthFormat,['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING'],this.size,false)
+            this.depthTextureView = new TextureView(this.depthTexture);
+        }
+        override resize(width: number, height: number) {
+            super.resize(width, height);
+            this.depthTexture.size[0]=this.size[0];
+            this.depthTexture.size[1]=this.size[1];
+            this.depthTexture.createTexture(this.sampleCount);
+        }
+        override get GPURenderPassDescriptor(): GPURenderPassDescriptor {
+            const renderPassDescriptor = super.GPURenderPassDescriptor;
+            renderPassDescriptor.depthStencilAttachment = {
+                view: this.depthTextureView.view,
+                depthLoadValue: 0.0,
+                depthStoreOp: "store",
+                stencilLoadValue: 0,
+                stencilStoreOp: "store",
+            }
+            return renderPassDescriptor;
+        }
+        override get GPURenderBundleEncoderDescriptor(): GPURenderBundleEncoderDescriptor {
+            return {
+                colorFormats: Object.values(this.renderTargets).map(rt => rt.texture.format),
+                sampleCount: this.sampleCount,
+                label: this.label,
+                depthStencilFormat: this.#depthFormat
+            }
+        }
+        override onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>) {
+            return {
+                ...super.onDecoratePipeline(renderpipeline),
+                depthStencil: {
+                    depthWriteEnabled:renderpipeline.depthBuffer?.depthWriteEnabled ?? true,
+                    depthCompare:renderpipeline.depthBuffer?.depthCompare ?? 'greater',
+                    format: this.#depthFormat   
+                }
+            }
+        }
+}
+
 
 export class PickableRenderPass<T extends {
     [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
@@ -187,18 +216,17 @@ export class PickableRenderPass<T extends {
     [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
     gRenderTargetId: RenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>
 }
-> extends RenderPass<T> {
+> extends DepthRenderPass<T> {
     pickBuffer: GPUBuffer;
     pickBufferRead?: GPUBuffer;
     pickPositionBindGroup0?: GPUBindGroup;
     constructor(gpu: GPU,
         renderTargets: T,
         sampleCount: 1|4,
-        depthStencil = false,
         size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
         _onResize: (width: number, height: number) => [number, number],
         label:string) {
-            super(gpu,renderTargets,sampleCount,depthStencil,size,_onResize,label);
+            super(gpu,renderTargets,sampleCount,size,_onResize,label);
             if(sampleCount == 4) {
                 this.pickBuffer = this.gpu.device.createBuffer({
                     size: 4 * 4, //depth + meshID (four pixel)
@@ -266,13 +294,13 @@ export class PickableRenderPass<T extends {
         if(this.pickPositionBindGroup0) {
             const mousePositionBuffer = engine.gpu.createGPUBuffer(8,[GPUBufferUsage.UNIFORM],true);
             new Uint32Array(mousePositionBuffer.getMappedRange(0,8)).set([engine.mousePosition[0], engine.mousePosition[1]]);
-            mousePositionBuffer.unmap();                
+            mousePositionBuffer.unmap();
             const pickPositionBindGroup1 = engine.gpu.device.createBindGroup({
                 layout: this.pickPositionLayout,
                 entries: [
                     {
                         binding: 0,
-                        resource: this.depthTextureView!.view,
+                        resource: this.depthTextureView.view,
                     },
                     {
                         binding: 1,
@@ -307,7 +335,7 @@ export class PickableRenderPass<T extends {
         else {
             encoder.copyTextureToBuffer(
                 {
-                    texture: this.depthTexture!.texture,
+                    texture: this.depthTexture.texture,
                     aspect: "depth-only",
                     origin: { x: 0, y: 0, z: 0 }
                 },

@@ -1,5 +1,5 @@
 ﻿import { MainNode } from "./MainNode.js";
-import { PickableRenderPass, RenderPass } from "./GPU/RenderPass.js";
+import { DepthRenderPass, PickableRenderPass, RenderPass } from "./GPU/RenderPass.js";
 import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget, SwapRenderTarget } from "./GPU/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
@@ -71,7 +71,7 @@ export class GPU {
         gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"]>>;
     }>;
     //TODO: waterpass does not need normals
-    readonly renderPassWater: RenderPass<{
+    readonly renderPassWater: DepthRenderPass<{
         normals: RenderTarget<Texture<"r32uint",['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
         diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
     }>;
@@ -285,17 +285,17 @@ export class GPU {
         this.renderPassScreen = new PickableRenderPass(this, {
             gRenderTargetId,
             gRenderTargetDiffuse
-        }, 4, true, [canvas.width,canvas.height,1],
+        }, 4, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
             },'renderPassScreen');
         const normalTextureWater = Texture.create(this,"r32uint",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
         const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
     
-        this.renderPassWater = new RenderPass(this, {
+        this.renderPassWater = new DepthRenderPass(this, {
             normals: new RenderTarget(normalTextureWater, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
             diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
-        }, 1, true, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2],'renderPassWater');
+        }, 1, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2],'renderPassWater');
       
 
         const context:GPUCanvasContext | null = canvas.getContext('webgpu');
@@ -313,7 +313,7 @@ export class GPU {
 
         this.renderPassCanvas = new RenderPass(this, {
             swap: new SwapRenderTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 })
-        },1, false, [canvas.width,canvas.height,1],
+        },1, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
             },'renderPassCanvas');

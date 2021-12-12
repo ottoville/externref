@@ -44,7 +44,7 @@ bld/
 .vs/
 # Uncomment if you have tasks that create the project's static files in wwwroot
 wwwroot/js
-wwwroot/shaders/*.json
+src/shaders.json
 wwwroot/workers
 wwwroot/webworkers
 wwwroot/sw.js

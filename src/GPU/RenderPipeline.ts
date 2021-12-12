@@ -31,7 +31,7 @@ export class RenderPipeline {
         public fragmentShader:Shader,
         renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'vertex' | 'fragment'>,
         public bindgroupdrawable: PipelineLayout,
-        public depthBuffer? : {depthWriteEnabled:boolean,depthCompare:GPUCompareFunction }) {
+        public depthBuffer? : {depthWriteEnabled:boolean, depthCompare:GPUCompareFunction }) {
 
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
         if(!renderPipelineDescriptor.primitive)

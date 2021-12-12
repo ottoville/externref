@@ -10,8 +10,8 @@ declare const engine: Engine;
 */
 export const run = (asr: typeof assert) => {
     
-    describe('Bounding box ', function () {
-      it('Update scale, translation and rotation', function () {
+    describe('Pick box ', function () {
+      it('Pick position and mesh', async function () {
         /*engine.mainCamera.updateDirection(v => v.set([0,-1,0]));
         const b = new Box(undefined, undefined,false,'bigbox');
         b.update_scale(engine.rustEngine, 1000, 10, 1000);
