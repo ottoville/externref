@@ -18,10 +18,10 @@ export const run = (asr: typeof assert) => {
         b.SetTranslation([0,-100,0]);
 */
 
-        /*const pickInfo0 = await engine.gpu.renderPassScreen.pickPosition(true);
+        const pickInfo0 = await engine.gpu.renderPassScreen.pickPosition(true);
         const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined);
-        console.log(pickInfo0)
-        console.log(pickInfo)*/
+        console.log('pickInfo0',pickInfo0)
+        console.log('pickInfo',pickInfo)
       });
     })
   

@@ -16,6 +16,7 @@ import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "./GPU/RenderPass.js";
+import { Texture } from "./GPU/Texture.js";
 
 declare const engine:Engine;
 
@@ -204,15 +205,15 @@ export class Engine {
         const gpu = new GPU(canvas, adapter, device);
         //@ts-ignore
         window.printRenderTarget = () => {
-            gpu.renderPassScreen.renderTargets.gRenderTargetId.texture.toBitmap(0)
+            Texture.toBitmap(gpu.renderPassScreen.renderTargets.gRenderTargetId.texture);
         }
         //@ts-ignore
         window.printRenderTarget2 = () => {
-            gpu.renderPassScreen.depthTexture!.toBitmap(0)
+            Texture.toBitmap(gpu.renderPassScreen.depthTexture);
         }
         //@ts-ignore
         window.printRenderTarget3 = () => {
-            gpu.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture.toBitmap(0)
+            Texture.toBitmap(gpu.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture)
         }
         const map = new Map<number, number>();
         const dataSizeBytes = MainNode.GPUDataSize * 4; //4 * 16 + 3 * 4;

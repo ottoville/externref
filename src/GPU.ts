@@ -1,11 +1,12 @@
 ﻿import { MainNode } from "./MainNode.js";
 import { DepthRenderPass, PickableRenderPass, RenderPass } from "./GPU/RenderPass.js";
 import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
-import { RenderTarget, SwapRenderTarget } from "./GPU/RenderTarget.js";
+import { RenderTarget } from "./GPU/RenderTargets/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import {Texture } from "./GPU/texture.js";
 import type { Projection } from "./GPU/Projection.js";
 import shaders from "./shaders.json" assert { type: "json" };
+import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
 
 export const GPUBufferUsage = {
     MAP_READ: 0x0001,
@@ -57,7 +58,7 @@ export class GPU {
     readonly timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
     readonly timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
 
-    readonly BindGroupCanvas: () => GPUBindGroup;
+    readonly BindGroupCanvas: (renderPass: RenderPass) => GPUBindGroup;
     static instance: GPU;
 
     readonly renderPasses: Set<RenderPass>;
@@ -67,15 +68,15 @@ export class GPU {
         y: 1
     }
     readonly renderPassScreen: PickableRenderPass<{
-        gRenderTargetId: RenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>;
-        gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"]>>;
+        gRenderTargetId: MSAARenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>;
+        gRenderTargetDiffuse: MSAARenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"]>>;
     }>;
-    //TODO: waterpass does not need normals
+
     readonly renderPassWater: DepthRenderPass<{
         normals: RenderTarget<Texture<"r32uint",['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
         diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
     }>;
-    readonly renderPassCanvas: RenderPass<{ swap: SwapRenderTarget<Texture<GPUTextureFormat, ["RENDER_ATTACHMENT"]>>; }>;
+    readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<GPUTextureFormat, ["RENDER_ATTACHMENT"]>>; }>;
 
     context: GPUCanvasContext;
     updateViewPipeline:TerraGPUComputePipeLine;
@@ -279,8 +280,8 @@ export class GPU {
         const normalAndPositionTexture = Texture.create(this,"r32uint",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'],[300,300,1])
         const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING']) //TODO: remove texture binding
 
-        const gRenderTargetId = new RenderTarget(normalAndPositionTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 });
-        const gRenderTargetDiffuse = new RenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 });
+        const gRenderTargetId = new MSAARenderTarget(normalAndPositionTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 });
+        const gRenderTargetDiffuse = new MSAARenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 });
 
         this.renderPassScreen = new PickableRenderPass(this, {
             gRenderTargetId,
@@ -312,8 +313,8 @@ export class GPU {
         const canvasTexture = Texture.create(this,this.presentationFormat,['RENDER_ATTACHMENT'])
 
         this.renderPassCanvas = new RenderPass(this, {
-            swap: new SwapRenderTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 })
-        },1, [canvas.width,canvas.height,1],
+            swap: new RenderTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },undefined, undefined,true)
+        }, 1, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
             },'renderPassCanvas');
@@ -326,10 +327,10 @@ export class GPU {
         this.renderPasses = new Set([this.renderPassCanvas, this.renderPassScreen, this.renderPassWater]);
         //[this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
 
-        this.BindGroupCanvas = () =>  BindGroupLayoutCanvas.createBindGroup([
+        this.BindGroupCanvas = (renderPass: RenderPass) =>  BindGroupLayoutCanvas.createBindGroup([
             {
                 binding: 0,
-                resource: this.renderPassScreen.renderTargets.gRenderTargetDiffuse.viewOrResolve
+                resource: this.renderPassScreen.renderTargets.gRenderTargetDiffuse.viewOrResolve(renderPass)
             },
             {
                 binding: 1,

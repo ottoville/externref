@@ -3,13 +3,14 @@ import type { TerraCamera } from "../TerraCamera.js";
 import { GPUBufferUsage, type GPU } from "../GPU.js";
 import type { RenderPipeline } from "./RenderPipeline.js";
 import type { Drawable } from "./Drawable.js";
-import { RenderTarget } from "./RenderTarget.js";
+import type { RenderTarget } from "./RenderTargets/RenderTarget.js";
 import { PipelineLayout } from "./PipelineLayout.js";
 import { GPUTextureUsageLiterals, Texture } from "./texture.js";
 import { TerraVector3 } from "../Math.js";
 import type { Engine } from "../engine.js";
 import { MainNode } from "../MainNode.js";
 import { TextureView } from "./TextureView.js";
+import { MSAARenderTarget } from "./RenderTargets/MSAARenderTarget.js";
 
 declare const engine:Engine;
 
@@ -33,9 +34,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         ) {
         for (const rt of Object.values(renderTargets)) {
             rt.texture.renderPasses.add(this);
-            rt.texture.size[0]=this.size[0];
-            rt.texture.size[1]=this.size[1];
-            rt.texture.createTexture(this.sampleCount);
+            rt.resize(this);
         }
     }
     getVariant(renderPipeline:Readonly<RenderPipeline>) {
@@ -81,10 +80,8 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     onResize:Set<()=>void>=new Set();
     resize(width: number, height: number) {
         [this.size[0], this.size[1]] = this._onResize(width, height);
-        for (const key in this.renderTargets) {
-            this.renderTargets[key]!.texture.size[0]=this.size[0];
-            this.renderTargets[key]!.texture.size[1]=this.size[1];
-            this.renderTargets[key]!.texture.createTexture(this.sampleCount);
+        for (const rt of Object.values(this.renderTargets)) {
+            rt.resize(this);
         }
         this.onResize.forEach(cb => cb());
     }
@@ -105,7 +102,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             label: this.label
         }
     }
-    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | (() => GPUBindGroup), rootLayout: PipelineLayout) {
+    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass: RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {
         const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
         if (!this.bundles.length) {
             const renderDesc=this.GPURenderBundleEncoderDescriptor;
@@ -113,7 +110,8 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             let drawedMeshes = 0;
             const dynamicIndices: number[] = [];
 
-            renderBundleEncoder.setBindGroup(0, typeof (rootBindGroup) === 'function' ? rootBindGroup() : rootBindGroup);
+            const r= typeof (rootBindGroup) === 'function' ? rootBindGroup(this) : rootBindGroup;
+            renderBundleEncoder.setBindGroup(0, r);
             rootLayout.renderPipeLines.forEach(renderPipeline => {
                 drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
             });
@@ -168,7 +166,7 @@ export class DepthRenderPass<T extends {
         _onResize: (width: number, height: number) => [number, number],
         label:string) {
             super(gpu,renderTargets,sampleCount,size,_onResize,label);
-            this.depthTexture = new Texture(gpu,this.#depthFormat,['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING'],this.size,false)
+            this.depthTexture = new Texture(gpu,this.#depthFormat,['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING'],this.size)
             this.depthTextureView = new TextureView(this.depthTexture);
         }
         override resize(width: number, height: number) {
@@ -209,17 +207,19 @@ export class DepthRenderPass<T extends {
 }
 
 
-export class PickableRenderPass<T extends {
+interface PickableTargets {
     [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
-    gRenderTargetId: RenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>
-} = {
-    [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
-    gRenderTargetId: RenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>
+    gRenderTargetId: RenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>> |
+                    MSAARenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>
 }
-> extends DepthRenderPass<T> {
+export class PickableRenderPass<T extends PickableTargets = PickableTargets> extends DepthRenderPass<T> {
     pickBuffer: GPUBuffer;
     pickBufferRead?: GPUBuffer;
-    pickPositionBindGroup0?: GPUBindGroup;
+    pickPositionPipeline=this.gpu.createComputePipeline('readDepth.comp.wgsl');
+    pickPositionLayout = this.pickPositionPipeline.getBindGroupLayout(1)
+    pickPositionBindGroup0: GPUBindGroup;
+
+
     constructor(gpu: GPU,
         renderTargets: T,
         sampleCount: 1|4,
@@ -236,20 +236,20 @@ export class PickableRenderPass<T extends {
                     size: 4 + 4, //depth + meshID (four pixel)
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
                 });
-                this.pickPositionBindGroup0 = this.pickPositionPipeline.createBindGroup(0,[
-                    {
-                        binding: 0,
-                        resource: {
-                            buffer: this.pickBuffer
-                        }
-                    }]);
+
             } else {
                 this.pickBuffer = this.gpu.device.createBuffer({
                     size: this.size[0] * this.size[1] * 4,
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
                 }); 
             }
-
+            this.pickPositionBindGroup0 = this.pickPositionPipeline.createBindGroup(0,[
+                {
+                    binding: 0,
+                    resource: {
+                        buffer: this.pickBuffer
+                    }
+                }]);
     }
     override resize(width: number, height: number) {
         super.resize(width, height);
@@ -272,8 +272,6 @@ export class PickableRenderPass<T extends {
     pickPromise: Promise<{ position: TerraVector3 } | null> | null = null;
     pickPromiseMesh: Promise<{ position: TerraVector3, meshId: number } | null> | null = null;
 
-    pickPositionPipeline=this.gpu.createComputePipeline('readDepth.comp.wgsl');
-    pickPositionLayout = this.pickPositionPipeline.getBindGroupLayout(1)
 
     pickPosition(): Promise<{ position: TerraVector3 } | null>
     pickPosition(mesh:true): Promise<{ position: TerraVector3, meshId: number } | null>
@@ -291,7 +289,8 @@ export class PickableRenderPass<T extends {
         const buffer=this.pickBuffer;
         const encoder = this.gpu.device.createCommandEncoder();
         let zAndIDPromise:Promise<[z:number, id:number]>;
-        if(this.pickPositionBindGroup0) {
+        const gRenderTargetId = this.renderTargets.gRenderTargetId
+        if(gRenderTargetId instanceof MSAARenderTarget) {
             const mousePositionBuffer = engine.gpu.createGPUBuffer(8,[GPUBufferUsage.UNIFORM],true);
             new Uint32Array(mousePositionBuffer.getMappedRange(0,8)).set([engine.mousePosition[0], engine.mousePosition[1]]);
             mousePositionBuffer.unmap();
@@ -304,7 +303,7 @@ export class PickableRenderPass<T extends {
                     },
                     {
                         binding: 1,
-                        resource: this.renderTargets.gRenderTargetId.view.resolveView!
+                        resource: gRenderTargetId.resolveView()
                     },
                     {
                         binding: 2,
@@ -349,7 +348,7 @@ export class PickableRenderPass<T extends {
             if(mesh) {
                 encoder.copyTextureToBuffer(
                     {
-                        texture: this.renderTargets.gRenderTargetId.texture.texture,
+                        texture: gRenderTargetId.texture.texture,
                         origin: { x: engine.mousePosition[0], y: engine.mousePosition[1], z: 0 }
                     },
                     {
