@@ -173,7 +173,7 @@ export class MeshCamera implements CameraController {
         return !this.#busy;
     }
     #busy=false;
-    async calculateCameraPositionAndTarget_deprecated() {
+    calculateCameraPositionAndTarget_deprecated() {
         this.#busy=true;
         const translation = this.#mesh.translation;
         const translationDelta = this.#mesh.velocity;
@@ -204,7 +204,7 @@ export class MeshCamera implements CameraController {
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
 
-        await engine.collideWithWorld();
+        engine.collideWithWorld();
 
         engine.collider.finalPosition[0] *= engine.collider.radius[0]
         engine.collider.finalPosition[1] *= engine.collider.radius[1]

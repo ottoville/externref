@@ -3,7 +3,6 @@
 declare var DB: Promise<IDBDatabase>;
 
 importScripts("/js/DB.js");
-importScripts("/js/commonMath.js");
 const numBlades = 70000;
 const BLADE_WIDTH = 0.0025;
 const BLADE_HEIGHT_MIN = 0.3
@@ -27,7 +26,7 @@ function clamp(value: number, min: number, max: number) {
 }
 const plantaes: PlantI[] = [];
 const grids2: Map<string, number[]> = new Map()
-let methods = {
+const methods = {
     init: (data: WMessage<{ positions: SharedArrayBuffer, shape: any, noises: any }>) => {
         noises = new Float32Array(data.data.noises);
         this.postMessage({ id: data.id });
@@ -141,7 +140,7 @@ let methods = {
 
 
       //  bladecount = clamp(bladecount, plantaes.length, grasspositions.length / 2)
-       	
+    
        // for (let i = 0; i < Math.min(bladecount, plantaes.length); i++) {
      /*   for (let i = 0; i < amount; i++) {
 
@@ -160,12 +159,12 @@ let methods = {
 
     },
     get: async () => {
-        let trans = (await DB).transaction(['plantae']);
+        const trans = (await DB).transaction(['plantae']);
         trans.objectStore('plantae').getAll().onsuccess = (evt) => {
             bladecount = Math.min((<IDBRequest>evt.target).result.length, grasspositions.length);
             trans.oncomplete = () => this.postMessage({ type: 'updated', count: bladecount })
             for (let i = 0; i < bladecount; i++) {
-                let r = (<IDBRequest>evt.target).result[i];
+                const r = (<IDBRequest>evt.target).result[i];
                 grasspositions.set(r.pos, i * 2);
             }
         }

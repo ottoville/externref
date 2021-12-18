@@ -11,17 +11,43 @@ declare const engine: Engine;
 export const run = (asr: typeof assert) => {
     
     describe('Pick box ', function () {
-      it('Pick position and mesh', async function () {
-        /*engine.mainCamera.updateDirection(v => v.set([0,-1,0]));
-        const b = new Box(undefined, undefined,false,'bigbox');
-        b.update_scale(engine.rustEngine, 1000, 10, 1000);
-        b.SetTranslation([0,-100,0]);
-*/
+      it('Pick position and mesh', async function (done) {
+        /*engine.mainCamera.updateDirection(v => v.set([0,-1,0])); */
+        const b = new Box(undefined, undefined,false,'greenbox');
+        b.translation = [0,400,0]
+        b.update_scale(500, 500, 500);
 
-        const pickInfo0 = await engine.gpu.renderPassScreen.pickPosition(true);
-        const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined);
-        console.log('pickInfo0',pickInfo0)
-        console.log('pickInfo',pickInfo)
+        engine.mainCamera.position = [5000,400,0];
+        engine.mainCamera.updateDirection((direction) => {
+          direction[0]=1;
+          direction[1]=0;
+          direction[2]=0;
+        });
+        await new Promise<void>((res, rej) => {
+          requestAnimationFrame(async () => {
+            try {
+              engine.mousePosition[0]=(engine.canvas.width/2)|0;
+              engine.mousePosition[1]=(engine.canvas.height/2)|0;
+      
+              const pickInfo0 = await engine.gpu.renderPassScreen.pickPosition(true);
+              const pickInfo = await engine.gpu.renderPassScreen.pickMesh(undefined);
+
+              asr.notStrictEqual(pickInfo0, null);
+              asr.strictEqual(pickInfo0!.meshId, b.id);
+              asr.strictEqual(Math.round(pickInfo0!.position[0]!), 500)
+              asr.strictEqual(Math.round(pickInfo0!.position[1]!), 400)
+              asr.strictEqual(Math.floor(pickInfo0!.position[2]!), 0)
+              asr.strictEqual(pickInfo!.mesh.label, 'greenbox')
+              res();
+            } catch(e) {
+              //@ts-ignore
+              window.printRenderTarget3()
+              rej();
+            }
+          })
+        });
+        done();
+
       });
     })
   

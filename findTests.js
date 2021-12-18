@@ -1,7 +1,13 @@
 ﻿var fs = require('fs');
 const promises=[];
 function readFiles(dirname, obj) {
+
+
     return new Promise((res, rej) => {
+        if(dirname.substr(0,3)==='./.' || dirname === './test-build/' || dirname === './engine/' || dirname === './node_modules/') {
+            res();
+            return;
+        }
         fs.readdir(dirname, async function (err, filenames) {
             if (err) {
                 console.log(err);
@@ -13,7 +19,7 @@ function readFiles(dirname, obj) {
                 if (stat.isDirectory()) {
                     return readFiles(dirname + filename+'/', obj);
                 } else {
-                    if (filename.substr(-8) == '.test.js') {
+                    if (filename.substr(-8) == '.test.ts') {
                         obj.push(dirname + filename)
                     }
                 }

@@ -35,6 +35,6 @@
     "service-worker.published.ts",
   ],
   
-  "include": [ "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "./runTest.ts"],
+  "include": [ "tests.json", "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "./runTest.ts"],
 
 }

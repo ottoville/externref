@@ -48,7 +48,8 @@
     "service-worker.published.ts",
     "test-build",
     "runTest.ts",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "tests.json"
   ],
   "references": [
     { "path": "./tsconfig.workers.json" },

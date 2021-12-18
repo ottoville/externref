@@ -147,7 +147,7 @@ export class PositionCamera implements CameraController {
         return !this.#busy;
     }
     #busy=false;
-    async calculateCameraPositionAndTarget() {
+    calculateCameraPositionAndTarget() {
         this.#busy=true;
         //TODO: apply gravity alwaus not only on input
         //this.#position[1]-=0.3
@@ -165,7 +165,7 @@ export class PositionCamera implements CameraController {
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
 
-        await engine.collideWithWorld();
+        engine.collideWithWorld();
 
         engine.collider.finalPosition[0] *= engine.collider.radius[0]
         engine.collider.finalPosition[1] *= engine.collider.radius[1]

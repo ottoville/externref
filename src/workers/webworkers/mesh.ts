@@ -1,5 +1,4 @@
-﻿importScripts("/js/commonMath.js");
-importScripts("/js/workers/webworkers/ray.js");
+﻿importScripts("/js/workers/webworkers/ray.js");
 
 const meshes: Map<number, Mesh> = new Map();
 interface pickInfo {

@@ -9,6 +9,10 @@ const angularSensibilityX = 3000;
 const angularSensibilityY = 3000;
 declare const engine: Engine;
 
+
+const Epsilon = 0.001;
+
+
 interface serialized {
     alpha: number,
     beta: number,
@@ -164,7 +168,7 @@ export class ArcRotateCamera implements CameraController {
         this.#newPosition[1] = this.#target[1] + this.#computationVector[1];
         this.#newPosition[2] = this.#target[2] + this.#computationVector[2];
     }
-    async calculateCameraPositionAndTarget() {
+    calculateCameraPositionAndTarget() {
 
         this.#collisionTriggered = true;
 
@@ -194,7 +198,7 @@ export class ArcRotateCamera implements CameraController {
 
         //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
         //let starttime=performance.now();
-        await engine.collideWithWorld();
+        engine.collideWithWorld();
 
 
         //coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));

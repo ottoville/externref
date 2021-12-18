@@ -5,8 +5,8 @@
   "main": "Collider.js",
   "type": "module",
   "scripts": {
-    "testem": "node ../../findTests.js && testem --file testem_config.json",
-    "testem-ci": "node ../../findTests.js && testem --file testem_config_ci.json",
+    "testem": "testem --file testem_config.json",
+    "testem-ci": "testem --file testem_config_ci.json",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest",
     "browserify": "browserify js/runTest.js -o browserified.js && browserify js/engine.js -o js/engine.js"
   },
