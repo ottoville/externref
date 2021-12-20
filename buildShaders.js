@@ -32,9 +32,15 @@ function readFiles(dirname, obj) {
 let obj = {};
 (async () => {
     await Promise.all([readFiles('./shaders/', obj)]).then(() => {
-        fs.writeFile('./shaders.json', JSON.stringify(obj), (err) => {
-            if (err) throw err;
-            console.log('Shaders optimized');
-        });
+        return new Promise(res => {
+            fs.writeFile('./shaders.json', JSON.stringify(obj), (err) => {
+                if (err) throw err;
+                //Sleep one second so shaders.json timestamp is older than build files
+                setTimeout(res, 1000);
+
+            });
+        })
     });
+    console.log('Shaders optimized');
+
 })();

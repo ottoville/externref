@@ -21,7 +21,7 @@
 [[binding(0), group(0)]] var<uniform> settings : Settings;
 [[binding(0), group(1)]] var<storage,read> slopes : IntArray;
 [[binding(1), group(1)]] var<storage,read> facet12 : PlaneArray;
-[[binding(0), group(2)]] var<storage,write> resultMatrix : IntArray;
+[[binding(0), group(2)]] var ground_texture: texture_storage_2d<rgba8unorm,write>;
 
 
 [[stage(compute), workgroup_size(1)]]
@@ -47,9 +47,10 @@ fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
 
     let y:f32 = -(norm.x * f32(cx) + norm.z * f32(cz) + d) / norm.y;
     if( y > 3.0 ) {
-        resultMatrix.numbers[GlobalInvocationID.y * settings.textureSize.y + GlobalInvocationID.x]=-16711936; //Int32 represation of uint8 0, 255, 0, 255
+        textureStore(ground_texture, vec2<i32>(GlobalInvocationID.xy), vec4<f32>(0.0,1.0,0.0,1.0));
      } else {
-        resultMatrix.numbers[GlobalInvocationID.y * settings.textureSize.y + GlobalInvocationID.x]=-16711681; //Int32 represation of uint8 255, 255, 0, 255
+        textureStore(ground_texture, vec2<i32>(GlobalInvocationID.xy), vec4<f32>(1.0,1.0,0.0,1.0));
+
      }
     return;
   }

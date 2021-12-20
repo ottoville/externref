@@ -39,7 +39,7 @@
     },
     "allowSyntheticDefaultImports": true
   },
-  "include": [ "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "code.tsx" ],
+  "include": [ "shaders.json", "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "code.tsx" ],
   "exclude": [
     "node_modules",
     "workers",
