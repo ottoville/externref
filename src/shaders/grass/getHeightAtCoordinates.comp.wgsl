@@ -1,32 +1,30 @@
-
-
-[[block]] struct Vec2Array {
+struct Vec2Array {
   vectors : [[stride(8)]] array<vec2<f32>>;
 };
 
-[[block]] struct IntArray {
+struct IntArray {
    numbers : [[stride(4)]] array<i32>;
 };
 
- struct Plane {
+struct Plane {
   norm : vec3<f32>;
   d : f32;
 };
-[[block]] struct PlaneArray {
+struct PlaneArray {
    plane : [[stride(16)]] array<Plane>;
 };
-[[block]] struct FloatArray {
+struct FloatArray {
   numbers : [[stride(4)]] array<f32>;
 };
 struct PositionAndRotate {
    position : vec3<f32>;
    rotation : f32;
 };
-[[block]] struct PositionAndRotateArray {
+struct PositionAndRotateArray {
    arr : [[stride(16)]] array<PositionAndRotate>;
 };
 
-[[block]] struct Settings {
+struct Settings {
      size : vec2<u32>;
      bufferSize : vec2<u32>;
      subdivisions : u32;

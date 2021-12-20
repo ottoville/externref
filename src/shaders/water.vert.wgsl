@@ -1,14 +1,14 @@
-[[block]] struct Uniforms {
+struct Uniforms {
   modelViewProjectionMatrix : mat4x4<f32>;
   view : mat4x4<f32>;
   viewPosition : vec3<f32>;
 };
 
-[[block]] struct Time {
+struct Time {
   time : u32;
   [[align(4)]] delta : f32;
 };
-[[block]] struct WorldPosition {
+struct WorldPosition {
   world : mat4x4<f32>;
   [[size(16)]] delta : vec3<f32>;
   [[size(16)]] custom : vec3<f32>;

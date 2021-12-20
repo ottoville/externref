@@ -1,10 +1,10 @@
 
-[[block]] struct Depth_And_Mesh {
+struct Depth_And_Mesh {
   depth:f32;
   mesh:u32;
 };
 
-[[block]] struct Mouse {
+struct Mouse {
   position:vec2<i32>;
 };
 [[binding(0), group(0)]] var<storage, write> depth_and_mesh : Depth_And_Mesh;

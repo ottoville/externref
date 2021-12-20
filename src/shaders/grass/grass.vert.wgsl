@@ -11,13 +11,13 @@ let rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(
   vec2<f32>(1.0,0.0),
   vec2<f32>(1.0,0.0));
 
-[[block]] struct Scene {
+struct Scene {
   viewProjection : mat4x4<f32>;
   view : mat4x4<f32>;
   cameraPosition : vec3<f32>;
 };
 
-[[block]] struct Time {
+struct Time {
   time : u32;
   delta : f32;
 };

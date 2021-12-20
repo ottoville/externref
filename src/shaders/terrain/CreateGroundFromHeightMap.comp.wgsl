@@ -1,6 +1,6 @@
 let filt:vec3<f32> = vec3<f32>(0.3, 0.59, 0.11);
 
-[[block]] struct Settings {
+struct Settings {
      size : vec2<u32>;
      bufferSize : vec2<u32>;
      subdivisions : u32;
@@ -13,10 +13,10 @@ struct Vertice {
   normals : vec3<f32>;
   uv : vec2<f32>;
 };
-[[block]] struct Vertices {
+struct Vertices {
     vert : [[stride(48)]] array<Vertice>;
 };
-[[block]] struct Pixels {
+struct Pixels {
     pixels : [[stride(4)]] array<u32>;
 };
 [[binding(0), group(0)]] var<uniform> settings : Settings;

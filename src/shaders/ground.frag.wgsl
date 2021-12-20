@@ -13,12 +13,12 @@ struct Meshes {
   directional_light : f32;
   scenes:u32;
 };
-[[block]] struct MeshArray {
+struct MeshArray {
   length:u32;
   pointers: array<u32, 63>;
   mesh : [[stride(256)]] array<Meshes>;
 };
-[[block]] struct Projection {
+struct Projection {
   inversed_projection : mat4x4<f32>;
   reversed_projection:mat4x4<f32>;
   projectionFarPlane:mat4x4<f32>;
@@ -29,7 +29,7 @@ struct Meshes {
   slice_scale:f32;
   slice_bias:f32;
 };
-[[block]] struct Uniforms {
+struct Uniforms {
   screenDimensions : vec2<f32>;
   screendimensions_ratio:vec2<f32>;
 };
@@ -37,7 +37,7 @@ struct ClusterBounds {
   minAABB : vec3<f32>;
   maxAABB : vec3<f32>;
 };
-[[block]] struct Clusters {
+struct Clusters {
   bounds : [[stride(32)]] array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
   lightsCount: [[stride(4)]] array<u32, 27648>;
   lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824

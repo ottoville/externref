@@ -3,14 +3,14 @@
   minPoint : vec3<f32>;
   maxPoint : vec3<f32>;
 };
-[[block]] struct clusterArray {
+struct clusterArray {
   bounds : [[stride(32)]] array<VolumeTileAABB,27648>; //32 * 18 * 48 = total tiles = 27648
   lightsCount: [[stride(4)]] array<u32, 27648>;
   lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
 
 };
 
-[[block]] struct Projection {
+struct Projection {
   inversed_projection : mat4x4<f32>;
   reversed_projection:mat4x4<f32>;
   inversed_projection_farplane:mat4x4<f32>;
@@ -18,7 +18,7 @@
   zFar : f32;
 };
 
-[[block]] struct Uniforms {
+struct Uniforms {
   screenDimensions : vec2<f32>;
 
 };

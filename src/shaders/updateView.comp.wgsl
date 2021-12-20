@@ -5,16 +5,16 @@ struct Meshes {
   point_light_squared : f32;
   directional_light : f32;
 };
-[[block]] struct MeshArray {
+struct MeshArray {
   length:u32;
   pointers: array<u32, 63>;
   mesh : [[stride(256)]] array<Meshes>;
 };
-[[block]] struct PointLights {
+struct PointLights {
   length:u32;
   pointers: array<u32>;
 };
-[[block]] struct ViewUniforms {
+struct ViewUniforms {
   modelViewProjectionMatrix : mat4x4<f32>;
   view : mat4x4<f32>;
   viewPosition : vec3<f32>;
@@ -23,7 +23,7 @@ struct ClusterBounds {
   minAABB : vec4<f32>;
   maxAABB : vec4<f32>;
 };
-[[block]] struct Clusters {
+struct Clusters {
   bounds : [[stride(32)]] array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
   lightsCount: [[stride(4)]] array<u32, 27648>;
   lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824

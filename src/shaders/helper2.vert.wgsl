@@ -1,15 +1,15 @@
-[[block]] struct Scene {
+struct Scene {
    viewProjection : mat4x4<f32>;
    view : mat4x4<f32>;
    cameraPosition : vec3<f32>;
 };
 
-[[block]] struct Time {
+struct Time {
   time : u32;
   delta : f32;
 };
 
-[[block]] struct IntArray {
+struct IntArray {
   numbers : [[stride(4)]] array<i32>;
 };
 
@@ -17,18 +17,18 @@ struct Plane {
   norm : vec3<f32>;
   d : f32;
 };
-[[block]] struct PlaneArray {
+struct PlaneArray {
   plane : [[stride(16)]] array<Plane>;
 };
 
-[[block]] struct WorldPosition {
+struct WorldPosition {
   position : mat4x4<f32>;
   [[size(16)]] delta : vec3<f32>;
   [[size(16)]] custom : vec3<f32>;
   [[size(16)]] acceleration : vec3<f32>;
    id : u32;
 };
-[[block]] struct Settings {
+struct Settings {
      size : vec2<u32>;
      bufferSize : vec2<u32>;
      subdivisions : u32;

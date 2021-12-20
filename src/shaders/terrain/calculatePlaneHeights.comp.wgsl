@@ -1,4 +1,4 @@
-[[block]] struct Settings {
+struct Settings {
      size : vec2<u32>;
      bufferSize : vec2<u32>;
      subdivisions : u32;
@@ -12,10 +12,10 @@ struct Vertice {
   [[size(16)]] normals : vec3<f32>;
   uv : vec2<f32>;
 };
-[[block]] struct IntArray {
+struct IntArray {
    numbers : [[stride(4)]] array<i32>;
 };
-[[block]] struct Vertices {
+struct Vertices {
      vert : [[stride(48)]] array<Vertice>;
 };
 
@@ -23,7 +23,7 @@ struct Vertice {
    norm : vec3<f32>;
    d : f32;
 };
-[[block]] struct PlaneArray {
+struct PlaneArray {
   plane : [[stride(16)]] array<Plane>;
 };
 [[binding(0), group(0)]] var<uniform> settings : Settings;

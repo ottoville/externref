@@ -1,11 +1,11 @@
 
-[[block]] struct FloatArray {
+struct FloatArray {
    numbers : [[stride(4)]] array<f32>;
 };
-[[block]] struct Slopes {
+struct Slopes {
    numbers : [[stride(4)]] array<i32>;
 };
-[[block]] struct Settings {
+struct Settings {
      size : vec2<u32>;
      bufferSize : vec2<u32>;
      subdivisions : u32;

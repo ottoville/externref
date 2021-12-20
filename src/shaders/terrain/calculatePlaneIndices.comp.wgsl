@@ -1,7 +1,7 @@
-[[block]] struct Indices {
+struct Indices {
   numbers : [[stride(4)]] array<u32>;
 };
-[[block]] struct Settings {
+struct Settings {
      size : vec2<u32>;
      bufferSize : vec2<u32>;
      subdivisions : u32;

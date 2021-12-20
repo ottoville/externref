@@ -8,16 +8,16 @@ struct Mesh {
   point_light : f32;
 
 };
-[[block]] struct LightsArray_deprecated {
+struct LightsArray_deprecated {
   lights_count:u32;
   light: array<u32>;
 };
-[[block]] struct MeshArray {
+struct MeshArray {
   length:u32;
   pointers: array<u32, 63>;
   mesh : [[stride(256)]] array<Mesh>;
 };
-[[block]] struct Uniforms {
+struct Uniforms {
   zNear : f32;
   zFar : f32;
   screenDimensions : vec2<f32>;
@@ -30,7 +30,7 @@ struct ClusterBounds {
   minAABB : vec3<f32>;
   maxAABB : vec3<f32>;
 };
-[[block]] struct Clusters {
+struct Clusters {
   bounds : [[stride(32)]] array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
   lightsCount: [[stride(4)]] array<u32, 27648>;
   lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
