@@ -513,8 +513,8 @@ export class GPU {
         if (layout)
             desc.layout = layout;
         const pipeline = this.device.createComputePipeline(desc) as TerraGPUComputePipeLine;
-        pipeline.createBindGroup = (layout: number | GPUBindGroupLayout, entries) => this.device.createBindGroup({
-            layout: layout instanceof GPUBindGroupLayout ? layout : pipeline.getBindGroupLayout(layout),
+        pipeline.createBindGroup = (layout2: number | GPUBindGroupLayout, entries) => this.device.createBindGroup({
+            layout: layout2 instanceof GPUBindGroupLayout ? layout2 : pipeline.getBindGroupLayout(layout2),
             entries: entries
         });
         return pipeline
@@ -537,7 +537,7 @@ export class GPU {
                 });
             }
             if (bgt.subBindGroups.size) {
-                bgt.subBindGroups.forEach((bgt) => { drawedMeshes += this.drawBindGroups(renderPassEncoder, bgt, renderPass, ++index) });
+                bgt.subBindGroups.forEach(b => { drawedMeshes += this.drawBindGroups(renderPassEncoder, b, renderPass, ++index) });
             }
         }
         return drawedMeshes;

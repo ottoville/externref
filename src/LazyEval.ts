@@ -1,6 +1,6 @@
 /*
     This LazyEval class is used to set fixed time between repeatly called functions.
-    Created: Otto-Ville Lamminpää
+    Created: Otto-Ville Lamminpï¿½ï¿½
 
     Usage:
 
@@ -14,7 +14,7 @@
  */
 export class LazyEval {
     #timerStart: number | null = null;
-    #timeoutID: number = 0;
+    #timeoutID = 0;
     constructor(
         private callback: (...args: any[]) => void) {
     }
@@ -23,7 +23,7 @@ export class LazyEval {
             this.#timerStart = Date.now();
             this.#timeoutID = setTimeout(() => this.run(args), timeout);
         } else {
-            let lazyTimer = timeout - (Date.now() - this.#timerStart);
+            const lazyTimer = timeout - (Date.now() - this.#timerStart);
             clearTimeout(this.#timeoutID);
             if (lazyTimer <= 0)
                 this.run(args);

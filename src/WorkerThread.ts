@@ -45,7 +45,7 @@ abstract class MainWorker extends Worker {
 }
 export class WorkerThread extends MainWorker {
     message<T, U>(returntype: WorkerReturn, action: string, data: object, options?: U): Promise<T> {
-        let toWorker: WMessage = { type: returntype, action: action, data: data };
+        const toWorker: WMessage = { type: returntype, action: action, data: data };
         return new Promise((res, rej) => {
             toWorker.id = this.operations.push([res,rej]) - 1
             super.postMessage(toWorker, options);
@@ -63,7 +63,7 @@ export class ObjectWorkerThread extends MainWorker {
     }
     message<T>(objectID: number, action: string, args?: any[]): Promise<T>
     message<T, U>(objectID: number, action: string, args?: any[], options?: U): Promise<T> {
-        let toWorker: WMessage = {
+        const toWorker: WMessage = {
             action: action, data: {
                 objId: objectID,
                 args: typeof(args)!=='undefined'?args:[]

@@ -194,7 +194,7 @@ class Ray {
      * @param intersectionTreshold extra extend to be added to the box in all direction
      * @returns if the box was hit
      */
-    public intersectsBoxMinMax(minimum: { x: number, y: number, z: number }, maximum: { x: number, y: number, z: number }, intersectionTreshold: number = 0): boolean {
+    public intersectsBoxMinMax(minimum: { x: number, y: number, z: number }, maximum: { x: number, y: number, z: number }, intersectionTreshold = 0): boolean {
 
         //const newMinimum = edge1.copyFromFloats(minimum.x - intersectionTreshold, minimum.y - intersectionTreshold, minimum.z - intersectionTreshold);
         edge1[0] = minimum.x - intersectionTreshold
@@ -305,7 +305,7 @@ class Ray {
      * @param intersectionTreshold extra extend to be added to the BoundingBox in all direction
      * @returns if the box was hit
      */
-    public intersectsBox(box: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number }}, intersectionTreshold: number = 0): boolean {
+    public intersectsBox(box: { min: { x: number, y: number, z: number }, max: { x: number, y: number, z: number }}, intersectionTreshold = 0): boolean {
         return this.intersectsBoxMinMax(box.min, box.max, intersectionTreshold);
     }
 

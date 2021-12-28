@@ -1,5 +1,5 @@
 ﻿
-const loginf = async (e: any, method: string | undefined, callback: (obj: { provider: string, accessToken: string, pointerEvent:PointerEvent }) => void) => {
+const loginf = (e: any, method: string | undefined, callback: (obj: { provider: string, accessToken: string, pointerEvent:PointerEvent }) => void) => {
   //  loadelem.style.display = 'block';
     // blazor.invokeMethod('setProgress', 0);
     //progelem.max = 100;
@@ -20,7 +20,7 @@ const loginf = async (e: any, method: string | undefined, callback: (obj: { prov
                 //progelem.value = 10;
               //  login({ provider: 'facebook', accessToken: response.authResponse.accessToken, userID: response.authResponse.userID, pointerEvent: e });
             });
-            FB.getLoginStatus(async (response) => {
+            FB.getLoginStatus((response) => {
                 if (response.status === 'connected') {
                     // progelem.value = 5;
                   //  (await BlazorRouter).invokeMethod('startGame');

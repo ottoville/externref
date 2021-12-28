@@ -2,7 +2,7 @@
     noReturn,
     Promise
 }
-interface WMessage<T> {
+interface WMessage<T = Record<string, unknown>> {
     type: WorkerReturn,
     data: T,
     action: string,

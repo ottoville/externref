@@ -2,6 +2,7 @@ type ObjStoreDetails = { version: number, parameters?: IDBObjectStoreParameters,
 type ObjStoreIndex= {version:number,name: string, keyPath: string | string[],options?: IDBIndexParameters}
 
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace JSX {
     interface ElementClass {
         render: (props: any) => HTMLElement;
@@ -50,14 +51,14 @@ globalThis.TerraUI = {
             } else
                 elem.setAttribute(key, props[key]);
         }
-        content.forEach(function appendContent(content) {
-            if (Array.isArray(content)) {
-                content.forEach(appendContent)
+        content.forEach(function appendContent(content2) {
+            if (Array.isArray(content2)) {
+                content2.forEach(appendContent)
             } else {
-                if (content instanceof HTMLElement)
-                    elem.appendChild(content);
+                if (content2 instanceof HTMLElement)
+                    elem.appendChild(content2);
                 else {
-                    elem.appendChild(document.createTextNode(content));
+                    elem.appendChild(document.createTextNode(content2));
                 }
             }
         });

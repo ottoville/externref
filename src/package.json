@@ -20,7 +20,7 @@
     "test": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs",
     "testem": "node ../findTests.js && tsc --project tsconfig.testem.json && npm run buildRust-testem2 && npm run buildWasmSimd-testem && npm run testem --prefix ./test-build",
     "testem-ci": "node ../findTests.js && tsc --project tsconfig.testem.json && npm run buildRust-testem2 && npm run buildWasmSimd-testem && npm run testem-ci --prefix ./test-build",
-    "eslint": "eslint ./*/**.ts"
+    "eslint": "eslint --quiet ./*/**.ts ."
   },
   "author": "",
   "license": "ISC",

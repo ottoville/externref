@@ -131,7 +131,6 @@ export class TerrainTool extends MainNode {
         clearInterval(this.mouseinterval);
     }
     override destroy = (): void => {
-        terrainWorker.unsubscribe('heights');
         this.drawable.destroy();
         this.facet12ArrGPUBufferSwap.destroy();
         this.traits.forEach(trait => trait.destroy());

@@ -392,7 +392,7 @@ class Mesh {
           return this.normals;
       }*/
 }
-onmessage = async (e: WorkerMessageObject<{ objId?: number, args: any[] }, Mesh>) => {
+onmessage = (e: WorkerMessageObject<{ objId?: number, args: any[] }, Mesh>) => {
     if (e.data.action == 'init') {
         meshes.set(e.data.data.objId!, new Mesh(e.data.data.objId!, ...<[SharedArrayBuffer, SharedArrayBuffer, number, SharedArrayBuffer, SharedArrayBuffer]>e.data.data.args));
         //meshes.set(e.data.data.meshId, new Mesh(e.data.data.indices, e.data.data.positions, e.data.data.normals));
