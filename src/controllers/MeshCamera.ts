@@ -10,12 +10,8 @@ const enum ARROW_KEYS  {
     RIGHT = 2,
     DOWN = 4,
     LEFT = 8,
-
     LEFT_AND_RIGHT = ARROW_KEYS.RIGHT|ARROW_KEYS.LEFT
 }
-
-ARROW_KEYS.LEFT_AND_RIGHT
-
 
 export class MeshCamera implements CameraController {
     name='PositionCamera';
@@ -24,7 +20,7 @@ export class MeshCamera implements CameraController {
     #arrowKeysDown=0;
     #mesh: MainNode;
     constructor(private camera: TerraCamera, initial=false) {
-        const mesh=[...MainNode.Meshes.values()].find(mesh => mesh.label==='human');
+        const mesh=[...MainNode.Meshes.values()].find(m => m.label==='human');
         if(!mesh)
             throw new Error('Mesh not found');
         this.#mesh = mesh;
@@ -58,6 +54,14 @@ export class MeshCamera implements CameraController {
         engine.collider.radius[0] = 0.5;
         engine.collider.radius[1] = 2;
         engine.collider.radius[2] = 0.5;
+        this.enable();
+    }
+    disable() {
+        document.removeEventListener('keydown', this.#keydownfunction);
+        document.removeEventListener('keyup', this.#keyupfunction);
+    }
+    enable() {
+        console.log('enable mesh camera');
         document.addEventListener('keydown', this.#keydownfunction);
         document.addEventListener('keyup', this.#keyupfunction);
     }
@@ -113,8 +117,7 @@ export class MeshCamera implements CameraController {
         }
     }
     destroy(): void {
-        document.removeEventListener('keydown', this.#keydownfunction);
-        document.removeEventListener('keyup', this.#keyupfunction);
+        this.disable();
     }
     lastTranslation=new TerraVector3();
     checkInputs() {
@@ -131,7 +134,7 @@ export class MeshCamera implements CameraController {
                 translationDelta[0] - (direction[0]*this.#velocity),
                 translationDelta[1] - (direction[1]*this.#velocity),
                 translationDelta[2] - (direction[2]*this.#velocity)
-            ]
+            ];
         }
         if((this.#arrowKeysDown & ARROW_KEYS.DOWN) === ARROW_KEYS.DOWN) {
             const direction=this.camera.direction;
@@ -141,18 +144,17 @@ export class MeshCamera implements CameraController {
                 translationDelta[2] + (direction[2]*this.#velocity)
             ]
         }
-
+        const walkingSpeed = 1.4
         //Limit speed to 1
         const length=Math.sqrt(translationDelta[0]*translationDelta[0] + translationDelta[1]*translationDelta[1] + translationDelta[2]*translationDelta[2])
-        if(length>10) {
+        if(length>walkingSpeed) {
+            const scale = walkingSpeed/length;
             this.#mesh.velocity=[
-                translationDelta[0] / 10,
-                translationDelta[1] / 10,
-                translationDelta[2] / 10
+                translationDelta[0] * scale,
+                translationDelta[1] * scale,
+                translationDelta[2] * scale
             ]
         }
-
-        
         if((this.#arrowKeysDown & (ARROW_KEYS.LEFT_AND_RIGHT)) >0) {
             if((this.#arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
                 this.#angle+=0.03;

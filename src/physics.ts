@@ -25,7 +25,7 @@ export class Physics {
     movables: MainNode[] = []; //Stuff that moves without physic, eg. sun.
     tickables: ({ checkCollide(velocityPerDelta: readonly [number, number, number]): void } & DataNode)[] = []; //Stuff that moves and have collision check
     tickTime = 21600;  //6 hours
-    tickIntervalMs = 100;
+    tickIntervalMs = 16;
     #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
     get physicTime() {
         if (this.#gameSpeed >= 0) {

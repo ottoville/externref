@@ -86,8 +86,7 @@ export class ArcRotateCamera implements CameraController {
     #beta = 0;
     #radius = 10;
     constructor(private camera: TerraCamera<PickableRenderPass>, initial = false) {
-        engine.canvas.addEventListener('wheel', this.#cameraWheel);
-        engine.canvas.addEventListener('pointerdown', this.#cameraPointerDown);
+        this.enable();
         if (initial) {
             engine.DB.transaction("save").objectStore("save").get(["camera", "ArchRotateCamera"]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
@@ -152,6 +151,15 @@ export class ArcRotateCamera implements CameraController {
         engine.canvas.removeEventListener('pointermove', this.#cameraMove);
         engine.canvas.removeEventListener('wheel', this.#cameraWheel);
         this.serialize();
+    }
+    disable() {
+        engine.canvas.removeEventListener('pointerdown', this.#cameraPointerDown);
+        engine.canvas.removeEventListener('pointermove', this.#cameraMove);
+        engine.canvas.removeEventListener('wheel', this.#cameraWheel);
+    }
+    enable() {
+        engine.canvas.addEventListener('wheel', this.#cameraWheel);
+        engine.canvas.addEventListener('pointerdown', this.#cameraPointerDown);
     }
     #calculatePosition() {
         let sinb = Math.sin(this.#beta);

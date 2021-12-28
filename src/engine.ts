@@ -17,6 +17,7 @@ import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "./GPU/RenderPass.js";
 import { Texture } from "./GPU/Texture.js";
+import type { DataNode } from "./DataNode.js";
 
 declare const engine:Engine;
 
@@ -289,8 +290,8 @@ export class Engine {
         return new Engine(gpu, await DB, canvas, wasm, rust.instance.exports as rustWasm);
     }
     attachCameraInput(initial = false) {
-    this.inputManager = new ArcRotateCamera(this.mainCamera, initial);
-       //  this.inputManager = new PositionCamera(this.mainCamera,initial);
+        this.inputManager = new ArcRotateCamera(this.mainCamera, initial);
+        //this.inputManager = new PositionCamera(this.mainCamera,initial);
     }
     readonly #timeAndDeltaBuffer = new ArrayBuffer(8);
     readonly #timeView = new Uint32Array(this.#timeAndDeltaBuffer, 0, 1);
@@ -374,8 +375,7 @@ export class Engine {
     ) {
         this.memory = rust.memory;
         window.engine = this;
-        const projection = new Projection(gpu);
-        this.mainCamera = new TerraCamera(gpu.renderPassScreen, projection, gpu);
+        this.mainCamera = new TerraCamera(gpu.renderPassScreen, new Projection(gpu), gpu);
 
 
         this.collider = new ColliderJS(rust);
@@ -501,7 +501,7 @@ export class Engine {
         this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
 
-    collideWithWorld() {
+    collideWithWorld(currentMesh?:DataNode) {
         //TODO: Call only when camera position change
         const scaledPosition = this.collider.scaledPosition;
         const scaledVelocity = this.collider.scaledVelocity;
@@ -518,7 +518,15 @@ export class Engine {
             // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-            this.physics.tickables.forEach(mesh => mesh.checkCollision(this.collider))
+            if(currentMesh) {
+                this.physics.tickables.forEach(mesh => {
+                    if(currentMesh !== mesh)
+                        mesh.checkCollision(this.collider)
+                });
+            }
+            else {
+                this.physics.tickables.forEach(mesh => mesh.checkCollision(this.collider));
+            }
 
             const intersectionPoint = this.collider.intersectionPointWasm;
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];

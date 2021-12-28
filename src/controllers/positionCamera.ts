@@ -55,8 +55,16 @@ export class PositionCamera implements CameraController {
         engine.collider.radius[0] = 0.5;
         engine.collider.radius[1] = 0.5;
         engine.collider.radius[2] = 0.5;
+        this.enable();
+    }
+    enable() {
         document.addEventListener('keydown', this.#keydownfunction);
         document.addEventListener('keyup', this.#keyupfunction);
+
+    }
+    disable() {
+        document.removeEventListener('keydown', this.#keydownfunction);
+        document.removeEventListener('keyup', this.#keyupfunction);
     }
     #serializeRequested=false;
     serialize = () => {
@@ -108,8 +116,7 @@ export class PositionCamera implements CameraController {
         }
     }
     destroy(): void {
-        document.removeEventListener('keydown', this.#keydownfunction);
-        document.removeEventListener('keyup', this.#keyupfunction);
+        this.disable();
     }
     checkInputs() {
         if(this.#arrowKeysDown === 0)

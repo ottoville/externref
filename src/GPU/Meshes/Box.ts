@@ -81,6 +81,6 @@ export class Box extends SimpleIndexedMesh {
         scaledVelocity[2] = velocityPerDelta[2];
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
-        engine.collideWithWorld();
+        engine.collideWithWorld(this);
     }
 }

@@ -22,7 +22,7 @@ declare const engine:Engine;
  */
 
 export class Plants {
-    public numBlades = 4000000;
+    public numBlades = 65535;
     public opts = {
         radius: 86
     }

@@ -147,7 +147,7 @@ fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
     let y:f32 = -(norm.x * f32(cx) + norm.z * f32(cz) + d) / norm.y;
     if( y > 3.0 ) {
       let r = (snoise2(vec3<f32>(vec2<f32>(GlobalInvocationID.xy),y))+1.0)*0.5;
-      let b = (snoise2(vec3<f32>(vec2<f32>(GlobalInvocationID.xy),y)+vec3<f32>(1.0,1.0,1.0))+1.0)*0.5;
+      let b = (snoise2(vec3<f32>(vec2<f32>(GlobalInvocationID.yx),y))+1.0)*0.5;
         textureStore(ground_texture, vec2<i32>(GlobalInvocationID.xy), vec4<f32>(r,1.0,b,1.0));
      } else {
         textureStore(ground_texture, vec2<i32>(GlobalInvocationID.xy), vec4<f32>(1.0,1.0,0.0,1.0));

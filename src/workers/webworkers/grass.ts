@@ -53,13 +53,8 @@ const methods = {
         if (amount === 0)
             return;
        // var d = new Date().getTime();
-        const db = await DB;
-        const trans = db.transaction("plantae");
       //  var objstore = trans.objectStore("plantae");
-        const objs: PlantI[] = [];
-        trans.onerror = function (err) {
-            console.log(err)
-        }
+
         //console.log('creating grass, amount', amount, data)
 
         //let offsets: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * amount);
@@ -90,20 +85,6 @@ const methods = {
             if (gridarr.length > grassPerSquareMeter * 2)
                 continue;
             gridarr.push(offsetsX, offsetsY);
-            /*
-            if (i == 0) {
-                maxX = minX = offsets[i * 2 + 0];
-                maxZ = minZ = offsets[i * 2 + 1];
-                if (isNaN(maxX) || isNaN(maxZ) || isNaN(minX) || isNaN(minZ)) {
-                    console.log('maxX or maxZ is nan, i is', i);
-                    continue;
-                }
-                continue;
-            }
-            maxX = Math.max(maxX, offsets[i * 2 + 0]);
-            maxZ = Math.max(maxZ, offsets[i * 2 + 1]);
-            minX = Math.min(minX, offsets[i * 2 + 0]);
-            minZ = Math.min(minZ, offsets[i * 2 + 1]);*/
 
         }
 
@@ -170,7 +151,7 @@ const methods = {
         }
     }
 }
-onmessage = async (e: WorkerMessage<{}>) => {
+onmessage = (e: WorkerMessage) => {
     methods[e.data.action](e.data);
 }
 

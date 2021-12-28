@@ -8,7 +8,7 @@ interface WMessage<T> {
     action: string,
     id: number
 }
-interface WorkerMessage<T> extends MessageEvent {
+interface WorkerMessage<T = Record<string, unknown>> extends MessageEvent {
     data: WMessage<T>
 }
 

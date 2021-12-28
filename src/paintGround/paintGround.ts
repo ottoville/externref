@@ -35,7 +35,6 @@ export abstract class paintGround {
         public resolve: PTResultF
     ) {
         this.uitab.canvasListener.addListener("pointerdown", this.#mainPointerDown, { once: true });
-        engine.inputManager?.destroy();
     }
     //public resolve: PTResultF = () => null;
     /* public activate(callback: PTResultF) {
@@ -43,7 +42,6 @@ export abstract class paintGround {
          this.resolve = callback;
      }*/
     public destroy() {
-        engine.attachCameraInput();
         this.uitab.canvasListener.destroy();
     }
 
@@ -114,7 +112,7 @@ export abstract class paintGround {
             this.onAreaDraw(width);
         }
     }
-    private finalClick = () => {
+    #finalClick = () => {
         //this.canvas.addEventListener('click', async () => {
         //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
         this.uitab.canvasListener.removeListener('pointermove', this.#mousemove);
@@ -126,12 +124,11 @@ export abstract class paintGround {
         this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
     }
     private mouseMoveRegisterClick = () => {
-        this.uitab.canvasListener.addListener('pointerdown', this.finalClick, { once: true });
+        this.uitab.canvasListener.addListener('pointerdown', this.#finalClick, { once: true });
     }
     #pointerUp = () => {
-
         this.uitab.canvasListener.removeListener('pointermove', this.#drawArea);
-        engine.attachCameraInput();
+        engine.inputManager?.enable();
         //fix race condition
         if (this.#end_position[0] == 0)
             return;
@@ -159,7 +156,7 @@ export abstract class paintGround {
             console.log(pickInfo)
             this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
             this.onMainPointerDown(this.#start_position);
-            engine.inputManager?.destroy();
+            engine.inputManager?.disable();
             this.uitab.canvasListener.addListener("pointermove", this.#drawArea, { lazy: 25 });
 
             this.uitab.canvasListener.addListener("pointerup", this.#pointerUp, { once: true });

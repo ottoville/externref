@@ -26,11 +26,13 @@ module.exports = {
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-shadow": ["error"],
         "no-var": "off",
         "no-cond-assign": "off",
         "no-this-alias":"off",
         "require-await":2,
         "require-atomic-updates":2,
-        "no-promise-executor-return":2
+        "no-promise-executor-return":2,
+        "no-self-compare": 2
     }
 };
