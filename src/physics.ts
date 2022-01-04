@@ -144,7 +144,8 @@ export class Physics {
         });
         this.#deltaOld=dt;
         if (realDeltaInGameTime > MIN_TICK_DELTA) {
-            this.#tick();
+            // Withtimeout execution is returned to event loop, allowing inputs before next tick
+            setTimeout(this.#tick,0);
         } else {
             this.#interval = setTimeout(this.#tick, this.tickIntervalMs - (Date.now() - timestamp))
         }

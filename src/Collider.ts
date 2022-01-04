@@ -53,8 +53,9 @@ export class ColliderJS {
         }
 
         var sqrtD = Math.sqrt(determinant);
-        var r1 = (-b - sqrtD) / (2.0 * a);
-        var r2 = (-b + sqrtD) / (2.0 * a);
+        const doubledA=2.0 * a;
+        var r1 = (-b - sqrtD) / doubledA;
+        var r2 = (-b + sqrtD) / doubledA;
 
         if (r1 > r2) {
             var temp = r2;
@@ -324,13 +325,17 @@ export class ColliderJS {
         this.#collisionPoint[2] = 0;
         var found = false;
         var t = 1.0;
+        var embeddedInPlane = false;
         if (normalDotVelocity == 0) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
                 return;
             }
+            embeddedInPlane = true;
+            var t0 = 0;
+
         }
         else {
-            let t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+            var t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
             var t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
 
             if (t0 > t1) {
@@ -346,7 +351,8 @@ export class ColliderJS {
             if (t0 < 0) {
                 t0 = 0;
             }
-            //TODO: Use simd
+        }
+        if(!embeddedInPlane) {
             this.#planeIntersectionPoint[0] = scaledPosition[0] - triangle.planeCollider[0] + scaledVelocity[0] * t0;
             this.#planeIntersectionPoint[1] = scaledPosition[1] - triangle.planeCollider[1] + scaledVelocity[1] * t0;
             this.#planeIntersectionPoint[2] = scaledPosition[2] - triangle.planeCollider[2] + scaledVelocity[2] * t0;
@@ -392,6 +398,7 @@ export class ColliderJS {
                 b = 2.0 * (Dot(scaledVelocity, this.#tempVector));
                 c = (this.#tempVector[0] * this.#tempVector[0] + this.#tempVector[1] * this.#tempVector[1] + this.#tempVector[2] * this.#tempVector[2]) - 1.0;
                 lowestRoot = this.getLowestRoot(this.#velocitySquaredLength, b, c, t);
+                //lowestRoot = engine.wasm.getLowestRoot(this.#velocitySquaredLength, b, c, t)
                 if (lowestRoot) {
                     t = lowestRoot;
                     found = true;
@@ -431,6 +438,7 @@ export class ColliderJS {
                 c = edgeSquaredLength * (1.0 - (this._baseToVertex[0] * this._baseToVertex[0] + this._baseToVertex[1] * this._baseToVertex[1] + this._baseToVertex[2] * this._baseToVertex[2])) + edgeDotBaseToVertex * edgeDotBaseToVertex;
 
                 lowestRoot = this.getLowestRoot(a, b, c, t);
+                //lowestRoot = engine.wasm.getLowestRoot(a, b, c, t)
                 if (lowestRoot) {
                     var f = (edgeDotVelocity * lowestRoot - edgeDotBaseToVertex) / edgeSquaredLength;
                     if (f >= 0.0 && f <= 1.0) {
@@ -449,7 +457,9 @@ export class ColliderJS {
             }
         }
         if (found) {
-            var distToCollisionSquared = t * this.#velocitySquaredLength;
+         //   engine.rust.collision_found(this.collider_ptr, t * this.#velocitySquaredLength, this.#collisionPoint[0], this.#collisionPoint[1], this.#collisionPoint[2]);
+        //  engine.wasm.collision_found_debug(t, this.#velocitySquaredLength, this.#collisionPoint[0], this.#collisionPoint[1], this.#collisionPoint[2], 0) 
+          var distToCollisionSquared = t * t * this.#velocitySquaredLength;
             //var distToCollisionSquared = t * (this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
           //  console.log(this.collisionFound);
           
