@@ -127,20 +127,16 @@ TODO
                 terrainPositionAndUvsAndNormalsGPU.unmap();
 
             } else {
-                const bytesPerRow=Terrain.subdivisions[0] * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT;
                 const b = await (await fetch('/images/tenerife250.webp')).blob();
 
                 const bitmap = await createImageBitmap(b);
                 const texture = engine.gpu.device.createTexture({
                     format: 'rgba8unorm',
                     size:[Terrain.subdivisions[0],Terrain.subdivisions[1]],
-                    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+                    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
                 })
                 engine.gpu.device.queue.copyExternalImageToTexture({source:bitmap},{texture},[bitmap.width,bitmap.height]);
 
-                const sourcePixels = engine.gpu.createGPUBuffer((Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * Uint8ClampedArray.BYTES_PER_ELEMENT), [GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE])
-                const commandEncoder = engine.gpu.createCommandEncoder();
-                commandEncoder.copyTextureToBuffer({texture},{buffer:sourcePixels, bytesPerRow:bytesPerRow},[Terrain.subdivisions[0],Terrain.subdivisions[1]])
 
                 const computePipeline = engine.gpu.createComputePipeline('terrain/CreateGroundFromHeightMap.comp.wgsl');
 
@@ -150,10 +146,11 @@ TODO
                         buffer: settingsGPU
                     }
                 }]);
+                const commandEncoder = engine.gpu.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setBindGroup(0, bindGroupSettings);
                 var terrainPositionAndUvsAndNormalsGPU = engine.gpu.createGPUBuffer(verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC])
-                    const sourceBindGroup = computePipeline.createBindGroup(1, [
+                const sourceBindGroup = computePipeline.createBindGroup(1, [
                     {
                         binding: 0,
                         resource: {
@@ -162,9 +159,7 @@ TODO
                     },
                     {
                         binding: 1,
-                        resource: {
-                            buffer: sourcePixels
-                        }
+                        resource: texture.createView()
                     }
                 ]);
                 passEncoder.setPipeline(computePipeline);
@@ -446,7 +441,11 @@ TODO
                 // Get a GPU buffer for reading in an unmapped state.
                 const gpuReadBuffer = engine.gpu.createGPUBuffer(textureSizeBytes, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ]);
                 // Encode commands for copying buffer to buffer.
-                commandEncoder.copyTextureToBuffer({texture: this.texture},{buffer: gpuReadBuffer, bytesPerRow: 4*Terrain.textureSize[0]},Terrain.textureSize)
+
+                commandEncoder.copyTextureToBuffer(
+                    {texture: this.texture},
+                    {buffer: gpuReadBuffer, bytesPerRow: 4*Terrain.textureSize[0]},
+                Terrain.textureSize)
                 var [gpuReadBufferPositions, gpuReadBufferIndices] = engine.gpu.createCopy(commandEncoder, this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU)
                 const gpuCommands = commandEncoder.finish();
                 engine.gpu.device.queue.submit([gpuCommands]);

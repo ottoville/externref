@@ -329,37 +329,7 @@
         if
           return
         end
-    end
-
-    f32.const 1.0
-    global.set $lowestRoot
-
-    (local.set $triangle0
-      (v128.load
-        (i32.load offset=16
-            (local.get $planePosition)
-        )
-      )
-    )
-
-    (local.set $triangle1
-      (v128.load
-        (i32.load offset=20
-           (local.get $planePosition)
-        )
-      )
-    )
-    (local.set $triangle2
-      (v128.load 
-        (i32.load offset=24
-            (local.get $planePosition)
-        )
-      )
-    )
-    local.get $normalDotVelocity
-    f32.const 0
-    f32.ne
-    if
+    else
       (local.tee $t0  ;;t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
         (f32.div
           (f32.sub
@@ -398,6 +368,37 @@
       if
         return
       end
+    end
+
+    f32.const 1.0
+    global.set $lowestRoot
+
+    (local.set $triangle0
+      (v128.load
+        (i32.load offset=16
+            (local.get $planePosition)
+        )
+      )
+    )
+
+    (local.set $triangle1
+      (v128.load
+        (i32.load offset=20
+           (local.get $planePosition)
+        )
+      )
+    )
+    (local.set $triangle2
+      (v128.load 
+        (i32.load offset=24
+            (local.get $planePosition)
+        )
+      )
+    )
+    local.get $normalDotVelocity
+    f32.const 0
+    f32.ne
+    if
       (call $checkPointInTriangle
         ;;planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
         (local.tee $planeIntersectionPoint
@@ -765,11 +766,12 @@
       br_if $for-loop|0
     end
   )
+  ;; TODO: $maxR is same than global lowestRoot?
   (func $getLowestRoot (param $a f32) (param $b f32) (param $c f32) (param $maxR f32) (result f32)
     ;;var determinant = b * b - 4.0 * a * c;
     (local $determinant f32)
     (local $squared f32)
-    (local $squaredA f32)
+    (local $doubledA f32)
     (local $R1 f32)
     (local $R2 f32)
     (local.tee  $determinant
@@ -803,7 +805,7 @@
             (f32.sqrt (local.get $determinant)
           ))
         )
-        (local.tee $squaredA
+        (local.tee $doubledA
           (f32.mul
             (f32.const 2.0)
             (local.get $a)
@@ -819,7 +821,7 @@
           )
           (local.get $squared)
         )
-        (local.get $squaredA)
+        (local.get $doubledA)
       )
     )
    f32.gt

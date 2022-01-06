@@ -850,41 +850,41 @@
 
             (local.get $meshID)
             (f32x4.extract_lane 0
-            (local.tee $t0
-              (f32x4.div
-                (f32x4.sub
-                  (f32x4.splat
-                    (f32.const -1)
+              (local.tee $t0
+                (f32x4.div
+                  (f32x4.sub
+                    (f32x4.splat
+                      (f32.const -1)
+                    )
+                    (local.get $signedDistToTrianglePlane)
                   )
-                  (local.get $signedDistToTrianglePlane)
-                )
-                (local.tee $normalDotVelocity
-                  (call $simd_dot
-                    (local.get $planeX)
-                    (global.get $velocityX)
+                  (local.tee $normalDotVelocity
+                    (call $simd_dot
+                      (local.get $planeX)
+                      (global.get $velocityX)
 
-                    (local.get $planeY)
-                    (global.get $velocityY)
+                      (local.get $planeY)
+                      (global.get $velocityY)
 
-                    (local.get $planeZ)
-                    (global.get $velocityZ)
+                      (local.get $planeZ)
+                      (global.get $velocityZ)
+                    )
                   )
                 )
               )
-            )
             )
             (f32x4.extract_lane 0
               (local.tee $t1
-              (f32x4.div
-                (f32x4.sub
-                  (f32x4.splat
-                    (f32.const 1)
+                (f32x4.div
+                  (f32x4.sub
+                    (f32x4.splat
+                      (f32.const 1)
+                    )
+                    (local.get $signedDistToTrianglePlane)
                   )
-                  (local.get $signedDistToTrianglePlane)
+                  (local.get $normalDotVelocity)
                 )
-                (local.get $normalDotVelocity)
               )
-            )
             )
           )
         end

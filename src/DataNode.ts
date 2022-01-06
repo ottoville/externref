@@ -175,11 +175,12 @@ export abstract class DataNode extends MainNode {
             this.#lastColliderTransformMatrix = this.#myCollisionsTransformMatrix.clone();
             this.#updateColliderPlanes();
         }
-            /*const scaledPosition=collider.scaledPosition;
+           /* const scaledPosition=collider.scaledPosition;
             const scaledVelocity=collider.scaledVelocity
-            this.#triangleFaces.forEach(triangle => {
-               collider._testTriangle(triangle, scaledPosition, scaledVelocity);
-            });*/
+            const trLength=this.#triangleFaces.length;
+            for(let i=0; i<trLength; i++) {
+                collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
+            }*/
              engine.wasm.testTriangles(
                 engine.rust.collider_faces_pointer(this.ptr),
                 engine.rust.collider_planes_parallel_pointer(this.ptr),
