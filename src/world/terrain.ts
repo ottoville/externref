@@ -448,27 +448,17 @@ TODO
                 var [gpuReadBufferPositions, gpuReadBufferIndices] = engine.gpu.createCopy(commandEncoder, this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU)
                 const gpuCommands = commandEncoder.finish();
                 engine.gpu.device.queue.submit([gpuCommands]);
-                gpuReadBuffer.mapAsync(GPUMapMode.READ).then(() => {
-                    // Read buffer.
-                    const arrayBuffer = gpuReadBuffer.getMappedRange();
-                    const c = document.createElement('canvas');
-                    c.width=Terrain.textureSize[0];
-                    c.height=Terrain.textureSize[1];
-                    const ctx = c.getContext("2d");
-                    if (!ctx)
-                        throw ('get 2d context failed');
-                    ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer), c.width, c.height), 0, 0);
-                    c.toBlob(async blob => {
-                        if(blob) {
-                            TerrainTool.saveTexture(await blob.arrayBuffer(), Terrain.textureSize);
-                         }                        
-                        
-                    },"image/webp", 1);
-                    gpuReadBuffer.destroy();
-
-                })
-                //resultMatrixBuffer.destroy();
-
+                await gpuReadBuffer.mapAsync(GPUMapMode.READ);
+                // Read buffer.
+                const arrayBuffer = gpuReadBuffer.getMappedRange();
+                const c = new OffscreenCanvas(...Terrain.textureSize);
+                const ctx = c.getContext("2d");
+                if (!ctx)
+                    throw ('get 2d context failed');
+                ctx.putImageData(new ImageData(new Uint8ClampedArray(arrayBuffer), c.width, c.height), 0, 0);
+                const blob = await c.convertToBlob({ type: "image/webp", quality: 1 })
+                TerrainTool.saveTexture(await blob.arrayBuffer(), Terrain.textureSize);
+                gpuReadBuffer.destroy();
             }
             engine.gpu.GPU2CPU(async (buff) => {
                 await buff.mapAsync(GPUMapMode.READ);
