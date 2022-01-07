@@ -26,19 +26,22 @@ struct Pixels {
 
 [[stage(compute), workgroup_size(1)]]
 fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
+    let coords=vec2<f32>(
+        f32(GlobalInvocationID.x * settings.size.x) / f32(settings.subdivisions),
+        f32(GlobalInvocationID.y * settings.size.y) / f32(settings.subdivisions)
+    );
     var position: vec3<f32> = vec3<f32>(f32(GlobalInvocationID.x * settings.size.x) / f32(settings.subdivisions) - (f32(settings.size.x) / 2.0),
     0.0,
     f32((settings.subdivisions - GlobalInvocationID.y) * settings.size.y) / f32(settings.subdivisions) - (f32(settings.size.y) / 2.0));
+    // TODO: move to uniform
+   let texture_size:vec2<i32> = textureDimensions(pixels);
 
-   let heightmap:vec2<i32> = vec2<i32>(
-       i32(((position.x + f32(settings.size.x) / 2.0) / f32(settings.size.x)) * f32(settings.bufferSize.x - u32(1))),
-        i32((1.0 - (position.z + f32(settings.size.y) / 2.0) / f32(settings.size.y)) * f32(settings.bufferSize.y - u32(1)))
-   );
-   let gradient:f32 = dot(textureLoad(pixels, heightmap, 0), filt);
-  
+
+   let gradient:f32 = dot(textureLoad(pixels, vec2<i32>((vec2<f32>(texture_size)/vec2<f32>(settings.size)) * coords.xy), 0), filt);    
+
    position.y = f32(settings.heightMinMax.x) + f32( settings.heightMinMax.y -  settings.heightMinMax.x) * gradient;
    positions.vert[GlobalInvocationID.y * (settings.subdivisions + u32(1)) + GlobalInvocationID.x].position = position;
   
    positions.vert[GlobalInvocationID.y * (settings.subdivisions + u32(1)) + GlobalInvocationID.x].uv = (position.xz + vec2<f32>(settings.max)) / vec2<f32>(settings.size);
-    return;
-  }
+   return;
+}

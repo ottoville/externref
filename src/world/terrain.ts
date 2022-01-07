@@ -132,11 +132,10 @@ TODO
                 const bitmap = await createImageBitmap(b);
                 const texture = engine.gpu.device.createTexture({
                     format: 'rgba8unorm',
-                    size:[Terrain.subdivisions[0],Terrain.subdivisions[1]],
+                    size:[bitmap.width, bitmap.height],
                     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
                 })
                 engine.gpu.device.queue.copyExternalImageToTexture({source:bitmap},{texture},[bitmap.width,bitmap.height]);
-
 
                 const computePipeline = engine.gpu.createComputePipeline('terrain/CreateGroundFromHeightMap.comp.wgsl');
 
