@@ -528,18 +528,17 @@ export class Engine {
                 this.physics.tickables.forEach(mesh => mesh.checkCollision(this.collider));
             }
 
-            const intersectionPoint = this.collider.intersectionPointWasm;
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
             this.#destinationPoint[1] = scaledPosition[1] + scaledVelocity[1];
             this.#destinationPoint[2] = scaledPosition[2] + scaledVelocity[2];
 
 
             if (this.collider.collision_not_found) {
-                //console.log('set finalposition',...this.#destinationPoint)
 
                 this.collider.finalPosition.set(this.#destinationPoint);
-                return;
+                break;
             }
+            const intersectionPoint = this.collider.intersectionPointWasm;
             //console.log('collision found')
             if (scaledVelocity[0] !== 0 || scaledVelocity[1] !== 0 || scaledVelocity[2] !== 0) {
                 //this.collider._getResponse(position, velocity);
@@ -600,8 +599,12 @@ export class Engine {
             if (scaledVelocity[0] * scaledVelocity[0] + scaledVelocity[1] * scaledVelocity[1] + scaledVelocity[2] * scaledVelocity[2] <= this.closeDistanceSquared) {
                 //finalPosition.copyFrom(position);
                 this.collider.finalPosition.set(scaledPosition);
-                return;
+                break;
             }
         }
+        this.collider.finalPosition[0] *= this.collider.radius[0]
+        this.collider.finalPosition[1] *= this.collider.radius[1]
+        this.collider.finalPosition[2] *= this.collider.radius[2]
+
     }
 }

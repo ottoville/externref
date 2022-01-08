@@ -208,11 +208,6 @@ export class ArcRotateCamera implements CameraController {
         //let starttime=performance.now();
         engine.collideWithWorld();
 
-
-        //coordinator._finalPosition.multiplyInPlace(Vector3.FromArray(terraEngine.collider._radius));
-        engine.collider.finalPosition[0] *= engine.collider.radius[0]
-        engine.collider.finalPosition[1] *= engine.collider.radius[1]
-        engine.collider.finalPosition[2] *= engine.collider.radius[2]
         //run the callback
         // if (!this.engine.collider.collidedMesh) {
         if (engine.collider.collision_not_found) {

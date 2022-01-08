@@ -1,6 +1,7 @@
 ﻿import type { Engine } from "./engine";
 import type { DataNode } from "./DataNode.js";
 import type { MainNode } from "./MainNode.js";
+import type { ReadOnlyTerraVector3 } from "./Math.js";
 declare const engine: Engine;
 const MIN_TICK_DELTA = 110;
 
@@ -23,7 +24,7 @@ export class Physics {
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
     movables: MainNode[] = []; //Stuff that moves without physic, eg. sun.
-    tickables: ({ checkCollide(velocityPerDelta: readonly [number, number, number]): void } & DataNode)[] = []; //Stuff that moves and have collision check
+    tickables: ({ checkCollide(velocityPerDelta: readonly [number, number, number]): ReadOnlyTerraVector3 } & DataNode)[] = []; //Stuff that moves and have collision check
     tickTime = 21600;  //6 hours
     tickIntervalMs = 16;
     #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
@@ -87,7 +88,7 @@ export class Physics {
             }
         });
         this.tickables.forEach(tickable => {
-            if (tickable.onPhysicTick)
+            if (tickable.onPhysicTick) // @ts-ignore
                 tickable.onPhysicTick(delta);
 
             const velocity = tickable.velocity;
@@ -107,30 +108,28 @@ export class Physics {
                 } else {
                     var velocityY = velocityPerDelta[1]
                 }
-                const scaledVelocity = [
-                    velocityPerDelta[0] / engine.collider.radius[0],
-                    velocityY / engine.collider.radius[1],
-                    velocityPerDelta[2] / engine.collider.radius[2]
-                ] as const
-                tickable.checkCollide(scaledVelocity);
+                const finalPosition = tickable.checkCollide([
+                    velocityPerDelta[0],
+                    velocityY,
+                    velocityPerDelta[2]
+                ]);
 
                 //TODO: What if collision is found (collider cannot resolve position without collision)
                 if (engine.collider.collision_not_found) {
-                    engine.collider.finalPosition[0] *= engine.collider.radius[0]
-                    engine.collider.finalPosition[1] *= engine.collider.radius[1]
-                    engine.collider.finalPosition[2] *= engine.collider.radius[2]
+
 
                     //TODO: If the was not collision at all, these calculations are not needed
                     tickable.lastVelocityDelta = [
-                        engine.collider.finalPosition[0] - currentTranslation[0],
-                        engine.collider.finalPosition[1] - currentTranslation[1],
-                        engine.collider.finalPosition[2] - currentTranslation[2]
+                        finalPosition[0] - currentTranslation[0],
+                        finalPosition[1] - currentTranslation[1],
+                        finalPosition[2] - currentTranslation[2]
                     ] as const
                     tickable.velocity =[
                         tickable.lastVelocityDelta[0] * delta_multiplier,
                         tickable.lastVelocityDelta[1] * delta_multiplier,
                         tickable.lastVelocityDelta[2] * delta_multiplier,
                     ]
+                    //this is now asked twice
                     const translation = tickable.translation;
                     translation.set([
                         translation[0] + tickable.lastVelocityDelta[0],

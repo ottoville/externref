@@ -1,6 +1,6 @@
 import { ObjectWorkerThread } from "./WorkerThread.js";
 import { MainNode } from "./MainNode.js";
-import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
+import { ReadOnlyTerraVector3, TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
 import type { Scene } from "./Scene.js";
 import type { ColliderJS } from "./Collider.js";
 import type { Engine } from "./engine.js";
@@ -26,7 +26,8 @@ export abstract class DataNode extends MainNode {
     lastVelocityDelta: readonly [number, number, number]=[0,0,0];
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    checkCollide(_velocityPerDelta:[number,number,number]):void {
+    checkCollide(_velocityPerDelta:[number,number,number]):ReadOnlyTerraVector3 {
+        return this.translation;
         // TODO: Generic collision check, object shape is not known
     }
     readonly pickInfo = new pickInfo();
@@ -161,6 +162,7 @@ export abstract class DataNode extends MainNode {
     #myCollisionsTransformMatrix = new TerraMatrix();
     public checkCollision (collider: ColliderJS) {
         if (this.faces_count % 4 != 0) {  //TODO
+            console.warn('Checking collision on mesh that does not have right amount of faces')
             return
         }
         //console.log(this.label, this.bounding_min, this.bounding_max)
