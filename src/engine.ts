@@ -543,6 +543,7 @@ export class Engine {
             if (scaledVelocity[0] !== 0 || scaledVelocity[1] !== 0 || scaledVelocity[2] !== 0) {
                 //this.collider._getResponse(position, velocity);
                 // https://arxiv.org/ftp/arxiv/papers/1211/1211.0059.pdf
+                // vel.scaleInPlace((this._nearestDistance / vel.length()));
                 let scale = this.collider.nearest_distance_squared / (scaledVelocity[0] * scaledVelocity[0] + scaledVelocity[1] * scaledVelocity[1] + scaledVelocity[2] * scaledVelocity[2]);
                 // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
                 scaledVelocity[0] *= scale;
@@ -554,10 +555,12 @@ export class Engine {
                 scaledPosition[1] += scaledVelocity[1];
                 scaledPosition[2] += scaledVelocity[2];
 
+                //pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
                 this.collider._slidePlaneNormal[0] = scaledPosition[0] - intersectionPoint[0];
                 this.collider._slidePlaneNormal[1] = scaledPosition[1] - intersectionPoint[1];
                 this.collider._slidePlaneNormal[2] = scaledPosition[2] - intersectionPoint[2];
 
+                // this._slidePlaneNormal.normalize();
                 const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
                 if (!(length === 0 || length === 1.0)) {
                     const norm = 1 / length;
@@ -566,13 +569,11 @@ export class Engine {
                     this.collider._slidePlaneNormal[2] *= norm;
                 }
 
-                // this._slidePlaneNormal.normalize();
 
                 // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
                 this.#displacementVector[0] = this.collider._slidePlaneNormal[0] * this.collider.epsilon;
                 this.#displacementVector[1] = this.collider._slidePlaneNormal[1] * this.collider.epsilon;
                 this.#displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
-
                 // pos.addInPlace(this._displacementVector);
                 scaledPosition[0] += this.#displacementVector[0];
                 scaledPosition[1] += this.#displacementVector[1];
@@ -586,9 +587,9 @@ export class Engine {
                 scale = Dot(this.#destinationPoint, this.collider._slidePlaneNormal) + d;
 
                 //this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
-                this.#destinationPoint[0] -= this.collider._slidePlaneNormal[0] * scale;
-                this.#destinationPoint[1] -= this.collider._slidePlaneNormal[1] * scale;
-                this.#destinationPoint[2] -= this.collider._slidePlaneNormal[2] * scale
+                this.#destinationPoint[0] -= (this.collider._slidePlaneNormal[0] * scale);
+                this.#destinationPoint[1] -= (this.collider._slidePlaneNormal[1] * scale);
+                this.#destinationPoint[2] -= (this.collider._slidePlaneNormal[2] * scale)
                 //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
                 scaledVelocity[0] = this.#destinationPoint[0] - intersectionPoint[0];
                 scaledVelocity[1] = this.#destinationPoint[1] - intersectionPoint[1];
