@@ -23,7 +23,7 @@ class pickInfo {
 }
 
 export abstract class DataNode extends MainNode {
-    lastVelocityDelta: readonly [number, number, number]=[0,0,0];
+    lastVelocity: readonly [number, number, number]=[0,0,0];
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     checkCollide(_velocityPerDelta:[number,number,number]):ReadOnlyTerraVector3 {

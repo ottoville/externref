@@ -26,7 +26,7 @@ export class Physics {
     movables: MainNode[] = []; //Stuff that moves without physic, eg. sun.
     tickables: ({ checkCollide(velocityPerDelta: readonly [number, number, number]): ReadOnlyTerraVector3 } & DataNode)[] = []; //Stuff that moves and have collision check
     tickTime = 21600;  //6 hours
-    tickIntervalMs = 16;
+    tickIntervalMs = 16.6;
     #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
     get physicTime() {
         if (this.#gameSpeed >= 0) {
@@ -70,8 +70,13 @@ export class Physics {
 
         this.tickTime += delta / this.#realMSingameSecond;
         const dt = delta / 1000;
+        const delta_multiplier =  1000 / delta;
+        /*
+            Min delta = 0,0166 = 60fps/s.
+            If higher fps is wanted, then collider displacementVector must be updated to closer,
+            otherwise gravity will pull objects that are ground causing jumping.
 
-        const delta_multiplier = 1000 / delta;
+        */
         this.movables.forEach(movable => {
             if (movable.onPhysicTick)
                 movable.onPhysicTick(delta);
@@ -88,7 +93,7 @@ export class Physics {
             }
         });
         this.tickables.forEach(tickable => {
-            if (tickable.onPhysicTick) // @ts-ignore
+            if (tickable.onPhysicTick)
                 tickable.onPhysicTick(delta);
 
             const velocity = tickable.velocity;
@@ -97,14 +102,13 @@ export class Physics {
                 velocity[1] * dt,
                 velocity[2] * dt
             ]
-            const currentTranslation = tickable.translation;
+            const translation = tickable.translation;
 
             // TODO: Only check collision if some of both object has moved
-            if (currentTranslation[0] !== 0 || currentTranslation[1] !== 0 || currentTranslation[2] !== 0) {
-
+            if (translation[0] !== 0 || translation[1] !== 0 || translation[2] !== 0) {
                 if (tickable.hasGravity) {
                     // Todo: Use general acceleration for all calculations
-                    var velocityY = tickable.lastVelocityDelta[1]*(dt/this.#deltaOld) + -GRAVITY*dt*dt
+                    var velocityY = tickable.lastVelocity[1]*dt*(dt/this.#deltaOld) + -GRAVITY*dt*dt
                 } else {
                     var velocityY = velocityPerDelta[1]
                 }
@@ -116,25 +120,26 @@ export class Physics {
 
                 //TODO: What if collision is found (collider cannot resolve position without collision)
                 if (engine.collider.collision_not_found) {
-
-
                     //TODO: If the was not collision at all, these calculations are not needed
-                    tickable.lastVelocityDelta = [
-                        finalPosition[0] - currentTranslation[0],
-                        finalPosition[1] - currentTranslation[1],
-                        finalPosition[2] - currentTranslation[2]
+                    const newVelocityDelta = [
+                        finalPosition[0] - translation[0],
+                        finalPosition[1] - translation[1],
+                        finalPosition[2] - translation[2]
                     ] as const
                     tickable.velocity =[
-                        tickable.lastVelocityDelta[0] * delta_multiplier,
-                        tickable.lastVelocityDelta[1] * delta_multiplier,
-                        tickable.lastVelocityDelta[2] * delta_multiplier,
+                        newVelocityDelta[0] * delta_multiplier,
+                        newVelocityDelta[1] * delta_multiplier,
+                        newVelocityDelta[2] * delta_multiplier,
                     ]
-                    //this is now asked twice
-                    const translation = tickable.translation;
+                    tickable.lastVelocity=[
+                        tickable.velocity[0],
+                        tickable.velocity[1],
+                        tickable.velocity[2],
+                    ]
                     translation.set([
-                        translation[0] + tickable.lastVelocityDelta[0],
-                        translation[1] + tickable.lastVelocityDelta[1],
-                        translation[2] + tickable.lastVelocityDelta[2]
+                        translation[0] + newVelocityDelta[0],
+                        translation[1] + newVelocityDelta[1],
+                        translation[2] + newVelocityDelta[2]
                     ])
                     //currentTranslation.set(engine.collider.finalPosition);
                     tickable.update_dynamic_buffer();
