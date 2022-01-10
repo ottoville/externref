@@ -132,8 +132,14 @@ export interface ColliderWasm {
     _initialize: () => void
 }
 export class Engine {
-    readonly CollisionsEpsilon = 0.001;
-    readonly closeDistance = this.CollisionsEpsilon * 10.0;
+
+    /*
+        This is the distance that collision response will set the object after collide.
+        It is the constraint that keeps objects together. So when force is applied, the collision occurs.
+        For gravity (at 60fps) it must be lower than   9.80665*0.016*0.016 = 0,0027240694444442 
+        TODO: make other constraints for other forces than gravity
+    */
+    readonly closeDistance = 0.0025;
     readonly closeDistanceSquared = this.closeDistance * this.closeDistance
 
     // registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
