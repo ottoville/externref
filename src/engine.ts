@@ -64,6 +64,7 @@ export type rustWasm = {
     gpu_pointer(mesh_ptr:number):number,
     translation_pointer(mesh_ptr:number):number,
     velocity_pointer(mesh_ptr:number):number,
+    acceleration_pointer(mesh_ptr:number):number,
     bounding_min_pointer(mesh_ptr:number):number,
     bounding_max_pointer(mesh_ptr:number):number,
     scale_x(mesh_ptr:number):number,
@@ -506,8 +507,9 @@ export class Engine {
             byteLength)
         this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
-
+    wasFoundCollision=false;
     collideWithWorld(currentMesh?:DataNode) {
+        this.wasFoundCollision=false;
         //TODO: Call only when camera position change
         const scaledPosition = this.collider.scaledPosition;
         const scaledVelocity = this.collider.scaledVelocity;
@@ -544,6 +546,7 @@ export class Engine {
                 this.collider.finalPosition.set(this.#destinationPoint);
                 break;
             }
+            this.wasFoundCollision = true;
             const intersectionPoint = this.collider.intersectionPointWasm;
             //console.log('collision found')
             if (scaledVelocity[0] !== 0 || scaledVelocity[1] !== 0 || scaledVelocity[2] !== 0) {
@@ -555,7 +558,6 @@ export class Engine {
                 scaledVelocity[0] *= scale;
                 scaledVelocity[1] *= scale;
                 scaledVelocity[2] *= scale;
-
 
                 scaledPosition[0] += scaledVelocity[0];
                 scaledPosition[1] += scaledVelocity[1];
@@ -581,6 +583,12 @@ export class Engine {
                 this.#displacementVector[1] = this.collider._slidePlaneNormal[1] * this.collider.epsilon;
                 this.#displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
                 // pos.addInPlace(this._displacementVector);
+                /*
+                    displacementVector is a constraint added to position, so eg. objects that are colliding
+                    ground because of gravity, will "flow" of amount of displacementVector.
+                    It must be small enought so same force applied from displacement position would cause collide.
+                    Otherwise object would constantry jumping on ground.
+                */
                 scaledPosition[0] += this.#displacementVector[0];
                 scaledPosition[1] += this.#displacementVector[1];
                 scaledPosition[2] += this.#displacementVector[2];

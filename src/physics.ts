@@ -14,7 +14,7 @@ const GRAVITY = 9.80665;
  * Gametime is saved in minutes.
  * */
 
-
+const tmp_vector:[number,number,number]=[0,0,0];
 export class Physics {
     #lastTickTimeMs: number = new Date().getTime();
     #lastStateChangeTime = new Date().getTime();
@@ -48,7 +48,6 @@ export class Physics {
         When tab is background its not getting called and delta is growing very large.
         Large delta results large gravity, collision detector will see bigger impact.
     */
-    #deltaOld=1
     #tick = () => {
         const timestamp = Date.now();
         if (this.#lastStateChangeTime > this.#lastTickTimeMs) {
@@ -71,6 +70,8 @@ export class Physics {
         this.tickTime += delta / this.#realMSingameSecond;
         const dt = delta / 1000;
         const delta_multiplier =  1000 / delta;
+        const dt_half_sqrt=dt*dt*0.5;
+        const dt_half=dt*0.5;
         /*
             Min delta = 0,0166 = 60fps/s.
             If higher fps is wanted, then collider displacementVector must be updated to closer,
@@ -92,63 +93,90 @@ export class Physics {
                 movable.update_dynamic_buffer();
             }
         });
-        this.tickables.forEach(tickable => {
+        /*
+            TODO:
+             - acceleration etc setters update dynamic buffer. So it is updated multiple times on loop.
+        */
+        for(let i = 0; i<this.tickables.length; i++) {
+            const tickable=this.tickables[i]!;
+            //this.tickables.forEach(tickable => {
             if (tickable.onPhysicTick)
                 tickable.onPhysicTick(delta);
-
             const velocity = tickable.velocity;
-            const velocityPerDelta: [number, number, number] = [
-                velocity[0] * dt,
-                velocity[1] * dt,
-                velocity[2] * dt
-            ]
-            const translation = tickable.translation;
-
-            // TODO: Only check collision if some of both object has moved
-            if (translation[0] !== 0 || translation[1] !== 0 || translation[2] !== 0) {
-                if (tickable.hasGravity) {
-                    // Todo: Use general acceleration for all calculations
-                    var velocityY = tickable.lastVelocity[1]*dt*(dt/this.#deltaOld) + -GRAVITY*dt*dt
-                } else {
-                    var velocityY = velocityPerDelta[1]
-                }
+           /* if(velocity[0] > 0 || velocity[1] > 0 || velocity[2] > 0) {
+                // TODO: take account to Y axis also.
+                let speed = Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]);
+                if(speed > 0)
+                tickable.velocity = [
+                    velocity[0] - 0.1,
+                    velocity[1],
+                    velocity[2] - 0.1
+                ]
+            }*/
+            const wantedVelocityPerDelta=tmp_vector;
+            wantedVelocityPerDelta[0]=velocity[0]*dt + tickable.acceleration2[0]*dt_half_sqrt 
+            wantedVelocityPerDelta[1]=velocity[1]*dt + tickable.acceleration2[1]*dt_half_sqrt
+            wantedVelocityPerDelta[2]=velocity[2]*dt + tickable.acceleration2[2]*dt_half_sqrt;
+            const frictionAcceleration:[number,number,number]=[0,0,0]
+            const translation=tickable.translation;
+           if(wantedVelocityPerDelta[0] !== 0 || wantedVelocityPerDelta[1] !== 0 || wantedVelocityPerDelta[2] !== 0) {
                 const finalPosition = tickable.checkCollide([
-                    velocityPerDelta[0],
-                    velocityY,
-                    velocityPerDelta[2]
+                    wantedVelocityPerDelta[0],
+                    wantedVelocityPerDelta[1],
+                    wantedVelocityPerDelta[2]
                 ]);
-
-                //TODO: What if collision is found (collider cannot resolve position without collision)
-                if (engine.collider.collision_not_found) {
-                    //TODO: If the was not collision at all, these calculations are not needed
+                if (engine.wasFoundCollision) {
                     const newVelocityDelta = [
-                        finalPosition[0] - translation[0],
-                        finalPosition[1] - translation[1],
-                        finalPosition[2] - translation[2]
+                        (finalPosition[0] - translation[0]),
+                        (finalPosition[1] - translation[1]),
+                        (finalPosition[2] - translation[2])
                     ] as const
-                    tickable.velocity =[
+                    tickable.acceleration2=[
+                        (newVelocityDelta[0]-velocity[0]*dt)/dt_half_sqrt,
+                        (newVelocityDelta[1]-velocity[1]*dt)/dt_half_sqrt,
+                        (newVelocityDelta[2]-velocity[2]*dt)/dt_half_sqrt
+                    ]
+  
+                    const newVelocity = [
                         newVelocityDelta[0] * delta_multiplier,
                         newVelocityDelta[1] * delta_multiplier,
-                        newVelocityDelta[2] * delta_multiplier,
-                    ]
-                    tickable.lastVelocity=[
-                        tickable.velocity[0],
-                        tickable.velocity[1],
-                        tickable.velocity[2],
-                    ]
-                    translation.set([
-                        translation[0] + newVelocityDelta[0],
-                        translation[1] + newVelocityDelta[1],
-                        translation[2] + newVelocityDelta[2]
-                    ])
-                    //currentTranslation.set(engine.collider.finalPosition);
-                    tickable.update_dynamic_buffer();
+                        newVelocityDelta[2] * delta_multiplier
+                    ] as const
+                /*
+                    TODO: friction is now set higher in x and z because human cannot break otherwise.
+                */
+                    frictionAcceleration[0] = newVelocity[0] - newVelocity[0]*0.6,
+                    frictionAcceleration[1] = newVelocity[1] - newVelocity[1]*0.9,
+                    frictionAcceleration[2] = newVelocity[2] - newVelocity[2]*0.6    
                 }
+                tickable.translation=[
+                    finalPosition[0],
+                    finalPosition[1],
+                    finalPosition[2]
+                ];
             }
-        });
-        this.#deltaOld=dt;
+            const old_acceleration=tmp_vector;
+            old_acceleration[0]=tickable.acceleration2[0];
+            old_acceleration[1]=tickable.acceleration2[1];
+            old_acceleration[2]=tickable.acceleration2[2];
+            tickable.acceleration2[0] = -frictionAcceleration[0] + tickable.force[0];
+            tickable.acceleration2[1] = -frictionAcceleration[1] + tickable.force[1] -(tickable.hasGravity?GRAVITY:0);
+            tickable.acceleration2[2] = -frictionAcceleration[2] + tickable.force[2];
+            tickable.force[0]=0;
+            tickable.force[1]=0;
+            tickable.force[2]=0;
+            //Vec3d new_vel = vel + (acc+new_acc)*(dt*0.5);
+            tickable.velocity=[
+                velocity[0] + (old_acceleration[0]+tickable.acceleration2[0])*dt_half,
+                velocity[1] + (old_acceleration[1]+tickable.acceleration2[1])*dt_half,
+                velocity[2] + (old_acceleration[2]+tickable.acceleration2[2])*dt_half,
+            ];
+            //TODO: Update only if neeeded
+            tickable.update_dynamic_buffer();
+        }
         if (realDeltaInGameTime > MIN_TICK_DELTA) {
             // Withtimeout execution is returned to event loop, allowing inputs before next tick
+            // TODO: nested timeout forces 4ms delay
             setTimeout(this.#tick,0);
         } else {
             this.#interval = setTimeout(this.#tick, this.tickIntervalMs - (Date.now() - timestamp))

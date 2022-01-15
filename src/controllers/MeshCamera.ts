@@ -16,7 +16,7 @@ const enum ARROW_KEYS  {
 export class MeshCamera implements CameraController {
     name='PositionCamera';
     #angle=Math.PI;
-    #velocity=0.5;
+    #acceleration=10;
     #arrowKeysDown=0;
     #mesh: MainNode;
     constructor(private camera: TerraCamera, initial=false) {
@@ -125,35 +125,30 @@ export class MeshCamera implements CameraController {
 
         if(this.lastTranslation[1] === translation[1] && this.#arrowKeysDown === 0)
             return false;
-        //TODO update velocity, not translation
         const translationDelta = this.#mesh.velocity;
 
         if((this.#arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
             const direction=this.camera.direction;
-            this.#mesh.velocity=[
-                translationDelta[0] - (direction[0]*this.#velocity),
-                translationDelta[1] - (direction[1]*this.#velocity),
-                translationDelta[2] - (direction[2]*this.#velocity)
-            ];
+            this.#mesh.force[0]-=(direction[0]*this.#acceleration)
+            this.#mesh.force[2]-=(direction[2]*this.#acceleration)
         }
         if((this.#arrowKeysDown & ARROW_KEYS.DOWN) === ARROW_KEYS.DOWN) {
             const direction=this.camera.direction;
-            this.#mesh.velocity=[
-                translationDelta[0] + (direction[0]*this.#velocity),
-                translationDelta[1] + (direction[1]*this.#velocity),
-                translationDelta[2] + (direction[2]*this.#velocity)
-            ]
+            this.#mesh.force[0]+=(direction[0]*this.#acceleration)
+            this.#mesh.force[2]+=(direction[2]*this.#acceleration)
         }
         const walkingSpeed = 1.4
         //Limit speed to 1
-        const length=Math.sqrt(translationDelta[0]*translationDelta[0] + translationDelta[1]*translationDelta[1] + translationDelta[2]*translationDelta[2])
+        //TODO
+        const length=Math.sqrt(translationDelta[0]*translationDelta[0] /*+ translationDelta[1]*translationDelta[1]*/ + translationDelta[2]*translationDelta[2])
         if(length>walkingSpeed) {
+            //@ts-ignore
             const scale = walkingSpeed/length;
-            this.#mesh.velocity=[
+            /*this.#mesh.velocity=[
                 translationDelta[0] * scale,
-                translationDelta[1] * scale,
+                translationDelta[1],
                 translationDelta[2] * scale
-            ]
+            ]*/
         }
         if((this.#arrowKeysDown & (ARROW_KEYS.LEFT_AND_RIGHT)) >0) {
             if((this.#arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
@@ -175,66 +170,4 @@ export class MeshCamera implements CameraController {
         return !this.#busy;
     }
     #busy=false;
-    calculateCameraPositionAndTarget_deprecated() {
-        this.#busy=true;
-        const translation = this.#mesh.translation;
-        const translationDelta = this.#mesh.velocity;
-        
-        //TODO: apply gravity alwaus not only on input
-        //this.#position[1]-=0.3
-
-        const scaledPosition=engine.collider.scaledPosition;
-        scaledPosition[0] = translation[0] / engine.collider.radius[0];
-        scaledPosition[1] = translation[1] / engine.collider.radius[1];
-        scaledPosition[2] = translation[2] / engine.collider.radius[2];
-        const scaledVelocity=engine.collider.scaledVelocity;
-
-        const newPosition= [
-            translation[0]+translationDelta[0],
-            translation[1]+translationDelta[1],
-            translation[2]+translationDelta[2]
-        ] as const
-
-
-        scaledVelocity[0] = (newPosition[0]-translation[0])/engine.collider.radius[0];
-        scaledVelocity[1] = (newPosition[1]-translation[1])/engine.collider.radius[1];
-        scaledVelocity[2] = (newPosition[2]-translation[2])/engine.collider.radius[2];
-        console.log('translationDelta',...translationDelta)
-        console.log('scaledVelocity',...scaledVelocity)
-        console.log('scaledPosition',...scaledPosition)
-
-        engine.collider.collidedMesh = undefined;
-        engine.collider._retry = 0;
-
-        engine.collideWithWorld();
-
-        engine.collider.finalPosition[0] *= engine.collider.radius[0]
-        engine.collider.finalPosition[1] *= engine.collider.radius[1]
-        engine.collider.finalPosition[2] *= engine.collider.radius[2]
-        //run the callback
-        // if (!this.engine.collider.collidedMesh) {
-        if (engine.collider.collision_not_found) {
-            //this._position.copyFrom(position);
-            if (this.camera.position[0] != engine.collider.finalPosition[0] || this.camera.position[1] != engine.collider.finalPosition[1] || this.camera.position[2] != engine.collider.finalPosition[2]) {      
-               /* this.#mesh.SetTranslationDelta([
-                    translation[0] - engine.collider.finalPosition[0],
-                    translation[1] - engine.collider.finalPosition[1],
-                    translation[2] - engine.collider.finalPosition[2]
-                ])*/
-               
-               /* scaledVelocity[0] = (translation[0] - engine.collider.finalPosition[0])
-                scaledVelocity[1] = (translation[1] - engine.collider.finalPosition[1])
-                scaledVelocity[2] = (translation[2] - engine.collider.finalPosition[2])
-        */
-                
-                console.log('finalposition',...engine.collider.finalPosition)
-                this.camera.position=engine.collider.finalPosition;
-                this.#mesh.translation = engine.collider.finalPosition;
-                this.lastTranslation.set(engine.collider.finalPosition);
-            }
-        } else {
-            console.log('collide')
-        }
-        this.#busy=false;
-    }
 }
