@@ -27,12 +27,12 @@ pub unsafe extern "C" fn intersection_point_pointer(collider_ptr:*const Collider
     (*collider_ptr).intersection_point.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn collision_not_found_pointer(collider_ptr:*const Collider) -> usize {
-    (*collider_ptr).intersection_point.as_ptr() as usize + 16usize
+pub unsafe extern "C" fn collision_not_found_pointer(collider_ptr:*const Collider) -> &'static u32 {
+    &((*collider_ptr).collision_not_found)
 }
 #[no_mangle]
-pub unsafe extern "C" fn nearest_distance_squared_pointer(collider_ptr:*const Collider) -> usize {
-    (*collider_ptr).intersection_point.as_ptr() as usize + 20usize
+pub unsafe extern "C" fn nearest_distance_squared_pointer(collider_ptr:*const Collider) -> &'static f32 {
+    &((*collider_ptr).nearest_distance_squared)
 }
 #[no_mangle]
 pub unsafe extern "C" fn scaled_position_pointer(collider_ptr:*const Collider) -> *const f32 {
@@ -43,8 +43,12 @@ pub unsafe extern "C" fn scaled_velocity_pointer(collider_ptr:*const Collider) -
     (*collider_ptr).scaled_velocity.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn collided_mesh_pointer(collider_ptr:*const Collider) -> usize {
-    (*collider_ptr).intersection_point.as_ptr() as usize + 56usize
+pub unsafe extern "C" fn collided_mesh_pointer(collider_ptr:*const Collider) -> &'static u32 {
+    &((*collider_ptr).collided_mesh)
+}
+#[no_mangle]
+pub unsafe extern "C" fn collision_found(collider_ptr:*mut Collider, dist_to_collision_squared:f32, collision_point_x:f32, collision_point_y:f32, collision_point_z:f32) {
+    (*collider_ptr).collision_found(dist_to_collision_squared, collision_point_x, collision_point_y, collision_point_z)
 }
 impl Collider {
     pub fn new() -> Self {
@@ -55,6 +59,15 @@ impl Collider {
             scaled_position:[0.0,0.0,0.0,0.0],
             scaled_velocity:[0.0,0.0,0.0,0.0],
             collided_mesh:0u32
+        }
+    }
+    fn collision_found(&mut self, dist_to_collision_squared:f32, collision_point_x:f32, collision_point_y:f32, collision_point_z:f32) {
+        if self.collision_not_found == 1 || dist_to_collision_squared < self.nearest_distance_squared {
+            self.intersection_point[0] = collision_point_x;
+            self.intersection_point[1] = collision_point_y;
+            self.intersection_point[2] = collision_point_z;
+            self.nearest_distance_squared=dist_to_collision_squared;
+            self.collision_not_found=0;
         }
     }
 

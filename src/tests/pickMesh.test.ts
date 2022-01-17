@@ -12,6 +12,7 @@ export const run = (asr: typeof assert) => {
     
     describe('Pick box ', function () {
       it('Pick position and mesh', async function (done) {
+        this.timeout(3000);
         /*engine.mainCamera.updateDirection(v => v.set([0,-1,0])); */
         const b = new Box(undefined, undefined,false,'greenbox');
         b.translation = [0,400,0]

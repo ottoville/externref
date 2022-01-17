@@ -12,7 +12,6 @@ import { Zones } from "../tools/zones.js";
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
 //import { LazyEval } from "../LazyEval.js";
-import { Box } from "../GPU/Meshes/Box.js";
 import { Sun2 } from "../world/sun2.js";
 
 import { MainNode } from "../MainNode.js";
@@ -71,13 +70,13 @@ export class Canvas extends TerraCompoment {
             const sea = new Sea([terrascene]);
             //new testPlane(terrascene);
 
-            const b = new Box([terrascene],undefined,true,'bigbox');
-            b.update_scale(500, 500, 500);
-            b.translation = [123,1000,123];
-            b.update_rotation(Math.sin(1.1),0,0,Math.cos(1.1));
+/*            const b = new Box([terrascene],undefined,true,'bigbox');
+            b.update_scale(100, 5, 100);
+            b.translation = [123,300,123];
+            //b.update_rotation(Math.sin(1.1),0,0,Math.cos(1.1));
             //@ts-expect-error
             window.debugBB=() => b.drawable.debug_bounding_box();
-
+*/
             new Human([terrascene])
             const terrainInited = Terrain.loadFromTexture([terrascene]);
 
@@ -96,32 +95,6 @@ export class Canvas extends TerraCompoment {
             return undefined;
         });
 
-        const b2 = new Box([mainScene], 300,true,'greenbox',[0,1,0,0]);
-        b2.hasGravity=true;
-        b2.onPhysicTick=() => {
-            const velocity=b2.velocity;
-            b2.velocity = [velocity[0],velocity[1],-3]
-     
-        }
-        b2.update_scale(30, 30, 30);
-
-        const x = 500;
-        const z = 800;
-        // let z = 0;
-        b2.translation = [x, 1200, z];
-        //let x2=-1000;
-        //@ts-ignore
-        let a = 0;
-        setInterval(() => {
-           // b2.SetTranslation([x,1200])
-            //@ts-ignore
-            a += 0.005;
-            //b3.SetTranslation([x2++, 400, 0])
-        }, 10);
-        /* setTimeout(() => {
-             clearInterval(intervalID);
-             b2.destroy(terraEngine.rustEngine);
-         },10000)*/
 
         const canvasPipeline = terraEngine.gpu.rootLayout.addRenderPipeline(
             new VertexShader(terraEngine.gpu, 'deferred.vert.wgsl'),
