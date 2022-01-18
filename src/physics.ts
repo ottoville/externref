@@ -1,8 +1,6 @@
-﻿import type { Engine } from "./engine";
-import type { DataNode } from "./DataNode.js";
+﻿import type { DataNode } from "./DataNode.js";
 import type { MainNode } from "./MainNode.js";
 import type { ReadOnlyTerraVector3 } from "./Math.js";
-declare const engine: Engine;
 const MIN_TICK_DELTA = 110;
 
 const GRAVITY = 9.80665;
@@ -117,7 +115,7 @@ export class Physics {
             wantedVelocityPerDelta[0]=velocity[0]*dt + tickable.acceleration2[0]*dt_half_sqrt 
             wantedVelocityPerDelta[1]=velocity[1]*dt + tickable.acceleration2[1]*dt_half_sqrt
             wantedVelocityPerDelta[2]=velocity[2]*dt + tickable.acceleration2[2]*dt_half_sqrt;
-            const frictionAcceleration:[number,number,number]=[0,0,0]
+            const motionFrictionAcceleration:[number,number,number]=[0,0,0]
             const translation=tickable.translation;
            if(wantedVelocityPerDelta[0] !== 0 || wantedVelocityPerDelta[1] !== 0 || wantedVelocityPerDelta[2] !== 0) {
                 const finalPosition = tickable.checkCollide([
@@ -125,29 +123,46 @@ export class Physics {
                     wantedVelocityPerDelta[1],
                     wantedVelocityPerDelta[2]
                 ]);
-                if (engine.wasFoundCollision) {
-                    const newVelocityDelta = [
+                if (tickable.is_colliding) {
+                    const newVelocityDelta:[number,number,number] = [
                         (finalPosition[0] - translation[0]),
                         (finalPosition[1] - translation[1]),
                         (finalPosition[2] - translation[2])
-                    ] as const
-                    tickable.acceleration2=[
-                        (newVelocityDelta[0]-velocity[0]*dt)/dt_half_sqrt,
-                        (newVelocityDelta[1]-velocity[1]*dt)/dt_half_sqrt,
-                        (newVelocityDelta[2]-velocity[2]*dt)/dt_half_sqrt
                     ]
-  
-                    const newVelocity = [
-                        newVelocityDelta[0] * delta_multiplier,
-                        newVelocityDelta[1] * delta_multiplier,
-                        newVelocityDelta[2] * delta_multiplier
-                    ] as const
+                    if(newVelocityDelta[0] !== 0 || newVelocityDelta[1] !== 0 || newVelocityDelta[2] !== 0) {
+                        let friction=false;
+                        if(tickable.last_velocity[0] === 0 || tickable.last_velocity[1] === 0 || tickable.last_velocity[2] === 0) {
+                            // Apply friction when object is not moving
+                            friction=true;
+                        }
+                        tickable.last_velocity[0] = newVelocityDelta[0] * delta_multiplier;
+                        tickable.last_velocity[1] = newVelocityDelta[1] * delta_multiplier;
+                        tickable.last_velocity[2] = newVelocityDelta[2] * delta_multiplier;
+                        // eslint-disable-next-line no-constant-condition
+                        if(false && friction) {
+                            if(tickable.speed < tickable.grip*1.8) {
+                                console.log('stop')
+                                //Friction prevents object from start moving.
+                                tickable.last_velocity[0]=0;
+                                tickable.last_velocity[1]=0;
+                                tickable.last_velocity[2]=0;
+                                newVelocityDelta[0]=0;
+                                newVelocityDelta[1]=0;
+                                newVelocityDelta[2]=0;
+                            }
+                        }
+
+                    }
+                    tickable.acceleration2[0] = (newVelocityDelta[0]-velocity[0]*dt)/dt_half_sqrt;
+                    tickable.acceleration2[1] = (newVelocityDelta[1]-velocity[1]*dt)/dt_half_sqrt;
+                    tickable.acceleration2[2] = (newVelocityDelta[2]-velocity[2]*dt)/dt_half_sqrt;
+
                 /*
-                    TODO: friction is now set higher in x and z because human cannot break otherwise.
+                    TODO: friction is now set higher in x and z because human cannot brake otherwise.
                 */
-                    frictionAcceleration[0] = newVelocity[0] - newVelocity[0]*0.6,
-                    frictionAcceleration[1] = newVelocity[1] - newVelocity[1]*0.9,
-                    frictionAcceleration[2] = newVelocity[2] - newVelocity[2]*0.6    
+                  //  motionFrictionAcceleration[0] = tickable.last_velocity[0] - tickable.last_velocity[0] * 0.6 //*tickable.grip,
+                  //  motionFrictionAcceleration[1] = tickable.last_velocity[1] - tickable.last_velocity[1] * 0.9 //*tickable.grip,
+                  //  motionFrictionAcceleration[2] = tickable.last_velocity[2] - tickable.last_velocity[2] * 0.6 //*tickable.grip
                 }
                 tickable.translation=[
                     finalPosition[0],
@@ -159,9 +174,9 @@ export class Physics {
             old_acceleration[0]=tickable.acceleration2[0];
             old_acceleration[1]=tickable.acceleration2[1];
             old_acceleration[2]=tickable.acceleration2[2];
-            tickable.acceleration2[0] = -frictionAcceleration[0] + tickable.force[0];
-            tickable.acceleration2[1] = -frictionAcceleration[1] + tickable.force[1] -(tickable.hasGravity?GRAVITY:0);
-            tickable.acceleration2[2] = -frictionAcceleration[2] + tickable.force[2];
+            tickable.acceleration2[0] = -motionFrictionAcceleration[0] + tickable.force[0];
+            tickable.acceleration2[1] = -motionFrictionAcceleration[1] + tickable.force[1] -(tickable.hasGravity?GRAVITY:0);
+            tickable.acceleration2[2] = -motionFrictionAcceleration[2] + tickable.force[2];
             tickable.force[0]=0;
             tickable.force[1]=0;
             tickable.force[2]=0;

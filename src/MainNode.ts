@@ -4,6 +4,17 @@ import type { Engine } from "./engine.js";
 declare const engine:Engine;
 
 export abstract class MainNode {
+    acceleration2: [number, number, number]=[0,0,0];
+    //Actual velocity that occured last tick
+    last_velocity: [number, number, number]=[0,0,0];
+    get speed() {
+        return Math.sqrt(this.last_velocity[0]*this.last_velocity[0]+this.last_velocity[1]*this.last_velocity[1]+this.last_velocity[2]*this.last_velocity[2])
+    }
+    //coefficient of friction
+    grip=0;
+    // TODO force per ms?
+    force: [number, number, number]=[0,0,0];
+    is_colliding=false;
     set gpu_custom_data(data:[number,number,number,number]) {
         engine.rust.set_gpu_custom_data(this.ptr,data[0],data[1],data[2],data[3])
     }
@@ -63,9 +74,6 @@ export abstract class MainNode {
     get strip(): boolean {
         return engine.rust.strip(this.ptr)===1?true:false;
     }
-    get acceleration_pointer(): number {
-        throw('not implemented')
-    }
 
     onPhysicTick?: (time: number) => void;
     hasGravity = false;
@@ -96,10 +104,11 @@ export abstract class MainNode {
         this.update_dynamic_buffer();
     }
     get acceleration(): ReadOnlyTerraVector3 {
-        return new TerraVector3(engine.memory.buffer, this.acceleration_pointer)
+        return new TerraVector3(engine.memory.buffer, engine.rust.acceleration_pointer(this.ptr))
     }
     set acceleration(value: [number, number, number] | TerraVector3) {
         this.acceleration.set(value);
+        this.update_dynamic_buffer();
     }
     get bounding_min() {
         return new TerraVector3(engine.memory.buffer,engine.rust.bounding_min_pointer(this.ptr));

@@ -70,13 +70,6 @@ export class Canvas extends TerraCompoment {
             const sea = new Sea([terrascene]);
             //new testPlane(terrascene);
 
-/*            const b = new Box([terrascene],undefined,true,'bigbox');
-            b.update_scale(100, 5, 100);
-            b.translation = [123,300,123];
-            //b.update_rotation(Math.sin(1.1),0,0,Math.cos(1.1));
-            //@ts-expect-error
-            window.debugBB=() => b.drawable.debug_bounding_box();
-*/
             new Human([terrascene])
             const terrainInited = Terrain.loadFromTexture([terrascene]);
 
@@ -94,7 +87,6 @@ export class Canvas extends TerraCompoment {
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
             return undefined;
         });
-
 
         const canvasPipeline = terraEngine.gpu.rootLayout.addRenderPipeline(
             new VertexShader(terraEngine.gpu, 'deferred.vert.wgsl'),

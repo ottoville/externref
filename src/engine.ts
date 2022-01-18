@@ -507,9 +507,9 @@ export class Engine {
             byteLength)
         this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
-    wasFoundCollision=false;
     collideWithWorld(currentMesh?:DataNode) {
-        this.wasFoundCollision=false;
+        if(currentMesh)
+            currentMesh.is_colliding=false;
         //TODO: Call only when camera position change
         const scaledPosition = this.collider.scaledPosition;
         const scaledVelocity = this.collider.scaledVelocity;
@@ -546,7 +546,8 @@ export class Engine {
                 this.collider.finalPosition.set(this.#destinationPoint);
                 break;
             }
-            this.wasFoundCollision = true;
+            if(currentMesh)
+                currentMesh.is_colliding = true;
             const intersectionPoint = this.collider.intersectionPointWasm;
             //console.log('collision found')
             if (scaledVelocity[0] !== 0 || scaledVelocity[1] !== 0 || scaledVelocity[2] !== 0) {
@@ -603,7 +604,8 @@ export class Engine {
                 //this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
                 this.#destinationPoint[0] -= (this.collider._slidePlaneNormal[0] * scale);
                 this.#destinationPoint[1] -= (this.collider._slidePlaneNormal[1] * scale);
-                this.#destinationPoint[2] -= (this.collider._slidePlaneNormal[2] * scale)
+                this.#destinationPoint[2] -= (this.collider._slidePlaneNormal[2] * scale);
+
                 //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
                 scaledVelocity[0] = this.#destinationPoint[0] - intersectionPoint[0];
                 scaledVelocity[1] = this.#destinationPoint[1] - intersectionPoint[1];
