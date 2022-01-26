@@ -14,23 +14,21 @@ struct WorldPosition {
   delta : vec3<f32>;
 };
 
-[[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
-[[binding(1), group(0)]] var<uniform> times : Time;
-//[[binding(0), set(1)]] var<uniform> worldposition : WorldPosition;
+@binding(0) @group(0) var<uniform> uniforms : Uniforms;
+@binding(1) @group(0) var<uniform> times : Time;
 
 let sunDistance: f32= 1495000.0;  //divided by 100000 correct one
 
 
 
-//[[location(0)]] var<out> ambient : vec4<f32>;
 
 struct Output {
-  [[builtin(position)]] Position : vec4<f32>;
+  @builtin(position) Position : vec4<f32>;
 };
 
 
-[[stage(vertex)]]
-fn main([[builtin(vertex_index)]] VertexIndex : u32) -> Output {
+@stage(vertex)
+fn main(@builtin(vertex_index) VertexIndex : u32) -> Output {
   var vertices : array<vec2<f32>, 14> = array<vec2<f32>, 14>(
             vec2<f32>( -6824.0,  1557.0),
             vec2<f32>( -6824.0, -1557.0),

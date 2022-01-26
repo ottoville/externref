@@ -3,7 +3,7 @@ struct Settings {
      bufferSize : vec2<u32>;
      subdivisions : u32;
      heightMinMax : vec2<i32>;
-    [[align(32)]] max : vec2<i32>;
+     @align(32) max : vec2<i32>;
      textureSize:vec2<u32>;
 };
 
@@ -13,10 +13,10 @@ struct Settings {
   d : f32;
 };
 struct PlaneArray {
-  plane : [[stride(16)]] array<Plane>;
+  plane : @stride(16) array<Plane>;
 };
 struct IntArray {
-  numbers : [[stride(4)]] array<i32>;
+  numbers : @stride(4) array<i32>;
 };
 
 
@@ -117,14 +117,14 @@ fn snoise2(v:vec3<f32>) -> f32 {
                                 dot(p2,x2), dot(p3,x3) ) );
 }
 
-[[binding(0), group(0)]] var<uniform> settings : Settings;
-[[binding(0), group(1)]] var<storage,read> slopes : IntArray;
-[[binding(1), group(1)]] var<storage,read> facet12 : PlaneArray;
-[[binding(0), group(2)]] var ground_texture: texture_storage_2d<rgba8unorm,write>;
+@binding(0) @group(0) var<uniform> settings : Settings;
+@binding(0) @group(1) var<storage,read> slopes : IntArray;
+@binding(1) @group(1) var<storage,read> facet12 : PlaneArray;
+@binding(0) @group(2) var ground_texture: texture_storage_2d<rgba8unorm,write>;
 
 
-[[stage(compute), workgroup_size(1)]]
-fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
+@stage(compute) @workgroup_size(1)
+fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
 
     let cx:i32 = i32(f32(GlobalInvocationID.x) * (f32(settings.size.x)/f32(settings.textureSize.x)) - f32(settings.size.x/u32(2)));

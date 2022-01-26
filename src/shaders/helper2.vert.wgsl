@@ -10,7 +10,7 @@ struct Time {
 };
 
 struct IntArray {
-  numbers : [[stride(4)]] array<i32>;
+  numbers : @stride(4) array<i32>;
 };
 
 struct Plane {
@@ -18,14 +18,14 @@ struct Plane {
   d : f32;
 };
 struct PlaneArray {
-  plane : [[stride(16)]] array<Plane>;
+  plane : @stride(16) array<Plane>;
 };
 
 struct WorldPosition {
   position : mat4x4<f32>;
-  [[size(16)]] delta : vec3<f32>;
-  [[size(16)]] custom : vec3<f32>;
-  [[size(16)]] acceleration : vec3<f32>;
+  @size(16) delta : vec3<f32>;
+  @size(16) custom : vec3<f32>;
+  @size(16) acceleration : vec3<f32>;
    id : u32;
 };
 struct Settings {
@@ -33,14 +33,14 @@ struct Settings {
      bufferSize : vec2<u32>;
      subdivisions : u32;
      heightMinMax : vec2<i32>;
-    [[align(32)]] max : vec2<i32>;
+    @align(32) max : vec2<i32>;
 };
-[[binding(0), group(0)]] var<uniform> scene : Scene;
-[[binding(1), group(0)]] var<uniform> time : Time;
-[[binding(0), group(1)]] var<uniform> world : WorldPosition;
-[[binding(0), group(2)]] var<storage,read> slopes : IntArray;
-[[binding(1), group(2)]] var<storage,read> facet12 : PlaneArray;
-[[binding(2), group(2)]] var<storage,read> settings :  Settings;
+@binding(0) @group(0) var<uniform> scene : Scene;
+@binding(1) @group(0) var<uniform> time : Time;
+@binding(0) @group(1) var<uniform> world : WorldPosition;
+@binding(0) @group(2) var<storage,read> slopes : IntArray;
+@binding(1) @group(2) var<storage,read> facet12 : PlaneArray;
+@binding(2) @group(2) var<storage,read> settings :  Settings;
 
 
 //let PI:f32 = 3.1415926535897932384626433832795;
@@ -65,14 +65,14 @@ fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
     return -(norm.x * f32(xz.x) + norm.z * f32(xz.y) + d) / norm.y;
  };
 struct Output {
-  [[location(0)]] color : vec3<f32>;
-  [[builtin(position)]] Position : vec4<f32>;
+  @location(0) color : vec3<f32>;
+  @builtin(position) Position : vec4<f32>;
 };
 
-[[stage(vertex)]]
+@stage(vertex)
 fn main(
-  [[builtin(instance_index)]] instanceIdx : u32,
-  [[builtin(vertex_index)]] VertexIndex : u32) -> Output {
+  @builtin(instance_index) instanceIdx : u32,
+  @builtin(vertex_index) VertexIndex : u32) -> Output {
     var vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
       vec2<f32>( -0.5,  2.0),
       vec2<f32>( -0.5, -2.0),

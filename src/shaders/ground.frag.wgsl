@@ -1,14 +1,13 @@
-//[[location(0)]] var<out> outColor : vec4<f32>;
 struct Output {
-  [[location(0)]] ID : u32;
-  [[location(1)]] Diffuse : vec4<f32>;
+  @location(0) ID : u32;
+  @location(1) Diffuse : vec4<f32>;
 };
 struct Meshes {
   position : mat4x4<f32>;
-  [[size(16)]] y: f32;  //padding
+  @size(16) y: f32;  //padding
   ambient : vec3<f32>;
   shadow : f32;
-  [[size(20)]] x: f32;  //padding
+  @size(20) x: f32;  //padding
   point_light_squared : f32;
   directional_light : f32;
   scenes:u32;
@@ -16,7 +15,7 @@ struct Meshes {
 struct MeshArray {
   length:u32;
   pointers: array<u32, 63>;
-  mesh : [[stride(256)]] array<Meshes>;
+  mesh : @stride(256) array<Meshes>;
 };
 struct Projection {
   inversed_projection : mat4x4<f32>;
@@ -38,17 +37,17 @@ struct ClusterBounds {
   maxAABB : vec3<f32>;
 };
 struct Clusters {
-  bounds : [[stride(32)]] array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: [[stride(4)]] array<u32, 27648>;
-  lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
+  bounds : @stride(32) array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
+  lightsCount: @stride(4) array<u32, 27648>;
+  lights: @stride(4) array<u32, 1741824>;  //27648 * 63 = 1741824
 };
-[[binding(2), group(0)]] var<storage, read> clusters_array : Clusters;
-[[binding(3), group(0)]] var<uniform> dimensions : Uniforms;
-[[binding(4), group(0)]] var<storage, read> meshes : MeshArray;
-[[binding(5), group(0)]] var<uniform> projection : Projection;
+@binding(2) @group(0) var<storage, read> clusters_array : Clusters;
+@binding(3) @group(0) var<uniform> dimensions : Uniforms;
+@binding(4) @group(0) var<storage, read> meshes : MeshArray;
+@binding(5) @group(0) var<uniform> projection : Projection;
 
-[[binding(0), group(2)]] var mySampler: sampler;
-[[binding(1), group(2)]] var myTexture: texture_2d<f32>;
+@binding(0) @group(2) var mySampler: sampler;
+@binding(1) @group(2) var myTexture: texture_2d<f32>;
 
 fn linearDepth(depthSample : f32) -> f32 {
   return projection.z_near_multiplied_far / fma(depthSample, projection.z_near_substracted_far, projection.zNear);
@@ -82,14 +81,14 @@ fn getClusterIndex2(fragCoord : vec4<f32>) -> u32 {
       vec3<f32>(0.5, 0.0, 1.0),
       vec3<f32>(1.0, 0.0, 0.5)
     );
-[[stage(fragment)]]
+@stage(fragment)
 fn main(
-  [[builtin(position)]] fragCoord : vec4<f32>,
-  [[location(0)]]  v_uv : vec2<f32>,
-  [[location(1)]] normal : vec3<f32>,
-  [[location(2)]]  position : vec3<f32>,
-  [[location(3), interpolate(flat)]]  id : u32,
-  [[location(4), interpolate(flat)]]  scenes : u32) -> Output {
+  @builtin(position) fragCoord : vec4<f32>,
+  @location(0)  v_uv : vec2<f32>,
+  @location(1) normal : vec3<f32>,
+  @location(2)  position : vec3<f32>,
+  @location(3) @interpolate(flat)  id : u32,
+  @location(4) @interpolate(flat)  scenes : u32) -> Output {
 
     var output:Output;
 

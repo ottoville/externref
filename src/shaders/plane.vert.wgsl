@@ -6,7 +6,7 @@ struct Scene {
 };
 
 struct IntArray {
-   numbers : [[stride(4)]] array<i32>;
+   numbers : @stride(4) array<i32>;
 };
 
 struct Plane {
@@ -14,7 +14,7 @@ struct Plane {
    d : f32;
 };
 struct PlaneArray {
-   plane : [[stride(16)]] array<Plane>;
+   plane : @stride(16) array<Plane>;
 };
 
 struct WorldPosition {
@@ -25,13 +25,13 @@ struct Settings {
      bufferSize : vec2<u32>;
      subdivisions : u32;
      heightMinMax : vec2<i32>;
-    [[align(32)]] max : vec2<i32>;
+     @align(32) max : vec2<i32>;
 };
-[[binding(0), group(0)]] var<uniform> scene : Scene;
-[[binding(0), group(1)]] var<uniform> world : WorldPosition;
-[[binding(0), group(2)]] var<storage, read> slopes : IntArray;
-[[binding(1), group(2)]] var<storage, read> facet12 : PlaneArray;
-[[binding(2), group(2)]] var<storage, read> settings : Settings;
+@binding(0) @group(0) var<uniform> scene : Scene;
+@binding(0) @group(1) var<uniform> world : WorldPosition;
+@binding(0) @group(2) var<storage, read> slopes : IntArray;
+@binding(1) @group(2) var<storage, read> facet12 : PlaneArray;
+@binding(2) @group(2) var<storage, read> settings : Settings;
 
 fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
     let col:u32 = u32(floor((xz.x + f32(settings.max.x)) * f32(settings.subdivisions) / f32(settings.size.x)));
@@ -50,11 +50,11 @@ fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
     return -(norm.x * f32(xz.x) + norm.z * f32(xz.y) + d) / norm.y;
  };
 struct Output {
-  [[location(0)]] color : vec3<f32>;
-  [[builtin(position)]] Position : vec4<f32>;
+  @location(0) color : vec3<f32>;
+  @builtin(position) Position : vec4<f32>;
 };
-[[stage(vertex)]]
-fn main([[location(0)]] position : vec3<f32>) -> Output {
+@stage(vertex)
+fn main(@location(0) position : vec3<f32>) -> Output {
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; //250 * 250;
     var output:Output;
     var worldPos:vec4<f32> = world.position * vec4<f32>(position.x, 0.0, position.y, 1.0);

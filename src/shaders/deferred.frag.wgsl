@@ -1,10 +1,10 @@
 
 struct Mesh {
   position : mat4x4<f32>;
-  [[size(16)]] y: f32;  //padding
+  @size(16) y: f32;  //padding
   ambient : vec3<f32>;
   shadow : f32;
-  [[size(20)]] x: f32;  //padding
+  @size(20) x: f32;  //padding
   point_light : f32;
 
 };
@@ -15,7 +15,7 @@ struct LightsArray_deprecated {
 struct MeshArray {
   length:u32;
   pointers: array<u32, 63>;
-  mesh : [[stride(256)]] array<Mesh>;
+   mesh : @stride(256) array<Mesh>;
 };
 struct Uniforms {
   zNear : f32;
@@ -31,21 +31,21 @@ struct ClusterBounds {
   maxAABB : vec3<f32>;
 };
 struct Clusters {
-  bounds : [[stride(32)]] array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: [[stride(4)]] array<u32, 27648>;
-  lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
+  bounds : @stride(32) array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
+  lightsCount: @stride(4) array<u32, 27648>;
+  lights: @stride(4) array<u32, 1741824>;  //27648 * 63 = 1741824
 };
 
-[[binding(0), group(0)]] var diffuseTexture: texture_2d<f32>;
-[[binding(1), group(0)]] var<storage, read> meshes : MeshArray;
+@binding(0) @group(0) var diffuseTexture: texture_2d<f32>;
+@binding(1) @group(0) var<storage, read> meshes : MeshArray;
 
 
 struct Output {
-  [[location(0)]] Color : vec4<f32>;
+  @location(0) Color : vec4<f32>;
 };
 
-[[stage(fragment)]]
-fn main([[builtin(position)]] fragCoord : vec4<f32>) -> Output {
+@stage(fragment)
+fn main(@builtin(position) fragCoord : vec4<f32>) -> Output {
 
   var colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(
       vec3<f32>(1.0, 0.0, 0.0),

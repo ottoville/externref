@@ -1,29 +1,27 @@
 
 struct FloatArray {
-   numbers : [[stride(4)]] array<f32>;
+   numbers : @stride(4) array<f32>;
 };
 struct Slopes {
-   numbers : [[stride(4)]] array<i32>;
+   numbers : @stride(4) array<i32>;
 };
 struct Settings {
      size : vec2<u32>;
      bufferSize : vec2<u32>;
      subdivisions : u32;
      heightMinMax : vec2<i32>;
-    [[align(32)]] max : vec2<i32>;
+     @align(32) max : vec2<i32>;
      textureSize:vec2<u32>;
 };
 
-[[binding(0), group(0)]] var<uniform> settings : Settings;
-
-[[binding(0), group(1)]] var<storage, read_write> normals : FloatArray;
-
-[[binding(0), group(2)]] var<storage, read> slopes : Slopes;
-[[binding(1), group(2)]] var<storage, read> facet12 : FloatArray;
+@binding(0) @group(0) var<uniform> settings : Settings;
+@binding(0) @group(1) var<storage, read_write> normals : FloatArray;
+@binding(0) @group(2) var<storage, read> slopes : Slopes;
+@binding(1) @group(2) var<storage, read> facet12 : FloatArray;
 
 
-[[stage(compute), workgroup_size(1)]]
-fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
+@stage(compute) @workgroup_size(1)
+fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let stride : u32 = u32(12);
     let facetSize : u32 = settings.subdivisions * settings.subdivisions * u32(4); //250*250* 4;
 

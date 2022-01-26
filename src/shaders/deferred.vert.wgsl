@@ -1,10 +1,10 @@
 struct Output {
-    [[builtin(position)]] Position : vec4<f32>;
+    @builtin(position) Position : vec4<f32>;
 };
 
-[[stage(vertex)]]
+@stage(vertex)
 fn main(
-    [[builtin(vertex_index)]] VertexIndex : u32) -> Output {
+    @builtin(vertex_index) VertexIndex : u32) -> Output {
     var vertices = array<vec2<f32>, 6>(
         vec2<f32>(-1.0, -1.0), vec2<f32>(1.0, -1.0), vec2<f32>(-1.0, 1.0),
         vec2<f32>(-1.0, 1.0), vec2<f32>(1.0, -1.0), vec2<f32>(1.0, 1.0));

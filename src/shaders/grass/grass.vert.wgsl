@@ -21,8 +21,8 @@ struct Time {
   time : u32;
   delta : f32;
 };
-[[binding(0), group(0)]] var<uniform> scene : Scene;
-[[binding(1), group(0)]] var<uniform> time : Time;
+@binding(0) @group(0) var<uniform> scene : Scene;
+@binding(1) @group(0) var<uniform> time : Time;
 
 //[[block]] struct Lights {
 //  [[offset(48)]] sunDirection : vec3<f32>;
@@ -43,8 +43,8 @@ fn rand(co:vec2<f32>) -> f32 {
 
 let windDirection:f32 = 0.0;
 struct Output {
-  [[builtin(position)]] Position : vec4<f32>;
-  [[location(0)]] color : vec3<f32>;
+  @builtin(position) Position : vec4<f32>;
+  @location(0) color : vec3<f32>;
 };
 
 let vertices_ : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
@@ -57,11 +57,11 @@ let vertices_ : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
     vec2<f32>(0.0, 1.0)
 );
 
-[[stage(vertex)]]
+@stage(vertex)
 fn main(
-  [[location(2)]] vertices : vec3<f32>,
-  [[location(0)]] positions : vec4<f32>, //position xyz + rotate
-  [[location(1)]] shape : vec4<f32> // {x:scale, y:baseAngle, z:curve, w:color} (blade's shape properties)
+  @location(2) vertices : vec3<f32>,
+  @location(0) positions : vec4<f32>, //position xyz + rotate
+  @location(1) shape : vec4<f32> // {x:scale, y:baseAngle, z:curve, w:color} (blade's shape properties)
 ) -> Output {
   var output:Output;
  //ambient = lights.ambient;

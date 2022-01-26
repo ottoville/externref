@@ -3,20 +3,20 @@ struct Settings {
      bufferSize : vec2<u32>;
      subdivisions : u32;
      heightMinMax : vec2<i32>;
-    [[align(32)]] max : vec2<i32>;
+     @align(32) max : vec2<i32>;
      textureSize:vec2<u32>;
 };
 
 struct Vertice {
-  [[size(16)]] position : vec3<f32>;
-  [[size(16)]] normals : vec3<f32>;
+  @size(16) position : vec3<f32>;
+  @size(16) normals : vec3<f32>;
   uv : vec2<f32>;
 };
 struct IntArray {
-   numbers : [[stride(4)]] array<i32>;
+   numbers : @stride(4) array<i32>;
 };
 struct Vertices {
-     vert : [[stride(48)]] array<Vertice>;
+     vert : @stride(48) array<Vertice>;
 };
 
  struct Plane {
@@ -24,17 +24,17 @@ struct Vertices {
    d : f32;
 };
 struct PlaneArray {
-  plane : [[stride(16)]] array<Plane>;
+  plane : @stride(16) array<Plane>;
 };
-[[binding(0), group(0)]] var<uniform> settings : Settings;
-[[binding(0), group(1)]] var<storage, read> vertices : Vertices;
-[[binding(0), group(2)]] var<storage, write> slopes :  IntArray;
-[[binding(1), group(2)]] var<storage, write> facet12 : PlaneArray;
+@binding(0) @group(0) var<uniform> settings : Settings;
+@binding(0) @group(1) var<storage, read> vertices : Vertices;
+@binding(0) @group(2) var<storage, write> slopes :  IntArray;
+@binding(1) @group(2) var<storage, write> facet12 : PlaneArray;
 
 
 let cd: f32 = -1.0;
-[[stage(compute), workgroup_size(1)]]
-fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
+@stage(compute) @workgroup_size(1)
+fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
   let subdivisions_plus_one:u32 = settings.subdivisions + u32(1);
   let facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
 

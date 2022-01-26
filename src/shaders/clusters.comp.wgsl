@@ -4,10 +4,9 @@
   maxPoint : vec3<f32>;
 };
 struct clusterArray {
-  bounds : [[stride(32)]] array<VolumeTileAABB,27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: [[stride(4)]] array<u32, 27648>;
-  lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
-
+  bounds : @stride(32) array<VolumeTileAABB,27648>; //32 * 18 * 48 = total tiles = 27648
+  lightsCount: @stride(4) array<u32, 27648>;
+  lights: @stride(4)  array<u32, 1741824>;  //27648 * 63 = 1741824
 };
 
 struct Projection {
@@ -22,9 +21,9 @@ struct Uniforms {
   screenDimensions : vec2<f32>;
 
 };
-[[binding(0), group(0)]] var<storage, write> clusters : clusterArray;
-[[binding(1), group(0)]] var<uniform> screentoview : Projection;
-[[binding(2), group(0)]] var<uniform> uniforms : Uniforms;
+@group(0) @binding(0) var<storage, write> clusters : clusterArray;
+@group(0) @binding(1) var<uniform> screentoview : Projection;
+@group(0) @binding(2) var<uniform> uniforms : Uniforms;
 
  fn clipToView(clip : vec4<f32>) -> vec4<f32> {
    //View space transform
@@ -61,10 +60,8 @@ struct Uniforms {
 
  //let tileCount : vec3<u32> = vec3<u32>(1u, 1u, 1u);
  let tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
-
-[[stage(compute), workgroup_size(4,2,4)]]
-//[[stage(compute), workgroup_size(1,1,1)]]
-  fn main([[builtin(global_invocation_id)]] global_id : vec3<u32>) {
+@stage(compute) @workgroup_size(4,2,4)
+  fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
     let tileIndex = global_id.x +
                     global_id.y * tileCount.x +
                     global_id.z * tileCount.x * tileCount.y;

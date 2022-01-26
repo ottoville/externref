@@ -5,31 +5,31 @@ struct Uniforms {
 };
 struct WorldPosition {
   world : mat4x4<f32>;
-  [[size(16)]] delta : vec3<f32>;
-  [[size(16)]] custom : vec3<f32>;
-  [[size(16)]] acceleration : vec3<f32>;
+  @size(16) delta : vec3<f32>;
+  @size(16) custom : vec3<f32>;
+  @size(16) acceleration : vec3<f32>;
    id : u32;
    point_light_squared:f32;          //30
    directional_light:f32;
    scenes:u32; //bitmask
 };
-[[binding(0), group(0)]] var<uniform> uniforms : Uniforms;
-[[binding(0), group(1)]] var<uniform> worldposition : WorldPosition;
+@binding(0) @group(0) var<uniform> uniforms : Uniforms;
+@binding(0) @group(1) var<uniform> worldposition : WorldPosition;
 
 struct Output {
-  [[builtin(position)]] Position : vec4<f32>;
-  [[location(0)]] v_uv : vec2<f32>;
-  [[location(1)]] normal : vec3<f32>;
-  [[location(2)]] position : vec3<f32>;
-  [[location(3), interpolate(flat)]] id : u32;  
-  [[location(4), interpolate(flat)]] scenes : u32;  
+  @builtin(position) Position : vec4<f32>;
+  @location(0) v_uv : vec2<f32>;
+  @location(1) normal : vec3<f32>;
+  @location(2) position : vec3<f32>;
+  @location(3) @interpolate(flat) id : u32;  
+  @location(4) @interpolate(flat) scenes : u32;  
  };
 
 
-[[stage(vertex)]]
-fn main([[location(0)]] position : vec3<f32>,
-        [[location(1)]] uv : vec2<f32>,
-        [[location(2)]] normal : vec3<f32> ) -> Output {
+@stage(vertex)
+fn main(@location(0) position : vec3<f32>,
+        @location(1) uv : vec2<f32>,
+        @location(2) normal : vec3<f32> ) -> Output {
   var output : Output;
   output.Position = uniforms.modelViewProjectionMatrix * vec4<f32>(position.xyz, 1.0);
   //shading = dot(normal, lights.sunDirection)*lights.shadow;

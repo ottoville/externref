@@ -1,14 +1,14 @@
 
 struct Meshes {
   position : mat4x4<f32>;
-  [[size(52)]] y: f32;  //padding
+  @size(52) y: f32;  //padding
   point_light_squared : f32;
   directional_light : f32;
 };
 struct MeshArray {
   length:u32;
   pointers: array<u32, 63>;
-  mesh : [[stride(256)]] array<Meshes>;
+  mesh : @stride(256) array<Meshes>;
 };
 struct PointLights {
   length:u32;
@@ -24,16 +24,16 @@ struct ClusterBounds {
   maxAABB : vec4<f32>;
 };
 struct Clusters {
-  bounds : [[stride(32)]] array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: [[stride(4)]] array<u32, 27648>;
-  lights: [[stride(4)]] array<u32, 1741824>;  //27648 * 63 = 1741824
+  bounds : @stride(32) array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
+  lightsCount: @stride(4) array<u32, 27648>;
+  lights: @stride(4) array<u32, 1741824>;  //27648 * 63 = 1741824
 };
 
-[[binding(0), group(0)]] var<storage, read> meshes : MeshArray;
-[[binding(1), group(0)]] var<storage, read> point_lights : PointLights;
-[[binding(2), group(0)]] var<storage, read> directional_lights : PointLights;
-[[binding(0), group(1)]] var<storage, read_write> clusters : Clusters;
-[[binding(1), group(1)]] var<uniform> viewUniforms : ViewUniforms;
+@binding(0) @group(0) var<storage, read> meshes : MeshArray;
+@binding(1) @group(0) var<storage, read> point_lights : PointLights;
+@binding(2) @group(0) var<storage, read> directional_lights : PointLights;
+@binding(0) @group(1) var<storage, read_write> clusters : Clusters;
+@binding(1) @group(1) var<uniform> viewUniforms : ViewUniforms;
 
 
 
@@ -57,9 +57,9 @@ struct Clusters {
   }
 let tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
 
-[[stage(compute), workgroup_size(4, 2, 4)]]
+@stage(compute) @workgroup_size(4, 2, 4)
 fn main(
-    [[builtin(global_invocation_id)]] global_id : vec3<u32>
+    @builtin(global_invocation_id) global_id : vec3<u32>
 ) {
 
   let tileIndex = global_id.x +
