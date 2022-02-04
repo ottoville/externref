@@ -4,9 +4,9 @@
   maxPoint : vec3<f32>;
 };
 struct clusterArray {
-  bounds : @stride(32) array<VolumeTileAABB,27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: @stride(4) array<u32, 27648>;
-  lights: @stride(4)  array<u32, 1741824>;  //27648 * 63 = 1741824
+  bounds: array<VolumeTileAABB,27648>; //32 * 18 * 48 = total tiles = 27648
+  lightsCount: array<u32, 27648>;
+  lights: array<u32, 1741824>;  //27648 * 63 = 1741824
 };
 
 struct Projection {

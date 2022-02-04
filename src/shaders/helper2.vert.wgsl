@@ -10,7 +10,7 @@ struct Time {
 };
 
 struct IntArray {
-  numbers : @stride(4) array<i32>;
+  numbers: array<i32>;
 };
 
 struct Plane {
@@ -18,7 +18,7 @@ struct Plane {
   d : f32;
 };
 struct PlaneArray {
-  plane : @stride(16) array<Plane>;
+  plane: array<Plane>;
 };
 
 struct WorldPosition {

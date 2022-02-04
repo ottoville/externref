@@ -11,13 +11,13 @@ struct Settings {
 struct Vertice {
   position : vec3<f32>;
   normals : vec3<f32>;
-  uv : vec2<f32>;
+  @size(16) uv : vec2<f32>;
 };
 struct Vertices {
-    vert : @stride(48) array<Vertice>;
+    vert: array<Vertice>;
 };
 struct Pixels {
-    pixels : @stride(4) array<u32>;
+    pixels: array<u32>;
 };
 @binding(0) @group(0) var<uniform> settings : Settings;
 @binding(0) @group(1) var<storage, write> positions : Vertices;
@@ -40,7 +40,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
    let gradient:f32 = dot(textureLoad(pixels, vec2<i32>((vec2<f32>(texture_size)/vec2<f32>(settings.size)) * coords.xy), 0), filt);    
 
    position.y = f32(settings.heightMinMax.x) + f32( settings.heightMinMax.y -  settings.heightMinMax.x) * gradient;
-   position.y = 10.0;
+   //position.y = 10.0;
    positions.vert[GlobalInvocationID.y * (settings.subdivisions + u32(1)) + GlobalInvocationID.x].position = position;
   
    positions.vert[GlobalInvocationID.y * (settings.subdivisions + u32(1)) + GlobalInvocationID.x].uv = (position.xz + vec2<f32>(settings.max)) / vec2<f32>(settings.size);

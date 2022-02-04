@@ -13,10 +13,10 @@ struct Settings {
   d : f32;
 };
 struct PlaneArray {
-  plane : @stride(16) array<Plane>;
+  plane: array<Plane>;
 };
 struct IntArray {
-  numbers : @stride(4) array<i32>;
+  numbers: array<i32>;
 };
 
 

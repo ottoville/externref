@@ -10,13 +10,13 @@ struct Settings {
 struct Vertice {
   @size(16) position : vec3<f32>;
   @size(16) normals : vec3<f32>;
-  uv : vec2<f32>;
+  @size(16) uv : vec2<f32>;
 };
 struct IntArray {
-   numbers : @stride(4) array<i32>;
+   numbers: array<i32>;
 };
 struct Vertices {
-     vert : @stride(48) array<Vertice>;
+     vert: array<Vertice>;
 };
 
  struct Plane {
@@ -24,7 +24,7 @@ struct Vertices {
    d : f32;
 };
 struct PlaneArray {
-  plane : @stride(16) array<Plane>;
+  plane: array<Plane>;
 };
 @binding(0) @group(0) var<uniform> settings : Settings;
 @binding(0) @group(1) var<storage, read> vertices : Vertices;

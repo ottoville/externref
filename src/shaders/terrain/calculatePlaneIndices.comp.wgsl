@@ -1,5 +1,5 @@
 struct Indices {
-  numbers : @stride(4) array<u32>;
+  numbers: array<u32>;
 };
 struct Settings {
      size : vec2<u32>;

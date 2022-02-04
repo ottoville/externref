@@ -1,9 +1,9 @@
 struct Vec2Array {
-  vectors : @stride(8) array<vec2<f32>>;
+  vectors: array<vec2<f32>>;
 };
 
 struct IntArray {
-   numbers : @stride(4) array<i32>;
+   numbers: array<i32>;
 };
 
 struct Plane {
@@ -11,17 +11,17 @@ struct Plane {
   d : f32;
 };
 struct PlaneArray {
-   plane : @stride(16) array<Plane>;
+   plane: array<Plane>;
 };
 struct FloatArray {
-  numbers : @stride(4) array<f32>;
+  numbers: array<f32>;
 };
 struct PositionAndRotate {
    position : vec3<f32>;
    rotation : f32;
 };
 struct PositionAndRotateArray {
-   arr : @stride(16) array<PositionAndRotate>;
+   arr:  array<PositionAndRotate>;
 };
 
 struct Settings {

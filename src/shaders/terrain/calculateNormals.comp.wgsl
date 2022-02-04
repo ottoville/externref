@@ -1,9 +1,9 @@
 
 struct FloatArray {
-   numbers : @stride(4) array<f32>;
+   numbers: array<f32>;
 };
 struct Slopes {
-   numbers : @stride(4) array<i32>;
+   numbers: array<i32>;
 };
 struct Settings {
      size : vec2<u32>;

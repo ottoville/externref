@@ -3,19 +3,20 @@ struct Output {
   @location(1) Diffuse : vec4<f32>;
 };
 struct Meshes {
-  position : mat4x4<f32>;
-  @size(16) y: f32;  //padding
-  ambient : vec3<f32>;
-  shadow : f32;
-  @size(20) x: f32;  //padding
-  point_light_squared : f32;
-  directional_light : f32;
-  scenes:u32;
+  position : mat4x4<f32>;           //64  0
+  @size(16) y: f32;  //padding      //16  80
+  ambient : vec3<f32>;              //12  92
+  shadow : f32;                     //4   96
+  @size(20) x: f32;  //padding      //20  116
+  point_light_squared : f32;        //4   120
+  directional_light : f32;          //4   124
+  scenes:u32;                       //4   128
+  @size(128) z: f32;  //padding
 };
 struct MeshArray {
   length:u32;
   pointers: array<u32, 63>;
-  mesh : @stride(256) array<Meshes>;
+  mesh: array<Meshes>;
 };
 struct Projection {
   inversed_projection : mat4x4<f32>;
@@ -37,9 +38,9 @@ struct ClusterBounds {
   maxAABB : vec3<f32>;
 };
 struct Clusters {
-  bounds : @stride(32) array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: @stride(4) array<u32, 27648>;
-  lights: @stride(4) array<u32, 1741824>;  //27648 * 63 = 1741824
+  bounds: array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
+  lightsCount: array<u32, 27648>;
+  lights: array<u32, 1741824>;  //27648 * 63 = 1741824
 };
 @binding(2) @group(0) var<storage, read> clusters_array : Clusters;
 @binding(3) @group(0) var<uniform> dimensions : Uniforms;

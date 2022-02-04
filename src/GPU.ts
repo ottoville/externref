@@ -45,7 +45,7 @@ export class GPU {
     readonly GPUMeshes: GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer;
     readonly GPUPointLights: GPUStorageBuffer & GPUCopyDSTBuffer;
     readonly GPUDirectionalLights: GPUStorageBuffer & GPUCopyDSTBuffer;
-    readonly rootLayout:PipelineLayout;
+    readonly rootLayout: PipelineLayout;
     readonly positionBindGroupTimeWGSL:LayoutGroupDrawable<[GPUBindGroupEntry]>;
 
 
@@ -231,12 +231,6 @@ export class GPU {
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
                 } as GPUTextureBindingLayout
-            }, {    //meshes
-                binding: 1,
-                visibility: GPUShaderStage.FRAGMENT,
-                buffer: {
-                    type: "read-only-storage"
-                }
             }
         );
         this.rootLayout = new PipelineLayout('rootLayout', this, BindGroupLayoutCanvas);
@@ -331,14 +325,7 @@ export class GPU {
             {
                 binding: 0,
                 resource: this.renderPassScreen.renderTargets.gRenderTargetDiffuse.viewOrResolve(renderPass)
-            },
-            {
-                binding: 1,
-                resource: {
-                    buffer: this.GPUMeshes
-                }
-            }
-            ]
+            }]
         );
         
         this.#DynamicBindGroups.add(this.BindGroupPosition);

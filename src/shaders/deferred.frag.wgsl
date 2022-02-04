@@ -12,11 +12,6 @@ struct LightsArray_deprecated {
   lights_count:u32;
   light: array<u32>;
 };
-struct MeshArray {
-  length:u32;
-  pointers: array<u32, 63>;
-   mesh : @stride(256) array<Mesh>;
-};
 struct Uniforms {
   zNear : f32;
   zFar : f32;
@@ -31,14 +26,12 @@ struct ClusterBounds {
   maxAABB : vec3<f32>;
 };
 struct Clusters {
-  bounds : @stride(32) array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: @stride(4) array<u32, 27648>;
-  lights: @stride(4) array<u32, 1741824>;  //27648 * 63 = 1741824
+  bounds: array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
+  lightsCount: array<u32, 27648>;
+  lights: array<u32, 1741824>;  //27648 * 63 = 1741824
 };
 
 @binding(0) @group(0) var diffuseTexture: texture_2d<f32>;
-@binding(1) @group(0) var<storage, read> meshes : MeshArray;
-
 
 struct Output {
   @location(0) Color : vec4<f32>;
