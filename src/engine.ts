@@ -17,7 +17,7 @@ import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "./GPU/RenderPass.js";
 import { Texture } from "./GPU/Texture.js";
-import type { DataNode } from "./DataNode.js";
+import { closeDistance, closeDistanceSquared, Ellipsoid } from "./DataNode.js";
 
 declare const engine:Engine;
 
@@ -87,7 +87,7 @@ export type rustWasm = {
 
 }
 
-function Dot(left: [number, number, number] | Float32Array | TerraVector3, right: [number, number, number] | Float32Array | TerraVector3): number {
+function Dot(left: readonly [number, number, number] | Float32Array | TerraVector3, right: readonly [number, number, number] | Float32Array | TerraVector3): number {
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 }
 const ObjectStores = {
@@ -140,8 +140,6 @@ export class Engine {
         For gravity (at 60fps) it must be lower than   9.80665*0.016*0.016 = 0,0027240694444442 
         TODO: make other constraints for other forces than gravity
     */
-    readonly closeDistance = 0.0025;
-    readonly closeDistanceSquared = this.closeDistance * this.closeDistance
 
     // registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
 
@@ -475,8 +473,6 @@ export class Engine {
     }
     update_point_lights(pointer:number, length:number) {
         const lights = new Uint32Array(this.memory.buffer, pointer, length);
-        console.log('lights',...lights)
-
         const commandEncoder = this.gpu.device.createCommandEncoder();
         //TODO: Potential buffer overflow
         const byteLength = 4 + lights.byteLength;
@@ -507,33 +503,31 @@ export class Engine {
             byteLength)
         this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
-    collideWithWorld(currentMesh?:DataNode) {
-        if(currentMesh)
-            currentMesh.is_colliding=false;
+    collideWithWorld(sphere: Ellipsoid) : void {
+        if(sphere instanceof MainNode)
+            sphere.is_colliding=false;
         //TODO: Call only when camera position change
         const scaledPosition = this.collider.scaledPosition;
         const scaledVelocity = this.collider.scaledVelocity;
 
-
-
         for (let i = 0; i < 3; i++) {
             //TODO: really, here inside the loop?
             //TODO: Remove this JS initialize
-            this.collider._initialize(scaledPosition, scaledVelocity, this.closeDistance);
+            this.collider._initialize(scaledPosition, scaledVelocity, closeDistance, sphere);
 
             //TODO: Velocity and position might change during async operation, so do not give a pointer but copy
             this.wasm._initialize();
             // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-            if(currentMesh) {
+            if(sphere instanceof MainNode) {
                 this.physics.tickables.forEach(mesh => {
-                    if(currentMesh !== mesh)
-                        mesh.checkCollision(this.collider)
+                    if(sphere !== mesh)
+                        mesh.checkCollision(this.collider, sphere)
                 });
             }
             else {
-                this.physics.tickables.forEach(mesh => mesh.checkCollision(this.collider));
+                this.physics.tickables.forEach(mesh => mesh.checkCollision(this.collider, sphere));
             }
 
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
@@ -546,8 +540,8 @@ export class Engine {
                 this.collider.finalPosition.set(this.#destinationPoint);
                 break;
             }
-            if(currentMesh)
-                currentMesh.is_colliding = true;
+            if(sphere instanceof MainNode)
+                sphere.is_colliding = true;
             const intersectionPoint = this.collider.intersectionPointWasm;
             //console.log('collision found')
             if (scaledVelocity[0] !== 0 || scaledVelocity[1] !== 0 || scaledVelocity[2] !== 0) {
@@ -565,6 +559,8 @@ export class Engine {
                 scaledPosition[2] += scaledVelocity[2];
 
                 //pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
+                //TODO: Use planeNormal already calculated on collided triangle.
+                        //When colliding the face
                 this.collider._slidePlaneNormal[0] = scaledPosition[0] - intersectionPoint[0];
                 this.collider._slidePlaneNormal[1] = scaledPosition[1] - intersectionPoint[1];
                 this.collider._slidePlaneNormal[2] = scaledPosition[2] - intersectionPoint[2];
@@ -578,11 +574,13 @@ export class Engine {
                     this.collider._slidePlaneNormal[2] *= norm;
                 }
 
+              /*  this.#displacementVector[0] = slidePlaneNormalWorld[0] * this.collider.epsilon;
+                this.#displacementVector[1] = slidePlaneNormalWorld[1] * this.collider.epsilon;
+                this.#displacementVector[2] = slidePlaneNormalWorld[2] * this.collider.epsilon;*/
 
-                // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
-                this.#displacementVector[0] = this.collider._slidePlaneNormal[0] * this.collider.epsilon;
-                this.#displacementVector[1] = this.collider._slidePlaneNormal[1] * this.collider.epsilon;
-                this.#displacementVector[2] = this.collider._slidePlaneNormal[2] * this.collider.epsilon;
+                this.#displacementVector[0] = this.collider._slidePlaneNormal[0] * sphere.closeDistanceVector[0];
+                this.#displacementVector[1] = this.collider._slidePlaneNormal[1] * sphere.closeDistanceVector[1];
+                this.#displacementVector[2] = this.collider._slidePlaneNormal[2] * sphere.closeDistanceVector[2];
                 // pos.addInPlace(this._displacementVector);
                 /*
                     displacementVector is a constraint added to position, so eg. objects that are colliding
@@ -601,7 +599,6 @@ export class Engine {
                 const d = -(this.collider._slidePlaneNormal[0] * intersectionPoint[0] + this.collider._slidePlaneNormal[1] * intersectionPoint[1] + this.collider._slidePlaneNormal[2] * intersectionPoint[2]);
                 scale = Dot(this.#destinationPoint, this.collider._slidePlaneNormal) + d;
 
-                //this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
                 this.#destinationPoint[0] -= (this.collider._slidePlaneNormal[0] * scale);
                 this.#destinationPoint[1] -= (this.collider._slidePlaneNormal[1] * scale);
                 this.#destinationPoint[2] -= (this.collider._slidePlaneNormal[2] * scale);
@@ -612,16 +609,20 @@ export class Engine {
                 scaledVelocity[2] = this.#destinationPoint[2] - intersectionPoint[2];
             }
 
+            const unScaledVelocity = [
+                scaledVelocity[0] * sphere.radius[0],
+                scaledVelocity[1] * sphere.radius[1],
+                scaledVelocity[2] * sphere.radius[2]
+            ] as const;
             // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
-            if (scaledVelocity[0] * scaledVelocity[0] + scaledVelocity[1] * scaledVelocity[1] + scaledVelocity[2] * scaledVelocity[2] <= this.closeDistanceSquared) {
+            if (unScaledVelocity[0] * unScaledVelocity[0] + unScaledVelocity[1] * unScaledVelocity[1] + unScaledVelocity[2] * unScaledVelocity[2] <= closeDistanceSquared) {
                 //finalPosition.copyFrom(position);
                 this.collider.finalPosition.set(scaledPosition);
                 break;
             }
         }
-        this.collider.finalPosition[0] *= this.collider.radius[0]
-        this.collider.finalPosition[1] *= this.collider.radius[1]
-        this.collider.finalPosition[2] *= this.collider.radius[2]
-
+        this.collider.finalPosition[0] *= sphere.radius[0]
+        this.collider.finalPosition[1] *= sphere.radius[1]
+        this.collider.finalPosition[2] *= sphere.radius[2]
     }
 }

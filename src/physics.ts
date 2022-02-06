@@ -1,6 +1,5 @@
 ﻿import type { DataNode } from "./DataNode.js";
 import type { MainNode } from "./MainNode.js";
-import type { ReadOnlyTerraVector3 } from "./Math.js";
 const MIN_TICK_DELTA = 110;
 
 const GRAVITY = 9.80665;
@@ -22,7 +21,7 @@ export class Physics {
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
     movables: MainNode[] = []; //Stuff that moves without physic, eg. sun.
-    tickables: ({ checkCollide(velocityPerDelta: readonly [number, number, number]): ReadOnlyTerraVector3 } & DataNode)[] = []; //Stuff that moves and have collision check
+    tickables: DataNode[] = []; //Stuff that moves and have collision check
     tickTime = 21600;  //6 hours
     tickIntervalMs = 16.6;
     #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
@@ -97,7 +96,6 @@ export class Physics {
         */
         for(let i = 0; i<this.tickables.length; i++) {
             const tickable=this.tickables[i]!;
-            //this.tickables.forEach(tickable => {
             if (tickable.onPhysicTick)
                 tickable.onPhysicTick(delta);
             const velocity = tickable.velocity;
@@ -124,6 +122,7 @@ export class Physics {
                     wantedVelocityPerDelta[2]
                 ]);
                 if (tickable.is_colliding) {
+                    tickable.onCollide()
                     const newVelocityDelta:[number,number,number] = [
                         (finalPosition[0] - translation[0]),
                         (finalPosition[1] - translation[1]),
@@ -151,7 +150,11 @@ export class Physics {
                                 newVelocityDelta[2]=0;
                             }
                         }
-
+                    }
+                    else {
+                        tickable.last_velocity[0] = 0;
+                        tickable.last_velocity[1] = 0;
+                        tickable.last_velocity[2] = 0;
                     }
                     tickable.acceleration2[0] = (newVelocityDelta[0]-velocity[0]*dt)/dt_half_sqrt;
                     tickable.acceleration2[1] = (newVelocityDelta[1]-velocity[1]*dt)/dt_half_sqrt;
@@ -160,9 +163,13 @@ export class Physics {
                 /*
                     TODO: friction is now set higher in x and z because human cannot brake otherwise.
                 */
-                  //  motionFrictionAcceleration[0] = tickable.last_velocity[0] - tickable.last_velocity[0] * 0.6 //*tickable.grip,
-                  //  motionFrictionAcceleration[1] = tickable.last_velocity[1] - tickable.last_velocity[1] * 0.9 //*tickable.grip,
-                  //  motionFrictionAcceleration[2] = tickable.last_velocity[2] - tickable.last_velocity[2] * 0.6 //*tickable.grip
+                    motionFrictionAcceleration[0] = tickable.last_velocity[0] - tickable.last_velocity[0]// * tickable.grip,
+                    motionFrictionAcceleration[1] = tickable.last_velocity[1] - tickable.last_velocity[1]// * tickable.grip,
+                    motionFrictionAcceleration[2] = tickable.last_velocity[2] - tickable.last_velocity[2]// * tickable.grip
+                } else {
+                    tickable.last_velocity[0] = wantedVelocityPerDelta[0] * delta_multiplier;
+                    tickable.last_velocity[1] = wantedVelocityPerDelta[1] * delta_multiplier;
+                    tickable.last_velocity[2] = wantedVelocityPerDelta[2] * delta_multiplier;
                 }
                 tickable.translation=[
                     finalPosition[0],
@@ -180,7 +187,6 @@ export class Physics {
             tickable.force[0]=0;
             tickable.force[1]=0;
             tickable.force[2]=0;
-            //Vec3d new_vel = vel + (acc+new_acc)*(dt*0.5);
             tickable.velocity=[
                 velocity[0] + (old_acceleration[0]+tickable.acceleration2[0])*dt_half,
                 velocity[1] + (old_acceleration[1]+tickable.acceleration2[1])*dt_half,

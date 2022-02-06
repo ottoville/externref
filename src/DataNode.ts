@@ -22,13 +22,40 @@ class pickInfo {
     }
 }
 
-export abstract class DataNode extends MainNode {
-    lastVelocity: readonly [number, number, number]=[0,0,0];
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+export interface Ellipsoid {
+    collisionsScalingMatrix: TerraMatrix;
+    radius: {
+        0: number;
+        1: number;
+        2: number;
+    }
+    readonly closeDistanceVector:[number,number,number]
+}
+
+/*
+    TODO: Calculate closeDistance on every collision to take account angle between upVector and collided slope,
+    so it is always small enought for gravity to hit on next tick.
+*/
+
+export const closeDistance = 0.0022
+export const closeDistanceSquared = closeDistance*closeDistance
+export abstract class DataNode extends MainNode implements Ellipsoid {
+    //TODO: this is a sphere collider
+    radius: { 0: number; 1: number; 2: number; };
+    readonly #radius: [x: number, y: number, z: number] = [1, 1, 1]
+    readonly collisionsScalingMatrix:TerraMatrix = new TerraMatrix([
+        1.0 / this.#radius[0],   0.0,                   0.0,                    0.0,
+        0.0,                     1.0 / this.#radius[1], 0.0,                    0.0,
+        0.0,                     0.0,                   1.0 / this.#radius[2],  0.0,
+        0.0, 0.0, 0.0, 1.0]);
+    readonly closeDistanceVector:[number,number,number] = [closeDistance / this.#radius[0], closeDistance / this.#radius[1], closeDistance / this.#radius[2]];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     checkCollide(_velocityPerDelta:[number,number,number]):ReadOnlyTerraVector3 {
         return this.translation;
         // TODO: Generic collision check, object shape is not known
+    }
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    onCollide() {
     }
     readonly pickInfo = new pickInfo();
     protected readonly colliderVerticesV4: number[] = [];
@@ -61,14 +88,36 @@ export abstract class DataNode extends MainNode {
             engine.physics.tickables.push(this);
 
 
-        //Run this on microtask so the scope who called
-        //constuctor has time to add verticesPositionBuffer and indicesbuffer property.
+        const radius = this.#radius
+        const collisionsScalingMatrix = this.collisionsScalingMatrix;
+        const myCloseDistance = this.closeDistanceVector;
+        this.radius = {
+            get 0() {
+                return radius[0]
+            },
+            get 1() {
+                return radius[1]
+            },
+            get 2() {
+                return radius[2]
+            },
+            set 0(v: number) {
+                radius[0] = v;
+                collisionsScalingMatrix[0] = 1.0 / v;
+                myCloseDistance[0] = closeDistance / v
 
-        queueMicrotask(() => {
-            //worker.message(this.uniqueID, 'init', [indicesView?.buffer, this.verticesPositionBuffer, this.verticesPositionStride, this.boundingBox.buffer, this.pickInfo.buffer])
-            //this.boundingBox.initMin();
-            //this.boundingBox.initMax();
-        });
+            },
+            set 1(v: number) {
+                radius[1] = v;
+                collisionsScalingMatrix[5] = 1.0 / v;
+                myCloseDistance[1] = closeDistance / v
+            },
+            set 2(v: number) {
+                radius[2] = v;
+                collisionsScalingMatrix[10] = 1.0 / v;
+                myCloseDistance[2] = closeDistance / v
+            }
+        }
     }
     get verticesArray() {
         const arr:Float32Array[] = [];
@@ -160,34 +209,39 @@ export abstract class DataNode extends MainNode {
     }
     //collisionsScalingMatrix = new TerraMatrix();
     #myCollisionsTransformMatrix = new TerraMatrix();
-    public checkCollision (collider: ColliderJS) {
+    public checkCollision (collider: ColliderJS, sphere: Ellipsoid) {
         if (this.faces_count % 4 != 0) {  //TODO
             console.warn('Checking collision on mesh that does not have right amount of faces')
             return
         }
         //console.log(this.label, this.bounding_min, this.bounding_max)
-        if (!collider._canDoCollision(this.bounding_min, this.bounding_max)) {
+        if (!collider._canDoCollision(this.bounding_min, this.bounding_max, sphere)) {
             return;
         }
-        // Transformation matrix
-        this.#myCollisionsTransformMatrix = collider.collisionsScalingMatrix.clone();
-
-        this.get_transformation().multiplyToRef(this.#myCollisionsTransformMatrix, this.#myCollisionsTransformMatrix);
+        //console.log('collisionsScalingMatrix',collisionsScalingMatrix)
+        this.get_transformation().multiplyToRef(sphere.collisionsScalingMatrix, this.#myCollisionsTransformMatrix);
         if (!this.#lastColliderTransformMatrix.equals(this.#myCollisionsTransformMatrix)) {
             this.#lastColliderTransformMatrix = this.#myCollisionsTransformMatrix.clone();
             this.#updateColliderPlanes();
         }
-           /* const scaledPosition=collider.scaledPosition;
-            const scaledVelocity=collider.scaledVelocity
-            const trLength=this.#triangleFaces.length;
-            for(let i=0; i<trLength; i++) {
-                collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
-            }*/
-             engine.wasm.testTriangles(
-                engine.rust.collider_faces_pointer(this.ptr),
-                engine.rust.collider_planes_parallel_pointer(this.ptr),
-                this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
-                this.id);
+        //@ts-ignore
+            // eslint-disable-next-line no-constant-condition
+           
+        const scaledPosition=collider.scaledPosition;
+        const scaledVelocity=collider.scaledVelocity
+        const trLength=this.#triangleFaces.length;
+        //console.log('faces',this.#faceQuatros)
+        for(let i=0; i<trLength; i++) {
+            collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
+        }
+/*
+        TODO: Use wasm when this.faces_count % 4 == 0
+        engine.wasm.testTriangles(
+            engine.rust.collider_faces_pointer(this.ptr),
+            engine.rust.collider_planes_parallel_pointer(this.ptr),
+            this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
+            this.id);*/
+             
         
     }
     protected buildFaces() {

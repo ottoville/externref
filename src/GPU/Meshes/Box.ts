@@ -67,18 +67,19 @@ export class Box extends SimpleIndexedMesh {
         this.gpu_custom_data=color;
     }
     
+    //TODO: This is now actually a sphere collider
     override checkCollide(velocityPerDelta:readonly [number,number,number]) {
         const translation = this.translation;
      //   console.log('checkCollide',...translationDelta)
      //   console.log('translation',...translation)
         const scaledPosition=engine.collider.scaledPosition;
-        scaledPosition[0] = translation[0] / engine.collider.radius[0];
-        scaledPosition[1] = translation[1] / engine.collider.radius[1];
-        scaledPosition[2] = translation[2] / engine.collider.radius[2];
+        scaledPosition[0] = translation[0] / this.radius[0];
+        scaledPosition[1] = translation[1] / this.radius[1];
+        scaledPosition[2] = translation[2] / this.radius[2];
         const scaledVelocity=engine.collider.scaledVelocity;
-        scaledVelocity[0] = velocityPerDelta[0] / engine.collider.radius[0];
-        scaledVelocity[1] = velocityPerDelta[1] / engine.collider.radius[1];
-        scaledVelocity[2] = velocityPerDelta[2] / engine.collider.radius[2];
+        scaledVelocity[0] = velocityPerDelta[0] / this.radius[0];
+        scaledVelocity[1] = velocityPerDelta[1] / this.radius[1];
+        scaledVelocity[2] = velocityPerDelta[2] / this.radius[2];
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
         engine.collideWithWorld(this);

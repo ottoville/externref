@@ -71,7 +71,7 @@ export const run = (asr: typeof assert) => {
           done();
       });
       it('Uphill', async function (done) {
-        this.timeout(5000);
+        this.timeout(6000);
         const b2 = new Box(undefined, 400,true,'gravitygreenbox2',[0,1,0,0]);
         b2.translation = [23, 500, -100];
         b2.hasGravity=true;
@@ -81,8 +81,10 @@ export const run = (asr: typeof assert) => {
         let oldTranslation:[number,number,number]=[...translation]
         let collided=false;
         await new Promise<void>((res, rej) => {
+            b2.onCollide=() => {
+              b2.force[2]=10
+            }
             b2.onPhysicTick=() => {
-              b2.force[2]=4
               if(ticks < 3) {
                 //@ts-expect-error
                 oldTranslation=[...translation];
@@ -95,13 +97,13 @@ export const run = (asr: typeof assert) => {
                 }
                 collided=true;
               } else if(collided) {
-                done(new Error('Go throught plane'));
+                done(new Error('Went throught plane'));
               }
               //@ts-expect-error
               oldTranslation=[...translation];
               
               ticks++;
-              if(ticks > 250) {
+              if(ticks > 300) {
                 res();
                 delete b2.onPhysicTick;
               }
@@ -118,19 +120,13 @@ export const run = (asr: typeof assert) => {
         b2.translation = [30, 600, 120];
         b2.hasGravity=true;
         let ticks=0;
-        const translation=b2.translation;
         let collided=false;
-        //@ts-expect-error
-        let oldTranslation:[number,number,number]=[...translation]
         await new Promise<void>((res, rej) => {
             b2.onPhysicTick=() => {
               if(ticks < 3) {
-                //@ts-expect-error
-                oldTranslation=[...translation];
                 ticks++;
                 return;
               }
-              console.log('colliding',b2.is_colliding, ticks)
               if(b2.is_colliding && !collided) {
                 collided=true;
                 if(ticks < 10)
@@ -138,8 +134,6 @@ export const run = (asr: typeof assert) => {
               } else if (!b2.is_colliding && collided ) {
                   done(new Error('Jumped on plane'));
               }
-              //@ts-expect-error
-              oldTranslation=[...translation];
               
               ticks++;
               if(ticks > 250) {

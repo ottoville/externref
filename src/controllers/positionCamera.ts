@@ -1,7 +1,7 @@
 import type { Engine } from "../engine";
 import { TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
-import type { CameraController } from "./CameraController.js";
+import { CameraController } from "./CameraController.js";
 
 declare const engine:Engine;
 
@@ -17,7 +17,7 @@ const enum ARROW_KEYS  {
 ARROW_KEYS.LEFT_AND_RIGHT
 
 
-export class PositionCamera implements CameraController {
+export class PositionCamera extends CameraController {
     name='PositionCamera';
     #angle=Math.PI;
     #position=new TerraVector3([-3000,300,0]);
@@ -25,6 +25,7 @@ export class PositionCamera implements CameraController {
     #arrowKeysDown=0;
 
     constructor(private camera: TerraCamera, initial=false) {
+        super();
         const syncCamera = () => {
             this.camera.position=this.#position;
             this.camera.updateDirection(direction => {
@@ -51,10 +52,6 @@ export class PositionCamera implements CameraController {
             this.#position.set(this.camera.position as TerraVector3);
             this.#angle=Math.acos(this.camera.direction[0]);
         }
-        //syncCamera();
-        engine.collider.radius[0] = 0.5;
-        engine.collider.radius[1] = 0.5;
-        engine.collider.radius[2] = 0.5;
         this.enable();
     }
     enable() {
@@ -160,19 +157,20 @@ export class PositionCamera implements CameraController {
         //this.#position[1]-=0.3
 
         const scaledPosition=engine.collider.scaledPosition;
-        scaledPosition[0] = this.camera.position[0] / engine.collider.radius[0];
-        scaledPosition[1] = this.camera.position[1] / engine.collider.radius[1];
-        scaledPosition[2] = this.camera.position[2] / engine.collider.radius[2];
+        scaledPosition[0] = this.camera.position[0] / this.radius[0];
+        scaledPosition[1] = this.camera.position[1] / this.radius[1];
+        scaledPosition[2] = this.camera.position[2] / this.radius[2];
         const scaledVelocity=engine.collider.scaledVelocity;
-        scaledVelocity[0] = (this.#position[0] - this.camera.position[0]) / engine.collider.radius[0];
-        scaledVelocity[1] = (this.#position[1] - this.camera.position[1]) / engine.collider.radius[1];
-        scaledVelocity[2] = (this.#position[2] - this.camera.position[2]) / engine.collider.radius[2];
+        scaledVelocity[0] = (this.#position[0] - this.camera.position[0]) / this.radius[0];
+        scaledVelocity[1] = (this.#position[1] - this.camera.position[1]) / this.radius[1];
+        scaledVelocity[2] = (this.#position[2] - this.camera.position[2]) / this.radius[2];
 
 
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
 
-        engine.collideWithWorld();
+        engine.collideWithWorld(this);
+
         //run the callback
         // if (!this.engine.collider.collidedMesh) {
         if (engine.collider.collision_not_found) {

@@ -2,7 +2,7 @@
 import type { Engine } from "../engine.js";
 import { TerraMatrix, TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
-import type { CameraController } from "./CameraController.js";
+import { CameraController } from "./CameraController.js";
 let pointerDownButton = 0;
 const panningSensibility = 20;
 const angularSensibilityX = 3000;
@@ -21,7 +21,7 @@ interface serialized {
     position: { 0: number, 1: number, 2: number } & Float32Array
 }
 
-export class ArcRotateCamera implements CameraController {
+export class ArcRotateCamera extends CameraController {
     name='ArcRotateCamera'
     #serializeRequested = false;
 
@@ -57,7 +57,6 @@ export class ArcRotateCamera implements CameraController {
 
     // #globalCurrentTarget = new Float32Array(3);
 
-    #collisionRadius: [number, number, number] = [0.5, 0.5, 0.5];
 
     #inertia = 0.9;
     #speed = 2.0;
@@ -86,6 +85,7 @@ export class ArcRotateCamera implements CameraController {
     #beta = 0;
     #radius = 10;
     constructor(private camera: TerraCamera<PickableRenderPass>, initial = false) {
+        super();
         this.enable();
         if (initial) {
             engine.DB.transaction("save").objectStore("save").get(["camera", "ArchRotateCamera"]).onsuccess = evt => {
@@ -181,23 +181,20 @@ export class ArcRotateCamera implements CameraController {
         this.#collisionTriggered = true;
 
         this.#calculatePosition()
-        engine.collider.radius[0] = this.#collisionRadius[0];
-        engine.collider.radius[1] = this.#collisionRadius[1];
-        engine.collider.radius[2] = this.#collisionRadius[2];
 
         // coordinator.getNewPosition(this._position, this._collisionVelocity, this._collider, 3, null, this._onCollisionPositionChange, this.uniqueId);
 
         // this._position.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledPosition);
         const scaledPosition = engine.collider.scaledPosition;
-        scaledPosition[0] = this.camera.position[0] / engine.collider.radius[0];
-        scaledPosition[1] = this.camera.position[1] / engine.collider.radius[1];
-        scaledPosition[2] = this.camera.position[2] / engine.collider.radius[2];
+        scaledPosition[0] = this.camera.position[0] / this.radius[0];
+        scaledPosition[1] = this.camera.position[1] / this.radius[1];
+        scaledPosition[2] = this.camera.position[2] / this.radius[2];
         //this._newPosition.subtractToRef(this._position, this._collisionVelocity);
         // this._collisionVelocity.divideToRef(Vector3.FromArray(terraEngine.collider._radius), coordinator._scaledVelocity);
         const scaledVelocity = engine.collider.scaledVelocity;
-        scaledVelocity[0] = (this.#newPosition[0] - this.camera.position[0]) / engine.collider.radius[0];
-        scaledVelocity[1] = (this.#newPosition[1] - this.camera.position[1]) / engine.collider.radius[1];
-        scaledVelocity[2] = (this.#newPosition[2] - this.camera.position[2]) / engine.collider.radius[2];
+        scaledVelocity[0] = (this.#newPosition[0] - this.camera.position[0]) / this.radius[0];
+        scaledVelocity[1] = (this.#newPosition[1] - this.camera.position[1]) / this.radius[1];
+        scaledVelocity[2] = (this.#newPosition[2] - this.camera.position[2]) / this.radius[2];
 
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
@@ -206,7 +203,7 @@ export class ArcRotateCamera implements CameraController {
 
         //  terraEngine.collider._initialPosition = coordinator._scaledPosition;
         //let starttime=performance.now();
-        engine.collideWithWorld();
+        engine.collideWithWorld(this);
 
         //run the callback
         // if (!this.engine.collider.collidedMesh) {

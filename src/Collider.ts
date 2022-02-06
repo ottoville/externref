@@ -1,14 +1,16 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
+import type { Ellipsoid } from "./DataNode.js";
 import type { Engine, rustWasm } from "./engine.js";
-import { TerraMatrix, TerraVector3, Triangle } from "./Math.js";
+import { TerraVector3, Triangle } from "./Math.js";
 declare const engine:Engine;
 
-function Dot(left: [number, number, number] | Float32Array | TerraVector3, right: [number, number, number] | Float32Array | TerraVector3): number {
+// TODO: change to readonlyTerraVector
+function Dot(left: readonly [number, number, number] | Float32Array | TerraVector3, right: readonly [number, number, number] | Float32Array | TerraVector3): number {
     return (left[0] * right[0] + left[1] * right[1] + left[2] * right[2]);
 }
-function CrossToRef(left: [number, number, number], right: [number, number, number], result: [number, number, number]): void {
+function CrossToRef(left: readonly [number, number, number], right: readonly [number, number, number], result: [number, number, number]): void {
     result[0] = left[1] * right[2] - left[2] * right[1];
     result[1] = left[2] * right[0] - left[0] * right[2];
     result[2] = left[0] * right[1] - left[1] * right[0];
@@ -98,9 +100,6 @@ export class ColliderJS {
     _destinationPoint: [x: number, y: number, z: number] = [0, 0, 0];
     _slidePlaneNormal: [x: number, y: number, z: number] = [0, 0, 0];
     _displacementVector: [x: number, y: number, z: number] = [0, 0, 0];
-    radius: { 0: number; 1: number; 2: number; };
-
-    readonly collisionsScalingMatrix:TerraMatrix;
 
     get scaledPosition() {
         return new Float32Array(engine.memory.buffer, engine.rust.scaled_position_pointer(this.collider_ptr), 4) as TerraVector3;
@@ -123,55 +122,16 @@ export class ColliderJS {
     get collision_not_found() {
         return new Float32Array(engine.memory.buffer, engine.rust.collision_not_found_pointer(this.collider_ptr), 1)[0]!
     }
-    constructor(rustExports:rustWasm, private _radius: [x: number, y: number, z: number] = [1, 1, 1]) {
+    constructor(rustExports:rustWasm) {
 
         this.collider_ptr = rustExports.collider();
 
 
         this.finalPosition= new TerraVector3();
 
-/*
-        console.log('intersection_point_pointer',new Float32Array(engine.memory.buffer, this.rust.intersection_point_pointer,3));
-        console.log('collision_not_found_pointer',new Uint32Array(engine.memory.buffer, this.rust.collision_not_found_pointer,1));
-        console.log('nearest_distance_squared_pointer',new Float32Array(engine.memory.buffer, this.rust.nearest_distance_squared_pointer,1));
-
-    console.log('scaled_position_pointer',new Float32Array(engine.memory.buffer, this.rust.scaled_position_pointer,4));
-    console.log('scaled_velocity_pointer',new Float32Array(engine.memory.buffer, this.rust.scaled_velocity_pointer,4));
-    console.log('collided_mesh_pointer',new Uint32Array(engine.memory.buffer, this.rust.collided_mesh_pointer,1));
-*/
-
-        this.collisionsScalingMatrix = new TerraMatrix([
-            1.0 / _radius[0],   0.0,                   0.0,                    0.0,
-            0.0,                     1.0 / _radius[1], 0.0,                    0.0,
-            0.0,                     0.0,                   1.0 / _radius[2],  0.0,
-            0.0, 0.0, 0.0, 1.0]);
 
 
-        const collisionsScalingMatrix = this.collisionsScalingMatrix
-        this.radius = {
-            get 0() {
-                return _radius[0]
-            },
-            get 1() {
-                return _radius[1]
-            },
-            get 2() {
-                return _radius[2]
-            },
-            set 0(v: number) {
-                _radius[0] = v;
-                collisionsScalingMatrix[0] = 1.0 / v;
-            },
-            set 1(v: number) {
-                _radius[1] = v;
-                collisionsScalingMatrix[5] = 1.0 / v;
-            },
-            set 2(v: number) {
-                _radius[2] = v;
-                collisionsScalingMatrix[10] = 1.0 / v;
 
-            }
-        }
     }
 
 
@@ -193,16 +153,9 @@ export class ColliderJS {
 
    // #nearestDistanceSquared = 9999999;
 
-
-    /**
-     * Gets the plane normal used to compute the sliding response (in local space)
-     */
-    public get slidePlaneNormal(): [number, number, number] {
-        return this._slidePlaneNormal;
-    }
     // Methods
     /** @hidden */
-    public _initialize(source: TerraVector3, dir: TerraVector3, e: number): void {
+    public _initialize(source: TerraVector3, dir: TerraVector3,e: number, sphere: Ellipsoid): void {
         //this.#nearestDistanceSquared = 9999999;
         this.nearest_distance_squared=9999999;
         //this.#velocity = dir;
@@ -231,13 +184,13 @@ export class ColliderJS {
         this.#basePoint[2] = source[2];*/
 
 
-        this._basePointWorld[0] = source[0] * this._radius[0];
-        this._basePointWorld[1] = source[1] * this._radius[1];
-        this._basePointWorld[2] = source[2] * this._radius[2];
+        this._basePointWorld[0] = source[0] * sphere.radius[0];
+        this._basePointWorld[1] = source[1] * sphere.radius[1];
+        this._basePointWorld[2] = source[2] * sphere.radius[2];
 
-        this.#velocityWorld[0] = dir[0] * this._radius[0];
-        this.#velocityWorld[1] = dir[1] * this._radius[1];
-        this.#velocityWorld[2] = dir[2] * this._radius[2];
+        this.#velocityWorld[0] = dir[0] * sphere.radius[0];
+        this.#velocityWorld[1] = dir[1] * sphere.radius[1];
+        this.#velocityWorld[2] = dir[2] * sphere.radius[2];
         this._velocityWorldLength = Math.sqrt(this.#velocityWorld[0] * this.#velocityWorld[0] + this.#velocityWorld[1] * this.#velocityWorld[1] + this.#velocityWorld[2] * this.#velocityWorld[2]);
 
         this.epsilon = e;
@@ -290,10 +243,10 @@ export class ColliderJS {
     }
 
     /** @hidden */
-    public _canDoCollision(/*sphereCenter: Vector3, sphereRadius: number, */vecMin: TerraVector3, vecMax: TerraVector3): boolean {
+    public _canDoCollision(vecMin: TerraVector3, vecMax: TerraVector3, sphere: Ellipsoid): boolean {
         //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
 
-        var max = Math.max(this._radius[0], this._radius[1], this._radius[2]);
+        var max = Math.max(sphere.radius[0], sphere.radius[1], sphere.radius[2]);
 
         /*   if (distance > this._velocityWorldLength + max + sphereRadius) {
                return false;
@@ -464,6 +417,32 @@ export class ColliderJS {
           //  console.log(this.collisionFound);
           
             if (this.collision_not_found === 1 || distToCollisionSquared < this.nearest_distance_squared) {
+               
+               
+               
+                //Dir = (B - A) x (C - A)
+                //Norm = Dir / len(Dir)
+              /*  const vectors=triangle.vectors;
+
+                const BminusA:[number,number,number] = [
+                    vectors[2][0]-vectors[0][0],
+                    vectors[2][1]-vectors[0][1],
+                    vectors[2][2]-vectors[0][2]
+                ];
+                const CminusA:[number,number,number] = [
+                    vectors[1][0]-vectors[0][0],
+                    vectors[1][1]-vectors[0][1],
+                    vectors[1][2]-vectors[0][2]
+                ];
+                const ref:[number,number,number]=[0,0,0];
+                CrossToRef(BminusA,CminusA,ref);
+                const len=Math.hypot(...ref)
+                const norm=[ref[0] / len,ref[1] / len,ref[2] / len]
+
+                console.log('plane normal',norm)
+*/
+               
+               
                 this.intersectionPointWasm.set(this.#collisionPoint);
                 this.nearest_distance_squared=distToCollisionSquared;
 
