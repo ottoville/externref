@@ -6,6 +6,7 @@ export interface UITABClassLike {
         sea: Sea): UITAB;
 
     label: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     menuElem: ((instance: any) => HTMLElement)
 }
 export abstract class UITAB {

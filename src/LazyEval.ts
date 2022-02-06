@@ -1,6 +1,6 @@
 /*
     This LazyEval class is used to set fixed time between repeatly called functions.
-    Created: Otto-Ville Lamminp��
+    Created: Otto-Ville Lamminpää
 
     Usage:
 
@@ -16,9 +16,10 @@ export class LazyEval {
     #timerStart: number | null = null;
     #timeoutID = 0;
     constructor(
+         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         private callback: (...args: any[]) => void) {
     }
-    eval(timeout: number, ...args: any[]) {
+    eval(timeout: number, ...args: (Event)[]) {
         if (this.#timerStart === null) {
             this.#timerStart = Date.now();
             this.#timeoutID = setTimeout(() => this.run(args), timeout);
@@ -31,7 +32,7 @@ export class LazyEval {
                 this.#timeoutID = setTimeout(() => this.run(args), lazyTimer);
         }
     }
-    run(args:any[]) {
+    run(args:Event[]) {
         this.#timerStart = null;
         this.callback(...args);
     }

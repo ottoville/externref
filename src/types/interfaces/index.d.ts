@@ -1,10 +1,7 @@
 //type Angle={rad:number, deg:number}
-import type { TerraVector2, TerraVector3} from "../../Math";
+import type { TerraVector2} from "../../Math";
 
-type Zone = {
-    coord: any, ang: any, //Angle,
-    size: { h: number, w: number }
-}
+
 type subTexture = {
     x: number;
     z: number;
@@ -21,7 +18,6 @@ type PTDresult =
             h: number
         }
     }
-type PTResultF= ( coords: PTDresult, plane?:any) => void;
 
 interface loginProvider {
     provider: string,

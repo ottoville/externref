@@ -6,7 +6,7 @@ self.importScripts('./service-worker-assets.js');
     service.addEventListener('install', event => event.waitUntil(onInstall()));
     service.addEventListener('activate', event => event.waitUntil(onActivate()));
     service.addEventListener('fetch', event => event.respondWith(onFetch(event)));
-})(self as any);
+})(self as unknown as ServiceWorkerGlobalScope);
 
 const cacheNamePrefix = 'offline-cache-';
 //@ts-ignore

@@ -22,6 +22,8 @@ import { Human } from "../human.js";
 
 import type { DrawableSimple } from "../GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
+//@ts-ignore
+import { Box } from "../GPU/Meshes/Box.js";
 
 declare const engine:Engine;
 class CanvasMesh extends MainNode {
@@ -73,7 +75,7 @@ export class Canvas extends TerraCompoment {
             new Human([terrascene])
             const terrainInited = Terrain.loadFromTexture([terrascene]);
 
-            const ready = terrainInited.then(ground => [ground, sea]);
+            const ready = terrainInited.then(ground => [ground, sea] as const);
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
 
             this.progress = 100;
@@ -85,9 +87,25 @@ export class Canvas extends TerraCompoment {
             sun.translation.set([0, 1, 0]);
             sun.gpu_custom_data = [0, 0, 0, 1]; //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
-            return undefined;
         });
+     /*   const slope = new Box(undefined, undefined,true,'gravitybixbox2');
+        slope.update_scale(200, 5, 200);
+        slope.update_rotation(Math.sin(1.4),0,0,Math.cos(1.4));
+        slope.translation = [23,500,23];
 
+        const b2 = new Box(undefined, 400,true,'gravitygreenbox2',[0,1,0,0]);
+        b2.translation = [23, 500, -100];
+        //@ts-ignore
+        window.b2=b2;
+        //b2.hasGravity=true;
+        b2.onCollide=() => {
+            b2.force[2]=10
+          }
+
+          const b2 = new Box(undefined, 400,true,'gravitygreenbox2',[0,1,0,0]);
+          b2.translation = [30, 900, 120];
+          b2.hasGravity=true;
+*/
         const canvasPipeline = terraEngine.gpu.rootLayout.addRenderPipeline(
             new VertexShader(terraEngine.gpu, 'deferred.vert.wgsl'),
             new Shader(terraEngine.gpu, 'deferred.frag.wgsl'), {
@@ -161,7 +179,7 @@ export class Canvas extends TerraCompoment {
                 this.timeOfDay.value = new Date(Number(engine.physics.gameTime)).toUTCString();
             }, 1000);
 
-            const [terrain, sea]: [Terrain, Sea] = await args[0].ready;
+            const [terrain, sea] = await args[0].ready!;
             this.menuClick = (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => {
                 if (this.openedMenu) {
                     const [oldInstance, oldMenuContainer] = this.openedMenu;

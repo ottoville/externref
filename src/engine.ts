@@ -291,7 +291,7 @@ export class Engine {
                 memory: rust.instance.exports.memory
             }
         });
-        const wasm: ColliderWasm = obj.instance.exports as any;
+        const wasm = obj.instance.exports as unknown as ColliderWasm;
         return new Engine(gpu, await DB, canvas, wasm, rust.instance.exports as rustWasm);
     }
     attachCameraInput(initial = false) {

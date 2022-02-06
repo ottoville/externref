@@ -5,16 +5,18 @@ export enum WorkerReturn {
 interface WMessage {
     type?: WorkerReturn,
     action: string,
-    data: any,
+    data: unknown,
     id?: number
 }
 abstract class MainWorker extends Worker {
     protected operations: ([
-        (value?: any | PromiseLike<any> | undefined) => void,
-        (value?: unknown | PromiseLike<unknown> | undefined) => void,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (value?: any | PromiseLike<unknown> | undefined) => void,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (value?: any | PromiseLike<unknown> | undefined) => void,
     ] | null)[] = [];
     #subscriptions: { [key: string]: (value?: unknown) => void; } = {};
-    constructor(stringUrl: any, options?: WorkerOptions) {
+    constructor(stringUrl: string | URL, options?: WorkerOptions) {
         super(stringUrl, options);
         this.onmessage = (e) => {
             if (typeof (e.data.id) !== 'undefined') {
@@ -36,7 +38,7 @@ abstract class MainWorker extends Worker {
             }
         };
     }
-    subscribe(type: string, callback: (value?: any) => void) {
+    subscribe(type: string, callback: (value?: unknown) => void) {
         this.#subscriptions[type] = callback
     }
     unsubscribe(type: string) {
@@ -53,7 +55,7 @@ export class WorkerThread extends MainWorker {
     }
 }
 export class ObjectWorkerThread extends MainWorker {
-    signal<U>(objectID: number, action: string, args?: any[], options?: U): void {
+    signal<U>(objectID: number, action: string, args?: unknown[], options?: U): void {
         super.postMessage({
             action: action, data: {
                 objId: objectID,
@@ -61,8 +63,8 @@ export class ObjectWorkerThread extends MainWorker {
             }
         }, options);
     }
-    message<T>(objectID: number, action: string, args?: any[]): Promise<T>
-    message<T, U>(objectID: number, action: string, args?: any[], options?: U): Promise<T> {
+    message<T>(objectID: number, action: string, args?: unknown[]): Promise<T>
+    message<T, U>(objectID: number, action: string, args?: unknown[], options?: U): Promise<T> {
         const toWorker: WMessage = {
             action: action, data: {
                 objId: objectID,

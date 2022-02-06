@@ -24,11 +24,9 @@ interface PlantI {
 function clamp(value: number, min: number, max: number) {
     return Math.min(Math.max(value, min), max);
 }
-const plantaes: PlantI[] = [];
 const grids2: Map<string, number[]> = new Map()
 const methods = {
-    init: (data: WMessage<{ positions: SharedArrayBuffer, shape: any, noises: any }>) => {
-        noises = new Float32Array(data.data.noises);
+    init: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
         this.postMessage({ id: data.id });
         caches.match(new Request('/grass')).then(async cachedgrass => {
             if (cachedgrass) {
@@ -46,7 +44,7 @@ const methods = {
         new Float32Array(data.data.positions,0,grasspositions.length).set(grasspositions);
         grasspositions = new Float32Array(data.data.positions);
     },
-    save: async (data: WMessage<{ angle: number, area: { size: any, coord: Float32Array } }>) => {
+    save: async (data: WMessage<{ angle: number, area: { size: {w:number, h:number}, coord: Float32Array } }>) => {
         const grassPerSquareMeter=8
         const amount = Math.abs(data.data.area.size.h * data.data.area.size.w) * grassPerSquareMeter
         if (amount === 0)

@@ -392,6 +392,7 @@ class Mesh {
           return this.normals;
       }*/
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 onmessage = (e: WorkerMessageObject<{ objId?: number, args: any[] }, Mesh>) => {
     if (e.data.action == 'init') {
         meshes.set(e.data.data.objId!, new Mesh(e.data.data.objId!, ...<[SharedArrayBuffer, SharedArrayBuffer, number, SharedArrayBuffer, SharedArrayBuffer]>e.data.data.args));

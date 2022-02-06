@@ -5,22 +5,32 @@ type ObjStoreIndex= {version:number,name: string, keyPath: string | string[],opt
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace JSX {
     interface ElementClass {
-        render: (props: any) => HTMLElement;
+        render: (props: unknown) => HTMLElement;
     }
     type IntrinsicElements = {
-        [elemName in keyof HTMLElementTagNameMap]: {[index:string]:any};
+        [elemName in keyof HTMLElementTagNameMap]: {[index:string]:unknown};
     };
 }
 
 abstract class TerraCompoment {
-    abstract render(props: { [index: string]: any }): HTMLElement
+    abstract render(props: { [index: string]: unknown }): HTMLElement
 }
 
+interface propsI {
+    'onClick'?: () => void,
+    'onChange'?: () => void,
+    [index: string]: string | boolean | (() => void) | (string | string[] | HTMLElement | HTMLElement[])[]
+}
 
-declare var TerraUI: { createElement: (name: string | ((props: any) => HTMLElement), props: { [index: string]: any }, ...content: (HTMLElement | string)[]) => HTMLElement };
+declare var TerraUI: {
+    createElement: (name: string | ((props: unknown) => HTMLElement),
+    props: propsI,
+    ...content: (HTMLElement | string)[]) => HTMLElement };
 
 globalThis.TerraUI = {
-    createElement: (name: string | HTMLElement | ((props: any) => HTMLElement) | (new () => TerraCompoment), props?: { [index: string]: any }, ...content: (HTMLElement | HTMLElement[] | string | string[])[]) => {
+    createElement: (name: string | HTMLElement | ((props: unknown) => HTMLElement) | (new () => TerraCompoment),
+    props?: propsI,
+    ...content: (HTMLElement | HTMLElement[] | string | string[])[]) => {
         props = props || {};
         const nametype = typeof (name);
         if (nametype === 'function') {
@@ -29,7 +39,7 @@ globalThis.TerraUI = {
                 var instance = new (name as new () => TerraCompoment)()
                 return instance.render(props);
             }
-            return (name as (props: any) => HTMLElement)(props);
+            return (name as (props: unknown) => HTMLElement)(props);
         }
         else if (nametype == 'string')
             var elem = document.createElement(name as string);
@@ -38,18 +48,23 @@ globalThis.TerraUI = {
             
         for (var key in props) {
             if (key == 'onClick') {
-                if(typeof(name)==='string')
-                    elem.addEventListener('click', props[key])
+                const prop=props[key];
+                if(typeof(name)==='string' && prop)
+                    elem.addEventListener('click', prop)
             } else if (key == 'onChange') {
-                if (typeof (name) === 'string')
-                    elem.addEventListener('change', props[key])
+                const prop=props[key];
+                if (typeof (name) === 'string' && prop)
+                    elem.addEventListener('change', prop)
             }
             else if (key == 'checked') {
                 if (props[key])
                     (elem as HTMLInputElement).checked=true
             
-            } else
-                elem.setAttribute(key, props[key]);
+            } else if (typeof props[key] === 'string') {
+                const prop=props[key];
+                if(typeof prop === 'string')
+                elem.setAttribute(key, prop);
+            }
         }
         content.forEach(function appendContent(content2) {
             if (Array.isArray(content2)) {

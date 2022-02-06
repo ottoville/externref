@@ -28,6 +28,7 @@ module.exports = {
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/no-shadow": ["error"],
+        "@typescript-eslint/no-explicit-any": ["error"],
         "no-var": "off",
         "no-cond-assign": "off",
         "no-this-alias":"off",

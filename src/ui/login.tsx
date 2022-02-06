@@ -1,5 +1,5 @@
 ﻿
-const loginf = (e: any, method: string | undefined, callback: (obj: { provider: string, accessToken: string, pointerEvent:PointerEvent }) => void) => {
+const loginf = (e: PointerEvent, method: string | undefined, callback: (obj: { provider: string, accessToken: string, pointerEvent:PointerEvent }) => void) => {
   //  loadelem.style.display = 'block';
     // blazor.invokeMethod('setProgress', 0);
     //progelem.max = 100;
@@ -40,7 +40,7 @@ const loginf = (e: any, method: string | undefined, callback: (obj: { provider: 
         callback({ provider: 'anomyous', accessToken: localStorage.accessToken, pointerEvent: e });
     }
 };
-export const Login = ((props: { callback: (obj: { provider: string, accessToken: string, pointerEvent: PointerEvent }) => void, children?: any }, ): HTMLElement => {
+export const Login = ((props: { callback: (obj: { provider: string, accessToken: string, pointerEvent: PointerEvent }) => void, children?: unknown }, ): HTMLElement => {
     return <div>
 
     <h3>Select your language</h3>
