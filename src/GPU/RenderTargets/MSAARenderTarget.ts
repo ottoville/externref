@@ -11,12 +11,12 @@ extends RenderTarget<T> {
     #resolveView?: TextureView;
     constructor(
         texture: T,
-        loadValue: GPULoadOp | GPUColor,
+        clearValue: GPUColor,
         textureViewDescriptor?: GPUTextureViewDescriptor,
         writeMask: GPUColorWriteFlags = 0xF,
         isSwap = false
     ) {
-        super(texture, loadValue, textureViewDescriptor, writeMask,isSwap);
+        super(texture, clearValue, textureViewDescriptor, writeMask,isSwap);
         if(!isSwap) {
             const resolved = this.texture.createResolveTexture();
             const resolveView = new TextureView(resolved, textureViewDescriptor);

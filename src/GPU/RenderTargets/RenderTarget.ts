@@ -8,7 +8,7 @@ export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLit
     view: TextureView;
     constructor(
         public readonly texture: T,
-        public loadValue: GPULoadOp | GPUColor,
+        public clearValue: GPUColor,
         textureViewDescriptor?: GPUTextureViewDescriptor,
         public writeMask: GPUColorWriteFlags = 0xF,
         protected isSwap=false
@@ -23,7 +23,8 @@ export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLit
     createColorAttachment() {
         const obj:GPURenderPassColorAttachment = {
             view: this.isSwap ? engine.gpu.context.getCurrentTexture().createView() : this.view.view,
-            loadValue:this.loadValue,
+            clearValue: this.clearValue,
+            loadOp: "clear",
             storeOp: "store"
         }
         return obj;

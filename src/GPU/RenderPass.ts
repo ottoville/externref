@@ -179,9 +179,11 @@ export class DepthRenderPass<T extends {
             const renderPassDescriptor = super.GPURenderPassDescriptor;
             renderPassDescriptor.depthStencilAttachment = {
                 view: this.depthTextureView.view,
-                depthLoadValue: 0.0,
+                depthClearValue: 0.0,
+                depthLoadOp: 'clear',
                 depthStoreOp: "store",
-                stencilLoadValue: 0,
+                stencilClearValue: 0.0,
+                stencilLoadOp: 'clear',
                 stencilStoreOp: "store",
             }
             return renderPassDescriptor;
