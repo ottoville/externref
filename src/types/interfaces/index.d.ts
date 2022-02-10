@@ -18,6 +18,7 @@ type PTDresult =
             h: number
         }
     }
+    type PTResultF= ( coords: PTDresult) => void;
 
 interface loginProvider {
     provider: string,

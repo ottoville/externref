@@ -6,6 +6,14 @@ import type { PipelineLayout } from "../GPU/PipelineLayout.js";
 import { Engine } from "../engine.js";
 import { BindGroupLayout } from "../GPU/BindGroupLayout.js";
 declare const engine:Engine;
+
+declare class OffscreenCanvas {
+    width: number;
+    height: number;
+    convertToBlob(options?: { type?: "image/png" | "image/webp"; quality?: number; }): Promise<Blob>
+    getContext(contextType: "2d"):CanvasRenderingContext2D
+    constructor(width: number, height:number)
+}
 export class Terrain {
     /*
 TODO
@@ -23,8 +31,8 @@ TODO
     slopeArrGPUBuffer:GPUStorageBuffer;
     //TODO: Remove copy_src
     
-    facet12ArrGPUBuffer:GPUStorageBuffer & GPUCopyDSTBuffer & GPUCopySRCBuffer;
-    facet12ArrGPUBufferSwap :GPUMapWriteBuffer & GPUCopySRCBuffer;
+    facet12ArrGPUBuffer: GPUStorageBuffer & GPUCopyDSTBuffer & GPUCopySRCBuffer;
+    facet12ArrGPUBufferSwap: GPUMapWriteBuffer & GPUCopySRCBuffer;
 
 
 

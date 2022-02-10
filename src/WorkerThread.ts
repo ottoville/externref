@@ -38,7 +38,8 @@ abstract class MainWorker extends Worker {
             }
         };
     }
-    subscribe(type: string, callback: (value?: unknown) => void) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    subscribe(type: string, callback: (value?: any) => void) {
         this.#subscriptions[type] = callback
     }
     unsubscribe(type: string) {
