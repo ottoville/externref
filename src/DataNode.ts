@@ -219,6 +219,7 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
             return;
         }
         //console.log('collisionsScalingMatrix',collisionsScalingMatrix)
+        // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix 
         this.get_transformation().multiplyToRef(sphere.collisionsScalingMatrix, this.#myCollisionsTransformMatrix);
         if (!this.#lastColliderTransformMatrix.equals(this.#myCollisionsTransformMatrix)) {
             this.#lastColliderTransformMatrix = this.#myCollisionsTransformMatrix.clone();

@@ -172,7 +172,7 @@ TODO
                 passEncoder.setPipeline(computePipeline);
                 passEncoder.setBindGroup(1, sourceBindGroup);
                 passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
-                passEncoder.endPass();
+                passEncoder.end();
                 engine.gpu.device.queue.submit([commandEncoder.finish()]);
             }
             return new Terrain(scenes, settingsGPU, terrainPositionAndUvsAndNormalsGPU);
@@ -418,7 +418,7 @@ TODO
         caches.match(new Request('/terrainTexture.webp')).then(async (cachedtexture) => {
             const textureSizeBytes = Int32Array.BYTES_PER_ELEMENT * (Terrain.textureSize[0] * Terrain.textureSize[1]);
             if (cachedtexture) {
-                passEncoder.endPass();
+                passEncoder.end();
                 var [gpuReadBufferPositions, gpuReadBufferIndices] = engine.gpu.createCopy(commandEncoder, this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU)
                 const bitmap = await createImageBitmap(await cachedtexture.blob());
                 engine.gpu.device.queue.copyExternalImageToTexture({source:bitmap},{texture: this.texture},Terrain.textureSize);
@@ -442,7 +442,7 @@ TODO
                 passEncoder.setBindGroup(1, bindGroupHeightsRead);
                 passEncoder.setBindGroup(2, bindGroup1);
                 passEncoder.dispatch(...Terrain.textureSize);
-                passEncoder.endPass();
+                passEncoder.end();
 
 
                 // Get a GPU buffer for reading in an unmapped state.

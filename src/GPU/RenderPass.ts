@@ -147,7 +147,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             this.bundles.push(renderBundleEncoder.finish());
         }
         passEncoder.executeBundles(this.bundles);
-        passEncoder.endPass();
+        passEncoder.end();
     }
 }
 export class DepthRenderPass<T extends {
@@ -319,7 +319,7 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
             pickPass.setBindGroup(0, this.pickPositionBindGroup0);
             pickPass.setBindGroup(1, pickPositionBindGroup1);
             pickPass.dispatch(1);
-            pickPass.endPass();
+            pickPass.end();
             encoder.copyBufferToBuffer(this.#pickBuffer,0,this.#pickBufferRead!,0,4+4);
             this.gpu.device.queue.submit([encoder.finish()]);
 

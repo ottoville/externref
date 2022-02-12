@@ -168,7 +168,7 @@ export class Plants {
                 passEncoder.setBindGroup(0, bindGroup);
                 passEncoder.setBindGroup(1, bindGroup2);
                 passEncoder.dispatch(this.numBlades);
-                passEncoder.endPass();
+                passEncoder.end();
                 commandEncoder.copyBufferToBuffer(
                     positionGPUSwap, 0,
                     positionGPU, 0,

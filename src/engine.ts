@@ -353,7 +353,7 @@ export class Engine {
                     lightPass.dispatch(...this.gpu.CLUSTER_DISPATCH_SIZE);
                 }
             });
-            lightPass.endPass();
+            lightPass.end();
             this.#updateLights = false;
 
             this.cameras.forEach(camera => {
@@ -463,7 +463,7 @@ export class Engine {
                         camera.updateProjection(passEncoder,computePipelineClustersLayout)
                     });
                 });
-                passEncoder.endPass();
+                passEncoder.end();
                 gpu.device.queue.submit([commandEncoder.finish()]);
 
                 this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
@@ -621,6 +621,8 @@ export class Engine {
                 break;
             }
         }
+       // if(this.collider.collision_not_found)
+        //    debugger;
         this.collider.finalPosition[0] *= sphere.radius[0]
         this.collider.finalPosition[1] *= sphere.radius[1]
         this.collider.finalPosition[2] *= sphere.radius[2]

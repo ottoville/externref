@@ -19,7 +19,10 @@ abstract class TerraCompoment {
 interface propsI {
     'onClick'?: () => void,
     'onChange'?: () => void,
-    [index: string]: string | boolean | (() => void) | (string | string[] | HTMLElement | HTMLElement[])[]
+    [index: string]:    string |
+                        boolean |
+                        (() => void) | 
+                        (string | string[] | HTMLElement | HTMLElement[])[]
 }
 
 declare var TerraUI: {

@@ -203,9 +203,9 @@ export class ColliderJS {
 
     /** @hidden */
     public _checkPointInTriangle(point: [x: number, y: number, z: number], triangle: Triangle): boolean {
-
-        const v1=triangle.vectors[1];
-        const v2=triangle.vectors[2];
+        const vectors = triangle.vectors;
+        const v1=vectors[1];
+        const v2=vectors[2];
         //TODO: Use simd
         this.#tempVector[0] = v2[0] - point[0]
         this.#tempVector[1] = v2[1] - point[1]
@@ -224,7 +224,7 @@ export class ColliderJS {
         if (d < 0) {
             return false;
         }
-        const v0=triangle.vectors[0];
+        const v0=vectors[0];
 
         this.#tempVector3[0] = v0[0] - point[0]
         this.#tempVector3[1] = v0[1] - point[1]
@@ -339,9 +339,10 @@ export class ColliderJS {
              this.#points[1] = p3a;
              this.#points[2] = p1a;*/
             let i = 0;
+            const vectors = triangle.vectors;
             while (i < 3) {
                 // for (let i = 0; i < 3; i++) {
-                const p = triangle.vectors[i];
+                const p = vectors[i];
                 if (!p)
                     continue;
 
@@ -366,10 +367,10 @@ export class ColliderJS {
             let a; // = this.#velocitySquaredLength;
             i = 2;
             while (i > 0) {
-                const p = triangle.vectors[i]
+                const p = vectors[i]
                 if (!p)
                     continue;
-                const p2 = triangle.vectors[i - 1] || triangle.vectors[2];
+                const p2 = vectors[i - 1] || vectors[2];
                 this._edge[0] = p2[0] - p[0];
                 this._edge[1] = p2[1] - p[1];
                 this._edge[2] = p2[2] - p[2];
