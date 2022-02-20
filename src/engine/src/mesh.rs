@@ -88,6 +88,27 @@ pub unsafe extern "C" fn update_dynamic_buffer(mesh_ptr:*const Mesh) {
     (*mesh_ptr).update_dynamic_buffer();
 }
 #[no_mangle]
+pub unsafe extern "C" fn update_euler_angles(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32) {
+    // Produces a quaternion from Euler angles in the z-y-x orientation (Tait-Bryan angles)
+    // TODO: utilize SIMD
+    let half_roll = z * 0.5;
+    let half_pitch = x * 0.5;
+    let half_yaw = y * 0.5;
+    
+    let sin_roll = half_roll.sin();
+    let cos_roll = half_roll.cos();
+    let sin_pitch = half_pitch.sin();
+    let cos_pitch = half_pitch.cos();
+    let sin_yaw = half_yaw.sin();
+    let cos_yaw = half_yaw.cos();
+
+    (*mesh_ptr).rotation.x = (cos_yaw * sin_pitch * cos_roll) + (sin_yaw * cos_pitch * sin_roll);
+    (*mesh_ptr).rotation.y = (sin_yaw * cos_pitch * cos_roll) - (cos_yaw * sin_pitch * sin_roll);
+    (*mesh_ptr).rotation.z = (cos_yaw * cos_pitch * sin_roll) - (sin_yaw * sin_pitch * cos_roll);
+    (*mesh_ptr).rotation.w = (cos_yaw * cos_pitch * cos_roll) + (sin_yaw * sin_pitch * sin_roll);
+    (*mesh_ptr).on_update();
+}
+#[no_mangle]
 pub unsafe extern "C" fn update_rotation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32, w: f32) {
     (*mesh_ptr).rotation.x = x;
     (*mesh_ptr).rotation.y = y;

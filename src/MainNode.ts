@@ -28,6 +28,9 @@ export abstract class MainNode {
     update_rotation(x: number, y: number, z: number, w: number) {
         engine.rust.update_rotation(this.ptr,x,y,z,w);
     }
+    update_euler_angles(x: number, y: number, z: number) {
+        engine.rust.update_euler_angles(this.ptr,x,y,z);
+    }
     set_scenes(id: number) {
         engine.rust.set_scenes(this.ptr, id);
     }

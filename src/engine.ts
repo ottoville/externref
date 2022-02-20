@@ -55,6 +55,7 @@ export type rustWasm = {
     alloc_vector_usize(size:number):number,
     update_scale(mesh_ptr:number, x:number, y:number, z:number):void,
     update_rotation(mesh_ptr:number, x:number, y:number, z:number, w:number):void,
+    update_euler_angles(mesh_ptr:number, x:number, y:number, z:number):void,
     update_dynamic_buffer(mesh_ptr:number):void,
     gpu_alignment(mesh_ptr:number):number,
     positions_count(mesh_ptr:number):number,
@@ -503,13 +504,9 @@ export class Engine {
             byteLength)
         this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
-    collideWithWorld(sphere: Ellipsoid) : void {
-        if(sphere instanceof MainNode)
-            sphere.is_colliding=false;
-        //TODO: Call only when camera position change
+    #getFinalPosition(sphere: Ellipsoid): [number, number, number] | TerraVector3 {
         const scaledPosition = this.collider.scaledPosition;
         const scaledVelocity = this.collider.scaledVelocity;
-
         for (let i = 0; i < 3; i++) {
             //TODO: really, here inside the loop?
             //TODO: Remove this JS initialize
@@ -522,8 +519,10 @@ export class Engine {
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
             if(sphere instanceof MainNode) {
                 this.physics.tickables.forEach(mesh => {
+                   // if(mesh.label !== 'gravitybixbox2')
+                     //   return;
                     if(sphere !== mesh)
-                        mesh.checkCollision(this.collider, sphere)
+                        mesh.checkCollision(this.collider, sphere, i)
                 });
             }
             else {
@@ -537,8 +536,8 @@ export class Engine {
 
             if (this.collider.collision_not_found) {
 
-                this.collider.finalPosition.set(this.#destinationPoint);
-                break;
+                //this.collider.finalPosition.set(scaledPosition);
+                return this.#destinationPoint;
             }
             if(sphere instanceof MainNode)
                 sphere.is_colliding = true;
@@ -566,13 +565,24 @@ export class Engine {
                 this.collider._slidePlaneNormal[2] = scaledPosition[2] - intersectionPoint[2];
 
                 // this._slidePlaneNormal.normalize();
-                const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
+               // const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
+                const length = Math.hypot(this.collider._slidePlaneNormal[0],this.collider._slidePlaneNormal[1],this.collider._slidePlaneNormal[2]);
+                
                 if (!(length === 0 || length === 1.0)) {
                     const norm = 1 / length;
                     this.collider._slidePlaneNormal[0] *= norm;
                     this.collider._slidePlaneNormal[1] *= norm;
                     this.collider._slidePlaneNormal[2] *= norm;
                 }
+
+//DEBUG START
+//this.collider._slidePlaneNormal[0]=0;
+//this.collider._slidePlaneNormal[1]=0.9422223358842474;
+//this.collider._slidePlaneNormal[2]=-0.3349881636130334;
+//DEBUG END
+
+
+               // console.log('slidePlaneNormal',...this.collider._slidePlaneNormal)
 
               /*  this.#displacementVector[0] = slidePlaneNormalWorld[0] * this.collider.epsilon;
                 this.#displacementVector[1] = slidePlaneNormalWorld[1] * this.collider.epsilon;
@@ -617,12 +627,16 @@ export class Engine {
             // if (Math.hypot(velocity[0], velocity[1], velocity[2]) <= closeDistance) {
             if (unScaledVelocity[0] * unScaledVelocity[0] + unScaledVelocity[1] * unScaledVelocity[1] + unScaledVelocity[2] * unScaledVelocity[2] <= closeDistanceSquared) {
                 //finalPosition.copyFrom(position);
-                this.collider.finalPosition.set(scaledPosition);
-                break;
+                return scaledPosition;
             }
         }
-       // if(this.collider.collision_not_found)
-        //    debugger;
+        return scaledPosition;
+    }
+    collideWithWorld(sphere: Ellipsoid) : void {
+        if(sphere instanceof MainNode)
+            sphere.is_colliding=false;
+        //TODO: Call only when camera position change
+        this.collider.finalPosition.set(this.#getFinalPosition(sphere));
         this.collider.finalPosition[0] *= sphere.radius[0]
         this.collider.finalPosition[1] *= sphere.radius[1]
         this.collider.finalPosition[2] *= sphere.radius[2]
