@@ -220,6 +220,7 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
     #pickPositionPipeline=this.gpu.createComputePipeline('readDepth.comp.wgsl');
     pickPositionLayout = this.#pickPositionPipeline.getBindGroupLayout(1)
     pickPositionBindGroup0: GPUBindGroup;
+    rowBytes = this.size[0]*4;
 
 
     constructor(gpu: GPU,
@@ -240,8 +241,11 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
                 });
 
             } else {
+                const offset=this.rowBytes%256;
+                if(offset!==0)
+                    this.rowBytes=this.rowBytes-offset+256
                 this.#pickBuffer = this.gpu.device.createBuffer({
-                    size: this.size[0] * this.size[1] * 4,
+                    size: this.rowBytes * this.size[1],
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
                 }); 
             }
@@ -263,8 +267,13 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
                     oldpickBuffer.destroy();
                 },1000);
             }
+            this.rowBytes=this.size[0]*4;
+            const offset=this.rowBytes%256;
+            if(offset!==0)
+                this.rowBytes=this.rowBytes-offset+256
+
             this.#pickBuffer = this.gpu.device.createBuffer({
-                size: this.size[0] * this.size[1] * 4,
+                size: this.rowBytes * this.size[1],
                 usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
             });
         }
@@ -285,10 +294,6 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
             return this.pickPromise
         }
         const camera = [...this.cameras][0]!;
-        const offset = (engine.mousePosition[1] * this.size[0] + engine.mousePosition[0]) * 4;
-        const padding = offset % 16;
-
-        const buffer=this.#pickBuffer;
         const encoder = this.gpu.device.createCommandEncoder();
         let zAndIDPromise:Promise<[z:number, id:number]>;
         const gRenderTargetId = this.renderTargets.gRenderTargetId
@@ -332,6 +337,13 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
             });
         }
         else {
+            let newOffset=engine.mousePosition[1] * this.rowBytes + engine.mousePosition[0] * 4;
+            //For MapAsync
+            const missOffset = newOffset % 8; 
+            if(missOffset!==0) {
+                newOffset=newOffset-missOffset
+            }
+            //The entire subresource must be copied when the format (TextureFormat::Depth32Float) is a depth/stencil format or the sample count (1) is > 1.
             encoder.copyTextureToBuffer(
                 {
                     texture: this.depthTexture.texture,
@@ -339,8 +351,8 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
                     origin: { x: 0, y: 0, z: 0 }
                 },
                 {
-                    buffer,
-                    bytesPerRow: this.size[0] * 4,
+                    buffer: this.#pickBuffer,
+                    bytesPerRow: this.rowBytes,
                     offset: 0
                 },
                 [this.size[0], this.size[1]]
@@ -354,19 +366,20 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
                     {
                         buffer: this.#pickBuffer,
                         bytesPerRow: 256,
-                        offset: offset - padding + 32
+                        offset: newOffset + missOffset + 32
                     },
                     [1, 1, 1]
                 );
             }
             this.gpu.device.queue.submit([encoder.finish()]);
-            zAndIDPromise = buffer.mapAsync(GPUMapMode.READ,offset - padding,padding + 32 + 16).then(() => {
-                const b = buffer.getMappedRange(offset - padding,padding + 32 + 16);
-                const z = new DataView(b).getFloat32(padding, true);
+            const buffer=this.#pickBuffer;
+            zAndIDPromise = this.#pickBuffer.mapAsync(GPUMapMode.READ,newOffset,missOffset+32 + 16).then(() => {
+                const b = buffer.getMappedRange(newOffset,missOffset+32 + 16);
+                const z = new DataView(b).getFloat32(missOffset, true);
                 let meshId =0;
                 if(mesh) {
                     this.pickPromiseMesh = null;
-                    meshId = new DataView(b).getUint32(32, true);
+                    meshId = new DataView(b).getUint32(missOffset+32, true);
                 } else
                     this.pickPromise = null;
                 buffer.unmap();
@@ -416,7 +429,7 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
         else {
             const mesh = MainNode.Meshes.get(pickInfo.meshId);
             if (!mesh) {
-                throw ('Mesh not found');
+                throw (new Error('Mesh, '+pickInfo.meshId+' not found'));
             }
             if (predicate && !predicate(mesh)) {
                 return null;

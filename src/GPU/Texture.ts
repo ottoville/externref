@@ -86,8 +86,13 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
             }
             setTimeout(() => {
                 const encoder = texture.gpu.device.createCommandEncoder();
+                let bytesPerRow=texture.size[0] * bytes_per_fixel;
+                const missAlignment=bytesPerRow % 256;
+                if(missAlignment !== 0) {
+                    bytesPerRow=bytesPerRow-missAlignment + 256;
+                }
                 const buffer = texture.gpu.device.createBuffer({
-                    size: texture.size[0] * texture.size[1] * bytes_per_fixel,
+                    size: bytesPerRow * texture.size[1],
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
                 });
                 encoder.copyTextureToBuffer(
@@ -97,7 +102,7 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
                     },
                     {
                         buffer: buffer,
-                        bytesPerRow: texture.size[0] * bytes_per_fixel,
+                        bytesPerRow: bytesPerRow,
                         rowsPerImage: texture.size[1]
                     },
                     [texture.size[0], texture.size[1]]
@@ -112,7 +117,7 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
                     if(!ctx) {
                         throw(new Error('Cannot get context'));
                     }
-                    const imageData = ctx.createImageData(c.width, c.height);
+                    const imageData = ctx.createImageData(bytesPerRow/bytes_per_fixel, c.height);
                     let data:Uint8ClampedArray;
                     if(bytes_per_fixel > 4) {
                         const floatData=new Float32Array(buffer.getMappedRange());
