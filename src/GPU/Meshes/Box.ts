@@ -1,5 +1,5 @@
 ﻿import type { Scene } from "../../Scene.js";
-import { SimpleIndexedMesh } from "../RenderPipeLines/Simple.js";
+import { SimpleIndexedMesh } from "../RenderPipeLines/SimpleIndexedMesh.js";
 import { GPU, GPUBufferUsage } from "../../GPU.js";
 import { Engine } from "../../engine.js";
 declare const engine:Engine;
@@ -83,6 +83,9 @@ export class Box extends SimpleIndexedMesh {
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
         engine.collideWithWorld(this);
+        if(!engine.collider.collision_not_found) {
+           //console.log('cant solve collision', this.label)
+        }
         return engine.collider.finalPosition;
     }
 }
