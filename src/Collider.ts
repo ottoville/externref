@@ -260,7 +260,7 @@ export class ColliderJS {
     }
     //#points: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()];
     /** @hidden */
-    public _testTriangle(triangle: Triangle, scaledPosition:TerraVector3, scaledVelocity:TerraVector3): void {
+    public _testTriangle(triangle: Triangle, scaledPosition:TerraVector3, scaledVelocity:TerraVector3, debug?:number): void {
         //console.log(triangle.planeCollider[0])
         var dot = Dot(triangle.planeCollider, this.#normalizedVelocity);
         
@@ -268,7 +268,7 @@ export class ColliderJS {
             return
         }
 
-        var signedDistToTrianglePlane = Dot(scaledPosition, triangle.planeCollider) + triangle.planeCollider[3]; //trianglePlane.signedDistanceTo(this._basePoint);
+        const signedDistToTrianglePlane = Dot(scaledPosition, triangle.planeCollider) + triangle.planeCollider[3]; //trianglePlane.signedDistanceTo(this._basePoint);
         var normalDotVelocity = Dot(triangle.planeCollider, scaledVelocity);
 
        // let t0=0;
@@ -279,7 +279,14 @@ export class ColliderJS {
         var found = false;
         var t = 1.0;
         var embeddedInPlane = false;
-        if (normalDotVelocity == 0) {
+        if(debug) {
+           /* if(Math.abs(normalDotVelocity) < 0.00001) {
+                normalDotVelocity=0;
+            }*/
+           // console.log('normalDotVelocity',normalDotVelocity, normalDotVelocity === 0);
+
+        }
+        if (normalDotVelocity === 0) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
                 return;
             }
@@ -322,6 +329,8 @@ export class ColliderJS {
                 
                 // this._collisionPoint.copyFrom(this._planeIntersectionPoint);
             }
+        } else {
+           // console.log('embeddedInPlane')
         }
 
         if (!found) {
@@ -423,7 +432,7 @@ export class ColliderJS {
                
                 //Dir = (B - A) x (C - A)
                 //Norm = Dir / len(Dir)
-              /*  const vectors=triangle.vectors;
+               /* const vectors=triangle.vectors;
 
                 const BminusA:[number,number,number] = [
                     vectors[2][0]-vectors[0][0],
@@ -440,8 +449,8 @@ export class ColliderJS {
                 const len=Math.hypot(...ref)
                 const norm=[ref[0] / len,ref[1] / len,ref[2] / len]
 
-                console.log('plane normal',norm)
-*/
+                console.log('plane normal',norm)*/
+
                
                
                 this.intersectionPointWasm.set(this.#collisionPoint);

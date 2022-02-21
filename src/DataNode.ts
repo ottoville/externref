@@ -123,7 +123,9 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         const arr:Float32Array[] = [];
         const vertices_pointer=engine.rust.vertices_pointer(this.ptr);
         for (let i=0; i< this.vertices_count; i++) {
-            arr.push(new Float32Array(engine.memory.buffer, vertices_pointer + i*Float32Array.BYTES_PER_ELEMENT*this.vertices_stride, this.vertices_stride))
+            arr.push(new Float32Array(engine.memory.buffer,
+                                        vertices_pointer + i*Float32Array.BYTES_PER_ELEMENT*this.vertices_stride,
+                                        this.vertices_stride))
         }
         return arr;
     }
@@ -209,7 +211,7 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
     }
     //collisionsScalingMatrix = new TerraMatrix();
     #myCollisionsTransformMatrix = new TerraMatrix();
-    public checkCollision (collider: ColliderJS, sphere: Ellipsoid) {
+    public checkCollision (collider: ColliderJS, sphere: Ellipsoid, debug?:number) {
         if (this.faces_count % 4 != 0) {  //TODO
             console.warn('Checking collision on mesh that does not have right amount of faces')
             return
@@ -233,7 +235,7 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         const trLength=this.#triangleFaces.length;
         //console.log('faces',this.#faceQuatros)
         for(let i=0; i<trLength; i++) {
-            collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
+            collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity, debug);
         }
 /*
         TODO: Use wasm when this.faces_count % 4 == 0
@@ -338,11 +340,11 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
 }
 export abstract class BoundableNodeSimple extends DataNode {
     constructor(
-        scenes: Scene[],
         vertices:Float32Array,
         verticesPositionStride = 3,
         strip = false,
-        label:string
+        label:string,
+        scenes?: Scene[],
     ) {
         super(vertices.length/verticesPositionStride,verticesPositionStride, false, strip,  undefined, undefined, label, scenes);
         this.set_vertices(vertices);
