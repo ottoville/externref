@@ -1,6 +1,5 @@
 struct Output {
-  @location(0) ID : u32;
-  @location(1) Diffuse : vec4<f32>;
+  @location(0) Diffuse : vec4<f32>;
 };
 
 @stage(fragment)

@@ -289,7 +289,7 @@ TODO
                 }
             }
         )
-        this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', heightsLayout.createBindGroup(heightsBindGroupEntries));
+        this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', heightsLayout.createBindGroup('TerrainHeightsbindGroupTree',heightsBindGroupEntries));
         
         const computePipelineIndices = engine.gpu.createComputePipeline('terrain/calculatePlaneIndices.comp.wgsl');
 

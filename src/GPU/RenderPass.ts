@@ -20,22 +20,53 @@ interface RenderPipelineVariant2 {
     rootDrawables: Set<Drawable>
 }
 export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> } = { [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> }> {
+    /* Either cameras or bindGroupCanvas*/
     cameras: Set<TerraCamera> = new Set();
+    BindGroupCanvas?: () => GPUBindGroup;
+
     scenes: Set<Scene> = new Set();
     bundles: GPURenderBundle[] = [];
     renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant2> = new Map();
+    sizeBindGroup: () => GPUBindGroup;
+    #sizeBuffer: GPUUniformBuffer;
+    
     constructor(
         public gpu: GPU,
         public renderTargets: T,
         public sampleCount: 1 | 4,
         public size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
         private _onResize: (width: number, height: number) => [number, number],
+        private entryPoint: string,
+        public rootLayout: PipelineLayout,
         protected label:string
         ) {
         for (const rt of Object.values(renderTargets)) {
             rt.texture.renderPasses.add(this);
             rt.resize(this);
         }
+        this.#sizeBuffer=this.updateSizeBindGroup(true);
+        this.sizeBindGroup = () => gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup', [{
+            binding: 0,
+            resource: {
+                buffer: this.#sizeBuffer,
+                size: 16,
+                offset: 0
+            }
+        }]);
+    }
+    updateSizeBindGroup(initial = false) {
+        if (!initial)
+            this.#sizeBuffer.destroy();
+        this.#sizeBuffer = this.gpu.createGPUBuffer(this.gpu.gpu_screen_buffer_size, [GPUBufferUsage.UNIFORM], true, 'screen_buffer');
+        const uniformbuffer = this.#sizeBuffer.getMappedRange();
+
+        new Float32Array(uniformbuffer, 0, 4).set([
+            this.size[0],
+            this.size[1],
+            this.size[0] / this.gpu.clustersInRow[0],
+            this.size[1] / this.gpu.clustersInRow[1]]);
+        this.#sizeBuffer.unmap();
+        return this.#sizeBuffer;
     }
     getVariant(renderPipeline:Readonly<RenderPipeline>) {
         let variant = this.renderPipelines.get(renderPipeline)
@@ -56,6 +87,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             vertex: renderpipeline.vertexShader,
             fragment: {
                 ...renderpipeline.fragmentShader,
+                entryPoint: this.entryPoint,
                 targets: Object.values(this.renderTargets).map(rt => {
                     return {
                         format: rt.texture.format,
@@ -73,13 +105,16 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         return this.gpu.device.createRenderPipeline(
             {
                 ...renderpipeline.renderPipelineDescriptor,
-                ...this.onDecoratePipeline(renderpipeline)
+                ...this.onDecoratePipeline(renderpipeline),
+                label: 'renderPipeline:'+renderpipeline.label+' RenderPass:'+this.label
+                
             }
         )
     }
     onResize:Set<()=>void>=new Set();
     resize(width: number, height: number) {
         [this.size[0], this.size[1]] = this._onResize(width, height);
+        this.updateSizeBindGroup();
         for (const rt of Object.values(this.renderTargets)) {
             rt.resize(this);
         }
@@ -102,54 +137,65 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             label: this.label
         }
     }
-    render(renderEncoder: GPUCommandEncoder, rootBindGroup: GPUBindGroup | ((renderPass: RenderPass) => GPUBindGroup), rootLayout: PipelineLayout) {
+    renderCamera(renderBundleEncoder: GPURenderBundleEncoder, rootLayout: PipelineLayout, rootBindGroup: GPUBindGroup, bindGroupStartIndex:number) {
+        let drawedMeshes = 0;
+        const dynamicIndices: number[] = [];
+        renderBundleEncoder.setBindGroup(bindGroupStartIndex, rootBindGroup);
+        rootLayout.renderPipeLines.forEach(renderPipeline => {
+            drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, bindGroupStartIndex+1);
+        });
+        //POSITION
+        if (this.gpu.positionBindGroupTimeWGSL.bindGroupLayout.dynamicIndices) {
+            dynamicIndices.push(bindGroupStartIndex+1);
+        }
+        this.gpu.positionBindGroupTimeWGSL.renderPipeLines.forEach(renderPipeline => {
+            drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, bindGroupStartIndex+1, dynamicIndices);
+        });
+        this.gpu.positionBindGroupTimeWGSL.subBindGroups.forEach(pipelineLayout => {
+            if (pipelineLayout.sharedBindgroup) {
+                renderBundleEncoder.setBindGroup(bindGroupStartIndex+2, pipelineLayout.sharedBindgroup);
+            }
+            pipelineLayout.renderPipeLines.forEach(renderPipeline => {
+                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, bindGroupStartIndex + 1 + dynamicIndices.length, dynamicIndices);
+            });
+        });
+        dynamicIndices.length = 0;
+                    //SUN
+        if (this.gpu.positionBindGroupTime.bindGroupLayout.dynamicIndices) {
+            dynamicIndices.push(bindGroupStartIndex+1);
+        }
+        this.gpu.positionBindGroupTime.renderPipeLines.forEach(renderPipeline => {
+            drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, bindGroupStartIndex + 1, dynamicIndices);
+        });
+        this.gpu.positionBindGroupTime.subBindGroups.forEach(bindGroup => {
+            bindGroup.renderPipeLines.forEach(renderPipeline => {
+                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, bindGroupStartIndex + 1 + dynamicIndices.length, dynamicIndices);
+            });
+        });
+        return drawedMeshes;
+    }
+    render(renderEncoder: GPUCommandEncoder) {
         const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
         if (!this.bundles.length) {
-            const renderDesc=this.GPURenderBundleEncoderDescriptor;
-            const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder(renderDesc);
+            const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder(this.GPURenderBundleEncoderDescriptor);
             let drawedMeshes = 0;
-            const dynamicIndices: number[] = [];
+            if(this.BindGroupCanvas) {
+                drawedMeshes+= this.renderCamera(renderBundleEncoder,this.rootLayout,this.BindGroupCanvas(), 0)
+            } else {
+                renderBundleEncoder.setBindGroup(0, this.sizeBindGroup());
 
-            const r= typeof (rootBindGroup) === 'function' ? rootBindGroup(this) : rootBindGroup;
-            renderBundleEncoder.setBindGroup(0, r);
-            rootLayout.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1);
-            });
-            //POSITION
-            if (this.gpu.positionBindGroupTimeWGSL.bindGroupLayout.dynamicIndices) {
-                dynamicIndices.push(1);
+                this.cameras.forEach(camera => {
+                    drawedMeshes+= this.renderCamera(renderBundleEncoder,this.rootLayout,camera.uniformBindGroup(),1)
+                })
             }
-            this.gpu.positionBindGroupTimeWGSL.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1, dynamicIndices);
-            });
-            this.gpu.positionBindGroupTimeWGSL.subBindGroups.forEach(pipelineLayout => {
-                if (pipelineLayout.sharedBindgroup) {
-                    renderBundleEncoder.setBindGroup(2, pipelineLayout.sharedBindgroup);
-                }
-                pipelineLayout.renderPipeLines.forEach(renderPipeline => {
-                    drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1 + dynamicIndices.length, dynamicIndices);
-                });
-            });
-            dynamicIndices.length = 0;
-            //SUN
-            if (this.gpu.positionBindGroupTime.bindGroupLayout.dynamicIndices) {
-                dynamicIndices.push(1);
-            }
-            this.gpu.positionBindGroupTime.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1, dynamicIndices);
-            });
-            this.gpu.positionBindGroupTime.subBindGroups.forEach(bindGroup => {
-                bindGroup.renderPipeLines.forEach(renderPipeline => {
-                    drawedMeshes += renderPipeline.draw(renderBundleEncoder, this, 1 + dynamicIndices.length, dynamicIndices);
-                });
-            });
-            console.log('Meshes draw',drawedMeshes)
+            console.log('Meshes draw for',this.GPURenderBundleEncoderDescriptor.label,drawedMeshes)
             this.bundles.push(renderBundleEncoder.finish());
         }
         passEncoder.executeBundles(this.bundles);
         passEncoder.end();
     }
 }
+
 export class DepthRenderPass<T extends {
     [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
 } = {
@@ -164,8 +210,10 @@ export class DepthRenderPass<T extends {
         sampleCount: 1|4,
         size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
         _onResize: (width: number, height: number) => [number, number],
+        entryPoint: string,
+        rootLayout: PipelineLayout,
         label:string) {
-            super(gpu,renderTargets,sampleCount,size,_onResize,label);
+            super(gpu,renderTargets,sampleCount,size,_onResize,entryPoint,rootLayout, label);
             this.depthTexture = new Texture(gpu,this.#depthFormat,['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING'],this.size)
             this.depthTextureView = new TextureView(this.depthTexture);
         }
@@ -208,13 +256,11 @@ export class DepthRenderPass<T extends {
         }
 }
 
-
-interface PickableTargets {
+export class PickableRenderPass<T extends {
     [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
-    gRenderTargetId: RenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>> |
-                    MSAARenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>
-}
-export class PickableRenderPass<T extends PickableTargets = PickableTargets> extends DepthRenderPass<T> {
+} = {
+    [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
+}> extends DepthRenderPass<T> {
     #pickBuffer: GPUBuffer;
     #pickBufferRead?: GPUBuffer;
     #pickPositionPipeline=this.gpu.createComputePipeline('readDepth.comp.wgsl');
@@ -222,22 +268,25 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
     pickPositionBindGroup0: GPUBindGroup;
     rowBytes = this.size[0]*4;
 
-
     constructor(gpu: GPU,
         renderTargets: T,
         sampleCount: 1|4,
         size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
         _onResize: (width: number, height: number) => [number, number],
-        label:string) {
-            super(gpu,renderTargets,sampleCount,size,_onResize,label);
+        entryPoint: string,
+        rootLayout: PipelineLayout,
+        label: string) {
+            super(gpu,renderTargets,sampleCount,size,_onResize,entryPoint,rootLayout,label);
             if(sampleCount == 4) {
                 this.#pickBuffer = this.gpu.device.createBuffer({
                     size: 4 * 4, //depth + meshID (four pixel)
                     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+                    label: 'pickBuffer'
                 });
                 this.#pickBufferRead = this.gpu.device.createBuffer({
                     size: 4 + 4, //depth + meshID (four pixel)
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+                    label: 'pickBufferRead'
                 });
 
             } else {
@@ -247,6 +296,7 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
                 this.#pickBuffer = this.gpu.device.createBuffer({
                     size: this.rowBytes * this.size[1],
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+                    label: 'pickBuffer'
                 }); 
             }
             this.pickPositionBindGroup0 = this.#pickPositionPipeline.createBindGroup(0,[
@@ -275,6 +325,7 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
             this.#pickBuffer = this.gpu.device.createBuffer({
                 size: this.rowBytes * this.size[1],
                 usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+                label: 'pickBuffer'
             });
         }
         this.onResize.forEach(cb => cb());
@@ -296,8 +347,8 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
         const camera = [...this.cameras][0]!;
         const encoder = this.gpu.device.createCommandEncoder();
         let zAndIDPromise:Promise<[z:number, id:number]>;
-        const gRenderTargetId = this.renderTargets.gRenderTargetId
-        if(gRenderTargetId instanceof MSAARenderTarget) {
+        const gRenderTargetDiffuse = this.renderTargets.gRenderTargetDiffuse
+        if(gRenderTargetDiffuse instanceof MSAARenderTarget) {
             const mousePositionBuffer = engine.gpu.createGPUBuffer(8,[GPUBufferUsage.UNIFORM],true);
             new Uint32Array(mousePositionBuffer.getMappedRange(0,8)).set([engine.mousePosition[0], engine.mousePosition[1]]);
             mousePositionBuffer.unmap();
@@ -310,7 +361,7 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
                     },
                     {
                         binding: 1,
-                        resource: gRenderTargetId.resolveView()
+                        resource: this.gpu.pickRenderPass.renderTargets.gRenderTargetId.view.view
                     },
                     {
                         binding: 2,
@@ -360,7 +411,7 @@ export class PickableRenderPass<T extends PickableTargets = PickableTargets> ext
             if(mesh) {
                 encoder.copyTextureToBuffer(
                     {
-                        texture: gRenderTargetId.texture.texture,
+                        texture: this.gpu.pickRenderPass.renderTargets.gRenderTargetId.texture.texture,
                         origin: { x: engine.mousePosition[0], y: engine.mousePosition[1], z: 0 }
                     },
                     {

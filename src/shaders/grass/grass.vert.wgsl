@@ -21,8 +21,8 @@ struct Time {
   time : u32;
   delta : f32;
 };
-@binding(0) @group(0) var<uniform> scene : Scene;
-@binding(1) @group(0) var<uniform> time : Time;
+@binding(0) @group(1) var<uniform> scene : Scene;
+@binding(1) @group(1) var<uniform> time : Time;
 
 //[[block]] struct Lights {
 //  [[offset(48)]] sunDirection : vec3<f32>;

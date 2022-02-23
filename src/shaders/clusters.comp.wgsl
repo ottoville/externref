@@ -21,9 +21,10 @@ struct Uniforms {
   screenDimensions : vec2<f32>;
 
 };
-@group(0) @binding(0) var<storage, write> clusters : clusterArray;
-@group(0) @binding(1) var<uniform> screentoview : Projection;
-@group(0) @binding(2) var<uniform> uniforms : Uniforms;
+@group(0) @binding(0) var<uniform> uniforms : Uniforms;
+
+@group(1) @binding(0) var<storage, write> clusters : clusterArray;
+@group(1) @binding(1) var<uniform> screentoview : Projection;
 
  fn clipToView(clip : vec4<f32>) -> vec4<f32> {
    //View space transform

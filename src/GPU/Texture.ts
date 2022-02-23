@@ -74,6 +74,9 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
             texture.createTexture(1,true);
             let bytes_per_fixel: number;
             switch (texture.format) {
+                case 'r32uint':
+                    bytes_per_fixel = 4;
+                    break;
                 case 'bgra8unorm':
                     bytes_per_fixel = 4;
                     break;

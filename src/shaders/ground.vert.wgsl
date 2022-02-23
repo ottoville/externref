@@ -13,8 +13,8 @@ struct WorldPosition {
    directional_light:f32;
    scenes:u32; //bitmask
 };
-@binding(0) @group(0) var<uniform> uniforms : Uniforms;
-@binding(0) @group(1) var<uniform> worldposition : WorldPosition;
+@binding(0) @group(1) var<uniform> uniforms : Uniforms;
+@binding(0) @group(2) var<uniform> worldposition : WorldPosition;
 
 struct Output {
   @builtin(position) Position : vec4<f32>;

@@ -11,7 +11,6 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
     readonly #childCameras: Set<TerraCamera> = new Set();
 
     readonly #clusterArrayBuffer: GPUStorageBuffer
-    #projectionUniformsBuffer: GPUUniformBuffer;
 
     readonly #uniformBufferSize = /* modelViewProjectionMatrix + view matrix */ 4 * 16 * 2 /* viewPosition */ + 4 * 4;
     readonly #direction = new TerraVector3([1, 0, 0])
@@ -32,26 +31,10 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
     readonly updateViewBindGroup: GPUBindGroup;
     readonly uniformBindGroup: () => GPUBindGroup;
 
-    updateProjectionUniformsBuffer(initial = false) {
-        if (!initial)
-            this.#projectionUniformsBuffer.destroy();
-        this.#projectionUniformsBuffer = this.gpu.createGPUBuffer(this.gpu.gpu_screen_buffer_size, [GPUBufferUsage.UNIFORM], true);
-        const uniformbuffer = this.#projectionUniformsBuffer.getMappedRange();
-
-        new Float32Array(uniformbuffer, 0, 4).set([
-            this.renderPass.size[0],
-            this.renderPass.size[1],
-            this.renderPass.size[0] / this.gpu.clustersInRow[0],
-            this.renderPass.size[1] / this.gpu.clustersInRow[1]]);
-        this.#projectionUniformsBuffer.unmap();
-        return this.#projectionUniformsBuffer;
-
-    }
     constructor(public renderPass: T, public projection: Projection, private gpu: GPU, parent?: TerraCamera) {
         this.#clusterArrayBuffer = gpu.createGPUBuffer(gpu.clusterSizeinBytes, [GPUBufferUsage.STORAGE]);
-        this.#projectionUniformsBuffer = this.updateProjectionUniformsBuffer(true);
         this.#uniformBuffer = gpu.createGPUBuffer(this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]); //Todo: set to private
-        this.uniformBindGroup = () => gpu.uniformBindGroupLayoutWithTime.createBindGroup(
+        this.uniformBindGroup = () => gpu.uniformBindGroupLayoutWithTime.createBindGroup('uniformBindGroup',
             [{
                 binding: 0,
                 resource: {
@@ -64,20 +47,14 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
                     buffer: this.#clusterArrayBuffer
                 }
             },
-            {   //projection
-                binding: 3,
-                resource: {
-                    buffer: this.#projectionUniformsBuffer
-                }
-            },
             {
-                binding: 4,
+                binding: 3,
                 resource: {
                     buffer: this.gpu.GPUMeshes
                 }
             },
             { //TODO: Set to own group because shared by many cameras
-                binding: 5,
+                binding: 4,
                 resource: {
                     buffer: this.projection.gpuBuffer
                 }
@@ -118,29 +95,25 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
     }
 
     updateProjection(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: GPUBindGroupLayout) {
-        this.updateProjectionUniformsBuffer();
+        //TODO move out from loop
         const bindGroup = this.gpu.device.createBindGroup({
             layout: computePipelineClustersLayout,
             entries: [{
                 binding: 0,
                 resource: {
-                    buffer: this.#clusterArrayBuffer
+                    buffer: this.#clusterArrayBuffer,
+                    label: 'clusterArrayBuffer'
                 }
             },
             {
                 binding: 1,
                 resource: {
-                    buffer: this.projection.gpuBuffer
-                }
-            },
-            {
-                binding: 2,
-                resource: {
-                    buffer: this.#projectionUniformsBuffer
+                    buffer: this.projection.gpuBuffer,
+                    label: 'gpuBuffer'
                 }
             }]
         });
-        passEncoder.setBindGroup(0, bindGroup);
+        passEncoder.setBindGroup(1, bindGroup);
         passEncoder.dispatch(...this.gpu.CLUSTER_DISPATCH_SIZE);
     }
     #doUpdateView = false;

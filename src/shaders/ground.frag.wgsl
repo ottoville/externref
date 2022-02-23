@@ -1,6 +1,8 @@
 struct Output {
+  @location(0) Diffuse : vec4<f32>;
+};
+struct OutputPick {
   @location(0) ID : u32;
-  @location(1) Diffuse : vec4<f32>;
 };
 struct Meshes {
   position : mat4x4<f32>;           //64  0
@@ -42,13 +44,16 @@ struct Clusters {
   lightsCount: array<u32, 27648>;
   lights: array<u32, 1741824>;  //27648 * 63 = 1741824
 };
-@binding(2) @group(0) var<storage, read> clusters_array : Clusters;
-@binding(3) @group(0) var<uniform> dimensions : Uniforms;
-@binding(4) @group(0) var<storage, read> meshes : MeshArray;
-@binding(5) @group(0) var<uniform> projection : Projection;
 
-@binding(0) @group(2) var mySampler: sampler;
-@binding(1) @group(2) var myTexture: texture_2d<f32>;
+@binding(0) @group(0) var<uniform> dimensions : Uniforms;
+
+
+@binding(2) @group(1) var<storage, read> clusters_array : Clusters;
+@binding(3) @group(1) var<storage, read> meshes : MeshArray;
+@binding(4) @group(1) var<uniform> projection : Projection;
+
+@binding(0) @group(3) var mySampler: sampler;
+@binding(1) @group(3) var myTexture: texture_2d<f32>;
 
 fn linearDepth(depthSample : f32) -> f32 {
   return projection.z_near_multiplied_far / fma(depthSample, projection.z_near_substracted_far, projection.zNear);
@@ -94,9 +99,6 @@ fn main(
     var output:Output;
 
 //  output.Normals=vec4<f32>(normal.xyz, bitcast<f32>(id));
-
-  output.ID=id;
-
 
   //outPositions=vec4<f32>(position.xyz, 1.0);
   output.Diffuse = textureSample(myTexture, mySampler, v_uv);
@@ -144,4 +146,17 @@ fn main(
 
   return output;
 }
+@stage(fragment)
+fn pick(
+  @builtin(position) fragCoord : vec4<f32>,
+  @location(0)  v_uv : vec2<f32>,
+  @location(1) normal : vec3<f32>,
+  @location(2)  position : vec3<f32>,
+  @location(3) @interpolate(flat)  id : u32,
+  @location(4) @interpolate(flat)  scenes : u32) -> OutputPick {
 
+    var output:OutputPick;
+    output.ID=id;
+    return output;
+
+  }

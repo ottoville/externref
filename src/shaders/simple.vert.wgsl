@@ -19,9 +19,9 @@ struct Time {
   time : u32;
   delta : f32;
 };
-@binding(0) @group(0) var<uniform> uniforms : Uniforms;
-@binding(0) @group(1) var<uniform> mesh_uniforms : MeshUniforms;
-@binding(1) @group(0) var<uniform> times : Time;
+@binding(0) @group(1) var<uniform> uniforms : Uniforms;
+@binding(0) @group(2) var<uniform> mesh_uniforms : MeshUniforms;
+@binding(1) @group(1) var<uniform> times : Time;
 
 struct Output {
   @builtin(position) Position : vec4<f32>;

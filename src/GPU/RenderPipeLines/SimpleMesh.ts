@@ -13,7 +13,7 @@ function Simple(gpu: GPU) {
     if (renderPipeline)
         return renderPipeline;
     
-    renderPipeline = gpu.positionBindGroupTimeWGSL.addRenderPipeline(
+    renderPipeline = gpu.positionBindGroupTimeWGSL.addRenderPipeline('SimpleRenderPipeline',
         new VertexShader(gpu, 'simple.vert.wgsl', 'main', [{
             arrayStride: 6 * 4,
             stepMode: "vertex",
@@ -29,7 +29,6 @@ function Simple(gpu: GPU) {
                 format: "float32x3"
             }]
         }]), new Shader(gpu, 'simple.frag.wgsl'), {
-        label: 'simple',
         primitive: { topology: 'triangle-list' },
     });
     renderPipelines.set(gpu, renderPipeline);

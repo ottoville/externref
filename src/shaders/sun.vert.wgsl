@@ -14,8 +14,8 @@ struct WorldPosition {
   delta : vec3<f32>;
 };
 
-@binding(0) @group(0) var<uniform> uniforms : Uniforms;
-@binding(1) @group(0) var<uniform> times : Time;
+@binding(0) @group(1) var<uniform> uniforms : Uniforms;
+@binding(1) @group(1) var<uniform> times : Time;
 
 let sunDistance: f32= 1495000.0;  //divided by 100000 correct one
 

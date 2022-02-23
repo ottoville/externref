@@ -20,7 +20,7 @@ function getRenderPipeline(gpu: GPU) {
     let renderPipeline: RenderPipeline | undefined = renderPipelines.get(gpu);
     if (renderPipeline)
         return renderPipeline;
-    renderPipeline = gpu.positionBindGroupTime.addRenderPipeline(
+    renderPipeline = gpu.positionBindGroupTime.addRenderPipeline('SunRenderPipeline',
         new VertexShader(gpu,'sun.vert.wgsl'),
         new Shader(gpu,'sun.frag.wgsl'),
         {

@@ -12,7 +12,7 @@ function DebugNormalsPipeline(entryPoint='main', topology:GPUPrimitiveTopology='
     if (renderPipeline)
         return renderPipeline;
 
-    const renderPipeLine = engine.gpu.positionBindGroupTimeWGSL.addRenderPipeline(new VertexShader(engine.gpu,'debug_normals.vert.wgsl', entryPoint, [{
+    const renderPipeLine = engine.gpu.positionBindGroupTimeWGSL.addRenderPipeline('normalsRenderPipeline', new VertexShader(engine.gpu,'debug_normals.vert.wgsl', entryPoint, [{
         arrayStride: 48,
         stepMode: "vertex",
         attributes: [{
@@ -29,7 +29,6 @@ function DebugNormalsPipeline(entryPoint='main', topology:GPUPrimitiveTopology='
         }
         ]
     }]), new Shader(engine.gpu,'color.frag.wgsl','main'), {
-        label: 'terrain',
         primitive: { topology }
     });
     DebugNormalsRenderPipelines.set(engine.gpu, renderPipeLine);

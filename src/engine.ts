@@ -212,7 +212,7 @@ export class Engine {
         const gpu = new GPU(canvas, adapter, device);
         //@ts-ignore
         window.printRenderTarget = () => {
-            Texture.toBitmap(gpu.renderPassScreen.renderTargets.gRenderTargetId.texture);
+            Texture.toBitmap(gpu.pickRenderPass.renderTargets.gRenderTargetId.texture);
         }
         //@ts-ignore
         window.printRenderTarget2 = () => {
@@ -357,14 +357,12 @@ export class Engine {
             lightPass.end();
             this.#updateLights = false;
 
-            this.cameras.forEach(camera => {
-                camera.renderPass.render(renderEncoder, camera.uniformBindGroup,this.gpu.rootCameralayout);
-            });
+            this.gpu.renderPasses.forEach(renderPass => {
+                renderPass.render(renderEncoder)
+            })
         } catch (e) {
             console.error(e);
         }
-
-        this.gpu.renderPassCanvas.render(renderEncoder, this.gpu.BindGroupCanvas, this.gpu.rootLayout);
 
         this.gpu.pendingCommandBuffers.add(renderEncoder.finish())
         this.gpu.device.queue.submit(this.gpu.pendingCommandBuffers);
@@ -382,7 +380,7 @@ export class Engine {
         this.memory = rust.memory;
         window.engine = this;
         this.mainCamera = new TerraCamera(gpu.renderPassScreen, new Projection(gpu), gpu);
-
+        gpu.pickRenderPass.cameras.add(this.mainCamera)
 
         this.collider = new ColliderJS(rust);
         this.attachCameraInput(true);
@@ -422,8 +420,27 @@ export class Engine {
             width: 1920,
             height: 1080
         }
-        const computePipelineClusters       = gpu.createComputePipeline('clusters.comp.wgsl');
-        const computePipelineClustersLayout = computePipelineClusters.getBindGroupLayout(0)
+        const computePipelineClustersLayout = gpu.device.createBindGroupLayout({label: 'computePipelineClustersLayout', entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.COMPUTE,
+                buffer: {
+                    type: 'storage'
+                }
+            },
+            {
+                binding: 1,
+                visibility: GPUShaderStage.COMPUTE,
+                buffer: {
+                    type: 'uniform'
+                }
+            }
+        ]})
+        const computePipelineClusters       = gpu.createComputePipeline('clusters.comp.wgsl',
+        gpu.device.createPipelineLayout({
+            bindGroupLayouts:[gpu.sizeBindGroupLayout.layout, computePipelineClustersLayout]
+        }));
+
         if(!canvas.parentElement) {
             throw new Error('Canvas must have parent element');
         }
@@ -460,6 +477,7 @@ export class Engine {
 
                 gpu.renderPasses.forEach(renderPass => {
                     renderPass.resize(canvas.width, canvas.height);
+                    passEncoder.setBindGroup(0, renderPass.sizeBindGroup());
                     renderPass.cameras.forEach(camera => {
                         camera.updateProjection(passEncoder,computePipelineClustersLayout)
                     });

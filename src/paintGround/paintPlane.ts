@@ -32,7 +32,7 @@ function getRenderPipeline(scene: Scene, ground: Terrain): RenderPipeline {
     if (renderPipeline) {
         return renderPipeline;
     }
-    renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline(new VertexShader(engine.gpu,'plane.vert.wgsl', 'main', [{
+    renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline('paintPlaneRenderpipeline', new VertexShader(engine.gpu,'plane.vert.wgsl', 'main', [{
         arrayStride: 4 * 2,
         stepMode: "vertex" as GPUVertexStepMode,
         attributes: [{

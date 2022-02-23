@@ -35,12 +35,12 @@ struct Settings {
      heightMinMax : vec2<i32>;
     @align(32) max : vec2<i32>;
 };
-@binding(0) @group(0) var<uniform> scene : Scene;
-@binding(1) @group(0) var<uniform> time : Time;
-@binding(0) @group(1) var<uniform> world : WorldPosition;
-@binding(0) @group(2) var<storage,read> slopes : IntArray;
-@binding(1) @group(2) var<storage,read> facet12 : PlaneArray;
-@binding(2) @group(2) var<storage,read> settings :  Settings;
+@binding(0) @group(1) var<uniform> scene : Scene;
+@binding(1) @group(1) var<uniform> time : Time;
+@binding(0) @group(2) var<uniform> world : WorldPosition;
+@binding(0) @group(3) var<storage,read> slopes : IntArray;
+@binding(1) @group(3) var<storage,read> facet12 : PlaneArray;
+@binding(2) @group(3) var<storage,read> settings :  Settings;
 
 
 //let PI:f32 = 3.1415926535897932384626433832795;

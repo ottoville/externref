@@ -10,8 +10,8 @@ struct WorldPosition {
   @size(16) acceleration : vec3<f32>;
    id : u32;
 };
-@binding(0) @group(0) var<uniform> uniforms : Uniforms;
-@binding(0) @group(1) var<uniform> worldposition : WorldPosition;
+@binding(0) @group(1) var<uniform> uniforms : Uniforms;
+@binding(0) @group(2) var<uniform> worldposition : WorldPosition;
 
 
 struct Output {

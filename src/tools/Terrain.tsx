@@ -25,7 +25,7 @@ function getRenderPipeline(terrain: Terrain): RenderPipeline {
         return renderPipeline;
     }
 
-    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
+    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline('TerrainToolRenderpipeline',
         new VertexShader(engine.gpu, "helper2.vert.wgsl",'main',  [{
             arrayStride: 12,
             stepMode: 'vertex',

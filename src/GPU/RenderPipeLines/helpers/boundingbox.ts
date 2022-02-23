@@ -12,7 +12,7 @@ function DebugBoundingPipeline(entryPoint = 'main', topology: GPUPrimitiveTopolo
     if (renderPipeline)
         return renderPipeline;
 
-    const renderPipeLine = engine.gpu.positionBindGroupTimeWGSL.addRenderPipeline(
+    const renderPipeLine = engine.gpu.positionBindGroupTimeWGSL.addRenderPipeline('colorRenderPipeline',
         new VertexShader(engine.gpu, 'debug_boundingbox.vert.wgsl', entryPoint, [{
             arrayStride: 16,
             stepMode: "vertex",
@@ -24,7 +24,6 @@ function DebugBoundingPipeline(entryPoint = 'main', topology: GPUPrimitiveTopolo
             }
             ]
         }]), new Shader(engine.gpu, 'color.frag.wgsl', entryPoint), {
-        label: 'color',
         primitive: { topology, stripIndexFormat:'uint32' }
     });
     DebugBoundingRenderPipelines.set(engine.gpu, renderPipeLine);

@@ -27,11 +27,13 @@ export class RenderPipeline {
     public createSharedBindGroups?: () => Set<GPUBindGroup>
     renderPipelineDescriptor: Readonly<Omit<GPURenderPipelineDescriptor, 'vertex' | 'fragment'>>
     constructor(
+        public label: string,
         public vertexShader:VertexShader,
         public fragmentShader:Shader,
         renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'vertex' | 'fragment'>,
         public bindgroupdrawable: PipelineLayout,
-        public depthBuffer? : {depthWriteEnabled:boolean, depthCompare:GPUCompareFunction }) {
+        public depthBuffer? : {depthWriteEnabled:boolean, depthCompare:GPUCompareFunction },
+        ) {
 
         renderPipelineDescriptor.layout = bindgroupdrawable.layout;
         if(!renderPipelineDescriptor.primitive)

@@ -24,6 +24,9 @@ import type { DrawableSimple } from "../GPU/Drawable.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 //@ts-ignore
 import { Box } from "../GPU/Meshes/Box.js";
+//@ts-ignore
+
+import { Triangle } from "../GPU/Meshes/Triangle.js";
 
 declare const engine:Engine;
 class CanvasMesh extends MainNode {
@@ -88,28 +91,27 @@ export class Canvas extends TerraCompoment {
             sun.gpu_custom_data = [0, 0, 0, 1]; //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
         });
-     /*   const slope = new Box(undefined, undefined,true,'gravitybixbox2');
-        slope.update_scale(200, 5, 200);
-        slope.update_rotation(Math.sin(1.4),0,0,Math.cos(1.4));
-        slope.translation = [23,500,23];
+     /*   const slope = new Triangle();
+        slope.update_scale(0, 400, 400);
+      //  slope.update_rotation(Math.sin(1.4), -0.5, -0.5, Math.cos(1.4));
+        slope.update_euler_angles(0,0,Math.PI*-0.3);
+        slope.translation = [23,600,23];
 
         const b2 = new Box(undefined, 400,true,'gravitygreenbox2',[0,1,0,0]);
-        b2.translation = [23, 500, -100];
+        b2.translation = [-200, 500, 350];
+        b2.update_scale(20, 20, 20);
+
         //@ts-ignore
         window.b2=b2;
         //b2.hasGravity=true;
         b2.onCollide=() => {
             b2.force[2]=10
-          }
-
-          const b2 = new Box(undefined, 400,true,'gravitygreenbox2',[0,1,0,0]);
-          b2.translation = [30, 900, 120];
-          b2.hasGravity=true;
+         }
 */
-        const canvasPipeline = terraEngine.gpu.rootLayout.addRenderPipeline(
+
+        const canvasPipeline = engine.gpu.renderPassCanvas.rootLayout.addRenderPipeline('CanvasRenderPipeline',
             new VertexShader(terraEngine.gpu, 'deferred.vert.wgsl'),
             new Shader(terraEngine.gpu, 'deferred.frag.wgsl'), {
-            label: 'canvas',
             primitive: {
                 topology: 'triangle-list',
                 frontFace: 'ccw'
