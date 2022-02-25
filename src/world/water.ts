@@ -38,7 +38,7 @@ function getRenderPipeline(gpu: GPU) {
         }
     ));
     renderPipeline = bindGroupTextureWater.addRenderPipeline('WaterRenderPipeline',
-        new VertexShader(gpu, 'water.vert.wgsl', 'main', [{
+        new VertexShader(gpu, 'water.vert.wgsl', [{
             arrayStride: 12,
             stepMode: 'vertex',
             attributes: [{

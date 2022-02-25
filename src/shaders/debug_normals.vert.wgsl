@@ -22,7 +22,7 @@ struct Output {
  };
 
 @stage(vertex)
-fn normals(@location(0) position : vec3<f32>,
+fn main(@location(0) position : vec3<f32>,
   @location(1) normal : vec3<f32>,
   @builtin(vertex_index) gl_VertexIndex : u32 ) -> Output {
     var output : Output;

@@ -7,13 +7,12 @@ import type { Engine } from "../../engine.js";
 declare const engine:Engine;
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function TerrainRenderPipeline(gpu: GPU, entryPoint='main', topology:GPUPrimitiveTopology='triangle-list') {
+function TerrainRenderPipeline(gpu: GPU, topology:GPUPrimitiveTopology='triangle-list') {
     const renderPipeline = renderPipelines.get(gpu);
     if (renderPipeline)
         return renderPipeline;
 
-    const renderPipeLine = gpu.lightsBindGroupTexture2.addRenderPipeline('TerrainRenderPipeline',new VertexShader(gpu,'ground.vert.wgsl', entryPoint,
-    [
+    const renderPipeLine = gpu.lightsBindGroupTexture2.addRenderPipeline('TerrainRenderPipeline',new VertexShader(gpu,'ground.vert.wgsl',  [
         {
         arrayStride: 48,
         stepMode: "vertex",
@@ -37,7 +36,7 @@ function TerrainRenderPipeline(gpu: GPU, entryPoint='main', topology:GPUPrimitiv
         }
         ]
     }
-    ]), new Shader(gpu,'ground.frag.wgsl',entryPoint), {
+    ]), new Shader(gpu,'ground.frag.wgsl'), {
         primitive: { topology }
     });
     renderPipelines.set(gpu, renderPipeLine);

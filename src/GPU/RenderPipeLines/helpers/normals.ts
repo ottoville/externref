@@ -7,12 +7,12 @@ import type { Engine } from "../../../engine.js";
 declare const engine:Engine;
 
 const DebugNormalsRenderPipelines: Map<GPU, RenderPipeline> = new Map();
-function DebugNormalsPipeline(entryPoint='main', topology:GPUPrimitiveTopology='line-list') {
+function DebugNormalsPipeline(topology:GPUPrimitiveTopology='line-list') {
     const renderPipeline = DebugNormalsRenderPipelines.get(engine.gpu);
     if (renderPipeline)
         return renderPipeline;
 
-    const renderPipeLine = engine.gpu.positionBindGroupTimeWGSL.addRenderPipeline('normalsRenderPipeline', new VertexShader(engine.gpu,'debug_normals.vert.wgsl', entryPoint, [{
+    const renderPipeLine = engine.gpu.positionBindGroupTimeWGSL.addRenderPipeline('normalsRenderPipeline', new VertexShader(engine.gpu,'debug_normals.vert.wgsl', [{
         arrayStride: 48,
         stepMode: "vertex",
         attributes: [{
@@ -28,7 +28,7 @@ function DebugNormalsPipeline(entryPoint='main', topology:GPUPrimitiveTopology='
             format: "float32x3"
         }
         ]
-    }]), new Shader(engine.gpu,'color.frag.wgsl','main'), {
+    }]), new Shader(engine.gpu,'color.frag.wgsl'), {
         primitive: { topology }
     });
     DebugNormalsRenderPipelines.set(engine.gpu, renderPipeLine);
@@ -38,7 +38,7 @@ export class NormalsMesh extends MainNode {
     drawable:DrawableSimple;
     constructor(positionsCount: number, stride=12) {        
         super(false, false, positionsCount,stride, undefined, undefined, undefined, undefined, 'NormalsDebug');
-        const renderPipeline=DebugNormalsPipeline('normals');
+        const renderPipeline=DebugNormalsPipeline();
         this.drawable=renderPipeline.addDrawableSimple(this,undefined,undefined,undefined);
     }
 }

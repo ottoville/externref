@@ -49,3 +49,25 @@ fn main(
   //ambient=lights.ambient;
   return output;
 }
+struct PickOutput {
+  @builtin(position) Position : vec4<f32>;
+  @location(0) @interpolate(flat) id : u32;
+};
+@stage(vertex)
+fn pick(
+  @builtin(vertex_index) VertexIndex : u32,
+  @location(0) pos : vec3<f32>,
+  @location(1) normal : vec3<f32>
+) ->PickOutput {
+  var output: PickOutput;
+  var curPos : mat4x4<f32> = mesh_uniforms.world;
+  curPos[3] = mesh_uniforms.world[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;
+  curPos[3].w=1.0;
+  var worldPos=curPos * vec4<f32>(pos, 1.0);
+
+  output.Position = uniforms.modelViewProjectionMatrix * worldPos;
+  output.id=mesh_uniforms.id;
+  //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
+  //ambient=lights.ambient;
+  return output;
+}

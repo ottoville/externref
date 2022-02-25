@@ -14,7 +14,7 @@ function Simple(gpu: GPU) {
         return renderPipeline;
     
     renderPipeline = gpu.positionBindGroupTimeWGSL.addRenderPipeline('SimpleRenderPipeline',
-        new VertexShader(gpu, 'simple.vert.wgsl', 'main', [{
+        new VertexShader(gpu, 'simple.vert.wgsl', [{
             arrayStride: 6 * 4,
             stepMode: "vertex",
             attributes: [{

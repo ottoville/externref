@@ -277,9 +277,10 @@ export class Angle {
 
 export class Triangle {
     updatePlane() {
-        const v0 = this.vectors[0];
-        const v1 = this.vectors[1];
-        const v2 = this.vectors[2];
+        const vectors = this.vectors;
+        const v0 = vectors[0];
+        const v1 = vectors[1];
+        const v2 = vectors[2];
         const x1 = v1[0] - v2[0];
         const y1 = v1[1] - v2[1];
         const z1 = v1[2] - v2[2];
@@ -304,7 +305,7 @@ export class Triangle {
             normal_x,
             normal_y,
             normal_z,
-            -((normal_x * this.vectors[2][0]) + (normal_y * this.vectors[2][1]) + (normal_z * this.vectors[2][2]))
+            -((normal_x * vectors[2][0]) + (normal_y * vectors[2][1]) + (normal_z * vectors[2][2]))
         ]);
     }
     get planeCollider() {

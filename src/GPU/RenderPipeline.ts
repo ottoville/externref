@@ -8,7 +8,7 @@ import type shaders from "../shaders.json";
 
 export class Shader {
     module:GPUShaderModule;
-    constructor(gpu:GPU, shader:keyof typeof shaders, public entryPoint='main') {
+    constructor(gpu:GPU, shader: keyof typeof shaders) {
         const module=gpu.shaderModules[shader];
         if(!module)
             throw(new Error('shader '+shader+' not found'));
@@ -16,8 +16,8 @@ export class Shader {
     }
 }
 export class VertexShader extends Shader {
-    constructor(gpu:GPU,shader:keyof typeof shaders, entrypoint='main', public buffers:Iterable<GPUVertexBufferLayout>=[]) {
-        super(gpu,shader, entrypoint)
+    constructor(gpu:GPU,shader: keyof typeof shaders, public buffers:Iterable<GPUVertexBufferLayout>=[]) {
+        super(gpu,shader)
     }
 }
 export class RenderPipeline {

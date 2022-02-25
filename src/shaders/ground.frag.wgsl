@@ -149,11 +149,7 @@ fn main(
 @stage(fragment)
 fn pick(
   @builtin(position) fragCoord : vec4<f32>,
-  @location(0)  v_uv : vec2<f32>,
-  @location(1) normal : vec3<f32>,
-  @location(2)  position : vec3<f32>,
-  @location(3) @interpolate(flat)  id : u32,
-  @location(4) @interpolate(flat)  scenes : u32) -> OutputPick {
+  @location(0) @interpolate(flat)  id : u32) -> OutputPick {
 
     var output:OutputPick;
     output.ID=id;

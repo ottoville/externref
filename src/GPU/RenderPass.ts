@@ -84,7 +84,10 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
 
     onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>):GPURenderPipelineDescriptor {
         const renderPipelineDescriptor:GPURenderPipelineDescriptor = {
-            vertex: renderpipeline.vertexShader,
+            vertex: {
+                ...renderpipeline.vertexShader,
+                entryPoint: this.entryPoint,
+            },
             fragment: {
                 ...renderpipeline.fragmentShader,
                 entryPoint: this.entryPoint,

@@ -19,9 +19,7 @@ struct OutputPick {
 
 @stage(fragment)
 fn pick(
-  @location(0)  normal : vec3<f32>,
-  @location(1) @interpolate(flat)  id : u32,
-  @location(2) color:vec3<f32>
+  @location(0) @interpolate(flat)  id : u32
 ) -> OutputPick {
   var output:OutputPick;
   output.ID = id;
