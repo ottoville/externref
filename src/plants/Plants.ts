@@ -1,4 +1,3 @@
-//import { translate, rotateMatrix } from "../math.js";
 import { WorkerThread, WorkerReturn } from "../WorkerThread.js";
 import { Terrain } from "../world/terrain.js";
 //import simplex from '../simplex.js'

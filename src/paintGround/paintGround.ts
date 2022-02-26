@@ -11,7 +11,6 @@ import type { Scene } from "../Scene.js";
 import { Engine } from "../engine.js";
 declare const engine:Engine;
 
-//import { rotateMatrix, translate } from "./math.js";
 
 let width: number;
 let height: number;

@@ -1,6 +1,6 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { Engine } from "../../engine.js";
-import { Triangle as MTriangle } from "../../math.js";
+import { Triangle as MTriangle } from "../../Math.js";
 import { SimpleMesh } from "../RenderPipeLines/SimpleMesh.js";
 declare const engine:Engine;
 

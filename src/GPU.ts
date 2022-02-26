@@ -3,7 +3,7 @@ import { DepthRenderPass, PickableRenderPass, RenderPass } from "./GPU/RenderPas
 import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTargets/RenderTarget.js";
 import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
-import {Texture } from "./GPU/texture.js";
+import {Texture } from "./GPU/Texture.js";
 import type { Projection } from "./GPU/Projection.js";
 import shaders from "./shaders.json" assert { type: "json" };
 import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
