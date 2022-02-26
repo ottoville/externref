@@ -7,8 +7,7 @@ import { MainNode } from "../MainNode.js";
 import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
-import type { GPU } from "../GPU";
-import { GPUBufferUsage } from "../gpu.js"
+import { GPUBufferUsage, type GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
 
 import type { Engine } from "../engine.js";

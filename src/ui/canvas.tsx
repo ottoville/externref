@@ -8,7 +8,7 @@ import { PlantsUI } from "../tools/plantsUI.js";
 import { CameraTAB } from "../tools/camera.js";
 import { BuildingsUI } from "../tools/buildings.js";
 import { TerrainTool } from "../tools/Terrain.js";
-import { Zones } from "../tools/zones.js";
+import { Zones } from "../tools/Zones.js";
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
 //import { LazyEval } from "../LazyEval.js";

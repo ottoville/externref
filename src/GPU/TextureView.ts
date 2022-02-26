@@ -1,4 +1,4 @@
-import type { Texture } from "./texture";
+import type { Texture } from "./Texture.js";
 export class TextureView {
     view: GPUTextureView;
     constructor(public texture: Texture, private descriptor?: GPUTextureViewDescriptor) {
