@@ -13,7 +13,7 @@
     "buildWasmSimd": "wat2wasm.exe collider\\colliderSIMD2.wat --debug-names -o ..\\wwwroot\\collider\\colliderSimdO.wasm --enable-simd",
     "buildWasmSimd-testem": "wat2wasm.exe collider\\colliderSIMD2.wat --debug-names -o .\\test-build\\collider\\colliderSimdO.wasm --enable-simd",
     "buildWasmSimd-prod": "wat2wasm.exe collider\\colliderSIMD2.wat -o ..\\wwwroot\\collider\\colliderSimd.wasm --enable-simd && wasm-opt.exe ..\\wwwroot\\collider\\colliderSimd.wasm -o ..\\wwwroot\\collider\\colliderSimdO.wasm -O3 --enable-simd --always-inline-max-function-size 200",
-    "build": "pwsh -Command New-Item  ..\\wwwroot\\js\\engine -Force -ItemType \"directory\" && npm run buildRust2 && npm run buildShaders && tsc -b  && npm run buildWasmSimd",
+    "build": "pwsh -Command New-Item  ../wwwroot/js/engine -Force -ItemType \"directory\" && npm run buildRust2 && npm run buildShaders && tsc -b  && npm run buildWasmSimd",
     "build-test": "node ../findTests.js && tsc --project tsconfig.testem.json && npm run buildRust-testem2 && npm run buildWasmSimd-testem",
     "buildShaders": "node ../buildShaders.js",
     "build-prod": "npm run buildRust && tsc -b  && npm run buildWasmSimd-prod",
