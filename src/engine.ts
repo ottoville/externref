@@ -278,7 +278,7 @@ export class Engine {
         if(!rust.instance.exports.memory) {
             throw(new Error('No memory exported'));
         }
-        const obj = await WebAssembly.instantiateStreaming(await fetch('collider/colliderSIMDO.wasm'), {
+        const obj = await WebAssembly.instantiateStreaming(await fetch('collider/colliderSimdO.wasm'), {
             console: {
                 log: function (arg: string) {
                     console.log(arg);
