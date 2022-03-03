@@ -9,78 +9,71 @@ declare const engine:Engine;
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
-function getRenderPipeline(gpu: GPU) {
-    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(gpu);
-    if (renderPipeline)
-        return renderPipeline;
-
-    //TODO: Reuse sampler with terrain.ts?
-    const sampler = gpu.device.createSampler({
-        magFilter: "nearest",
-        minFilter: "nearest",
-        mipmapFilter:"nearest"
-    });
-    const bindGroupTextureWater = gpu.positionBindGroupTimeWGSL.addChildLayout('water', BindGroupLayout.create(
-        gpu,
-        'water',
-        {
-            binding: 0,
-            visibility: GPUShaderStage.FRAGMENT,
-            sampler: {
-                type:'non-filtering'
-            }
-        }, {
-            binding: 1,
-            visibility: GPUShaderStage.FRAGMENT,
-            texture: {
-
-            }
-        }
-    ));
-    renderPipeline = bindGroupTextureWater.addRenderPipeline('WaterRenderPipeline',
-        new VertexShader(gpu, 'water.vert.wgsl', [{
-            arrayStride: 12,
-            stepMode: 'vertex',
-            attributes: [{
-                // position
-                shaderLocation: 0,
-                offset: 0,
-                format: "float32x3"
-            }]
-        }]),
-        new Shader(gpu, 'water.frag.wgsl'),
-        {
-            primitive: {
-                topology: 'triangle-strip',
-                stripIndexFormat: 'uint16',
-                frontFace:'cw'
-            },
-        },undefined, () =>
-        [
-            {
-                binding: 0,
-                resource: sampler
-            },
-            {
-                binding: 1,
-                resource: gpu.renderPassWater.renderTargets.diffuse.view.view
-            }
-        ]
-
-    );
-    renderPipelines.set(gpu, renderPipeline);
-    return renderPipeline
-}
-
-
 export class Sea extends BoundableNodeSimple {
     drawable: DrawableSimple;
     constructor(scenes: Scene[]) {
         super(new Float32Array([-50000.0, 3.0, -50000.0,
             50000.0, 3.0, -50000.0,
             -50000.0, 3.0, 50000.0,
-            50000.0, 3.0, 50000.0]), undefined, true,'water',scenes); //48
-        const renderPipeline=getRenderPipeline(engine.gpu);
+            50000.0, 3.0, 50000.0]), undefined, true,'water',false,scenes); //48
+        let renderPipeline = renderPipelines.get(engine.gpu);
+        if (!renderPipeline) {
+            //TODO: Reuse sampler with terrain.ts?
+            const sampler = engine.gpu.device.createSampler({
+                magFilter: "nearest",
+                minFilter: "nearest",
+                mipmapFilter:"nearest"
+            });
+            const bindGroupTextureWater = engine.gpu.positionBindGroupTimeWGSL.addChildLayout('water', BindGroupLayout.create(
+                engine.gpu,
+                'water',
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {
+                        type:'non-filtering'
+                    }
+                }, {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {
+        
+                    }
+                }
+            ));
+            renderPipeline = bindGroupTextureWater.addRenderPipeline('WaterRenderPipeline',
+                new VertexShader(engine.gpu, 'water.vert.wgsl', [{
+                    arrayStride: 12,
+                    stepMode: 'vertex',
+                    attributes: [{
+                        // position
+                        shaderLocation: 0,
+                        offset: 0,
+                        format: "float32x3"
+                    }]
+                }]),
+                new Shader(engine.gpu, 'water.frag.wgsl'),
+                {
+                    primitive: {
+                        topology: 'triangle-strip',
+                        stripIndexFormat: 'uint16',
+                        frontFace:'cw'
+                    },
+                },undefined, () =>
+                [
+                    {
+                        binding: 0,
+                        resource: sampler
+                    },
+                    {
+                        binding: 1,
+                        resource: engine.gpu.renderPassWater.renderTargets.diffuse.view.view
+                    }
+                ]
+        
+            );
+            renderPipelines.set(engine.gpu, renderPipeline);
+        }
         this.drawable = renderPipeline.addDrawableSimple(this, undefined, undefined, undefined);
         this.drawable.setVertexBuffer(0, new Float32Array([-50000.0, 3.0, -50000.0,
             50000.0, 3.0, -50000.0,

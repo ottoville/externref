@@ -7,44 +7,39 @@ import { Engine } from "../../engine.js";
 declare const engine:Engine;
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
-
-function Simple(gpu: GPU) {
-    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(gpu);
-    if (renderPipeline)
-        return renderPipeline;
-    
-    renderPipeline = gpu.positionBindGroupTimeWGSL.addRenderPipeline('SimpleRenderPipeline',
-        new VertexShader(gpu, 'simple.vert.wgsl', [{
-            arrayStride: 6 * 4,
-            stepMode: "vertex",
-            attributes: [{
-                // position
-                shaderLocation: 0,
-                offset: 0,
-                format: "float32x3",
-            }, {
-                // normals
-                shaderLocation: 1,
-                offset: 12,
-                format: "float32x3"
-            }]
-        }]), new Shader(gpu, 'simple.frag.wgsl'), {
-        primitive: { topology: 'triangle-list' },
-    });
-    renderPipelines.set(gpu, renderPipeline);
-    return renderPipeline
-}
 export abstract class SimpleMesh extends BoundableNodeSimple {
     drawable:DrawableSimple;
     constructor(
         vBufferCPU: Float32Array,
         label:string,
+        has_physic: boolean,
         vBufferGPU?: GPUVertexBuffer,
         scenes?: Scene[]) {
 
-        super(vBufferCPU, 6, false,label,scenes);
+        super(vBufferCPU, 6, false,label,has_physic, scenes);
         this.set_vertices(vBufferCPU)
-        const renderPipeline=Simple(engine.gpu);
+        let renderPipeline = renderPipelines.get(engine.gpu);
+        if (!renderPipeline) {
+            renderPipeline = engine.gpu.positionBindGroupTimeWGSL.addRenderPipeline('SimpleRenderPipeline',
+                new VertexShader(engine.gpu, 'simple.vert.wgsl', [{
+                    arrayStride: 6 * 4,
+                    stepMode: "vertex",
+                    attributes: [{
+                        // position
+                        shaderLocation: 0,
+                        offset: 0,
+                        format: "float32x3",
+                    }, {
+                        // normals
+                        shaderLocation: 1,
+                        offset: 12,
+                        format: "float32x3"
+                    }]
+                }]), new Shader(engine.gpu, 'simple.frag.wgsl'), {
+                primitive: { topology: 'triangle-list' },
+            });
+            renderPipelines.set(engine.gpu, renderPipeline);
+        }
         this.drawable =  renderPipeline.addDrawableSimple(this)
 
         if(!vBufferGPU) {

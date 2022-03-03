@@ -26,27 +26,6 @@ class PlaneMesh extends MainNode implements IndexedNode {
 }
 
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
-
-function getRenderPipeline(scene: Scene, ground: Terrain): RenderPipeline {
-    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
-    if (renderPipeline) {
-        return renderPipeline;
-    }
-    renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline('paintPlaneRenderpipeline', new VertexShader(engine.gpu,'plane.vert.wgsl', [{
-        arrayStride: 4 * 2,
-        stepMode: "vertex" as GPUVertexStepMode,
-        attributes: [{
-            // position
-            shaderLocation: 0,
-            offset: 0,
-            format: "float32x2"
-        }]
-    }]), new Shader(engine.gpu,'UIColor.frag.wgsl'), {
-        primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat:'uint32' },
-    });
-    renderPipelines.set(scene.gpu, renderPipeline);
-    return renderPipeline
-}
 export class paintPlane extends paintGround {
     #mesh:PlaneMesh
     constructor(
@@ -60,7 +39,23 @@ export class paintPlane extends paintGround {
             this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0)
             callback(p);
         });
-        this.#mesh = new PlaneMesh(getRenderPipeline(scene, ground), 0);
+        let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
+        if (!renderPipeline) {
+            renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline('paintPlaneRenderpipeline', new VertexShader(engine.gpu,'plane.vert.wgsl', [{
+                arrayStride: 4 * 2,
+                stepMode: "vertex" as GPUVertexStepMode,
+                attributes: [{
+                    // position
+                    shaderLocation: 0,
+                    offset: 0,
+                    format: "float32x2"
+                }]
+            }]), new Shader(engine.gpu,'UIColor.frag.wgsl'), {
+                primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat:'uint32' },
+            });
+            renderPipelines.set(scene.gpu, renderPipeline);
+        }
+        this.#mesh = new PlaneMesh(renderPipeline, 0);
         this.#mesh.drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
     }
     #startingPoint = new TerraVector2(2);
