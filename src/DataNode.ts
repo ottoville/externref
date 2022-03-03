@@ -196,11 +196,10 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
             this.getPosition(i).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer,posAndCol[1]));
         });
         const collider_planes_parallel_pointer=engine.rust.collider_planes_parallel_pointer(this.ptr);
+        this.#triangleFaces.forEach(face => {
+            face.updatePlane();
+        })
         this.#faceQuatros.forEach((quatro, i) => {
-            quatro[0].updatePlane();
-            quatro[1].updatePlane();
-            quatro[2].updatePlane();
-            quatro[3].updatePlane();
             new Float32Array(engine.memory.buffer, collider_planes_parallel_pointer + i * 4 * 16, 16).set([
                 quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
                 quatro[0].planeCollider[1], quatro[1].planeCollider[1], quatro[2].planeCollider[1], quatro[3].planeCollider[1], //y
@@ -212,15 +211,9 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
     //collisionsScalingMatrix = new TerraMatrix();
     #myCollisionsTransformMatrix = new TerraMatrix();
     public checkCollision (collider: ColliderJS, sphere: Ellipsoid, debug?:number) {
-        if (this.faces_count % 4 != 0) {  //TODO
-            console.warn('Checking collision on mesh that does not have right amount of faces')
-            return
-        }
-        //console.log(this.label, this.bounding_min, this.bounding_max)
         if (!collider._canDoCollision(this.bounding_min, this.bounding_max, sphere)) {
             return;
         }
-        //console.log('collisionsScalingMatrix',collisionsScalingMatrix)
         // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix 
         this.get_transformation().multiplyToRef(sphere.collisionsScalingMatrix, this.#myCollisionsTransformMatrix);
         if (!this.#lastColliderTransformMatrix.equals(this.#myCollisionsTransformMatrix)) {
@@ -230,20 +223,31 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         //@ts-ignore
             // eslint-disable-next-line no-constant-condition
            
-        const scaledPosition=collider.scaledPosition;
-        const scaledVelocity=collider.scaledVelocity
-        const trLength=this.#triangleFaces.length;
-        //console.log('faces',this.#faceQuatros)
-        for(let i=0; i<trLength; i++) {
-            collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity, debug);
-        }
-/*
+
+            if (this.faces_count % 4 != 0) {
+                const scaledPosition=collider.scaledPosition;
+                const scaledVelocity=collider.scaledVelocity
+                const trLength=this.#triangleFaces.length;
+                for(let i=0; i<trLength; i++) {
+                    collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity, debug);
+                }
+            } else {
+                /*
         TODO: Use wasm when this.faces_count % 4 == 0
         engine.wasm.testTriangles(
             engine.rust.collider_faces_pointer(this.ptr),
             engine.rust.collider_planes_parallel_pointer(this.ptr),
             this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
             this.id);*/
+                const scaledPosition=collider.scaledPosition;
+                const scaledVelocity=collider.scaledVelocity
+                const trLength=this.#triangleFaces.length;
+                for(let i=0; i<trLength; i++) {
+                    collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity, debug);
+                }
+            }
+
+
              
         
     }
@@ -257,8 +261,8 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
                     faceQuatro = [];
                 }
             });
-            this.#updateColliderPlanes();
         }
+        this.#updateColliderPlanes();
     }
 }
 
@@ -344,9 +348,10 @@ export abstract class BoundableNodeSimple extends DataNode {
         verticesPositionStride = 3,
         strip = false,
         label:string,
+        has_physic: boolean,
         scenes?: Scene[],
     ) {
-        super(vertices.length/verticesPositionStride,verticesPositionStride, false, strip,  undefined, undefined, label, scenes);
+        super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip,  undefined, undefined, label, scenes);
         this.set_vertices(vertices);
     }
     override set_vertices(vertices:Float32Array) {

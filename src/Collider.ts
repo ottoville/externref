@@ -48,12 +48,11 @@ export class ColliderJS {
     finalPosition: TerraVector3;
     collider_ptr: number;
     getLowestRoot (a: number, b: number, c: number, maxR: number) {
-
+        //TODO: This will give false negative if determinant is zero
         var determinant = b * b - 4.0 * a * c;
         if (determinant < 0) {
             return 0;
         }
-
         var sqrtD = Math.sqrt(determinant);
         const doubledA=2.0 * a;
         var r1 = (-b - sqrtD) / doubledA;
@@ -338,8 +337,6 @@ export class ColliderJS {
            // var velocitySquaredLength = this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2];
 
             //var a = this.#velocitySquaredLength;
-            
-
             let lowestRoot: number;
             let b: number;
             let c: number;
@@ -352,8 +349,9 @@ export class ColliderJS {
             while (i < 3) {
                 // for (let i = 0; i < 3; i++) {
                 const p = vectors[i];
-                if (!p)
-                    continue;
+                if (!p) {
+                    throw('no vector found '+p)
+                }
 
                 this.#tempVector[0] = scaledPosition[0] - p[0];
                 this.#tempVector[1] = scaledPosition[1] - p[1];

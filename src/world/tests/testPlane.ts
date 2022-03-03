@@ -15,7 +15,7 @@ export class testPlane extends BoundableNodeSimple {
 
     constructor(scene: Scene) {
         //@ts-ignore
-        super(new SharedArrayBuffer(7 * 3 * 4),7,undefined,undefined,scene)
+        super(new SharedArrayBuffer(7 * 3 * 4),7,undefined,undefined,false,scene)
         //this.boundingBox.box.set([0, 0, 0, 200, 200, 0])
         this.set_vertices(vertices);
        /* this.updateVertices(buffer =>
