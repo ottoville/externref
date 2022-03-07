@@ -47,6 +47,8 @@ export class ColliderJS {
     #velocitySquaredLength!: number;
     finalPosition: TerraVector3;
     collider_ptr: number;
+    collidedPointInTriangle: Triangle | undefined;
+    didCollide = false;
     getLowestRoot (a: number, b: number, c: number, maxR: number) {
         //TODO: This will give false negative if determinant is zero
         var determinant = b * b - 4.0 * a * c;
@@ -115,22 +117,15 @@ export class ColliderJS {
     get nearest_distance_squared() {
         return new Float32Array(engine.memory.buffer, engine.rust.nearest_distance_squared_pointer(this.collider_ptr), 1)[0]!
     }
-    set collision_not_found(val:number) {
-        new Float32Array(engine.memory.buffer, engine.rust.collision_not_found_pointer(this.collider_ptr), 1).set([val]);
+    set collision_resolved(val:number) {
+        new Float32Array(engine.memory.buffer, engine.rust.collision_resolved_pointer(this.collider_ptr), 1).set([val]);
     }
-    get collision_not_found() {
-        return new Float32Array(engine.memory.buffer, engine.rust.collision_not_found_pointer(this.collider_ptr), 1)[0]!
+    get collision_resolved() {
+        return new Float32Array(engine.memory.buffer, engine.rust.collision_resolved_pointer(this.collider_ptr), 1)[0]!
     }
     constructor(rustExports:rustWasm) {
-
         this.collider_ptr = rustExports.collider();
-
-
         this.finalPosition= new TerraVector3();
-
-
-
-
     }
 
 
@@ -155,7 +150,7 @@ export class ColliderJS {
     // Methods
     /** @hidden */
     public _initialize(source: TerraVector3, dir: TerraVector3,e: number, sphere: Ellipsoid): void {
-        //this.#nearestDistanceSquared = 9999999;
+        this.collidedPointInTriangle=undefined;
         this.nearest_distance_squared=9999999;
         //this.#velocity = dir;
         const scaledVelocity=this.scaledVelocity;
@@ -194,7 +189,7 @@ export class ColliderJS {
 
         this.epsilon = e;
        // this.collisionFound = false;
-       this.collision_not_found=1;
+       this.collision_resolved=1;
         //console.log('set collisionNotFound true')
 
 
@@ -259,7 +254,7 @@ export class ColliderJS {
     }
     //#points: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()];
     /** @hidden */
-    public _testTriangle(triangle: Triangle, scaledPosition:TerraVector3, scaledVelocity:TerraVector3, debug?:number): void {
+    public _testTriangle(triangle: Triangle, scaledPosition:TerraVector3, scaledVelocity:TerraVector3): void {
         //console.log(triangle.planeCollider[0])
         var dot = Dot(triangle.planeCollider, this.#normalizedVelocity);
         
@@ -268,30 +263,22 @@ export class ColliderJS {
         }
 
         const signedDistToTrianglePlane = Dot(scaledPosition, triangle.planeCollider) + triangle.planeCollider[3]; //trianglePlane.signedDistanceTo(this._basePoint);
-        var normalDotVelocity = Dot(triangle.planeCollider, scaledVelocity);
+        const normalDotVelocity = Dot(triangle.planeCollider, scaledVelocity);
 
        // let t0=0;
-        // this._collisionPoint.copyFromFloats(0, 0, 0);
         this.#collisionPoint[0] = 0;
         this.#collisionPoint[1] = 0;
         this.#collisionPoint[2] = 0;
         var found = false;
         var t = 1.0;
         var embeddedInPlane = false;
-        if(debug) {
-           /* if(Math.abs(normalDotVelocity) < 0.00001) {
-                normalDotVelocity=0;
-            }*/
-           // console.log('normalDotVelocity',normalDotVelocity, normalDotVelocity === 0);
 
-        }
-        if (normalDotVelocity === 0) {
+        if (Math.abs(normalDotVelocity) < 0.00001) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
                 return;
             }
             embeddedInPlane = true;
             var t0 = 0;
-
         }
         else {
             var t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
@@ -320,6 +307,7 @@ export class ColliderJS {
             // this._velocity.scaleToRef(t0, this._tempVector);
             //this._planeIntersectionPoint.addInPlace(this._tempVector);
             if (this._checkPointInTriangle(this.#planeIntersectionPoint, triangle)) {
+                this.collidedPointInTriangle=triangle;
                 found = true;
                 t = t0;
                 this.#collisionPoint[0] = this.#planeIntersectionPoint[0];
@@ -328,8 +316,6 @@ export class ColliderJS {
                 
                 // this._collisionPoint.copyFrom(this._planeIntersectionPoint);
             }
-        } else {
-           // console.log('embeddedInPlane')
         }
 
         if (!found) {
@@ -363,6 +349,8 @@ export class ColliderJS {
                 if (lowestRoot) {
                     t = lowestRoot;
                     found = true;
+                    this.collidedPointInTriangle=undefined
+
                     this.#collisionPoint[0] = p[0]
                     this.#collisionPoint[1] = p[1]
                     this.#collisionPoint[2] = p[2]                    
@@ -405,6 +393,8 @@ export class ColliderJS {
                     if (f >= 0.0 && f <= 1.0) {
                         t = lowestRoot;
                         found = true;
+                        this.collidedPointInTriangle=undefined
+
                         // this._edge.scaleInPlace(f);
                 /*        this._edge[0] *= f;
                         this._edge[1] *= f;
@@ -424,7 +414,7 @@ export class ColliderJS {
             //var distToCollisionSquared = t * (this.#velocity[0] * this.#velocity[0] + this.#velocity[1] * this.#velocity[1] + this.#velocity[2] * this.#velocity[2]);
           //  console.log(this.collisionFound);
           
-            if (this.collision_not_found === 1 || distToCollisionSquared < this.nearest_distance_squared) {
+            if (this.collision_resolved === 1 || distToCollisionSquared < this.nearest_distance_squared) {
                
                
                
@@ -456,67 +446,10 @@ export class ColliderJS {
 
               //  console.log('nearestDistanceSquared',this.#nearestDistanceSquared)
                 //this.collisionFound = true;
-                this.collision_not_found=0;
+                this.collision_resolved=0;
                 //console.log('set collisionNotFound 0', this.collisionNotFound.getUint32(0,true))
                 this.collidedMesh = "hostMesh";
             }
         }
     }
-
-    /** @hidden */
-    /*
-    public _getResponse(pos: Vector3, vel: Vector3): void {
-        this._destinationPoint[0] = pos[0] + vel[0];
-        this._destinationPoint[1] = pos[1] + vel[1];
-        this._destinationPoint[2] = pos[2] + vel[2];
-        let scale = this.engine.nearestDistanceSquared.getFloat32(0,true) / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
-       // let scale = this.#nearestDistanceSquared / (vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
-        vel[0] *= scale;
-        vel[1] *= scale;
-        vel[2] *= scale;
-
-        pos[0] = this.basePoint[0] + vel[0];
-        pos[1] = this.basePoint[1] + vel[1];
-        pos[2] = this.basePoint[2] + vel[2];
-
-        this._slidePlaneNormal[0] = pos[0] - this.engine.intersectionPointWasm[0];
-        this._slidePlaneNormal[1] = pos[1] - this.engine.intersectionPointWasm[1];
-        this._slidePlaneNormal[2] = pos[2] - this.engine.intersectionPointWasm[2];
-
-        const length = Math.sqrt(this._slidePlaneNormal[0] * this._slidePlaneNormal[0] + this._slidePlaneNormal[1] * this._slidePlaneNormal[1] + this._slidePlaneNormal[2] * this._slidePlaneNormal[2]);
-        if (!(length === 0 || length === 1.0)) {
-            const norm = 1 / length;
-            this._slidePlaneNormal[0] *= norm;
-            this._slidePlaneNormal[1] *= norm;
-            this._slidePlaneNormal[2] *= norm;
-        }
-
-        // this._slidePlaneNormal.normalize();
-
-        // this._slidePlaneNormal.scaleToRef(this._epsilon, this._displacementVector);
-        this._displacementVector[0] = this._slidePlaneNormal[0] * this.epsilon;
-        this._displacementVector[1] = this._slidePlaneNormal[1] * this.epsilon;
-        this._displacementVector[2] = this._slidePlaneNormal[2] * this.epsilon;
-
-        // pos.addInPlace(this._displacementVector);
-        pos[0] += this._displacementVector[0];
-        pos[1] += this._displacementVector[1];
-        pos[2] += this._displacementVector[2];
-        //this.intersectionPoint.addInPlace(this._displacementVector);
-        this.engine.intersectionPointWasm[0] += this._displacementVector[0];
-        this.engine.intersectionPointWasm[1] += this._displacementVector[1];
-        this.engine.intersectionPointWasm[2] += this._displacementVector[2];
-
-        var d = -(this._slidePlaneNormal[0] * this.engine.intersectionPointWasm[0] + this._slidePlaneNormal[1] * this.engine.intersectionPointWasm[1] + this._slidePlaneNormal[2] * this.engine.intersectionPointWasm[2]);
-        scale = Dot(this._destinationPoint, this._slidePlaneNormal) + d;
-
-        //this._destinationPoint.subtractInPlace(this._slidePlaneNormal);
-        this._destinationPoint[0] -= this._slidePlaneNormal[0] * scale;
-        this._destinationPoint[1] -= this._slidePlaneNormal[1] * scale;
-        this._destinationPoint[2] -= this._slidePlaneNormal[2] * scale
-        //this._destinationPoint.subtractToRef(this.intersectionPoint, vel);
-        vel[0] = this._destinationPoint[0] - this.engine.intersectionPointWasm[0];
-        vel[1] = this._destinationPoint[1] - this.engine.intersectionPointWasm[1];
-        vel[2] = this._destinationPoint[2] - this.engine.intersectionPointWasm[2];
-    }*/
 }

@@ -79,7 +79,7 @@ export class Box extends SimpleIndexedMesh {
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
         engine.collideWithWorld(this);
-        if(!engine.collider.collision_not_found) {
+        if(!engine.collider.collision_resolved) {
            //console.log('cant solve collision', this.label)
         }
         return engine.collider.finalPosition;

@@ -210,7 +210,7 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
     }
     //collisionsScalingMatrix = new TerraMatrix();
     #myCollisionsTransformMatrix = new TerraMatrix();
-    public checkCollision (collider: ColliderJS, sphere: Ellipsoid, debug?:number) {
+    public checkCollision (collider: ColliderJS, sphere: Ellipsoid) {
         if (!collider._canDoCollision(this.bounding_min, this.bounding_max, sphere)) {
             return;
         }
@@ -229,7 +229,7 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
                 const scaledVelocity=collider.scaledVelocity
                 const trLength=this.#triangleFaces.length;
                 for(let i=0; i<trLength; i++) {
-                    collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity, debug);
+                    collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
                 }
             } else {
                 /*
@@ -243,7 +243,7 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
                 const scaledVelocity=collider.scaledVelocity
                 const trLength=this.#triangleFaces.length;
                 for(let i=0; i<trLength; i++) {
-                    collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity, debug);
+                    collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
                 }
             }
 

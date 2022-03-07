@@ -3,7 +3,7 @@ pub use crate::mesh::Mesh;
 
 pub struct Collider {
     intersection_point:[f32;4],
-    pub collision_not_found:u32,
+    pub collision_resolved:u32,
     pub nearest_distance_squared:f32,
     scaled_position:[f32;4],
     scaled_velocity:[f32;4],
@@ -11,7 +11,7 @@ pub struct Collider {
 }
 static COLLIDER:Collider=Collider {
     intersection_point:[0.0,0.0,0.0,0.0],
-    collision_not_found:1u32,
+    collision_resolved:1u32,
     nearest_distance_squared:0.0,
     scaled_position:[0.0,0.0,0.0,0.0],
     scaled_velocity:[0.0,0.0,0.0,0.0],
@@ -27,8 +27,8 @@ pub unsafe extern "C" fn intersection_point_pointer(collider_ptr:*const Collider
     (*collider_ptr).intersection_point.as_ptr()
 }
 #[no_mangle]
-pub unsafe extern "C" fn collision_not_found_pointer(collider_ptr:*const Collider) -> &'static u32 {
-    &((*collider_ptr).collision_not_found)
+pub unsafe extern "C" fn collision_resolved_pointer(collider_ptr:*const Collider) -> &'static u32 {
+    &((*collider_ptr).collision_resolved)
 }
 #[no_mangle]
 pub unsafe extern "C" fn nearest_distance_squared_pointer(collider_ptr:*const Collider) -> &'static f32 {
@@ -54,7 +54,7 @@ impl Collider {
     pub fn new() -> Self {
         Collider {
             intersection_point:[0.0,0.0,0.0,0.0],
-            collision_not_found:1u32,
+            collision_resolved:1u32,
             nearest_distance_squared:0.0,
             scaled_position:[0.0,0.0,0.0,0.0],
             scaled_velocity:[0.0,0.0,0.0,0.0],
@@ -62,12 +62,12 @@ impl Collider {
         }
     }
     fn collision_found(&mut self, dist_to_collision_squared:f32, collision_point_x:f32, collision_point_y:f32, collision_point_z:f32) {
-        if self.collision_not_found == 1 || dist_to_collision_squared < self.nearest_distance_squared {
+        if self.collision_resolved == 1 || dist_to_collision_squared < self.nearest_distance_squared {
             self.intersection_point[0] = collision_point_x;
             self.intersection_point[1] = collision_point_y;
             self.intersection_point[2] = collision_point_z;
             self.nearest_distance_squared=dist_to_collision_squared;
-            self.collision_not_found=0;
+            self.collision_resolved=0;
         }
     }
 

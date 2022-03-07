@@ -26,7 +26,7 @@ let GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
 export type rustWasm = {
     collider():number,
     intersection_point_pointer(collider_ptr:number):number
-    collision_not_found_pointer(collider_ptr:number):number
+    collision_resolved_pointer(collider_ptr:number):number
     nearest_distance_squared_pointer(collider_ptr:number):number
     scaled_position_pointer(collider_ptr:number):number
     scaled_velocity_pointer(collider_ptr:number):number
@@ -394,7 +394,7 @@ export class Engine {
 
         //TODO: this does not work after memory grow
         this.#collidedMesh = new DataView(this.memory.buffer, engine.rust.collided_mesh_pointer(this.collider.collider_ptr), 4);
-        wasm.construct(engine.rust.collision_not_found_pointer(this.collider.collider_ptr),
+        wasm.construct(engine.rust.collision_resolved_pointer(this.collider.collider_ptr),
             engine.rust.intersection_point_pointer(this.collider.collider_ptr),
             engine.rust.nearest_distance_squared_pointer(this.collider.collider_ptr),
             engine.rust.collided_mesh_pointer(this.collider.collider_ptr),
@@ -525,6 +525,7 @@ export class Engine {
     #getFinalPosition(sphere: Ellipsoid): [number, number, number] | TerraVector3 {
         const scaledPosition = this.collider.scaledPosition;
         const scaledVelocity = this.collider.scaledVelocity;
+        this.collider.didCollide = false;
         for (let i = 0; i < 3; i++) {
             //TODO: really, here inside the loop?
             //TODO: Remove this JS initialize
@@ -537,10 +538,10 @@ export class Engine {
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
             if(sphere instanceof MainNode) {
                 this.physics.tickables.forEach(mesh => {
-                   // if(mesh.label !== 'gravitybixbox2')
-                     //   return;
+                    //if(mesh.label !== 'slopeTriangle' && mesh.label !== 'bigbox')
+                   //  return;
                     if(sphere !== mesh)
-                        mesh.checkCollision(this.collider, sphere, i)
+                        mesh.checkCollision(this.collider, sphere)
                 });
             }
             else {
@@ -552,11 +553,11 @@ export class Engine {
             this.#destinationPoint[2] = scaledPosition[2] + scaledVelocity[2];
 
 
-            if (this.collider.collision_not_found) {
-
+            if (this.collider.collision_resolved) {
                 //this.collider.finalPosition.set(scaledPosition);
                 return this.#destinationPoint;
             }
+            this.collider.didCollide=true;
             if(sphere instanceof MainNode)
                 sphere.is_colliding = true;
             const intersectionPoint = this.collider.intersectionPointWasm;
@@ -576,27 +577,34 @@ export class Engine {
                 scaledPosition[2] += scaledVelocity[2];
 
                 //pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
-                //TODO: Use planeNormal already calculated on collided triangle.
-                        //When colliding the face
-                this.collider._slidePlaneNormal[0] = scaledPosition[0] - intersectionPoint[0];
-                this.collider._slidePlaneNormal[1] = scaledPosition[1] - intersectionPoint[1];
-                this.collider._slidePlaneNormal[2] = scaledPosition[2] - intersectionPoint[2];
+                if(this.collider.collidedPointInTriangle) {
+                    //TODO: this does not work on ellipsoid space.
+                    this.collider._slidePlaneNormal[0]=this.collider.collidedPointInTriangle.planeCollider[0];
+                    this.collider._slidePlaneNormal[1]=this.collider.collidedPointInTriangle.planeCollider[1];
+                    this.collider._slidePlaneNormal[2]=this.collider.collidedPointInTriangle.planeCollider[2];
+                } else {
+                    this.collider._slidePlaneNormal[0] = scaledPosition[0] - intersectionPoint[0];
+                    this.collider._slidePlaneNormal[1] = scaledPosition[1] - intersectionPoint[1];
+                    this.collider._slidePlaneNormal[2] = scaledPosition[2] - intersectionPoint[2];
 
-                // this._slidePlaneNormal.normalize();
-               // const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
-                const length = Math.hypot(this.collider._slidePlaneNormal[0],this.collider._slidePlaneNormal[1],this.collider._slidePlaneNormal[2]);
+                    // this._slidePlaneNormal.normalize();
+                // const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
+                    const length = Math.hypot(this.collider._slidePlaneNormal[0],this.collider._slidePlaneNormal[1],this.collider._slidePlaneNormal[2]);
                 
-                if (!(length === 0 || length === 1.0)) {
-                    const norm = 1 / length;
-                    this.collider._slidePlaneNormal[0] *= norm;
-                    this.collider._slidePlaneNormal[1] *= norm;
-                    this.collider._slidePlaneNormal[2] *= norm;
+                    if (!(length === 0 || length === 1.0)) {
+                        const norm = 1 / length;
+                        this.collider._slidePlaneNormal[0] *= norm;
+                        this.collider._slidePlaneNormal[1] *= norm;
+                        this.collider._slidePlaneNormal[2] *= norm;
+                    }
                 }
 
 //DEBUG START
-//this.collider._slidePlaneNormal[0]=0;
-//this.collider._slidePlaneNormal[1]=0.9422223358842474;
-//this.collider._slidePlaneNormal[2]=-0.3349881636130334;
+/*
+this.collider._slidePlaneNormal[0]= -0.5877852439880371
+this.collider._slidePlaneNormal[1]= 0.80901700258255
+this.collider._slidePlaneNormal[2]= 0
+*/
 //DEBUG END
 
 
