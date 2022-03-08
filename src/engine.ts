@@ -28,10 +28,15 @@ export type rustWasm = {
     intersection_point_pointer(collider_ptr:number):number
     collision_resolved_pointer(collider_ptr:number):number
     nearest_distance_squared_pointer(collider_ptr:number):number
+    set_nearest_distance_squared(collider_ptr:number, distance:number):void
+    get_nearest_distance_squared(collider_ptr:number):number
     scaled_position_pointer(collider_ptr:number):number
     scaled_velocity_pointer(collider_ptr:number):number
     collided_mesh_pointer(collider_ptr:number):number
-
+    speed_pointer(collider_ptr:number):number
+    set_speed(collider_ptr:number, speed:number):void
+    get_speed(collider_ptr:number):number
+    basepoint_world_pointer(collider_ptr:number):number
     handle_gpu_queue_rust():void,
 
     new_mesh(id:number, has_bounding:boolean,
@@ -66,8 +71,7 @@ export type rustWasm = {
     translation_pointer(mesh_ptr:number):number,
     velocity_pointer(mesh_ptr:number):number,
     acceleration_pointer(mesh_ptr:number):number,
-    bounding_min_pointer(mesh_ptr:number):number,
-    bounding_max_pointer(mesh_ptr:number):number,
+    intersect_box_aa_sphere(mesh_ptr:number,collider_ptr:number, radius:number):boolean
     scale_x(mesh_ptr:number):number,
     scale_y(mesh_ptr:number):number,
     scale_z(mesh_ptr:number):number,

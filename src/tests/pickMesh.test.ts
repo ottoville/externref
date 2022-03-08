@@ -2,7 +2,6 @@
 import { Box } from "../GPU/Meshes/Box.js";
 
 import type { Engine } from "../engine.js";
-import { TerraVector3 } from "../Math.js";
 declare const engine: Engine;
 
 /*

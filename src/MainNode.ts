@@ -1,6 +1,7 @@
 ﻿import { ReadOnlyTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Scene } from "./Scene.js";
 import type { Engine } from "./engine.js";
+import type { ColliderJS } from "./Collider.js";
 declare const engine:Engine;
 
 export abstract class MainNode {
@@ -113,11 +114,8 @@ export abstract class MainNode {
         this.acceleration.set(value);
         this.update_dynamic_buffer();
     }
-    get bounding_min() {
-        return new TerraVector3(engine.memory.buffer,engine.rust.bounding_min_pointer(this.ptr));
-    }
-    get bounding_max() {
-        return new TerraVector3(engine.memory.buffer,engine.rust.bounding_max_pointer(this.ptr));
+    intersect_box_aa_sphere(collider:ColliderJS, radius: number) {
+        return engine.rust.intersect_box_aa_sphere(this.ptr,collider.collider_ptr, radius)
     }
     constructor(
         hasBounding = false,

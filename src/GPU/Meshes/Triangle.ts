@@ -1,6 +1,5 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { Engine } from "../../engine.js";
-import { Triangle as MTriangle } from "../../Math.js";
 import { SimpleMesh } from "../RenderPipeLines/SimpleMesh.js";
 declare const engine:Engine;
 
@@ -13,7 +12,6 @@ const positions = new Float32Array([
 
 let uid=0;
 export class Triangle extends SimpleMesh {
-    colliderTriangle: MTriangle;
     constructor(
         label='triangle'+(uid++),
         color:[number,number,number,number]=[1,0,0,0],
@@ -22,10 +20,6 @@ export class Triangle extends SimpleMesh {
     ) {
         super(positions,label,has_physic, undefined, scenes)
         this.gpu_custom_data=color;
-        const verticesArray=this.verticesArray;
-        this.colliderTriangle = new MTriangle([verticesArray[0]!.byteOffset,verticesArray[1]!.byteOffset,verticesArray[2]!.byteOffset],
-            () => engine.rust.collider_faces_pointer(this.ptr)
-        )
     }
     
     //TODO: This is now actually a sphere collider

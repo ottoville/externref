@@ -211,7 +211,16 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
     //collisionsScalingMatrix = new TerraMatrix();
     #myCollisionsTransformMatrix = new TerraMatrix();
     public checkCollision (collider: ColliderJS, sphere: Ellipsoid) {
-        if (!collider._canDoCollision(this.bounding_min, this.bounding_max, sphere)) {
+
+        //TODO: When there is support for bounding sphere.
+        //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
+
+        var max = Math.max(sphere.radius[0], sphere.radius[1], sphere.radius[2]);
+
+        /*   if (distance > this._velocityWorldLength + max + sphereRadius) {
+               return false;
+           }*/
+        if(!this.intersect_box_aa_sphere(engine.collider,max)) {
             return;
         }
         // TODO: keep colliderplanes in memory for x amount of collisionsScalingMatrix 

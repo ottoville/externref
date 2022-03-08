@@ -1,6 +1,7 @@
 pub use crate::Vec3;
 pub use crate::Vec3_f32;
 pub use crate::Vec4;
+use crate::collider::Collider;
 pub use crate::mesh::Mesh;
 
 pub struct BoundingBox {
@@ -153,5 +154,32 @@ impl BoundingBox {
         };
 
         self.dirty=false;
+    }
+    pub fn intersect_box_aa_sphere(&self, collider: &Collider, radius:f32) -> bool {
+        let bound=collider.speed + radius;
+        if self.min.x > collider.basepoint_world[0] + bound {
+            return false;
+        }
+    
+        if collider.basepoint_world[0] - bound > self.max.x {
+            return false;
+        }
+    
+        if self.min.y > collider.basepoint_world[1] + bound {
+            return false;
+        }
+    
+        if collider.basepoint_world[1] - bound > self.max.y {
+            return false;
+        }
+    
+        if self.min.z > collider.basepoint_world[2] + bound {
+            return false;
+        }
+    
+        if collider.basepoint_world[2] - bound > self.max.z {
+            return false;
+        }
+        return true;
     }
 }

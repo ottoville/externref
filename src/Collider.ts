@@ -15,34 +15,6 @@ function CrossToRef(left: readonly [number, number, number], right: readonly [nu
     result[1] = left[2] * right[0] - left[0] * right[2];
     result[2] = left[0] * right[1] - left[1] * right[0];
 }
-var intersectBoxAASphere = (boxMin: TerraVector3, boxMax: TerraVector3, sphereCenter: [number, number, number], sphereRadius: number): boolean => {
-    if (boxMin[0] > sphereCenter[0] + sphereRadius) {
-        return false;
-    }
-
-    if (sphereCenter[0] - sphereRadius > boxMax[0]) {
-        return false;
-    }
-
-    if (boxMin[1] > sphereCenter[1] + sphereRadius) {
-        return false;
-    }
-
-    if (sphereCenter[1] - sphereRadius > boxMax[1]) {
-        return false;
-    }
-
-    if (boxMin[2] > sphereCenter[2] + sphereRadius) {
-        return false;
-    }
-
-    if (sphereCenter[2] - sphereRadius > boxMax[2]) {
-        return false;
-    }
-    return true;
-};
-
-
 export class ColliderJS {
     #velocitySquaredLength!: number;
     finalPosition: TerraVector3;
@@ -112,10 +84,10 @@ export class ColliderJS {
         return new Float32Array(engine.memory.buffer, engine.rust.intersection_point_pointer(this.collider_ptr), 4) as TerraVector3;
     }
     set nearest_distance_squared(val:number) {
-        new Float32Array(engine.memory.buffer, engine.rust.nearest_distance_squared_pointer(this.collider_ptr), 1).set([val]);
+        engine.rust.set_nearest_distance_squared(this.collider_ptr, val);
     }
     get nearest_distance_squared() {
-        return new Float32Array(engine.memory.buffer, engine.rust.nearest_distance_squared_pointer(this.collider_ptr), 1)[0]!
+        return engine.rust.get_nearest_distance_squared(this.collider_ptr);
     }
     set collision_resolved(val:number) {
         new Float32Array(engine.memory.buffer, engine.rust.collision_resolved_pointer(this.collider_ptr), 1).set([val]);
@@ -135,9 +107,7 @@ export class ColliderJS {
    // basePoint!: Vector3;
     epsilon = 0;
     /** @hidden */
-    public _velocityWorldLength = 0;
     /** @hidden */
-    public _basePointWorld: [number, number, number] = [0, 0, 0];
     #velocityWorld = new TerraVector3()
     #normalizedVelocity: [x: number, y: number, z: number] = [0, 0, 0];
     /** @hidden */
@@ -155,7 +125,9 @@ export class ColliderJS {
         //this.#velocity = dir;
         const scaledVelocity=this.scaledVelocity;
         this.#velocitySquaredLength = scaledVelocity[0] * scaledVelocity[0] + scaledVelocity[1] * scaledVelocity[1] + scaledVelocity[2] * scaledVelocity[2];
-       /* this.#velocity[0] = dir[0];
+     //   engine.rust.set_speed_squared(this.collider_ptr, scaledVelocity[0] * scaledVelocity[0] + scaledVelocity[1] * scaledVelocity[1] + scaledVelocity[2] * scaledVelocity[2])
+       
+        /* this.#velocity[0] = dir[0];
         this.#velocity[1] = dir[1];
         this.#velocity[2] = dir[2];*/
 
@@ -177,16 +149,16 @@ export class ColliderJS {
         this.#basePoint[1] = source[1];
         this.#basePoint[2] = source[2];*/
 
-
-        this._basePointWorld[0] = source[0] * sphere.radius[0];
-        this._basePointWorld[1] = source[1] * sphere.radius[1];
-        this._basePointWorld[2] = source[2] * sphere.radius[2];
+        new Float32Array(engine.rust.memory.buffer, engine.rust.basepoint_world_pointer(this.collider_ptr),3).set([
+            source[0] * sphere.radius[0],
+            source[1] * sphere.radius[1],
+            source[2] * sphere.radius[2]
+        ])
 
         this.#velocityWorld[0] = dir[0] * sphere.radius[0];
         this.#velocityWorld[1] = dir[1] * sphere.radius[1];
         this.#velocityWorld[2] = dir[2] * sphere.radius[2];
-        this._velocityWorldLength = Math.sqrt(this.#velocityWorld[0] * this.#velocityWorld[0] + this.#velocityWorld[1] * this.#velocityWorld[1] + this.#velocityWorld[2] * this.#velocityWorld[2]);
-
+        engine.rust.set_speed(this.collider_ptr, Math.hypot(this.#velocityWorld[0], this.#velocityWorld[1],  this.#velocityWorld[2]))
         this.epsilon = e;
        // this.collisionFound = false;
        this.collision_resolved=1;
@@ -236,22 +208,6 @@ export class ColliderJS {
         return d >= 0;
     }
 
-    /** @hidden */
-    public _canDoCollision(vecMin: TerraVector3, vecMax: TerraVector3, sphere: Ellipsoid): boolean {
-        //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
-
-        var max = Math.max(sphere.radius[0], sphere.radius[1], sphere.radius[2]);
-
-        /*   if (distance > this._velocityWorldLength + max + sphereRadius) {
-               return false;
-           }*/
-
-        if (!intersectBoxAASphere(vecMin, vecMax, this._basePointWorld, this._velocityWorldLength + max)) {
-            return false;
-        }
-
-        return true;
-    }
     //#points: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()];
     /** @hidden */
     public _testTriangle(triangle: Triangle, scaledPosition:TerraVector3, scaledVelocity:TerraVector3): void {

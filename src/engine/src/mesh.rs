@@ -1,5 +1,6 @@
 
 
+use crate::collider::Collider;
 pub use crate::engine::Engine;
 pub use crate::engine::ENGINE;
 pub use crate::Vec3;
@@ -153,10 +154,16 @@ pub unsafe extern "C" fn velocity_pointer(mesh_ptr:*const Mesh) -> *const [f32; 
     &(*mesh_ptr).gpu_mesh.delta
 }
 #[no_mangle]
+pub unsafe extern "C" fn intersect_box_aa_sphere(mesh_ptr:*mut Mesh, collider:*const Collider, radius:f32) -> bool {
+    (*mesh_ptr).intersect_box_aa_sphere(&(*collider), radius)
+}
+#[cfg(debug_assertions)]
+#[no_mangle]
 pub unsafe extern "C" fn bounding_min_pointer(mesh_ptr:*mut Mesh) -> *const Vec3_f32 {
     (*mesh_ptr).geometry.update_bounding_box(&(*mesh_ptr).gpu_mesh.transformation);
     (&(*mesh_ptr).geometry.bounding_box.min) as *const Vec3_f32
 }
+#[cfg(debug_assertions)]
 #[no_mangle]
 pub unsafe extern "C" fn bounding_max_pointer(mesh_ptr:*mut Mesh) -> *const Vec3_f32 {
     (*mesh_ptr).geometry.update_bounding_box(&(*mesh_ptr).gpu_mesh.transformation);
@@ -379,6 +386,10 @@ impl Mesh {
         self.gpu_mesh.transformation.z.x = (xz + wy) * sz;
         self.gpu_mesh.transformation.z.y = (yz - wx) * sz;
         self.gpu_mesh.transformation.z.z = (1.0 - (xx + yy)) * sz;
+    }
+    pub fn intersect_box_aa_sphere(&mut self, collider: &Collider, radius:f32) -> bool {
+        self.geometry.update_bounding_box(&self.gpu_mesh.transformation);
+        self.geometry.bounding_box.intersect_box_aa_sphere(collider, radius)
     }
 }
 impl Drop for Mesh {

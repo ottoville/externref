@@ -1,6 +1,6 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { SimpleIndexedMesh } from "../RenderPipeLines/SimpleIndexedMesh.js";
-import { GPUBufferUsage } from "../../GPU.js";
+
 import { Engine } from "../../engine.js";
 declare const engine:Engine;
 
@@ -48,18 +48,14 @@ export class Box extends SimpleIndexedMesh {
         label='box'+(uid++),
         color:[number,number,number,number]=[1,0,0,0]
     ) {
-        const [indicesBuffer, iBuffer] = engine.gpu.createInputBuffer(GPUBufferUsage.INDEX, new Uint32Array([
+        super(positions, new Uint32Array([
             0, 1, 2, 0, 2, 3,    // front
             4, 5, 6, 4, 6, 7,    // back
             8, 9, 10, 8, 10, 11,   // top
             12, 13, 14, 12, 14, 15,   // bottom
             16, 17, 18, 16, 18, 19,   // right
             20, 21, 22, 20, 22, 23,   // left
-        ]));
-        const vBuffer = engine.gpu.device.createBuffer({ usage: GPUBufferUsage.VERTEX, size: positions.byteLength, mappedAtCreation: true }) as GPUVertexBuffer;
-        new Float32Array(vBuffer.getMappedRange()).set(positions);
-        vBuffer.unmap();
-        super(positions, new Uint32Array(indicesBuffer), iBuffer, vBuffer, label, point_light, has_physic, scenes);
+        ]),label, undefined, undefined, point_light, has_physic, scenes);
         this.gpu_custom_data=color;
     }
     
