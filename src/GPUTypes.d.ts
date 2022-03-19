@@ -34,9 +34,6 @@ type storageBindGroupLayout = {
         size?: number;
     }
 }
-interface TerraGPUComputePipeLine extends GPUComputePipeline {
-    createBindGroup(layout: number | GPUBindGroupLayout, entries: Iterable<GPUBindGroupEntry>): GPUBindGroup
-}
 interface TerraGPUCommandEncoder extends GPUCommandEncoder {
     copyBufferToBuffer(
         source: GPUCopySRCBuffer,

@@ -11,6 +11,8 @@ import type { Engine } from "../engine.js";
 import { MainNode } from "../MainNode.js";
 import { TextureView } from "./TextureView.js";
 import { MSAARenderTarget } from "./RenderTargets/MSAARenderTarget.js";
+import { ComputePipeline } from "./ComputePipeline.js";
+import { BindGroup } from "./BindGroup.js";
 
 declare const engine:Engine;
 
@@ -114,14 +116,12 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
             }
         )
     }
-    onResize:Set<()=>void>=new Set();
     resize(width: number, height: number) {
         [this.size[0], this.size[1]] = this._onResize(width, height);
         this.updateSizeBindGroup();
         for (const rt of Object.values(this.renderTargets)) {
             rt.resize(this);
         }
-        this.onResize.forEach(cb => cb());
     }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const colorAttachments = Object.values(this.renderTargets).map(rt => {
@@ -217,7 +217,7 @@ export class DepthRenderPass<T extends {
         rootLayout: PipelineLayout,
         label:string) {
             super(gpu,renderTargets,sampleCount,size,_onResize,entryPoint,rootLayout, label);
-            this.depthTexture = new Texture(gpu,this.#depthFormat,['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING'],this.size)
+            this.depthTexture = new Texture(gpu,this.#depthFormat,['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING'],'depthTexture'+label,this.size,sampleCount)
             this.depthTextureView = new TextureView(this.depthTexture);
         }
         override resize(width: number, height: number) {
@@ -232,10 +232,7 @@ export class DepthRenderPass<T extends {
                 view: this.depthTextureView.view,
                 depthClearValue: 0.0,
                 depthLoadOp: 'clear',
-                depthStoreOp: "store",
-                stencilClearValue: 0.0,
-                stencilLoadOp: 'clear',
-                stencilStoreOp: "store",
+                depthStoreOp: "store"
             }
             return renderPassDescriptor;
         }
@@ -266,9 +263,10 @@ export class PickableRenderPass<T extends {
 }> extends DepthRenderPass<T> {
     #pickBuffer: GPUBuffer;
     #pickBufferRead?: GPUBuffer;
-    #pickPositionPipeline=this.gpu.createComputePipeline('readDepth.comp.wgsl');
-    pickPositionLayout = this.#pickPositionPipeline.getBindGroupLayout(1)
-    pickPositionBindGroup0: GPUBindGroup;
+    #pickPositionPipeline?: ComputePipeline;
+    #mousePositionBuffer?: GPUUniformBuffer & GPUCopyDSTBuffer;
+    #pickPositionBindGroup0?: BindGroup;
+    #pickPositionBindGroup1?: BindGroup;
     rowBytes = this.size[0]*4;
 
     constructor(gpu: GPU,
@@ -281,16 +279,42 @@ export class PickableRenderPass<T extends {
         label: string) {
             super(gpu,renderTargets,sampleCount,size,_onResize,entryPoint,rootLayout,label);
             if(sampleCount == 4) {
-                this.#pickBuffer = this.gpu.device.createBuffer({
+                this.#pickPositionPipeline= new ComputePipeline(gpu,'readDepth.comp.wgsl');
+
+                this.#pickBuffer = gpu.device.createBuffer({
                     size: 4 * 4, //depth + meshID (four pixel)
                     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
                     label: 'pickBuffer'
                 });
-                this.#pickBufferRead = this.gpu.device.createBuffer({
+                this.#pickBufferRead = gpu.device.createBuffer({
                     size: 4 + 4, //depth + meshID (four pixel)
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
                     label: 'pickBufferRead'
                 });
+                this.#mousePositionBuffer = gpu.createGPUBuffer(8,[GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
+
+                this.#pickPositionBindGroup0 = this.#pickPositionPipeline.createBindGroup(0,'pickPositionBindGroup0',() => [
+                    {
+                        binding: 0,
+                        resource: {
+                            buffer: this.#pickBuffer
+                        }
+                    }]);
+                this.#pickPositionBindGroup1 = this.#pickPositionPipeline.createBindGroup(1,'pickPositionBindGroup1',() => [
+                        {
+                            binding: 0,
+                            resource: this.depthTextureView.view,
+                        },
+                        {
+                            binding: 1,
+                            resource: this.gpu.pickRenderPass.renderTargets.gRenderTargetId.view.view
+                        },
+                        {
+                            binding: 2,
+                            resource: {
+                                buffer: this.#mousePositionBuffer!
+                            }
+                }]);
 
             } else {
                 const offset=this.rowBytes%256;
@@ -302,13 +326,7 @@ export class PickableRenderPass<T extends {
                     label: 'pickBuffer'
                 }); 
             }
-            this.pickPositionBindGroup0 = this.#pickPositionPipeline.createBindGroup(0,[
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: this.#pickBuffer
-                    }
-                }]);
+            
     }
     override resize(width: number, height: number) {
         super.resize(width, height);
@@ -331,13 +349,11 @@ export class PickableRenderPass<T extends {
                 label: 'pickBuffer'
             });
         }
-        this.onResize.forEach(cb => cb());
     }
 
     pickPromise: Promise<{ position: TerraVector3 } | null> | null = null;
     pickPromiseMesh: Promise<{ position: TerraVector3, meshId: number } | null> | null = null;
-
-
+    #zAndIDPromise:Promise<[z:number, id:number]> | null = null;
     pickPosition(): Promise<{ position: TerraVector3 } | null>
     pickPosition(mesh:true): Promise<{ position: TerraVector3, meshId: number } | null>
     pickPosition(mesh=false): Promise<{ position: TerraVector3 } | null> | Promise<{ position: TerraVector3, meshId: number } | null> {
@@ -349,46 +365,34 @@ export class PickableRenderPass<T extends {
         }
         const camera = [...this.cameras][0]!;
         const encoder = this.gpu.device.createCommandEncoder();
-        let zAndIDPromise:Promise<[z:number, id:number]>;
+        
         const gRenderTargetDiffuse = this.renderTargets.gRenderTargetDiffuse
         if(gRenderTargetDiffuse instanceof MSAARenderTarget) {
-            const mousePositionBuffer = engine.gpu.createGPUBuffer(8,[GPUBufferUsage.UNIFORM],true);
-            new Uint32Array(mousePositionBuffer.getMappedRange(0,8)).set([engine.mousePosition[0], engine.mousePosition[1]]);
-            mousePositionBuffer.unmap();
-            const pickPositionBindGroup1 = engine.gpu.device.createBindGroup({
-                layout: this.pickPositionLayout,
-                entries: [
-                    {
-                        binding: 0,
-                        resource: this.depthTextureView.view,
-                    },
-                    {
-                        binding: 1,
-                        resource: this.gpu.pickRenderPass.renderTargets.gRenderTargetId.view.view
-                    },
-                    {
-                        binding: 2,
-                        resource: {
-                            buffer: mousePositionBuffer
-                        }
-                    }]
-            });
-            const pickPass = encoder.beginComputePass();
-            pickPass.setPipeline(this.#pickPositionPipeline);
-            pickPass.setBindGroup(0, this.pickPositionBindGroup0);
-            pickPass.setBindGroup(1, pickPositionBindGroup1);
-            pickPass.dispatch(1);
-            pickPass.end();
-            encoder.copyBufferToBuffer(this.#pickBuffer,0,this.#pickBufferRead!,0,4+4);
-            this.gpu.device.queue.submit([encoder.finish()]);
-
-            zAndIDPromise = this.#pickBufferRead!.mapAsync(GPUMapMode.READ,0,4+4).then(() => {
-                const b = this.#pickBufferRead!.getMappedRange(0,4+4);
-                const z = new DataView(b).getFloat32(0, true);
-                const meshID = new DataView(b).getUint32(4, true);
-                this.#pickBufferRead!.unmap();
-                return [z, meshID];
-            });
+            if(!this.#zAndIDPromise) {
+                const mousePositionSwapBuffer = engine.gpu.createGPUBuffer(8,[GPUBufferUsage.COPY_SRC],true);
+                new Uint32Array(mousePositionSwapBuffer.getMappedRange(0,8)).set([engine.mousePosition[0], engine.mousePosition[1]]);
+                mousePositionSwapBuffer.unmap();
+                encoder.copyBufferToBuffer(mousePositionSwapBuffer,0,this.#mousePositionBuffer!,0,8);
+                const pickPass = encoder.beginComputePass({label:'pickPass'});
+                pickPass.setPipeline(this.#pickPositionPipeline!.pipeline);
+                pickPass.setBindGroup(0, this.#pickPositionBindGroup0!.bindGroup);
+                pickPass.setBindGroup(1, this.#pickPositionBindGroup1!.bindGroup);
+                pickPass.dispatch(1);
+                pickPass.end();
+                encoder.copyBufferToBuffer(this.#pickBuffer,0,this.#pickBufferRead!,0,4+4);
+                this.gpu.device.queue.submit([encoder.finish()]);
+           
+                console.log('map pickBufferRead')
+                this.#zAndIDPromise = this.#pickBufferRead!.mapAsync(GPUMapMode.READ,0,4+4).then(() => {
+                    const b = this.#pickBufferRead!.getMappedRange(0,4+4);
+                    const z = new DataView(b).getFloat32(0, true);
+                    const meshID = new DataView(b).getUint32(4, true);
+                    console.log('unmap pickBufferRead')
+                    this.#pickBufferRead!.unmap();
+                    this.#zAndIDPromise = null;
+                    return [z, meshID];
+                });
+            }
         }
         else {
             let newOffset=engine.mousePosition[1] * this.rowBytes + engine.mousePosition[0] * 4;
@@ -427,20 +431,23 @@ export class PickableRenderPass<T extends {
             }
             this.gpu.device.queue.submit([encoder.finish()]);
             const buffer=this.#pickBuffer;
-            zAndIDPromise = this.#pickBuffer.mapAsync(GPUMapMode.READ,newOffset,missOffset+32 + 16).then(() => {
-                const b = buffer.getMappedRange(newOffset,missOffset+32 + 16);
-                const z = new DataView(b).getFloat32(missOffset, true);
-                let meshId =0;
-                if(mesh) {
-                    this.pickPromiseMesh = null;
-                    meshId = new DataView(b).getUint32(missOffset+32, true);
-                } else
-                    this.pickPromise = null;
-                buffer.unmap();
-                return [z, meshId];
-            });
+            if(!this.#zAndIDPromise) {
+                this.#zAndIDPromise = this.#pickBuffer.mapAsync(GPUMapMode.READ,newOffset,missOffset+32 + 16).then(() => {
+                    const b = buffer.getMappedRange(newOffset,missOffset+32 + 16);
+                    const z = new DataView(b).getFloat32(missOffset, true);
+                    let meshId =0;
+                    if(mesh) {
+                        this.pickPromiseMesh = null;
+                        meshId = new DataView(b).getUint32(missOffset+32, true);
+                    } else
+                        this.pickPromise = null;
+                    buffer.unmap();
+                    this.#zAndIDPromise=null;
+                    return [z, meshId];
+                });
+            }
         }
-        const promise=zAndIDPromise.then(zAndID => {
+        const promise=this.#zAndIDPromise.then(zAndID => {
 
             if(zAndID[0] === 0) { // Z is 0 when did not hit anything, far plane value
                 this.pickPromise = null;

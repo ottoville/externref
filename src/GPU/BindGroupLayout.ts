@@ -4,7 +4,7 @@ import type { GPU } from "../GPU.js";
 //TODO: Merge layoutgroupdrawable here
 //@ts-ignore
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface GPUBindGroupTextureEntry<SampleType = 'float'> extends GPUBindGroupEntry {
+export interface GPUBindGroupTextureEntry<SampleType = 'float'> extends GPUBindGroupEntry {
     resource: GPUTextureView;
 }
 type MapToGPUBindGroupEntry<T> = {

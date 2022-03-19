@@ -1,39 +1,16 @@
 ﻿import type { Scene } from "../Scene.js";
 import { MainNode } from "../MainNode.js";
 import { Angle } from "../Math.js";
-import type { GPU } from "../GPU.js";
-import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { GPU } from "../GPU.js";
 import type { DrawableSimple } from "../GPU/Drawable.js";
 import type { Engine } from "../engine.js";
+import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
 declare const engine:Engine;
 
 //const sundistance = 149600000000;
 
 const zAngle = Math.cos(Math.PI * 0.2);
 const yAngle = Math.sin(Math.PI * 0.2);
-
-
-
-const renderPipelines: Map<GPU, RenderPipeline> = new Map();
-
-function getRenderPipeline(gpu: GPU) {
-    let renderPipeline: RenderPipeline | undefined = renderPipelines.get(gpu);
-    if (renderPipeline)
-        return renderPipeline;
-    renderPipeline = gpu.positionBindGroupTime.addRenderPipeline('SunRenderPipeline',
-        new VertexShader(gpu,'sun.vert.wgsl'),
-        new Shader(gpu,'sun.frag.wgsl'),
-        {
-            primitive: {
-                topology: 'triangle-strip',
-                cullMode: 'none',
-                stripIndexFormat:'uint16'
-            }
-    },{depthWriteEnabled:false, depthCompare:'always'});
-    renderPipelines.set(gpu, renderPipeline);
-    return renderPipeline
-}
-
 
 export class Sun2 extends MainNode {
     #clamp = (value: number, min: number, max: number) => {
@@ -75,8 +52,11 @@ export class Sun2 extends MainNode {
     drawable:DrawableSimple;
     constructor(scenes: Scene[]) {
         super(undefined, undefined, 14,undefined,undefined,1,undefined,undefined,'sun',scenes);
-        const renderPipeline=getRenderPipeline(engine.gpu);
-        this.drawable=renderPipeline.addDrawableSimple(this,undefined,undefined,undefined);
+        this.drawable=GPU.createRenderPipeline(SunRenderPipeline, {
+            topology: 'triangle-strip',
+            cullMode: 'none',
+            stripIndexFormat:'uint16'
+        }).addDrawableSimple(this,undefined,undefined,undefined);
         engine.physics.movables.push(this);
     }
 }

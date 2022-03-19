@@ -49,6 +49,9 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         0.0,                     0.0,                   1.0 / this.#radius[2],  0.0,
         0.0, 0.0, 0.0, 1.0]);
     readonly closeDistanceVector:[number,number,number] = [closeDistance / this.#radius[0], closeDistance / this.#radius[1], closeDistance / this.#radius[2]];
+
+    #vectorsVec4: number[] = [];
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     checkCollide(_velocityPerDelta:[number,number,number]):ReadOnlyTerraVector3 {
         return this.translation;
@@ -80,6 +83,7 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         static_faces = false,
         label:string,
         scenes?: Scene[],
+        protected frontFace: GPUFrontFace = 'cw'
     ) {
         super(true, true, positionCount, verticesPositionStride, point_light,undefined, static_faces,strip,label,scenes);
 
@@ -119,6 +123,31 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
             }
         }
     }
+    protected pushVertice = (position:number) => {
+        let newLen=0;
+        if(this.frontFace === 'ccw') {
+            newLen=this.#vectorsVec4.unshift(position)
+        } else {
+            newLen=this.#vectorsVec4.push(position)
+        }
+        if (newLen === 3) {
+            const collider_faces_pointer = engine.rust.collider_faces_pointer(this.ptr); 
+            const faceIndex = this.#triangleFaces.length;
+            this.#triangleFaces.push(new Triangle(
+                this.#vectorsVec4  as [number, number, number],
+                () => collider_faces_pointer + faceIndex * 4 * 7));
+            new Uint32Array(
+                engine.memory.buffer,
+                collider_faces_pointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
+                3).set(this.#vectorsVec4); //4 is from plane
+        
+            if(this.strip) {
+                this.#vectorsVec4 = [(this.#vectorsVec4 as [number, number, number])[1], (this.#vectorsVec4 as [number, number, number])[2]];
+            } else {
+                this.#vectorsVec4 = [];
+            }
+        }
+    }
     get verticesArray() {
         const arr:Float32Array[] = [];
         const vertices_pointer=engine.rust.vertices_pointer(this.ptr);
@@ -145,6 +174,8 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         //TODO: Calculate on demand
         if(this.faces_count === 0 || this.vertices_count===0)
             return false;
+        this.#triangleFaces.length=0;
+        this.#vectorsVec4=[]
         this.#positionsAndCollider.length=0;
         this.colliderVerticesV4.length=0;
         //this.lastColliderWorldVectorsPointer = this.engine.mallocView(this.positions_count * 4 * Float32Array.BYTES_PER_ELEMENT);
@@ -157,27 +188,6 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         }
         //return this.facesBufferColliderPointer.byteOffset;
         return true;
-    }
-    addVectors = (faceIndex: number, vectors: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number] ) => {
-        if (vectors.length != 3)
-            throw ('less than 3 vector');
-        const collider_faces_pointer = engine.rust.collider_faces_pointer(this.ptr); 
-        this.#triangleFaces[faceIndex] = new Triangle(
-            vectors,
-            () => collider_faces_pointer + faceIndex * 4 * 7);
-       /* new Triangle(
-            vectors,
-            new Float32Array(this.engine.memory.buffer, this.collider_faces_pointer + faceIndex * 4 * 7,4) as TerraVector4
-        );*/
-        new Uint32Array(
-            engine.memory.buffer,
-            collider_faces_pointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
-            3).set(vectors); //4 is from plane
-      /*  new Uint32Array(
-            this.engine.memory.buffer,
-            this.collider_faces_pointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
-            3).set(vectors.map(v => v.byteOffset)); //4 is from plane*/
-    
     }
     abstract rebuildTrianglePlanes() : void
 
@@ -307,8 +317,9 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
         static_faces = false,
         label:string,
         scenes?: Scene[],
+        frontFace: GPUFrontFace = 'cw'
     ) {
-        super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip, point_light,static_faces,label, scenes);
+        super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip, point_light,static_faces,label, scenes, frontFace);
 
         this.indices = indicesView;
         this.set_vertices(vertices);
@@ -320,34 +331,13 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
     rebuildTrianglePlanes() {
         if(!this.initCollider())
             return;
-      //  if(!facesBufferColliderPointer)
-      //      return;
-        let vectorsVec4: number[] = [];
-        let faceIndex = 0;
-        const indices=this.indices
-        if (this.strip) {
-            indices.forEach((indice: number) => {
-                const vector = this.colliderVerticesV4[indice];
-                if (typeof(vector) === 'undefined') {
-                    throw ('position not found');
-                }
-                if (vectorsVec4.push(vector) < 3)
-                    return;
-                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number]);
-                vectorsVec4 = [(vectorsVec4 as [number, number, number])[1], (vectorsVec4 as [number, number, number])[2]];
-            });
-        } else {
-            indices.forEach((indice: number) => {
-                const position = this.colliderVerticesV4[indice]
-                if (typeof(position) === 'undefined') {
-                    throw ('position ' + indice + ' not found');
-                }
-                if (vectorsVec4.push(position!) == 3) {
-                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number])
-                    vectorsVec4 = [];
-                }
-            });
-        }
+        this.indices.forEach((indice: number) => {
+            const position = this.colliderVerticesV4[indice]
+            if (typeof(position) === 'undefined') {
+                throw ('position ' + indice + ' not found');
+            }
+            this.pushVertice(position)
+        });
         this.buildFaces();
     }
 }
@@ -370,25 +360,7 @@ export abstract class BoundableNodeSimple extends DataNode {
     rebuildTrianglePlanes() {
         if(!this.initCollider())
             return;
-
-
-        let vectorsVec4: number[] = [];
-        let faceIndex = 0;
-        if (this.strip) {
-            this.colliderVerticesV4.forEach(vector => {
-                if (vectorsVec4.push(vector) < 3)
-                    return;
-                this.addVectors(faceIndex++, vectorsVec4 as [number, number, number])
-                vectorsVec4 = [(vectorsVec4 as [number, number, number])[1], (vectorsVec4 as [number, number, number])[2]];
-            });
-        } else {
-            this.colliderVerticesV4.forEach(vector => {
-                if (vectorsVec4.push(vector) == 3) {
-                    this.addVectors(faceIndex++, vectorsVec4 as [number, number, number])
-                    vectorsVec4 = [];
-                }
-            });
-        }
+        this.colliderVerticesV4.forEach(this.pushVertice);
         this.buildFaces();
     }
 }

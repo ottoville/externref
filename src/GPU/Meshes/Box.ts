@@ -1,5 +1,5 @@
 ﻿import type { Scene } from "../../Scene.js";
-import { SimpleIndexedMesh } from "../RenderPipeLines/SimpleIndexedMesh.js";
+import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 
 import { Engine } from "../../engine.js";
 declare const engine:Engine;

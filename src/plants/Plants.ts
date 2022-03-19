@@ -3,14 +3,15 @@ import { Terrain } from "../world/terrain.js";
 //import simplex from '../simplex.js'
 
 import { PTDresult } from "../types/interfaces/index.js";
+import { GPU } from "../GPU.js";
 
 import type { Scene } from "../Scene.js";
-import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { GPUBufferUsage } from "../GPU.js"
-import { Engine } from "../engine.js";
+import { PlantsRenderPipeline } from "../GPU/RenderPipeLines/Plants.js";
+import { ComputePipeline } from "../GPU/ComputePipeline.js";
+
+import type { Engine } from "../engine.js";
 declare const engine:Engine;
-
-
 
 /**
  * Sets up indices for single blade mesh.
@@ -43,43 +44,8 @@ export class Plants {
     constructor(
         scene: Scene,
         terrainP: Promise<Terrain>,
-    ) {
-        const planstPipeline = engine.gpu.rootCameralayout.addRenderPipeline('PlantsRenderPipeline',
-            new VertexShader(engine.gpu, 'grass/grass.vert.wgsl', [
-                {
-                    arrayStride: 4 * 4,
-                    stepMode: "instance",
-                    attributes: [{ // position
-                        shaderLocation: 0,
-                        offset: 0,
-                        format: "float32x4"
-                    }]
-                },
-                {
-                    arrayStride: 4 * 4,
-                    stepMode: "instance",
-                    attributes: [
-                        {  // shape
-                            shaderLocation: 1,
-                            offset: 0,
-                            format: "float32x4"
-                        }
-                    ]
-                }, {
-                    arrayStride: 12,
-                    stepMode: 'vertex',
-                    attributes: [{
-                        // vertex position
-                        shaderLocation: 2,
-                        offset: 0,
-                        format: "float32x3"
-                    }]
-                }
-            ]),
-            new Shader(engine.gpu, 'color.frag.wgsl'), {
-            primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }
-        });
-        const drawable = planstPipeline.addDrawableIndirect(scene.gpu.createGPUBuffer(4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST]), 'Plants')
+    ) {        
+        const drawable = GPU.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }).addDrawableIndirect(scene.gpu.createGPUBuffer(4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST]), 'Plants')
         const positionGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
         const shapeGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
 
@@ -110,8 +76,8 @@ export class Plants {
         });
         terrainP.then(terrain => {
 
-            const computePipeline = scene.gpu.createComputePipeline("grass/getHeightAtCoordinates.comp.wgsl");
-            const layout = computePipeline.getBindGroupLayout(0);
+            const computePipeline = new ComputePipeline(engine.gpu, "grass/getHeightAtCoordinates.comp.wgsl");
+            const layout = computePipeline.pipeline.getBindGroupLayout(0);
             const bindGroup = scene.gpu.device.createBindGroup({
                 layout, entries: [
                     {
@@ -149,11 +115,11 @@ export class Plants {
 
                 const commandEncoder = scene.gpu.device.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
-                passEncoder.setPipeline(computePipeline);
+                passEncoder.setPipeline(computePipeline.pipeline);
 
                 const worldCopyGPU = scene.gpu.createGPUBuffer(this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], true);
                 const bindGroup2 = scene.gpu.device.createBindGroup({
-                    layout: computePipeline.getBindGroupLayout(1), entries: [{
+                    layout: computePipeline.pipeline.getBindGroupLayout(1), entries: [{
                         binding: 0,
                         resource: {
                             buffer: worldCopyGPU
@@ -236,14 +202,5 @@ export class Plants {
 
         // let offsetbufferPlain = new BABYLON.Buffer(engine, new Float32Array(this.offset), true, 4, false, true);
 
-        /* 
- 
- 
- 
-         //Poaceae._geometry.setVerticesBuffer(new BABYLON.VertexBuffer(engine, offsetbufferPlain, "worldPos", true, true, 0, true, 0, 4, undefined, undefined, true));
- 
-         let shapebuffer = new Buffer(engine, new Float32Array(shapes), true, 4, false, true);
-         let geometry: Geometry | null;
-   */
     }
 }

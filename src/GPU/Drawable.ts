@@ -3,8 +3,8 @@ import type { RenderPass } from "./RenderPass.js";
 import { MainNode } from "../MainNode.js";
 import { GPUBufferUsage } from "../GPU.js"
 import type { DataNode, IndexedNode } from "../DataNode.js";
-import { NormalsMesh } from "./RenderPipeLines/helpers/normals.js";
-import { BoundingBoxMesh } from "./RenderPipeLines/helpers/boundingbox.js";
+import { NormalsMesh } from "./Meshes/helpers/normals.js";
+import { BoundingBoxMesh } from "./Meshes/helpers/boundingbox.js";
 
 import type { Engine } from "../engine.js";
 declare const engine:Engine;
@@ -79,7 +79,6 @@ export abstract class Drawable {
             }
         });
         this.staticBuffers && renderEncoder.setBindGroup(BindGroupsStart++, this.staticBuffers)
-
         this.#vertexBuffers.forEach((buffer, index) => renderEncoder.setVertexBuffer(index, buffer.buffer, buffer.offset, buffer.size));
         this.render(renderEncoder);
     }

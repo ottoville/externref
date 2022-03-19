@@ -1,12 +1,15 @@
 ﻿import { MainNode } from "./MainNode.js";
 import { DepthRenderPass, PickableRenderPass, RenderPass } from "./GPU/RenderPass.js";
-import { LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
+import { type LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTargets/RenderTarget.js";
-import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
+import { BindGroupLayout, type GPUBindGroupTextureEntry } from "./GPU/BindGroupLayout.js";
 import {Texture } from "./GPU/Texture.js";
 import type { Projection } from "./GPU/Projection.js";
 import shaders from "./shaders.json" assert { type: "json" };
 import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
+import type { RenderPipeline } from "./GPU/RenderPipeline.js";
+import { ComputePipeline } from "./GPU/ComputePipeline.js";
+import type { BindGroup } from "./GPU/BindGroup.js";
 
 export const GPUBufferUsage = {
     MAP_READ: 0x0001,
@@ -25,6 +28,8 @@ type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
 };
 export class GPU {
+    static bindMap:WeakMap<GPUBindingResource, BindGroup[]> = new WeakMap();
+
     readonly gpu_memory_index_size=256;
     readonly gpu_screen_buffer_size= 16; //screen width and height and ratio
     readonly gpu_max_point_lights=63;
@@ -75,7 +80,7 @@ export class GPU {
     readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<GPUTextureFormat, ["RENDER_ATTACHMENT"]>>; }>;
 
     context: GPUCanvasContext;
-    updateViewPipeline:TerraGPUComputePipeLine;
+    updateViewPipeline:ComputePipeline;
     updateViewBindGroup: GPUBindGroup;
     readonly clustersInRow:[number,number,number]=[32, 18, 48];
 
@@ -91,7 +96,24 @@ export class GPU {
     readonly shaderModules = {} as { [K in keyof typeof shaders]: GPUShaderModule }
     pickRenderPass: RenderPass<{ gRenderTargetId: RenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>; }>;
     sizeBindGroupLayout: BindGroupLayout<[GPUBindGroupEntry]>;
+    static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
+    bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
+    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState={}) {
+        const primitiveWithDefaults:GPUPrimitiveState={
+            topology: 'triangle-list',
+            frontFace: 'cw',
+            cullMode: 'back',
+            ...primitive
+        }
+        const hash = desc[0]+Object.values(primitiveWithDefaults).sort().join();
+        let renderPipeline = GPU.#renderPipelines.get(hash);
+        if(!renderPipeline) {
+            renderPipeline=desc[1](hash, primitiveWithDefaults);
+            GPU.#renderPipelines.set(hash, renderPipeline);
+        }
+        return renderPipeline;
 
+    }
     constructor(public canvas: HTMLCanvasElement, adapter:GPUAdapter, public device: GPUDevice) {
 
         for(const key in shaders) {
@@ -124,6 +146,7 @@ export class GPU {
             }
         )
         this.viewUniformsLayout= this.device.createBindGroupLayout({
+            label:'viewUniformsLayout',
             entries: [
                 {
                     binding:0,
@@ -141,7 +164,7 @@ export class GPU {
                 }
             ]
         });
-        this.updateViewPipeline=this.createComputePipeline('updateView.comp.wgsl',
+        this.updateViewPipeline=new ComputePipeline(this,'updateView.comp.wgsl',
             this.device.createPipelineLayout({bindGroupLayouts:[viewLayout.layout, this.viewUniformsLayout]}));
 
 
@@ -259,8 +282,25 @@ export class GPU {
                 texture: {}
             }
         ));
-        const idTexture = Texture.create(this,"r32uint",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'],[300,300,1])
-        const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING']) //TODO: remove texture binding
+        this.bindGroupTextureWater = this.positionBindGroupTimeWGSL.addChildLayout('water', BindGroupLayout.create(
+            this,
+            'water',
+            {
+                binding: 0,
+                visibility: GPUShaderStage.FRAGMENT,
+                sampler: {
+                    type:'non-filtering'
+                }
+            }, {
+                binding: 1,
+                visibility: GPUShaderStage.FRAGMENT,
+                texture: {
+    
+                }
+            }
+        ));
+        const idTexture = Texture.create(this,"r32uint",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'],'idTexture',[300,300,1])
+        const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'diffuseTexture') //TODO: remove texture binding
 
         const gRenderTargetDiffuse = new MSAARenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 });
 
@@ -277,7 +317,7 @@ export class GPU {
             (w, h) => {
                 return [w, h]
             },'main',this.rootCameralayout,'renderPassScreen');
-        const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'])
+        const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'diffuseTextureWater')
     
         this.renderPassWater = new DepthRenderPass(this, {
             diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
@@ -295,7 +335,7 @@ export class GPU {
             usage: GPUTextureUsage.RENDER_ATTACHMENT
         });
 
-        const canvasTexture = Texture.create(this,this.presentationFormat,['RENDER_ATTACHMENT'])
+        const canvasTexture = Texture.create(this,this.presentationFormat,['RENDER_ATTACHMENT'],'canvasTexture')
         const BindGroupLayoutCanvas = BindGroupLayout.create(this,'BindGroupLayoutCanvas',
         {   //diffuse
             binding: 0,
@@ -465,25 +505,7 @@ export class GPU {
         this.device.queue.submit([commandEncoder.finish()]);
         callback(...readBuffers).finally(() => readBuffers.forEach(gpuReadBuffer => gpuReadBuffer.destroy()));
     }
-    createComputePipeline(shader: keyof typeof shaders, layout?: GPUPipelineLayout, entryPoint = 'main'): TerraGPUComputePipeLine {
-        const shaderModule = this.shaderModules[shader];
-        if (!shaderModule)
-            throw (new Error('Shader ' + shader + ' not found'));
-        const desc: GPUComputePipelineDescriptor = {
-            compute: {
-                module: shaderModule,
-                entryPoint
-            }
-        };
-        if (layout)
-            desc.layout = layout;
-        const pipeline = this.device.createComputePipeline(desc) as TerraGPUComputePipeLine;
-        pipeline.createBindGroup = (layout2: number | GPUBindGroupLayout, entries) => this.device.createBindGroup({
-            layout: layout2 instanceof GPUBindGroupLayout ? layout2 : pipeline.getBindGroupLayout(layout2),
-            entries: entries
-        });
-        return pipeline
-    }
+
     drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass, index: number) {
         let drawedMeshes = 0;
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {

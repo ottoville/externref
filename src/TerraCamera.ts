@@ -5,6 +5,7 @@ import { GPUBufferUsage } from "./GPU.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Projection } from "./GPU/Projection.js";
 import type { Engine } from "./engine.js";
+import type { BindGroup } from "./GPU/BindGroup.js";
 declare const engine:Engine;
 
 export class TerraCamera<T extends RenderPass = RenderPass> {
@@ -28,7 +29,7 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
     readonly #position = new TerraVector3(this.#viewProjectionPositionBuffer, 128);
 
     readonly #uniformBuffer: GPUUniformBuffer & GPUCopyDSTBuffer; //Todo: set to private
-    readonly updateViewBindGroup: GPUBindGroup;
+    readonly updateViewBindGroup: BindGroup;
     readonly uniformBindGroup: () => GPUBindGroup;
 
     constructor(public renderPass: T, public projection: Projection, private gpu: GPU, parent?: TerraCamera) {
@@ -60,8 +61,8 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
                 }
             }
         ]);
-        this.updateViewBindGroup = this.gpu.updateViewPipeline.createBindGroup(this.gpu.viewUniformsLayout,
-            [
+        this.updateViewBindGroup = this.gpu.updateViewPipeline.createBindGroup(this.gpu.viewUniformsLayout,'updateViewBindGroup2',
+            () => [
                 {
                     binding: 0,
                     resource: {

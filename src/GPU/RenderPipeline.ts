@@ -25,24 +25,15 @@ export class RenderPipeline {
     dynamicBindGroupOffset: number[] = [];
     #GPUIndexFormat: GPUIndexFormat = 'uint16';
     public createSharedBindGroups?: () => Set<GPUBindGroup>
-    renderPipelineDescriptor: Readonly<Omit<GPURenderPipelineDescriptor, 'vertex' | 'fragment'>>
     constructor(
         public label: string,
         public vertexShader:VertexShader,
         public fragmentShader:Shader,
-        renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'vertex' | 'fragment'>,
+        public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'vertex' | 'fragment'>,
         public bindgroupdrawable: PipelineLayout,
         public depthBuffer? : {depthWriteEnabled:boolean, depthCompare:GPUCompareFunction },
         ) {
-
-        renderPipelineDescriptor.layout = bindgroupdrawable.layout;
-        if(!renderPipelineDescriptor.primitive)
-            renderPipelineDescriptor.primitive={cullMode:'back', frontFace:'cw'};
-        if(!renderPipelineDescriptor.primitive.cullMode)
-            renderPipelineDescriptor.primitive.cullMode='back';
-        if(!renderPipelineDescriptor.primitive.frontFace)
-            renderPipelineDescriptor.primitive.frontFace='cw';
-        this.renderPipelineDescriptor=renderPipelineDescriptor;
+        renderPipelineDescriptor.layout = bindgroupdrawable.layout;       
     }
     destroy(): void {
         this.bindgroupdrawable.renderPipeLines.delete(this);

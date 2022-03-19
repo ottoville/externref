@@ -1,6 +1,6 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { Engine } from "../../engine.js";
-import { SimpleIndexedMesh } from "../RenderPipeLines/SimpleIndexedMesh.js";
+import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 declare const engine:Engine;
 
 
@@ -82,7 +82,7 @@ export class Sphere extends SimpleIndexedMesh {
             verticesAndNormals[i*6+4]   = vertices[i*3+1]!;
             verticesAndNormals[i*6+5]   = vertices[i*3+2]!;
         }
-        super(verticesAndNormals,indices,label,undefined, undefined, undefined, has_physic,scenes)
+        super(verticesAndNormals,indices,label,undefined, undefined, undefined, has_physic,scenes,'ccw')
         this.gpu_custom_data=color;
     }
     override checkCollide(velocityPerDelta:readonly [number,number,number]) {

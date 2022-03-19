@@ -18,6 +18,7 @@ import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "./GPU/RenderPass.js";
 import { Texture } from "./GPU/Texture.js";
 import { closeDistance, closeDistanceSquared, Ellipsoid } from "./DataNode.js";
+import { ComputePipeline } from "./GPU/ComputePipeline.js";
 
 declare const engine:Engine;
 
@@ -349,12 +350,12 @@ export class Engine {
                 camera.updateView(renderEncoder)
             })
             const lightPass = renderEncoder.beginComputePass();
-            lightPass.setPipeline(this.gpu.updateViewPipeline);
+            lightPass.setPipeline(this.gpu.updateViewPipeline.pipeline);
             lightPass.setBindGroup(0, this.gpu.updateViewBindGroup);
             this.cameras.forEach(camera => {
                 if(camera.viewUpdated || this.#updateLights) {
                     camera.viewUpdated=false;
-                    lightPass.setBindGroup(1, camera.updateViewBindGroup);
+                    lightPass.setBindGroup(1, camera.updateViewBindGroup.bindGroup);
                     lightPass.dispatch(...this.gpu.CLUSTER_DISPATCH_SIZE);
                 }
             });
@@ -440,7 +441,7 @@ export class Engine {
                 }
             }
         ]})
-        const computePipelineClusters       = gpu.createComputePipeline('clusters.comp.wgsl',
+        const computePipelineClusters       = new ComputePipeline(gpu,'clusters.comp.wgsl',
         gpu.device.createPipelineLayout({
             bindGroupLayouts:[gpu.sizeBindGroupLayout.layout, computePipelineClustersLayout]
         }));
@@ -475,7 +476,7 @@ export class Engine {
                 })
                 const commandEncoder = gpu.createCommandEncoder();
                 const passEncoder = commandEncoder.beginComputePass();
-                passEncoder.setPipeline(computePipelineClusters);
+                passEncoder.setPipeline(computePipelineClusters.pipeline);
                 
                 gpu.projections.forEach(projection => projection.update(aspectRatio))
 

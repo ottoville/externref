@@ -1,6 +1,6 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { Engine } from "../../engine.js";
-import { SimpleMesh } from "../RenderPipeLines/SimpleMesh.js";
+import { SimpleMesh } from "../AbstractMeshes/SimpleMesh.js";
 declare const engine:Engine;
 
 const positions = new Float32Array([
