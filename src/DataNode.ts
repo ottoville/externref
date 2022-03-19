@@ -51,7 +51,12 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
     readonly closeDistanceVector:[number,number,number] = [closeDistance / this.#radius[0], closeDistance / this.#radius[1], closeDistance / this.#radius[2]];
 
     #vectorsVec4: number[] = [];
-
+    override update_scale(x: number, y: number, z: number) {
+        this.radius[0]=x;
+        this.radius[1]=y;
+        this.radius[2]=z;
+        super.update_scale(x,y,z)
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     checkCollide(_velocityPerDelta:[number,number,number]):ReadOnlyTerraVector3 {
         return this.translation;

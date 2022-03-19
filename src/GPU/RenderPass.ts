@@ -382,12 +382,10 @@ export class PickableRenderPass<T extends {
                 encoder.copyBufferToBuffer(this.#pickBuffer,0,this.#pickBufferRead!,0,4+4);
                 this.gpu.device.queue.submit([encoder.finish()]);
            
-                console.log('map pickBufferRead')
                 this.#zAndIDPromise = this.#pickBufferRead!.mapAsync(GPUMapMode.READ,0,4+4).then(() => {
                     const b = this.#pickBufferRead!.getMappedRange(0,4+4);
                     const z = new DataView(b).getFloat32(0, true);
                     const meshID = new DataView(b).getUint32(4, true);
-                    console.log('unmap pickBufferRead')
                     this.#pickBufferRead!.unmap();
                     this.#zAndIDPromise = null;
                     return [z, meshID];

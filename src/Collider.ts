@@ -225,9 +225,9 @@ export class ColliderJS {
         this.#collisionPoint[0] = 0;
         this.#collisionPoint[1] = 0;
         this.#collisionPoint[2] = 0;
-        var found = false;
-        var t = 1.0;
-        var embeddedInPlane = false;
+        let found = false;
+        let t = 1.0;
+        let embeddedInPlane = false;
 
         if (Math.abs(normalDotVelocity) < 0.00001) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
@@ -254,6 +254,7 @@ export class ColliderJS {
                 t0 = 0;
             }
         }
+        let collidedPointInTriangle:Triangle|undefined;
         if(!embeddedInPlane) {
             this.#planeIntersectionPoint[0] = scaledPosition[0] - triangle.planeCollider[0] + scaledVelocity[0] * t0;
             this.#planeIntersectionPoint[1] = scaledPosition[1] - triangle.planeCollider[1] + scaledVelocity[1] * t0;
@@ -263,7 +264,7 @@ export class ColliderJS {
             // this._velocity.scaleToRef(t0, this._tempVector);
             //this._planeIntersectionPoint.addInPlace(this._tempVector);
             if (this._checkPointInTriangle(this.#planeIntersectionPoint, triangle)) {
-                this.collidedPointInTriangle=triangle;
+                collidedPointInTriangle=triangle;
                 found = true;
                 t = t0;
                 this.#collisionPoint[0] = this.#planeIntersectionPoint[0];
@@ -305,8 +306,6 @@ export class ColliderJS {
                 if (lowestRoot) {
                     t = lowestRoot;
                     found = true;
-                    this.collidedPointInTriangle=undefined
-
                     this.#collisionPoint[0] = p[0]
                     this.#collisionPoint[1] = p[1]
                     this.#collisionPoint[2] = p[2]                    
@@ -349,8 +348,6 @@ export class ColliderJS {
                     if (f >= 0.0 && f <= 1.0) {
                         t = lowestRoot;
                         found = true;
-                        this.collidedPointInTriangle=undefined
-
                         // this._edge.scaleInPlace(f);
                 /*        this._edge[0] *= f;
                         this._edge[1] *= f;
@@ -405,6 +402,7 @@ export class ColliderJS {
                 this.collision_resolved=0;
                 //console.log('set collisionNotFound 0', this.collisionNotFound.getUint32(0,true))
                 this.collidedMesh = "hostMesh";
+                this.collidedPointInTriangle=collidedPointInTriangle;
             }
         }
     }
