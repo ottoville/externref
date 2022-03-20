@@ -1,7 +1,7 @@
 import { MainNode } from "../../../MainNode.js";
 import { DrawableSimple } from "../../Drawable.js";
 
-import { BoundingBoxPipeline } from "../../RenderPipeLines/boundingbox.js";
+import { BoundingBoxPipeline } from "../../RenderPipeLines/Boundingbox.js";
 import { GPU } from "../../../GPU.js";
 
 export class BoundingBoxMesh extends MainNode {
