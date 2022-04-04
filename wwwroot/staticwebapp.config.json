@@ -4,19 +4,12 @@
       "Cross-Origin-Embedder-Policy": "require-corp"
     },
     "auth": {
-      "rolesSource": "/api/GetRoles",
       "identityProviders": {
         "azureActiveDirectory": {
-          "userDetailsClaim": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
           "registration": {
-            "openIdIssuer": "https://login.microsoftonline.com/6e88dd1a-1c4c-4518-9792-fef60a759b97",
-            "clientIdSettingName": "AAD_CLIENT_ID",
-            "clientSecretSettingName": "AAD_CLIENT_SECRET"
-          },
-          "login": {
-            "loginParameters": [
-              "resource=https://graph.microsoft.com"
-            ]
+            "openIdIssuer": "https://login.microsoftonline.com/6e88dd1a-1c4c-4518-9792-fef60a759b97/v2.0",
+            "clientIdSettingName": "AZURE_CLIENT_ID",
+            "clientSecretSettingName": "AZURE_CLIENT_SECRET"
           }
         }
       }
