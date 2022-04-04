@@ -1,35 +1,34 @@
-
 struct Meshes {
-  position : mat4x4<f32>;       // 64 0
-  @size(52) y: f32;  //padding     52 116
-  point_light_squared : f32;    // 4   120
-  directional_light : f32;      // 4   124
-  scenes:u32;                       //4   128
-  @size(128) z: f32;  //padding
+  position : mat4x4<f32>,       // 64 0
+  @size(52) y: f32,  //padding     52 116
+  point_light_squared : f32,    // 4   120
+  directional_light : f32,      // 4   124
+  scenes:u32,                       //4   128
+  @size(128) z: f32  //padding
 };
 
 struct MeshArray {
-  length:u32;
-  pointers: array<u32, 63>;
-  mesh: array<Meshes>;
+  length:u32,
+  pointers: array<u32, 63>,
+  mesh: array<Meshes>
 };
 struct PointLights {
-  length:u32;
-  pointers: array<u32>;
+  length:u32,
+  pointers: array<u32>
 };
 struct ViewUniforms {
-  modelViewProjectionMatrix : mat4x4<f32>;
-  view : mat4x4<f32>;
-  viewPosition : vec3<f32>;
+  modelViewProjectionMatrix : mat4x4<f32>,
+  view : mat4x4<f32>,
+  viewPosition : vec3<f32>
 };
 struct ClusterBounds {
-  minAABB : vec4<f32>;
-  maxAABB : vec4<f32>;
+  minAABB : vec4<f32>,
+  maxAABB : vec4<f32>
 };
 struct Clusters {
-  bounds: array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: array<u32, 27648>;
-  lights: array<u32, 1741824>;  //27648 * 63 = 1741824
+  bounds: array<ClusterBounds, 27648>, //32 * 18 * 48 = total tiles = 27648
+  lightsCount: array<u32, 27648>,
+  lights: array<u32, 1741824>  //27648 * 63 = 1741824
 };
 
 @binding(0) @group(0) var<storage, read> meshes : MeshArray;

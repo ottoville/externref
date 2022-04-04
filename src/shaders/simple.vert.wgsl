@@ -1,14 +1,14 @@
 struct Uniforms {
-  modelViewProjectionMatrix : mat4x4<f32>;
-  view : mat4x4<f32>;
-  viewPosition : vec3<f32>;
+  modelViewProjectionMatrix : mat4x4<f32>,
+  view : mat4x4<f32>,
+  viewPosition : vec3<f32>
 };
 struct MeshUniforms {
-  world : mat4x4<f32>;
-  @size(16) delta : vec3<f32>;
-  @size(16) custom : vec3<f32>;
-  @size(16) acceleration : vec3<f32>;
-   id : u32;
+  world : mat4x4<f32>,
+  @size(16) delta : vec3<f32>,
+  @size(16) custom : vec3<f32>,
+  @size(16) acceleration : vec3<f32>,
+   id : u32
 };
 //[[block]] struct Lights {
 //  [[offset(48)]] sunDirection : vec3<f32>;
@@ -16,18 +16,18 @@ struct MeshUniforms {
 //  [[offset(92)]] shadow : f32;
 //};
 struct Time {
-  time : u32;
-  delta : f32;
+  time : u32,
+  delta : f32
 };
 @binding(0) @group(1) var<uniform> uniforms : Uniforms;
 @binding(0) @group(2) var<uniform> mesh_uniforms : MeshUniforms;
 @binding(1) @group(1) var<uniform> times : Time;
 
 struct Output {
-  @builtin(position) Position : vec4<f32>;
-  @location(0) normal : vec3<f32>;
-  @location(1) @interpolate(flat) id : u32;
-  @location(2) color : vec3<f32>;
+  @builtin(position) Position : vec4<f32>,
+  @location(0) normal : vec3<f32>,
+  @location(1) @interpolate(flat) id : u32,
+  @location(2) color : vec3<f32>
 };
 @stage(vertex)
 fn main(
@@ -50,8 +50,8 @@ fn main(
   return output;
 }
 struct PickOutput {
-  @builtin(position) Position : vec4<f32>;
-  @location(0) @interpolate(flat) id : u32;
+  @builtin(position) Position : vec4<f32>,
+  @location(0) @interpolate(flat) id : u32
 };
 @stage(vertex)
 fn pick(

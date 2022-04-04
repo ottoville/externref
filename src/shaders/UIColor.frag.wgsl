@@ -2,7 +2,7 @@
 //Do not write position, only color.
 
 struct Output {
-  @location(0) Diffuse : vec4<f32>;
+  @location(0) Diffuse : vec4<f32>
 };
 @stage(fragment)
 fn main(@location(0) color:vec3<f32>) -> Output {

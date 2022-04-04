@@ -1,30 +1,30 @@
 struct Settings {
-     size : vec2<u32>;
-     bufferSize : vec2<u32>;
-     subdivisions : u32;
-     heightMinMax : vec2<i32>;
-     @align(32) max : vec2<i32>;
-     textureSize:vec2<u32>;
+     size : vec2<u32>,
+     bufferSize : vec2<u32>,
+     subdivisions : u32,
+     heightMinMax : vec2<i32>,
+     @align(32) max : vec2<i32>,
+     textureSize:vec2<u32>
 };
 
 struct Vertice {
-  @size(16) position : vec3<f32>;
-  @size(16) normals : vec3<f32>;
-  @size(16) uv : vec2<f32>;
+  @size(16) position : vec3<f32>,
+  @size(16) normals : vec3<f32>,
+  @size(16) uv : vec2<f32>
 };
 struct IntArray {
-   numbers: array<i32>;
+   numbers: array<i32>
 };
 struct Vertices {
-     vert: array<Vertice>;
+     vert: array<Vertice>
 };
 
  struct Plane {
-   norm : vec3<f32>;
-   d : f32;
+   norm : vec3<f32>,
+   d : f32
 };
 struct PlaneArray {
-  plane: array<Plane>;
+  plane: array<Plane>
 };
 @binding(0) @group(0) var<uniform> settings : Settings;
 @binding(0) @group(1) var<storage, read> vertices : Vertices;

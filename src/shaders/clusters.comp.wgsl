@@ -1,25 +1,24 @@
 //ssbo initialization
  struct VolumeTileAABB {
-  minPoint : vec3<f32>;
-  maxPoint : vec3<f32>;
+  minPoint : vec3<f32>,
+  maxPoint : vec3<f32>
 };
 struct clusterArray {
-  bounds: array<VolumeTileAABB,27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: array<u32, 27648>;
-  lights: array<u32, 1741824>;  //27648 * 63 = 1741824
+  bounds: array<VolumeTileAABB,27648>, //32 * 18 * 48 = total tiles = 27648
+  lightsCount: array<u32, 27648>,
+  lights: array<u32, 1741824>  //27648 * 63 = 1741824
 };
 
 struct Projection {
-  inversed_projection : mat4x4<f32>;
-  reversed_projection:mat4x4<f32>;
-  inversed_projection_farplane:mat4x4<f32>;
-  zNear : f32;
-  zFar : f32;
+  inversed_projection : mat4x4<f32>,
+  reversed_projection:mat4x4<f32>,
+  inversed_projection_farplane:mat4x4<f32>,
+  zNear : f32,
+  zFar : f32
 };
 
 struct Uniforms {
-  screenDimensions : vec2<f32>;
-
+  screenDimensions : vec2<f32>
 };
 @group(0) @binding(0) var<uniform> uniforms : Uniforms;
 

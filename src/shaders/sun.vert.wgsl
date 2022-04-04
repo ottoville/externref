@@ -1,17 +1,17 @@
 struct Uniforms {
-  modelViewProjectionMatrix : mat4x4<f32>;
-  view : mat4x4<f32>;
-  viewPosition : vec3<f32>;
+  modelViewProjectionMatrix : mat4x4<f32>,
+  view : mat4x4<f32>,
+  viewPosition : vec3<f32>
 };
 
 struct Time {
-  time : u32;
-  delta : f32;
+  time : u32,
+  delta : f32
 };
 
 struct WorldPosition {
-  world : mat4x4<f32>;
-  delta : vec3<f32>;
+  world : mat4x4<f32>,
+  delta : vec3<f32>
 };
 
 @binding(0) @group(1) var<uniform> uniforms : Uniforms;
@@ -19,11 +19,8 @@ struct WorldPosition {
 
 let sunDistance: f32= 1495000.0;  //divided by 100000 correct one
 
-
-
-
 struct Output {
-  @builtin(position) Position : vec4<f32>;
+  @builtin(position) Position : vec4<f32>
 };
 
 

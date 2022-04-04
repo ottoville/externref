@@ -1,23 +1,23 @@
 let filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0);
 
 struct Settings {
-     size : vec2<u32>;
-     bufferSize : vec2<u32>;
-     subdivisions : u32;
-     heightMinMax : vec2<i32>;
-     @align(32) max : vec2<i32>;
-     textureSize:vec2<u32>;
+     size : vec2<u32>,
+     bufferSize : vec2<u32>,
+     subdivisions : u32,
+     heightMinMax : vec2<i32>,
+     @align(32) max : vec2<i32>,
+     textureSize:vec2<u32>
 };
 struct Vertice {
-  position : vec3<f32>;
-  normals : vec3<f32>;
-  @size(16) uv : vec2<f32>;
+  position : vec3<f32>,
+  normals : vec3<f32>,
+  @size(16) uv : vec2<f32>
 };
 struct Vertices {
-    vert: array<Vertice>;
+    vert: array<Vertice>
 };
 struct Pixels {
-    pixels: array<u32>;
+    pixels: array<u32>
 };
 @binding(0) @group(0) var<uniform> settings : Settings;
 @binding(0) @group(1) var<storage, write> positions : Vertices;

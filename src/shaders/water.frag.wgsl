@@ -1,5 +1,5 @@
 struct Output {
-  @location(0) Diffuse : vec4<f32>;
+  @location(0) Diffuse : vec4<f32>
 };
 @binding(0) @group(3) var mySampler: sampler;
 @binding(1) @group(3) var diffuseTexture: texture_2d<f32>;

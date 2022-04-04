@@ -1,24 +1,22 @@
 struct Uniforms {
-  modelViewProjectionMatrix : mat4x4<f32>;
-  view : mat4x4<f32>;
-  viewPosition : vec3<f32>;
+  modelViewProjectionMatrix : mat4x4<f32>,
+  view : mat4x4<f32>,
+  viewPosition : vec3<f32>
 };
 struct WorldPosition {
-  world : mat4x4<f32>;
-  @size(16) delta : vec3<f32>;
-  @size(16) custom : vec3<f32>;
-  @size(16) acceleration : vec3<f32>;
-   id : u32;
+  world : mat4x4<f32>,
+  @size(16) delta : vec3<f32>,
+  @size(16) custom : vec3<f32>,
+  @size(16) acceleration : vec3<f32>,
+   id : u32
 };
 @binding(0) @group(0) var<uniform> uniforms : Uniforms;
 @binding(0) @group(1) var<uniform> worldposition : WorldPosition;
 
 
-
-
 struct Output {
-  @builtin(position) Position : vec4<f32>;
-  @location(0) color : vec3<f32>;
+  @builtin(position) Position : vec4<f32>,
+  @location(0) color : vec3<f32>
  };
 
 @stage(vertex)

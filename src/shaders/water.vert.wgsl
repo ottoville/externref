@@ -1,19 +1,19 @@
 struct Uniforms {
-  modelViewProjectionMatrix : mat4x4<f32>;
-  view : mat4x4<f32>;
-  viewPosition : vec3<f32>;
+  modelViewProjectionMatrix : mat4x4<f32>,
+  view : mat4x4<f32>,
+  viewPosition : vec3<f32>
 };
 
 struct Time {
-  time : u32;
-  @align(4) delta : f32;
+  time : u32,
+  @align(4) delta : f32
 };
 struct WorldPosition {
-  world : mat4x4<f32>;
-  @size(16) delta : vec3<f32>;
-  @size(16) custom : vec3<f32>;
-  @size(16) acceleration : vec3<f32>;
-   id : u32;
+  world : mat4x4<f32>,
+  @size(16) delta : vec3<f32>,
+  @size(16) custom : vec3<f32>,
+  @size(16) acceleration : vec3<f32>,
+   id : u32
 };
 
 @binding(0) @group(1) var<uniform> uniforms : Uniforms;
@@ -31,10 +31,10 @@ let pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
 
 //[[location(1)]] var<out> ambient : vec3<f32>;
 struct Output {
-  @builtin(position) Position : vec4<f32>;
-  @location(0) v_uv : vec4<f32>;
-  @location(1) position : vec3<f32>;
-  @location(2) @interpolate(flat) id : u32;
+  @builtin(position) Position : vec4<f32>,
+  @location(0) v_uv : vec4<f32>,
+  @location(1) position : vec3<f32>,
+  @location(2) @interpolate(flat) id : u32
 };
 
 @stage(vertex)

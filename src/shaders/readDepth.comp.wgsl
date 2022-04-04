@@ -1,11 +1,11 @@
 
 struct Depth_And_Mesh {
-  depth:f32;
-  mesh:u32;
+  depth:f32,
+  mesh:u32
 };
 
 struct Mouse {
-  position:vec2<i32>;
+  position:vec2<i32>
 };
 @binding(0) @group(0) var<storage, write> depth_and_mesh : Depth_And_Mesh;
 @binding(0) @group(1) var depth_texture : texture_depth_multisampled_2d;

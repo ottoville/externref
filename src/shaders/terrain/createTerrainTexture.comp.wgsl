@@ -1,24 +1,22 @@
 struct Settings {
-     size : vec2<u32>;
-     bufferSize : vec2<u32>;
-     subdivisions : u32;
-     heightMinMax : vec2<i32>;
-     @align(32) max : vec2<i32>;
-     textureSize:vec2<u32>;
+     size : vec2<u32>,
+     bufferSize : vec2<u32>,
+     subdivisions : u32,
+     heightMinMax : vec2<i32>,
+     @align(32) max : vec2<i32>,
+     textureSize:vec2<u32>
 };
-
 
  struct Plane {
-  norm : vec3<f32>;
-  d : f32;
+  norm : vec3<f32>,
+  d : f32
 };
 struct PlaneArray {
-  plane: array<Plane>;
+  plane: array<Plane>
 };
 struct IntArray {
-  numbers: array<i32>;
+  numbers: array<i32>
 };
-
 
 fn mod289(x:f32) -> f32 {
   return x - floor(x * (1. / 289.)) * 289.;

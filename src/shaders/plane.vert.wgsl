@@ -1,31 +1,30 @@
-
 struct Scene {
-   viewProjection : mat4x4<f32>;
-   view : mat4x4<f32>;
-   viewPosition : vec3<f32>;
+   viewProjection : mat4x4<f32>,
+   view : mat4x4<f32>,
+   viewPosition : vec3<f32>
 };
 
 struct IntArray {
-   numbers: array<i32>;
+   numbers: array<i32>
 };
 
 struct Plane {
-   norm : vec3<f32>;
-   d : f32;
+   norm : vec3<f32>,
+   d : f32
 };
 struct PlaneArray {
-   plane: array<Plane>;
+   plane: array<Plane>
 };
 
 struct WorldPosition {
-   position : mat4x4<f32>;
+   position : mat4x4<f32>
 };
 struct Settings {
-     size : vec2<u32>;
-     bufferSize : vec2<u32>;
-     subdivisions : u32;
-     heightMinMax : vec2<i32>;
-     @align(32) max : vec2<i32>;
+     size : vec2<u32>,
+     bufferSize : vec2<u32>,
+     subdivisions : u32,
+     heightMinMax : vec2<i32>,
+     @align(32) max : vec2<i32>
 };
 @binding(0) @group(1) var<uniform> scene : Scene;
 @binding(0) @group(2) var<uniform> world : WorldPosition;
@@ -50,8 +49,8 @@ fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
     return -(norm.x * f32(xz.x) + norm.z * f32(xz.y) + d) / norm.y;
  };
 struct Output {
-  @location(0) color : vec3<f32>;
-  @builtin(position) Position : vec4<f32>;
+  @location(0) color : vec3<f32>,
+  @builtin(position) Position : vec4<f32>
 };
 @stage(vertex)
 fn main(@location(0) position : vec3<f32>) -> Output {

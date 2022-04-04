@@ -12,14 +12,14 @@ let rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(
   vec2<f32>(1.0,0.0));
 
 struct Scene {
-  viewProjection : mat4x4<f32>;
-  view : mat4x4<f32>;
-  cameraPosition : vec3<f32>;
+  viewProjection : mat4x4<f32>,
+  view : mat4x4<f32>,
+  cameraPosition : vec3<f32>
 };
 
 struct Time {
-  time : u32;
-  delta : f32;
+  time : u32,
+  delta : f32
 };
 @binding(0) @group(1) var<uniform> scene : Scene;
 @binding(1) @group(1) var<uniform> time : Time;
@@ -43,8 +43,8 @@ fn rand(co:vec2<f32>) -> f32 {
 
 let windDirection:f32 = 0.0;
 struct Output {
-  @builtin(position) Position : vec4<f32>;
-  @location(0) color : vec3<f32>;
+  @builtin(position) Position : vec4<f32>,
+  @location(0) color : vec3<f32>
 };
 
 let vertices_ : array<vec2<f32>, 7> = array<vec2<f32>, 7>(

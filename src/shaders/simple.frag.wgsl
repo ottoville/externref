@@ -1,5 +1,5 @@
 struct Output {
-  @location(0) Diffuse : vec4<f32>;
+  @location(0) Diffuse : vec4<f32>
 };
 
 @stage(fragment)
@@ -14,7 +14,7 @@ fn main(
 }
 
 struct OutputPick {
-  @location(0) ID : u32;
+  @location(0) ID : u32
 };
 
 @stage(fragment)

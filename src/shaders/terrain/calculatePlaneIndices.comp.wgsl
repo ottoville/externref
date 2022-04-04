@@ -1,13 +1,13 @@
 struct Indices {
-  numbers: array<u32>;
+  numbers: array<u32>
 };
 struct Settings {
-     size : vec2<u32>;
-     bufferSize : vec2<u32>;
-     subdivisions : u32;
-     heightMinMax : vec2<i32>;
-     @align(32) max : vec2<i32>;
-     textureSize:vec2<u32>;
+     size : vec2<u32>,
+     bufferSize : vec2<u32>,
+     subdivisions : u32,
+     heightMinMax : vec2<i32>,
+     @align(32) max : vec2<i32>,
+     textureSize:vec2<u32>
 };
 @binding(0) @group(0) var<uniform> settings : Settings;
 @binding(0) @group(1) var<storage,write> indices : Indices;

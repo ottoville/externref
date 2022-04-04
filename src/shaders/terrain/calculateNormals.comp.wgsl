@@ -1,17 +1,16 @@
-
 struct FloatArray {
-   numbers: array<f32>;
+   numbers: array<f32>
 };
 struct Slopes {
-   numbers: array<i32>;
+   numbers: array<i32>
 };
 struct Settings {
-     size : vec2<u32>;
-     bufferSize : vec2<u32>;
-     subdivisions : u32;
-     heightMinMax : vec2<i32>;
-     @align(32) max : vec2<i32>;
-     textureSize:vec2<u32>;
+     size : vec2<u32>,
+     bufferSize : vec2<u32>,
+     subdivisions : u32,
+     heightMinMax : vec2<i32>,
+     @align(32) max : vec2<i32>,
+     textureSize:vec2<u32>
 };
 
 @binding(0) @group(0) var<uniform> settings : Settings;

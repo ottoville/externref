@@ -1,40 +1,36 @@
-
 struct Mesh {
-  position : mat4x4<f32>;
-  @size(16) y: f32;  //padding
-  ambient : vec3<f32>;
-  shadow : f32;
-  @size(20) x: f32;  //padding
-  point_light : f32;
+  position : mat4x4<f32>,
+  @size(16) y: f32,  //padding
+  ambient : vec3<f32>,
+  shadow : f32,
+  @size(20) x: f32,  //padding
+  point_light : f32
 
 };
-struct LightsArray_deprecated {
-  lights_count:u32;
-  light: array<u32>;
-};
+
 struct Uniforms {
-  zNear : f32;
-  zFar : f32;
-  screenDimensions : vec2<f32>;
+  zNear : f32,
+  zFar : f32,
+  screenDimensions : vec2<f32>
 };
 struct LightsArray {
-  count:u32;
-  lightPointers: array<u32, 63>;
+  count:u32,
+  lightPointers: array<u32, 63>
 };
 struct ClusterBounds {
-  minAABB : vec3<f32>;
-  maxAABB : vec3<f32>;
+  minAABB : vec3<f32>,
+  maxAABB : vec3<f32>
 };
 struct Clusters {
-  bounds: array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: array<u32, 27648>;
-  lights: array<u32, 1741824>;  //27648 * 63 = 1741824
+  bounds: array<ClusterBounds, 27648>, //32 * 18 * 48 = total tiles = 27648
+  lightsCount: array<u32, 27648>,
+  lights: array<u32, 1741824>  //27648 * 63 = 1741824
 };
 
 @binding(0) @group(0) var diffuseTexture: texture_2d<f32>;
 
 struct Output {
-  @location(0) Color : vec4<f32>;
+  @location(0) Color : vec4<f32>
 };
 
 @stage(fragment)

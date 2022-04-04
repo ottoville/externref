@@ -1,48 +1,48 @@
 struct Output {
-  @location(0) Diffuse : vec4<f32>;
+  @location(0) Diffuse : vec4<f32>
 };
 struct OutputPick {
-  @location(0) ID : u32;
+  @location(0) ID : u32
 };
 struct Meshes {
-  position : mat4x4<f32>;           //64  0
-  @size(16) y: f32;  //padding      //16  80
-  ambient : vec3<f32>;              //12  92
-  shadow : f32;                     //4   96
-  @size(20) x: f32;  //padding      //20  116
-  point_light_squared : f32;        //4   120
-  directional_light : f32;          //4   124
-  scenes:u32;                       //4   128
-  @size(128) z: f32;  //padding
+  position : mat4x4<f32>,           //64  0
+  @size(16) y: f32,  //padding      //16  80
+  ambient : vec3<f32>,              //12  92
+  shadow : f32,                     //4   96
+  @size(20) x: f32,  //padding      //20  116
+  point_light_squared : f32,        //4   120
+  directional_light : f32,          //4   124
+  scenes:u32,                       //4   128
+  @size(128) z: f32  //padding
 };
 struct MeshArray {
-  length:u32;
-  pointers: array<u32, 63>;
-  mesh: array<Meshes>;
+  length:u32,
+  pointers: array<u32, 63>,
+  mesh: array<Meshes>
 };
 struct Projection {
-  inversed_projection : mat4x4<f32>;
-  reversed_projection:mat4x4<f32>;
-  projectionFarPlane:mat4x4<f32>;
-  zNear : f32;
-  zFar : f32;
-  z_near_multiplied_far: f32;
-  z_near_substracted_far: f32;
-  slice_scale:f32;
-  slice_bias:f32;
+  inversed_projection : mat4x4<f32>,
+  reversed_projection:mat4x4<f32>,
+  projectionFarPlane:mat4x4<f32>,
+  zNear : f32,
+  zFar : f32,
+  z_near_multiplied_far: f32,
+  z_near_substracted_far: f32,
+  slice_scale:f32,
+  slice_bias:f32
 };
 struct Uniforms {
-  screenDimensions : vec2<f32>;
-  screendimensions_ratio:vec2<f32>;
+  screenDimensions : vec2<f32>,
+  screendimensions_ratio:vec2<f32>
 };
 struct ClusterBounds {
-  minAABB : vec3<f32>;
-  maxAABB : vec3<f32>;
+  minAABB : vec3<f32>,
+  maxAABB : vec3<f32>
 };
 struct Clusters {
-  bounds: array<ClusterBounds, 27648>; //32 * 18 * 48 = total tiles = 27648
-  lightsCount: array<u32, 27648>;
-  lights: array<u32, 1741824>;  //27648 * 63 = 1741824
+  bounds: array<ClusterBounds, 27648>, //32 * 18 * 48 = total tiles = 27648
+  lightsCount: array<u32, 27648>,
+  lights: array<u32, 1741824>  //27648 * 63 = 1741824
 };
 
 @binding(0) @group(0) var<uniform> dimensions : Uniforms;
