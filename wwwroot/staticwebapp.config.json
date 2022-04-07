@@ -5,11 +5,22 @@
     },
     "auth": {
       "identityProviders": {
-        "azureActiveDirectory": {
-          "registration": {
-            "openIdIssuer": "https://login.microsoftonline.com/6e88dd1a-1c4c-4518-9792-fef60a759b97/v2.0",
-            "clientIdSettingName": "AAD_CLIENT_ID",
-            "clientSecretSettingName": "AAD_CLIENT_SECRET"
+        "customOpenIdConnectProviders": {
+          "myProvider": {
+            "registration": {
+              "clientIdSettingName": "AAD_CLIENT_ID",
+              "clientCredential": {
+                "clientSecretSettingName": "AAD_CLIENT_SECRET"
+              },
+              "openIdConnectConfiguration": {
+                "wellKnownOpenIdConfiguration": "https://terrasimapp.b2clogin.com/terrasimapp.onmicrosoft.com/B2C_1_terrasimapp/v2.0/.well-known/openid-configuration"
+              }
+            },
+            "login": {
+              "nameClaimType": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+              "scopes": [],
+              "loginParameterNames": []
+            }
           }
         }
       }
