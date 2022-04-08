@@ -6,7 +6,7 @@
     "auth": {
       "identityProviders": {
         "customOpenIdConnectProviders": {
-          "myProvider": {
+          "b2c": {
             "registration": {
               "clientIdSettingName": "AAD_CLIENT_ID",
               "clientCredential": {
