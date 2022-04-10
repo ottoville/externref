@@ -1,0 +1,34 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "start-swa",
+            "type": "shell",
+            "command": "swa start ./wwwroot/ --ssl --ssl-cert=\"./server.crt\" --ssl-key=\"./server.key\"",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "swa",
+                "pattern": {
+                    "regexp": "^([^\\s].*)\\((\\d+|\\d+,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                    "file": 1,
+                    "location": 2,
+                    "severity": 3,
+                    "code": 4,
+                    "message": 5
+                },
+                "fileLocation": "relative",
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^\\.*",
+                    "endsPattern": ".*Press CTRL\\+C to exit.*"
+                }
+            }
+        },
+    ]
+  }

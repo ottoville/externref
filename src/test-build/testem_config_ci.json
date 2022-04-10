@@ -5,8 +5,8 @@
   "src_files": [
     "./**/*.test.ts"
   ],
-  "cert":"certificate.crt",
-  "key":"privatekey.key",
+  "cert":"../../server.crt",
+  "key":"../../server.key",
   "launch_in_dev": [ "Chrome Canary" ],
   "browser_args": {
     "Chrome Canary": [
