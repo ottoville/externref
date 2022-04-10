@@ -1,0 +1,43 @@
+trigger:
+  branches:
+    include:
+    - refs/heads/master
+  paths:
+    include:
+    - /
+  batch: True
+name: $(date:yyyyMMdd)$(rev:.r)
+jobs:
+- job: Phase_1
+  displayName: Agent job 1
+  timeoutInMinutes: 0
+  pool:
+    vmImage: ubuntu-20.04
+  steps:
+  - checkout: self
+  - task: Npm@1
+    displayName: npm install
+    inputs:
+      command: custom
+      workingDir: src
+      verbose: false
+      customCommand: ci --production
+  - task: Rustup@1
+    displayName: Rustup
+    inputs:
+      rustupCommand: target add wasm32-unknown-unknown
+  - task: Npm@1
+    displayName: npm build
+    inputs:
+      command: custom
+      workingDir: src
+      verbose: false
+      customCommand: run build
+  - task: AzureStaticWebApp@0
+    displayName: 'Static Web App: '
+    inputs:
+      app_location: wwwroot
+      skip_app_build: false
+      verbose: false
+      azure_static_web_apps_api_token: 2aef2b5c97599f9114259a5b48deeca2588934fdb83cf50b591444ef8b10206e1-eb01d464-e4f3-4b9f-822c-960472154ecb00363827
+...
