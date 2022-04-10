@@ -22,7 +22,7 @@ interface propsI { //@ts-ignore testem
     [index: string]:    string |
                         boolean |
                         (() => void) | 
-                        (string | string[] | HTMLElement | HTMLElement[])[]
+                        (HTMLElement | string | false | (HTMLElement | string | false)[])[]
 }
 
 declare var TerraUI: {
@@ -33,7 +33,7 @@ declare var TerraUI: {
 globalThis.TerraUI = {
     createElement: (name: string | HTMLElement | ((props: unknown) => HTMLElement) | (new () => TerraCompoment),
     props?: propsI,
-    ...content: (HTMLElement | HTMLElement[] | string | string[])[]) => {
+    ...content: (HTMLElement | string | false | (HTMLElement | string | false)[])[]) => {
         props = props || {};
         const nametype = typeof (name);
         if (nametype === 'function') {
@@ -75,7 +75,7 @@ globalThis.TerraUI = {
             } else {
                 if (content2 instanceof HTMLElement)
                     elem.appendChild(content2);
-                else {
+                else if(content2 !== null && content2 !== false) {
                     elem.appendChild(document.createTextNode(content2));
                 }
             }

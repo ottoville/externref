@@ -1,8 +1,6 @@
 //import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
 
 import { Engine } from "./engine.js";
-
-import { Login } from "./ui/login.js";
 import { Canvas } from "./ui/canvas.js";
 export const state: {
     userInfo:null | string
@@ -15,13 +13,28 @@ if (!app)
     throw ('App not found');
 let logged = false;
 
-const render = () => {
+const render = async () => {
     app.innerHTML=''
-    app.appendChild(logged ? <Canvas></Canvas> : <Login callback={onLogin}></Login>
-);
+    const creditentials = await fetch('/.auth/me').then(response => response.json());
+    if(logged) {
+        return app.appendChild(<Canvas></Canvas>)
+    }
+    app.appendChild(<div>
+
+    <h3>Select your language</h3>
+    <select>
+
+    </select>
+    <h3>Log in to play the game</h3>
+    <fieldset id="loginmethods">
+        { !creditentials.clientPrincipal && <a href="/.auth/login/login">Login</a>}
+        { !creditentials.clientPrincipal && <button onClick={(e: PointerEvent) => onLogin({provider: 'anomyous', accessToken:'foobar', pointerEvent: e})}>Continue without logging in and online features</button>}
+        { creditentials.clientPrincipal && <a href="/.auth/logout">Logout</a>}
+        { creditentials.clientPrincipal && <button onClick={(e: PointerEvent) => onLogin({provider: 'anomyous', accessToken:'foobar', pointerEvent: e})}>Play</button>}
+    </fieldset>
+    </div>);
 }
 const onLogin = (obj: { provider: string, accessToken: string, pointerEvent: PointerEvent }) => {
-    console.log('onlogin', obj.provider)
     state.userInfo = obj.provider
     logged=true
     render()
