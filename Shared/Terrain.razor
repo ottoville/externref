@@ -1,8 +1,0 @@
-﻿@inject IJSRuntime JSRuntime;
-@code {
-    public string subMenu;
-}
-<legend style="background-color:white">Terrain</legend>
-<button class="w3-bar-item w3-button @(subMenu=="raise"?"w3-green":"")" @onclick="@(e=> { subMenu = "raise"; JSRuntime.InvokeVoidAsync("invokeMenu", "TerrainTool", "raise"); })">⇫</button>
-<button class="w3-bar-item w3-button @(subMenu=="lower"?"w3-green":"")" style="transform: rotate(-180deg);" @onclick="@(e=> {subMenu = "lower"; JSRuntime.InvokeVoidAsync("invokeMenu", "TerrainTool", "lower"); })">⇫</button>
-
