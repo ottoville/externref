@@ -13,12 +13,6 @@ pub struct Elevator {
     pub length:usize
 
 }
-/*
-extern "C" {
-    fn log(s: &str);
-    fn error(s: &str);
-}
-*/
 
 #[no_mangle]
 pub unsafe extern "C" fn create_elevator(mesh_ptr:*const Mesh) -> *mut Elevator {
@@ -112,9 +106,7 @@ impl Elevator {
         let radius_near = radius * 0.3;
         let radius_far = radius * 0.7;
         if mesh.geometry.indices.len() == 0 {
-           // error("Elevator needs indices");
             panic!("Elevator needs indices")
-
         }
         for sv in self.selected_vertices.iter() {
             let vertice=sv.0 * mesh.geometry.vertices_stride;
@@ -222,11 +214,7 @@ impl Elevator {
         };
         let mut faces_of_vertices:Vec<Vec<usize>> = vec![Vec::with_capacity(6);positions_count];
         if mesh.geometry.indices.len() == 0usize {
-            unsafe {
-               // error("Elevator needs indices");
-            }
             panic!("Elevator needs indices")
-
         }
         for (i, indice) in mesh.geometry.indices.iter().enumerate() {
             faces_of_vertices[*indice].push(i/3);

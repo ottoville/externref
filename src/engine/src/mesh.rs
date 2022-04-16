@@ -27,12 +27,6 @@ pub struct Mesh {
     pub strip:bool,
     pub draw_command: DrawCommand
 }
-/*
-extern "C" {
-    fn log(s: &str);
-    fn error(s: &str);
-}
-*/
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh(
     id:u32,
@@ -308,13 +302,9 @@ impl Mesh {
 
         return m;
     }
-    /*pub fn draw(&self) {
-
-    }*/
     pub unsafe fn update_dynamic_buffer(&self) {
         ENGINE.gpu_queue2.push((&self.gpu_mesh, self.gpu_alignment));
     }
-
 
     fn on_update(&mut self) {
         self.update_matrix();
