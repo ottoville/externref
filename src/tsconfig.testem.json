@@ -4,12 +4,7 @@
     "outDir": "./test-build/js",
     "target": "ESNext",
     "module": "ESNext",
-    "lib": [
-      "dom",
-      "esnext",
-      "ES2017.SharedMemory",
-      "DOM.Iterable"
-    ],
+
     "jsx": "react",
     "jsxFactory": "TerraUI.createElement",
     "sourceMap": false,
@@ -19,11 +14,17 @@
     "tsBuildInfoFile": "tsconfig.testbuild.tsbuildinfo",
     "incremental": true,
     "typeRoots": [ "./node_modules/@types/", "./node_modules/@webgpu/", "./test-build/node_modules/@types/"],
-    "types": ["types", "facebook-js-sdk", "mocha", "offscreencanvas"],
+    "types": ["types", "mocha"],
     "paths": {
       "/js/*": ["./*"],
       "/js/engine/*": ["./test-build/js/engine/*"],
     },
+    "lib": [
+      "dom",
+      "esnext",
+      "ES2017.SharedMemory",
+      "DOM.Iterable"
+    ],
     "resolveJsonModule": true,
     "moduleResolution": "node",
   },
