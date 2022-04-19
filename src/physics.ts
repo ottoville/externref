@@ -1,5 +1,7 @@
 ﻿import type { DataNode } from "./DataNode.js";
 import type { MainNode } from "./MainNode.js";
+import type { Engine } from "./engine.js";
+
 const MIN_TICK_DELTA = 110;
 
 const GRAVITY = 9.80665;
@@ -46,6 +48,7 @@ export class Physics {
         Large delta results large gravity, collision detector will see bigger impact.
     */
     #tick = () => {
+        this.engine.rust.physic_tick();
         const timestamp = Date.now();
         if (this.#lastStateChangeTime > this.#lastTickTimeMs) {
             var realDeltaInGameTime = ((timestamp - this.#lastStateChangeTime) << this.#gameSpeed) + this.#tickDeltaWhenStateChange
@@ -81,7 +84,6 @@ export class Physics {
             const velocity = movable.velocity;
             if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
                 const currentTranslation = movable.translation;
-                ///console.log('currentTranslation',...currentTranslation)
                 currentTranslation.set([
                     currentTranslation[0] + velocity[0],
                     currentTranslation[1] + velocity[1],
@@ -95,8 +97,9 @@ export class Physics {
              - acceleration etc setters update dynamic buffer. So it is updated multiple times on loop.
         */
         for(let i = 0; i<this.tickables.length; i++) {
+            continue;
             const tickable=this.tickables[i]!;
-            if (tickable.onPhysicTick)
+            if (tickable.onPhysicTick) //@ts-ignore
                 tickable.onPhysicTick(delta);
             const velocity = tickable.velocity;
            /* if(velocity[0] > 0 || velocity[1] > 0 || velocity[2] > 0) {
@@ -244,8 +247,9 @@ export class Physics {
     get gameSpeed() {
         return this.#gameSpeed;
     }
-    constructor() {
+    constructor(private engine:Engine) {
         this.gameSpeed = 0;
+        engine.rust.init_engine2();
     }
 
 }

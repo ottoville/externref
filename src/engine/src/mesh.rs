@@ -1,5 +1,8 @@
 
 
+use core::panic;
+
+use rapier3d::prelude::*;
 use crate::collider::Collider;
 pub use crate::engine::Engine;
 pub use crate::engine::ENGINE;
@@ -7,6 +10,7 @@ pub use crate::Vec3;
 pub use crate::Vec3_f32;
 pub use crate::Vec4;
 pub use crate::GPUMesh;
+use crate::engine::Engine2;
 pub use crate::geometry::Geometry;
 pub use crate::geometry::Plane;
 pub use crate::geometry::ColliderPlane;
@@ -16,6 +20,9 @@ pub use crate::drawable::Drawable;
 pub use crate::drawable::DrawCommand;
 pub use crate::drawable::DrawType;
 
+extern "C" {
+    fn jslog_number(number:u32);
+}
 pub struct Mesh {
     pub id:u32,
     pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
@@ -38,11 +45,11 @@ pub unsafe extern "C" fn new_mesh(
     directional_light:f32,
     scenes:f32,
     static_faces:bool,
-    strip:bool) -> *mut Mesh {
-        let mesh = Box::new(Mesh::new(id, has_bounding, has_geometry,positions_count,vertices_stride,point_light,directional_light,scenes,static_faces,strip));
-        let ptr=Box::leak(mesh);
-        (*ptr).update_dynamic_buffer();
-        return ptr;
+    strip:bool) -> *const Mesh {
+        let e = ENGINE.physic_engine_mut();
+        let mesh = Mesh::new(id, has_bounding, has_geometry,positions_count,vertices_stride,point_light,directional_light,scenes,static_faces,strip, e);
+        mesh.update_dynamic_buffer();
+        return mesh as *const Mesh;
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_vertices(mesh:*mut Mesh, ptr:*mut f32, length:usize) {
@@ -110,6 +117,10 @@ pub unsafe extern "C" fn update_rotation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: 
     (*mesh_ptr).rotation.z = z;
     (*mesh_ptr).rotation.w = w;
     (*mesh_ptr).on_update();
+}
+#[no_mangle]
+pub unsafe extern "C" fn update_translation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32) {
+    (*mesh_ptr).update_translation(x, y, z)
 }
 #[no_mangle]
 pub unsafe extern "C" fn indices_pointer(mesh_ptr:*const Mesh) -> *const usize {
@@ -233,7 +244,7 @@ impl Mesh {
 }
 
 impl Mesh {
-    pub unsafe fn new(
+    pub unsafe fn new<'a>(
         id:u32,
         has_bounding:bool,
         has_geometry:bool,
@@ -243,7 +254,9 @@ impl Mesh {
         directional_light:f32,
         scenes:f32,
         static_faces:bool,
-        strip:bool) -> Self {
+        strip:bool,
+        engine2: &'a mut Engine2) -> &'a Self {
+        let geometry = Geometry::new(id,has_geometry, has_bounding, vertices_stride, static_faces,strip,engine2);
 
         let m = Mesh {
             id,
@@ -263,7 +276,7 @@ impl Mesh {
                 directional_light,
                 scenes: scenes as u32,
             },
-            geometry: Geometry::new(has_geometry, has_bounding, vertices_stride, positions_count, static_faces,strip),
+            geometry,
             rotation: Vec4 {
                 x: 0.0,
                 y: 0.0,
@@ -300,7 +313,28 @@ impl Mesh {
 
         ENGINE.allocated_gpu_memory();
 
-        return m;
+        let new_id=engine2.meshes.len();
+        engine2.meshes.push(m);
+        jslog_number(&(ENGINE.physic_engine().meshes[0]) as *const Mesh as u32);
+        &engine2.meshes[new_id]
+
+       // (*engine_ptr).meshes.insert(mesh.geometry.rigid_body_handle.clone(), &mesh);
+
+
+       // return m;
+    }
+    pub unsafe fn update_translation(&mut self, x:f32, y:f32, z:f32) {
+        self.gpu_mesh.transformation.w.x=x;
+        self.gpu_mesh.transformation.w.y=y;
+        self.gpu_mesh.transformation.w.z=z;
+        self.update_dynamic_buffer();
+
+        let e = ENGINE.physic_engine_mut();
+        let rigid_body = e.rigid_body_set.get_mut(self.geometry.rigid_body_handle);
+            match rigid_body {
+                Some(rigid_body) => rigid_body.set_translation(vector![x, y, z], true),
+                None    => panic!("Rigid body not found"),
+            };
     }
     pub unsafe fn update_dynamic_buffer(&self) {
         ENGINE.gpu_queue2.push((&self.gpu_mesh, self.gpu_alignment));

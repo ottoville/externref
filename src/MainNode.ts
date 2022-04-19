@@ -91,14 +91,11 @@ export abstract class MainNode {
 
     get_transformation = () => new TerraMatrix(engine.memory.buffer, engine.rust.gpu_pointer(this.ptr))//new TerraMatrix(this.data.buffer);
 
-
     get translation(): ReadOnlyTerraVector3 {
         return new ReadOnlyTerraVector3(engine.memory.buffer, engine.rust.translation_pointer(this.ptr));
     }
     set translation(value: [number, number, number] | TerraVector3) {
-        const translation =  new TerraVector3(engine.memory.buffer, engine.rust.translation_pointer(this.ptr));
-        translation.set(value);
-        this.update_dynamic_buffer();
+        engine.rust.update_translation(this.ptr, value[0], value[1], value[2])
     }
     get velocity(): ReadOnlyTerraVector3 {
         return new TerraVector3(engine.memory.buffer, engine.rust.velocity_pointer(this.ptr))

@@ -25,8 +25,9 @@ import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 //@ts-ignore
 import { Box } from "../GPU/Meshes/Box.js";
 //@ts-ignore
-
 import { Triangle } from "../GPU/Meshes/Triangle.js";
+//@ts-ignore
+import { Sphere } from "../GPU/Meshes/Sphere.js";
 
 declare const engine:Engine;
 class CanvasMesh extends MainNode {
@@ -91,23 +92,31 @@ export class Canvas extends TerraCompoment {
             sun.gpu_custom_data = [0, 0, 0, 1]; //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
         });
-     /*   const slope = new Triangle();
+        const slope = new Triangle('slopeTriangle',undefined,true);
         slope.update_scale(0, 400, 400);
-      //  slope.update_rotation(Math.sin(1.4), -0.5, -0.5, Math.cos(1.4));
-        slope.update_euler_angles(0,0,Math.PI*-0.3);
+
+     //   slope.update_euler_angles(0,0,Math.PI*-0.5);
+      slope.update_euler_angles(0,0,Math.PI*-0.4);
         slope.translation = [23,600,23];
 
-        const b2 = new Box(undefined, 400,true,'gravitygreenbox2',[0,1,0,0]);
-        b2.translation = [-200, 500, 350];
+
+       /* const bixbox = new Box(undefined, 400,true,'bigbox',[1,1,0,0]);
+        bixbox.update_scale(400, 400, 400);
+        bixbox.translation = [23,200,23];*/
+
+
+        const b2 = new Sphere(3,'sphere',[0,1,0,0],true);
+        b2.translation = [346.5, 1300, 350];
+     //   b2.translation = [-140, 590, 350];
         b2.update_scale(20, 20, 20);
 
         //@ts-ignore
         window.b2=b2;
-        //b2.hasGravity=true;
-        b2.onCollide=() => {
-            b2.force[2]=10
-         }
-*/
+        b2.hasGravity=true;
+       /* b2.onCollide=() => {
+            b2.force[0]=20
+         }*/
+
 
         const canvasPipeline = engine.gpu.renderPassCanvas.rootLayout.addRenderPipeline('CanvasRenderPipeline',
             new VertexShader(terraEngine.gpu, 'deferred.vert.wgsl'),

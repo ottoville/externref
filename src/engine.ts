@@ -62,6 +62,7 @@ export type rustWasm = {
     update_scale(mesh_ptr:number, x:number, y:number, z:number):void,
     update_rotation(mesh_ptr:number, x:number, y:number, z:number, w:number):void,
     update_euler_angles(mesh_ptr:number, x:number, y:number, z:number):void,
+    update_translation(mesh_ptr:number, x:number, y:number, z:number):void,
     update_dynamic_buffer(mesh_ptr:number):void,
     gpu_alignment(mesh_ptr:number):number,
     positions_count(mesh_ptr:number):number,
@@ -91,6 +92,8 @@ export type rustWasm = {
     get_length(elevator_ptr:number):number
     get_offset(elevator_ptr:number):number
 
+    init_engine2():void
+    physic_tick():void
 }
 
 function Dot(left: readonly [number, number, number] | Float32Array | TerraVector3, right: readonly [number, number, number] | Float32Array | TerraVector3): number {
@@ -149,7 +152,7 @@ export class Engine {
 
     // registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
 
-    readonly physics = new Physics();
+    readonly physics:Physics;
     readonly scenes: Map<string, Scene> = new Map();
     // readonly collisionNotFound:DataView
     //@ts-ignore
@@ -231,7 +234,7 @@ export class Engine {
         const dataSizeBytes = MainNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
 
         //Init rust wasm
-        const rust = await WebAssembly.instantiateStreaming(await fetch('/js/engine/engine.wasm'), {
+        const rust = await WebAssembly.instantiateStreaming(await fetch('/js/engine/wasm32-unknown-unknown/debug/engine.wasm'), {
             env: {
                 update_point_lights:(pointer: number, length: number) => {
                     engine.update_point_lights(pointer, length)
@@ -277,7 +280,19 @@ export class Engine {
                         engine.gpu.GPUMeshes, 0,
                         buffLength);
                         engine.gpu.pendingCommandBuffers.add(renderEncoder.finish())
-                }
+                },
+                now() {
+                    return Date.now()
+                },
+                jspanic(ptr:number) {
+                    console.error(new TextDecoder().decode(new Uint8Array(engine.rust.memory.buffer, ptr, 512)).trimEnd())
+                },
+                jslog(ptr:number) {
+                    console.log(new TextDecoder().decode(new Uint8Array(engine.rust.memory.buffer, ptr, 512)).trimEnd())
+                },
+                jslog_number(number:number) {
+                    console.log(number)
+                },
             }
         });
         if(!rust.instance.exports.memory) {
@@ -382,6 +397,7 @@ export class Engine {
         public wasm: ColliderWasm,
         public rust: rustWasm
     ) {
+        this.physics = new Physics(this);
         this.memory = rust.memory;
         window.engine = this;
         this.mainCamera = new TerraCamera(gpu.renderPassScreen, new Projection(gpu), gpu);

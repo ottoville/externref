@@ -99,6 +99,9 @@ export const run = (asr: typeof assert) => {
               } else if(collided) {
                 done(new Error('Went throught plane'));
               }
+              if(collided && !b2.is_colliding) {
+                done(new Error('Jumped on plane'));
+              }
               //@ts-expect-error
               oldTranslation=[...translation];
               
@@ -148,5 +151,4 @@ export const run = (asr: typeof assert) => {
             done();        
       })
     })
-  
 }

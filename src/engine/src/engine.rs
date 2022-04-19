@@ -1,17 +1,28 @@
+use std::collections::HashMap;
+use std::panic;
+
 pub use crate::GPUMesh;
 pub use crate::mesh::Mesh;
+use rapier3d::prelude::*;
+
+
 extern "C" {
     fn update_point_lights(pointer: *const u32, length:usize);
     fn update_directional_lights(pointer: *const u32, length:usize);
     fn handle_gpu_queue(pointerVec:*const (*const GPUMesh, u32), length:usize);
     fn updateAllocatedMemory(ptr:*const u32, length: usize);
+    fn jspanic(number:*const u8);
+    pub fn jslog(number:*const u8);
+    fn jslog_number(number:u32);
 }
 pub struct Engine {
     gpu_reserved_slots: u64,
     pub gpu_queue2: Vec<(*const GPUMesh, u32)>, //mesh + gpu alignment //pub gpu_queue2: Vec<(*const GPUMesh, u32)>,
     pub point_lights:Vec<u32>,
     pub directional_lights:Vec<u32>,
-    pub allocated_gpu_memory:Vec<u32>
+    pub allocated_gpu_memory:Vec<u32>,
+    pub engine2: Option<Engine2<'static>>,
+
 }
 pub static mut ENGINE:Engine = Engine {
     gpu_reserved_slots: 0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,  //ZERO:Free, ONE: Reserved
@@ -19,6 +30,7 @@ pub static mut ENGINE:Engine = Engine {
     point_lights: Vec::new(),
     directional_lights: Vec::new(),
     allocated_gpu_memory: Vec::new(),
+    engine2: None
 };
 
 #[no_mangle]
@@ -27,11 +39,91 @@ pub unsafe extern "C" fn handle_gpu_queue_rust() {
         handle_gpu_queue(ENGINE.gpu_queue2.as_ptr(), ENGINE.gpu_queue2.len());
         ENGINE.gpu_queue2.clear()
     }
-    //(ENGINE.gpu_queue2.as_ptr(), ENGINE.gpu_queue2.len())
+}
+pub struct Engine2<'a> {
+    physic_pipeline: PhysicsPipeline,
+    pub rigid_body_set: RigidBodySet,
+    pub collider_set: ColliderSet,
+    pub island_manager: IslandManager,
+    pub meshes: Vec<Mesh>,
+    pub rigid_bodies: HashMap<RigidBodyHandle,&'a Mesh>,
+    broad_phase: BroadPhase
+}
+pub fn create_js_string(mut str:String) -> *const u8 {
+    str.truncate(512);
+    let log_str = format!("{: <512}", str);
+    let ptr=log_str.as_ptr();
+    std::mem::forget(log_str);
+    return ptr;
+}
+#[no_mangle]
+pub unsafe extern "C" fn init_engine2() {
+    panic::set_hook(Box::new(|panic_info| {
+        jspanic(create_js_string(panic_info.to_string()));
+    }));
+    ENGINE.engine2=Some(Engine2 {
+        physic_pipeline: PhysicsPipeline::new(),
+        rigid_body_set: RigidBodySet::new(),
+        collider_set: ColliderSet::new(),
+        island_manager: IslandManager::new(),
+        meshes: Vec::with_capacity(100),
+        rigid_bodies: HashMap::new(),
+        broad_phase: BroadPhase::new()
+    });
+}
+#[no_mangle]
+pub unsafe extern "C" fn physic_tick() {
+      //  jslog_number(&(ENGINE.physic_engine().meshes[0]) as *const Mesh as u32);
+        let gravity = vector![0.0, -9.81, 0.0];
+        let integration_parameters = IntegrationParameters::default();
+        
+        let mut narrow_phase = NarrowPhase::new();
+        let mut joint_set = ImpulseJointSet::new();
+        let mut multi_joint_set = MultibodyJointSet::new();
+        let mut ccd_solver = CCDSolver::new();
+        let physics_hooks = ();
+        let event_handler = ();
+
+        let e = ENGINE.physic_engine_mut();
+        e.physic_pipeline.step(
+            &gravity,
+            &integration_parameters,
+            &mut e.island_manager,
+            &mut e.broad_phase,
+            &mut narrow_phase,
+            &mut e.rigid_body_set,
+            &mut e.collider_set,
+            &mut joint_set,
+            &mut multi_joint_set,
+            &mut ccd_solver,
+            &physics_hooks,
+            &event_handler);
+
+        // Iter on each dynamic rigid-bodies that moved.
+        /*   for rigid_body_handle in (*engine_ptr).island_manager.active_dynamic_bodies() {
+            let rigid_body = &(*engine_ptr).rigid_body_set[*rigid_body_handle];
+            println!("Rigid body {:?} has a new position: {}", rigid_body_handle, rigid_body.position());
+        }*/
 }
 //const GPU_QUEUE: Vec<(* const GPUMesh, u32)> = Vec::new();
 //const MESHES: Vec<*const Mesh> = Vec::new();
 impl Engine {
+    pub fn physic_engine(&self) -> &Engine2 {
+        match &self.engine2 {
+            Some(e) => {
+                return e;
+            }
+            None => panic!("Engine not initialized")
+        }
+    }
+    pub fn physic_engine_mut(&mut self) -> &mut Engine2<'static> {
+        match &mut self.engine2 {
+            Some(e) => {
+                return e;
+            }
+            None => panic!("Engine not initialized")
+        }
+    }
     pub fn allocated_gpu_memory (&mut self) {
         self.allocated_gpu_memory.clear();
         self.allocated_gpu_memory.push(0);

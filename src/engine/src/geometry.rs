@@ -2,12 +2,10 @@
 pub use crate::Vec3;
 pub use crate::Vec4;
 pub use crate::boundingbox::BoundingBox;
-
-
-extern "C" {
-    fn log(s: &str);
-    fn error(s: &str);
-}
+use crate::engine::Engine2;
+use crate::engine::create_js_string;
+use crate::engine::jslog;
+use rapier3d::prelude::*;
 
 pub struct ColliderPlane {
     plane: Plane,
@@ -26,12 +24,29 @@ pub struct Geometry {
     pub collider_planes_parallel: Vec<[f32;4]>, //lanes for x,y,z,d
     pub last_collider_world_vertices:Vec<f32>,
 
-    pub static_faces: bool // Used for terrain
+    pub static_faces: bool, // Used for terrain
+    pub rigid_body_handle:RigidBodyHandle
 }
 impl Geometry {
-    //TODO: remove positions_count, it does not reflect reality
-    pub fn new(has_geometry:bool, has_bounding:bool,vertices_stride:usize, positions_count:usize, static_faces:bool, strip:bool) -> Self {
+    //TODO: remove has_geometry and make geometry optional
+    pub unsafe fn new(mesh_id:u32,has_geometry:bool, has_bounding:bool,vertices_stride:usize, static_faces:bool, strip:bool, engine2: &mut Engine2) -> Self {
+        let mut str="Create geometry for mesh ".to_string();
+        str.push_str(&mesh_id.to_string());
+        jslog(create_js_string(str));
+        
+        let rigid_body = RigidBodyBuilder::dynamic().additional_mass(0.5).additional_mass_properties(MassProperties::new(
+            point![0.0, 1.0, 0.0],
+            0.5,
+            vector![0.3, 0.2, 0.1],
+        ))
+        .translation(vector![0.0, 10.0, mesh_id as f32])
+        .build();
+        let collider = ColliderBuilder::ball(0.5).density(2.0).restitution(0.7).build();
+        let rigid_body_handle:RigidBodyHandle;
 
+        rigid_body_handle = engine2.rigid_body_set.insert(rigid_body);
+        engine2.collider_set.insert_with_parent(collider, rigid_body_handle, &mut engine2.rigid_body_set);
+    
         let mut g = Geometry {
             has_geometry,
             bounding_box:BoundingBox::new(has_bounding),
@@ -43,7 +58,8 @@ impl Geometry {
             collider_planes_parallel:Vec::new(),
             last_collider_world_vertices:Vec::new(),
             static_faces,
-            strip
+            strip,
+            rigid_body_handle
         };
         g.allocate_faces();
         return g;
