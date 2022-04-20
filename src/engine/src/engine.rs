@@ -21,7 +21,7 @@ pub struct Engine {
     pub point_lights:Vec<u32>,
     pub directional_lights:Vec<u32>,
     pub allocated_gpu_memory:Vec<u32>,
-    pub engine2: Option<Engine2<'static>>,
+    pub engine2: Option<Engine2>,
 
 }
 pub static mut ENGINE:Engine = Engine {
@@ -40,13 +40,13 @@ pub unsafe extern "C" fn handle_gpu_queue_rust() {
         ENGINE.gpu_queue2.clear()
     }
 }
-pub struct Engine2<'a> {
+pub struct Engine2 {
     physic_pipeline: PhysicsPipeline,
     pub rigid_body_set: RigidBodySet,
     pub collider_set: ColliderSet,
     pub island_manager: IslandManager,
     pub meshes: Vec<Mesh>,
-    pub rigid_bodies: HashMap<RigidBodyHandle,&'a Mesh>,
+    pub rigid_bodies: HashMap<RigidBodyHandle,&'static mut Mesh>,
     broad_phase: BroadPhase
 }
 pub fn create_js_string(mut str:String) -> *const u8 {
@@ -100,10 +100,20 @@ pub unsafe extern "C" fn physic_tick() {
             &event_handler);
 
         // Iter on each dynamic rigid-bodies that moved.
-        /*   for rigid_body_handle in (*engine_ptr).island_manager.active_dynamic_bodies() {
-            let rigid_body = &(*engine_ptr).rigid_body_set[*rigid_body_handle];
-            println!("Rigid body {:?} has a new position: {}", rigid_body_handle, rigid_body.position());
-        }*/
+        for rigid_body_handle in e.island_manager.active_dynamic_bodies() {
+            let mesh=e.rigid_bodies.get_mut(rigid_body_handle);
+            match mesh {
+                Some(m) => {
+                    jslog(create_js_string("Mesh found".to_string()));
+                    let rigid_body = &e.rigid_body_set[*rigid_body_handle];
+                    let pos=rigid_body.position();
+                    m.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);
+                }
+                None => {
+                    jslog(create_js_string("Mesh not found".to_string()))
+                }
+            }
+        }
 }
 //const GPU_QUEUE: Vec<(* const GPUMesh, u32)> = Vec::new();
 //const MESHES: Vec<*const Mesh> = Vec::new();
@@ -116,7 +126,7 @@ impl Engine {
             None => panic!("Engine not initialized")
         }
     }
-    pub fn physic_engine_mut(&mut self) -> &mut Engine2<'static> {
+    pub fn physic_engine_mut(&mut self) -> &mut Engine2 {
         match &mut self.engine2 {
             Some(e) => {
                 return e;

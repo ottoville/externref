@@ -29,7 +29,7 @@ pub struct Geometry {
 }
 impl Geometry {
     //TODO: remove has_geometry and make geometry optional
-    pub unsafe fn new(mesh_id:u32,has_geometry:bool, has_bounding:bool,vertices_stride:usize, static_faces:bool, strip:bool, engine2: &mut Engine2) -> Self {
+    pub unsafe fn new(mesh_id:u32,has_geometry:bool, has_bounding:bool,vertices_stride:usize, static_faces:bool, strip:bool, engine2: &mut Engine2) -> (Self, RigidBodyHandle) {
         let mut str="Create geometry for mesh ".to_string();
         str.push_str(&mesh_id.to_string());
         jslog(create_js_string(str));
@@ -62,7 +62,7 @@ impl Geometry {
             rigid_body_handle
         };
         g.allocate_faces();
-        return g;
+        return (g, rigid_body_handle);
     }
     pub fn faces_count(&self) -> usize {
         if self.static_faces {

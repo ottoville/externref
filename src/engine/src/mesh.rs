@@ -20,9 +20,6 @@ pub use crate::drawable::Drawable;
 pub use crate::drawable::DrawCommand;
 pub use crate::drawable::DrawType;
 
-extern "C" {
-    fn jslog_number(number:u32);
-}
 pub struct Mesh {
     pub id:u32,
     pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
@@ -48,8 +45,8 @@ pub unsafe extern "C" fn new_mesh(
     strip:bool) -> *const Mesh {
         let e = ENGINE.physic_engine_mut();
         let mesh = Mesh::new(id, has_bounding, has_geometry,positions_count,vertices_stride,point_light,directional_light,scenes,static_faces,strip, e);
-        mesh.update_dynamic_buffer();
-        return mesh as *const Mesh;
+        (*mesh).update_dynamic_buffer();
+        return mesh;
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_vertices(mesh:*mut Mesh, ptr:*mut f32, length:usize) {
@@ -120,7 +117,7 @@ pub unsafe extern "C" fn update_rotation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: 
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_translation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32) {
-    (*mesh_ptr).update_translation(x, y, z)
+    (*mesh_ptr).set_translation(x, y, z)
 }
 #[no_mangle]
 pub unsafe extern "C" fn indices_pointer(mesh_ptr:*const Mesh) -> *const usize {
@@ -255,8 +252,8 @@ impl Mesh {
         scenes:f32,
         static_faces:bool,
         strip:bool,
-        engine2: &'a mut Engine2) -> &'a Self {
-        let geometry = Geometry::new(id,has_geometry, has_bounding, vertices_stride, static_faces,strip,engine2);
+        engine2: &'static mut Engine2) -> *const Mesh {
+        let (geometry, rigid_body_handle) = Geometry::new(id,has_geometry, has_bounding, vertices_stride, static_faces,strip,engine2);
 
         let m = Mesh {
             id,
@@ -315,26 +312,24 @@ impl Mesh {
 
         let new_id=engine2.meshes.len();
         engine2.meshes.push(m);
-        jslog_number(&(ENGINE.physic_engine().meshes[0]) as *const Mesh as u32);
-        &engine2.meshes[new_id]
-
-       // (*engine_ptr).meshes.insert(mesh.geometry.rigid_body_handle.clone(), &mesh);
-
-
-       // return m;
+        let ptr = &engine2.meshes[new_id] as *const Mesh;
+        let _ = engine2.rigid_bodies.insert(rigid_body_handle, &mut engine2.meshes[new_id]);
+        return ptr;
     }
-    pub unsafe fn update_translation(&mut self, x:f32, y:f32, z:f32) {
-        self.gpu_mesh.transformation.w.x=x;
-        self.gpu_mesh.transformation.w.y=y;
-        self.gpu_mesh.transformation.w.z=z;
-        self.update_dynamic_buffer();
-
+    pub unsafe fn set_translation(&mut self, x:f32, y:f32, z:f32) {
+        self.update_translation(x,y,z);
         let e = ENGINE.physic_engine_mut();
         let rigid_body = e.rigid_body_set.get_mut(self.geometry.rigid_body_handle);
             match rigid_body {
                 Some(rigid_body) => rigid_body.set_translation(vector![x, y, z], true),
                 None    => panic!("Rigid body not found"),
             };
+    }
+    pub unsafe fn update_translation(&mut self, x:f32, y:f32, z:f32) {
+        self.gpu_mesh.transformation.w.x=x;
+        self.gpu_mesh.transformation.w.y=y;
+        self.gpu_mesh.transformation.w.z=z;
+        self.update_dynamic_buffer();
     }
     pub unsafe fn update_dynamic_buffer(&self) {
         ENGINE.gpu_queue2.push((&self.gpu_mesh, self.gpu_alignment));
