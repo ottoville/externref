@@ -47,7 +47,8 @@ pub struct Engine2 {
     pub island_manager: IslandManager,
     pub meshes: Vec<Mesh>,
     pub rigid_bodies: HashMap<RigidBodyHandle,&'static mut Mesh>,
-    broad_phase: BroadPhase
+    broad_phase: BroadPhase,
+    pub gpu_meshes: Vec<GPUMesh>
 }
 pub fn create_js_string(mut str:String) -> *const u8 {
     str.truncate(512);
@@ -68,7 +69,8 @@ pub unsafe extern "C" fn init_engine2() {
         island_manager: IslandManager::new(),
         meshes: Vec::with_capacity(100),
         rigid_bodies: HashMap::new(),
-        broad_phase: BroadPhase::new()
+        broad_phase: BroadPhase::new(),
+        gpu_meshes: Vec::with_capacity(100),
     });
 }
 #[no_mangle]
@@ -104,7 +106,7 @@ pub unsafe extern "C" fn physic_tick() {
             let mesh=e.rigid_bodies.get_mut(rigid_body_handle);
             match mesh {
                 Some(m) => {
-                    jslog(create_js_string("Mesh found".to_string()));
+                   // jslog(create_js_string("Mesh found".to_string()));
                     let rigid_body = &e.rigid_body_set[*rigid_body_handle];
                     let pos=rigid_body.position();
                     m.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);

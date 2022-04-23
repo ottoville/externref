@@ -33,7 +33,7 @@ declare const engine:Engine;
 class CanvasMesh extends MainNode {
     drawable:DrawableSimple;
     constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
-        super(undefined, undefined, positionsCount,undefined, undefined, undefined, undefined, undefined, 'canvas');
+        super(positionsCount,undefined, undefined, undefined, 'canvas');
         this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([engine.gpu.renderPassCanvas]))
 
     }
@@ -41,7 +41,7 @@ class CanvasMesh extends MainNode {
 
 class Light extends MainNode {
     constructor(scene:Scene) {
-        super(false, false, undefined,undefined,0,1,undefined,undefined,'Light',[scene]);
+        super(undefined,0,1,undefined,'Light',[scene]);
     }
 }
 

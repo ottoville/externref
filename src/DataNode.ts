@@ -3,7 +3,7 @@ import { MainNode } from "./MainNode.js";
 import { ReadOnlyTerraVector3, TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
 import type { Scene } from "./Scene.js";
 import type { ColliderJS } from "./Collider.js";
-import type { Engine } from "./engine.js";
+import type { Engine, rust_pointer } from "./engine.js";
 declare const engine:Engine;
 
 const worker = new ObjectWorkerThread('/js/workers/webworkers/mesh.js');
@@ -78,7 +78,29 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
     get vertices() {
         return new Float32Array(engine.memory.buffer, engine.rust.vertices_pointer(this.ptr), this.vertices_count * this.vertices_stride);
     }
- 
+    get vertices_count() {
+        return engine.rust.vertices_count(this.ptr);
+    }
+    
+    get faces_count() {
+        return engine.rust.faces_count(this.ptr);
+    }
+    set faces(faces:Float32Array)  {
+        const ptr = engine.rust.alloc_vector_f32(faces.length);
+        new Float32Array(engine.rust.memory.buffer,ptr,faces.length).set(faces);
+        engine.rust.set_faces(this.ptr, ptr, faces.length);
+    }
+    get vertices_stride(): number{
+        return engine.rust.vertices_stride(this.ptr);
+    }
+    set_vertices(vertices: Float32Array) {
+        const ptr = engine.rust.alloc_vector_f32(vertices.length);
+        new Float32Array(engine.rust.memory.buffer,ptr,vertices.length).set(vertices);
+        engine.rust.update_vertices(this.ptr, ptr, vertices.length);
+    }
+    get last_collider_world_vertices_pointer() {
+        return engine.rust.last_collider_world_vertices_pointer(this.ptr);
+    }
     constructor(
         positionCount: number,
         verticesPositionStride: number,
@@ -88,10 +110,15 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         static_faces = false,
         label:string,
         scenes?: Scene[],
-        protected frontFace: GPUFrontFace = 'cw'
-    ) {
-        super(true, true, positionCount, verticesPositionStride, point_light,undefined, static_faces,strip,label,scenes);
+        protected frontFace: GPUFrontFace = 'cw',
+        collider_ptr?: rust_pointer<"collider">,
 
+    ) {
+        super(positionCount,point_light,undefined, strip,label,scenes);
+        if(!collider_ptr) {
+            collider_ptr = engine.rust.create_ball_collider();
+        }
+        engine.rust.add_geometry(this.ptr,true,verticesPositionStride,static_faces,strip,collider_ptr)
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
         if(has_physic)
             engine.physics.tickables.push(this);
@@ -322,9 +349,10 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
         static_faces = false,
         label:string,
         scenes?: Scene[],
-        frontFace: GPUFrontFace = 'cw'
+        frontFace: GPUFrontFace = 'cw',
+        collider_ptr?: rust_pointer<"collider">,
     ) {
-        super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip, point_light,static_faces,label, scenes, frontFace);
+        super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip, point_light,static_faces,label,scenes, frontFace, collider_ptr);
 
         this.indices = indicesView;
         this.set_vertices(vertices);
@@ -354,8 +382,9 @@ export abstract class BoundableNodeSimple extends DataNode {
         label:string,
         has_physic: boolean,
         scenes?: Scene[],
+        collider_ptr?: rust_pointer<"collider">,
     ) {
-        super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip,  undefined, undefined, label, scenes);
+        super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip,  undefined, undefined, label, scenes,undefined, collider_ptr);
         this.set_vertices(vertices);
     }
     override set_vertices(vertices:Float32Array) {

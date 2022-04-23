@@ -2,7 +2,7 @@
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
 import type { Ellipsoid } from "./DataNode.js";
-import type { Engine, rustWasm } from "./engine.js";
+import type { Engine, rustWasm, rust_pointer } from "./engine.js";
 import { TerraVector3, Triangle } from "./Math.js";
 declare const engine:Engine;
 
@@ -18,7 +18,7 @@ function CrossToRef(left: readonly [number, number, number], right: readonly [nu
 export class ColliderJS {
     #velocitySquaredLength!: number;
     finalPosition: TerraVector3;
-    collider_ptr: number;
+    collider_ptr: rust_pointer<"legacy_collider">;
     collidedPointInTriangle: Triangle | undefined;
     didCollide = false;
     getLowestRoot (a: number, b: number, c: number, maxR: number) {

@@ -103,7 +103,7 @@ abstract class DrawableDirect extends Drawable {
     debug_render_normals(node: DataNode) {
         const gpu = this.renderPipeline.bindgroupdrawable.gpu;
         const vertices = node.verticesArray;
-        const stride=this.node.vertices_stride;
+        const stride=node.vertices_stride;
 
         const debug_render_normals_vertexBuffer = gpu.createGPUBuffer(this.node.positions_count*stride*2*Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], true);
         const view = new Float32Array( debug_render_normals_vertexBuffer.getMappedRange());
@@ -113,7 +113,7 @@ abstract class DrawableDirect extends Drawable {
         })
         debug_render_normals_vertexBuffer.unmap();
 
-        const mesh = new NormalsMesh(this.node.positions_count*2,stride)
+        const mesh = new NormalsMesh(this.node.positions_count*2)
         mesh.drawable.setVertexBuffer(0,debug_render_normals_vertexBuffer)
     }
     debug_bounding_box() {

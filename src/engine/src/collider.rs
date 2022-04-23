@@ -67,10 +67,6 @@ pub unsafe extern "C" fn set_speed(collider_ptr:*mut Collider, speed:f32) {
     (*collider_ptr).speed = speed;
 }
 #[no_mangle]
-pub unsafe extern "C" fn get_speed(collider_ptr:*const Collider) -> f32 {
-    (*collider_ptr).speed
-}
-#[no_mangle]
 pub unsafe extern "C" fn basepoint_world_pointer(collider_ptr:*const Collider) -> *const f32 {
     (*collider_ptr).basepoint_world.as_ptr()
 }

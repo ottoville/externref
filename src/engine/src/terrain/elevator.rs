@@ -15,8 +15,8 @@ pub struct Elevator {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn create_elevator(mesh_ptr:*const Mesh) -> *mut Elevator {
-    Box::leak(Box::new(Elevator::new(&(*mesh_ptr))))
+pub unsafe extern "C" fn create_elevator(mesh_ptr:*mut Mesh) -> *mut Elevator {
+    Box::leak(Box::new(Elevator::new(&mut (*mesh_ptr))))
 }
 
 #[no_mangle]
@@ -105,19 +105,20 @@ impl Elevator {
         }
         let radius_near = radius * 0.3;
         let radius_far = radius * 0.7;
-        if mesh.geometry.indices.len() == 0 {
+        let geometry=mesh.get_geometry_mut();
+        if geometry.indices.len() == 0 {
             panic!("Elevator needs indices")
         }
         for sv in self.selected_vertices.iter() {
-            let vertice=sv.0 * mesh.geometry.vertices_stride;
-            let mut positiony = mesh.geometry.vertices[vertice +1];
+            let vertice=sv.0 * geometry.vertices_stride;
+            let mut positiony = geometry.vertices[vertice +1];
             if sv.1 < radius_near {
                 positiony += full_height;
             } else {
                 positiony += full_height * (1.0 - (sv.1 - radius_near) / radius_far);
             }
             
-            mesh.geometry.vertices[vertice +1] = f32::clamp(positiony,height_min,height_max);
+            geometry.vertices[vertice +1] = f32::clamp(positiony,height_min,height_max);
             if new_position {
                 let face_of_vertices=&self.faces_of_vertices[vertice / 12];
                 for index in face_of_vertices {
@@ -127,30 +128,30 @@ impl Elevator {
 
         }
 
-        let half = mesh.geometry.faces.planes.len()/2;
-        let stride=&mesh.geometry.vertices_stride;
+        let half = geometry.faces.planes.len()/2;
+        let stride=&geometry.vertices_stride;
         for face_index in self.selected_faces.iter() {
             if new_position {
-                self.selected_indices.insert(mesh.geometry.indices[face_index * 3]);
-                self.selected_indices.insert(mesh.geometry.indices[face_index * 3 + 1]);
-                self.selected_indices.insert(mesh.geometry.indices[face_index * 3 + 2]);
+                self.selected_indices.insert(geometry.indices[face_index * 3]);
+                self.selected_indices.insert(geometry.indices[face_index * 3 + 1]);
+                self.selected_indices.insert(geometry.indices[face_index * 3 + 2]);
             }
-            let v1_ptr = std::slice::from_ref(&mesh.geometry.vertices[mesh.geometry.indices[face_index * 3]*stride]).as_ptr() as *mut v128;
+            let v1_ptr = std::slice::from_ref(&geometry.vertices[geometry.indices[face_index * 3]*stride]).as_ptr() as *mut v128;
             let v1 = v128_load(v1_ptr);
 
-            let v2_ptr = std::slice::from_ref(&mesh.geometry.vertices[mesh.geometry.indices[face_index * 3 +1]*stride]).as_ptr()  as *mut v128;
+            let v2_ptr = std::slice::from_ref(&geometry.vertices[geometry.indices[face_index * 3 +1]*stride]).as_ptr()  as *mut v128;
             let v2 = v128_load(v2_ptr);
 
-            let v3_ptr = std::slice::from_ref(&mesh.geometry.vertices[mesh.geometry.indices[face_index * 3 + 2]*stride]).as_ptr()  as *mut v128;
+            let v3_ptr = std::slice::from_ref(&geometry.vertices[geometry.indices[face_index * 3 + 2]*stride]).as_ptr()  as *mut v128;
             let v3 = v128_load(v3_ptr);
 
             let v1v2=f32x4_sub(v1,v2);
             let v3v2=f32x4_sub(v3,v2);
 
             let mut plane = if (face_index & 1) == 0 {
-                &mut mesh.geometry.faces.planes[half + (face_index >> 1)]
+                &mut geometry.faces.planes[half + (face_index >> 1)]
             } else {
-                &mut mesh.geometry.faces.planes[face_index >> 1]
+                &mut geometry.faces.planes[face_index >> 1]
             };
 
             let v3v2_shuffled_yzxw=i32x4_shuffle::<1,2,0,3>(v3v2,v3v2);
@@ -172,14 +173,14 @@ impl Elevator {
         }
         for vertex_index in self.selected_indices.iter() {
             let faces=&self.faces_of_vertices[*vertex_index];
-            let norm_ptr = std::slice::from_ref(&mesh.geometry.vertices[vertex_index*stride+4]).as_ptr() as *mut v128;
+            let norm_ptr = std::slice::from_ref(&geometry.vertices[vertex_index*stride+4]).as_ptr() as *mut v128;
 
             let mut norm_v = f32x4_splat(0.0);
             for face_index in faces.iter() {
                 let plane = if (face_index & 1) == 0 {
-                    &mut mesh.geometry.faces.planes[half + (face_index >> 1)]
+                    &mut geometry.faces.planes[half + (face_index >> 1)]
                 } else {
-                    &mut mesh.geometry.faces.planes[face_index >> 1]
+                    &mut geometry.faces.planes[face_index >> 1]
                 };
                 let plane_vector=v128_load(plane.norm.as_ptr() as *mut v128);
                 norm_v = f32x4_add(norm_v, plane_vector)
@@ -196,27 +197,28 @@ impl Elevator {
         }
     }
 
-    pub fn new (mesh:&Mesh) -> Elevator {
-        let mut vertices = Vec::with_capacity(mesh.geometry.vertices.len()/mesh.geometry.vertices_stride*3);
-        let iter = mesh.geometry.vertices.chunks(mesh.geometry.vertices_stride * 4);
+    pub fn new (mesh:&mut Mesh) -> Elevator {
+        let geometry = mesh.get_geometry_mut();
+        let mut vertices = Vec::with_capacity(geometry.vertices.len()/geometry.vertices_stride*3);
+        let iter = geometry.vertices.chunks(geometry.vertices_stride * 4);
         for val in iter {
             let mut v: Vec<f32> = vec![
-                val[0], val[mesh.geometry.vertices_stride],        val[mesh.geometry.vertices_stride * 2],        val[mesh.geometry.vertices_stride * 3],
-                val[1], val[mesh.geometry.vertices_stride + 1],    val[mesh.geometry.vertices_stride * 2 + 1],    val[mesh.geometry.vertices_stride * 3 + 1],
-                val[2], val[mesh.geometry.vertices_stride + 2],    val[mesh.geometry.vertices_stride * 2 + 2],    val[mesh.geometry.vertices_stride * 3 + 2],
+                val[0], val[geometry.vertices_stride],        val[geometry.vertices_stride * 2],        val[geometry.vertices_stride * 3],
+                val[1], val[geometry.vertices_stride + 1],    val[geometry.vertices_stride * 2 + 1],    val[geometry.vertices_stride * 3 + 1],
+                val[2], val[geometry.vertices_stride + 2],    val[geometry.vertices_stride * 2 + 2],    val[geometry.vertices_stride * 3 + 2],
             ];
             vertices.append(&mut v);
         }
-        let positions_count = if mesh.geometry.indices.len() > 0 {
-            mesh.geometry.indices.len()
+        let positions_count = if geometry.indices.len() > 0 {
+            geometry.indices.len()
         } else {
-            mesh.geometry.vertices.len() / mesh.geometry.vertices_stride
+            geometry.vertices.len() / geometry.vertices_stride
         };
         let mut faces_of_vertices:Vec<Vec<usize>> = vec![Vec::with_capacity(6);positions_count];
-        if mesh.geometry.indices.len() == 0usize {
+        if geometry.indices.len() == 0usize {
             panic!("Elevator needs indices")
         }
-        for (i, indice) in mesh.geometry.indices.iter().enumerate() {
+        for (i, indice) in geometry.indices.iter().enumerate() {
             faces_of_vertices[*indice].push(i/3);
         };
         Elevator {

@@ -11,6 +11,7 @@ mod drawable;
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
+use rapier3d::prelude::*;
 
 #[no_mangle]
 pub extern "C" fn alloc_vector_f32(size:usize) -> *mut f32 {
@@ -22,7 +23,11 @@ pub extern "C" fn alloc_vector_usize(size:usize) -> *mut usize {
     let mut buf = std::mem::ManuallyDrop::new(vec![0;size]);
     buf.as_mut_ptr()
 }
-
+#[no_mangle]
+pub extern "C" fn create_ball_collider() -> *mut Collider {
+    let collider = Box::new(ColliderBuilder::ball(0.5).density(2.0).restitution(0.7).build());
+    Box::leak(collider)
+}
 #[derive(Copy, Clone)]
 pub struct Vec4<T> {
     x: T,

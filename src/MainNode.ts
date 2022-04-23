@@ -1,6 +1,6 @@
 ﻿import { ReadOnlyTerraVector3, TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Scene } from "./Scene.js";
-import type { Engine } from "./engine.js";
+import type { Engine, rust_pointer } from "./engine.js";
 import type { ColliderJS } from "./Collider.js";
 declare const engine:Engine;
 
@@ -19,7 +19,7 @@ export abstract class MainNode {
     set gpu_custom_data(data:[number,number,number,number]) {
         engine.rust.set_gpu_custom_data(this.ptr,data[0],data[1],data[2],data[3])
     }
-    ptr: number;
+    ptr: rust_pointer<"mesh">;
     get id() {
         return engine.rust.id(this.ptr)
     }
@@ -38,11 +38,6 @@ export abstract class MainNode {
     update_dynamic_buffer() {
         engine.rust.update_dynamic_buffer(this.ptr);
     }
-    set_vertices(vertices: Float32Array) {
-        const ptr = engine.rust.alloc_vector_f32(vertices.length);
-        new Float32Array(engine.rust.memory.buffer,ptr,vertices.length).set(vertices);
-        engine.rust.update_vertices(this.ptr, ptr, vertices.length);
-    }
     get scale_x(): number {
         return engine.rust.scale_x(this.ptr)
     }
@@ -53,24 +48,6 @@ export abstract class MainNode {
         return engine.rust.scale_z(this.ptr)
     }
 
-    get faces_count() {
-        return engine.rust.faces_count(this.ptr);
-    }
-    get vertices_count() {
-        return engine.rust.vertices_count(this.ptr);
-    }
-    get vertices_stride(): number{
-        return engine.rust.vertices_stride(this.ptr);
-    }
-    set faces(faces:Float32Array)  {
-        const ptr = engine.rust.alloc_vector_f32(faces.length);
-        new Float32Array(engine.rust.memory.buffer,ptr,faces.length).set(faces);
-        engine.rust.set_faces(this.ptr, ptr, faces.length);
-    }
-
-    get last_collider_world_vertices_pointer() {
-        return engine.rust.last_collider_world_vertices_pointer(this.ptr);
-    }
     get positions_count() {
         return engine.rust.positions_count(this.ptr);
     }
@@ -115,21 +92,15 @@ export abstract class MainNode {
         return engine.rust.intersect_box_aa_sphere(this.ptr,collider.collider_ptr, radius)
     }
     constructor(
-        hasBounding = false,
-        has_geometry = false,
         positionsCount = 0,
-        vertices_stride = 3,
         point_light=0,
         directional_light=0,
-        static_faces=false,
         strip=false,
         public label:string,
         scenes?:Scene[],
         ) {
         const sceneids=scenes?scenes.reduce((acc, scene) => acc | scene.id,0):1;
-        //super(engine.rustEngine, MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, sceneids, static_faces, strip);
-        this.ptr=engine.rust.new_mesh(MainNode.uniqueID++, hasBounding, has_geometry, positionsCount, vertices_stride, point_light, directional_light, sceneids, static_faces, strip)
-       
+        this.ptr=engine.rust.new_mesh(MainNode.uniqueID++, positionsCount, point_light, directional_light, sceneids, strip);     
         MainNode.Meshes.set(this.id, this);
     }
     destroy() {

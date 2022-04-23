@@ -10,7 +10,7 @@ import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { GPUBufferUsage, type GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
 
-import type { Engine } from "../engine.js";
+import type { Engine, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
 declare const engine:Engine;
 
@@ -59,7 +59,7 @@ export class TerrainTool extends MainNode {
     tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
 
     facet12ArrGPUBufferSwap = engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
-    elevator: number
+    elevator: rust_pointer<"elevator">
     drawable: DrawableSimple;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
     scene: Scene;
@@ -68,7 +68,7 @@ export class TerrainTool extends MainNode {
         public terrain: Terrain,
         public sea: Sea,
     ) {
-        super(undefined, undefined, 4, undefined, undefined, undefined, undefined, undefined, 'TerrainTool');
+        super(4, undefined, undefined, undefined, 'TerrainTool');
         const renderPipeline=getRenderPipeline(terrain);
         const scene=engine.scenes.get('main');
         if(!scene)

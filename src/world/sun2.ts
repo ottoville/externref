@@ -51,7 +51,7 @@ export class Sun2 extends MainNode {
     }
     drawable:DrawableSimple;
     constructor(scenes: Scene[]) {
-        super(undefined, undefined, 14,undefined,undefined,1,undefined,undefined,'sun',scenes);
+        super(14,undefined,1,undefined,'sun',scenes);
         this.drawable=GPU.createRenderPipeline(SunRenderPipeline, {
             topology: 'triangle-strip',
             cullMode: 'none',
