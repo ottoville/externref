@@ -21,7 +21,10 @@ import { closeDistance, closeDistanceSquared, Ellipsoid } from "./DataNode.js";
 import { ComputePipeline } from "./GPU/ComputePipeline.js";
 
 declare const engine:Engine;
-
+let curSecond = 0;
+let framecount = 0;
+//@ts-ignore
+window.fps = 0;
 let GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
 export type rust_pointer<T> = {
     __brand:T
@@ -48,52 +51,53 @@ export type rustWasm = {
         directional_light:number,
         scenes:number,
         strip:boolean): rust_pointer<"mesh">,
-    add_geometry(mesh_ptr:rust_pointer<"mesh">,
+    add_geometry(mesh:rust_pointer<"mesh">,
         has_bounding:boolean,
         vertices_stride:number,
         static_faces:boolean,
-        strip:boolean,
+        strip:boolean):void,
+    add_collider(mesh:rust_pointer<"mesh">,
         collider:rust_pointer<"collider">):void
     memory: WebAssembly.Memory,
-    update_vertices(mesh_ptr:rust_pointer<"mesh">, ptr:number, length:number):void,
-    set_indices(mesh_ptr:rust_pointer<"mesh">, ptr:number, length:number):void,
-    vertices_pointer(mesh_ptr:rust_pointer<"mesh">):number,
-    indices_pointer(mesh_ptr:rust_pointer<"mesh">):number,
-    last_collider_world_vertices_pointer(mesh_ptr:rust_pointer<"mesh">):number,
-    vertices_count(mesh_ptr:rust_pointer<"mesh">):number,
-    faces_count(mesh_ptr:rust_pointer<"mesh">):number,
+    set_vertices(mesh:rust_pointer<"mesh">, ptr:number, length:number):void,
+    set_indices(mesh:rust_pointer<"mesh">, ptr:number, length:number):void,
+    vertices_pointer(mesh:rust_pointer<"mesh">):number,
+    indices_pointer(mesh:rust_pointer<"mesh">):number,
+    last_collider_world_vertices_pointer(mesh:rust_pointer<"mesh">):number,
+    vertices_count(mesh:rust_pointer<"mesh">):number,
+    faces_count(mesh:rust_pointer<"mesh">):number,
     alloc_vector_f32(size:number):number,
     alloc_vector_usize(size:number):number,
-    update_scale(mesh_ptr:rust_pointer<"mesh">, x:number, y:number, z:number):void,
-    update_rotation(mesh_ptr:rust_pointer<"mesh">, x:number, y:number, z:number, w:number):void,
-    update_euler_angles(mesh_ptr:rust_pointer<"mesh">, x:number, y:number, z:number):void,
-    update_translation(mesh_ptr:rust_pointer<"mesh">, x:number, y:number, z:number):void,
-    update_dynamic_buffer(mesh_ptr:rust_pointer<"mesh">):void,
-    gpu_alignment(mesh_ptr:rust_pointer<"mesh">):number,
-    positions_count(mesh_ptr:rust_pointer<"mesh">):number,
-    id(mesh_ptr:rust_pointer<"mesh">):number,
-    strip(mesh_ptr:rust_pointer<"mesh">):number,
-    collider_planes_parallel_pointer(mesh_ptr:rust_pointer<"mesh">):number,
-    gpu_pointer(mesh_ptr:rust_pointer<"mesh">):number,
-    translation_pointer(mesh_ptr:rust_pointer<"mesh">):number,
-    velocity_pointer(mesh_ptr:rust_pointer<"mesh">):number,
-    acceleration_pointer(mesh_ptr:rust_pointer<"mesh">):number,
-    intersect_box_aa_sphere(mesh_ptr:rust_pointer<"mesh">,collider_ptr:number, radius:number):boolean
-    scale_x(mesh_ptr:rust_pointer<"mesh">):number,
-    scale_y(mesh_ptr:rust_pointer<"mesh">):number,
-    scale_z(mesh_ptr:rust_pointer<"mesh">):number,
-    vertices_stride(mesh_ptr:rust_pointer<"mesh">):number,
-    set_faces(mesh_ptr:rust_pointer<"mesh">, ptr:number, length:number):void,
-    set_gpu_custom_data(mesh_ptr:rust_pointer<"mesh">, d0:number,d1:number,d2:number,d3:number):void,
-    collider_faces_pointer(mesh_ptr:rust_pointer<"mesh">):number,
-    set_scenes(mesh_ptr:rust_pointer<"mesh">, scenes:number):void,
-    update_scale_and_rotation(mesh_ptr:rust_pointer<"mesh">, x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number):void
-    faces_pointer(mesh_ptr:rust_pointer<"mesh">):number,
-    bounding_vectors_pointer_simd(mesh_ptr:rust_pointer<"mesh">):number,
+    update_scale(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
+    update_rotation(mesh:rust_pointer<"mesh">, x:number, y:number, z:number, w:number):void,
+    update_euler_angles(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
+    update_translation(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
+    update_dynamic_buffer(mesh:rust_pointer<"mesh">):void,
+    gpu_alignment(mesh:rust_pointer<"mesh">):number,
+    positions_count(mesh:rust_pointer<"mesh">):number,
+    id(mesh:rust_pointer<"mesh">):number,
+    strip(mesh:rust_pointer<"mesh">):number,
+    collider_planes_parallel_pointer(mesh:rust_pointer<"mesh">):number,
+    gpu_pointer(mesh:rust_pointer<"mesh">):number,
+    translation_pointer(mesh:rust_pointer<"mesh">):number,
+    velocity_pointer(mesh:rust_pointer<"mesh">):number,
+    acceleration_pointer(mesh:rust_pointer<"mesh">):number,
+    intersect_box_aa_sphere(mesh:rust_pointer<"mesh">,collider_ptr:number, radius:number):boolean
+    scale_x(mesh:rust_pointer<"mesh">):number,
+    scale_y(mesh:rust_pointer<"mesh">):number,
+    scale_z(mesh:rust_pointer<"mesh">):number,
+    vertices_stride(mesh:rust_pointer<"mesh">):number,
+    set_faces(mesh:rust_pointer<"mesh">, ptr:number, length:number):void,
+    set_gpu_custom_data(mesh:rust_pointer<"mesh">, d0:number,d1:number,d2:number,d3:number):void,
+    collider_faces_pointer(mesh:rust_pointer<"mesh">):number,
+    set_scenes(mesh:rust_pointer<"mesh">, scenes:number):void,
+    update_scale_and_rotation(mesh:rust_pointer<"mesh">, x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number):void
+    faces_pointer(mesh:rust_pointer<"mesh">):number,
+    bounding_vectors_pointer_simd(mesh:rust_pointer<"mesh">):number,
 
-    create_elevator(mesh_ptr:rust_pointer<"mesh">):rust_pointer<"elevator">,
+    create_elevator(mesh:rust_pointer<"mesh">):rust_pointer<"elevator">,
     mouse_position_pointer(elevator_ptr:rust_pointer<"elevator">):number
-    elevate(elevator_ptr:rust_pointer<"elevator">,mesh_ptr:rust_pointer<"mesh">, radius:number, height:number):void
+    elevate(elevator_ptr:rust_pointer<"elevator">, mesh:rust_pointer<"mesh">, radius:number, height:number):void
     get_length(elevator_ptr:rust_pointer<"elevator">):number
     get_offset(elevator_ptr:rust_pointer<"elevator">):number
 
@@ -101,6 +105,7 @@ export type rustWasm = {
     physic_tick():void
 
     create_ball_collider():rust_pointer<"collider">
+    create_trimesh_collider(mesh:rust_pointer<"mesh">):rust_pointer<"collider">
 }
 
 function Dot(left: readonly [number, number, number] | Float32Array | TerraVector3, right: readonly [number, number, number] | Float32Array | TerraVector3): number {
@@ -334,13 +339,14 @@ export class Engine {
         //msPerFrame = performance.now() - startTime;
         //startTime = performance.now();
 
-        //const nowSecond = (Date.now() / 500) | 0;
-        /*if (nowSecond !== curSecond) {
-            rendertime = framecount * 2;
+        const nowSecond = (Date.now() / 500) | 0;
+        if (nowSecond !== curSecond) {
+            //@ts-ignore
+            window.fps = framecount * 2;
             curSecond = nowSecond;
             framecount = 0;
         }
-        framecount++;*/
+        framecount++;
         //performance.mark('renderloopStart');
 
 

@@ -1,5 +1,5 @@
 ﻿import type { Scene } from "../../Scene.js";
-import type { Engine } from "../../engine.js";
+import type { Engine, rust_pointer } from "../../engine.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 declare const engine:Engine;
 
@@ -64,7 +64,9 @@ const icosphere = (order = 0) => {
 
 let uid=0;
 export class Sphere extends SimpleIndexedMesh {
-    collider_ptr=engine.rust.create_ball_collider();
+    override create_collider(): rust_pointer<"collider"> {
+      return engine.rust.create_ball_collider();
+    }
     constructor(
         order=0,
         label='sphere'+(uid++),

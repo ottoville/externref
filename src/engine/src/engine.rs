@@ -9,11 +9,10 @@ use rapier3d::prelude::*;
 extern "C" {
     fn update_point_lights(pointer: *const u32, length:usize);
     fn update_directional_lights(pointer: *const u32, length:usize);
-    fn handle_gpu_queue(pointerVec:*const (*const GPUMesh, u32), length:usize);
+    fn handle_gpu_queue(pointerVec:*const[u32;2], length:usize);
     fn updateAllocatedMemory(ptr:*const u32, length: usize);
     fn jspanic(number:*const u8);
-    pub fn jslog(number:*const u8);
-    fn jslog_number(number:u32);
+    fn jslog(number:*const u8);
 }
 pub struct Engine {
     gpu_reserved_slots: u64,
@@ -36,7 +35,7 @@ pub static mut ENGINE:Engine = Engine {
 #[no_mangle]
 pub unsafe extern "C" fn handle_gpu_queue_rust() {
     if ENGINE.gpu_queue2.len() > 0 {
-        handle_gpu_queue(ENGINE.gpu_queue2.as_ptr(), ENGINE.gpu_queue2.len());
+        handle_gpu_queue(ENGINE.gpu_queue2.as_ptr() as *const [u32; 2], ENGINE.gpu_queue2.len());
         ENGINE.gpu_queue2.clear()
     }
 }
@@ -56,6 +55,16 @@ pub fn create_js_string(mut str:String) -> *const u8 {
     let ptr=log_str.as_ptr();
     std::mem::forget(log_str);
     return ptr;
+}
+pub fn jslog_string(strings: Vec<String>) {
+    let mut newstr=String::new();
+    for str in strings.iter() {
+        newstr.push(' ');
+        newstr.push_str(str);
+    }
+    unsafe {
+    jslog(create_js_string(newstr));
+    }
 }
 #[no_mangle]
 pub unsafe extern "C" fn init_engine2() {

@@ -1,7 +1,7 @@
 ﻿import { BoundableNodeIndexed } from "../../DataNode.js";
 import type { Scene } from "../../Scene.js";
 import type { DrawableIndexed } from "../Drawable.js";
-import type { Engine } from "../../engine.js";
+import type { Engine, rust_pointer } from "../../engine.js";
 import { TerrainRenderPipeline } from "../RenderPipeLines/Terrain.js";
 declare const engine:Engine;
 import { GPU } from "../../GPU.js";
@@ -15,6 +15,9 @@ export class TerrainMesh extends BoundableNodeIndexed {
         this.drawable.setStaticBuffer(this.sampler, textureview);
     }
     drawable:DrawableIndexed;
+    override create_collider(): rust_pointer<"collider"> {
+        return engine.rust.create_trimesh_collider(this.ptr);
+    }
     constructor(
         scenes: Scene[],
         public initialTexture: GPUTextureView,

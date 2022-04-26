@@ -17,7 +17,6 @@ export abstract class SimpleMesh extends BoundableNodeSimple {
         scenes?: Scene[]) {
 
         super(vBufferCPU, 6, false,label,has_physic, scenes);
-        this.set_vertices(vBufferCPU);
         this.drawable =  GPU.createRenderPipeline(SimpleRenderPipeline).addDrawableSimple(this)
 
         if(!vBufferGPU) {

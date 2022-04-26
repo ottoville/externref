@@ -1,7 +1,7 @@
 ﻿import { BoundableNodeIndexed } from "../../DataNode.js";
 import type { Scene } from "../../Scene.js";
 import type { DrawableIndexed } from "../Drawable.js";
-import { Engine, rust_pointer } from "../../engine.js";
+import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { GPU } from "../../GPU.js";
 declare const engine:Engine;
@@ -18,9 +18,8 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
         has_physic = false,
         scenes?: Scene[],
         frontFace: GPUFrontFace = 'cw',
-        collider_ptr?: rust_pointer<"collider">,
         ) {
-        super(vBufferCPU, 6, indicesView,has_physic, undefined, point_light,undefined,label,scenes,frontFace, collider_ptr);
+        super(vBufferCPU, 6, indicesView, has_physic, undefined, point_light, undefined, label, scenes, frontFace);
 
         this.drawable =  GPU.createRenderPipeline(SimpleRenderPipeline, {frontFace}).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass]))
         if(!vBufferGPU) {

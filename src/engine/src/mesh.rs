@@ -10,6 +10,7 @@ pub use crate::Vec3_f32;
 pub use crate::Vec4;
 pub use crate::GPUMesh;
 use crate::engine::Engine2;
+use crate::engine::jslog_string;
 pub use crate::geometry::Geometry;
 pub use crate::geometry::Plane;
 pub use crate::geometry::ColliderPlane;
@@ -28,7 +29,8 @@ pub struct Mesh {
     pub geometry:Option<Geometry>,
     pub positions_count:usize,
     pub strip:bool,
-    pub draw_command: DrawCommand
+    pub draw_command: DrawCommand,
+    rigid_body_handle: RigidBodyHandle
 }
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh(
@@ -49,16 +51,20 @@ pub unsafe extern "C" fn add_geometry(
     has_bounding:bool,
     vertices_stride:usize,
     static_faces:bool,
-    strip:bool,
-    collider:*const Collider) {
-        
-        let coll=std::ptr::read(collider);
-        (*mesh).add_geometry(has_bounding, vertices_stride, static_faces, strip, coll, ENGINE.physic_engine_mut());
+    strip:bool) {        
+        (*mesh).add_geometry(has_bounding, vertices_stride, static_faces, strip);
 }
 #[no_mangle]
-pub unsafe extern "C" fn update_vertices(mesh:*mut Mesh, ptr:*mut f32, length:usize) {
+pub unsafe extern "C" fn add_collider(
+    mesh:*mut Mesh,
+    collider:*const Collider) {
+        let coll=std::ptr::read(collider);
+        (*mesh).add_collider(coll, ENGINE.physic_engine_mut());
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_vertices(mesh:*mut Mesh, ptr:*mut f32, length:usize) {
     let vertices=Vec::from_raw_parts(ptr, length, length);
-    (*mesh).get_geometry_mut().update_vertices(vertices);
+    (*mesh).get_geometry_mut().set_vertices(vertices);
 }
 #[no_mangle]
 pub unsafe extern "C" fn set_indices(mesh:*mut Mesh, ptr:*mut usize, length:usize) {
@@ -170,6 +176,10 @@ pub unsafe extern "C" fn velocity_pointer(mesh_ptr:*const Mesh) -> *const [f32; 
 pub unsafe extern "C" fn intersect_box_aa_sphere(mesh_ptr:*mut Mesh, collider:*const crate::collider::Collider, radius:f32) -> bool {
     (*mesh_ptr).intersect_box_aa_sphere(&(*collider), radius)
 }
+#[no_mangle]
+pub unsafe extern "C" fn create_trimesh_collider(mesh_ptr:*mut Mesh) -> *mut Collider {
+    (*mesh_ptr).create_trimesh_collider()
+}
 #[cfg(debug_assertions)]
 #[no_mangle]
 pub unsafe extern "C" fn bounding_min_pointer(mesh_ptr:*mut Mesh) -> *const Vec3_f32 {
@@ -270,17 +280,39 @@ impl Mesh {
 }
 
 impl Mesh {
+    //TODO: move to geometry
+    pub fn create_trimesh_collider(&self) -> *mut Collider {
+        let geometry = self.get_geometry();
+        let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
+        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(geometry.vertices.len() / geometry.vertices_stride);
+        iterator.for_each(|i| {
+            vertices.push(Point::new(i[0], i[1], i[2]));
+        });
+
+        let mut indices:Vec<[u32; 3]> = Vec::with_capacity(geometry.indices.len()/3);
+        geometry.indices.chunks(3).into_iter().for_each(|i| {
+            indices.push([i[0] as u32, i[1] as u32, i[2] as u32]);
+
+        });
+        jslog_string(vec!["create_trimesh_collider".to_string(), vertices.len().to_string(), indices.len().to_string() ]);
+
+        let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).density(2.0).restitution(0.7).build());
+        Box::leak(collider)
+    }
     pub unsafe fn add_geometry<'a>(
         &'static mut self,
         has_bounding:bool,
         vertices_stride:usize,
         static_faces:bool,
-        strip:bool,
+        strip:bool) {
+        self.geometry=Some(Geometry::new(has_bounding, vertices_stride, static_faces,strip));
+    }
+
+    pub unsafe fn add_collider<'a>(
+        &'static mut self,
         collider:Collider,
         engine2: &'static mut Engine2) {
-        let (geometry, rigid_body_handle) = Geometry::new(has_bounding, vertices_stride, static_faces,strip,collider,engine2);
-        self.geometry=Some(geometry);
-        let _ = engine2.rigid_bodies.insert(rigid_body_handle, self);
+            engine2.collider_set.insert_with_parent(collider, self.rigid_body_handle, &mut engine2.rigid_body_set);
     }
 
     pub unsafe fn new<'a>(
@@ -291,6 +323,13 @@ impl Mesh {
         scenes:f32,
         strip:bool,
         engine2: &'static mut Engine2) -> *const Mesh {
+        
+        let rigid_body = RigidBodyBuilder::dynamic().additional_mass(0.5).additional_mass_properties(MassProperties::new(
+            point![0.0, 1.0, 0.0],
+            0.5,
+            vector![0.3, 0.2, 0.1])).translation(vector![0.0, 10.0, 0.0])
+            .build();
+        let rigid_body_handle = engine2.rigid_body_set.insert(rigid_body);
         let m = Mesh {
             id,
             gpu_mesh_alignment: engine2.gpu_meshes.len(),
@@ -318,8 +357,8 @@ impl Mesh {
                 index_count: 0,
                 first_index: 0,
                 base_vertex: 0
-            
-            }
+            },
+            rigid_body_handle
         };
         engine2.gpu_meshes.push(GPUMesh {
             transformation: Vec4 {
@@ -351,7 +390,7 @@ impl Mesh {
         engine2.meshes.push(m);
         let ptr = &engine2.meshes[new_id] as *const Mesh;
 
-
+        engine2.rigid_bodies.insert(rigid_body_handle, &mut engine2.meshes[new_id]);
         return ptr;
     }
     pub fn get_geometry(&self) -> &Geometry {
@@ -377,7 +416,7 @@ impl Mesh {
     pub unsafe fn set_translation(&mut self, x:f32, y:f32, z:f32) {
         self.update_translation(x,y,z);
         let e = ENGINE.physic_engine_mut();
-        let rigid_body = e.rigid_body_set.get_mut(self.get_geometry_mut().rigid_body_handle);
+        let rigid_body = e.rigid_body_set.get_mut(self.rigid_body_handle);
             match rigid_body {
                 Some(rigid_body) => rigid_body.set_translation(vector![x, y, z], true),
                 None    => panic!("Rigid body not found"),

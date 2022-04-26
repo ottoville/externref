@@ -3,7 +3,7 @@ import { MainNode } from "./MainNode.js";
 import { ReadOnlyTerraVector3, TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
 import type { Scene } from "./Scene.js";
 import type { ColliderJS } from "./Collider.js";
-import type { Engine, rust_pointer } from "./engine.js";
+import type { Engine } from "./engine.js";
 declare const engine:Engine;
 
 const worker = new ObjectWorkerThread('/js/workers/webworkers/mesh.js');
@@ -96,13 +96,16 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
     set_vertices(vertices: Float32Array) {
         const ptr = engine.rust.alloc_vector_f32(vertices.length);
         new Float32Array(engine.rust.memory.buffer,ptr,vertices.length).set(vertices);
-        engine.rust.update_vertices(this.ptr, ptr, vertices.length);
+        engine.rust.set_vertices(this.ptr, ptr, vertices.length);
     }
     get last_collider_world_vertices_pointer() {
         return engine.rust.last_collider_world_vertices_pointer(this.ptr);
     }
+    create_collider() {
+        return engine.rust.create_ball_collider();
+    }
     constructor(
-        positionCount: number,
+        vertices: Float32Array,
         verticesPositionStride: number,
         has_physic = false,
         strip = false,
@@ -111,14 +114,17 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         label:string,
         scenes?: Scene[],
         protected frontFace: GPUFrontFace = 'cw',
-        collider_ptr?: rust_pointer<"collider">,
-
     ) {
-        super(positionCount,point_light,undefined, strip,label,scenes);
-        if(!collider_ptr) {
-            collider_ptr = engine.rust.create_ball_collider();
-        }
-        engine.rust.add_geometry(this.ptr,true,verticesPositionStride,static_faces,strip,collider_ptr)
+        super(vertices.length/verticesPositionStride,point_light,undefined, strip,label,scenes);
+        engine.rust.add_geometry(this.ptr,true,verticesPositionStride,static_faces,strip);
+        this.set_vertices(vertices);
+        // queueMicrotask here so mesh will have indices initialized
+        queueMicrotask(() => {
+            const collider_ptr = this.create_collider();
+            engine.rust.add_collider(this.ptr, collider_ptr)
+        });
+        
+
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
         if(has_physic)
             engine.physics.tickables.push(this);
@@ -318,11 +324,11 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
 }
 
 export interface IndexedNode extends MainNode {
-    indices_count: number
+    indices_count?: number //This property is optional because it is invoked on constructor when class is not fully initialized
 }
 
 export abstract class BoundableNodeIndexed extends DataNode implements IndexedNode {
-    indices_count=0;
+    indices_count?=0;
     set indices(indices:Uint32Array) {
         this.indices_count=indices.length;
         const ptr = engine.rust.alloc_vector_usize(indices.length);
@@ -332,7 +338,7 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
     }
     get indices() {
         const ptr = engine.rust.indices_pointer(this.ptr);
-        return new Uint32Array(engine.rust.memory.buffer, ptr, this.indices_count);
+        return new Uint32Array(engine.rust.memory.buffer, ptr, this.indices_count ?? 0);
     }
 
 /*    set setFaces(faces:Float32Array) {
@@ -350,12 +356,10 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
         label:string,
         scenes?: Scene[],
         frontFace: GPUFrontFace = 'cw',
-        collider_ptr?: rust_pointer<"collider">,
     ) {
-        super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip, point_light,static_faces,label,scenes, frontFace, collider_ptr);
+        super(vertices, verticesPositionStride, has_physic, strip, point_light,static_faces,label,scenes, frontFace);
 
         this.indices = indicesView;
-        this.set_vertices(vertices);
     }
     override set_vertices(vertices:Float32Array) {
         super.set_vertices(vertices);
@@ -382,10 +386,8 @@ export abstract class BoundableNodeSimple extends DataNode {
         label:string,
         has_physic: boolean,
         scenes?: Scene[],
-        collider_ptr?: rust_pointer<"collider">,
     ) {
-        super(vertices.length/verticesPositionStride,verticesPositionStride, has_physic, strip,  undefined, undefined, label, scenes,undefined, collider_ptr);
-        this.set_vertices(vertices);
+        super(vertices, verticesPositionStride, has_physic, strip,  undefined, undefined, label, scenes,undefined);
     }
     override set_vertices(vertices:Float32Array) {
         super.set_vertices(vertices);

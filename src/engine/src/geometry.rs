@@ -2,10 +2,7 @@
 pub use crate::Vec3;
 pub use crate::Vec4;
 pub use crate::boundingbox::BoundingBox;
-use crate::engine::Engine2;
-use crate::engine::create_js_string;
-use crate::engine::jslog;
-use rapier3d::prelude::*;
+use crate::engine::jslog_string;
 
 pub struct ColliderPlane {
     plane: Plane,
@@ -24,22 +21,9 @@ pub struct Geometry {
     pub last_collider_world_vertices:Vec<f32>,
 
     pub static_faces: bool, // Used for terrain
-    pub rigid_body_handle:RigidBodyHandle
 }
 impl Geometry {
-    pub unsafe fn new(has_bounding:bool,vertices_stride:usize, static_faces:bool, strip:bool, collider:Collider, engine2: &mut Engine2) -> (Self, RigidBodyHandle) {       
-        let rigid_body = RigidBodyBuilder::dynamic().additional_mass(0.5).additional_mass_properties(MassProperties::new(
-            point![0.0, 1.0, 0.0],
-            0.5,
-            vector![0.3, 0.2, 0.1],
-        ))
-        .translation(vector![0.0, 10.0, 0.0])
-        .build();
-        let rigid_body_handle:RigidBodyHandle;
-
-        rigid_body_handle = engine2.rigid_body_set.insert(rigid_body);
-        engine2.collider_set.insert_with_parent(collider, rigid_body_handle, &mut engine2.rigid_body_set);
-    
+    pub unsafe fn new(has_bounding:bool,vertices_stride:usize, static_faces:bool, strip:bool) -> Self {
         let mut g = Geometry {
             bounding_box:BoundingBox::new(has_bounding),
             vertices: Vec::new(),
@@ -50,11 +34,10 @@ impl Geometry {
             collider_planes_parallel:Vec::new(),
             last_collider_world_vertices:Vec::new(),
             static_faces,
-            strip,
-            rigid_body_handle
+            strip
         };
         g.allocate_faces();
-        return (g, rigid_body_handle);
+        return g;
     }
     pub fn faces_count(&self) -> usize {
         if self.static_faces {
@@ -83,6 +66,7 @@ impl Geometry {
         }
         let faces_count = self.faces_count();
         self.faces=Faces::new(faces_count);
+        jslog_string(vec!["allocate faces".to_string(), faces_count.to_string()]);
         self.collider_planes=Vec::with_capacity(faces_count);
         self.collider_planes_parallel=Vec::with_capacity(faces_count*4usize);
     }
@@ -95,11 +79,10 @@ impl Geometry {
             self.bounding_box.transform(transformation);
         }
     }
-    pub fn update_vertices(&mut self, vertices:Vec<f32>) {
+    pub fn set_vertices(&mut self, vertices:Vec<f32>) {
         self.vertices=vertices;
         self.bounding_box.need_init = true;
         self.allocate_faces();
-
     }
 }
 pub struct Faces {

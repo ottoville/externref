@@ -243,7 +243,7 @@ export class DrawableIndexed extends DrawableDirect {
     render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) {
         if (this.indexBuffer) {
             renderEncoder.setIndexBuffer(this.indexBuffer, this.GPUIndexFormat);
-            renderEncoder.drawIndexed(this.node.indices_count, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);
+            renderEncoder.drawIndexed(this.node.indices_count ?? 0, this.instanceCount, this.firstIndex, this.baseVertex, this.firstInstance);
         }
     }
 }
