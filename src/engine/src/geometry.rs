@@ -5,8 +5,8 @@ pub use crate::boundingbox::BoundingBox;
 use crate::engine::jslog_string;
 
 pub struct ColliderPlane {
-    plane: Plane,
-    vectors: [f32;3]
+    _plane: Plane,
+    _vectors: [f32;3]
 }
 pub struct Geometry {
     pub bounding_box:BoundingBox,

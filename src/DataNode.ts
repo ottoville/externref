@@ -114,8 +114,10 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         label:string,
         scenes?: Scene[],
         protected frontFace: GPUFrontFace = 'cw',
+        fixed = false,
+        rigid_body = true
     ) {
-        super(vertices.length/verticesPositionStride,point_light,undefined, strip,label,scenes);
+        super(vertices.length/verticesPositionStride, point_light, undefined, strip, label, scenes, fixed, rigid_body);
         engine.rust.add_geometry(this.ptr,true,verticesPositionStride,static_faces,strip);
         this.set_vertices(vertices);
         // queueMicrotask here so mesh will have indices initialized
@@ -329,11 +331,15 @@ export interface IndexedNode extends MainNode {
 
 export abstract class BoundableNodeIndexed extends DataNode implements IndexedNode {
     indices_count?=0;
-    set indices(indices:Uint32Array) {
+    set_indices_and_vertices(indices:Uint32Array, vertices:Float32Array) {
         this.indices_count=indices.length;
         const ptr = engine.rust.alloc_vector_usize(indices.length);
         new Uint32Array(engine.rust.memory.buffer,ptr,indices.length).set(indices);
-        engine.rust.set_indices(this.ptr, ptr, indices.length);
+
+        const ptr_vertices = engine.rust.alloc_vector_f32(vertices.length);
+        new Float32Array(engine.rust.memory.buffer,ptr_vertices,vertices.length).set(vertices);
+
+        engine.rust.set_indices_and_vertices(this.ptr, ptr, indices.length, ptr_vertices, vertices.length);
         this.rebuildTrianglePlanes();
     }
     get indices() {
@@ -356,10 +362,11 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
         label:string,
         scenes?: Scene[],
         frontFace: GPUFrontFace = 'cw',
+        fixed = false,
+        rigid_body = true
     ) {
-        super(vertices, verticesPositionStride, has_physic, strip, point_light,static_faces,label,scenes, frontFace);
-
-        this.indices = indicesView;
+        super(vertices, verticesPositionStride, has_physic, strip, point_light, static_faces, label, scenes, frontFace, fixed, rigid_body);
+        this.set_indices_and_vertices(indicesView, vertices);
     }
     override set_vertices(vertices:Float32Array) {
         super.set_vertices(vertices);

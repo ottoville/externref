@@ -63,7 +63,7 @@ pub fn jslog_string(strings: Vec<String>) {
         newstr.push_str(str);
     }
     unsafe {
-    jslog(create_js_string(newstr));
+       jslog(create_js_string(newstr));
     }
 }
 #[no_mangle]

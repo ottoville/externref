@@ -477,13 +477,13 @@ TODO
             }, this.facet12ArrGPUBuffer)
     
             gpuReadBufferPositions.readAndDestroy(readbuff => {
-                this.mesh.set_vertices(new Float32Array(readbuff));
-                this.updateSwap2(0, readbuff.byteLength, true);
-                this.serialize();
+                return gpuReadBufferIndices.readAndDestroy(buff => {
+                    this.mesh.set_indices_and_vertices(new Uint32Array(buff),new Float32Array(readbuff));
+                    this.updateSwap2(0, readbuff.byteLength, true);
+                    this.serialize();
+                });
             });
-            gpuReadBufferIndices.readAndDestroy(buff => {
-                this.mesh.indices=new Uint32Array(buff);
-            });
+
         })
     }
     /*
