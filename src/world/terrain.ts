@@ -172,7 +172,7 @@ TODO
                 ]);
                 passEncoder.setPipeline(computePipeline.pipeline);
                 passEncoder.setBindGroup(1, sourceBindGroup.bindGroup);
-                passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
+                passEncoder.dispatchWorkgroups(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
                 passEncoder.end();
                 engine.gpu.device.queue.submit([commandEncoder.finish()]);
             }
@@ -386,7 +386,7 @@ TODO
             }
             ]
         ).bindGroup);
-        passEncoder.dispatch(...Terrain.subdivisions);
+        passEncoder.dispatchWorkgroups(...Terrain.subdivisions);
 
         passEncoder.setPipeline(computePlaneHeights.pipeline);
         passEncoder.setBindGroup(0, computePlaneHeights.createBindGroup(0, 'settingsGPU', () => [{
@@ -400,7 +400,7 @@ TODO
             layout: computePlaneHeights.pipeline.getBindGroupLayout(2),
             entries: _heightsBindGroupEntries
         }));
-        passEncoder.dispatch(...Terrain.subdivisions);
+        passEncoder.dispatchWorkgroups(...Terrain.subdivisions);
 
         passEncoder.setPipeline(computePipelineNormals.pipeline);
         passEncoder.setBindGroup(0, computePipelineNormals.createBindGroup(settingsLayout,'settingsGPU',() => [{
@@ -414,7 +414,7 @@ TODO
             entries: terrainPositionAndUvsAndNormalsGPU_bgroup()
         }))
         passEncoder.setBindGroup(2, bindGroupHeightsRead)
-        passEncoder.dispatch(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
+        passEncoder.dispatchWorkgroups(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
         const textureView=this.texture.createView();
         this.mesh = new TerrainMesh(scenes, textureView, this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, new Float32Array(positionsCount*12), new Uint32Array(this.#terrainIndicesLength / 4), 12);
 
@@ -444,7 +444,7 @@ TODO
                 passEncoder.setPipeline(createTexturePipeline.pipeline);
                 passEncoder.setBindGroup(1, bindGroupHeightsRead);
                 passEncoder.setBindGroup(2, bindGroup1.bindGroup);
-                passEncoder.dispatch(...Terrain.textureSize);
+                passEncoder.dispatchWorkgroups(...Terrain.textureSize);
                 passEncoder.end();
 
 

@@ -386,7 +386,7 @@ export class Engine {
                 if(camera.viewUpdated || this.#updateLights) {
                     camera.viewUpdated=false;
                     lightPass.setBindGroup(1, camera.updateViewBindGroup.bindGroup);
-                    lightPass.dispatch(...this.gpu.CLUSTER_DISPATCH_SIZE);
+                    lightPass.dispatchWorkgroups(...this.gpu.CLUSTER_DISPATCH_SIZE);
                 }
             });
             lightPass.end();

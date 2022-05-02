@@ -115,7 +115,7 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
             }]
         });
         passEncoder.setBindGroup(1, bindGroup);
-        passEncoder.dispatch(...this.gpu.CLUSTER_DISPATCH_SIZE);
+        passEncoder.dispatchWorkgroups(...this.gpu.CLUSTER_DISPATCH_SIZE);
     }
     #doUpdateView = false;
     viewUpdated = false;

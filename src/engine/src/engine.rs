@@ -44,6 +44,7 @@ pub struct Engine2 {
     pub rigid_body_set: RigidBodySet,
     pub collider_set: ColliderSet,
     pub island_manager: IslandManager,
+    narrow_phase: NarrowPhase,
     pub meshes: Vec<Mesh>,
     pub rigid_bodies: HashMap<RigidBodyHandle,&'static mut Mesh>,
     broad_phase: BroadPhase,
@@ -71,16 +72,22 @@ pub unsafe extern "C" fn init_engine2() {
     panic::set_hook(Box::new(|panic_info| {
         jspanic(create_js_string(panic_info.to_string()));
     }));
-    ENGINE.engine2=Some(Engine2 {
+    let mut rigid_body_set = RigidBodySet::new();
+    let mut collider_set = ColliderSet::new();
+
+    let e = Engine2 {
         physic_pipeline: PhysicsPipeline::new(),
-        rigid_body_set: RigidBodySet::new(),
-        collider_set: ColliderSet::new(),
+        rigid_body_set,
+        collider_set,
         island_manager: IslandManager::new(),
+        narrow_phase: NarrowPhase::new(),
         meshes: Vec::with_capacity(100),
         rigid_bodies: HashMap::new(),
         broad_phase: BroadPhase::new(),
         gpu_meshes: Vec::with_capacity(100),
-    });
+    };
+
+    ENGINE.engine2=Some(e);
 }
 #[no_mangle]
 pub unsafe extern "C" fn physic_tick() {
@@ -88,7 +95,6 @@ pub unsafe extern "C" fn physic_tick() {
         let gravity = vector![0.0, -9.81, 0.0];
         let integration_parameters = IntegrationParameters::default();
         
-        let mut narrow_phase = NarrowPhase::new();
         let mut joint_set = ImpulseJointSet::new();
         let mut multi_joint_set = MultibodyJointSet::new();
         let mut ccd_solver = CCDSolver::new();
@@ -101,7 +107,7 @@ pub unsafe extern "C" fn physic_tick() {
             &integration_parameters,
             &mut e.island_manager,
             &mut e.broad_phase,
-            &mut narrow_phase,
+            &mut e.narrow_phase,
             &mut e.rigid_body_set,
             &mut e.collider_set,
             &mut joint_set,

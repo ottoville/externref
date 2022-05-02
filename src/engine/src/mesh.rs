@@ -290,9 +290,9 @@ impl Mesh {
     pub fn create_trimesh_collider(&self) -> *mut Collider {
 
         let mut vertices:Vec<Point<Real>> = Vec::with_capacity(9);
-        vertices.push(Point::new(-1000.0, 2.0, -1000.0));
-        vertices.push(Point::new(-1000.0, 2.0, 1000.0));
-        vertices.push(Point::new(1000.0, 2.0, -1000.0));
+        vertices.push(Point::new(-5000.0, 2.0, -5000.0));
+        vertices.push(Point::new(-5000.0, 2.0, 5000.0));
+        vertices.push(Point::new(5000.0, 2.0, -5000.0));
         let mut indices:Vec<[u32; 3]> = Vec::with_capacity(3);
         indices.push([0,1,2]);
         let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).build());
@@ -343,7 +343,7 @@ impl Mesh {
                     };
                 }
                 None => {
-                    engine2.collider_set.insert(collider);
+                    self.collider_handle.replace(engine2.collider_set.insert(collider));
                 }
             }
 

@@ -219,7 +219,7 @@ export class ArcRotateCamera extends CameraController {
             direction[1] = this.camera.position[1] - this.#target[1];
             direction[2] = this.camera.position[2] - this.#target[2];
             //Normalize direction
-            const zLength = Math.sqrt(direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2]);
+            const zLength = Math.hypot(direction[0], direction[1], direction[2]);
             if (!(zLength === 0 || zLength === 1)) {
                 //zAxis.normalizeFromLength(xLength);
                 const scale = 1.0 / zLength;

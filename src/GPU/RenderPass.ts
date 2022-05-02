@@ -377,7 +377,7 @@ export class PickableRenderPass<T extends {
                 pickPass.setPipeline(this.#pickPositionPipeline!.pipeline);
                 pickPass.setBindGroup(0, this.#pickPositionBindGroup0!.bindGroup);
                 pickPass.setBindGroup(1, this.#pickPositionBindGroup1!.bindGroup);
-                pickPass.dispatch(1);
+                pickPass.dispatchWorkgroups(1);
                 pickPass.end();
                 encoder.copyBufferToBuffer(this.#pickBuffer,0,this.#pickBufferRead!,0,4+4);
                 this.gpu.device.queue.submit([encoder.finish()]);
