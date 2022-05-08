@@ -4,20 +4,18 @@ import { BindGroup } from "./BindGroup.js";
 
 export class ComputePipeline {
     pipeline: GPUComputePipeline;
-    constructor(private gpu: GPU, private shader: keyof typeof shaders, layout?: GPUPipelineLayout, private entryPoint = 'main') {
+    constructor(private gpu: GPU, private shader: keyof typeof shaders, layout: GPUPipelineLayout | 'auto' = 'auto', private entryPoint = 'main') {
         const shaderModule = gpu.shaderModules[shader];
         if (!shaderModule)
             throw (new Error('Shader ' + shader + ' not found'));
-        const desc: GPUComputePipelineDescriptor = {
+        this.pipeline = gpu.device.createComputePipeline({
             compute: {
                 module: shaderModule,
                 entryPoint
             },
-            label:shader+' '+entryPoint
-        };
-        if (layout)
-            desc.layout = layout;
-        this.pipeline = gpu.device.createComputePipeline(desc);
+            label:shader+' '+entryPoint,
+            layout
+        });
     }
     createBindGroup(layout: number | GPUBindGroupLayout, label: string, entries: () => Iterable<GPUBindGroupEntry>) {
         return new BindGroup(this.gpu,

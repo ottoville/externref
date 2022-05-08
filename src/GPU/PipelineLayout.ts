@@ -12,7 +12,7 @@ export class PipelineLayout {
         label: string,
         vertexShader:VertexShader,
         fragmentShader:Shader,
-        renderPipeline: Omit<GPURenderPipelineDescriptor, 'depthStencil' | 'fragment' | 'vertex'>,
+        renderPipeline: Omit<GPURenderPipelineDescriptor, 'depthStencil' | 'fragment' | 'vertex' | 'layout'>,
         depthBuffer?:{depthWriteEnabled:boolean,depthCompare:GPUCompareFunction }): RenderPipeline {
 
         const d = new RenderPipeline(label, vertexShader,fragmentShader,renderPipeline, this,depthBuffer)
@@ -58,7 +58,7 @@ export class PipelineLayout {
     }
 }
 export class DynamicPipelineLayout extends PipelineLayout {
-    override addRenderPipeline(label: string, vertexShader:VertexShader, fragmentShader:Shader,renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex'>): RenderPipeline {
+    override addRenderPipeline(label: string, vertexShader:VertexShader, fragmentShader:Shader,renderPipeline: Omit<GPURenderPipelineDescriptor, 'sampleCount' | 'fragment' | 'vertex' | 'layout'>): RenderPipeline {
         const d = super.addRenderPipeline(label, vertexShader,fragmentShader,renderPipeline);
         d.dynamicBindGroupOffset = [0];
         return d;
@@ -69,7 +69,7 @@ export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends Pipeline
         label: string,
         vertexShader:VertexShader,
         fragmentShader:Shader,
-        renderPipeline: Omit<GPURenderPipelineDescriptor, 'depthStencil' | 'fragment' | 'vertex'>,
+        renderPipeline: Omit<GPURenderPipelineDescriptor, 'depthStencil' | 'fragment' | 'vertex' | 'layout'>,
         depthBuffer? : {depthWriteEnabled:boolean,depthCompare:GPUCompareFunction },
         bindGroups?: () => T,
         ): RenderPipeline {

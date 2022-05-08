@@ -84,8 +84,8 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         return variant;
     }
 
-    onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>):GPURenderPipelineDescriptor {
-        const renderPipelineDescriptor:GPURenderPipelineDescriptor = {
+    onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>): Omit<GPURenderPipelineDescriptor, 'layout'> {
+        const renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'layout'> = {
             vertex: {
                 ...renderpipeline.vertexShader,
                 entryPoint: this.entryPoint,
@@ -110,6 +110,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         return this.gpu.device.createRenderPipeline(
             {
                 ...renderpipeline.renderPipelineDescriptor,
+                layout: renderpipeline.bindgroupdrawable.layout,
                 ...this.onDecoratePipeline(renderpipeline),
                 label: 'renderPipeline:'+renderpipeline.label+' RenderPass:'+this.label
                 
@@ -281,7 +282,7 @@ export class PickableRenderPass<T extends {
         label: string) {
             super(gpu,renderTargets,sampleCount,size,_onResize,entryPoint,rootLayout,label);
             if(sampleCount == 4) {
-                this.#pickPositionPipeline= new ComputePipeline(gpu,'readDepth.comp.wgsl');
+                this.#pickPositionPipeline= new ComputePipeline(gpu, 'readDepth.comp.wgsl');
 
                 this.#pickBuffer = gpu.device.createBuffer({
                     size: 4 * 4, //depth + meshID (four pixel)
