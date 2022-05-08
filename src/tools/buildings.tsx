@@ -5,7 +5,6 @@ import { canvasListener } from "../traits/canvasListener.js";
 import { Trait } from "../traits/trait.js";
 
 import { Terrain } from "../world/terrain.js";
-import { Sea } from "../world/water.js";
 
 import { Engine } from "../engine.js";
 declare const engine:Engine;
@@ -24,10 +23,9 @@ export class BuildingsUI extends UITAB {
     traits: Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
     constructor(
-        terrain: Terrain,
-        sea: Sea,
+        terrain: Terrain
     ) {
-        super(terrain, sea);
+        super(terrain);
 
     }
     public create = (type: string): void => {

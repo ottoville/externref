@@ -1,14 +1,12 @@
 import { UITAB } from "../UITAB.js";
 import type { Terrain } from "../world/terrain.js";
-import { Sea } from "../world/water.js";
 export class CameraTAB extends UITAB {
     static menuElem = <button class="w3-bar-item w3-button">Debug camera</button>;
     static override label = 'Camera';
     constructor(
-        terrain: Terrain,
-        sea: Sea
+        terrain: Terrain
     ) {
-        super(terrain, sea);
+        super(terrain);
 
     }
     override destroy = (): void => {

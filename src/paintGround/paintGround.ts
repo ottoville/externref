@@ -6,7 +6,6 @@ import { TerraVector2, Angle } from "../Math.js";
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
 import type { hasCanvasListener } from "../traits/canvasListener.js";
-import type { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import { Engine } from "../engine.js";
 declare const engine:Engine;
@@ -29,7 +28,6 @@ export abstract class paintGround {
     constructor(
         protected scene: Scene,
         protected ground: Terrain,
-        protected sea: Sea,
         private uitab: hasCanvasListener,
         public resolve: PTResultF
     ) {

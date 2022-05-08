@@ -2,7 +2,6 @@
 import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 import { hasCanvasListener } from "../traits/canvasListener.js";
-import { Sea } from "../world/water.js";
 import type { Scene } from "../Scene.js";
 import { TerraVector2 } from "../Math.js";
 
@@ -22,7 +21,6 @@ export class paintTexture extends paintGround {
     constructor(
         scene: Scene,
         ground: Terrain,
-        sea: Sea,
         protected zonedt: GPUTexture,
         private textureWidth: number,
         private textureHeight: number,
@@ -30,7 +28,7 @@ export class paintTexture extends paintGround {
         private ratio:number,
         callback: PTResultF
     ) {
-        super(scene, ground, sea, uitab,callback);
+        super(scene, ground, uitab, callback);
     }
     onAreaDraw(width: number) {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {

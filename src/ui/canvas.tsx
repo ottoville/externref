@@ -73,13 +73,13 @@ export class Canvas extends TerraCompoment {
             new Sun2([terrascene]);
             // Initial scene objects here
 
-            const sea = new Sea([terrascene]);
+            new Sea([terrascene]);
             //new testPlane(terrascene);
 
             new Human([terrascene])
             const terrainInited = Terrain.loadFromTexture([terrascene]);
 
-            const ready = terrainInited.then(ground => [ground, sea] as const);
+            const ready = terrainInited.then(ground => [ground] as const);
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
 
             this.progress = 100;
@@ -190,7 +190,7 @@ export class Canvas extends TerraCompoment {
                 this.timeOfDay.value = new Date(Number(engine.physics.gameTime)).toUTCString();
             }, 1000);
 
-            const [terrain, sea] = await args[0].ready!;
+            const [terrain] = await args[0].ready!;
             this.menuClick = (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => {
                 if (this.openedMenu) {
                     const [oldInstance, oldMenuContainer] = this.openedMenu;
@@ -203,7 +203,7 @@ export class Canvas extends TerraCompoment {
                         }
                     }
                 }
-                const instance = new tool(terrain, sea);
+                const instance = new tool(terrain);
                 menuContainer.appendChild(tool.menuElem(instance));
                 this.openedMenu = [instance, menuContainer];
             }

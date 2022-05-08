@@ -4,7 +4,6 @@ import { Terrain } from "../world/terrain.js";
 import { PTDresult } from "../types/interfaces/index.js";
 import { canvasListener } from "../traits/canvasListener.js";
 
-import { Sea } from "../world/water.js";
 import type { Trait } from "../traits/trait.js";
 import type { Scene } from "../Scene.js";
 import type { Engine } from "../engine.js";
@@ -37,9 +36,8 @@ export class Zones extends UITAB {
     scene: Scene;
     constructor(
         terrain: Terrain,
-        sea: Sea,
     ) {
-        super(terrain, sea);
+        super(terrain);
         const initialScene=terrain.scenes[0];
         if(!initialScene) {
             throw(new Error('scene not found'))
@@ -84,7 +82,7 @@ export class Zones extends UITAB {
         
         terrain.mesh.setTextureView(this.#zoneTexture.createView());
         terrain.mesh.set_scenes(staticScene.id)
-        this.PT = new paintTexture(this.scene, this.terrain, sea, this.#zoneTexture, 5120, 5120, this, this.#ratio, (response) => {
+        this.PT = new paintTexture(this.scene, this.terrain, this.#zoneTexture, 5120, 5120, this, this.#ratio, (response) => {
             engine.DB.transaction("zones", 'readwrite').objectStore("zones").put(response);
         });
         /*this.PT.activate(async (response) => {

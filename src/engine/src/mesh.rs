@@ -289,15 +289,7 @@ impl Mesh {
     //TODO: move to geometry
     pub fn create_trimesh_collider(&self) -> *mut Collider {
 
-        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(9);
-        vertices.push(Point::new(-5000.0, 2.0, -5000.0));
-        vertices.push(Point::new(-5000.0, 2.0, 5000.0));
-        vertices.push(Point::new(5000.0, 2.0, -5000.0));
-        let mut indices:Vec<[u32; 3]> = Vec::with_capacity(3);
-        indices.push([0,1,2]);
-        let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).build());
-        Box::leak(collider)
-        /*let geometry = self.get_geometry();
+        let geometry = self.get_geometry();
         let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
         let mut vertices:Vec<Point<Real>> = Vec::with_capacity(geometry.vertices.len() / geometry.vertices_stride);
         iterator.for_each(|i| {
@@ -309,10 +301,11 @@ impl Mesh {
             indices.push([i[0] as u32, i[1] as u32, i[2] as u32]);
 
         });
-        jslog_string(vec!["create_trimesh_collider".to_string(), vertices.len().to_string(), indices.len().to_string() ]);
-       // jslog_string(vec![format!("{:?}", indices)]);
+      /*  jslog_string(vec!["create_trimesh_collider".to_string(), vertices.len().to_string(), indices.len().to_string() ]);
+        jslog_string(vec![format!("{:?}", vertices)]);
+        jslog_string(vec![format!("{:?}", indices)]);*/
         let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).density(2.0).restitution(0.7).build());
-        Box::leak(collider)*/
+        Box::leak(collider)
     }
     pub unsafe fn add_geometry<'a>(
         &'static mut self,
@@ -327,10 +320,10 @@ impl Mesh {
         &'static mut self,
         collider:Collider,
         engine2: &'static mut Engine2) {
-            let aabb = collider.compute_aabb();
+           /*  let aabb = collider.compute_aabb();
             let (vertices, indices) = aabb.to_trimesh();
             jslog_string(vec![format!("{:?}", vertices)]);
-            jslog_string(vec![format!("{:?}", indices)]);
+            jslog_string(vec![format!("{:?}", indices)]);*/
             match self.rigid_body_handle {
                 Some(rigid_body_handle) => {
                     let old = self.collider_handle.replace(engine2.collider_set.insert_with_parent(collider, rigid_body_handle, &mut engine2.rigid_body_set));
@@ -359,8 +352,6 @@ impl Mesh {
         fixed:bool,
         rigid_body: bool,
         engine2: &'static mut Engine2) -> *const Mesh {
-        
-
         let mut m = Mesh {
             id,
             gpu_mesh_alignment: engine2.gpu_meshes.len(),
@@ -426,12 +417,12 @@ impl Mesh {
             if fixed {
                 rigid_body_builder = RigidBodyBuilder::fixed();
             } else {
-                rigid_body_builder = RigidBodyBuilder::dynamic();
+                rigid_body_builder = RigidBodyBuilder::dynamic().sleeping(true).ccd_enabled(true);
             }
             let rigid_body=rigid_body_builder.additional_mass(0.5).additional_mass_properties(MassProperties::new(
                 point![0.0, 1.0, 0.0],
                 0.5,
-                vector![0.3, 0.2, 0.1])).translation(vector![0.0, 10.0, 0.0])
+                vector![0.3, 0.2, 0.1]))
                 .build();
             let rigid_body_handle = engine2.rigid_body_set.insert(rigid_body);
             m.rigid_body_handle = Some(rigid_body_handle);

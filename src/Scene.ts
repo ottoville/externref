@@ -2,15 +2,14 @@
 import type { TerraCamera } from "./TerraCamera.js";
 import type { Engine } from "./engine.js";
 import type { Terrain } from "./world/terrain.js";
-import type { Sea } from "./world/water.js";
 declare const engine:Engine;
 
 let sceneID=1;
 export class Scene {
     readonly id=sceneID;
-    ready: Promise<readonly [Terrain, Sea]> | undefined;
+    ready: Promise<readonly [Terrain]> | undefined;
 
-    constructor(public name: string, public gpu: GPU, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => Promise<readonly [Terrain, Sea]> | undefined) {
+    constructor(public name: string, public gpu: GPU, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => Promise<readonly [Terrain]> | undefined) {
         sceneID<<=1;
         engine.scenes.set(name, this);
         TerraCameras.forEach(camera => {

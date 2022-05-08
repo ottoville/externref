@@ -375,7 +375,6 @@ TODO
                 buffer: this.settingsGPU
             }
         }])
-        console.log(settingsGPUBindGroup.bindGroup)
         passEncoder.setBindGroup(0, settingsGPUBindGroup.bindGroup);
         passEncoder.setBindGroup(1, computePipelineIndices.createBindGroup(1,'terrainIndicesGPU',
             () => [{

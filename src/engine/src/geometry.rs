@@ -66,7 +66,6 @@ impl Geometry {
         }
         let faces_count = self.faces_count();
         self.faces=Faces::new(faces_count);
-        jslog_string(vec!["allocate faces".to_string(), faces_count.to_string()]);
         self.collider_planes=Vec::with_capacity(faces_count);
         self.collider_planes_parallel=Vec::with_capacity(faces_count*4usize);
     }

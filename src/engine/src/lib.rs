@@ -25,7 +25,7 @@ pub extern "C" fn alloc_vector_usize(size:usize) -> *mut usize {
 }
 #[no_mangle]
 pub extern "C" fn create_ball_collider() -> *mut Collider {
-    let collider = Box::new(ColliderBuilder::ball(20.0).density(2.0).restitution(0.7).build());
+    let collider = Box::new(ColliderBuilder::ball(1.0).density(2.0).restitution(0.7).build());
     Box::leak(collider)
 }
 #[derive(Copy, Clone)]

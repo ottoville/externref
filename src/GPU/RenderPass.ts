@@ -181,6 +181,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
         if (!this.bundles.length) {
             const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder(this.GPURenderBundleEncoderDescriptor);
+            //@ts-expect-error
             let drawedMeshes = 0;
             if(this.BindGroupCanvas) {
                 drawedMeshes+= this.renderCamera(renderBundleEncoder,this.rootLayout,this.BindGroupCanvas(), 0)
@@ -188,10 +189,11 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
                 renderBundleEncoder.setBindGroup(0, this.sizeBindGroup());
 
                 this.cameras.forEach(camera => {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     drawedMeshes+= this.renderCamera(renderBundleEncoder,this.rootLayout,camera.uniformBindGroup(),1)
                 })
             }
-            console.log('Meshes draw for',this.GPURenderBundleEncoderDescriptor.label,drawedMeshes)
+            //console.log('Meshes draw for',this.GPURenderBundleEncoderDescriptor.label,drawedMeshes)
             this.bundles.push(renderBundleEncoder.finish());
         }
         passEncoder.executeBundles(this.bundles);

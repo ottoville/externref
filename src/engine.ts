@@ -230,6 +230,9 @@ export class Engine {
         //this.progress = 5;
         if (!device)
             throw ('no GPU device');
+        device.lost.then(reason => {
+            console.error('GPU device lost', reason)
+        });
 
         const gpu = new GPU(canvas, adapter, device);
         //@ts-ignore
