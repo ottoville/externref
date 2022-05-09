@@ -24,7 +24,7 @@ pub struct Mesh {
     pub id:u32,
     pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
     pub gpu_mesh_alignment: usize, //Alignment in engine.gpu_meshes vector
-    rotation: Vec4<f32>,
+    pub rotation: Vec4<f32>,
     scaling: Vec3<f32>,
     pub geometry:Option<Geometry>,
     pub positions_count:usize,
@@ -288,13 +288,13 @@ impl Mesh {
 impl Mesh {
     //TODO: move to geometry
     pub fn create_trimesh_collider(&self) -> *mut Collider {
-
         let geometry = self.get_geometry();
         let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
         let vertices_amount = geometry.vertices.len() / geometry.vertices_stride;
         let mut vertices:Vec<Point<Real>> = Vec::with_capacity(vertices_amount);
         iterator.for_each(|i| {
-            vertices.push(Point::new(i[0], i[1], i[2]));
+            // TODO: ensure simd
+            vertices.push(Point::new(i[0] * self.scaling.x, i[1] * self.scaling.y, i[2] * self.scaling.z));
         });
         let mut indices:Vec<[u32; 3]>;
         if geometry.indices.len() == 0 {
@@ -498,6 +498,25 @@ impl Mesh {
         unsafe {
             self.update_matrix();
             self.update_dynamic_buffer();
+            let e = ENGINE.physic_engine_mut();
+            let gpu_mesh = &mut e.gpu_meshes[self.gpu_mesh_alignment];
+            match self.rigid_body_handle {
+                Some(rigid_body_handle) => {
+                    let rigid_body = e.rigid_body_set.get_mut(rigid_body_handle);
+                    match rigid_body {
+                        Some(rigid_body) => 
+                        {
+                            rigid_body.set_translation(vector![gpu_mesh.transformation.w.x, gpu_mesh.transformation.w.y, gpu_mesh.transformation.w.z], true);
+                            let (euler_x, euler_y, euler_z) = Rotation::from_quaternion(nalgebra::Quaternion::new(self.rotation.x, self.rotation.y, self.rotation.z, self.rotation.w)).euler_angles();              
+                            let avec = AngVector::new(euler_x, euler_y, euler_z);
+                            //TODO simplify
+                            rigid_body.set_rotation(avec, true);
+                        },
+                        None    => panic!("Rigid body not found"),
+                    };
+                }
+                _ => {}
+            }
         }
         if self.get_geometry_mut().bounding_box.has_bounding {
             self.get_geometry_mut().bounding_box.dirty=true;

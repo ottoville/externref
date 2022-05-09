@@ -124,6 +124,12 @@ pub unsafe extern "C" fn physic_tick() {
                 Some(m) => {
                    // jslog(create_js_string("Mesh found".to_string()));
                     let rigid_body = &e.rigid_body_set[*rigid_body_handle];
+                    let newrot=rigid_body.rotation().as_vector();
+                    m.rotation.x = newrot.x;
+                    m.rotation.y = newrot.y;
+                    m.rotation.z = newrot.z;
+                    m.rotation.w = newrot.w;
+                    m.update_matrix();
                     let pos=rigid_body.position();
                     m.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);
                 }

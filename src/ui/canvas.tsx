@@ -95,9 +95,9 @@ export class Canvas extends TerraCompoment {
         const slope = new Triangle('slopeTriangle',undefined,true);
         slope.update_scale(0, 400, 400);
 
-     //   slope.update_euler_angles(0,0,Math.PI*-0.5);
-      slope.update_euler_angles(0,0,Math.PI*-0.4);
-        slope.translation = [23,600,23];
+        //   slope.update_euler_angles(0,0,Math.PI*-0.5);
+        slope.update_euler_angles(0,0,Math.PI*-0.4);
+        slope.translation = [23,1200,23];
 
 
        /* const bixbox = new Box(undefined, 400,true,'bigbox',[1,1,0,0]);
