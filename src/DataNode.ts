@@ -87,7 +87,7 @@ export abstract class DataNode extends MainNode {
         return engine.rust.last_collider_world_vertices_pointer(this.ptr);
     }
     create_collider() {
-        return engine.rust.create_ball_collider(1);
+        return engine.rust.create_trimesh_collider(this.ptr);
     }
     constructor(
         vertices: Float32Array,
@@ -346,8 +346,10 @@ export abstract class BoundableNodeSimple extends DataNode {
         label:string,
         has_physic: boolean,
         scenes?: Scene[],
+        fixed = false,
+        rigid_body = true
     ) {
-        super(vertices, verticesPositionStride, has_physic, strip,  undefined, undefined, label, scenes,undefined);
+        super(vertices, verticesPositionStride, has_physic, strip,  undefined, undefined, label, scenes,undefined, fixed, rigid_body);
     }
     override set_vertices(vertices:Float32Array) {
         super.set_vertices(vertices);

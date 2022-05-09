@@ -28,6 +28,11 @@ pub extern "C" fn create_ball_collider(radius: f32) -> *mut Collider {
     let collider = Box::new(ColliderBuilder::ball(radius).restitution(0.0).build());
     Box::leak(collider)
 }
+#[no_mangle]
+pub extern "C" fn create_cuboid_collider(hx: f32, hy: f32, hz: f32) -> *mut Collider {
+    let collider = Box::new(ColliderBuilder::cuboid(hx, hy, hz).restitution(0.0).build());
+    Box::leak(collider)
+}
 #[derive(Copy, Clone)]
 pub struct Vec4<T> {
     x: T,
@@ -113,7 +118,7 @@ pub struct GPUMesh {
     delta: [f32; 4],                 //20
     custom: [f32; 4],                //24 user for color in simple.vert
     acceleration: [f32; 4],          //28
-    id: u32,                         //29
+    _id: u32,                         //29
     point_light_squared:f32,          //30
     directional_light:f32,          //31
     scenes:u32, //bitmask

@@ -21,7 +21,7 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
         ) {
         super(vBufferCPU, 6, indicesView, has_physic, undefined, point_light, undefined, label, scenes, frontFace);
 
-        this.drawable =  GPU.createRenderPipeline(SimpleRenderPipeline, {frontFace}).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass]))
+        this.drawable =  GPU.createRenderPipeline(SimpleRenderPipeline, {frontFace}).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]))
         if(!vBufferGPU) {
             vBufferGPU = engine.gpu.device.createBuffer({ usage: GPUBufferUsage.VERTEX, size: vBufferCPU.byteLength, mappedAtCreation: true }) as GPUVertexBuffer;
             new Float32Array(vBufferGPU.getMappedRange()).set(vBufferCPU);

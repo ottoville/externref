@@ -106,8 +106,9 @@ export type rustWasm = {
     init_engine2():void
     physic_tick():void
 
-    create_ball_collider(radius: number):rust_pointer<"collider">
-    create_trimesh_collider(mesh:rust_pointer<"mesh">):rust_pointer<"collider">
+    create_ball_collider(radius: number): rust_pointer<"collider">
+    create_trimesh_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
+    create_cuboid_collider(hx: number, hy: number, hz: number): rust_pointer<"collider">
 }
 
 function Dot(left: readonly [number, number, number] | Float32Array | TerraVector3, right: readonly [number, number, number] | Float32Array | TerraVector3): number {

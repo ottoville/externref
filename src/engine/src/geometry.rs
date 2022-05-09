@@ -2,7 +2,6 @@
 pub use crate::Vec3;
 pub use crate::Vec4;
 pub use crate::boundingbox::BoundingBox;
-use crate::engine::jslog_string;
 
 pub struct ColliderPlane {
     _plane: Plane,

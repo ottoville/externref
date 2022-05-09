@@ -3,14 +3,19 @@ import type { Scene } from "../Scene.js";
 import { GPU } from "../GPU.js";
 import type { DrawableSimple } from "../GPU/Drawable.js";
 import { WaterRenderPipeline } from "../GPU/RenderPipeLines/Water.js";
+import type { Engine } from "../engine.js";
+declare const engine:Engine;
 
 export class Sea extends BoundableNodeSimple {
     drawable: DrawableSimple;
+    override create_collider() {
+        return engine.rust.create_cuboid_collider(50000,3,50000);
+     }
     constructor(scenes: Scene[]) {
         super(new Float32Array([-50000.0, 3.0, -50000.0,
             50000.0, 3.0, -50000.0,
             -50000.0, 3.0, 50000.0,
-            50000.0, 3.0, 50000.0]), undefined, true,'water',false,scenes); //48        
+            50000.0, 3.0, 50000.0]), undefined, true,'water',false,scenes,true, false); //48        
         this.drawable = GPU.createRenderPipeline(WaterRenderPipeline,{
             topology: 'triangle-strip',
             stripIndexFormat: 'uint16',

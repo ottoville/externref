@@ -291,16 +291,28 @@ impl Mesh {
 
         let geometry = self.get_geometry();
         let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
-        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(geometry.vertices.len() / geometry.vertices_stride);
+        let vertices_amount = geometry.vertices.len() / geometry.vertices_stride;
+        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(vertices_amount);
         iterator.for_each(|i| {
             vertices.push(Point::new(i[0], i[1], i[2]));
         });
-
-        let mut indices:Vec<[u32; 3]> = Vec::with_capacity(geometry.indices.len()/3);
-        geometry.indices.chunks(3).into_iter().for_each(|i| {
-            indices.push([i[0] as u32, i[1] as u32, i[2] as u32]);
-
-        });
+        let mut indices:Vec<[u32; 3]>;
+        if geometry.indices.len() == 0 {
+            if self.strip {
+                panic!("Trimesh collider with triangle strip is not yet supported");
+            }
+            indices = Vec::with_capacity(vertices_amount);
+            let mut pos = 0;
+            while pos < vertices_amount {
+                indices.push([pos as u32, pos as u32 + 1, pos as u32 + 2]);
+                pos = pos + 3;
+            }
+        } else {
+            indices = Vec::with_capacity(geometry.indices.len()/3);
+            geometry.indices.chunks(3).into_iter().for_each(|i| {
+                indices.push([i[0] as u32, i[1] as u32, i[2] as u32]);
+            });
+        }
       /*  jslog_string(vec!["create_trimesh_collider".to_string(), vertices.len().to_string(), indices.len().to_string() ]);
         jslog_string(vec![format!("{:?}", vertices)]);
         jslog_string(vec![format!("{:?}", indices)]);*/
@@ -393,7 +405,7 @@ impl Mesh {
             delta: [0.0, 0.0, 0.0, 0.0],
             custom: [0.0, 0.0, 0.0, 0.0],
             acceleration: [0.0, 0.0, 0.0, 0.0],
-            id,
+            _id: id,
             point_light_squared: point_light * point_light,
             directional_light,
             scenes: scenes as u32,
