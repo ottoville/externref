@@ -1,13 +1,13 @@
 pub use crate::Vec3;
-pub use crate::Vec3_f32;
+pub use crate::Vec3F32;
 pub use crate::Vec4;
 use crate::collider::Collider;
 pub use crate::mesh::Mesh;
 
 pub struct BoundingBox {
     pub has_bounding:bool,
-    pub min:Vec3_f32,
-    pub max:Vec3_f32,
+    pub min:Vec3F32,
+    pub max:Vec3F32,
     pub min_original:Vec3<f32>,
     pub max_original:Vec3<f32>,
     pub vectors_original_simd: [Vec3<Vec4<f32>>;2],
@@ -20,8 +20,8 @@ impl BoundingBox {
     pub fn new(has_bounding:bool) -> Self {
         BoundingBox {
             has_bounding,
-            min:Vec3_f32 {x:0.0,y:0.0,z:0.0},
-            max:Vec3_f32 {x:0.0,y:0.0,z:0.0},
+            min:Vec3F32 {x:0.0,y:0.0,z:0.0},
+            max:Vec3F32 {x:0.0,y:0.0,z:0.0},
             min_original:Vec3 {x:0.0,y:0.0,z:0.0},
             max_original:Vec3 {x:0.0,y:0.0,z:0.0},
             vectors_original_simd:[Vec3 { x:Vec4 {x:0.0,y:0.0,z:0.0, w:0.0},  y:Vec4 {x:0.0,y:0.0,z:0.0, w:0.0}, z: Vec4 {x:0.0,y:0.0,z:0.0, w:0.0}};2],
@@ -142,12 +142,12 @@ impl BoundingBox {
             vector_simd.z.z= rz2 * rw2;
             vector_simd.z.w= rz3 * rw3;
         }
-        self.min = Vec3_f32 {
+        self.min = Vec3F32 {
             x: self.vectors_simd[0].x.min(&self.vectors_simd[1].x).get_min(),
             y: self.vectors_simd[0].y.min(&self.vectors_simd[1].y).get_min(),
             z: self.vectors_simd[0].z.min(&self.vectors_simd[1].z).get_min()
         };
-        self.max = Vec3_f32 {
+        self.max = Vec3F32 {
             x: self.vectors_simd[0].x.max(&self.vectors_simd[1].x).get_max(),
             y: self.vectors_simd[0].y.max(&self.vectors_simd[1].y).get_max(),
             z: self.vectors_simd[0].z.max(&self.vectors_simd[1].z).get_max()

@@ -39,24 +39,9 @@ export interface Ellipsoid {
 
 export const closeDistance = 0.0022
 export const closeDistanceSquared = closeDistance*closeDistance
-export abstract class DataNode extends MainNode implements Ellipsoid {
-    //TODO: this is a sphere collider
-    radius: { 0: number; 1: number; 2: number; };
-    readonly #radius: [x: number, y: number, z: number] = [1, 1, 1]
-    readonly collisionsScalingMatrix:TerraMatrix = new TerraMatrix([
-        1.0 / this.#radius[0],   0.0,                   0.0,                    0.0,
-        0.0,                     1.0 / this.#radius[1], 0.0,                    0.0,
-        0.0,                     0.0,                   1.0 / this.#radius[2],  0.0,
-        0.0, 0.0, 0.0, 1.0]);
-    readonly closeDistanceVector:[number,number,number] = [closeDistance / this.#radius[0], closeDistance / this.#radius[1], closeDistance / this.#radius[2]];
+export abstract class DataNode extends MainNode {
 
     #vectorsVec4: number[] = [];
-    override update_scale(x: number, y: number, z: number) {
-        this.radius[0]=x;
-        this.radius[1]=y;
-        this.radius[2]=z;
-        super.update_scale(x,y,z)
-    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     checkCollide(_velocityPerDelta:[number,number,number]):ReadOnlyTerraVector3 {
         return this.translation;
@@ -102,7 +87,7 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         return engine.rust.last_collider_world_vertices_pointer(this.ptr);
     }
     create_collider() {
-        return engine.rust.create_ball_collider();
+        return engine.rust.create_ball_collider(1);
     }
     constructor(
         vertices: Float32Array,
@@ -130,38 +115,6 @@ export abstract class DataNode extends MainNode implements Ellipsoid {
         //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
         if(has_physic)
             engine.physics.tickables.push(this);
-
-
-        const radius = this.#radius
-        const collisionsScalingMatrix = this.collisionsScalingMatrix;
-        const myCloseDistance = this.closeDistanceVector;
-        this.radius = {
-            get 0() {
-                return radius[0]
-            },
-            get 1() {
-                return radius[1]
-            },
-            get 2() {
-                return radius[2]
-            },
-            set 0(v: number) {
-                radius[0] = v;
-                collisionsScalingMatrix[0] = 1.0 / v;
-                myCloseDistance[0] = closeDistance / v
-
-            },
-            set 1(v: number) {
-                radius[1] = v;
-                collisionsScalingMatrix[5] = 1.0 / v;
-                myCloseDistance[1] = closeDistance / v
-            },
-            set 2(v: number) {
-                radius[2] = v;
-                collisionsScalingMatrix[10] = 1.0 / v;
-                myCloseDistance[2] = closeDistance / v
-            }
-        }
     }
     protected pushVertice = (position:number) => {
         let newLen=0;

@@ -106,7 +106,7 @@ export type rustWasm = {
     init_engine2():void
     physic_tick():void
 
-    create_ball_collider():rust_pointer<"collider">
+    create_ball_collider(radius: number):rust_pointer<"collider">
     create_trimesh_collider(mesh:rust_pointer<"mesh">):rust_pointer<"collider">
 }
 
@@ -575,17 +575,7 @@ export class Engine {
             // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-            if(sphere instanceof MainNode) {
-                this.physics.tickables.forEach(mesh => {
-                    //if(mesh.label !== 'slopeTriangle' && mesh.label !== 'bigbox')
-                   //  return;
-                    if(sphere !== mesh)
-                        mesh.checkCollision(this.collider, sphere)
-                });
-            }
-            else {
-                this.physics.tickables.forEach(mesh => mesh.checkCollision(this.collider, sphere));
-            }
+            this.physics.tickables.forEach(mesh => mesh.checkCollision(this.collider, sphere));
 
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
             this.#destinationPoint[1] = scaledPosition[1] + scaledVelocity[1];

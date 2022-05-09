@@ -108,8 +108,7 @@ export class Canvas extends TerraCompoment {
         const b2 = new Sphere(3,'sphere',[0,1,0,0],true);
         b2.translation = [346.5, 1300, 350];
      //   b2.translation = [-140, 590, 350];
-        b2.update_scale(20, 20, 20);
-
+        b2.radius = 10;
         //@ts-ignore
         window.b2=b2;
         b2.hasGravity=true;

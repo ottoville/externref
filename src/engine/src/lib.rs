@@ -24,8 +24,8 @@ pub extern "C" fn alloc_vector_usize(size:usize) -> *mut usize {
     buf.as_mut_ptr()
 }
 #[no_mangle]
-pub extern "C" fn create_ball_collider() -> *mut Collider {
-    let collider = Box::new(ColliderBuilder::ball(1.0).density(2.0).restitution(0.7).build());
+pub extern "C" fn create_ball_collider(radius: f32) -> *mut Collider {
+    let collider = Box::new(ColliderBuilder::ball(radius).restitution(0.0).build());
     Box::leak(collider)
 }
 #[derive(Copy, Clone)]
@@ -43,14 +43,14 @@ pub struct Vec3<T> {
 }
 #[repr(C, align(16))]
 #[derive(Copy, Clone)]
-pub struct Vec3_f32 {
+pub struct Vec3F32 {
     x: f32,
     y: f32,
     z: f32,
 }
 
-impl Vec3_f32 {
-    fn transform_to_ref(&self, m: &Vec4<Vec4<f32>>, other: &mut Vec3_f32) {
+/*impl Vec3F32 {
+    fn transform_to_ref(&self, m: &Vec4<Vec4<f32>>, other: &mut Vec3F32) {
         let rx = self.x * m.x.x + self.y * m.y.x + self.z * m.z.x + m.w.x;
         let ry = self.x * m.x.y + self.y * m.y.y + self.z * m.z.y + m.w.y;
         let rz = self.x * m.x.z + self.y * m.y.z + self.z * m.z.z + m.w.z;
@@ -59,7 +59,7 @@ impl Vec3_f32 {
         other.y = ry * rw;
         other.z = rz * rw;
     }
-}
+}*/
 
 impl Vec4<f32> {
     fn get_min(&self) -> f32 {

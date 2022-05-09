@@ -2,8 +2,17 @@
 import type { Engine, rust_pointer } from "../../engine.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
 declare const engine:Engine;
-
-
+let v = 12;
+const midCache = new Map<number, number>(); // midpoint vertices cache to avoid duplicating shared vertices
+function addMidPoint(vertices: Float32Array, a:number, b:number) {
+  const key = Math.floor((a + b) * (a + b + 1) / 2) + Math.min(a, b); // Cantor's pairing function
+  let i = midCache.get(key);
+  if (i !== undefined) { midCache.delete(key); return i; }
+  midCache.set(key, v);
+  for (let k = 0; k < 3; k++) vertices[3 * v + k] = (vertices[3 * a + k]! + vertices[3 * b + k]!) / 2;
+  i = v++;
+  return i;
+}
 const icosphere = (order = 0) => {
     // set up a 20-triangle icosahedron
     const f = (1 + 5 ** 0.5) / 2;
@@ -20,19 +29,9 @@ const icosphere = (order = 0) => {
       3, 9, 4, 3, 4, 2, 3, 2, 6, 3, 6, 8, 3, 8, 9, 
       9, 8, 1, 4, 9, 5, 2, 4, 11, 6, 2, 10, 8, 6, 7);
   
-    let v = 12;
-    const midCache = new Map(); // midpoint vertices cache to avoid duplicating shared vertices
-  
-    function addMidPoint(a:number, b:number) {
-      const key = Math.floor((a + b) * (a + b + 1) / 2) + Math.min(a, b); // Cantor's pairing function
-      let i = midCache.get(key);
-      if (i !== undefined) { midCache.delete(key); return i; }
-      midCache.set(key, v);
-      for (let k = 0; k < 3; k++) vertices[3 * v + k] = (vertices[3 * a + k]! + vertices[3 * b + k]!) / 2;
-      i = v++;
-      return i;
-    }
-  
+    v = 12;
+    midCache.clear();
+    
     let trianglesPrev = triangles;
     for (let i = 0; i < order; i++) {
       // subdivide each triangle into 4 triangles
@@ -41,9 +40,9 @@ const icosphere = (order = 0) => {
         const v1 = trianglesPrev[k + 0]!;
         const v2 = trianglesPrev[k + 1]!;
         const v3 = trianglesPrev[k + 2]!;
-        const a = addMidPoint(v1, v2);
-        const b = addMidPoint(v2, v3);
-        const c = addMidPoint(v3, v1);
+        const a = addMidPoint(vertices, v1, v2);
+        const b = addMidPoint(vertices, v2, v3);
+        const c = addMidPoint(vertices, v3, v1);
         let t = k * 4;
         triangles[t++] = v1; triangles[t++] = a; triangles[t++] = c;
         triangles[t++] = v2; triangles[t++] = b; triangles[t++] = a;
@@ -54,7 +53,8 @@ const icosphere = (order = 0) => {
     }
     // normalize vertices
     for (let i = 0; i < vertices.length; i += 3) {
-      const m = 1 / Math.hypot(vertices[i + 0]!, vertices[i + 1]!, vertices[i + 2]!);
+      //0.5 to create vertices from -0.5 to 0.5
+      const m = 0.5 / Math.hypot(vertices[i + 0]!, vertices[i + 1]!, vertices[i + 2]!);
       vertices[i + 0] *= m;
       vertices[i + 1] *= m;
       vertices[i + 2] *= m;
@@ -65,7 +65,16 @@ const icosphere = (order = 0) => {
 let uid=0;
 export class Sphere extends SimpleIndexedMesh {
     override create_collider(): rust_pointer<"collider"> {
-      return engine.rust.create_ball_collider();
+      return engine.rust.create_ball_collider(this.radius);
+    }
+    get radius() {
+      return this.scale_x * 0.5;
+    }
+    set radius(radius:number) {
+      const scale = radius * 2;
+      this.update_scale(scale, scale, scale);
+      const collider_ptr = engine.rust.create_ball_collider(radius);
+      engine.rust.add_collider(this.ptr, collider_ptr);
     }
     constructor(
         order=0,
@@ -87,20 +96,5 @@ export class Sphere extends SimpleIndexedMesh {
         }
         super(verticesAndNormals,indices,label,undefined, undefined, undefined, has_physic,scenes,'ccw')
         this.gpu_custom_data=color;
-    }
-    override checkCollide(velocityPerDelta:readonly [number,number,number]) {
-        const translation = this.translation;
-        const scaledPosition=engine.collider.scaledPosition;
-        scaledPosition[0] = translation[0] / this.radius[0];
-        scaledPosition[1] = translation[1] / this.radius[1];
-        scaledPosition[2] = translation[2] / this.radius[2];
-        const scaledVelocity=engine.collider.scaledVelocity;
-        scaledVelocity[0] = velocityPerDelta[0] / this.radius[0];
-        scaledVelocity[1] = velocityPerDelta[1] / this.radius[1];
-        scaledVelocity[2] = velocityPerDelta[2] / this.radius[2];
-        engine.collider.collidedMesh = undefined;
-        engine.collider._retry = 0;
-        engine.collideWithWorld(this);
-        return engine.collider.finalPosition;
     }
 }

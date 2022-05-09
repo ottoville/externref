@@ -6,7 +6,7 @@ use rapier3d::prelude::*;
 pub use crate::engine::Engine;
 pub use crate::engine::ENGINE;
 pub use crate::Vec3;
-pub use crate::Vec3_f32;
+pub use crate::Vec3F32;
 pub use crate::Vec4;
 pub use crate::GPUMesh;
 use crate::engine::Engine2;
@@ -188,24 +188,24 @@ pub unsafe extern "C" fn create_trimesh_collider(mesh_ptr:*mut Mesh) -> *mut Col
 }
 #[cfg(debug_assertions)]
 #[no_mangle]
-pub unsafe extern "C" fn bounding_min_pointer(mesh_ptr:*mut Mesh) -> *const Vec3_f32 {
+pub unsafe extern "C" fn bounding_min_pointer(mesh_ptr:*mut Mesh) -> *const Vec3F32 {
 
     let engine2 = ENGINE.physic_engine();
     let gpu_mesh = &engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
 
     (*mesh_ptr).get_geometry_mut().update_bounding_box(&gpu_mesh.transformation);
-    (&(*mesh_ptr).get_geometry_mut().bounding_box.min) as *const Vec3_f32
+    (&(*mesh_ptr).get_geometry_mut().bounding_box.min) as *const Vec3F32
 
 
 }
 #[cfg(debug_assertions)]
 #[no_mangle]
-pub unsafe extern "C" fn bounding_max_pointer(mesh_ptr:*mut Mesh) -> *const Vec3_f32 {
+pub unsafe extern "C" fn bounding_max_pointer(mesh_ptr:*mut Mesh) -> *const Vec3F32 {
     let engine2 = ENGINE.physic_engine();
     let gpu_mesh = &engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
 
     (*mesh_ptr).get_geometry_mut().update_bounding_box(&gpu_mesh.transformation);
-    (&(*mesh_ptr).get_geometry_mut().bounding_box.max) as *const Vec3_f32
+    (&(*mesh_ptr).get_geometry_mut().bounding_box.max) as *const Vec3F32
 }
 #[no_mangle]
 pub unsafe extern "C" fn scale_x(mesh_ptr:*mut Mesh) -> f32 {
@@ -304,7 +304,7 @@ impl Mesh {
       /*  jslog_string(vec!["create_trimesh_collider".to_string(), vertices.len().to_string(), indices.len().to_string() ]);
         jslog_string(vec![format!("{:?}", vertices)]);
         jslog_string(vec![format!("{:?}", indices)]);*/
-        let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).density(2.0).restitution(0.7).build());
+        let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).density(2.0).restitution(0.0).build());
         Box::leak(collider)
     }
     pub unsafe fn add_geometry<'a>(
@@ -419,11 +419,7 @@ impl Mesh {
             } else {
                 rigid_body_builder = RigidBodyBuilder::dynamic().sleeping(true).ccd_enabled(true);
             }
-            let rigid_body=rigid_body_builder.additional_mass(0.5).additional_mass_properties(MassProperties::new(
-                point![0.0, 1.0, 0.0],
-                0.5,
-                vector![0.3, 0.2, 0.1]))
-                .build();
+            let rigid_body=rigid_body_builder.build();
             let rigid_body_handle = engine2.rigid_body_set.insert(rigid_body);
             m.rigid_body_handle = Some(rigid_body_handle);
             engine2.meshes.push(m);

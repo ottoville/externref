@@ -18,9 +18,6 @@ export class Human extends Box {
        // engine.inputManager?.destroy();
        // engine.inputManager=null;
         this.inputManager = new MeshCamera(engine.mainCamera);
-        this.radius[0] = 0.5;
-        this.radius[1] = 2;
-        this.radius[2] = 0.5;
     }
     override onPhysicTick = () => {
         if((this.inputManager.arrowKeysDown & (ARROW_KEYS.LEFT_AND_RIGHT)) >0) {

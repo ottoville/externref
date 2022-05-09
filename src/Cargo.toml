@@ -14,9 +14,9 @@ path = "engine/src/lib.rs"
 #rapier3d = "0.11.1"
 rapier3d = { path = "../../../rapier/crates/rapier3d" }
 
-
-[package.metadata.wasm-pack.profile.dev]
-wasm-opt = false
-
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
+[profile.dev.package.parry3d]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+codegen-units = 16
