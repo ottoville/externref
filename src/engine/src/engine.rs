@@ -16,7 +16,7 @@ extern "C" {
 }
 pub struct Engine {
     gpu_reserved_slots: u64,
-    pub gpu_queue2: Vec<(*const GPUMesh, u32)>, //mesh + gpu alignment //pub gpu_queue2: Vec<(*const GPUMesh, u32)>,
+    pub gpu_queue2: Vec<(&'static GPUMesh, u32)>, //mesh + gpu alignment //pub gpu_queue2: Vec<(*const GPUMesh, u32)>,
     pub point_lights:Vec<u32>,
     pub directional_lights:Vec<u32>,
     pub allocated_gpu_memory:Vec<u32>,
@@ -69,9 +69,11 @@ pub fn jslog_string(strings: Vec<String>) {
     }
 }
 #[no_mangle]
-pub unsafe extern "C" fn init_engine2() {
+pub extern "C" fn init_engine2() {
     panic::set_hook(Box::new(|panic_info| {
-        jspanic(create_js_string(panic_info.to_string()));
+        unsafe {
+            jspanic(create_js_string(panic_info.to_string()));
+        }
     }));
     let rigid_body_set = RigidBodySet::new();
     let collider_set = ColliderSet::new();
@@ -88,8 +90,9 @@ pub unsafe extern "C" fn init_engine2() {
         gpu_meshes: Vec::with_capacity(100),
         ccd_solver: CCDSolver::new(),
     };
-
-    ENGINE.engine2=Some(e);
+    unsafe {
+        ENGINE.engine2=Some(e);
+    }
 }
 #[no_mangle]
 pub unsafe extern "C" fn physic_tick() {
@@ -172,7 +175,7 @@ impl Engine {
             updateAllocatedMemory(self.allocated_gpu_memory.as_ptr(),self.allocated_gpu_memory.len());
         }
     }
-    pub fn gpu_queue_pointer2(&self) -> *const (*const GPUMesh, u32) {
+    pub fn gpu_queue_pointer2(&self) -> *const (&GPUMesh, u32) {
         return self.gpu_queue2.as_ptr();
     }
     pub fn update_point_lights(&self) {

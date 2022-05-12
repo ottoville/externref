@@ -98,8 +98,11 @@ export class GPU {
     sizeBindGroupLayout: BindGroupLayout<[GPUBindGroupEntry]>;
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
     bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
+    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat}): RenderPipeline
+    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list'}): RenderPipeline
+    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive?: Omit<GPUPrimitiveState, 'topology'>): RenderPipeline
     static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState={}) {
-        const primitiveWithDefaults:GPUPrimitiveState={
+        const primitiveWithDefaults: GPUPrimitiveState={
             topology: 'triangle-list',
             frontFace: 'cw',
             cullMode: 'back',

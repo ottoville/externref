@@ -186,6 +186,11 @@ pub unsafe extern "C" fn intersect_box_aa_sphere(mesh_ptr:*mut Mesh, collider:*c
 pub unsafe extern "C" fn create_trimesh_collider(mesh_ptr:*mut Mesh) -> *mut Collider {
     (*mesh_ptr).create_trimesh_collider()
 }
+#[no_mangle]
+pub unsafe extern "C" fn create_convex_hull_collider(mesh_ptr:*mut Mesh) -> *mut Collider {
+    (*mesh_ptr).create_convex_hull_collider()
+}
+
 #[cfg(debug_assertions)]
 #[no_mangle]
 pub unsafe extern "C" fn bounding_min_pointer(mesh_ptr:*mut Mesh) -> *const Vec3F32 {
@@ -286,8 +291,35 @@ impl Mesh {
 }
 
 impl Mesh {
+    pub fn create_convex_hull_collider(&self) -> *mut Collider {
+        let geometry = self.get_geometry();
+        let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
+        let vertices_amount = geometry.vertices.len() / geometry.vertices_stride;
+        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(vertices_amount);
+        iterator.for_each(|i| {
+            // TODO: ensure simd
+            vertices.push(Point::new(i[0] * self.scaling.x, i[1] * self.scaling.y, i[2] * self.scaling.z));
+        });
+        let hull = ColliderBuilder::convex_hull(&vertices);
+        match hull {
+            Some(h) => {
+                let collider = Box::new(h.mass_properties(MassProperties::new(
+                    point![0.0, 1.0, 0.0],
+                    0.5,
+                    vector![0.3, 0.2, 0.1],
+                )).build());
+                Box::leak(collider)
+            }
+            None => {
+                panic!("Cannot create convex hull");
+            }
+        }
+
+    }
+
     //TODO: move to geometry
     pub fn create_trimesh_collider(&self) -> *mut Collider {
+
         let geometry = self.get_geometry();
         let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
         let vertices_amount = geometry.vertices.len() / geometry.vertices_stride;
@@ -299,7 +331,7 @@ impl Mesh {
         let mut indices:Vec<[u32; 3]>;
         if geometry.indices.len() == 0 {
             if self.strip {
-                panic!("Trimesh collider with triangle strip is not yet supported");
+                panic!("Unindexed Trimesh collider with triangle strip is not yet supported");
             }
             indices = Vec::with_capacity(vertices_amount);
             let mut pos = 0;
@@ -308,15 +340,26 @@ impl Mesh {
                 pos = pos + 3;
             }
         } else {
-            indices = Vec::with_capacity(geometry.indices.len()/3);
-            geometry.indices.chunks(3).into_iter().for_each(|i| {
-                indices.push([i[0] as u32, i[1] as u32, i[2] as u32]);
-            });
+            if self.strip {
+                indices = Vec::with_capacity(geometry.indices.len()-2);
+                geometry.indices.windows(3).for_each(|i| {
+                    indices.push([i[0] as u32, i[1] as u32, i[2] as u32]);
+                });
+            } else {
+                indices = Vec::with_capacity(geometry.indices.len()/3);
+                geometry.indices.chunks(3).into_iter().for_each(|i| {
+                    indices.push([i[0] as u32, i[1] as u32, i[2] as u32]);
+                });
+            }
         }
       /*  jslog_string(vec!["create_trimesh_collider".to_string(), vertices.len().to_string(), indices.len().to_string() ]);
         jslog_string(vec![format!("{:?}", vertices)]);
         jslog_string(vec![format!("{:?}", indices)]);*/
-        let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).density(2.0).restitution(0.0).build());
+        let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).mass_properties(MassProperties::new(
+            point![0.0, 1.0, 0.0],
+            0.5,
+            vector![0.3, 0.2, 0.1],
+        )).density(2.0).restitution(0.0).build());
         Box::leak(collider)
     }
     pub unsafe fn add_geometry<'a>(
@@ -373,7 +416,7 @@ impl Mesh {
                 x: 0.0,
                 y: 0.0,
                 z: 0.0,
-                w: 0.0,
+                w: 1.0,
             },
             scaling: Vec3 {
                 x: 1.0,
@@ -491,7 +534,7 @@ impl Mesh {
         let engine2 = ENGINE.physic_engine();
         let gpu_mesh = &engine2.gpu_meshes[self.gpu_mesh_alignment];
 
-        ENGINE.gpu_queue2.push((&*gpu_mesh, self.gpu_alignment));
+        ENGINE.gpu_queue2.push((&gpu_mesh, self.gpu_alignment));
     }
 
     fn on_update(&mut self) {
@@ -577,7 +620,7 @@ impl Mesh {
         let wz: f32 = w * z2;
 
         let sx = self.scaling.x;
-        let sy = self.scaling.y;
+        let sy = -self.scaling.y;
         let sz = self.scaling.z;
 
         let engine2 = ENGINE.physic_engine_mut();

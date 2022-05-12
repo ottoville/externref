@@ -18,10 +18,15 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
         has_physic = false,
         scenes?: Scene[],
         frontFace: GPUFrontFace = 'cw',
+        topology: GPUPrimitiveTopology = "triangle-list",
         ) {
-        super(vBufferCPU, 6, indicesView, has_physic, undefined, point_light, undefined, label, scenes, frontFace);
-
-        this.drawable =  GPU.createRenderPipeline(SimpleRenderPipeline, {frontFace}).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]))
+        const strip = topology === 'triangle-strip' || topology === 'line-strip';
+        super(vBufferCPU, 6, indicesView, has_physic, strip, point_light, undefined, label, scenes, frontFace);
+        const primitiveState:GPUPrimitiveState = {frontFace, topology};
+        if(strip)
+            primitiveState.stripIndexFormat = 'uint32';
+        this.drawable =  GPU.createRenderPipeline(SimpleRenderPipeline, primitiveState
+        ).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]))
         if(!vBufferGPU) {
             vBufferGPU = engine.gpu.device.createBuffer({ usage: GPUBufferUsage.VERTEX, size: vBufferCPU.byteLength, mappedAtCreation: true }) as GPUVertexBuffer;
             new Float32Array(vBufferGPU.getMappedRange()).set(vBufferCPU);

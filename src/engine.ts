@@ -108,6 +108,7 @@ export type rustWasm = {
 
     create_ball_collider(radius: number): rust_pointer<"collider">
     create_trimesh_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
+    create_convex_hull_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
     create_cuboid_collider(hx: number, hy: number, hz: number): rust_pointer<"collider">
 }
 
