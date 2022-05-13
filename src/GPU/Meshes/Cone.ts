@@ -1,5 +1,8 @@
 ﻿import type { Scene } from "../../Scene.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
+import type { Engine } from "../../engine.js";
+declare const engine:Engine;
+
 const douplePI = Math.PI*2;
 function strip2List(indices:Uint32Array) {
    const list=new Uint32Array((indices.length - 2) * 3);
@@ -18,8 +21,8 @@ function strip2List(indices:Uint32Array) {
    }
    return list;
 }
-function createCircle(faces = 14, cullMode: -1 | 1 = 1) {
-    const vertices = new Float32Array((faces + 2) * 6);
+function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride=6) {
+    const vertices = new Float32Array((faces + 2) * stride);
     const indices = new Uint32Array(faces+2);
 
     const edges=faces+2;
@@ -36,25 +39,36 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1) {
         indices[i+2]=i+2;
         if(i%2 === 0 ) {
             vertices.set(
-                [-x, 0, z, /* normals: */ 0, 0, 0], (i+2)*6);
+                [-x, 0, z, /* normals: */ 0, 0, 0], (i+2)*stride);
         } else {
             x = cullMode * Math.sin(progress);
             z = Math.cos(progress);
             vertices.set(
-                [x, 0, z, /* normals: */ 0, 0, 0], (i+2)*6);
+                [x, 0, z, /* normals: */ 0, 0, 0], (i+2)*stride);
             progress+=facelen;
         }
     }
+    // normalize vertices
+    for (let i = 0; i < vertices.length; i += stride) {
+        //0.5 to create vertices from -0.5 to 0.5
+        const m = 0.5 / Math.hypot(vertices[i + 0]!, vertices[i + 1]!, vertices[i + 2]!);
+        vertices[i + 0] *= m;
+        vertices[i + 1] *= m;
+        vertices[i + 2] *= m;
+    }
     return [vertices, indices] as const;
 }
-function createCone(faces = 14) {
+function createCone(faces = 14, stride=6) {
     if(faces%2 !== 0) {
         throw("Cone must not have odd number of faces");
     }
-    const [circleVertices, circleIndices] = createCircle(faces,-1);
+    const [circleVertices, circleIndices] = createCircle(faces,-1,stride);
     const coneVertices = Array.from(circleVertices);
-    
-    const zeroIndice = coneVertices.push(0,100,0,  /* normals: */0,0,0)/6-1;
+    //Lover the vertices to keep 0,0 coordinate in middle.
+    for(let i=0; i<coneVertices.length; i=i+stride) {
+        coneVertices[i+1]=-0.5;
+    }
+    const zeroIndice = coneVertices.push(0,0.5,0,  /* normals: */0,0,0)/stride-1;
 
     let indicesOrder = [0];
     const indicesOrder2:number[] = [];
@@ -84,7 +98,19 @@ export class Cone extends SimpleIndexedMesh {
         label='cone'+(uid++),
         color:[number,number,number,number]=[1,0,0,0]
     ) {
-        super(...createCone(),label, undefined, undefined, point_light, has_physic, scenes, undefined, "triangle-list");
+        super(...createCone(14,6),label, undefined, undefined, point_light, has_physic, scenes, undefined, "triangle-list");
         this.gpu_custom_data=color;
+    }
+    override create_collider() {
+        return engine.rust.create_cone_collider(this.scale_y/2,this.radius);
+    }
+    get radius() {
+        return this.scale_x * 0.5;
+    }
+    set radius(radius:number) {
+        const scale = radius * 2;
+        this.update_scale(scale, this.scale_y, scale);
+        const collider_ptr = engine.rust.create_cone_collider(this.scale_y/2, radius);
+        engine.rust.add_collider(this.ptr, collider_ptr);
     }
 }

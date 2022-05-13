@@ -5,9 +5,6 @@ use core::panic;
 use rapier3d::prelude::*;
 pub use crate::engine::Engine;
 pub use crate::engine::ENGINE;
-pub use crate::Vec3;
-pub use crate::Vec3F32;
-pub use crate::Vec4;
 pub use crate::GPUMesh;
 use crate::engine::Engine2;
 use crate::engine::jslog_string;
@@ -15,23 +12,29 @@ pub use crate::geometry::Geometry;
 pub use crate::geometry::Plane;
 pub use crate::geometry::ColliderPlane;
 pub use crate::boundingbox::BoundingBox;
+use crate::math::Quaternion;
+use crate::math::Vec3;
+use crate::math::Vec4;
 pub use crate::terrain::elevator::Elevator;
 pub use crate::drawable::Drawable;
 pub use crate::drawable::DrawCommand;
 pub use crate::drawable::DrawType;
+use crate::math::Vec3F32;
+
 
 pub struct Mesh {
     pub id:u32,
     pub gpu_alignment: u32, //Alignment in GPU memory. Real alignment is 256 + gpu_alignment because first block is used for indexing
     pub gpu_mesh_alignment: usize, //Alignment in engine.gpu_meshes vector
-    pub rotation: Vec4<f32>,
+    pub rotation: Quaternion,
     scaling: Vec3<f32>,
     pub geometry:Option<Geometry>,
     pub positions_count:usize,
     pub strip:bool,
     pub draw_command: DrawCommand,
     rigid_body_handle: Option<RigidBodyHandle>,
-    collider_handle: Option<ColliderHandle>
+    collider_handle: Option<ColliderHandle>,
+    pub label: String
 }
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh(
@@ -42,11 +45,20 @@ pub unsafe extern "C" fn new_mesh(
     scenes:f32,
     strip:bool,
     fixed: bool,
-    rigid_body: bool) -> *const Mesh {
-        let e = ENGINE.physic_engine_mut();
-        let mesh = Mesh::new(id, positions_count,point_light,directional_light,scenes,strip,fixed,rigid_body, e);
-        (*mesh).update_dynamic_buffer();
-        return mesh;
+    rigid_body: bool,
+    label: *mut std::os::raw::c_char) -> *const Mesh {
+        let cstr = std::ffi::CString::from_raw(label);
+        match cstr.to_str() {
+            Ok(str) => {
+                let e = ENGINE.physic_engine_mut();
+                let mesh = Mesh::new(id, positions_count,point_light,directional_light,scenes,strip,fixed,rigid_body, str.to_string(), e);
+                (*mesh).update_dynamic_buffer();
+                return mesh;    
+            }
+            Err(error) => {
+                panic!("{}", &error.to_string());
+            }
+        }
 }
 #[no_mangle]
 pub unsafe extern "C" fn add_geometry(
@@ -120,17 +132,17 @@ pub unsafe extern "C" fn update_euler_angles(mesh_ptr:*mut Mesh, x: f32, y: f32,
     let sin_yaw = half_yaw.sin();
     let cos_yaw = half_yaw.cos();
 
-    (*mesh_ptr).rotation.x = (cos_yaw * sin_pitch * cos_roll) + (sin_yaw * cos_pitch * sin_roll);
-    (*mesh_ptr).rotation.y = (sin_yaw * cos_pitch * cos_roll) - (cos_yaw * sin_pitch * sin_roll);
-    (*mesh_ptr).rotation.z = (cos_yaw * cos_pitch * sin_roll) - (sin_yaw * sin_pitch * cos_roll);
+    (*mesh_ptr).rotation.i = (cos_yaw * sin_pitch * cos_roll) + (sin_yaw * cos_pitch * sin_roll);
+    (*mesh_ptr).rotation.j = (sin_yaw * cos_pitch * cos_roll) - (cos_yaw * sin_pitch * sin_roll);
+    (*mesh_ptr).rotation.k = (cos_yaw * cos_pitch * sin_roll) - (sin_yaw * sin_pitch * cos_roll);
     (*mesh_ptr).rotation.w = (cos_yaw * cos_pitch * cos_roll) + (sin_yaw * sin_pitch * sin_roll);
     (*mesh_ptr).on_update();
 }
 #[no_mangle]
 pub unsafe extern "C" fn update_rotation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32, w: f32) {
-    (*mesh_ptr).rotation.x = x;
-    (*mesh_ptr).rotation.y = y;
-    (*mesh_ptr).rotation.z = z;
+    (*mesh_ptr).rotation.i = x;
+    (*mesh_ptr).rotation.j = y;
+    (*mesh_ptr).rotation.k = z;
     (*mesh_ptr).rotation.w = w;
     (*mesh_ptr).on_update();
 }
@@ -194,7 +206,6 @@ pub unsafe extern "C" fn create_convex_hull_collider(mesh_ptr:*mut Mesh) -> *mut
 #[cfg(debug_assertions)]
 #[no_mangle]
 pub unsafe extern "C" fn bounding_min_pointer(mesh_ptr:*mut Mesh) -> *const Vec3F32 {
-
     let engine2 = ENGINE.physic_engine();
     let gpu_mesh = &engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
 
@@ -262,9 +273,9 @@ pub unsafe extern "C" fn update_scale_and_rotation(mesh_ptr:*mut Mesh, x: f32, y
     (*mesh_ptr).scaling.x = x;
     (*mesh_ptr).scaling.y = y;
     (*mesh_ptr).scaling.z = z;
-    (*mesh_ptr).rotation.x = rx;
-    (*mesh_ptr).rotation.y = ry;
-    (*mesh_ptr).rotation.z = rz;
+    (*mesh_ptr).rotation.i = rx;
+    (*mesh_ptr).rotation.j = ry;
+    (*mesh_ptr).rotation.k = rz;
     (*mesh_ptr).rotation.w = rw;
     (*mesh_ptr).on_update();
 }
@@ -406,16 +417,17 @@ impl Mesh {
         strip:bool,
         fixed:bool,
         rigid_body: bool,
+        label: String,
         engine2: &'static mut Engine2) -> *const Mesh {
         let mut m = Mesh {
             id,
             gpu_mesh_alignment: engine2.gpu_meshes.len(),
             gpu_alignment: ENGINE.allocate_gpu(),
             geometry: None,
-            rotation: Vec4 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
+            rotation: Quaternion {
+                i: 0.0,
+                j: 0.0,
+                k: 0.0,
                 w: 1.0,
             },
             scaling: Vec3 {
@@ -436,7 +448,8 @@ impl Mesh {
                 base_vertex: 0
             },
             rigid_body_handle: None,
-            collider_handle: None
+            collider_handle: None,
+            label
         };
         engine2.gpu_meshes.push(GPUMesh {
             transformation: Vec4 {
@@ -550,11 +563,13 @@ impl Mesh {
                         Some(rigid_body) => 
                         {
                             rigid_body.set_translation(vector![gpu_mesh.transformation.w.x, gpu_mesh.transformation.w.y, gpu_mesh.transformation.w.z], true);
-                            let (euler_x, euler_y, euler_z) = Rotation::from_quaternion(nalgebra::Quaternion::new(self.rotation.x, self.rotation.y, self.rotation.z, self.rotation.w)).euler_angles();              
+                           /* let (euler_x, euler_y, euler_z) = Rotation::from_quaternion(nalgebra::Quaternion::new(self.rotation.w, self.rotation.x, self.rotation.y, self.rotation.z)).euler_angles();
                             let avec = AngVector::new(euler_x, euler_y, euler_z);
-                            //TODO simplify
-                            rigid_body.set_rotation(avec, true);
-                        },
+                          rigid_body.set_rotation(avec, true);*/
+                          
+                            rigid_body.set_quaternation(nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(self.rotation.w, self.rotation.i, self.rotation.j, self.rotation.k)), true)
+
+                         },
                         None    => panic!("Rigid body not found"),
                     };
                 }
@@ -599,9 +614,12 @@ impl Mesh {
         gpu_mesh.set_directional_light(engine, range, self.gpu_alignment);
     }
     pub unsafe fn update_matrix(&mut self) {
-        let x: f32 = self.rotation.x;
-        let y: f32 = self.rotation.y;
-        let z: f32 = self.rotation.z;
+        let engine2 = ENGINE.physic_engine_mut();
+        let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
+
+        let x: f32 = self.rotation.i;
+        let y: f32 = self.rotation.j;
+        let z: f32 = self.rotation.k;
         let w: f32 = self.rotation.w;
 
         let x2: f32 = x + x;
@@ -620,11 +638,9 @@ impl Mesh {
         let wz: f32 = w * z2;
 
         let sx = self.scaling.x;
-        let sy = -self.scaling.y;
+        let sy = self.scaling.y;
         let sz = self.scaling.z;
 
-        let engine2 = ENGINE.physic_engine_mut();
-        let gpu_mesh = &mut engine2.gpu_meshes[self.gpu_mesh_alignment];
 
         gpu_mesh.transformation.x.x = (1.0 - (yy + zz)) * sx;
         gpu_mesh.transformation.x.y = (xy + wz) * sx;

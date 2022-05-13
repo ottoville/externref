@@ -102,7 +102,11 @@ export abstract class MainNode {
         rigid_body = true,
         ) {
         const sceneids=scenes?scenes.reduce((acc, scene) => acc | scene.id,0):1;
-        this.ptr=engine.rust.new_mesh(MainNode.uniqueID++, positionsCount, point_light, directional_light, sceneids, strip, fixed, rigid_body);     
+        const label_ptr = engine.rust.alloc_string(label.length);
+        const view = new Uint8Array(engine.rust.memory.buffer, label_ptr, label.length);
+        view.set(new TextEncoder().encode(label));
+ 
+        this.ptr=engine.rust.new_mesh(MainNode.uniqueID++, positionsCount, point_light, directional_light, sceneids, strip, fixed, rigid_body, label_ptr);     
         MainNode.Meshes.set(this.id, this);
     }
     destroy() {

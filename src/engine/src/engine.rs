@@ -33,7 +33,7 @@ pub static mut ENGINE:Engine = Engine {
 };
 
 #[no_mangle]
-pub unsafe extern "C" fn handle_gpu_queue_rust() {
+pub unsafe extern "C" fn renderloop() {
     if ENGINE.gpu_queue2.len() > 0 {
         handle_gpu_queue(ENGINE.gpu_queue2.as_ptr() as *const [u32; 2], ENGINE.gpu_queue2.len());
         ENGINE.gpu_queue2.clear()
@@ -125,12 +125,11 @@ pub unsafe extern "C" fn physic_tick() {
             let mesh=e.rigid_bodies.get_mut(rigid_body_handle);
             match mesh {
                 Some(m) => {
-                   // jslog(create_js_string("Mesh found".to_string()));
                     let rigid_body = &e.rigid_body_set[*rigid_body_handle];
                     let newrot=rigid_body.rotation().as_vector();
-                    m.rotation.x = newrot.x;
-                    m.rotation.y = newrot.y;
-                    m.rotation.z = newrot.z;
+                    m.rotation.i = newrot.x;
+                    m.rotation.j = newrot.y;
+                    m.rotation.k = newrot.z;
                     m.rotation.w = newrot.w;
                     m.update_matrix();
                     let pos=rigid_body.position();

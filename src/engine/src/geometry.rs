@@ -1,7 +1,6 @@
 
-pub use crate::Vec3;
-pub use crate::Vec4;
 pub use crate::boundingbox::BoundingBox;
+use crate::math::Vec4;
 
 pub struct ColliderPlane {
     _plane: Plane,

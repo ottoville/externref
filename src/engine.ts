@@ -43,7 +43,7 @@ export type rustWasm = {
     collided_mesh_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
     set_speed(collider_ptr:rust_pointer<"legacy_collider">, speed:number):void
     basepoint_world_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
-    handle_gpu_queue_rust():void,
+    renderloop():void,
 
     new_mesh(id:number,
         positions_count:number,
@@ -52,7 +52,8 @@ export type rustWasm = {
         scenes:number,
         strip:boolean,
         fixed:boolean,
-        rigid_body:boolean): rust_pointer<"mesh">,
+        rigid_body:boolean,
+        label: rust_pointer<"u8">): rust_pointer<"mesh">,
     add_geometry(mesh:rust_pointer<"mesh">,
         has_bounding:boolean,
         vertices_stride:number,
@@ -70,6 +71,7 @@ export type rustWasm = {
     faces_count(mesh:rust_pointer<"mesh">):number,
     alloc_vector_f32(size:number) :rust_pointer<"f32">,
     alloc_vector_usize(size:number): rust_pointer<"usize">,
+    alloc_string(size:number): rust_pointer<"u8">,
     update_scale(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
     update_rotation(mesh:rust_pointer<"mesh">, x:number, y:number, z:number, w:number):void,
     update_euler_angles(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
@@ -110,6 +112,7 @@ export type rustWasm = {
     create_trimesh_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
     create_convex_hull_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
     create_cuboid_collider(hx: number, hy: number, hz: number): rust_pointer<"collider">
+    create_cone_collider(half_height: number, radius: number): rust_pointer<"collider">
 }
 
 function Dot(left: readonly [number, number, number] | Float32Array | TerraVector3, right: readonly [number, number, number] | Float32Array | TerraVector3): number {
@@ -301,7 +304,7 @@ export class Engine {
                         engine.gpu.pendingCommandBuffers.add(renderEncoder.finish())
                 },
                 now() {
-                    return Date.now()
+                    return performance.now()
                 },
                 jspanic(ptr:number) {
                     console.error(new TextDecoder().decode(new Uint8Array(engine.rust.memory.buffer, ptr, 512)).trimEnd())
@@ -357,11 +360,14 @@ export class Engine {
         //performance.mark('renderloopStart');
 
 
-        this.gpu.onRenders2.forEach(or => {
-            const buff = or();
-            if (buff)
-            this.gpu.pendingCommandBuffers.add(buff);
-        });
+
+        GPUQueueCommandEncoder=null;
+        engine.rust.renderloop();
+        //@ts-ignore bug in TS
+        const commandBuff= GPUQueueCommandEncoder?.finish() ?? null;
+        if(commandBuff)
+            this.gpu.pendingCommandBuffers.add(commandBuff);
+
         if (this.inputManager?.checkInputs()) {
             if(this.inputManager.calculateCameraPositionAndTarget)
             this.inputManager.calculateCameraPositionAndTarget();
@@ -448,13 +454,6 @@ export class Engine {
             Atomics.store(this.mousePosition, 0, e.clientX * gpu.scale.x)
             Atomics.store(this.mousePosition, 1, e.clientY * gpu.scale.y)
             Atomics.notify(new Int32Array(this.#mousePositionBuffer), 0);
-        });
-        
-        gpu.onRenders2.push(() => {
-            GPUQueueCommandEncoder=null;
-            engine.rust.handle_gpu_queue_rust();
-            //@ts-ignore bug in TS
-            return GPUQueueCommandEncoder?.finish() ?? null;
         });
         let resizeHandler = 0;
         const maxResolution = {

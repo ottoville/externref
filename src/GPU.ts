@@ -38,7 +38,6 @@ export class GPU {
     readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
     readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
 
-    readonly onRenders2: (() => (GPUCommandBuffer | null))[] = []
     readonly pendingCommandBuffers: Set<GPUCommandBuffer> = new Set();
     readonly tempGPUBuffers: Set<GPUBuffer> = new Set();
     

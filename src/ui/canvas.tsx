@@ -28,6 +28,7 @@ import { Box } from "../GPU/Meshes/Box.js";
 import { Triangle } from "../GPU/Meshes/Triangle.js";
 //@ts-ignore
 import { Sphere } from "../GPU/Meshes/Sphere.js";
+import { Cone } from "../GPU/Meshes/Cone.js";
 
 declare const engine:Engine;
 class CanvasMesh extends MainNode {
@@ -92,11 +93,12 @@ export class Canvas extends TerraCompoment {
             sun.gpu_custom_data = [0, 0, 0, 1]; //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
         });
-        const slope = new Triangle('slopeTriangle',undefined,true);
-        slope.update_scale(0, 400, 400);
+        const slope = new Cone(undefined,0,true,'Cone',[1,1,0,0]);
+        slope.update_scale(400, 1, 400);
 
         //   slope.update_euler_angles(0,0,Math.PI*-0.5);
-        slope.update_euler_angles(0,0,Math.PI*-0.4);
+       // slope.update_euler_angles(0,0,Math.PI*-0.4);
+       slope.update_euler_angles(0,0,0);
         slope.translation = [23,1200,23];
 
 

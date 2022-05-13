@@ -7,10 +7,13 @@ mod boundingbox;
 mod terrain;
 mod collider;
 mod drawable;
+mod math;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
+
+use math::Vec4;
 use rapier3d::prelude::*;
 
 #[no_mangle]
@@ -24,6 +27,19 @@ pub extern "C" fn alloc_vector_usize(size:usize) -> *mut usize {
     buf.as_mut_ptr()
 }
 #[no_mangle]
+pub extern "C" fn alloc_string(size:usize) -> *const std::os::raw::c_char {
+    let str = format!("{:0>l$}", "\0", l=size+1);
+    let vec = str.as_bytes().to_vec();
+    match std::ffi::CString::from_vec_with_nul(vec) {
+        Ok(s) => {
+            s.into_raw()
+        }
+        Err(e) => {
+            panic!("{}",e.to_string())
+        }
+    }
+}
+#[no_mangle]
 pub extern "C" fn create_ball_collider(radius: f32) -> *mut Collider {
     let collider = Box::new(ColliderBuilder::ball(radius).restitution(0.0).build());
     Box::leak(collider)
@@ -33,84 +49,10 @@ pub extern "C" fn create_cuboid_collider(hx: f32, hy: f32, hz: f32) -> *mut Coll
     let collider = Box::new(ColliderBuilder::cuboid(hx, hy, hz).restitution(0.0).build());
     Box::leak(collider)
 }
-#[derive(Copy, Clone)]
-pub struct Vec4<T> {
-    x: T,
-    y: T,
-    z: T,
-    w: T,
-}
-#[derive(Copy, Clone)]
-pub struct Vec3<T> {
-    x: T,
-    y: T,
-    z: T,
-}
-#[repr(C, align(16))]
-#[derive(Copy, Clone)]
-pub struct Vec3F32 {
-    x: f32,
-    y: f32,
-    z: f32,
-}
-
-/*impl Vec3F32 {
-    fn transform_to_ref(&self, m: &Vec4<Vec4<f32>>, other: &mut Vec3F32) {
-        let rx = self.x * m.x.x + self.y * m.y.x + self.z * m.z.x + m.w.x;
-        let ry = self.x * m.x.y + self.y * m.y.y + self.z * m.z.y + m.w.y;
-        let rz = self.x * m.x.z + self.y * m.y.z + self.z * m.z.z + m.w.z;
-        let rw = 1.0 / (self.x * m.x.w + self.y * m.y.w + self.z * m.y.w + m.w.w);
-        other.x = rx * rw;
-        other.y = ry * rw;
-        other.z = rz * rw;
-    }
-}*/
-
-impl Vec4<f32> {
-    fn get_min(&self) -> f32 {
-        self.x.min(self.y.min(self.z.min(self.w)))
-    }
-    fn get_max(&self) -> f32 {
-        self.x.max(self.y.max(self.z.max(self.w)))
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    fn min(&self, other: &Vec4<f32>) -> Vec4<f32> {
-        Vec4 {
-            x:self.x.min(other.x),
-            y:self.y.min(other.y),
-            z:self.z.min(other.z),
-            w:self.w.min(other.w)
-        }
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    fn max(&self, other: &Vec4<f32>) -> Vec4<f32> {
-        Vec4 {
-            x:self.x.max(other.x),
-            y:self.y.max(other.y),
-            z:self.z.max(other.z),
-            w:self.w.max(other.w)
-        }
-    }
-    #[cfg(target_arch = "wasm32")]
-    fn min(&self, other: &Vec4<f32>) -> Vec4<f32> {
-        use std::arch::wasm32::*;
-        unsafe {
-            let v0 = v128_load(self as *const Vec4<f32> as *const v128);
-            let v1 = v128_load(other as *const Vec4<f32> as *const v128);
-            let res=f32x4_pmin(v0, v1);
-            return std::mem::transmute::<v128, Vec4<f32>>(res);
-        }
-    }
-    #[cfg(target_arch = "wasm32")]
-    fn max(&self, other: &Vec4<f32>) -> Vec4<f32> {
-        use std::arch::wasm32::*;
-        unsafe {
-            let v0 = v128_load(self as *const Vec4<f32> as *const v128);
-            let v1 = v128_load(other as *const Vec4<f32> as *const v128);
-            let res=f32x4_pmax(v0, v1);
-            return std::mem::transmute::<v128, Vec4<f32>>(res);
-        }
-    }
+#[no_mangle]
+pub extern "C" fn create_cone_collider(half_height: f32, radius: f32) -> *mut Collider {
+    let collider = Box::new(ColliderBuilder::cone(half_height, radius).restitution(0.0).build());
+    Box::leak(collider)
 }
 
 pub struct GPUMesh {
