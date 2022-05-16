@@ -182,7 +182,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         const passEncoder = renderEncoder.beginRenderPass(this.GPURenderPassDescriptor);
         if (!this.bundles.length) {
             const renderBundleEncoder = this.gpu.device.createRenderBundleEncoder(this.GPURenderBundleEncoderDescriptor);
-            //@ts-expect-error
+            //@ts-ignore
             let drawedMeshes = 0;
             if(this.BindGroupCanvas) {
                 drawedMeshes+= this.renderCamera(renderBundleEncoder,this.rootLayout,this.BindGroupCanvas(), 0)

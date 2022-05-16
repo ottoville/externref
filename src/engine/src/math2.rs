@@ -48,7 +48,7 @@ impl Vec4<Vec4<f32>> {
         result.x.y = self.x.x * other.x.y + self.x.y * other.y.y + self.x.z * other.z.y + self.x.w * other.w.y;
         result.x.z = self.x.x * other.x.z + self.x.y * other.y.z + self.x.z * other.z.z + self.x.w * other.w.z;
         result.x.w = self.x.x * other.x.w + self.x.y * other.y.w + self.x.z * other.z.w + self.x.w * other.w.w;
-  
+
         result.y.x = self.y.x * other.x.x + self.y.y * other.y.x + self.y.z * other.z.x + self.y.w * other.w.x;
         result.y.y = self.y.x * other.x.y + self.y.y * other.y.y + self.y.z * other.z.y + self.y.w * other.w.y;
         result.y.z = self.y.x * other.x.z + self.y.y * other.y.z + self.y.z * other.z.z + self.y.w * other.w.z;
@@ -76,7 +76,7 @@ impl Vec4<Vec4<f32>> {
         v128_store(&mut result.x as *mut Vec4<f32> as *mut v128,
             f32x4_add(
                 f32x4_add(
-                    f32x4_mul(v128_load32_splat(&self.x.x as *const f32 as *const u32), v0),
+                    f32x4_mul(f32x4_splat(self.x.x), v0),
                     f32x4_mul(f32x4_splat(self.x.y), v1)
                 ),
                 f32x4_add(

@@ -7,13 +7,13 @@ mod boundingbox;
 mod terrain;
 mod collider;
 mod drawable;
-mod math;
+mod math2;
 
 pub use crate::engine::Engine;
 pub use crate::geometry::Geometry;
 pub use crate::terrain::elevator::Elevator;
 
-use math::Vec4;
+use math2::Vec4;
 use rapier3d::prelude::*;
 
 #[no_mangle]

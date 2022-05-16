@@ -1,5 +1,5 @@
 use crate::collider::Collider;
-use crate::math::{Vec4, Vec3F32, Vec3};
+use crate::math2::{Vec4, Vec3F32, Vec3};
 pub use crate::mesh::Mesh;
 
 pub struct BoundingBox {
