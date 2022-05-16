@@ -35,6 +35,7 @@ module.exports = {
         "require-await":2,
         "require-atomic-updates":2,
         "no-promise-executor-return":2,
-        "no-self-compare": 2
+        "no-self-compare": 2,
+        "no-throw-literal": 2
     }
 };

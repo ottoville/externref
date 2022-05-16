@@ -28,6 +28,7 @@ import { Box } from "../GPU/Meshes/Box.js";
 import { Triangle } from "../GPU/Meshes/Triangle.js";
 //@ts-ignore
 import { Sphere } from "../GPU/Meshes/Sphere.js";
+//@ts-ignore
 import { Cone } from "../GPU/Meshes/Cone.js";
 
 declare const engine:Engine;
@@ -45,17 +46,22 @@ class Light extends MainNode {
         super(undefined,0,1,undefined,'Light',[scene]);
     }
 }
-
 export class Canvas extends TerraCompoment {
     #progressBar: HTMLProgressElement = <progress min="0" max="100" value="0"></progress>;
     #progresElem: HTMLSpanElement = <span>0</span>;
+    #errorDialog: HTMLDialogElement = <dialog></dialog>
     #canvasElem: HTMLCanvasElement = <canvas class="gameControl hidden"></canvas>
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
     async initalize(): Promise<[Scene]> {
         this.progress = 6;
 
-        const terraEngine = await Engine.initEngine(this.#canvasElem);
+        const terraEngine = await Engine.initEngine(this.#canvasElem, (e) => {
+            console.error(e);
+            this.#errorDialog.textContent = e.name + ', ' + e.message;
+            //@ts-expect-error
+            this.#errorDialog.showModal();
+        });
         this.progress = 15;
 
 
@@ -93,13 +99,12 @@ export class Canvas extends TerraCompoment {
             sun.gpu_custom_data = [0, 0, 0, 1]; //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
         });
-        const slope = new Cone(undefined,0,true,'Cone',[1,1,0,0]);
-        slope.update_scale(400, 1, 400);
+        const slope = new Triangle('slopeTriangle',undefined,true);
+        slope.update_scale(0, 400, 400);
 
-        //   slope.update_euler_angles(0,0,Math.PI*-0.5);
-       // slope.update_euler_angles(0,0,Math.PI*-0.4);
-       slope.update_euler_angles(0,0,0);
-        slope.translation = [23,1200,23];
+     //   slope.update_euler_angles(0,0,Math.PI*-0.5);
+      slope.update_euler_angles(0,0,Math.PI*-0.4);
+        slope.translation = [23,600,23];
 
 
        /* const bixbox = new Box(undefined, 400,true,'bigbox',[1,1,0,0]);
@@ -226,10 +231,11 @@ export class Canvas extends TerraCompoment {
                 <input name="time" type="radio" id="fastforward5" value="5" checked={engine.physics.gameSpeed === 5} />
                 <label for="fastforward5">32⏩</label>
             </div>)
-        }).catch(e => {
-            console.error('creating terrain failed', e);
-            this.#progresElem.textContent = e.name + ' ' + e.message;
-
+        }).catch((e:Error) => {
+            console.error('Launching program failed', e);
+            this.#errorDialog.textContent = e.name + ', ' + e.message;
+            //@ts-expect-error
+            this.#errorDialog.showModal();
         });
     }
     set progress(value: number) {
@@ -240,6 +246,7 @@ export class Canvas extends TerraCompoment {
     }
     render() {
         return <div style="height:100%">
+            {this.#errorDialog}
             {this.#canvasElem}
             {this.toolsContainer}
             <div id="fps">@(rendertime) @(msPerFrame)</div>

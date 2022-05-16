@@ -328,7 +328,7 @@ export class GPU {
 
         const context:GPUCanvasContext | null = canvas.getContext('webgpu');
         if (!context)
-            throw ('Unable to get webgpu context');
+            throw (new Error('Unable to get webgpu context'));
         this.context = context
         this.presentationFormat = context.getPreferredFormat(adapter);
         context.configure({

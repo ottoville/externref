@@ -189,7 +189,7 @@ export class Engine {
     #renderFrame = 0;
     readonly mainCamera: TerraCamera<PickableRenderPass>;
     memory: WebAssembly.Memory;
-    static async initEngine(canvas: HTMLCanvasElement): Promise<Engine> {
+    static async initEngine(canvas: HTMLCanvasElement, showError: (e: Error) => void): Promise<Engine> {
         const DB = new Promise<EarthDatabase>(function (res) {
             var IDB = indexedDB.open("City", 6);
             IDB.onupgradeneeded = function (e) {
@@ -225,18 +225,25 @@ export class Engine {
         })
 
         if (!window.navigator.gpu)
-            throw ('no webgpu support');
-        const adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
-        //this.progress = 4;
+            throw (new Error('no webgpu support'));
 
-        if (!adapter)
-            throw ('No adapter');
+
+        const adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }).then(GPUAdapter => {
+            if(!GPUAdapter) {
+                console.error('Failed to get adapter, getting fallback adapter');
+                return window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter: true });
+            }
+            return GPUAdapter;
+        })
+        if(!adapter) {
+            throw (new Error('Failed to get adapter'));
+        }
         const device = await adapter.requestDevice();
         //this.progress = 5;
         if (!device)
-            throw ('no GPU device');
+            throw (new Error('no GPU device'));
         device.lost.then(reason => {
-            console.error('GPU device lost', reason)
+            console.error('GPU device lost', reason);
         });
 
         const gpu = new GPU(canvas, adapter, device);
@@ -335,7 +342,7 @@ export class Engine {
             }
         });
         const wasm = obj.instance.exports as unknown as ColliderWasm;
-        return new Engine(gpu, await DB, canvas, wasm, rust.instance.exports as rustWasm);
+        return new Engine(gpu, await DB, canvas, wasm, rust.instance.exports as rustWasm, showError);
     }
     attachCameraInput(initial = false) {
         this.inputManager = new ArcRotateCamera(this.mainCamera, initial);
@@ -421,7 +428,8 @@ export class Engine {
         public DB: EarthDatabase,
         public canvas: HTMLCanvasElement,
         public wasm: ColliderWasm,
-        public rust: rustWasm
+        public rust: rustWasm,
+        showError: (e: Error) => void
     ) {
         this.physics = new Physics(this);
         this.memory = rust.memory;
@@ -491,41 +499,48 @@ export class Engine {
             window.cancelAnimationFrame(this.#renderFrame)
             clearTimeout(resizeHandler);
             resizeHandler = setTimeout(() => {
-                const aspectRatio = entry.contentRect.width / entry.contentRect.height
-                canvas.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
+                try {
+                    const aspectRatio = entry.contentRect.width / entry.contentRect.height
+                    canvas.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
 
-                canvas.height = canvas.width / aspectRatio
+                    canvas.height = canvas.width / aspectRatio
 
-                if (canvas.height > maxResolution.height) {
-                    canvas.height = maxResolution.height;
-                    canvas.width = canvas.height * aspectRatio;
-                }
+                    if (canvas.height > maxResolution.height) {
+                        canvas.height = maxResolution.height;
+                        canvas.width = canvas.height * aspectRatio;
+                    }
 
-                gpu.scale.x = canvas.width / entry.contentRect.width;
-                gpu.scale.y = canvas.height / entry.contentRect.height;
-                // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
-                gpu.context.configure({
-                    device: gpu.device,
-                    format: gpu.presentationFormat,
-                    usage: GPUTextureUsage.RENDER_ATTACHMENT
-                })
-                const commandEncoder = gpu.createCommandEncoder();
-                const passEncoder = commandEncoder.beginComputePass();
-                passEncoder.setPipeline(computePipelineClusters.pipeline);
-                
-                gpu.projections.forEach(projection => projection.update(aspectRatio))
+                    gpu.scale.x = canvas.width / entry.contentRect.width;
+                    gpu.scale.y = canvas.height / entry.contentRect.height;
+                    // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
+                    gpu.context.configure({
+                        device: gpu.device,
+                        format: gpu.presentationFormat,
+                        usage: GPUTextureUsage.RENDER_ATTACHMENT
+                    })
+                    const commandEncoder = gpu.createCommandEncoder();
+                    const passEncoder = commandEncoder.beginComputePass();
+                    passEncoder.setPipeline(computePipelineClusters.pipeline);
+                    
+                    gpu.projections.forEach(projection => projection.update(aspectRatio))
 
-                gpu.renderPasses.forEach(renderPass => {
-                    renderPass.resize(canvas.width, canvas.height);
-                    passEncoder.setBindGroup(0, renderPass.sizeBindGroup());
-                    renderPass.cameras.forEach(camera => {
-                        camera.updateProjection(passEncoder,computePipelineClustersLayout)
+                    gpu.renderPasses.forEach(renderPass => {
+                        renderPass.resize(canvas.width, canvas.height);
+                        passEncoder.setBindGroup(0, renderPass.sizeBindGroup());
+                        renderPass.cameras.forEach(camera => {
+                            camera.updateProjection(passEncoder,computePipelineClustersLayout)
+                        });
                     });
-                });
-                passEncoder.end();
-                gpu.device.queue.submit([commandEncoder.finish()]);
+                    passEncoder.end();
+                    gpu.device.queue.submit([commandEncoder.finish()]);
 
-                this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
+                    this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
+                } catch(e) {
+                    if(!(e instanceof Error)) {
+                        showError(new Error('Unknown error occured, '+e));
+                    } else 
+                        showError(e);
+                }
             }, 500)
         });
         ro.observe(canvas.parentElement)
