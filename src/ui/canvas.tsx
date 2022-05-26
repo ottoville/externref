@@ -46,6 +46,7 @@ class Light extends MainNode {
         super(undefined,0,1,undefined,'Light',[scene]);
     }
 }
+const errors:Error[]=[]
 export class Canvas extends TerraCompoment {
     #progressBar: HTMLProgressElement = <progress min="0" max="100" value="0"></progress>;
     #progresElem: HTMLSpanElement = <span>0</span>;
@@ -53,14 +54,24 @@ export class Canvas extends TerraCompoment {
     #canvasElem: HTMLCanvasElement = <canvas class="gameControl hidden"></canvas>
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
+    showError() {
+        //@ts-expect-error
+        if(!this.#errorDialog.open) {
+            const e=errors.shift();
+            if(e) {
+                this.#errorDialog.textContent = e.name + ', ' + e.message;
+                //@ts-expect-error
+                this.#errorDialog.showModal();
+            }
+        }
+    }
     async initalize(): Promise<[Scene]> {
         this.progress = 6;
 
         const terraEngine = await Engine.initEngine(this.#canvasElem, (e) => {
             console.error(e);
-            this.#errorDialog.textContent = e.name + ', ' + e.message;
-            //@ts-expect-error
-            this.#errorDialog.showModal();
+            errors.push(e);
+            this.showError();
         });
         this.progress = 15;
 
@@ -73,8 +84,6 @@ export class Canvas extends TerraCompoment {
 
       
         this.progress = 19;
-
-
 
         const mainScene = new Scene('main', terraEngine.gpu, [engine.mainCamera, waterCamera], (terrascene) => {
             new Sun2([terrascene]);
@@ -183,6 +192,9 @@ export class Canvas extends TerraCompoment {
     timeOfDay: HTMLOutputElement = <output id="TODout" fow="TOD"></output>
     constructor() {
         super();
+        this.#errorDialog.addEventListener('close', () => {
+            this.showError();
+        })
         this.progress = 2;
         this.uiTabs.forEach(tool => {
             const menuContainer: HTMLFieldSetElement = <fieldset class="w3-dropdown-content w3-card-4 w3-show" style="margin-top:36px"></fieldset>
@@ -232,10 +244,8 @@ export class Canvas extends TerraCompoment {
                 <label for="fastforward5">32⏩</label>
             </div>)
         }).catch((e:Error) => {
-            console.error('Launching program failed', e);
-            this.#errorDialog.textContent = e.name + ', ' + e.message;
-            //@ts-expect-error
-            this.#errorDialog.showModal();
+            errors.push(e);
+            this.showError();
         });
     }
     set progress(value: number) {

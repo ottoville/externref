@@ -10,7 +10,7 @@ export const state: {
 
 const app = document.getElementById('app')
 if (!app)
-    throw ('App not found');
+    throw (new Error('App not found'));
 let logged = false;
 
 const render = async () => {

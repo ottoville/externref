@@ -9,6 +9,7 @@ import type { Scene } from "../Scene.js";
 import { GPUBufferUsage } from "../GPU.js"
 import { PlantsRenderPipeline } from "../GPU/RenderPipeLines/Plants.js";
 import { ComputePipeline } from "../GPU/ComputePipeline.js";
+import { Buffer } from "../GPU/Buffer.js";
 
 import type { Engine } from "../engine.js";
 declare const engine:Engine;
@@ -44,15 +45,15 @@ export class Plants {
     constructor(
         scene: Scene,
         terrainP: Promise<Terrain>,
-    ) {        
-        const drawable = GPU.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }).addDrawableIndirect(scene.gpu.createGPUBuffer(4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST]), 'Plants')
-        const positionGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
-        const shapeGPU = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST]);
+    ) {
+        const indirectBuffer = Buffer.create(scene.gpu,4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST],'indirectBuffer');
+        const drawable = GPU.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }).addDrawableIndirect(indirectBuffer, 'Plants')
+        const positionGPU = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'positionGPU');
+        const shapeGPU = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'shapeGPU');
 
 
-        const positionGPUSwap = scene.gpu.device.createBuffer({ size: this.numBlades * 4 * 4, usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE });
-        const shapeGPUSwap = scene.gpu.createGPUBuffer(this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE]);
-
+        const positionGPUSwap = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE], 'positionGPUSwap');
+        const shapeGPUSwap = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE],'shapeGPUSwap');
         drawable.setVertexBuffer(0, positionGPU)
         drawable.setVertexBuffer(1, shapeGPU);
         drawable.setVertexBuffer(2, new Float32Array([
@@ -82,33 +83,23 @@ export class Plants {
                 layout, entries: [
                     {
                         binding: 0,
-                        resource: {
-                            buffer: terrain.slopeArrGPUBuffer
-                        }
+                        resource: terrain.slopeArrGPUBuffer.getStorageBinding()
                     },
                     {
                         binding: 1,
-                        resource: {
-                            buffer: terrain.facet12ArrGPUBuffer
-                        }
+                        resource: terrain.facet12ArrGPUBuffer.getStorageBinding()
                     },
                     {
                         binding: 2,
-                        resource: {
-                            buffer: positionGPUSwap
-                        }
+                        resource: positionGPUSwap.getStorageBinding()
                     },
                     {
                         binding: 3,
-                        resource: {
-                            buffer: shapeGPUSwap
-                        }
+                        resource: shapeGPUSwap.getStorageBinding()
                     },
                     {
                         binding: 4,
-                        resource: {
-                            buffer: terrain.settingsGPU
-                        }
+                        resource: terrain.settingsGPU.getStorageBinding()
                     }]
             });
             this.worker.subscribe('updated', (data: { buffer: SharedArrayBuffer }) => {
@@ -117,32 +108,24 @@ export class Plants {
                 const passEncoder = commandEncoder.beginComputePass();
                 passEncoder.setPipeline(computePipeline.pipeline);
 
-                const worldCopyGPU = scene.gpu.createGPUBuffer(this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], true);
+                const worldCopyGPU = Buffer.create(scene.gpu, this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'worldCopyGPU', (buffer) => {
+                    const worldSetArr = buffer.getMappedRange();
+                    new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
+                });
                 const bindGroup2 = scene.gpu.device.createBindGroup({
                     layout: computePipeline.pipeline.getBindGroupLayout(1), entries: [{
                         binding: 0,
-                        resource: {
-                            buffer: worldCopyGPU
-                        }
+                        resource: worldCopyGPU.getStorageBinding()
                     }]
                 });
-                const worldSetArr = worldCopyGPU.getMappedRange();
-                new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
-                worldCopyGPU.unmap();
 
                 passEncoder.setBindGroup(0, bindGroup);
                 passEncoder.setBindGroup(1, bindGroup2);
                 passEncoder.dispatchWorkgroups(this.numBlades);
                 passEncoder.end();
-                commandEncoder.copyBufferToBuffer(
-                    positionGPUSwap, 0,
-                    positionGPU, 0,
-                    this.numBlades * 4 * 4);
-                commandEncoder.copyBufferToBuffer(
-                    shapeGPUSwap, 0,
-                    shapeGPU, 0,
-                    this.numBlades * 4 * 4);
-                scene.gpu.updateBufferRaw(commandEncoder, drawable.buffer, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
+                positionGPUSwap.copyTo(commandEncoder, positionGPU, 0, 0, this.numBlades * 4 * 4)
+                shapeGPUSwap.copyTo(commandEncoder,shapeGPU, 0, 0, this.numBlades * 4 * 4)
+                indirectBuffer.updateBufferRaw(commandEncoder, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
                 scene.gpu.pendingCommandBuffers.add(commandEncoder.finish())
             });
         })

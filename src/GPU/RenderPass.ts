@@ -13,6 +13,7 @@ import { TextureView } from "./TextureView.js";
 import { MSAARenderTarget } from "./RenderTargets/MSAARenderTarget.js";
 import { ComputePipeline } from "./ComputePipeline.js";
 import { BindGroup } from "./BindGroup.js";
+import { BindUniformBuffer, Buffer, CopyDstBuffer } from "./Buffer.js";
 
 declare const engine:Engine;
 
@@ -30,7 +31,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
     bundles: GPURenderBundle[] = [];
     renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant2> = new Map();
     sizeBindGroup: () => GPUBindGroup;
-    #sizeBuffer: GPUUniformBuffer;
+    #sizeBuffer: BindUniformBuffer;
     
     constructor(
         public gpu: GPU,
@@ -49,25 +50,21 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         this.#sizeBuffer=this.updateSizeBindGroup(true);
         this.sizeBindGroup = () => gpu.sizeBindGroupLayout.createBindGroup('sizeBindGroup', [{
             binding: 0,
-            resource: {
-                buffer: this.#sizeBuffer,
-                size: 16,
-                offset: 0
-            }
+            resource: this.#sizeBuffer.getUniformBinding(0, 16)
         }]);
     }
     updateSizeBindGroup(initial = false) {
         if (!initial)
             this.#sizeBuffer.destroy();
-        this.#sizeBuffer = this.gpu.createGPUBuffer(this.gpu.gpu_screen_buffer_size, [GPUBufferUsage.UNIFORM], true, 'screen_buffer');
-        const uniformbuffer = this.#sizeBuffer.getMappedRange();
+        this.#sizeBuffer = Buffer.create(this.gpu, this.gpu.gpu_screen_buffer_size, [GPUBufferUsage.UNIFORM], 'screen_buffer', b => {
+            const uniformbuffer = b.getMappedRange();
+            new Float32Array(uniformbuffer, 0, 4).set([
+                this.size[0],
+                this.size[1],
+                this.size[0] / this.gpu.clustersInRow[0],
+                this.size[1] / this.gpu.clustersInRow[1]]);
+        });
 
-        new Float32Array(uniformbuffer, 0, 4).set([
-            this.size[0],
-            this.size[1],
-            this.size[0] / this.gpu.clustersInRow[0],
-            this.size[1] / this.gpu.clustersInRow[1]]);
-        this.#sizeBuffer.unmap();
         return this.#sizeBuffer;
     }
     getVariant(renderPipeline:Readonly<RenderPipeline>) {
@@ -267,7 +264,7 @@ export class PickableRenderPass<T extends {
     #pickBuffer: GPUBuffer;
     #pickBufferRead?: GPUBuffer;
     #pickPositionPipeline?: ComputePipeline;
-    #mousePositionBuffer?: GPUUniformBuffer & GPUCopyDSTBuffer;
+    #mousePositionBuffer?: CopyDstBuffer & BindUniformBuffer;
     #pickPositionBindGroup0?: BindGroup;
     #pickPositionBindGroup1?: BindGroup;
     rowBytes = this.size[0]*4;
@@ -294,7 +291,7 @@ export class PickableRenderPass<T extends {
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
                     label: 'pickBufferRead'
                 });
-                this.#mousePositionBuffer = gpu.createGPUBuffer(8,[GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
+                this.#mousePositionBuffer = Buffer.create(gpu, 8,[GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],'mousePositionBuffer');
 
                 this.#pickPositionBindGroup0 = this.#pickPositionPipeline.createBindGroup(0,'pickPositionBindGroup0',() => [
                     {
@@ -314,9 +311,7 @@ export class PickableRenderPass<T extends {
                         },
                         {
                             binding: 2,
-                            resource: {
-                                buffer: this.#mousePositionBuffer!
-                            }
+                            resource: this.#mousePositionBuffer!.getUniformBinding()
                 }]);
 
             } else {
@@ -372,10 +367,10 @@ export class PickableRenderPass<T extends {
         const gRenderTargetDiffuse = this.renderTargets.gRenderTargetDiffuse
         if(gRenderTargetDiffuse instanceof MSAARenderTarget) {
             if(!this.#zAndIDPromise) {
-                const mousePositionSwapBuffer = engine.gpu.createGPUBuffer(8,[GPUBufferUsage.COPY_SRC],true);
-                new Uint32Array(mousePositionSwapBuffer.getMappedRange(0,8)).set([engine.mousePosition[0], engine.mousePosition[1]]);
-                mousePositionSwapBuffer.unmap();
-                encoder.copyBufferToBuffer(mousePositionSwapBuffer,0,this.#mousePositionBuffer!,0,8);
+                const mousePositionSwapBuffer = Buffer.create(engine.gpu,8,[GPUBufferUsage.COPY_SRC], 'mousePositionSwapBuffer', b => {
+                    new Uint32Array(b.getMappedRange(0,8)).set([engine.mousePosition[0], engine.mousePosition[1]]);
+                });
+                mousePositionSwapBuffer.copyTo(encoder,this.#mousePositionBuffer!,0, 0, 8,);
                 const pickPass = encoder.beginComputePass({label:'pickPass'});
                 pickPass.setPipeline(this.#pickPositionPipeline!.pipeline);
                 pickPass.setBindGroup(0, this.#pickPositionBindGroup0!.bindGroup);

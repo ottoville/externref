@@ -3,7 +3,8 @@ import type { Scene } from "../../Scene.js";
 import type { DrawableIndexed } from "../Drawable.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
-import { GPU } from "../../GPU.js";
+import { GPU, GPUBufferUsage } from "../../GPU.js";
+import { Buffer, IndexBuffer, VertexBuffer } from "../../GPU/Buffer.js";
 declare const engine:Engine;
 
 export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
@@ -12,8 +13,8 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
         vBufferCPU: Float32Array,
         indicesView: Uint32Array,
         label:string,
-        iBuffer?: GPUIndexBuffer,
-        vBufferGPU?: GPUVertexBuffer,
+        iBuffer?: IndexBuffer,
+        vBufferGPU?: VertexBuffer,
         point_light=0,
         has_physic = false,
         scenes?: Scene[],
@@ -28,15 +29,15 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
         this.drawable =  GPU.createRenderPipeline(SimpleRenderPipeline, primitiveState
         ).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]))
         if(!vBufferGPU) {
-            vBufferGPU = engine.gpu.device.createBuffer({ usage: GPUBufferUsage.VERTEX, size: vBufferCPU.byteLength, mappedAtCreation: true }) as GPUVertexBuffer;
-            new Float32Array(vBufferGPU.getMappedRange()).set(vBufferCPU);
-            vBufferGPU.unmap();
+            vBufferGPU = Buffer.create(engine.gpu, vBufferCPU.byteLength, [GPUBufferUsage.VERTEX],  'vertex_'+label, b => {
+                new Float32Array(b.getMappedRange()).set(vBufferCPU);    
+            });
         }
         this.drawable.setVertexBuffer(0, vBufferGPU);
         if(!iBuffer) {
-            iBuffer = engine.gpu.device.createBuffer({ usage: GPUBufferUsage.INDEX, size: indicesView.byteLength, mappedAtCreation: true }) as GPUIndexBuffer;
-            new Uint32Array(iBuffer.getMappedRange()).set(indicesView);
-            iBuffer.unmap();
+            iBuffer = Buffer.create(engine.gpu, indicesView.byteLength, [GPUBufferUsage.INDEX],  'index_'+label, b => {
+                new Uint32Array(b.getMappedRange()).set(indicesView);
+            })
         }
         this.drawable.setIndexBuffer(iBuffer, undefined, undefined, indicesView.BYTES_PER_ELEMENT == 4 ? 'uint32' : 'uint16');
 

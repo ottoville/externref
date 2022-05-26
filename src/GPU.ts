@@ -11,6 +11,8 @@ import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import { ComputePipeline } from "./GPU/ComputePipeline.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
 
+import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer } from "./GPU/Buffer.js";
+
 export const GPUBufferUsage = {
     MAP_READ: 0x0001,
     MAP_WRITE: 0x0002,
@@ -24,9 +26,9 @@ export const GPUBufferUsage = {
     QUERY_RESOLVE: 0x0200
 } as const
 
-type CopyBuffers<T> = {
+/*type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
-};
+};*/
 export class GPU {
     static bindMap:WeakMap<GPUBindingResource, BindGroup[]> = new WeakMap();
 
@@ -34,7 +36,6 @@ export class GPU {
     readonly gpu_screen_buffer_size= 16; //screen width and height and ratio
     readonly gpu_max_point_lights=63;
 
-    readonly #bufferSizes: WeakMap<GPUBuffer, number> = new WeakMap();
     readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
     readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
 
@@ -46,9 +47,9 @@ export class GPU {
     projections: Set<Projection> = new Set();
     
     //Todo: Remove COPY_SRC
-    readonly GPUMeshes: GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer;
-    readonly GPUPointLights: GPUStorageBuffer & GPUCopyDSTBuffer;
-    readonly GPUDirectionalLights: GPUStorageBuffer & GPUCopyDSTBuffer;
+    readonly GPUMeshes: CopySrcBuffer & CopyDstBuffer & BindStorageBuffer & BindUniformBuffer
+    readonly GPUPointLights: CopyDstBuffer & BindStorageBuffer & BindUniformBuffer;
+    readonly GPUDirectionalLights:  CopyDstBuffer & BindStorageBuffer
     readonly positionBindGroupTimeWGSL:LayoutGroupDrawable<[GPUBindGroupEntry]>;
 
 
@@ -58,8 +59,8 @@ export class GPU {
 
     readonly BindGroupPosition:GPUBindGroup;
     readonly positionBindGroupTime:PipelineLayout;
-    readonly timeGroup: { binding: number; resource: { buffer: GPUUniformBuffer & GPUCopyDSTBuffer; }; };
-    readonly timeBuffer: GPUUniformBuffer & GPUCopyDSTBuffer;
+    readonly timeGroup: { binding: number; resource: { buffer: GPUBuffer }; };
+    readonly timeBuffer: CopyDstBuffer & BindUniformBuffer
 
     static instance: GPU;
 
@@ -169,29 +170,22 @@ export class GPU {
         this.updateViewPipeline=new ComputePipeline(this,'updateView.comp.wgsl',
             this.device.createPipelineLayout({bindGroupLayouts:[viewLayout.layout, this.viewUniformsLayout]}));
 
-
-        this.GPUMeshes = this.createGPUBuffer(MainNode.alignment /* meshes count etc */ + MainNode.alignment * MainNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC]);
-        this.GPUPointLights = this.createGPUBuffer(this.gpu_max_point_lights*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
-        this.GPUDirectionalLights = this.createGPUBuffer(63*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST])
+        this.GPUMeshes = Buffer.create(this, MainNode.alignment /* meshes count etc */ + MainNode.alignment * MainNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],'GPUMeshes')
+        this.GPUPointLights = Buffer.create(this, this.gpu_max_point_lights*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],'GPUPointLights')
+        this.GPUDirectionalLights = Buffer.create(this, 63*4,[GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],'GPUDirectionalLights')
         
         
         this.updateViewBindGroup=viewLayout.createBindGroup('updateViewBindGroup',[{
             binding: 0,
-            resource: {
-                buffer: this.GPUMeshes,
-            },
+            resource: this.GPUMeshes.getStorageBinding(),
         },
         {
             binding: 1,
-            resource: {
-                buffer: this.GPUPointLights,
-            },
+            resource: this.GPUPointLights.getStorageBinding(),
         },
         {
             binding: 2,
-            resource: {
-                buffer: this.GPUDirectionalLights,
-            },
+            resource: this.GPUDirectionalLights.getStorageBinding(),
         }]);
         this.uniformBindGroupLayoutWithTime  = BindGroupLayout.create(this,
             'uniformBindGroupLayoutWithTime',
@@ -263,11 +257,7 @@ export class GPU {
         this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition',[
             {
                 binding: 0,
-                resource: {
-                    buffer: this.GPUMeshes,
-                    offset: 0,
-                    size: MainNode.GPUDataSize * 4
-                }
+                resource: this.GPUMeshes.getUniformBinding(0, MainNode.GPUDataSize * 4)
             }]);
         this.positionBindGroupTime = this.rootCameralayout.addChildBindGroup('positionBindGroupTime', this.BindGroupPosition, true);
         this.positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout('positionBindGroupTimeWGSL', BindGroupLayoutPosition);
@@ -372,139 +362,12 @@ export class GPU {
         
         this.#DynamicBindGroups.add(this.BindGroupPosition);
         const timeAndDeltaBuffer = new ArrayBuffer(8);
-        this.timeBuffer = this.createGPUBuffer(timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST]);
+        this.timeBuffer = Buffer.create(this, timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],'timeBuffer');
         this.timeGroup = {
             binding: 1,
-            resource: {
-                buffer: this.timeBuffer
-            }
+            resource: this.timeBuffer.getUniformBinding()
         }
         GPU.instance = this;
-    }
-    updateBufferRaw(commandEncoder: GPUCommandEncoder, destination: GPUCopyDSTBuffer, data: ArrayBuffer) {
-        const tempBuffer = this.createGPUBuffer(data.byteLength, [GPUBufferUsage.COPY_SRC], true);
-        new Int8Array(tempBuffer.getMappedRange()).set(new Int8Array(data));
-        tempBuffer.unmap();
-        commandEncoder.copyBufferToBuffer(
-            tempBuffer, 0,
-            destination, 0,
-            data.byteLength);
-    }
-    async updateBuffer(buffer: GPUCopySRCBuffer, destination: GPUCopyDSTBuffer, ...data: (Float32Array | Uint32Array)[]): Promise<GPUCommandBuffer | null> {
-        const size = data.reduce((prev, curr) => prev + curr.byteLength, 0);
-        await buffer.mapAsync(GPUMapMode.WRITE, 0, size);
-        let offset = 0;
-        data.forEach(view => {
-            new Int8Array(buffer.getMappedRange(offset, view.byteLength)).set(new Int8Array(view.buffer, 0, view.byteLength));
-            offset += view.byteLength;
-        });
-        return this.copyBufferToBuffer(buffer, destination, size)
-    }
-    copyBufferToBuffer(buffer: GPUCopySRCBuffer, destination: GPUCopyDSTBuffer, size: number): GPUCommandBuffer {
-        buffer.unmap();
-        const commandEncoder = this.device.createCommandEncoder();
-        commandEncoder.copyBufferToBuffer(
-            buffer, 0,
-            destination, 0,
-            size);
-        return commandEncoder.finish();
-    }
-
-    //uniform
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM], mappedAtCreation?: boolean, label?:string): GPUUniformBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUUniformBuffer & GPUStorageBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean, label?:string): GPUUniformBuffer & GPUCopyDSTBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean, label?:string): GPUUniformBuffer & GPUCopyDSTBuffer & GPUStorageBuffer & GPUCopySRCBuffer
-    //index
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX], mappedAtCreation?: boolean, label?:string): GPUIndexBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean, label?:string): GPUIndexBuffer & GPUCopyDSTBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUIndexBuffer & GPUStorageBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean, label?:string): GPUIndexBuffer & GPUStorageBuffer & GPUCopySRCBuffer
-    //vertex
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.VERTEX], mappedAtCreation?: boolean, label?:string): GPUVertexBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUVertexBuffer & GPUStorageBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean, label?:string): GPUVertexBuffer & GPUCopyDSTBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUVertexBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
-    //indirect
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDIRECT], mappedAtCreation?: boolean, label?:string): GPUIndirectBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.INDIRECT | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.INDIRECT | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean, label?:string): GPUIndirectBuffer & GPUCopyDSTBuffer
-
-    //storage 
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean): GPUStorageBuffer //(can be mapped at creation)
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean, label?:string): GPUStorageBuffer & GPUCopySRCBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean, label?:string): GPUStorageBuffer & GPUCopyDSTBuffer
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean, label?:string): GPUStorageBuffer & GPUCopyDSTBuffer & GPUCopySRCBuffer
-    createGPUBuffer(size: number, usages:[
-        typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC | typeof GPUBufferUsage.VERTEX,
-        typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC | typeof GPUBufferUsage.VERTEX,
-        typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC | typeof GPUBufferUsage.VERTEX,
-        typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC | typeof GPUBufferUsage.VERTEX], mappedAtCreation?: boolean, label?:string): GPUStorageBuffer & GPUCopyDSTBuffer & GPUCopySRCBuffer & GPUVertexBuffer
-
-    //MAP read (Only CopyDst is allowed with MapRead)
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.MAP_READ | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.MAP_READ | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean, label?:string): GPUMapReadBuffer & GPUCopyDSTBuffer
-
-    //MAP write (Only CopySrc is allowed with MapWrite)
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.COPY_SRC | typeof GPUBufferUsage.MAP_WRITE, typeof GPUBufferUsage.COPY_SRC | typeof GPUBufferUsage.MAP_WRITE], mappedAtCreation?: boolean, label?:string): GPUMapWriteBuffer & GPUCopySRCBuffer
-    //copy source for mapped at creation
-    createGPUBuffer(size: number, usages: [typeof GPUBufferUsage.COPY_SRC], mappedAtCreation?: boolean, label?:string): GPUCopySRCBuffer
-
-
-    createGPUBuffer(size: number, usages: number[], mappedAtCreation = false, label?:string): GPUBuffer {
-        if (size === 0)
-            throw (new Error('Cannot create zero sized buffer'));
-        const usage = usages.reduce((prev, curr) => prev | curr, 0);
-        const desc:GPUBufferDescriptor = { usage, size, mappedAtCreation }
-        if(label)
-            desc.label=label;
-        const buff = this.device.createBuffer(desc);
-
-        if (usage & GPUBufferUsage.MAP_READ) {
-            (buff as GPUMapReadBuffer).readAndDestroy = async (callback: (buff: ArrayBuffer) => Promise<void> | void): Promise<void> => {
-                await buff.mapAsync(GPUMapMode.READ);
-                const arrbuff = buff.getMappedRange();
-                await callback(arrbuff);
-                buff.destroy();
-            }
-        }
-        else if (usage & GPUBufferUsage.COPY_SRC)
-            this.#bufferSizes.set(buff, size);
-        return buff;
-    }
-
-    createCopy<T extends GPUCopySRCBuffer[]>(commandEncoder: GPUCommandEncoder, ...buffers: T): CopyBuffers<T> {
-        const readBuffers: (GPUMapReadBuffer & GPUCopyDSTBuffer)[] = [];
-        buffers.forEach(buffer => {
-            let size: number | undefined;
-            if (size = this.#bufferSizes.get(buffer)) {
-                const gpuReadBuffer = this.createGPUBuffer(size, [GPUBufferUsage.COPY_DST, GPUBufferUsage.MAP_READ])
-                readBuffers.push(gpuReadBuffer);
-                commandEncoder.copyBufferToBuffer(
-                    buffer, // source buffer
-                    0, //source offset
-                    gpuReadBuffer, //destination buffer
-                    0, //destination offset
-                    size
-                );
-            }
-            else
-                throw (new Error('Buffer size not found from weakmap'));
-        });
-        return readBuffers as CopyBuffers<T>;
-    }
-
-    createCommandEncoder(descriptor?: GPUCommandEncoderDescriptor): TerraGPUCommandEncoder {
-        const commandEncoder = this.device.createCommandEncoder(descriptor) as TerraGPUCommandEncoder;
-        /*   commandEncoder.finishWithCopy = (callback: (...buff: GPUBuffer[]) => Promise<void>, ...buffers: GPUCopySRCBuffer[]) => {
-               this.createCopyBuffers(commandEncoder, buffers, callback);
-           }*/
-        return commandEncoder;
-    }
-    GPU2CPU(callback: (...buff: (GPUMapReadBuffer & GPUCopyDSTBuffer)[]) => Promise<void>, ...buffers: GPUCopySRCBuffer[]): void {
-        const commandEncoder = this.device.createCommandEncoder();
-        const readBuffers = this.createCopy(commandEncoder, ...buffers);
-        this.device.queue.submit([commandEncoder.finish()]);
-        callback(...readBuffers).finally(() => readBuffers.forEach(gpuReadBuffer => gpuReadBuffer.destroy()));
     }
 
     drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass, index: number) {

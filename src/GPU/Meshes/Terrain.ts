@@ -5,6 +5,7 @@ import type { Engine, rust_pointer } from "../../engine.js";
 import { TerrainRenderPipeline } from "../RenderPipeLines/Terrain.js";
 declare const engine:Engine;
 import { GPU } from "../../GPU.js";
+import type { IndexBuffer, VertexBuffer} from "../../GPU/Buffer.js";
 
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler = engine.gpu.device.createSampler({
@@ -26,8 +27,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
     constructor(
         scenes: Scene[],
         public initialTexture: GPUTextureView,
-        public vBuffer: GPUVertexBuffer,
-        public iBuffer: GPUIndexBuffer,
+        public vBuffer: VertexBuffer,
+        public iBuffer: IndexBuffer,
         vertices: Float32Array,
         indicesView: Uint32Array,
         verticesPositionStride = 3

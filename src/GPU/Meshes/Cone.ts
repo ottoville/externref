@@ -60,7 +60,7 @@ function createCircle(faces = 14, cullMode: -1 | 1 = 1, stride=6) {
 }
 function createCone(faces = 14, stride=6) {
     if(faces%2 !== 0) {
-        throw("Cone must not have odd number of faces");
+        throw(new Error("Cone must not have odd number of faces"));
     }
     const [circleVertices, circleIndices] = createCircle(faces,-1,stride);
     const coneVertices = Array.from(circleVertices);

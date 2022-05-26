@@ -6,7 +6,7 @@ import type { DrawableSimple } from "../GPU/Drawable.js";
 import { MainNode } from "../MainNode.js";
 import type { Trait } from "../traits/trait.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
-import { GPUBufferUsage, type GPU } from "../GPU.js"
+import { type GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
 
 import type { Engine, rust_pointer } from "../engine.js";
@@ -54,10 +54,6 @@ export class TerrainTool extends MainNode {
     traits: Set<Trait> = new Set();
     #canvasListener = new canvasListener(this);
 
-    tempFacet1Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
-    tempFacet2Buffer: (GPUCopySRCBuffer & GPUMapWriteBuffer) | null = null;
-
-    facet12ArrGPUBufferSwap = engine.gpu.createGPUBuffer(Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.MAP_WRITE]);
     elevator: rust_pointer<"elevator">
     drawable: DrawableSimple;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
@@ -129,7 +125,6 @@ export class TerrainTool extends MainNode {
     }
     override destroy = (): void => {
         this.drawable.destroy();
-        this.facet12ArrGPUBufferSwap.destroy();
         this.traits.forEach(trait => trait.destroy());
 
         //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
