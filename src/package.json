@@ -29,7 +29,7 @@
     "@webgpu/types": "0.1.17",
     "esm": "^3.2.25",
     "typescript": "4.7.2",
-    "wasm-opt": "^1.1.1"
+    "wasm-opt": "1.3.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "5.26.0",
