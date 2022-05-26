@@ -92,7 +92,7 @@ export class GPU {
    // readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = [1,1,1];
     viewUniformsLayout: GPUBindGroupLayout;
     readonly uniformBindGroupLayoutWithTime: BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>;
-    readonly presentationFormat: GPUTextureFormat;
+    readonly presentationFormat = navigator.gpu.getPreferredCanvasFormat();
     readonly shaderModules = {} as { [K in keyof typeof shaders]: GPUShaderModule }
     pickRenderPass: RenderPass<{ gRenderTargetId: RenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>; }>;
     sizeBindGroupLayout: BindGroupLayout<[GPUBindGroupEntry]>;
@@ -117,7 +117,7 @@ export class GPU {
         return renderPipeline;
 
     }
-    constructor(public canvas: HTMLCanvasElement, adapter:GPUAdapter, public device: GPUDevice) {
+    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
 
         for(const key in shaders) {
             const k=key as keyof typeof shaders;
@@ -319,8 +319,8 @@ export class GPU {
         const context:GPUCanvasContext | null = canvas.getContext('webgpu');
         if (!context)
             throw (new Error('Unable to get webgpu context'));
-        this.context = context
-        this.presentationFormat = context.getPreferredFormat(adapter);
+        this.context = context;
+        
         context.configure({
             device: device,
             format: this.presentationFormat,

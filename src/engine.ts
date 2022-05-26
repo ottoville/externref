@@ -257,7 +257,7 @@ export class Engine {
                 showError(new Error(e));
         });
 
-        const gpu = new GPU(canvas, adapter, device);
+        const gpu = new GPU(canvas, device);
         //@ts-ignore
         window.printRenderTarget = () => {
             Texture.toBitmap(gpu.pickRenderPass.renderTargets.gRenderTargetId.texture);

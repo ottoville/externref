@@ -26,7 +26,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@webgpu/types": "0.1.16",
+    "@webgpu/types": "0.1.17",
     "esm": "^3.2.25",
     "typescript": "4.7.2",
     "wasm-opt": "^1.1.1"
