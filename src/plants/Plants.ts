@@ -40,7 +40,7 @@ export class Plants {
                     area: area,
                     angle: area.rad
                 })
-        })
+        }).catch(engine.showError)
     }
     constructor(
         scene: Scene,
@@ -128,7 +128,7 @@ export class Plants {
                 indirectBuffer.updateBufferRaw(commandEncoder, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
                 scene.gpu.pendingCommandBuffers.add(commandEncoder.finish())
             });
-        })
+        }).catch(engine.showError)
 
 
         return;

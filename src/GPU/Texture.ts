@@ -1,6 +1,8 @@
 import { RenderPass } from "./RenderPass.js";
 import { GPU } from "../GPU.js";
 import { TextureView } from "./TextureView.js";
+import type { Engine } from "../engine.js";
+declare const engine: Engine;
 
 export type GPUTextureUsageLiterals= 'COPY_SRC' | 'COPY_DST' | 'TEXTURE_BINDING' | 'STORAGE_BINDING' | 'RENDER_ATTACHMENT';
 
@@ -151,7 +153,7 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
                         buffer.destroy();
                     },"image/jpeg",0.96);
                     
-                });
+                }).catch(engine.showError);
                 setTimeout(() => {
                     //this.#debug = false;
                     texture.createTexture(1);

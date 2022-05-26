@@ -59,7 +59,7 @@ export class Zones extends UITAB {
         texture.height=5120;
         const ctx = texture.getContext('2d');
         if (!ctx)
-            throw ('getting 2d context failed');
+            throw (new Error('getting 2d context failed'));
         ctx.beginPath();
         ctx.fillStyle = "yellow";
         ctx.fillRect(0, 0, 5120, 5120);

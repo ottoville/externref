@@ -331,7 +331,7 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
         this.indices.forEach((indice: number) => {
             const position = this.colliderVerticesV4[indice]
             if (typeof(position) === 'undefined') {
-                throw ('position ' + indice + ' not found');
+                throw (new Error('position ' + indice + ' not found'));
             }
             this.pushVertice(position)
         });

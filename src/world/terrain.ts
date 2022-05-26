@@ -444,7 +444,7 @@ TODO
                     this.serialize();
                 });
             })
-        })
+        }).catch(engine.showError)
     }
     /*
     #ratioX = Terrain.subdivisionsX / this.width;

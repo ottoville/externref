@@ -293,7 +293,7 @@ export class ColliderJS {
                 // for (let i = 0; i < 3; i++) {
                 const p = vectors[i];
                 if (!p) {
-                    throw('no vector found '+p)
+                    throw(new Error('no vector found '+p))
                 }
 
                 this.#tempVector[0] = scaledPosition[0] - p[0];

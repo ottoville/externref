@@ -32,7 +32,7 @@ export class PlantsUI extends UITAB {
     ) {
         super(terrain);
         if(!this.scene) {
-            throw('no scene');
+            throw(new Error('no scene'));
         }
     }
     activateDraw = () => {

@@ -32,6 +32,8 @@ const methods = {
             if (cachedgrass) {
                 this.postMessage({ type: 'updated', buffer: await cachedgrass.arrayBuffer() });
             }
+        }).catch(e => {
+            console.error('Error in web worker', e)
         })
     },
     growMemory: (size: number) => {

@@ -249,6 +249,12 @@ export class Engine {
             throw (new Error('no GPU device'));
         device.lost.then(reason => {
             console.error('GPU device lost', reason);
+        }).catch((e) => {
+            //TODO do this when device lost is handled properly
+            if(e instanceof Error)
+                showError(e)
+            else
+                showError(new Error(e));
         });
 
         const gpu = new GPU(canvas, adapter, device);

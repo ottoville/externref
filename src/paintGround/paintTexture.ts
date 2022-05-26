@@ -32,10 +32,10 @@ export class paintTexture extends paintGround {
     }
     onAreaDraw(width: number) {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {
-            throw ('onAreaDraw non numeric width or height');
+            throw (new Error('onAreaDraw non numeric width or height'));
         }
         if (this.ang360.rad < 0) {
-            throw ('onAreaDraw negative angle not supported');
+            throw (new Error('onAreaDraw negative angle not supported'));
         }
         this.drawSubImage(width, this.height, this.ang360.rad)
     }
@@ -71,7 +71,7 @@ export class paintTexture extends paintGround {
 
         const ctx = c.getContext("2d");
         if (!ctx)
-            throw ('cannot get 2D context');
+            throw (new Error('cannot get 2D context'));
 
         let imageData = ctx.createImageData(c.width, c.height);
 

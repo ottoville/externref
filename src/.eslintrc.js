@@ -18,6 +18,7 @@ module.exports = {
     },
     plugins: [
         '@typescript-eslint',
+        "promise"
     ],
     extends: [
         'eslint:recommended',
@@ -29,6 +30,7 @@ module.exports = {
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/no-shadow": ["error"],
         "@typescript-eslint/no-explicit-any": ["error"],
+        "promise/catch-or-return": "error",
         "no-var": "off",
         "no-cond-assign": "off",
         "no-this-alias":"off",

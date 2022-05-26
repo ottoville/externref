@@ -135,7 +135,7 @@ export class ArcRotateCamera extends CameraController {
                     this.#targetMovingTo = position.position;
                     this.#targetLerpPosition = 0;
                 }
-            })
+            }).catch(engine.showError)
         }
         engine.canvas.addEventListener('pointermove', this.#cameraMove);
         engine.canvas.addEventListener('pointerup', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove), { once: true });
