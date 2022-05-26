@@ -55,12 +55,10 @@ export class Canvas extends TerraCompoment {
     currentGameTime = 0;
     menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
     showError() {
-        //@ts-expect-error
         if(!this.#errorDialog.open) {
             const e=errors.shift();
             if(e) {
                 this.#errorDialog.textContent = e.name + ', ' + e.message;
-                //@ts-expect-error
                 this.#errorDialog.showModal();
             }
         }
@@ -101,7 +99,7 @@ export class Canvas extends TerraCompoment {
             this.progress = 100;
             return ready;
         });
-        //@ts-ignore
+        //@ts-expect-error
         const debugscene = new Scene('static', terraEngine.gpu, [engine.mainCamera], (scene) => {
             const sun = new Light(scene);
             sun.translation.set([0, 1, 0]);
