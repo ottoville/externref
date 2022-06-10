@@ -5,9 +5,9 @@ import { BoundingBoxPipeline } from "../../RenderPipeLines/Boundingbox.js";
 import { GPU } from "../../../GPU.js";
 
 export class BoundingBoxMesh extends MainNode {
-    drawable:DrawableSimple;
+    drawable: DrawableSimple | undefined;
     constructor() {         
         super(26,undefined,undefined,undefined,'BoundingBoxDebug');
-        this.drawable=GPU.createRenderPipeline(BoundingBoxPipeline,{ topology: 'line-strip', stripIndexFormat:'uint32' }).addDrawableSimple(this,undefined,undefined,undefined);
+        this.drawable = GPU.createRenderPipeline(BoundingBoxPipeline,{ topology: 'line-strip', stripIndexFormat:'uint32' })?.addDrawableSimple(this,undefined,undefined,undefined);
     }
 }

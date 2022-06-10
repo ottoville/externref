@@ -18,7 +18,7 @@ export abstract class Drawable {
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
     constructor(
         protected renderPipeline: Readonly<RenderPipeline>,
-        private renderPasses: Set<RenderPass> = new Set([engine.gpu.renderPassScreen])) {
+        private renderPasses: Set<RenderPass> = new Set([engine.gpu!.renderPassScreen])) {
             this.renderPasses.forEach(rp => {
                 const variant = rp.getVariant(this.renderPipeline);
                 this.#renderList.set(rp, variant.rootDrawables.add(this));
@@ -114,7 +114,7 @@ abstract class DrawableDirect extends Drawable {
             })
         });
         const mesh = new NormalsMesh(this.node.positions_count*2)
-        mesh.drawable.setVertexBuffer(0,debug_render_normals_vertexBuffer)
+        mesh.drawable!.setVertexBuffer(0,debug_render_normals_vertexBuffer)
     }
     debug_bounding_box() {
         const vectors_simd=new Float32Array(engine.memory.buffer, engine.rust.bounding_vectors_pointer_simd(this.node.ptr), 3*4*2);
@@ -155,7 +155,7 @@ abstract class DrawableDirect extends Drawable {
             view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 7*4*Float32Array.BYTES_PER_ELEMENT,4),25*4);
         });
         const mesh = new BoundingBoxMesh();
-        mesh.drawable.setVertexBuffer(0,debug_render_boundingbox_vertexBuffer)
+        mesh.drawable!.setVertexBuffer(0,debug_render_boundingbox_vertexBuffer)
     }
     set instanceCount(count: number) {
         if (count === this.#instanceCount)

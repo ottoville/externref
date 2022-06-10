@@ -8,14 +8,11 @@ import { GPU } from "../../GPU.js";
 import type { IndexBuffer, VertexBuffer} from "../../GPU/Buffer.js";
 
 export class TerrainMesh extends BoundableNodeIndexed {
-    sampler = engine.gpu.device.createSampler({
-        magFilter: "linear",
-        minFilter: "linear",
-    })
+    sampler: GPUSampler | undefined;
     setTextureView = (textureview: GPUTextureView) => {
-        this.drawable.setStaticBuffer(this.sampler, textureview);
+        this.drawable!.setStaticBuffer(this.sampler!, textureview);
     }
-    drawable:DrawableIndexed;
+    drawable: DrawableIndexed | undefined;
     override create_collider(): rust_pointer<"collider"> {
         return engine.rust.create_trimesh_collider(this.ptr);
     }
@@ -34,11 +31,17 @@ export class TerrainMesh extends BoundableNodeIndexed {
         verticesPositionStride = 3
     ) {
         super(vertices, verticesPositionStride, indicesView, true, undefined, undefined, true, 'terrain', scenes, undefined, true, false);
-        this.drawable = GPU.createRenderPipeline(TerrainRenderPipeline).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]), undefined, 0, 1);
-        //@ts-expect-error
-        window.debugTerrain=() => this.drawable.debug_render_normals(this);
-        this.drawable.setStaticBuffer(this.sampler, initialTexture);
-        this.drawable.setVertexBuffer(0, this.vBuffer);
-        this.drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
+        if(engine.gpu) {
+            this.sampler = engine.gpu.device.createSampler({
+                magFilter: "linear",
+                minFilter: "linear",
+            });
+            this.drawable = GPU.createRenderPipeline(TerrainRenderPipeline)?.addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]), undefined, 0, 1);
+            //@ts-expect-error
+            window.debugTerrain=() => this.drawable.debug_render_normals(this);    
+            this.drawable!.setStaticBuffer(this.sampler, initialTexture);
+            this.drawable!.setVertexBuffer(0, this.vBuffer);
+            this.drawable!.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
+        }
     }
 }

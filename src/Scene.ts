@@ -13,7 +13,7 @@ export class Scene {
         sceneID<<=1;
         engine.scenes.set(name, this);
         TerraCameras.forEach(camera => {
-            camera.renderPass.scenes.add(this);
+            camera.renderPass?.scenes.add(this);
         })
 
         const groundAndSea = onRenderStart(this);

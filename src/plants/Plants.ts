@@ -28,7 +28,7 @@ export class Plants {
         radius: 86
     }
     //private offset: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 2 * this.numBlades);
-    private worker = new WorkerThread('/js/workers/webworkers/grass.js');
+    private worker = new WorkerThread('grass.js');
     private ready: Promise<void>;
     public fillArea(area: PTDresult) {
         //let amount = 100000
@@ -47,25 +47,26 @@ export class Plants {
         terrainP: Promise<Terrain>,
     ) {
         const indirectBuffer = Buffer.create(scene.gpu,4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST],'indirectBuffer');
-        const drawable = GPU.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }).addDrawableIndirect(indirectBuffer, 'Plants')
+        const drawable = GPU.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' })?.addDrawableIndirect(indirectBuffer, 'Plants')
         const positionGPU = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'positionGPU');
         const shapeGPU = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'shapeGPU');
 
 
         const positionGPUSwap = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE], 'positionGPUSwap');
         const shapeGPUSwap = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE],'shapeGPUSwap');
-        drawable.setVertexBuffer(0, positionGPU)
-        drawable.setVertexBuffer(1, shapeGPU);
-        drawable.setVertexBuffer(2, new Float32Array([
-            0.02, 0.0,
-            -0.02, 0.0,
-            0.014, 0.29,
-            -0.014, 0.29,
-            0.007, 0.57,
-            -0.007, 0.57,
-            0.0, 1.0
-        ]));
-
+        if(drawable) {
+            drawable.setVertexBuffer(0, positionGPU)
+            drawable.setVertexBuffer(1, shapeGPU);
+            drawable.setVertexBuffer(2, new Float32Array([
+                0.02, 0.0,
+                -0.02, 0.0,
+                0.014, 0.29,
+                -0.014, 0.29,
+                0.007, 0.57,
+                -0.007, 0.57,
+                0.0, 1.0
+            ]));
+        }
 
         const shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * this.numBlades);
         const noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
@@ -77,7 +78,7 @@ export class Plants {
         });
         terrainP.then(terrain => {
 
-            const computePipeline = new ComputePipeline(engine.gpu, "grass/getHeightAtCoordinates.comp.wgsl");
+            const computePipeline = new ComputePipeline(engine.gpu!, "grass/getHeightAtCoordinates.comp.wgsl");
             const layout = computePipeline.pipeline.getBindGroupLayout(0);
             const bindGroup = scene.gpu.device.createBindGroup({
                 layout, entries: [

@@ -51,34 +51,34 @@ export class Buffer {
  //   readonly INDIRECT?: boolean;
     readonly QUERY_RESOLVE?: boolean
     //uniform
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): BindUniformBuffer
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.STORAGE], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): BindUniformBuffer & BindStorageBuffer
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST], label:string, mappedAtCreation?: (buff: GPUBuffer) => void):  CopyDstBuffer & BindUniformBuffer
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], label:string, mappedAtCreation?: (buff: GPUBuffer) => void):CopyDstBuffer & BindUniformBuffer & BindStorageBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): BindUniformBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.STORAGE], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): BindUniformBuffer & BindStorageBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void):  CopyDstBuffer & BindUniformBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void):CopyDstBuffer & BindUniformBuffer & BindStorageBuffer
     
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): copySrcBuffer & CopyDstBuffer & BindUniformBuffer & BindStorageBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): copySrcBuffer & CopyDstBuffer & BindUniformBuffer & BindStorageBuffer
    
     //index
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.INDEX], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): IndexBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.INDEX], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): IndexBuffer
     /* static create(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.COPY_DST], mappedAtCreation?: boolean, label?:string): GPUIndexBuffer & GPUCopyDSTBuffer
     static create(size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUIndexBuffer & GPUStorageBuffer
     */
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): copySrcBuffer & BindStorageBuffer & IndexBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.INDEX | typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): copySrcBuffer & BindStorageBuffer & IndexBuffer
     //vertex
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.VERTEX], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): VertexBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.VERTEX], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): VertexBuffer
    /* static create(size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUVertexBuffer & GPUStorageBuffer
-  */static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): CopyDstBuffer & VertexBuffer
+  */static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): CopyDstBuffer & VertexBuffer
    /* static create(size: number, usages: [typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.VERTEX | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.STORAGE], mappedAtCreation?: boolean, label?:string): GPUVertexBuffer & GPUCopyDSTBuffer & GPUStorageBuffer
     //indirect
     static create(size: number, usages: [typeof GPUBufferUsage.INDIRECT], mappedAtCreation?: boolean, label?:string): GPUIndirectBuffer
     */
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.INDIRECT | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.INDIRECT | typeof GPUBufferUsage.COPY_DST], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): CopyDstBuffer & IndirectBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.INDIRECT | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.INDIRECT | typeof GPUBufferUsage.COPY_DST], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): CopyDstBuffer & IndirectBuffer
 
     //storage 
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.STORAGE], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): BindStorageBuffer //(can be mapped at creation)
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): copySrcBuffer & BindStorageBuffer
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): CopyDstBuffer & BindStorageBuffer
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC], label:string, mappedAtCreation?: (buff: GPUBuffer) => void): copySrcBuffer & CopyDstBuffer & BindStorageBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.STORAGE], label:string,mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): BindStorageBuffer //(can be mapped at creation)
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_SRC], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): copySrcBuffer & BindStorageBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): CopyDstBuffer & BindStorageBuffer
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC, typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): copySrcBuffer & CopyDstBuffer & BindStorageBuffer
     static create(gpu: GPU, size: number, usages:[
         typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC | typeof GPUBufferUsage.VERTEX,
         typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC | typeof GPUBufferUsage.VERTEX,
@@ -86,8 +86,8 @@ export class Buffer {
         typeof GPUBufferUsage.STORAGE | typeof GPUBufferUsage.COPY_DST | typeof GPUBufferUsage.COPY_SRC | typeof GPUBufferUsage.VERTEX], label:string, mappedAtCreation?: (buff: GPUBuffer) => void):  copySrcBuffer & CopyDstBuffer & BindStorageBuffer & VertexBuffer
 
     //copy source for mapped at creation
-    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.COPY_SRC], label:string, mappedAtCreation: (buff: GPUBuffer) => void): copySrcBuffer
-    static create(gpu: GPU, size: number, usages: number[], label:string, mappedAtCreation?:(buff: GPUBuffer) => void) {
+    static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.COPY_SRC], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): copySrcBuffer
+    static create(gpu: GPU, size: number, usages: number[], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void) {
         let b:Buffer;
         if(usages.includes(GPUBufferUsage.COPY_SRC)) {
             b = new copySrcBuffer(gpu, size, usages, typeof mappedAtCreation !== "undefined");
@@ -96,7 +96,7 @@ export class Buffer {
             b = new Buffer(gpu, size, usages, typeof mappedAtCreation !== "undefined", label)
         }
         if(mappedAtCreation) {
-            mappedAtCreation(b.buffer);
+            mappedAtCreation(b.buffer, gpu);
             b.buffer.unmap();
         }
         return b;

@@ -22,11 +22,8 @@ import { ComputePipeline } from "./GPU/ComputePipeline.js";
 import { Buffer } from "./GPU/Buffer.js";
 
 declare const engine:Engine;
-let curSecond = 0;
-let framecount = 0;
 //@ts-ignore
 window.fps = 0;
-let GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
 export type rust_pointer<T> = {
     __brand:T
 } & number
@@ -189,14 +186,20 @@ export class Engine {
     readonly #destinationPoint: [number, number, number] = [0, 0, 0];
     readonly #displacementVector: [number, number, number] = [0, 0, 0];
 
-    #updateLights = false;
+    updateLights = false;
     inputManager: CameraController | null = null
-    #renderFrame = 0;
+    renderFrame = 0;
     readonly mainCamera: TerraCamera<PickableRenderPass>;
     memory: WebAssembly.Memory;
-    static async initEngine(canvas: HTMLCanvasElement, showError: (e: Error) => void): Promise<Engine> {
+    static async initEngine(canvas: HTMLCanvasElement | undefined, showError: (e: Error) => void): Promise<Engine | void> {
         const DB = new Promise<EarthDatabase>(function (res) {
             var IDB = indexedDB.open("City", 6);
+            IDB.onerror=function(e) {
+                if(e instanceof Error)
+                    showError(e);
+                else 
+                    showError(new Error(e.toString()));
+            }
             IDB.onupgradeneeded = function (e) {
                 console.log('IDBVersionChangeEvent',e);
                 // Save the IDBDatabase interface 
@@ -229,9 +232,9 @@ export class Engine {
             }
         })
 
-        if (!window.navigator.gpu)
-            throw (new Error('no webgpu support'));
-
+        if (!window.navigator.gpu) {
+            return showError(new Error('no webgpu support'));
+        }
 
         const adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }).then(GPUAdapter => {
             if(!GPUAdapter) {
@@ -241,12 +244,13 @@ export class Engine {
             return GPUAdapter;
         })
         if(!adapter) {
-            throw (new Error('Failed to get adapter'));
+            return showError (new Error('Failed to get adapter'));
         }
         const device = await adapter.requestDevice();
         //this.progress = 5;
         if (!device)
-            throw (new Error('no GPU device'));
+            return showError (new Error('no GPU device'));
+
         device.lost.then(reason => {
             console.error('GPU device lost', reason);
         }).catch((e) => {
@@ -256,19 +260,21 @@ export class Engine {
             else
                 showError(new Error(e));
         });
-
-        const gpu = new GPU(canvas, device);
-        //@ts-ignore
-        window.printRenderTarget = () => {
-            Texture.toBitmap(gpu.pickRenderPass.renderTargets.gRenderTargetId.texture);
-        }
-        //@ts-ignore
-        window.printRenderTarget2 = () => {
-            Texture.toBitmap(gpu.renderPassScreen.depthTexture);
-        }
-        //@ts-ignore
-        window.printRenderTarget3 = () => {
-            Texture.toBitmap(gpu.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture)
+        let gpu: GPU | undefined = undefined;
+        if(canvas) {
+            gpu = new GPU(canvas, device);
+            //@ts-ignore
+            window.printRenderTarget = () => {
+                Texture.toBitmap(gpu!.pickRenderPass.renderTargets.gRenderTargetId.texture);
+            }
+            //@ts-ignore
+            window.printRenderTarget2 = () => {
+                Texture.toBitmap(gpu!.renderPassScreen.depthTexture);
+            }
+            //@ts-ignore
+            window.printRenderTarget3 = () => {
+                Texture.toBitmap(gpu!.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture)
+            }
         }
         const map = new Map<number, number>();
         const dataSizeBytes = MainNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
@@ -283,37 +289,41 @@ export class Engine {
                     engine.update_directional_lights(pointer, length)
                 },
                 handle_gpu_queue:(pointerVec:number, length:number) => {
-                    GPUQueueCommandEncoder=gpu.device.createCommandEncoder();
+                    if(!gpu)
+                        return;
+                    gpu.GPUQueueCommandEncoder=gpu.device.createCommandEncoder();
                     const pointers_to_gpumesh_and_alignment = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
                     for (let i = 0; i < pointers_to_gpumesh_and_alignment.length; i += 2) {
                         map.set(pointers_to_gpumesh_and_alignment[i]!, pointers_to_gpumesh_and_alignment[i + 1]!);
                     }
                     let tempOffset = 0;
 
-                    Buffer.create(gpu, dataSizeBytes * map.size, [GPUBufferUsage.COPY_SRC],'handle_gpu_queue', tempBuffer => {
+                    Buffer.create(gpu, dataSizeBytes * map.size, [GPUBufferUsage.COPY_SRC],'handle_gpu_queue', (tempBuffer, gpu2) => {
                         map.forEach((alignment, gpumeshPointer) => {
                             const data = new Float32Array(engine.memory.buffer, gpumeshPointer, MainNode.GPUDataSize);
                             //Point light
                             if (data[29]! > 0) {
-                                engine.#updateLights = true;
+                                engine.updateLights = true;
             
                             }
                             new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
-                            gpu.GPUMeshes.copyFrom(GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * dataSizeBytes, gpu.gpu_memory_index_size + alignment * 256, dataSizeBytes)
+                            gpu2.GPUMeshes.copyFrom(gpu!.GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * dataSizeBytes, gpu2.gpu_memory_index_size + alignment * 256, dataSizeBytes)
 
                         });
                         map.clear();
-                        engine.gpu.tempGPUBuffers.add(tempBuffer);    
+                        gpu2.tempGPUBuffers.add(tempBuffer);    
                     });
                 },
                 //TODO: Queue this call and do it only once per frame
                 updateAllocatedMemory(allocated_gpu_memory_ptr:number, length:number) {
-                    const renderEncoder = engine.gpu.device.createCommandEncoder();
+                    if(!gpu)
+                        return;
+                    const renderEncoder = gpu.device.createCommandEncoder();
                     const buffLength = Uint32Array.BYTES_PER_ELEMENT * length;
                     const tempBuffer = Buffer.create(gpu, buffLength, [GPUBufferUsage.COPY_SRC],'tempBuffer', tempBuffer2 => {
                         new Uint32Array(tempBuffer2.getMappedRange(0, buffLength)).set(new Uint32Array(engine.rust.memory.buffer, allocated_gpu_memory_ptr, length));
                     });
-                    tempBuffer.copyTo(renderEncoder, engine.gpu.GPUMeshes,0, 0, buffLength);
+                    tempBuffer.copyTo(renderEncoder, gpu.GPUMeshes,0, 0, buffLength);
                 },
                 now() {
                     return performance.now()
@@ -330,7 +340,7 @@ export class Engine {
             }
         });
         if(!rust.instance.exports.memory) {
-            throw(new Error('No memory exported'));
+            return showError(new Error('No memory exported'));
         }
         const obj = await WebAssembly.instantiateStreaming(await fetch('collider/colliderSimdO.wasm'), {
             console: {
@@ -353,81 +363,8 @@ export class Engine {
         this.inputManager = new ArcRotateCamera(this.mainCamera, initial);
         //this.inputManager = new PositionCamera(this.mainCamera,initial);
     }
-    readonly #timeAndDeltaBuffer = new ArrayBuffer(8);
-    readonly #timeView = new Uint32Array(this.#timeAndDeltaBuffer, 0, 1);
-    readonly deltaView = new Float32Array(this.#timeAndDeltaBuffer, 4, 1);
     readonly cameras:Set<TerraCamera>=new Set();
-    readonly #renderLoop = (time: DOMHighResTimeStamp) => {
-        //msPerFrame = performance.now() - startTime;
-        //startTime = performance.now();
-
-        const nowSecond = (Date.now() / 500) | 0;
-        if (nowSecond !== curSecond) {
-            //@ts-ignore
-            window.fps = framecount * 2;
-            curSecond = nowSecond;
-            framecount = 0;
-        }
-        framecount++;
-        //performance.mark('renderloopStart');
-
-
-
-        GPUQueueCommandEncoder=null;
-        engine.rust.renderloop();
-        //@ts-ignore bug in TS
-        const commandBuff= GPUQueueCommandEncoder?.finish() ?? null;
-        if(commandBuff)
-            this.gpu.pendingCommandBuffers.add(commandBuff);
-
-        if (this.inputManager?.checkInputs()) {
-            if(this.inputManager.calculateCameraPositionAndTarget)
-            this.inputManager.calculateCameraPositionAndTarget();
-        }
-
-        const renderEncoder = this.gpu.device.createCommandEncoder();
-
-        this.#timeView.set([time]);
-        let physicDelta: number | null;
-        if (this.physics.gameSpeed == -1)
-            physicDelta = null;
-        else
-            physicDelta = (this.physics.physicTime - this.physics.tickTime) / ((this.physics.tickIntervalMs))
-
-        if (physicDelta !== null)
-            this.deltaView.set([physicDelta]);
-
-        this.gpu.timeBuffer.write(0, this.#timeAndDeltaBuffer);
-        try {
-            this.cameras.forEach(camera => {
-                camera.updateView(renderEncoder)
-            })
-            const lightPass = renderEncoder.beginComputePass();
-            lightPass.setPipeline(this.gpu.updateViewPipeline.pipeline);
-            lightPass.setBindGroup(0, this.gpu.updateViewBindGroup);
-            this.cameras.forEach(camera => {
-                if(camera.viewUpdated || this.#updateLights) {
-                    camera.viewUpdated=false;
-                    lightPass.setBindGroup(1, camera.updateViewBindGroup.bindGroup);
-                    lightPass.dispatchWorkgroups(...this.gpu.CLUSTER_DISPATCH_SIZE);
-                }
-            });
-            lightPass.end();
-            this.#updateLights = false;
-
-            this.gpu.renderPasses.forEach(renderPass => {
-                renderPass.render(renderEncoder)
-            })
-        } catch (e) {
-            console.error(e);
-        }
-
-        this.gpu.pendingCommandBuffers.add(renderEncoder.finish())
-        this.gpu.device.queue.submit(this.gpu.pendingCommandBuffers);
-        this.gpu.pendingCommandBuffers.clear();
-        this.gpu.tempGPUBuffers.forEach(buff => buff.destroy())
-        this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
-    }
+    
     showError(e:unknown) {
         if(!(e instanceof Error)) {
             this.showErrorError(new Error('Unknown error ' + e));
@@ -439,9 +376,9 @@ export class Engine {
 
     }
     constructor(
-        public gpu: GPU,
+        public gpu: GPU | undefined,
         public DB: EarthDatabase,
-        public canvas: HTMLCanvasElement,
+        public canvas: HTMLCanvasElement | undefined,
         public wasm: ColliderWasm,
         public rust: rustWasm,
         public showErrorError: (e: Error) => void
@@ -449,8 +386,9 @@ export class Engine {
         this.physics = new Physics(this);
         this.memory = rust.memory;
         window.engine = this;
-        this.mainCamera = new TerraCamera(gpu.renderPassScreen, new Projection(gpu), gpu);
-        gpu.pickRenderPass.cameras.add(this.mainCamera)
+        this.mainCamera = new TerraCamera(gpu?.renderPassScreen, new Projection(gpu), gpu);
+        if(gpu)
+            gpu.pickRenderPass.cameras.add(this.mainCamera)
 
         this.collider = new ColliderJS(rust);
         this.attachCameraInput(true);
@@ -471,50 +409,51 @@ export class Engine {
             engine.rust.scaled_velocity_pointer(this.collider.collider_ptr),
             engine.rust.scaled_position_pointer(this.collider.collider_ptr))
 
-
-        //this.colliderWASM.getLowestRoot = wasm.getLowestRoot;
-        canvas.addEventListener('pointermove', (e) => {
-            Atomics.store(this.mousePosition, 0, e.clientX * gpu.scale.x)
-            Atomics.store(this.mousePosition, 1, e.clientY * gpu.scale.y)
-            Atomics.notify(new Int32Array(this.#mousePositionBuffer), 0);
-        });
+        let computePipelineClusters: ComputePipeline | undefined;
+        let computePipelineClustersLayout: GPUBindGroupLayout | undefined;
+        if(gpu && canvas) {
+            canvas.addEventListener('pointermove', (e) => {
+                Atomics.store(this.mousePosition, 0, e.clientX * gpu.scale.x)
+                Atomics.store(this.mousePosition, 1, e.clientY * gpu.scale.y)
+                Atomics.notify(new Int32Array(this.#mousePositionBuffer), 0);
+            });
+            computePipelineClustersLayout = gpu.device.createBindGroupLayout({label: 'computePipelineClustersLayout', entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type: 'storage'
+                    }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type: 'uniform'
+                    }
+                }
+            ]})
+            computePipelineClusters       = new ComputePipeline(gpu,'clusters.comp.wgsl',
+            gpu.device.createPipelineLayout({
+                bindGroupLayouts:[gpu.sizeBindGroupLayout.layout, computePipelineClustersLayout]
+            }));
+        }
         let resizeHandler = 0;
         const maxResolution = {
             width: 1920,
             height: 1080
         }
-        const computePipelineClustersLayout = gpu.device.createBindGroupLayout({label: 'computePipelineClustersLayout', entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.COMPUTE,
-                buffer: {
-                    type: 'storage'
-                }
-            },
-            {
-                binding: 1,
-                visibility: GPUShaderStage.COMPUTE,
-                buffer: {
-                    type: 'uniform'
-                }
-            }
-        ]})
-        const computePipelineClusters       = new ComputePipeline(gpu,'clusters.comp.wgsl',
-        gpu.device.createPipelineLayout({
-            bindGroupLayouts:[gpu.sizeBindGroupLayout.layout, computePipelineClustersLayout]
-        }));
-
-        if(!canvas.parentElement) {
-            throw new Error('Canvas must have parent element');
-        }
         const ro = new window.ResizeObserver(entries => {
             const entry = entries[0];
             if (!entry)
                 return;
-            window.cancelAnimationFrame(this.#renderFrame)
+            window.cancelAnimationFrame(this.renderFrame)
             clearTimeout(resizeHandler);
             resizeHandler = setTimeout(() => {
                 try {
+                    if(!gpu || !canvas) {
+                        return;
+                    }
                     const aspectRatio = entry.contentRect.width / entry.contentRect.height
                     canvas.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
 
@@ -535,7 +474,7 @@ export class Engine {
                     })
                     const commandEncoder = gpu.device.createCommandEncoder();
                     const passEncoder = commandEncoder.beginComputePass();
-                    passEncoder.setPipeline(computePipelineClusters.pipeline);
+                    passEncoder.setPipeline(computePipelineClusters!.pipeline);
                     
                     gpu.projections.forEach(projection => projection.update(aspectRatio))
 
@@ -543,21 +482,28 @@ export class Engine {
                         renderPass.resize(canvas.width, canvas.height);
                         passEncoder.setBindGroup(0, renderPass.sizeBindGroup());
                         renderPass.cameras.forEach(camera => {
-                            camera.updateProjection(passEncoder,computePipelineClustersLayout)
+                            camera.updateProjection(passEncoder,computePipelineClustersLayout!)
                         });
                     });
                     passEncoder.end();
                     gpu.device.queue.submit([commandEncoder.finish()]);
 
-                    this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
+                    this.renderFrame = window.requestAnimationFrame(gpu.renderLoop);
                 } catch(e) {
                     this.showError(e);
                 }
             }, 500)
         });
-        ro.observe(canvas.parentElement)
+        if(canvas) {
+            if(!canvas.parentElement) {
+                throw new Error('Canvas must have parent element');
+            }
+            ro.observe(canvas.parentElement);
+        }
     }
     update_point_lights(pointer:number, length:number) {
+        if(!this.gpu)
+            return
         const lights = new Uint32Array(this.memory.buffer, pointer, length);
         const commandEncoder = this.gpu.device.createCommandEncoder();
         //TODO: Potential buffer overflow
@@ -571,6 +517,8 @@ export class Engine {
         this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
     update_directional_lights(pointer:number, length:number) {
+        if(!this.gpu)
+            return
         const lights = new Uint32Array(this.memory.buffer, pointer, length);
         const commandEncoder = this.gpu.device.createCommandEncoder();
         //TODO: Potential buffer overflow

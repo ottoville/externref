@@ -10,9 +10,9 @@ export class Projection {
     readonly #fov=0.4;
     readonly farPlane = 100000;
     readonly nearPlane = 1;
-    gpuBuffer: BindUniformBuffer;
+    gpuBuffer: BindUniformBuffer | undefined;
 
-    constructor(private gpu:GPU) {
+    constructor(private gpu?:GPU) {
         this.gpuBuffer=this.update(1, true);
     }
     update(aspectRatio:number, initial=false) {
@@ -31,22 +31,25 @@ export class Projection {
            0.0, 0.0, this.farPlane * nf, -1.0,
            0.0, 0.0, this.farPlane * this.nearPlane * nf, 0.0,
        ]);
-        if(!initial)
+
+        if(!initial && this.gpuBuffer)
             this.gpuBuffer.destroy();
-        this.gpuBuffer = Buffer.create(this.gpu, 64+64+64+8+4+4+4+4, [GPUBufferUsage.UNIFORM],  'uniform_projection', b => {
-            const gpuBuffer = b.getMappedRange();
-            this.projectionReversedZ.invertToRef(new TerraMatrix(gpuBuffer));
-            new TerraMatrix(gpuBuffer,64).set(this.projectionReversedZ);
-            this.reversedProjectionFarPlane.invertToRef(new TerraMatrix(gpuBuffer,128));
-            new Float32Array(gpuBuffer, 192,6).set([
-                this.nearPlane,
-                this.farPlane,
-                this.nearPlane*this.farPlane,
-                this.farPlane-this.nearPlane,
-                this.gpu.clustersInRow[2] / Math.log2(this.farPlane / this.nearPlane), //sliceScale
-                -(this.gpu.clustersInRow[2] * Math.log2(this.nearPlane) / Math.log2(this.farPlane / this.nearPlane)) //sliceBias
-            ]);
-        });
+        if(this.gpu) {
+            this.gpuBuffer = Buffer.create(this.gpu, 64+64+64+8+4+4+4+4, [GPUBufferUsage.UNIFORM],  'uniform_projection', b => {
+                const gpuBuffer = b.getMappedRange();
+                this.projectionReversedZ.invertToRef(new TerraMatrix(gpuBuffer));
+                new TerraMatrix(gpuBuffer,64).set(this.projectionReversedZ);
+                this.reversedProjectionFarPlane.invertToRef(new TerraMatrix(gpuBuffer,128));
+                new Float32Array(gpuBuffer, 192,6).set([
+                    this.nearPlane,
+                    this.farPlane,
+                    this.nearPlane*this.farPlane,
+                    this.farPlane-this.nearPlane,
+                    this.gpu!.clustersInRow[2] / Math.log2(this.farPlane / this.nearPlane), //sliceScale
+                    -(this.gpu!.clustersInRow[2] * Math.log2(this.nearPlane) / Math.log2(this.farPlane / this.nearPlane)) //sliceBias
+                ]);
+            });
+        }
         return this.gpuBuffer;
    }
 }

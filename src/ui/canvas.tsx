@@ -36,7 +36,7 @@ class CanvasMesh extends MainNode {
     drawable:DrawableSimple;
     constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
         super(positionsCount,undefined, undefined, undefined, 'canvas');
-        this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([engine.gpu.renderPassCanvas]))
+        this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([engine.gpu!.renderPassCanvas]))
 
     }
 }
@@ -63,7 +63,7 @@ export class Canvas extends TerraCompoment {
             }
         }
     }
-    async initalize(): Promise<[Scene]> {
+    async initalize(): Promise<[Scene] | void> {
         this.progress = 6;
 
         const terraEngine = await Engine.initEngine(this.#canvasElem, (e) => {
@@ -71,10 +71,12 @@ export class Canvas extends TerraCompoment {
             errors.push(e);
             this.showError();
         });
+        if(!terraEngine)
+            return;
         this.progress = 15;
 
 
-        const waterCamera = new TerraCamera(terraEngine.gpu.renderPassWater, engine.mainCamera.projection, terraEngine.gpu, engine.mainCamera);
+        const waterCamera = new TerraCamera(terraEngine.gpu!.renderPassWater, engine.mainCamera.projection, terraEngine.gpu, engine.mainCamera);
         waterCamera.beforeViewUpdate.add((position, direction) => {
             position[1] -= (position[1] - 3) * 2;
             direction[1] = -direction[1];
@@ -83,7 +85,7 @@ export class Canvas extends TerraCompoment {
       
         this.progress = 19;
 
-        const mainScene = new Scene('main', terraEngine.gpu, [engine.mainCamera, waterCamera], (terrascene) => {
+        const mainScene = new Scene('main', terraEngine.gpu!, [engine.mainCamera, waterCamera], (terrascene) => {
             new Sun2([terrascene]);
             // Initial scene objects here
 
@@ -126,14 +128,11 @@ export class Canvas extends TerraCompoment {
         //@ts-ignore
         window.b2=b2;
         b2.hasGravity=true;
-       /* b2.onCollide=() => {
-            b2.force[0]=20
-         }*/
 
 
-        const canvasPipeline = engine.gpu.renderPassCanvas.rootLayout.addRenderPipeline('CanvasRenderPipeline',
-            new VertexShader(terraEngine.gpu, 'deferred.vert.wgsl'),
-            new Shader(terraEngine.gpu, 'deferred.frag.wgsl'), {
+        const canvasPipeline = engine.gpu!.renderPassCanvas.rootLayout.addRenderPipeline('CanvasRenderPipeline',
+            new VertexShader(terraEngine.gpu!, 'deferred.vert.wgsl'),
+            new Shader(terraEngine.gpu!, 'deferred.frag.wgsl'), {
             primitive: {
                 topology: 'triangle-list',
                 frontFace: 'ccw'
@@ -202,6 +201,8 @@ export class Canvas extends TerraCompoment {
             </div>)
         });
         this.initalize().then(async args => {
+            if(!args)
+                return;
             setInterval(() => {
                 this.timeOfDay.value = new Date(Number(engine.physics.gameTime)).toUTCString();
             }, 1000);

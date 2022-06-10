@@ -1,7 +1,10 @@
 import { Shader, VertexShader } from "../RenderPipeline.js";
 import { Engine } from "../../engine.js";
 declare const engine:Engine;
-export const WaterRenderPipeline = ['WaterRenderPipeline', function create(label:string,primitive: GPUPrimitiveState) {
+export const WaterRenderPipeline = ['WaterRenderPipeline', function create(label:string, primitive: GPUPrimitiveState) {
+    if(!engine.gpu) {
+        return undefined;
+    }
     //TODO: Reuse sampler with terrain.ts?
     const sampler = engine.gpu.device.createSampler({
         magFilter: "nearest",
@@ -30,7 +33,7 @@ export const WaterRenderPipeline = ['WaterRenderPipeline', function create(label
                 },
                 {
                     binding: 1,
-                    resource: engine.gpu.renderPassWater.renderTargets.diffuse.view.view
+                    resource: engine.gpu!.renderPassWater.renderTargets.diffuse.view.view
                 }
             ]
         )

@@ -14,17 +14,17 @@ import type { Scene } from "../Scene.js";
 declare const engine:Engine;
 
 
-const terrainWorker = new WorkerThread('/js/workers/webworkers/terrainWorker.js');
+const terrainWorker = new WorkerThread('terrainWorker.js');
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 
 function getRenderPipeline(terrain: Terrain): RenderPipeline {
-    let renderPipeline = renderPipelines.get(engine.gpu);
+    let renderPipeline = renderPipelines.get(engine.gpu!);
     if (renderPipeline) {
         return renderPipeline;
     }
 
     renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline('TerrainToolRenderpipeline',
-        new VertexShader(engine.gpu, "helper2.vert.wgsl", [{
+        new VertexShader(engine.gpu!, "helper2.vert.wgsl", [{
             arrayStride: 12,
             stepMode: 'vertex',
             attributes: [{
@@ -34,13 +34,13 @@ function getRenderPipeline(terrain: Terrain): RenderPipeline {
                 format: "float32x3"
             }]
         }]),
-        new Shader(engine.gpu, 'UIColor.frag.wgsl'), {
+        new Shader(engine.gpu!, 'UIColor.frag.wgsl'), {
         primitive: {
             topology: 'triangle-list',
             cullMode: 'none'
         }
     })
-    renderPipelines.set(engine.gpu, renderPipeline);
+    renderPipelines.set(engine.gpu!, renderPipeline);
     return renderPipeline
 }
 
@@ -129,13 +129,13 @@ export class TerrainTool extends MainNode {
 
         //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
         super.destroy();
-        renderPipelines.delete(engine.gpu);
+        renderPipelines.delete(engine.gpu!);
     };
     #mouseListener = async () => {
         /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {
             this.SetTranslation([this.terrain.mesh.pickInfo.point[0], 0, this.terrain.mesh.pickInfo.point[2]]);
         });*/
-        const pickInfo = await engine.gpu.renderPassScreen.pickPosition(true);
+        const pickInfo = await engine.gpu!.renderPassScreen.pickPosition(true);
         if(pickInfo) {
             this.#pick.meshId = pickInfo.meshId;
             this.#pick.position[0] = pickInfo.position[0];

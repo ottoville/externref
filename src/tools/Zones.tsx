@@ -48,7 +48,7 @@ export class Zones extends UITAB {
             throw(new Error('staticScene not found'));
         }
         this.#ratio = Terrain.size[0] / this.#size //texture coordinates
-        this.#zoneTexture = engine.gpu.device.createTexture({
+        this.#zoneTexture = engine.gpu!.device.createTexture({
             size: [5120, 5120, 1],
             format: "rgba8unorm",
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -77,7 +77,7 @@ export class Zones extends UITAB {
                 ctx.fillRect(0, 0, -(z.size.h / this.#ratio), -(z.size.w / this.#ratio));
             });
             ctx.stroke();
-            engine.gpu.device.queue.copyExternalImageToTexture({source: texture}, { texture: this.#zoneTexture }, [5120, 5120, 1]);
+            engine.gpu!.device.queue.copyExternalImageToTexture({source: texture}, { texture: this.#zoneTexture }, [5120, 5120, 1]);
         }
         
         terrain.mesh.setTextureView(this.#zoneTexture.createView());

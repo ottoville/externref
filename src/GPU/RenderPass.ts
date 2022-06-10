@@ -188,7 +188,7 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
 
                 this.cameras.forEach(camera => {
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    drawedMeshes+= this.renderCamera(renderBundleEncoder,this.rootLayout,camera.uniformBindGroup(),1)
+                    drawedMeshes+= this.renderCamera(renderBundleEncoder,this.rootLayout,camera.uniformBindGroup!(),1)
                 })
             }
             //console.log('Meshes draw for',this.GPURenderBundleEncoderDescriptor.label,drawedMeshes)
@@ -367,7 +367,7 @@ export class PickableRenderPass<T extends {
         const gRenderTargetDiffuse = this.renderTargets.gRenderTargetDiffuse
         if(gRenderTargetDiffuse instanceof MSAARenderTarget) {
             if(!this.#zAndIDPromise) {
-                const mousePositionSwapBuffer = Buffer.create(engine.gpu,8,[GPUBufferUsage.COPY_SRC], 'mousePositionSwapBuffer', b => {
+                const mousePositionSwapBuffer = Buffer.create(engine.gpu!,8,[GPUBufferUsage.COPY_SRC], 'mousePositionSwapBuffer', b => {
                     new Uint32Array(b.getMappedRange(0,8)).set([engine.mousePosition[0], engine.mousePosition[1]]);
                 });
                 mousePositionSwapBuffer.copyTo(encoder,this.#mousePositionBuffer!,0, 0, 8,);

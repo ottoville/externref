@@ -4,7 +4,7 @@ import { Engine } from "../../engine.js";
 declare const engine:Engine;
 
 export const TerrainRenderPipeline=['TerrainRenderPipeline',function create(label:string,primitive: GPUPrimitiveState) {
-    return engine.gpu.lightsBindGroupTexture2.addRenderPipeline(label,new VertexShader(engine.gpu,'ground.vert.wgsl',  [
+    return engine.gpu!.lightsBindGroupTexture2.addRenderPipeline(label,new VertexShader(engine.gpu!,'ground.vert.wgsl',  [
         {
         arrayStride: 48,
         stepMode: "vertex",
@@ -28,7 +28,7 @@ export const TerrainRenderPipeline=['TerrainRenderPipeline',function create(labe
         }
         ]
     }
-    ]), new Shader(engine.gpu,'ground.frag.wgsl'), {
+    ]), new Shader(engine.gpu!,'ground.frag.wgsl'), {
         primitive
     });
 }] as const

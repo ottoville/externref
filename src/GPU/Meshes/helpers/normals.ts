@@ -4,9 +4,9 @@ import { DrawableSimple } from "../../Drawable.js";
 import { NormalsPipeline } from "../../RenderPipeLines/Normals.js";
 
 export class NormalsMesh extends MainNode {
-    drawable:DrawableSimple;
+    drawable: DrawableSimple | undefined;
     constructor(positionsCount: number) {        
         super(positionsCount,undefined, undefined, undefined, 'NormalsDebug');
-        this.drawable=GPU.createRenderPipeline(NormalsPipeline,{ topology:'line-list' }).addDrawableSimple(this,undefined,undefined,undefined);
+        this.drawable = GPU.createRenderPipeline(NormalsPipeline,{ topology:'line-list' })?.addDrawableSimple(this,undefined,undefined,undefined);
     }
 }

@@ -10,8 +10,11 @@ import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import { ComputePipeline } from "./GPU/ComputePipeline.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
-
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer } from "./GPU/Buffer.js";
+
+import type { Engine, } from "./engine.js";
+declare const engine:Engine;
+
 
 export const GPUBufferUsage = {
     MAP_READ: 0x0001,
@@ -25,6 +28,8 @@ export const GPUBufferUsage = {
     INDIRECT: 0x0100,
     QUERY_RESOLVE: 0x0200
 } as const
+let curSecond = 0;
+let framecount = 0;
 
 /*type CopyBuffers<T> = {
     [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
@@ -98,10 +103,10 @@ export class GPU {
     sizeBindGroupLayout: BindGroupLayout<[GPUBindGroupEntry]>;
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
     bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
-    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat}): RenderPipeline
-    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list'}): RenderPipeline
-    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive?: Omit<GPUPrimitiveState, 'topology'>): RenderPipeline
-    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState={}) {
+    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline | undefined], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat}): RenderPipeline | undefined
+    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline | undefined], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list'}): RenderPipeline | undefined
+    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline | undefined], primitive?: Omit<GPUPrimitiveState, 'topology'>): RenderPipeline | undefined
+    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline | undefined], primitive: GPUPrimitiveState={}) {
         const primitiveWithDefaults: GPUPrimitiveState={
             topology: 'triangle-list',
             frontFace: 'cw',
@@ -112,11 +117,13 @@ export class GPU {
         let renderPipeline = GPU.#renderPipelines.get(hash);
         if(!renderPipeline) {
             renderPipeline=desc[1](hash, primitiveWithDefaults);
-            GPU.#renderPipelines.set(hash, renderPipeline);
+            if(renderPipeline)
+                GPU.#renderPipelines.set(hash, renderPipeline);
         }
         return renderPipeline;
 
     }
+    GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
 
         for(const key in shaders) {
@@ -294,11 +301,11 @@ export class GPU {
         const idTexture = Texture.create(this,"r32uint",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'],'idTexture',[300,300,1])
         const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'diffuseTexture') //TODO: remove texture binding
 
-        const gRenderTargetDiffuse = new MSAARenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 });
+        const gRenderTargetDiffuse = new MSAARenderTarget(this, diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 });
 
         this.pickRenderPass=new RenderPass(this,
             {
-                gRenderTargetId: new RenderTarget(idTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 })
+                gRenderTargetId: new RenderTarget(this, idTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 })
             },1,[canvas.width,canvas.height,1],(w, h) => {
             return [w, h]
         },'pick',this.rootCameralayout,'pickRenderPass');
@@ -312,11 +319,11 @@ export class GPU {
         const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'diffuseTextureWater')
     
         this.renderPassWater = new DepthRenderPass(this, {
-            diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
+            diffuse: new RenderTarget(this, diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
         }, 1, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2],'main',this.rootCameralayout,'renderPassWater');
       
 
-        const context:GPUCanvasContext | null = canvas.getContext('webgpu');
+        const context: GPUCanvasContext | null = canvas.getContext('webgpu');
         if (!context)
             throw (new Error('Unable to get webgpu context'));
         this.context = context;
@@ -339,7 +346,7 @@ export class GPU {
         const canvasRootLayout = new PipelineLayout('canvasRootLayout', this, BindGroupLayoutCanvas);
 
         this.renderPassCanvas = new RenderPass(this, {
-            swap: new RenderTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },undefined, undefined,true)
+            swap: new RenderTarget(this, canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },undefined, undefined,true)
         }, 1, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
@@ -369,7 +376,81 @@ export class GPU {
         }
         GPU.instance = this;
     }
+    readonly #timeAndDeltaBuffer = new ArrayBuffer(8);
+    readonly deltaView = new Float32Array(this.#timeAndDeltaBuffer, 4, 1);
+    readonly #timeView = new Uint32Array(this.#timeAndDeltaBuffer, 0, 1);
 
+    readonly renderLoop = (time: DOMHighResTimeStamp) => {
+        //msPerFrame = performance.now() - startTime;
+        //startTime = performance.now();
+
+        const nowSecond = (Date.now() / 500) | 0;
+        if (nowSecond !== curSecond) {
+            //@ts-ignore
+            window.fps = framecount * 2;
+            curSecond = nowSecond;
+            framecount = 0;
+        }
+        framecount++;
+        //performance.mark('renderloopStart');
+
+
+
+        this.GPUQueueCommandEncoder=null;
+        engine.rust.renderloop();
+        //@ts-ignore bug in TS
+        const commandBuff= this.GPUQueueCommandEncoder?.finish() ?? null;
+        if(commandBuff)
+            this.pendingCommandBuffers.add(commandBuff);
+
+        if (engine.inputManager?.checkInputs()) {
+            if(engine.inputManager.calculateCameraPositionAndTarget)
+            engine.inputManager.calculateCameraPositionAndTarget();
+        }
+
+        const renderEncoder = this.device.createCommandEncoder();
+
+        this.#timeView.set([time]);
+        let physicDelta: number | null;
+        if (engine.physics.gameSpeed == -1)
+            physicDelta = null;
+        else
+            physicDelta = (engine.physics.physicTime - engine.physics.tickTime) / ((engine.physics.tickIntervalMs))
+
+        if (physicDelta !== null)
+            this.deltaView.set([physicDelta]);
+
+        this.timeBuffer.write(0, this.#timeAndDeltaBuffer);
+        try {
+            engine.cameras.forEach(camera => {
+                camera.updateView(renderEncoder)
+            })
+            const lightPass = renderEncoder.beginComputePass();
+            lightPass.setPipeline(this.updateViewPipeline.pipeline);
+            lightPass.setBindGroup(0, this.updateViewBindGroup);
+            engine.cameras.forEach(camera => {
+                if(camera.viewUpdated || engine.updateLights) {
+                    camera.viewUpdated=false;
+                    lightPass.setBindGroup(1, camera.updateViewBindGroup!.bindGroup);
+                    lightPass.dispatchWorkgroups(...this.CLUSTER_DISPATCH_SIZE);
+                }
+            });
+            lightPass.end();
+            engine.updateLights = false;
+
+            this.renderPasses.forEach(renderPass => {
+                renderPass.render(renderEncoder)
+            })
+        } catch (e) {
+            console.error(e);
+        }
+
+        this.pendingCommandBuffers.add(renderEncoder.finish())
+        this.device.queue.submit(this.pendingCommandBuffers);
+        this.pendingCommandBuffers.clear();
+        this.tempGPUBuffers.forEach(buff => buff.destroy())
+        engine.renderFrame = window.requestAnimationFrame(this.renderLoop);
+    }
     drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass, index: number) {
         let drawedMeshes = 0;
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {

@@ -49,14 +49,14 @@ export class Sun2 extends MainNode {
         this.update_dynamic_buffer();
 
     }
-    drawable:DrawableSimple;
+    drawable: DrawableSimple | undefined;
     constructor(scenes: Scene[]) {
         super(14,undefined,1,undefined,'sun',scenes);
         this.drawable=GPU.createRenderPipeline(SunRenderPipeline, {
             topology: 'triangle-strip',
             cullMode: 'none',
             stripIndexFormat:'uint16'
-        }).addDrawableSimple(this,undefined,undefined,undefined);
+        })?.addDrawableSimple(this,undefined,undefined,undefined);
         engine.physics.movables.push(this);
     }
 }

@@ -129,7 +129,7 @@ export class ArcRotateCamera extends CameraController {
     #cameraPointerDown = (e: PointerEvent) => {
         pointerDownButton = e.button;
         if (pointerDownButton !== 2) {
-            engine.gpu.renderPassScreen.pickPosition().then(position => {
+            engine.gpu!.renderPassScreen.pickPosition().then(position => {
                 if(position) {
                     this.#targetMovingfrom = new TerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
                     this.#targetMovingTo = position.position;
@@ -137,25 +137,25 @@ export class ArcRotateCamera extends CameraController {
                 }
             }).catch(engine.showError)
         }
-        engine.canvas.addEventListener('pointermove', this.#cameraMove);
-        engine.canvas.addEventListener('pointerup', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove), { once: true });
-        engine.canvas.addEventListener('pointerleave', () => engine.canvas.removeEventListener('pointermove', this.#cameraMove), { once: true });
+        engine.canvas!.addEventListener('pointermove', this.#cameraMove);
+        engine.canvas!.addEventListener('pointerup', () => engine.canvas!.removeEventListener('pointermove', this.#cameraMove), { once: true });
+        engine.canvas!.addEventListener('pointerleave', () => engine.canvas!.removeEventListener('pointermove', this.#cameraMove), { once: true });
     }
 
     destroy() {
-        engine.canvas.removeEventListener('pointerdown', this.#cameraPointerDown);
-        engine.canvas.removeEventListener('pointermove', this.#cameraMove);
-        engine.canvas.removeEventListener('wheel', this.#cameraWheel);
+        engine.canvas!.removeEventListener('pointerdown', this.#cameraPointerDown);
+        engine.canvas!.removeEventListener('pointermove', this.#cameraMove);
+        engine.canvas!.removeEventListener('wheel', this.#cameraWheel);
         this.serialize();
     }
     disable() {
-        engine.canvas.removeEventListener('pointerdown', this.#cameraPointerDown);
-        engine.canvas.removeEventListener('pointermove', this.#cameraMove);
-        engine.canvas.removeEventListener('wheel', this.#cameraWheel);
+        engine.canvas!.removeEventListener('pointerdown', this.#cameraPointerDown);
+        engine.canvas!.removeEventListener('pointermove', this.#cameraMove);
+        engine.canvas!.removeEventListener('wheel', this.#cameraWheel);
     }
     enable() {
-        engine.canvas.addEventListener('wheel', this.#cameraWheel);
-        engine.canvas.addEventListener('pointerdown', this.#cameraPointerDown);
+        engine.canvas!.addEventListener('wheel', this.#cameraWheel);
+        engine.canvas!.addEventListener('pointerdown', this.#cameraPointerDown);
     }
     #calculatePosition() {
         let sinb = Math.sin(this.#beta);

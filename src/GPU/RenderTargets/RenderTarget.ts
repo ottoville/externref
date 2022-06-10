@@ -1,12 +1,12 @@
 import { type GPUTextureUsageLiterals, Texture } from "../Texture.js";
 import { TextureView } from "../TextureView.js";
-import type { Engine } from "../../engine.js";
 import type { RenderPass } from "../RenderPass.js";
-declare const engine:Engine;
+import type { GPU } from "../../GPU.js";
 
 export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> {
     view: TextureView;
     constructor(
+        protected gpu: GPU,
         public readonly texture: T,
         public clearValue: GPUColor,
         textureViewDescriptor?: GPUTextureViewDescriptor,
@@ -22,7 +22,7 @@ export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLit
 
     createColorAttachment() {
         const obj:GPURenderPassColorAttachment = {
-            view: this.isSwap ? engine.gpu.context.getCurrentTexture().createView() : this.view.view,
+            view: this.isSwap ? this.gpu.context.getCurrentTexture().createView() : this.view.view,
             clearValue: this.clearValue,
             loadOp: "clear",
             storeOp: "store"

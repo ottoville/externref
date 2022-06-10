@@ -7,7 +7,7 @@ import type { Engine } from "../engine.js";
 declare const engine:Engine;
 
 export class Sea extends BoundableNodeSimple {
-    drawable: DrawableSimple;
+    drawable: DrawableSimple | undefined;
     override create_collider() {
         return engine.rust.create_cuboid_collider(50000,3,50000);
      }
@@ -20,8 +20,8 @@ export class Sea extends BoundableNodeSimple {
             topology: 'triangle-strip',
             stripIndexFormat: 'uint16',
             frontFace:'cw'
-        }).addDrawableSimple(this, undefined, undefined, undefined);
-        this.drawable.setVertexBuffer(0, new Float32Array([-50000.0, 3.0, -50000.0,
+        })?.addDrawableSimple(this, undefined, undefined, undefined);
+        this.drawable?.setVertexBuffer(0, new Float32Array([-50000.0, 3.0, -50000.0,
             50000.0, 3.0, -50000.0,
             -50000.0, 3.0, 50000.0,
             50000.0, 3.0, 50000.0]))

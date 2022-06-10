@@ -39,7 +39,7 @@ export class paintPlane extends paintGround {
         });
         let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
         if (!renderPipeline) {
-            renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline('paintPlaneRenderpipeline', new VertexShader(engine.gpu,'plane.vert.wgsl', [{
+            renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline('paintPlaneRenderpipeline', new VertexShader(engine.gpu!,'plane.vert.wgsl', [{
                 arrayStride: 4 * 2,
                 stepMode: "vertex" as GPUVertexStepMode,
                 attributes: [{
@@ -48,7 +48,7 @@ export class paintPlane extends paintGround {
                     offset: 0,
                     format: "float32x2"
                 }]
-            }]), new Shader(engine.gpu,'UIColor.frag.wgsl'), {
+            }]), new Shader(engine.gpu!,'UIColor.frag.wgsl'), {
                 primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat:'uint32' },
             });
             renderPipelines.set(scene.gpu, renderPipeline);

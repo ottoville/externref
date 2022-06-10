@@ -3,7 +3,9 @@ import { Engine } from "../../engine.js";
 declare const engine:Engine;
 
 export const PlantsRenderPipeline = ['PlantsRenderPipeline',function PlantsRenderPipeline(label:string, primitive: GPUPrimitiveState) {
-return engine.gpu.rootCameralayout.addRenderPipeline(label,
+    if(!engine.gpu)
+        return;
+    return engine.gpu.rootCameralayout.addRenderPipeline(label,
             new VertexShader(engine.gpu, 'grass/grass.vert.wgsl', [
                 {
                     arrayStride: 4 * 4,

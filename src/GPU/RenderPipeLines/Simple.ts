@@ -3,6 +3,8 @@ import { Engine } from "../../engine.js";
 declare const engine:Engine;
 
 export const SimpleRenderPipeline = ['SimpleRenderPipeline',function SimpleRenderPipeline(label:string, primitive: GPUPrimitiveState) {
+    if(!engine.gpu)
+        return;
     return engine.gpu.positionBindGroupTimeWGSL.addRenderPipeline(label,
         new VertexShader(engine.gpu, 'simple.vert.wgsl', [{
             arrayStride: 6 * 4,

@@ -1,22 +1,22 @@
 import { RenderTarget } from "./RenderTarget.js";
 import type { GPUTextureUsageLiterals, Texture } from "../Texture.js";
 import { TextureView } from "../TextureView.js";
-import type { Engine } from "../../engine.js";
 import { RenderPass } from "../RenderPass.js";
-declare const engine:Engine;
+import type { GPU } from "../../gpu.js";
 
 export class MSAARenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>
 extends RenderTarget<T> {
     resolveView: () => GPUTextureView;
     #resolveView?: TextureView;
     constructor(
+        gpu: GPU,
         texture: T,
         clearValue: GPUColor,
         textureViewDescriptor?: GPUTextureViewDescriptor,
         writeMask: GPUColorWriteFlags = 0xF,
         isSwap = false
     ) {
-        super(texture, clearValue, textureViewDescriptor, writeMask,isSwap);
+        super(gpu, texture, clearValue, textureViewDescriptor, writeMask,isSwap);
         if(!isSwap) {
             const resolved = this.texture.createResolveTexture();
             const resolveView = new TextureView(resolved, textureViewDescriptor);
@@ -26,9 +26,9 @@ extends RenderTarget<T> {
             }
         } else {
             this.resolveView = () => {
-                return engine.gpu.context.getCurrentTexture().createView();
+                return this.gpu.context.getCurrentTexture().createView();
             }
-        }        
+        }   
     }
     override createColorAttachment() {
         const obj=super.createColorAttachment();
