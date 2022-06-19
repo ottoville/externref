@@ -24,8 +24,8 @@ export class PositionCamera extends CameraController {
     #velocity=0.5;
     #arrowKeysDown=0;
 
-    constructor(private camera: TerraCamera, initial=false) {
-        super();
+    constructor(private camera: TerraCamera, element?: HTMLElement, initial=false) {
+        super(element);
         const syncCamera = () => {
             this.camera.position=this.#position;
             this.camera.updateDirection(direction => {
@@ -34,7 +34,7 @@ export class PositionCamera extends CameraController {
                 direction[2]=Math.sin(this.#angle);
             });
         }
-        if(initial) {
+        if(initial && engine.DB) {
             engine.DB.transaction("save").objectStore("save").get(["camera", "PositionCamera"]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
                     const restored = ((evt.target as IDBRequest).result as {
@@ -52,20 +52,20 @@ export class PositionCamera extends CameraController {
             this.#position.set(this.camera.position as TerraVector3);
             this.#angle=Math.acos(this.camera.direction[0]);
         }
-        this.enable();
+        if(element)
+            this.enable(element);
     }
-    enable() {
-        document.addEventListener('keydown', this.#keydownfunction);
-        document.addEventListener('keyup', this.#keyupfunction);
-
+    enable(element: HTMLElement) {
+        element.addEventListener('keydown', this.#keydownfunction);
+        element.addEventListener('keyup', this.#keyupfunction);
     }
     disable() {
-        document.removeEventListener('keydown', this.#keydownfunction);
-        document.removeEventListener('keyup', this.#keyupfunction);
+        this.element?.removeEventListener('keydown', this.#keydownfunction);
+        this.element?.removeEventListener('keyup', this.#keyupfunction);
     }
     #serializeRequested=false;
     serialize = () => {
-        if(this.#serializeRequested)
+        if(this.#serializeRequested || !engine.DB)
             return;
         this.#serializeRequested=true;
         const request=engine.DB.transaction("save", "readwrite").objectStore("save").put({

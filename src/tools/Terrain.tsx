@@ -13,7 +13,6 @@ import type { Engine, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
 declare const engine:Engine;
 
-
 const terrainWorker = new WorkerThread('terrainWorker.js');
 const renderPipelines: Map<GPU, RenderPipeline> = new Map();
 

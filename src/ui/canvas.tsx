@@ -70,7 +70,7 @@ export class Canvas extends TerraCompoment {
             console.error(e);
             errors.push(e);
             this.showError();
-        });
+        }, {rust:  fetch('/js/engine/wasm32-unknown-unknown/debug/engine.wasm'), collider: fetch('../collider/colliderSimdO.wasm')});
         if(!terraEngine)
             return;
         this.progress = 15;

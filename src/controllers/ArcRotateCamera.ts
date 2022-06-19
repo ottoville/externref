@@ -25,7 +25,7 @@ export class ArcRotateCamera extends CameraController {
     #serializeRequested = false;
 
     serialize(): void {
-        if (this.#serializeRequested)
+        if (this.#serializeRequested || !engine.DB)
             return;
         this.#serializeRequested = true;
         const request = engine.DB.transaction("save", "readwrite").objectStore("save").put({
@@ -81,10 +81,11 @@ export class ArcRotateCamera extends CameraController {
     #alpha = 0;
     #beta = 0;
     #radius = 10;
-    constructor(private camera: TerraCamera<PickableRenderPass>, initial = false) {
-        super();
-        this.enable();
-        if (initial) {
+    constructor(private camera: TerraCamera<PickableRenderPass>, canvas?: HTMLCanvasElement, initial = false) {
+        super(canvas);
+        if(canvas)
+            this.enable(canvas);
+        if (initial && engine.DB) {
             engine.DB.transaction("save").objectStore("save").get(["camera", "ArchRotateCamera"]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
                     const restored = (evt.target as IDBRequest).result.data as serialized | undefined;
@@ -143,19 +144,19 @@ export class ArcRotateCamera extends CameraController {
     }
 
     destroy() {
-        engine.canvas!.removeEventListener('pointerdown', this.#cameraPointerDown);
-        engine.canvas!.removeEventListener('pointermove', this.#cameraMove);
-        engine.canvas!.removeEventListener('wheel', this.#cameraWheel);
+        this.element?.removeEventListener('pointerdown', this.#cameraPointerDown);
+        this.element?.removeEventListener('pointermove', this.#cameraMove);
+        this.element?.removeEventListener('wheel', this.#cameraWheel);
         this.serialize();
     }
     disable() {
-        engine.canvas!.removeEventListener('pointerdown', this.#cameraPointerDown);
-        engine.canvas!.removeEventListener('pointermove', this.#cameraMove);
-        engine.canvas!.removeEventListener('wheel', this.#cameraWheel);
+        this.element?.removeEventListener('pointerdown', this.#cameraPointerDown);
+        this.element?.removeEventListener('pointermove', this.#cameraMove);
+        this.element?.removeEventListener('wheel', this.#cameraWheel);
     }
-    enable() {
-        engine.canvas!.addEventListener('wheel', this.#cameraWheel);
-        engine.canvas!.addEventListener('pointerdown', this.#cameraPointerDown);
+    enable(canvas: HTMLCanvasElement) {
+        canvas.addEventListener('wheel', this.#cameraWheel);
+        canvas.addEventListener('pointerdown', this.#cameraPointerDown);
     }
     #calculatePosition() {
         let sinb = Math.sin(this.#beta);

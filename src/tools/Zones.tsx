@@ -8,7 +8,14 @@ import type { Trait } from "../traits/trait.js";
 import type { Scene } from "../Scene.js";
 import type { Engine } from "../engine.js";
 declare const engine:Engine;
-
+declare class OffscreenCanvas {
+    width: number;
+    height: number;
+    convertToBlob(options?: { type?: "image/png" | "image/webp"; quality?: number; }): Promise<Blob>
+    getContext(contextId:| "webgpu"): GPUCanvasContext | null;    
+    getContext(contextType: "2d"): CanvasRenderingContext2D | null
+    constructor(width: number, height:number)
+}
 export class Zones extends UITAB {
     static override label = 'Zones';
     static menuElem = () => <div><legend style="background-color:white"> Draw zone </legend>
@@ -54,36 +61,36 @@ export class Zones extends UITAB {
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
         });
 
-        const texture = document.createElement('canvas');
-        texture.width=5120;
-        texture.height=5120;
-        const ctx = texture.getContext('2d');
-        if (!ctx)
-            throw (new Error('getting 2d context failed'));
-        ctx.beginPath();
-        ctx.fillStyle = "yellow";
-        ctx.fillRect(0, 0, 5120, 5120);
-        const centerX = this.#size / 2;
-        const centerZ = this.#size / 2;
-        engine.DB.transaction("zones").objectStore("zones").getAll().onsuccess = (evt) => {
-            ctx.strokeStyle = "blue";
-            ctx.fillStyle = "blue";
-            ctx.lineWidth = 1;
-            //@ts-ignore
-            ((evt.target.result) as PTDresult[]).forEach(z => {
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.translate(centerX + z.coord[0] / this.#ratio, centerZ + z.coord[1] / this.#ratio );
-                ctx.rotate(-z.rad);
-                ctx.fillRect(0, 0, -(z.size.h / this.#ratio), -(z.size.w / this.#ratio));
-            });
-            ctx.stroke();
-            engine.gpu!.device.queue.copyExternalImageToTexture({source: texture}, { texture: this.#zoneTexture }, [5120, 5120, 1]);
+        if(engine.DB) {
+            
+            const texture = new OffscreenCanvas(5120, 5120)
+            const ctx = texture.getContext('2d');
+            if (!ctx)
+                throw (new Error('getting 2d context failed'));
+            ctx.beginPath();
+            ctx.fillStyle = "yellow";
+            ctx.fillRect(0, 0, 5120, 5120);    
+            const centerX = this.#size / 2;
+            const centerZ = this.#size / 2;    
+            engine.DB.transaction("zones").objectStore("zones").getAll().onsuccess = (evt) => {
+                ctx.strokeStyle = "blue";
+                ctx.fillStyle = "blue";
+                ctx.lineWidth = 1;
+                //@ts-ignore
+                ((evt.target.result) as PTDresult[]).forEach(z => {
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    ctx.translate(centerX + z.coord[0] / this.#ratio, centerZ + z.coord[1] / this.#ratio );
+                    ctx.rotate(-z.rad);
+                    ctx.fillRect(0, 0, -(z.size.h / this.#ratio), -(z.size.w / this.#ratio));
+                });
+                ctx.stroke();
+                engine.gpu!.device.queue.copyExternalImageToTexture({source: texture}, { texture: this.#zoneTexture }, [5120, 5120, 1]);
+            }
         }
-        
         terrain.mesh.setTextureView(this.#zoneTexture.createView());
         terrain.mesh.set_scenes(staticScene.id)
         this.PT = new paintTexture(this.scene, this.terrain, this.#zoneTexture, 5120, 5120, this, this.#ratio, (response) => {
-            engine.DB.transaction("zones", 'readwrite').objectStore("zones").put(response);
+            engine.DB?.transaction("zones", 'readwrite').objectStore("zones").put(response);
         });
         /*this.PT.activate(async (response) => {
             (await this.scene.engine.DB).transaction("zones", 'readwrite').objectStore("zones").put(response);

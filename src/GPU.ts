@@ -13,6 +13,7 @@ import type { BindGroup } from "./GPU/BindGroup.js";
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer } from "./GPU/Buffer.js";
 
 import type { Engine, } from "./engine.js";
+import { Uint16Vector2 } from "./Math.js";
 declare const engine:Engine;
 
 
@@ -36,6 +37,10 @@ let framecount = 0;
 };*/
 export class GPU {
     static bindMap:WeakMap<GPUBindingResource, BindGroup[]> = new WeakMap();
+
+    readonly #mousePositionBuffer = new SharedArrayBuffer(4);
+    readonly mousePosition = new Uint16Vector2(this.#mousePositionBuffer);
+
 
     readonly gpu_memory_index_size=256;
     readonly gpu_screen_buffer_size= 16; //screen width and height and ratio
@@ -124,8 +129,39 @@ export class GPU {
 
     }
     GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
-    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
+    static async create(canvas: HTMLCanvasElement) {
+        if (!window.navigator.gpu) {
+            throw(new Error('no webgpu support'));
+        }
 
+        const adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }).then(GPUAdapter => {
+            if(!GPUAdapter) {
+                console.error('Failed to get adapter, getting fallback adapter');
+                return window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter: true });
+            }
+            return GPUAdapter;
+        })
+        if(!adapter) {
+            throw (new Error('Failed to get adapter'));
+        }
+        const device = await adapter.requestDevice();
+        //this.progress = 5;
+        if (!device)
+            throw (new Error('no GPU device'));
+
+        device.lost.then(reason => {
+            console.error('GPU device lost', reason);
+        }).catch((e) => {
+            //TODO do this when device lost is handled properly
+            if(e instanceof Error)
+                throw(e)
+            else
+                throw(new Error(e));
+        });
+        return new GPU(canvas, device);
+    }
+    renderFrame = 0;
+    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
         for(const key in shaders) {
             const k=key as keyof typeof shaders;
             this.shaderModules[k] = device.createShaderModule({ code: shaders[k], label:k });
@@ -301,11 +337,11 @@ export class GPU {
         const idTexture = Texture.create(this,"r32uint",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'],'idTexture',[300,300,1])
         const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'diffuseTexture') //TODO: remove texture binding
 
-        const gRenderTargetDiffuse = new MSAARenderTarget(this, diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 });
+        const gRenderTargetDiffuse = new MSAARenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 });
 
         this.pickRenderPass=new RenderPass(this,
             {
-                gRenderTargetId: new RenderTarget(this, idTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 })
+                gRenderTargetId: new RenderTarget(idTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 })
             },1,[canvas.width,canvas.height,1],(w, h) => {
             return [w, h]
         },'pick',this.rootCameralayout,'pickRenderPass');
@@ -319,11 +355,11 @@ export class GPU {
         const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'diffuseTextureWater')
     
         this.renderPassWater = new DepthRenderPass(this, {
-            diffuse: new RenderTarget(this, diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
+            diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
         }, 1, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2],'main',this.rootCameralayout,'renderPassWater');
       
 
-        const context: GPUCanvasContext | null = canvas.getContext('webgpu');
+        const context: GPUCanvasContext | null = canvas.getContext('webgpu') as unknown as GPUCanvasContext; // unknown for jest
         if (!context)
             throw (new Error('Unable to get webgpu context'));
         this.context = context;
@@ -346,7 +382,7 @@ export class GPU {
         const canvasRootLayout = new PipelineLayout('canvasRootLayout', this, BindGroupLayoutCanvas);
 
         this.renderPassCanvas = new RenderPass(this, {
-            swap: new RenderTarget(this, canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },undefined, undefined,true)
+            swap: new RenderTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },undefined, undefined, context)
         }, 1, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
@@ -375,6 +411,89 @@ export class GPU {
             resource: this.timeBuffer.getUniformBinding()
         }
         GPU.instance = this;
+
+        const computePipelineClustersLayout = this.device.createBindGroupLayout({label: 'computePipelineClustersLayout', entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.COMPUTE,
+                buffer: {
+                    type: 'storage'
+                }
+            },
+            {
+                binding: 1,
+                visibility: GPUShaderStage.COMPUTE,
+                buffer: {
+                    type: 'uniform'
+                }
+            }
+        ]})
+        const computePipelineClusters       = new ComputePipeline(this,'clusters.comp.wgsl',
+        this.device.createPipelineLayout({
+            bindGroupLayouts:[this.sizeBindGroupLayout.layout, computePipelineClustersLayout]
+        }));
+        let resizeHandler:null | ReturnType<typeof setTimeout> = null;
+        const maxResolution = {
+            width: 1920,
+            height: 1080
+        }
+        const ro = new window.ResizeObserver(entries => {
+            const entry = entries[0];
+            if (!entry)
+                return;
+            window.cancelAnimationFrame(this.renderFrame)
+            resizeHandler && clearTimeout(resizeHandler);
+            resizeHandler = setTimeout(() => {
+                try {
+                    const aspectRatio = entry.contentRect.width / entry.contentRect.height
+                    canvas.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
+
+                    canvas.height = canvas.width / aspectRatio
+
+                    if (canvas.height > maxResolution.height) {
+                        canvas.height = maxResolution.height;
+                        canvas.width = canvas.height * aspectRatio;
+                    }
+
+                    this.scale.x = canvas.width / entry.contentRect.width;
+                    this.scale.y = canvas.height / entry.contentRect.height;
+                    // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
+                    this.context.configure({
+                        device: this.device,
+                        format: this.presentationFormat,
+                        usage: GPUTextureUsage.RENDER_ATTACHMENT
+                    })
+                    const commandEncoder = this.device.createCommandEncoder();
+                    const passEncoder = commandEncoder.beginComputePass();
+                    passEncoder.setPipeline(computePipelineClusters.pipeline);
+                    
+                    this.projections.forEach(projection => projection.update(aspectRatio))
+
+                    this.renderPasses.forEach(renderPass => {
+                        renderPass.resize(canvas.width, canvas.height);
+                        passEncoder.setBindGroup(0, renderPass.sizeBindGroup());
+                        renderPass.cameras.forEach(camera => {
+                            camera.updateProjection(passEncoder,computePipelineClustersLayout)
+                        });
+                    });
+                    passEncoder.end();
+                    this.device.queue.submit([commandEncoder.finish()]);
+
+                    this.renderFrame = window.requestAnimationFrame(this.renderLoop);
+                } catch(e) {
+                    engine.showError(e);
+                }
+            }, 500)
+        });
+        if(!canvas.parentElement) {
+            throw new Error('Canvas must have parent element');
+        }
+        ro.observe(canvas.parentElement);
+        canvas.addEventListener('pointermove', (e) => {
+            Atomics.store(this.mousePosition, 0, e.clientX * this.scale.x)
+            Atomics.store(this.mousePosition, 1, e.clientY * this.scale.y)
+            Atomics.notify(new Int32Array(this.#mousePositionBuffer), 0);
+        });
     }
     readonly #timeAndDeltaBuffer = new ArrayBuffer(8);
     readonly deltaView = new Float32Array(this.#timeAndDeltaBuffer, 4, 1);

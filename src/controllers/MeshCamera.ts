@@ -24,7 +24,7 @@ export class MeshCamera {
                 direction[2]=Math.sin(this.angle);
             });
         }
-        if(initial) {
+        if(initial && engine.DB) {
             engine.DB.transaction("save").objectStore("save").get(["camera", "MeshCamera"]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
                     const restored = ((evt.target as IDBRequest).result as {

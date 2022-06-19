@@ -7,7 +7,6 @@ import type { RenderTarget } from "./RenderTargets/RenderTarget.js";
 import { PipelineLayout } from "./PipelineLayout.js";
 import { GPUTextureUsageLiterals, Texture } from "./Texture.js";
 import { TerraVector3 } from "../Math.js";
-import type { Engine } from "../engine.js";
 import { MainNode } from "../MainNode.js";
 import { TextureView } from "./TextureView.js";
 import { MSAARenderTarget } from "./RenderTargets/MSAARenderTarget.js";
@@ -15,7 +14,6 @@ import { ComputePipeline } from "./ComputePipeline.js";
 import { BindGroup } from "./BindGroup.js";
 import { BindUniformBuffer, Buffer, CopyDstBuffer } from "./Buffer.js";
 
-declare const engine:Engine;
 
 interface RenderPipelineVariant2 {
     renderpipeline: GPURenderPipeline;
@@ -367,8 +365,8 @@ export class PickableRenderPass<T extends {
         const gRenderTargetDiffuse = this.renderTargets.gRenderTargetDiffuse
         if(gRenderTargetDiffuse instanceof MSAARenderTarget) {
             if(!this.#zAndIDPromise) {
-                const mousePositionSwapBuffer = Buffer.create(engine.gpu!,8,[GPUBufferUsage.COPY_SRC], 'mousePositionSwapBuffer', b => {
-                    new Uint32Array(b.getMappedRange(0,8)).set([engine.mousePosition[0], engine.mousePosition[1]]);
+                const mousePositionSwapBuffer = Buffer.create(this.gpu,8,[GPUBufferUsage.COPY_SRC], 'mousePositionSwapBuffer', b => {
+                    new Uint32Array(b.getMappedRange(0,8)).set([this.gpu.mousePosition[0], this.gpu.mousePosition[1]]);
                 });
                 mousePositionSwapBuffer.copyTo(encoder,this.#mousePositionBuffer!,0, 0, 8,);
                 const pickPass = encoder.beginComputePass({label:'pickPass'});
@@ -391,7 +389,7 @@ export class PickableRenderPass<T extends {
             }
         }
         else {
-            let newOffset=engine.mousePosition[1] * this.rowBytes + engine.mousePosition[0] * 4;
+            let newOffset=this.gpu.mousePosition[1] * this.rowBytes + this.gpu.mousePosition[0] * 4;
             //For MapAsync
             const missOffset = newOffset % 8; 
             if(missOffset!==0) {
@@ -415,7 +413,7 @@ export class PickableRenderPass<T extends {
                 encoder.copyTextureToBuffer(
                     {
                         texture: this.gpu.pickRenderPass.renderTargets.gRenderTargetId.texture.texture,
-                        origin: { x: engine.mousePosition[0], y: engine.mousePosition[1], z: 0 }
+                        origin: { x: this.gpu.mousePosition[0], y: this.gpu.mousePosition[1], z: 0 }
                     },
                     {
                         buffer: this.#pickBuffer,
@@ -451,8 +449,8 @@ export class PickableRenderPass<T extends {
                 return null;
             }
             const result = new TerraVector3();
-            const x = engine.mousePosition[0] / this.size[0] * 2 - 1;
-            const y = -(engine.mousePosition[1] / this.size[1] * 2 - 1);
+            const x = this.gpu.mousePosition[0] / this.size[0] * 2 - 1;
+            const y = -(this.gpu.mousePosition[1] / this.size[1] * 2 - 1);
             new TerraVector3([x, y, zAndID[0]]).multiply2Ref(camera.projectionViewInverted, result);
             if(mesh) {
                 this.pickPromiseMesh = null;

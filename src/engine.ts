@@ -4,7 +4,6 @@ import { MainNode } from "./MainNode.js";
 import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import type { TerraVector3 } from "./Math.js";
-import { Uint16Vector2 } from "./Math.js";
 import { GPUBufferUsage } from "./GPU.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { Projection } from "./GPU/Projection.js";
@@ -18,21 +17,29 @@ import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "./GPU/RenderPass.js";
 import { Texture } from "./GPU/Texture.js";
 import { closeDistance, closeDistanceSquared, Ellipsoid } from "./DataNode.js";
-import { ComputePipeline } from "./GPU/ComputePipeline.js";
 import { Buffer } from "./GPU/Buffer.js";
+
+function createError(e:unknown) {
+    if(!(e instanceof Error)) {
+        return new Error('Unknown error ' + e);
+    }
+    return e;
+}
 
 declare const engine:Engine;
 //@ts-ignore
-window.fps = 0;
+globalThis.fps = 0;
 export type rust_pointer<T> = {
     __brand:T
 } & number
 
-window.addEventListener('unhandledrejection', (e) => {
+/*
+globalThis.addEventListener && globalThis.addEventListener('unhandledrejection', (e) => {
     console.log(e)
     console.error('unhandledrejection');
     debugger;
 })
+*/
 export type rustWasm = {
     collider():rust_pointer<"legacy_collider">,
     intersection_point_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
@@ -180,8 +187,6 @@ export class Engine {
     readonly #collidedMesh: DataView
     readonly collider: ColliderJS;
 
-    readonly #mousePositionBuffer = new SharedArrayBuffer(4);
-    readonly mousePosition = new Uint16Vector2(this.#mousePositionBuffer);
 
     readonly #destinationPoint: [number, number, number] = [0, 0, 0];
     readonly #displacementVector: [number, number, number] = [0, 0, 0];
@@ -191,78 +196,56 @@ export class Engine {
     renderFrame = 0;
     readonly mainCamera: TerraCamera<PickableRenderPass>;
     memory: WebAssembly.Memory;
-    static async initEngine(canvas: HTMLCanvasElement | undefined, showError: (e: Error) => void): Promise<Engine | void> {
-        const DB = new Promise<EarthDatabase>(function (res) {
-            var IDB = indexedDB.open("City", 6);
-            IDB.onerror=function(e) {
-                if(e instanceof Error)
-                    showError(e);
-                else 
-                    showError(new Error(e.toString()));
-            }
-            IDB.onupgradeneeded = function (e) {
-                console.log('IDBVersionChangeEvent',e);
-                // Save the IDBDatabase interface 
-                var db: EarthDatabase = this.result;
-        
-                (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach((objstore) => {
-                    let createdStore :IDBObjectStore 
-                    if(ObjectStores[objstore].version>e.oldVersion) {
-                        createdStore = db.createObjectStore(objstore, ObjectStores[objstore].parameters);
-                    } else {
-                        if (!this.transaction)
-                            throw (new Error('No transaction'));
-                        createdStore=this.transaction.objectStore(objstore);
-                    }
-                    let indices: ObjStoreIndex[] | undefined;
-                    if (indices = ObjectStores[objstore].indices) {
-                        indices.forEach((index) => {
-                            if (e.oldVersion < index.version) {
-                                createdStore.createIndex(index.name, index.keyPath, index.options);
-                            }
-                        })
-                    }
-                })
-            };
-            IDB.onsuccess = function () {
-                this.result.onerror = function (e) {
-                     console.log(e,((<IDBRequest>e.target)!).error!.message);
+    static async initEngine(
+        canvas: HTMLCanvasElement | undefined,
+        showError: (e: Error) => void,
+        wasmBinaries: {rust: Response | PromiseLike<Response> | BufferSource, collider: Response | PromiseLike<Response> | BufferSource}): Promise<Engine | void> {
+        let DB:Promise<EarthDatabase> | undefined = undefined;
+        if(typeof(indexedDB) === 'object') {
+            DB = new Promise<EarthDatabase>(function (res) {
+                var IDB = indexedDB.open("City", 6);
+                IDB.onerror=function(e) {
+                    showError(createError(e))
                 }
-                res(this.result);
-            }
-        })
-
-        if (!window.navigator.gpu) {
-            return showError(new Error('no webgpu support'));
+                IDB.onupgradeneeded = function (e) {
+                    console.log('IDBVersionChangeEvent',e);
+                    // Save the IDBDatabase interface 
+                    var db: EarthDatabase = this.result;
+            
+                    (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach((objstore) => {
+                        let createdStore :IDBObjectStore 
+                        if(ObjectStores[objstore].version>e.oldVersion) {
+                            createdStore = db.createObjectStore(objstore, ObjectStores[objstore].parameters);
+                        } else {
+                            if (!this.transaction)
+                                throw (new Error('No transaction'));
+                            createdStore=this.transaction.objectStore(objstore);
+                        }
+                        let indices: ObjStoreIndex[] | undefined;
+                        if (indices = ObjectStores[objstore].indices) {
+                            indices.forEach((index) => {
+                                if (e.oldVersion < index.version) {
+                                    createdStore.createIndex(index.name, index.keyPath, index.options);
+                                }
+                            })
+                        }
+                    })
+                };
+                IDB.onsuccess = function () {
+                    this.result.onerror = function (e) {
+                        console.log(e,((<IDBRequest>e.target)!).error!.message);
+                    }
+                    res(this.result);
+                }
+            })
         }
-
-        const adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }).then(GPUAdapter => {
-            if(!GPUAdapter) {
-                console.error('Failed to get adapter, getting fallback adapter');
-                return window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter: true });
-            }
-            return GPUAdapter;
-        })
-        if(!adapter) {
-            return showError (new Error('Failed to get adapter'));
-        }
-        const device = await adapter.requestDevice();
-        //this.progress = 5;
-        if (!device)
-            return showError (new Error('no GPU device'));
-
-        device.lost.then(reason => {
-            console.error('GPU device lost', reason);
-        }).catch((e) => {
-            //TODO do this when device lost is handled properly
-            if(e instanceof Error)
-                showError(e)
-            else
-                showError(new Error(e));
-        });
         let gpu: GPU | undefined = undefined;
         if(canvas) {
-            gpu = new GPU(canvas, device);
+            try {
+                gpu = await GPU.create(canvas);
+            } catch(e) {
+                showError(createError(e))
+            }
             //@ts-ignore
             window.printRenderTarget = () => {
                 Texture.toBitmap(gpu!.pickRenderPass.renderTargets.gRenderTargetId.texture);
@@ -278,9 +261,9 @@ export class Engine {
         }
         const map = new Map<number, number>();
         const dataSizeBytes = MainNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
-
-        //Init rust wasm
-        const rust = await WebAssembly.instantiateStreaming(await fetch('/js/engine/wasm32-unknown-unknown/debug/engine.wasm'), {
+        let rust: WebAssembly.WebAssemblyInstantiatedSource;
+        let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
+        const exportObj = {
             env: {
                 update_point_lights:(pointer: number, length: number) => {
                     engine.update_point_lights(pointer, length)
@@ -338,46 +321,60 @@ export class Engine {
                     console.log(number)
                 },
             }
-        });
-        if(!rust.instance.exports.memory) {
-            return showError(new Error('No memory exported'));
         }
-        const obj = await WebAssembly.instantiateStreaming(await fetch('collider/colliderSimdO.wasm'), {
-            console: {
-                log: function (arg: string) {
-                    console.log(arg);
-                },
-                error: function (line: number) {
-                    console.error('Some error in webassembly on line', line)
-                    throw (new Error('Some error in webassembly on line ' + line));
-                }
-            },
-            env: {
-                memory: rust.instance.exports.memory
+        try {
+            if(wasmBinaries.rust instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.rust)) {
+                rust = await WebAssembly.instantiate(wasmBinaries.rust, exportObj);
             }
-        });
-        const wasm = obj.instance.exports as unknown as ColliderWasm;
-        return new Engine(gpu, await DB, canvas, wasm, rust.instance.exports as rustWasm, showError);
+            else {
+               // rust = await WebAssembly.instantiateStreaming(await fetch('./engine/wasm32-unknown-unknown/debug/engine.wasm'), exportObj);
+                rust = await WebAssembly.instantiateStreaming(wasmBinaries.rust, exportObj);
+            }
+            if(!rust.instance.exports.memory) {
+                return showError(new Error('No memory exported'));
+            }
+            const colliderExportObj = {
+                console: {
+                    log: function (arg: string) {
+                        console.log(arg);
+                    },
+                    error: function (line: number) {
+                        console.error('Some error in webassembly on line', line)
+                        throw (new Error('Some error in webassembly on line ' + line));
+                    }
+                },
+                env: {
+                    memory: rust.instance.exports.memory
+                }
+            };
+            if(wasmBinaries.collider instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.collider)) {
+                colliderWasm = await WebAssembly.instantiate(wasmBinaries.collider, colliderExportObj);
+            } else {
+                colliderWasm = await WebAssembly.instantiateStreaming(wasmBinaries.collider, colliderExportObj);
+
+            }
+            //Init rust wasm
+        } catch(e) {
+            return showError(createError(e));
+        }
+        const wasm = colliderWasm.instance.exports as unknown as ColliderWasm;
+        return new Engine(gpu, DB ? await DB : undefined, canvas, wasm, rust.instance.exports as rustWasm, showError);
     }
     attachCameraInput(initial = false) {
-        this.inputManager = new ArcRotateCamera(this.mainCamera, initial);
-        //this.inputManager = new PositionCamera(this.mainCamera,initial);
+        this.inputManager = new ArcRotateCamera(this.mainCamera, this.canvas, initial);
+        //this.inputManager = new PositionCamera(this.mainCamera,document, initial);
     }
     readonly cameras:Set<TerraCamera>=new Set();
     
     showError(e:unknown) {
-        if(!(e instanceof Error)) {
-            this.showErrorError(new Error('Unknown error ' + e));
-        }
-        else {
-            if(!e.cause)
-                this.showErrorError(e);
-        }
-
+        const error = createError(e);
+        if(!error.cause)
+            this.showErrorError(error);
+        
     }
     constructor(
         public gpu: GPU | undefined,
-        public DB: EarthDatabase,
+        public DB: EarthDatabase | undefined,
         public canvas: HTMLCanvasElement | undefined,
         public wasm: ColliderWasm,
         public rust: rustWasm,
@@ -385,7 +382,8 @@ export class Engine {
     ) {
         this.physics = new Physics(this);
         this.memory = rust.memory;
-        window.engine = this;
+        //@ts-ignore
+        globalThis.engine = this;
         this.mainCamera = new TerraCamera(gpu?.renderPassScreen, new Projection(gpu), gpu);
         if(gpu)
             gpu.pickRenderPass.cameras.add(this.mainCamera)
@@ -396,9 +394,10 @@ export class Engine {
         const saveControllerState = () => {
             this.inputManager?.serialize();
         };
-        document.addEventListener('visibilitychange', saveControllerState);
-        window.addEventListener('beforeunload', saveControllerState);
-
+        if(gpu) {
+            document.addEventListener('visibilitychange', saveControllerState);
+            window.addEventListener('beforeunload', saveControllerState);
+        }
 
         //TODO: this does not work after memory grow
         this.#collidedMesh = new DataView(this.memory.buffer, engine.rust.collided_mesh_pointer(this.collider.collider_ptr), 4);
@@ -409,97 +408,6 @@ export class Engine {
             engine.rust.scaled_velocity_pointer(this.collider.collider_ptr),
             engine.rust.scaled_position_pointer(this.collider.collider_ptr))
 
-        let computePipelineClusters: ComputePipeline | undefined;
-        let computePipelineClustersLayout: GPUBindGroupLayout | undefined;
-        if(gpu && canvas) {
-            canvas.addEventListener('pointermove', (e) => {
-                Atomics.store(this.mousePosition, 0, e.clientX * gpu.scale.x)
-                Atomics.store(this.mousePosition, 1, e.clientY * gpu.scale.y)
-                Atomics.notify(new Int32Array(this.#mousePositionBuffer), 0);
-            });
-            computePipelineClustersLayout = gpu.device.createBindGroupLayout({label: 'computePipelineClustersLayout', entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.COMPUTE,
-                    buffer: {
-                        type: 'storage'
-                    }
-                },
-                {
-                    binding: 1,
-                    visibility: GPUShaderStage.COMPUTE,
-                    buffer: {
-                        type: 'uniform'
-                    }
-                }
-            ]})
-            computePipelineClusters       = new ComputePipeline(gpu,'clusters.comp.wgsl',
-            gpu.device.createPipelineLayout({
-                bindGroupLayouts:[gpu.sizeBindGroupLayout.layout, computePipelineClustersLayout]
-            }));
-        }
-        let resizeHandler = 0;
-        const maxResolution = {
-            width: 1920,
-            height: 1080
-        }
-        const ro = new window.ResizeObserver(entries => {
-            const entry = entries[0];
-            if (!entry)
-                return;
-            window.cancelAnimationFrame(this.renderFrame)
-            clearTimeout(resizeHandler);
-            resizeHandler = setTimeout(() => {
-                try {
-                    if(!gpu || !canvas) {
-                        return;
-                    }
-                    const aspectRatio = entry.contentRect.width / entry.contentRect.height
-                    canvas.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
-
-                    canvas.height = canvas.width / aspectRatio
-
-                    if (canvas.height > maxResolution.height) {
-                        canvas.height = maxResolution.height;
-                        canvas.width = canvas.height * aspectRatio;
-                    }
-
-                    gpu.scale.x = canvas.width / entry.contentRect.width;
-                    gpu.scale.y = canvas.height / entry.contentRect.height;
-                    // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
-                    gpu.context.configure({
-                        device: gpu.device,
-                        format: gpu.presentationFormat,
-                        usage: GPUTextureUsage.RENDER_ATTACHMENT
-                    })
-                    const commandEncoder = gpu.device.createCommandEncoder();
-                    const passEncoder = commandEncoder.beginComputePass();
-                    passEncoder.setPipeline(computePipelineClusters!.pipeline);
-                    
-                    gpu.projections.forEach(projection => projection.update(aspectRatio))
-
-                    gpu.renderPasses.forEach(renderPass => {
-                        renderPass.resize(canvas.width, canvas.height);
-                        passEncoder.setBindGroup(0, renderPass.sizeBindGroup());
-                        renderPass.cameras.forEach(camera => {
-                            camera.updateProjection(passEncoder,computePipelineClustersLayout!)
-                        });
-                    });
-                    passEncoder.end();
-                    gpu.device.queue.submit([commandEncoder.finish()]);
-
-                    this.renderFrame = window.requestAnimationFrame(gpu.renderLoop);
-                } catch(e) {
-                    this.showError(e);
-                }
-            }, 500)
-        });
-        if(canvas) {
-            if(!canvas.parentElement) {
-                throw new Error('Canvas must have parent element');
-            }
-            ro.observe(canvas.parentElement);
-        }
     }
     update_point_lights(pointer:number, length:number) {
         if(!this.gpu)
