@@ -6,7 +6,7 @@
         {
             "label": "start-swa",
             "type": "shell",
-            "command": "swa start ./wwwroot/ --ssl --ssl-cert=\"./server.crt\" --ssl-key=\"./server.key\"",
+            "command": "npm run swa --prefix ./src",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"

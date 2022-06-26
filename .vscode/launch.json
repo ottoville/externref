@@ -21,7 +21,6 @@
                 "hidden": true
             },
             "preLaunchTask": "start-swa"
-
         },
         {
             "type": "pwa-msedge",
@@ -60,7 +59,21 @@
             "presentation": {
                 "hidden": true
             }
-        }
+        },
+        {
+            "name": "Debug Jest Tests",
+            "type": "node",
+            "runtimeExecutable": "npm",
+            "request": "launch",
+            "runtimeArgs": [
+              "run",
+              "test",
+              "--prefix=./src",
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "port": 9229
+          }
     ],
     "compounds": [
         {
