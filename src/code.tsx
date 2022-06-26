@@ -1,6 +1,3 @@
-//import { testPlane, testPlaneNormals } from "./world/tests/testPlane.js";
-
-import { Engine } from "./engine.js";
 import { Canvas } from "./ui/canvas.js";
 export const state: {
     userInfo:null | string
@@ -61,12 +58,7 @@ console.log(app)
     }
 })*/
 
-declare global {
-    interface Window {
-        engine: Engine;
-        login: (e: PointerEvent, method: "facebook" | "anomyous") => void;
-    }
-}
+
 const loadelem = document.body.appendChild(document.createElement("div"));
 //let progelem = loadelem.appendChild(document.createElement("progress"))
 loadelem.style.position = 'absolute';

@@ -125,6 +125,7 @@ pub unsafe extern "C" fn physic_tick() {
             let mesh=e.rigid_bodies.get_mut(rigid_body_handle);
             match mesh {
                 Some(m) => {
+
                     let rigid_body = &e.rigid_body_set[*rigid_body_handle];
                     let newrot=rigid_body.rotation().as_vector();
                     m.rotation.i = newrot.x;
@@ -134,6 +135,9 @@ pub unsafe extern "C" fn physic_tick() {
                     m.update_matrix();
                     let pos=rigid_body.position();
                     m.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);
+                    /*if m.label == "human" {
+                        jslog_string(vec!["altitude".to_string(), pos.translation.y.to_string()]);
+                    }*/
                 }
                 None => {
                     jslog(create_js_string("Mesh not found".to_string()))

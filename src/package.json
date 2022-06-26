@@ -25,7 +25,7 @@
     "test-wasm": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs",
 
     "test": "node --inspect-brk --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --silent=false",
-    "test-integration": "start npm run swa && node --experimental-vm-modules node_modules/jest/bin/jest.js --silent=false --config=jest.integration.config.js",
+    "test-integration": "start npm run swa && node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --silent=false --config=jest.integration.config.js",
     "testem": "npm run build-test && testem --file testem_config.json"
   },
   "author": "",

@@ -18,7 +18,7 @@ export class Physics {
     #lastTickTimeMs: number = new Date().getTime();
     #lastStateChangeTime = new Date().getTime();
     #gameSpeed = 0;
-    #interval = 0;
+    #interval: null | ReturnType<typeof setTimeout> = null;
     #lastStateChangeGameTime = BigInt(21600000); //21600 * 1000; //6 hours
     #timeUntillTick = 0;
     #tickDeltaWhenStateChange = 0;
@@ -235,7 +235,7 @@ export class Physics {
         this.#lastStateChangeGameTime = this.gameTime;
         this.#lastStateChangeTime = new Date().getTime();
 
-        clearTimeout(this.#interval);
+        this.#interval && clearTimeout(this.#interval);
         this.#timeUntillTick = this.tickIntervalMs - this.#tickDeltaWhenStateChange;
         if (this.#gameSpeed >= 0) {
             this.#tickDeltaWhenStateChange = (new Date().getTime() - this.#lastTickTimeMs) << this.#gameSpeed
