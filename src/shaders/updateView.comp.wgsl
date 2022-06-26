@@ -59,7 +59,7 @@ struct Clusters {
   }
 let tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
 
-@stage(compute) @workgroup_size(4, 2, 4)
+@compute @workgroup_size(4, 2, 4)
 fn main(
     @builtin(global_invocation_id) global_id : vec3<u32>
 ) {

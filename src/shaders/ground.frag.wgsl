@@ -87,7 +87,7 @@ fn getClusterIndex2(fragCoord : vec4<f32>) -> u32 {
       vec3<f32>(0.5, 0.0, 1.0),
       vec3<f32>(1.0, 0.0, 0.5)
     );
-@stage(fragment)
+@fragment
 fn main(
   @builtin(position) fragCoord : vec4<f32>,
   @location(0)  v_uv : vec2<f32>,
@@ -146,7 +146,7 @@ fn main(
 
   return output;
 }
-@stage(fragment)
+@fragment
 fn pick(
   @builtin(position) fragCoord : vec4<f32>,
   @location(0) @interpolate(flat)  id : u32) -> OutputPick {

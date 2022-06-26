@@ -33,7 +33,7 @@ struct Output {
   @location(0) Color : vec4<f32>
 };
 
-@stage(fragment)
+@fragment
 fn main(@builtin(position) fragCoord : vec4<f32>) -> Output {
 
   var colorSet : array<vec3<f32>, 9> = array<vec3<f32>, 9>(

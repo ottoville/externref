@@ -2,7 +2,7 @@ struct Output {
   @location(0) Diffuse : vec4<f32>
 };
 
-@stage(fragment)
+@fragment
 fn main(
   @location(0)  normal : vec3<f32>,
   @location(1) @interpolate(flat)  id : u32,
@@ -17,7 +17,7 @@ struct OutputPick {
   @location(0) ID : u32
 };
 
-@stage(fragment)
+@fragment
 fn pick(
   @location(0) @interpolate(flat)  id : u32
 ) -> OutputPick {

@@ -57,7 +57,7 @@ let vertices_ : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
     vec2<f32>(0.0, 1.0)
 );
 
-@stage(vertex)
+@vertex
 fn main(
   @location(2) vertices : vec3<f32>,
   @location(0) positions : vec4<f32>, //position xyz + rotate

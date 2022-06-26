@@ -19,7 +19,7 @@ struct Output {
   @location(0) color : vec3<f32>
  };
 
-@stage(vertex)
+@vertex
 fn main(@location(0) position : vec3<f32>,
   @builtin(vertex_index) gl_VertexIndex : u32 ) -> Output {
     var output : Output;

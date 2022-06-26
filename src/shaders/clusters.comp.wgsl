@@ -60,7 +60,7 @@ struct Uniforms {
 
  //let tileCount : vec3<u32> = vec3<u32>(1u, 1u, 1u);
  let tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
-@stage(compute) @workgroup_size(4,2,4)
+@compute @workgroup_size(4,2,4)
   fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
     let tileIndex = global_id.x +
                     global_id.y * tileCount.x +

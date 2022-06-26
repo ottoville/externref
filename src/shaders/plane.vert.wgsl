@@ -52,7 +52,7 @@ struct Output {
   @location(0) color : vec3<f32>,
   @builtin(position) Position : vec4<f32>
 };
-@stage(vertex)
+@vertex
 fn main(@location(0) position : vec3<f32>) -> Output {
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; //250 * 250;
     var output:Output;

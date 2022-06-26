@@ -37,7 +37,7 @@ struct Output {
   @location(2) @interpolate(flat) id : u32
 };
 
-@stage(vertex)
+@vertex
 fn main(@location(0) position : vec3<f32>) -> Output {
   var output:Output;
   output.Position = uniforms.modelViewProjectionMatrix * vec4<f32>(position, 1.0);

@@ -12,7 +12,7 @@ struct Mouse {
 @binding(1) @group(1) var mesh_texture : texture_2d<u32>;
 @binding(2) @group(1) var<uniform> mouse : Mouse;
 
-@stage(compute) @workgroup_size(1, 1, 1)
+@compute @workgroup_size(1, 1, 1)
 fn main(
     @builtin(global_invocation_id) global_id : vec3<u32>
 ) {

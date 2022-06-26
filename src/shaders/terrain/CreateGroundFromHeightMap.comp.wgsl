@@ -24,7 +24,7 @@ struct Pixels {
 @binding(1) @group(1) var pixels : texture_2d<f32>;
 
 
-@stage(compute) @workgroup_size(1)
+@compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let coords=vec2<f32>(
         f32(GlobalInvocationID.x * settings.size.x) / f32(settings.subdivisions),

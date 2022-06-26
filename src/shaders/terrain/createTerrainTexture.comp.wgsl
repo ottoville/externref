@@ -121,7 +121,7 @@ fn snoise2(v:vec3<f32>) -> f32 {
 @binding(0) @group(2) var ground_texture: texture_storage_2d<rgba8unorm,write>;
 
 
-@stage(compute) @workgroup_size(1)
+@compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; // 250 * 250;
 

@@ -69,7 +69,7 @@ struct Output {
   @builtin(position) Position : vec4<f32>
 };
 
-@stage(vertex)
+@vertex
 fn main(
   @builtin(instance_index) instanceIdx : u32,
   @builtin(vertex_index) VertexIndex : u32) -> Output {

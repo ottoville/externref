@@ -6,7 +6,7 @@ struct Output {
 
 //[[location(1)]] var<in> ambient: vec3<f32>;
 
-@stage(fragment)
+@fragment
 fn main(@location(0) v_uv : vec4<f32>,
   @location(1) position : vec3<f32>,
   @location(2) @interpolate(flat) id : u32) -> Output {
