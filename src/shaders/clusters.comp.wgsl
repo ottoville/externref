@@ -56,10 +56,10 @@ struct Uniforms {
   }
 
 //Eye position is zero in view space
- let eyePos = vec3<f32>(0.0, 0.0, 0.0);
+ const eyePos = vec3<f32>(0.0, 0.0, 0.0);
 
  //let tileCount : vec3<u32> = vec3<u32>(1u, 1u, 1u);
- let tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
+ const tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
 @compute @workgroup_size(4,2,4)
   fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
     let tileIndex = global_id.x +

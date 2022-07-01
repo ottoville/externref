@@ -1,7 +1,7 @@
 import { Terrain } from "./world/terrain.js";
 export interface UITABClassLike {
     new (
-        terrain: Terrain): UITAB;
+        terrain: Terrain, canvas:HTMLCanvasElement): UITAB;
 
     label: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -11,7 +11,7 @@ export abstract class UITAB {
     abstract destroy(): void;
     static label:string;
     constructor(
-        public terrain: Terrain
+        public terrain: Terrain,
     ) {
 
     }

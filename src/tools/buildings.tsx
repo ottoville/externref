@@ -21,11 +21,13 @@ export class BuildingsUI extends UITAB {
         this.traits.forEach(trait => trait.destroy());
     };
     traits: Set<Trait> = new Set();
-    #canvasListener = new canvasListener(this);
+    #canvasListener: canvasListener;
     constructor(
-        terrain: Terrain
+        terrain: Terrain,
+        canvas: HTMLCanvasElement
     ) {
         super(terrain);
+        this.#canvasListener = new canvasListener(this, canvas);
 
     }
     public create = (type: string): void => {

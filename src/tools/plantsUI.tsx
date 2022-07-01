@@ -24,13 +24,15 @@ export class PlantsUI extends UITAB {
     public static instance: UITAB | null = null;
     static plantsMesh: Plants;
     private PT: paintPlane | null = null;
-    canvasListener = new canvasListener(this);
+    canvasListener: canvasListener;
     scene=engine.scenes.get('main');
 
     constructor(
-        terrain: Terrain
+        terrain: Terrain,
+        canvas: HTMLCanvasElement
     ) {
         super(terrain);
+        this.canvasListener = new canvasListener(this, canvas);
         if(!this.scene) {
             throw(new Error('no scene'));
         }

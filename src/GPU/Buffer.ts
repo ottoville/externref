@@ -90,19 +90,24 @@ export class Buffer {
     static create(gpu: GPU, size: number, usages: number[], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void) {
         let b:Buffer;
         if(usages.includes(GPUBufferUsage.COPY_SRC)) {
-            b = new copySrcBuffer(gpu, size, usages, typeof mappedAtCreation !== "undefined");
+            b = new copySrcBuffer(gpu, size, usages, typeof mappedAtCreation !== "undefined", label);
         }
         else {
             b = new Buffer(gpu, size, usages, typeof mappedAtCreation !== "undefined", label)
         }
         if(mappedAtCreation) {
-            mappedAtCreation(b.buffer, gpu);
+            try {
+                mappedAtCreation(b.buffer, gpu);
+            } catch(e) {
+                engine.showError(e);
+                return;
+            }
             b.buffer.unmap();
         }
         return b;
     }
     protected readonly buffer: GPUBuffer;
-    constructor(protected gpu: GPU, size: number, usages: number[], mappedAtCreation = false, public label?:string) {
+    constructor(protected gpu: GPU, size: number, usages: number[], mappedAtCreation = false, public label:string) {
         if (size === 0)
             throw (new Error('Cannot create zero sized buffer'));
         const usage = usages.reduce((prev, curr) => prev | curr, 0);
@@ -131,8 +136,9 @@ export class Buffer {
             (this as unknown as IndirectBuffer).indirectBuffer = this.buffer
         }
         if(usages.includes(GPUBufferUsage.COPY_DST)) {
+            //TODO: delete temp buffer
             (this as unknown as CopyDstBuffer).updateBufferRaw = (commandEncoder, data) => {
-                const tempBuffer = new copySrcBuffer(gpu, data.byteLength, [], true);
+                const tempBuffer = new copySrcBuffer(gpu, data.byteLength, [], true, label+'_swap');
                 new Int8Array(tempBuffer.buffer.getMappedRange()).set(new Int8Array(data));
                 tempBuffer.buffer.unmap();
                 commandEncoder.copyBufferToBuffer(
@@ -169,30 +175,30 @@ export class Buffer {
     }
 }
 class copySrcBuffer extends Buffer {
-    constructor(gpu: GPU, private size: number, usages: number[], mappedAtCreation=false) {
-        super(gpu, size, [GPUBufferUsage.COPY_SRC, ...usages],mappedAtCreation)
+    constructor(gpu: GPU, private size: number, usages: number[], mappedAtCreation=false, label: string) {
+        super(gpu, size, [GPUBufferUsage.COPY_SRC, ...usages],mappedAtCreation, label)
     }
     copyTo(commandEncoder: GPUCommandEncoder, buffer: CopyDstBuffer, sourceOffset: GPUSize64, destinationOffset: GPUSize64, copySize: GPUSize64) {
         buffer.copyFrom(commandEncoder, this.buffer, sourceOffset, destinationOffset, copySize);
     }
     createReadCopy(commandEncoder: GPUCommandEncoder) {
-        const gpuReadBuffer = new ReadBuffer(this.gpu, this.size);
+        const gpuReadBuffer = new ReadBuffer(this.gpu, this.size, this.label+'_readCopy');
         gpuReadBuffer.copyFrom(commandEncoder,this.buffer,0,0,this.size);
         return gpuReadBuffer;
     }
 }
  //MAP write (Only CopySrc is allowed with MapWrite)
 export class WriteBuffer extends copySrcBuffer {
-    constructor(gpu: GPU, size: number) {
-        super(gpu, size, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC])
+    constructor(gpu: GPU, size: number, label: string) {
+        super(gpu, size, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC], false, label)
     }
 }
  //MAP read (Only CopyDtst is allowed with MapRead)
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ReadBuffer extends CopyDstBuffer {}
 export class ReadBuffer extends Buffer {
-    constructor(gpu: GPU, size: number) {
-        super(gpu, size, [GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST])
+    constructor(gpu: GPU, size: number, label: string) {
+        super(gpu, size, [GPUBufferUsage.MAP_READ, GPUBufferUsage.COPY_DST], false, label)
     }
     async readAndDestroy(callback: (buff: ArrayBuffer) => Promise<void> | void): Promise<void> {
         let arrbuff: ArrayBuffer;

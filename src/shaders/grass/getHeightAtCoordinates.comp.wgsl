@@ -40,7 +40,7 @@ struct Settings {
 @binding(0) @group(1) var<storage, read> positions : Vec2Array;
 
 
-let PI:f32 = 3.141592653589793;
+const PI:f32 = 3.141592653589793;
 //
 // Description : Array and textureless GLSL 2D simplex noise function.
 //      Author : Ian McEwan, Ashima Arts.

@@ -112,7 +112,7 @@ export class Canvas extends TerraCompoment {
         slope.update_scale(0, 400, 400);
 
      //   slope.update_euler_angles(0,0,Math.PI*-0.5);
-      slope.update_euler_angles(0,0,Math.PI*-0.4);
+        slope.update_euler_angles(0,0,Math.PI*-0.4);
         slope.translation = [23,600,23];
 
 
@@ -220,7 +220,7 @@ export class Canvas extends TerraCompoment {
                         }
                     }
                 }
-                const instance = new tool(terrain);
+                const instance = new tool(terrain, this.#canvasElem);
                 menuContainer.appendChild(tool.menuElem(instance));
                 this.openedMenu = [instance, menuContainer];
             }

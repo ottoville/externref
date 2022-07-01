@@ -20,7 +20,7 @@ struct WorldPosition {
 @binding(1) @group(1) var<uniform> times : Time;
 @binding(0) @group(2) var<uniform> worldposition : WorldPosition;
 
-let pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
+const pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
     vec3<f32>(-50000.0,     3.0,   -50000.0),
     vec3<f32>(50000.0,      3.0,   -50000.0),
     vec3<f32>(-50000.0,     3.0,   50000.0),

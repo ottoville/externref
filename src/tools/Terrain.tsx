@@ -51,17 +51,18 @@ export class TerrainTool extends MainNode {
         <button class="w3-bar-item w3-button" style="transform: rotate(-180deg);" onClick={() => instance.lower()} >⇫</button >
     </div>;
     traits: Set<Trait> = new Set();
-    #canvasListener = new canvasListener(this);
-
+    #canvasListener: canvasListener;
     elevator: rust_pointer<"elevator">
     drawable: DrawableSimple;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
     scene: Scene;
 
     constructor(
-        public terrain: Terrain
+        public terrain: Terrain,
+        canvas: HTMLCanvasElement
     ) {
         super(4, undefined, undefined, undefined, 'TerrainTool');
+        this.#canvasListener = new canvasListener(this, canvas);
         const renderPipeline=getRenderPipeline(terrain);
         const scene=engine.scenes.get('main');
         if(!scene)

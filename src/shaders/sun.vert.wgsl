@@ -17,7 +17,7 @@ struct WorldPosition {
 @binding(0) @group(1) var<uniform> uniforms : Uniforms;
 @binding(1) @group(1) var<uniform> times : Time;
 
-let sunDistance: f32= 1495000.0;  //divided by 100000 correct one
+const sunDistance: f32= 1495000.0;  //divided by 100000 correct one
 
 struct Output {
   @builtin(position) Position : vec4<f32>

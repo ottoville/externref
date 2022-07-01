@@ -1,7 +1,6 @@
 ﻿import { LazyEval } from "../LazyEval.js";
-import { GPU } from "../GPU.js";
 import type { UITAB } from "../UITAB.js";
-import { Trait } from "./trait.js";
+import { Trait, Traitable } from "./trait.js";
 
 interface addListenerOptions extends AddEventListenerOptions {
     lazy?: number;
@@ -12,11 +11,14 @@ export interface hasCanvasListener extends UITAB {
 }
 
 export class canvasListener extends Trait {
+    constructor(traitable: Traitable, private canvas: HTMLCanvasElement) {
+        super(traitable);
+    }
     //abstract deactivate: () => void;
     override destroy() {
         this.#listeners.forEach((map, type) => {
             map.forEach((proxy, listener) => {
-                GPU.instance.canvas.removeEventListener(type, proxy || listener);
+                this.canvas.removeEventListener(type, proxy || listener);
             });
             map.clear();
         });
@@ -34,7 +36,7 @@ export class canvasListener extends Trait {
         }
         if (options && options.once) {
             map.set(listener, listener);
-            GPU.instance.canvas.addEventListener(type, listener, options);
+            this.canvas.addEventListener(type, listener, options);
         } else {
             if (map.has(listener)) {
                 console.warn('Adding same listener twice not supported: ', type);
@@ -42,23 +44,24 @@ export class canvasListener extends Trait {
             }
             if (options && options.lazy !== undefined) {
                 const lazyf = new LazyEval((e) => {
-                    listener.call(GPU.instance.canvas, e);
+                    listener.call(this.canvas, e);
                 });
                 const proxyf = (e: HTMLElementEventMap[K]) => {
                     lazyf.eval(options.lazy!, e);
                 };
                 map.set(listener, proxyf);
-                GPU.instance.canvas.addEventListener(type, proxyf);
+                this.canvas.addEventListener(type, proxyf);
             } else {
                 map.set(listener, null);
-                GPU.instance.canvas.addEventListener(type, listener);
+                
+                this.canvas.addEventListener(type, listener);
             }
         }
     }
     public removeListener<K extends keyof HTMLElementEventMap>(type: K, listener: (ev: HTMLElementEventMap[K]) => void) {
         let map: Map<(ev: HTMLElementEventMap[K]) => void, ((e: HTMLElementEventMap[K]) => void) | null> | undefined;
         if (map = this.#listeners.get(type)) {
-            GPU.instance.canvas.removeEventListener(type, map.get(listener) || listener);
+            this.canvas.removeEventListener(type, map.get(listener) || listener);
             if (!map.delete(listener))
                 console.warn('Tried to remove listener that did not exists:', type);
         }

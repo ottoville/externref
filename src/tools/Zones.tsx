@@ -35,7 +35,7 @@ export class Zones extends UITAB {
 
 
     traits: Set<Trait> = new Set();
-    public canvasListener = new canvasListener(this);
+    public canvasListener;
     private PT: paintTexture;
     #size = 5120;
     readonly #ratio:number //texture coordinates
@@ -43,8 +43,10 @@ export class Zones extends UITAB {
     scene: Scene;
     constructor(
         terrain: Terrain,
+        canvas: HTMLCanvasElement
     ) {
         super(terrain);
+        this.canvasListener = new canvasListener(this, canvas);
         const initialScene=terrain.scenes[0];
         if(!initialScene) {
             throw(new Error('scene not found'))

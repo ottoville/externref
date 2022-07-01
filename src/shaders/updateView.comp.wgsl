@@ -12,7 +12,7 @@ struct MeshArray {
   pointers: array<u32, 63>,
   mesh: array<Meshes>
 };
-struct PointLights {
+struct Lights {
   length:u32,
   pointers: array<u32>
 };
@@ -32,8 +32,8 @@ struct Clusters {
 };
 
 @binding(0) @group(0) var<storage, read> meshes : MeshArray;
-@binding(1) @group(0) var<storage, read> point_lights : PointLights;
-@binding(2) @group(0) var<storage, read> directional_lights : PointLights;
+@binding(1) @group(0) var<storage, read> point_lights : Lights;
+@binding(2) @group(0) var<storage, read> directional_lights : Lights;
 @binding(0) @group(1) var<storage, read_write> clusters : Clusters;
 @binding(1) @group(1) var<uniform> viewUniforms : ViewUniforms;
 
@@ -57,7 +57,7 @@ struct Clusters {
 
     return sqDist;
   }
-let tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
+const tileCount : vec3<u32> = vec3<u32>(32u, 18u, 48u);
 
 @compute @workgroup_size(4, 2, 4)
 fn main(

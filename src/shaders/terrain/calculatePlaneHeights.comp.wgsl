@@ -32,7 +32,7 @@ struct PlaneArray {
 @binding(1) @group(2) var<storage, write> facet12 : PlaneArray;
 
 
-let cd: f32 = -1.0;
+const cd: f32 = -1.0;
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
   let subdivisions_plus_one:u32 = settings.subdivisions + u32(1);

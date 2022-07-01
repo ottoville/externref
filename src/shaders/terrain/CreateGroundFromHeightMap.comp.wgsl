@@ -1,4 +1,4 @@
-let filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0);
+const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0);
 
 struct Settings {
      size : vec2<u32>,

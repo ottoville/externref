@@ -1,8 +1,8 @@
 
 
 
-let bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
-let rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(
+const bending :array<f32, 7> = array<f32, 7>(0.0, 0.0,0.2,0.2,0.5,0.5,1.0);
+const rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(
   vec2<f32>(0.0,0.0),
   vec2<f32>(0.0,0.0),
   vec2<f32>(1.0,0.0),
@@ -41,13 +41,13 @@ fn rand(co:vec2<f32>) -> f32 {
     return fract(sin(dot(co.xy ,vec2<f32>(12.9898,78.233))) * 43758.5453);
 }
 
-let windDirection:f32 = 0.0;
+const windDirection:f32 = 0.0;
 struct Output {
   @builtin(position) Position : vec4<f32>,
   @location(0) color : vec3<f32>
 };
 
-let vertices_ : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
+const vertices_ : array<vec2<f32>, 7> = array<vec2<f32>, 7>(
     vec2<f32>(0.02,  0.0),
     vec2<f32>(-0.02, 0.0),
     vec2<f32>(0.014,  0.29),

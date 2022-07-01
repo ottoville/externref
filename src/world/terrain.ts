@@ -211,7 +211,7 @@ TODO
         }
         this.slopeArrGPUBuffer = Buffer.create(engine.gpu, Int32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1], [GPUBufferUsage.STORAGE],'slopeArrGPUBuffer');
         this.facet12ArrGPUBuffer = Buffer.create(engine.gpu, Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], 'facet12ArrGPUBuffer');
-        this.facet12ArrGPUBufferSwap = new WriteBuffer(engine.gpu, Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2);
+        this.facet12ArrGPUBufferSwap = new WriteBuffer(engine.gpu, Float32Array.BYTES_PER_ELEMENT * Terrain.subdivisions[0] * Terrain.subdivisions[1] * 4 * 2, 'facet12ArrGPUBufferSwap');
         this.texture = engine.gpu.device.createTexture({
             dimension: '2d',
             format: "rgba8unorm",
@@ -418,7 +418,7 @@ TODO
 
 
                 // Get a GPU buffer for reading in an unmapped state.
-                const gpuReadBuffer = new ReadBuffer(engine.gpu!, textureSizeBytes);
+                const gpuReadBuffer = new ReadBuffer(engine.gpu!, textureSizeBytes, 'terrainReaduBuffer');
                 // Encode commands for copying buffer to buffer.
                 gpuReadBuffer.copyFromTexture(commandEncoder, {texture: this.texture}, {bytesPerRow: 4*Terrain.textureSize[0]}, Terrain.textureSize )
 
