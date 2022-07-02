@@ -20,3 +20,6 @@ debug = false
 debug-assertions = false
 overflow-checks = false
 codegen-units = 16
+
+[features]
+webgpu = []
