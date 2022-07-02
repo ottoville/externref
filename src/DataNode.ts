@@ -6,7 +6,7 @@ import type { ColliderJS } from "./Collider.js";
 import type { Engine } from "./engine.js";
 declare const engine:Engine;
 
-const worker = new ObjectWorkerThread('/js/workers/webworkers/mesh.js');
+const worker = new ObjectWorkerThread('mesh.js', {type:'module'});
 export interface PickingInfo {
     hit: boolean,
     pickedPoint: { x: number, y: number, z: number },
@@ -106,15 +106,13 @@ export abstract class DataNode extends MainNode {
         engine.rust.add_geometry(this.ptr,true,verticesPositionStride,static_faces,strip);
         this.set_vertices(vertices);
         // queueMicrotask here so mesh will have indices initialized
-        queueMicrotask(() => {
-            const collider_ptr = this.create_collider();
-            engine.rust.add_collider(this.ptr, collider_ptr)
-        });
-        
-
-        //this.facesBufferCollider = new ArrayBuffer(this.facesBuffer.byteLength);
-        if(has_physic)
+        if(has_physic) {
+            queueMicrotask(() => {
+                const collider_ptr = this.create_collider();
+                engine.rust.add_collider(this.ptr, collider_ptr)
+            });
             engine.physics.tickables.push(this);
+        }            
     }
     protected pushVertice = (position:number) => {
         let newLen=0;

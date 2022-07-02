@@ -125,11 +125,11 @@ fn main(
         if((scenes & light.scenes) != 0u) {
           let light_position:vec3<f32> = light.position[12].xyz;
           if(light.point_light_squared > 0.0) {
-            var light_dir:vec3<f32> = light_position - position.xyz;
-            let light_distance_squared= dot(light_dir, light_dir);
-            let attenuation = max(1.0 - light_distance_squared / (light.point_light_squared), 0.0);
+              var light_dir:vec3<f32> = light_position - position.xyz;
+              let light_distance_squared= dot(light_dir, light_dir);
+              let attenuation = max(1.0 - light_distance_squared / (light.point_light_squared), 0.0);
 
-            shading = shading + max(dot(normal.xyz, normalize(light_dir)),0.0) * attenuation;
+              shading = shading + max(dot(normal.xyz, normalize(light_dir)),0.0) * attenuation;
           } else {
               //Light reflect from athmosphere
               shading_rgb = shading_rgb + light.ambient;

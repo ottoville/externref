@@ -14,7 +14,7 @@ import { PositionCamera } from "./controllers/PositionCamera.js";
 import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
-import type { PickableRenderPass } from "./GPU/RenderPass.js";
+import type { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
 import { Texture } from "./GPU/Texture.js";
 import { closeDistance, closeDistanceSquared, Ellipsoid } from "./DataNode.js";
 import { Buffer } from "./GPU/Buffer.js";
@@ -259,8 +259,6 @@ export class Engine {
                 Texture.toBitmap(gpu!.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture)
             }
         }
-        const map = new Map<number, number>();
-        const dataSizeBytes = MainNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
         let rust: WebAssembly.WebAssemblyInstantiatedSource;
         let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
         const exportObj = {
@@ -270,32 +268,6 @@ export class Engine {
                 },
                 update_directional_lights:(pointer: number, length: number) => {
                     engine.update_directional_lights(pointer, length)
-                },
-                handle_gpu_queue:(pointerVec:number, length:number) => {
-                    if(!gpu)
-                        return;
-                    gpu.GPUQueueCommandEncoder=gpu.device.createCommandEncoder();
-                    const pointers_to_gpumesh_and_alignment = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
-                    for (let i = 0; i < pointers_to_gpumesh_and_alignment.length; i += 2) {
-                        map.set(pointers_to_gpumesh_and_alignment[i]!, pointers_to_gpumesh_and_alignment[i + 1]!);
-                    }
-                    let tempOffset = 0;
-
-                    Buffer.create(gpu, dataSizeBytes * map.size, [GPUBufferUsage.COPY_SRC],'handle_gpu_queue', (tempBuffer, gpu2) => {
-                        map.forEach((alignment, gpumeshPointer) => {
-                            const data = new Float32Array(engine.memory.buffer, gpumeshPointer, MainNode.GPUDataSize);
-                            //Point light
-                            if (data[29]! > 0) {
-                                engine.updateLights = true;
-            
-                            }
-                            new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
-                            gpu2.GPUMeshes.copyFrom(gpu!.GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * dataSizeBytes, gpu2.gpu_memory_index_size + alignment * 256, dataSizeBytes)
-
-                        });
-                        map.clear();
-                        gpu2.tempGPUBuffers.add(tempBuffer);    
-                    });
                 },
                 //TODO: Queue this call and do it only once per frame
                 updateAllocatedMemory(allocated_gpu_memory_ptr:number, length:number) {
@@ -320,6 +292,7 @@ export class Engine {
                 jslog_number(number:number) {
                     console.log(number)
                 },
+                ...gpu?.exported_functions
             }
         }
         try {
@@ -426,7 +399,7 @@ export class Engine {
     }
     update_directional_lights(pointer:number, length:number) {
         if(!this.gpu)
-            return
+            return;
         const lights = new Uint32Array(this.memory.buffer, pointer, length);
         const commandEncoder = this.gpu.device.createCommandEncoder();
         //TODO: Potential buffer overflow

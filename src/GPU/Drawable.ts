@@ -1,5 +1,5 @@
 ﻿import { RenderPipeline } from "./RenderPipeline.js";
-import type { RenderPass } from "./RenderPass.js";
+import type { RenderPass } from "./RenderPasses/RenderPass.js";
 import { MainNode } from "../MainNode.js";
 import { GPUBufferUsage } from "../GPU.js"
 import type { DataNode, IndexedNode } from "../DataNode.js";

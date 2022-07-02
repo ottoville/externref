@@ -1,4 +1,4 @@
-﻿import type { RenderPass } from "./GPU/RenderPass.js";
+﻿import type { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
 
 import type { GPU } from "./GPU.js";
 import { GPUBufferUsage } from "./GPU.js";
@@ -164,7 +164,7 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
         this.projectionViewInvertedIsDirty = true;
         if(this.gpu) {
             const tempBuffer = Buffer.create(this.gpu,this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], 'camera_tempBuffer', b => {
-                this.gpu!.tempGPUBuffers.add(b);
+                this.gpu!.tempGPUBuffers.push(b);
                 new Float32Array(b.getMappedRange()).set(this.#viewAndProjection);
             });
             tempBuffer.copyTo(commandEncoder, this.#uniformBuffer!,0,0,this.#viewAndProjection.byteLength)

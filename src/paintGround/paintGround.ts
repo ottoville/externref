@@ -8,7 +8,6 @@ import type { PTResultF } from "../types/interfaces/index.js";
 import type { hasCanvasListener } from "../traits/canvasListener.js";
 import type { Scene } from "../Scene.js";
 import { Engine } from "../engine.js";
-import { GPU } from "../gpu.js";
 declare const engine:Engine;
 
 
@@ -126,7 +125,7 @@ export abstract class paintGround {
     }
     #pointerUp = () => {
         this.uitab.canvasListener.removeListener('pointermove', this.#drawArea);
-        engine.inputManager?.enable(GPU.instance.canvas);
+        engine.inputManager?.enable(this.uitab.canvasListener.canvas);
         //fix race condition
         if (this.#end_position[0] == 0)
             return;

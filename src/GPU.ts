@@ -1,5 +1,8 @@
 ﻿import { MainNode } from "./MainNode.js";
-import { DepthRenderPass, PickableRenderPass, RenderPass } from "./GPU/RenderPass.js";
+import { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
+import { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
+import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
+
 import { type LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderTarget } from "./GPU/RenderTargets/RenderTarget.js";
 import { BindGroupLayout, type GPUBindGroupTextureEntry } from "./GPU/BindGroupLayout.js";
@@ -32,9 +35,15 @@ export const GPUBufferUsage = {
 let curSecond = 0;
 let framecount = 0;
 
-/*type CopyBuffers<T> = {
-    [K in keyof T]: (GPUMapReadBuffer & GPUCopyDSTBuffer)
-};*/
+// Cluster debug
+/*
+let debugNumber=0;
+//@ts-ignore
+window.resetDebugNumber = () => {
+    debugNumber = 0;
+}
+*/
+const dataSizeBytes = MainNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
 export class GPU {
     static bindMap:WeakMap<GPUBindingResource, BindGroup[]> = new WeakMap();
 
@@ -50,7 +59,7 @@ export class GPU {
     readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
 
     readonly pendingCommandBuffers: Set<GPUCommandBuffer> = new Set();
-    readonly tempGPUBuffers: Set<GPUBuffer> = new Set();
+    readonly tempGPUBuffers: GPUBuffer[] = [];
     
     readonly rootCameralayout:PipelineLayout;
 
@@ -72,8 +81,6 @@ export class GPU {
     readonly timeGroup: { binding: number; resource: { buffer: GPUBuffer }; };
     readonly timeBuffer: CopyDstBuffer & BindUniformBuffer
 
-    static instance: GPU;
-
     readonly renderPasses: Set<RenderPass>;
 
     readonly scale = {
@@ -89,7 +96,6 @@ export class GPU {
     }>;
     readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<GPUTextureFormat, ["RENDER_ATTACHMENT"]>>; }>;
 
-    context: GPUCanvasContext;
     updateViewPipeline:ComputePipeline;
     updateViewBindGroup: GPUBindGroup;
     readonly clustersInRow:[number,number,number]=[32, 18, 48];
@@ -362,7 +368,6 @@ export class GPU {
         const context: GPUCanvasContext | null = canvas.getContext('webgpu') as unknown as GPUCanvasContext; // unknown for jest
         if (!context)
             throw (new Error('Unable to get webgpu context'));
-        this.context = context;
         
         context.configure({
             device: device,
@@ -410,7 +415,6 @@ export class GPU {
             binding: 1,
             resource: this.timeBuffer.getUniformBinding()
         }
-        GPU.instance = this;
 
         const computePipelineClustersLayout = this.device.createBindGroupLayout({label: 'computePipelineClustersLayout', entries: [
             {
@@ -458,7 +462,7 @@ export class GPU {
                     this.scale.x = canvas.width / entry.contentRect.width;
                     this.scale.y = canvas.height / entry.contentRect.height;
                     // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
-                    this.context.configure({
+                    context.configure({
                         device: this.device,
                         format: this.presentationFormat,
                         usage: GPUTextureUsage.RENDER_ATTACHMENT
@@ -494,6 +498,31 @@ export class GPU {
             Atomics.store(this.mousePosition, 1, e.clientY * this.scale.y)
             Atomics.notify(new Int32Array(this.#mousePositionBuffer), 0);
         });
+    }
+    readonly #queue_map = new Map<number, number>();
+    readonly exported_functions = {
+        handle_gpu_queue:(pointerVec:number, length:number) => {
+            this.GPUQueueCommandEncoder=this.device.createCommandEncoder();
+            const pointers_to_gpumesh_and_alignment = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
+            for (let i = 0; i < pointers_to_gpumesh_and_alignment.length; i += 2) {
+                this.#queue_map.set(pointers_to_gpumesh_and_alignment[i]!, pointers_to_gpumesh_and_alignment[i + 1]!);
+            }
+            let tempOffset = 0;
+    
+            Buffer.create(this, dataSizeBytes * this.#queue_map.size, [GPUBufferUsage.COPY_SRC],'handle_gpu_queue', (tempBuffer, gpu2) => {
+                this.#queue_map.forEach((alignment, gpumeshPointer) => {
+                    const data = new Float32Array(engine.memory.buffer, gpumeshPointer, MainNode.GPUDataSize);
+                    //Point light
+                    if (data[29]! > 0) {
+                        engine.updateLights = true;
+                    }
+                    new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
+                    gpu2.GPUMeshes.copyFrom(this.GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * dataSizeBytes, gpu2.gpu_memory_index_size + alignment * 256, dataSizeBytes)
+                });
+                this.#queue_map.clear();
+                gpu2.tempGPUBuffers.push(tempBuffer);    
+            });
+        }
     }
     readonly #timeAndDeltaBuffer = new ArrayBuffer(8);
     readonly deltaView = new Float32Array(this.#timeAndDeltaBuffer, 4, 1);
@@ -555,6 +584,9 @@ export class GPU {
                 }
             });
             lightPass.end();
+            // Cluster debug
+            //var readBuffer = engine.mainCamera.clusterArrayBuffer?.createReadCopy(renderEncoder)
+
             engine.updateLights = false;
 
             this.renderPasses.forEach(renderPass => {
@@ -566,10 +598,20 @@ export class GPU {
 
         this.pendingCommandBuffers.add(renderEncoder.finish())
         this.device.queue.submit(this.pendingCommandBuffers);
+        // Cluster debug
+        /*
+        if(debugNumber === 0) {
+            readBuffer?.readAndDestroy((buff) => {
+                console.log('clusters',new Uint32Array(buff,8*4 * 27648 + 4 * 27648, 2 ));
+            });
+            debugNumber=debugNumber+1;
+        }*/
         this.pendingCommandBuffers.clear();
-        this.tempGPUBuffers.forEach(buff => buff.destroy())
+        this.tempGPUBuffers.forEach(buff => buff.destroy());
+        this.tempGPUBuffers.length=0;
         engine.renderFrame = window.requestAnimationFrame(this.renderLoop);
     }
+    /*
     drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass, index: number) {
         let drawedMeshes = 0;
         if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
@@ -608,9 +650,9 @@ export class GPU {
             });
             if (pipelineLayout.subBindGroups.size) {
                 pipelineLayout.subBindGroups.forEach((subPipelineLayot) => {
-                    /*subPipelineLayot.renderPipeLines.forEach(renderPipeline => {
-                        drawedMeshes += renderPipeline.draw(renderPassEncoder, renderPass, index + dynamicIndices.length, dynamicIndices);
-                    });*/
+                    //subPipelineLayot.renderPipeLines.forEach(renderPipeline => {
+                    //    drawedMeshes += renderPipeline.draw(renderPassEncoder, renderPass, index + dynamicIndices.length, dynamicIndices);
+                    //});
                     drawedMeshes += this.drawBindGroups2(renderPassEncoder, subPipelineLayot, renderPass, pipelineLayout.bindGroupLayout.dynamicIndices?index:++index, dynamicIndices)
                     
                 });
@@ -618,4 +660,5 @@ export class GPU {
         }
         return drawedMeshes;
     }
+    */
 }

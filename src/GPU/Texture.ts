@@ -1,4 +1,4 @@
-import { RenderPass } from "./RenderPass.js";
+import { RenderPass } from "./RenderPasses/RenderPass.js";
 import { GPU } from "../GPU.js";
 import { TextureView } from "./TextureView.js";
 import type { Engine } from "../engine.js";

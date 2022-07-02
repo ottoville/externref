@@ -1,6 +1,6 @@
 ﻿import type { PipelineLayout } from "./PipelineLayout.js";
 import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
-import type { RenderPass } from "./RenderPass.js";
+import type { RenderPass } from "./RenderPasses/RenderPass.js";
 import { MainNode } from "../MainNode.js";
 import type { GPU } from "../GPU.js";
 import type { IndexedNode } from "../DataNode.js";

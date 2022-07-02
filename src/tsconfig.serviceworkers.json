@@ -9,7 +9,8 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     //"strict": true,
-    "tsBuildInfoFile": "tsconfig.workers.tsbuildinfo"
+    "tsBuildInfoFile": "tsconfig.serviceworkers.tsbuildinfo",
+    "types": []
     },
     "exclude": [
       "node_modules"

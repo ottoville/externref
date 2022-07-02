@@ -209,6 +209,9 @@ export class ReadOnlyTerraVector3 extends TerraVector3 {
     declare readonly 0: number
     declare readonly 1: number
     declare readonly 2: number
+    override set(): never {
+        throw(new Error('Cannot use "set" in ReadOnly vector, use setter instead'));
+    }
 }
 export class TerraVector4 extends Float32Array {
     declare 0: number

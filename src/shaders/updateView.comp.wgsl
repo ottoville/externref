@@ -68,7 +68,7 @@ fn main(
                   global_id.y * tileCount.x +
                   global_id.z * tileCount.x * tileCount.y;
 
-  let cluster=clusters.bounds[tileIndex];
+  
   var lightCount=0u;
   for(var pointerIndex:u32=0u; pointerIndex < directional_lights.length; pointerIndex = pointerIndex + 1u) {
     let meshIndex = directional_lights.pointers[pointerIndex];
@@ -79,6 +79,7 @@ fn main(
       break;
     }
   }
+  let cluster=clusters.bounds[tileIndex];
   for(var pointerIndex:u32=0u; pointerIndex < point_lights.length; pointerIndex = pointerIndex + 1u) {
     let meshIndex = point_lights.pointers[pointerIndex];
     let mesh=meshes.mesh[meshIndex];

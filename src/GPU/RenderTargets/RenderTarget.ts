@@ -1,6 +1,6 @@
 import { type GPUTextureUsageLiterals, Texture } from "../Texture.js";
 import { TextureView } from "../TextureView.js";
-import type { RenderPass } from "../RenderPass.js";
+import type { RenderPass } from "../RenderPasses/RenderPass.js";
 
 export class RenderTarget<T extends Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>> {
     view: TextureView;

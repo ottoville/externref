@@ -72,20 +72,20 @@ export abstract class MainNode {
         return new ReadOnlyTerraVector3(engine.memory.buffer, engine.rust.translation_pointer(this.ptr));
     }
     set translation(value: [number, number, number] | TerraVector3) {
-        engine.rust.update_translation(this.ptr, value[0], value[1], value[2])
+        engine.rust.update_translation(this.ptr, value[0], value[1], value[2]);
     }
     get velocity(): ReadOnlyTerraVector3 {
-        return new TerraVector3(engine.memory.buffer, engine.rust.velocity_pointer(this.ptr))
+        return new ReadOnlyTerraVector3(engine.memory.buffer, engine.rust.velocity_pointer(this.ptr))
     }
     set velocity(value: [number, number, number] | TerraVector3) {
-        this.velocity.set(value);
+        new TerraVector3(engine.memory.buffer, engine.rust.velocity_pointer(this.ptr)).set(value);
         this.update_dynamic_buffer();
     }
     get acceleration(): ReadOnlyTerraVector3 {
-        return new TerraVector3(engine.memory.buffer, engine.rust.acceleration_pointer(this.ptr))
+        return new ReadOnlyTerraVector3(engine.memory.buffer, engine.rust.acceleration_pointer(this.ptr))
     }
     set acceleration(value: [number, number, number] | TerraVector3) {
-        this.acceleration.set(value);
+        new TerraVector3(engine.memory.buffer, engine.rust.acceleration_pointer(this.ptr)).set(value);
         this.update_dynamic_buffer();
     }
     intersect_box_aa_sphere(collider:ColliderJS, radius: number) {

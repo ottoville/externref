@@ -58,6 +58,7 @@ export class Canvas extends TerraCompoment {
         if(!this.#errorDialog.open) {
             const e=errors.shift();
             if(e) {
+                console.error(e);
                 this.#errorDialog.textContent = e.name + ', ' + e.message;
                 this.#errorDialog.showModal();
             }
@@ -67,7 +68,6 @@ export class Canvas extends TerraCompoment {
         this.progress = 6;
 
         const terraEngine = await Engine.initEngine(this.#canvasElem, (e) => {
-            console.error(e);
             errors.push(e);
             this.showError();
         }, {rust:  fetch('/js/engine/wasm32-unknown-unknown/debug/engine.wasm'), collider: fetch('../collider/colliderSimdO.wasm')});
@@ -104,7 +104,7 @@ export class Canvas extends TerraCompoment {
         //@ts-expect-error
         const debugscene = new Scene('static', terraEngine.gpu, [engine.mainCamera], (scene) => {
             const sun = new Light(scene);
-            sun.translation.set([0, 1, 0]);
+            sun.translation=[0, 1, 0]
             sun.gpu_custom_data = [0, 0, 0, 1]; //shadow to 1 (no shadow)
             //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
         });

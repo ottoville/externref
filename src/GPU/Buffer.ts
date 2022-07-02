@@ -136,9 +136,9 @@ export class Buffer {
             (this as unknown as IndirectBuffer).indirectBuffer = this.buffer
         }
         if(usages.includes(GPUBufferUsage.COPY_DST)) {
-            //TODO: delete temp buffer
             (this as unknown as CopyDstBuffer).updateBufferRaw = (commandEncoder, data) => {
                 const tempBuffer = new copySrcBuffer(gpu, data.byteLength, [], true, label+'_swap');
+                this.gpu.tempGPUBuffers.push(tempBuffer.buffer);
                 new Int8Array(tempBuffer.buffer.getMappedRange()).set(new Int8Array(data));
                 tempBuffer.buffer.unmap();
                 commandEncoder.copyBufferToBuffer(

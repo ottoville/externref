@@ -84,12 +84,11 @@ export class Physics {
             const velocity = movable.velocity;
             if (velocity[0] !== 0 || velocity[1] !== 0 || velocity[2] !== 0) {
                 const currentTranslation = movable.translation;
-                currentTranslation.set([
+                movable.translation = [
                     currentTranslation[0] + velocity[0],
                     currentTranslation[1] + velocity[1],
                     currentTranslation[2] + velocity[2]
-                ]);
-                movable.update_dynamic_buffer();
+                ];
             }
         });
         /*
