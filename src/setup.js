@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable no-undef */
 const {mkdir, writeFile} = require('fs').promises;
 const os = require('os');
 const path = require('path');

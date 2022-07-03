@@ -16,7 +16,7 @@ describe(
       engine = await Engine.initEngine(undefined, (e) => {
         console.log('error', e.message);
       }, {
-        rust: fs.readFileSync('../wwwroot/js/engine/wasm32-unknown-unknown/debug/engine.wasm'),
+        rust: fs.readFileSync('../node/wasm32-unknown-unknown/debug/engine.wasm'),
         collider: fs.readFileSync('../wwwroot/collider/colliderSimdO.wasm')
       });
       engine!.mainCamera.position = [100, 100, 100];

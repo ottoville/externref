@@ -1,4 +1,4 @@
-﻿importScripts("/js/workers/webworkers/ray.js");
+﻿//importScripts("/js/workers/webworkers/ray.js");
 
 const meshes: Map<number, Mesh> = new Map();
 interface pickInfo {
@@ -39,7 +39,7 @@ class Mesh {
 
     readonly #positionsView: Float32Array;
     readonly #indicesView: Uint32Array | undefined;
-    readonly #boundingBox = new Float32Array(this.boundingBoxBuffer);
+    readonly #boundingBox:Float32Array;
     #pickingPoint: Float32Array;
     #pickingDistance: Float32Array;
     constructor(
@@ -50,7 +50,7 @@ class Mesh {
         private readonly boundingBoxBuffer: SharedArrayBuffer,
         readonly pickingBuffer: SharedArrayBuffer
     ) {
-
+        this.#boundingBox=new Float32Array(this.boundingBoxBuffer);
         this.#positionsView = new Float32Array(positions);
         this.#pickingPoint = new Float32Array(pickingBuffer, 0, 3);
         this.#pickingDistance = new Float32Array(pickingBuffer, 3 * 4, 1);

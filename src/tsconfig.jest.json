@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports":true,
+    "outDir": "./test-build/js",
+    "target": "ESNext",
+    "module": "ESNext",
+    "jsx": "react",
+    "jsxFactory": "TerraUI.createElement",
+    "sourceMap": false,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    //"strict": true,
+    "tsBuildInfoFile": "tsconfig.testbuild.tsbuildinfo",
+    "incremental": true,
+    "paths": {
+      "/test-build/js/*": ["./*"],
+      "/js/engine/*": ["./test-build/js/engine/*"],
+    },
+    "lib": [
+      "dom",
+      "esnext",
+      "ES2017.SharedMemory",
+      "DOM.Iterable"
+    ],
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "typeRoots": ["./node_modules/@webgpu/"],
+    "types": ["jest", "@webgpu/types"]
+  },
+  "exclude": [
+    "workers",
+    "lib",
+    "service-worker.ts",
+    "service-worker.published.ts",
+    "jest.config.js",
+    "package.json"
+  ],
+  
+  "include": [ "tests.json", "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "./runTest.ts"],
+
+  "references": [
+    { "path": "./tsconfig.testem_workers.json" },
+  ]
+}

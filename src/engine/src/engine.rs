@@ -9,6 +9,7 @@ use rapier3d::prelude::*;
 extern "C" {
     fn update_point_lights(pointer: *const u32, length:usize);
     fn update_directional_lights(pointer: *const u32, length:usize);
+    #[cfg(feature = "webgpu")]
     fn handle_gpu_queue(pointerVec:*const[u32;2], length:usize);
     fn updateAllocatedMemory(ptr:*const u32, length: usize);
     fn jspanic(number:*const u8);
@@ -33,6 +34,7 @@ pub static mut ENGINE:Engine = Engine {
 };
 
 #[no_mangle]
+#[cfg(feature = "webgpu")]
 pub unsafe extern "C" fn renderloop() {
     if ENGINE.gpu_queue2.len() > 0 {
         handle_gpu_queue(ENGINE.gpu_queue2.as_ptr() as *const [u32; 2], ENGINE.gpu_queue2.len());

@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const {readFile} = require('fs').promises;
 const os = require('os');
 const path = require('path');

@@ -11,7 +11,7 @@ export interface hasCanvasListener extends UITAB {
 }
 
 export class canvasListener extends Trait {
-    constructor(traitable: Traitable, private canvas: HTMLCanvasElement) {
+    constructor(traitable: Traitable, public canvas: HTMLCanvasElement) {
         super(traitable);
     }
     //abstract deactivate: () => void;

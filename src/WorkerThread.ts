@@ -8,7 +8,11 @@ interface WMessage {
     data: unknown,
     id?: number
 }
-abstract class MainWorker extends Worker {
+const folderPosition = import.meta.url.lastIndexOf('/');
+const basePath = import.meta.url.substring(0, folderPosition)+'/workers/webworkers/';
+// Jest
+const Worker2:typeof window.Worker = typeof(Worker) === 'function' ? Worker : class {} as unknown as typeof window.Worker
+abstract class MainWorker extends Worker2 {
     protected operations: ([
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (value?: any | PromiseLike<unknown> | undefined) => void,
@@ -17,7 +21,7 @@ abstract class MainWorker extends Worker {
     ] | null)[] = [];
     #subscriptions: { [key: string]: (value?: unknown) => void; } = {};
     constructor(stringUrl: string | URL, options?: WorkerOptions) {
-        super(stringUrl, options);
+        super(basePath+stringUrl, options);
         this.onmessage = (e) => {
             if (typeof (e.data.id) !== 'undefined') {
                 let operation: [
