@@ -89,6 +89,8 @@ export abstract class DataNode extends MainNode {
     create_collider() {
         return engine.rust.create_trimesh_collider(this.ptr);
     }
+    static override Meshes: Map<number, DataNode> = new Map();
+
     constructor(
         vertices: Float32Array,
         verticesPositionStride: number,
@@ -103,6 +105,7 @@ export abstract class DataNode extends MainNode {
         rigid_body = true
     ) {
         super(vertices.length/verticesPositionStride, point_light, undefined, strip, label, scenes, fixed, rigid_body);
+        DataNode.Meshes.set(this.id, this);
         engine.rust.add_geometry(this.ptr,true,verticesPositionStride,static_faces,strip);
         this.set_vertices(vertices);
         // queueMicrotask here so mesh will have indices initialized

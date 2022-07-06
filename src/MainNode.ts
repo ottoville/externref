@@ -13,8 +13,6 @@ export abstract class MainNode {
     }
     //coefficient of friction
     grip=0;
-    // TODO force per ms?
-    force: [number, number, number]=[0,0,0];
     is_colliding=false;
     set gpu_custom_data(data:[number,number,number,number]) {
         engine.rust.set_gpu_custom_data(this.ptr,data[0],data[1],data[2],data[3])
@@ -73,6 +71,10 @@ export abstract class MainNode {
     }
     set translation(value: [number, number, number] | TerraVector3) {
         engine.rust.update_translation(this.ptr, value[0], value[1], value[2]);
+    }
+     // TODO force per ms?
+     apply_impulse(value: [number, number, number] | TerraVector3) {
+        engine.rust.apply_impulse(this.ptr, value[0], value[1], value[2]);
     }
     get velocity(): ReadOnlyTerraVector3 {
         return new ReadOnlyTerraVector3(engine.memory.buffer, engine.rust.velocity_pointer(this.ptr))

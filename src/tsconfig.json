@@ -27,7 +27,8 @@
       "ES2017.SharedMemory",
       "DOM.Iterable"
     ],
-    "typeRoots": [ "./node_modules/@types/", "./node_modules/@webgpu/"],
+    "typeRoots": ["./node_modules/@webgpu/"],
+    "types": ["@webgpu/types"],
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "allowJs": true,
@@ -37,18 +38,21 @@
     "paths": {
       "/js/engine/*": ["../wwwroot/js/engine/*"]
     },
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
   },
-  "include": [ "shaders.json", "**/*.ts", "**/*.tsx", "**/*.d.ts", "./rustwasm/*.js", "./node_modules/@webgpu/**/*", "code.tsx" ],
+  "include": [ "shaders.json", "**/*.ts", "**/*.tsx", "./rustwasm/*.js", "code.tsx" ],
   "exclude": [
     "node_modules",
+    "jestWorker.ts",
     "workers",
     "lib",
     "service-worker.ts",
     "service-worker.published.ts",
     "test-build",
     "runTest.ts",
+    "**/*.test.integration.ts",
     "**/*.test.ts",
+    "**/*.tesX.ts",
     "tests.json"
   ],
   "references": [

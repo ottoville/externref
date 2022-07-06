@@ -45,9 +45,12 @@ pub extern "C" fn create_ball_collider(radius: f32) -> *mut Collider {
     Box::leak(collider)
 }
 #[no_mangle]
-pub extern "C" fn create_cuboid_collider(hx: f32, hy: f32, hz: f32) -> *mut Collider {
-    let collider = Box::new(ColliderBuilder::cuboid(hx, hy, hz).restitution(0.0).build());
-    Box::leak(collider)
+pub extern "C" fn create_cuboid_collider(hx: f32, hy: f32, hz: f32, collision_events:bool) -> *mut Collider {
+    let mut colliderbuilder = ColliderBuilder::cuboid(hx, hy, hz).restitution(0.0);
+    if collision_events {
+        colliderbuilder = colliderbuilder.active_events(ActiveEvents::COLLISION_EVENTS);
+    }
+    Box::leak(Box::new(colliderbuilder.build()))
 }
 #[no_mangle]
 pub extern "C" fn create_cone_collider(half_height: f32, radius: f32) -> *mut Collider {
@@ -72,6 +75,7 @@ impl GPUMesh {
             self.point_light_squared = range * range;
             if old_value == 0.0 {
                 engine.point_lights.push(gpu_alignment);
+                #[cfg(feature = "webgpu")]
                 engine.update_point_lights();
             }
         } else {
@@ -79,6 +83,7 @@ impl GPUMesh {
             if old_value > 0.0 {
                 let index = engine.point_lights.iter().position(|x| *x == gpu_alignment).unwrap();
                 engine.point_lights.swap_remove(index);
+                #[cfg(feature = "webgpu")]
                 engine.update_point_lights();
             }
         }
@@ -89,6 +94,7 @@ impl GPUMesh {
             self.directional_light = range;
             if old_value == 0.0 {
                 engine.directional_lights.push(gpu_alignment);
+                #[cfg(feature = "webgpu")]
                 engine.update_directional_lights();
             }
         } else {
@@ -96,6 +102,7 @@ impl GPUMesh {
             if old_value > 0.0 {
                 let index = engine.directional_lights.iter().position(|x| *x == gpu_alignment).unwrap();
                 engine.directional_lights.swap_remove(index);
+                #[cfg(feature = "webgpu")]
                 engine.update_directional_lights();
             }
         }

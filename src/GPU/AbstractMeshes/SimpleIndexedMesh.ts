@@ -20,9 +20,10 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
         scenes?: Scene[],
         frontFace: GPUFrontFace = 'cw',
         topology: GPUPrimitiveTopology = "triangle-list",
+        fixed = false
         ) {
         const strip = topology === 'triangle-strip' || topology === 'line-strip';
-        super(vBufferCPU, 6, indicesView, has_physic, strip, point_light, undefined, label, scenes, frontFace);
+        super(vBufferCPU, 6, indicesView, has_physic, strip, point_light, undefined, label, scenes, frontFace,fixed);
         const primitiveState:GPUPrimitiveState = {frontFace, topology};
         if(strip)
             primitiveState.stripIndexFormat = 'uint32';

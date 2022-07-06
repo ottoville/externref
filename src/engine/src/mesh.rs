@@ -12,14 +12,14 @@ pub use crate::geometry::Geometry;
 pub use crate::geometry::Plane;
 pub use crate::geometry::ColliderPlane;
 pub use crate::boundingbox::BoundingBox;
-use crate::math::Quaternion;
-use crate::math::Vec3;
-use crate::math::Vec4;
+use crate::math2::Quaternion;
+use crate::math2::Vec3;
+use crate::math2::Vec4;
 pub use crate::terrain::elevator::Elevator;
 pub use crate::drawable::Drawable;
 pub use crate::drawable::DrawCommand;
 pub use crate::drawable::DrawType;
-use crate::math::Vec3F32;
+use crate::math2::Vec3F32;
 
 
 pub struct Mesh {
@@ -149,6 +149,10 @@ pub unsafe extern "C" fn update_rotation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: 
 #[no_mangle]
 pub unsafe extern "C" fn update_translation(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32) {
     (*mesh_ptr).set_translation(x, y, z)
+}
+#[no_mangle]
+pub unsafe extern "C" fn apply_impulse(mesh_ptr:*mut Mesh, x: f32, y: f32, z: f32) {
+    (*mesh_ptr).apply_impulse(x, y, z)
 }
 #[no_mangle]
 pub unsafe extern "C" fn indices_pointer(mesh_ptr:*mut Mesh) -> *const usize {
@@ -302,7 +306,7 @@ impl Mesh {
 }
 
 impl Mesh {
-    pub fn create_convex_hull_collider(&self) -> *mut Collider {
+    pub fn create_flat_collider(&self) -> *mut Collider {
         let geometry = self.get_geometry();
         let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
         let vertices_amount = geometry.vertices.len() / geometry.vertices_stride;
@@ -310,6 +314,7 @@ impl Mesh {
         iterator.for_each(|i| {
             // TODO: ensure simd
             vertices.push(Point::new(i[0] * self.scaling.x, i[1] * self.scaling.y, i[2] * self.scaling.z));
+            vertices.push(Point::new(i[0] * self.scaling.x - 0.01, i[1] * self.scaling.y, i[2] * self.scaling.z));
         });
         let hull = ColliderBuilder::convex_hull(&vertices);
         match hull {
@@ -325,7 +330,32 @@ impl Mesh {
                 panic!("Cannot create convex hull");
             }
         }
-
+    }
+    pub fn create_convex_hull_collider(&self) -> *mut Collider {
+        let geometry = self.get_geometry();
+        let iterator=geometry.vertices.chunks(geometry.vertices_stride).into_iter();
+        let vertices_amount = geometry.vertices.len() / geometry.vertices_stride;
+        let mut vertices:Vec<Point<Real>> = Vec::with_capacity(vertices_amount*2);
+        iterator.for_each(|i| {
+            // TODO: ensure simd
+            vertices.push(Point::new(i[0] * self.scaling.x, i[1] * self.scaling.y, i[2] * self.scaling.z));
+            vertices.push(Point::new(i[0] * self.scaling.x - 0.1, i[1] * self.scaling.y, i[2] * self.scaling.z));
+        });
+        jslog_string(vec!["convex hull".to_string(), self.label.to_string(), format!["{:?}",vertices]]);
+        let hull = ColliderBuilder::convex_hull(&vertices);
+        match hull {
+            Some(h) => {
+                let collider = Box::new(h.mass_properties(MassProperties::new(
+                    point![0.0, 1.0, 0.0],
+                    0.5,
+                    vector![0.3, 0.2, 0.1],
+                )).build());
+                Box::leak(collider)
+            }
+            None => {
+                panic!("Cannot create convex hull");
+            }
+        }
     }
 
     //TODO: move to geometry
@@ -339,6 +369,9 @@ impl Mesh {
             // TODO: ensure simd
             vertices.push(Point::new(i[0] * self.scaling.x, i[1] * self.scaling.y, i[2] * self.scaling.z));
         });
+        if self.label == "human" {
+            jslog_string(vec!["human vertices".to_string(), format!("{:?}", vertices)]);
+        }
         let mut indices:Vec<[u32; 3]>;
         if geometry.indices.len() == 0 {
             if self.strip {
@@ -366,11 +399,7 @@ impl Mesh {
       /*  jslog_string(vec!["create_trimesh_collider".to_string(), vertices.len().to_string(), indices.len().to_string() ]);
         jslog_string(vec![format!("{:?}", vertices)]);
         jslog_string(vec![format!("{:?}", indices)]);*/
-        let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).mass_properties(MassProperties::new(
-            point![0.0, 1.0, 0.0],
-            0.5,
-            vector![0.3, 0.2, 0.1],
-        )).density(2.0).restitution(0.0).build());
+        let collider = Box::new(ColliderBuilder::trimesh(vertices, indices).density(2.0).restitution(0.5).build());
         Box::leak(collider)
     }
     pub unsafe fn add_geometry<'a>(
@@ -468,13 +497,15 @@ impl Mesh {
         });
         if point_light > 0.0 {
             ENGINE.point_lights.push(m.gpu_alignment);
+            #[cfg(feature = "webgpu")]
             ENGINE.update_point_lights();
         }
         if directional_light > 0.0 {
             ENGINE.directional_lights.push(m.gpu_alignment);
+            #[cfg(feature = "webgpu")]
             ENGINE.update_directional_lights();
         }
-
+        #[cfg(feature = "webgpu")]
         ENGINE.allocated_gpu_memory();
 
         let new_id=engine2.meshes.len();
@@ -542,6 +573,19 @@ impl Mesh {
         gpu_mesh.transformation.w.y=y;
         gpu_mesh.transformation.w.z=z;
         self.update_dynamic_buffer();
+    }
+    pub unsafe fn apply_impulse(&mut self, x:f32, y:f32, z:f32) {
+        let e = ENGINE.physic_engine_mut();
+        match self.rigid_body_handle {
+            Some(rigid_body_handle) => {
+                let rigid_body = e.rigid_body_set.get_mut(rigid_body_handle);
+                match rigid_body {
+                    Some(rigid_body) => rigid_body.apply_impulse(vector![x, y, z], true),
+                    None    => panic!("Rigid body not found"),
+                };
+            }
+            _ => {}
+        }
     }
     pub unsafe fn update_dynamic_buffer(&self) {
         let engine2 = ENGINE.physic_engine();
@@ -673,13 +717,16 @@ impl Drop for Mesh {
             if gpu_mesh.point_light_squared > 0.0 {
                 let index = ENGINE.point_lights.iter().position(|x| *x == self.gpu_alignment).unwrap();
                 ENGINE.point_lights.swap_remove(index);
+                #[cfg(feature = "webgpu")]
                 ENGINE.update_point_lights();
             }
             if gpu_mesh.directional_light > 0.0 {
                 let index = ENGINE.directional_lights.iter().position(|x| *x == self.gpu_alignment).unwrap();
                 ENGINE.directional_lights.swap_remove(index);
+                #[cfg(feature = "webgpu")]
                 ENGINE.update_directional_lights();
             }
+            #[cfg(feature = "webgpu")]
             ENGINE.de_allocate_gpu(self.gpu_alignment);
         }
     }

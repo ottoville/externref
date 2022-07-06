@@ -4,7 +4,6 @@ import { MainNode } from "./MainNode.js";
 import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import type { TerraVector3 } from "./Math.js";
-import { GPUBufferUsage } from "./GPU.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { Projection } from "./GPU/Projection.js";
 import type { CameraController } from "./controllers/CameraController.js";
@@ -16,8 +15,7 @@ import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
 import { Texture } from "./GPU/Texture.js";
-import { closeDistance, closeDistanceSquared, Ellipsoid } from "./DataNode.js";
-import { Buffer } from "./GPU/Buffer.js";
+import { closeDistance, closeDistanceSquared, DataNode, Ellipsoid } from "./DataNode.js";
 
 function createError(e:unknown) {
     if(!(e instanceof Error)) {
@@ -85,6 +83,7 @@ export type rustWasm = {
     update_rotation(mesh:rust_pointer<"mesh">, x:number, y:number, z:number, w:number):void,
     update_euler_angles(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
     update_translation(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
+    apply_impulse(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
     update_dynamic_buffer(mesh:rust_pointer<"mesh">):void,
     gpu_alignment(mesh:rust_pointer<"mesh">):number,
     positions_count(mesh:rust_pointer<"mesh">):number,
@@ -120,7 +119,7 @@ export type rustWasm = {
     create_ball_collider(radius: number): rust_pointer<"collider">
     create_trimesh_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
     create_convex_hull_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
-    create_cuboid_collider(hx: number, hy: number, hz: number): rust_pointer<"collider">
+    create_cuboid_collider(hx: number, hy: number, hz: number, collision_events:boolean): rust_pointer<"collider">
     create_cone_collider(half_height: number, radius: number): rust_pointer<"collider">
 }
 
@@ -263,23 +262,6 @@ export class Engine {
         let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
         const exportObj = {
             env: {
-                update_point_lights:(pointer: number, length: number) => {
-                    engine.update_point_lights(pointer, length)
-                },
-                update_directional_lights:(pointer: number, length: number) => {
-                    engine.update_directional_lights(pointer, length)
-                },
-                //TODO: Queue this call and do it only once per frame
-                updateAllocatedMemory(allocated_gpu_memory_ptr:number, length:number) {
-                    if(!gpu)
-                        return;
-                    const renderEncoder = gpu.device.createCommandEncoder();
-                    const buffLength = Uint32Array.BYTES_PER_ELEMENT * length;
-                    const tempBuffer = Buffer.create(gpu, buffLength, [GPUBufferUsage.COPY_SRC],'tempBuffer', tempBuffer2 => {
-                        new Uint32Array(tempBuffer2.getMappedRange(0, buffLength)).set(new Uint32Array(engine.rust.memory.buffer, allocated_gpu_memory_ptr, length));
-                    });
-                    tempBuffer.copyTo(renderEncoder, gpu.GPUMeshes,0, 0, buffLength);
-                },
                 now() {
                     return performance.now()
                 },
@@ -291,6 +273,9 @@ export class Engine {
                 },
                 jslog_number(number:number) {
                     console.log(number)
+                },
+                mesh_on_collide(mesh_id:number) {
+                    DataNode.Meshes.get(mesh_id)?.onCollide();
                 },
                 ...gpu?.exported_functions
             }
@@ -381,36 +366,6 @@ export class Engine {
             engine.rust.scaled_velocity_pointer(this.collider.collider_ptr),
             engine.rust.scaled_position_pointer(this.collider.collider_ptr))
 
-    }
-    update_point_lights(pointer:number, length:number) {
-        if(!this.gpu)
-            return
-        const lights = new Uint32Array(this.memory.buffer, pointer, length);
-        const commandEncoder = this.gpu.device.createCommandEncoder();
-        //TODO: Potential buffer overflow
-        const byteLength = 4 + lights.byteLength;
-        const tempBuffer = Buffer.create(this.gpu, byteLength, [GPUBufferUsage.COPY_SRC], 'point_lights_tempBuffer', tempBuffer2 => {
-            const gpu_buffer=new Uint32Array(tempBuffer2.getMappedRange());
-            gpu_buffer[0] = lights.length;
-            gpu_buffer.set(lights,1);
-        });
-        tempBuffer.copyTo(commandEncoder, this.gpu.GPUPointLights,0,0,byteLength);
-        this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
-    }
-    update_directional_lights(pointer:number, length:number) {
-        if(!this.gpu)
-            return;
-        const lights = new Uint32Array(this.memory.buffer, pointer, length);
-        const commandEncoder = this.gpu.device.createCommandEncoder();
-        //TODO: Potential buffer overflow
-        const byteLength = 4 + lights.byteLength;
-        const tempBuffer = Buffer.create(this.gpu, byteLength, [GPUBufferUsage.COPY_SRC], 'directional_lights_tempBuffer', tempBuffer2 => {
-            const gpu_buffer=new Uint32Array(tempBuffer2.getMappedRange());
-            gpu_buffer[0] = lights.length;
-            gpu_buffer.set(lights,1);
-        });
-        tempBuffer.copyTo(commandEncoder, this.gpu.GPUDirectionalLights, 0, 0, byteLength);
-        this.gpu.pendingCommandBuffers.add(commandEncoder.finish());
     }
     #getFinalPosition(sphere: Ellipsoid): [number, number, number] | TerraVector3 {
         const scaledPosition = this.collider.scaledPosition;

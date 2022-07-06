@@ -136,15 +136,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "instant"
-version = "0.1.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a5bbe824c507c5da5956355e86a746d82e0e1464f65d862cc5e71da70e94b2c"
-dependencies = [
- "cfg-if",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -305,7 +296,7 @@ dependencies = [
 
 [[package]]
 name = "rapier3d"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "approx",
  "arrayvec",
@@ -313,7 +304,6 @@ dependencies = [
  "bitflags",
  "crossbeam",
  "downcast-rs",
- "instant",
  "nalgebra",
  "num-derive",
  "num-traits",

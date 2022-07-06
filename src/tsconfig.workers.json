@@ -3,19 +3,19 @@
     "composite": true,
     "outDir": "../wwwroot/js",
     "module": "esnext",
-    "target": "ES2020",
+    "target": "ESNext",
     "lib": [ "esnext", "webworker" ],
     "sourceMap": false,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     //"strict": true,
-    "tsBuildInfoFile": "tsconfig.workers.tsbuildinfo"
-    },
-    "exclude": [
-      "node_modules"
-    ],
+    "tsBuildInfoFile": "tsconfig.workers.tsbuildinfo",
+    "types": []
+  },
+  "exclude": [
+    "node_modules"
+  ],
   "include": [
     "./workers/webworkers/*.ts",
-    "./webgpu.d.ts"
   ]
 }

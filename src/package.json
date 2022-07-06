@@ -39,8 +39,8 @@
     "@typescript-eslint/parser": "5.26.0",
     "eslint": "8.16.0",
     "eslint-plugin-promise": "6.0.0",
-    "jest": "28.1.1",
-    "puppeteer-core": "14.3",
+    "jest": "28.1.2",
+    "puppeteer-core": "15.3.0",
     "ts-jest": "28.0.5"
   }
 }

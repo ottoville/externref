@@ -1,43 +1,49 @@
 use std::collections::HashMap;
 use std::panic;
 
-pub use crate::GPUMesh;
 pub use crate::mesh::Mesh;
-use rapier3d::prelude::*;
-
+pub use crate::GPUMesh;
+use rapier3d::{crossbeam, prelude::*};
 
 extern "C" {
-    fn update_point_lights(pointer: *const u32, length:usize);
-    fn update_directional_lights(pointer: *const u32, length:usize);
     #[cfg(feature = "webgpu")]
-    fn handle_gpu_queue(pointerVec:*const[u32;2], length:usize);
-    fn updateAllocatedMemory(ptr:*const u32, length: usize);
-    fn jspanic(number:*const u8);
-    fn jslog(number:*const u8);
+    fn update_point_lights(pointer: *const u32, length: usize);
+    #[cfg(feature = "webgpu")]
+    fn update_directional_lights(pointer: *const u32, length: usize);
+    #[cfg(feature = "webgpu")]
+    fn handle_gpu_queue(pointerVec: *const [u32; 2], length: usize);
+    #[cfg(feature = "webgpu")]
+    fn updateAllocatedMemory(ptr: *const u32, length: usize);
+    fn jspanic(number: *const u8);
+    fn jslog(number: *const u8);
+    fn mesh_on_collide(number: u32);
 }
 pub struct Engine {
     gpu_reserved_slots: u64,
     pub gpu_queue2: Vec<(&'static GPUMesh, u32)>, //mesh + gpu alignment //pub gpu_queue2: Vec<(*const GPUMesh, u32)>,
-    pub point_lights:Vec<u32>,
-    pub directional_lights:Vec<u32>,
-    pub allocated_gpu_memory:Vec<u32>,
+    pub point_lights: Vec<u32>,
+    pub directional_lights: Vec<u32>,
+    pub allocated_gpu_memory: Vec<u32>,
     pub engine2: Option<Engine2>,
-
 }
-pub static mut ENGINE:Engine = Engine {
-    gpu_reserved_slots: 0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000,  //ZERO:Free, ONE: Reserved
+pub static mut ENGINE: Engine = Engine {
+    gpu_reserved_slots:
+        0b0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000, //ZERO:Free, ONE: Reserved
     gpu_queue2: Vec::new(),
     point_lights: Vec::new(),
     directional_lights: Vec::new(),
     allocated_gpu_memory: Vec::new(),
-    engine2: None
+    engine2: None,
 };
 
 #[no_mangle]
 #[cfg(feature = "webgpu")]
 pub unsafe extern "C" fn renderloop() {
     if ENGINE.gpu_queue2.len() > 0 {
-        handle_gpu_queue(ENGINE.gpu_queue2.as_ptr() as *const [u32; 2], ENGINE.gpu_queue2.len());
+        handle_gpu_queue(
+            ENGINE.gpu_queue2.as_ptr() as *const [u32; 2],
+            ENGINE.gpu_queue2.len(),
+        );
         ENGINE.gpu_queue2.clear()
     }
 }
@@ -49,33 +55,31 @@ pub struct Engine2 {
     narrow_phase: NarrowPhase,
     ccd_solver: CCDSolver,
     pub meshes: Vec<Mesh>,
-    pub rigid_bodies: HashMap<RigidBodyHandle,&'static mut Mesh>,
+    pub rigid_bodies: HashMap<RigidBodyHandle, &'static mut Mesh>,
     broad_phase: BroadPhase,
-    pub gpu_meshes: Vec<GPUMesh>
+    pub gpu_meshes: Vec<GPUMesh>,
 }
-pub fn create_js_string(mut str:String) -> *const u8 {
+pub fn create_js_string(mut str: String) -> *const u8 {
     str.truncate(512);
     let log_str = format!("{: <512}", str);
-    let ptr=log_str.as_ptr();
+    let ptr = log_str.as_ptr();
     std::mem::forget(log_str);
     return ptr;
 }
 pub fn jslog_string(strings: Vec<String>) {
-    let mut newstr=String::new();
+    let mut newstr = String::new();
     for str in strings.iter() {
         newstr.push(' ');
         newstr.push_str(str);
     }
     unsafe {
-       jslog(create_js_string(newstr));
+        jslog(create_js_string(newstr));
     }
 }
 #[no_mangle]
 pub extern "C" fn init_engine2() {
-    panic::set_hook(Box::new(|panic_info| {
-        unsafe {
-            jspanic(create_js_string(panic_info.to_string()));
-        }
+    panic::set_hook(Box::new(|panic_info| unsafe {
+        jspanic(create_js_string(panic_info.to_string()));
     }));
     let rigid_body_set = RigidBodySet::new();
     let collider_set = ColliderSet::new();
@@ -93,59 +97,98 @@ pub extern "C" fn init_engine2() {
         ccd_solver: CCDSolver::new(),
     };
     unsafe {
-        ENGINE.engine2=Some(e);
+        ENGINE.engine2 = Some(e);
     }
+}
+unsafe fn collider_to_mesh(e:&Engine2, collider_handle: ColliderHandle) -> Option<&&mut Mesh> {
+    return match e.collider_set.get(collider_handle) {
+        Some(collider) => match collider.parent() {
+            Some(rigid_body_handle) => {
+                e.rigid_bodies.get(&rigid_body_handle)
+            }
+            None => None,
+        },
+        None => None,
+    };
 }
 #[no_mangle]
 pub unsafe extern "C" fn physic_tick() {
-      //  jslog_number(&(ENGINE.physic_engine().meshes[0]) as *const Mesh as u32);
-        let gravity = vector![0.0, -9.81, 0.0];
-        let integration_parameters = IntegrationParameters::default();
-        
-        let mut joint_set = ImpulseJointSet::new();
-        let mut multi_joint_set = MultibodyJointSet::new();
-        let physics_hooks = ();
-        let event_handler = ();
+    //  jslog_number(&(ENGINE.physic_engine().meshes[0]) as *const Mesh as u32);
+    let gravity = vector![0.0, -9.81, 0.0];
+    let integration_parameters = IntegrationParameters::default();
 
-        let e = ENGINE.physic_engine_mut();
-        e.physic_pipeline.step(
-            &gravity,
-            &integration_parameters,
-            &mut e.island_manager,
-            &mut e.broad_phase,
-            &mut e.narrow_phase,
-            &mut e.rigid_body_set,
-            &mut e.collider_set,
-            &mut joint_set,
-            &mut multi_joint_set,
-            &mut e.ccd_solver,
-            &physics_hooks,
-            &event_handler);
+    let mut joint_set = ImpulseJointSet::new();
+    let mut multi_joint_set = MultibodyJointSet::new();
+    let physics_hooks = ();
+    // Initialize the event collector.
+    //TODO: do not create on each step.
+    let (contact_send, contact_recv) = crossbeam::channel::unbounded();
+    let (collision_send, collision_recv) = crossbeam::channel::unbounded();
 
-        // Iter on each dynamic rigid-bodies that moved.
-        for rigid_body_handle in e.island_manager.active_dynamic_bodies() {
-            let mesh=e.rigid_bodies.get_mut(rigid_body_handle);
-            match mesh {
-                Some(m) => {
+    let event_handler = ChannelEventCollector::new(collision_send, contact_send);
 
-                    let rigid_body = &e.rigid_body_set[*rigid_body_handle];
-                    let newrot=rigid_body.rotation().as_vector();
-                    m.rotation.i = newrot.x;
-                    m.rotation.j = newrot.y;
-                    m.rotation.k = newrot.z;
-                    m.rotation.w = newrot.w;
-                    m.update_matrix();
-                    let pos=rigid_body.position();
-                    m.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);
-                    /*if m.label == "human" {
-                        jslog_string(vec!["altitude".to_string(), pos.translation.y.to_string()]);
-                    }*/
-                }
-                None => {
-                    jslog(create_js_string("Mesh not found".to_string()))
-                }
+    let e = ENGINE.physic_engine_mut();
+    e.physic_pipeline.step(
+        &gravity,
+        &integration_parameters,
+        &mut e.island_manager,
+        &mut e.broad_phase,
+        &mut e.narrow_phase,
+        &mut e.rigid_body_set,
+        &mut e.collider_set,
+        &mut joint_set,
+        &mut multi_joint_set,
+        &mut e.ccd_solver,
+        &physics_hooks,
+        &event_handler,
+    );
+
+    while let Ok(collision_event) = collision_recv.try_recv() {
+        // Handle the collision event.
+        jslog_string(vec![format!(
+            "Received collision event: {:?}",
+            collision_event
+        )]);
+        match collider_to_mesh(e,collision_event.collider1()) {
+            Some(m) => {
+                mesh_on_collide(m.id)
             }
+            None => jslog(create_js_string(
+                "Mesh not found for collider1".to_string(),
+            ))
         }
+        match collider_to_mesh(e,collision_event.collider2()) {
+            Some(m) => {
+                mesh_on_collide(m.id)
+            }
+            None => jslog(create_js_string(
+                "Mesh not found for collider2".to_string(),
+            ))
+        }        
+    }
+    // Iter on each dynamic rigid-bodies that moved.
+    for rigid_body_handle in e.island_manager.active_dynamic_bodies() {
+        let mesh = e.rigid_bodies.get_mut(rigid_body_handle);
+        match mesh {
+            Some(m) => {
+                let rigid_body = &e.rigid_body_set[*rigid_body_handle];
+                let newrot = rigid_body.rotation().as_vector();
+                m.rotation.i = newrot.x;
+                m.rotation.j = newrot.y;
+                m.rotation.k = newrot.z;
+                m.rotation.w = newrot.w;
+                m.update_matrix();
+                let pos = rigid_body.position();
+                m.update_translation(pos.translation.x, pos.translation.y, pos.translation.z);
+                /*if m.label == "human" {
+                    jslog_string(vec!["altitude".to_string(), pos.translation.y.to_string()]);
+                }*/
+            }
+            None => jslog(create_js_string(
+                "Mesh not found for rigid body".to_string(),
+            )),
+        }
+    }
 }
 //const GPU_QUEUE: Vec<(* const GPUMesh, u32)> = Vec::new();
 //const MESHES: Vec<*const Mesh> = Vec::new();
@@ -155,7 +198,7 @@ impl Engine {
             Some(e) => {
                 return e;
             }
-            None => panic!("Engine not initialized")
+            None => panic!("Engine not initialized"),
         }
     }
     pub fn physic_engine_mut(&mut self) -> &mut Engine2 {
@@ -163,10 +206,11 @@ impl Engine {
             Some(e) => {
                 return e;
             }
-            None => panic!("Engine not initialized")
+            None => panic!("Engine not initialized"),
         }
     }
-    pub fn allocated_gpu_memory (&mut self) {
+    #[cfg(feature = "webgpu")]
+    pub fn allocated_gpu_memory(&mut self) {
         self.allocated_gpu_memory.clear();
         self.allocated_gpu_memory.push(0);
         for i in 0..60 {
@@ -177,37 +221,45 @@ impl Engine {
         }
         self.allocated_gpu_memory[0] = self.allocated_gpu_memory.len() as u32;
         unsafe {
-            updateAllocatedMemory(self.allocated_gpu_memory.as_ptr(),self.allocated_gpu_memory.len());
+            updateAllocatedMemory(
+                self.allocated_gpu_memory.as_ptr(),
+                self.allocated_gpu_memory.len(),
+            );
         }
     }
     pub fn gpu_queue_pointer2(&self) -> *const (&GPUMesh, u32) {
         return self.gpu_queue2.as_ptr();
     }
+    #[cfg(feature = "webgpu")]
     pub fn update_point_lights(&self) {
         unsafe {
             update_point_lights(self.point_lights.as_ptr(), self.point_lights.len());
         }
     }
+    #[cfg(feature = "webgpu")]
     pub fn update_directional_lights(&self) {
         unsafe {
-            update_directional_lights(self.directional_lights.as_ptr(),self.directional_lights.len());
+            update_directional_lights(
+                self.directional_lights.as_ptr(),
+                self.directional_lights.len(),
+            );
         }
     }
 
     pub fn allocate_gpu(&mut self) -> u32 {
         //ZERO:Free, ONE: Reserved
-        let free_index=self.gpu_reserved_slots.trailing_ones();
+        let free_index = self.gpu_reserved_slots.trailing_ones();
         if free_index < 60u32 {
             //set bit to 1
-            self.gpu_reserved_slots |= 1u64<<free_index;
-        }
-        else {
+            self.gpu_reserved_slots |= 1u64 << free_index;
+        } else {
             //TODO
         }
         return free_index;
     }
+    #[cfg(feature = "webgpu")]
     pub fn de_allocate_gpu(&mut self, address: u32) {
-        self.gpu_reserved_slots &= !(1u64<<address);
+        self.gpu_reserved_slots &= !(1u64 << address);
         self.allocated_gpu_memory();
     }
 }

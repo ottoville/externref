@@ -4,7 +4,7 @@ import type { Engine } from "./engine.js";
 
 const MIN_TICK_DELTA = 110;
 
-const GRAVITY = 9.80665;
+//const GRAVITY = 9.80665;
 
 //let Epsilon = 0.001;
 
@@ -41,14 +41,14 @@ export class Physics {
 
         return (this.tickTime + (delta / this.#realMSingameSecond));
     }
-
+    onPhysicTick: Set<(delta:number) => void> = new Set();
     /*
         There is a flaw in #tick function.
         When tab is background its not getting called and delta is growing very large.
         Large delta results large gravity, collision detector will see bigger impact.
     */
     #tick = () => {
-        this.engine.rust.physic_tick();
+        
         const timestamp = Date.now();
         if (this.#lastStateChangeTime > this.#lastTickTimeMs) {
             var realDeltaInGameTime = ((timestamp - this.#lastStateChangeTime) << this.#gameSpeed) + this.#tickDeltaWhenStateChange
@@ -78,6 +78,8 @@ export class Physics {
             otherwise gravity will pull objects that are ground causing jumping.
 
         */
+        this.engine.rust.physic_tick();
+        this.onPhysicTick.forEach(f => f(delta));
         this.movables.forEach(movable => {
             if (movable.onPhysicTick)
                 movable.onPhysicTick(delta);
@@ -183,12 +185,13 @@ export class Physics {
             old_acceleration[0]=tickable.acceleration2[0];
             old_acceleration[1]=tickable.acceleration2[1];
             old_acceleration[2]=tickable.acceleration2[2];
-            tickable.acceleration2[0] = -motionFrictionAcceleration[0] + tickable.force[0];
+            //Force is in rapier
+           /* tickable.acceleration2[0] = -motionFrictionAcceleration[0] + tickable.force[0];
             tickable.acceleration2[1] = -motionFrictionAcceleration[1] + tickable.force[1] -(tickable.hasGravity?GRAVITY:0);
             tickable.acceleration2[2] = -motionFrictionAcceleration[2] + tickable.force[2];
             tickable.force[0]=0;
             tickable.force[1]=0;
-            tickable.force[2]=0;
+            tickable.force[2]=0;*/
             tickable.velocity=[
                 velocity[0] + (old_acceleration[0]+tickable.acceleration2[0])*dt_half,
                 velocity[1] + (old_acceleration[1]+tickable.acceleration2[1])*dt_half,

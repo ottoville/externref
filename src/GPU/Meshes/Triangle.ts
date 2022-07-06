@@ -15,14 +15,14 @@ let uid=0;
 export class Triangle extends SimpleMesh {
     override create_collider() {
         return engine.rust.create_convex_hull_collider(this.ptr);
-      }
+    }
     constructor(
         label='triangle'+(uid++),
         color:[number,number,number,number]=[1,0,0,0],
         has_physic=false,
         scenes?: Scene[],
     ) {
-        super(positions,label,has_physic, undefined, scenes)
+        super(positions,label,has_physic, undefined, scenes, true)
         this.gpu_custom_data=color;
     }
 }

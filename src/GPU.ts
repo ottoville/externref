@@ -522,6 +522,41 @@ export class GPU {
                 this.#queue_map.clear();
                 gpu2.tempGPUBuffers.push(tempBuffer);    
             });
+        },
+         //TODO: Queue this call and do it only once per frame
+        updateAllocatedMemory:(allocated_gpu_memory_ptr:number, length:number) => {
+            const renderEncoder = this.device.createCommandEncoder();
+            const buffLength = Uint32Array.BYTES_PER_ELEMENT * length;
+            const tempBuffer = Buffer.create(this, buffLength, [GPUBufferUsage.COPY_SRC],'tempBuffer', tempBuffer2 => {
+                new Uint32Array(tempBuffer2.getMappedRange(0, buffLength)).set(new Uint32Array(engine.rust.memory.buffer, allocated_gpu_memory_ptr, length));
+            });
+            tempBuffer.copyTo(renderEncoder, this.GPUMeshes,0, 0, buffLength);
+        },
+        update_directional_lights:(pointer:number, length:number) => {
+            const lights = new Uint32Array(engine.memory.buffer, pointer, length);
+            const commandEncoder = this.device.createCommandEncoder();
+            //TODO: Potential buffer overflow
+            const byteLength = 4 + lights.byteLength;
+            const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'directional_lights_tempBuffer', tempBuffer2 => {
+                const gpu_buffer=new Uint32Array(tempBuffer2.getMappedRange());
+                gpu_buffer[0] = lights.length;
+                gpu_buffer.set(lights,1);
+            });
+            tempBuffer.copyTo(commandEncoder, this.GPUDirectionalLights, 0, 0, byteLength);
+            this.pendingCommandBuffers.add(commandEncoder.finish());
+        },
+        update_point_lights:(pointer:number, length:number) => {
+            const lights = new Uint32Array(engine.memory.buffer, pointer, length);
+            const commandEncoder = this.device.createCommandEncoder();
+            //TODO: Potential buffer overflow
+            const byteLength = 4 + lights.byteLength;
+            const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'point_lights_tempBuffer', tempBuffer2 => {
+                const gpu_buffer=new Uint32Array(tempBuffer2.getMappedRange());
+                gpu_buffer[0] = lights.length;
+                gpu_buffer.set(lights,1);
+            });
+            tempBuffer.copyTo(commandEncoder, this.GPUPointLights,0,0,byteLength);
+            this.pendingCommandBuffers.add(commandEncoder.finish());
         }
     }
     readonly #timeAndDeltaBuffer = new ArrayBuffer(8);

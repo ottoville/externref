@@ -43,13 +43,16 @@ export class Human extends Box {
         if(this.speed<1.4) {
             if((this.inputManager.arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
                 const direction=this.inputManager.camera.direction;
-                this.force[0]-=(direction[0]*maxAcceleration)
-                this.force[2]-=(direction[2]*maxAcceleration)
+                this.apply_impulse([-direction[0]*maxAcceleration, 0, -direction[2]*maxAcceleration])
+                //this.force[0]-=(direction[0]*maxAcceleration)
+                //this.force[2]-=(direction[2]*maxAcceleration)
             }
             if((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN) === ARROW_KEYS.DOWN) {
                 const direction=this.inputManager.camera.direction;
-                this.force[0]+=(direction[0]*maxAcceleration)
-                this.force[2]+=(direction[2]*maxAcceleration)
+                this.apply_impulse([direction[0]*maxAcceleration, 0, direction[2]*maxAcceleration])
+
+                //this.force[0]+=(direction[0]*maxAcceleration)
+                //this.force[2]+=(direction[2]*maxAcceleration)
             }
         }
     }
