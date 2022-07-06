@@ -28,8 +28,8 @@ struct PlaneArray {
 };
 @binding(0) @group(0) var<uniform> settings : Settings;
 @binding(0) @group(1) var<storage, read> vertices : Vertices;
-@binding(0) @group(2) var<storage, write> slopes :  IntArray;
-@binding(1) @group(2) var<storage, write> facet12 : PlaneArray;
+@binding(0) @group(2) var<storage, read_write> slopes :  IntArray;
+@binding(1) @group(2) var<storage, read_write> facet12 : PlaneArray;
 
 
 const cd: f32 = -1.0;

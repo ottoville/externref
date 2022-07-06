@@ -34,8 +34,8 @@ struct Settings {
 
 @binding(0) @group(0) var<storage, read> slopes : IntArray;
 @binding(1) @group(0) var<storage, read> facet12 : PlaneArray;
-@binding(2) @group(0) var<storage, write> positionAndRotate : PositionAndRotateArray;
-@binding(3) @group(0) var<storage, write> shapes : FloatArray;
+@binding(2) @group(0) var<storage, read_write> positionAndRotate : PositionAndRotateArray;
+@binding(3) @group(0) var<storage, read_write> shapes : FloatArray;
 @binding(4) @group(0) var<storage, read> settings : Settings;
 @binding(0) @group(1) var<storage, read> positions : Vec2Array;
 

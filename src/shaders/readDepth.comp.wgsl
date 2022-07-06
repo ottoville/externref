@@ -7,7 +7,7 @@ struct Depth_And_Mesh {
 struct Mouse {
   position:vec2<i32>
 };
-@binding(0) @group(0) var<storage, write> depth_and_mesh : Depth_And_Mesh;
+@binding(0) @group(0) var<storage, read_write> depth_and_mesh : Depth_And_Mesh;
 @binding(0) @group(1) var depth_texture : texture_depth_multisampled_2d;
 @binding(1) @group(1) var mesh_texture : texture_2d<u32>;
 @binding(2) @group(1) var<uniform> mouse : Mouse;

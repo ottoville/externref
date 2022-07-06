@@ -10,7 +10,7 @@ struct Settings {
      textureSize:vec2<u32>
 };
 @binding(0) @group(0) var<uniform> settings : Settings;
-@binding(0) @group(1) var<storage,write> indices : Indices;
+@binding(0) @group(1) var<storage, read_write> indices : Indices;
 
 
 @compute @workgroup_size(1)

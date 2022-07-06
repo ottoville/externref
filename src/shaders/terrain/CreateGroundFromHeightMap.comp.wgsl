@@ -20,7 +20,7 @@ struct Pixels {
     pixels: array<u32>
 };
 @binding(0) @group(0) var<uniform> settings : Settings;
-@binding(0) @group(1) var<storage, write> positions : Vertices;
+@binding(0) @group(1) var<storage, read_write> positions : Vertices;
 @binding(1) @group(1) var pixels : texture_2d<f32>;
 
 
