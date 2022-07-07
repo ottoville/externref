@@ -1,6 +1,13 @@
 struct FloatArray {
    numbers: array<f32>
 };
+ struct Plane {
+   norm : vec3<f32>,
+   d : f32
+};
+struct PlaneArray {
+  plane: array<Plane>
+};
 struct Slopes {
    numbers: array<i32>
 };
@@ -16,56 +23,27 @@ struct Settings {
 @binding(0) @group(0) var<uniform> settings : Settings;
 @binding(0) @group(1) var<storage, read_write> normals : FloatArray;
 @binding(0) @group(2) var<storage, read> slopes : Slopes;
-@binding(1) @group(2) var<storage, read> facet12 : FloatArray;
+@binding(1) @group(2) var<storage, read> facet12 : PlaneArray;
 
 
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
-    let stride : u32 = u32(12);
-    let facetSize : u32 = settings.subdivisions * settings.subdivisions * u32(4); //250*250* 4;
+    let stride : u32 = 12u;
+    let facetSize : u32 = settings.subdivisions * settings.subdivisions; //250*250* 4;
 
     let i:u32 = GlobalInvocationID.y * stride;
-    let j:u32 = GlobalInvocationID.x * (settings.subdivisions + u32(1)) * stride;
+    let j:u32 = GlobalInvocationID.x * (settings.subdivisions + 1u) * stride;
 
     let rows:u32 = GlobalInvocationID.x * settings.subdivisions;
-    let last_y:u32=GlobalInvocationID.y - u32(1);
-    var index:u32 = (rows +  GlobalInvocationID.y) * u32(4);
-    let norm1:vec3<f32> =vec3<f32>(
-        facet12.numbers[index],
-        facet12.numbers[index + u32(1)],
-        facet12.numbers[index + u32(2)]
-    );
-    index= facetSize +  ((rows +  GlobalInvocationID.y) * u32(4));
-    let norm2:vec3<f32> =vec3<f32>(
-        facet12.numbers[index],
-        facet12.numbers[index + u32(1)],
-        facet12.numbers[index + u32(2)]
-    );
-    index = facetSize +  ((rows +  last_y) * u32(4));
-    let norm4:vec3<f32> =vec3<f32>(
-        facet12.numbers[index],
-        facet12.numbers[index + u32(1)],
-        facet12.numbers[index + u32(2)]
-    );
-    let last_x:u32 = GlobalInvocationID.x - u32(1);
-  index = (last_x * settings.subdivisions +  (GlobalInvocationID.y)) * u32(4);
-    let norm5:vec3<f32> =vec3<f32>(
-        facet12.numbers[index],
-        facet12.numbers[index + u32(1)],
-        facet12.numbers[index + u32(1)]
-    );
-    index=(last_x * settings.subdivisions +  last_y) * u32(4);
-    let norm7:vec3<f32> =vec3<f32>(
-       facet12.numbers[index],
-       facet12.numbers[index + u32(1)],
-       facet12.numbers[index + u32(2)]
-    );
-    index=facetSize +  ((last_x * settings.subdivisions +  last_y) * u32(4));
-    let norm8:vec3<f32> =vec3<f32>(
-        facet12.numbers[index],
-        facet12.numbers[index + u32(1)],
-        facet12.numbers[index + u32(2)]
-    );
+    let last_y:u32=GlobalInvocationID.y - 1u;
+    
+    let norm1:vec3<f32> = facet12.plane[rows +  GlobalInvocationID.y].norm;
+    let norm2:vec3<f32> = facet12.plane[facetSize +  (rows +  GlobalInvocationID.y)].norm;
+    let norm4:vec3<f32> = facet12.plane[facetSize +  rows +  last_y].norm;
+    let last_x:u32 = GlobalInvocationID.x - 1u;
+    let norm5:vec3<f32> = facet12.plane[last_x * settings.subdivisions +  GlobalInvocationID.y].norm;
+    let norm7:vec3<f32> = facet12.plane[last_x * settings.subdivisions +  last_y].norm;
+    let norm8:vec3<f32> = facet12.plane[facetSize + last_x * settings.subdivisions +  last_y].norm;
 
     let normalized:vec3<f32> = normalize(norm1 + norm2 + norm4 + norm5 + norm7 + norm8);
     
@@ -99,9 +77,9 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     //7 and 8   far
     
 
-    normals.numbers[j + i + u32(4)]=normalized.x;
-    normals.numbers[j + i + u32(5)]=normalized.y;
-    normals.numbers[j + i + u32(6)]=normalized.z;
+    normals.numbers[j + i + 4u]=normalized.x;
+    normals.numbers[j + i + 5u]=normalized.y;
+    normals.numbers[j + i + 6u]=normalized.z;
    
     return;
  }
