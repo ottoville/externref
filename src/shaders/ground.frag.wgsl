@@ -4,21 +4,12 @@ struct Output {
 struct OutputPick {
   @location(0) ID : u32
 };
-struct Meshes {
-  position : mat4x4<f32>,           //64  0
-  @size(16) y: f32,  //padding      //16  80
-  ambient : vec3<f32>,              //12  92
-  shadow : f32,                     //4   96
-  @size(20) x: f32,  //padding      //20  116
-  point_light_squared : f32,        //4   120
-  directional_light : f32,          //4   124
-  scenes:u32,                       //4   128
-  @size(128) z: f32  //padding
-};
+#import "mesh.export.wgsl"
+
 struct MeshArray {
   length:u32,
   pointers: array<u32, 63>,
-  mesh: array<Meshes>
+  mesh: array<MeshUniforms>
 };
 struct Projection {
   inversed_projection : mat4x4<f32>,
@@ -123,7 +114,7 @@ fn main(
         let light_index:u32 = clusters_array.lights[cluster_index*63u + light_pointer_index];
         let light = meshes.mesh[light_index];
         if((scenes & light.scenes) != 0u) {
-          let light_position:vec3<f32> = light.position[12].xyz;
+          let light_position:vec3<f32> = light.transformation[12].xyz;
           if(light.point_light_squared > 0.0) {
               var light_dir:vec3<f32> = light_position - position.xyz;
               let light_distance_squared= dot(light_dir, light_dir);

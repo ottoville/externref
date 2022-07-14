@@ -3,7 +3,7 @@ import type { Scene } from "../../Scene.js";
 import type { DrawableSimple } from "../Drawable.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
-import { GPU, GPUBufferUsage } from "../../GPU.js";
+import { GPUBufferUsage } from "../../GPU.js";
 import { Buffer, VertexBuffer } from "../../GPU/Buffer.js";
 
 declare const engine:Engine;
@@ -18,8 +18,7 @@ export abstract class SimpleMesh extends BoundableNodeSimple {
         scenes?: Scene[],
         fixed = false) {
         super(vBufferCPU, 6, false,label,has_physic, scenes, fixed);
-        this.drawable =  GPU.createRenderPipeline(SimpleRenderPipeline)?.addDrawableSimple(this)
-
+        this.drawable =  engine.gpu?.createRenderPipeline(SimpleRenderPipeline).addDrawableSimple(this)
         if(!vBufferGPU && engine.gpu) {
             vBufferGPU = Buffer.create(engine.gpu, vBufferCPU.byteLength, [GPUBufferUsage.VERTEX], 'vertex_'+label, b => {
                 new Float32Array(b.getMappedRange()).set(vBufferCPU);

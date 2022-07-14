@@ -14,8 +14,14 @@ export abstract class MainNode {
     //coefficient of friction
     grip=0;
     is_colliding=false;
-    set gpu_custom_data(data:[number,number,number,number]) {
-        engine.rust.set_gpu_custom_data(this.ptr,data[0],data[1],data[2],data[3])
+    set color(data:[number,number,number,number]) {
+        engine.rust.set_color(this.ptr,data[0],data[1],data[2],data[3])
+    }
+    set ambient(data:[r:number, b:number, g:number]) {
+        engine.rust.set_ambient(this.ptr, data[0], data[1], data[2])
+    }
+    set shadow(shadow:number) {
+        engine.rust.set_shadow(this.ptr,shadow)
     }
     ptr: rust_pointer<"mesh">;
     get id() {
@@ -59,8 +65,6 @@ export abstract class MainNode {
     isStatic = false;
     static uniqueID = 1;
     static Meshes: Map<number, MainNode> = new Map();
-    static GPUDataSize = /*transform matrix */16 /*delta */ +4 /*custom */ +4 /* acceleration */ +4 /*id */ +1 /*point_light */ +1 /*directional_light*/ +1 /*scenes*/+1;
-    static alignment = 256;
     /* Todo: make dynamic with treshold values */
     static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
 
@@ -81,13 +85,6 @@ export abstract class MainNode {
     }
     set velocity(value: [number, number, number] | TerraVector3) {
         new TerraVector3(engine.memory.buffer, engine.rust.velocity_pointer(this.ptr)).set(value);
-        this.update_dynamic_buffer();
-    }
-    get acceleration(): ReadOnlyTerraVector3 {
-        return new ReadOnlyTerraVector3(engine.memory.buffer, engine.rust.acceleration_pointer(this.ptr))
-    }
-    set acceleration(value: [number, number, number] | TerraVector3) {
-        new TerraVector3(engine.memory.buffer, engine.rust.acceleration_pointer(this.ptr)).set(value);
         this.update_dynamic_buffer();
     }
     intersect_box_aa_sphere(collider:ColliderJS, radius: number) {

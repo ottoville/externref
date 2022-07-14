@@ -93,14 +93,15 @@ export type rustWasm = {
     gpu_pointer(mesh:rust_pointer<"mesh">):number,
     translation_pointer(mesh:rust_pointer<"mesh">):number,
     velocity_pointer(mesh:rust_pointer<"mesh">):number,
-    acceleration_pointer(mesh:rust_pointer<"mesh">):number,
     intersect_box_aa_sphere(mesh:rust_pointer<"mesh">,collider_ptr:number, radius:number):boolean
     scale_x(mesh:rust_pointer<"mesh">):number,
     scale_y(mesh:rust_pointer<"mesh">):number,
     scale_z(mesh:rust_pointer<"mesh">):number,
     vertices_stride(mesh:rust_pointer<"mesh">):number,
     set_faces(mesh:rust_pointer<"mesh">, ptr:number, length:number):void,
-    set_gpu_custom_data(mesh:rust_pointer<"mesh">, d0:number,d1:number,d2:number,d3:number):void,
+    set_color(mesh:rust_pointer<"mesh">, d0:number,d1:number,d2:number,d3:number):void,
+    set_ambient(mesh:rust_pointer<"mesh">, r:number, g:number, b:number):void
+    set_shadow(mesh:rust_pointer<"mesh">, shadow:number):void
     collider_faces_pointer(mesh:rust_pointer<"mesh">):number,
     set_scenes(mesh:rust_pointer<"mesh">, scenes:number):void,
     update_scale_and_rotation(mesh:rust_pointer<"mesh">, x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number):void
@@ -113,7 +114,7 @@ export type rustWasm = {
     get_length(elevator_ptr:rust_pointer<"elevator">):number
     get_offset(elevator_ptr:rust_pointer<"elevator">):number
 
-    init_engine2():void
+    init_engine2(): number
     physic_tick():void
 
     create_ball_collider(radius: number): rust_pointer<"collider">
@@ -238,26 +239,7 @@ export class Engine {
                 }
             })
         }
-        let gpu: GPU | undefined = undefined;
-        if(canvas) {
-            try {
-                gpu = await GPU.create(canvas);
-            } catch(e) {
-                showError(createError(e))
-            }
-            //@ts-ignore
-            window.printRenderTarget = () => {
-                Texture.toBitmap(gpu!.pickRenderPass.renderTargets.gRenderTargetId.texture);
-            }
-            //@ts-ignore
-            window.printRenderTarget2 = () => {
-                Texture.toBitmap(gpu!.renderPassScreen.depthTexture);
-            }
-            //@ts-ignore
-            window.printRenderTarget3 = () => {
-                Texture.toBitmap(gpu!.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture)
-            }
-        }
+ 
         let rust: WebAssembly.WebAssemblyInstantiatedSource;
         let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
         const exportObj = {
@@ -277,9 +259,22 @@ export class Engine {
                 mesh_on_collide(mesh_id:number) {
                     DataNode.Meshes.get(mesh_id)?.onCollide();
                 },
-                ...gpu?.exported_functions
+                handle_gpu_queue(pointerVec:number, length:number) {
+                    engine.gpu?.handle_gpu_queue(pointerVec, length);
+                },
+                updateAllocatedMemory(allocated_gpu_memory_ptr:number, length:number) {
+                    engine.gpu?.updateAllocatedMemory(allocated_gpu_memory_ptr, length);
+                },
+                update_directional_lights(pointer:number, length:number) {
+                    engine.gpu?.update_directional_lights(pointer, length)
+                },
+                update_point_lights(pointer:number, length:number) {
+                    engine.gpu?.update_point_lights(pointer, length)
+                }
             }
         }
+        let gpu: GPU | undefined = undefined;
+
         try {
             if(wasmBinaries.rust instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.rust)) {
                 rust = await WebAssembly.instantiate(wasmBinaries.rust, exportObj);
@@ -291,6 +286,28 @@ export class Engine {
             if(!rust.instance.exports.memory) {
                 return showError(new Error('No memory exported'));
             }
+            var rustWasm = rust.instance.exports as rustWasm;
+            const GPUDataSize = rustWasm.init_engine2();
+            if(canvas) {
+                try {
+                    gpu = await GPU.create(canvas, GPUDataSize);
+                } catch(e) {
+                    showError(createError(e))
+                }
+                //@ts-ignore
+                window.printRenderTarget = () => {
+                    Texture.toBitmap(gpu!.pickRenderPass.renderTargets.gRenderTargetId.texture);
+                }
+                //@ts-ignore
+                window.printRenderTarget2 = () => {
+                    Texture.toBitmap(gpu!.renderPassScreen.depthTexture);
+                }
+                //@ts-ignore
+                window.printRenderTarget3 = () => {
+                    Texture.toBitmap(gpu!.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture)
+                }
+            }
+
             const colliderExportObj = {
                 console: {
                     log: function (arg: string) {
@@ -316,7 +333,7 @@ export class Engine {
             return showError(createError(e));
         }
         const wasm = colliderWasm.instance.exports as unknown as ColliderWasm;
-        return new Engine(gpu, DB ? await DB : undefined, canvas, wasm, rust.instance.exports as rustWasm, showError);
+        return new Engine(gpu, DB ? await DB : undefined, canvas, wasm, rustWasm, showError);
     }
     attachCameraInput(initial = false) {
         this.inputManager = new ArcRotateCamera(this.mainCamera, this.canvas, initial);

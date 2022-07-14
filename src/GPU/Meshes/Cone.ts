@@ -99,7 +99,7 @@ export class Cone extends SimpleIndexedMesh {
         color:[number,number,number,number]=[1,0,0,0]
     ) {
         super(...createCone(14,6),label, undefined, undefined, point_light, has_physic, scenes, undefined, "triangle-list");
-        this.gpu_custom_data=color;
+        this.color=color;
     }
     override create_collider() {
         return engine.rust.create_cone_collider(this.scale_y/2,this.radius);

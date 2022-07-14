@@ -3,7 +3,6 @@ import { Terrain } from "../world/terrain.js";
 //import simplex from '../simplex.js'
 
 import { PTDresult } from "../types/interfaces/index.js";
-import { GPU } from "../GPU.js";
 
 import type { Scene } from "../Scene.js";
 import { GPUBufferUsage } from "../GPU.js"
@@ -47,14 +46,14 @@ export class Plants {
         terrainP: Promise<Terrain>,
     ) {
         const indirectBuffer = Buffer.create(scene.gpu,4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST],'indirectBuffer');
-        const drawable = GPU.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' })?.addDrawableIndirect(indirectBuffer, 'Plants')
         const positionGPU = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'positionGPU');
         const shapeGPU = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'shapeGPU');
 
 
         const positionGPUSwap = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE], 'positionGPUSwap');
         const shapeGPUSwap = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE],'shapeGPUSwap');
-        if(drawable) {
+        if(engine.gpu) {
+            const drawable = engine.gpu.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }).addDrawableIndirect(indirectBuffer, 'Plants')
             drawable.setVertexBuffer(0, positionGPU)
             drawable.setVertexBuffer(1, shapeGPU);
             drawable.setVertexBuffer(2, new Float32Array([

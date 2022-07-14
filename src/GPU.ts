@@ -37,13 +37,13 @@ let framecount = 0;
 
 // Cluster debug
 /*
+
 let debugNumber=0;
 //@ts-ignore
 window.resetDebugNumber = () => {
     debugNumber = 0;
 }
 */
-const dataSizeBytes = MainNode.GPUDataSize * 4; //4 * 16 + 3 * 4;
 export class GPU {
     static bindMap:WeakMap<GPUBindingResource, BindGroup[]> = new WeakMap();
 
@@ -51,7 +51,7 @@ export class GPU {
     readonly mousePosition = new Uint16Vector2(this.#mousePositionBuffer);
 
 
-    readonly gpu_memory_index_size=256;
+    static readonly gpu_memory_index_size=256;
     readonly gpu_screen_buffer_size= 16; //screen width and height and ratio
     readonly gpu_max_point_lights=63;
 
@@ -76,12 +76,12 @@ export class GPU {
 
     readonly lightsBindGroupTexture2 : LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
 
-    readonly BindGroupPosition:GPUBindGroup;
+    readonly BindGroupPosition: GPUBindGroup;
     readonly positionBindGroupTime:PipelineLayout;
     readonly timeGroup: { binding: number; resource: { buffer: GPUBuffer }; };
     readonly timeBuffer: CopyDstBuffer & BindUniformBuffer
 
-    readonly renderPasses: Set<RenderPass>;
+    readonly renderPasses: RenderPass[];
 
     readonly scale = {
         x: 1,
@@ -114,10 +114,10 @@ export class GPU {
     sizeBindGroupLayout: BindGroupLayout<[GPUBindGroupEntry]>;
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
     bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
-    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline | undefined], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat}): RenderPipeline | undefined
-    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline | undefined], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list'}): RenderPipeline | undefined
-    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline | undefined], primitive?: Omit<GPUPrimitiveState, 'topology'>): RenderPipeline | undefined
-    static createRenderPipeline(desc:readonly [label: string, create:(hash:string,primitive: GPUPrimitiveState) => RenderPipeline | undefined], primitive: GPUPrimitiveState={}) {
+    createRenderPipeline(desc:readonly [label: string, create:(gpu:GPU, hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat}): RenderPipeline
+    createRenderPipeline(desc:readonly [label: string, create:(gpu:GPU, hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list'}): RenderPipeline
+    createRenderPipeline(desc:readonly [label: string, create:(gpu:GPU, hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive?: Omit<GPUPrimitiveState, 'topology'>): RenderPipeline
+    createRenderPipeline(desc:readonly [label: string, create:(gpu:GPU, hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState={}) {
         const primitiveWithDefaults: GPUPrimitiveState={
             topology: 'triangle-list',
             frontFace: 'cw',
@@ -127,7 +127,7 @@ export class GPU {
         const hash = desc[0]+Object.values(primitiveWithDefaults).sort().join();
         let renderPipeline = GPU.#renderPipelines.get(hash);
         if(!renderPipeline) {
-            renderPipeline=desc[1](hash, primitiveWithDefaults);
+            renderPipeline=desc[1](this, hash, primitiveWithDefaults);
             if(renderPipeline)
                 GPU.#renderPipelines.set(hash, renderPipeline);
         }
@@ -135,7 +135,7 @@ export class GPU {
 
     }
     GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
-    static async create(canvas: HTMLCanvasElement) {
+    static async create(canvas: HTMLCanvasElement, GPUDataSize: number) {
         if (!window.navigator.gpu) {
             throw(new Error('no webgpu support'));
         }
@@ -164,10 +164,10 @@ export class GPU {
             else
                 throw(new Error(e));
         });
-        return new GPU(canvas, device);
+        return new GPU(canvas, device, GPUDataSize);
     }
     renderFrame = 0;
-    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice) {
+    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice,  private GPUDataSizeBytes: number) {
         for(const key in shaders) {
             const k=key as keyof typeof shaders;
             this.shaderModules[k] = device.createShaderModule({ code: shaders[k], label:k });
@@ -218,8 +218,7 @@ export class GPU {
         });
         this.updateViewPipeline=new ComputePipeline(this,'updateView.comp.wgsl',
             this.device.createPipelineLayout({bindGroupLayouts:[viewLayout.layout, this.viewUniformsLayout]}));
-
-        this.GPUMeshes = Buffer.create(this, MainNode.alignment /* meshes count etc */ + MainNode.alignment * MainNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],'GPUMeshes')
+        this.GPUMeshes = Buffer.create(this, GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * MainNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],'GPUMeshes')
         this.GPUPointLights = Buffer.create(this, this.gpu_max_point_lights*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],'GPUPointLights')
         this.GPUDirectionalLights = Buffer.create(this, 63*4,[GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],'GPUDirectionalLights')
         
@@ -306,7 +305,7 @@ export class GPU {
         this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition',[
             {
                 binding: 0,
-                resource: this.GPUMeshes.getUniformBinding(0, MainNode.GPUDataSize * 4)
+                resource: this.GPUMeshes.getUniformBinding(0, GPU.gpu_memory_index_size)
             }]);
         this.positionBindGroupTime = this.rootCameralayout.addChildBindGroup('positionBindGroupTime', this.BindGroupPosition, true);
         this.positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout('positionBindGroupTimeWGSL', BindGroupLayoutPosition);
@@ -364,6 +363,10 @@ export class GPU {
             diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
         }, 1, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2],'main',this.rootCameralayout,'renderPassWater');
       
+        //TODO: this does not need to be canvas size
+        /*const renderPassShadows = new DepthRenderPass(this, {}, 4, [canvas.width,canvas.height,1],
+            (w, h) => [w, h],'shadows',this.rootCameralayout,'renderPassShadows');
+    */
 
         const context: GPUCanvasContext | null = canvas.getContext('webgpu') as unknown as GPUCanvasContext; // unknown for jest
         if (!context)
@@ -398,7 +401,7 @@ export class GPU {
 
         //water color { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }
 
-        this.renderPasses = new Set([this.renderPassCanvas, this.renderPassScreen, this.renderPassWater, this.pickRenderPass]);
+        this.renderPasses = [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater, this.pickRenderPass];
         //[this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
 
         this.renderPassCanvas.BindGroupCanvas = () =>  BindGroupLayoutCanvas.createBindGroup('BindGroupCanvas',[
@@ -500,64 +503,63 @@ export class GPU {
         });
     }
     readonly #queue_map = new Map<number, number>();
-    readonly exported_functions = {
-        handle_gpu_queue:(pointerVec:number, length:number) => {
-            this.GPUQueueCommandEncoder=this.device.createCommandEncoder();
-            const pointers_to_gpumesh_and_alignment = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
-            for (let i = 0; i < pointers_to_gpumesh_and_alignment.length; i += 2) {
-                this.#queue_map.set(pointers_to_gpumesh_and_alignment[i]!, pointers_to_gpumesh_and_alignment[i + 1]!);
-            }
-            let tempOffset = 0;
-    
-            Buffer.create(this, dataSizeBytes * this.#queue_map.size, [GPUBufferUsage.COPY_SRC],'handle_gpu_queue', (tempBuffer, gpu2) => {
-                this.#queue_map.forEach((alignment, gpumeshPointer) => {
-                    const data = new Float32Array(engine.memory.buffer, gpumeshPointer, MainNode.GPUDataSize);
-                    //Point light
-                    if (data[29]! > 0) {
-                        engine.updateLights = true;
-                    }
-                    new Float32Array(tempBuffer.getMappedRange(tempOffset * dataSizeBytes, dataSizeBytes)).set(data);
-                    gpu2.GPUMeshes.copyFrom(this.GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * dataSizeBytes, gpu2.gpu_memory_index_size + alignment * 256, dataSizeBytes)
-                });
-                this.#queue_map.clear();
-                gpu2.tempGPUBuffers.push(tempBuffer);    
-            });
-        },
-         //TODO: Queue this call and do it only once per frame
-        updateAllocatedMemory:(allocated_gpu_memory_ptr:number, length:number) => {
-            const renderEncoder = this.device.createCommandEncoder();
-            const buffLength = Uint32Array.BYTES_PER_ELEMENT * length;
-            const tempBuffer = Buffer.create(this, buffLength, [GPUBufferUsage.COPY_SRC],'tempBuffer', tempBuffer2 => {
-                new Uint32Array(tempBuffer2.getMappedRange(0, buffLength)).set(new Uint32Array(engine.rust.memory.buffer, allocated_gpu_memory_ptr, length));
-            });
-            tempBuffer.copyTo(renderEncoder, this.GPUMeshes,0, 0, buffLength);
-        },
-        update_directional_lights:(pointer:number, length:number) => {
-            const lights = new Uint32Array(engine.memory.buffer, pointer, length);
-            const commandEncoder = this.device.createCommandEncoder();
-            //TODO: Potential buffer overflow
-            const byteLength = 4 + lights.byteLength;
-            const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'directional_lights_tempBuffer', tempBuffer2 => {
-                const gpu_buffer=new Uint32Array(tempBuffer2.getMappedRange());
-                gpu_buffer[0] = lights.length;
-                gpu_buffer.set(lights,1);
-            });
-            tempBuffer.copyTo(commandEncoder, this.GPUDirectionalLights, 0, 0, byteLength);
-            this.pendingCommandBuffers.add(commandEncoder.finish());
-        },
-        update_point_lights:(pointer:number, length:number) => {
-            const lights = new Uint32Array(engine.memory.buffer, pointer, length);
-            const commandEncoder = this.device.createCommandEncoder();
-            //TODO: Potential buffer overflow
-            const byteLength = 4 + lights.byteLength;
-            const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'point_lights_tempBuffer', tempBuffer2 => {
-                const gpu_buffer=new Uint32Array(tempBuffer2.getMappedRange());
-                gpu_buffer[0] = lights.length;
-                gpu_buffer.set(lights,1);
-            });
-            tempBuffer.copyTo(commandEncoder, this.GPUPointLights,0,0,byteLength);
-            this.pendingCommandBuffers.add(commandEncoder.finish());
+
+    handle_gpu_queue(pointerVec:number, length:number) {
+        this.GPUQueueCommandEncoder=this.device.createCommandEncoder();
+        const pointers_to_gpumesh_and_alignment = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
+        for (let i = 0; i < pointers_to_gpumesh_and_alignment.length; i += 2) {
+            this.#queue_map.set(pointers_to_gpumesh_and_alignment[i]!, pointers_to_gpumesh_and_alignment[i + 1]!);
         }
+        let tempOffset = 0;
+
+        Buffer.create(this, this.GPUDataSizeBytes * this.#queue_map.size, [GPUBufferUsage.COPY_SRC],'handle_gpu_queue', (tempBuffer, gpu2) => {
+            this.#queue_map.forEach((alignment, gpumeshPointer) => {
+                const data = new Float32Array(engine.memory.buffer, gpumeshPointer, this.GPUDataSizeBytes/4);
+                //Point light
+                if (data[29]! > 0) {
+                    engine.updateLights = true;
+                }
+                new Float32Array(tempBuffer.getMappedRange(tempOffset * this.GPUDataSizeBytes, this.GPUDataSizeBytes)).set(data);
+                gpu2.GPUMeshes.copyFrom(this.GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * this.GPUDataSizeBytes, GPU.gpu_memory_index_size + alignment * 256, this.GPUDataSizeBytes)
+            });
+            this.#queue_map.clear();
+            gpu2.tempGPUBuffers.push(tempBuffer);
+        });
+    }
+        //TODO: Queue this call and do it only once per frame
+    updateAllocatedMemory(allocated_gpu_memory_ptr:number, length:number) {
+        const renderEncoder = this.device.createCommandEncoder();
+        const buffLength = Uint32Array.BYTES_PER_ELEMENT * length;
+        const tempBuffer = Buffer.create(this, buffLength, [GPUBufferUsage.COPY_SRC],'tempBuffer', tempBuffer2 => {
+            new Uint32Array(tempBuffer2.getMappedRange(0, buffLength)).set(new Uint32Array(engine.rust.memory.buffer, allocated_gpu_memory_ptr, length));
+        });
+        tempBuffer.copyTo(renderEncoder, this.GPUMeshes,0, 0, buffLength);
+    }
+    update_directional_lights(pointer:number, length:number) {
+        const lights = new Uint32Array(engine.memory.buffer, pointer, length);
+        const commandEncoder = this.device.createCommandEncoder();
+        //TODO: Potential buffer overflow
+        const byteLength = 4 + lights.byteLength;
+        const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'directional_lights_tempBuffer', tempBuffer2 => {
+            const gpu_buffer=new Uint32Array(tempBuffer2.getMappedRange());
+            gpu_buffer[0] = lights.length;
+            gpu_buffer.set(lights,1);
+        });
+        tempBuffer.copyTo(commandEncoder, this.GPUDirectionalLights, 0, 0, byteLength);
+        this.pendingCommandBuffers.add(commandEncoder.finish());
+    }
+    update_point_lights(pointer:number, length:number) {
+        const lights = new Uint32Array(engine.memory.buffer, pointer, length);
+        const commandEncoder = this.device.createCommandEncoder();
+        //TODO: Potential buffer overflow
+        const byteLength = 4 + lights.byteLength;
+        const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'point_lights_tempBuffer', tempBuffer2 => {
+            const gpu_buffer=new Uint32Array(tempBuffer2.getMappedRange());
+            gpu_buffer[0] = lights.length;
+            gpu_buffer.set(lights,1);
+        });
+        tempBuffer.copyTo(commandEncoder, this.GPUPointLights,0,0,byteLength);
+        this.pendingCommandBuffers.add(commandEncoder.finish());
     }
     readonly #timeAndDeltaBuffer = new ArrayBuffer(8);
     readonly deltaView = new Float32Array(this.#timeAndDeltaBuffer, 4, 1);

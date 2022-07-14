@@ -1,12 +1,9 @@
 import { Shader, VertexShader } from "../RenderPipeline.js";
-import { Engine } from "../../engine.js";
-declare const engine:Engine;
+import { GPU } from "../../GPU.js";
 
-export const PlantsRenderPipeline = ['PlantsRenderPipeline',function PlantsRenderPipeline(label:string, primitive: GPUPrimitiveState) {
-    if(!engine.gpu)
-        return;
-    return engine.gpu.rootCameralayout.addRenderPipeline(label,
-            new VertexShader(engine.gpu, 'grass/grass.vert.wgsl', [
+export const PlantsRenderPipeline = ['PlantsRenderPipeline',function PlantsRenderPipeline(gpu:GPU, label:string, primitive: GPUPrimitiveState) {
+    return gpu.rootCameralayout.addRenderPipeline(label,
+            new VertexShader(gpu, 'grass/grass.vert.wgsl', [
                 {
                     arrayStride: 4 * 4,
                     stepMode: "instance",
@@ -37,7 +34,7 @@ export const PlantsRenderPipeline = ['PlantsRenderPipeline',function PlantsRende
                     }]
                 }
             ]),
-            new Shader(engine.gpu, 'color.frag.wgsl'), {
+            new Shader(gpu, 'color.frag.wgsl'), {
             primitive
         })
     }] as const

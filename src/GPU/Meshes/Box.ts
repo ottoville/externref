@@ -60,6 +60,6 @@ export class Box extends SimpleIndexedMesh {
             16, 17, 18, 16, 18, 19,   // right
             20, 21, 22, 20, 22, 23,   // left
         ),label, undefined, undefined, point_light, has_physic, scenes, undefined, undefined, fixed);
-        this.gpu_custom_data=color;
+        this.color=color;
     }
 }

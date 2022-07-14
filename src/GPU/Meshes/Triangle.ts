@@ -23,6 +23,6 @@ export class Triangle extends SimpleMesh {
         scenes?: Scene[],
     ) {
         super(positions,label,has_physic, undefined, scenes, true)
-        this.gpu_custom_data=color;
+        this.color=color;
     }
 }

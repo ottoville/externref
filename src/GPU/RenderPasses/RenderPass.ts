@@ -114,14 +114,9 @@ export class RenderPass<T extends { [index: string]: RenderTarget<Texture<GPUTex
         }
     }
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
-        const colorAttachments = Object.values(this.renderTargets).map(rt => {
-            return rt.createColorAttachment()
-        });
-
-        const renderPassDescriptor: GPURenderPassDescriptor = {
-            colorAttachments,
-        }
-        return renderPassDescriptor;
+        return  {
+            colorAttachments: Object.values(this.renderTargets).map(rt => rt.createColorAttachment()),
+        };
     }
     get GPURenderBundleEncoderDescriptor(): GPURenderBundleEncoderDescriptor {
         return {

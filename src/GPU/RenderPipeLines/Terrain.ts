@@ -1,10 +1,9 @@
 import { Shader, VertexShader } from "../RenderPipeline.js";
-import { Engine } from "../../engine.js";
+import type { GPU } from "../../GPU";
 
-declare const engine:Engine;
 
-export const TerrainRenderPipeline=['TerrainRenderPipeline',function create(label:string,primitive: GPUPrimitiveState) {
-    return engine.gpu!.lightsBindGroupTexture2.addRenderPipeline(label,new VertexShader(engine.gpu!,'ground.vert.wgsl',  [
+export const TerrainRenderPipeline=['TerrainRenderPipeline',function create(gpu:GPU, label:string,primitive: GPUPrimitiveState) {
+    return gpu.lightsBindGroupTexture2.addRenderPipeline(label,new VertexShader(gpu,'ground.vert.wgsl',  [
         {
         arrayStride: 48,
         stepMode: "vertex",
@@ -28,7 +27,7 @@ export const TerrainRenderPipeline=['TerrainRenderPipeline',function create(labe
         }
         ]
     }
-    ]), new Shader(engine.gpu!,'ground.frag.wgsl'), {
+    ]), new Shader(gpu,'ground.frag.wgsl'), {
         primitive
     });
 }] as const

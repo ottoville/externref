@@ -60,13 +60,14 @@ pub extern "C" fn create_cone_collider(half_height: f32, radius: f32) -> *mut Co
 
 pub struct GPUMesh {
     transformation: Vec4<Vec4<f32>>, //16
-    delta: [f32; 4],                 //20
-    custom: [f32; 4],                //24 user for color in simple.vert
-    acceleration: [f32; 4],          //28
+    color: [f32; 4],                 //20
+    ambient: [f32; 3],              //12
+    shadow: f32,
+    spotlight: [f32; 4],          //28
     _id: u32,                         //29
     point_light_squared:f32,          //30
     directional_light:f32,          //31
-    scenes:u32, //bitmask
+    scenes:u32, //bitmask           //48
 }
 impl GPUMesh {
     pub fn set_point_light(&mut self, engine:&mut Engine, range:f32, gpu_alignment:u32) {

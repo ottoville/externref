@@ -1,12 +1,9 @@
 import { Shader, VertexShader } from "../RenderPipeline.js";
-import { Engine } from "../../engine.js";
-declare const engine:Engine;
+import { GPU } from "../../GPU.js";
 
-export const SimpleRenderPipeline = ['SimpleRenderPipeline',function SimpleRenderPipeline(label:string, primitive: GPUPrimitiveState) {
-    if(!engine.gpu)
-        return;
-    return engine.gpu.positionBindGroupTimeWGSL.addRenderPipeline(label,
-        new VertexShader(engine.gpu, 'simple.vert.wgsl', [{
+export const SimpleRenderPipeline = ['SimpleRenderPipeline',function SimpleRenderPipeline(gpu:GPU, label:string, primitive: GPUPrimitiveState) {
+    return gpu.positionBindGroupTimeWGSL.addRenderPipeline(label,
+        new VertexShader(gpu, 'simple.vert.wgsl', [{
             arrayStride: 6 * 4,
             stepMode: "vertex",
             attributes: [{
@@ -20,7 +17,7 @@ export const SimpleRenderPipeline = ['SimpleRenderPipeline',function SimpleRende
                 offset: 12,
                 format: "float32x3"
             }]
-        }]), new Shader(engine.gpu, 'simple.frag.wgsl'), {
+        }]), new Shader(gpu, 'simple.frag.wgsl'), {
         primitive,
     });
 }] as const

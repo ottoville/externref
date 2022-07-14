@@ -3,7 +3,7 @@ import type { Scene } from "../../Scene.js";
 import type { DrawableIndexed } from "../Drawable.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
-import { GPU, GPUBufferUsage } from "../../GPU.js";
+import { GPUBufferUsage } from "../../GPU.js";
 import { Buffer, IndexBuffer, VertexBuffer } from "../../GPU/Buffer.js";
 declare const engine:Engine;
 
@@ -28,8 +28,8 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
         if(strip)
             primitiveState.stripIndexFormat = 'uint32';
         if(engine.gpu) {
-            this.drawable = GPU.createRenderPipeline(SimpleRenderPipeline, primitiveState
-            )?.addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]))
+            this.drawable = engine.gpu.createRenderPipeline(SimpleRenderPipeline, primitiveState
+            ).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]))
             if(!vBufferGPU) {
                 vBufferGPU = Buffer.create(engine.gpu, vBufferCPU.byteLength, [GPUBufferUsage.VERTEX],  'vertex_'+label, b => {
                     new Float32Array(b.getMappedRange()).set(vBufferCPU);    

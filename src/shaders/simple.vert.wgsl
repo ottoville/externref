@@ -3,13 +3,8 @@ struct Uniforms {
   view : mat4x4<f32>,
   viewPosition : vec3<f32>
 };
-struct MeshUniforms {
-  world : mat4x4<f32>,
-  @size(16) delta : vec3<f32>,
-  @size(16) custom : vec3<f32>,
-  @size(16) acceleration : vec3<f32>,
-   id : u32
-};
+#import "mesh.export.wgsl"
+
 //[[block]] struct Lights {
 //  [[offset(48)]] sunDirection : vec3<f32>;
 //  [[offset(80)]] ambient : vec3<f32>;
@@ -37,14 +32,14 @@ fn main(
 ) -> Output {
   var output:Output;
   output.normal=normal;
-  var curPos : mat4x4<f32> = mesh_uniforms.world;
-  curPos[3] = mesh_uniforms.world[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;
+  var curPos : mat4x4<f32> = mesh_uniforms.transformation;
+  curPos[3] = mesh_uniforms.transformation[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;
   curPos[3].w=1.0;
   var worldPos=curPos * vec4<f32>(pos, 1.0);
 
   output.Position = uniforms.modelViewProjectionMatrix * worldPos;
   output.id=mesh_uniforms.id;
-  output.color = mesh_uniforms.custom;
+  output.color = mesh_uniforms.color;
   //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;
   return output;
@@ -60,8 +55,8 @@ fn pick(
   @location(1) normal : vec3<f32>
 ) ->PickOutput {
   var output: PickOutput;
-  var curPos : mat4x4<f32> = mesh_uniforms.world;
-  curPos[3] = mesh_uniforms.world[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;
+  var curPos : mat4x4<f32> = mesh_uniforms.transformation;
+  curPos[3] = mesh_uniforms.transformation[3]; //+ vec4<f32>(mesh_uniforms.delta,1.0) * times.delta;
   curPos[3].w=1.0;
   var worldPos=curPos * vec4<f32>(pos, 1.0);
 

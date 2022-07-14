@@ -1,13 +1,10 @@
 import { Shader, VertexShader } from "../RenderPipeline.js";
-import { Engine } from "../../engine.js";
-declare const engine:Engine;
+import { GPU } from "../../GPU.js";
 
-export const SunRenderPipeline = ['SunRenderPipeline', function create(label:string,primitive: GPUPrimitiveState) {
-    if(!engine.gpu)
-        return;
-    return engine.gpu.positionBindGroupTime.addRenderPipeline(label,
-        new VertexShader(engine.gpu,'sun.vert.wgsl'),
-        new Shader(engine.gpu,'sun.frag.wgsl'),
+export const SunRenderPipeline = ['SunRenderPipeline', function create(gpu: GPU, label:string,primitive: GPUPrimitiveState) {
+    return gpu.positionBindGroupTime.addRenderPipeline(label,
+        new VertexShader(gpu,'sun.vert.wgsl'),
+        new Shader(gpu,'sun.frag.wgsl'),
         {
             primitive
     },{depthWriteEnabled:false, depthCompare:'always'});

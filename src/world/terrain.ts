@@ -301,6 +301,7 @@ TODO
             }]
         });
         const writableTextureLayout=engine.gpu.device.createBindGroupLayout({
+            label: 'writableTextureLayout',
             entries: [
             {
                 binding: 0,
@@ -338,6 +339,7 @@ TODO
             }
         ];
         const bindGroupHeightsRead = engine.gpu.device.createBindGroup({
+            label: 'bindGroupHeightsRead',
             layout: heightsLayout2,
             entries: _heightsBindGroupEntries
         });
@@ -366,6 +368,7 @@ TODO
         }]).bindGroup);
         passEncoder.setBindGroup(1, computePlaneHeights.createBindGroup(1,'terrainPositionAndUvsAndNormalsGPU', terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup);
         passEncoder.setBindGroup(2, engine.gpu.device.createBindGroup({
+            label: '_heightsBindGroupEntries',
             layout: computePlaneHeights.pipeline.getBindGroupLayout(2),
             entries: _heightsBindGroupEntries
         }));
@@ -407,7 +410,7 @@ TODO
                 const bindGroup1 = createTexturePipeline.createBindGroup(writableTextureLayout, 'writableTexture',() => [
                     {
                         binding: 0,
-                        resource: textureView
+                        resource: textureView,
                     }
                 ])
                 passEncoder.setPipeline(createTexturePipeline.pipeline);

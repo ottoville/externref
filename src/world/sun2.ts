@@ -1,7 +1,6 @@
 ﻿import type { Scene } from "../Scene.js";
 import { MainNode } from "../MainNode.js";
 import { Angle } from "../Math.js";
-import { GPU } from "../GPU.js";
 import type { DrawableSimple } from "../GPU/Drawable.js";
 import type { Engine } from "../engine.js";
 import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
@@ -43,20 +42,21 @@ export class Sun2 extends MainNode {
 
 
         //earth shadow
-        const shadow = this.#clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
-        this.gpu_custom_data=[ambientR, ambientGB, ambientGB, shadow];
-        // this.customData.set([ambientR, ambientGB, ambientGB, shadow]);
+        this.ambient = [ambientR, ambientGB, ambientGB];
+        this.shadow = this.#clamp(sunPositionY * 8 + 1, 0, 1); // <<3 == * 8
         this.update_dynamic_buffer();
 
     }
     drawable: DrawableSimple | undefined;
     constructor(scenes: Scene[]) {
         super(14,undefined,1,undefined,'sun',scenes);
-        this.drawable=GPU.createRenderPipeline(SunRenderPipeline, {
-            topology: 'triangle-strip',
-            cullMode: 'none',
-            stripIndexFormat:'uint16'
-        })?.addDrawableSimple(this,undefined,undefined,undefined);
+        if(engine.gpu) {
+            this.drawable=engine.gpu.createRenderPipeline(SunRenderPipeline, {
+                topology: 'triangle-strip',
+                cullMode: 'none',
+                stripIndexFormat:'uint16'
+            }).addDrawableSimple(this,undefined,undefined,undefined);
+        }
         engine.physics.movables.push(this);
     }
 }

@@ -34,7 +34,8 @@ pub struct Mesh {
     pub draw_command: DrawCommand,
     rigid_body_handle: Option<RigidBodyHandle>,
     collider_handle: Option<ColliderHandle>,
-    pub label: String
+    pub label: String,
+    velocity: [f32; 4],
 }
 #[no_mangle]
 pub unsafe extern "C" fn new_mesh(
@@ -192,7 +193,7 @@ pub unsafe extern "C" fn translation_pointer(mesh_ptr:*const Mesh) -> *const Vec
 #[no_mangle]
 pub unsafe extern "C" fn velocity_pointer(mesh_ptr:*const Mesh) -> *const [f32; 4] {
     let engine2 = ENGINE.physic_engine();
-    &engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment].delta
+    &((*mesh_ptr).velocity)
 }
 #[no_mangle]
 pub unsafe extern "C" fn intersect_box_aa_sphere(mesh_ptr:*mut Mesh, collider:*const crate::collider::Collider, radius:f32) -> bool {
@@ -251,15 +252,30 @@ pub unsafe extern "C" fn set_faces(mesh_ptr:*mut Mesh, ptr:*mut Plane, length:us
     (*mesh_ptr).get_geometry_mut().faces.planes=planes;
 }
 #[no_mangle]
-pub unsafe extern "C" fn set_gpu_custom_data(mesh_ptr:*mut Mesh, data_0:f32, data_1:f32,data_2:f32,data_3:f32) {
+pub unsafe extern "C" fn set_color(mesh_ptr:*mut Mesh, data_0:f32, data_1:f32,data_2:f32,data_3:f32) {
     let engine2 = ENGINE.physic_engine_mut();
     let gpu_mesh = &mut engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
 
-    gpu_mesh.custom[0]=data_0;
-    gpu_mesh.custom[1]=data_1;
-    gpu_mesh.custom[2]=data_2;
-    gpu_mesh.custom[3]=data_3;
+    gpu_mesh.color[0]=data_0;
+    gpu_mesh.color[1]=data_1;
+    gpu_mesh.color[2]=data_2;
+    gpu_mesh.color[3]=data_3;
 }
+#[no_mangle]
+pub unsafe extern "C" fn set_ambient(mesh_ptr:*mut Mesh, ambient_r:f32, ambient_g:f32, ambient_b:f32) {
+    let engine2 = ENGINE.physic_engine_mut();
+    let gpu_mesh = &mut engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
+    gpu_mesh.ambient[0] = ambient_r;
+    gpu_mesh.ambient[1] = ambient_g;
+    gpu_mesh.ambient[2] = ambient_b;
+}
+#[no_mangle]
+pub unsafe extern "C" fn set_shadow(mesh_ptr:*mut Mesh, shadow:f32) {
+    let engine2 = ENGINE.physic_engine_mut();
+    let gpu_mesh = &mut engine2.gpu_meshes[*&(*mesh_ptr).gpu_mesh_alignment];
+    gpu_mesh.shadow = shadow;
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn collider_faces_pointer(mesh_ptr:*mut Mesh) -> *const ColliderPlane {
     (*mesh_ptr).get_geometry_mut().collider_planes.as_ptr()
@@ -453,6 +469,7 @@ impl Mesh {
             gpu_mesh_alignment: engine2.gpu_meshes.len(),
             gpu_alignment: ENGINE.allocate_gpu(),
             geometry: None,
+            velocity: [0.0,0.0,0.0,0.0],
             rotation: Quaternion {
                 i: 0.0,
                 j: 0.0,
@@ -487,9 +504,10 @@ impl Mesh {
                 z: Vec4 { x:0.0, y:0.0, z:1.0, w:0.0},
                 w: Vec4 { x:0.0, y:0.0, z:0.0, w:1.0},
             },
-            delta: [0.0, 0.0, 0.0, 0.0],
-            custom: [0.0, 0.0, 0.0, 0.0],
-            acceleration: [0.0, 0.0, 0.0, 0.0],
+            ambient: [0.0, 0.0, 0.0],
+            shadow: 0.0,
+            color: [0.0, 0.0, 0.0, 0.0],
+            spotlight: [0.0, 0.0, 0.0, 0.0],
             _id: id,
             point_light_squared: point_light * point_light,
             directional_light,
@@ -638,12 +656,6 @@ impl Mesh {
     pub fn set_scale_z(&mut self, z:f32) {
         self.scaling.z=z;
         self.on_update();
-    }
-
-    pub unsafe fn acceleration_pointer(&self) -> *const [f32; 4] {
-        let engine2 = ENGINE.physic_engine();
-        let gpu_mesh = &engine2.gpu_meshes[self.gpu_mesh_alignment];
-        &gpu_mesh.acceleration
     }
     pub unsafe fn set_point_light(&mut self, engine:&mut Engine, range:f32) {
         let engine2 = ENGINE.physic_engine_mut();

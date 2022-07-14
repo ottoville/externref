@@ -3,15 +3,9 @@ struct Uniforms {
   view : mat4x4<f32>,
   viewPosition : vec3<f32>
 };
-struct WorldPosition {
-  world : mat4x4<f32>,
-  @size(16) delta : vec3<f32>,
-  @size(16) custom : vec3<f32>,
-  @size(16) acceleration : vec3<f32>,
-   id : u32
-};
+#import "mesh.export.wgsl"
 @binding(0) @group(1) var<uniform> uniforms : Uniforms;
-@binding(0) @group(2) var<uniform> worldposition : WorldPosition;
+@binding(0) @group(2) var<uniform> worldposition : MeshUniforms;
 
 
 struct Output {

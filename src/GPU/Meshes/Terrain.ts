@@ -4,13 +4,12 @@ import type { DrawableIndexed } from "../Drawable.js";
 import type { Engine, rust_pointer } from "../../engine.js";
 import { TerrainRenderPipeline } from "../RenderPipeLines/Terrain.js";
 declare const engine:Engine;
-import { GPU } from "../../GPU.js";
 import type { IndexBuffer, VertexBuffer} from "../../GPU/Buffer.js";
 
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
     setTextureView = (textureview: GPUTextureView) => {
-        this.drawable!.setStaticBuffer(this.sampler!, textureview);
+        this.drawable!.setStaticBuffer('terrainTexture', this.sampler!, textureview);
     }
     drawable: DrawableIndexed | undefined;
     override create_collider(): rust_pointer<"collider"> {
@@ -36,10 +35,10 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 magFilter: "linear",
                 minFilter: "linear",
             });
-            this.drawable = GPU.createRenderPipeline(TerrainRenderPipeline)?.addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]), undefined, 0, 1);
+            this.drawable = engine.gpu.createRenderPipeline(TerrainRenderPipeline).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]), undefined, 0, 1);
             //@ts-expect-error
             window.debugTerrain=() => this.drawable.debug_render_normals(this);    
-            this.drawable!.setStaticBuffer(this.sampler, initialTexture);
+            this.drawable!.setStaticBuffer('TerrainInitialTexture', this.sampler, initialTexture);
             this.drawable!.setVertexBuffer(0, this.vBuffer);
             this.drawable!.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
         }

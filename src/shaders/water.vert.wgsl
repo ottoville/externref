@@ -8,17 +8,11 @@ struct Time {
   time : u32,
   @align(4) delta : f32
 };
-struct WorldPosition {
-  world : mat4x4<f32>,
-  @size(16) delta : vec3<f32>,
-  @size(16) custom : vec3<f32>,
-  @size(16) acceleration : vec3<f32>,
-   id : u32
-};
+#import "mesh.export.wgsl"
 
 @binding(0) @group(1) var<uniform> uniforms : Uniforms;
 @binding(1) @group(1) var<uniform> times : Time;
-@binding(0) @group(2) var<uniform> worldposition : WorldPosition;
+@binding(0) @group(2) var<uniform> worldposition : MeshUniforms;
 
 const pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
     vec3<f32>(-50000.0,     3.0,   -50000.0),

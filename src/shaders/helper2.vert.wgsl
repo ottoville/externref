@@ -21,13 +21,7 @@ struct PlaneArray {
   plane: array<Plane>
 };
 
-struct WorldPosition {
-  position : mat4x4<f32>,
-  @size(16) delta : vec3<f32>,
-  @size(16) custom : vec3<f32>,
-  @size(16) acceleration : vec3<f32>,
-   id : u32
-};
+#import "mesh.export.wgsl"
 struct Settings {
      size : vec2<u32>,
      bufferSize : vec2<u32>,
@@ -37,7 +31,7 @@ struct Settings {
 };
 @binding(0) @group(1) var<uniform> scene : Scene;
 @binding(1) @group(1) var<uniform> time : Time;
-@binding(0) @group(2) var<uniform> world : WorldPosition;
+@binding(0) @group(2) var<uniform> world : MeshUniforms;
 @binding(0) @group(3) var<storage,read> slopes : IntArray;
 @binding(1) @group(3) var<storage,read> facet12 : PlaneArray;
 @binding(2) @group(3) var<storage,read> settings :  Settings;
@@ -90,7 +84,7 @@ fn main(
     var offset:vec2<f32> = rotated + vec2<f32>(10.0 * c, 10.0 * s);
 
 
-    var worldPos:vec4<f32> = world.position * vec4<f32>(offset.x, position.y, offset.y, 1.0);
+    var worldPos:vec4<f32> = world.transformation * vec4<f32>(offset.x, position.y, offset.y, 1.0);
     worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz, facetSize) + 3.0;
     output.Position = scene.viewProjection * worldPos;
     output.color = vec3<f32>(1.0,1.0,1.0);

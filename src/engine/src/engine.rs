@@ -77,7 +77,7 @@ pub fn jslog_string(strings: Vec<String>) {
     }
 }
 #[no_mangle]
-pub extern "C" fn init_engine2() {
+pub extern "C" fn init_engine2() -> usize {
     panic::set_hook(Box::new(|panic_info| unsafe {
         jspanic(create_js_string(panic_info.to_string()));
     }));
@@ -99,7 +99,9 @@ pub extern "C" fn init_engine2() {
     unsafe {
         ENGINE.engine2 = Some(e);
     }
+    std::mem::size_of::<GPUMesh>()
 }
+
 unsafe fn collider_to_mesh(e:&Engine2, collider_handle: ColliderHandle) -> Option<&&mut Mesh> {
     return match e.collider_set.get(collider_handle) {
         Some(collider) => match collider.parent() {

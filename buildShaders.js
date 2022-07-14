@@ -1,4 +1,5 @@
 var fs = require('fs');
+const imports = new Map();
 function readFiles(dirname, obj) {
     return new Promise((mres, mrej) => {
         fs.readdir(dirname,{ withFileTypes: true }, async function (err, filenames) {
@@ -10,18 +11,25 @@ function readFiles(dirname, obj) {
                 if(filename.isDirectory()) {
                     return readFiles(dirname+filename.name+'/',obj);
                 }
-                else if (filename.name.substr(-5) == '.wgsl') {
-                    return new Promise(rres => {
-                        fs.readFile(dirname + filename.name, 'utf-8', function (err, content) {
-                            if (err) {
-                                console.error(err);
-                                return;
+                else if (filename.name.endsWith('.wgsl') && !filename.name.endsWith('.export.wgsl')) {
+                    try {
+                        const content = (await Promise.all((await fs.promises.readFile(dirname + filename.name, 'utf-8')).split("\n").map(line => line.trim()).map(async line => {
+                            if(line.startsWith('#import')) {
+                                const filename=line.split('"')[1];
+                                let importPromise = imports.get(line.split('"')[1]);
+                                if(!importPromise) {
+                                    importPromise = fs.promises.readFile(dirname + filename, 'utf-8');
+                                    imports.set(filename, importPromise);
+                                }
+                                line = await importPromise;
                             }
-                            obj[dirname.substr(10)+filename.name] = content.replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '');
-                            rres();
-                        })
-                    })
-
+                            return line;
+                        }))).join('\n');
+                        obj[dirname.substr(10)+filename.name] = content.replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '');
+                    } catch(err) {
+                        console.error(err);
+                        return;
+                    }
                 } else {
                 }
             }));

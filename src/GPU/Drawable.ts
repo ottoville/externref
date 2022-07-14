@@ -1,7 +1,7 @@
 ﻿import { RenderPipeline } from "./RenderPipeline.js";
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
 import { MainNode } from "../MainNode.js";
-import { GPUBufferUsage } from "../GPU.js"
+import { GPU, GPUBufferUsage } from "../GPU.js"
 import type { DataNode, IndexedNode } from "../DataNode.js";
 import { NormalsMesh } from "./Meshes/helpers/normals.js";
 import { BoundingBoxMesh } from "./Meshes/helpers/boundingbox.js";
@@ -27,10 +27,11 @@ export abstract class Drawable {
     }
 
     staticBuffers?:GPUBindGroup;
-    setStaticBuffer(...staticBuffers:(GPUSampler | GPUTextureView)[]) {
+    setStaticBuffer(label: string, ...staticBuffers:(GPUSampler | GPUTextureView)[]) {
         this.clearBundles();
         this.staticBuffers= this.renderPipeline.bindgroupdrawable.gpu.device.createBindGroup(
             {
+                label,
                 layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout.layout,
                 entries: staticBuffers.map((resource, binding) => {
                     return {
@@ -76,7 +77,7 @@ export abstract class Drawable {
         this.dynamicBuffers.forEach((gpubindgroup_offset, i) => {
             const di=dynamicIndex[i];
             if(di) {
-                renderEncoder.setBindGroup(di, gpubindgroup_offset[0], [this.renderPipeline.bindgroupdrawable.gpu.gpu_memory_index_size + gpubindgroup_offset[1] * MainNode.alignment]);
+                renderEncoder.setBindGroup(di, gpubindgroup_offset[0], [GPU.gpu_memory_index_size + gpubindgroup_offset[1] * GPU.gpu_memory_index_size]);
             }
         });
         this.staticBuffers && renderEncoder.setBindGroup(BindGroupsStart++, this.staticBuffers)

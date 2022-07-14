@@ -95,6 +95,6 @@ export class Sphere extends SimpleIndexedMesh {
             verticesAndNormals[i*6+5]   = vertices[i*3+2]!;
         }
         super(verticesAndNormals,indices,label,undefined, undefined, undefined, has_physic,scenes,'ccw')
-        this.gpu_custom_data=color;
+        this.color=color;
     }
 }

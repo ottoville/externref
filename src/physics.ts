@@ -251,7 +251,6 @@ export class Physics {
     }
     constructor(private engine:Engine) {
         this.gameSpeed = 0;
-        engine.rust.init_engine2();
     }
 
 }

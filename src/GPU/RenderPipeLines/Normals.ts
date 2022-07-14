@@ -1,9 +1,8 @@
 import { Shader, VertexShader } from "../RenderPipeline.js";
-import { Engine } from "../../engine.js";
-declare const engine:Engine;
+import { GPU } from "../../GPU.js";
 
-export const NormalsPipeline = ['NormalsPipeline',function create(label:string,primitive: GPUPrimitiveState) {
-    return engine.gpu!.positionBindGroupTimeWGSL.addRenderPipeline(label, new VertexShader(engine.gpu!,'debug_normals.vert.wgsl', [{
+export const NormalsPipeline = ['NormalsPipeline',function create(gpu:GPU, label:string,primitive: GPUPrimitiveState) {
+    return gpu.positionBindGroupTimeWGSL.addRenderPipeline(label, new VertexShader(gpu,'debug_normals.vert.wgsl', [{
         arrayStride: 48,
         stepMode: "vertex",
         attributes: [{
@@ -19,7 +18,7 @@ export const NormalsPipeline = ['NormalsPipeline',function create(label:string,p
             format: "float32x3"
         }
         ]
-    }]), new Shader(engine.gpu!,'color.frag.wgsl'), {
+    }]), new Shader(gpu,'color.frag.wgsl'), {
         primitive
     });
 }] as const

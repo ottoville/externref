@@ -1,16 +1,9 @@
-struct Meshes {
-  position : mat4x4<f32>,       // 64 0
-  @size(52) y: f32,  //padding     52 116
-  point_light_squared : f32,    // 4   120
-  directional_light : f32,      // 4   124
-  scenes:u32,                       //4   128
-  @size(128) z: f32  //padding
-};
+#import "mesh.export.wgsl"
 
 struct MeshArray {
   length:u32,
   pointers: array<u32, 63>,
-  mesh: array<Meshes>
+  mesh: array<MeshUniforms>
 };
 struct Lights {
   length:u32,
@@ -84,7 +77,7 @@ fn main(
     let meshIndex = point_lights.pointers[pointerIndex];
     let mesh=meshes.mesh[meshIndex];
     // TODO: Preselect lights with CPU
-    let lightViewPos = viewUniforms.view * vec4<f32>(mesh.position[12].xyz, 1.0);
+    let lightViewPos = viewUniforms.view * vec4<f32>(mesh.transformation[12].xyz, 1.0);
     let sqDist = sqDistPointAABB(vec3<f32>(lightViewPos.xy, lightViewPos.z), cluster.minAABB.xyz, cluster.maxAABB.xyz);
 
     if (sqDist <= mesh.point_light_squared) {
