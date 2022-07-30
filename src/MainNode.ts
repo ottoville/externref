@@ -27,8 +27,10 @@ export abstract class MainNode {
     get id() {
         return engine.rust.id(this.ptr)
     }
-    update_scale(x: number, y: number, z: number) {
-        engine.rust.update_scale(this.ptr, x,y,z)
+    update_scale(scale:number): void
+    update_scale(x: number, y: number, z: number): void
+    update_scale(x: number, y?: number, z?: number) {
+        engine.rust.update_scale(this.ptr, x,y??x,z??x)
     }
     update_rotation(x: number, y: number, z: number, w: number) {
         engine.rust.update_rotation(this.ptr,x,y,z,w);

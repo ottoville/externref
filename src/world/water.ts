@@ -8,7 +8,7 @@ declare const engine:Engine;
 export class Sea extends BoundableNodeSimple {
     drawable: DrawableSimple | undefined;
     override create_collider() {
-        return engine.rust.create_cuboid_collider(50000,3,50000, false);
+        return engine.rust.create_cuboid_collider(50000,3,50000,0, false);
      }
     constructor(scenes: Scene[]) {
         super(new Float32Array([-50000.0, 3.0, -50000.0,

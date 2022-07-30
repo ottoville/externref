@@ -1,0 +1,42 @@
+import { OctaSphere } from "./OctaSphere.js";
+import type { Scene } from "../../Scene.js";
+import type { Engine } from "../../engine.js";
+declare const engine: Engine;
+
+let uid = 0;
+export const enum CAPSULE_ORIENTATION {
+    x,
+    y,
+    z
+}
+export class Capsule extends OctaSphere {
+    constructor(
+        label = 'Capsule' + (uid++),
+        can_collide = false,
+        fixed = false,
+        orientation: CAPSULE_ORIENTATION,
+        length: number,
+        scenes?: Scene[],
+    ) {
+        super(label, can_collide, fixed, orientation === CAPSULE_ORIENTATION.x ? length : 0, orientation === CAPSULE_ORIENTATION.y ? length : 0, orientation === CAPSULE_ORIENTATION.z ? length : 0, scenes)
+    }
+    override create_collider() {
+        if (this.height > 0 && this.width === 0 && this.depth === 0) {
+            const radius = (1 / (1 + this.height * 0.5)) * this.scale_x;
+            return engine.rust.create_capsule_collider(this.scale_y - radius, radius, 0, false);
+        }
+        else if (this.height === 0 && this.width > 0 && this.depth === 0) {
+            const radius = (1 / (1 + this.width * 0.5)) * this.scale_x;
+            return engine.rust.create_capsule_collider(this.scale_y - radius, radius, 1, false);
+        }
+        else {
+            const radius = (1 / (1 + this.depth * 0.5)) * this.scale_x;
+            return engine.rust.create_capsule_collider(this.scale_y - radius, radius, 2, false);
+        }
+    }
+    set radius(radius: number) {
+        this.update_scale(radius);
+        const collider_ptr = this.create_collider();
+        engine.rust.add_collider(this.ptr, collider_ptr);
+    }
+}

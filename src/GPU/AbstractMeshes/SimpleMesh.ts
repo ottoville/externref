@@ -13,11 +13,12 @@ export abstract class SimpleMesh extends BoundableNodeSimple {
     constructor(
         vBufferCPU: Float32Array,
         label:string,
-        has_physic: boolean,
+        can_collide: boolean,
         vBufferGPU?: VertexBuffer,
         scenes?: Scene[],
-        fixed = false) {
-        super(vBufferCPU, 6, false,label,has_physic, scenes, fixed);
+        fixed = false,
+        point_light = 0) {
+        super(vBufferCPU, 6, false,label,can_collide, scenes, fixed, undefined, point_light);
         this.drawable =  engine.gpu?.createRenderPipeline(SimpleRenderPipeline).addDrawableSimple(this)
         if(!vBufferGPU && engine.gpu) {
             vBufferGPU = Buffer.create(engine.gpu, vBufferCPU.byteLength, [GPUBufferUsage.VERTEX], 'vertex_'+label, b => {

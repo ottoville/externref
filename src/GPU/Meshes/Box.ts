@@ -42,7 +42,7 @@ let uid=0;
 export class Box extends SimpleIndexedMesh {
     override create_collider() {
         //TODO do not automaticly set collision events
-        return engine.rust.create_cuboid_collider(this.scale_x,this.scale_y,this.scale_z, true);
+        return engine.rust.create_cuboid_collider(this.scale_x,this.scale_y,this.scale_z,0, true);
     }
     constructor(
         scenes?: Scene[],

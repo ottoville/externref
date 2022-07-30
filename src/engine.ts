@@ -118,9 +118,10 @@ export type rustWasm = {
     physic_tick():void
 
     create_ball_collider(radius: number): rust_pointer<"collider">
+    create_capsule_collider(half_height: number, radius: number,orientation: 0|1|2, collision_events:boolean): rust_pointer<"collider">,
     create_trimesh_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
     create_convex_hull_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
-    create_cuboid_collider(hx: number, hy: number, hz: number, collision_events:boolean): rust_pointer<"collider">
+    create_cuboid_collider(hx: number, hy: number, hz: number, border_radius: number, collision_events:boolean): rust_pointer<"collider">
     create_cone_collider(half_height: number, radius: number): rust_pointer<"collider">
 }
 
@@ -256,8 +257,19 @@ export class Engine {
                 jslog_number(number:number) {
                     console.log(number)
                 },
-                mesh_on_collide(mesh_id:number) {
-                    DataNode.Meshes.get(mesh_id)?.onCollide();
+                mesh_on_collide(mesh_id:number, started: boolean) {
+                    const mesh = DataNode.Meshes.get(mesh_id);
+                    if(mesh) {
+                        DataNode.Meshes.get(mesh_id)?.onCollide(started);
+                        mesh.colliding=started;
+                    }
+                },
+                mesh_on_physic_tick(mesh_id:number) {
+                    const cb = DataNode.Meshes.get(mesh_id)?.onPhysicTick
+                    if(cb) {
+                        //TODO: fix delta
+                        cb(0)
+                    }
                 },
                 handle_gpu_queue(pointerVec:number, length:number) {
                     engine.gpu?.handle_gpu_queue(pointerVec, length);
@@ -337,7 +349,7 @@ export class Engine {
     }
     attachCameraInput(initial = false) {
         this.inputManager = new ArcRotateCamera(this.mainCamera, this.canvas, initial);
-        //this.inputManager = new PositionCamera(this.mainCamera,document, initial);
+        //this.inputManager = new PositionCamera(this.mainCamera, this.canvas, initial);
     }
     readonly cameras:Set<TerraCamera>=new Set();
     
