@@ -78,49 +78,44 @@ export class Plants {
         terrainP.then(terrain => {
 
             const computePipeline = new ComputePipeline(engine.gpu!, "grass/getHeightAtCoordinates.comp.wgsl");
-            const layout = computePipeline.pipeline.getBindGroupLayout(0);
-            const bindGroup = scene.gpu.device.createBindGroup({
-                layout, entries: [
-                    {
-                        binding: 0,
-                        resource: terrain.slopeArrGPUBuffer.getStorageBinding()
-                    },
-                    {
-                        binding: 1,
-                        resource: terrain.facet12ArrGPUBuffer.getStorageBinding()
-                    },
-                    {
-                        binding: 2,
-                        resource: positionGPUSwap.getStorageBinding()
-                    },
-                    {
-                        binding: 3,
-                        resource: shapeGPUSwap.getStorageBinding()
-                    },
-                    {
-                        binding: 4,
-                        resource: terrain.settingsGPU.getStorageBinding()
-                    }]
-            });
+            const bindGroup = computePipeline.createBindGroup(0, 'bindGroup1', bindGroup1 => [
+                {
+                    binding: 0,
+                    resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1)
+                },
+                {
+                    binding: 1,
+                    resource: terrain.facet12ArrGPUBuffer.getStorageBinding(bindGroup1)
+                },
+                {
+                    binding: 2,
+                    resource: positionGPUSwap.getStorageBinding(bindGroup1)
+                },
+                {
+                    binding: 3,
+                    resource: shapeGPUSwap.getStorageBinding(bindGroup1)
+                },
+                {
+                    binding: 4,
+                    resource: terrain.settingsGPU.getStorageBinding(bindGroup1)
+                }])
             this.worker.subscribe('updated', (data: { buffer: SharedArrayBuffer }) => {
 
-                const commandEncoder = scene.gpu.device.createCommandEncoder();
-                const passEncoder = commandEncoder.beginComputePass();
+                const commandEncoder = scene.gpu.device.createCommandEncoder({label: 'plants_encoder'});
+                const passEncoder = commandEncoder.beginComputePass({label: 'plants_pass_encoder'});
                 passEncoder.setPipeline(computePipeline.pipeline);
 
                 const worldCopyGPU = Buffer.create(scene.gpu, this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'worldCopyGPU', (buffer) => {
                     const worldSetArr = buffer.getMappedRange();
                     new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
                 });
-                const bindGroup2 = scene.gpu.device.createBindGroup({
-                    layout: computePipeline.pipeline.getBindGroupLayout(1), entries: [{
-                        binding: 0,
-                        resource: worldCopyGPU.getStorageBinding()
-                    }]
-                });
+                const bindGroup2 = computePipeline.createBindGroup(1, 'bindGroup2', bg => [{
+                    binding: 0,
+                    resource: worldCopyGPU.getStorageBinding(bg)
+                }])
 
-                passEncoder.setBindGroup(0, bindGroup);
-                passEncoder.setBindGroup(1, bindGroup2);
+                passEncoder.setBindGroup(0, bindGroup.bindGroup);
+                passEncoder.setBindGroup(1, bindGroup2.bindGroup);
                 passEncoder.dispatchWorkgroups(this.numBlades);
                 passEncoder.end();
                 positionGPUSwap.copyTo(commandEncoder, positionGPU, 0, 0, this.numBlades * 4 * 4)

@@ -1,6 +1,7 @@
 import shaders from "../shaders.json" assert { type: "json" };
 import type { GPU } from "../GPU.js";
 import { BindGroup } from "./BindGroup.js";
+import { BindGroupLayout } from "./BindGroupLayout.js";
 
 export class ComputePipeline {
     pipeline: GPUComputePipeline;
@@ -17,9 +18,9 @@ export class ComputePipeline {
             layout
         });
     }
-    createBindGroup(layout: number | GPUBindGroupLayout, label: string, entries: () => Iterable<GPUBindGroupEntry>) {
+    createBindGroup(layout: number | BindGroupLayout, label: string, entries: (bindGroup: BindGroup) => Iterable<GPUBindGroupEntry>) {
         return new BindGroup(this.gpu,
-            layout instanceof GPUBindGroupLayout ? layout : this.pipeline.getBindGroupLayout(layout),
+            layout instanceof BindGroupLayout ? layout : new BindGroupLayout(this.gpu, this.pipeline.getBindGroupLayout(layout)),
             this.shader+' '+this.entryPoint+' '+label,
             entries
         )

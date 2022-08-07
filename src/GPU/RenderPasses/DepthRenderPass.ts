@@ -1,55 +1,47 @@
 import type { PipelineLayout } from "../PipelineLayout.js";
-import type { RenderTarget } from "../RenderTargets/RenderTarget.js";
-import { type GPUTextureUsageLiterals, Texture } from "../Texture.js";
-import { TextureView } from "../TextureView.js";
+import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
+import type { GPUTextureUsageLiterals } from "../Texture.js";
 import { RenderPass } from "./RenderPass.js";
-import { type GPU } from "../../GPU.js";
+import type { GPU } from "../../GPU.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
+import type { DepthRenderTarget } from "GPU/RenderTargets/DepthRenderTarget.js";
 
 export class DepthRenderPass<T extends {
-    [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
+    [index: string]: (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, GPUTextureUsageLiterals[]>;
 } = {
-    [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
+    [index: string]: (renderPass: RenderPass) =>ColorRenderTarget<GPUTextureFormat, GPUTextureUsageLiterals[]>;
 }
     > extends RenderPass<T> {
-    depthTexture: Texture<GPUTextureFormat, ['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING']>;
-    depthTextureView: TextureView;
-    #depthFormat: GPUTextureFormat = 'depth32float';
+    depthRenderTarget: DepthRenderTarget<GPUTextureFormat, GPUTextureUsageLiterals[]> 
     constructor(gpu: GPU,
-        renderTargets: T,
+        renderTargetsConstructors: T,
         sampleCount: 1 | 4,
         size: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate],
         _onResize: (width: number, height: number) => [number, number],
         entryPoint: string,
         rootLayout: PipelineLayout,
-        label: string) {
-        super(gpu, renderTargets, sampleCount, size, _onResize, entryPoint, rootLayout, label);
-        this.depthTexture = new Texture(gpu, this.#depthFormat, ['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING'], 'depthTexture' + label, this.size, sampleCount)
-        this.depthTextureView = new TextureView(this.depthTexture);
+        label: string,
+        depthRenderTargetsConstructor: ((renderPass: RenderPass) => DepthRenderTarget<GPUTextureFormat, GPUTextureUsageLiterals[]>)) {
+        super(gpu, renderTargetsConstructors, sampleCount, size, _onResize, entryPoint, rootLayout, label);
+            this.depthRenderTarget=depthRenderTargetsConstructor(this);
+            this.GPURenderBundleEncoderDescriptor = {
+                ...this.GPURenderBundleEncoderDescriptor,
+                depthStencilFormat: this.depthRenderTarget.format
+        }
     }
     override resize(width: number, height: number) {
         super.resize(width, height);
-        this.depthTexture.size[0] = this.size[0];
-        this.depthTexture.size[1] = this.size[1];
-        this.depthTexture.createTexture(this.sampleCount);
+        this.depthRenderTarget.resize(this.size[0], this.size[1], this.sampleCount)    
     }
     override get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const renderPassDescriptor = super.GPURenderPassDescriptor;
         renderPassDescriptor.depthStencilAttachment = {
-            view: this.depthTextureView.view,
-            depthClearValue: 0.0,
+            view: this.depthRenderTarget.view.view,
+            depthClearValue: this.depthRenderTarget.clearValue,
             depthLoadOp: 'clear',
             depthStoreOp: "store"
         }
         return renderPassDescriptor;
-    }
-    override get GPURenderBundleEncoderDescriptor(): GPURenderBundleEncoderDescriptor {
-        return {
-            colorFormats: Object.values(this.renderTargets).map(rt => rt.texture.format),
-            sampleCount: this.sampleCount,
-            label: this.label,
-            depthStencilFormat: this.#depthFormat
-        }
     }
     override onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>) {
         return {
@@ -57,7 +49,7 @@ export class DepthRenderPass<T extends {
             depthStencil: {
                 depthWriteEnabled: renderpipeline.depthBuffer?.depthWriteEnabled ?? true,
                 depthCompare: renderpipeline.depthBuffer?.depthCompare ?? 'greater',
-                format: this.#depthFormat
+                format: this.depthRenderTarget.format
             }
         }
     }

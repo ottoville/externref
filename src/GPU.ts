@@ -1,12 +1,9 @@
-﻿import { MainNode } from "./MainNode.js";
-import { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
+﻿import { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
 import { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
-import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
 
 import { type LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
-import { RenderTarget } from "./GPU/RenderTargets/RenderTarget.js";
+import { ColorRenderTarget } from "./GPU/RenderTargets/ColorRenderTarget.js";
 import { BindGroupLayout, type GPUBindGroupTextureEntry } from "./GPU/BindGroupLayout.js";
-import {Texture } from "./GPU/Texture.js";
 import type { Projection } from "./GPU/Projection.js";
 import shaders from "./shaders.json" assert { type: "json" };
 import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
@@ -17,6 +14,8 @@ import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuf
 
 import type { Engine, } from "./engine.js";
 import { Uint16Vector2 } from "./Math.js";
+import { DepthRenderTarget } from "./GPU/RenderTargets/DepthRenderTarget.js";
+import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
 declare const engine:Engine;
 
 
@@ -34,6 +33,8 @@ export const GPUBufferUsage = {
 } as const
 let curSecond = 0;
 let framecount = 0;
+/* Todo: make dynamic with treshold values */
+const maxInstances = 10;
 
 // Cluster debug
 /*
@@ -45,8 +46,6 @@ window.resetDebugNumber = () => {
 }
 */
 export class GPU {
-    static bindMap:WeakMap<GPUBindingResource, BindGroup[]> = new WeakMap();
-
     readonly #mousePositionBuffer = new SharedArrayBuffer(4);
     readonly mousePosition = new Uint16Vector2(this.#mousePositionBuffer);
 
@@ -55,65 +54,60 @@ export class GPU {
     readonly gpu_screen_buffer_size= 16; //screen width and height and ratio
     readonly gpu_max_point_lights=63;
 
-    readonly GPUBindGroupLayouts: WeakMap<GPUBindGroup, BindGroupLayout<GPUBindGroupEntry[]>> = new WeakMap();
-    readonly #DynamicBindGroups: WeakSet<GPUBindGroup> = new WeakSet();
+    readonly #DynamicBindGroups: WeakSet<BindGroup> = new WeakSet();
 
     readonly pendingCommandBuffers: Set<GPUCommandBuffer> = new Set();
     readonly tempGPUBuffers: GPUBuffer[] = [];
     
     readonly rootCameralayout:PipelineLayout;
 
-    projections: Set<Projection> = new Set();
+    readonly projections: Set<Projection> = new Set();
     
     //Todo: Remove COPY_SRC
     readonly GPUMeshes: CopySrcBuffer & CopyDstBuffer & BindStorageBuffer & BindUniformBuffer
-    readonly GPUPointLights: CopyDstBuffer & BindStorageBuffer & BindUniformBuffer;
-    readonly GPUDirectionalLights:  CopyDstBuffer & BindStorageBuffer
+    readonly #GPUPointLights: CopyDstBuffer & BindStorageBuffer & BindUniformBuffer;
+    readonly #GPUDirectionalLights:  CopyDstBuffer & BindStorageBuffer
     readonly positionBindGroupTimeWGSL:LayoutGroupDrawable<[GPUBindGroupEntry]>;
-
-
-    readonly uniformBindGroupLayoutLightsWGSL2 : BindGroupLayout<[GPUBindGroupEntry]>;
 
     readonly lightsBindGroupTexture2 : LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
 
-    readonly BindGroupPosition: GPUBindGroup;
+    readonly BindGroupPosition: BindGroup;
     readonly positionBindGroupTime:PipelineLayout;
-    readonly timeGroup: { binding: number; resource: { buffer: GPUBuffer }; };
     readonly timeBuffer: CopyDstBuffer & BindUniformBuffer
 
-    readonly renderPasses: RenderPass[];
+    readonly #renderPasses: RenderPass[];
 
-    readonly scale = {
+    readonly #scale = {
         x: 1,
         y: 1
     }
     readonly renderPassScreen: PickableRenderPass<{
-        gRenderTargetDiffuse: RenderTarget<Texture<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"]>>;
+        gRenderTargetDiffuse: () => MSAARenderTarget<"bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING"]>;
     }>;
 
     readonly renderPassWater: DepthRenderPass<{
-        diffuse: RenderTarget<Texture<"bgra8unorm", ['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>>;
+        diffuse: () => ColorRenderTarget<"bgra8unorm", ['RENDER_ATTACHMENT', 'TEXTURE_BINDING']>;
     }>;
-    readonly renderPassCanvas: RenderPass<{ swap: RenderTarget<Texture<GPUTextureFormat, ["RENDER_ATTACHMENT"]>>; }>;
+    readonly renderPassCanvas: RenderPass<{ swap: () => ColorRenderTarget<GPUTextureFormat, ["RENDER_ATTACHMENT"]>; }>;
 
     updateViewPipeline:ComputePipeline;
-    updateViewBindGroup: GPUBindGroup;
+    readonly #updateViewBindGroup: BindGroup;
     readonly clustersInRow:[number,number,number]=[32, 18, 48];
 
     readonly clusterSizeinBytes: number;
 
 
-    readonly CLUSTER_WORKGROUP_SIZE:[number,number,number] = [4, 2, 4];
-    readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = this.clustersInRow.map((v,i) => Math.ceil(v/this.CLUSTER_WORKGROUP_SIZE[i]!)) as [number,number,number];
+    readonly #CLUSTER_WORKGROUP_SIZE:[number,number,number] = [4, 2, 4];
+    readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = this.clustersInRow.map((v,i) => Math.ceil(v/this.#CLUSTER_WORKGROUP_SIZE[i]!)) as [number,number,number];
    // readonly CLUSTER_DISPATCH_SIZE:[number,number,number] = [1,1,1];
-    viewUniformsLayout: GPUBindGroupLayout;
+    readonly viewUniformsLayout: BindGroupLayout;
     readonly uniformBindGroupLayoutWithTime: BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>;
-    readonly presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+    readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
     readonly shaderModules = {} as { [K in keyof typeof shaders]: GPUShaderModule }
-    pickRenderPass: RenderPass<{ gRenderTargetId: RenderTarget<Texture<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>>; }>;
-    sizeBindGroupLayout: BindGroupLayout<[GPUBindGroupEntry]>;
+    readonly pickRenderPass: RenderPass<{ gRenderTargetId: () => ColorRenderTarget<"r32uint", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_SRC"]>; }>;
+    readonly sizeBindGroupLayout: BindGroupLayout<[GPUBindGroupEntry]>;
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
-    bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
+    readonly bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
     createRenderPipeline(desc:readonly [label: string, create:(gpu:GPU, hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat}): RenderPipeline
     createRenderPipeline(desc:readonly [label: string, create:(gpu:GPU, hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list'}): RenderPipeline
     createRenderPipeline(desc:readonly [label: string, create:(gpu:GPU, hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive?: Omit<GPUPrimitiveState, 'topology'>): RenderPipeline
@@ -134,7 +128,7 @@ export class GPU {
         return renderPipeline;
 
     }
-    GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
+    #GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
     static async create(canvas: HTMLCanvasElement, GPUDataSize: number) {
         if (!window.navigator.gpu) {
             throw(new Error('no webgpu support'));
@@ -166,7 +160,7 @@ export class GPU {
         });
         return new GPU(canvas, device, GPUDataSize);
     }
-    renderFrame = 0;
+    #renderFrame = 0;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice,  private GPUDataSizeBytes: number) {
         for(const key in shaders) {
             const k=key as keyof typeof shaders;
@@ -197,7 +191,7 @@ export class GPU {
                 }
             }
         )
-        this.viewUniformsLayout= this.device.createBindGroupLayout({
+        this.viewUniformsLayout= new BindGroupLayout(this, this.device.createBindGroupLayout({
             label:'viewUniformsLayout',
             entries: [
                 {
@@ -215,25 +209,25 @@ export class GPU {
                     }
                 }
             ]
-        });
+        }))
         this.updateViewPipeline=new ComputePipeline(this,'updateView.comp.wgsl',
-            this.device.createPipelineLayout({bindGroupLayouts:[viewLayout.layout, this.viewUniformsLayout]}));
-        this.GPUMeshes = Buffer.create(this, GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * MainNode.maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],'GPUMeshes')
-        this.GPUPointLights = Buffer.create(this, this.gpu_max_point_lights*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],'GPUPointLights')
-        this.GPUDirectionalLights = Buffer.create(this, 63*4,[GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],'GPUDirectionalLights')
+            this.device.createPipelineLayout({bindGroupLayouts:[viewLayout.layout, this.viewUniformsLayout.layout]}));
+        this.GPUMeshes = Buffer.create(this, GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],'GPUMeshes')
+        this.#GPUPointLights = Buffer.create(this, this.gpu_max_point_lights*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],'GPUPointLights')
+        this.#GPUDirectionalLights = Buffer.create(this, 63*4,[GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],'GPUDirectionalLights')
         
         
-        this.updateViewBindGroup=viewLayout.createBindGroup('updateViewBindGroup',[{
+        this.#updateViewBindGroup=viewLayout.createBindGroup('updateViewBindGroup',bindGroup => [{
             binding: 0,
-            resource: this.GPUMeshes.getStorageBinding(),
+            resource: this.GPUMeshes.getStorageBinding(bindGroup),
         },
         {
             binding: 1,
-            resource: this.GPUPointLights.getStorageBinding(),
+            resource: this.#GPUPointLights.getStorageBinding(bindGroup),
         },
         {
             binding: 2,
-            resource: this.GPUDirectionalLights.getStorageBinding(),
+            resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
         }]);
         this.uniformBindGroupLayoutWithTime  = BindGroupLayout.create(this,
             'uniformBindGroupLayoutWithTime',
@@ -281,16 +275,6 @@ export class GPU {
 
         this.rootCameralayout = new PipelineLayout('rootCamera', this, this.uniformBindGroupLayoutWithTime, sizePipelineLayout, undefined, false, false);
 
-        this.uniformBindGroupLayoutLightsWGSL2 = BindGroupLayout.create(this,'uniformBindGroupLayoutLightsWGSL2',
-            {
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX,
-                buffer: {
-                    type: "uniform"
-                }
-            }
-        );
-
         const BindGroupLayoutPosition= BindGroupLayout.create(this,
             'BindGroupLayoutPosition',
             {
@@ -302,10 +286,10 @@ export class GPU {
                 }
             }
         );
-        this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition',[
+        this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition',bindGroup => [
             {
                 binding: 0,
-                resource: this.GPUMeshes.getUniformBinding(0, GPU.gpu_memory_index_size)
+                resource: this.GPUMeshes.getUniformBinding(bindGroup, 0, GPU.gpu_memory_index_size)
             }]);
         this.positionBindGroupTime = this.rootCameralayout.addChildBindGroup('positionBindGroupTime', this.BindGroupPosition, true);
         this.positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout('positionBindGroupTimeWGSL', BindGroupLayoutPosition);
@@ -339,29 +323,29 @@ export class GPU {
                 }
             }
         ));
-        const idTexture = Texture.create(this,"r32uint",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'],'idTexture',[300,300,1])
-        const diffuseTexture = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'diffuseTexture') //TODO: remove texture binding
-
-        const gRenderTargetDiffuse = new MSAARenderTarget(diffuseTexture, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 });
 
         this.pickRenderPass=new RenderPass(this,
             {
-                gRenderTargetId: new RenderTarget(idTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },{ baseArrayLayer: 0, arrayLayerCount: 1 })
+                gRenderTargetId: ColorRenderTarget.createForRenderpass("r32uint",['RENDER_ATTACHMENT', 'TEXTURE_BINDING','COPY_SRC'], 'idTexture', { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },[300,300,1],{ baseArrayLayer: 0, arrayLayerCount: 1 })
             },1,[canvas.width,canvas.height,1],(w, h) => {
             return [w, h]
         },'pick',this.rootCameralayout,'pickRenderPass');
 
         this.renderPassScreen = new PickableRenderPass(this, {
-            gRenderTargetDiffuse
+            gRenderTargetDiffuse: MSAARenderTarget.createForRenderpass("bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'diffuseTexture', { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }),
+
         }, 4, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
-            },'main',this.rootCameralayout,'renderPassScreen');
-        const diffuseTextureWater = Texture.create(this,"bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'diffuseTextureWater')
-    
+            },'main',this.rootCameralayout,'renderPassScreen',DepthRenderTarget.createForRenderpass('depth32float',['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING'],'depthTexture_renderPassWater' ,0,undefined,undefined, undefined,undefined,4));
+
         this.renderPassWater = new DepthRenderPass(this, {
-            diffuse: new RenderTarget(diffuseTextureWater, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 })
-        }, 1, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2],'main',this.rootCameralayout,'renderPassWater');
+            diffuse: ColorRenderTarget.createForRenderpass("bgra8unorm",['RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'diffuseTextureWater', { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }),
+        
+        }, 1, [canvas.width,canvas.height,1], (w, h) => [w >> 2, h >> 2],'main',this.rootCameralayout,'renderPassWater',
+
+        DepthRenderTarget.createForRenderpass('depth32float',['RENDER_ATTACHMENT', 'COPY_SRC'],'depthTexture_renderPassWater' ,0,undefined,undefined, undefined,undefined,1)
+        );
       
         //TODO: this does not need to be canvas size
         /*const renderPassShadows = new DepthRenderPass(this, {}, 4, [canvas.width,canvas.height,1],
@@ -374,11 +358,10 @@ export class GPU {
         
         context.configure({
             device: device,
-            format: this.presentationFormat,
+            format: this.#presentationFormat,
             usage: GPUTextureUsage.RENDER_ATTACHMENT
         });
 
-        const canvasTexture = Texture.create(this,this.presentationFormat,['RENDER_ATTACHMENT'],'canvasTexture')
         const BindGroupLayoutCanvas = BindGroupLayout.create(this,'BindGroupLayoutCanvas',
         {   //diffuse
             binding: 0,
@@ -390,7 +373,7 @@ export class GPU {
         const canvasRootLayout = new PipelineLayout('canvasRootLayout', this, BindGroupLayoutCanvas);
 
         this.renderPassCanvas = new RenderPass(this, {
-            swap: new RenderTarget(canvasTexture, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },undefined, undefined, context)
+            swap: ColorRenderTarget.createForRenderpass(this.#presentationFormat,['RENDER_ATTACHMENT'],'canvasTexture', { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },undefined, undefined,undefined, context)
         }, 1, [canvas.width,canvas.height,1],
             (w, h) => {
                 return [w, h]
@@ -401,25 +384,20 @@ export class GPU {
 
         //water color { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }
 
-        this.renderPasses = [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater, this.pickRenderPass];
-        //[this.renderPassCanvas, this.renderPassScreen, this.renderPassWater] = renderPasses;
+        this.#renderPasses = [this.renderPassCanvas, this.renderPassScreen, this.renderPassWater, this.pickRenderPass];
 
-        this.renderPassCanvas.BindGroupCanvas = () =>  BindGroupLayoutCanvas.createBindGroup('BindGroupCanvas',[
+        this.renderPassCanvas.BindGroupCanvas = () =>  BindGroupLayoutCanvas.createBindGroup('BindGroupCanvas', (bindGroup) => [
             {
                 binding: 0,
-                resource: this.renderPassScreen.renderTargets.gRenderTargetDiffuse.viewOrResolve(this.renderPassCanvas)
+                resource: this.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view.getTextureBinding(bindGroup)
             }]
         );
         
         this.#DynamicBindGroups.add(this.BindGroupPosition);
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = Buffer.create(this, timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],'timeBuffer');
-        this.timeGroup = {
-            binding: 1,
-            resource: this.timeBuffer.getUniformBinding()
-        }
-
-        const computePipelineClustersLayout = this.device.createBindGroupLayout({label: 'computePipelineClustersLayout', entries: [
+        
+        const computePipelineClustersLayout = new BindGroupLayout(this, {label: 'computePipelineClustersLayout', entries: [
             {
                 binding: 0,
                 visibility: GPUShaderStage.COMPUTE,
@@ -434,10 +412,10 @@ export class GPU {
                     type: 'uniform'
                 }
             }
-        ]})
+        ]} )
         const computePipelineClusters       = new ComputePipeline(this,'clusters.comp.wgsl',
         this.device.createPipelineLayout({
-            bindGroupLayouts:[this.sizeBindGroupLayout.layout, computePipelineClustersLayout]
+            bindGroupLayouts:[this.sizeBindGroupLayout.layout, computePipelineClustersLayout.layout]
         }));
         let resizeHandler:null | ReturnType<typeof setTimeout> = null;
         const maxResolution = {
@@ -448,7 +426,7 @@ export class GPU {
             const entry = entries[0];
             if (!entry)
                 return;
-            window.cancelAnimationFrame(this.renderFrame)
+            window.cancelAnimationFrame(this.#renderFrame)
             resizeHandler && clearTimeout(resizeHandler);
             resizeHandler = setTimeout(() => {
                 try {
@@ -462,23 +440,23 @@ export class GPU {
                         canvas.width = canvas.height * aspectRatio;
                     }
 
-                    this.scale.x = canvas.width / entry.contentRect.width;
-                    this.scale.y = canvas.height / entry.contentRect.height;
+                    this.#scale.x = canvas.width / entry.contentRect.width;
+                    this.#scale.y = canvas.height / entry.contentRect.height;
                     // configure() must also be called if you want to change the size of the textures returned by getCurrentTexture()
                     context.configure({
                         device: this.device,
-                        format: this.presentationFormat,
+                        format: this.#presentationFormat,
                         usage: GPUTextureUsage.RENDER_ATTACHMENT
                     })
-                    const commandEncoder = this.device.createCommandEncoder();
-                    const passEncoder = commandEncoder.beginComputePass();
+                    const commandEncoder = this.device.createCommandEncoder({label: 'resizeEncoder'});
+                    const passEncoder = commandEncoder.beginComputePass({label: 'resizePassEncoder'});
                     passEncoder.setPipeline(computePipelineClusters.pipeline);
                     
                     this.projections.forEach(projection => projection.update(aspectRatio))
 
-                    this.renderPasses.forEach(renderPass => {
+                    this.#renderPasses.forEach(renderPass => {
                         renderPass.resize(canvas.width, canvas.height);
-                        passEncoder.setBindGroup(0, renderPass.sizeBindGroup());
+                        passEncoder.setBindGroup(0, renderPass.sizeBindGroup().bindGroup);
                         renderPass.cameras.forEach(camera => {
                             camera.updateProjection(passEncoder,computePipelineClustersLayout)
                         });
@@ -486,7 +464,7 @@ export class GPU {
                     passEncoder.end();
                     this.device.queue.submit([commandEncoder.finish()]);
 
-                    this.renderFrame = window.requestAnimationFrame(this.renderLoop);
+                    this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
                 } catch(e) {
                     engine.showError(e);
                 }
@@ -497,15 +475,15 @@ export class GPU {
         }
         ro.observe(canvas.parentElement);
         canvas.addEventListener('pointermove', (e) => {
-            Atomics.store(this.mousePosition, 0, e.clientX * this.scale.x)
-            Atomics.store(this.mousePosition, 1, e.clientY * this.scale.y)
+            Atomics.store(this.mousePosition, 0, e.clientX * this.#scale.x)
+            Atomics.store(this.mousePosition, 1, e.clientY * this.#scale.y)
             Atomics.notify(new Int32Array(this.#mousePositionBuffer), 0);
         });
     }
     readonly #queue_map = new Map<number, number>();
 
     handle_gpu_queue(pointerVec:number, length:number) {
-        this.GPUQueueCommandEncoder=this.device.createCommandEncoder();
+        this.#GPUQueueCommandEncoder=this.device.createCommandEncoder({label: 'handle_gpu_queue_encoder'});
         const pointers_to_gpumesh_and_alignment = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
         for (let i = 0; i < pointers_to_gpumesh_and_alignment.length; i += 2) {
             this.#queue_map.set(pointers_to_gpumesh_and_alignment[i]!, pointers_to_gpumesh_and_alignment[i + 1]!);
@@ -520,7 +498,7 @@ export class GPU {
                     engine.updateLights = true;
                 }
                 new Float32Array(tempBuffer.getMappedRange(tempOffset * this.GPUDataSizeBytes, this.GPUDataSizeBytes)).set(data);
-                gpu2.GPUMeshes.copyFrom(this.GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * this.GPUDataSizeBytes, GPU.gpu_memory_index_size + alignment * 256, this.GPUDataSizeBytes)
+                gpu2.GPUMeshes.copyFrom(this.#GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * this.GPUDataSizeBytes, GPU.gpu_memory_index_size + alignment * GPU.gpu_memory_index_size, this.GPUDataSizeBytes)
             });
             this.#queue_map.clear();
             gpu2.tempGPUBuffers.push(tempBuffer);
@@ -528,7 +506,7 @@ export class GPU {
     }
         //TODO: Queue this call and do it only once per frame
     updateAllocatedMemory(allocated_gpu_memory_ptr:number, length:number) {
-        const renderEncoder = this.device.createCommandEncoder();
+        const renderEncoder = this.device.createCommandEncoder({label: 'updateAllocatedMemory_encoder'});
         const buffLength = Uint32Array.BYTES_PER_ELEMENT * length;
         const tempBuffer = Buffer.create(this, buffLength, [GPUBufferUsage.COPY_SRC],'tempBuffer', tempBuffer2 => {
             new Uint32Array(tempBuffer2.getMappedRange(0, buffLength)).set(new Uint32Array(engine.rust.memory.buffer, allocated_gpu_memory_ptr, length));
@@ -537,7 +515,7 @@ export class GPU {
     }
     update_directional_lights(pointer:number, length:number) {
         const lights = new Uint32Array(engine.memory.buffer, pointer, length);
-        const commandEncoder = this.device.createCommandEncoder();
+        const commandEncoder = this.device.createCommandEncoder({label: 'update_directional_lights_encoder'});
         //TODO: Potential buffer overflow
         const byteLength = 4 + lights.byteLength;
         const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'directional_lights_tempBuffer', tempBuffer2 => {
@@ -545,12 +523,12 @@ export class GPU {
             gpu_buffer[0] = lights.length;
             gpu_buffer.set(lights,1);
         });
-        tempBuffer.copyTo(commandEncoder, this.GPUDirectionalLights, 0, 0, byteLength);
+        tempBuffer.copyTo(commandEncoder, this.#GPUDirectionalLights, 0, 0, byteLength);
         this.pendingCommandBuffers.add(commandEncoder.finish());
     }
     update_point_lights(pointer:number, length:number) {
         const lights = new Uint32Array(engine.memory.buffer, pointer, length);
-        const commandEncoder = this.device.createCommandEncoder();
+        const commandEncoder = this.device.createCommandEncoder({label: 'update_point_lights_encoder'});
         //TODO: Potential buffer overflow
         const byteLength = 4 + lights.byteLength;
         const tempBuffer = Buffer.create(this, byteLength, [GPUBufferUsage.COPY_SRC], 'point_lights_tempBuffer', tempBuffer2 => {
@@ -558,14 +536,14 @@ export class GPU {
             gpu_buffer[0] = lights.length;
             gpu_buffer.set(lights,1);
         });
-        tempBuffer.copyTo(commandEncoder, this.GPUPointLights,0,0,byteLength);
+        tempBuffer.copyTo(commandEncoder, this.#GPUPointLights,0,0,byteLength);
         this.pendingCommandBuffers.add(commandEncoder.finish());
     }
     readonly #timeAndDeltaBuffer = new ArrayBuffer(8);
     readonly deltaView = new Float32Array(this.#timeAndDeltaBuffer, 4, 1);
     readonly #timeView = new Uint32Array(this.#timeAndDeltaBuffer, 0, 1);
 
-    readonly renderLoop = (time: DOMHighResTimeStamp) => {
+    readonly #renderLoop = (time: DOMHighResTimeStamp) => {
         //msPerFrame = performance.now() - startTime;
         //startTime = performance.now();
 
@@ -581,10 +559,10 @@ export class GPU {
 
 
 
-        this.GPUQueueCommandEncoder=null;
+        this.#GPUQueueCommandEncoder=null;
         engine.rust.renderloop();
         //@ts-ignore bug in TS
-        const commandBuff= this.GPUQueueCommandEncoder?.finish() ?? null;
+        const commandBuff= this.#GPUQueueCommandEncoder?.finish() ?? null;
         if(commandBuff)
             this.pendingCommandBuffers.add(commandBuff);
 
@@ -593,7 +571,7 @@ export class GPU {
             engine.inputManager.calculateCameraPositionAndTarget();
         }
 
-        const renderEncoder = this.device.createCommandEncoder();
+        const renderEncoder = this.device.createCommandEncoder({label:'renderloop_renderEncoder'});
 
         this.#timeView.set([time]);
         let physicDelta: number | null;
@@ -610,9 +588,9 @@ export class GPU {
             engine.cameras.forEach(camera => {
                 camera.updateView(renderEncoder)
             })
-            const lightPass = renderEncoder.beginComputePass();
+            const lightPass = renderEncoder.beginComputePass({label: 'lightPassEncoder'});
             lightPass.setPipeline(this.updateViewPipeline.pipeline);
-            lightPass.setBindGroup(0, this.updateViewBindGroup);
+            lightPass.setBindGroup(0, this.#updateViewBindGroup.bindGroup);
             engine.cameras.forEach(camera => {
                 if(camera.viewUpdated || engine.updateLights) {
                     camera.viewUpdated=false;
@@ -626,7 +604,7 @@ export class GPU {
 
             engine.updateLights = false;
 
-            this.renderPasses.forEach(renderPass => {
+            this.#renderPasses.forEach(renderPass => {
                 renderPass.render(renderEncoder)
             })
         } catch (e) {
@@ -646,56 +624,6 @@ export class GPU {
         this.pendingCommandBuffers.clear();
         this.tempGPUBuffers.forEach(buff => buff.destroy());
         this.tempGPUBuffers.length=0;
-        engine.renderFrame = window.requestAnimationFrame(this.renderLoop);
+        engine.renderFrame = window.requestAnimationFrame(this.#renderLoop);
     }
-    /*
-    drawBindGroups(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, bgt: PipelineLayout, renderPass: RenderPass, index: number) {
-        let drawedMeshes = 0;
-        if (bgt.renderPipeLines.size || bgt.subBindGroups.size) {
-            if (bgt.sharedBindgroup && this.#DynamicBindGroups.has(bgt.sharedBindgroup)) {
-                bgt.renderPipeLines.forEach(renderPipeline => {
-                    renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup!, renderPipeline.dynamicBindGroupOffset.map(o => o * MainNode.alignment));
-                    drawedMeshes += renderPipeline.draw(renderPassEncoder, renderPass, index);
-                });
-            }
-            else {
-                if (bgt.sharedBindgroup) {
-                    renderPassEncoder.setBindGroup(index, bgt.sharedBindgroup);
-                }
-                bgt.renderPipeLines.forEach(m => {
-                    drawedMeshes += m.draw(renderPassEncoder, renderPass, index)
-                });
-            }
-            if (bgt.subBindGroups.size) {
-                bgt.subBindGroups.forEach(b => { drawedMeshes += this.drawBindGroups(renderPassEncoder, b, renderPass, ++index) });
-            }
-        }
-        return drawedMeshes;
-    }
-    //Without shared bindgroups
-    drawBindGroups2(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, pipelineLayout: PipelineLayout, renderPass: RenderPass, index: number, dynamicIndices: number[] = []) {
-        let drawedMeshes = 0;
-        if (pipelineLayout.renderPipeLines.size || pipelineLayout.subBindGroups.size) {
-
-            if (pipelineLayout.bindGroupLayout.dynamicIndices) {
-                dynamicIndices.push(index);
-
-            }
-
-            pipelineLayout.renderPipeLines.forEach(renderpipeline => {
-                drawedMeshes += renderpipeline.draw(renderPassEncoder, renderPass, index, dynamicIndices)
-            });
-            if (pipelineLayout.subBindGroups.size) {
-                pipelineLayout.subBindGroups.forEach((subPipelineLayot) => {
-                    //subPipelineLayot.renderPipeLines.forEach(renderPipeline => {
-                    //    drawedMeshes += renderPipeline.draw(renderPassEncoder, renderPass, index + dynamicIndices.length, dynamicIndices);
-                    //});
-                    drawedMeshes += this.drawBindGroups2(renderPassEncoder, subPipelineLayot, renderPass, pipelineLayout.bindGroupLayout.dynamicIndices?index:++index, dynamicIndices)
-                    
-                });
-            }
-        }
-        return drawedMeshes;
-    }
-    */
 }

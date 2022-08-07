@@ -7,6 +7,7 @@ import { Engine } from "../engine.js";
 import { BindGroupLayout } from "../GPU/BindGroupLayout.js";
 import { ComputePipeline } from "../GPU/ComputePipeline.js";
 import { Buffer, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindUniformBuffer, BindStorageBuffer, VertexBuffer } from "../GPU/Buffer.js";
+import { BindGroup } from "GPU/BindGroup.js";
 declare const engine:Engine;
 
 declare class OffscreenCanvas {
@@ -76,7 +77,7 @@ TODO
             )
         });
 
-        const commandEncoder = engine.gpu.device.createCommandEncoder();
+        const commandEncoder = engine.gpu.device.createCommandEncoder({label: 'updateSwap2_encoder'});
         b1.copyTo(commandEncoder, this.terrainPositionAndUvsAndNormalsGPU, 0, offset, byteLength)
         let b2: CopySrcBuffer;
         if (!nofaces) {
@@ -137,18 +138,18 @@ TODO
 
                 const computePipeline = new ComputePipeline(engine.gpu!, 'terrain/CreateGroundFromHeightMap.comp.wgsl');
 
-                const bindGroupSettings = computePipeline.createBindGroup(0, 'bindGroupSettings', () => [{
+                const bindGroupSettings = computePipeline.createBindGroup(0, 'bindGroupSettings', (bindGroup) => [{
                     binding: 0,
-                    resource: settingsGPU.getUniformBinding()
+                    resource: settingsGPU.getUniformBinding(bindGroup)
                 }]);
-                const commandEncoder = engine.gpu!.device.createCommandEncoder();
-                const passEncoder = commandEncoder.beginComputePass();
+                const commandEncoder = engine.gpu!.device.createCommandEncoder({label: 'loadFromTexture_encoder'});
+                const passEncoder = commandEncoder.beginComputePass({label: 'loadFromTexture_encoder_pass_encoder'});
                 passEncoder.setBindGroup(0, bindGroupSettings.bindGroup);
                 var terrainPositionAndUvsAndNormalsGPU = Buffer.create(engine.gpu!, verticesBufferSize, [GPUBufferUsage.STORAGE, GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST, GPUBufferUsage.COPY_SRC], 'terrainPositionAndUvsAndNormalsGPU')
-                const sourceBindGroup = computePipeline.createBindGroup(1,'sourceBindGroup', () => [
+                const sourceBindGroup = computePipeline.createBindGroup(1,'sourceBindGroup', (bindGroup) => [
                     {
                         binding: 0,
-                        resource: terrainPositionAndUvsAndNormalsGPU.getStorageBinding()
+                        resource: terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup)
                     },
                     {
                         binding: 1,
@@ -220,30 +221,16 @@ TODO
             size: Terrain.textureSize,
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
         });
-        const _heightsBindGroupEntries: [GPUBindGroupEntry, GPUBindGroupEntry] = [
+        const _heightsBindGroupEntries =  (bindGroup:BindGroup) => [
             {
                 binding: 0,
-                resource: this.slopeArrGPUBuffer.getStorageBinding()
+                resource: this.slopeArrGPUBuffer.getStorageBinding(bindGroup)
             },
             {
                 binding: 1,
-                resource: this.facet12ArrGPUBuffer.getStorageBinding()
+                resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup)
             }
-        ];
-        const heightsBindGroupEntries:[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry] = [
-            {
-                binding: 0,
-                resource: this.slopeArrGPUBuffer.getStorageBinding()
-            },
-            {
-                binding: 1,
-                resource: this.facet12ArrGPUBuffer.getStorageBinding()
-            },
-            {
-                binding: 2,
-                resource: this.settingsGPU.getStorageBinding()
-            }
-        ];
+        ]
         const heightsLayout = BindGroupLayout.create(engine.gpu,'terrain',
             {
                 binding: 0,
@@ -268,7 +255,20 @@ TODO
                 }
             }
         )
-        this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', heightsLayout.createBindGroup('TerrainHeightsbindGroupTree',heightsBindGroupEntries));
+        this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', heightsLayout.createBindGroup('TerrainHeightsbindGroupTree', bindGroup => [
+            {
+                binding: 0,
+                resource: this.slopeArrGPUBuffer.getStorageBinding(bindGroup)
+            },
+            {
+                binding: 1,
+                resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup)
+            },
+            {
+                binding: 2,
+                resource: this.settingsGPU.getStorageBinding(bindGroup)
+            }
+        ]));
         
         const computePipelineIndices = new ComputePipeline(engine.gpu, 'terrain/calculatePlaneIndices.comp.wgsl');
 
@@ -279,10 +279,10 @@ TODO
         })( (Terrain.subdivisions[0] + 1) * (Terrain.subdivisions[1] + 1));
                
 
-        const commandEncoder = engine.gpu.device.createCommandEncoder();
-        const passEncoder = commandEncoder.beginComputePass();
+        const commandEncoder = engine.gpu.device.createCommandEncoder({label: 'terrain_encoder'});
+        const passEncoder = commandEncoder.beginComputePass({label: 'terrain_pass_encoder'});
 
-        const settingsLayout=engine.gpu.device.createBindGroupLayout({
+        const settingsLayout=new BindGroupLayout(engine.gpu, engine.gpu.device.createBindGroupLayout({
             entries: [{
                 binding: 0,
                 visibility: GPUShaderStage.COMPUTE,
@@ -290,8 +290,8 @@ TODO
                     type: "uniform"
                 }
             }]
-        });
-        const writableStorageLayout=engine.gpu.device.createBindGroupLayout({
+        }));
+        const writableStorageLayout= new BindGroupLayout(engine.gpu, {
             entries: [{
                 binding: 0,
                 visibility: GPUShaderStage.COMPUTE,
@@ -299,8 +299,8 @@ TODO
                     type: "storage"
                 }
             }]
-        });
-        const writableTextureLayout=engine.gpu.device.createBindGroupLayout({
+        }) 
+        const writableTextureLayout=new BindGroupLayout(engine.gpu, engine.gpu.device.createBindGroupLayout({
             label: 'writableTextureLayout',
             entries: [
             {
@@ -311,8 +311,8 @@ TODO
                     format: 'rgba8unorm'
                 }
             }]
-        });
-        const heightsLayout2 = engine.gpu.device.createBindGroupLayout({
+        }));
+        const heightsLayout2 = new BindGroupLayout(engine.gpu, {
             entries: [{
                 binding: 0,
                 visibility: GPUShaderStage.COMPUTE,
@@ -327,63 +327,53 @@ TODO
                 }
             }]
             
-        });
-        const normalsLayout=engine.gpu.device.createPipelineLayout({bindGroupLayouts:[settingsLayout,writableStorageLayout, heightsLayout2]})
+        })
+        const normalsLayout=engine.gpu.device.createPipelineLayout({bindGroupLayouts:[settingsLayout.layout,writableStorageLayout.layout, heightsLayout2.layout]})
         const computePipelineNormals = new ComputePipeline(engine.gpu, 'terrain/calculateNormals.comp.wgsl', normalsLayout)
         const computePlaneHeights = new ComputePipeline(engine.gpu, 'terrain/calculatePlaneHeights.comp.wgsl');
 
-        const terrainPositionAndUvsAndNormalsGPU_bgroup = () => [
+        const terrainPositionAndUvsAndNormalsGPU_bgroup = (bindGroup: BindGroup) => [
             {
                 binding: 0,
-                resource: this.terrainPositionAndUvsAndNormalsGPU.getStorageBinding()
+                resource: this.terrainPositionAndUvsAndNormalsGPU.getStorageBinding(bindGroup)
             }
         ];
-        const bindGroupHeightsRead = engine.gpu.device.createBindGroup({
-            label: 'bindGroupHeightsRead',
-            layout: heightsLayout2,
-            entries: _heightsBindGroupEntries
-        });
+        const bindGroupHeightsRead = heightsLayout2.createBindGroup('bindGroupHeightsRead', _heightsBindGroupEntries)
         //todo: remove unneeded flags
         const terrainIndicesGPU = Buffer.create(engine.gpu, this.#terrainIndicesLength, [GPUBufferUsage.INDEX, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], 'terrainIndicesGPU');
 
         passEncoder.setPipeline(computePipelineIndices.pipeline);
-        const settingsGPUBindGroup = computePipelineIndices.createBindGroup(0, 'settingsGPU',() => [{
+        const settingsGPUBindGroup = computePipelineIndices.createBindGroup(0, 'settingsGPU',(bindGroup) => [{
             binding: 0,
-            resource: this.settingsGPU.getUniformBinding()
+            resource: this.settingsGPU.getUniformBinding(bindGroup)
         }])
         passEncoder.setBindGroup(0, settingsGPUBindGroup.bindGroup);
         passEncoder.setBindGroup(1, computePipelineIndices.createBindGroup(1,'terrainIndicesGPU',
-            () => [{
+            (bindGroup) => [{
                 binding: 0,
-                resource: terrainIndicesGPU.getStorageBinding()
+                resource: terrainIndicesGPU.getStorageBinding(bindGroup)
             }
             ]
         ).bindGroup);
         passEncoder.dispatchWorkgroups(...Terrain.subdivisions);
 
         passEncoder.setPipeline(computePlaneHeights.pipeline);
-        passEncoder.setBindGroup(0, computePlaneHeights.createBindGroup(0, 'settingsGPU', () => [{
+        passEncoder.setBindGroup(0, computePlaneHeights.createBindGroup(0, 'settingsGPU', (bindGroup) => [{
             binding: 0,
-            resource: this.settingsGPU.getUniformBinding()
+            resource: this.settingsGPU.getUniformBinding(bindGroup)
         }]).bindGroup);
         passEncoder.setBindGroup(1, computePlaneHeights.createBindGroup(1,'terrainPositionAndUvsAndNormalsGPU', terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup);
-        passEncoder.setBindGroup(2, engine.gpu.device.createBindGroup({
-            label: '_heightsBindGroupEntries',
-            layout: computePlaneHeights.pipeline.getBindGroupLayout(2),
-            entries: _heightsBindGroupEntries
-        }));
+        passEncoder.setBindGroup(2,
+        new BindGroupLayout(engine.gpu, computePlaneHeights.pipeline.getBindGroupLayout(2)).createBindGroup('_heightsBindGroupEntries', _heightsBindGroupEntries).bindGroup)
         passEncoder.dispatchWorkgroups(...Terrain.subdivisions);
 
         passEncoder.setPipeline(computePipelineNormals.pipeline);
-        passEncoder.setBindGroup(0, computePipelineNormals.createBindGroup(settingsLayout,'settingsGPU',() => [{
+        passEncoder.setBindGroup(0, computePipelineNormals.createBindGroup(settingsLayout,'settingsGPU',(bindGroup) => [{
             binding: 0,
-            resource: this.settingsGPU.getUniformBinding()
+            resource: this.settingsGPU.getUniformBinding(bindGroup)
         }]).bindGroup)
-        passEncoder.setBindGroup(1, engine.gpu.device.createBindGroup({
-            layout: writableStorageLayout,
-            entries: terrainPositionAndUvsAndNormalsGPU_bgroup()
-        }))
-        passEncoder.setBindGroup(2, bindGroupHeightsRead)
+        passEncoder.setBindGroup(1,         writableStorageLayout.createBindGroup('terrainPositionAndUvsAndNormalsGPU_bgroup', terrainPositionAndUvsAndNormalsGPU_bgroup).bindGroup        )
+        passEncoder.setBindGroup(2, bindGroupHeightsRead.bindGroup)
         passEncoder.dispatchWorkgroups(Terrain.subdivisions[0] + 1, Terrain.subdivisions[1] + 1);
         const textureView=this.texture.createView();
 
@@ -403,7 +393,7 @@ TODO
                     "terrain/createTerrainTexture.comp.wgsl",
                     engine.gpu!.device.createPipelineLayout(
                         {
-                            bindGroupLayouts: [settingsLayout,heightsLayout2, writableTextureLayout]
+                            bindGroupLayouts: [settingsLayout.layout,heightsLayout2.layout, writableTextureLayout.layout]
                         }
                     )
                 );
@@ -414,7 +404,7 @@ TODO
                     }
                 ])
                 passEncoder.setPipeline(createTexturePipeline.pipeline);
-                passEncoder.setBindGroup(1, bindGroupHeightsRead);
+                passEncoder.setBindGroup(1, bindGroupHeightsRead.bindGroup);
                 passEncoder.setBindGroup(2, bindGroup1.bindGroup);
                 passEncoder.dispatchWorkgroups(...Terrain.textureSize);
                 passEncoder.end();
@@ -440,7 +430,7 @@ TODO
                 })
             }
 
-            const commandEncoder2 = engine.gpu!.device.createCommandEncoder();
+            const commandEncoder2 = engine.gpu!.device.createCommandEncoder({label: 'terrain_encoder2'});
             const readBuffer2 = this.facet12ArrGPUBuffer.createReadCopy(commandEncoder2);
             engine.gpu!.device.queue.submit([commandEncoder2.finish()]);
             readBuffer2.readAndDestroy(buff => {

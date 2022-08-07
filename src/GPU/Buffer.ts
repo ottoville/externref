@@ -1,7 +1,8 @@
 import { type GPU, GPUBufferUsage } from "../GPU.js";
-import { Engine } from "../engine.js";
+import type { Engine } from "../engine.js";
+import type { BindGroup } from "./BindGroup.js";
+import { Bindable } from "./Bindable.js";
 declare const engine:Engine;
-
 
 export interface CopyDstBuffer extends Buffer {
     updateBufferRaw: (commandEncoder: GPUCommandEncoder, data: ArrayBuffer) => void
@@ -14,10 +15,10 @@ export interface MappedBuffer {
     getMappedRange: () => void
 }
 export interface BindUniformBuffer extends Buffer {
-    getUniformBinding: (offset?: GPUSize64, size?:GPUSize64) => GPUBufferBinding;
+    getUniformBinding: (bindGroup: BindGroup, offset?: GPUSize64, size?:GPUSize64) => GPUBufferBinding;
 }
 export interface BindStorageBuffer extends Buffer {
-    getStorageBinding: (offset?: GPUSize64, size?:GPUSize64) => GPUBufferBinding;
+    getStorageBinding: (bindGroup: BindGroup, offset?: GPUSize64, size?:GPUSize64) => GPUBufferBinding;
 }
 export interface VertexBuffer extends Buffer {
     vertexBuffer: GPUBuffer;
@@ -28,7 +29,7 @@ export interface IndexBuffer extends Buffer {
 export interface IndirectBuffer extends Buffer {
     indirectBuffer: GPUBuffer;
 }
-function bufferBinding(this:Buffer,label:string, offset=0,bindingSize?:GPUSize64): GPUBufferBinding&GPUObjectBase {
+function bufferBinding(this:Buffer,label:string, bindGroup: BindGroup, offset=0,bindingSize?:GPUSize64): GPUBufferBinding&GPUObjectBase {
     const obj : GPUBufferBinding&GPUObjectBase={
         buffer: this.buffer,
         offset,
@@ -37,18 +38,11 @@ function bufferBinding(this:Buffer,label:string, offset=0,bindingSize?:GPUSize64
     if (bindingSize) {
         obj.size=bindingSize;
     }
+    this.bindGroups.add(bindGroup);
     return obj;
 }
-export class Buffer {
- //   readonly MAP_READ?: boolean;
-  //  readonly MAP_WRITE?: boolean;
-   // readonly COPY_SRC?: boolean;
-  //  readonly COPY_DST?: boolean;
-   // readonly INDEX?: boolean;
-   // readonly VERTEX?: boolean;
-    //readonly UNIFORM?: boolean;
-    //readonly STORAGE?: boolean;
- //   readonly INDIRECT?: boolean;
+export class Buffer extends Bindable {
+    
     readonly QUERY_RESOLVE?: boolean
     //uniform
     static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): BindUniformBuffer
@@ -110,6 +104,7 @@ export class Buffer {
     constructor(protected gpu: GPU, size: number, usages: number[], mappedAtCreation = false, public label:string) {
         if (size === 0)
             throw (new Error('Cannot create zero sized buffer'));
+        super();
         const usage = usages.reduce((prev, curr) => prev | curr, 0);
         const desc:GPUBufferDescriptor = { usage, size, mappedAtCreation }
         if(label)
@@ -170,8 +165,9 @@ export class Buffer {
             
         }
     }
-    destroy() {
+    override destroy() {
         this.buffer.destroy();
+        super.destroy();
     }
 }
 class copySrcBuffer extends Buffer {

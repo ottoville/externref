@@ -4,34 +4,38 @@ import { MSAARenderTarget } from "../RenderTargets/MSAARenderTarget.js";
 import { ComputePipeline } from "../ComputePipeline.js";
 import type { BindGroup } from "../BindGroup.js";
 import { type BindUniformBuffer, type CopyDstBuffer, Buffer } from "../Buffer.js";
-import type { RenderTarget } from "../RenderTargets/RenderTarget.js";
-import type { GPUTextureUsageLiterals, Texture } from "../Texture.js";
-import { DepthRenderPass } from "./DepthRenderPass.js";
+import type { GPUTextureUsageLiterals } from "../Texture.js";
 import type { PipelineLayout } from "../PipelineLayout.js";
 import { GPUBufferUsage, type GPU } from "../../GPU.js";
+import { RenderPass } from "./RenderPass.js";
+import type { ColorRenderTarget } from "GPU/RenderTargets/ColorRenderTarget.js";
+import { DepthRenderTarget } from "GPU/RenderTargets/DepthRenderTarget.js";
+import { DepthRenderPass } from "./DepthRenderPass.js";
 
 export class PickableRenderPass<T extends {
-    [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
+    [index: string]: (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, GPUTextureUsageLiterals[]>;
 } = {
-    [index: string]: RenderTarget<Texture<GPUTextureFormat, GPUTextureUsageLiterals[]>>;
+    [index: string]: (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, GPUTextureUsageLiterals[]>;
 }> extends DepthRenderPass<T> {
     #pickBuffer: GPUBuffer;
-    #pickBufferRead?: GPUBuffer;
-    #pickPositionPipeline?: ComputePipeline;
-    #mousePositionBuffer?: CopyDstBuffer & BindUniformBuffer;
-    #pickPositionBindGroup0?: BindGroup;
-    #pickPositionBindGroup1?: BindGroup;
-    rowBytes = this.size[0]*4;
+    readonly #pickBufferRead?: GPUBuffer;
+    readonly #pickPositionPipeline?: ComputePipeline;
+    readonly #mousePositionBuffer?: CopyDstBuffer & BindUniformBuffer;
+    readonly #pickPositionBindGroup0?: BindGroup;
+    readonly #pickPositionBindGroup1?: BindGroup;
+    #rowBytes = this.size[0]*4;
 
     constructor(gpu: GPU,
-        renderTargets: T,
+        renderTargetsConstructors: T,
         sampleCount: 1|4,
         size: [GPUIntegerCoordinate,GPUIntegerCoordinate,GPUIntegerCoordinate],
         _onResize: (width: number, height: number) => [number, number],
         entryPoint: string,
         rootLayout: PipelineLayout,
-        label: string) {
-            super(gpu,renderTargets,sampleCount,size,_onResize,entryPoint,rootLayout,label);
+        label: string,
+        depthRenderTargetsConstructor: ((renderPass: RenderPass) => DepthRenderTarget<GPUTextureFormat, GPUTextureUsageLiterals[]>),
+        ) {
+            super(gpu,renderTargetsConstructors,sampleCount,size,_onResize,entryPoint,rootLayout,label,depthRenderTargetsConstructor);
             if(sampleCount == 4) {
                 this.#pickPositionPipeline= new ComputePipeline(gpu, 'readDepth.comp.wgsl');
 
@@ -54,26 +58,26 @@ export class PickableRenderPass<T extends {
                             buffer: this.#pickBuffer
                         }
                     }]);
-                this.#pickPositionBindGroup1 = this.#pickPositionPipeline.createBindGroup(1,'pickPositionBindGroup1',() => [
+                this.#pickPositionBindGroup1 = this.#pickPositionPipeline.createBindGroup(1,'pickPositionBindGroup1',(bindGroup) => [
                         {
                             binding: 0,
-                            resource: this.depthTextureView.view,
+                            resource: this.depthRenderTarget.view.getTextureBinding(bindGroup),
                         },
                         {
                             binding: 1,
-                            resource: this.gpu.pickRenderPass.renderTargets.gRenderTargetId.view.view
+                            resource: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.view.getTextureBinding(bindGroup)
                         },
                         {
                             binding: 2,
-                            resource: this.#mousePositionBuffer!.getUniformBinding()
+                            resource: this.#mousePositionBuffer!.getUniformBinding(bindGroup)
                 }]);
 
             } else {
-                const offset=this.rowBytes%256;
+                const offset=this.#rowBytes%256;
                 if(offset!==0)
-                    this.rowBytes=this.rowBytes-offset+256
+                    this.#rowBytes=this.#rowBytes-offset+256
                 this.#pickBuffer = this.gpu.device.createBuffer({
-                    size: this.rowBytes * this.size[1],
+                    size: this.#rowBytes * this.size[1],
                     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
                     label: 'pickBuffer'
                 }); 
@@ -90,13 +94,13 @@ export class PickableRenderPass<T extends {
                     oldpickBuffer.destroy();
                 },1000);
             }
-            this.rowBytes=this.size[0]*4;
-            const offset=this.rowBytes%256;
+            this.#rowBytes=this.size[0]*4;
+            const offset=this.#rowBytes%256;
             if(offset!==0)
-                this.rowBytes=this.rowBytes-offset+256
+                this.#rowBytes=this.#rowBytes-offset+256
 
             this.#pickBuffer = this.gpu.device.createBuffer({
-                size: this.rowBytes * this.size[1],
+                size: this.#rowBytes * this.size[1],
                 usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
                 label: 'pickBuffer'
             });
@@ -116,9 +120,8 @@ export class PickableRenderPass<T extends {
             return this.pickPromise
         }
         const camera = [...this.cameras][0]!;
-        const encoder = this.gpu.device.createCommandEncoder();
-        
-        const gRenderTargetDiffuse = this.renderTargets.gRenderTargetDiffuse
+        const encoder = this.gpu.device.createCommandEncoder({label: 'pickPosition_encoder'});
+        const gRenderTargetDiffuse = this.gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse
         if(gRenderTargetDiffuse instanceof MSAARenderTarget) {
             if(!this.#zAndIDPromise) {
                 const mousePositionSwapBuffer = Buffer.create(this.gpu,8,[GPUBufferUsage.COPY_SRC], 'mousePositionSwapBuffer', b => {
@@ -145,7 +148,7 @@ export class PickableRenderPass<T extends {
             }
         }
         else {
-            let newOffset=this.gpu.mousePosition[1] * this.rowBytes + this.gpu.mousePosition[0] * 4;
+            let newOffset=this.gpu.mousePosition[1] * this.#rowBytes + this.gpu.mousePosition[0] * 4;
             //For MapAsync
             const missOffset = newOffset % 8; 
             if(missOffset!==0) {
@@ -154,13 +157,13 @@ export class PickableRenderPass<T extends {
             //The entire subresource must be copied when the format (TextureFormat::Depth32Float) is a depth/stencil format or the sample count (1) is > 1.
             encoder.copyTextureToBuffer(
                 {
-                    texture: this.depthTexture.texture,
+                    texture: this.depthRenderTarget.texture,
                     aspect: "depth-only",
                     origin: { x: 0, y: 0, z: 0 }
                 },
                 {
                     buffer: this.#pickBuffer,
-                    bytesPerRow: this.rowBytes,
+                    bytesPerRow: this.#rowBytes,
                     offset: 0
                 },
                 [this.size[0], this.size[1]]
@@ -168,7 +171,7 @@ export class PickableRenderPass<T extends {
             if(mesh) {
                 encoder.copyTextureToBuffer(
                     {
-                        texture: this.gpu.pickRenderPass.renderTargets.gRenderTargetId.texture.texture,
+                        texture: this.gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.texture,
                         origin: { x: this.gpu.mousePosition[0], y: this.gpu.mousePosition[1], z: 0 }
                     },
                     {

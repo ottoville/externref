@@ -1,29 +1,33 @@
-import { GPU } from "../GPU.js";
+import type { GPU } from "../GPU.js";
+import type { BindGroupLayout } from "./BindGroupLayout.js";
+import type { RenderBundleEncoder } from "./RenderBundleEncoder.js";
 
 export class BindGroup {
-    dirty=true;
+    #dirty=true;
     #bindGroup: GPUBindGroup;
+    readonly #renderPasses: Set<RenderBundleEncoder> = new Set();
+    getForRenderPass(renderBundleEncoder: RenderBundleEncoder) {
+        this.#renderPasses.add(renderBundleEncoder);
+        return this.bindGroup;
+    }
+    destroy() {
+        this.#renderPasses.forEach(rp => rp.destroy());
+        this.#dirty=true;
+    }
+    //TODO: set private
     get bindGroup() {
-        if(this.dirty) {
-            const entries=this.entriesf();
+        if(this.#dirty) {
+            const entries=this.entriesf(this);
             this.#bindGroup = this.gpu.device.createBindGroup({
-                layout: this.layout,
+                layout: this.layout.layout,
                 entries,
                 label: this.label
             });
-            this.dirty=false;
-            for(const entry of entries) {
-                let arr = GPU.bindMap.get(entry.resource);
-                if(!arr) {
-                    arr=[] as BindGroup[];
-                    GPU.bindMap.set(entry.resource,arr);
-                }
-                arr.push(this);
-            }
+            this.#dirty=false;
         }
         return this.#bindGroup;
     }
-    constructor(private gpu: GPU, private layout:  GPUBindGroupLayout, private label: string, private entriesf: () => Iterable<GPUBindGroupEntry>) {
+    constructor(private gpu: GPU, public layout:  BindGroupLayout, private label: string, private entriesf: (bindGroup: BindGroup) => Iterable<GPUBindGroupEntry>) {
         this.#bindGroup=this.bindGroup;
     }
 }

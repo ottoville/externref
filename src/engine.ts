@@ -14,7 +14,6 @@ import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
-import { Texture } from "./GPU/Texture.js";
 import { closeDistance, closeDistanceSquared, DataNode, Ellipsoid } from "./DataNode.js";
 
 function createError(e:unknown) {
@@ -306,17 +305,18 @@ export class Engine {
                 } catch(e) {
                     showError(createError(e))
                 }
+                
                 //@ts-ignore
                 window.printRenderTarget = () => {
-                    Texture.toBitmap(gpu!.pickRenderPass.renderTargets.gRenderTargetId.texture);
+                    gpu!.pickRenderPass.colorRenderTargets.gRenderTargetId.toBitmap()
                 }
                 //@ts-ignore
                 window.printRenderTarget2 = () => {
-                    Texture.toBitmap(gpu!.renderPassScreen.depthTexture);
+                    gpu!.renderPassScreen.depthRenderTarget.toBitmap()
                 }
                 //@ts-ignore
                 window.printRenderTarget3 = () => {
-                    Texture.toBitmap(gpu!.renderPassScreen.renderTargets.gRenderTargetDiffuse.texture)
+                    gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.toBitmap();
                 }
             }
 

@@ -84,7 +84,7 @@ export class paintTexture extends paintGround {
             format: "rgba8unorm",
             usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC
         });
-        const encoder = this.scene.gpu.device.createCommandEncoder();
+        const encoder = this.scene.gpu.device.createCommandEncoder({label: 'drawSubImage_encoder'});
 
         encoder.copyTextureToTexture(
             { texture: this.zonedt, origin: { x: minX, y: minZ } },
@@ -113,7 +113,7 @@ export class paintTexture extends paintGround {
         encoder.copyTextureToBuffer({ texture: tempTexture }, { buffer: tempBuffer, bytesPerRow: (c.width * 4) }, [c.width, c.height, 1]);
 
         this.scene.gpu.device.queue.submit([encoder.finish()]);
-        const encoder2 = this.scene.gpu.device.createCommandEncoder();
+        const encoder2 = this.scene.gpu.device.createCommandEncoder({label: 'drawSubImage2_encoder'});
         const cacheImage = this.subTextureCache.imageData;
         if (cacheImage) {
             encoder2.copyTextureToTexture(
