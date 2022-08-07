@@ -32,14 +32,14 @@ struct Clusters {
 
 
 
-  fn sqDistPointAABB(point : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {
+  fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {
     var sqDist = 0.0;
     // const minAABB : vec3<f32> = clusters.bounds[tileIndex].minAABB;
     // const maxAABB : vec3<f32> = clusters.bounds[tileIndex].maxAABB;
 
     // Wait, does this actually work? Just porting code, but it seems suspect?
     for(var i = 0; i < 3; i = i + 1) {
-      let v = point[i];
+      let v = position[i];
       if(v < minAABB[i]){
         sqDist = sqDist + (minAABB[i] - v) * (minAABB[i] - v);
       }
@@ -78,7 +78,7 @@ fn main(
     let mesh=meshes.mesh[meshIndex];
     // TODO: Preselect lights with CPU
     let lightViewPos = viewUniforms.view * vec4<f32>(mesh.transformation[12].xyz, 1.0);
-    let sqDist = sqDistPointAABB(vec3<f32>(lightViewPos.xy, lightViewPos.z), cluster.minAABB.xyz, cluster.maxAABB.xyz);
+    let sqDist = sqDistPointAABB(lightViewPos.xyz, cluster.minAABB.xyz, cluster.maxAABB.xyz);
 
     if (sqDist <= mesh.point_light_squared) {
       // Light affects this cluster. Add it to the list.
