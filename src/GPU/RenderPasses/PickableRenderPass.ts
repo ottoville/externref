@@ -8,8 +8,8 @@ import type { GPUTextureUsageLiterals } from "../Texture.js";
 import type { PipelineLayout } from "../PipelineLayout.js";
 import { GPUBufferUsage, type GPU } from "../../GPU.js";
 import { RenderPass } from "./RenderPass.js";
-import type { ColorRenderTarget } from "GPU/RenderTargets/ColorRenderTarget.js";
-import { DepthRenderTarget } from "GPU/RenderTargets/DepthRenderTarget.js";
+import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
+import { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";
 import { DepthRenderPass } from "./DepthRenderPass.js";
 
 export class PickableRenderPass<T extends {

@@ -4,7 +4,7 @@ import type { GPUTextureUsageLiterals } from "../Texture.js";
 import { RenderPass } from "./RenderPass.js";
 import type { GPU } from "../../GPU.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
-import type { DepthRenderTarget } from "GPU/RenderTargets/DepthRenderTarget.js";
+import type { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";
 
 export class DepthRenderPass<T extends {
     [index: string]: (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, GPUTextureUsageLiterals[]>;

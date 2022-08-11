@@ -1,5 +1,5 @@
-import type { RenderPass } from "GPU/RenderPasses/RenderPass";
-import type { GPUTextureUsageLiterals } from "GPU/Texture";
+import type { RenderPass } from "../RenderPasses/RenderPass";
+import type { GPUTextureUsageLiterals } from "../Texture";
 import { RenderTarget } from "./RenderTarget.js";
 
 export class DepthRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends GPUTextureUsageLiterals[] = GPUTextureUsageLiterals[]> extends RenderTarget<F, U> {

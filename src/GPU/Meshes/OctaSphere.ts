@@ -1,8 +1,6 @@
 ﻿import type { Scene } from "../../Scene.js";
-import type { Engine } from "../../engine.js";
 import { TerraVector3, TerraVector4, Quaternion } from "../../Math.js";
 import { SimpleIndexedMesh } from "../AbstractMeshes/SimpleIndexedMesh.js";
-declare const engine: Engine;
 
 
 const HALF_PI = Math.PI * 0.5;

@@ -16,7 +16,7 @@ import fs from 'fs';
       });
     }, 10000);
     it('Update scale, translation and rotation', function () {
-      const b = new Box(undefined, undefined,false,'bigbox');
+      const b = new Box({can_collide: false, label:'bigbox'});
       b.update_scale(500, 500, 500);
       b.translation = [123,1000,123];
       b.update_rotation(Math.sin(1.1),0,0,Math.cos(1.1));
