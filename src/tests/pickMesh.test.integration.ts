@@ -21,12 +21,14 @@ const browser=globalThis.__BROWSER_GLOBAL__ as Browser;
         await elem?.click();
         await page.waitForSelector('progress');
         await page.waitForFunction(() => !document.querySelector('progress'));
+      })
+      it('should pick', async () => {
         const [pickInfo0, pickInfo, boxId] = await page.evaluate(async function () {
           //@ts-expect-error
           const Box:typeof Box2  = (await import('/js/GPU/Meshes/Box.js')).Box;
           //@ts-expect-error
           const engine:Engine = window.engine;
-          const b = new Box(undefined, undefined,false,'PickGreenbox');
+          const b = new Box({can_collide: false, label: 'PickGreenbox'});
           b.translation = [0,400,0]
           b.update_scale(500, 500, 500);
           engine.mainCamera.position = [5000,400,0];
