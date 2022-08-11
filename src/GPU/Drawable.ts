@@ -8,13 +8,14 @@ import { BoundingBoxMesh } from "./Meshes/helpers/boundingbox.js";
 import { Buffer, IndexBuffer, IndirectBuffer, VertexBuffer } from "./Buffer.js";
 
 import type { Engine } from "../engine.js";
+import type { BindGroup } from "./BindGroup.js";
 declare const engine: Engine;
 
 
 export abstract class Drawable {
     abstract label: string;
     #vertexBuffers: Map<number, { buffer: VertexBuffer, offset: number | undefined, size: number | undefined }> = new Map();
-    protected dynamicBuffers: [GPUBindGroup, number][] = [];
+    protected dynamicBuffers: [BindGroup, number][] = [];
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
     constructor(
         protected renderPipeline: Readonly<RenderPipeline>,
@@ -78,7 +79,7 @@ export abstract class Drawable {
         this.dynamicBuffers.forEach((gpubindgroup_offset, i) => {
             const di = dynamicIndex[i];
             if (di) {
-                renderEncoder.setBindGroup(di, gpubindgroup_offset[0], [GPU.gpu_memory_index_size + gpubindgroup_offset[1] * GPU.gpu_memory_index_size]);
+                renderEncoder.setBindGroup(di, gpubindgroup_offset[0].bindGroup, [GPU.gpu_memory_index_size + gpubindgroup_offset[1] * GPU.gpu_memory_index_size]);
             }
         });
         this.staticBuffers && renderEncoder.setBindGroup(BindGroupsStart++, this.staticBuffers)
@@ -98,7 +99,7 @@ abstract class DrawableDirect extends Drawable {
         instanceCount = 1,
     ) {
         super(renderPipeline, renderPasses);
-        this.dynamicBuffers.push([this.renderPipeline.bindgroupdrawable.gpu.BindGroupPosition.bindGroup, dynamicIndex])
+        this.dynamicBuffers.push([this.renderPipeline.bindgroupdrawable.gpu.BindGroupPosition, dynamicIndex])
         if (instanceCount == 0)
             console.warn('Added drawable with 0 instances, nothing will be drawn');
         this.#instanceCount = instanceCount;

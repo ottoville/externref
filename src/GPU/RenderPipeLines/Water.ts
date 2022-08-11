@@ -29,7 +29,7 @@ export const WaterRenderPipeline = ['WaterRenderPipeline', function create(gpu:G
                 },
                 {
                     binding: 1,
-                    resource: gpu.renderPassWater.renderTargets.diffuse.view.view
+                    resource: gpu.renderPassWater.colorRenderTargets.diffuse.view.view
                 }
             ]
         )

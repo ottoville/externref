@@ -67,8 +67,6 @@ export abstract class MainNode {
     isStatic = false;
     static uniqueID = 1;
     static Meshes: Map<number, MainNode> = new Map();
-    /* Todo: make dynamic with treshold values */
-    static maxInstances = 10;  //HOX! change also to calculatePickingRays.comp shader
 
     get_transformation = () => new TerraMatrix(engine.memory.buffer, engine.rust.gpu_pointer(this.ptr))//new TerraMatrix(this.data.buffer);
 

@@ -44,6 +44,7 @@ function bufferBinding(this:Buffer,label:string, bindGroup: BindGroup, offset=0,
 export class Buffer extends Bindable {
     
     readonly QUERY_RESOLVE?: boolean
+    protected usage: number;
     //uniform
     static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): BindUniformBuffer
     static create(gpu: GPU, size: number, usages: [typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.STORAGE, typeof GPUBufferUsage.UNIFORM | typeof GPUBufferUsage.STORAGE], label:string, mappedAtCreation?:(buff: GPUBuffer, gpu:GPU) => void): BindUniformBuffer & BindStorageBuffer
@@ -100,13 +101,14 @@ export class Buffer extends Bindable {
         }
         return b;
     }
-    protected readonly buffer: GPUBuffer;
-    constructor(protected gpu: GPU, size: number, usages: number[], mappedAtCreation = false, public label:string) {
+    protected buffer: GPUBuffer;
+    constructor(protected gpu: GPU, size: number, protected usages: number[], mappedAtCreation = false, public label:string) {
         if (size === 0)
             throw (new Error('Cannot create zero sized buffer'));
         super();
-        const usage = usages.reduce((prev, curr) => prev | curr, 0);
-        const desc:GPUBufferDescriptor = { usage, size, mappedAtCreation }
+        this.usage = usages.reduce((prev, curr) => prev | curr, 0);
+
+        const desc:GPUBufferDescriptor = { usage:this.usage, size, mappedAtCreation }
         if(label)
             desc.label=label;
         try {
@@ -181,6 +183,20 @@ class copySrcBuffer extends Buffer {
         const gpuReadBuffer = new ReadBuffer(this.gpu, this.size, this.label+'_readCopy');
         gpuReadBuffer.copyFrom(commandEncoder,this.buffer,0,0,this.size);
         return gpuReadBuffer;
+    }
+    resize(size: number) {
+        try {
+            const commandEncoder = this.gpu.device.createCommandEncoder({label: 'bufferResizeEncoder'})
+            const newBuffer = this.gpu.device.createBuffer({ usage:this.usage | GPUBufferUsage.COPY_DST, size, label: this.label });
+            commandEncoder.copyBufferToBuffer(this.buffer, 0, newBuffer,0,this.size);
+            this.gpu.device.queue.submit([commandEncoder.finish()]);
+            this.size=size;
+            this.destroy();
+            this.buffer=newBuffer;
+        } catch(e) {
+            engine.showError(e);
+            throw(new Error('Cannot create buffer', {cause: (e instanceof Error ? e: new Error(new String(e).toString()))}));
+        }
     }
 }
  //MAP write (Only CopySrc is allowed with MapWrite)

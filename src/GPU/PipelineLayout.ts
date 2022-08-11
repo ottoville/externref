@@ -80,7 +80,8 @@ export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends Pipeline
                 return new Set([this.gpu.device.createBindGroup(
                     {
                         layout: this.bindGroupLayout.layout,
-                        entries: bindGroups()
+                        entries: bindGroups(),
+                        label: 'sharedBindGroup'
                     }
                 )])
             }

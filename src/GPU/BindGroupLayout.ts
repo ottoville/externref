@@ -33,12 +33,5 @@ export class BindGroupLayout<T extends GPUBindGroupEntry[] = GPUBindGroupEntry[]
     }
     createBindGroup(label: string, entries: (bindGroup: BindGroup) => MapToGPUBindGroupEntry<T>): BindGroup {
         return new BindGroup(this.gpu, this, label,entries)
-        /*const bindGroup = this.gpu.device.createBindGroup({
-            layout: this.layout,
-            entries,
-            label
-        });
-        this.gpu.GPUBindGroupLayouts.set(bindGroup, this);
-        return bindGroup*/
     } 
 }

@@ -33,8 +33,7 @@ export const GPUBufferUsage = {
 } as const
 let curSecond = 0;
 let framecount = 0;
-/* Todo: make dynamic with treshold values */
-const maxInstances = 10;
+
 
 // Cluster debug
 /*
@@ -46,6 +45,8 @@ window.resetDebugNumber = () => {
 }
 */
 export class GPU {
+    #maxInstances = 10;
+
     readonly #mousePositionBuffer = new SharedArrayBuffer(4);
     readonly mousePosition = new Uint16Vector2(this.#mousePositionBuffer);
 
@@ -212,7 +213,7 @@ export class GPU {
         }))
         this.updateViewPipeline=new ComputePipeline(this,'updateView.comp.wgsl',
             this.device.createPipelineLayout({bindGroupLayouts:[viewLayout.layout, this.viewUniformsLayout.layout]}));
-        this.GPUMeshes = Buffer.create(this, GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],'GPUMeshes')
+        this.GPUMeshes = Buffer.create(this, GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * this.#maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC],'GPUMeshes')
         this.#GPUPointLights = Buffer.create(this, this.gpu_max_point_lights*4,[GPUBufferUsage.UNIFORM,GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],'GPUPointLights')
         this.#GPUDirectionalLights = Buffer.create(this, 63*4,[GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST],'GPUDirectionalLights')
         
@@ -484,21 +485,31 @@ export class GPU {
 
     handle_gpu_queue(pointerVec:number, length:number) {
         this.#GPUQueueCommandEncoder=this.device.createCommandEncoder({label: 'handle_gpu_queue_encoder'});
-        const pointers_to_gpumesh_and_alignment = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
-        for (let i = 0; i < pointers_to_gpumesh_and_alignment.length; i += 2) {
-            this.#queue_map.set(pointers_to_gpumesh_and_alignment[i]!, pointers_to_gpumesh_and_alignment[i + 1]!);
+        const pointers_to_gpumesh_and_offset = new Uint32Array(engine.memory.buffer, pointerVec, length * 2);
+        for (let i = 0; i < pointers_to_gpumesh_and_offset.length; i += 2) {
+            const offset = pointers_to_gpumesh_and_offset[i + 1]!;
+            this.#queue_map.set(pointers_to_gpumesh_and_offset[i]!, offset);
+            if(offset >= this.#maxInstances) {
+                this.#maxInstances=offset+10;
+              //  console.log('resize to ',maxInstances)
+             //   new Float32Array(engine.memory.buffer, engine.rust.GPUMeshes()+offset*this.GPUDataSizeBytes, offset*256);
+                this.GPUMeshes.resize(GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * this.#maxInstances)
+            }
         }
         let tempOffset = 0;
 
         Buffer.create(this, this.GPUDataSizeBytes * this.#queue_map.size, [GPUBufferUsage.COPY_SRC],'handle_gpu_queue', (tempBuffer, gpu2) => {
-            this.#queue_map.forEach((alignment, gpumeshPointer) => {
+            this.#queue_map.forEach((offset, gpumeshPointer) => {
+
+
                 const data = new Float32Array(engine.memory.buffer, gpumeshPointer, this.GPUDataSizeBytes/4);
                 //Point light
                 if (data[29]! > 0) {
                     engine.updateLights = true;
                 }
                 new Float32Array(tempBuffer.getMappedRange(tempOffset * this.GPUDataSizeBytes, this.GPUDataSizeBytes)).set(data);
-                gpu2.GPUMeshes.copyFrom(this.#GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * this.GPUDataSizeBytes, GPU.gpu_memory_index_size + alignment * GPU.gpu_memory_index_size, this.GPUDataSizeBytes)
+              //  console.log('copy to ',GPU.gpu_memory_index_size + offset * GPU.gpu_memory_index_size, offset)
+                gpu2.GPUMeshes.copyFrom(this.#GPUQueueCommandEncoder!, tempBuffer, tempOffset++ * this.GPUDataSizeBytes, GPU.gpu_memory_index_size + offset * GPU.gpu_memory_index_size, this.GPUDataSizeBytes)
             });
             this.#queue_map.clear();
             gpu2.tempGPUBuffers.push(tempBuffer);
