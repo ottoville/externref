@@ -38,6 +38,8 @@ globalThis.addEventListener && globalThis.addEventListener('unhandledrejection',
 })
 */
 export type rustWasm = {
+    GPUMeshes():rust_pointer<"GPUMeshes">,
+
     collider():rust_pointer<"legacy_collider">,
     intersection_point_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
     collision_resolved_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
@@ -308,15 +310,16 @@ export class Engine {
                 
                 //@ts-ignore
                 window.printRenderTarget = () => {
-                    gpu!.pickRenderPass.colorRenderTargets.gRenderTargetId.toBitmap()
+                    gpu!.pickRenderPass.colorRenderTargets.gRenderTargetId.print_bitmap()
                 }
                 //@ts-ignore
                 window.printRenderTarget2 = () => {
-                    gpu!.renderPassScreen.depthRenderTarget.toBitmap()
+                    gpu!.renderPassScreen.depthRenderTarget.print_bitmap()
                 }
                 //@ts-ignore
                 window.printRenderTarget3 = () => {
-                    gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.toBitmap();
+                    gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.print_bitmap()
+                    
                 }
             }
 

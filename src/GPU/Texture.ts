@@ -33,9 +33,6 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
             usage: usages,
             label: this.label+(debug?'debug':'')
         });
-        if(debug) {
-            this.label+='debug'
-        }
         this.views.forEach(view => view.reCreate(debug));
 
         return this.texture;
@@ -53,7 +50,7 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
         public usages: U,
         public label: string,
         public readonly size: [number, number, number] = [300, 300, 1],
-        initialSampleCount: 1 | 4 = 1
+        public initialSampleCount: 1 | 4 = 1
 
     ) {
         this.texture = this.createTexture(initialSampleCount);
