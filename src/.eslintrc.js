@@ -38,6 +38,7 @@ module.exports = {
         "require-atomic-updates":2,
         "no-promise-executor-return":2,
         "no-self-compare": 2,
-        "no-throw-literal": 2
+        "no-throw-literal": 2,
+        "valid-typeof": 2
     }
 };

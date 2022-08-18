@@ -6,7 +6,7 @@ import type { Projection } from "./GPU/Projection.js";
 import type { Engine } from "./engine.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer} from "./GPU/Buffer.js";
-import type { BindGroupLayout } from "GPU/BindGroupLayout.js";
+import type { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 declare const engine:Engine;
 
 export class TerraCamera<T extends RenderPass = RenderPass> {

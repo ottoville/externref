@@ -577,9 +577,9 @@ export class GPU {
         if(commandBuff)
             this.pendingCommandBuffers.add(commandBuff);
 
-        if (engine.inputManager?.checkInputs()) {
+        if (engine.inputManager?.checkInputs && engine.inputManager?.checkInputs()) {
             if(engine.inputManager.calculateCameraPositionAndTarget)
-            engine.inputManager.calculateCameraPositionAndTarget();
+                engine.inputManager.calculateCameraPositionAndTarget();
         }
 
         const renderEncoder = this.device.createCommandEncoder({label:'renderloop_renderEncoder'});

@@ -16,7 +16,10 @@ const enum ARROW_KEYS  {
 
 ARROW_KEYS.LEFT_AND_RIGHT
 
-
+/*
+    This camera is used for camera that can be moved with keyboard
+    without being attached to any mesh
+*/
 export class PositionCamera extends CameraController {
     name='PositionCamera';
     #angle=Math.PI;
@@ -52,16 +55,16 @@ export class PositionCamera extends CameraController {
             this.#position.set(this.camera.position as TerraVector3);
             this.#angle=Math.acos(this.camera.direction[0]);
         }
-        if(element)
-            this.enable(element);
+        if(typeof document !== 'undefined')
+            this.enable();
     }
-    enable(element: HTMLElement) {
-        element.addEventListener('keydown', this.#keydownfunction);
-        element.addEventListener('keyup', this.#keyupfunction);
+    enable() {
+        document.addEventListener('keydown', this.#keydownfunction);
+        document.addEventListener('keyup', this.#keyupfunction);
     }
     disable() {
-        this.element?.removeEventListener('keydown', this.#keydownfunction);
-        this.element?.removeEventListener('keyup', this.#keyupfunction);
+        document?.removeEventListener('keydown', this.#keydownfunction);
+        document?.removeEventListener('keyup', this.#keyupfunction);
     }
     #serializeRequested=false;
     serialize = () => {

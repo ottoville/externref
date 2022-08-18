@@ -32,7 +32,7 @@ pub struct Mesh {
     pub positions_count:usize,
     pub strip:bool,
     pub draw_command: DrawCommand,
-    rigid_body_handle: Option<RigidBodyHandle>,
+    pub rigid_body_handle: Option<RigidBodyHandle>,
     collider_handle: Option<ColliderHandle>,
     pub label: String,
     velocity: [f32; 4],
@@ -608,7 +608,6 @@ impl Mesh {
     pub unsafe fn update_dynamic_buffer(&self) {
         let engine2 = ENGINE.physic_engine();
         let gpu_mesh = &engine2.gpu_meshes[self.gpu_mesh_alignment];
-
         ENGINE.gpu_queue2.push((&gpu_mesh, self.gpu_alignment));
     }
 
@@ -618,28 +617,27 @@ impl Mesh {
             self.update_dynamic_buffer();
             let e = ENGINE.physic_engine_mut();
             let gpu_mesh = &mut e.gpu_meshes[self.gpu_mesh_alignment];
-            match self.rigid_body_handle {
-                Some(rigid_body_handle) => {
-                    let rigid_body = e.rigid_body_set.get_mut(rigid_body_handle);
-                    match rigid_body {
-                        Some(rigid_body) => 
-                        {
-                            rigid_body.set_translation(vector![gpu_mesh.transformation.w.x, gpu_mesh.transformation.w.y, gpu_mesh.transformation.w.z], true);
-                           /* let (euler_x, euler_y, euler_z) = Rotation::from_quaternion(nalgebra::Quaternion::new(self.rotation.w, self.rotation.x, self.rotation.y, self.rotation.z)).euler_angles();
-                            let avec = AngVector::new(euler_x, euler_y, euler_z);
-                          rigid_body.set_rotation(avec, true);*/
-                          
-                            rigid_body.set_quaternation(nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(self.rotation.w, self.rotation.i, self.rotation.j, self.rotation.k)), true)
+            if let Some(rigid_body_handle) = self.rigid_body_handle {
+                let rigid_body = e.rigid_body_set.get_mut(rigid_body_handle);
+                match rigid_body {
+                    Some(rigid_body) => 
+                    {
+                        rigid_body.set_translation(vector![gpu_mesh.transformation.w.x, gpu_mesh.transformation.w.y, gpu_mesh.transformation.w.z], true);
+                       /* let (euler_x, euler_y, euler_z) = Rotation::from_quaternion(nalgebra::Quaternion::new(self.rotation.w, self.rotation.x, self.rotation.y, self.rotation.z)).euler_angles();
+                        let avec = AngVector::new(euler_x, euler_y, euler_z);
+                      rigid_body.set_rotation(avec, true);*/
+                      
+                        rigid_body.set_quaternation(nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(self.rotation.w, self.rotation.i, self.rotation.j, self.rotation.k)), true)
 
-                         },
-                        None    => panic!("Rigid body not found"),
-                    };
-                }
-                _ => {}
+                     },
+                    None    => panic!("Rigid body not found"),
+                };
             }
         }
-        if self.get_geometry_mut().bounding_box.has_bounding {
-            self.get_geometry_mut().bounding_box.dirty=true;
+        if let Some(geometry) = &mut self.geometry {
+            if geometry.bounding_box.has_bounding {
+                geometry.bounding_box.dirty = true;
+            }
         }
     }
 

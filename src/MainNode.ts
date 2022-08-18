@@ -11,8 +11,12 @@ export abstract class MainNode {
     get speed() {
         return Math.sqrt(this.last_velocity[0]*this.last_velocity[0]+this.last_velocity[1]*this.last_velocity[1]+this.last_velocity[2]*this.last_velocity[2])
     }
+    
     //coefficient of friction
     grip=0;
+    // TODO force per ms?
+    force: [number, number, number]=[0,0,0];
+
     is_colliding=false;
     set color(data:[number,number,number,number]) {
         engine.rust.set_color(this.ptr,data[0],data[1],data[2],data[3])

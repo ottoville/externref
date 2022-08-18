@@ -1,6 +1,6 @@
 import { ObjectWorkerThread } from "./WorkerThread.js";
 import { MainNode } from "./MainNode.js";
-import { ReadOnlyTerraVector3, TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
+import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
 import type { Scene } from "./Scene.js";
 import type { ColliderJS } from "./Collider.js";
 import type { Engine } from "./engine.js";
@@ -40,15 +40,16 @@ export interface Ellipsoid {
 export const closeDistance = 0.0022
 export const closeDistanceSquared = closeDistance*closeDistance
 export abstract class DataNode extends MainNode {
-
+    // TODO: collide or uncollide with ANY mesh will change this value, so its lot of broken and does not indicate if mesh is really colliding now.
+    colliding = false;
     #vectorsVec4: number[] = [];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    checkCollide(_velocityPerDelta:[number,number,number]):ReadOnlyTerraVector3 {
+    checkCollide(_velocityPerDelta:[number,number,number]):TerraVector3 {
         return this.translation;
         // TODO: Generic collision check, object shape is not known
     }
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    onCollide() {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    onCollideCharacter(_started: boolean) {
     }
     readonly pickInfo = new pickInfo();
     protected readonly colliderVerticesV4: number[] = [];
@@ -94,7 +95,7 @@ export abstract class DataNode extends MainNode {
     constructor(
         vertices: Float32Array,
         verticesPositionStride: number,
-        has_physic = false,
+        can_collide = false,
         strip = false,
         point_light = 0,
         static_faces = false,
@@ -109,12 +110,11 @@ export abstract class DataNode extends MainNode {
         engine.rust.add_geometry(this.ptr,true,verticesPositionStride,static_faces,strip);
         this.set_vertices(vertices);
         // queueMicrotask here so mesh will have indices initialized
-        if(has_physic) {
+        if(can_collide) {
             queueMicrotask(() => {
                 const collider_ptr = this.create_collider();
                 engine.rust.add_collider(this.ptr, collider_ptr)
             });
-            engine.physics.tickables.push(this);
         }            
     }
     protected pushVertice = (position:number) => {
@@ -309,7 +309,7 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
         vertices: Float32Array,
         verticesPositionStride = 3,
         indicesView: Uint32Array,
-        has_physic = false,
+        can_collide = false,
         strip = false,
         point_light = 0,
         static_faces = false,
@@ -319,7 +319,7 @@ export abstract class BoundableNodeIndexed extends DataNode implements IndexedNo
         fixed = false,
         rigid_body = true
     ) {
-        super(vertices, verticesPositionStride, has_physic, strip, point_light, static_faces, label, scenes, frontFace, fixed, rigid_body);
+        super(vertices, verticesPositionStride, can_collide, strip, point_light, static_faces, label, scenes, frontFace, fixed, rigid_body);
         this.set_indices_and_vertices(indicesView, vertices);
     }
     override set_vertices(vertices:Float32Array) {
@@ -345,12 +345,13 @@ export abstract class BoundableNodeSimple extends DataNode {
         verticesPositionStride = 3,
         strip = false,
         label:string,
-        has_physic: boolean,
+        can_collide: boolean,
         scenes?: Scene[],
         fixed = false,
-        rigid_body = true
+        rigid_body = true,
+        point_light = 0,
     ) {
-        super(vertices, verticesPositionStride, has_physic, strip,  undefined, undefined, label, scenes,undefined, fixed, rigid_body);
+        super(vertices, verticesPositionStride, can_collide, strip,point_light, undefined, label, scenes,undefined, fixed, rigid_body);
     }
     override set_vertices(vertices:Float32Array) {
         super.set_vertices(vertices);
