@@ -27,9 +27,12 @@ import { Box } from "../GPU/Meshes/Box.js";
 //@ts-ignore
 import { Triangle } from "../GPU/Meshes/Triangle.js";
 //@ts-ignore
-import { Sphere } from "../GPU/Meshes/Sphere.js";
+import { IcoSphere } from "../GPU/Meshes/IcoSphere.js";
 //@ts-ignore
 import { Cone } from "../GPU/Meshes/Cone.js";
+import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
+//@ts-ignore
+import { RoundCuboid } from "../GPU/Meshes/RoundCuboid.js";
 
 declare const engine:Engine;
 class CanvasMesh extends MainNode {
@@ -92,7 +95,7 @@ export class Canvas extends TerraCompoment {
             new Sea([terrascene]);
             //new testPlane(terrascene);
 
-            new Human([terrascene])
+            new Human({scenes: [terrascene], inputEnabled:false})
             const terrainInited = Terrain.loadFromTexture([terrascene]);
 
             const ready = terrainInited.then(ground => [ground] as const);
@@ -105,29 +108,60 @@ export class Canvas extends TerraCompoment {
         const debugscene = new Scene('static', terraEngine.gpu, [engine.mainCamera], (scene) => {
             const sun = new Light(scene);
             sun.translation=[0, 1, 0]
-            sun.gpu_custom_data = [0, 0, 0, 1]; //shadow to 1 (no shadow)
-            //  sun.customData.set([0, 0, 0, 1]) //shadow to 1 (no shadow)
+            sun.ambient = [0, 0, 0];
+            sun.shadow = 1; // shadow to 1 (no shadow)
         });
-        const slope = new Triangle('slopeTriangle',undefined,true);
+
+       /* const slope = new Box(
+            {can_collide: true, label: 'gravitybixbox2', fixed: true});
+        slope.update_scale(200, 5, 200);
+        slope.update_rotation(Math.sin(1.4), 0, 0, Math.cos(1.4));
+        slope.translation = [23, 500, 23];
+    */
+        const sphere = new Capsule('blueball0',true,false, CAPSULE_ORIENTATION.y,3);
+        sphere.translation = [0, 900, -70];
+        sphere.radius = 50;
+        sphere.color=[1,1,0,0];
+
+
+        const sphere2 = new Capsule('blueball1',true,false,CAPSULE_ORIENTATION.z, 3);
+        sphere2.translation = [60, 900, -70];
+        sphere2.radius = 50;
+        sphere2.color=[0,0,1,0];
+
+       /* const sphere3 = new Capsule('blueball2',true,false,CAPSULE_ORIENTATION.x,3);
+        sphere3.translation = [-60, 900, -70];
+        sphere3.radius = 50;
+        sphere3.color=[1,0,1,0];
+*/
+        const sphere4 = new IcoSphere({label: 'blueball3',can_collide: true, fixed: false, order:1});
+        sphere4.translation = [-100, 900, -70];
+        sphere4.update_scale(30);
+        sphere4.color=[1,0,1,0];
+
+/*
+        const b = new Box(
+            {can_collide: false, label: 'PickGreenbox'});
+        b.translation = [0,400,0]
+        b.update_scale(500, 500, 500);
+*/
+       /* const b = new Box(undefined, undefined, true, 'gravitybixbox',undefined,true);
+        b.update_scale(100, 5, 100);
+        b.translation = [123, 300, 123];
+    */
+       /* const b2 = new Box(undefined, 400, true, 'gravitygreenbox2', [0, 1, 0, 0]);
+        b2.translation = [23, 500, -100];
+        b2.hasGravity = true;
+    console.log('b2 id is',b2.id)*/
+
+      /*  const slope = new Triangle('slopeTriangle',undefined,true);
         slope.update_scale(0, 400, 400);
 
      //   slope.update_euler_angles(0,0,Math.PI*-0.5);
         slope.update_euler_angles(0,0,Math.PI*-0.4);
         slope.translation = [23,600,23];
+*/
 
-
-       /* const bixbox = new Box(undefined, 400,true,'bigbox',[1,1,0,0]);
-        bixbox.update_scale(400, 400, 400);
-        bixbox.translation = [23,200,23];*/
-
-
-        const b2 = new Sphere(3,'sphere',[0,1,0,0],true);
-        b2.translation = [346.5, 1300, 350];
-     //   b2.translation = [-140, 590, 350];
-        b2.radius = 10;
-        //@ts-ignore
-        window.b2=b2;
-        b2.hasGravity=true;
 
 
         const canvasPipeline = engine.gpu!.renderPassCanvas.rootLayout.addRenderPipeline('CanvasRenderPipeline',

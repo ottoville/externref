@@ -19,7 +19,7 @@ export class Human extends Box {
         0.0, 0.0, 0.0, 1.0]);
     readonly closeDistanceVector:[number,number,number] = [closeDistance / this.#radius[0], closeDistance / this.#radius[1], closeDistance / this.#radius[2]];
     
-    constructor(properties: {scenes: Scene[]}) {
+    constructor(properties: {scenes: Scene[], inputEnabled:boolean}) {
         super({...properties,point_light: 400, can_collide: false, label: 'human'});
         engine.physics.tickables.push(this);
         this.hasGravity = true;
@@ -29,8 +29,10 @@ export class Human extends Box {
         this.update_scale(1, 1, 1);
        // engine.inputManager?.destroy();
        
-        this.inputManager = new MeshCamera(engine.mainCamera);
-        engine.inputManager=this.inputManager;
+        this.inputManager = new MeshCamera(engine.mainCamera, false);
+        if(properties.inputEnabled) {
+            this.inputManager.attachCameraController(engine.mainCamera.getControlForInputManager(this.inputManager))
+        }
         engine.physics.onPhysicTick.add(() => {
           //  console.log('human translation', this.translation)
         })
@@ -91,13 +93,13 @@ export class Human extends Box {
             this.inputManager.verticalAngle = this.inputManager.verticalAngle % (Math.PI*2);
             const ang = this.inputManager.angle-Math.PI;
             const vang = this.inputManager.verticalAngle;
-            this.inputManager.camera.updateDirection(direction => {
+            this.inputManager.cameraControl?.updateDirection(direction => {
                 direction[0]=Math.cos(ang) * Math.sin(vang);
                 direction[1]=Math.cos(vang);
                 direction[2]=Math.sin(ang) * Math.sin(vang);
             });
         }
-        engine.mainCamera.position=this.translation;
+        this.inputManager.cameraControl?.updatePosition(position => position.set(this.translation))
     }
     override onCollideCharacter() {
         const speed = this.speed;
