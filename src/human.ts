@@ -31,7 +31,7 @@ export class Human extends Box {
        
         this.inputManager = new MeshCamera(engine.mainCamera, false);
         if(properties.inputEnabled) {
-            this.inputManager.attachCameraController(engine.mainCamera.getControlForInputManager(this.inputManager))
+            engine.mainCamera.attachControllerForCamera(this.inputManager)
         }
         engine.physics.onPhysicTick.add(() => {
           //  console.log('human translation', this.translation)

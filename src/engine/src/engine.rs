@@ -16,7 +16,8 @@ extern "C" {
     fn updateAllocatedMemory(ptr: *const u32, length: usize);
     fn jspanic(number: *const u8);
     fn jslog(number: *const u8);
-    fn mesh_on_collide(number: u32);
+    fn mesh_on_collide(number: u32, status: bool);
+    fn mesh_on_physic_tick(number: u32);
 }
 pub struct Engine {
     gpu_reserved_slots: u64,
@@ -47,6 +48,11 @@ pub unsafe extern "C" fn renderloop() {
         ENGINE.gpu_queue2.clear()
     }
 }
+#[no_mangle]
+#[cfg(feature = "webgpu")]
+pub unsafe extern "C" fn GPUMeshes() -> &'static GPUMesh {
+    &ENGINE.physic_engine().gpu_meshes[0]
+}
 pub struct Engine2 {
     physic_pipeline: PhysicsPipeline,
     pub rigid_body_set: RigidBodySet,
@@ -58,6 +64,7 @@ pub struct Engine2 {
     pub rigid_bodies: HashMap<RigidBodyHandle, &'static mut Mesh>,
     broad_phase: BroadPhase,
     pub gpu_meshes: Vec<GPUMesh>,
+    joint_set:ImpulseJointSet
 }
 pub fn create_js_string(mut str: String) -> *const u8 {
     str.truncate(512);
@@ -95,6 +102,7 @@ pub extern "C" fn init_engine2() -> usize {
         broad_phase: BroadPhase::new(),
         gpu_meshes: Vec::with_capacity(100),
         ccd_solver: CCDSolver::new(),
+        joint_set: ImpulseJointSet::new()
     };
     unsafe {
         ENGINE.engine2 = Some(e);
@@ -119,7 +127,6 @@ pub unsafe extern "C" fn physic_tick() {
     let gravity = vector![0.0, -9.81, 0.0];
     let integration_parameters = IntegrationParameters::default();
 
-    let mut joint_set = ImpulseJointSet::new();
     let mut multi_joint_set = MultibodyJointSet::new();
     let physics_hooks = ();
     // Initialize the event collector.
@@ -130,6 +137,9 @@ pub unsafe extern "C" fn physic_tick() {
     let event_handler = ChannelEventCollector::new(collision_send, contact_send);
 
     let e = ENGINE.physic_engine_mut();
+    e.meshes.iter().for_each(|m|  {
+        mesh_on_physic_tick(m.id)
+    });
     e.physic_pipeline.step(
         &gravity,
         &integration_parameters,
@@ -138,7 +148,7 @@ pub unsafe extern "C" fn physic_tick() {
         &mut e.narrow_phase,
         &mut e.rigid_body_set,
         &mut e.collider_set,
-        &mut joint_set,
+        &mut e.joint_set,
         &mut multi_joint_set,
         &mut e.ccd_solver,
         &physics_hooks,
@@ -147,13 +157,13 @@ pub unsafe extern "C" fn physic_tick() {
 
     while let Ok(collision_event) = collision_recv.try_recv() {
         // Handle the collision event.
-        jslog_string(vec![format!(
+        /*jslog_string(vec![format!(
             "Received collision event: {:?}",
             collision_event
-        )]);
+        )]);*/
         match collider_to_mesh(e,collision_event.collider1()) {
             Some(m) => {
-                mesh_on_collide(m.id)
+                mesh_on_collide(m.id, collision_event.started())
             }
             None => jslog(create_js_string(
                 "Mesh not found for collider1".to_string(),
@@ -161,7 +171,7 @@ pub unsafe extern "C" fn physic_tick() {
         }
         match collider_to_mesh(e,collision_event.collider2()) {
             Some(m) => {
-                mesh_on_collide(m.id)
+                mesh_on_collide(m.id, collision_event.started())
             }
             None => jslog(create_js_string(
                 "Mesh not found for collider2".to_string(),

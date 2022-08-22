@@ -6,15 +6,13 @@ import type { Scene } from "./Scene.js";
 import type { TerraVector3 } from "./Math.js";
 import { TerraCamera } from "./TerraCamera.js";
 import { Projection } from "./GPU/Projection.js";
-import type { CameraController } from "./controllers/CameraController.js";
-//@ts-ignore
-import { PositionCamera } from "./controllers/PositionCamera.js";
 //@ts-ignore
 import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
 import type { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
 import { closeDistance, closeDistanceSquared, DataNode, Ellipsoid } from "./DataNode.js";
+import type { CameraController } from "./controllers/CameraController.js";
 
 function createError(e:unknown) {
     if(!(e instanceof Error)) {
@@ -171,6 +169,7 @@ export interface ColliderWasm {
     testTriangles: (position: number, positionParallel: number, length: number, meshID: number) => void
     _initialize: () => void
 }
+
 export class Engine {
 
     /*
@@ -194,7 +193,8 @@ export class Engine {
     readonly #displacementVector: [number, number, number] = [0, 0, 0];
 
     updateLights = false;
-    inputManager: CameraController | null = null
+    inputManager:CameraController|null = null
+
     renderFrame = 0;
     readonly mainCamera: TerraCamera<PickableRenderPass>;
     memory: WebAssembly.Memory;
@@ -261,7 +261,7 @@ export class Engine {
                 mesh_on_collide(mesh_id:number, started: boolean) {
                     const mesh = DataNode.Meshes.get(mesh_id);
                     if(mesh) {
-                        DataNode.Meshes.get(mesh_id)?.onCollide(started);
+                        DataNode.Meshes.get(mesh_id)?.onCollideCharacter(started);
                         mesh.colliding=started;
                     }
                 },
@@ -350,10 +350,6 @@ export class Engine {
         const wasm = colliderWasm.instance.exports as unknown as ColliderWasm;
         return new Engine(gpu, DB ? await DB : undefined, canvas, wasm, rustWasm, showError);
     }
-    attachCameraInput(initial = false) {
-        this.inputManager = new ArcRotateCamera(this.mainCamera, this.canvas, initial);
-        //this.inputManager = new PositionCamera(this.mainCamera, this.canvas, initial);
-    }
     readonly cameras:Set<TerraCamera>=new Set();
     
     showError(e:unknown) {
@@ -379,8 +375,7 @@ export class Engine {
             gpu.pickRenderPass.cameras.add(this.mainCamera)
 
         this.collider = new ColliderJS(rust);
-        this.attachCameraInput(true);
-
+        this.mainCamera.attachControllerForCamera(new ArcRotateCamera(this.mainCamera, this.canvas, true))
         const saveControllerState = () => {
             this.inputManager?.serialize();
         };
@@ -413,8 +408,19 @@ export class Engine {
             // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-            this.physics.tickables.forEach(mesh => mesh.checkCollision(this.collider, sphere));
-
+            if(sphere instanceof DataNode) {
+                DataNode.Meshes.forEach(mesh => {
+                    if(sphere !== mesh)
+                        mesh.checkCollision(this.collider, sphere)
+                });
+            }
+            else {
+                DataNode.Meshes.forEach(mesh => {
+                    if(mesh.label==='water')
+                        return; //Sea is bugging
+                     mesh.checkCollision(this.collider, sphere)
+                });
+            }
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
             this.#destinationPoint[1] = scaledPosition[1] + scaledVelocity[1];
             this.#destinationPoint[2] = scaledPosition[2] + scaledVelocity[2];

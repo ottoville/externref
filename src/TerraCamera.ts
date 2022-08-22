@@ -7,10 +7,12 @@ import type { Engine } from "./engine.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer} from "./GPU/Buffer.js";
 import type { BindGroupLayout } from "./GPU/BindGroupLayout.js";
+import type { CameraController } from "./controllers/CameraController.js";
 declare const engine:Engine;
 
+export type CameraControl = { updatePosition(cb: (position: TerraVector3) => void): void; updateDirection(cb: (direction: TerraVector3) => void): void; }
 export class TerraCamera<T extends RenderPass = RenderPass> {
-    readonly #childCameras: Set<TerraCamera> = new Set();
+    readonly #childCameras: Set<CameraControl> = new Set();
 
     readonly #clusterArrayBuffer?: BindStorageBuffer/* & CopySrcBuffer*/
     
@@ -33,6 +35,7 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
     readonly #uniformBuffer?: BindUniformBuffer & CopyDstBuffer
     readonly updateViewBindGroup?: BindGroup;
     readonly uniformBindGroup?: BindGroup;
+    #controls: CameraControl;
 
     constructor(public renderPass: T | undefined, public projection: Projection, private gpu?: GPU, parent?: TerraCamera) {
         if(renderPass && gpu) {
@@ -75,20 +78,56 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
             gpu.projections.add(this.projection);    
         }
         this.viewArr[15] = 1;
-        if (parent)
-            parent.#childCameras.add(this);
+
         engine.cameras.add(this);
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const me = this;
+        this.#controls = {
+            updatePosition(cb:(position:TerraVector3) => void) {
+                cb(me.#position);
+                me.#doUpdateView=true;
+            },
+            updateDirection(cb:(direction:TerraVector3) => void) {
+                cb(me.#direction);
+                if (me.viewArr[2] !== me.#direction[0] || me.viewArr[6] !== me.#direction[1] || me.viewArr[10] !== me.#direction[2]) {
+                    me.#doUpdateView = true;
+                }
+            }
+        }
+        if (parent) {
+            parent.#childCameras.add(this.getControlForCamera(parent));
+        }
+    }
+    #cameraController?:TerraCamera
+    #inputController?:CameraController
+    getControlForCamera(owner:TerraCamera) {
+        if(this.#cameraController && this.#cameraController !== owner)
+            throw new Error('Camera is already controlled');
+        else {
+            this.#cameraController=owner;
+            return this.#controls
+        }
+    }
+    attachControllerForCamera(controller:CameraController) {
+        if(this.#inputController) {
+            if(this.#inputController !== controller) {
+                if(typeof document !== 'undefined')
+                    this.#inputController.deAttachCameraController();
+                delete this.#inputController.cameraControl
+            } else {
+                return this.#controls
+            }
+        }
+        this.#inputController=controller;
+        engine.inputManager=controller;    
+        if(typeof document !== 'undefined')
+            controller.attachCameraController();
+        controller.cameraControl=this.#controls;
+        return this.#controls
     }
     get position(): Readonly<{ [0]: number, [1]: number, [2]: number } > {
         return this.#position
     }
-    set position(position: [number, number, number] | { [0]: number, [1]: number, [2]: number }) {
-        this.#position[0] = position[0];
-        this.#position[1] = position[1];
-        this.#position[2] = position[2];
-        this.#doUpdateView=true;
-    }
-
     updateProjection(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: BindGroupLayout) {
         //TODO move out from loop
         const bindGroup = computePipelineClustersLayout.createBindGroup('updateProjection',bindGroup2 => [{
@@ -108,22 +147,21 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
     get direction(): Readonly<{ [0]: number, [1]: number, [2]: number }> {
         return this.#direction
     }
-    updateDirection(cb:(direction:TerraVector3) => void) {
-        cb(this.#direction);
-        if (this.viewArr[2] !== this.#direction[0] || this.viewArr[6] !== this.#direction[1] || this.viewArr[10] !== this.#direction[2]) {
-            this.#doUpdateView = true;
-        }
-    }
+
     updateView(commandEncoder: GPUCommandEncoder) {
         if (!this.#doUpdateView)
             return;
         this.beforeViewUpdate.forEach(cb => cb(this.#position, this.#direction));
         this.#doUpdateView = false;
         this.viewUpdated = true;
-        this.#childCameras.forEach(childCamera => {
-            childCamera.position = this.#position;
+        this.#childCameras.forEach(childCameraControl => {
+            childCameraControl.updatePosition(position => {
+                position[0]=this.#position[0]
+                position[1]=this.#position[1]
+                position[2]=this.#position[2]
+            })
             //TODO: share same buffer;
-            childCamera.updateDirection(direction => {
+            childCameraControl.updateDirection(direction => {
                 direction.set(this.#direction)
             })
         });

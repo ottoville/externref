@@ -23,7 +23,6 @@ interface serialized {
 export class ArcRotateCamera extends CameraController {
     name='ArcRotateCamera'
     #serializeRequested = false;
-
     serialize(): void {
         if (this.#serializeRequested || !engine.DB)
             return;
@@ -83,8 +82,6 @@ export class ArcRotateCamera extends CameraController {
     #radius = 10;
     constructor(private camera: TerraCamera<PickableRenderPass>, canvas?: HTMLCanvasElement, initial = false) {
         super(canvas);
-        if(canvas)
-            this.enable(canvas);
         if (initial && engine.DB) {
             engine.DB.transaction("save").objectStore("save").get(["camera", "ArchRotateCamera"]).onsuccess = evt => {
                 if ((evt.target as IDBRequest).result) {
@@ -94,7 +91,9 @@ export class ArcRotateCamera extends CameraController {
                         this.#beta = restored.beta;
                         this.#radius = restored.radius;
                         this.#target.set(restored.target);
-                        camera.position = restored.position;
+                        this.cameraControl?.updatePosition(position => {
+                            position.set(restored.position)
+                        })
                         this.#calculateDirection();
                     }
                 }
@@ -142,21 +141,15 @@ export class ArcRotateCamera extends CameraController {
         engine.canvas!.addEventListener('pointerup', () => engine.canvas!.removeEventListener('pointermove', this.#cameraMove), { once: true });
         engine.canvas!.addEventListener('pointerleave', () => engine.canvas!.removeEventListener('pointermove', this.#cameraMove), { once: true });
     }
-
-    destroy() {
+    deAttachCameraController() {
         this.element?.removeEventListener('pointerdown', this.#cameraPointerDown);
         this.element?.removeEventListener('pointermove', this.#cameraMove);
         this.element?.removeEventListener('wheel', this.#cameraWheel);
         this.serialize();
     }
-    disable() {
-        this.element?.removeEventListener('pointerdown', this.#cameraPointerDown);
-        this.element?.removeEventListener('pointermove', this.#cameraMove);
-        this.element?.removeEventListener('wheel', this.#cameraWheel);
-    }
-    enable(canvas: HTMLCanvasElement) {
-        canvas.addEventListener('wheel', this.#cameraWheel);
-        canvas.addEventListener('pointerdown', this.#cameraPointerDown);
+    attachCameraController() {
+        this.element?.addEventListener('wheel', this.#cameraWheel);
+        this.element?.addEventListener('pointerdown', this.#cameraPointerDown);
     }
     #calculatePosition() {
         let sinb = Math.sin(this.#beta);
@@ -170,7 +163,9 @@ export class ArcRotateCamera extends CameraController {
         return this.#computationVector
     }
     calculateCameraPositionAndTarget() {
-
+        if(!this.cameraControl) {
+            throw new Error('no cameracontrol')
+        }
         this.#collisionTriggered = true;
 
 
@@ -203,19 +198,20 @@ export class ArcRotateCamera extends CameraController {
         if (engine.collider.didCollide) {
             //this._position.copyFrom(position);
             if (this.camera.position[0] != engine.collider.finalPosition[0] || this.camera.position[1] != engine.collider.finalPosition[1] || this.camera.position[2] != engine.collider.finalPosition[2]) {
-                this.camera.position = engine.collider.finalPosition;
+                this.cameraControl?.updatePosition(position => position.set(engine.collider.finalPosition))
             }
             this.#rebuildAnglesAndRadius();
         }
         this.#collisionTriggered = false;
         // Recompute because of constraints
-        this.camera.position = this.#calculatePosition()
+        this.cameraControl?.updatePosition(position => position.set(this.#calculatePosition()))
+
         this.#calculateDirection();
         
 
     }
     #calculateDirection() {
-        this.camera.updateDirection((direction) => {
+        this.cameraControl?.updateDirection((direction) => {
             direction[0] = this.camera.position[0] - this.#target[0];
             direction[1] = this.camera.position[1] - this.#target[1];
             direction[2] = this.camera.position[2] - this.#target[2];

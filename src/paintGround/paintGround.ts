@@ -125,7 +125,7 @@ export abstract class paintGround {
     }
     #pointerUp = () => {
         this.uitab.canvasListener.removeListener('pointermove', this.#drawArea);
-        engine.inputManager?.enable(this.uitab.canvasListener.canvas);
+        engine.inputManager?.attachCameraController();
         //fix race condition
         if (this.#end_position[0] == 0)
             return;
@@ -150,10 +150,9 @@ export abstract class paintGround {
           }, false, this.camera);*/
         const pickInfo = await engine.gpu!.renderPassScreen.pickMesh(undefined, mesh => { return mesh === this.ground.mesh });
         if (pickInfo) {
-            console.log(pickInfo)
             this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
             this.onMainPointerDown(this.#start_position);
-            engine.inputManager?.disable();
+            engine.inputManager?.deAttachCameraController();
             this.uitab.canvasListener.addListener("pointermove", this.#drawArea, { lazy: 25 });
 
             this.uitab.canvasListener.addListener("pointerup", this.#pointerUp, { once: true });

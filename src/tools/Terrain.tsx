@@ -109,7 +109,8 @@ export class TerrainTool extends MainNode {
             return;
         }
         this.#canvasListener.addListener("pointerup", this.pointerupf, { once: true });
-        engine.inputManager?.destroy();
+        engine.inputManager?.deAttachCameraController();
+
 
         this.mouseinterval = setInterval(() => {
             engine.rust.elevate(this.elevator,this.terrain.mesh.ptr,200,5*this.direction);
@@ -120,7 +121,7 @@ export class TerrainTool extends MainNode {
         }, 17);
     }
     pointerupf = (): void => {
-        engine.attachCameraInput();
+        engine.inputManager?.attachCameraController();
         clearInterval(this.mouseinterval);
     }
     override destroy = (): void => {

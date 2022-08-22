@@ -26,12 +26,13 @@ export class PositionCamera extends CameraController {
     #position=new TerraVector3([-3000,300,0]);
     #velocity=0.5;
     #arrowKeysDown=0;
+    
 
     constructor(private camera: TerraCamera, element?: HTMLElement, initial=false) {
         super(element);
         const syncCamera = () => {
-            this.camera.position=this.#position;
-            this.camera.updateDirection(direction => {
+            this.cameraControl?.updatePosition(position => position.set(this.#position));
+            this.cameraControl?.updateDirection(direction => {
                 direction[0]=Math.cos(this.#angle);
                 direction[1]=0;
                 direction[2]=Math.sin(this.#angle);
@@ -55,14 +56,12 @@ export class PositionCamera extends CameraController {
             this.#position.set(this.camera.position as TerraVector3);
             this.#angle=Math.acos(this.camera.direction[0]);
         }
-        if(typeof document !== 'undefined')
-            this.enable();
     }
-    enable() {
-        document.addEventListener('keydown', this.#keydownfunction);
-        document.addEventListener('keyup', this.#keyupfunction);
+    attachCameraController() {
+        document?.addEventListener('keydown', this.#keydownfunction);
+        document?.addEventListener('keyup', this.#keyupfunction);
     }
-    disable() {
+    deAttachCameraController() {
         document?.removeEventListener('keydown', this.#keydownfunction);
         document?.removeEventListener('keyup', this.#keyupfunction);
     }
@@ -115,9 +114,6 @@ export class PositionCamera extends CameraController {
             this.#arrowKeysDown&=~ARROW_KEYS.RIGHT;
         }
     }
-    destroy(): void {
-        this.disable();
-    }
     checkInputs() {
         if(this.#arrowKeysDown === 0)
             return false;
@@ -145,7 +141,7 @@ export class PositionCamera extends CameraController {
                 if(this.#angle < -Math.PI)
                     this.#angle=Math.PI-(this.#angle%Math.PI)
             }
-            this.camera.updateDirection(direction => {
+            this.cameraControl?.updateDirection(direction => {
                 direction[0]=Math.cos(this.#angle);
                 direction[1]=0;
                 direction[2]=Math.sin(this.#angle);
@@ -179,7 +175,7 @@ export class PositionCamera extends CameraController {
         if (engine.collider.collision_resolved) {
             //this._position.copyFrom(position);
             if (this.camera.position[0] != engine.collider.finalPosition[0] || this.camera.position[1] != engine.collider.finalPosition[1] || this.camera.position[2] != engine.collider.finalPosition[2]) {      
-                this.camera.position=engine.collider.finalPosition;
+                this.cameraControl?.updatePosition(position => position.set(engine.collider.finalPosition));
                 this.#position=engine.collider.finalPosition;
             }
         }

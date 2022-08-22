@@ -1,3 +1,4 @@
+import type { CameraControl } from "../TerraCamera.js";
 import { closeDistance, Ellipsoid } from "../DataNode.js";
 import { TerraMatrix } from "../Math.js";
 
@@ -10,7 +11,7 @@ export abstract class CameraController implements Ellipsoid {
         0.0,                     0.0,                   1.0 / this.collisionRadius[2],  0.0,
         0.0, 0.0, 0.0, 1.0]);
     readonly closeDistanceVector:[number,number,number] = [closeDistance / this.collisionRadius[0], closeDistance / this.collisionRadius[1], closeDistance / this.collisionRadius[2]];
-
+    cameraControl?: CameraControl;
     constructor(protected element: HTMLElement | undefined) {
         const collisionRadius=this.collisionRadius;
         const collisionsScalingMatrix = this.collisionsScalingMatrix;
@@ -43,10 +44,12 @@ export abstract class CameraController implements Ellipsoid {
         }
     }
     abstract readonly name: string;
-    abstract destroy() : void;
-    abstract enable(canvas: HTMLCanvasElement) : void;
-    abstract disable() : void;
-    abstract checkInputs() : void
-    abstract calculateCameraPositionAndTarget?(): void
     abstract serialize(): void;
+
+
+    abstract attachCameraController() : void;
+    abstract deAttachCameraController() : void;
+    abstract checkInputs() : boolean
+    abstract calculateCameraPositionAndTarget(): void
+
 }

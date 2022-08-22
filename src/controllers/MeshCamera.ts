@@ -1,6 +1,7 @@
 import { TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import type { Engine } from "../engine";
+import { CameraController } from "./CameraController.js";
 declare const engine:Engine;
 
 export const enum ARROW_KEYS  {
@@ -11,16 +12,17 @@ export const enum ARROW_KEYS  {
     LEFT_AND_RIGHT = ARROW_KEYS.RIGHT|ARROW_KEYS.LEFT
 }
 
-export class MeshCamera {
+export class MeshCamera extends CameraController{
     name='PositionCamera';
     angle=Math.PI;
     verticalAngle=Math.PI*0.5;
     arrowKeysDown=0;
     pointerMovement={x:0,y:0};
     constructor(public camera: TerraCamera, initial=false) {
+        super(document?.body);
         const syncCamera = () => {
             //this.camera.position=this.#position;
-            this.camera.updateDirection(direction => {
+            this.cameraControl?.updateDirection(direction => {
                 direction[0]=Math.cos(this.angle);
                 direction[1]=0;
                 direction[2]=Math.sin(this.angle);
@@ -44,17 +46,22 @@ export class MeshCamera {
             //this.#position.set(this.camera.position as TerraVector3);
             this.angle=Math.acos(this.camera.direction[0]);
         }
-        //syncCamera();
-        this.enable();
     }
-    disable() {
+    calculateCameraPositionAndTarget() {
+        // TODO
+    }
+    checkInputs() {
+        //TODO
+        return true;
+    }
+    deAttachCameraController() {
         document.exitPointerLock();
         document.removeEventListener('keydown', this.#keydownfunction);
         document.removeEventListener('keyup', this.#keyupfunction);
         document.removeEventListener('pointermove', this.#pointerMoveFunction);
         document.removeEventListener('pointerdown', this.#pointerDownFunction);
     }
-    enable() {
+    attachCameraController() {
         document.body.requestPointerLock()
         document.addEventListener('pointerdown', this.#pointerDownFunction);
         document.addEventListener('keydown', this.#keydownfunction);
@@ -119,9 +126,6 @@ export class MeshCamera {
         else if(e.key==='ArrowRight') {
             this.arrowKeysDown&=~ARROW_KEYS.RIGHT;
         }
-    }
-    destroy(): void {
-        this.disable();
     }
     lastTranslation=new TerraVector3();
 }
