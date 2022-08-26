@@ -35,7 +35,7 @@ export class ArcRotateCamera extends CameraController {
                 beta: this.#beta,
                 radius: this.#radius,
                 target: this.#target,
-                position: new Float32Array(engine.mainCamera.position as unknown as number[]) as { 0: number, 1: number, 2: number } & Float32Array
+                position: new Float32Array(engine.mainCamera?.position as unknown as number[]) as { 0: number, 1: number, 2: number } & Float32Array
             } as serialized
         });
         request.onsuccess = () => {
@@ -129,7 +129,7 @@ export class ArcRotateCamera extends CameraController {
     #cameraPointerDown = (e: PointerEvent) => {
         pointerDownButton = e.button;
         if (pointerDownButton !== 2) {
-            engine.gpu!.renderPassScreen.pickPosition().then(position => {
+            engine.gpu?.renderPassScreen.pickPosition().then(position => {
                 if(position) {
                     this.#targetMovingfrom = new TerraVector3([this.#target[0], this.#target[1], this.#target[2]]);
                     this.#targetMovingTo = position.position;

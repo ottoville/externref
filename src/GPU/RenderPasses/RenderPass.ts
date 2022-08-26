@@ -19,9 +19,7 @@ interface RenderPipelineVariant2 {
 
 type RenderTargetConstructor = (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, GPUTextureUsageLiterals[]>;
 
-export class RenderPass<
-
-U extends {
+export class RenderPass<U extends {
     [index: string]: RenderTargetConstructor } 
         = { [index: string]: RenderTargetConstructor },
 > {
@@ -101,7 +99,7 @@ U extends {
         return variant;
     }
 
-    onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>): Omit<GPURenderPipelineDescriptor, 'layout'> {
+    protected onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>): Omit<GPURenderPipelineDescriptor, 'layout'> {
         const renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'layout'> = {
             vertex: {
                 ...renderpipeline.vertexShader,

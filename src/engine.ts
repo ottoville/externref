@@ -14,18 +14,18 @@ import type { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.j
 import { closeDistance, closeDistanceSquared, DataNode, Ellipsoid } from "./DataNode.js";
 import type { CameraController } from "./controllers/CameraController.js";
 
-function createError(e:unknown) {
-    if(!(e instanceof Error)) {
+function createError(e: unknown) {
+    if (!(e instanceof Error)) {
         return new Error('Unknown error ' + e);
     }
     return e;
 }
 
-declare const engine:Engine;
+declare const engine: Engine;
 //@ts-ignore
 globalThis.fps = 0;
 export type rust_pointer<T> = {
-    __brand:T
+    __brand: T
 } & number
 
 /*
@@ -36,91 +36,91 @@ globalThis.addEventListener && globalThis.addEventListener('unhandledrejection',
 })
 */
 export type rustWasm = {
-    GPUMeshes():rust_pointer<"GPUMeshes">,
+    GPUMeshes(): rust_pointer<"GPUMeshes">,
 
-    collider():rust_pointer<"legacy_collider">,
-    intersection_point_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
-    collision_resolved_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
-    nearest_distance_squared_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
-    set_nearest_distance_squared(collider_ptr:rust_pointer<"legacy_collider">, distance:number):void
-    get_nearest_distance_squared(collider_ptr:rust_pointer<"legacy_collider">):number
-    scaled_position_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
-    scaled_velocity_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
-    collided_mesh_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
-    set_speed(collider_ptr:rust_pointer<"legacy_collider">, speed:number):void
-    basepoint_world_pointer(collider_ptr:rust_pointer<"legacy_collider">):number
-    renderloop():void,
+    collider(): rust_pointer<"legacy_collider">,
+    intersection_point_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
+    collision_resolved_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
+    nearest_distance_squared_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
+    set_nearest_distance_squared(collider_ptr: rust_pointer<"legacy_collider">, distance: number): void
+    get_nearest_distance_squared(collider_ptr: rust_pointer<"legacy_collider">): number
+    scaled_position_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
+    scaled_velocity_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
+    collided_mesh_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
+    set_speed(collider_ptr: rust_pointer<"legacy_collider">, speed: number): void
+    basepoint_world_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
+    renderloop(): void,
 
-    new_mesh(id:number,
-        positions_count:number,
-        point_light:number,
-        directional_light:number,
-        scenes:number,
-        strip:boolean,
-        fixed:boolean,
-        rigid_body:boolean,
+    new_mesh(id: number,
+        positions_count: number,
+        point_light: number,
+        directional_light: number,
+        scenes: number,
+        strip: boolean,
+        fixed: boolean,
+        rigid_body: boolean,
         label: rust_pointer<"u8">): rust_pointer<"mesh">,
-    add_geometry(mesh:rust_pointer<"mesh">,
-        has_bounding:boolean,
-        vertices_stride:number,
-        static_faces:boolean,
-        strip:boolean):void,
-    add_collider(mesh:rust_pointer<"mesh">,
-        collider:rust_pointer<"collider">):void
+    add_geometry(mesh: rust_pointer<"mesh">,
+        has_bounding: boolean,
+        vertices_stride: number,
+        static_faces: boolean,
+        strip: boolean): void,
+    add_collider(mesh: rust_pointer<"mesh">,
+        collider: rust_pointer<"collider">): void
     memory: WebAssembly.Memory,
-    set_vertices(mesh:rust_pointer<"mesh">, ptr:rust_pointer<"f32">, length:number):void,
-    set_indices_and_vertices(mesh:rust_pointer<"mesh">, indices:rust_pointer<"usize">, indices_length:number, vertices:rust_pointer<"f32">, vertices_length:number):void,
-    vertices_pointer(mesh:rust_pointer<"mesh">):number,
-    indices_pointer(mesh:rust_pointer<"mesh">):number,
-    last_collider_world_vertices_pointer(mesh:rust_pointer<"mesh">):number,
-    vertices_count(mesh:rust_pointer<"mesh">):number,
-    faces_count(mesh:rust_pointer<"mesh">):number,
-    alloc_vector_f32(size:number) :rust_pointer<"f32">,
-    alloc_vector_usize(size:number): rust_pointer<"usize">,
-    alloc_string(size:number): rust_pointer<"u8">,
-    update_scale(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
-    update_rotation(mesh:rust_pointer<"mesh">, x:number, y:number, z:number, w:number):void,
-    update_euler_angles(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
-    update_translation(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
-    apply_impulse(mesh:rust_pointer<"mesh">, x:number, y:number, z:number):void,
-    update_dynamic_buffer(mesh:rust_pointer<"mesh">):void,
-    gpu_alignment(mesh:rust_pointer<"mesh">):number,
-    positions_count(mesh:rust_pointer<"mesh">):number,
-    id(mesh:rust_pointer<"mesh">):number,
-    strip(mesh:rust_pointer<"mesh">):number,
-    collider_planes_parallel_pointer(mesh:rust_pointer<"mesh">):number,
-    gpu_pointer(mesh:rust_pointer<"mesh">):number,
-    translation_pointer(mesh:rust_pointer<"mesh">):number,
-    velocity_pointer(mesh:rust_pointer<"mesh">):number,
-    intersect_box_aa_sphere(mesh:rust_pointer<"mesh">,collider_ptr:number, radius:number):boolean
-    scale_x(mesh:rust_pointer<"mesh">):number,
-    scale_y(mesh:rust_pointer<"mesh">):number,
-    scale_z(mesh:rust_pointer<"mesh">):number,
-    vertices_stride(mesh:rust_pointer<"mesh">):number,
-    set_faces(mesh:rust_pointer<"mesh">, ptr:number, length:number):void,
-    set_color(mesh:rust_pointer<"mesh">, d0:number,d1:number,d2:number,d3:number):void,
-    set_ambient(mesh:rust_pointer<"mesh">, r:number, g:number, b:number):void
-    set_shadow(mesh:rust_pointer<"mesh">, shadow:number):void
-    collider_faces_pointer(mesh:rust_pointer<"mesh">):number,
-    set_scenes(mesh:rust_pointer<"mesh">, scenes:number):void,
-    update_scale_and_rotation(mesh:rust_pointer<"mesh">, x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number):void
-    faces_pointer(mesh:rust_pointer<"mesh">):number,
-    bounding_vectors_pointer_simd(mesh:rust_pointer<"mesh">):number,
+    set_vertices(mesh: rust_pointer<"mesh">, ptr: rust_pointer<"f32">, length: number): void,
+    set_indices_and_vertices(mesh: rust_pointer<"mesh">, indices: rust_pointer<"usize">, indices_length: number, vertices: rust_pointer<"f32">, vertices_length: number): void,
+    vertices_pointer(mesh: rust_pointer<"mesh">): number,
+    indices_pointer(mesh: rust_pointer<"mesh">): number,
+    last_collider_world_vertices_pointer(mesh: rust_pointer<"mesh">): number,
+    vertices_count(mesh: rust_pointer<"mesh">): number,
+    faces_count(mesh: rust_pointer<"mesh">): number,
+    alloc_vector_f32(size: number): rust_pointer<"f32">,
+    alloc_vector_usize(size: number): rust_pointer<"usize">,
+    alloc_string(size: number): rust_pointer<"u8">,
+    update_scale(mesh: rust_pointer<"mesh">, x: number, y: number, z: number): void,
+    update_rotation(mesh: rust_pointer<"mesh">, x: number, y: number, z: number, w: number): void,
+    update_euler_angles(mesh: rust_pointer<"mesh">, x: number, y: number, z: number): void,
+    update_translation(mesh: rust_pointer<"mesh">, x: number, y: number, z: number): void,
+    apply_impulse(mesh: rust_pointer<"mesh">, x: number, y: number, z: number): void,
+    update_dynamic_buffer(mesh: rust_pointer<"mesh">): void,
+    gpu_alignment(mesh: rust_pointer<"mesh">): number,
+    positions_count(mesh: rust_pointer<"mesh">): number,
+    id(mesh: rust_pointer<"mesh">): number,
+    strip(mesh: rust_pointer<"mesh">): number,
+    collider_planes_parallel_pointer(mesh: rust_pointer<"mesh">): number,
+    gpu_pointer(mesh: rust_pointer<"mesh">): number,
+    translation_pointer(mesh: rust_pointer<"mesh">): number,
+    velocity_pointer(mesh: rust_pointer<"mesh">): number,
+    intersect_box_aa_sphere(mesh: rust_pointer<"mesh">, collider_ptr: number, radius: number): boolean
+    scale_x(mesh: rust_pointer<"mesh">): number,
+    scale_y(mesh: rust_pointer<"mesh">): number,
+    scale_z(mesh: rust_pointer<"mesh">): number,
+    vertices_stride(mesh: rust_pointer<"mesh">): number,
+    set_faces(mesh: rust_pointer<"mesh">, ptr: number, length: number): void,
+    set_color(mesh: rust_pointer<"mesh">, d0: number, d1: number, d2: number, d3: number): void,
+    set_ambient(mesh: rust_pointer<"mesh">, r: number, g: number, b: number): void
+    set_shadow(mesh: rust_pointer<"mesh">, shadow: number): void
+    collider_faces_pointer(mesh: rust_pointer<"mesh">): number,
+    set_scenes(mesh: rust_pointer<"mesh">, scenes: number): void,
+    update_scale_and_rotation(mesh: rust_pointer<"mesh">, x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number): void
+    faces_pointer(mesh: rust_pointer<"mesh">): number,
+    bounding_vectors_pointer_simd(mesh: rust_pointer<"mesh">): number,
 
-    create_elevator(mesh:rust_pointer<"mesh">):rust_pointer<"elevator">,
-    mouse_position_pointer(elevator_ptr:rust_pointer<"elevator">):number
-    elevate(elevator_ptr:rust_pointer<"elevator">, mesh:rust_pointer<"mesh">, radius:number, height:number):void
-    get_length(elevator_ptr:rust_pointer<"elevator">):number
-    get_offset(elevator_ptr:rust_pointer<"elevator">):number
+    create_elevator(mesh: rust_pointer<"mesh">): rust_pointer<"elevator">,
+    mouse_position_pointer(elevator_ptr: rust_pointer<"elevator">): number
+    elevate(elevator_ptr: rust_pointer<"elevator">, mesh: rust_pointer<"mesh">, radius: number, height: number): void
+    get_length(elevator_ptr: rust_pointer<"elevator">): number
+    get_offset(elevator_ptr: rust_pointer<"elevator">): number
 
     init_engine2(): number
-    physic_tick():void
+    physic_tick(): void
 
     create_ball_collider(radius: number): rust_pointer<"collider">
-    create_capsule_collider(half_height: number, radius: number,orientation: 0|1|2, collision_events:boolean): rust_pointer<"collider">,
-    create_trimesh_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
-    create_convex_hull_collider(mesh:rust_pointer<"mesh">): rust_pointer<"collider">
-    create_cuboid_collider(hx: number, hy: number, hz: number, border_radius: number, collision_events:boolean): rust_pointer<"collider">
+    create_capsule_collider(half_height: number, radius: number, orientation: 0 | 1 | 2, collision_events: boolean): rust_pointer<"collider">,
+    create_trimesh_collider(mesh: rust_pointer<"mesh">): rust_pointer<"collider">
+    create_convex_hull_collider(mesh: rust_pointer<"mesh">): rust_pointer<"collider">
+    create_cuboid_collider(hx: number, hy: number, hz: number, border_radius: number, collision_events: boolean): rust_pointer<"collider">
     create_cone_collider(half_height: number, radius: number): rust_pointer<"collider">
 }
 
@@ -147,7 +147,7 @@ const ObjectStores = {
         parameters: { keyPath: ["type", "name"], autoIncrement: false }
     },
     maps: <ObjStoreDetails>{
-        version:4,
+        version: 4,
         parameters: { keyPath: "id", autoIncrement: true }
     }
 };
@@ -169,7 +169,7 @@ export interface ColliderWasm {
     testTriangles: (position: number, positionParallel: number, length: number, meshID: number) => void
     _initialize: () => void
 }
-
+let deviceId=0;
 export class Engine {
 
     /*
@@ -181,7 +181,7 @@ export class Engine {
 
     // registry = new FinalizationRegistry((arr: { byteOffset: number, byteLength: number }) => this.freeMemory(arr));
 
-    readonly physics:Physics;
+    readonly physics: Physics;
     readonly scenes: Map<string, Scene> = new Map();
     // readonly collisionNotFound:DataView
     //@ts-ignore
@@ -193,35 +193,35 @@ export class Engine {
     readonly #displacementVector: [number, number, number] = [0, 0, 0];
 
     updateLights = false;
-    inputManager:CameraController|null = null
+    inputManager: CameraController | null = null
 
-    renderFrame = 0;
-    readonly mainCamera: TerraCamera<PickableRenderPass>;
+    mainCamera?: TerraCamera<PickableRenderPass>;
     memory: WebAssembly.Memory;
+    GPUReady: Promise<GPU>;
     static async initEngine(
         canvas: HTMLCanvasElement | undefined,
         showError: (e: Error) => void,
-        wasmBinaries: {rust: Response | PromiseLike<Response> | BufferSource, collider: Response | PromiseLike<Response> | BufferSource}): Promise<Engine | void> {
-        let DB:Promise<EarthDatabase> | undefined = undefined;
-        if(typeof(indexedDB) === 'object') {
+        wasmBinaries: { rust: Response | PromiseLike<Response> | BufferSource, collider: Response | PromiseLike<Response> | BufferSource }): Promise<Engine | void> {
+        let DB: Promise<EarthDatabase> | undefined = undefined;
+        if (typeof (indexedDB) === 'object') {
             DB = new Promise<EarthDatabase>(function (res) {
                 var IDB = indexedDB.open("City", 6);
-                IDB.onerror=function(e) {
+                IDB.onerror = function (e) {
                     showError(createError(e))
                 }
                 IDB.onupgradeneeded = function (e) {
-                    console.log('IDBVersionChangeEvent',e);
+                    console.log('IDBVersionChangeEvent', e);
                     // Save the IDBDatabase interface 
                     var db: EarthDatabase = this.result;
-            
+
                     (<(keyof typeof ObjectStores)[]>Object.keys(ObjectStores)).forEach((objstore) => {
-                        let createdStore :IDBObjectStore 
-                        if(ObjectStores[objstore].version>e.oldVersion) {
+                        let createdStore: IDBObjectStore
+                        if (ObjectStores[objstore].version > e.oldVersion) {
                             createdStore = db.createObjectStore(objstore, ObjectStores[objstore].parameters);
                         } else {
                             if (!this.transaction)
                                 throw (new Error('No transaction'));
-                            createdStore=this.transaction.objectStore(objstore);
+                            createdStore = this.transaction.objectStore(objstore);
                         }
                         let indices: ObjStoreIndex[] | undefined;
                         if (indices = ObjectStores[objstore].indices) {
@@ -235,13 +235,13 @@ export class Engine {
                 };
                 IDB.onsuccess = function () {
                     this.result.onerror = function (e) {
-                        console.log(e,((<IDBRequest>e.target)!).error!.message);
+                        console.log(e, ((<IDBRequest>e.target)!).error!.message);
                     }
                     res(this.result);
                 }
             })
         }
- 
+
         let rust: WebAssembly.WebAssemblyInstantiatedSource;
         let colliderWasm: WebAssembly.WebAssemblyInstantiatedSource;
         const exportObj = {
@@ -249,79 +249,61 @@ export class Engine {
                 now() {
                     return performance.now()
                 },
-                jspanic(ptr:number) {
+                jspanic(ptr: number) {
                     console.error(new TextDecoder().decode(new Uint8Array(engine.rust.memory.buffer, ptr, 512)).trimEnd())
                 },
-                jslog(ptr:number) {
+                jslog(ptr: number) {
                     console.log(new TextDecoder().decode(new Uint8Array(engine.rust.memory.buffer, ptr, 512)).trimEnd())
                 },
-                jslog_number(number:number) {
+                jslog_number(number: number) {
                     console.log(number)
                 },
-                mesh_on_collide(mesh_id:number, started: boolean) {
+                mesh_on_collide(mesh_id: number, started: boolean) {
                     const mesh = DataNode.Meshes.get(mesh_id);
-                    if(mesh) {
+                    if (mesh) {
                         DataNode.Meshes.get(mesh_id)?.onCollideCharacter(started);
-                        mesh.colliding=started;
+                        mesh.colliding = started;
                     }
                 },
-                mesh_on_physic_tick(mesh_id:number) {
+                mesh_on_physic_tick(mesh_id: number) {
                     const cb = DataNode.Meshes.get(mesh_id)?.onPhysicTick
-                    if(cb) {
+                    if (cb) {
                         //TODO: fix delta
                         cb(0)
                     }
                 },
-                handle_gpu_queue(pointerVec:number, length:number) {
+                handle_gpu_queue(pointerVec: number, length: number) {
                     engine.gpu?.handle_gpu_queue(pointerVec, length);
                 },
-                updateAllocatedMemory(allocated_gpu_memory_ptr:number, length:number) {
+                updateAllocatedMemory(allocated_gpu_memory_ptr: number, length: number) {
                     engine.gpu?.updateAllocatedMemory(allocated_gpu_memory_ptr, length);
                 },
-                update_directional_lights(pointer:number, length:number) {
+                update_directional_lights(pointer: number, length: number) {
                     engine.gpu?.update_directional_lights(pointer, length)
                 },
-                update_point_lights(pointer:number, length:number) {
+                update_point_lights(pointer: number, length: number) {
                     engine.gpu?.update_point_lights(pointer, length)
                 }
             }
         }
-        let gpu: GPU | undefined = undefined;
-
+        let GPUDataSize: number;
         try {
-            if(wasmBinaries.rust instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.rust)) {
+            if (wasmBinaries.rust instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.rust)) {
                 rust = await WebAssembly.instantiate(wasmBinaries.rust, exportObj);
             }
             else {
-               // rust = await WebAssembly.instantiateStreaming(await fetch('./engine/wasm32-unknown-unknown/debug/engine.wasm'), exportObj);
+                // rust = await WebAssembly.instantiateStreaming(await fetch('./engine/wasm32-unknown-unknown/debug/engine.wasm'), exportObj);
                 rust = await WebAssembly.instantiateStreaming(wasmBinaries.rust, exportObj);
             }
-            if(!rust.instance.exports.memory) {
+            if (!rust.instance.exports.memory) {
                 return showError(new Error('No memory exported'));
             }
             var rustWasm = rust.instance.exports as rustWasm;
-            const GPUDataSize = rustWasm.init_engine2();
-            if(canvas) {
-                try {
-                    gpu = await GPU.create(canvas, GPUDataSize);
-                } catch(e) {
-                    showError(createError(e))
-                }
-                
-                //@ts-ignore
-                window.printRenderTarget = () => {
-                    gpu!.pickRenderPass.colorRenderTargets.gRenderTargetId.print_bitmap()
-                }
-                //@ts-ignore
-                window.printRenderTarget2 = () => {
-                    gpu!.renderPassScreen.depthRenderTarget.print_bitmap()
-                }
-                //@ts-ignore
-                window.printRenderTarget3 = () => {
-                    gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.print_bitmap()
-                    
-                }
+            GPUDataSize = rustWasm.init_engine2();
+            if (canvas && !window.navigator.gpu) {
+                throw (new Error('no webgpu support'));
             }
+
 
             const colliderExportObj = {
                 console: {
@@ -337,52 +319,127 @@ export class Engine {
                     memory: rust.instance.exports.memory
                 }
             };
-            if(wasmBinaries.collider instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.collider)) {
+            if (wasmBinaries.collider instanceof ArrayBuffer || ArrayBuffer.isView(wasmBinaries.collider)) {
                 colliderWasm = await WebAssembly.instantiate(wasmBinaries.collider, colliderExportObj);
             } else {
                 colliderWasm = await WebAssembly.instantiateStreaming(wasmBinaries.collider, colliderExportObj);
 
             }
             //Init rust wasm
-        } catch(e) {
+        } catch (e) {
             return showError(createError(e));
         }
         const wasm = colliderWasm.instance.exports as unknown as ColliderWasm;
-        return new Engine(gpu, DB ? await DB : undefined, canvas, wasm, rustWasm, showError);
+        return new Engine(DB ? await DB : undefined, canvas, wasm, rustWasm, showError, GPUDataSize);
     }
-    readonly cameras:Set<TerraCamera>=new Set();
-    
-    showError(e:unknown) {
+    readonly cameras: Set<TerraCamera> = new Set();
+
+    showError(e: unknown) {
         const error = createError(e);
-        if(!error.cause)
+        if (!error.cause)
             this.showErrorError(error);
+
+    }
+    gpu: GPU | undefined
+    async createGPU(GPUDataSize: number,cb:(gpu:GPU) => void, adapter: GPUAdapter | null) {
+        if(!adapter) {
+            // eslint-disable-next-line require-atomic-updates
+            adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
+            if (!adapter) {
+                console.error('Failed to get adapter, getting fallback adapter');
+                // eslint-disable-next-line require-atomic-updates
+                adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter: true })
+            }
+            if (!adapter) {
+                throw new Error('Cannot get adapter');
+            }
+        }
+        let device: GPUDevice;
+        try {
+            console.log('getting new device');
+            device = await adapter!.requestDevice({label:'device'+(deviceId++)});
+        } catch (e) {
+            console.error('failed to get new device, getting new adapter');
+            let adapter2 = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
+            if (!adapter2) {
+                console.error('Failed to get adapter, getting fallback adapter');
+                adapter2 = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter: true })
+            }
+            if (!adapter2) {
+                throw new Error('Cannot get adapter');
+            }
+            try {
+                device = await adapter2!.requestDevice({label:'device'+(deviceId++)});
+            } catch (ee) {
+                console.error(ee);
+                throw new Error('Cannot get device');
+            }
+            // eslint-disable-next-line require-atomic-updates
+            adapter = adapter2;
+
+        }
+        device.lost.then(reason => {
+            console.error('GPU device lost', reason);
+            const newGPU=this.createGPU(GPUDataSize,cb, adapter);
+            this.gpu!.destroy(newGPU);
+            this.gpu = undefined;
+            this.GPUReady = newGPU;
+        }).catch((ee) => {
+            if (ee instanceof Error)
+                throw (ee)
+            else
+                throw (new Error(ee));
+        });
         
+        const gpu = new GPU(this.canvas!, device, GPUDataSize);
+        this.gpu = gpu;
+        console.log('new GPU initialized');
+        cb(gpu)
+        return gpu;
+
     }
     constructor(
-        public gpu: GPU | undefined,
         public DB: EarthDatabase | undefined,
         public canvas: HTMLCanvasElement | undefined,
         public wasm: ColliderWasm,
         public rust: rustWasm,
-        public showErrorError: (e: Error) => void
+        public showErrorError: (e: Error) => void,
+        GPUDataSize: number,
     ) {
+        if(canvas) {
+            this.GPUReady=this.createGPU(GPUDataSize,gpu => {
+                this.mainCamera = new TerraCamera(gpu, gpu.renderPassScreen, new Projection(gpu));
+                gpu.pickRenderPass.cameras.add(this.mainCamera);
+                this.mainCamera.attachControllerForCamera(new ArcRotateCamera(this.mainCamera, this.canvas, true))
+                //@ts-ignore
+                window.printRenderTarget = () => {
+                    gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.print_bitmap()
+                }
+                //@ts-ignore
+                window.printRenderTarget2 = () => {
+                    gpu.renderPassScreen.depthRenderTarget.print_bitmap()
+                }
+                //@ts-ignore
+                window.printRenderTarget3 = () => {
+                    gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.print_bitmap()
+                }
+            } ,null);
+            const saveControllerState = () => {
+                this.inputManager?.serialize();
+            };
+            document.addEventListener('visibilitychange', saveControllerState);
+            window.addEventListener('beforeunload', saveControllerState);
+
+        } else {
+            this.GPUReady=new Promise(() => {undefined});
+        }
         this.physics = new Physics(this);
         this.memory = rust.memory;
         //@ts-ignore
         globalThis.engine = this;
-        this.mainCamera = new TerraCamera(gpu?.renderPassScreen, new Projection(gpu), gpu);
-        if(gpu)
-            gpu.pickRenderPass.cameras.add(this.mainCamera)
 
         this.collider = new ColliderJS(rust);
-        this.mainCamera.attachControllerForCamera(new ArcRotateCamera(this.mainCamera, this.canvas, true))
-        const saveControllerState = () => {
-            this.inputManager?.serialize();
-        };
-        if(gpu) {
-            document.addEventListener('visibilitychange', saveControllerState);
-            window.addEventListener('beforeunload', saveControllerState);
-        }
+
 
         //TODO: this does not work after memory grow
         this.#collidedMesh = new DataView(this.memory.buffer, engine.rust.collided_mesh_pointer(this.collider.collider_ptr), 4);
@@ -408,17 +465,17 @@ export class Engine {
             // this.wasmSIMD._initialize(velocity.byteOffset, position.byteOffset)
 
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
-            if(sphere instanceof DataNode) {
+            if (sphere instanceof DataNode) {
                 DataNode.Meshes.forEach(mesh => {
-                    if(sphere !== mesh)
+                    if (sphere !== mesh)
                         mesh.checkCollision(this.collider, sphere)
                 });
             }
             else {
                 DataNode.Meshes.forEach(mesh => {
-                    if(mesh.label==='water')
+                    if (mesh.label === 'water')
                         return; //Sea is bugging
-                     mesh.checkCollision(this.collider, sphere)
+                    mesh.checkCollision(this.collider, sphere)
                 });
             }
             this.#destinationPoint[0] = scaledPosition[0] + scaledVelocity[0];
@@ -430,8 +487,8 @@ export class Engine {
                 //this.collider.finalPosition.set(scaledPosition);
                 return this.#destinationPoint;
             }
-            this.collider.didCollide=true;
-            if(sphere instanceof MainNode)
+            this.collider.didCollide = true;
+            if (sphere instanceof MainNode)
                 sphere.is_colliding = true;
             const intersectionPoint = this.collider.intersectionPointWasm;
             //console.log('collision found')
@@ -450,20 +507,20 @@ export class Engine {
                 scaledPosition[2] += scaledVelocity[2];
 
                 //pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
-                if(this.collider.collidedPointInTriangle) {
+                if (this.collider.collidedPointInTriangle) {
                     //TODO: this does not work on ellipsoid space.
-                    this.collider._slidePlaneNormal[0]=this.collider.collidedPointInTriangle.planeCollider[0];
-                    this.collider._slidePlaneNormal[1]=this.collider.collidedPointInTriangle.planeCollider[1];
-                    this.collider._slidePlaneNormal[2]=this.collider.collidedPointInTriangle.planeCollider[2];
+                    this.collider._slidePlaneNormal[0] = this.collider.collidedPointInTriangle.planeCollider[0];
+                    this.collider._slidePlaneNormal[1] = this.collider.collidedPointInTriangle.planeCollider[1];
+                    this.collider._slidePlaneNormal[2] = this.collider.collidedPointInTriangle.planeCollider[2];
                 } else {
                     this.collider._slidePlaneNormal[0] = scaledPosition[0] - intersectionPoint[0];
                     this.collider._slidePlaneNormal[1] = scaledPosition[1] - intersectionPoint[1];
                     this.collider._slidePlaneNormal[2] = scaledPosition[2] - intersectionPoint[2];
 
                     // this._slidePlaneNormal.normalize();
-                // const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
-                    const length = Math.hypot(this.collider._slidePlaneNormal[0],this.collider._slidePlaneNormal[1],this.collider._slidePlaneNormal[2]);
-                
+                    // const length = Math.sqrt(this.collider._slidePlaneNormal[0] * this.collider._slidePlaneNormal[0] + this.collider._slidePlaneNormal[1] * this.collider._slidePlaneNormal[1] + this.collider._slidePlaneNormal[2] * this.collider._slidePlaneNormal[2]);
+                    const length = Math.hypot(this.collider._slidePlaneNormal[0], this.collider._slidePlaneNormal[1], this.collider._slidePlaneNormal[2]);
+
                     if (!(length === 0 || length === 1.0)) {
                         const norm = 1 / length;
                         this.collider._slidePlaneNormal[0] *= norm;
@@ -472,20 +529,20 @@ export class Engine {
                     }
                 }
 
-//DEBUG START
-/*
-this.collider._slidePlaneNormal[0]= -0.5877852439880371
-this.collider._slidePlaneNormal[1]= 0.80901700258255
-this.collider._slidePlaneNormal[2]= 0
-*/
-//DEBUG END
+                //DEBUG START
+                /*
+                this.collider._slidePlaneNormal[0]= -0.5877852439880371
+                this.collider._slidePlaneNormal[1]= 0.80901700258255
+                this.collider._slidePlaneNormal[2]= 0
+                */
+                //DEBUG END
 
 
-               // console.log('slidePlaneNormal',...this.collider._slidePlaneNormal)
+                // console.log('slidePlaneNormal',...this.collider._slidePlaneNormal)
 
-              /*  this.#displacementVector[0] = slidePlaneNormalWorld[0] * this.collider.epsilon;
-                this.#displacementVector[1] = slidePlaneNormalWorld[1] * this.collider.epsilon;
-                this.#displacementVector[2] = slidePlaneNormalWorld[2] * this.collider.epsilon;*/
+                /*  this.#displacementVector[0] = slidePlaneNormalWorld[0] * this.collider.epsilon;
+                  this.#displacementVector[1] = slidePlaneNormalWorld[1] * this.collider.epsilon;
+                  this.#displacementVector[2] = slidePlaneNormalWorld[2] * this.collider.epsilon;*/
 
                 this.#displacementVector[0] = this.collider._slidePlaneNormal[0] * sphere.closeDistanceVector[0];
                 this.#displacementVector[1] = this.collider._slidePlaneNormal[1] * sphere.closeDistanceVector[1];
@@ -531,9 +588,9 @@ this.collider._slidePlaneNormal[2]= 0
         }
         return scaledPosition;
     }
-    collideWithWorld(sphere: Ellipsoid) : void {
-        if(sphere instanceof MainNode)
-            sphere.is_colliding=false;
+    collideWithWorld(sphere: Ellipsoid): void {
+        if (sphere instanceof MainNode)
+            sphere.is_colliding = false;
         //TODO: Call only when camera position change
         this.collider.finalPosition.set(this.#getFinalPosition(sphere));
         this.collider.finalPosition[0] *= sphere.radius[0]

@@ -29,9 +29,9 @@ export class Human extends Box {
         this.update_scale(1, 1, 1);
        // engine.inputManager?.destroy();
        
-        this.inputManager = new MeshCamera(engine.mainCamera, false);
+        this.inputManager = new MeshCamera(engine.mainCamera!, false);
         if(properties.inputEnabled) {
-            engine.mainCamera.attachControllerForCamera(this.inputManager)
+            engine.mainCamera?.attachControllerForCamera(this.inputManager)
         }
         engine.physics.onPhysicTick.add(() => {
           //  console.log('human translation', this.translation)

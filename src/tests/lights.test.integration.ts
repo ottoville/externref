@@ -1,5 +1,5 @@
 import { describe, beforeAll, it, jest, expect } from '@jest/globals'
-import type { Page, Browser } from 'puppeteer-core';
+import { Page, Browser } from 'puppeteer-core';
 
 import { Box as Box2 } from "../GPU/Meshes/Box.js";
 
@@ -35,8 +35,13 @@ const browser=globalThis.__BROWSER_GLOBAL__ as Browser;
           b2.translation = [0,400,300]
           b.update_scale(200, 200, 200);
           b2.update_scale(200, 200, 200);
-          engine.mainCamera.position = [5000,400,0];
-          engine.mainCamera.updateDirection((direction) => {
+          //@ts-expect-error
+          const control=engine!.mainCamera.attachControllerForCamera({
+            attachCameraController:() => undefined,
+            deAttachCameraController:() => undefined
+            });
+            control.updatePosition(position => position.set([5000,400,0]));
+          control.updateDirection((direction) => {
             direction[0]=1;
             direction[1]=0;
             direction[2]=0;

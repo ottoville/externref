@@ -16,6 +16,7 @@ import type { Engine, } from "./engine.js";
 import { Uint16Vector2 } from "./Math.js";
 import { DepthRenderTarget } from "./GPU/RenderTargets/DepthRenderTarget.js";
 import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
+import { TerraCamera } from "TerraCamera.js";
 declare const engine:Engine;
 
 
@@ -63,6 +64,7 @@ export class GPU {
     readonly rootCameralayout:PipelineLayout;
 
     readonly projections: Set<Projection> = new Set();
+    readonly cameras: TerraCamera[] = []
     
     //Todo: Remove COPY_SRC
     readonly GPUMeshes: CopySrcBuffer & CopyDstBuffer & BindStorageBuffer & BindUniformBuffer
@@ -109,6 +111,7 @@ export class GPU {
     readonly sizeBindGroupLayout: BindGroupLayout<[GPUBindGroupEntry]>;
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
     readonly bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
+    ro: ResizeObserver;
     createRenderPipeline(desc:readonly [label: string, create:(gpu:GPU, hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat}): RenderPipeline
     createRenderPipeline(desc:readonly [label: string, create:(gpu:GPU, hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list'}): RenderPipeline
     createRenderPipeline(desc:readonly [label: string, create:(gpu:GPU, hash:string,primitive: GPUPrimitiveState) => RenderPipeline], primitive?: Omit<GPUPrimitiveState, 'topology'>): RenderPipeline
@@ -130,39 +133,22 @@ export class GPU {
 
     }
     #GPUQueueCommandEncoder:GPUCommandEncoder | null = null;
-    static async create(canvas: HTMLCanvasElement, GPUDataSize: number) {
-        if (!window.navigator.gpu) {
-            throw(new Error('no webgpu support'));
-        }
-
-        const adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }).then(GPUAdapter => {
-            if(!GPUAdapter) {
-                console.error('Failed to get adapter, getting fallback adapter');
-                return window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter: true });
-            }
-            return GPUAdapter;
-        })
-        if(!adapter) {
-            throw (new Error('Failed to get adapter'));
-        }
-        const device = await adapter.requestDevice();
-        //this.progress = 5;
-        if (!device)
-            throw (new Error('no GPU device'));
-
-        device.lost.then(reason => {
-            console.error('GPU device lost', reason);
-        }).catch((e) => {
-            //TODO do this when device lost is handled properly
-            if(e instanceof Error)
-                throw(e)
-            else
-                throw(new Error(e));
-        });
-        return new GPU(canvas, device, GPUDataSize);
-    }
     #renderFrame = 0;
-    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice,  private GPUDataSizeBytes: number) {
+    destroy(newGPU: Promise<GPU>) {
+        console.log('stop renderloop');
+        // eslint-disable-next-line promise/catch-or-return
+        newGPU.then(gpu => {
+            this.cameras.forEach(camera => {
+                camera.initForGPU(gpu);
+            })
+        })
+        this.ro.disconnect();
+        cancelAnimationFrame(this.#renderFrame);
+    }
+    constructor(
+        public canvas: HTMLCanvasElement,
+        public device: GPUDevice,
+        private GPUDataSizeBytes: number) {
         for(const key in shaders) {
             const k=key as keyof typeof shaders;
             this.shaderModules[k] = device.createShaderModule({ code: shaders[k], label:k });
@@ -423,7 +409,7 @@ export class GPU {
             width: 1920,
             height: 1080
         }
-        const ro = new window.ResizeObserver(entries => {
+        this.ro = new window.ResizeObserver(entries => {
             const entry = entries[0];
             if (!entry)
                 return;
@@ -453,18 +439,17 @@ export class GPU {
                     const passEncoder = commandEncoder.beginComputePass({label: 'resizePassEncoder'});
                     passEncoder.setPipeline(computePipelineClusters.pipeline);
                     
-                    this.projections.forEach(projection => projection.update(aspectRatio))
+                    this.projections.forEach(projection => projection.update(aspectRatio, this))
 
                     this.#renderPasses.forEach(renderPass => {
                         renderPass.resize(canvas.width, canvas.height);
                         passEncoder.setBindGroup(0, renderPass.sizeBindGroup().bindGroup);
                         renderPass.cameras.forEach(camera => {
-                            camera.updateProjection(passEncoder,computePipelineClustersLayout)
+                            camera.updateClusters(passEncoder,computePipelineClustersLayout)
                         });
                     });
                     passEncoder.end();
                     this.device.queue.submit([commandEncoder.finish()]);
-
                     this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
                 } catch(e) {
                     engine.showError(e);
@@ -474,7 +459,7 @@ export class GPU {
         if(!canvas.parentElement) {
             throw new Error('Canvas must have parent element');
         }
-        ro.observe(canvas.parentElement);
+        this.ro.observe(canvas.parentElement);
         canvas.addEventListener('pointermove', (e) => {
             Atomics.store(this.mousePosition, 0, e.clientX * this.#scale.x)
             Atomics.store(this.mousePosition, 1, e.clientY * this.#scale.y)
@@ -635,6 +620,6 @@ export class GPU {
         this.pendingCommandBuffers.clear();
         this.tempGPUBuffers.forEach(buff => buff.destroy());
         this.tempGPUBuffers.length=0;
-        engine.renderFrame = window.requestAnimationFrame(this.#renderLoop);
+        this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
     }
 }

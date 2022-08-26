@@ -33,13 +33,14 @@ import { Cone } from "../GPU/Meshes/Cone.js";
 import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
 //@ts-ignore
 import { RoundCuboid } from "../GPU/Meshes/RoundCuboid.js";
+import { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
 
 declare const engine:Engine;
 class CanvasMesh extends MainNode {
     drawable:DrawableSimple;
-    constructor(canvaspipeline: RenderPipeline, positionsCount: number) {
+    constructor(canvaspipeline: RenderPipeline, positionsCount: number, renderPass:RenderPass) {
         super(positionsCount,undefined, undefined, undefined, 'canvas');
-        this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([engine.gpu!.renderPassCanvas]))
+        this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([renderPass]))
 
     }
 }
@@ -78,8 +79,8 @@ export class Canvas extends TerraCompoment {
             return;
         this.progress = 15;
 
-
-        const waterCamera = new TerraCamera(terraEngine.gpu!.renderPassWater, engine.mainCamera.projection, terraEngine.gpu, engine.mainCamera);
+        const gpu = await terraEngine.GPUReady;
+        const waterCamera = new TerraCamera(gpu,gpu.renderPassWater, engine.mainCamera!.projection, engine.mainCamera);
         waterCamera.beforeViewUpdate.add((position, direction) => {
             position[1] -= (position[1] - 3) * 2;
             direction[1] = -direction[1];
@@ -88,7 +89,7 @@ export class Canvas extends TerraCompoment {
       
         this.progress = 19;
 
-        const mainScene = new Scene('main', terraEngine.gpu!, [engine.mainCamera, waterCamera], (terrascene) => {
+        const mainScene = new Scene('main', gpu, [engine.mainCamera!, waterCamera], (terrascene) => {
             new Sun2([terrascene]);
             // Initial scene objects here
 
@@ -164,15 +165,15 @@ export class Canvas extends TerraCompoment {
 
 
 
-        const canvasPipeline = engine.gpu!.renderPassCanvas.rootLayout.addRenderPipeline('CanvasRenderPipeline',
-            new VertexShader(terraEngine.gpu!, 'deferred.vert.wgsl'),
-            new Shader(terraEngine.gpu!, 'deferred.frag.wgsl'), {
+        const canvasPipeline = gpu.renderPassCanvas.rootLayout.addRenderPipeline('CanvasRenderPipeline',
+            new VertexShader(gpu, 'deferred.vert.wgsl'),
+            new Shader(gpu, 'deferred.frag.wgsl'), {
             primitive: {
                 topology: 'triangle-list',
                 frontFace: 'ccw'
             }
         });
-        new CanvasMesh(canvasPipeline, 6);
+        new CanvasMesh(canvasPipeline, 6,gpu.renderPassCanvas);
 
 
 

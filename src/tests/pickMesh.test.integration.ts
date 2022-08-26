@@ -31,12 +31,14 @@ const browser=globalThis.__BROWSER_GLOBAL__ as Browser;
           const b = new Box({can_collide: false, label: 'PickGreenbox'});
           b.translation = [0,400,0]
           b.update_scale(500, 500, 500);
-          engine.mainCamera.position = [5000,400,0];
-          engine.mainCamera.updateDirection((direction) => {
-            direction[0]=1;
-            direction[1]=0;
-            direction[2]=0;
-          });
+          //@ts-expect-error
+          const control=engine!.mainCamera.attachControllerForCamera({
+            attachCameraController:() => undefined,
+            deAttachCameraController:() => undefined
+            });
+            control.updatePosition(position => position.set([5000,400,0]))
+            control.updateDirection(direction => direction.set([1,0,0]))
+
           await new Promise<void>(res => {
             requestAnimationFrame(() => res());
           });
@@ -45,7 +47,6 @@ const browser=globalThis.__BROWSER_GLOBAL__ as Browser;
           });
           engine.gpu!.mousePosition[0]=(engine.canvas!.width/2)|0;
           engine.gpu!.mousePosition[1]=(engine.canvas!.height/2)|0;
-    
          const pickedPosition = await engine.gpu!.renderPassScreen.pickPosition(true);
          const pickedMesh = await engine.gpu!.renderPassScreen.pickMesh(undefined);
          return [pickedPosition, {position: pickedMesh?.position, label: pickedMesh?.mesh.label}, b.id] as const;

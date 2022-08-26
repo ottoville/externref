@@ -91,12 +91,12 @@ export class Buffer extends Bindable {
             b = new Buffer(gpu, size, usages, typeof mappedAtCreation !== "undefined", label)
         }
         if(mappedAtCreation) {
-            try {
+           // try {
                 mappedAtCreation(b.buffer, gpu);
-            } catch(e) {
-                engine.showError(e);
-                return;
-            }
+           // } catch(e) {
+             //   engine.showError(e);
+           //     return;
+           // }
             b.buffer.unmap();
         }
         return b;
