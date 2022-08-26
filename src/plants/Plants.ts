@@ -38,7 +38,7 @@ export class Plants {
                 {
                     area: area,
                     angle: area.rad
-                })
+                },[])
         }).catch(engine.showError)
     }
     constructor(
@@ -74,7 +74,7 @@ export class Plants {
             //  positions: this.offset,
             shape: shapes,
             noises: noises,
-        });
+        },[]);
         terrainP.then(terrain => {
 
             const computePipeline = new ComputePipeline(engine.gpu!, "grass/getHeightAtCoordinates.comp.wgsl");

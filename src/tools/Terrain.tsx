@@ -98,7 +98,7 @@ export class TerrainTool extends MainNode {
 
     }
     static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number, number]) {
-        terrainWorker.message<ArrayBuffer, Transferable[]>(WorkerReturn.Promise, 'saveTexture', { buffer: arrayBuffer, size: size }, [arrayBuffer]);
+        terrainWorker.message<ArrayBuffer>(WorkerReturn.Promise, 'saveTexture', { buffer: arrayBuffer, size: size }, [arrayBuffer]);
     }
     //TERRAIN EDITING DISABLED
     private direction: 1 | 0 | -1 = 0;

@@ -51,7 +51,7 @@ abstract class MainWorker extends Worker2 {
     }
 }
 export class WorkerThread extends MainWorker {
-    message<T, U>(returntype: WorkerReturn, action: string, data: object, options?: U): Promise<T> {
+    message<T>(returntype: WorkerReturn, action: string, data: object, options: Transferable[]): Promise<T> {
         const toWorker: WMessage = { type: returntype, action: action, data: data };
         return new Promise((res, rej) => {
             toWorker.id = this.operations.push([res,rej]) - 1
@@ -60,7 +60,7 @@ export class WorkerThread extends MainWorker {
     }
 }
 export class ObjectWorkerThread extends MainWorker {
-    signal<U>(objectID: number, action: string, args?: unknown[], options?: U): void {
+    signal(objectID: number, action: string, options: Transferable[], args?: unknown[]): void {
         super.postMessage({
             action: action, data: {
                 objId: objectID,
@@ -68,8 +68,7 @@ export class ObjectWorkerThread extends MainWorker {
             }
         }, options);
     }
-    message<T>(objectID: number, action: string, args?: unknown[]): Promise<T>
-    message<T, U>(objectID: number, action: string, args?: unknown[], options?: U): Promise<T> {
+    message<T>(objectID: number, action: string, args?: unknown[], options?: Transferable[]): Promise<T> {
         const toWorker: WMessage = {
             action: action, data: {
                 objId: objectID,
@@ -77,8 +76,11 @@ export class ObjectWorkerThread extends MainWorker {
             }
         };
         return new Promise((res, rej) => {
-            toWorker.id = this.operations.push([res, rej]) - 1
-            super.postMessage(toWorker, options);
+            toWorker.id = this.operations.push([res, rej]) - 1;
+            if(options)
+                super.postMessage(toWorker, options)
+            else
+                super.postMessage(toWorker);
         })
     }
 }
