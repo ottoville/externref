@@ -80,7 +80,7 @@ export class ArcRotateCamera extends CameraController {
     #alpha = 0;
     #beta = 0;
     #radius = 10;
-    constructor(private camera: TerraCamera<PickableRenderPass>, canvas?: HTMLCanvasElement, initial = false) {
+    constructor(private camera: TerraCamera, canvas?: HTMLCanvasElement, initial = false) {
         super(canvas);
         if (initial && engine.DB) {
             engine.DB.transaction("save").objectStore("save").get(["camera", "ArchRotateCamera"]).onsuccess = evt => {

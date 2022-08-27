@@ -16,7 +16,7 @@ import type { Engine, } from "./engine.js";
 import { Uint16Vector2 } from "./Math.js";
 import { DepthRenderTarget } from "./GPU/RenderTargets/DepthRenderTarget.js";
 import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
-import { TerraCamera } from "TerraCamera.js";
+import { TerraCamera } from "./TerraCamera.js";
 declare const engine:Engine;
 
 

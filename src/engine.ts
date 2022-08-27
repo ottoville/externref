@@ -10,7 +10,6 @@ import { Projection } from "./GPU/Projection.js";
 import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
-import type { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
 import { closeDistance, closeDistanceSquared, DataNode, Ellipsoid } from "./DataNode.js";
 import type { CameraController } from "./controllers/CameraController.js";
 
@@ -195,7 +194,7 @@ export class Engine {
     updateLights = false;
     inputManager: CameraController | null = null
 
-    mainCamera?: TerraCamera<PickableRenderPass>;
+    mainCamera: TerraCamera
     memory: WebAssembly.Memory;
     GPUReady: Promise<GPU>;
     static async initEngine(
@@ -406,9 +405,14 @@ export class Engine {
         public showErrorError: (e: Error) => void,
         GPUDataSize: number,
     ) {
+        //@ts-ignore
+        globalThis.engine = this;
+
+        this.mainCamera = new TerraCamera(undefined, undefined, new Projection(undefined));
+
         if(canvas) {
             this.GPUReady=this.createGPU(GPUDataSize,gpu => {
-                this.mainCamera = new TerraCamera(gpu, gpu.renderPassScreen, new Projection(gpu));
+                this.mainCamera.initForGPU(gpu)
                 gpu.pickRenderPass.cameras.add(this.mainCamera);
                 this.mainCamera.attachControllerForCamera(new ArcRotateCamera(this.mainCamera, this.canvas, true))
                 //@ts-ignore
@@ -435,8 +439,6 @@ export class Engine {
         }
         this.physics = new Physics(this);
         this.memory = rust.memory;
-        //@ts-ignore
-        globalThis.engine = this;
 
         this.collider = new ColliderJS(rust);
 
