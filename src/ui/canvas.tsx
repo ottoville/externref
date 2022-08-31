@@ -34,6 +34,7 @@ import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
 //@ts-ignore
 import { RoundCuboid } from "../GPU/Meshes/RoundCuboid.js";
 import { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
+import { ArcRotateCamera } from "../controllers/ArcRotateCamera.js";
 
 declare const engine:Engine;
 class CanvasMesh extends MainNode {
@@ -80,7 +81,8 @@ export class Canvas extends TerraCompoment {
         this.progress = 15;
 
         const gpu = await terraEngine.GPUReady;
-        const waterCamera = new TerraCamera(gpu,gpu.renderPassWater, engine.mainCamera!.projection, engine.mainCamera);
+        const waterCamera = new TerraCamera(gpu.renderPassWater, engine.mainCamera);
+        waterCamera.initForGPU(gpu,engine.mainCamera!.projection!)
         waterCamera.beforeViewUpdate.add((position, direction) => {
             position[1] -= (position[1] - 3) * 2;
             direction[1] = -direction[1];
@@ -95,8 +97,18 @@ export class Canvas extends TerraCompoment {
 
             new Sea([terrascene]);
             //new testPlane(terrascene);
-
-            new Human({scenes: [terrascene], inputEnabled:false})
+            const archRotateController = new ArcRotateCamera(engine.mainCamera, this.#canvasElem, true);
+            engine.mainCamera.attachControllerForCamera(archRotateController);
+            const human = new Human({scenes: [terrascene], inputEnabled:false});
+            document.addEventListener('keypress', e => {
+                if(e.key === 'Tab') {
+                    if(engine.inputManager === human.inputManager) {
+                        engine.mainCamera?.attachControllerForCamera(human.inputManager)
+                    } else {
+                        engine.mainCamera.attachControllerForCamera(archRotateController);
+                    }
+                }
+            })
             const terrainInited = Terrain.loadFromTexture([terrascene]);
 
             const ready = terrainInited.then(ground => [ground] as const);

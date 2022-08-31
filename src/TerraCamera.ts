@@ -2,7 +2,7 @@
 
 import { GPUBufferUsage } from "./GPU.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
-import type { Projection } from "./GPU/Projection.js";
+import { Projection } from "./GPU/Projection.js";
 import type { Engine } from "./engine.js";
 import type { GPU } from "./gpu.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
@@ -42,8 +42,15 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
     readonly beforeViewUpdate: Set<(position: TerraVector3, direction: TerraVector3) => void> = new Set();
     #cameraController?:TerraCamera
     #inputController?:CameraController
-    initForGPU(gpu:GPU) {
+    projection?: Projection
+    private gpu?: GPU 
+    initForGPU(gpu:GPU, projection: Projection) {
+        this.#clusterArrayBuffer?.destroy();
+        this.#uniformBuffer?.destroy();
+        this.uniformBindGroup?.destroy();
+        this.updateViewBindGroup?.destroy();
         this.gpu=gpu;
+        this.projection = projection;
         this.#clusterArrayBuffer = Buffer.create(gpu, gpu.clusterSizeinBytes, [GPUBufferUsage.STORAGE, /*GPUBufferUsage.COPY_SRC*/], 'clusterArrayBuffer');
         this.#uniformBuffer = Buffer.create(gpu, this.#uniformBufferSize, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'uniformBuffer'); //Todo: set to private
         this.uniformBindGroup = gpu.uniformBindGroupLayoutWithTime.createBindGroup('uniformBindGroup', (bindGroup) =>
@@ -64,7 +71,7 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
             },
             { //TODO: Set to own group because shared by many cameras
                 binding: 4,
-                resource: this.projection.gpuBuffer!.getUniformBinding(bindGroup)
+                resource: projection.gpuBuffer.getUniformBinding(bindGroup)
             }
         ]);
         this.updateViewBindGroup = gpu.updateViewPipeline.createBindGroup(gpu.viewUniformsLayout,'updateViewBindGroup2',
@@ -82,10 +89,7 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
         gpu.projections.add(this.projection);
         gpu.cameras.push(this);
     }
-    constructor(private gpu: GPU | undefined, public renderPass: T | undefined, public projection: Projection, parent?: TerraCamera) {
-        if(gpu) {
-            this.initForGPU(gpu)
-        }
+    constructor(public renderPass: T | undefined, parent?: TerraCamera) {
         if(renderPass) {
             renderPass.cameras.add(this);
         }
@@ -146,7 +150,7 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
         },
         {
             binding: 1,
-            resource: this.projection.gpuBuffer!.getUniformBinding(bindGroup2)
+            resource: this.projection!.gpuBuffer.getUniformBinding(bindGroup2)
         }])
         passEncoder.setBindGroup(1, bindGroup.bindGroup);
         passEncoder.dispatchWorkgroups(...this.gpu!.CLUSTER_DISPATCH_SIZE);
@@ -206,9 +210,13 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
         this.viewArr[13] = -(this.viewArr[1] * this.#position[0] + this.viewArr[5] * this.#position[1] + this.viewArr[9] * this.#position[2])
         //z
         this.viewArr[14] = -(this.viewArr[2] * this.#position[0] + this.viewArr[6] * this.#position[1] + this.viewArr[10] * this.#position[2]);
-        this.viewArr.multiplyToRef(this.projection.projectionReversedZ, this.projectionViewArr)
-        this.projectionViewInvertedIsDirty = true;
+        if(this.projection) {
+            this.viewArr.multiplyToRef(this.projection.projectionReversedZ, this.projectionViewArr)
+            console.log('multiply projectionReversedZ')
+        }
+            this.projectionViewInvertedIsDirty = true;
         if(this.renderPass && this.gpu) {
+            console.log('updateView')
             const tempBuffer = Buffer.create(this.gpu,this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], 'camera_tempBuffer', b => {
                 this.gpu!.tempGPUBuffers.push(b);
                 new Float32Array(b.getMappedRange()).set(this.#viewAndProjection);

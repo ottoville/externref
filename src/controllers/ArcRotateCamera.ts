@@ -1,5 +1,4 @@
-﻿import type { PickableRenderPass } from "../GPU/RenderPasses/PickableRenderPass.js";
-import type { Engine } from "../engine.js";
+﻿import type { Engine } from "../engine.js";
 import { TerraMatrix, TerraVector3 } from "../Math.js";
 import type { TerraCamera } from "../TerraCamera.js";
 import { CameraController } from "./CameraController.js";

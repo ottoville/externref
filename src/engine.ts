@@ -414,7 +414,7 @@ export class Engine {
             this.GPUReady=this.createGPU(GPUDataSize,gpu => {
                 this.mainCamera.initForGPU(gpu)
                 gpu.pickRenderPass.cameras.add(this.mainCamera);
-                this.mainCamera.attachControllerForCamera(new ArcRotateCamera(this.mainCamera, this.canvas, true))
+                
                 //@ts-ignore
                 window.printRenderTarget = () => {
                     gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.print_bitmap()
