@@ -194,7 +194,7 @@ export class Engine {
     updateLights = false;
     inputManager: CameraController | null = null
 
-    mainCamera: TerraCamera
+    mainCamera: TerraCamera;
     memory: WebAssembly.Memory;
     GPUReady: Promise<GPU>;
     static async initEngine(
@@ -407,14 +407,12 @@ export class Engine {
     ) {
         //@ts-ignore
         globalThis.engine = this;
-
-        this.mainCamera = new TerraCamera(undefined, undefined, new Projection(undefined));
+        this.mainCamera = new TerraCamera();
 
         if(canvas) {
             this.GPUReady=this.createGPU(GPUDataSize,gpu => {
-                this.mainCamera.initForGPU(gpu)
+                this.mainCamera.initForGPU(gpu.renderPassScreen, gpu, new Projection(gpu));
                 gpu.pickRenderPass.cameras.add(this.mainCamera);
-                
                 //@ts-ignore
                 window.printRenderTarget = () => {
                     gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.print_bitmap()

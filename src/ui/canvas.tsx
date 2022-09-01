@@ -81,8 +81,8 @@ export class Canvas extends TerraCompoment {
         this.progress = 15;
 
         const gpu = await terraEngine.GPUReady;
-        const waterCamera = new TerraCamera(gpu.renderPassWater, engine.mainCamera);
-        waterCamera.initForGPU(gpu,engine.mainCamera!.projection!)
+        const waterCamera = new TerraCamera(engine.mainCamera);
+        waterCamera.initForGPU(gpu.renderPassWater, gpu,engine.mainCamera.projection!)
         waterCamera.beforeViewUpdate.add((position, direction) => {
             position[1] -= (position[1] - 3) * 2;
             direction[1] = -direction[1];
@@ -91,7 +91,7 @@ export class Canvas extends TerraCompoment {
       
         this.progress = 19;
 
-        const mainScene = new Scene('main', gpu, [engine.mainCamera!, waterCamera], (terrascene) => {
+        const mainScene = new Scene('main', gpu, [engine.mainCamera, waterCamera], (terrascene) => {
             new Sun2([terrascene]);
             // Initial scene objects here
 
@@ -99,13 +99,13 @@ export class Canvas extends TerraCompoment {
             //new testPlane(terrascene);
             const archRotateController = new ArcRotateCamera(engine.mainCamera, this.#canvasElem, true);
             engine.mainCamera.attachControllerForCamera(archRotateController);
-            const human = new Human({scenes: [terrascene], inputEnabled:false});
-            document.addEventListener('keypress', e => {
+            const human = new Human({scenes: [terrascene], inputEnabled:false})
+            document.addEventListener('keydown', e => {
                 if(e.key === 'Tab') {
                     if(engine.inputManager === human.inputManager) {
-                        engine.mainCamera?.attachControllerForCamera(human.inputManager)
-                    } else {
                         engine.mainCamera.attachControllerForCamera(archRotateController);
+                    } else {
+                        engine.mainCamera.attachControllerForCamera(human.inputManager)
                     }
                 }
             })

@@ -138,7 +138,7 @@ export class GPU {
         // eslint-disable-next-line promise/catch-or-return
         newGPU.then(gpu => {
             this.cameras.forEach(camera => {
-                camera.initForGPU(gpu,camera.projection!);
+                camera.initForGPU(gpu.renderPassScreen, gpu,camera.projection!);
             })
         })
         this.ro.disconnect();

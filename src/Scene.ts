@@ -12,10 +12,6 @@ export class Scene {
     constructor(public name: string, public gpu: GPU, public TerraCameras: [TerraCamera] | TerraCamera[], onRenderStart: (scene: Scene) => Promise<readonly [Terrain]> | undefined) {
         sceneID<<=1;
         engine.scenes.set(name, this);
-        TerraCameras.forEach(camera => {
-            camera.renderPass?.scenes.add(this);
-        })
-
         const groundAndSea = onRenderStart(this);
         this.ready = groundAndSea;
     }

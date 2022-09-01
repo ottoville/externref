@@ -2,7 +2,7 @@
 
 import { GPUBufferUsage } from "./GPU.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
-import { Projection } from "./GPU/Projection.js";
+import type { Projection } from "./GPU/Projection.js";
 import type { Engine } from "./engine.js";
 import type { GPU } from "./gpu.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
@@ -12,7 +12,7 @@ import type { CameraController } from "./controllers/CameraController.js";
 declare const engine:Engine;
 
 export type CameraControl = { updatePosition(cb: (position: TerraVector3) => void): void; updateDirection(cb: (direction: TerraVector3) => void): void; }
-export class TerraCamera<T extends RenderPass = RenderPass> {
+export class TerraCamera {
     readonly #childCameras: Set<CameraControl> = new Set();
 
     #clusterArrayBuffer?: BindStorageBuffer/* & CopySrcBuffer*/
@@ -44,7 +44,10 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
     #inputController?:CameraController
     projection?: Projection
     private gpu?: GPU 
-    initForGPU(gpu:GPU, projection: Projection) {
+    initForGPU(renderPass: RenderPass | undefined, gpu:GPU, projection: Projection) {
+        if(renderPass) {
+            renderPass.cameras.add(this);
+        }
         this.#clusterArrayBuffer?.destroy();
         this.#uniformBuffer?.destroy();
         this.uniformBindGroup?.destroy();
@@ -89,10 +92,7 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
         gpu.projections.add(this.projection);
         gpu.cameras.push(this);
     }
-    constructor(public renderPass: T | undefined, parent?: TerraCamera) {
-        if(renderPass) {
-            renderPass.cameras.add(this);
-        }
+    constructor(parent?: TerraCamera) {
         this.viewArr[15] = 1;
 
         engine.cameras.add(this);
@@ -212,11 +212,9 @@ export class TerraCamera<T extends RenderPass = RenderPass> {
         this.viewArr[14] = -(this.viewArr[2] * this.#position[0] + this.viewArr[6] * this.#position[1] + this.viewArr[10] * this.#position[2]);
         if(this.projection) {
             this.viewArr.multiplyToRef(this.projection.projectionReversedZ, this.projectionViewArr)
-            console.log('multiply projectionReversedZ')
         }
             this.projectionViewInvertedIsDirty = true;
-        if(this.renderPass && this.gpu) {
-            console.log('updateView')
+        if(this.gpu) {
             const tempBuffer = Buffer.create(this.gpu,this.#viewAndProjection.byteLength, [GPUBufferUsage.COPY_SRC], 'camera_tempBuffer', b => {
                 this.gpu!.tempGPUBuffers.push(b);
                 new Float32Array(b.getMappedRange()).set(this.#viewAndProjection);

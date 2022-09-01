@@ -34,7 +34,7 @@ export class ArcRotateCamera extends CameraController {
                 beta: this.#beta,
                 radius: this.#radius,
                 target: this.#target,
-                position: new Float32Array(engine.mainCamera?.position as unknown as number[]) as { 0: number, 1: number, 2: number } & Float32Array
+                position: new Float32Array(engine.mainCamera.position as unknown as number[]) as { 0: number, 1: number, 2: number } & Float32Array
             } as serialized
         });
         request.onsuccess = () => {

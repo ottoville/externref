@@ -27,7 +27,6 @@ export class RenderPass<U extends {
     readonly cameras: Set<TerraCamera> = new Set();
     BindGroupCanvas?: () => BindGroup;
 
-    readonly scenes: Set<Scene> = new Set();
     readonly bundles: RenderBundleEncoder[] = [];
     readonly renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant2> = new Map();
     readonly sizeBindGroup: () => BindGroup;
@@ -193,10 +192,14 @@ export class RenderPass<U extends {
             drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder,renderBundleEncoder, this.rootLayout, this.BindGroupCanvas(), 0)
         } else {
             GPUrenderBundleEncoder.setBindGroup(0, this.sizeBindGroup().getForRenderPass(renderBundleEncoder));
-            this.cameras.forEach(camera => {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder,renderBundleEncoder, this.rootLayout, camera.uniformBindGroup!, 1)
-            })
+            if(this.cameras.size === 0) {
+                console.warn('Renderpass has no cameras, cannot render anything')
+            } else {
+                this.cameras.forEach(camera => {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder,renderBundleEncoder, this.rootLayout, camera.uniformBindGroup!, 1)
+                })
+            }
         }
         //console.log('Meshes draw for',this.GPURenderBundleEncoderDescriptor.label,drawedMeshes)
     })
