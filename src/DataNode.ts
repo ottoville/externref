@@ -41,7 +41,10 @@ export const closeDistance = 0.0022
 export const closeDistanceSquared = closeDistance*closeDistance
 export abstract class DataNode extends MainNode {
     // TODO: collide or uncollide with ANY mesh will change this value, so its lot of broken and does not indicate if mesh is really colliding now.
-    colliding = false;
+    colliding_physics = false;
+    //Used for character
+    colliding_character=false;
+
     #vectorsVec4: number[] = [];
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     checkCollide(_velocityPerDelta:[number,number,number]):TerraVector3 {

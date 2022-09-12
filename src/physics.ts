@@ -125,7 +125,7 @@ export class Physics {
                     wantedVelocityPerDelta[1],
                     wantedVelocityPerDelta[2]
                 ]);
-                if (tickable.is_colliding) {
+                if (tickable.colliding_character) {
                     tickable.onCollideCharacter(false)
                     const newVelocityDelta:[number,number,number] = [
                         (finalPosition[0] - translation[0]),
@@ -133,16 +133,15 @@ export class Physics {
                         (finalPosition[2] - translation[2])
                     ]
                     if(newVelocityDelta[0] !== 0 || newVelocityDelta[1] !== 0 || newVelocityDelta[2] !== 0) {
-                        let friction=false;
                         if(tickable.last_velocity[0] === 0 || tickable.last_velocity[1] === 0 || tickable.last_velocity[2] === 0) {
                             // Apply friction when object is not moving
-                            friction=true;
+                           // friction=true;
                         }
                         tickable.last_velocity[0] = newVelocityDelta[0] * delta_multiplier;
                         tickable.last_velocity[1] = newVelocityDelta[1] * delta_multiplier;
                         tickable.last_velocity[2] = newVelocityDelta[2] * delta_multiplier;
                         // eslint-disable-next-line no-constant-condition
-                        if(friction) {
+                        /*if(friction) {
                             if(tickable.speed < tickable.grip*1.8) {
                                 console.log('stop')
                                 //Friction prevents object from start moving.
@@ -153,13 +152,14 @@ export class Physics {
                                 newVelocityDelta[1]=0;
                                 newVelocityDelta[2]=0;
                             }
-                        }
+                        }*/
                     }
                     else {
                         tickable.last_velocity[0] = 0;
                         tickable.last_velocity[1] = 0;
                         tickable.last_velocity[2] = 0;
                     }
+                    // Calculate correct acceleration so new position can be forced throught velocity
                     tickable.acceleration2[0] = (newVelocityDelta[0]-velocity[0]*dt)/dt_half_sqrt;
                     tickable.acceleration2[1] = (newVelocityDelta[1]-velocity[1]*dt)/dt_half_sqrt;
                     tickable.acceleration2[2] = (newVelocityDelta[2]-velocity[2]*dt)/dt_half_sqrt;
@@ -167,9 +167,9 @@ export class Physics {
                 /*
                     TODO: friction is now set higher in x and z because human cannot brake otherwise.
                 */
-                    motionFrictionAcceleration[0] = tickable.last_velocity[0] - tickable.last_velocity[0] //* tickable.grip,
-                    motionFrictionAcceleration[1] = tickable.last_velocity[1] - tickable.last_velocity[1] //* tickable.grip,
-                    motionFrictionAcceleration[2] = tickable.last_velocity[2] - tickable.last_velocity[2] //* tickable.grip
+                    motionFrictionAcceleration[0] = -tickable.last_velocity[0]*tickable.grip,
+                    motionFrictionAcceleration[1] = -tickable.last_velocity[1]*tickable.grip,
+                    motionFrictionAcceleration[2] = -tickable.last_velocity[2]*tickable.grip;
                 } else {
                     tickable.last_velocity[0] = wantedVelocityPerDelta[0] * delta_multiplier;
                     tickable.last_velocity[1] = wantedVelocityPerDelta[1] * delta_multiplier;
@@ -181,22 +181,22 @@ export class Physics {
                     finalPosition[2]
                 ];
             }
-            const old_acceleration=tmp_vector;
-            old_acceleration[0]=tickable.acceleration2[0];
-            old_acceleration[1]=tickable.acceleration2[1];
-            old_acceleration[2]=tickable.acceleration2[2];
+            tickable.last_acceleration[0]=tickable.acceleration2[0];
+            tickable.last_acceleration[1]=tickable.acceleration2[1];
+            tickable.last_acceleration[2]=tickable.acceleration2[2];
 
-            tickable.acceleration2[0] = -motionFrictionAcceleration[0] + tickable.force[0];
-            tickable.acceleration2[1] = -motionFrictionAcceleration[1] + tickable.force[1] -(tickable.hasGravity?GRAVITY:0);
-            tickable.acceleration2[2] = -motionFrictionAcceleration[2] + tickable.force[2];
-            tickable.force[0]=0;
-            tickable.force[1]=0;
-            tickable.force[2]=0;
+            tickable.acceleration2[0] = motionFrictionAcceleration[0] + tickable.impulse[0];
+            tickable.acceleration2[1] = motionFrictionAcceleration[1] + tickable.impulse[1] -(tickable.hasGravity?GRAVITY:0);
+            tickable.acceleration2[2] = motionFrictionAcceleration[2] + tickable.impulse[2];
+
+            tickable.impulse[0]=0;
+            tickable.impulse[1]=0;
+            tickable.impulse[2]=0;
 
             tickable.velocity=[
-                velocity[0] + (old_acceleration[0]+tickable.acceleration2[0])*dt_half,
-                velocity[1] + (old_acceleration[1]+tickable.acceleration2[1])*dt_half,
-                velocity[2] + (old_acceleration[2]+tickable.acceleration2[2])*dt_half,
+                velocity[0] + (tickable.last_acceleration[0]+tickable.acceleration2[0])*dt_half,
+                velocity[1] + (tickable.last_acceleration[1]+tickable.acceleration2[1])*dt_half,
+                velocity[2] + (tickable.last_acceleration[2]+tickable.acceleration2[2])*dt_half,
             ];
             //TODO: Update only if neeeded
             tickable.update_dynamic_buffer();

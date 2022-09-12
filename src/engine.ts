@@ -1,6 +1,5 @@
 ﻿import { Physics } from "./physics.js";
 import { GPU } from "./GPU.js";
-import { MainNode } from "./MainNode.js";
 import { ColliderJS } from "./Collider.js";
 import type { Scene } from "./Scene.js";
 import type { TerraVector3 } from "./Math.js";
@@ -261,7 +260,7 @@ export class Engine {
                     const mesh = DataNode.Meshes.get(mesh_id);
                     if (mesh) {
                         DataNode.Meshes.get(mesh_id)?.onCollideCharacter(started);
-                        mesh.colliding = started;
+                        mesh.colliding_physics = started;
                     }
                 },
                 mesh_on_physic_tick(mesh_id: number) {
@@ -367,6 +366,7 @@ export class Engine {
             if (!adapter2) {
                 throw new Error('Cannot get adapter');
             }
+            console.log('got adapter, getting device')
             try {
                 device = await adapter2!.requestDevice({label:'device'+(deviceId++)});
             } catch (ee) {
@@ -488,8 +488,8 @@ export class Engine {
                 return this.#destinationPoint;
             }
             this.collider.didCollide = true;
-            if (sphere instanceof MainNode)
-                sphere.is_colliding = true;
+            if (sphere instanceof DataNode)
+                sphere.colliding_character = true;
             const intersectionPoint = this.collider.intersectionPointWasm;
             //console.log('collision found')
             if (scaledVelocity[0] !== 0 || scaledVelocity[1] !== 0 || scaledVelocity[2] !== 0) {
@@ -589,8 +589,8 @@ export class Engine {
         return scaledPosition;
     }
     collideWithWorld(sphere: Ellipsoid): void {
-        if (sphere instanceof MainNode)
-            sphere.is_colliding = false;
+        if (sphere instanceof DataNode)
+            sphere.colliding_character = false;
         //TODO: Call only when camera position change
         this.collider.finalPosition.set(this.#getFinalPosition(sphere));
         this.collider.finalPosition[0] *= sphere.radius[0]

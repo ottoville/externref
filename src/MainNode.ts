@@ -8,16 +8,17 @@ export abstract class MainNode {
     acceleration2: [number, number, number]=[0,0,0];
     //Actual velocity that occured last tick
     last_velocity: [number, number, number]=[0,0,0];
+    last_acceleration:[number, number, number]=[0,0,0];
     get speed() {
-        return Math.sqrt(this.last_velocity[0]*this.last_velocity[0]+this.last_velocity[1]*this.last_velocity[1]+this.last_velocity[2]*this.last_velocity[2])
+        return Math.sqrt(this.velocity[0]*this.velocity[0]+this.velocity[1]*this.velocity[1]+this.velocity[2]*this.velocity[2])
     }
-    
+    get speedSquared() {
+        return this.velocity[0]*this.velocity[0]+this.velocity[1]*this.velocity[1]+this.velocity[2]*this.velocity[2];
+    }
     //coefficient of friction
-    grip=0;
-    // TODO force per ms?
-    force: [number, number, number]=[0,0,0];
+    grip=1;
+    impulse: [number, number, number]=[0,0,0];
 
-    is_colliding=false;
     set color(data:[number,number,number,number]) {
         engine.rust.set_color(this.ptr,data[0],data[1],data[2],data[3])
     }
