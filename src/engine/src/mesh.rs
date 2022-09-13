@@ -623,11 +623,7 @@ impl Mesh {
                     Some(rigid_body) => 
                     {
                         rigid_body.set_translation(vector![gpu_mesh.transformation.w.x, gpu_mesh.transformation.w.y, gpu_mesh.transformation.w.z], true);
-                       /* let (euler_x, euler_y, euler_z) = Rotation::from_quaternion(nalgebra::Quaternion::new(self.rotation.w, self.rotation.x, self.rotation.y, self.rotation.z)).euler_angles();
-                        let avec = AngVector::new(euler_x, euler_y, euler_z);
-                      rigid_body.set_rotation(avec, true);*/
-                      
-                        rigid_body.set_quaternation(nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(self.rotation.w, self.rotation.i, self.rotation.j, self.rotation.k)), true)
+                        rigid_body.set_rotation(nalgebra::Unit::from_quaternion(nalgebra::Quaternion::new(self.rotation.w, self.rotation.i, self.rotation.j, self.rotation.k)), true)
 
                      },
                     None    => panic!("Rigid body not found"),
