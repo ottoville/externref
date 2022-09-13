@@ -106,49 +106,49 @@ export class Human extends Box {
                 const angle = Math.atan2(-direction[2], -direction[0]) + Math.PI * 0.25;
                 const angle2 = Math.atan2(this.last_velocity[2], this.last_velocity[0]);
                 if (Math.abs(angle2 - angle) > 0.1) {
-                    const verticalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
-                    this.velocity = [Math.cos(angle) * verticalSpeed, this.velocity[1], Math.sin(angle) * verticalSpeed];
+                    const horizontalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
+                    this.velocity = [Math.cos(angle) * horizontalSpeed, this.velocity[1], Math.sin(angle) * horizontalSpeed];
                 }
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP_LEFT) === ARROW_KEYS.UP_LEFT) {
                 const angle = Math.atan2(-direction[2], -direction[0]) - Math.PI * 0.25;
                 const angle2 = Math.atan2(this.last_velocity[2], this.last_velocity[0]);
                 if (Math.abs(angle2 - angle) > 0.1) {
-                    const verticalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
-                    this.velocity = [Math.cos(angle) * verticalSpeed, this.velocity[1], Math.sin(angle) * verticalSpeed];
+                    const horizontalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
+                    this.velocity = [Math.cos(angle) * horizontalSpeed, this.velocity[1], Math.sin(angle) * horizontalSpeed];
                 }
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN_RIGHT) === ARROW_KEYS.DOWN_RIGHT) {
                 const angle = Math.atan2(-direction[2], -direction[0]) + Math.PI * 0.75;
                 const angle2 = Math.atan2(this.last_velocity[2], this.last_velocity[0]);
                 if (Math.abs(angle2 - angle) > 0.1) {
-                    const verticalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
-                    this.velocity = [Math.cos(angle) * verticalSpeed, this.velocity[1], Math.sin(angle) * verticalSpeed];
+                    const horizontalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
+                    this.velocity = [Math.cos(angle) * horizontalSpeed, this.velocity[1], Math.sin(angle) * horizontalSpeed];
                 }
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN_LEFT) === ARROW_KEYS.DOWN_LEFT) {
                 const angle = Math.atan2(-direction[2], -direction[0]) - Math.PI * 0.75;
                 const angle2 = Math.atan2(this.last_velocity[2], this.last_velocity[0]);
                 if (Math.abs(angle2 - angle) > 0.1) {
-                    const verticalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
-                    this.velocity = [Math.cos(angle) * verticalSpeed, this.velocity[1], Math.sin(angle) * verticalSpeed];
+                    const horizontalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
+                    this.velocity = [Math.cos(angle) * horizontalSpeed, this.velocity[1], Math.sin(angle) * horizontalSpeed];
                 }
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.UP) === ARROW_KEYS.UP) {
-                const verticalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
-                this.velocity = [-direction[0] * verticalSpeed, this.velocity[1], -direction[2] * verticalSpeed]
+                const horizontalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
+                this.velocity = [-direction[0] * horizontalSpeed, this.velocity[1], -direction[2] * horizontalSpeed]
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.DOWN) === ARROW_KEYS.DOWN) {
-                const verticalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
-                this.velocity = [direction[0] * verticalSpeed, this.velocity[1], direction[2] * verticalSpeed]
+                const horizontalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
+                this.velocity = [direction[0] * horizontalSpeed, this.velocity[1], direction[2] * horizontalSpeed]
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.LEFT) === ARROW_KEYS.LEFT) {
-                const verticalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
-                this.velocity = [-direction[2] * verticalSpeed, this.velocity[1], direction[0] * verticalSpeed]
+                const horizontalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
+                this.velocity = [-direction[2] * horizontalSpeed, this.velocity[1], direction[0] * horizontalSpeed]
             }
             else if ((this.inputManager.arrowKeysDown & ARROW_KEYS.RIGHT) === ARROW_KEYS.RIGHT) {
-                const verticalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
-                this.velocity = [direction[2] * verticalSpeed, this.velocity[1], -direction[0] * verticalSpeed]
+                const horizontalSpeed = Math.hypot(this.velocity[0], this.velocity[2]);
+                this.velocity = [direction[2] * horizontalSpeed, this.velocity[1], -direction[0] * horizontalSpeed]
             }
         }
         this.inputManager.cameraControl?.updatePosition(position => position.set(this.translation))
