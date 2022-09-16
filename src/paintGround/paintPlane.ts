@@ -9,7 +9,7 @@ import type { GPU } from "../GPU.js";
 
 import { TerraVector2 } from "../Math.js";
 import { DrawableIndexed } from "../GPU/Drawable.js";
-import type { IndexedNode } from "../DataNode.js";
+import type { IndexedNode } from "../nodes/DataNode.js";
 import type { Engine } from "../engine.js";
 declare const engine:Engine;
 

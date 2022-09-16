@@ -1,5 +1,5 @@
 import type { CameraControl } from "../TerraCamera.js";
-import { closeDistance, Ellipsoid } from "../DataNode.js";
+import { closeDistance, Ellipsoid } from "../nodes/DataNode.js";
 import { TerraMatrix } from "../Math.js";
 
 export abstract class CameraController implements Ellipsoid {

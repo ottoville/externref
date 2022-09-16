@@ -550,23 +550,17 @@ impl Mesh {
         return ptr;
     }
     pub fn get_geometry(&self) -> &Geometry {
-        match &self.geometry {
-            Some(g) => {
-                g
-            }
-            None => {
-                panic!("Mesh has no geometry")
-            }
+        if let Some(g) = &self.geometry {
+            g
+        } else {
+            panic!("Mesh has no geometry")
         }
     }
     pub fn get_geometry_mut(&mut self) -> &mut Geometry {
-        match &mut self.geometry {
-            Some(g) => {
-                g
-            }
-            None => {
-                panic!("Mesh has no geometry")
-            }
+        if let Some(g) = &mut self.geometry {
+            g
+        } else {
+            panic!("Mesh has no geometry")
         }
     }
     pub unsafe fn set_translation(&mut self, x:f32, y:f32, z:f32) {

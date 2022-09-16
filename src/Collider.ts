@@ -1,9 +1,9 @@
 ﻿// Implementation of the "Improved Collision detection and Response" algorithm proposed by Kasper Fauerby
 // https://www.peroxide.dk/papers/collision/collision.pdf
 
-import type { Ellipsoid } from "./DataNode.js";
+import type { Ellipsoid } from "./nodes/DataNode.js";
 import type { Engine, rustWasm, rust_pointer } from "./engine.js";
-import { TerraVector3, Triangle } from "./Math.js";
+import { TerraVector3, TerraVector4, Triangle } from "./Math.js";
 declare const engine:Engine;
 
 // TODO: change to readonlyTerraVector
@@ -19,7 +19,6 @@ export class ColliderJS {
     #velocitySquaredLength!: number;
     finalPosition: TerraVector3;
     collider_ptr: rust_pointer<"legacy_collider">;
-    collidedPointInTriangle: Triangle | undefined;
     didCollide = false;
     getLowestRoot (a: number, b: number, c: number, maxR: number) {
         //TODO: This will give false negative if determinant is zero
@@ -83,6 +82,18 @@ export class ColliderJS {
     get intersectionPointWasm() {
         return new Float32Array(engine.memory.buffer, engine.rust.intersection_point_pointer(this.collider_ptr), 4) as TerraVector3;
     }
+    get collided_point_in_triangle() {
+        const trianglePtr=new Uint32Array(engine.memory.buffer, engine.rust.collided_point_in_triangle_pointer(this.collider_ptr),1)[0];
+        if(trianglePtr===0)
+            return undefined
+        return new Float32Array(engine.memory.buffer, trianglePtr, 4) as TerraVector4;
+    }
+    set collided_point_in_triangle(val:TerraVector4|undefined) {
+        if(!val)
+            new Uint32Array(engine.memory.buffer, engine.rust.collided_point_in_triangle_pointer(this.collider_ptr),1)[0]=0;
+        else
+            new Uint32Array(engine.memory.buffer, engine.rust.collided_point_in_triangle_pointer(this.collider_ptr),1)[0]=val.byteOffset;
+    }
     set nearest_distance_squared(val:number) {
         engine.rust.set_nearest_distance_squared(this.collider_ptr, val);
     }
@@ -120,7 +131,7 @@ export class ColliderJS {
     // Methods
     /** @hidden */
     public _initialize(source: TerraVector3, dir: TerraVector3,e: number, sphere: Ellipsoid): void {
-        this.collidedPointInTriangle=undefined;
+        this.collided_point_in_triangle=undefined;
         this.nearest_distance_squared=9999999;
         //this.#velocity = dir;
         const scaledVelocity=this.scaledVelocity;
@@ -254,7 +265,7 @@ export class ColliderJS {
                 t0 = 0;
             }
         }
-        let collidedPointInTriangle:Triangle|undefined;
+        let collidedPointInTriangle = false;
         if(!embeddedInPlane) {
             this.#planeIntersectionPoint[0] = scaledPosition[0] - triangle.planeCollider[0] + scaledVelocity[0] * t0;
             this.#planeIntersectionPoint[1] = scaledPosition[1] - triangle.planeCollider[1] + scaledVelocity[1] * t0;
@@ -263,8 +274,8 @@ export class ColliderJS {
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             // this._velocity.scaleToRef(t0, this._tempVector);
             //this._planeIntersectionPoint.addInPlace(this._tempVector);
-            if (this._checkPointInTriangle(this.#planeIntersectionPoint, triangle)) {
-                collidedPointInTriangle=triangle;
+            collidedPointInTriangle=this._checkPointInTriangle(this.#planeIntersectionPoint, triangle);
+            if (collidedPointInTriangle) {
                 found = true;
                 t = t0;
                 this.#collisionPoint[0] = this.#planeIntersectionPoint[0];
@@ -402,7 +413,7 @@ export class ColliderJS {
                 this.collision_resolved=0;
                 //console.log('set collisionNotFound 0', this.collisionNotFound.getUint32(0,true))
                 this.collidedMesh = "hostMesh";
-                this.collidedPointInTriangle=collidedPointInTriangle;
+                this.collided_point_in_triangle=collidedPointInTriangle?triangle.planeCollider:undefined;
             }
         }
     }

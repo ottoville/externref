@@ -2,7 +2,7 @@
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
 import { MainNode } from "../MainNode.js";
 import { GPU, GPUBufferUsage } from "../GPU.js"
-import type { DataNode, IndexedNode } from "../DataNode.js";
+import type { DataNode, IndexedNode } from "../nodes/DataNode.js";
 import { NormalsMesh } from "./Meshes/helpers/normals.js";
 import { BoundingBoxMesh } from "./Meshes/helpers/boundingbox.js";
 import { Buffer, IndexBuffer, IndirectBuffer, VertexBuffer } from "./Buffer.js";

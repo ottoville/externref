@@ -9,7 +9,7 @@ import { Projection } from "./GPU/Projection.js";
 import { ArcRotateCamera } from "./controllers/ArcRotateCamera.js";
 //@ts-ignore
 import { MeshCamera } from "./controllers/MeshCamera.js";
-import { closeDistance, closeDistanceSquared, DataNode, Ellipsoid } from "./DataNode.js";
+import { closeDistance, closeDistanceSquared, DataNode, Ellipsoid } from "./nodes/DataNode.js";
 import type { CameraController } from "./controllers/CameraController.js";
 
 function createError(e: unknown) {
@@ -45,6 +45,7 @@ export type rustWasm = {
     scaled_position_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     scaled_velocity_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     collided_mesh_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
+    collided_point_in_triangle_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     set_speed(collider_ptr: rust_pointer<"legacy_collider">, speed: number): void
     basepoint_world_pointer(collider_ptr: rust_pointer<"legacy_collider">): number
     renderloop(): void,
@@ -86,7 +87,7 @@ export type rustWasm = {
     positions_count(mesh: rust_pointer<"mesh">): number,
     id(mesh: rust_pointer<"mesh">): number,
     strip(mesh: rust_pointer<"mesh">): number,
-    collider_planes_parallel_pointer(mesh: rust_pointer<"mesh">): number,
+    collider_planes_parallel_pointer(mesh: rust_pointer<"mesh">): rust_pointer<"collider_planes_parallel_pointer">,
     gpu_pointer(mesh: rust_pointer<"mesh">): number,
     translation_pointer(mesh: rust_pointer<"mesh">): number,
     velocity_pointer(mesh: rust_pointer<"mesh">): number,
@@ -99,7 +100,7 @@ export type rustWasm = {
     set_color(mesh: rust_pointer<"mesh">, d0: number, d1: number, d2: number, d3: number): void,
     set_ambient(mesh: rust_pointer<"mesh">, r: number, g: number, b: number): void
     set_shadow(mesh: rust_pointer<"mesh">, shadow: number): void
-    collider_faces_pointer(mesh: rust_pointer<"mesh">): number,
+    collider_faces_pointer(mesh: rust_pointer<"mesh">): rust_pointer<'collider_faces'>,
     set_scenes(mesh: rust_pointer<"mesh">, scenes: number): void,
     update_scale_and_rotation(mesh: rust_pointer<"mesh">, x: number, y: number, z: number, rx: number, ry: number, rz: number, rw: number): void
     faces_pointer(mesh: rust_pointer<"mesh">): number,
@@ -161,10 +162,10 @@ interface EarthDatabase extends IDBDatabase {
     createObjectStore(name: ObjectStore, optionalParameters?: IDBObjectStoreParameters): IDBObjectStore;
 }
 export interface ColliderWasm {
-    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number, velocity: number, basePoint: number): void;
+    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number, velocity: number, basePoint: number, collidedPointInTrianglePointer:number): void;
     memory: WebAssembly.Memory
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
-    testTriangles: (position: number, positionParallel: number, length: number, meshID: number) => void
+    testTriangles: (position: rust_pointer<"collider_faces">, positionParallel: rust_pointer<"collider_planes_parallel_pointer">, length: number, meshID: number) => void
     _initialize: () => void
 }
 let deviceId=0;
@@ -448,7 +449,8 @@ export class Engine {
             engine.rust.nearest_distance_squared_pointer(this.collider.collider_ptr),
             engine.rust.collided_mesh_pointer(this.collider.collider_ptr),
             engine.rust.scaled_velocity_pointer(this.collider.collider_ptr),
-            engine.rust.scaled_position_pointer(this.collider.collider_ptr))
+            engine.rust.scaled_position_pointer(this.collider.collider_ptr),
+            engine.rust.collided_point_in_triangle_pointer(this.collider.collider_ptr))
 
     }
     #getFinalPosition(sphere: Ellipsoid): [number, number, number] | TerraVector3 {
@@ -507,11 +509,13 @@ export class Engine {
                 scaledPosition[2] += scaledVelocity[2];
 
                 //pos.subtractToRef(this.intersectionPoint, this._slidePlaneNormal);
-                if (this.collider.collidedPointInTriangle) {
+
+                if (this.collider.collided_point_in_triangle) {
                     //TODO: this does not work on ellipsoid space.
-                    this.collider._slidePlaneNormal[0] = this.collider.collidedPointInTriangle.planeCollider[0];
-                    this.collider._slidePlaneNormal[1] = this.collider.collidedPointInTriangle.planeCollider[1];
-                    this.collider._slidePlaneNormal[2] = this.collider.collidedPointInTriangle.planeCollider[2];
+                    this.collider._slidePlaneNormal[0] = this.collider.collided_point_in_triangle[0];
+                    this.collider._slidePlaneNormal[1] = this.collider.collided_point_in_triangle[1];
+                    this.collider._slidePlaneNormal[2] = this.collider.collided_point_in_triangle[2];
+
                 } else {
                     this.collider._slidePlaneNormal[0] = scaledPosition[0] - intersectionPoint[0];
                     this.collider._slidePlaneNormal[1] = scaledPosition[1] - intersectionPoint[1];

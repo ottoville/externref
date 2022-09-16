@@ -3,7 +3,7 @@ import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.j
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
 import { MainNode } from "../MainNode.js";
 import type { GPU } from "../GPU.js";
-import type { IndexedNode } from "../DataNode.js";
+import type { IndexedNode } from "../nodes/DataNode.js";
 import type { IndexBuffer, IndirectBuffer } from "./Buffer.js";
 import type shaders from "../shaders.json";
 

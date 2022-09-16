@@ -1,4 +1,4 @@
-﻿import { BoundableNodeSimple } from "../../DataNode.js";
+﻿import { BoundableNodeSimple } from "../../nodes/BoundableNodeSimple.js";
 import type { Scene } from "../../Scene.js";
 import type { DrawableSimple } from "../Drawable.js";
 import { Engine } from "../../engine.js";

@@ -1,4 +1,4 @@
-﻿import { BoundableNodeIndexed } from "../../DataNode.js";
+﻿import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
 import type { Scene } from "../../Scene.js";
 import type { DrawableIndexed } from "../Drawable.js";
 import type { Engine, rust_pointer } from "../../engine.js";

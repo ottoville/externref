@@ -8,6 +8,7 @@ pub struct Collider {
     pub nearest_distance_squared:f32,
     scaled_position:[f32;4],
     scaled_velocity:[f32;4],
+    collided_point_in_triangle_pointer:usize,
     collided_mesh:u32,
     pub speed:f32,
 }
@@ -18,6 +19,7 @@ static COLLIDER:Collider=Collider {
     nearest_distance_squared:0.0,
     scaled_position:[0.0,0.0,0.0,0.0],
     scaled_velocity:[0.0,0.0,0.0,0.0],
+    collided_point_in_triangle_pointer:0,
     collided_mesh:0u32,
     speed: 0.0,
 };
@@ -55,6 +57,10 @@ pub unsafe extern "C" fn scaled_velocity_pointer(collider_ptr:*const Collider) -
     (*collider_ptr).scaled_velocity.as_ptr()
 }
 #[no_mangle]
+pub unsafe extern "C" fn collided_point_in_triangle_pointer(collider_ptr:*const Collider) -> *const usize {
+    &((*collider_ptr).collided_point_in_triangle_pointer)
+}
+#[no_mangle]
 pub unsafe extern "C" fn collided_mesh_pointer(collider_ptr:*const Collider) -> &'static u32 {
     &((*collider_ptr).collided_mesh)
 }
@@ -83,6 +89,7 @@ impl Collider {
             nearest_distance_squared:0.0,
             scaled_position:[0.0,0.0,0.0,0.0],
             scaled_velocity:[0.0,0.0,0.0,0.0],
+            collided_point_in_triangle_pointer:0,
             collided_mesh:0u32,
             speed:0.0,
         }

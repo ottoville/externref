@@ -1,9 +1,9 @@
-import { ObjectWorkerThread } from "./WorkerThread.js";
-import { MainNode } from "./MainNode.js";
-import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "./Math.js";
-import type { Scene } from "./Scene.js";
-import type { ColliderJS } from "./Collider.js";
-import type { Engine } from "./engine.js";
+import { ObjectWorkerThread } from "../WorkerThread.js";
+import { MainNode } from "../MainNode.js";
+import { TerraMatrix, TerraVector3, TerraVector4, Triangle } from "../Math.js";
+import type { Scene } from "../Scene.js";
+import type { ColliderJS } from "../Collider.js";
+import type { Engine } from "../engine.js";
 declare const engine:Engine;
 
 const worker = new ObjectWorkerThread('mesh.js', {type:'module'});
@@ -111,6 +111,7 @@ export abstract class DataNode extends MainNode {
         super(vertices.length/verticesPositionStride, point_light, undefined, strip, label, scenes, fixed, rigid_body);
         DataNode.Meshes.set(this.id, this);
         engine.rust.add_geometry(this.ptr,true,verticesPositionStride,static_faces,strip);
+
         this.set_vertices(vertices);
         // queueMicrotask here so mesh will have indices initialized
         if(can_collide) {
@@ -206,6 +207,7 @@ export abstract class DataNode extends MainNode {
         this.#triangleFaces.forEach(face => {
             face.updatePlane();
         })
+       
         this.#faceQuatros.forEach((quatro, i) => {
             new Float32Array(engine.memory.buffer, collider_planes_parallel_pointer + i * 4 * 16, 16).set([
                 quatro[0].planeCollider[0], quatro[1].planeCollider[0], quatro[2].planeCollider[0], quatro[3].planeCollider[0], //x
@@ -217,7 +219,7 @@ export abstract class DataNode extends MainNode {
     }
     //collisionsScalingMatrix = new TerraMatrix();
     #myCollisionsTransformMatrix = new TerraMatrix();
-    public checkCollision (collider: ColliderJS, sphere: Ellipsoid) {
+    public checkCollision (_collider: ColliderJS, sphere: Ellipsoid) {
 
         //TODO: When there is support for bounding sphere.
         //  var distance = Vector3.Distance(Vector3.FromArray(this._basePointWorld), sphereCenter);
@@ -241,26 +243,26 @@ export abstract class DataNode extends MainNode {
            
 
             if (this.faces_count % 4 != 0) {
-                const scaledPosition=collider.scaledPosition;
+               /* const scaledPosition=collider.scaledPosition;
                 const scaledVelocity=collider.scaledVelocity
                 const trLength=this.#triangleFaces.length;
                 for(let i=0; i<trLength; i++) {
                     collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
-                }
+                }*/
             } else {
-                /*
-        TODO: Use wasm when this.faces_count % 4 == 0
+                
+     //   TODO: Use wasm when this.faces_count % 4 == 0
         engine.wasm.testTriangles(
             engine.rust.collider_faces_pointer(this.ptr),
             engine.rust.collider_planes_parallel_pointer(this.ptr),
             this.faces_count * 7 * Float32Array.BYTES_PER_ELEMENT, //  plane + vector pointers
-            this.id);*/
-                const scaledPosition=collider.scaledPosition;
+            this.id); 
+             /*   const scaledPosition=collider.scaledPosition;
                 const scaledVelocity=collider.scaledVelocity
                 const trLength=this.#triangleFaces.length;
                 for(let i=0; i<trLength; i++) {
                     collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
-                }
+                }*/
             }
 
 
@@ -286,84 +288,3 @@ export interface IndexedNode extends MainNode {
     indices_count?: number //This property is optional because it is invoked on constructor when class is not fully initialized
 }
 
-export abstract class BoundableNodeIndexed extends DataNode implements IndexedNode {
-    indices_count?=0;
-    set_indices_and_vertices(indices:Uint32Array, vertices:Float32Array) {
-        this.indices_count=indices.length;
-        const ptr = engine.rust.alloc_vector_usize(indices.length);
-        new Uint32Array(engine.rust.memory.buffer,ptr,indices.length).set(indices);
-
-        const ptr_vertices = engine.rust.alloc_vector_f32(vertices.length);
-        new Float32Array(engine.rust.memory.buffer,ptr_vertices,vertices.length).set(vertices);
-
-        engine.rust.set_indices_and_vertices(this.ptr, ptr, indices.length, ptr_vertices, vertices.length);
-        this.rebuildTrianglePlanes();
-    }
-    get indices() {
-        const ptr = engine.rust.indices_pointer(this.ptr);
-        return new Uint32Array(engine.rust.memory.buffer, ptr, this.indices_count ?? 0);
-    }
-
-/*    set setFaces(faces:Float32Array) {
-        this.faces=faces;
-        this.rebuildTrianglePlanes();
-    }*/
-    constructor(
-        vertices: Float32Array,
-        verticesPositionStride = 3,
-        indicesView: Uint32Array,
-        can_collide = false,
-        strip = false,
-        point_light = 0,
-        static_faces = false,
-        label:string,
-        scenes?: Scene[],
-        frontFace: GPUFrontFace = 'cw',
-        fixed = false,
-        rigid_body = true
-    ) {
-        super(vertices, verticesPositionStride, can_collide, strip, point_light, static_faces, label, scenes, frontFace, fixed, rigid_body);
-        this.set_indices_and_vertices(indicesView, vertices);
-    }
-    override set_vertices(vertices:Float32Array) {
-        super.set_vertices(vertices);
-        this.rebuildTrianglePlanes();
-    }
-    rebuildTrianglePlanes() {
-        if(!this.initCollider())
-            return;
-        this.indices.forEach((indice: number) => {
-            const position = this.colliderVerticesV4[indice]
-            if (typeof(position) === 'undefined') {
-                throw (new Error('position ' + indice + ' not found'));
-            }
-            this.pushVertice(position)
-        });
-        this.buildFaces();
-    }
-}
-export abstract class BoundableNodeSimple extends DataNode {
-    constructor(
-        vertices:Float32Array,
-        verticesPositionStride = 3,
-        strip = false,
-        label:string,
-        can_collide: boolean,
-        scenes?: Scene[],
-        fixed = false,
-        rigid_body = true,
-        point_light = 0,
-    ) {
-        super(vertices, verticesPositionStride, can_collide, strip,point_light, undefined, label, scenes,undefined, fixed, rigid_body);
-    }
-    override set_vertices(vertices:Float32Array) {
-        super.set_vertices(vertices);
-        this.rebuildTrianglePlanes();
-    }
-    rebuildTrianglePlanes() {
-        if(!this.initCollider())
-            return;
-        this.colliderVerticesV4.forEach(this.pushVertice);
-        this.buildFaces();
-    }
-}

@@ -42,6 +42,7 @@
 
   (global $isConstructed (mut i32) (i32.const 0))
 
+  (global $collidedPointInTrianglePointer (mut i32) (i32.const 0))
   (func $construct
       (param $collisionNotFoundPointer i32)
       (param $interSectionPoint i32)
@@ -49,6 +50,7 @@
       (param $collidedMesh i32)
       (param $velocityPointer i32)
       (param $basePointPointer i32)
+      (param $collidedPointInTrianglePointer i32)
       
       (global.set $isConstructed
         (i32.const 1)  
@@ -76,6 +78,10 @@
       
       (global.set $basePointPointer
         (local.get $basePointPointer)
+      )
+
+      (global.set $collidedPointInTrianglePointer
+        (local.get $collidedPointInTrianglePointer)
       )
   )
 
@@ -209,6 +215,11 @@
     f32x4.extract_lane 2
     f32x4.splat
     global.set $velocityZ
+
+
+    global.get $collidedPointInTrianglePointer
+    i32.const 0
+    i32.store
   )
 
   (func $v3_dot
@@ -360,6 +371,8 @@
     
     (local $planeIntersectionPoint v128)
     (local $distToCollisionSquared f32)
+
+    (local $collidedPointInTriangle i32)
     
     i32.const 0
     global.set $found
@@ -392,33 +405,35 @@
       if
         return
       end
-      (call $checkPointInTriangle
-        ;;planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
-        (local.tee $planeIntersectionPoint
-          (f32x4.add
-            (f32x4.sub
-              (global.get $basePoint)
-              (local.tee $planeCollider
-                (v128.load
-                  (local.get $planePosition)
+      (local.tee $collidedPointInTriangle
+        (call $checkPointInTriangle
+          ;;planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
+          (local.tee $planeIntersectionPoint
+            (f32x4.add
+              (f32x4.sub
+                (global.get $basePoint)
+                (local.tee $planeCollider
+                  (v128.load
+                    (local.get $planePosition)
+                  )
                 )
               )
-            )
-            (f32x4.mul
-              (global.get $velocity)
-              (f32x4.splat
-                (f32.max
-                  (f32.const 0)
-                  (local.get $t0)
+              (f32x4.mul
+                (global.get $velocity)
+                (f32x4.splat
+                  (f32.max
+                    (f32.const 0)
+                    (local.get $t0)
+                  )
                 )
               )
             )
           )
+          (local.get $planeCollider)
+          (local.get $triangle0)
+          (local.get $triangle1)
+          (local.get $triangle2)
         )
-        (local.get $planeCollider)
-        (local.get $triangle0)
-        (local.get $triangle1)
-        (local.get $triangle2)
       )
       if
         local.get $t0
@@ -528,6 +543,13 @@
 
         global.get $collidedMeshPointer
         local.get $meshID
+        i32.store
+
+        global.get $collidedPointInTrianglePointer
+        local.get $planePosition
+        i32.const 0
+        local.get $collidedPointInTriangle
+        select
         i32.store
       end
     end

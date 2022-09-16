@@ -77,7 +77,7 @@ fn main(
     let meshIndex = point_lights.pointers[pointerIndex];
     let mesh=meshes.mesh[meshIndex];
     // TODO: Preselect lights with CPU
-    let lightViewPos = viewUniforms.view * vec4<f32>(mesh.transformation[12].xyz, 1.0);
+    let lightViewPos = viewUniforms.view * vec4<f32>(mesh.transformation[3].xyz, 1.0);
     let sqDist = sqDistPointAABB(lightViewPos.xyz, cluster.minAABB.xyz, cluster.maxAABB.xyz);
 
     if (sqDist <= mesh.point_light_squared) {

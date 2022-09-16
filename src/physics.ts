@@ -1,4 +1,4 @@
-﻿import type { DataNode } from "./DataNode.js";
+﻿import type { DataNode } from "./nodes/DataNode.js";
 import type { MainNode } from "./MainNode.js";
 import type { Engine } from "./engine.js";
 
