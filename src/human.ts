@@ -216,7 +216,7 @@ export class Human extends Box {
         scaledVelocity[2] = velocityPerDelta[2] / this.radius[2];
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
-        engine.collideWithWorld(this);
+        engine.collideWithWorld(this,scaledPosition, scaledVelocity);
         if (!engine.collider.collision_resolved) {
             //console.log('cant solve collision', this.label)
         }

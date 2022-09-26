@@ -222,7 +222,6 @@ export class ColliderJS {
     //#points: [TerraVector3, TerraVector3, TerraVector3] = [new TerraVector3(), new TerraVector3(), new TerraVector3()];
     /** @hidden */
     public _testTriangle(triangle: Triangle, scaledPosition:TerraVector3, scaledVelocity:TerraVector3): void {
-        //console.log(triangle.planeCollider[0])
         var dot = Dot(triangle.planeCollider, this.#normalizedVelocity);
         
         if (dot > 0) {
@@ -238,18 +237,19 @@ export class ColliderJS {
         this.#collisionPoint[2] = 0;
         let found = false;
         let t = 1.0;
-        let embeddedInPlane = false;
+        let collidedPointInTriangle = false;
 
-        if (Math.abs(normalDotVelocity) < 0.00001) {
+        // Check if movement is at 90 degree angle with plane
+        if (Math.abs(normalDotVelocity) < 0.0009) {
             if (Math.abs(signedDistToTrianglePlane) >= 1.0) {
                 return;
             }
-            embeddedInPlane = true;
             var t0 = 0;
         }
         else {
             var t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
-            var t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+
+            let t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
 
             if (t0 > t1) {
                 var temp = t1;
@@ -264,13 +264,9 @@ export class ColliderJS {
             if (t0 < 0) {
                 t0 = 0;
             }
-        }
-        let collidedPointInTriangle = false;
-        if(!embeddedInPlane) {
             this.#planeIntersectionPoint[0] = scaledPosition[0] - triangle.planeCollider[0] + scaledVelocity[0] * t0;
             this.#planeIntersectionPoint[1] = scaledPosition[1] - triangle.planeCollider[1] + scaledVelocity[1] * t0;
             this.#planeIntersectionPoint[2] = scaledPosition[2] - triangle.planeCollider[2] + scaledVelocity[2] * t0;
-           // console.log(this.#planeIntersectionPoint[0])
             //this._basePoint.subtractToRef(trianglePlane.normal, this._planeIntersectionPoint);
             // this._velocity.scaleToRef(t0, this._tempVector);
             //this._planeIntersectionPoint.addInPlace(this._tempVector);

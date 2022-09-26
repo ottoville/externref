@@ -168,7 +168,7 @@ export class PositionCamera extends CameraController {
         engine.collider.collidedMesh = undefined;
         engine.collider._retry = 0;
 
-        engine.collideWithWorld(this);
+        engine.collideWithWorld(this, scaledPosition, scaledVelocity);
 
         //run the callback
         // if (!this.engine.collider.collidedMesh) {

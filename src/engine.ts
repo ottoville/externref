@@ -453,9 +453,7 @@ export class Engine {
             engine.rust.collided_point_in_triangle_pointer(this.collider.collider_ptr))
 
     }
-    #getFinalPosition(sphere: Ellipsoid): [number, number, number] | TerraVector3 {
-        const scaledPosition = this.collider.scaledPosition;
-        const scaledVelocity = this.collider.scaledVelocity;
+    #getFinalPosition(sphere: Ellipsoid, scaledPosition: TerraVector3, scaledVelocity: TerraVector3): [number, number, number] | TerraVector3 {
         this.collider.didCollide = false;
         for (let i = 0; i < 3; i++) {
             //TODO: really, here inside the loop?
@@ -592,11 +590,11 @@ export class Engine {
         }
         return scaledPosition;
     }
-    collideWithWorld(sphere: Ellipsoid): void {
+    collideWithWorld(sphere: Ellipsoid, scaledPosition: TerraVector3, scaledVelocity: TerraVector3): void {
         if (sphere instanceof DataNode)
             sphere.colliding_character = false;
         //TODO: Call only when camera position change
-        this.collider.finalPosition.set(this.#getFinalPosition(sphere));
+        this.collider.finalPosition.set(this.#getFinalPosition(sphere, scaledPosition, scaledVelocity));
         this.collider.finalPosition[0] *= sphere.radius[0]
         this.collider.finalPosition[1] *= sphere.radius[1]
         this.collider.finalPosition[2] *= sphere.radius[2]

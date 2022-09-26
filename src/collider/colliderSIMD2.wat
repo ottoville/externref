@@ -1,5 +1,5 @@
 (module
-  (import "console" "log" (func $log (param i32)))
+  (import "console" "log" (func $log (param f32)))
   (import "console" "error" (func $console.error (param i32)))
   (import "env" "memory" (memory 16))
   (export "memory" (memory 0))
@@ -37,8 +37,6 @@
 
   (global $basePointPointer (mut i32) (i32.const 0))
   (global $velocityPointer (mut i32) (i32.const 0))
-
-  (global $isMoving (mut i32) (i32.const 0))
 
   (global $isConstructed (mut i32) (i32.const 0))
 
@@ -102,18 +100,6 @@
         (global.get $velocityPointer)
       )
     )
-    (global.set $isMoving
-      (v128.any_true
-        (global.get $velocity)
-      )
-    )
-    global.get $isMoving
-    i32.eqz
-    if
-      i32.const 0
-      drop
-    end
-
     (global.set $basePoint
       (v128.load
         (global.get $basePointPointer)
@@ -357,13 +343,13 @@
     f32.gt
   )
   (func $testTriangle
+    (param $embeddedInPlane i32)
     (param $planePosition i32)
     (param $triangle0 v128)
     (param $triangle1 v128)
     (param $triangle2 v128)
     (param $meshID i32)
     (param $t0 f32)
-    (param $t1 f32)
 
     (local $planeCollider v128)
     (local $temp_t f32)
@@ -379,71 +365,54 @@
 
     f32.const 1.0
     global.set $lowestRoot
-
-    global.get $isMoving
-    if
-      (local.get $t0)  ;;t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
-      (local.get $t1)   ;; t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
-  
-      f32.gt
-      if
-          local.get $t0
-          local.get $t1
-          local.set $t0
-          local.set $t1
-      end
-
-      local.get $t0
-      f32.const 1
-      f32.gt
-      if
-        return
-      end
-      local.get $t1
-      f32.const 0
-      f32.lt
-      if
-        return
-      end
-      (local.tee $collidedPointInTriangle
-        (call $checkPointInTriangle
-          ;;planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
-          (local.tee $planeIntersectionPoint
-            (f32x4.add
-              (f32x4.sub
-                (global.get $basePoint)
-                (local.tee $planeCollider
-                  (v128.load
-                    (local.get $planePosition)
+    
+    local.get $embeddedInPlane
+    i32.eqz
+    (if
+      (then
+        (local.tee $collidedPointInTriangle
+          (call $checkPointInTriangle
+            ;;planeIntersectionPoint = this.#basePoint - triangle.planeCollider + this.#velocity * t0
+            (local.tee $planeIntersectionPoint
+              (f32x4.add
+                (f32x4.sub
+                  (global.get $basePoint)
+                  (local.tee $planeCollider
+                    (v128.load
+                      (local.get $planePosition)
+                    )
                   )
                 )
-              )
-              (f32x4.mul
-                (global.get $velocity)
-                (f32x4.splat
-                  (f32.max
-                    (f32.const 0)
-                    (local.get $t0)
+                (f32x4.mul
+                  (global.get $velocity)
+                  (f32x4.splat
+                    (f32.max
+                      (f32.const 0)
+                      (local.get $t0)
+                    )
                   )
                 )
               )
             )
+            (local.get $planeCollider)
+            (local.get $triangle0)
+            (local.get $triangle1)
+            (local.get $triangle2)
           )
-          (local.get $planeCollider)
-          (local.get $triangle0)
-          (local.get $triangle1)
-          (local.get $triangle2)
+        )
+        (if
+          (then
+            local.get $t0
+            global.set $lowestRoot
+            local.get $planeIntersectionPoint
+            global.set $collisionPoint
+            i32.const 1
+            global.set $found
+          )
         )
       )
-      if
-        local.get $t0
-        global.set $lowestRoot
-        local.get $planeIntersectionPoint
-        global.set $collisionPoint
-        i32.const 1
-        global.set $found
-      end
-    end
+    )
+    
     global.get $found
     i32.eqz
     if
@@ -476,7 +445,6 @@
         global.set $found
         local.get $triangle1
         global.set $collisionPoint
-
       end
       (local.tee $curLowestRoot
         (call $checkForLowestRoot
@@ -511,6 +479,10 @@
 
     global.get $found
     if
+
+
+
+
       i32.const 1
       (f32.lt
         (local.tee $distToCollisionSquared
@@ -526,6 +498,7 @@
           (global.get $nearestDistanceSquaredPointer)
         )
       )
+
       (i32.load
         (global.get $collisionNotFoundPointer)
       )
@@ -749,7 +722,6 @@
     (param $meshID i32)
 
     (local $end i32)
-    (local $v0 v128)
 
     (local $planeX v128)
     (local $planeY v128)
@@ -761,7 +733,9 @@
     (local $t0 v128)
     (local $t1 v128)
 
-    (local $doTest i32)
+    (local $embeddedInPlane v128)
+    (local $dotOverZero v128)
+    (local $return v128)
 
     local.get $length
     i32.eqz
@@ -778,44 +752,48 @@
     i32.const 64
     i32.sub
     local.set $planePositionHorizontal
-
     loop $for-loop|0
-      (local.tee $v0
-        (f32x4.le
-          (call $simd_dot
-            (local.tee $planeX
-              (v128.load
-                (local.tee $planePositionHorizontal
-                  (i32.add
-                    (local.get $planePositionHorizontal)
-                    (i32.const 64)
+      
+      (i32.eqz
+        (i32x4.all_true
+          (local.tee $dotOverZero
+            (f32x4.gt
+              (call $simd_dot
+                (local.tee $planeX
+                  (v128.load
+                    (local.tee $planePositionHorizontal
+                      (i32.add
+                        (local.get $planePositionHorizontal)
+                        (i32.const 64)
+                      )
+                    )
                   )
                 )
+                (global.get $normalizedVelocityX)
+                (local.tee $planeY
+                  (v128.load offset=16
+                      (local.get $planePositionHorizontal)
+                  )
+                )
+                (global.get $normalizedVelocityY)
+                (local.tee $planeZ
+                  (v128.load offset=32
+                      (local.get $planePositionHorizontal)
+                  )
+                )
+                (global.get $normalizedVelocityZ)
               )
+              (v128.const f32x4 0 0 0 0)
             )
-            (global.get $normalizedVelocityX)
-            (local.tee $planeY
-              (v128.load offset=16
-                  (local.get $planePositionHorizontal)
-              )
-            )
-            (global.get $normalizedVelocityY)
-            (local.tee $planeZ
-              (v128.load offset=32
-                  (local.get $planePositionHorizontal)
-              )
-            )
-            (global.get $normalizedVelocityZ)
           )
-          (v128.const i32x4 0 0 0 0)
         )
       )
-      v128.any_true
-      if
-        (local.set $signedDistToTrianglePlane ;;Todo: convert to "tee"
+      (if
+        (then
+          (local.set $signedDistToTrianglePlane
           (f32x4.add
             (v128.load offset=48
-                (local.get $planePositionHorizontal)
+              (local.get $planePositionHorizontal)
             )
             (call $simd_dot
               (global.get $basePointX)
@@ -829,27 +807,124 @@
             )
           )
         )
-        (local.set $doTest
-          (i32.const 1)
+
+        ;; Calculate dot angle between velocity and normal
+        (local.tee $embeddedInPlane
+          (f32x4.lt
+            (f32x4.abs
+              (local.tee $normalDotVelocity
+                (call $simd_dot
+                  (local.get $planeX)
+                  (global.get $velocityX)
+                  (local.get $planeY)
+                  (global.get $velocityY)
+                  (local.get $planeZ)
+                  (global.get $velocityZ)
+                )
+              )
+            )
+            (v128.const f32x4 0.0009 0.0009 0.0009 0.0009)
+          )
         )
-        global.get $isMoving
+        i32x4.all_true
+        i32.eqz
+        ;; Some is not embedded in plane
+        (if 
+          (then
+            ;;var t0 = (-1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+            (local.set $t0
+              (f32x4.div
+                (f32x4.sub
+                  (v128.const f32x4 -1 -1 -1 -1)
+                  (local.get $signedDistToTrianglePlane)
+                )
+                (local.get $normalDotVelocity)
+              )
+            )
+            ;;var t1 = (1.0 - signedDistToTrianglePlane) / normalDotVelocity;
+            (local.set $t1
+              (f32x4.div
+                (f32x4.sub
+                  (v128.const f32x4 1 1 1 1)
+                  (local.get $signedDistToTrianglePlane)
+                )
+                (local.get $normalDotVelocity)
+              )
+            )
+            (f32x4.max
+              (local.get $t0)
+              (local.get $t1)
+            )
+            (f32x4.min
+              (local.get $t0)
+              (local.get $t1)
+            )
+            local.set $t0
+            local.set $t1
+
+            (local.set $return
+              (v128.or
+                (f32x4.gt
+                    (local.get $t0)
+                    (v128.const f32x4 1 1 1 1)
+                )
+                (f32x4.lt
+                    (local.get $t1)
+                    (v128.const f32x4 0 0 0 0)
+                )
+              )
+            )
+            (local.set $t0
+              (f32x4.max
+                (local.get $t0)
+                (v128.const f32x4 0 0 0 0)
+              )
+            )
+          )
+        )
+
+        local.get $embeddedInPlane
+        ;; Check if movement is not at 90 degree angle with plane
+        v128.any_true
+        ;; Some is embedded in plane
+        (if
+          (then
+            ;; Set t0 to zero when embedded in plane
+            (local.set $t0
+              (v128.bitselect
+                (v128.const f32x4 0 0 0 0)
+                (local.get $t0)
+                (local.get $embeddedInPlane)
+              )
+            )
+            (local.set $return
+              (v128.bitselect
+                (f32x4.ge
+                  (f32x4.abs
+                    (local.get $signedDistToTrianglePlane)
+                  )
+                  (v128.const f32x4 1 1 1 1)
+                )
+                (local.get $return)
+                (local.get $embeddedInPlane)
+              )
+            )
+          )
+        )
+        (i32x4.extract_lane 0
+          (local.tee $return
+            (v128.or
+              (local.get $dotOverZero)
+              (local.get $return)
+            )
+          )
+        )
         i32.eqz
         if
-            (f32x4.extract_lane 0
-              (local.get $signedDistToTrianglePlane)
-            )
-            f32.abs
-            f32.const 1
-            f32.ge  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
-            if
-              (local.set $doTest
-                (i32.const 0)
-              )
-            end
-        end
-        (local.get $doTest)
-        if
           (call $testTriangle
+            (i32x4.extract_lane 0
+              (local.get $embeddedInPlane)
+            )
             (local.get $planePosition)
 
             (v128.load
@@ -872,65 +947,19 @@
 
             (local.get $meshID)
             (f32x4.extract_lane 0
-              (local.tee $t0
-                (f32x4.div
-                  (f32x4.sub
-                    (f32x4.splat
-                      (f32.const -1)
-                    )
-                    (local.get $signedDistToTrianglePlane)
-                  )
-                  (local.tee $normalDotVelocity
-                    (call $simd_dot
-                      (local.get $planeX)
-                      (global.get $velocityX)
-
-                      (local.get $planeY)
-                      (global.get $velocityY)
-
-                      (local.get $planeZ)
-                      (global.get $velocityZ)
-                    )
-                  )
-                )
-              )
-            )
-            (f32x4.extract_lane 0
-              (local.tee $t1
-                (f32x4.div
-                  (f32x4.sub
-                    (f32x4.splat
-                      (f32.const 1)
-                    )
-                    (local.get $signedDistToTrianglePlane)
-                  )
-                  (local.get $normalDotVelocity)
-                )
-              )
+              (local.get $t0)
             )
           )
         end
-        (local.set $doTest
-          (i32.const 1)
+        (i32x4.extract_lane 1
+          (local.get $return)
         )
-        global.get $isMoving
         i32.eqz
         if
-            (f32x4.extract_lane 1
-              (local.get $signedDistToTrianglePlane)
-            )
-            f32.abs
-            f32.const 1
-            f32.ge  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
-            if
-              (local.set $doTest
-                (i32.const 0)
-              )
-            end
-        end
-        (local.get $doTest)
-        if
           (call $testTriangle
+            (i32x4.extract_lane 1
+              (local.get $embeddedInPlane)
+            )
             (i32.add
               (local.get $planePosition)
               (i32.const 28)
@@ -958,32 +987,17 @@
             (f32x4.extract_lane 1
             (local.get $t0)
             )
-            (f32x4.extract_lane 1
-              (local.get $t1)
-            )
           )
         end
-        (local.set $doTest
-          (i32.const 1)
+        (i32x4.extract_lane 2
+          (local.get $return)
         )
-        global.get $isMoving
         i32.eqz
         if
-            (f32x4.extract_lane 2
-              (local.get $signedDistToTrianglePlane)
-            )
-            f32.abs
-            f32.const 1
-            f32.ge  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
-            if
-              (local.set $doTest
-                (i32.const 0)
-              )
-            end
-        end
-        (local.get $doTest)
-        if
           (call $testTriangle
+            (i32x4.extract_lane 2
+              (local.get $embeddedInPlane)
+            )
             (i32.add
               (local.get $planePosition)
               (i32.const 56)
@@ -993,7 +1007,6 @@
                   (local.get $planePosition)
                 )
             )
-              
 
             (v128.load
                 (i32.load offset=76
@@ -1010,36 +1023,21 @@
             (f32x4.extract_lane 2
             (local.get $t0)
             )
-            (f32x4.extract_lane 2
-              (local.get $t1)
-            )
           )
         end
-        (local.set $doTest
-          (i32.const 1)
+        (i32x4.extract_lane 3
+          (local.get $return)
         )
-        global.get $isMoving
         i32.eqz
         if
-            (f32x4.extract_lane 3
-              (local.get $signedDistToTrianglePlane)
-            )
-            f32.abs
-            f32.const 1
-            f32.ge  ;;if (Math.abs(signedDistToTrianglePlane) >= 1.0)
-            if
-              (local.set $doTest
-                (i32.const 0)
-              )
-            end
-        end
-        (local.get $doTest)
-        if
           (call $testTriangle
-              (i32.add
-                  (local.get $planePosition)
-                  (i32.const 84)
-              )
+            (i32x4.extract_lane 3
+              (local.get $embeddedInPlane)
+            )
+            (i32.add
+                (local.get $planePosition)
+                (i32.const 84)
+            )
             (v128.load
                 (i32.load offset=100
                   (local.get $planePosition)
@@ -1061,21 +1059,22 @@
             (f32x4.extract_lane 3
             (local.get $t0)
             )
-            (f32x4.extract_lane 3
-              (local.get $t1)
-            )
           )
         end
-      end
-      (local.tee $planePosition
-        (i32.add
-            (local.get $planePosition)
-            (i32.const 112)
         )
       )
-      local.get $end
-      i32.lt_u
-      br_if $for-loop|0
+
+      
+    
+    (local.tee $planePosition
+      (i32.add
+          (local.get $planePosition)
+          (i32.const 112)
+      )
+    )
+    local.get $end
+    i32.lt_u
+    br_if $for-loop|0
     end
   )
   (func $getLowestRoot (param $a f32) (param $b f32) (param $c f32) (param $maxR f32) (result f32)
