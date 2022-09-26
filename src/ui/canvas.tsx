@@ -276,17 +276,17 @@ export class Canvas extends TerraCompoment {
                 <br />
                 <input name="time" type="radio" id="pause" value="-1" checked={engine.physics.gameSpeed === -1} />
                 <label for="pause">⏸️</label>
-                <input name="time" type="radio" id="play" value="0" checked={engine.physics.gameSpeed === 0} />
+                <input name="time" type="radio" id="play" value="1" checked={engine.physics.gameSpeed === 1} />
                 <label for="play">▶️</label>
-                <input name="time" type="radio" id="fastforward" value="1" checked={engine.physics.gameSpeed === 1} />
+                <input name="time" type="radio" id="fastforward" value="2" checked={engine.physics.gameSpeed === 2} />
                 <label for="fastforward">⏩</label>
-                <input name="time" type="radio" id="fastforward2" value="2" checked={engine.physics.gameSpeed === 2} />
+                <input name="time" type="radio" id="fastforward2" value="3" checked={engine.physics.gameSpeed === 4} />
                 <label for="fastforward2">4⏩</label>
-                <input name="time" type="radio" id="fastforward3" value="3" checked={engine.physics.gameSpeed === 3} />
+                <input name="time" type="radio" id="fastforward3" value="4" checked={engine.physics.gameSpeed === 8} />
                 <label for="fastforward3">8⏩</label>
-                <input name="time" type="radio" id="fastforward4" value="4" checked={engine.physics.gameSpeed === 4} />
+                <input name="time" type="radio" id="fastforward4" value="5" checked={engine.physics.gameSpeed === 16} />
                 <label for="fastforward4">16⏩</label>
-                <input name="time" type="radio" id="fastforward5" value="5" checked={engine.physics.gameSpeed === 5} />
+                <input name="time" type="radio" id="fastforward5" value="6" checked={engine.physics.gameSpeed === 32} />
                 <label for="fastforward5">32⏩</label>
             </div>)
         }).catch((e:Error) => {

@@ -19,7 +19,7 @@ export class Sun2 extends MainNode {
     override onPhysicTick = (/*delta: number*/) => {
         const anglePerMinute = (Math.PI * 2) / 1439;
         //let meridian: number = Math.PI * 0.1;
-        const meridian: number = Math.PI * 0.5;
+        const meridian = 0;
         //149597870000
 
         //let sundistance = 149600; //divided by 100000
@@ -27,8 +27,8 @@ export class Sun2 extends MainNode {
         const minutesOfDay = secondsOfDay / 60;
         const sunAngle = new Angle(minutesOfDay * anglePerMinute).sub(meridian);
 
-        const sunPositionX = Math.sin(sunAngle);
-        let sunPositionY = Math.cos(sunAngle);
+        const sunPositionX = Math.cos(sunAngle);
+        let sunPositionY = Math.sin(sunAngle);
 
         const sunPositionZ = sunPositionY * zAngle;
 

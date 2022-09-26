@@ -29,7 +29,7 @@ TODO
     static readonly size = [10000, 10000] as const;
     static readonly maxXZ=[Terrain.size[0] / 2.0,Terrain.size[1] / 2.0] as const;
     static readonly minmax=[-2, 500] as const;
-    static readonly textureSize = [1024, 1024] as const;
+    static readonly textureSize = [8192, 8192] as const;
 
     slopeArrGPUBuffer: BindStorageBuffer;
     //TODO: Remove copy_src

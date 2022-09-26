@@ -15,9 +15,10 @@ const GRAVITY = 9.80665;
 
 const tmp_vector:[number,number,number]=[0,0,0];
 export class Physics {
+    #lastTickTimeMsInGameTime: number = new Date().getTime();
     #lastTickTimeMs: number = new Date().getTime();
     #lastStateChangeTime = new Date().getTime();
-    #gameSpeed = 0;
+    #gameSpeed = 1;
     #interval: null | ReturnType<typeof setTimeout> = null;
     #lastStateChangeGameTime = BigInt(21600000); //21600 * 1000; //6 hours
     #timeUntillTick = 0;
@@ -25,19 +26,19 @@ export class Physics {
     movables: MainNode[] = []; //Stuff that moves without physic, eg. sun.
     tickables: DataNode[] = []; //Stuff that moves and have collision check
     tickTime = 21600;  //6 hours
-    tickIntervalMs = 16.6;
+    readonly tickIntervalMs = 16.6;
     #realMSingameSecond = 1000 as const; //1000 millisecond in real time = 1 second in game time (on normal speed)
     get physicTime() {
         if (this.#gameSpeed >= 0) {
             const timestamp = new Date().getTime();
-            if (this.#lastStateChangeTime > this.#lastTickTimeMs) {
-                var delta = (timestamp - this.#lastStateChangeTime << this.#gameSpeed) + this.#tickDeltaWhenStateChange
+            if (this.#lastStateChangeTime > this.#lastTickTimeMsInGameTime) {
+                var delta = (timestamp - this.#lastStateChangeTime * this.#gameSpeed) + this.#tickDeltaWhenStateChange
             } else {
-                var delta = (timestamp - this.#lastTickTimeMs) << this.#gameSpeed // get the delta time since last tick
+                var delta = (timestamp - this.#lastTickTimeMsInGameTime) * this.#gameSpeed // get the delta time since last tick
             }
         }
         else
-            var delta = (this.#lastStateChangeTime - this.#lastTickTimeMs) << this.#gameSpeed;
+            var delta = (this.#lastStateChangeTime - this.#lastTickTimeMsInGameTime) * this.#gameSpeed;
 
         return (this.tickTime + (delta / this.#realMSingameSecond));
     }
@@ -48,26 +49,35 @@ export class Physics {
         Large delta results large gravity, collision detector will see bigger impact.
     */
     #tick = () => {
-        
         const timestamp = Date.now();
-        if (this.#lastStateChangeTime > this.#lastTickTimeMs) {
-            var realDeltaInGameTime = ((timestamp - this.#lastStateChangeTime) << this.#gameSpeed) + this.#tickDeltaWhenStateChange
+        if (this.#lastStateChangeTime > this.#lastTickTimeMsInGameTime) {
+            var realDeltaInGameTime = ((timestamp - this.#lastStateChangeTime) * this.#gameSpeed) + this.#tickDeltaWhenStateChange
+            if(realDeltaInGameTime < 0) {
+                throw new Error('Delta cannot be negative')
+            }
         } else {
-            var realDeltaInGameTime = (timestamp - this.#lastTickTimeMs) << this.#gameSpeed; // get the delta time since last tick
+            var realDeltaInGameTime = (timestamp - this.#lastTickTimeMs) * this.#gameSpeed; // get the delta time since last tick
+            if(realDeltaInGameTime < 0) {
+                throw new Error('Delta cannot be negative')
+            }
         }
         if (realDeltaInGameTime > MIN_TICK_DELTA) {
             var delta = 100;
-            this.#lastTickTimeMs += delta;
+            this.#lastTickTimeMsInGameTime += delta;
             //const queueLength = realDeltaInGameTime / 100;
             /*if(queueLength > 100) {
                 delta = realDeltaInGameTime;
             }*/
         } else {
             var delta = realDeltaInGameTime;
-            this.#lastTickTimeMs = timestamp;
+            this.#lastTickTimeMsInGameTime+=realDeltaInGameTime;
         }
+        this.#lastTickTimeMs = timestamp;
 
-        this.tickTime += delta / this.#realMSingameSecond;
+
+        this.tickTime += (delta / this.#realMSingameSecond);
+        console.log('delta',delta)
+      //  console.log('hours passed', this.tickTime/60/60)
         const dt = delta / 1000;
         const delta_multiplier =  1000 / delta;
         const dt_half_sqrt=dt*dt*0.5;
@@ -210,12 +220,11 @@ export class Physics {
         }
     }
 
-    private createLoop(speed: number, timeToFirstTick = this.tickIntervalMs) {
+    private createLoop(timeToFirstTick = this.tickIntervalMs) {
         if (timeToFirstTick != this.tickIntervalMs) {
-            const firstTickMs = timeToFirstTick >> speed;
             setTimeout(() => {
                 this.#tick();
-            }, firstTickMs);
+            }, timeToFirstTick);
         }
         else
             this.#interval = setTimeout(this.#tick, timeToFirstTick);
@@ -224,34 +233,28 @@ export class Physics {
         if (this.gameSpeed < 0)
             return this.#lastStateChangeGameTime;
         var interval = new Date().getTime() - this.#lastStateChangeTime;
-        return this.#lastStateChangeGameTime + (BigInt((interval * 60) << this.gameSpeed));
-    }
-    //Called from blazor
-    setGameSpeed(value: {
-        gameSpeed: number
-        lastStateChangeGameTime: number
-        lastStateChangeTime: number
-    }) {
-        this.gameSpeed = value.gameSpeed;
+        return this.#lastStateChangeGameTime + BigInt(interval * 60 * this.gameSpeed);
     }
     set gameSpeed(value: number) {
+        if(Number.isNaN(value))
+            throw new Error('gameSpeed must be number')
         this.#lastStateChangeGameTime = this.gameTime;
         this.#lastStateChangeTime = new Date().getTime();
 
         this.#interval && clearTimeout(this.#interval);
         this.#timeUntillTick = this.tickIntervalMs - this.#tickDeltaWhenStateChange;
         if (this.#gameSpeed >= 0) {
-            this.#tickDeltaWhenStateChange = (new Date().getTime() - this.#lastTickTimeMs) << this.#gameSpeed
+            this.#tickDeltaWhenStateChange = (new Date().getTime() - this.#lastTickTimeMs) * this.#gameSpeed
         }
         this.#gameSpeed = value;
         if (value >= 0)
-            this.createLoop(0, this.#timeUntillTick); //for now psysic is always run on constant speed
+            this.createLoop(this.#timeUntillTick); //for now psysic is always run on constant speed
     }
     get gameSpeed() {
         return this.#gameSpeed;
     }
     constructor(private engine:Engine) {
-        this.gameSpeed = 0;
+        this.gameSpeed = 1;
     }
 
 }
