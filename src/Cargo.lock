@@ -297,6 +297,7 @@ dependencies = [
 [[package]]
 name = "rapier3d"
 version = "0.14.0"
+source = "git+https://terraSim@dev.azure.com/terraSim/terrasim/_git/rapier?branch=master#503a0e1213d0fbc0f698b0c9fa48d0c1d9ed312d"
 dependencies = [
  "approx",
  "arrayvec",

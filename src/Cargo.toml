@@ -11,11 +11,10 @@ path = "engine/src/lib.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-#rapier3d = "0.11.1"
 rapier3d = { git = "https://terraSim@dev.azure.com/terraSim/terrasim/_git/rapier", branch = "master" }
 
-[patch."https://terraSim@dev.azure.com/terraSim/terrasim/_git/rapier"]
-rapier3d = { path = "../../../rapier/crates/rapier3d" }
+#[patch."https://terraSim@dev.azure.com/terraSim/terrasim/_git/rapier"]
+#rapier3d = { path = "../../../rapier/crates/rapier3d" }
 
 
 [profile.dev.package.parry3d]
