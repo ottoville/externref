@@ -15,6 +15,7 @@ jobs:
     vmImage: ubuntu-20.04
   steps:
   - checkout: self
+    submodules: true
   - task: Npm@1
     displayName: npm install
     inputs:
