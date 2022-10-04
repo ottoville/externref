@@ -4,7 +4,7 @@ import { GPUBufferUsage } from "./GPU.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Projection } from "./GPU/Projection.js";
 import type { Engine } from "./engine.js";
-import type { GPU } from "./gpu.js";
+import type { GPU } from "./GPU.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer} from "./GPU/Buffer.js";
 import type { BindGroupLayout } from "./GPU/BindGroupLayout.js";
