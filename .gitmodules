@@ -1,4 +1,4 @@
 [submodule "src/rapier"]
 	path = src/rapier
 	url = https://terraSim@dev.azure.com/terraSim/terrasim/_git/rapier
-	branch = azure/master
+	branch = azure/terrasim

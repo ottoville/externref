@@ -249,10 +249,16 @@ export class Engine {
                     return performance.now()
                 },
                 jspanic(ptr: number) {
-                    console.error(new TextDecoder().decode(new Uint8Array(engine.rust.memory.buffer, ptr, 512)).trimEnd())
+                    if(!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
+                        throw new Error('Webassembly module does not have memory');
+                    }
+                    console.error(new TextDecoder().decode(new Uint8Array(rust.instance.exports.memory.buffer, ptr, 512)).trimEnd())
                 },
                 jslog(ptr: number) {
-                    console.log(new TextDecoder().decode(new Uint8Array(engine.rust.memory.buffer, ptr, 512)).trimEnd())
+                    if(!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
+                        throw new Error('Webassembly module does not have memory');
+                    }
+                    console.log(new TextDecoder().decode(new Uint8Array(rust.instance.exports.memory.buffer, ptr, 512)).trimEnd())
                 },
                 jslog_number(number: number) {
                     console.log(number)
