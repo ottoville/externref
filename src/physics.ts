@@ -76,7 +76,6 @@ export class Physics {
 
 
         this.tickTime += (delta / this.#realMSingameSecond);
-        console.log('delta',delta)
       //  console.log('hours passed', this.tickTime/60/60)
         const dt = delta / 1000;
         const delta_multiplier =  1000 / delta;
