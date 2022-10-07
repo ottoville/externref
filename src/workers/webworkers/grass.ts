@@ -28,10 +28,14 @@ const grids2: Map<string, number[]> = new Map()
 const methods = {
     init: (data: WMessage<{ positions: SharedArrayBuffer }>) => {
         this.postMessage({ id: data.id });
-        caches.match(new Request('/grass')).then(async cachedgrass => {
-            if (cachedgrass) {
-                this.postMessage({ type: 'updated', buffer: await cachedgrass.arrayBuffer() });
+        caches.match(new Request('/grass')).then(response => {
+            if(response) {
+                return response.arrayBuffer();
+            } else {
+                return fetch('/assets/grass').then(response2 => response2.arrayBuffer())
             }
+        }).then(arrayBuffer => {
+            this.postMessage({ type: 'updated', buffer: arrayBuffer });
         }).catch(e => {
             console.error('Error in web worker', e)
         })

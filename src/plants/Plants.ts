@@ -69,7 +69,14 @@ export class Plants {
 
         const shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * numBlades);
         const noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * numBlades);
-
+        //@ts-ignore
+        window.downloadGrass = () => {
+            caches.match(new Request('/grass')).then(async cachedgrass => {
+                if (cachedgrass) {
+                    console.log('grass', URL.createObjectURL(await cachedgrass.blob()));
+                }
+            });
+        }
 
         this.#ready =  terrainP.then(async terrain => {
             await this.#worker.message(WorkerReturn.Promise, 'init', {
