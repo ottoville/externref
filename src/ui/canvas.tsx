@@ -99,7 +99,10 @@ export class Canvas extends TerraCompoment {
             //new testPlane(terrascene);
             const archRotateController = new ArcRotateCamera(engine.mainCamera, this.#canvasElem, true);
             engine.mainCamera.attachControllerForCamera(archRotateController);
-            const human = new Human({scenes: [terrascene], inputEnabled:false})
+            const human = new Human({scenes: [terrascene], inputEnabled:true});
+            // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
+            human.translation = [-239.37437438964844, 200, 910.1807250976562];
+
             document.addEventListener('keydown', e => {
                 if(e.key === 'Tab') {
                     if(engine.inputManager === human.inputManager) {

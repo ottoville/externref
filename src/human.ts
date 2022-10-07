@@ -23,8 +23,6 @@ export class Human extends Box {
         super({ ...properties, point_light: 400, can_collide: false, label: 'human' });
         engine.physics.tickables.push(this);
         this.hasGravity = true;
-        // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
-        this.translation = [-239.37437438964844, 500, 910.1807250976562];
         //this.velocity=[0,-5,0];
         this.update_scale(1, 1, 1);
         // engine.inputManager?.destroy();
