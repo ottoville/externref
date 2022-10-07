@@ -5,8 +5,8 @@ import { Engine } from "../engine.js";
 import { Plants } from "../plants/Plants.js";
 import { UITAB, UITABClassLike } from "../UITAB.js";
 import { PlantsUI } from "../tools/plantsUI.js";
-import { CameraTAB } from "../tools/camera.js";
-import { BuildingsUI } from "../tools/buildings.js";
+/*import { CameraTAB } from "../tools/camera.js";
+import { BuildingsUI } from "../tools/buildings.js";*/
 import { TerrainTool } from "../tools/Terrain.js";
 import { Zones } from "../tools/Zones.js";
 import { Terrain } from "../world/terrain.js";
@@ -234,7 +234,7 @@ export class Canvas extends TerraCompoment {
     toolsContainer: HTMLFieldSetElement = <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;"></fieldset>
     gameState = <fieldset class="gameControl hidden" id="gameState"></fieldset>
 
-    uiTabs: (UITABClassLike)[] = [PlantsUI, BuildingsUI, CameraTAB, TerrainTool, Zones]
+    uiTabs: (UITABClassLike)[] = [PlantsUI, /*BuildingsUI, CameraTAB,*/ TerrainTool, Zones]
     openedMenu: [UITAB, HTMLFieldSetElement] | undefined;
     timeOfDay: HTMLOutputElement = <output id="TODout" fow="TOD"></output>
     constructor() {

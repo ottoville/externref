@@ -17,11 +17,6 @@ const render = async () => {
         return app.appendChild(<Canvas></Canvas>)
     }
     app.appendChild(<div>
-
-    <h3>Select your language</h3>
-    <select>
-
-    </select>
     <h3>Log in to play the game</h3>
     <fieldset id="loginmethods">
         { !creditentials.clientPrincipal && <a href="/.auth/login/login">Login</a>}
