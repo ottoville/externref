@@ -20,21 +20,21 @@ declare const engine:Engine;
  * @param vc2 vertex start offset for back side of blade
  * @param i index offset
  */
+ const numBlades = 65535;
 
 export class Plants {
-    public numBlades = 65535;
     public opts = {
         radius: 86
     }
     //private offset: SharedArrayBuffer = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 2 * this.numBlades);
-    private worker = new WorkerThread('grass.js');
-    private ready: Promise<void>;
+    #worker = new WorkerThread('grass.js');
+    #ready: Promise<void>;
     public fillArea(area: PTDresult) {
         //let amount = 100000
 
-        this.ready.then(() => {
+        this.#ready.then(() => {
             // console.log('sending grass to worker, took ', new Date().getTime() - d);
-            this.worker.message(WorkerReturn.noReturn, 'save',
+            this.#worker.message(WorkerReturn.noReturn, 'save',
                 {
                     area: area,
                     angle: area.rad
@@ -46,12 +46,12 @@ export class Plants {
         terrainP: Promise<Terrain>,
     ) {
         const indirectBuffer = Buffer.create(scene.gpu,4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST],'indirectBuffer');
-        const positionGPU = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'positionGPU');
-        const shapeGPU = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'shapeGPU');
+        const positionGPU = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'positionGPU');
+        const shapeGPU = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'shapeGPU');
 
 
-        const positionGPUSwap = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE], 'positionGPUSwap');
-        const shapeGPUSwap = Buffer.create(scene.gpu, this.numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE],'shapeGPUSwap');
+        const positionGPUSwap = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE], 'positionGPUSwap');
+        const shapeGPUSwap = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE],'shapeGPUSwap');
         if(engine.gpu) {
             const drawable = engine.gpu.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }).addDrawableIndirect(indirectBuffer, 'Plants')
             drawable.setVertexBuffer(0, positionGPU)
@@ -67,16 +67,16 @@ export class Plants {
             ]));
         }
 
-        const shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * this.numBlades);
-        const noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * this.numBlades);
+        const shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * numBlades);
+        const noises = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * numBlades);
 
-        this.ready = this.worker.message(WorkerReturn.Promise, 'init', {
-            //  positions: this.offset,
-            shape: shapes,
-            noises: noises,
-        },[]);
-        terrainP.then(terrain => {
 
+        this.#ready =  terrainP.then(async terrain => {
+            await this.#worker.message(WorkerReturn.Promise, 'init', {
+                //  positions: this.offset,
+                shape: shapes,
+                noises: noises,
+            },[]);
             const computePipeline = new ComputePipeline(engine.gpu!, "grass/getHeightAtCoordinates.comp.wgsl");
             const bindGroup = computePipeline.createBindGroup(0, 'bindGroup1', bindGroup1 => [
                 {
@@ -99,29 +99,31 @@ export class Plants {
                     binding: 4,
                     resource: terrain.settingsGPU.getStorageBinding(bindGroup1)
                 }])
-            this.worker.subscribe('updated', (data: { buffer: SharedArrayBuffer }) => {
+            this.#worker.subscribe('updated', (data: { buffer: SharedArrayBuffer }) => {
+                    const commandEncoder = scene.gpu.device.createCommandEncoder({label: 'plants_encoder'});
+                    const passEncoder = commandEncoder.beginComputePass({label: 'plants_pass_encoder'});
+                    passEncoder.setPipeline(computePipeline.pipeline);
 
-                const commandEncoder = scene.gpu.device.createCommandEncoder({label: 'plants_encoder'});
-                const passEncoder = commandEncoder.beginComputePass({label: 'plants_pass_encoder'});
-                passEncoder.setPipeline(computePipeline.pipeline);
+                    const worldCopyGPU = Buffer.create(scene.gpu, numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'worldCopyGPU', (buffer) => {
+                        const worldSetArr = buffer.getMappedRange();
+                        new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
+                    });
+                    const bindGroup2 = computePipeline.createBindGroup(1, 'bindGroup2', bg => [{
+                        binding: 0,
+                        resource: worldCopyGPU.getStorageBinding(bg)
+                    }])
 
-                const worldCopyGPU = Buffer.create(scene.gpu, this.numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'worldCopyGPU', (buffer) => {
-                    const worldSetArr = buffer.getMappedRange();
-                    new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
-                });
-                const bindGroup2 = computePipeline.createBindGroup(1, 'bindGroup2', bg => [{
-                    binding: 0,
-                    resource: worldCopyGPU.getStorageBinding(bg)
-                }])
+                    passEncoder.setBindGroup(0, bindGroup.bindGroup);
+                    passEncoder.setBindGroup(1, bindGroup2.bindGroup);
+                    passEncoder.dispatchWorkgroups(numBlades);
+                    passEncoder.end();
 
-                passEncoder.setBindGroup(0, bindGroup.bindGroup);
-                passEncoder.setBindGroup(1, bindGroup2.bindGroup);
-                passEncoder.dispatchWorkgroups(this.numBlades);
-                passEncoder.end();
-                positionGPUSwap.copyTo(commandEncoder, positionGPU, 0, 0, this.numBlades * 4 * 4)
-                shapeGPUSwap.copyTo(commandEncoder,shapeGPU, 0, 0, this.numBlades * 4 * 4)
-                indirectBuffer.updateBufferRaw(commandEncoder, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
-                scene.gpu.pendingCommandBuffers.add(commandEncoder.finish())
+                    positionGPUSwap.copyTo(commandEncoder, positionGPU, 0, 0, numBlades * 4 * 4);
+
+                    shapeGPUSwap.copyTo(commandEncoder,shapeGPU, 0, 0, numBlades * 4 * 4);
+
+                    indirectBuffer.updateBufferRaw(commandEncoder, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
+                    scene.gpu.pendingCommandBuffers.add(commandEncoder.finish());
             });
         }).catch(engine.showError)
 

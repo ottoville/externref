@@ -46,6 +46,7 @@ TODO
     readonly mesh: TerrainMesh;
 
     TerrainHeightsbindGroupTree : PipelineLayout;
+    ready: Promise<void>;
     
     //TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpu.BindGroupPosition, true)
 
@@ -162,7 +163,9 @@ TODO
                 passEncoder.end();
                 engine.gpu!.device.queue.submit([commandEncoder.finish()]);
             }
-            return new Terrain(scenes, settingsGPU, terrainPositionAndUvsAndNormalsGPU);
+            const terrain = new Terrain(scenes, settingsGPU, terrainPositionAndUvsAndNormalsGPU);
+            await terrain.ready;
+            return terrain;
 
         })
         return t;
@@ -379,7 +382,7 @@ TODO
 
         this.mesh = new TerrainMesh(scenes, textureView, this.terrainPositionAndUvsAndNormalsGPU, terrainIndicesGPU, new Float32Array(positionsCount*12), new Uint32Array(this.#terrainIndicesLength / 4), 12);
 
-        caches.match(new Request('/terrainTexture.webp')).then(async (cachedtexture) => {
+        this.ready = caches.match(new Request('/terrainTexture.webp')).then(async (cachedtexture) => {
             const textureSizeBytes = Int32Array.BYTES_PER_ELEMENT * (Terrain.textureSize[0] * Terrain.textureSize[1]);
             if (cachedtexture) {
                 passEncoder.end();
@@ -442,7 +445,7 @@ TODO
                     this.updateSwap2(0, readbuff.byteLength, true);
                     this.serialize();
                 });
-            })
+            });
         }).catch(engine.showError)
     }
     /*

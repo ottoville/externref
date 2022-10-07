@@ -43,10 +43,6 @@ export class PlantsUI extends UITAB {
                 //this.PT && this.PT.destroy();
                 PlantsUI.plantsMesh.fillArea(response);
             });
-            /*this.PT?.activate((response: PTDresult) => {
-                //this.PT && this.PT.destroy();
-                PlantsUI.plantsMesh.fillArea(response)
-            });*/
         } catch (e) {
             console.error(e);
         }
