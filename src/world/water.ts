@@ -11,7 +11,8 @@ export class Sea extends BoundableNodeSimple {
         return engine.rust.create_cuboid_collider(50000,3,50000,0, false);
      }
     constructor(scenes: Scene[]) {
-        super(new Float32Array([-50000.0, 3.0, -50000.0,
+        super(new Float32Array([
+            -50000.0, 3.0, -50000.0,
             50000.0, 3.0, -50000.0,
             -50000.0, 3.0, 50000.0,
             50000.0, 3.0, 50000.0]), undefined, true,'water',false,scenes,true, false); //48    

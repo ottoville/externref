@@ -534,9 +534,9 @@ export class GPU {
         tempBuffer.copyTo(commandEncoder, this.#GPUPointLights,0,0,byteLength);
         this.pendingCommandBuffers.add(commandEncoder.finish());
     }
-    readonly #timeAndDeltaBuffer = new ArrayBuffer(8);
-    readonly deltaView = new Float32Array(this.#timeAndDeltaBuffer, 4, 1);
-    readonly #timeView = new Uint32Array(this.#timeAndDeltaBuffer, 0, 1);
+    readonly timeAndDeltaBuffer = new ArrayBuffer(8);
+    readonly deltaView = new Float32Array(this.timeAndDeltaBuffer, 4, 1);
+    readonly #timeView = new Uint32Array(this.timeAndDeltaBuffer, 0, 1);
 
     readonly #renderLoop = (time: DOMHighResTimeStamp) => {
         //msPerFrame = performance.now() - startTime;
@@ -574,11 +574,10 @@ export class GPU {
             physicDelta = null;
         else
             physicDelta = (engine.physics.physicTime - engine.physics.tickTime) / ((engine.physics.tickIntervalMs))
-
         if (physicDelta !== null)
             this.deltaView.set([physicDelta]);
+        this.timeBuffer.write(0, this.timeAndDeltaBuffer);
 
-        this.timeBuffer.write(0, this.#timeAndDeltaBuffer);
         try {
             engine.cameras.forEach(camera => {
                 camera.updateView(renderEncoder)

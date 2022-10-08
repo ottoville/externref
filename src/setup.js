@@ -9,8 +9,10 @@ const DIR = path.join(os.tmpdir(), 'jest_puppeteer_global_setup');
 
 module.exports = async function () {
   const browser = await puppeteer.launch({
+    product: 'chrome',
+    channel: 'chrome',
     headless:false,
-    executablePath: 'C:/Users/ottov/AppData/Local/Google/Chrome SxS/Application/chrome.exe', args: [
+    args: [
     "--remote-debugging-port=9222",
     "--enable-unsafe-webgpu",
     "--enable-features=SharedArrayBuffer",

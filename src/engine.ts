@@ -479,8 +479,6 @@ export class Engine {
             }
             else {
                 DataNode.Meshes.forEach(mesh => {
-                    if (mesh.label === 'water')
-                        return; //Sea is bugging
                     mesh.checkCollision(this.collider, sphere)
                 });
             }
