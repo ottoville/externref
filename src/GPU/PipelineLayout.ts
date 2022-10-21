@@ -7,7 +7,7 @@ import { RenderPipeline, Shader, VertexShader } from "./RenderPipeline.js";
 type extractGeneric<Type> = Type extends BindGroupLayout<infer X> ? X : never
 
 export class PipelineLayout {
-    subBindGroups: Set<PipelineLayout> = new Set();
+    subBindGroups: PipelineLayout[] = [];
 
     addRenderPipeline(
         label: string,
@@ -23,19 +23,18 @@ export class PipelineLayout {
     renderPipeLines: Set<RenderPipeline> = new Set();
 
     layout: GPUPipelineLayout;
-    constructor(label:string, public gpu: GPU, public bindGroupLayout: BindGroupLayout, public parent?: PipelineLayout, public sharedBindgroup?: (BindGroup), public isDynamic = false, isRoot = false, debug=false) {
+    constructor(public label:string, public gpu: GPU, public bindGroupLayout: BindGroupLayout, public parent?: PipelineLayout, public sharedBindgroup?: (BindGroup), public isDynamic = false, isRoot = false, debug=false) {
         const layoutTree: GPUBindGroupLayout[] = [bindGroupLayout.layout];
         if (!isRoot && parent) {
             let curparent: PipelineLayout | undefined = parent;
             do {
                 layoutTree.unshift(curparent.bindGroupLayout.layout);                
             } while (curparent = curparent.parent)
-            parent.subBindGroups.add(this);
+            parent.subBindGroups.push(this);
         }
         if(debug) {
             console.log(layoutTree);
         }
-
         this.layout = this.gpu.device.createPipelineLayout({ bindGroupLayouts: layoutTree, label });
     }
     addChildLayout<T extends BindGroupLayout<GPUBindGroupEntry[]>>(label:string, meshBindGroupLayout: T,debug?:boolean): LayoutGroupDrawable<extractGeneric<T>> {
@@ -54,7 +53,7 @@ export class PipelineLayout {
             r = new PipelineLayout(label, this.gpu, sharedBindgroup.layout, this, sharedBindgroup, isDynamic);
         else
             r = new DynamicPipelineLayout(label, this.gpu, sharedBindgroup.layout, this, sharedBindgroup, isDynamic,undefined,debug);
-        this.subBindGroups.add(r);
+        this.subBindGroups.push(r);
         return r;
     }
 }

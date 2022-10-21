@@ -1,7 +1,10 @@
 import { type GPUTextureUsageLiterals, Texture } from "../Texture.js";
 import { TextureView } from "../TextureView.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
-
+export type RenderTargetOptions = {
+    size: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate],
+    textureViewDescriptor?: GPUTextureViewDescriptor,    
+}
 export class RenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends GPUTextureUsageLiterals[] = GPUTextureUsageLiterals[]>
     extends Texture<F, U>
 {
@@ -12,8 +15,7 @@ export class RenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U exten
         usages: U,
         label: string,
         public renderPass: RenderPass,
-        size: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate] = [300, 300, 1],
-        textureViewDescriptor?: GPUTextureViewDescriptor,
+        { size = [300, 300, 1], textureViewDescriptor}: RenderTargetOptions,
         public writeMask: GPUColorWriteFlags = 0xF,
         protected context?: GPUCanvasContext,
         initialSampleCount: 1 | 4 = 1,

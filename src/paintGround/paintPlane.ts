@@ -19,7 +19,7 @@ class PlaneMesh extends MainNode implements IndexedNode {
     indices_count=0;
     drawable:DrawableIndexed;
     constructor(renderPipeline: RenderPipeline, verticesCount: number) {
-        super(verticesCount, undefined, undefined, undefined, 'plane');
+        super({ positionsCount: verticesCount, label: 'plane'});
         this.drawable=renderPipeline.addDrawableIndexed(this, undefined,undefined, 0, 1, 0);
     }
 }

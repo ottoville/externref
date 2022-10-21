@@ -46,7 +46,7 @@ export class TerraCamera {
     private gpu?: GPU 
     initForGPU(renderPass: RenderPass | undefined, gpu:GPU, projection: Projection) {
         if(renderPass) {
-            renderPass.cameras.add(this);
+            renderPass.perspectiveCameras.add(this);
         }
         this.#clusterArrayBuffer?.destroy();
         this.#uniformBuffer?.destroy();

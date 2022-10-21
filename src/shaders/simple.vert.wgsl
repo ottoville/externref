@@ -5,11 +5,6 @@ struct Uniforms {
 };
 #import "mesh.export.wgsl"
 
-//[[block]] struct Lights {
-//  [[offset(48)]] sunDirection : vec3<f32>;
-//  [[offset(80)]] ambient : vec3<f32>;
-//  [[offset(92)]] shadow : f32;
-//};
 struct Time {
   time : u32,
   delta : f32

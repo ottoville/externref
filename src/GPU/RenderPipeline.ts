@@ -1,7 +1,7 @@
 ﻿import type { PipelineLayout } from "./PipelineLayout.js";
 import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
-import { MainNode } from "../MainNode.js";
+import { DrawableNode } from "../MainNode.js";
 import type { GPU } from "../GPU.js";
 import type { IndexedNode } from "../nodes/DataNode.js";
 import type { IndexBuffer, IndirectBuffer } from "./Buffer.js";
@@ -61,7 +61,7 @@ export class RenderPipeline {
     addDrawableIndirect(buffer: IndirectBuffer, label:string, renderPasses?: Set<RenderPass>) {
         return new DrawableIndirect(this, buffer,label,renderPasses);
     }
-    addDrawableSimple(node: MainNode, instanceCount = 1, firstVertex = 0, firstInstance = 0, renderPasses?: Set<RenderPass>): DrawableSimple {
+    addDrawableSimple(node: DrawableNode, instanceCount = 1, firstVertex = 0, firstInstance = 0, renderPasses?: Set<RenderPass>): DrawableSimple {
         return new DrawableSimple(this, node, renderPasses, instanceCount, firstVertex, firstInstance)
     }
     addDrawableIndexed(node: IndexedNode, renderPasses?: Set<RenderPass>, indexBuffer?: IndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {

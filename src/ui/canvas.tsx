@@ -19,9 +19,7 @@ import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 //import { savedCamera } from "../types/interfaces/index.js";
 
-
-import type { DrawableSimple } from "../GPU/Drawable.js";
-import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
 //@ts-ignore
 import { Box } from "../GPU/Meshes/Box.js";
 //@ts-ignore
@@ -33,22 +31,16 @@ import { Cone } from "../GPU/Meshes/Cone.js";
 import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
 //@ts-ignore
 import { RoundCuboid } from "../GPU/Meshes/RoundCuboid.js";
-import { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
 import { ArcRotateCamera } from "../controllers/ArcRotateCamera.js";
+import { UIRectangle } from "./UIRectangle.js";
+import { Texture } from "../GPU/Texture.js";
+import { TextureView } from "../GPU/TextureView.js";
 
 declare const engine:Engine;
-class CanvasMesh extends MainNode {
-    drawable:DrawableSimple;
-    constructor(canvaspipeline: RenderPipeline, positionsCount: number, renderPass:RenderPass) {
-        super(positionsCount,undefined, undefined, undefined, 'canvas');
-        this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([renderPass]))
-
-    }
-}
 
 class Light extends MainNode {
     constructor(scene:Scene) {
-        super(undefined,0,1,undefined,'Light',[scene]);
+        super({ point_light:0, directional_light: 1, label: 'Light',scenes:[scene]});
     }
 }
 const errors:Error[]=[]
@@ -180,17 +172,58 @@ export class Canvas extends TerraCompoment {
 
 
 
-        const canvasPipeline = gpu.renderPassCanvas.rootLayout.addRenderPipeline('CanvasRenderPipeline',
-            new VertexShader(gpu, 'deferred.vert.wgsl'),
-            new Shader(gpu, 'deferred.frag.wgsl'), {
+        const UIPipeline = gpu.canvasRootLayout.addRenderPipeline('UIRenderPipeline',
+            new VertexShader(gpu, 'deferred/UI.vert.wgsl', [
+                {
+                    arrayStride: 4 * 4,
+                    stepMode: "vertex",
+                    attributes: [{
+                        // position
+                        shaderLocation: 0,
+                        offset: 0,
+                        format: "float32x2",
+                    },
+                    {
+                        // uv
+                        shaderLocation: 1,
+                        offset: 8,
+                        format: "float32x2",
+                    }]
+                }
+            ]),
+            new Shader(gpu, 'deferred/UI.frag.wgsl'),{
             primitive: {
                 topology: 'triangle-list',
                 frontFace: 'ccw'
-            }
+            },
         });
-        new CanvasMesh(canvasPipeline, 6,gpu.renderPassCanvas);
+        new UIRectangle({
+            canvaspipeline: UIPipeline,
+            renderPass: gpu.renderPassCanvas,
+            label:'UICanvas',
+            borderSize:{width:0, height:0, texture_width:0, texture_height:0},
+            texture: gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
+            scale: {x:1, y:1},
+            translate: {x:0, y:0},
+        });
+        
+        const b = await (await fetch('/assets/button.webp')).blob();
 
+        const bitmap = await createImageBitmap(b);
+        const texture = Texture.create(gpu, 'rgba8unorm',  ['COPY_DST', 'RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'button',[bitmap.width, bitmap.height,1])
 
+        engine.gpu!.device.queue.copyExternalImageToTexture({source:bitmap},{texture:texture.texture},[bitmap.width,bitmap.height]);
+
+        new UIRectangle({
+            canvaspipeline: UIPipeline,
+            renderPass: gpu.renderPassCanvas,
+            label:'UIButton',
+            borderSize:{width:0.01, height:'auto', texture_width:0.2, texture_height: 0.2 },
+            texture: new TextureView(texture),
+            scale: {x:0.1, y:0.1},
+            translate: {x:-0.9, y: 0.9},
+            originalAspectRatio: 0.3
+        })
 
         this.progress = 20;
 

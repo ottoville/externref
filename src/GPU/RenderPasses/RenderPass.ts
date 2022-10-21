@@ -9,6 +9,7 @@ import type { GPUTextureUsageLiterals } from "../Texture.js";
 import { type BindUniformBuffer, Buffer } from "../Buffer.js";
 import type { BindGroup } from "../BindGroup.js";
 import { RenderBundleEncoder } from "../RenderBundleEncoder.js";
+import type { DrawableNode } from "../../MainNode.js";
 
 
 interface RenderPipelineVariant2 {
@@ -23,9 +24,8 @@ export class RenderPass<U extends {
     [index: string]: RenderTargetConstructor } 
         = { [index: string]: RenderTargetConstructor },
 > {
-    /* Either cameras or bindGroupCanvas*/
-    readonly cameras: Set<TerraCamera> = new Set();
-    BindGroupCanvas?: () => BindGroup;
+
+    readonly perspectiveCameras: Set<TerraCamera> = new Set();
 
     readonly bundles: RenderBundleEncoder[] = [];
     readonly renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant2> = new Map();
@@ -39,12 +39,13 @@ export class RenderPass<U extends {
         [Property in keyof U]: ReturnType<RenderTargetConstructor>
       };
     GPURenderBundleEncoderDescriptor: GPURenderBundleEncoderDescriptor;
+    onResize:Map<DrawableNode, () => void>=new Map();
     constructor(
         public gpu: GPU,
         colorRenderTargetsConstructors: U,
         public sampleCount: 1 | 4,
         public size: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate],
-        private _onResize: (width: number, height: number) => [number, number],
+        private getSizeOnResize: (width: number, height: number) => [number, number],
         
         private entryPoint: string,
         public rootLayout: PipelineLayout,
@@ -108,10 +109,14 @@ export class RenderPass<U extends {
                 ...renderpipeline.fragmentShader,
                 entryPoint: this.entryPoint,
                 targets: Object.values(this.#colorRenderTargets).map(rt => {
-                    return {
+                    const state:GPUColorTargetState = {
                         format: rt.texture.format,
-                        writeMask: rt.writeMask
+                        writeMask: rt.writeMask,
                     }
+                    if(rt.blend) {
+                        state.blend=rt.blend
+                    }
+                    return state;
                 })
             }
         }
@@ -132,7 +137,7 @@ export class RenderPass<U extends {
         )
     }
     resize(width: number, height: number) {
-        [this.size[0], this.size[1]] = this._onResize(width, height);
+        [this.size[0], this.size[1]] = this.getSizeOnResize(width, height);
         this.#updateSizeBindGroup();
         for (const rt of Object.values(this.#colorRenderTargets)) {
             rt.resize(this.size[0], this.size[1], this.sampleCount)
@@ -148,60 +153,46 @@ export class RenderPass<U extends {
         return renderPassDescriptor;
     }
 
-    #renderCamera(GPUrenderBundleEncoder: GPURenderBundleEncoder, renderBundleEncoder: RenderBundleEncoder, rootLayout: PipelineLayout, rootBindGroup: BindGroup, bindGroupStartIndex: number) {
+    #renderCamera(GPUrenderBundleEncoder: GPURenderBundleEncoder, renderBundleEncoder: RenderBundleEncoder, rootLayout: PipelineLayout, bindGroupStartIndex: number) {
         let drawedMeshes = 0;
-        const dynamicIndices: number[] = [];
-        GPUrenderBundleEncoder.setBindGroup(bindGroupStartIndex, rootBindGroup.getForRenderPass(renderBundleEncoder));
         rootLayout.renderPipeLines.forEach(renderPipeline => {
-            drawedMeshes += renderPipeline.draw(GPUrenderBundleEncoder, this, bindGroupStartIndex + 1);
+            drawedMeshes += renderPipeline.draw(GPUrenderBundleEncoder, this, bindGroupStartIndex);
         });
-        //POSITION
-        if (this.gpu.positionBindGroupTimeWGSL.bindGroupLayout.dynamicIndices) {
-            dynamicIndices.push(bindGroupStartIndex + 1);
-        }
-        this.gpu.positionBindGroupTimeWGSL.renderPipeLines.forEach(renderPipeline => {
-            drawedMeshes += renderPipeline.draw(GPUrenderBundleEncoder, this, bindGroupStartIndex + 1, dynamicIndices);
-        });
-        this.gpu.positionBindGroupTimeWGSL.subBindGroups.forEach(pipelineLayout => {
-            if (pipelineLayout.sharedBindgroup) {
-                GPUrenderBundleEncoder.setBindGroup(bindGroupStartIndex + 2, pipelineLayout.sharedBindgroup.getForRenderPass(renderBundleEncoder));
+        const dynamicIndices: number[] = [];
+        rootLayout.subBindGroups.forEach(subBindGroup => {
+            //POSITION
+            if (subBindGroup.bindGroupLayout.dynamicIndices) {
+                dynamicIndices.push(bindGroupStartIndex);
             }
-            pipelineLayout.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(GPUrenderBundleEncoder, this, bindGroupStartIndex + 1 + dynamicIndices.length, dynamicIndices);
+            subBindGroup.renderPipeLines.forEach(renderPipeline => {
+                drawedMeshes += renderPipeline.draw(GPUrenderBundleEncoder, this, bindGroupStartIndex, dynamicIndices);
             });
-        });
-        dynamicIndices.length = 0;
-        //SUN
-        if (this.gpu.positionBindGroupTime.bindGroupLayout.dynamicIndices) {
-            dynamicIndices.push(bindGroupStartIndex + 1);
-        }
-        this.gpu.positionBindGroupTime.renderPipeLines.forEach(renderPipeline => {
-            drawedMeshes += renderPipeline.draw(GPUrenderBundleEncoder, this, bindGroupStartIndex + 1, dynamicIndices);
-        });
-        this.gpu.positionBindGroupTime.subBindGroups.forEach(bindGroup => {
-            bindGroup.renderPipeLines.forEach(renderPipeline => {
-                drawedMeshes += renderPipeline.draw(GPUrenderBundleEncoder, this, bindGroupStartIndex + 1 + dynamicIndices.length, dynamicIndices);
+            subBindGroup.subBindGroups.forEach(pipelineLayout => {
+                if (pipelineLayout.sharedBindgroup) {
+                    GPUrenderBundleEncoder.setBindGroup(bindGroupStartIndex + 1, pipelineLayout.sharedBindgroup.getForRenderPass(renderBundleEncoder));
+                }
+                pipelineLayout.renderPipeLines.forEach(renderPipeline => {
+                    drawedMeshes += renderPipeline.draw(GPUrenderBundleEncoder, this, bindGroupStartIndex + dynamicIndices.length, dynamicIndices);
+                });
             });
+            dynamicIndices.length = 0;
         });
         return drawedMeshes;
     }
     readonly #renderBundle:RenderBundleEncoder = new RenderBundleEncoder(this, (GPUrenderBundleEncoder, renderBundleEncoder) => {
         //@ts-ignore
         let drawedMeshes = 0;
-        if (this.BindGroupCanvas) {
-            drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder,renderBundleEncoder, this.rootLayout, this.BindGroupCanvas(), 0)
+        if(this.perspectiveCameras.size === 0) {
+            // Draw UI
+            drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder,renderBundleEncoder, this.rootLayout, 0)
         } else {
             GPUrenderBundleEncoder.setBindGroup(0, this.sizeBindGroup().getForRenderPass(renderBundleEncoder));
-            if(this.cameras.size === 0) {
-                console.warn('Renderpass has no cameras, cannot render anything')
-            } else {
-                this.cameras.forEach(camera => {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder,renderBundleEncoder, this.rootLayout, camera.uniformBindGroup!, 1)
-                })
-            }
+            this.perspectiveCameras.forEach(camera => {
+                GPUrenderBundleEncoder.setBindGroup(1, camera.uniformBindGroup!.getForRenderPass(renderBundleEncoder));
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder,renderBundleEncoder, this.rootLayout, 2)
+            })
         }
-        //console.log('Meshes draw for',this.GPURenderBundleEncoderDescriptor.label,drawedMeshes)
     })
 
     render(renderEncoder: GPUCommandEncoder) {

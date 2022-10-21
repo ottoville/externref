@@ -1,25 +1,25 @@
 import { ColorRenderTarget } from "./ColorRenderTarget.js";
 import type { GPUTextureUsageLiterals } from "../Texture.js";
 import { RenderPass } from "../RenderPasses/RenderPass.js";
-import { RenderTarget } from "./RenderTarget.js";
+import { RenderTarget, RenderTargetOptions } from "./RenderTarget.js";
 
 export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends GPUTextureUsageLiterals[] = GPUTextureUsageLiterals[]>
     extends ColorRenderTarget<F, U> {
-    static override createForRenderpass<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat>(format: F, usages: U, label: string, clearValue: GPUColor, size?: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate], textureViewDescriptor?: GPUTextureViewDescriptor, writeMask?: GPUColorWriteFlags, context?: GPUCanvasContext): (renderPass: RenderPass) => MSAARenderTarget<F, U>
-    static override createForRenderpass<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT'], F extends GPUTextureFormat>(format: F, usages: U, label: string, clearValue: GPUColor, size?: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate], textureViewDescriptor?: GPUTextureViewDescriptor, writeMask?: GPUColorWriteFlags, context?: GPUCanvasContext): (renderPass: RenderPass) => MSAARenderTarget<F, U>
-    static override createForRenderpass<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC'], F extends GPUTextureFormat>(format: F, usages: U, label: string, clearValue: GPUColor, size?: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate], textureViewDescriptor?: GPUTextureViewDescriptor, writeMask?: GPUColorWriteFlags, context?: GPUCanvasContext): (renderPass: RenderPass) => MSAARenderTarget<F, U>
+    static override createForRenderpass<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat>(format: F, usages: U, label: string, clearValue: GPUColor, options?: RenderTargetOptions, blend?:GPUBlendState, writeMask?: GPUColorWriteFlags, context?: GPUCanvasContext): (renderPass: RenderPass) => MSAARenderTarget<F, U>
+    static override createForRenderpass<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT'], F extends GPUTextureFormat>(format: F, usages: U, label: string, clearValue: GPUColor, options?: RenderTargetOptions, blend?:GPUBlendState, writeMask?: GPUColorWriteFlags, context?: GPUCanvasContext): (renderPass: RenderPass) => MSAARenderTarget<F, U>
+    static override createForRenderpass<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC'], F extends GPUTextureFormat>(format: F, usages: U, label: string, clearValue: GPUColor, options?: RenderTargetOptions, blend?:GPUBlendState, writeMask?: GPUColorWriteFlags, context?: GPUCanvasContext): (renderPass: RenderPass) => MSAARenderTarget<F, U>
     static override createForRenderpass<U extends GPUTextureUsageLiterals[] = GPUTextureUsageLiterals[], F extends GPUTextureFormat = GPUTextureFormat>(
         format: F,
         usages: U,
         label: string,
         clearValue: GPUColor,
-        size: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate] = [300, 300, 1],
-        textureViewDescriptor?: GPUTextureViewDescriptor,
+        options: RenderTargetOptions = {size: [300,300,1]},
+        blend?:GPUBlendState,
         writeMask: GPUColorWriteFlags = 0xF,
         context?: GPUCanvasContext
     ) {
         return (renderPass: RenderPass) => {
-            return new MSAARenderTarget(clearValue, format, usages, label, renderPass, size, textureViewDescriptor, writeMask, context)
+            return new MSAARenderTarget(clearValue, format, usages, label, renderPass, options, blend, writeMask, context)
         }
     }
     readonly resolveTexture?: RenderTarget<F, U>
@@ -30,14 +30,14 @@ export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U e
         usages: U,
         label: string,
         renderPass: RenderPass,
-        size: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate] = [300, 300, 1],
-        textureViewDescriptor?: GPUTextureViewDescriptor,
+        options: RenderTargetOptions = { size: [300,300,1] },
+        blend?:GPUBlendState,
         writeMask: GPUColorWriteFlags = 0xF,
         context?: GPUCanvasContext
     ) {
-        super(clearValue, format, usages, label, renderPass, size, textureViewDescriptor, writeMask, context);
+        super(clearValue, format, usages, label, renderPass, options, blend, writeMask, context);
         if (!context) {
-            const resolveTexture = new RenderTarget(this.format, this.usages, this.label + 'Resolve' + Date.now(), this.renderPass, undefined, undefined, undefined, undefined, undefined);
+            const resolveTexture = new RenderTarget(this.format, this.usages, this.label + 'Resolve' + Date.now(), this.renderPass, { size: options.size }, undefined, undefined, undefined);
             this.resolveTexture = resolveTexture;
             //  this.#resolveView = resolveView;
             this.#resolveView = () => {

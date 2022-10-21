@@ -388,20 +388,35 @@ export class Triangle {
             -((normal_x * vectors[2][0]) + (normal_y * vectors[2][1]) + (normal_z * vectors[2][2]))
         ]);
     }
+    #planeCollider: TerraVector4;
     get planeCollider() {
-        return new TerraVector4(engine.memory.buffer, this.pointerToVector4())
+        if(this.#planeCollider.byteLength === 0) {
+            this.#planeCollider = new TerraVector4(engine.memory.buffer, this.pointerToVector4); 
+        }
+        return this.#planeCollider;
     }
+    #vectors: [TerraVector4,TerraVector4,TerraVector4];
+
     get vectors():[TerraVector4,TerraVector4,TerraVector4] {
-        return [
-            new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
-            new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
-            new TerraVector4(engine.memory.buffer, this.vectorsPointers[2]),
-        ]
+        if(this.#vectors[0].byteLength === 0) {
+            this.#vectors = [
+                new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
+                new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
+                new TerraVector4(engine.memory.buffer, this.vectorsPointers[2]),
+            ]
+        }
+        return this.#vectors
     }
     constructor(
         private vectorsPointers: [pointerToVec4:number, pointerToVec4:number, pointerToVec4:number],
-        private pointerToVector4: () => number
+        private pointerToVector4: number
         ) {
+            this.#vectors = [
+                new TerraVector4(engine.memory.buffer, this.vectorsPointers[0]),
+                new TerraVector4(engine.memory.buffer, this.vectorsPointers[1]),
+                new TerraVector4(engine.memory.buffer, this.vectorsPointers[2]),
+            ]
+            this.#planeCollider = new TerraVector4(engine.memory.buffer, this.pointerToVector4);
     }
 
 }

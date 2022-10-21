@@ -10,7 +10,7 @@ declare const engine:Engine;
 export class BoundingBoxMesh extends MainNode {
     drawable: DrawableSimple | undefined;
     constructor() {         
-        super(26,undefined,undefined,undefined,'BoundingBoxDebug');
+        super({positionsCount: 26, label: 'BoundingBoxDebug'});
         if(engine.gpu)
             this.drawable = engine.gpu.createRenderPipeline(BoundingBoxPipeline,{ topology: 'line-strip', stripIndexFormat:'uint32' }).addDrawableSimple(this,undefined,undefined,undefined);
     }

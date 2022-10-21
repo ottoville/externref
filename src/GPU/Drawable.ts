@@ -1,6 +1,6 @@
 ﻿import { RenderPipeline } from "./RenderPipeline.js";
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
-import { MainNode } from "../MainNode.js";
+import { DrawableNode, MainNode } from "../MainNode.js";
 import { GPU, GPUBufferUsage } from "../GPU.js"
 import type { DataNode, IndexedNode } from "../nodes/DataNode.js";
 import { NormalsMesh } from "./Meshes/helpers/normals.js";
@@ -8,18 +8,18 @@ import { BoundingBoxMesh } from "./Meshes/helpers/boundingbox.js";
 import { Buffer, IndexBuffer, IndirectBuffer, VertexBuffer } from "./Buffer.js";
 
 import type { Engine } from "../engine.js";
-import type { BindGroup } from "./BindGroup.js";
+import { BindGroup } from "./BindGroup.js";
 declare const engine: Engine;
 
 
 export abstract class Drawable {
     abstract label: string;
     #vertexBuffers: Map<number, { buffer: VertexBuffer, offset: number | undefined, size: number | undefined }> = new Map();
-    protected dynamicBuffers: [BindGroup, number][] = [];
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
     constructor(
         protected renderPipeline: Readonly<RenderPipeline>,
-        private renderPasses: Set<RenderPass> = new Set([engine.gpu!.renderPassScreen])) {
+        private renderPasses: Set<RenderPass> = new Set([engine.gpu!.renderPassScreen]),
+        protected dynamicBuffers: [BindGroup, number][]) {
         this.renderPasses.forEach(rp => {
             const variant = rp.getVariant(this.renderPipeline);
             this.#renderList.set(rp, variant.rootDrawables.add(this));
@@ -27,20 +27,15 @@ export abstract class Drawable {
         this.clearBundles();
     }
 
-    staticBuffers?: GPUBindGroup;
-    setStaticBuffer(label: string, ...staticBuffers: (GPUSampler | GPUTextureView)[]) {
+    #staticBindGroup?: BindGroup;
+    setStaticBindGroup(label: string, staticBuffers:(bindGroup: BindGroup) => Iterable<GPUBindGroupEntry>) {
         this.clearBundles();
-        this.staticBuffers = this.renderPipeline.bindgroupdrawable.gpu.device.createBindGroup(
-            {
-                label,
-                layout: this.renderPipeline.bindgroupdrawable.bindGroupLayout.layout,
-                entries: staticBuffers.map((resource, binding) => {
-                    return {
-                        binding,
-                        resource
-                    }
-                })
-            })
+        this.#staticBindGroup = new BindGroup(
+            this.renderPipeline.bindgroupdrawable.gpu,
+            this.renderPipeline.bindgroupdrawable.bindGroupLayout,
+            label,
+            staticBuffers
+            )
     }
     protected clearBundles() {
         //TODO: is this needed?
@@ -75,31 +70,30 @@ export abstract class Drawable {
         return Tbuffer;
     }
     abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder): void
-    draw(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex: number[]) {
-        this.dynamicBuffers.forEach((gpubindgroup_offset, i) => {
+    draw(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex: number[]) {       
+        this.dynamicBuffers.forEach(([{bindGroup}, offset], i) => {
             const di = dynamicIndex[i];
             if (di) {
-                renderEncoder.setBindGroup(di, gpubindgroup_offset[0].bindGroup, [GPU.gpu_memory_index_size + gpubindgroup_offset[1] * GPU.gpu_memory_index_size]);
+                renderEncoder.setBindGroup(di, bindGroup, [GPU.gpu_memory_index_size + offset * GPU.gpu_memory_index_size]);
             }
         });
-        this.staticBuffers && renderEncoder.setBindGroup(BindGroupsStart++, this.staticBuffers)
+        this.#staticBindGroup && renderEncoder.setBindGroup(BindGroupsStart++, this.#staticBindGroup.bindGroup)
         this.#vertexBuffers.forEach((buffer, index) => renderEncoder.setVertexBuffer(index, buffer.buffer.vertexBuffer, buffer.offset, buffer.size));
         this.render(renderEncoder);
     }
 }
 abstract class DrawableDirect extends Drawable {
     #instanceCount: number;
-    abstract node: MainNode
+    protected abstract node: DrawableNode
 
     constructor(
         renderPipeline: RenderPipeline,
-        dynamicIndex: number,
+        dynamicBindGroups: [BindGroup, number][],
         public label: string,
         renderPasses?: Set<RenderPass>,
         instanceCount = 1,
     ) {
-        super(renderPipeline, renderPasses);
-        this.dynamicBuffers.push([this.renderPipeline.bindgroupdrawable.gpu.BindGroupPosition, dynamicIndex])
+        super(renderPipeline, renderPasses, dynamicBindGroups);
         if (instanceCount == 0)
             console.warn('Added drawable with 0 instances, nothing will be drawn');
         this.#instanceCount = instanceCount;
@@ -120,6 +114,10 @@ abstract class DrawableDirect extends Drawable {
         mesh.drawable!.setVertexBuffer(0, debug_render_normals_vertexBuffer)
     }
     debug_bounding_box() {
+        if(!(this.node instanceof MainNode)) {
+            console.warn("Cannot debug_bounding_box on UI elements")
+            return;
+        }
         const vectors_simd = new Float32Array(engine.memory.buffer, engine.rust.bounding_vectors_pointer_simd(this.node.ptr), 3 * 4 * 2);
         const vectors = new Float32Array([
             vectors_simd[0]!, vectors_simd[4]!, vectors_simd[8]!, 0,
@@ -176,7 +174,7 @@ export class DrawableIndirect extends Drawable {
         readonly buffer: IndirectBuffer,
         public label: string,
         renderPasses?: Set<RenderPass>,) {
-        super(renderPipeline, renderPasses);
+        super(renderPipeline, renderPasses, []);
     }
     render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) {
         renderEncoder.drawIndirect(this.buffer.indirectBuffer, 0);
@@ -185,12 +183,17 @@ export class DrawableIndirect extends Drawable {
 export class DrawableSimple extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
-        public node: MainNode,
+        protected node: DrawableNode,
         renderPasses?: Set<RenderPass>,
         instanceCount = 1,
         public firstVertex = 0,
         public firstInstance = 0) {
-        super(renderPipeline, engine.rust.gpu_alignment(node.ptr), node.label, renderPasses, instanceCount);
+        const dynamicBindGroups:[BindGroup, number][]=[]
+        if(node instanceof MainNode) {
+            const dynamicIndex = engine.rust.gpu_alignment(node.ptr);
+            dynamicBindGroups.push([renderPipeline.bindgroupdrawable.gpu.BindGroupPosition, dynamicIndex])
+        }
+        super(renderPipeline, dynamicBindGroups, node.label, renderPasses, instanceCount);
     }
     render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder) {
         renderEncoder.draw(this.node.positions_count, this.instanceCount, this.firstVertex, this.firstInstance);
@@ -200,7 +203,7 @@ export class DrawableSimple extends DrawableDirect {
 export class DrawableIndexed extends DrawableDirect {
     constructor(
         renderPipeline: RenderPipeline,
-        public node: IndexedNode,
+        protected node: IndexedNode,
         renderPasses?: Set<RenderPass>,
         private indexBuffer?: IndexBuffer,
         public baseVertex = 0,
@@ -209,7 +212,7 @@ export class DrawableIndexed extends DrawableDirect {
         public firstInstance = 0,
         private GPUIndexFormat: GPUIndexFormat = 'uint16',
     ) {
-        super(renderPipeline, engine.rust.gpu_alignment(node.ptr), node.label, renderPasses, instanceCount);
+        super(renderPipeline, [[renderPipeline.bindgroupdrawable.gpu.BindGroupPosition, engine.rust.gpu_alignment(node.ptr)]], node.label, renderPasses, instanceCount);
     }
 
     override destroy(preserveVerticeBuffers: number[] = [], preserveIndexBuffer = false): void {

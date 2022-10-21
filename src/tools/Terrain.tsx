@@ -61,7 +61,7 @@ export class TerrainTool extends MainNode {
         public terrain: Terrain,
         canvas: HTMLCanvasElement
     ) {
-        super(4, undefined, undefined, undefined, 'TerrainTool');
+        super({ positionsCount: 4, label: 'TerrainTool'});
         this.#canvasListener = new canvasListener(this, canvas);
         const renderPipeline=getRenderPipeline(terrain);
         const scene=engine.scenes.get('main');

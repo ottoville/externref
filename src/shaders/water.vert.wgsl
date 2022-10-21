@@ -14,15 +14,6 @@ struct Time {
 @binding(1) @group(1) var<uniform> times : Time;
 @binding(0) @group(2) var<uniform> worldposition : MeshUniforms;
 
-const pos : array<vec3<f32>, 4> = array<vec3<f32>, 4>(
-    vec3<f32>(-50000.0,     3.0,   -50000.0),
-    vec3<f32>(50000.0,      3.0,   -50000.0),
-    vec3<f32>(-50000.0,     3.0,   50000.0),
-    vec3<f32>(50000.0,      3.0,   50000.0)
-    );
-
-
-
 //[[location(1)]] var<out> ambient : vec3<f32>;
 struct Output {
   @builtin(position) Position : vec4<f32>,

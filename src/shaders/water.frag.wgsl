@@ -15,7 +15,6 @@ fn main(@location(0) v_uv : vec4<f32>,
   let uv : vec2<f32> = vec2<f32>(v_uv.x/v_uv.w , (v_uv.y/v_uv.w))*0.5+vec2<f32>(0.5,0.5);
 
   output.Diffuse=textureSample(diffuseTexture, mySampler, uv);
-  output.Diffuse.w=0.0;
 
   return output;
 }

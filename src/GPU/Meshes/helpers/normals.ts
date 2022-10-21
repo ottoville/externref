@@ -8,7 +8,7 @@ declare const engine:Engine;
 export class NormalsMesh extends MainNode {
     drawable: DrawableSimple | undefined;
     constructor(positionsCount: number) {        
-        super(positionsCount,undefined, undefined, undefined, 'NormalsDebug');
+        super({positionsCount, label: 'NormalsDebug'});
         if(engine.gpu)
             this.drawable = engine.gpu.createRenderPipeline(NormalsPipeline,{ topology:'line-list' }).addDrawableSimple(this,undefined,undefined,undefined);
     }

@@ -419,7 +419,7 @@ export class Engine {
         if(canvas) {
             this.GPUReady=this.createGPU(GPUDataSize,gpu => {
                 this.mainCamera.initForGPU(gpu.renderPassScreen, gpu, new Projection(gpu));
-                gpu.pickRenderPass.cameras.add(this.mainCamera);
+                gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
                 //@ts-ignore
                 window.printRenderTarget = () => {
                     gpu.pickRenderPass.colorRenderTargets.gRenderTargetId.print_bitmap()

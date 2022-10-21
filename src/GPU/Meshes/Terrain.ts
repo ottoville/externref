@@ -9,7 +9,15 @@ import type { IndexBuffer, VertexBuffer} from "../../GPU/Buffer.js";
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
     setTextureView = (textureview: GPUTextureView) => {
-        this.drawable!.setStaticBuffer('terrainTexture', this.sampler!, textureview);
+        this.drawable!.setStaticBindGroup('terrainTexture', () => {
+            return [{
+                binding:0,
+                resource: this.sampler!
+            }, {
+                binding:1,
+                resource: textureview
+            }]
+        });
     }
     drawable: DrawableIndexed | undefined;
     override create_collider(): rust_pointer<"collider"> {
@@ -38,7 +46,15 @@ export class TerrainMesh extends BoundableNodeIndexed {
             this.drawable = engine.gpu.createRenderPipeline(TerrainRenderPipeline).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]), undefined, 0, 1);
             //@ts-expect-error
             window.debugTerrain=() => this.drawable.debug_render_normals(this);    
-            this.drawable!.setStaticBuffer('TerrainInitialTexture', this.sampler, initialTexture);
+            this.drawable!.setStaticBindGroup('TerrainInitialTexture', () => {
+                return [{
+                    binding:0,
+                    resource: this.sampler!
+                }, {
+                    binding:1,
+                    resource: initialTexture
+                }]
+            });
             this.drawable!.setVertexBuffer(0, this.vBuffer);
             this.drawable!.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
         }

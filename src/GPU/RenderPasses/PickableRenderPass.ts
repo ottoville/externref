@@ -119,7 +119,7 @@ export class PickableRenderPass<T extends {
         else if (!mesh && this.pickPromise) {
             return this.pickPromise
         }
-        const camera = [...this.cameras][0]!;
+        const camera = [...this.perspectiveCameras][0]!;
         const encoder = this.gpu.device.createCommandEncoder({label: 'pickPosition_encoder'});
         const gRenderTargetDiffuse = this.gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse
         if(gRenderTargetDiffuse instanceof MSAARenderTarget) {

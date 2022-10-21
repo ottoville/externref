@@ -49,7 +49,7 @@ export class Sun2 extends MainNode {
     }
     drawable: DrawableSimple | undefined;
     constructor(scenes: Scene[]) {
-        super(14,undefined,1,undefined,'sun',scenes);
+        super({ positionsCount: 14, directional_light: 1,label: 'sun', scenes});
         if(engine.gpu) {
             this.drawable=engine.gpu.createRenderPipeline(SunRenderPipeline, {
                 topology: 'triangle-strip',

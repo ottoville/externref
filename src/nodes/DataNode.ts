@@ -108,7 +108,14 @@ export abstract class DataNode extends MainNode {
         fixed = false,
         rigid_body = true
     ) {
-        super(vertices.length/verticesPositionStride, point_light, undefined, strip, label, scenes, fixed, rigid_body);
+        super({positionsCount: vertices.length/verticesPositionStride,
+        point_light,
+        strip,
+        label,
+        scenes,
+        fixed,
+        rigid_body
+    });
         DataNode.Meshes.set(this.id, this);
         engine.rust.add_geometry(this.ptr,true,verticesPositionStride,static_faces,strip);
 
@@ -133,7 +140,7 @@ export abstract class DataNode extends MainNode {
             const faceIndex = this.#triangleFaces.length;
             this.#triangleFaces.push(new Triangle(
                 this.#vectorsVec4  as [number, number, number],
-                () => collider_faces_pointer + faceIndex * 4 * 7));
+                collider_faces_pointer + faceIndex * 4 * 7));
             new Uint32Array(
                 engine.memory.buffer,
                 collider_faces_pointer + faceIndex * Float32Array.BYTES_PER_ELEMENT * 7 + 4 * Float32Array.BYTES_PER_ELEMENT,
@@ -190,18 +197,15 @@ export abstract class DataNode extends MainNode {
     abstract rebuildTrianglePlanes() : void
 
 
-    getPosition = (index: number) => {
-        if(index > this.positions_count) {
-            throw new Error('Tried to access vertice out of boundary')
-        }
-        return new TerraVector3(engine.memory.buffer, engine.rust.vertices_pointer(this.ptr) + index * this.vertices_stride * Float32Array.BYTES_PER_ELEMENT);
-    }
     intersectsRay = (ray: Float32Array): Promise<void> => {
         return worker.message(this.id, 'intersectsRay', [ray.buffer]);
     }
     #updateColliderPlanes() {
         this.#positionsAndCollider.forEach((posAndCol, i) => {
-            this.getPosition(i).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer,posAndCol[1]));
+            if(i > this.positions_count) {
+                throw new Error('Tried to access vertice out of boundary')
+            }
+            new TerraVector3(engine.memory.buffer, posAndCol[0]).multiply2Ref(this.#myCollisionsTransformMatrix, new TerraVector4(engine.memory.buffer,posAndCol[1]));
         });
         const collider_planes_parallel_pointer=engine.rust.collider_planes_parallel_pointer(this.ptr);
         this.#triangleFaces.forEach(face => {
