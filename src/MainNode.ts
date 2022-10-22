@@ -8,6 +8,7 @@ export interface DrawableNode {
     label: string;
     destroy(): void;
 }
+//TODO this class can be "inlined" to UIRectangle?
 export abstract class UINode implements DrawableNode {
     label: string;
     positions_count: number;
@@ -27,7 +28,7 @@ export abstract class UINode implements DrawableNode {
         view.set(new TextEncoder().encode(label));
     }
     destroy() {
-        
+        // TODO
     }
 }
 export abstract class MainNode implements DrawableNode {

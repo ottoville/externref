@@ -1,10 +1,8 @@
 ﻿import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
-import { canvasListener } from "../traits/canvasListener.js";
 import type { DrawableSimple } from "../GPU/Drawable.js";
 import { MainNode } from "../MainNode.js";
-import type { Trait } from "../traits/trait.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { type GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
@@ -50,8 +48,6 @@ export class TerrainTool extends MainNode {
         <button class="w3-bar-item w3-button" onClick={() => instance.raise()}>⇫</button>
         <button class="w3-bar-item w3-button" style="transform: rotate(-180deg);" onClick={() => instance.lower()} >⇫</button >
     </div>;
-    traits: Set<Trait> = new Set();
-    #canvasListener: canvasListener;
     elevator: rust_pointer<"elevator">
     drawable: DrawableSimple;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
@@ -59,10 +55,8 @@ export class TerrainTool extends MainNode {
 
     constructor(
         public terrain: Terrain,
-        canvas: HTMLCanvasElement
     ) {
         super({ positionsCount: 4, label: 'TerrainTool'});
-        this.#canvasListener = new canvasListener(this, canvas);
         const renderPipeline=getRenderPipeline(terrain);
         const scene=engine.scenes.get('main');
         if(!scene)
@@ -93,8 +87,7 @@ export class TerrainTool extends MainNode {
 
         // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
-
-        this.#canvasListener.addListener("pointermove", this.#mouseListener, { lazy: 15 });
+        engine.addPointerListener('move', this, this.#mouseListener)
 
     }
     static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number, number]) {
@@ -108,9 +101,8 @@ export class TerrainTool extends MainNode {
         if (evt.button !== 0) {
             return;
         }
-        this.#canvasListener.addListener("pointerup", this.pointerupf, { once: true });
+        engine.addPointerListener('onceUp', this, this.#pointerupf)
         engine.inputManager?.deAttachCameraController();
-
 
         this.mouseinterval = setInterval(() => {
             engine.rust.elevate(this.elevator,this.terrain.mesh.ptr,200,5*this.direction);
@@ -120,14 +112,13 @@ export class TerrainTool extends MainNode {
             }
         }, 17);
     }
-    pointerupf = (): void => {
+    #pointerupf = (): void => {
         engine.inputManager?.attachCameraController();
         clearInterval(this.mouseinterval);
     }
     override destroy = (): void => {
         this.drawable.destroy();
-        this.traits.forEach(trait => trait.destroy());
-
+        engine.clearPointerDownListeners(this);
         //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
         super.destroy();
         renderPipelines.delete(engine.gpu!);
@@ -149,15 +140,13 @@ export class TerrainTool extends MainNode {
     raise = (): void => {
         //TERRAIN EDITING DISABLED
         this.direction = 1;
-        this.#canvasListener.removeListener("pointerdown", this.#pointerdownf);
-        this.#canvasListener.addListener("pointerdown", this.#pointerdownf);
+        engine.addPointerListener('down', this, this.#pointerdownf)
 
     }
     lower = (): void => {
 
         //TERRAIN EDITING DISABLED
         this.direction = -1;
-        this.#canvasListener.removeListener("pointerdown", this.#pointerdownf);
-        this.#canvasListener.addListener("pointerdown", this.#pointerdownf);
+        engine.addPointerListener('down', this, this.#pointerdownf)        
     }
 }

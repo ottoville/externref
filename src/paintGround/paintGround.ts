@@ -5,7 +5,6 @@ import { TerraVector2, Angle } from "../Math.js";
 
 import type { Terrain } from "../world/terrain.js";
 import type { PTResultF } from "../types/interfaces/index.js";
-import type { hasCanvasListener } from "../traits/canvasListener.js";
 import type { Scene } from "../Scene.js";
 import { Engine } from "../engine.js";
 declare const engine:Engine;
@@ -28,10 +27,9 @@ export abstract class paintGround {
     constructor(
         protected scene: Scene,
         protected ground: Terrain,
-        private uitab: hasCanvasListener,
         public resolve: PTResultF
     ) {
-        this.uitab.canvasListener.addListener("pointerdown", this.#mainPointerDown, { once: true });
+        engine.addPointerListener('onceDown', this, this.#mainPointerDown);
     }
     //public resolve: PTResultF = () => null;
     /* public activate(callback: PTResultF) {
@@ -39,7 +37,7 @@ export abstract class paintGround {
          this.resolve = callback;
      }*/
     public destroy() {
-        this.uitab.canvasListener.destroy();
+        engine.clearPointerDownListeners(this);
     }
 
     #drawVector = new TerraVector2(2);
@@ -112,19 +110,19 @@ export abstract class paintGround {
     #finalClick = () => {
         //this.canvas.addEventListener('click', async () => {
         //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
-        this.uitab.canvasListener.removeListener('pointermove', this.#mousemove);
+        engine.removePointerListener('move', this, this.#mousemove);
         //this.canvas.removeEventListener('pointermove', this.mousemove, false);
 
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
-        this.uitab.canvasListener.addListener('pointerdown', this.#mainPointerDown, { once: true });
+        engine.addPointerListener('onceDown', this, this.#mainPointerDown);
         this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
     }
     private mouseMoveRegisterClick = () => {
-        this.uitab.canvasListener.addListener('pointerdown', this.#finalClick, { once: true });
+        engine.addPointerListener('onceUp', this, this.#finalClick);
     }
     #pointerUp = () => {
-        this.uitab.canvasListener.removeListener('pointermove', this.#drawArea);
+        engine.removePointerListener('move', this, this.#drawArea)
         engine.inputManager?.attachCameraController();
         //fix race condition
         if (this.#end_position[0] == 0)
@@ -134,14 +132,14 @@ export abstract class paintGround {
         } catch (e) {
             console.log(e);
         } finally {
-            this.uitab.canvasListener.addListener('pointermove', this.#mousemove, { lazy: 25 });
-            this.uitab.canvasListener.addListener('pointermove', this.mouseMoveRegisterClick, { once: true });
+            engine.addPointerListener('move', this, this.#mousemove);
+            engine.addPointerListener('onceMove', this, this.mouseMoveRegisterClick)
         }
     }
 
     #mainPointerDown = async (evt: PointerEvent) => {
         if (evt.button !== 0) {
-            this.uitab.canvasListener.addListener('pointerdown', this.#mainPointerDown, { once: true });
+            engine.addPointerListener('onceDown',this, this.#mainPointerDown);
             return;
         }
         // check if we are under a mesh
@@ -153,9 +151,8 @@ export abstract class paintGround {
             this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
             this.onMainPointerDown(this.#start_position);
             engine.inputManager?.deAttachCameraController();
-            this.uitab.canvasListener.addListener("pointermove", this.#drawArea, { lazy: 25 });
-
-            this.uitab.canvasListener.addListener("pointerup", this.#pointerUp, { once: true });
+            engine.addPointerListener('move', this, this.#drawArea);
+            engine.addPointerListener('onceUp', this, this.#pointerUp)
         } else {
             console.debug('no pickinfo pickedpoint');
             console.log(pickInfo);

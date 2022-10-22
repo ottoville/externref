@@ -3,7 +3,6 @@ import type { Terrain } from "../world/terrain.js";
 //import { Vector3 } from "../lib/babylon/Maths/math.vector.js";
 //import { MeshBuilder } from "../lib/babylon/Meshes/meshBuilder.js";
 
-import { hasCanvasListener } from "../traits/canvasListener.js";
 import type { Scene } from "../Scene.js";
 
 export class paintLine extends paintGround {
@@ -20,8 +19,7 @@ export class paintLine extends paintGround {
     constructor(
         scene: Scene,
         ground: Terrain,
-        uitab: hasCanvasListener
     ) {
-        super(scene, ground, uitab, () => null);
+        super(scene, ground, () => null);
     }
 }

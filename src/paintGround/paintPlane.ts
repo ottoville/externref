@@ -1,7 +1,6 @@
 ﻿import { paintGround } from "./paintGround.js";
 import type { Terrain } from "../world/terrain.js";
 import { PTResultF } from "../types/interfaces/index.js";
-import { hasCanvasListener } from "../traits/canvasListener.js";
 import { MainNode } from "../MainNode.js";
 import type { Scene } from "../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
@@ -30,10 +29,9 @@ export class paintPlane extends paintGround {
     constructor(
         scene: Scene,
         ground: Terrain,
-        uitab: hasCanvasListener,
         callback: PTResultF
     ) {
-        super(scene, ground, uitab,(p) => {
+        super(scene, ground, (p) => {
             this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0)
             callback(p);
         });

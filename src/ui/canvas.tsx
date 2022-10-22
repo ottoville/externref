@@ -303,7 +303,7 @@ export class Canvas extends TerraCompoment {
                         }
                     }
                 }
-                const instance = new tool(terrain, this.#canvasElem);
+                const instance = new tool(terrain);
                 menuContainer.appendChild(tool.menuElem(instance));
                 this.openedMenu = [instance, menuContainer];
             }

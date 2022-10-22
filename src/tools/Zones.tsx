@@ -2,9 +2,7 @@ import { UITAB } from "../UITAB.js";
 import { paintTexture } from "../paintGround/paintTexture.js";
 import { Terrain } from "../world/terrain.js";
 import { PTDresult } from "../types/interfaces/index.js";
-import { canvasListener } from "../traits/canvasListener.js";
 
-import type { Trait } from "../traits/trait.js";
 import type { Scene } from "../Scene.js";
 import type { Engine } from "../engine.js";
 declare const engine:Engine;
@@ -33,9 +31,6 @@ export class Zones extends UITAB {
         </label>
      </div>
 
-
-    traits: Set<Trait> = new Set();
-    public canvasListener;
     private PT: paintTexture;
     #size = 5120;
     readonly #ratio:number //texture coordinates
@@ -43,10 +38,8 @@ export class Zones extends UITAB {
     scene: Scene;
     constructor(
         terrain: Terrain,
-        canvas: HTMLCanvasElement
     ) {
         super(terrain);
-        this.canvasListener = new canvasListener(this, canvas);
         const initialScene=terrain.scenes[0];
         if(!initialScene) {
             throw(new Error('scene not found'))
@@ -91,7 +84,7 @@ export class Zones extends UITAB {
         }
         terrain.mesh.setTextureView(this.#zoneTexture.createView());
         terrain.mesh.set_scenes(staticScene.id)
-        this.PT = new paintTexture(this.scene, this.terrain, this.#zoneTexture, 5120, 5120, this, this.#ratio, (response) => {
+        this.PT = new paintTexture(this.scene, this.terrain, this.#zoneTexture, 5120, 5120, this.#ratio, (response) => {
             engine.DB?.transaction("zones", 'readwrite').objectStore("zones").put(response);
         });
         /*this.PT.activate(async (response) => {
@@ -103,6 +96,5 @@ export class Zones extends UITAB {
         this.terrain.mesh.setTextureView(this.terrain.texture.createView());
         this.#zoneTexture.destroy();
         this.PT.destroy();
-        this.traits.forEach(trait => trait.destroy());
     }
 }

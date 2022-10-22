@@ -1,9 +1,4 @@
 ﻿import { UITAB } from "../UITAB.js";
-
-
-import { canvasListener } from "../traits/canvasListener.js";
-import { Trait } from "../traits/trait.js";
-
 import { Terrain } from "../world/terrain.js";
 
 import { Engine } from "../engine.js";
@@ -18,23 +13,19 @@ export class BuildingsUI extends UITAB {
 </div>;
     activate: () => void= () => null;
     destroy: () => void = () => {
-        this.traits.forEach(trait => trait.destroy());
+        engine.clearPointerDownListeners(this);
     };
-    traits: Set<Trait> = new Set();
-    #canvasListener: canvasListener;
     constructor(
         terrain: Terrain,
-        canvas: HTMLCanvasElement
     ) {
         super(terrain);
-        this.#canvasListener = new canvasListener(this, canvas);
 
     }
     public create = (type: string): void => {
         const scene = engine.scenes.get('main');
 
         if (type == 'house') {
-            this.#canvasListener.addListener("pointerdown", function doHouse() {
+            engine.addPointerListener('onceDown', this, function doHouse() {
                 //@ts-ignore
                 let pickInfo: BABYLON.PickingInfo | null;
                 //@ts-ignore
@@ -81,7 +72,7 @@ export class BuildingsUI extends UITAB {
                     }
                 }
 
-            }, {once:true});
+            });
         }
     }
 }

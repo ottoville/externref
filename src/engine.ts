@@ -404,6 +404,39 @@ export class Engine {
         return gpu;
 
     }
+    private pointerMaps = {
+        'onceDown': new Map<object, Set<(e: PointerEvent) => void>>(),
+        'down': new Map<object, Set<(e: PointerEvent) => void>>(),
+        'onceUp': new Map<object, Set<(e: PointerEvent) => void>>(),
+        'up': new Map<object, Set<(e: PointerEvent) => void>>(),
+        'onceMove': new Map<object, Set<(e: PointerEvent) => void>>(),
+        'move': new Map<object, Set<(e: PointerEvent) => void>>()
+    } as const;
+    /*
+        Add listener to canvas element.
+         * type: type of listener
+         * object: The object which adds the listener, this is used to remove listener when object is destroyed
+    */
+    addPointerListener(type: keyof typeof engine.pointerMaps, object: object, cb: (e: PointerEvent) => void) {
+        const map = this.pointerMaps[type];
+        let cbs = map.get(object);
+        if(!cbs) {
+            cbs = new Set();
+            map.set(object, cbs);
+        }
+        cbs.add(cb);
+    }
+    removePointerListener(type: keyof typeof engine.pointerMaps, object:object, cb: (e: PointerEvent) => void) {
+        const removed = this.pointerMaps[type].get(object)?.delete(cb);
+        if(!removed) {
+            console.warn('Removed', type, 'listener on',object,'that did not exists');
+        }
+    }
+    clearPointerDownListeners(object: object) {
+        Object.values(this.pointerMaps).forEach(map => {
+            map.delete(object);
+        });
+    }
     constructor(
         public DB: EarthDatabase | undefined,
         public canvas: HTMLCanvasElement | undefined,
@@ -417,6 +450,23 @@ export class Engine {
         this.mainCamera = new TerraCamera();
 
         if(canvas) {
+            canvas.addEventListener('pointerup', (e) => {
+                this.pointerMaps.up.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.pointerMaps.onceUp.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.pointerMaps.onceUp.clear();
+            });
+            canvas.addEventListener('pointerdown', (e) => {
+                this.pointerMaps.down.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.pointerMaps.onceDown.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.pointerMaps.onceDown.clear();
+            });
+            canvas.addEventListener('pointermove', (e) => {
+                this.pointerMaps.move.forEach(cbs => cbs.forEach(cb => cb(e)));
+                this.pointerMaps.onceMove.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.pointerMaps.onceMove.clear();
+            });
+
+
             this.GPUReady=this.createGPU(GPUDataSize,gpu => {
                 this.mainCamera.initForGPU(gpu.renderPassScreen, gpu, new Projection(gpu));
                 gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);

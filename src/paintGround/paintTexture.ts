@@ -1,7 +1,6 @@
 ﻿import { paintGround } from "./paintGround.js";
 import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
-import { hasCanvasListener } from "../traits/canvasListener.js";
 import type { Scene } from "../Scene.js";
 import { TerraVector2 } from "../Math.js";
 
@@ -24,11 +23,10 @@ export class paintTexture extends paintGround {
         protected zonedt: GPUTexture,
         private textureWidth: number,
         private textureHeight: number,
-        uitab: hasCanvasListener,
         private ratio:number,
         callback: PTResultF
     ) {
-        super(scene, ground, uitab, callback);
+        super(scene, ground, callback);
     }
     onAreaDraw(width: number) {
         if (Number.isNaN(width) || Number.isNaN(this.height)) {
