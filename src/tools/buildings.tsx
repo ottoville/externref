@@ -13,7 +13,7 @@ export class BuildingsUI extends UITAB {
 </div>;
     activate: () => void= () => null;
     destroy: () => void = () => {
-        engine.clearPointerDownListeners(this);
+        engine.clearInputListeners(this);
     };
     constructor(
         terrain: Terrain,
@@ -25,7 +25,7 @@ export class BuildingsUI extends UITAB {
         const scene = engine.scenes.get('main');
 
         if (type == 'house') {
-            engine.addPointerListener('onceDown', this, function doHouse() {
+            engine.addInputListenerOnce('pointerdown', this, function doHouse() {
                 //@ts-ignore
                 let pickInfo: BABYLON.PickingInfo | null;
                 //@ts-ignore

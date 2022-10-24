@@ -29,7 +29,7 @@ export abstract class paintGround {
         protected ground: Terrain,
         public resolve: PTResultF
     ) {
-        engine.addPointerListener('onceDown', this, this.#mainPointerDown);
+        engine.addInputListenerOnce('pointerdown', this, this.#mainPointerDown);
     }
     //public resolve: PTResultF = () => null;
     /* public activate(callback: PTResultF) {
@@ -37,7 +37,7 @@ export abstract class paintGround {
          this.resolve = callback;
      }*/
     public destroy() {
-        engine.clearPointerDownListeners(this);
+        engine.clearInputListeners(this);
     }
 
     #drawVector = new TerraVector2(2);
@@ -108,21 +108,18 @@ export abstract class paintGround {
         }
     }
     #finalClick = () => {
-        //this.canvas.addEventListener('click', async () => {
-        //tempplane.material = new BABYLON.CustomMaterial("mat",scene);
-        engine.removePointerListener('move', this, this.#mousemove);
-        //this.canvas.removeEventListener('pointermove', this.mousemove, false);
+        engine.removeInputListener('pointermove', this, this.#mousemove);
 
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
-        engine.addPointerListener('onceDown', this, this.#mainPointerDown);
+        engine.addInputListenerOnce('pointerdown', this, this.#mainPointerDown);
         this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
     }
     private mouseMoveRegisterClick = () => {
-        engine.addPointerListener('onceUp', this, this.#finalClick);
+        engine.addInputListenerOnce('pointerup', this, this.#finalClick);
     }
     #pointerUp = () => {
-        engine.removePointerListener('move', this, this.#drawArea)
+        engine.removeInputListener('pointermove', this, this.#drawArea)
         engine.inputManager?.attachCameraController();
         //fix race condition
         if (this.#end_position[0] == 0)
@@ -132,14 +129,14 @@ export abstract class paintGround {
         } catch (e) {
             console.log(e);
         } finally {
-            engine.addPointerListener('move', this, this.#mousemove);
-            engine.addPointerListener('onceMove', this, this.mouseMoveRegisterClick)
+            engine.addInputListener('pointermove', this, this.#mousemove);
+            engine.addInputListenerOnce('pointermove', this, this.mouseMoveRegisterClick)
         }
     }
 
     #mainPointerDown = async (evt: PointerEvent) => {
         if (evt.button !== 0) {
-            engine.addPointerListener('onceDown',this, this.#mainPointerDown);
+            engine.addInputListenerOnce('pointerdown',this, this.#mainPointerDown);
             return;
         }
         // check if we are under a mesh
@@ -151,8 +148,8 @@ export abstract class paintGround {
             this.#start_position = new TerraVector2([pickInfo.position[0], pickInfo.position[2]]);
             this.onMainPointerDown(this.#start_position);
             engine.inputManager?.deAttachCameraController();
-            engine.addPointerListener('move', this, this.#drawArea);
-            engine.addPointerListener('onceUp', this, this.#pointerUp)
+            engine.addInputListener('pointermove', this, this.#drawArea);
+            engine.addInputListenerOnce('pointerup', this, this.#pointerUp)
         } else {
             console.debug('no pickinfo pickedpoint');
             console.log(pickInfo);

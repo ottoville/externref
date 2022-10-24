@@ -169,6 +169,8 @@ export interface ColliderWasm {
     _initialize: () => void
 }
 let deviceId=0;
+type Events = 'pointerdown' | 'pointerup' | 'pointermove' | 'pointerleave' | 'wheel' | 'keydown' | 'keyup'
+
 export class Engine {
 
     /*
@@ -404,36 +406,59 @@ export class Engine {
         return gpu;
 
     }
-    private pointerMaps = {
-        'onceDown': new Map<object, Set<(e: PointerEvent) => void>>(),
-        'down': new Map<object, Set<(e: PointerEvent) => void>>(),
-        'onceUp': new Map<object, Set<(e: PointerEvent) => void>>(),
-        'up': new Map<object, Set<(e: PointerEvent) => void>>(),
-        'onceMove': new Map<object, Set<(e: PointerEvent) => void>>(),
-        'move': new Map<object, Set<(e: PointerEvent) => void>>()
+    #inputMaps = {
+        pointerdown: new Map<object, Set<(e: UIEvent) => void>>(),
+        pointerup: new Map<object, Set<(e: UIEvent) => void>>(),
+        pointermove: new Map<object, Set<(e: UIEvent) => void>>(),
+        pointerleave: new Map<object, Set<(e: UIEvent) => void>>(),
+        wheel: new Map<object, Set<(e: UIEvent) => void>>(),
+        keydown: new Map<object, Set<(e: UIEvent) => void>>(),
+        keyup: new Map<object, Set<(e: UIEvent) => void>>(),
+
+        pointerdownOnce: new Map<object, Set<(e: UIEvent) => void>>(),
+        pointerupOnce: new Map<object, Set<(e: UIEvent) => void>>(),
+        pointermoveOnce: new Map<object, Set<(e: UIEvent) => void>>(),
+        pointerleaveOnce: new Map<object, Set<(e: UIEvent) => void>>(),
+        wheelOnce: new Map<object, Set<(e: UIEvent) => void>>(),
+        keydownOnce: new Map<object, Set<(e: UIEvent) => void>>(),
+        keyupOnce: new Map<object, Set<(e: UIEvent) => void>>(),
+
+
     } as const;
     /*
         Add listener to canvas element.
          * type: type of listener
          * object: The object which adds the listener, this is used to remove listener when object is destroyed
     */
-    addPointerListener(type: keyof typeof engine.pointerMaps, object: object, cb: (e: PointerEvent) => void) {
-        const map = this.pointerMaps[type];
+    addInputListener<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => void) {
+        const map = this.#inputMaps[type];
         let cbs = map.get(object);
         if(!cbs) {
             cbs = new Set();
             map.set(object, cbs);
         }
+        //@ts-expect-error
         cbs.add(cb);
     }
-    removePointerListener(type: keyof typeof engine.pointerMaps, object:object, cb: (e: PointerEvent) => void) {
-        const removed = this.pointerMaps[type].get(object)?.delete(cb);
+    addInputListenerOnce<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => void) {
+        const map = this.#inputMaps[`${type}Once`];
+        let cbs = map.get(object);
+        if(!cbs) {
+            cbs = new Set();
+            map.set(object, cbs);
+        }
+        //@ts-expect-error
+        cbs.add(cb);
+    }
+    removeInputListener<K extends (Events & keyof HTMLElementEventMap)>(type: K, object:object, cb: (e: HTMLElementEventMap[K]) => void) {
+    //@ts-expect-error
+        const removed = this.#inputMaps[type].get(object)?.delete(cb) || this.#inputMaps[`${type}Once`].get(object)?.delete(cb)
         if(!removed) {
             console.warn('Removed', type, 'listener on',object,'that did not exists');
         }
     }
-    clearPointerDownListeners(object: object) {
-        Object.values(this.pointerMaps).forEach(map => {
+    clearInputListeners(object: object) {
+        Object.values(this.#inputMaps).forEach(map => {
             map.delete(object);
         });
     }
@@ -451,21 +476,40 @@ export class Engine {
 
         if(canvas) {
             canvas.addEventListener('pointerup', (e) => {
-                this.pointerMaps.up.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.pointerMaps.onceUp.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.pointerMaps.onceUp.clear();
+                this.#inputMaps.pointerup.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.#inputMaps.pointerupOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.#inputMaps.pointerupOnce.clear();
             });
             canvas.addEventListener('pointerdown', (e) => {
-                this.pointerMaps.down.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.pointerMaps.onceDown.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.pointerMaps.onceDown.clear();
+                this.#inputMaps.pointerdown.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.#inputMaps.pointerdownOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.#inputMaps.pointerdownOnce.clear();
             });
             canvas.addEventListener('pointermove', (e) => {
-                this.pointerMaps.move.forEach(cbs => cbs.forEach(cb => cb(e)));
-                this.pointerMaps.onceMove.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.pointerMaps.onceMove.clear();
+                this.#inputMaps.pointermove.forEach(cbs => cbs.forEach(cb => cb(e)));
+                this.#inputMaps.pointermoveOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.#inputMaps.pointermoveOnce.clear();
             });
-
+            canvas.addEventListener('wheel', (e) => {
+                this.#inputMaps.wheel.forEach(cbs => cbs.forEach(cb => cb(e)));
+                this.#inputMaps.wheelOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.#inputMaps.wheelOnce.clear();
+            });
+            canvas.addEventListener('pointerleave', (e) => {
+                this.#inputMaps.pointerleave.forEach(cbs => cbs.forEach(cb => cb(e)));
+                this.#inputMaps.pointerleaveOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.#inputMaps.pointerleaveOnce.clear();
+            });
+            canvas.addEventListener('keydown', (e) => {
+                this.#inputMaps.keydown.forEach(cbs => cbs.forEach(cb => cb(e)));
+                this.#inputMaps.keydownOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.#inputMaps.keydownOnce.clear();
+            });
+            canvas.addEventListener('keyup', (e) => {
+                this.#inputMaps.keyup.forEach(cbs => cbs.forEach(cb => cb(e)));
+                this.#inputMaps.keyupOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
+                this.#inputMaps.keyupOnce.clear();
+            });
 
             this.GPUReady=this.createGPU(GPUDataSize,gpu => {
                 this.mainCamera.initForGPU(gpu.renderPassScreen, gpu, new Projection(gpu));

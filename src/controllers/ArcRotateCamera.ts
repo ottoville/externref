@@ -136,19 +136,26 @@ export class ArcRotateCamera extends CameraController {
                 }
             }).catch(engine.showError)
         }
-        engine.canvas!.addEventListener('pointermove', this.#cameraMove);
-        engine.canvas!.addEventListener('pointerup', () => engine.canvas!.removeEventListener('pointermove', this.#cameraMove), { once: true });
-        engine.canvas!.addEventListener('pointerleave', () => engine.canvas!.removeEventListener('pointermove', this.#cameraMove), { once: true });
+        engine.addInputListener('pointermove', this, this.#cameraMove);
+        const onceUp = () => {
+            engine.removeInputListener('pointermove', this, this.#cameraMove)
+            engine.removeInputListener('pointerleave', this, onceLeace)
+        }
+        const onceLeace = () => {
+            engine.removeInputListener('pointermove', this, this.#cameraMove);
+            engine.removeInputListener('pointerup', this, onceUp);
+        }
+        engine.addInputListenerOnce('pointerleave', this, onceLeace);
+        engine.addInputListenerOnce('pointerup',this, onceUp)
+    
     }
     deAttachCameraController() {
-        this.element?.removeEventListener('pointerdown', this.#cameraPointerDown);
-        this.element?.removeEventListener('pointermove', this.#cameraMove);
-        this.element?.removeEventListener('wheel', this.#cameraWheel);
+        engine.clearInputListeners(this);
         this.serialize();
     }
     attachCameraController() {
-        this.element?.addEventListener('wheel', this.#cameraWheel);
-        this.element?.addEventListener('pointerdown', this.#cameraPointerDown);
+        engine.addInputListener('wheel', this, this.#cameraWheel);
+        engine.addInputListener('pointerdown', this, this.#cameraPointerDown);
     }
     #calculatePosition() {
         let sinb = Math.sin(this.#beta);

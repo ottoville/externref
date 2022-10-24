@@ -87,7 +87,7 @@ export class TerrainTool extends MainNode {
 
         // this.engine = sceneDeprecated.getEngine() as WebGPUEngine;
 
-        engine.addPointerListener('move', this, this.#mouseListener)
+        engine.addInputListener('pointermove', this, this.#mouseListener)
 
     }
     static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number, number]) {
@@ -101,7 +101,7 @@ export class TerrainTool extends MainNode {
         if (evt.button !== 0) {
             return;
         }
-        engine.addPointerListener('onceUp', this, this.#pointerupf)
+        engine.addInputListenerOnce('pointerup', this, this.#pointerupf)
         engine.inputManager?.deAttachCameraController();
 
         this.mouseinterval = setInterval(() => {
@@ -118,7 +118,7 @@ export class TerrainTool extends MainNode {
     }
     override destroy = (): void => {
         this.drawable.destroy();
-        engine.clearPointerDownListeners(this);
+        engine.clearInputListeners(this);
         //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
         super.destroy();
         renderPipelines.delete(engine.gpu!);
@@ -140,13 +140,13 @@ export class TerrainTool extends MainNode {
     raise = (): void => {
         //TERRAIN EDITING DISABLED
         this.direction = 1;
-        engine.addPointerListener('down', this, this.#pointerdownf)
+        engine.addInputListener('pointerdown', this, this.#pointerdownf)
 
     }
     lower = (): void => {
 
         //TERRAIN EDITING DISABLED
         this.direction = -1;
-        engine.addPointerListener('down', this, this.#pointerdownf)        
+        engine.addInputListener('pointerdown', this, this.#pointerdownf)        
     }
 }

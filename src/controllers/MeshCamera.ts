@@ -59,17 +59,14 @@ export class MeshCamera extends CameraController{
     }
     deAttachCameraController() {
         document.exitPointerLock();
-        document.removeEventListener('keydown', this.#keydownfunction);
-        document.removeEventListener('keyup', this.#keyupfunction);
-        document.removeEventListener('pointermove', this.#pointerMoveFunction);
-        document.removeEventListener('pointerdown', this.#pointerDownFunction);
+        engine.clearInputListeners(this);
     }
     attachCameraController() {
         document.body.requestPointerLock()
-        document.addEventListener('pointerdown', this.#pointerDownFunction);
-        document.addEventListener('keydown', this.#keydownfunction);
-        document.addEventListener('keyup', this.#keyupfunction);
-        document.addEventListener('pointermove', this.#pointerMoveFunction);
+        engine.addInputListener('pointerdown',this, this.#pointerDownFunction);
+        engine.addInputListener('keydown',this, this.#keydownfunction);
+        engine.addInputListener('keyup',this, this.#keyupfunction);
+        engine.addInputListener('pointermove',this, this.#pointerMoveFunction);
     }
     //#serializeRequested=false;
 
