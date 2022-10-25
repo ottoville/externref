@@ -5,6 +5,9 @@ import type { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
 import { Buffer } from "../GPU/Buffer.js";
 import { GPUBufferUsage } from "../GPU.js";
 import { TextureView } from "../GPU/TextureView.js";
+import type { Engine } from "../engine.js";
+declare const engine:Engine;
+
 function createVertexBuffer(scale: { x: number, y: number },
     borderSize: {
         width: number,
@@ -115,8 +118,14 @@ function createVertexBuffer(scale: { x: number, y: number },
 export class UIRectangle extends UINode {
     drawable: DrawableSimple;
     #renderPass: RenderPass;
+    #boundingBox= {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0
+    }
     constructor({ canvaspipeline, renderPass, label,
-        borderSize, texture, scale, translate, originalAspectRatio }:
+        borderSize, texture, scale, translate, originalAspectRatio, events }:
         {
             canvaspipeline: RenderPipeline,
             renderPass: RenderPass,
@@ -136,7 +145,10 @@ export class UIRectangle extends UINode {
             texture: TextureView,
             scale: { x: number, y: number },
             translate: { x: number, y: number },
-            originalAspectRatio?: number
+            originalAspectRatio?: number,
+            events?: {
+                onClick?:(e:PointerEvent) => void,
+            }
         }) {
         super({ positionsCount: (borderSize.width > 0 || borderSize.height > 0) ? 54 : 6, label });
         this.#renderPass = renderPass;
@@ -146,12 +158,38 @@ export class UIRectangle extends UINode {
             const b = new Float32Array(buff.getMappedRange())
             b.set([translate.x, translate.y])
         });
+        const onClick = events?.onClick;
+        if(onClick) {
+            const clickListener = (e:PointerEvent) => {
+                if(
+                    (e.offsetX > this.#boundingBox.left && e.offsetX < this.#boundingBox.right)
+                     &&
+                    (e.offsetY > this.#boundingBox.top && e.offsetY < this.#boundingBox.bottom)
+                    ) {
+                        onClick(e);
+                    }
+            }
+            engine.addInputListener('pointerdown', this, clickListener)
+
+        }
         renderPass.onResize.set(this, () => {
             const widthPixels = renderPass.size[0] * scale.x;
+            const offsetXPixels = renderPass.size[0] * ((translate.x + 1) * 0.5) * 1/devicePixelRatio;
+            const offsetYPixels = renderPass.size[1] * ((-translate.y + 1) * 0.5) * 1/devicePixelRatio;
+            const halfWidth=widthPixels*0.5* 1/devicePixelRatio
+            let halfHeight:number;
             if (originalAspectRatio) {
                 const heightPixels = widthPixels * originalAspectRatio;
                 scale.y = heightPixels / renderPass.size[1];
+                halfHeight = halfWidth * originalAspectRatio;
+            } else {
+                halfHeight=renderPass.size[1] * scale.y*0.5* 1/devicePixelRatio
             }
+            this.#boundingBox.top = offsetYPixels - halfHeight;
+            this.#boundingBox.bottom = offsetYPixels + halfHeight;
+            this.#boundingBox.left = offsetXPixels - halfWidth;
+            this.#boundingBox.right = offsetXPixels + halfWidth;
+
             if (borderSize.width > 0 || (typeof borderSize.height === "number" && borderSize.height > 0)) {
                 const widthBorderPixels = renderPass.size[0] * borderSize.width;
                 borderSize.height=widthBorderPixels/renderPass.size[1];
@@ -179,5 +217,6 @@ export class UIRectangle extends UINode {
     override destroy() {
         super.destroy();
         this.#renderPass.onResize.delete(this);
+        engine.clearInputListeners(this);
     }
 }

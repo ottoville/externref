@@ -217,12 +217,17 @@ export class Canvas extends TerraCompoment {
         new UIRectangle({
             canvaspipeline: UIPipeline,
             renderPass: gpu.renderPassCanvas,
-            label:'UIButton',
-            borderSize:{width:0.01, height:'auto', texture_width:0.2, texture_height: 0.2 },
+            label: 'UIButton',
+            borderSize: {width:0.01, height: 'auto', texture_width: 0.2, texture_height: 0.2 },
             texture: new TextureView(texture),
             scale: {x:0.1, y:0.1},
-            translate: {x:-0.9, y: 0.9},
-            originalAspectRatio: 0.3
+            translate: { x:-0.9, y: 0.9 },
+            originalAspectRatio: 0.3,
+            events: {
+                onClick: (e) => {
+                    console.log(e);
+                }
+            }
         })
 
         this.progress = 20;
