@@ -1,5 +1,6 @@
 import type { GPU } from "../GPU.js";
 import { BindGroup } from "./BindGroup.js";
+import type { RenderPass } from "./RenderPasses/RenderPass.js";
 
 
 //TODO: Merge layoutgroupdrawable here
@@ -18,7 +19,7 @@ export class BindGroupLayout<T extends GPUBindGroupEntry[] = GPUBindGroupEntry[]
         BindGroupLayout<{ [K in keyof T]: T[K] extends {texture:GPUTextureBindingLayout} ? GPUBindGroupTextureEntry<T[K]['texture']['sampleType']>:GPUBindGroupEntry }> {
         return new BindGroupLayout(gpu, {label, entries})
     }
-    constructor(private gpu:GPU, entry:GPUBindGroupLayoutDescriptor|GPUBindGroupLayout) {
+    constructor(public gpu:GPU, entry:GPUBindGroupLayoutDescriptor|GPUBindGroupLayout) {
         if(entry instanceof GPUBindGroupLayout)
             this.layout = entry
         else {
@@ -31,7 +32,10 @@ export class BindGroupLayout<T extends GPUBindGroupEntry[] = GPUBindGroupEntry[]
             }
         }
     }
-    createBindGroup(label: string, entries: (bindGroup: BindGroup) => MapToGPUBindGroupEntry<T>): BindGroup {
-        return new BindGroup(this.gpu, this, label,entries)
+    createBindGroup(
+        label: string,
+        entries: (bindGroup: BindGroup) => MapToGPUBindGroupEntry<T>,
+        renderPasses?: Set<RenderPass>): BindGroup {
+        return new BindGroup(this, label,entries, renderPasses)
     } 
 }

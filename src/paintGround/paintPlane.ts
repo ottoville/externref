@@ -7,7 +7,7 @@ import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 
 import { TerraVector2 } from "../Math.js";
-import { DrawableIndexed } from "../GPU/Drawable.js";
+import type { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 import type { IndexedNode } from "../nodes/DataNode.js";
 import type { Engine } from "../engine.js";
 declare const engine:Engine;

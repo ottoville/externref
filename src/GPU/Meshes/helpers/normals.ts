@@ -1,8 +1,7 @@
 import { MainNode } from "../../../MainNode.js";
-import { DrawableSimple } from "../../Drawable.js";
 import { NormalsPipeline } from "../../RenderPipeLines/Normals.js";
-
 import type { Engine } from "../../../engine.js";
+import type { DrawableSimple } from "../../Drawables/DrawableSimple.js";
 declare const engine:Engine;
 
 export class NormalsMesh extends MainNode {

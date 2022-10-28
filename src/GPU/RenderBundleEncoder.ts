@@ -14,6 +14,9 @@ export class RenderBundleEncoder {
     destroy() {
         this.#renderBundle = undefined;
     }
-    constructor(private renderPass: RenderPass, private record: (GPURenderBundleEncoder: GPURenderBundleEncoder, renderBundleEncoder:RenderBundleEncoder) => void) {
+    constructor(
+        private renderPass: RenderPass,
+        private record: (GPURenderBundleEncoder: GPURenderBundleEncoder,
+        renderBundleEncoder: RenderBundleEncoder) => void) {
     }
 }

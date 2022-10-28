@@ -1,6 +1,6 @@
 ﻿import { BoundableNodeSimple } from "../nodes/BoundableNodeSimple.js";
 import type { Scene } from "../Scene.js";
-import type { DrawableSimple } from "../GPU/Drawable.js";
+import type { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { WaterRenderPipeline } from "../GPU/RenderPipeLines/Water.js";
 import type { Engine } from "../engine.js";
 declare const engine:Engine;

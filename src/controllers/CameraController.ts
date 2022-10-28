@@ -12,7 +12,7 @@ export abstract class CameraController implements Ellipsoid {
         0.0, 0.0, 0.0, 1.0]);
     readonly closeDistanceVector:[number,number,number] = [closeDistance / this.collisionRadius[0], closeDistance / this.collisionRadius[1], closeDistance / this.collisionRadius[2]];
     cameraControl?: CameraControl;
-    constructor(protected element: HTMLElement | undefined) {
+    constructor() {
         const collisionRadius=this.collisionRadius;
         const collisionsScalingMatrix = this.collisionsScalingMatrix;
         const myCloseDistance = this.closeDistanceVector;

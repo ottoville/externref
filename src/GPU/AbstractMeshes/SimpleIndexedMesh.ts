@@ -1,6 +1,6 @@
 ﻿import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
 import type { Scene } from "../../Scene.js";
-import type { DrawableIndexed } from "../Drawable.js";
+import type { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { GPUBufferUsage } from "../../GPU.js";

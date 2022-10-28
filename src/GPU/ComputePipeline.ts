@@ -19,7 +19,7 @@ export class ComputePipeline {
         });
     }
     createBindGroup(layout: number | BindGroupLayout, label: string, entries: (bindGroup: BindGroup) => Iterable<GPUBindGroupEntry>) {
-        return new BindGroup(this.gpu,
+        return new BindGroup(
             layout instanceof BindGroupLayout ? layout : new BindGroupLayout(this.gpu, this.pipeline.getBindGroupLayout(layout)),
             this.shader+' '+this.entryPoint+' '+label,
             entries

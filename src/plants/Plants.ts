@@ -75,6 +75,8 @@ export class Plants {
                 if (cachedgrass) {
                     console.log('grass', URL.createObjectURL(await cachedgrass.blob()));
                 }
+            }).catch((e) => {
+                console.error(e)
             });
         }
 

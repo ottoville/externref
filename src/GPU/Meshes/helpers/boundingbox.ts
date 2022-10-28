@@ -1,5 +1,5 @@
 import { MainNode } from "../../../MainNode.js";
-import { DrawableSimple } from "../../Drawable.js";
+import { DrawableSimple } from "../../Drawables/DrawableSimple";
 
 import { BoundingBoxPipeline } from "../../RenderPipeLines/Boundingbox.js";
 

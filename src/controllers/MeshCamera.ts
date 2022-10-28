@@ -22,7 +22,7 @@ export class MeshCamera extends CameraController{
     arrowKeysDown=0;
     pointerMovement={x:0,y:0};
     constructor(public camera: TerraCamera, initial=false) {
-        super(document?.body);
+        super();
         const syncCamera = () => {
             //this.camera.position=this.#position;
             this.cameraControl?.updateDirection(direction => {

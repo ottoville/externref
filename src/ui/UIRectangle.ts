@@ -1,11 +1,11 @@
 import { UINode } from "../MainNode.js";
 import type { RenderPipeline } from "../GPU/RenderPipeline.js";
-import type { DrawableSimple } from "../GPU/Drawable.js";
 import type { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
 import { Buffer } from "../GPU/Buffer.js";
 import { GPUBufferUsage } from "../GPU.js";
 import { TextureView } from "../GPU/TextureView.js";
 import type { Engine } from "../engine.js";
+import type { DrawableSimple } from "GPU/Drawables/DrawableSimple.js";
 declare const engine:Engine;
 
 function createVertexBuffer(scale: { x: number, y: number },
@@ -125,7 +125,7 @@ export class UIRectangle extends UINode {
         bottom: 0
     }
     constructor({ canvaspipeline, renderPass, label,
-        borderSize, texture, scale, translate, originalAspectRatio, events }:
+        borderSize, textureView, scale, translate, originalAspectRatio, events }:
         {
             canvaspipeline: RenderPipeline,
             renderPass: RenderPass,
@@ -142,7 +142,7 @@ export class UIRectangle extends UINode {
                 width: number, height: number | 'auto',
                 texture_width: number, texture_height: number
             },
-            texture: TextureView,
+            textureView: TextureView,
             scale: { x: number, y: number },
             translate: { x: number, y: number },
             originalAspectRatio?: number,
@@ -194,14 +194,15 @@ export class UIRectangle extends UINode {
                 const widthBorderPixels = renderPass.size[0] * borderSize.width;
                 borderSize.height=widthBorderPixels/renderPass.size[1];
             }
-            const vertices = createVertexBuffer(scale, borderSize, texture.texture.size, label);
+            const vertices = createVertexBuffer(scale, borderSize, textureView.texture.size, label);
             //TODO: enforce vertices set when pipeline have vertices buffer
             this.drawable.setVertexBuffer(0, new Float32Array(vertices.flat()));
         });
-        const vertices = createVertexBuffer(scale, borderSize, texture.texture.size, label);
+        const vertices = createVertexBuffer(scale, borderSize, textureView.texture.size, label);
         this.drawable.setVertexBuffer(0, new Float32Array(vertices.flat()));
 
-        this.drawable.setStaticBindGroup('UI_bindgroup', (bindGroup) => {
+        this.drawable.setStaticBindGroup('UI_bindgroup_' + label, (bindGroup) => {
+            console.log('setStaticBindGroup', textureView)
             return [
                 {
                     binding: 0,
@@ -209,7 +210,7 @@ export class UIRectangle extends UINode {
                 },
                 {
                     binding: 1,
-                    resource: texture.getTextureBinding(bindGroup)
+                    resource: textureView.getTextureBinding(bindGroup)
                 }
             ]
         })

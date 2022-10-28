@@ -257,9 +257,16 @@ export class GPU {
             visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
             buffer: { type: 'uniform' }
         })
-        const sizePipelineLayout = new PipelineLayout('renderPass', this, this.sizeBindGroupLayout, undefined, undefined, false, true);
+        const sizePipelineLayout = new PipelineLayout({
+            label: 'renderPass',
+            bindGroupLayout: this.sizeBindGroupLayout
+        });
 
-        this.rootCameralayout = new PipelineLayout('rootCamera', this, this.uniformBindGroupLayoutWithTime, sizePipelineLayout, undefined, false, false);
+        this.rootCameralayout = new PipelineLayout({
+            label: 'rootCamera',
+            bindGroupLayout: this.uniformBindGroupLayoutWithTime,
+            parent: sizePipelineLayout
+        });
 
         const BindGroupLayoutPosition = BindGroupLayout.create(this,
             'BindGroupLayoutPosition',
@@ -362,7 +369,10 @@ export class GPU {
                 } as GPUTextureBindingLayout
             }
         )
-        this.canvasRootLayout = new PipelineLayout('canvasRootLayout', this, BindGroupLayoutCanvas);
+        this.canvasRootLayout = new PipelineLayout({
+            label: 'canvasRootLayout',
+            bindGroupLayout: BindGroupLayoutCanvas
+        });
 
         this.renderPassCanvas = new RenderPass(this, {
             swap: ColorRenderTarget.createForRenderpass(this.#presentationFormat, ['RENDER_ATTACHMENT'], 'canvasTexture', { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, {size: [300,300,1]}, {

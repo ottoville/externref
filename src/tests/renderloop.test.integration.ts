@@ -1,7 +1,7 @@
 import type { Engine } from "../engine.js";
 import type { Page, Browser } from 'puppeteer-core';
 
-import { describe, beforeAll, it, expect, jest } from '@jest/globals'
+import { describe, beforeAll, it, expect } from '@jest/globals'
 
 
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
@@ -27,10 +27,10 @@ describe('Physic time ', function () {
       const engine: Engine = window.engine;
 
       const deltaView = new Float32Array(engine.gpu!.timeAndDeltaBuffer, 4, 1);
-      const value0 = deltaView[0];
+      const value0_ = deltaView[0];
       await new Promise(res => { setTimeout(res, 1234) });
-      const value1 = deltaView[0];
-      return [value0, value1];
+      const value1_ = deltaView[0];
+      return [value0_, value1_];
     });
     expect(Number.isFinite(value1)).toBe(true)
     expect(value0).not.toBe(value1)

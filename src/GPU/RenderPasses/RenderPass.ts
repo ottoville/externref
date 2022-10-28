@@ -2,7 +2,7 @@
 import type { TerraCamera } from "../../TerraCamera.js";
 import { GPUBufferUsage, type GPU } from "../../GPU.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
-import type { Drawable } from "../Drawable.js";
+import type { Drawable } from "../Drawables/Drawable.js";
 import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
 import type { PipelineLayout } from "../PipelineLayout.js";
 import type { GPUTextureUsageLiterals } from "../Texture.js";
@@ -188,7 +188,7 @@ export class RenderPass<U extends {
         } else {
             GPUrenderBundleEncoder.setBindGroup(0, this.sizeBindGroup().getForRenderPass(renderBundleEncoder));
             this.perspectiveCameras.forEach(camera => {
-                GPUrenderBundleEncoder.setBindGroup(1, camera.uniformBindGroup!.getForRenderPass(renderBundleEncoder));
+                GPUrenderBundleEncoder.setBindGroup(1, camera.uniformBindGroup!.bindGroup);
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder,renderBundleEncoder, this.rootLayout, 2)
             })

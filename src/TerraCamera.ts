@@ -44,10 +44,8 @@ export class TerraCamera {
     #inputController?:CameraController
     projection?: Projection
     private gpu?: GPU 
-    initForGPU(renderPass: RenderPass | undefined, gpu:GPU, projection: Projection) {
-        if(renderPass) {
-            renderPass.perspectiveCameras.add(this);
-        }
+    initForGPU(renderPass: RenderPass, gpu:GPU, projection: Projection) {
+        renderPass.perspectiveCameras.add(this);
         this.#clusterArrayBuffer?.destroy();
         this.#uniformBuffer?.destroy();
         this.uniformBindGroup?.destroy();
@@ -76,7 +74,7 @@ export class TerraCamera {
                 binding: 4,
                 resource: projection.gpuBuffer.getUniformBinding(bindGroup)
             }
-        ]);
+        ], new Set([renderPass]));
         this.updateViewBindGroup = gpu.updateViewPipeline.createBindGroup(gpu.viewUniformsLayout,'updateViewBindGroup2',
             (bindGroup) => [
                 {

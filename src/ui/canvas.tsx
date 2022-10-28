@@ -89,7 +89,7 @@ export class Canvas extends TerraCompoment {
 
             new Sea([terrascene]);
             //new testPlane(terrascene);
-            const archRotateController = new ArcRotateCamera(engine.mainCamera, this.#canvasElem, true);
+            const archRotateController = new ArcRotateCamera(engine.mainCamera, true);
             engine.mainCamera.attachControllerForCamera(archRotateController);
             const human = new Human({scenes: [terrascene], inputEnabled:true});
             // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
@@ -202,7 +202,7 @@ export class Canvas extends TerraCompoment {
             renderPass: gpu.renderPassCanvas,
             label:'UICanvas',
             borderSize:{width:0, height:0, texture_width:0, texture_height:0},
-            texture: gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
+            textureView: gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
             scale: {x:1, y:1},
             translate: {x:0, y:0},
         });
@@ -219,7 +219,7 @@ export class Canvas extends TerraCompoment {
             renderPass: gpu.renderPassCanvas,
             label: 'UIButton',
             borderSize: {width:0.01, height: 'auto', texture_width: 0.2, texture_height: 0.2 },
-            texture: new TextureView(texture),
+            textureView: new TextureView(texture),
             scale: {x:0.1, y:0.1},
             translate: { x:-0.9, y: 0.9 },
             originalAspectRatio: 0.3,
@@ -228,7 +228,7 @@ export class Canvas extends TerraCompoment {
                     console.log(e);
                 }
             }
-        })
+        });
 
         this.progress = 20;
 

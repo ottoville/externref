@@ -69,7 +69,17 @@ const browser=globalThis.__BROWSER_GLOBAL__ as Browser;
           new Uint8ClampedArray(data.buffer,bytesPerRow*300 + 500*renderTarget.bytes_per_fixel,4)] as const;
         });
         // Data is in BGR format.
-        expect(redPixel).toEqual({0:0,1:0,2:255,3:255})
-        expect(greenPixel).toEqual({0:0,1:255,2:0,3:255})
+        expect(redPixel).toEqual({
+          0: 0,
+          1: 0,
+          2: 255,
+          3: 255
+        })
+        expect(greenPixel).toEqual({
+          0: 0,
+          1: 255,
+          2: 0,
+          3: 255
+        })
       });
     })

@@ -48,8 +48,6 @@ TODO
     TerrainHeightsbindGroupTree : PipelineLayout;
     ready: Promise<void>;
     
-    //TerrainHeightsbindGroupPositionTree = this.TerrainHeightsbindGroupTree.addChildBindGroup(this.scene.gpu.BindGroupPosition, true)
-
     public static fromSave(cachedvertices: Response): Promise<ArrayBuffer> {
         return cachedvertices.arrayBuffer();
         /* const cacheimg = new Image();
@@ -258,19 +256,20 @@ TODO
                 }
             }
         )
-        this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain', heightsLayout.createBindGroup('TerrainHeightsbindGroupTree', bindGroup => [
-            {
-                binding: 0,
-                resource: this.slopeArrGPUBuffer.getStorageBinding(bindGroup)
-            },
-            {
-                binding: 1,
-                resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup)
-            },
-            {
-                binding: 2,
-                resource: this.settingsGPU.getStorageBinding(bindGroup)
-            }
+        this.TerrainHeightsbindGroupTree = engine.gpu.positionBindGroupTimeWGSL.addChildBindGroup('terrain',
+            heightsLayout.createBindGroup('TerrainHeightsbindGroupTree', bindGroup => [
+                {
+                    binding: 0,
+                    resource: this.slopeArrGPUBuffer.getStorageBinding(bindGroup)
+                },
+                {
+                    binding: 1,
+                    resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup)
+                },
+                {
+                    binding: 2,
+                    resource: this.settingsGPU.getStorageBinding(bindGroup)
+                }
         ]));
         
         const computePipelineIndices = new ComputePipeline(engine.gpu, 'terrain/calculatePlaneIndices.comp.wgsl');

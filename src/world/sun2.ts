@@ -1,7 +1,7 @@
 ﻿import type { Scene } from "../Scene.js";
 import { MainNode } from "../MainNode.js";
 import { Angle } from "../Math.js";
-import type { DrawableSimple } from "../GPU/Drawable.js";
+import type { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import type { Engine } from "../engine.js";
 import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
 declare const engine:Engine;

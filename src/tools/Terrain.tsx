@@ -1,7 +1,7 @@
 ﻿import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
-import type { DrawableSimple } from "../GPU/Drawable.js";
+import type { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { MainNode } from "../MainNode.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { type GPU } from "../GPU.js"

@@ -1,11 +1,13 @@
 ﻿import type { PipelineLayout } from "./PipelineLayout.js";
-import {  DrawableIndexed, DrawableIndirect, DrawableSimple } from "./Drawable.js";
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
 import { DrawableNode } from "../MainNode.js";
 import type { GPU } from "../GPU.js";
 import type { IndexedNode } from "../nodes/DataNode.js";
 import type { IndexBuffer, IndirectBuffer } from "./Buffer.js";
 import type shaders from "../shaders.json";
+import { DrawableIndirect } from "./Drawables/DrawableIndirect.js";
+import { DrawableSimple } from "./Drawables/DrawableSimple.js";
+import { DrawableIndexed } from "./Drawables/DrawableIndexed.js";
 
 export class Shader {
     module:GPUShaderModule;

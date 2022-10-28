@@ -14,7 +14,6 @@ describe('Physics Has gravity and collision', function () {
       rust: fs.readFileSync('../node/wasm32-unknown-unknown/debug/engine.wasm'),
       collider: fs.readFileSync('../wwwroot/collider/colliderSimdO.wasm')
     });
-    global.engine = engine!;
     const slope = new Box({can_collide: true, label: 'gravitybixbox2', fixed: true});
     slope.update_scale(200, 5, 200);
     slope.update_rotation(Math.sin(1.4), 0, 0, Math.cos(1.4));
@@ -36,7 +35,7 @@ describe('Physics Has gravity and collision', function () {
     let oldTranslation: [number, number, number] = [...translation]
     let collided = false;
     let falling = false;
-    await new Promise<void>((res, rej) => {
+    await new Promise<void>((res) => {
       console.log('creating physictick')
 
       engine!.physics.onPhysicTick.add(() => {
