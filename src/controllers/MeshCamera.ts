@@ -62,7 +62,7 @@ export class MeshCamera extends CameraController{
         engine.clearInputListeners(this);
     }
     attachCameraController() {
-        document.body.requestPointerLock()
+        document.body.requestPointerLock();
         engine.addInputListener('pointerdown',this, this.#pointerDownFunction);
         engine.addInputListener('keydown',this, this.#keydownfunction);
         engine.addInputListener('keyup',this, this.#keyupfunction);
@@ -94,7 +94,6 @@ export class MeshCamera extends CameraController{
     #keydownfunction = (e:KeyboardEvent) => {
         if(e.key==='ArrowUp') {
             this.arrowKeysDown|=ARROW_KEYS.UP;
-          //  this.#mesh.grip=0.8;
         }
         else if(e.key==='ArrowDown') {
             this.arrowKeysDown|=ARROW_KEYS.DOWN;

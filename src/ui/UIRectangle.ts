@@ -1,11 +1,12 @@
 import { UINode } from "../MainNode.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
+import type { RenderPipeline, VertexShader } from "../GPU/RenderPipeline.js";
 import type { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
 import { Buffer } from "../GPU/Buffer.js";
 import { GPUBufferUsage } from "../GPU.js";
 import { TextureView } from "../GPU/TextureView.js";
 import type { Engine } from "../engine.js";
-import type { DrawableSimple } from "GPU/Drawables/DrawableSimple.js";
+import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
+import { Texture } from "../GPU/Texture.js";
 declare const engine:Engine;
 
 function createVertexBuffer(scale: { x: number, y: number },
@@ -116,7 +117,15 @@ function createVertexBuffer(scale: { x: number, y: number },
     Draws rectangle.
 */
 export class UIRectangle extends UINode {
-    drawable: DrawableSimple;
+    drawable: DrawableSimple<RenderPipeline<VertexShader<[{
+        arrayStride: number;
+        stepMode: "vertex";
+        attributes: {
+            shaderLocation: number;
+            offset: number;
+            format: "float32x2";
+        }[];
+    }]>>>;
     #renderPass: RenderPass;
     #boundingBox= {
         left: 0,
@@ -124,10 +133,21 @@ export class UIRectangle extends UINode {
         right: 0,
         bottom: 0
     }
-    constructor({ canvaspipeline, renderPass, label,
-        borderSize, textureView, scale, translate, originalAspectRatio, events }:
+    constructor({
+        canvaspipeline, renderPass, label,
+        borderSize, textureView, scale, translate, originalAspectRatio,
+        events,
+        text }:
         {
-            canvaspipeline: RenderPipeline,
+            canvaspipeline: RenderPipeline<VertexShader<[{
+                arrayStride: number;
+                stepMode: "vertex";
+                attributes: {
+                    shaderLocation: number;
+                    offset: number;
+                    format: "float32x2";
+                }[];
+            }]>>,
             renderPass: RenderPass,
             label: string,
             /*
@@ -143,6 +163,12 @@ export class UIRectangle extends UINode {
                 texture_width: number, texture_height: number
             },
             textureView: TextureView,
+            text?: string,
+            /*
+                Scale:
+                    Size of the button relative to viewport size, value between 0 and 1.
+                    Border size is taken account to scale.
+            */
             scale: { x: number, y: number },
             translate: { x: number, y: number },
             originalAspectRatio?: number,
@@ -152,7 +178,35 @@ export class UIRectangle extends UINode {
         }) {
         super({ positionsCount: (borderSize.width > 0 || borderSize.height > 0) ? 54 : 6, label });
         this.#renderPass = renderPass;
-        this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([renderPass]))
+       // this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([renderPass]))
+       const vertices = createVertexBuffer(scale, borderSize, textureView.texture.size, label);
+
+       this.drawable = new DrawableSimple( {
+            renderPipeline: canvaspipeline,
+            node: this,
+            renderPasses: new Set([renderPass]),
+            instanceCount: 1,
+            firstVertex: 0,
+            firstInstance: 0,
+            vertexBuffers: [new Float32Array(vertices.flat())]
+        });
+        //this.drawable.setVertexBuffer(0, new Float32Array(vertices.flat()));
+
+        
+
+
+        // Create texture for text
+        const texture = Texture.create(renderPass.gpu, "bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_DST"], 'button_'+label+'_text',[500, 100, 1])
+        if(text) {
+            const canvas = new OffscreenCanvas(texture.size[0], texture.size[1]);
+            const ctx = canvas.getContext("2d")
+            if(!ctx) {
+                throw new Error('Cant get 2d context for texture text');
+            }
+            ctx.font = '48px serif';
+            ctx.fillText('Hello world', 0, 0);
+            renderPass.gpu.device.queue.copyExternalImageToTexture({source: canvas}, texture, [canvas.width, canvas.height, 1]);
+        }
 
         const uniformBuffer = Buffer.create(renderPass.gpu, 8 /* size of vec2<f32> */, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'UI_transform', (buff) => {
             const b = new Float32Array(buff.getMappedRange())
@@ -170,7 +224,6 @@ export class UIRectangle extends UINode {
                     }
             }
             engine.addInputListener('pointerdown', this, clickListener)
-
         }
         renderPass.onResize.set(this, () => {
             const widthPixels = renderPass.size[0] * scale.x;
@@ -194,15 +247,13 @@ export class UIRectangle extends UINode {
                 const widthBorderPixels = renderPass.size[0] * borderSize.width;
                 borderSize.height=widthBorderPixels/renderPass.size[1];
             }
-            const vertices = createVertexBuffer(scale, borderSize, textureView.texture.size, label);
+
+            const newVertices = createVertexBuffer(scale, borderSize, textureView.texture.size, label);
             //TODO: enforce vertices set when pipeline have vertices buffer
-            this.drawable.setVertexBuffer(0, new Float32Array(vertices.flat()));
+            this.drawable.setVertexBuffer(0, new Float32Array(newVertices.flat()));
         });
-        const vertices = createVertexBuffer(scale, borderSize, textureView.texture.size, label);
-        this.drawable.setVertexBuffer(0, new Float32Array(vertices.flat()));
 
         this.drawable.setStaticBindGroup('UI_bindgroup_' + label, (bindGroup) => {
-            console.log('setStaticBindGroup', textureView)
             return [
                 {
                     binding: 0,

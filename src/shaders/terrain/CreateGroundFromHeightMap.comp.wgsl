@@ -34,7 +34,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     0.0,
     f32((settings.subdivisions - GlobalInvocationID.y) * settings.size.y) / f32(settings.subdivisions) - (f32(settings.size.y) / 2.0));
     // TODO: move to uniform
-   let texture_size:vec2<i32> = textureDimensions(pixels);
+   let texture_size:vec2<u32> = textureDimensions(pixels);
 
 
    let gradient:f32 = dot(textureLoad(pixels, vec2<i32>((vec2<f32>(texture_size)/vec2<f32>(settings.size)) * coords.xy), 0), filt);    

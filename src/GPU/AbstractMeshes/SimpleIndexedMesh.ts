@@ -1,14 +1,23 @@
 ﻿import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
 import type { Scene } from "../../Scene.js";
-import type { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
+import { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { GPUBufferUsage } from "../../GPU.js";
 import { Buffer, IndexBuffer, VertexBuffer } from "../../GPU/Buffer.js";
+import { RenderPipeline, VertexShader } from "GPU/RenderPipeline.js";
 declare const engine:Engine;
 
 export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
-    drawable: DrawableIndexed | undefined;
+    drawable: DrawableIndexed<RenderPipeline<VertexShader<[{
+        arrayStride: number;
+        stepMode: "vertex";
+        attributes: {
+            shaderLocation: number;
+            offset: number;
+            format: "float32x3";
+        }[];
+    }]>>> | undefined;
     constructor(
         vBufferCPU: Float32Array,
         indicesView: Uint32Array,
@@ -28,14 +37,19 @@ export abstract class SimpleIndexedMesh extends BoundableNodeIndexed {
         if(strip)
             primitiveState.stripIndexFormat = 'uint32';
         if(engine.gpu) {
-            this.drawable = engine.gpu.createRenderPipeline(SimpleRenderPipeline, primitiveState
-            ).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]))
             if(!vBufferGPU) {
                 vBufferGPU = Buffer.create(engine.gpu, vBufferCPU.byteLength, [GPUBufferUsage.VERTEX],  'vertex_'+label, b => {
                     new Float32Array(b.getMappedRange()).set(vBufferCPU);    
                 });
             }
-            this.drawable!.setVertexBuffer(0, vBufferGPU);
+            const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline, primitiveState);
+
+            this.drawable = new DrawableIndexed({
+                renderPipeline,
+                node: this,
+                renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.pickRenderPass, engine.gpu.renderPassWater]),
+                vertexBuffers: [vBufferGPU]
+            })
             if(!iBuffer) {
                 iBuffer = Buffer.create(engine.gpu, indicesView.byteLength, [GPUBufferUsage.INDEX],  'index_'+label, b => {
                     new Uint32Array(b.getMappedRange()).set(indicesView);

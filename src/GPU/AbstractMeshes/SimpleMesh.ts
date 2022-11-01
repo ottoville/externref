@@ -1,15 +1,24 @@
 ﻿import { BoundableNodeSimple } from "../../nodes/BoundableNodeSimple.js";
 import type { Scene } from "../../Scene.js";
-import type { DrawableSimple } from "../Drawables/DrawableSimple.js";
+import { DrawableSimple } from "../Drawables/DrawableSimple.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { GPUBufferUsage } from "../../GPU.js";
-import { Buffer, VertexBuffer } from "../../GPU/Buffer.js";
+import { Buffer, VertexBuffer } from "../Buffer.js";
+import { RenderPipeline, VertexShader } from "../RenderPipeline.js";
 
 declare const engine:Engine;
 
 export abstract class SimpleMesh extends BoundableNodeSimple {
-    drawable: DrawableSimple | undefined;
+    drawable: DrawableSimple<RenderPipeline<VertexShader<[{
+        arrayStride: number;
+        stepMode: "vertex";
+        attributes: {
+            shaderLocation: number;
+            offset: number;
+            format: "float32x3";
+        }[];
+    }]>>> | undefined;
     constructor(
         vBufferCPU: Float32Array,
         label:string,
@@ -19,13 +28,20 @@ export abstract class SimpleMesh extends BoundableNodeSimple {
         fixed = false,
         point_light = 0) {
         super(vBufferCPU, 6, false,label,can_collide, scenes, fixed, undefined, point_light);
-        this.drawable =  engine.gpu?.createRenderPipeline(SimpleRenderPipeline).addDrawableSimple(this)
-        if(!vBufferGPU && engine.gpu) {
-            vBufferGPU = Buffer.create(engine.gpu, vBufferCPU.byteLength, [GPUBufferUsage.VERTEX], 'vertex_'+label, b => {
-                new Float32Array(b.getMappedRange()).set(vBufferCPU);
-            });
+        if(engine.gpu) {
+            if(!vBufferGPU) {
+                vBufferGPU = Buffer.create(engine.gpu, vBufferCPU.byteLength, [GPUBufferUsage.VERTEX], 'vertex_'+label, b => {
+                    new Float32Array(b.getMappedRange()).set(vBufferCPU);
+                });
+            }
+            const renderPipeline = engine.gpu.createRenderPipeline(SimpleRenderPipeline);
+            this.drawable = new DrawableSimple({
+                renderPipeline,
+                node: this,
+                vertexBuffers: [vBufferGPU],
+                renderPasses: undefined
+            })
         }
-        if(vBufferGPU)
-            this.drawable?.setVertexBuffer(0, vBufferGPU);
+        
     }
 }

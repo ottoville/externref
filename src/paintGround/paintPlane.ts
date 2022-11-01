@@ -7,7 +7,7 @@ import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 
 import { TerraVector2 } from "../Math.js";
-import type { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
+import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 import type { IndexedNode } from "../nodes/DataNode.js";
 import type { Engine } from "../engine.js";
 declare const engine:Engine;
@@ -16,14 +16,42 @@ declare const engine:Engine;
 
 class PlaneMesh extends MainNode implements IndexedNode {
     indices_count=0;
-    drawable:DrawableIndexed;
-    constructor(renderPipeline: RenderPipeline, verticesCount: number) {
+    drawable: DrawableIndexed<RenderPipeline<VertexShader<[{
+        arrayStride: number;
+        stepMode: GPUVertexStepMode;
+        attributes: {
+            shaderLocation: number;
+            offset: number;
+            format: "float32x2";
+        }[];
+    }]>>>;
+    constructor(renderPipeline: RenderPipeline<VertexShader<[{
+        arrayStride: number;
+        stepMode: GPUVertexStepMode;
+        attributes: {
+            shaderLocation: number;
+            offset: number;
+            format: "float32x2";
+        }[];
+    }]>>, verticesCount: number, vertexBuffer: Float32Array) {
         super({ positionsCount: verticesCount, label: 'plane'});
-        this.drawable=renderPipeline.addDrawableIndexed(this, undefined,undefined, 0, 1, 0);
+        this.drawable = new DrawableIndexed({
+            node: this,
+            renderPipeline,
+            vertexBuffers: [vertexBuffer]
+        });
     }
 }
 
-const renderPipelines: Map<GPU, RenderPipeline> = new Map();
+const renderPipelines: Map<GPU, RenderPipeline<VertexShader<[{
+    arrayStride: number;
+    stepMode: GPUVertexStepMode;
+    attributes: {
+        shaderLocation: number;
+        offset: number;
+        format: "float32x2";
+    }[];
+}]>>> = new Map();
 export class paintPlane extends paintGround {
     #mesh:PlaneMesh
     constructor(
@@ -35,7 +63,7 @@ export class paintPlane extends paintGround {
             this.#mesh.update_scale(this.#mesh.scale_x, this.#mesh.scale_y, 0)
             callback(p);
         });
-        let renderPipeline: RenderPipeline | undefined = renderPipelines.get(scene.gpu);
+        let renderPipeline = renderPipelines.get(scene.gpu);
         if (!renderPipeline) {
             renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline('paintPlaneRenderpipeline', new VertexShader(engine.gpu!,'plane.vert.wgsl', [{
                 arrayStride: 4 * 2,
@@ -51,7 +79,7 @@ export class paintPlane extends paintGround {
             });
             renderPipelines.set(scene.gpu, renderPipeline);
         }
-        this.#mesh = new PlaneMesh(renderPipeline, 0);
+        this.#mesh = new PlaneMesh(renderPipeline, 0, new Float32Array([0, 0, 0]));
         this.#mesh.drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
     }
     #startingPoint = new TerraVector2(2);

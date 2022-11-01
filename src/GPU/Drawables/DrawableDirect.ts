@@ -4,35 +4,49 @@ import type { RenderPipeline } from "../RenderPipeline";
 import type { BindGroup } from "../BindGroup.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import type { DataNode } from "nodes/DataNode.js";
-import { Buffer } from "../Buffer.js";
-import { NormalsMesh } from "../Meshes/helpers/normals.js";
+import { Buffer, VertexBuffer } from "../Buffer.js";
 import { GPUBufferUsage } from "../../GPU.js"
 import type { Engine } from "../../engine.js";
-import { BoundingBoxMesh } from "../../GPU/Meshes/helpers/boundingbox.js";
 declare const engine: Engine;
 
 
 export abstract class DrawableDirect extends Drawable {
     #instanceCount: number;
     protected abstract node: DrawableNode
-
+    public label: string
     constructor(
-        renderPipeline: RenderPipeline,
-        dynamicBindGroups: [BindGroup, number][],
-        public label: string,
-        renderPasses?: Set<RenderPass>,
-        instanceCount = 1,
+        {
+            renderPipeline,
+            dynamicBindGroups,
+            label,
+            renderPasses,
+            instanceCount = 1,
+            vertexBuffers
+        } : 
+        {
+            renderPipeline: RenderPipeline;
+            dynamicBindGroups: [BindGroup, number][];
+            label: string;
+            renderPasses: Set<RenderPass> | undefined;
+            instanceCount: number;
+            vertexBuffers?: (ArrayBufferView | VertexBuffer)[];
+        }
     ) {
-        super(renderPipeline, renderPasses, dynamicBindGroups);
+        super({
+            renderPipeline,
+            renderPasses,
+            dynamicBindGroups,
+            vertexBuffers
+        });
+        this.label = label;
         if (instanceCount == 0)
             console.warn('Added drawable with 0 instances, nothing will be drawn');
         this.#instanceCount = instanceCount;
     }
-    debug_render_normals(node: DataNode) {
+    async debug_render_normals(node: DataNode) {
         const gpu = this.renderPipeline.bindgroupdrawable.bindGroupLayout.gpu;
         const vertices = node.verticesArray;
         const stride = node.vertices_stride;
-
         const debug_render_normals_vertexBuffer = Buffer.create(gpu, this.node.positions_count * stride * 2 * Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], 'vertex_debug_render_normals', b => {
             const view = new Float32Array(b.getMappedRange());
             vertices.forEach((v, i) => {
@@ -40,10 +54,9 @@ export abstract class DrawableDirect extends Drawable {
                 view.set(v, i * stride * 2 + stride)
             })
         });
-        const mesh = new NormalsMesh(this.node.positions_count * 2)
-        mesh.drawable!.setVertexBuffer(0, debug_render_normals_vertexBuffer)
+        new (await import("../Meshes/helpers/normals.js")).NormalsMesh(this.node.positions_count * 2, debug_render_normals_vertexBuffer)
     }
-    debug_bounding_box() {
+    async debug_bounding_box() {
         if(!(this.node instanceof MainNode)) {
             console.warn("Cannot debug_bounding_box on UI elements")
             return;
@@ -85,8 +98,8 @@ export abstract class DrawableDirect extends Drawable {
             view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 5 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 24 * 4);
             view.set(new Float32Array(vectors.buffer, vectors.byteOffset + 7 * 4 * Float32Array.BYTES_PER_ELEMENT, 4), 25 * 4);
         });
-        const mesh = new BoundingBoxMesh();
-        mesh.drawable!.setVertexBuffer(0, debug_render_boundingbox_vertexBuffer)
+        
+        new (await import("../Meshes/helpers/boundingbox.js")).BoundingBoxMesh(debug_render_boundingbox_vertexBuffer);
     }
     set instanceCount(count: number) {
         if (count === this.#instanceCount)

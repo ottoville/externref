@@ -1,10 +1,11 @@
 ﻿import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
 import type { Scene } from "../../Scene.js";
-import type { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
+import { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
 import type { Engine, rust_pointer } from "../../engine.js";
 import { TerrainRenderPipeline } from "../RenderPipeLines/Terrain.js";
 declare const engine:Engine;
 import type { IndexBuffer, VertexBuffer} from "../../GPU/Buffer.js";
+import { RenderPipeline, VertexShader } from "GPU/RenderPipeline.js";
 
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
@@ -19,7 +20,19 @@ export class TerrainMesh extends BoundableNodeIndexed {
             }]
         });
     }
-    drawable: DrawableIndexed | undefined;
+    drawable: DrawableIndexed<RenderPipeline<VertexShader<[{
+        arrayStride: number;
+        stepMode: "vertex";
+        attributes: ({
+            shaderLocation: number;
+            offset: number;
+            format: "float32x3";
+        } | {
+            shaderLocation: number;
+            offset: number;
+            format: "float32x2";
+        })[];
+    }]>>> | undefined;
     override create_collider(): rust_pointer<"collider"> {
         return engine.rust.create_trimesh_collider(this.ptr);
     }
@@ -43,10 +56,16 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 magFilter: "linear",
                 minFilter: "linear",
             });
-            this.drawable = engine.gpu.createRenderPipeline(TerrainRenderPipeline).addDrawableIndexed(this, new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]), undefined, 0, 1);
+            const renderPipeline = engine.gpu.createRenderPipeline(TerrainRenderPipeline);
+            this.drawable = new DrawableIndexed({
+                renderPipeline,
+                renderPasses: new Set([engine.gpu.renderPassScreen, engine.gpu.renderPassWater, engine.gpu.pickRenderPass]),
+                node: this,
+                vertexBuffers: [this.vBuffer]
+            })
             //@ts-expect-error
             window.debugTerrain=() => this.drawable.debug_render_normals(this);    
-            this.drawable!.setStaticBindGroup('TerrainInitialTexture', () => {
+            this.drawable.setStaticBindGroup('TerrainInitialTexture', () => {
                 return [{
                     binding:0,
                     resource: this.sampler!
@@ -55,8 +74,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
                     resource: initialTexture
                 }]
             });
-            this.drawable!.setVertexBuffer(0, this.vBuffer);
-            this.drawable!.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
+            this.drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
         }
     }
 }

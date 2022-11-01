@@ -1,7 +1,7 @@
 ﻿import { UITAB } from "../UITAB.js";
 import { Terrain } from "../world/terrain.js";
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
-import type { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
+import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { MainNode } from "../MainNode.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { type GPU } from "../GPU.js"
@@ -12,25 +12,16 @@ import type { Scene } from "../Scene.js";
 declare const engine:Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
-const renderPipelines: Map<GPU, RenderPipeline> = new Map();
+const renderPipelines: Map<GPU, RenderPipeline<VertexShader<[]>>> = new Map();
 
-function getRenderPipeline(terrain: Terrain): RenderPipeline {
+function getRenderPipeline(terrain: Terrain): RenderPipeline<VertexShader<[]>> {
     let renderPipeline = renderPipelines.get(engine.gpu!);
     if (renderPipeline) {
         return renderPipeline;
     }
 
     renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline('TerrainToolRenderpipeline',
-        new VertexShader(engine.gpu!, "helper2.vert.wgsl", [{
-            arrayStride: 12,
-            stepMode: 'vertex',
-            attributes: [{
-                // position
-                shaderLocation: 0,
-                offset: 0,
-                format: "float32x3"
-            }]
-        }]),
+        new VertexShader(engine.gpu!, "helper2.vert.wgsl", []),
         new Shader(engine.gpu!, 'UIColor.frag.wgsl'), {
         primitive: {
             topology: 'triangle-list',
@@ -49,7 +40,7 @@ export class TerrainTool extends MainNode {
         <button class="w3-bar-item w3-button" style="transform: rotate(-180deg);" onClick={() => instance.lower()} >⇫</button >
     </div>;
     elevator: rust_pointer<"elevator">
-    drawable: DrawableSimple;
+    drawable: DrawableSimple<RenderPipeline<VertexShader<[]>>>;
     readonly #pick: { readonly position: TerraVector3, meshId: number };
     scene: Scene;
 
@@ -64,7 +55,14 @@ export class TerrainTool extends MainNode {
         this.scene=scene;
         
         this.elevator = engine.rust.create_elevator(terrain.mesh.ptr);
-        this.drawable = renderPipeline.addDrawableSimple(this, 8, 0, undefined);
+        this.drawable = new DrawableSimple({
+            renderPipeline,
+            node: this,
+            instanceCount: 8,
+            firstVertex: 0,
+            vertexBuffers: [],
+            renderPasses: undefined
+        })
         this.#pick = { position: new TerraVector3(engine.memory.buffer, engine.rust.mouse_position_pointer(this.elevator)), meshId: 0 };
         //scene.TerraCameras[0].subscribePickingRay();
         //TERRAIN EDITING DISABLED

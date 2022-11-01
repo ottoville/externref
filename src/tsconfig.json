@@ -27,8 +27,8 @@
       "ES2017.SharedMemory",
       "DOM.Iterable"
     ],
-    "typeRoots": ["./node_modules/@webgpu/"],
-    "types": ["@webgpu/types"],
+    "typeRoots": ["./node_modules/@webgpu/", "./node_modules/@types/"],
+    "types": ["@webgpu/types", "offscreencanvas"],
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "allowJs": true,

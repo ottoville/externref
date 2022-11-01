@@ -6,14 +6,6 @@ import { PTDresult } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
 import type { Engine } from "../engine.js";
 declare const engine:Engine;
-declare class OffscreenCanvas {
-    width: number;
-    height: number;
-    convertToBlob(options?: { type?: "image/png" | "image/webp"; quality?: number; }): Promise<Blob>
-    getContext(contextId:| "webgpu"): GPUCanvasContext | null;    
-    getContext(contextType: "2d"): CanvasRenderingContext2D | null
-    constructor(width: number, height:number)
-}
 export class Zones extends UITAB {
     static override label = 'Zones';
     static menuElem = () => <div><legend style="background-color:white"> Draw zone </legend>
@@ -57,7 +49,6 @@ export class Zones extends UITAB {
         });
 
         if(engine.DB) {
-            
             const texture = new OffscreenCanvas(5120, 5120)
             const ctx = texture.getContext('2d');
             if (!ctx)

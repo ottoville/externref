@@ -1,5 +1,4 @@
-﻿import type { Scene } from "../../Scene.js";
-import type { TerraCamera } from "../../TerraCamera.js";
+﻿import type { TerraCamera } from "../../TerraCamera.js";
 import { GPUBufferUsage, type GPU } from "../../GPU.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 import type { Drawable } from "../Drawables/Drawable.js";
@@ -14,7 +13,6 @@ import type { DrawableNode } from "../../MainNode.js";
 
 interface RenderPipelineVariant2 {
     renderpipeline: GPURenderPipeline;
-    drawables: Map<Scene, Set<Drawable>>
     rootDrawables: Set<Drawable>
 }
 
@@ -91,7 +89,6 @@ export class RenderPass<U extends {
             const renderpipeline = this.#decoratePipeline(renderPipeline);
             variant = {
                 renderpipeline: renderpipeline,
-                drawables: new Map(),
                 rootDrawables: new Set()
             }
             this.renderPipelines.set(renderPipeline, variant)

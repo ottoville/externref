@@ -11,6 +11,7 @@ import { ComputePipeline } from "../GPU/ComputePipeline.js";
 import { Buffer } from "../GPU/Buffer.js";
 
 import type { Engine } from "../engine.js";
+import { DrawableIndirect } from "../GPU/Drawables/DrawableIndirect.js";
 declare const engine:Engine;
 
 /**
@@ -53,18 +54,21 @@ export class Plants {
         const positionGPUSwap = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE], 'positionGPUSwap');
         const shapeGPUSwap = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE],'shapeGPUSwap');
         if(engine.gpu) {
-            const drawable = engine.gpu.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' }).addDrawableIndirect(indirectBuffer, 'Plants')
-            drawable.setVertexBuffer(0, positionGPU)
-            drawable.setVertexBuffer(1, shapeGPU);
-            drawable.setVertexBuffer(2, new Float32Array([
-                0.02, 0.0,
-                -0.02, 0.0,
-                0.014, 0.29,
-                -0.014, 0.29,
-                0.007, 0.57,
-                -0.007, 0.57,
-                0.0, 1.0
-            ]));
+            const renderPipeline = engine.gpu.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' });
+            new DrawableIndirect({
+                renderPipeline,
+                label: 'Plants',
+                buffer: indirectBuffer,
+                vertexBuffers: [positionGPU, shapeGPU, new Float32Array([
+                    0.02, 0.0,
+                    -0.02, 0.0,
+                    0.014, 0.29,
+                    -0.014, 0.29,
+                    0.007, 0.57,
+                    -0.007, 0.57,
+                    0.0, 1.0
+                ])]
+            })
         }
 
         const shapes = new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * 3 * numBlades);

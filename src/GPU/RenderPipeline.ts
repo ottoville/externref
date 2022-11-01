@@ -1,13 +1,7 @@
 ﻿import type { PipelineLayout } from "./PipelineLayout.js";
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
-import { DrawableNode } from "../MainNode.js";
 import type { GPU } from "../GPU.js";
-import type { IndexedNode } from "../nodes/DataNode.js";
-import type { IndexBuffer, IndirectBuffer } from "./Buffer.js";
 import type shaders from "../shaders.json";
-import { DrawableIndirect } from "./Drawables/DrawableIndirect.js";
-import { DrawableSimple } from "./Drawables/DrawableSimple.js";
-import { DrawableIndexed } from "./Drawables/DrawableIndexed.js";
 
 export class Shader {
     module:GPUShaderModule;
@@ -18,19 +12,24 @@ export class Shader {
         this.module = module;
     }
 }
-export class VertexShader extends Shader {
-    constructor(gpu:GPU,shader: keyof typeof shaders, public buffers:Iterable<GPUVertexBufferLayout>=[]) {
-        super(gpu,shader)
+type VertexBuffers = [GPUVertexBufferLayout]
+                            | [GPUVertexBufferLayout, GPUVertexBufferLayout]
+                            | [GPUVertexBufferLayout, GPUVertexBufferLayout, GPUVertexBufferLayout]
+                            | [];
+export class VertexShader<B extends VertexBuffers = VertexBuffers> extends Shader {
+    buffers:B;
+    constructor(gpu:GPU,shader: keyof typeof shaders, buffers:B) {
+        super(gpu,shader);
+        this.buffers = buffers;
     }
 }
-export class RenderPipeline {
+export class RenderPipeline<V extends VertexShader = VertexShader> {
 
     dynamicBindGroupOffset: number[] = [];
-    #GPUIndexFormat: GPUIndexFormat = 'uint16';
     public createSharedBindGroups?: () => Set<GPUBindGroup>;
     constructor(
         public label: string,
-        public vertexShader:VertexShader,
+        public vertexShader:V,
         public fragmentShader:Shader,
         public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'vertex' | 'fragment' | 'layout'>,
         public bindgroupdrawable: PipelineLayout,
@@ -44,10 +43,11 @@ export class RenderPipeline {
             renderPass: RenderPass,
             BindGroupsStart: number,
             dynamicIndices:number[]=[]): number {
-
         const variant = renderPass.renderPipelines.get(this)
-        if (!variant)
+        if (!variant) {
+            console.warn('No renderPipelines has been set for renderpass', this.label, ', wont draw anything')
             return 0;
+        }
         var drawables = variant.rootDrawables;
         if (!drawables || drawables.size == 0)
             return 0;
@@ -59,14 +59,5 @@ export class RenderPipeline {
          }
         drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart,dynamicIndices));
         return drawables.size;
-    }
-    addDrawableIndirect(buffer: IndirectBuffer, label:string, renderPasses?: Set<RenderPass>) {
-        return new DrawableIndirect(this, buffer,label,renderPasses);
-    }
-    addDrawableSimple(node: DrawableNode, instanceCount = 1, firstVertex = 0, firstInstance = 0, renderPasses?: Set<RenderPass>): DrawableSimple {
-        return new DrawableSimple(this, node, renderPasses, instanceCount, firstVertex, firstInstance)
-    }
-    addDrawableIndexed(node: IndexedNode, renderPasses?: Set<RenderPass>, indexBuffer?: IndexBuffer, baseVertex = 0, instanceCount = 1, firstIndex = 0, firstInstance = 0): DrawableIndexed {
-        return new DrawableIndexed(this, node, renderPasses, indexBuffer, baseVertex, instanceCount, firstIndex, firstInstance, this.#GPUIndexFormat) //todo: read indexformat from this inside method
     }
 }

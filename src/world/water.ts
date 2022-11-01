@@ -1,12 +1,21 @@
 ﻿import { BoundableNodeSimple } from "../nodes/BoundableNodeSimple.js";
 import type { Scene } from "../Scene.js";
-import type { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
+import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { WaterRenderPipeline } from "../GPU/RenderPipeLines/Water.js";
 import type { Engine } from "../engine.js";
+import { RenderPipeline, VertexShader } from "../GPU/RenderPipeline.js";
 declare const engine:Engine;
 
 export class Sea extends BoundableNodeSimple {
-    drawable: DrawableSimple | undefined;
+    drawable: DrawableSimple<RenderPipeline<VertexShader<[{
+        arrayStride: number;
+        stepMode: "vertex";
+        attributes: {
+            shaderLocation: number;
+            offset: number;
+            format: "float32x3";
+        }[];
+    }]>>> | undefined;
     override create_collider() {
         return engine.rust.create_cuboid_collider(50000,3,50000,0, false);
      }
@@ -17,15 +26,21 @@ export class Sea extends BoundableNodeSimple {
             -50000.0, 3.0, 50000.0,
             50000.0, 3.0, 50000.0]), undefined, true,'water',false,scenes,true, false); //48    
         if(engine.gpu) {    
-            this.drawable = engine.gpu.createRenderPipeline(WaterRenderPipeline,{
+            const renderPipeline = engine.gpu.createRenderPipeline(WaterRenderPipeline,{
                 topology: 'triangle-strip',
                 stripIndexFormat: 'uint16',
                 frontFace:'cw'
-            }).addDrawableSimple(this, undefined, undefined, undefined);
+            });
+            this.drawable = new DrawableSimple({
+                renderPipeline,
+                node: this,
+                vertexBuffers: [new Float32Array([-50000.0, 3.0, -50000.0,
+                    50000.0, 3.0, -50000.0,
+                    -50000.0, 3.0, 50000.0,
+                    50000.0, 3.0, 50000.0]),
+                ],
+                renderPasses: undefined
+            });
         }
-        this.drawable?.setVertexBuffer(0, new Float32Array([-50000.0, 3.0, -50000.0,
-            50000.0, 3.0, -50000.0,
-            -50000.0, 3.0, 50000.0,
-            50000.0, 3.0, 50000.0]))
     }
 }

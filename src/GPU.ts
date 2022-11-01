@@ -112,10 +112,10 @@ export class GPU {
     readonly bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
     ro: ResizeObserver;
     canvasRootLayout: PipelineLayout;
-    createRenderPipeline(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): RenderPipeline
-    createRenderPipeline(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => RenderPipeline], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): RenderPipeline
-    createRenderPipeline(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => RenderPipeline], primitive?: Omit<GPUPrimitiveState, 'topology'>): RenderPipeline
-    createRenderPipeline(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => RenderPipeline], primitive: GPUPrimitiveState = {}) {
+    createRenderPipeline<R extends RenderPipeline>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
+    createRenderPipeline<R extends RenderPipeline>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
+    createRenderPipeline<R extends RenderPipeline>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive?: Omit<GPUPrimitiveState, 'topology'>): R
+    createRenderPipeline<R extends RenderPipeline>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState = {}): R {
         const primitiveWithDefaults: GPUPrimitiveState = {
             topology: 'triangle-list',
             frontFace: 'cw',
@@ -129,6 +129,7 @@ export class GPU {
             if (renderPipeline)
                 GPU.#renderPipelines.set(hash, renderPipeline);
         }
+        //@ts-expect-error Bug in TS?
         return renderPipeline;
 
     }
@@ -362,9 +363,9 @@ export class GPU {
                     type: "uniform"
                 } as GPUBufferBindingLayout
             },
-            {   //diffuse
+            { 
                 binding: 1,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                visibility: GPUShaderStage.FRAGMENT,
                 texture: {
                 } as GPUTextureBindingLayout
             }

@@ -475,37 +475,37 @@ export class Engine {
         this.mainCamera = new TerraCamera();
 
         if(canvas) {
-            canvas.addEventListener('pointerup', (e) => {
+            canvas.ownerDocument.addEventListener('pointerup', (e) => {
                 this.#inputMaps.pointerup.forEach(cbs => cbs.forEach(cb => cb(e)))
                 this.#inputMaps.pointerupOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
                 this.#inputMaps.pointerupOnce.clear();
             });
-            canvas.addEventListener('pointerdown', (e) => {
+            canvas.ownerDocument.addEventListener('pointerdown', (e) => {
                 this.#inputMaps.pointerdown.forEach(cbs => cbs.forEach(cb => cb(e)))
                 this.#inputMaps.pointerdownOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
                 this.#inputMaps.pointerdownOnce.clear();
             });
-            canvas.addEventListener('pointermove', (e) => {
+            canvas.ownerDocument.addEventListener('pointermove', (e) => {
                 this.#inputMaps.pointermove.forEach(cbs => cbs.forEach(cb => cb(e)));
                 this.#inputMaps.pointermoveOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
                 this.#inputMaps.pointermoveOnce.clear();
             });
-            canvas.addEventListener('wheel', (e) => {
+            canvas.ownerDocument.addEventListener('wheel', (e) => {
                 this.#inputMaps.wheel.forEach(cbs => cbs.forEach(cb => cb(e)));
                 this.#inputMaps.wheelOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
                 this.#inputMaps.wheelOnce.clear();
             });
-            canvas.addEventListener('pointerleave', (e) => {
+            canvas.ownerDocument.addEventListener('pointerleave', (e) => {
                 this.#inputMaps.pointerleave.forEach(cbs => cbs.forEach(cb => cb(e)));
                 this.#inputMaps.pointerleaveOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
                 this.#inputMaps.pointerleaveOnce.clear();
             });
-            canvas.addEventListener('keydown', (e) => {
+            canvas.ownerDocument.addEventListener('keydown', (e) => {
                 this.#inputMaps.keydown.forEach(cbs => cbs.forEach(cb => cb(e)));
                 this.#inputMaps.keydownOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
                 this.#inputMaps.keydownOnce.clear();
             });
-            canvas.addEventListener('keyup', (e) => {
+            canvas.ownerDocument.addEventListener('keyup', (e) => {
                 this.#inputMaps.keyup.forEach(cbs => cbs.forEach(cb => cb(e)));
                 this.#inputMaps.keyupOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
                 this.#inputMaps.keyupOnce.clear();

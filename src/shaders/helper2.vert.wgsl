@@ -62,17 +62,17 @@ struct Output {
   @location(0) color : vec3<f32>,
   @builtin(position) Position : vec4<f32>
 };
-
+const vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
+  vec2<f32>( -0.5,  2.0),
+  vec2<f32>( -0.5, -2.0),
+  vec2<f32>( 0.5,  3.0),
+  vec2<f32>( 0.5, -3.0)
+);
 @vertex
 fn main(
   @builtin(instance_index) instanceIdx : u32,
   @builtin(vertex_index) VertexIndex : u32) -> Output {
-    var vertices : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
-      vec2<f32>( -0.5,  2.0),
-      vec2<f32>( -0.5, -2.0),
-      vec2<f32>( 0.5,  3.0),
-      vec2<f32>( 0.5, -3.0)
-    );
+
     var output:Output;
     let facetSize:u32 = settings.subdivisions * settings.subdivisions; //250 * 250;
 

@@ -1,4 +1,4 @@
-﻿import { Scene } from "../Scene.js";
+﻿import type { Scene } from "../Scene.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { TerrainMesh } from "../GPU/Meshes/Terrain.js";
 import { GPUBufferUsage } from "../GPU.js"
@@ -10,13 +10,6 @@ import { Buffer, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, Bin
 import { BindGroup } from "GPU/BindGroup.js";
 declare const engine:Engine;
 
-declare class OffscreenCanvas {
-    width: number;
-    height: number;
-    convertToBlob(options?: { type?: "image/png" | "image/webp"; quality?: number; }): Promise<Blob>
-    getContext(contextType: "2d"):CanvasRenderingContext2D
-    constructor(width: number, height:number)
-}
 export class Terrain {
     /*
 TODO

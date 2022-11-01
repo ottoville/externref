@@ -1,7 +1,7 @@
-﻿import { RenderPipeline } from "../RenderPipeline.js";
+﻿import type { RenderPipeline } from "../RenderPipeline.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import { GPU, GPUBufferUsage } from "../../GPU.js"
-import { Buffer, VertexBuffer } from "../Buffer.js";
+import { Buffer, type VertexBuffer } from "../Buffer.js";
 
 import type { Engine } from "../../engine.js";
 import { BindGroup } from "../BindGroup.js";
@@ -12,11 +12,31 @@ export abstract class Drawable {
     abstract label: string;
     #vertexBuffers: Map<number, { buffer: VertexBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
+    protected renderPipeline: Readonly<RenderPipeline>;
+    #renderPasses: Set<RenderPass>;
+    #dynamicBindGroups: [BindGroup, number][]
     constructor(
-        protected renderPipeline: Readonly<RenderPipeline>,
-        private renderPasses: Set<RenderPass> = new Set([engine.gpu!.renderPassScreen]),
-        protected dynamicBuffers: [BindGroup, number][]) {
-        this.renderPasses.forEach(rp => {
+        {
+            renderPipeline,
+            renderPasses = new Set([engine.gpu!.renderPassScreen]),
+            dynamicBindGroups = [],
+            vertexBuffers = []
+        } : {
+            renderPipeline: Readonly<RenderPipeline>;
+            renderPasses: Set<RenderPass> | undefined;
+            dynamicBindGroups?: [BindGroup, number][];
+            vertexBuffers: (ArrayBufferView | VertexBuffer)[] | undefined;
+        }) {
+
+        this.renderPipeline = renderPipeline;
+        this.#renderPasses = renderPasses;
+        this.#dynamicBindGroups = dynamicBindGroups;
+
+        vertexBuffers?.forEach((vertexBuffer, i) => {
+            this.setVertexBuffer(i, vertexBuffer)
+        });
+        
+        this.#renderPasses.forEach(rp => {
             const variant = rp.getVariant(this.renderPipeline);
             this.#renderList.set(rp, variant.rootDrawables.add(this));
         });
@@ -31,12 +51,12 @@ export abstract class Drawable {
             this.renderPipeline.bindgroupdrawable.bindGroupLayout,
             label,
             staticBuffers,
-            this.renderPasses
+            this.#renderPasses
             )
     }
     protected clearBundles() {
         //TODO: is this needed?
-        this.renderPasses.forEach(rp => rp.bundles.forEach(b => b.destroy()));
+        this.#renderPasses.forEach(rp => rp.bundles.forEach(b => b.destroy()));
     }
     destroy(preserveVerticeBuffers: number[] = []): void {
         this.#renderList.forEach(Drawables => Drawables.delete(this));
@@ -48,6 +68,7 @@ export abstract class Drawable {
     }
     setVertexBuffer(index: number, buffer: ArrayBufferView, destroyOld?: boolean): VertexBuffer
     setVertexBuffer<T extends VertexBuffer>(index: number, buffer: T, destroyOld?: boolean, offset?: number, size?: number): T
+    setVertexBuffer(index: number, buffer: ArrayBufferView | VertexBuffer, destroyOld?: boolean, offset?: number, size?: number): VertexBuffer
     setVertexBuffer(index: number, buffer: ArrayBufferView | VertexBuffer, destroyOld = true, offset?: number, size?: number): VertexBuffer {
         if (destroyOld) {
             const Tbuffer = this.#vertexBuffers.get(index);
@@ -68,7 +89,7 @@ export abstract class Drawable {
     }
     abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder): void
     draw(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex: number[]) {       
-        this.dynamicBuffers.forEach(([{bindGroup}, offset], i) => {
+        this.#dynamicBindGroups.forEach(([{bindGroup}, offset], i) => {
             const di = dynamicIndex[i];
             if (di) {
                 renderEncoder.setBindGroup(di, bindGroup, [GPU.gpu_memory_index_size + offset * GPU.gpu_memory_index_size]);
