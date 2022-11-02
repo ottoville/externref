@@ -1,12 +1,11 @@
 ﻿import type { Scene } from "../Scene.js";
 import { TerrainTool } from "../tools/Terrain.js";
 import { TerrainMesh } from "../GPU/Meshes/Terrain.js";
-import { GPUBufferUsage } from "../GPU.js"
 import type { PipelineLayout } from "../GPU/PipelineLayout.js";
 import { Engine } from "../engine.js";
 import { BindGroupLayout } from "../GPU/BindGroupLayout.js";
 import { ComputePipeline } from "../GPU/ComputePipeline.js";
-import { Buffer, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindUniformBuffer, BindStorageBuffer, VertexBuffer } from "../GPU/Buffer.js";
+import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindUniformBuffer, BindStorageBuffer, VertexBuffer } from "../GPU/Buffer.js";
 import { BindGroup } from "GPU/BindGroup.js";
 declare const engine:Engine;
 

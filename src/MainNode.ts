@@ -90,6 +90,9 @@ export abstract class MainNode implements DrawableNode {
     get positions_count() {
         return engine.rust.positions_count(this.ptr);
     }
+    set positions_count(positions_count: number) {
+        engine.rust.set_positions_count(this.ptr, positions_count);
+    }
 
     get strip(): boolean {
         return engine.rust.strip(this.ptr) === 1 ? true : false;
@@ -153,6 +156,6 @@ export abstract class MainNode implements DrawableNode {
         MainNode.Meshes.set(this.id, this);
     }
     destroy() {
-        // TODO
+        MainNode.Meshes.delete(this.id);
     }
 }

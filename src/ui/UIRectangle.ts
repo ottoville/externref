@@ -1,8 +1,7 @@
 import { UINode } from "../MainNode.js";
 import type { RenderPipeline, VertexShader } from "../GPU/RenderPipeline.js";
 import type { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
-import { Buffer } from "../GPU/Buffer.js";
-import { GPUBufferUsage } from "../GPU.js";
+import { Buffer, GPUBufferUsage } from "../GPU/Buffer.js";
 import { TextureView } from "../GPU/TextureView.js";
 import type { Engine } from "../engine.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";

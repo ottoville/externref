@@ -6,6 +6,7 @@ import { TerrainRenderPipeline } from "../RenderPipeLines/Terrain.js";
 declare const engine:Engine;
 import type { IndexBuffer, VertexBuffer} from "../../GPU/Buffer.js";
 import { RenderPipeline, VertexShader } from "GPU/RenderPipeline.js";
+import { NormalsMesh } from "./helpers/normals.js";
 
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
@@ -64,7 +65,8 @@ export class TerrainMesh extends BoundableNodeIndexed {
                 vertexBuffers: [this.vBuffer]
             })
             //@ts-expect-error
-            window.debugTerrain=() => this.drawable.debug_render_normals(this);    
+            window.debugTerrain=() => new NormalsMesh(this.drawable);
+
             this.drawable.setStaticBindGroup('TerrainInitialTexture', () => {
                 return [{
                     binding:0,

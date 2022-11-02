@@ -1,21 +1,20 @@
 ﻿import { paintGround } from "./paintGround.js";
 import type { Terrain } from "../world/terrain.js";
 import { PTResultF } from "../types/interfaces/index.js";
-import { MainNode } from "../MainNode.js";
 import type { Scene } from "../Scene.js";
 import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 
 import { TerraVector2 } from "../Math.js";
 import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
-import type { IndexedNode } from "../nodes/DataNode.js";
 import type { Engine } from "../engine.js";
+import { BoundableNodeIndexed } from "../nodes/BoundableNodeIndexed.js";
 declare const engine:Engine;
 
 
 
-class PlaneMesh extends MainNode implements IndexedNode {
-    indices_count=0;
+class PlaneMesh extends BoundableNodeIndexed {
+    //indices_count=0;
     drawable: DrawableIndexed<RenderPipeline<VertexShader<[{
         arrayStride: number;
         stepMode: GPUVertexStepMode;
@@ -33,8 +32,11 @@ class PlaneMesh extends MainNode implements IndexedNode {
             offset: number;
             format: "float32x2";
         }[];
-    }]>>, verticesCount: number, vertexBuffer: Float32Array) {
-        super({ positionsCount: verticesCount, label: 'plane'});
+    }]>>, vertexBuffer: Float32Array) {
+        super(vertexBuffer, 2,
+            new Uint32Array(),
+            false, false, undefined, undefined, 'plane', undefined, undefined, false, false, false);
+        //super({ positionsCount: verticesCount, label: 'plane'});
         this.drawable = new DrawableIndexed({
             node: this,
             renderPipeline,
@@ -79,7 +81,7 @@ export class paintPlane extends paintGround {
             });
             renderPipelines.set(scene.gpu, renderPipeline);
         }
-        this.#mesh = new PlaneMesh(renderPipeline, 0, new Float32Array([0, 0, 0]));
+        this.#mesh = new PlaneMesh(renderPipeline, new Float32Array([0, 0, 0]));
         this.#mesh.drawable.setVertexBuffer(0, new Float32Array([0, 0, 0]));
     }
     #startingPoint = new TerraVector2(2);

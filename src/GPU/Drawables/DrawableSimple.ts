@@ -10,7 +10,7 @@ declare const engine: Engine;
 export class DrawableSimple<R extends RenderPipeline = RenderPipeline> extends DrawableDirect {
     #firstVertex = 0;
     #firstInstance = 0;
-    protected node: DrawableNode;
+    node: DrawableNode;
     constructor(
         {
         renderPipeline,

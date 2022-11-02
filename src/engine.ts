@@ -85,6 +85,7 @@ export type rustWasm = {
     update_dynamic_buffer(mesh: rust_pointer<"mesh">): void,
     gpu_alignment(mesh: rust_pointer<"mesh">): number,
     positions_count(mesh: rust_pointer<"mesh">): number,
+    set_positions_count(mesh: rust_pointer<"mesh">, positions_count: number): number,
     id(mesh: rust_pointer<"mesh">): number,
     strip(mesh: rust_pointer<"mesh">): number,
     collider_planes_parallel_pointer(mesh: rust_pointer<"mesh">): rust_pointer<"collider_planes_parallel_pointer">,
@@ -566,13 +567,13 @@ export class Engine {
 
             // const normalizedVelocity = new TerraVector3([velocity[0], velocity[1], velocity[2]]).normalize();
             if (sphere instanceof DataNode) {
-                DataNode.Meshes.forEach(mesh => {
+                DataNode.CharacterCanCollideMeshes.forEach(mesh => {
                     if (sphere !== mesh)
                         mesh.checkCollision(this.collider, sphere)
                 });
             }
             else {
-                DataNode.Meshes.forEach(mesh => {
+                DataNode.CharacterCanCollideMeshes.forEach(mesh => {
                     mesh.checkCollision(this.collider, sphere)
                 });
             }

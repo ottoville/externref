@@ -10,7 +10,7 @@ import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import { ComputePipeline } from "./GPU/ComputePipeline.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
-import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer } from "./GPU/Buffer.js";
+import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer, GPUBufferUsage } from "./GPU/Buffer.js";
 
 import type { Engine, } from "./engine.js";
 import { Uint16Vector2 } from "./Math.js";
@@ -19,19 +19,6 @@ import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
 import { TerraCamera } from "./TerraCamera.js";
 declare const engine: Engine;
 
-
-export const GPUBufferUsage = {
-    MAP_READ: 0x0001,
-    MAP_WRITE: 0x0002,
-    COPY_SRC: 0x0004,
-    COPY_DST: 0x0008,
-    INDEX: 0x0010,
-    VERTEX: 0x0020,
-    UNIFORM: 0x0040,
-    STORAGE: 0x0080,
-    INDIRECT: 0x0100,
-    QUERY_RESOLVE: 0x0200
-} as const
 let curSecond = 0;
 let framecount = 0;
 

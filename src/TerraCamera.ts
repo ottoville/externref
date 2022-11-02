@@ -1,12 +1,11 @@
 ﻿import type { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
 
-import { GPUBufferUsage } from "./GPU.js";
 import { TerraMatrix, TerraVector3 } from "./Math.js";
 import type { Projection } from "./GPU/Projection.js";
 import type { Engine } from "./engine.js";
 import type { GPU } from "./GPU.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
-import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer} from "./GPU/Buffer.js";
+import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, GPUBufferUsage } from "./GPU/Buffer.js";
 import type { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 import type { CameraController } from "./controllers/CameraController.js";
 declare const engine:Engine;

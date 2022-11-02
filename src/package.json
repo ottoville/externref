@@ -17,7 +17,7 @@
     "buildShaders": "node ../buildShaders.js",
     "publish": "tsc && dotnet build ../BlazorApp1.csproj && dotnet publish ../BlazorApp1.csproj",
     "testWasm": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs",
-    "eslint": "eslint --quiet ./*/**.ts .",
+    "eslint": "eslint --ext .ts,.tsx --quiet ./",
     "swa": "swa start ../wwwroot/ --ssl --ssl-cert=\"../server.crt\" --ssl-key=\"../server.key\"",
     "test-wasm": "node --experimental-wasi-unstable-preview1 --experimental-wasm-simd collider/test/test.mjs",
     "test": "npm run test-unit && npm run test-integration",

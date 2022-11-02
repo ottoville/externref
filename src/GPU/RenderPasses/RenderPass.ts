@@ -1,11 +1,11 @@
 ﻿import type { TerraCamera } from "../../TerraCamera.js";
-import { GPUBufferUsage, type GPU } from "../../GPU.js";
+import { type GPU } from "../../GPU.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
 import type { Drawable } from "../Drawables/Drawable.js";
 import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
 import type { PipelineLayout } from "../PipelineLayout.js";
 import type { GPUTextureUsageLiterals } from "../Texture.js";
-import { type BindUniformBuffer, Buffer } from "../Buffer.js";
+import { type BindUniformBuffer, Buffer, GPUBufferUsage } from "../Buffer.js";
 import type { BindGroup } from "../BindGroup.js";
 import { RenderBundleEncoder } from "../RenderBundleEncoder.js";
 import type { DrawableNode } from "../../MainNode.js";

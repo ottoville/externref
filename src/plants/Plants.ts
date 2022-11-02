@@ -5,10 +5,9 @@ import { Terrain } from "../world/terrain.js";
 import { PTDresult } from "../types/interfaces/index.js";
 
 import type { Scene } from "../Scene.js";
-import { GPUBufferUsage } from "../GPU.js"
 import { PlantsRenderPipeline } from "../GPU/RenderPipeLines/Plants.js";
 import { ComputePipeline } from "../GPU/ComputePipeline.js";
-import { Buffer } from "../GPU/Buffer.js";
+import { Buffer, GPUBufferUsage } from "../GPU/Buffer.js";
 
 import type { Engine } from "../engine.js";
 import { DrawableIndirect } from "../GPU/Drawables/DrawableIndirect.js";

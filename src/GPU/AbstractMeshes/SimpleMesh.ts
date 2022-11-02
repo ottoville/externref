@@ -3,8 +3,7 @@ import type { Scene } from "../../Scene.js";
 import { DrawableSimple } from "../Drawables/DrawableSimple.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
-import { GPUBufferUsage } from "../../GPU.js";
-import { Buffer, VertexBuffer } from "../Buffer.js";
+import { Buffer, VertexBuffer, GPUBufferUsage } from "../Buffer.js";
 import { RenderPipeline, VertexShader } from "../RenderPipeline.js";
 
 declare const engine:Engine;

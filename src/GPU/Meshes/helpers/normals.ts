@@ -1,22 +1,32 @@
 import { MainNode } from "../../../MainNode.js";
 import { NormalsPipeline } from "../../RenderPipeLines/Normals.js";
-import type { Engine } from "../../../engine.js";
 import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
-import type { VertexBuffer } from "../../Buffer.js";
-declare const engine:Engine;
+import { Buffer, GPUBufferUsage } from "../../Buffer.js"
+import { DrawableIndexed } from "GPU/Drawables/DrawableIndexed.js";
 
 export class NormalsMesh extends MainNode {
     drawable: DrawableSimple | undefined;
-    constructor(positionsCount: number, vertexBuffer: VertexBuffer) {        
-        super({positionsCount, label: 'NormalsDebug'});
-        if(engine.gpu) {
-            const renderPipeline = engine.gpu.createRenderPipeline(NormalsPipeline, { topology:'line-list' });
-            this.drawable = new DrawableSimple({
-                node: this,
-                renderPipeline,
-                renderPasses: undefined,
-                vertexBuffers: [vertexBuffer]
+    constructor(targetNode: DrawableIndexed) {
+        const positionsCount = targetNode.node.positions_count * 2
+        super({ positionsCount, label: 'NormalsDebug' });
+        
+        const gpu = targetNode.renderPipeline.bindgroupdrawable.bindGroupLayout.gpu;
+        const vertices = targetNode.node.verticesArray;
+        const stride = targetNode.node.vertices_stride;
+        const vertexBuffer = Buffer.create(gpu, targetNode.node.positions_count * stride * 2 * Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], 'vertex_debug_render_normals', b => {
+            const view = new Float32Array(b.getMappedRange());
+            vertices.forEach((v, i) => {
+                view.set(v, i * stride * 2)
+                view.set(v, i * stride * 2 + stride)
             })
-        }
+        });
+
+        const renderPipeline = gpu.createRenderPipeline(NormalsPipeline, { topology: 'line-list' });
+        this.drawable = new DrawableSimple({
+            node: this,
+            renderPipeline,
+            renderPasses: undefined,
+            vertexBuffers: [vertexBuffer]
+        })
     }
 }

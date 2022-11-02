@@ -18,7 +18,8 @@ module.exports = {
     },
     plugins: [
         '@typescript-eslint',
-        "promise"
+        "promise",
+        "import"
     ],
     extends: [
         'eslint:recommended',
@@ -39,6 +40,18 @@ module.exports = {
         "no-promise-executor-return":2,
         "no-self-compare": 2,
         "no-throw-literal": 2,
-        "valid-typeof": 2
+        "valid-typeof": 2,
+        "import/no-cycle": 2
+    },
+    settings: {
+        "import/resolver": {
+            typescript: true,
+            node: true
+        },
+        "import/extensions": [
+            ".js",
+            ".jsx",
+            ".ts"
+          ]
     }
 };

@@ -1,7 +1,7 @@
 ﻿import type { RenderPipeline } from "../RenderPipeline.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
-import { GPU, GPUBufferUsage } from "../../GPU.js"
-import { Buffer, type VertexBuffer } from "../Buffer.js";
+import { GPU } from "../../GPU.js"
+import { Buffer, type VertexBuffer, GPUBufferUsage } from "../Buffer.js";
 
 import type { Engine } from "../../engine.js";
 import { BindGroup } from "../BindGroup.js";
@@ -12,7 +12,7 @@ export abstract class Drawable {
     abstract label: string;
     #vertexBuffers: Map<number, { buffer: VertexBuffer, offset: number | undefined, size: number | undefined }> = new Map();
     #renderList: Map<RenderPass, Set<Drawable>> = new Map();
-    protected renderPipeline: Readonly<RenderPipeline>;
+    public renderPipeline: Readonly<RenderPipeline>;
     #renderPasses: Set<RenderPass>;
     #dynamicBindGroups: [BindGroup, number][]
     constructor(

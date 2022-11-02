@@ -1,14 +1,13 @@
 import type { RenderPipeline, VertexShader } from "../RenderPipeline.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
-import { GPUBufferUsage } from "../../GPU.js"
-import type { IndexedNode } from "../../nodes/DataNode.js";
-import { Buffer, type VertexBuffer, type IndexBuffer } from "../Buffer.js";
+import { Buffer, type VertexBuffer, type IndexBuffer, GPUBufferUsage } from "../Buffer.js";
 import type { Engine } from "../../engine.js";
 import { DrawableDirect } from "./DrawableDirect.js";
+import { BoundableNodeIndexed } from "nodes/BoundableNodeIndexed.js";
 declare const engine: Engine;
 
 export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends DrawableDirect {
-    node: IndexedNode;
+    node: BoundableNodeIndexed;
     #indexBuffer: IndexBuffer | undefined
     #baseVertex: number;
     #firstIndex: number;
@@ -29,7 +28,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
         } :
         {
             renderPipeline: R;
-            node: IndexedNode;
+            node: BoundableNodeIndexed;
             renderPasses?: Set<RenderPass>;
             indexBuffer?: IndexBuffer;
             baseVertex?: number;

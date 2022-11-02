@@ -168,6 +168,10 @@ pub unsafe extern "C" fn positions_count(mesh_ptr:*const Mesh) -> usize {
     (*mesh_ptr).positions_count
 }
 #[no_mangle]
+pub unsafe extern "C" fn set_positions_count(mesh_ptr:*mut Mesh, positions_count:usize) {
+    (*mesh_ptr).positions_count = positions_count;
+}
+#[no_mangle]
 pub unsafe extern "C" fn id(mesh_ptr:*const Mesh) -> u32 {
     (*mesh_ptr).id
 }
@@ -545,7 +549,6 @@ impl Mesh {
         } else {
             engine2.meshes.push(m);
             ptr = &engine2.meshes[new_id] as *const Mesh;
-
         }
         return ptr;
     }

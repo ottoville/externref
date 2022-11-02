@@ -1,12 +1,11 @@
-﻿import { UITAB } from "../UITAB.js";
-import { Terrain } from "../world/terrain.js";
-import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
+﻿import type { UITAB } from "../UITAB.js";
+import type { Terrain } from "../world/terrain.js";
+import  { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { MainNode } from "../MainNode.js";
-import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { type RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { type GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
-
 import type { Engine, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
 declare const engine:Engine;
