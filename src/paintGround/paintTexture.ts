@@ -3,6 +3,7 @@ import type { Terrain } from "../world/terrain.js";
 import type { subTexture, PTResultF } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
 import { TerraVector2 } from "../Math.js";
+import { Texture2D } from "../GPU/Texture2D.js";
 
 export class paintTexture extends paintGround {
     private subTextureCache: subTexture = { x: 0, z: 0, width: 0, height: 0, imageData: null };
@@ -20,7 +21,7 @@ export class paintTexture extends paintGround {
     constructor(
         scene: Scene,
         ground: Terrain,
-        protected zonedt: GPUTexture,
+        protected zonedt: Texture2D<"rgba8unorm", 23>,
         private textureWidth: number,
         private textureHeight: number,
         private ratio:number,
@@ -85,7 +86,7 @@ export class paintTexture extends paintGround {
         const encoder = this.scene.gpu.device.createCommandEncoder({label: 'drawSubImage_encoder'});
 
         encoder.copyTextureToTexture(
-            { texture: this.zonedt, origin: { x: minX, y: minZ } },
+            { texture: this.zonedt.texture, origin: { x: minX, y: minZ } },
             { texture: tempTexture },
             [c.width, c.height, 1]);
         if (width && this.subTextureCache.imageData) {
@@ -116,7 +117,7 @@ export class paintTexture extends paintGround {
         if (cacheImage) {
             encoder2.copyTextureToTexture(
                 { texture: cacheImage },
-                { texture: this.zonedt, origin: { x: this.subTextureCache.x, y: this.subTextureCache.z } },
+                { texture: this.zonedt.texture, origin: { x: this.subTextureCache.x, y: this.subTextureCache.z } },
                 [this.subTextureCache.width, this.subTextureCache.height, 1]);
         }
         if (typeof (this.subTextureCache) !== 'undefined') {
@@ -155,7 +156,7 @@ export class paintTexture extends paintGround {
         tempBuffer2.unmap();
 
         encoder2.copyBufferToTexture({ buffer: tempBuffer2, bytesPerRow: c.width * 4 }, {
-            texture: this.zonedt,
+            texture: this.zonedt.texture,
             origin: {
                 x: minX,
                 y: minZ

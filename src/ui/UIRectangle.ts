@@ -5,38 +5,65 @@ import { Buffer, GPUBufferUsage } from "../GPU/Buffer.js";
 import { TextureView } from "../GPU/TextureView.js";
 import type { Engine } from "../engine.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
-import { Texture } from "../GPU/Texture.js";
-declare const engine:Engine;
+import { Texture, TextureUsage } from "../GPU/Texture.js";
+import { Texture2D, type Texture2dSize } from "../GPU/Texture2D.js";
+import { RenderTarget } from "GPU/RenderTargets/RenderTarget.js";
+declare const engine: Engine;
 
-function createVertexBuffer(scale: { x: number, y: number },
+type ButtonSize = { min_width: number, y: number }
+
+function createVertexBuffer(
+    scale: ButtonSize,
     borderSize: {
         width: number,
         height: number | 'auto',
         texture_width: number,
         texture_height: number
-    }, textureSize: [number, number, number], label:string) {
-
-
-    const outer_sizeX = (1 * scale.x)
-    const outer_sizeY = (1 * scale.y)
+    },
+    textureSize: { width: number, height: number },
+    label: string,
+    textUV: readonly [[number, number], [number, number], [number, number], [number, number]],
+    text?: string,
+) {
+    const outer_sizeX = scale.min_width
+    const outer_sizeY = scale.y
 
     const content_sizeX = outer_sizeX - borderSize.width
-    const content_sizeY = outer_sizeY - ((typeof borderSize.height==='number')?borderSize.height:0)
+    const content_sizeY = outer_sizeY - ((typeof borderSize.height === 'number') ? borderSize.height : 0)
     if (content_sizeX <= 0 || content_sizeY <= 0) {
         console.warn('UI', label, 'element content size is 0 or below')
     }
-    const vertices = [
-        [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
-        [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
-        [-content_sizeX, content_sizeY, borderSize.texture_width, borderSize.texture_height],
+    const vertices: [number, number, number, number][] = [];
+    if (text) {
+        vertices.push(
+            //bottom left
+            [-content_sizeX, -content_sizeY, ...textUV[3]],
+            //bottom right
+            [content_sizeX, -content_sizeY, ...textUV[2]],
+            //top left
+            [-content_sizeX, content_sizeY, ...textUV[0]],
 
-        [-content_sizeX, content_sizeY, borderSize.texture_width, borderSize.texture_height],
-        [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
-        [content_sizeX, content_sizeY, 1 - borderSize.texture_width, borderSize.texture_height]] as [number, number, number, number][]
+            //top left
+            [-content_sizeX, content_sizeY, ...textUV[0]],
+            //bottom right
+            [content_sizeX, -content_sizeY, ...textUV[2]],
+            //top right
+            [content_sizeX, content_sizeY, ...textUV[1]]);
+    } else {
+        vertices.push(
+            [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
+            [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
+            [-content_sizeX, content_sizeY, borderSize.texture_width, borderSize.texture_height],
+
+            [-content_sizeX, content_sizeY, borderSize.texture_width, borderSize.texture_height],
+            [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
+            [content_sizeX, content_sizeY, 1 - borderSize.texture_width, borderSize.texture_height]);
+    }
+
     if (borderSize.width > 0 || borderSize.height > 0) {
         //Left content_size
         vertices.push(
-            [-outer_sizeX, -content_sizeY, 0,  1 - borderSize.texture_height],
+            [-outer_sizeX, -content_sizeY, 0, 1 - borderSize.texture_height],
             [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
             [-outer_sizeX, content_sizeY, 0, borderSize.texture_height],
             [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
@@ -45,7 +72,7 @@ function createVertexBuffer(scale: { x: number, y: number },
 
         //right content_size
         vertices.push(
-            [outer_sizeX, -content_sizeY, 1,  1 - borderSize.texture_height],
+            [outer_sizeX, -content_sizeY, 1, 1 - borderSize.texture_height],
             [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
             [outer_sizeX, content_sizeY, 1, borderSize.texture_height],
             [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
@@ -106,9 +133,12 @@ function createVertexBuffer(scale: { x: number, y: number },
             [outer_sizeX, -content_sizeY, 1, 1 - borderSize.texture_height],
         )
     }
-    vertices.forEach(vertice => {
-        vertice[2] *= textureSize[0]
-        vertice[3] *= textureSize[1]
+    vertices.forEach((vertice, i) => {
+        if (text && i < 7) {
+            return;
+        }
+        vertice[2] *= textureSize.width
+        vertice[3] *= textureSize.height
     })
     return vertices;
 }
@@ -126,7 +156,7 @@ export class UIRectangle extends UINode {
         }[];
     }]>>>;
     #renderPass: RenderPass;
-    #boundingBox= {
+    #boundingBox = {
         left: 0,
         top: 0,
         right: 0,
@@ -134,7 +164,9 @@ export class UIRectangle extends UINode {
     }
     constructor({
         canvaspipeline, renderPass, label,
-        borderSize, textureView, scale, translate, originalAspectRatio,
+        borderSize,
+        backgroundTexture,
+        scale, translate, originalAspectRatio,
         events,
         text }:
         {
@@ -161,26 +193,133 @@ export class UIRectangle extends UINode {
                 width: number, height: number | 'auto',
                 texture_width: number, texture_height: number
             },
-            textureView: TextureView,
+            backgroundTexture: ImageBitmap | TextureView<Texture2D>,
             text?: string,
             /*
                 Scale:
                     Size of the button relative to viewport size, value between 0 and 1.
                     Border size is taken account to scale.
             */
-            scale: { x: number, y: number },
+            scale: ButtonSize,
             translate: { x: number, y: number },
             originalAspectRatio?: number,
             events?: {
-                onClick?:(e:PointerEvent) => void,
+                onClick?: (e: PointerEvent) => void,
             }
         }) {
         super({ positionsCount: (borderSize.width > 0 || borderSize.height > 0) ? 54 : 6, label });
         this.#renderPass = renderPass;
-       // this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([renderPass]))
-       const vertices = createVertexBuffer(scale, borderSize, textureView.texture.size, label);
+        let textureView: TextureView<Texture>
+        let textUV: readonly [[number, number], [number, number], [number, number], [number, number]] = [
+            [0, 0],
+            [0, 0],
+            [0, 0],
+            [0, 0]
+        ]
+        // this.drawable = canvaspipeline.addDrawableSimple(this, undefined, undefined, undefined, new Set([renderPass]))
+        if (backgroundTexture instanceof ImageBitmap) {
+            var backgroundSize:Texture2dSize = { width: backgroundTexture.width, height: backgroundTexture.height };
+            let copySource: ImageBitmap | OffscreenCanvas = backgroundTexture;
 
-       this.drawable = new DrawableSimple( {
+            // Create texture for text
+            if (text) {
+                copySource = new OffscreenCanvas(backgroundSize.width, backgroundSize.height);
+                const ctx = copySource.getContext("2d")
+                if (!ctx) {
+                    throw new Error('Cant get 2d context for texture text');
+                }
+                const font = '48px serif';
+                ctx.textBaseline ="top";
+                ctx.font = font;
+                const measuredSize = ctx.measureText(text)
+                const textSize = { width: measuredSize.width, height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent                }
+                console.log(measuredSize)
+
+
+                if(originalAspectRatio) {
+                    //Keep text aspect ratio normal
+                    const textAspectRatio = textSize.height / textSize.width;
+                    if(textAspectRatio > originalAspectRatio) {
+                        //need to add borders to left and right
+                        textSize.width = textSize.height/originalAspectRatio
+                    } else if(textAspectRatio < originalAspectRatio) {
+                        //need to add borders to top and bottom
+                        textSize.height = textSize.width*originalAspectRatio
+                    }
+                }
+                const extendedSize = {
+                    width: Math.max(backgroundSize.width, textSize.width),
+                    height: backgroundSize.height + textSize.height
+                }
+                copySource.width = extendedSize.width;
+                copySource.height = extendedSize.height;
+                ctx.drawImage(backgroundTexture, 0, 0);
+
+                
+                backgroundSize.height*borderSize.texture_height
+
+                const borderSizeInPixel = {
+                    width: backgroundSize.width*borderSize.texture_width,
+                    height: backgroundSize.height*borderSize.texture_height
+                }
+
+                const contentSize = {
+                    width: backgroundSize.width - borderSizeInPixel.width*2,
+                    height: backgroundSize.height - borderSizeInPixel.height*2,
+                }
+
+                ctx.drawImage(
+                    backgroundTexture,
+                    borderSizeInPixel.width,
+                    borderSizeInPixel.height,
+                    contentSize.width,contentSize.height,
+                    0,backgroundSize.height,
+                    extendedSize.width, textSize.height)
+                ctx.font = font;
+                ctx.textAlign = "center";
+                ctx.textBaseline ="top";
+                ctx.fillText(text, extendedSize.width*0.5, backgroundSize.height + measuredSize.actualBoundingBoxAscent);
+
+                //copySource.convertToBlob().then(b => {console.log(URL.createObjectURL(b!))})
+
+
+                textUV = [
+                    [0, backgroundSize.height],
+                    [extendedSize.width, backgroundSize.height],
+                    [extendedSize.width, extendedSize.height],
+                    [0, extendedSize.height]
+                ]
+            }
+            const texture = new RenderTarget(
+                {
+                    gpu: renderPass.gpu,
+                    format: "bgra8unorm",
+                    usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"],
+                    label: 'button_' + label + '_text',
+                    size: { width: copySource.width, height: copySource.height }
+                }
+            );
+
+            texture.copyFromExternalImage(
+                { source: copySource },
+                {
+                    origin: {
+                        x: 0,
+                        y: 0
+                    }
+                },
+                {width: copySource.width, height: copySource.height})
+
+            textureView = new TextureView(texture);
+            backgroundTexture.close();
+        } else {
+            var backgroundSize = backgroundTexture.texture.size;
+            textureView = backgroundTexture
+        }
+
+        const vertices = createVertexBuffer(scale, borderSize, backgroundSize, label, textUV, text);
+
+        this.drawable = new DrawableSimple({
             renderPipeline: canvaspipeline,
             node: this,
             renderPasses: new Set([renderPass]),
@@ -189,53 +328,38 @@ export class UIRectangle extends UINode {
             firstInstance: 0,
             vertexBuffers: [new Float32Array(vertices.flat())]
         });
-        //this.drawable.setVertexBuffer(0, new Float32Array(vertices.flat()));
-
-        
 
 
-        // Create texture for text
-        const texture = Texture.create(renderPass.gpu, "bgra8unorm", ["RENDER_ATTACHMENT", "TEXTURE_BINDING", "COPY_DST"], 'button_'+label+'_text',[500, 100, 1])
-        if(text) {
-            const canvas = new OffscreenCanvas(texture.size[0], texture.size[1]);
-            const ctx = canvas.getContext("2d")
-            if(!ctx) {
-                throw new Error('Cant get 2d context for texture text');
-            }
-            ctx.font = '48px serif';
-            ctx.fillText('Hello world', 0, 0);
-            renderPass.gpu.device.queue.copyExternalImageToTexture({source: canvas}, texture, [canvas.width, canvas.height, 1]);
-        }
 
         const uniformBuffer = Buffer.create(renderPass.gpu, 8 /* size of vec2<f32> */, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'UI_transform', (buff) => {
             const b = new Float32Array(buff.getMappedRange())
             b.set([translate.x, translate.y])
         });
         const onClick = events?.onClick;
-        if(onClick) {
-            const clickListener = (e:PointerEvent) => {
-                if(
+        if (onClick) {
+            const clickListener = (e: PointerEvent) => {
+                if (
                     (e.offsetX > this.#boundingBox.left && e.offsetX < this.#boundingBox.right)
-                     &&
+                    &&
                     (e.offsetY > this.#boundingBox.top && e.offsetY < this.#boundingBox.bottom)
-                    ) {
-                        onClick(e);
-                    }
+                ) {
+                    onClick(e);
+                }
             }
             engine.addInputListener('pointerdown', this, clickListener)
         }
         renderPass.onResize.set(this, () => {
-            const widthPixels = renderPass.size[0] * scale.x;
-            const offsetXPixels = renderPass.size[0] * ((translate.x + 1) * 0.5) * 1/devicePixelRatio;
-            const offsetYPixels = renderPass.size[1] * ((-translate.y + 1) * 0.5) * 1/devicePixelRatio;
-            const halfWidth=widthPixels*0.5* 1/devicePixelRatio
-            let halfHeight:number;
+            const widthPixels = renderPass.size.width * scale.min_width;
+            const offsetXPixels = renderPass.size.width * ((translate.x + 1) * 0.5) * 1 / devicePixelRatio;
+            const offsetYPixels = renderPass.size.height * ((-translate.y + 1) * 0.5) * 1 / devicePixelRatio;
+            const halfWidth = widthPixels * 0.5 * 1 / devicePixelRatio
+            let halfHeight: number;
             if (originalAspectRatio) {
                 const heightPixels = widthPixels * originalAspectRatio;
-                scale.y = heightPixels / renderPass.size[1];
+                scale.y = heightPixels / renderPass.size.height;
                 halfHeight = halfWidth * originalAspectRatio;
             } else {
-                halfHeight=renderPass.size[1] * scale.y*0.5* 1/devicePixelRatio
+                halfHeight = renderPass.size.height * scale.y * 0.5 * 1 / devicePixelRatio
             }
             this.#boundingBox.top = offsetYPixels - halfHeight;
             this.#boundingBox.bottom = offsetYPixels + halfHeight;
@@ -243,11 +367,11 @@ export class UIRectangle extends UINode {
             this.#boundingBox.right = offsetXPixels + halfWidth;
 
             if (borderSize.width > 0 || (typeof borderSize.height === "number" && borderSize.height > 0)) {
-                const widthBorderPixels = renderPass.size[0] * borderSize.width;
-                borderSize.height=widthBorderPixels/renderPass.size[1];
+                const widthBorderPixels = renderPass.size.width * borderSize.width;
+                borderSize.height = widthBorderPixels / renderPass.size.height;
             }
 
-            const newVertices = createVertexBuffer(scale, borderSize, textureView.texture.size, label);
+            const newVertices = createVertexBuffer(scale, borderSize, backgroundSize, label, textUV, text);
             //TODO: enforce vertices set when pipeline have vertices buffer
             this.drawable.setVertexBuffer(0, new Float32Array(newVertices.flat()));
         });

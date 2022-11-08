@@ -5,6 +5,9 @@ import { PTDresult } from "../types/interfaces/index.js";
 
 import type { Scene } from "../Scene.js";
 import type { Engine } from "../engine.js";
+import { TextureUsage } from "../GPU/Texture.js";
+import { TextureView } from "../GPU/TextureView.js";
+import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 declare const engine:Engine;
 export class Zones extends UITAB {
     static override label = 'Zones';
@@ -26,7 +29,7 @@ export class Zones extends UITAB {
     private PT: paintTexture;
     #size = 5120;
     readonly #ratio:number //texture coordinates
-    readonly #zoneTexture:GPUTexture;
+    readonly #zoneTexture: RenderTarget<"rgba8unorm", 23>;
     scene: Scene;
     constructor(
         terrain: Terrain,
@@ -42,10 +45,13 @@ export class Zones extends UITAB {
             throw(new Error('staticScene not found'));
         }
         this.#ratio = Terrain.size[0] / this.#size //texture coordinates
-        this.#zoneTexture = engine.gpu!.device.createTexture({
-            size: [5120, 5120, 1],
+
+        this.#zoneTexture = new RenderTarget({
+            gpu: engine.gpu!,
+            size: {width: 5120, height: 5120},
             format: "rgba8unorm",
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+            usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC"],
+            label: 'ZoneTexture'
         });
 
         if(engine.DB) {
@@ -70,10 +76,11 @@ export class Zones extends UITAB {
                     ctx.fillRect(0, 0, -(z.size.h / this.#ratio), -(z.size.w / this.#ratio));
                 });
                 ctx.stroke();
-                engine.gpu!.device.queue.copyExternalImageToTexture({source: texture}, { texture: this.#zoneTexture }, [5120, 5120, 1]);
+                this.#zoneTexture.copyFromExternalImage({source: texture}, {}, {width: 5120, height: 5120});
             }
         }
-        terrain.mesh.setTextureView(this.#zoneTexture.createView());
+        
+        terrain.mesh.setTextureView(new TextureView(this.#zoneTexture));
         terrain.mesh.set_scenes(staticScene.id)
         this.PT = new paintTexture(this.scene, this.terrain, this.#zoneTexture, 5120, 5120, this.#ratio, (response) => {
             engine.DB?.transaction("zones", 'readwrite').objectStore("zones").put(response);
@@ -84,7 +91,7 @@ export class Zones extends UITAB {
     }
     destroy = (): void => {
         this.terrain.mesh.set_scenes(this.scene.id)
-        this.terrain.mesh.setTextureView(this.terrain.texture.createView());
+        this.terrain.mesh.setTextureView(new TextureView(this.terrain.texture));
         this.#zoneTexture.destroy();
         this.PT.destroy();
     }

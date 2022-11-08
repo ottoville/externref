@@ -1,43 +1,45 @@
-import { ColorRenderTarget } from "./ColorRenderTarget.js";
-import type { GPUTextureUsageLiterals } from "../Texture.js";
+import { ColorRenderTarget, ColorRenderTargetParams } from "./ColorRenderTarget.js";
 import { RenderPass } from "../RenderPasses/RenderPass.js";
-import { RenderTarget, RenderTargetOptions } from "./RenderTarget.js";
+import { RenderTargetTextureUsageValue } from "./RenderTarget.js";
+import { Texture2DParams } from "../Texture2D.js";
+import { RenderPassTarget, RenderPassTargetOptions } from "./RenderPassTarget.js";
 
-export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends GPUTextureUsageLiterals[] = GPUTextureUsageLiterals[]>
+export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     extends ColorRenderTarget<F, U> {
-    static override createForRenderpass<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat>(format: F, usages: U, label: string, clearValue: GPUColor, options?: RenderTargetOptions, blend?:GPUBlendState, writeMask?: GPUColorWriteFlags, context?: GPUCanvasContext): (renderPass: RenderPass) => MSAARenderTarget<F, U>
-    static override createForRenderpass<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT'], F extends GPUTextureFormat>(format: F, usages: U, label: string, clearValue: GPUColor, options?: RenderTargetOptions, blend?:GPUBlendState, writeMask?: GPUColorWriteFlags, context?: GPUCanvasContext): (renderPass: RenderPass) => MSAARenderTarget<F, U>
-    static override createForRenderpass<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC'], F extends GPUTextureFormat>(format: F, usages: U, label: string, clearValue: GPUColor, options?: RenderTargetOptions, blend?:GPUBlendState, writeMask?: GPUColorWriteFlags, context?: GPUCanvasContext): (renderPass: RenderPass) => MSAARenderTarget<F, U>
-    static override createForRenderpass<U extends GPUTextureUsageLiterals[] = GPUTextureUsageLiterals[], F extends GPUTextureFormat = GPUTextureFormat>(
-        format: F,
-        usages: U,
-        label: string,
+    static override createForRenderpass<U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue, F extends GPUTextureFormat = GPUTextureFormat>(
+        textureOptions:Omit<Texture2DParams<F, U>, 'gpu'>,
         clearValue: GPUColor,
-        options: RenderTargetOptions = {size: [300,300,1]},
+        textureViewDescriptor?: GPUTextureViewDescriptor,
         blend?:GPUBlendState,
         writeMask: GPUColorWriteFlags = 0xF,
         context?: GPUCanvasContext
     ) {
         return (renderPass: RenderPass) => {
-            return new MSAARenderTarget(clearValue, format, usages, label, renderPass, options, blend, writeMask, context)
+            return new MSAARenderTarget(
+                textureOptions
+                , {
+                    renderPass,
+                    context,
+                    writeMask,
+                    textureViewDescriptor
+                }, {
+                    clearValue,
+                    blend
+                }
+            );
         }
     }
-    readonly resolveTexture?: RenderTarget<F, U>
+    readonly resolveTexture?: RenderPassTarget<F, U>
     readonly #resolveView: () => GPUTextureView;
     constructor(
-        clearValue: GPUColor,
-        format: F,
-        usages: U,
-        label: string,
-        renderPass: RenderPass,
-        options: RenderTargetOptions = { size: [300,300,1] },
-        blend?:GPUBlendState,
-        writeMask: GPUColorWriteFlags = 0xF,
-        context?: GPUCanvasContext
+        textureOptions: Omit<Texture2DParams<F, U>, 'gpu'>,
+        renderTargetOptions: RenderPassTargetOptions,
+        options: ColorRenderTargetParams
     ) {
-        super(clearValue, format, usages, label, renderPass, options, blend, writeMask, context);
-        if (!context) {
-            const resolveTexture = new RenderTarget(this.format, this.usages, this.label + 'Resolve' + Date.now(), this.renderPass, { size: options.size }, undefined, undefined, undefined);
+        super(textureOptions, renderTargetOptions, options);
+        if (!renderTargetOptions.context) {
+            const resolveTexture = new RenderPassTarget({gpu: renderTargetOptions.renderPass.gpu, ...textureOptions}, renderTargetOptions);
+            //const resolveTexture = new RenderTarget(this.format, this.usages, textureOptions.label, this.renderPass, { size: options.size }, undefined, undefined, undefined);
             this.resolveTexture = resolveTexture;
             //  this.#resolveView = resolveView;
             this.#resolveView = () => {
@@ -46,13 +48,13 @@ export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U e
             }
         } else {
             this.#resolveView = () => {
-                return context.getCurrentTexture().createView();
+                return renderTargetOptions.context!.getCurrentTexture().createView();
             }
         }
     }
-    override resize(width: number, height: number, sampleCount: 1 | 4) {
-        super.resize(width, height, sampleCount);
-        this.resolveTexture?.resize(width, height, 1)
+    override resize(size: {width: number, height: number}, sampleCount: 1 | 4) {
+        super.resize(size, sampleCount);
+        this.resolveTexture?.resize(size, 1)
     }
     override createColorAttachment() {
         const obj = super.createColorAttachment();

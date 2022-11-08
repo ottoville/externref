@@ -1,17 +1,63 @@
 import type { GPU } from "../GPU.js";
 import type { TextureView } from "./TextureView.js";
 
-export type GPUTextureUsageLiterals = 'COPY_SRC' | 'COPY_DST' | 'TEXTURE_BINDING' | 'STORAGE_BINDING' | 'RENDER_ATTACHMENT';
 
-export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GPUTextureUsageLiterals[] = GPUTextureUsageLiterals[]> {
+
+export type TextureSize = {
+    readonly width: GPUIntegerCoordinate;
+} | {
+    readonly width: GPUIntegerCoordinate;
+    readonly height: GPUIntegerCoordinate;
+} | {
+    readonly width: GPUIntegerCoordinate;
+    readonly height: GPUIntegerCoordinate;
+    readonly depthOrArrayLayers: GPUIntegerCoordinate;
+}
+
+export type TextureParams<F, U> = {
+    gpu: GPU;
+    format: F;
+    usages: U;
+    label: string;
+    size: TextureSize;
+    initialSampleCount?: 1 | 4;
+}
+
+/*
+    Cannot use const enum because TS would allow any number to enum https://stackoverflow.com/a/53496839
+*/
+export const RenderTargetTextureUsage = {
+    RENDER_ATTACHMENT : GPUTextureUsage.RENDER_ATTACHMENT as 16,
+    "RENDER_ATTACHMENT|COPY_SRC" : (GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT) as 17,
+    "RENDER_ATTACHMENT|TEXTURE_BINDING" : (GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT) as 20,
+    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC" : (GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC) as 21,
+    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST" : (GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST) as 22,
+    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC" : (GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC) as 23,
+    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING" : (GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING) as 31
+
+} as const
+export const TextureUsage = {
+    COPY_DST : GPUTextureUsage.COPY_DST as 2,
+    COPY_SRC : GPUTextureUsage.COPY_SRC as 1,
+    STORAGE_BINDING : GPUTextureUsage.STORAGE_BINDING as 8,
+    TEXTURE_BINDING : GPUTextureUsage.TEXTURE_BINDING as 4,
+    ...RenderTargetTextureUsage
+} as const
+
+type ValueOf<T> = T[keyof T];
+export type TextureUsageValue = ValueOf<typeof TextureUsage>
+
+export class Texture<
+    F extends GPUTextureFormat = GPUTextureFormat,
+    U extends TextureUsageValue = TextureUsageValue
+> {
     texture: GPUTexture;
     views: Set<TextureView> = new Set();
-    resize(width: number, height: number, sampleCount: 1 | 4) {
-        this.size[0] = width;
-        this.size[1] = height;
+    resize(size: TextureSize, sampleCount: 1 | 4) {
+        this.size = size;
         this.createTexture(sampleCount);
     }
-    protected destroy() {
+    destroy() {
         //Texture is undefined on initial call from constructor
         if (!this.texture)
             return
@@ -20,9 +66,9 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
     }
     protected createTexture(sampleCount: 1 | 4 = 1, debug = false) {
         //Texture is undefined on initial call
-        if(this.texture)
+        if (this.texture)
             this.destroy();
-        let usages = this.usages.reduce((prev, curr) => prev | GPUTextureUsage[curr], 0);
+        let usages = this.usages as number;
         if (debug) {
             usages |= GPUTextureUsage['COPY_SRC'];
         }
@@ -31,29 +77,35 @@ export class Texture<F extends GPUTextureFormat = GPUTextureFormat, U extends GP
             sampleCount: sampleCount,
             format: this.format,
             usage: usages,
-            label: this.label+(debug?'debug':'')
+            label: this.label + (debug ? 'debug' : '')
         });
         this.views.forEach(view => view.reCreate(debug));
 
         return this.texture;
     }
-    static create<U extends ['TEXTURE_BINDING'], F extends GPUTextureFormat>(gpu: GPU, format: F, usages: U, label: string, size?: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate]): Texture<F, U>
-    static create<U extends ['RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu: GPU, format: F, usages: U, label: string, size?: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate]): Texture<F, U>
-    static create<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT'], F extends GPUTextureFormat>(gpu: GPU, format: F, usages: U, label: string, size?: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate]): Texture<F, U>
-    static create<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_SRC'], F extends GPUTextureFormat>(gpu: GPU, format: F, usages: U, label: string, size?: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate]): Texture<F, U>
-    static create<U extends ['TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_DST', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_DST', 'TEXTURE_BINDING' | 'RENDER_ATTACHMENT' | 'COPY_DST'], F extends GPUTextureFormat>(gpu: GPU, format: F, usages: U, label: string, size?: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate]): Texture<F, U>
-    static create<F extends GPUTextureFormat>(gpu: GPU, format: F, usages: GPUTextureUsageLiterals[], label: string, size: [GPUIntegerCoordinate, GPUIntegerCoordinate, GPUIntegerCoordinate] = [300, 300, 1]): Texture<F, GPUTextureUsageLiterals[]> {
-        return new Texture(gpu, format, usages, label, size)
-    }
-    constructor(
-        public gpu: GPU,
-        public format: F,
-        public usages: U,
-        public label: string,
-        public readonly size: [number, number, number] = [300, 300, 1],
-        public initialSampleCount: 1 | 4 = 1
+    protected gpu: GPU;
+    public format: F;
+    protected usages: U;
+    public label: string;
+    public size: TextureSize;
+    protected initialSampleCount: 1 | 4 = 1
 
+    constructor(
+        {
+            gpu,
+            format,
+            usages,
+            label,
+            size,
+            initialSampleCount = 1
+        }: TextureParams<F, U>
     ) {
+        this.gpu = gpu;
+        this.format = format;
+        this.usages = usages;
+        this.label = label;
+        this.size = size;
+        this.initialSampleCount = initialSampleCount
         this.texture = this.createTexture(initialSampleCount);
     }
 

@@ -33,8 +33,6 @@ import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
 import { RoundCuboid } from "../GPU/Meshes/RoundCuboid.js";
 import { ArcRotateCamera } from "../controllers/ArcRotateCamera.js";
 import { UIRectangle } from "./UIRectangle.js";
-import { Texture } from "../GPU/Texture.js";
-import { TextureView } from "../GPU/TextureView.js";
 
 declare const engine:Engine;
 
@@ -202,32 +200,30 @@ export class Canvas extends TerraCompoment {
             renderPass: gpu.renderPassCanvas,
             label:'UICanvas',
             borderSize:{width:0, height:0, texture_width:0, texture_height:0},
-            textureView: gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
-            scale: {x:1, y:1},
+            backgroundTexture: gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.view,
+            scale: {min_width:1, y:1},
             translate: {x:0, y:0},
         });
         
         const b = await (await fetch('/assets/button.webp')).blob();
 
         const bitmap = await createImageBitmap(b);
-        const texture = Texture.create(gpu, 'rgba8unorm',  ['COPY_DST', 'RENDER_ATTACHMENT', 'TEXTURE_BINDING'],'button',[bitmap.width, bitmap.height,1])
-
-        engine.gpu!.device.queue.copyExternalImageToTexture({source:bitmap},{texture:texture.texture},[bitmap.width,bitmap.height]);
 
         new UIRectangle({
             canvaspipeline: UIPipeline,
             renderPass: gpu.renderPassCanvas,
             label: 'UIButton',
             borderSize: {width:0.01, height: 'auto', texture_width: 0.2, texture_height: 0.2 },
-            textureView: new TextureView(texture),
-            scale: {x:0.1, y:0.1},
-            translate: { x:-0.9, y: 0.9 },
+            backgroundTexture: bitmap,
+            scale: {min_width:0.1, y:0.1},
+            translate: { x:-0.9, y: 0.5 },
             originalAspectRatio: 0.3,
             events: {
                 onClick: (e) => {
                     console.log(e);
                 }
-            }
+            },
+            text: 'hello'
         });
 
         this.progress = 20;

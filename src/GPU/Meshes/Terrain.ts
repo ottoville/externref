@@ -7,17 +7,18 @@ declare const engine:Engine;
 import type { IndexBuffer, VertexBuffer} from "../../GPU/Buffer.js";
 import { RenderPipeline, VertexShader } from "GPU/RenderPipeline.js";
 import { NormalsMesh } from "./helpers/normals.js";
+import { TextureView } from "GPU/TextureView.js";
 
 export class TerrainMesh extends BoundableNodeIndexed {
     sampler: GPUSampler | undefined;
-    setTextureView = (textureview: GPUTextureView) => {
-        this.drawable!.setStaticBindGroup('terrainTexture', () => {
+    setTextureView = (textureview: TextureView) => {
+        this.drawable!.setStaticBindGroup('terrainTexture', (bindGroup) => {
             return [{
                 binding:0,
                 resource: this.sampler!
             }, {
                 binding:1,
-                resource: textureview
+                resource: textureview.getTextureBinding(bindGroup)
             }]
         });
     }
@@ -44,7 +45,7 @@ export class TerrainMesh extends BoundableNodeIndexed {
     }
     constructor(
         scenes: Scene[],
-        public initialTexture: GPUTextureView,
+        public initialTexture: TextureView,
         public vBuffer: VertexBuffer,
         public iBuffer: IndexBuffer,
         vertices: Float32Array,
@@ -67,13 +68,13 @@ export class TerrainMesh extends BoundableNodeIndexed {
             //@ts-expect-error
             window.debugTerrain=() => new NormalsMesh(this.drawable);
 
-            this.drawable.setStaticBindGroup('TerrainInitialTexture', () => {
+            this.drawable.setStaticBindGroup('TerrainInitialTexture', (bindGroup) => {
                 return [{
                     binding:0,
                     resource: this.sampler!
                 }, {
                     binding:1,
-                    resource: initialTexture
+                    resource: initialTexture.getTextureBinding(bindGroup)
                 }]
             });
             this.drawable.setIndexBuffer(this.iBuffer, 0, true, 'uint32');
