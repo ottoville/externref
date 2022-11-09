@@ -17,20 +17,16 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
 
         switch (textureOptions.format) {
             case 'r32uint':
-                this.#bytes_per_fixel = 4;
-                break;
             case 'bgra8unorm':
+            case 'rgba8unorm':
+            case 'depth32float':
                 this.#bytes_per_fixel = 4;
                 break;
             case 'rgba32float':
                 this.#bytes_per_fixel = 16;
                 break;
-            case 'depth32float':
-                this.#bytes_per_fixel = 4;
-                break;
             default:
-                throw new Error('unknown image format');
-            break;
+                throw new Error('unknown image format ' + textureOptions.format);
         }
     }
     copyFromExternalImage(
