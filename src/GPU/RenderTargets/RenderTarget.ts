@@ -39,7 +39,7 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
         copySize: GPUExtent3DDict,
         
     ) {
-        if((this.usages & GPUTextureUsage.COPY_DST) !== 0) {
+        if((this.usages & GPUTextureUsage.COPY_DST) === 0) {
             throw new Error('copyFromExternalImage: texture must include both RENDER_ATTACHMENT and COPY_DST.')
         }
         if((destination.origin?.y ?? 0) + (copySize.height??0) > this.size.height) {

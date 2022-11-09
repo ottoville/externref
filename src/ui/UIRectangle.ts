@@ -7,7 +7,7 @@ import type { Engine } from "../engine.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { Texture, TextureUsage } from "../GPU/Texture.js";
 import { Texture2D, type Texture2dSize } from "../GPU/Texture2D.js";
-import { RenderTarget } from "GPU/RenderTargets/RenderTarget.js";
+import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 declare const engine: Engine;
 
 type ButtonSize = { min_width: number, y: number }

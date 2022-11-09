@@ -8,7 +8,7 @@ import { type BindUniformBuffer, Buffer, GPUBufferUsage } from "../Buffer.js";
 import type { BindGroup } from "../BindGroup.js";
 import { RenderBundleEncoder } from "../RenderBundleEncoder.js";
 import type { DrawableNode } from "../../MainNode.js";
-import { RenderTargetTextureUsageValue } from "GPU/RenderTargets/RenderTarget.js";
+import { RenderTargetTextureUsageValue } from "../RenderTargets/RenderTarget.js";
 
 
 interface RenderPipelineVariant2 {
