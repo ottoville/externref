@@ -72,13 +72,13 @@ export class GPU {
         y: 1
     }
     readonly renderPassScreen: PickableRenderPass<{
-        gRenderTargetDiffuse: () => MSAARenderTarget<"bgra8unorm", typeof TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"]>;
+        gRenderTargetDiffuse: MSAARenderTarget<"bgra8unorm", typeof TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"]>;
     }>;
 
     readonly renderPassWater: DepthRenderPass<{
-        diffuse: () => ColorRenderTarget<"bgra8unorm",  typeof TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"]>;
+        diffuse: ColorRenderTarget<"bgra8unorm", typeof TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"]>;
     }>;
-    readonly renderPassCanvas: RenderPass<{ swap: () => ColorRenderTarget<GPUTextureFormat, typeof TextureUsage.RENDER_ATTACHMENT>; }>;
+    readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<GPUTextureFormat, typeof TextureUsage.RENDER_ATTACHMENT>; }>;
 
     updateViewPipeline: ComputePipeline;
     readonly #updateViewBindGroup: BindGroup;
@@ -94,7 +94,7 @@ export class GPU {
     readonly uniformBindGroupLayoutWithTime: BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>;
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
     readonly shaderModules = {} as { [K in keyof typeof shaders]: GPUShaderModule }
-    readonly pickRenderPass: RenderPass<{ gRenderTargetId: () => ColorRenderTarget<"r32uint", typeof TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
+    readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", typeof TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
     readonly sizeBindGroupLayout: BindGroupLayout<[GPUBindGroupEntry]>;
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
     readonly bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
@@ -307,8 +307,23 @@ export class GPU {
 
         this.pickRenderPass = new RenderPass({
             gpu: this,
-            colorRenderTargetsConstructors: {
-                gRenderTargetId: ColorRenderTarget.createForRenderpass({format: "r32uint", usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"], label: 'idTexture', size: { width: 300, height: 300 } }, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, { baseArrayLayer: 0, arrayLayerCount: 1 } , undefined)
+            colorRenderTargets: {
+                gRenderTargetId: new ColorRenderTarget(
+                    {
+                        gpu: this,
+                        format: "r32uint",
+                        usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
+                        label: 'idTexture',
+                        size: { width: 300, height: 300 }
+                    },
+                    {
+                        writeMask: 0xF,
+                        textureViewDescriptor: { baseArrayLayer: 0, arrayLayerCount: 1 },
+                        context: undefined
+                    }, {
+                    clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+                    blend: undefined
+                })
             },
             sampleCount: 1,
             size: { width: canvas.width, height: canvas.height },
@@ -324,8 +339,23 @@ export class GPU {
         this.renderPassScreen = new PickableRenderPass(
             {
                 gpu: this,
-                colorRenderTargetsConstructors: {
-                    gRenderTargetDiffuse: MSAARenderTarget.createForRenderpass({format: "bgra8unorm", usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"], label: 'diffuseTexture', size:  {width: 300, height: 300}}, { r: 0.53, g: 0.8, b: 0.92, a: 0.0 }),
+                colorRenderTargets: {
+                    gRenderTargetDiffuse: new MSAARenderTarget({
+                        gpu: this,
+                        format: "bgra8unorm",
+                        usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"],
+                        label: 'diffuseTexture',
+                        size: { width: 300, height: 300 }
+                    },
+                        {
+                            writeMask: 0xF,
+                            textureViewDescriptor: undefined,
+                            context: undefined
+                        },
+                        {
+                            clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 0.0 },
+                            blend: undefined,
+                        }),
                 },
                 sampleCount: 4,
                 size: { width: canvas.width, height: canvas.height },
@@ -336,15 +366,41 @@ export class GPU {
                 rootLayout: this.rootCameralayout,
                 label: 'renderPassScreen'
             },
-            //DepthRenderTarget.createForRenderpass('depth32float', ['RENDER_ATTACHMENT', 'COPY_SRC', 'TEXTURE_BINDING'], 'depthTexture_renderPassWater', 0, undefined, undefined, undefined, 4)
-            DepthRenderTarget.createForRenderpass('depth32float', TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"], 'depthTexture_renderPassWater', 0, {width: 300, height: 300}, undefined, undefined, 4)
+            new DepthRenderTarget(0, {
+                format: 'depth32float',
+                usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
+                label: 'depthTexture_renderPassWater',
+                initialSampleCount: 4,
+                size: { width: 300, height: 300 },
+                gpu: this
+            },
+                {
+                    writeMask: 0xF,
+                    context: undefined,
+                    textureViewDescriptor: undefined
+                })
         );
 
         this.renderPassWater = new DepthRenderPass(
             {
                 gpu: this,
-                colorRenderTargetsConstructors: {
-                    diffuse: ColorRenderTarget.createForRenderpass({format: "bgra8unorm", usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"], label: 'diffuseTextureWater', size: {width: 300, height: 300}}, { r: 0.023, g: 0.25, b: 0.45, a: 1.0 }),
+                colorRenderTargets: {
+                    diffuse: new ColorRenderTarget(
+                        {
+                            gpu: this,
+                            format: "bgra8unorm",
+                            usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"],
+                            label: 'diffuseTextureWater',
+                            size: { width: 300, height: 300 }
+                        }, {
+                        textureViewDescriptor: undefined,
+                        writeMask: 0xF,
+                        context: undefined
+                    },
+                        {
+                            clearValue: { r: 0.023, g: 0.25, b: 0.45, a: 1.0 },
+                            blend: undefined
+                        }),
                 },
                 sampleCount: 1,
                 size: { width: canvas.width, height: canvas.height },
@@ -353,7 +409,18 @@ export class GPU {
                 rootLayout: this.rootCameralayout,
                 label: 'renderPassWater'
             },
-            DepthRenderTarget.createForRenderpass('depth32float', TextureUsage["RENDER_ATTACHMENT|COPY_SRC"], 'depthTexture_renderPassWater', 0, {width: 300, height: 300}, undefined, undefined, 1)
+            new DepthRenderTarget(0, {
+                format: 'depth32float',
+                usages: TextureUsage["RENDER_ATTACHMENT|COPY_SRC"],
+                label: 'depthTexture_renderPassWater',
+                size: { width: 300, height: 300 },
+                initialSampleCount: 1,
+                gpu: this
+            }, {
+                writeMask: 0xF,
+                context: undefined,
+                textureViewDescriptor: undefined
+            })
         );
 
         //TODO: this does not need to be canvas size
@@ -393,19 +460,33 @@ export class GPU {
 
         this.renderPassCanvas = new RenderPass({
             gpu: this,
-            colorRenderTargetsConstructors: {
-                swap: ColorRenderTarget.createForRenderpass({format: this.#presentationFormat, usages: TextureUsage.RENDER_ATTACHMENT, label: 'canvasTexture', size: { width: 300, height: 300 } }, { r: 0.53, g: 0.8, b: 0.92, a: 1.0 }, undefined, {
-                    alpha: {
-                        operation: 'add',
-                        srcFactor: 'one',
-                        dstFactor: 'one-minus-src-alpha'
-                    },
-                    color: {
-                        operation: 'add',
-                        srcFactor: 'src-alpha',
-                        dstFactor: 'one-minus-src-alpha'
-                    }
-                }, undefined, context)
+            colorRenderTargets: {
+                swap: new ColorRenderTarget({
+                    gpu: this,
+                    format: this.#presentationFormat,
+                    usages: TextureUsage.RENDER_ATTACHMENT,
+                    label: 'canvasTexture',
+                    size: { width: 300, height: 300 }
+                }, {
+                    context: context,
+                    writeMask: 0xF,
+                    textureViewDescriptor: undefined
+                },
+                    {
+                        clearValue: { r: 0.53, g: 0.8, b: 0.92, a: 1.0 },
+                        blend: {
+                            alpha: {
+                                operation: 'add',
+                                srcFactor: 'one',
+                                dstFactor: 'one-minus-src-alpha'
+                            },
+                            color: {
+                                operation: 'add',
+                                srcFactor: 'src-alpha',
+                                dstFactor: 'one-minus-src-alpha'
+                            }
+                        }
+                    })
             },
             sampleCount: 1,
             size: { width: canvas.width, height: canvas.height },

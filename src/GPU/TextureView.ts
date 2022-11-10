@@ -1,8 +1,12 @@
 import type { Texture } from "./Texture.js";
 import type { BindGroup } from "./BindGroup.js";
 import { Bindable } from "./Bindable.js";
-
+import type { RenderPass } from "./RenderPasses/RenderPass.js";
+let n = 0;
 export class TextureView<T extends Texture = Texture> extends Bindable {
+    //To track when texture is assigned as render target 
+    readonly #renderPasses:Set<RenderPass>=new Set();
+
     //TODO: set private
     view: GPUTextureView;
     readonly #descriptor: GPUTextureViewDescriptor
@@ -16,15 +20,31 @@ export class TextureView<T extends Texture = Texture> extends Bindable {
         texture.views.add(this);
     }
     reCreate(debug=false) {
-        if(debug) {
-            this.#descriptor.label = (this.#descriptor.label!)+'debug'
-        }
         this.destroy();
-        this.view = this.texture.texture.createView(this.#descriptor);
+        let label = this.#descriptor.label ?? '';
+        if(debug) {
+            label = (this.#descriptor.label!)+'debug'+n;
+            console.log('create textureview',label)
+            n+=1;
+        }
+        this.view = this.texture.texture.createView(
+            {...this.#descriptor,
+                label:label
+            });
         return this.view;
     }
     getTextureBinding(bindGroup: BindGroup): GPUTextureView {
         this.bindGroups.add(bindGroup);
         return this.view;
+    }
+    getAsRenderTarget(renderPass: RenderPass) {
+        this.#renderPasses.add(renderPass);
+        return this.view;
+    }
+    override destroy(): void {
+        this.#renderPasses.forEach(rp => {
+            rp.bundles.forEach(bundle => bundle.destroy());
+        })
+        super.destroy();
     }
 }

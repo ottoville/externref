@@ -96,7 +96,6 @@ export abstract class Drawable {
             }
         });
         if(this.#staticBindGroup) {
-            console.log('set staticBindGroup', this.label)
             renderEncoder.setBindGroup(BindGroupsStart++, this.#staticBindGroup.bindGroup)
         }
         this.#vertexBuffers.forEach((buffer, index) => renderEncoder.setVertexBuffer(index, buffer.buffer.vertexBuffer, buffer.offset, buffer.size));

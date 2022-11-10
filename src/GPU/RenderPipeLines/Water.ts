@@ -21,7 +21,7 @@ export const WaterRenderPipeline = ['WaterRenderPipeline', function create(gpu:G
             new Shader(gpu, 'water.frag.wgsl'),
             {
                 primitive,
-            },undefined, () =>
+            },undefined, (bindGroup) =>
             [
                 {
                     binding: 0,
@@ -29,7 +29,7 @@ export const WaterRenderPipeline = ['WaterRenderPipeline', function create(gpu:G
                 },
                 {
                     binding: 1,
-                    resource: gpu.renderPassWater.colorRenderTargets.diffuse.view.view
+                    resource: gpu.renderPassWater.colorRenderTargets.diffuse.view.getTextureBinding(bindGroup)
                 }
             ]
         )

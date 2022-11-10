@@ -4,16 +4,16 @@ import { MSAARenderTarget } from "../RenderTargets/MSAARenderTarget.js";
 import { ComputePipeline } from "../ComputePipeline.js";
 import type { BindGroup } from "../BindGroup.js";
 import { type BindUniformBuffer, type CopyDstBuffer, Buffer, GPUBufferUsage } from "../Buffer.js";
-import { RenderPass, RenderPassProps } from "./RenderPass.js";
+import { RenderPassProps } from "./RenderPass.js";
 import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
 import { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";
 import { DepthRenderPass } from "./DepthRenderPass.js";
 import type { RenderTargetTextureUsageValue } from "GPU/RenderTargets/RenderTarget.js";
 
 export class PickableRenderPass<T extends {
-    [index: string]: (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
+    [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
 } = {
-    [index: string]: (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
+    [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
 }> extends DepthRenderPass<T> {
     #pickBuffer: GPUBuffer;
     readonly #pickBufferRead?: GPUBuffer;
@@ -24,9 +24,9 @@ export class PickableRenderPass<T extends {
     #rowBytes = this.size.width*4;
 
     constructor(renderPassProps: RenderPassProps<T>,
-        depthRenderTargetsConstructor: ((renderPass: RenderPass) => DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>),
+        depthRenderTargets: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>,
         ) {
-            super(renderPassProps, depthRenderTargetsConstructor);
+            super(renderPassProps, depthRenderTargets);
             if(renderPassProps.sampleCount == 4) {
                 this.#pickPositionPipeline= new ComputePipeline(renderPassProps.gpu, 'readDepth.comp.wgsl');
 

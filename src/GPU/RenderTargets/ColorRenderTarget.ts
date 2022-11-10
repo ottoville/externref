@@ -1,4 +1,3 @@
-import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import { type RenderTargetTextureUsageValue } from "./RenderTarget.js";
 import { Texture2DParams } from "../Texture2D.js";
 import { RenderPassTarget, RenderPassTargetOptions } from "./RenderPassTarget.js";
@@ -12,7 +11,7 @@ export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
     extends RenderPassTarget<F, U>
 {
     static createForRenderpass<U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue, F extends GPUTextureFormat = GPUTextureFormat>(
-        textureOptions:Omit<Texture2DParams<F, U>, 'gpu'>,
+        textureOptions:Texture2DParams<F, U>,
         clearValue: GPUColor,
         textureViewDescriptor?: GPUTextureViewDescriptor,
         blend?:GPUBlendState,
@@ -20,14 +19,13 @@ export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
         context?: GPUCanvasContext
 
     ) {
-        return (renderPass: RenderPass) => {
+        return () => {
             const options: ColorRenderTargetParams = {
                 clearValue,
                 blend
             }
             return new ColorRenderTarget<F, U>(textureOptions, 
                 {
-                    renderPass,
                     writeMask,
                     context,
                     textureViewDescriptor,
@@ -37,11 +35,11 @@ export class ColorRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U 
     #clearValue: GPUColor;
     public blend: GPUBlendState | undefined
     constructor(
-        textureOptions: Omit<Texture2DParams<F, U>, 'gpu'>,
+        textureOptions: Texture2DParams<F, U>,
         renderTargetOptions: RenderPassTargetOptions,
         options: ColorRenderTargetParams
     ) {
-        super({gpu: renderTargetOptions.renderPass.gpu, ...textureOptions}, renderTargetOptions);
+        super(textureOptions, renderTargetOptions);
         this.#clearValue = options.clearValue
         this.blend = options.blend
     }

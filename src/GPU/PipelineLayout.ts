@@ -1,4 +1,4 @@
-﻿import type { BindGroup } from "./BindGroup.js";
+﻿import { BindGroup } from "./BindGroup.js";
 import { BindGroupLayout } from "./BindGroupLayout.js";
 import { RenderPipeline, Shader, VertexShader } from "./RenderPipeline.js";
 
@@ -104,18 +104,15 @@ export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends Pipeline
         fragmentShader:Shader,
         renderPipeline: Omit<GPURenderPipelineDescriptor, 'depthStencil' | 'fragment' | 'vertex' | 'layout'>,
         depthBuffer? : {depthWriteEnabled:boolean,depthCompare:GPUCompareFunction },
-        bindGroups?: () => T,
+        bindGroups?: (bindGroup: BindGroup) => T,
         ) {
         const RP = super.addRenderPipeline(label, vertexShader,fragmentShader,renderPipeline,depthBuffer);
         if (bindGroups) {
-            RP.createSharedBindGroups = (): Set<GPUBindGroup> => {
-                return new Set([this.bindGroupLayout.gpu.device.createBindGroup(
-                    {
-                        layout: this.bindGroupLayout.layout,
-                        entries: bindGroups(),
-                        label: 'sharedBindGroup'
-                    }
-                )])
+
+            new BindGroup(this.bindGroupLayout, 'sharedBindGroup', bindGroups)
+
+            RP.createSharedBindGroups = (): Set<BindGroup> => {
+                return new Set([new BindGroup(this.bindGroupLayout, 'sharedBindGroup', bindGroups)])
             }
         }
         return RP;

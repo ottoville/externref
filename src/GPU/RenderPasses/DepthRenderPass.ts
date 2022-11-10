@@ -5,18 +5,18 @@ import type { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";
 import type { RenderTargetTextureUsageValue } from "../RenderTargets/RenderTarget.js";
 
 export class DepthRenderPass<T extends {
-    [index: string]: (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
+    [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
 } = {
-    [index: string]: (renderPass: RenderPass) =>ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
+    [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
 }
     > extends RenderPass<T> {
     depthRenderTarget: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue> 
     constructor(
         renderPassProps: RenderPassProps<T> ,
-        depthRenderTargetsConstructor: ((renderPass: RenderPass) => DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>)
+        depthRenderTargets: DepthRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
         ) {
         super(renderPassProps);
-            this.depthRenderTarget=depthRenderTargetsConstructor(this);
+            this.depthRenderTarget = depthRenderTargets;
             this.GPURenderBundleEncoderDescriptor = {
                 ...this.GPURenderBundleEncoderDescriptor,
                 depthStencilFormat: this.depthRenderTarget.format
@@ -28,8 +28,9 @@ export class DepthRenderPass<T extends {
     }
     override get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const renderPassDescriptor = super.GPURenderPassDescriptor;
+        
         renderPassDescriptor.depthStencilAttachment = {
-            view: this.depthRenderTarget.view.view,
+            view: this.depthRenderTarget.view.getAsRenderTarget(this),
             depthClearValue: this.depthRenderTarget.clearValue,
             depthLoadOp: 'clear',
             depthStoreOp: "store"

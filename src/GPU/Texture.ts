@@ -22,7 +22,7 @@ export type TextureParams<F, U> = {
     size: TextureSize;
     initialSampleCount?: 1 | 4;
 }
-
+let n = 0;
 /*
     Cannot use const enum because TS would allow any number to enum https://stackoverflow.com/a/53496839
 */
@@ -65,6 +65,12 @@ export class Texture<
         this.views.forEach(view => view.destroy());
     }
     protected createTexture(sampleCount: 1 | 4 = 1, debug = false) {
+        let label = this.label;
+        if(debug) {
+            label+='debug'+n;
+            console.log('create texture', label);
+            n=n+1;
+        }
         //Texture is undefined on initial call
         if (this.texture)
             this.destroy();
@@ -77,7 +83,7 @@ export class Texture<
             sampleCount: sampleCount,
             format: this.format,
             usage: usages,
-            label: this.label + (debug ? 'debug' : '')
+            label
         });
         this.views.forEach(view => view.reCreate(debug));
 

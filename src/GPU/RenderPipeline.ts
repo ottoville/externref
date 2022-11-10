@@ -2,6 +2,7 @@
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
 import type { GPU } from "../GPU.js";
 import type shaders from "../shaders.json";
+import { BindGroup } from "./BindGroup.js";
 
 export class Shader {
     module:GPUShaderModule;
@@ -26,7 +27,7 @@ export class VertexShader<B extends VertexBuffers = VertexBuffers> extends Shade
 export class RenderPipeline<V extends VertexShader = VertexShader> {
 
     dynamicBindGroupOffset: number[] = [];
-    public createSharedBindGroups?: () => Set<GPUBindGroup>;
+    public createSharedBindGroups?: () => Set<BindGroup>;
     constructor(
         public label: string,
         public vertexShader:V,
@@ -55,7 +56,7 @@ export class RenderPipeline<V extends VertexShader = VertexShader> {
         renderPassEncoder.setPipeline(variant.renderpipeline);
         //variant.renderpipeline.label && console.log('set Pipeline ', variant.renderpipeline.label)
         if(this.createSharedBindGroups) {
-            this.createSharedBindGroups().forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup));
+            this.createSharedBindGroups().forEach(bindgroup => renderPassEncoder.setBindGroup(BindGroupsStart++, bindgroup.bindGroup));
          }
         drawables.forEach(drawable => drawable.draw(renderPassEncoder, BindGroupsStart,dynamicIndices));
         return drawables.size;

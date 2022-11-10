@@ -16,13 +16,13 @@ interface RenderPipelineVariant2 {
     rootDrawables: Set<Drawable>
 }
 
-type RenderTargetConstructor = (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
+//type RenderTargetConstructor = (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
 
 export type RenderPassProps<U> = {
     gpu: GPU;
-    colorRenderTargetsConstructors: U;
+    colorRenderTargets: U;
     sampleCount: 1 | 4;
-    size: {width: number, height: number};
+    size: { width: number, height: number };
     getSizeOnResize: (width: number, height: number) => [number, number];
     entryPoint: string;
     rootLayout: PipelineLayout;
@@ -30,8 +30,9 @@ export type RenderPassProps<U> = {
 }
 
 export class RenderPass<U extends {
-    [index: string]: RenderTargetConstructor } 
-        = { [index: string]: RenderTargetConstructor },
+    [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>
+}
+    = { [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue> },
 > {
 
     readonly perspectiveCameras: Set<TerraCamera> = new Set();
@@ -40,18 +41,12 @@ export class RenderPass<U extends {
     readonly renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant2> = new Map();
     readonly sizeBindGroup: () => BindGroup;
     #sizeBuffer: BindUniformBuffer;
-    readonly colorRenderTargets = {} as {
-        [Property in keyof U]: ReturnType<U[Property]>
-      };
-    //Because typescript cannot extract returntype inside this function, use this private property for inside.
-    readonly #colorRenderTargets = {} as {
-        [Property in keyof U]: ReturnType<RenderTargetConstructor>
-      };
+    readonly colorRenderTargets = {} as U
     GPURenderBundleEncoderDescriptor: GPURenderBundleEncoderDescriptor;
-    onResize:Map<DrawableNode, () => void>=new Map();
+    onResize: Map<DrawableNode, () => void> = new Map();
     public gpu: GPU
     protected sampleCount: 1 | 4;
-    public size: { width: number, height: number};
+    public size: { width: number, height: number };
     #entryPoint: string
     #getSizeOnResize: (width: number, height: number) => [number, number];
     #rootLayout: PipelineLayout
@@ -59,14 +54,14 @@ export class RenderPass<U extends {
     constructor(
         {
             gpu,
-            colorRenderTargetsConstructors,
+            colorRenderTargets,
             sampleCount,
             size,
             getSizeOnResize,
             entryPoint,
             rootLayout,
             label
-        } : RenderPassProps<U>
+        }: RenderPassProps<U>
     ) {
         this.gpu = gpu;
         this.sampleCount = sampleCount;
@@ -75,16 +70,13 @@ export class RenderPass<U extends {
         this.#entryPoint = entryPoint;
         this.#rootLayout = rootLayout;
         this.label = label;
-        Object.entries(colorRenderTargetsConstructors).forEach(([key, value]) => {
-            const rt = value(this);
-            //@ts-expect-error
-            this.colorRenderTargets[key] = rt
-            //@ts-expect-error
-            this.#colorRenderTargets[key] = rt
+        this.colorRenderTargets = colorRenderTargets;
+        const renderTargersArray = Object.values(colorRenderTargets);
+        renderTargersArray.forEach(rt => {
             rt.resize(this.size, this.sampleCount)
         })
         this.GPURenderBundleEncoderDescriptor = {
-            colorFormats: Object.values(this.#colorRenderTargets).map(rt => rt.texture.format),
+            colorFormats: renderTargersArray.map(rt => rt.texture.format),
             sampleCount: this.sampleCount,
             label: this.label
         }
@@ -131,13 +123,13 @@ export class RenderPass<U extends {
             fragment: {
                 ...renderpipeline.fragmentShader,
                 entryPoint: this.#entryPoint,
-                targets: Object.values(this.#colorRenderTargets).map(rt => {
-                    const state:GPUColorTargetState = {
+                targets: Object.values(this.colorRenderTargets).map(rt => {
+                    const state: GPUColorTargetState = {
                         format: rt.texture.format,
                         writeMask: rt.renderTargetOptions.writeMask,
                     }
-                    if(rt.blend) {
-                        state.blend=rt.blend
+                    if (rt.blend) {
+                        state.blend = rt.blend
                     }
                     return state;
                 })
@@ -162,14 +154,14 @@ export class RenderPass<U extends {
     resize(width: number, height: number) {
         [this.size.width, this.size.height] = this.#getSizeOnResize(width, height);
         this.#updateSizeBindGroup();
-        for (const rt of Object.values(this.#colorRenderTargets)) {
+        for (const rt of Object.values(this.colorRenderTargets)) {
             rt.resize(this.size, this.sampleCount)
         }
     }
     //TODO: dont execute this function on every render
     get GPURenderPassDescriptor(): GPURenderPassDescriptor {
         const renderPassDescriptor: GPURenderPassDescriptor = {
-            colorAttachments: Object.values(this.#colorRenderTargets).map(rt => 
+            colorAttachments: Object.values(this.colorRenderTargets).map(rt =>
                 rt.createColorAttachment()
             ),
         };
@@ -202,18 +194,23 @@ export class RenderPass<U extends {
         });
         return drawedMeshes;
     }
-    readonly #renderBundle:RenderBundleEncoder = new RenderBundleEncoder(this, (GPUrenderBundleEncoder, renderBundleEncoder) => {
+    readonly #renderBundle: RenderBundleEncoder = new RenderBundleEncoder(this, (GPUrenderBundleEncoder, renderBundleEncoder) => {
+        Object.values(this.colorRenderTargets).some(rt => {
+            if(rt.texture.sampleCount === 0 &&  rt.view.bindGroups.size === 0) {
+                console.warn('Rendertarget ',rt.label,' is not binded as texture, render result will be shown.')
+            }
+        })
         //@ts-ignore
         let drawedMeshes = 0;
-        if(this.perspectiveCameras.size === 0) {
+        if (this.perspectiveCameras.size === 0) {
             // Draw UI
-            drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder,renderBundleEncoder, this.#rootLayout, 0)
+            drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder, renderBundleEncoder, this.#rootLayout, 0)
         } else {
             GPUrenderBundleEncoder.setBindGroup(0, this.sizeBindGroup().getForRenderPass(renderBundleEncoder));
             this.perspectiveCameras.forEach(camera => {
                 GPUrenderBundleEncoder.setBindGroup(1, camera.uniformBindGroup!.bindGroup);
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder,renderBundleEncoder, this.#rootLayout, 2)
+                drawedMeshes += this.#renderCamera(GPUrenderBundleEncoder, renderBundleEncoder, this.#rootLayout, 2)
             })
         }
     })

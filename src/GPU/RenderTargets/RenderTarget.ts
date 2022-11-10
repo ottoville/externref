@@ -36,7 +36,7 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
         
     ) {
         if((this.usages & GPUTextureUsage.COPY_DST) === 0) {
-            throw new Error('copyFromExternalImage: texture must include both RENDER_ATTACHMENT and COPY_DST.')
+            throw new Error('copyFromExternalImage: texture must include COPY_DST.')
         }
         if((destination.origin?.y ?? 0) + (copySize.height??0) > this.size.height) {
             throw new Error('copyFromExternalImage height touches outside of texture ')
