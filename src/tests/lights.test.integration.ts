@@ -57,8 +57,8 @@ const browser=globalThis.__BROWSER_GLOBAL__ as Browser;
           });
           const renderTarget = engine.gpu!.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!;
 
-          const data = await renderTarget.toBitmap()
-          let bytesPerRow = renderTarget.size[0] * renderTarget.bytes_per_fixel;
+          const data = await renderTarget.toBitmap();
+          let bytesPerRow = renderTarget.size.width * renderTarget.bytes_per_fixel;
           const missAlignment = bytesPerRow % 256;
 
           if (missAlignment !== 0) {
@@ -74,7 +74,7 @@ const browser=globalThis.__BROWSER_GLOBAL__ as Browser;
           1: 0,
           2: 255,
           3: 255
-        })
+        });
         expect(greenPixel).toEqual({
           0: 0,
           1: 255,

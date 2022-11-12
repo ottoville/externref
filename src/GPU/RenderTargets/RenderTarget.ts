@@ -7,21 +7,20 @@ F extends GPUTextureFormat = GPUTextureFormat,
 U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     extends Texture2D<F, U>
 {
-    #bytes_per_fixel: number;
+    bytes_per_fixel: number;
     constructor(
         textureOptions: Texture2DParams<F, U>,
     ) {
         super(textureOptions);
-
         switch (textureOptions.format) {
             case 'r32uint':
             case 'bgra8unorm':
             case 'rgba8unorm':
             case 'depth32float':
-                this.#bytes_per_fixel = 4;
+                this.bytes_per_fixel = 4;
                 break;
             case 'rgba32float':
-                this.#bytes_per_fixel = 16;
+                this.bytes_per_fixel = 16;
                 break;
             default:
                 throw new Error('unknown image format ' + textureOptions.format);
@@ -68,7 +67,7 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
         }
             
         const encoder = this.gpu.device.createCommandEncoder({ label: 'texture_toBitmap_encoder' });
-        let bytesPerRow = this.size.width * this.#bytes_per_fixel;
+        let bytesPerRow = this.size.width * this.bytes_per_fixel;
         const missAlignment = bytesPerRow % 256;
         if (missAlignment !== 0) {
             bytesPerRow = bytesPerRow - missAlignment + 256;
@@ -93,7 +92,7 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
         await buffer.mapAsync(GPUMapMode.READ);
 
         let data: Uint8ClampedArray;
-        if (this.#bytes_per_fixel > 4) {
+        if (this.bytes_per_fixel > 4) {
             const floatData = new Float32Array(buffer.getMappedRange());
             data = new Uint8ClampedArray(this.size.width * this.size.height * 4);
             for (let i = 0; i < data.length; i += 4) {
@@ -116,7 +115,7 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
         return data;
     }
     async print_bitmap() {
-        let bytesPerRow = this.size.width * this.#bytes_per_fixel;
+        let bytesPerRow = this.size.width * this.bytes_per_fixel;
         const missAlignment = bytesPerRow % 256;
         if (missAlignment !== 0) {
             bytesPerRow = bytesPerRow - missAlignment + 256;
@@ -130,7 +129,7 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
         if (!ctx) {
             throw (new Error('Cannot get context'));
         }
-        const imageData = ctx.createImageData(bytesPerRow / this.#bytes_per_fixel, c.height);
+        const imageData = ctx.createImageData(bytesPerRow / this.bytes_per_fixel, c.height);
         const data = await this.toBitmap();
         imageData.data.set(data);
         ctx.putImageData(imageData, 0, 0);
