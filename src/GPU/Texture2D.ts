@@ -10,7 +10,7 @@ export type Texture2dSize = {
 export class Texture2D<
 F extends GPUTextureFormat = GPUTextureFormat,
 U extends TextureUsageValue = TextureUsageValue
-> extends Texture {
+> extends Texture<F, U> {
     public override size: Texture2dSize = this.size;
     constructor(options: Texture2DParams<F, U>
     ) {

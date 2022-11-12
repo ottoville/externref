@@ -5,7 +5,7 @@ import { PTDresult } from "../types/interfaces/index.js";
 
 import type { Scene } from "../Scene.js";
 import type { Engine } from "../engine.js";
-import { TextureUsage } from "../GPU/Texture.js";
+import { TextureUsageEnums } from "../GPU/Texture.js";
 import { TextureView } from "../GPU/TextureView.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 declare const engine:Engine;
@@ -50,7 +50,7 @@ export class Zones extends UITAB {
             gpu: engine.gpu!,
             size: {width: 5120, height: 5120},
             format: "rgba8unorm",
-            usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC"],
+            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC"],
             label: 'ZoneTexture'
         });
 

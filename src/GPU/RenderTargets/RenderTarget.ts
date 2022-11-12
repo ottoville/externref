@@ -1,8 +1,6 @@
 import { Texture2D, type Texture2DParams } from "../Texture2D.js";
-import { RenderTargetTextureUsage, TextureUsage } from "../Texture.js";
+import { RenderTargetTextureUsageValue, TextureUsageEnums } from "../Texture.js";
 
-type ValueOf<T> = T[keyof T];
-export type RenderTargetTextureUsageValue = ValueOf<typeof RenderTargetTextureUsage>
 
 export class RenderTarget<
 F extends GPUTextureFormat = GPUTextureFormat,
@@ -62,7 +60,7 @@ U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
         //Use for debugging purpose.
         //this.#debug = true;
         let add_copy_src=false;
-        if((this.usages & TextureUsage.COPY_SRC) === 0) {
+        if((this.usages & TextureUsageEnums.COPY_SRC) === 0) {
             add_copy_src=true;
             this.createTexture(this.initialSampleCount, true);
             await new Promise(res => { requestAnimationFrame(res) });

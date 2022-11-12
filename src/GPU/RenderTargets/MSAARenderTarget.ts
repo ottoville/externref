@@ -1,7 +1,7 @@
 import { ColorRenderTarget, ColorRenderTargetParams } from "./ColorRenderTarget.js";
-import { RenderTargetTextureUsageValue } from "./RenderTarget.js";
 import { Texture2DParams } from "../Texture2D.js";
 import { RenderPassTarget, RenderPassTargetOptions } from "./RenderPassTarget.js";
+import type { RenderTargetTextureUsageValue } from "../Texture.js";
 
 export class MSAARenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue>
     extends ColorRenderTarget<F, U> {

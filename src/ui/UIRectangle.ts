@@ -5,7 +5,7 @@ import { Buffer, GPUBufferUsage } from "../GPU/Buffer.js";
 import { TextureView } from "../GPU/TextureView.js";
 import type { Engine } from "../engine.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
-import { Texture, TextureUsage } from "../GPU/Texture.js";
+import { Texture, TextureUsageEnums, TextureUsageValue } from "../GPU/Texture.js";
 import { Texture2D, type Texture2dSize } from "../GPU/Texture2D.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 declare const engine: Engine;
@@ -209,7 +209,7 @@ export class UIRectangle extends UINode {
         }) {
         super({ positionsCount: (borderSize.width > 0 || borderSize.height > 0) ? 54 : 6, label });
         this.#renderPass = renderPass;
-        let textureView: TextureView<Texture>
+        let textureView: TextureView<Texture<GPUTextureFormat, TextureUsageValue>>
         let textUV: readonly [[number, number], [number, number], [number, number], [number, number]] = [
             [0, 0],
             [0, 0],
@@ -294,7 +294,7 @@ export class UIRectangle extends UINode {
                 {
                     gpu: renderPass.gpu,
                     format: "bgra8unorm",
-                    usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"],
+                    usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST"],
                     label: 'button_' + label + '_text',
                     size: { width: copySource.width, height: copySource.height }
                 }
@@ -309,7 +309,6 @@ export class UIRectangle extends UINode {
                     }
                 },
                 {width: copySource.width, height: copySource.height})
-
             textureView = new TextureView(texture);
             backgroundTexture.close();
         } else {

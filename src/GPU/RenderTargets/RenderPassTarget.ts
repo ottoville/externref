@@ -1,6 +1,7 @@
 import { TextureView } from "../TextureView.js";
 import { Texture2D, type Texture2DParams } from "../Texture2D.js";
-import { RenderTarget, RenderTargetTextureUsageValue } from "./RenderTarget.js";
+import { RenderTarget } from "./RenderTarget.js";
+import type { RenderTargetTextureUsageValue } from "../Texture.js";
 
 export type RenderPassTargetOptions = {
     textureViewDescriptor: GPUTextureViewDescriptor | undefined,   

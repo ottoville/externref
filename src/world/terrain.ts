@@ -7,7 +7,7 @@ import { BindGroupLayout } from "../GPU/BindGroupLayout.js";
 import { ComputePipeline } from "../GPU/ComputePipeline.js";
 import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindUniformBuffer, BindStorageBuffer, VertexBuffer } from "../GPU/Buffer.js";
 import { BindGroup } from "../GPU/BindGroup.js";
-import { TextureUsage } from "../GPU/Texture.js";
+import { TextureUsageEnums } from "../GPU/Texture.js";
 import { TextureView } from "../GPU/TextureView.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 declare const engine:Engine;
@@ -216,7 +216,7 @@ TODO
             format: 'rgba8unorm',
             label: 'Terrain',
             size: Terrain.textureSize,
-            usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING"]
+            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING"]
         })
         const _heightsBindGroupEntries =  (bindGroup:BindGroup) => [
             {

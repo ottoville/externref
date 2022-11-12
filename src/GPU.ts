@@ -17,7 +17,7 @@ import { Uint16Vector2 } from "./Math.js";
 import { DepthRenderTarget } from "./GPU/RenderTargets/DepthRenderTarget.js";
 import { DepthRenderPass } from "./GPU/RenderPasses/DepthRenderPass.js";
 import { TerraCamera } from "./TerraCamera.js";
-import { TextureUsage } from "./GPU/Texture.js";
+import { TextureUsageEnums, TextureUsageType } from "./GPU/Texture.js";
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -72,13 +72,13 @@ export class GPU {
         y: 1
     }
     readonly renderPassScreen: PickableRenderPass<{
-        gRenderTargetDiffuse: MSAARenderTarget<"bgra8unorm", typeof TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"]>;
+        gRenderTargetDiffuse: MSAARenderTarget<"bgra8unorm", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING"]>;
     }>;
 
     readonly renderPassWater: DepthRenderPass<{
-        diffuse: ColorRenderTarget<"bgra8unorm", typeof TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"]>;
+        diffuse: ColorRenderTarget<"bgra8unorm", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING"]>;
     }>;
-    readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<GPUTextureFormat, typeof TextureUsage.RENDER_ATTACHMENT>; }>;
+    readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<GPUTextureFormat, TextureUsageType["RENDER_ATTACHMENT"]>; }>;
 
     updateViewPipeline: ComputePipeline;
     readonly #updateViewBindGroup: BindGroup;
@@ -94,7 +94,7 @@ export class GPU {
     readonly uniformBindGroupLayoutWithTime: BindGroupLayout<[GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry, GPUBindGroupEntry]>;
     readonly #presentationFormat = navigator.gpu.getPreferredCanvasFormat();
     readonly shaderModules = {} as { [K in keyof typeof shaders]: GPUShaderModule }
-    readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", typeof TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
+    readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
     readonly sizeBindGroupLayout: BindGroupLayout<[GPUBindGroupEntry]>;
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
     readonly bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
@@ -312,7 +312,7 @@ export class GPU {
                     {
                         gpu: this,
                         format: "r32uint",
-                        usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
+                        usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
                         label: 'idTexture',
                         size: { width: 300, height: 300 }
                     },
@@ -343,7 +343,7 @@ export class GPU {
                     gRenderTargetDiffuse: new MSAARenderTarget({
                         gpu: this,
                         format: "bgra8unorm",
-                        usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"],
+                        usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
                         label: 'diffuseTexture',
                         size: { width: 300, height: 300 }
                     },
@@ -368,8 +368,8 @@ export class GPU {
             },
             new DepthRenderTarget(0, {
                 format: 'depth32float',
-                usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
-                label: 'depthTexture_renderPassWater',
+                usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"],
+                label: 'depthTexture_renderPassScreen',
                 initialSampleCount: 4,
                 size: { width: 300, height: 300 },
                 gpu: this
@@ -389,7 +389,7 @@ export class GPU {
                         {
                             gpu: this,
                             format: "bgra8unorm",
-                            usages: TextureUsage["RENDER_ATTACHMENT|TEXTURE_BINDING"],
+                            usages: TextureUsageEnums["RENDER_ATTACHMENT|TEXTURE_BINDING"],
                             label: 'diffuseTextureWater',
                             size: { width: 300, height: 300 }
                         }, {
@@ -411,7 +411,7 @@ export class GPU {
             },
             new DepthRenderTarget(0, {
                 format: 'depth32float',
-                usages: TextureUsage["RENDER_ATTACHMENT|COPY_SRC"],
+                usages: TextureUsageEnums["RENDER_ATTACHMENT|COPY_SRC"],
                 label: 'depthTexture_renderPassWater',
                 size: { width: 300, height: 300 },
                 initialSampleCount: 1,
@@ -464,7 +464,7 @@ export class GPU {
                 swap: new ColorRenderTarget({
                     gpu: this,
                     format: this.#presentationFormat,
-                    usages: TextureUsage.RENDER_ATTACHMENT,
+                    usages: TextureUsageEnums.RENDER_ATTACHMENT,
                     label: 'canvasTexture',
                     size: { width: 300, height: 300 }
                 }, {

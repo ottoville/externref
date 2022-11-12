@@ -23,36 +23,50 @@ export type TextureParams<F, U> = {
     initialSampleCount?: 1 | 4;
 }
 let n = 0;
+
+export const enum TextureUsageEnums {
+    COPY_DST = 2,
+    COPY_SRC = 1,
+    STORAGE_BINDING = 8,
+    TEXTURE_BINDING = 4,
+    RENDER_ATTACHMENT = 16,
+    "RENDER_ATTACHMENT|COPY_SRC" = 17,
+    "RENDER_ATTACHMENT|TEXTURE_BINDING" = 20,
+    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC" = 21,
+    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST" = 22,
+    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC" = 23,
+    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING" = 31
+}
 /*
     Cannot use const enum because TS would allow any number to enum https://stackoverflow.com/a/53496839
 */
-export const RenderTargetTextureUsage = {
-    RENDER_ATTACHMENT : GPUTextureUsage.RENDER_ATTACHMENT as 16,
-    "RENDER_ATTACHMENT|COPY_SRC" : (GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT) as 17,
-    "RENDER_ATTACHMENT|TEXTURE_BINDING" : (GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT) as 20,
-    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC" : (GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC) as 21,
-    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST" : (GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST) as 22,
-    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC" : (GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC) as 23,
-    "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING" : (GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING) as 31
+interface RenderTargetTextureUsage {
+    readonly RENDER_ATTACHMENT :  16,
+    readonly "RENDER_ATTACHMENT|COPY_SRC" :  17,
+    readonly "RENDER_ATTACHMENT|TEXTURE_BINDING" : 20,
+    readonly "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC" : 21,
+    readonly "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST" : 22,
+    readonly "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC" :23,
+    readonly "RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_DST|COPY_SRC|STORAGE_BINDING" : 31
 
-} as const
-export const TextureUsage = {
-    COPY_DST : GPUTextureUsage.COPY_DST as 2,
-    COPY_SRC : GPUTextureUsage.COPY_SRC as 1,
-    STORAGE_BINDING : GPUTextureUsage.STORAGE_BINDING as 8,
-    TEXTURE_BINDING : GPUTextureUsage.TEXTURE_BINDING as 4,
-    ...RenderTargetTextureUsage
-} as const
+}
+export interface TextureUsageType extends RenderTargetTextureUsage {
+    readonly COPY_DST : 2,
+    readonly COPY_SRC : 1,
+    readonly STORAGE_BINDING : 8,
+    readonly TEXTURE_BINDING : 4,
+}
 
 type ValueOf<T> = T[keyof T];
-export type TextureUsageValue = ValueOf<typeof TextureUsage>
+export type TextureUsageValue = ValueOf<TextureUsageType>
+export type RenderTargetTextureUsageValue = ValueOf<RenderTargetTextureUsage>
 
 export class Texture<
-    F extends GPUTextureFormat = GPUTextureFormat,
-    U extends TextureUsageValue = TextureUsageValue
+    F extends GPUTextureFormat,
+    U extends TextureUsageValue
 > {
     texture: GPUTexture;
-    views: Set<TextureView> = new Set();
+    views: Set<TextureView<typeof this>> = new Set();
     resize(size: TextureSize, sampleCount: 1 | 4) {
         this.size = size;
         this.createTexture(sampleCount);

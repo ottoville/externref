@@ -8,15 +8,13 @@ import { type BindUniformBuffer, Buffer, GPUBufferUsage } from "../Buffer.js";
 import type { BindGroup } from "../BindGroup.js";
 import { RenderBundleEncoder } from "../RenderBundleEncoder.js";
 import type { DrawableNode } from "../../MainNode.js";
-import { RenderTargetTextureUsageValue } from "../RenderTargets/RenderTarget.js";
+import type { RenderTargetTextureUsageValue } from "../Texture.js";
 
 
 interface RenderPipelineVariant2 {
     renderpipeline: GPURenderPipeline;
     rootDrawables: Set<Drawable>
 }
-
-//type RenderTargetConstructor = (renderPass: RenderPass) => ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
 
 export type RenderPassProps<U> = {
     gpu: GPU;

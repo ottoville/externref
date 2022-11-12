@@ -1,6 +1,6 @@
-import { Texture2DParams } from "GPU/Texture2D";
+import type { RenderTargetTextureUsageValue } from "../Texture.js";
+import type { Texture2DParams } from "../Texture2D";
 import { RenderPassTarget, RenderPassTargetOptions } from "./RenderPassTarget.js";
-import { type RenderTargetTextureUsageValue } from "./RenderTarget.js";
 
 export class DepthRenderTarget<F extends GPUTextureFormat = GPUTextureFormat, U extends RenderTargetTextureUsageValue = RenderTargetTextureUsageValue> extends RenderPassTarget<F, U> {
     //TODO: limit format to depth formats

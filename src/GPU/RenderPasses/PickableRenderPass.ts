@@ -8,7 +8,7 @@ import { RenderPassProps } from "./RenderPass.js";
 import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
 import { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";
 import { DepthRenderPass } from "./DepthRenderPass.js";
-import type { RenderTargetTextureUsageValue } from "GPU/RenderTargets/RenderTarget.js";
+import type { RenderTargetTextureUsageValue } from "../Texture.js";
 
 export class PickableRenderPass<T extends {
     [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;

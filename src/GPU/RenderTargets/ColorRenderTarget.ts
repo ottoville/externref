@@ -1,4 +1,4 @@
-import { type RenderTargetTextureUsageValue } from "./RenderTarget.js";
+import type { RenderTargetTextureUsageValue } from "../Texture.js";
 import { Texture2DParams } from "../Texture2D.js";
 import { RenderPassTarget, RenderPassTargetOptions } from "./RenderPassTarget.js";
 
