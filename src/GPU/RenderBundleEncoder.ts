@@ -1,13 +1,16 @@
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
-let n=0;
 export class RenderBundleEncoder {
     #renderBundle:GPURenderBundle | undefined
-    renderBundle(descriptor:GPURenderBundleEncoderDescriptor) {
+    GPURenderBundleEncoderDescriptor: GPURenderBundleEncoderDescriptor;
+    renderBundleEncoder: GPURenderBundleEncoder;
+    renderBundle() {
         if(!this.#renderBundle) {
-            descriptor.label=descriptor.label?.substring(0,descriptor.label.length-1)+(n++).toString();
-            const renderBundleEncoder = this.renderPass.gpu.device.createRenderBundleEncoder(descriptor);
-            this.record(renderBundleEncoder, this)
-            this.#renderBundle = renderBundleEncoder.finish();
+            this.record(this)
+            this.#renderBundle = this.renderBundleEncoder.finish();
+            // Create bundeEncoder ready for next time it is called
+            // As writing of this code, resetting renderBundleEncoder is still TODO in webgpu specs.
+            this.renderBundleEncoder = this.renderPass.gpu.device.createRenderBundleEncoder(this.GPURenderBundleEncoderDescriptor);
+
         }
         return this.#renderBundle;
     }
@@ -16,7 +19,15 @@ export class RenderBundleEncoder {
     }
     constructor(
         private renderPass: RenderPass,
-        private record: (GPURenderBundleEncoder: GPURenderBundleEncoder,
-        renderBundleEncoder: RenderBundleEncoder) => void) {
+        renderBundleEncoderDescriptor:Partial<GPURenderBundleEncoderDescriptor> | undefined,
+        private record: (renderBundleEncoder: RenderBundleEncoder) => void) {
+            this.GPURenderBundleEncoderDescriptor = {
+                colorFormats: Object.values(renderPass.colorRenderTargets).map(rt => rt.texture.format),
+                sampleCount: renderPass.sampleCount,
+                label: renderPass.label,
+                ...renderBundleEncoderDescriptor
+            };
+            this.renderBundleEncoder = this.renderPass.gpu.device.createRenderBundleEncoder(this.GPURenderBundleEncoderDescriptor);
+
     }
 }

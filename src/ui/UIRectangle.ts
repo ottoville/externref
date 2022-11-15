@@ -14,6 +14,10 @@ type ButtonSize = { min_width: number, y: number }
 
 function createVertexBuffer(
     scale: ButtonSize,
+    renderPassSize: {
+        readonly width: number;
+        readonly height: number;
+    },
     borderSize: {
         width: number,
         height: number | 'auto',
@@ -25,6 +29,10 @@ function createVertexBuffer(
     textUV: readonly [[number, number], [number, number], [number, number], [number, number]],
     text?: string,
 ) {
+    if (borderSize.width > 0 || (typeof borderSize.height === "number" && borderSize.height > 0)) {
+        const widthBorderPixels = renderPassSize.width * borderSize.width;
+        borderSize.height = widthBorderPixels / renderPassSize.height;
+    }
     const outer_sizeX = scale.min_width
     const outer_sizeY = scale.y
 
@@ -33,113 +41,117 @@ function createVertexBuffer(
     if (content_sizeX <= 0 || content_sizeY <= 0) {
         console.warn('UI', label, 'element content size is 0 or below')
     }
-    const vertices: [number, number, number, number][] = [];
+    const positionsCount = (borderSize.width > 0 || borderSize.height > 0) ? 54 : 6
+    const vertices = new Float32Array(positionsCount * 4);
+    const container_topUV = (1 - borderSize.texture_height) * textureSize.height;
+    const container_bottomUV = borderSize.texture_height * textureSize.height;
+    const container_rightUV = borderSize.texture_width * textureSize.width;
+    const conteiner_leftUV = (1 - borderSize.texture_width) * textureSize.width;
     if (text) {
-        vertices.push(
+        vertices.set([
             //bottom left
-            [-content_sizeX, -content_sizeY, ...textUV[3]],
+            -content_sizeX, -content_sizeY, ...textUV[3],
             //bottom right
-            [content_sizeX, -content_sizeY, ...textUV[2]],
+            content_sizeX, -content_sizeY, ...textUV[2],
             //top left
-            [-content_sizeX, content_sizeY, ...textUV[0]],
+            -content_sizeX, content_sizeY, ...textUV[0],
 
             //top left
-            [-content_sizeX, content_sizeY, ...textUV[0]],
+            -content_sizeX, content_sizeY, ...textUV[0],
             //bottom right
-            [content_sizeX, -content_sizeY, ...textUV[2]],
+            content_sizeX, -content_sizeY, ...textUV[2],
             //top right
-            [content_sizeX, content_sizeY, ...textUV[1]]);
+            content_sizeX, content_sizeY, ...textUV[1]
+        ]);
     } else {
-        vertices.push(
-            [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
-            [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
-            [-content_sizeX, content_sizeY, borderSize.texture_width, borderSize.texture_height],
+        vertices.set(
+            [
+            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
 
-            [-content_sizeX, content_sizeY, borderSize.texture_width, borderSize.texture_height],
-            [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
-            [content_sizeX, content_sizeY, 1 - borderSize.texture_width, borderSize.texture_height]);
+            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV
+            
+            ]);
     }
 
     if (borderSize.width > 0 || borderSize.height > 0) {
         //Left content_size
-        vertices.push(
-            [-outer_sizeX, -content_sizeY, 0, 1 - borderSize.texture_height],
-            [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
-            [-outer_sizeX, content_sizeY, 0, borderSize.texture_height],
-            [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
-            [-content_sizeX, content_sizeY, borderSize.texture_width, borderSize.texture_height],
-            [-outer_sizeX, content_sizeY, 0, borderSize.texture_height]);
+        vertices.set(
+            [
+            -outer_sizeX, -content_sizeY, 0, container_topUV,
+            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+            -outer_sizeX, content_sizeY, 0, container_bottomUV,
+            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+            -outer_sizeX, content_sizeY, 0, container_bottomUV,
+
 
         //right content_size
-        vertices.push(
-            [outer_sizeX, -content_sizeY, 1, 1 - borderSize.texture_height],
-            [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
-            [outer_sizeX, content_sizeY, 1, borderSize.texture_height],
-            [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
-            [content_sizeX, content_sizeY, 1 - borderSize.texture_width, borderSize.texture_height],
-            [outer_sizeX, content_sizeY, 1, borderSize.texture_height]);
+
+            outer_sizeX, -content_sizeY, textureSize.width, container_topUV,
+            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+            outer_sizeX, content_sizeY, textureSize.width, container_bottomUV,
+            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
+            outer_sizeX, content_sizeY, textureSize.width, container_bottomUV,
         //bottom content_size
-        vertices.push(
-            [-content_sizeX, -outer_sizeY, borderSize.texture_width, 1],
-            [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
-            [content_sizeX, -outer_sizeY, 1 - borderSize.texture_width, 1],
-            [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
-            [content_sizeX, -outer_sizeY, 1 - borderSize.texture_width, 1],
-            [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
-        );
+
+            -content_sizeX, -outer_sizeY, container_rightUV, textureSize.height,
+            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+            content_sizeX, -outer_sizeY, conteiner_leftUV, textureSize.height,
+            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+            content_sizeX, -outer_sizeY, conteiner_leftUV, textureSize.height,
+            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+        
         //top content_size
-        vertices.push(
-            [-content_sizeX, outer_sizeY, borderSize.texture_width, 0],
-            [content_sizeX, outer_sizeY, 1 - borderSize.texture_width, 0],
-            [content_sizeX, content_sizeY, 1 - borderSize.texture_width, borderSize.texture_height],
-            [-content_sizeX, content_sizeY, borderSize.texture_width, borderSize.texture_height],
-            [content_sizeX, content_sizeY, 1 - borderSize.texture_width, borderSize.texture_height],
-            [-content_sizeX, outer_sizeY, borderSize.texture_width, 0]
-        )
+
+            -content_sizeX, outer_sizeY, container_rightUV, 0,
+            content_sizeX, outer_sizeY, conteiner_leftUV, 0,
+            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
+            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
+            -content_sizeX, outer_sizeY, container_rightUV, 0,
+        
         //top left corner
-        vertices.push(
-            [-outer_sizeX, outer_sizeY, 0, 0],
-            [-content_sizeX, content_sizeY, borderSize.texture_width, borderSize.texture_height],
-            [-content_sizeX, outer_sizeY, borderSize.texture_width, 0],
-            [-outer_sizeX, outer_sizeY, 0, 0],
-            [-content_sizeX, content_sizeY, borderSize.texture_width, borderSize.texture_height],
-            [-outer_sizeX, content_sizeY, 0, borderSize.texture_height],
-        )
+
+            -outer_sizeX, outer_sizeY, 0, 0,
+            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+            -content_sizeX, outer_sizeY, container_rightUV, 0,
+            -outer_sizeX, outer_sizeY, 0, 0,
+            -content_sizeX, content_sizeY, container_rightUV, container_bottomUV,
+            -outer_sizeX, content_sizeY, 0, container_bottomUV,
+        
         //bottom left corner
-        vertices.push(
-            [-outer_sizeX, -outer_sizeY, 0, 1],
-            [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
-            [-content_sizeX, -outer_sizeY, borderSize.texture_width, 1],
-            [-outer_sizeX, -outer_sizeY, 0, 1],
-            [-content_sizeX, -content_sizeY, borderSize.texture_width, 1 - borderSize.texture_height],
-            [-outer_sizeX, -content_sizeY, 0, 1 - borderSize.texture_height],
-        )
+
+            -outer_sizeX, -outer_sizeY, 0, textureSize.height,
+            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+            -content_sizeX, -outer_sizeY, container_rightUV, textureSize.height,
+            -outer_sizeX, -outer_sizeY, 0, textureSize.height,
+            -content_sizeX, -content_sizeY, container_rightUV, container_topUV,
+            -outer_sizeX, -content_sizeY, 0, container_topUV,
+        
         //top right corner
-        vertices.push(
-            [outer_sizeX, outer_sizeY, 1, 0],
-            [content_sizeX, content_sizeY, 1 - borderSize.texture_width, borderSize.texture_height],
-            [content_sizeX, outer_sizeY, 1 - borderSize.texture_width, 0],
-            [outer_sizeX, outer_sizeY, 1, 0],
-            [content_sizeX, content_sizeY, 1 - borderSize.texture_width, borderSize.texture_height],
-            [outer_sizeX, content_sizeY, 1, borderSize.texture_height],
-        )
+
+            outer_sizeX, outer_sizeY, textureSize.width, 0,
+            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
+            content_sizeX, outer_sizeY, conteiner_leftUV, 0,
+            outer_sizeX, outer_sizeY, textureSize.width, 0,
+            content_sizeX, content_sizeY, conteiner_leftUV, container_bottomUV,
+            outer_sizeX, content_sizeY, textureSize.width, container_bottomUV,
+        
         //bottom right corner
-        vertices.push(
-            [outer_sizeX, -outer_sizeY, 1, 1],
-            [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
-            [content_sizeX, -outer_sizeY, 1 - borderSize.texture_width, 1],
-            [outer_sizeX, -outer_sizeY, 1, 1],
-            [content_sizeX, -content_sizeY, 1 - borderSize.texture_width, 1 - borderSize.texture_height],
-            [outer_sizeX, -content_sizeY, 1, 1 - borderSize.texture_height],
-        )
+
+            outer_sizeX, -outer_sizeY, textureSize.width, textureSize.height,
+            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+            content_sizeX, -outer_sizeY, conteiner_leftUV, textureSize.height,
+            outer_sizeX, -outer_sizeY, textureSize.width, textureSize.height,
+            content_sizeX, -content_sizeY, conteiner_leftUV, container_topUV,
+            outer_sizeX, -content_sizeY, textureSize.width,container_topUV,
+            ], 24)
     }
-    vertices.forEach((vertice, i) => {
-        if (text && i < 7) {
-            return;
-        }
-        vertice[2] *= textureSize.width
-        vertice[3] *= textureSize.height
-    })
     return vertices;
 }
 /*
@@ -163,10 +175,14 @@ export class UIRectangle extends UINode {
         bottom: 0
     }
     constructor({
-        canvaspipeline, renderPass, label,
+        canvaspipeline,
+        renderPass,
+        label,
         borderSize,
         backgroundTexture,
-        scale, translate, originalAspectRatio,
+        scale,
+        translate,
+        originalAspectRatio,
         events,
         text }:
         {
@@ -233,9 +249,8 @@ export class UIRectangle extends UINode {
                 ctx.font = font;
                 const measuredSize = ctx.measureText(text)
                 const textSize = { width: measuredSize.width, height: measuredSize.actualBoundingBoxAscent + measuredSize.actualBoundingBoxDescent                }
-                console.log(measuredSize)
 
-
+                const originalTextHeight = textSize.height;
                 if(originalAspectRatio) {
                     //Keep text aspect ratio normal
                     const textAspectRatio = textSize.height / textSize.width;
@@ -278,10 +293,15 @@ export class UIRectangle extends UINode {
                 ctx.font = font;
                 ctx.textAlign = "center";
                 ctx.textBaseline ="top";
-                ctx.fillText(text, extendedSize.width*0.5, backgroundSize.height + measuredSize.actualBoundingBoxAscent);
-
-                //copySource.convertToBlob().then(b => {console.log(URL.createObjectURL(b!))})
-
+                const verticalTextMargin = textSize.height - originalTextHeight;
+                ctx.fillText(
+                    text,
+                    extendedSize.width*0.5,
+                    backgroundSize.height + measuredSize.actualBoundingBoxAscent + verticalTextMargin*0.5);
+                if(label === 'createGrassButton') {
+                    // eslint-disable-next-line promise/catch-or-return
+                    copySource.convertToBlob().then(b => {console.log(URL.createObjectURL(b!))})
+                }
 
                 textUV = [
                     [0, backgroundSize.height],
@@ -310,23 +330,12 @@ export class UIRectangle extends UINode {
                 },
                 {width: copySource.width, height: copySource.height})
             textureView = new TextureView(texture);
-            backgroundTexture.close();
         } else {
             var backgroundSize = backgroundTexture.texture.size;
             textureView = backgroundTexture
         }
 
-        const vertices = createVertexBuffer(scale, borderSize, backgroundSize, label, textUV, text);
 
-        this.drawable = new DrawableSimple({
-            renderPipeline: canvaspipeline,
-            node: this,
-            renderPasses: new Set([renderPass]),
-            instanceCount: 1,
-            firstVertex: 0,
-            firstInstance: 0,
-            vertexBuffers: [new Float32Array(vertices.flat())]
-        });
 
 
 
@@ -336,18 +345,26 @@ export class UIRectangle extends UINode {
         });
         const onClick = events?.onClick;
         if (onClick) {
-            const clickListener = (e: PointerEvent) => {
-                if (
+            const checkClickArea = (e: PointerEvent) => {
+                return (
                     (e.offsetX > this.#boundingBox.left && e.offsetX < this.#boundingBox.right)
                     &&
                     (e.offsetY > this.#boundingBox.top && e.offsetY < this.#boundingBox.bottom)
-                ) {
+                )
+            }
+            let pointerDown = false;
+            engine.addInputListener('pointerup', this, (e) => {
+                if(pointerDown && checkClickArea(e)) {
                     onClick(e);
                 }
-            }
-            engine.addInputListener('pointerdown', this, clickListener)
+            })
+            engine.addInputListener('pointerdown', this, (e) => {
+                if(checkClickArea(e)) {
+                    pointerDown = true;
+                }
+            })
         }
-        renderPass.onResize.set(this, () => {
+        const updateBoundingBoxAndVertices = () => {
             const widthPixels = renderPass.size.width * scale.min_width;
             const offsetXPixels = renderPass.size.width * ((translate.x + 1) * 0.5) * 1 / devicePixelRatio;
             const offsetYPixels = renderPass.size.height * ((-translate.y + 1) * 0.5) * 1 / devicePixelRatio;
@@ -365,14 +382,23 @@ export class UIRectangle extends UINode {
             this.#boundingBox.left = offsetXPixels - halfWidth;
             this.#boundingBox.right = offsetXPixels + halfWidth;
 
-            if (borderSize.width > 0 || (typeof borderSize.height === "number" && borderSize.height > 0)) {
-                const widthBorderPixels = renderPass.size.width * borderSize.width;
-                borderSize.height = widthBorderPixels / renderPass.size.height;
-            }
+            return createVertexBuffer(scale, renderPass.size, borderSize, backgroundSize, label, textUV, text);            
+        }
+        renderPass.onResize.set(this, () => {
+            const newVertices = updateBoundingBoxAndVertices();
+            this.drawable.setVertexBuffer(0, newVertices);
+        });
 
-            const newVertices = createVertexBuffer(scale, borderSize, backgroundSize, label, textUV, text);
-            //TODO: enforce vertices set when pipeline have vertices buffer
-            this.drawable.setVertexBuffer(0, new Float32Array(newVertices.flat()));
+        const vertices = updateBoundingBoxAndVertices();
+
+        this.drawable = new DrawableSimple({
+            renderPipeline: canvaspipeline,
+            node: this,
+            renderPasses: new Set([renderPass]),
+            instanceCount: 1,
+            firstVertex: 0,
+            firstInstance: 0,
+            vertexBuffers: [vertices]
         });
 
         this.drawable.setStaticBindGroup('UI_bindgroup_' + label, (bindGroup) => {

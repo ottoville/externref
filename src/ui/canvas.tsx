@@ -19,7 +19,6 @@ import { Scene } from "../Scene.js";
 import { Human } from "../human.js";
 //import { savedCamera } from "../types/interfaces/index.js";
 
-import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
 //@ts-ignore
 import { Box } from "../GPU/Meshes/Box.js";
 //@ts-ignore
@@ -33,6 +32,7 @@ import { Capsule, CAPSULE_ORIENTATION } from "../GPU/Meshes/Capsule.js";
 import { RoundCuboid } from "../GPU/Meshes/RoundCuboid.js";
 import { ArcRotateCamera } from "../controllers/ArcRotateCamera.js";
 import { UIRectangle } from "./UIRectangle.js";
+import { createTopMenu } from "./topMenu.js";
 
 declare const engine:Engine;
 
@@ -103,12 +103,16 @@ export class Canvas extends TerraCompoment {
                 }
             })
             const terrainInited = Terrain.loadFromTexture([terrascene]);
-
-            const ready = terrainInited.then(ground => [ground] as const);
+            terrainInited.then(terrain => createTopMenu(gpu, terrain)).catch(err => {
+                errors.push(err)
+                this.showError();
+            });
+            
+           
             PlantsUI.plantsMesh = new Plants(terrascene, terrainInited);
 
             this.progress = 100;
-            return ready;
+            return terrainInited;
         });
         //@ts-expect-error
         const debugscene = new Scene('static', terraEngine.gpu, [engine.mainCamera], (scene) => {
@@ -170,33 +174,9 @@ export class Canvas extends TerraCompoment {
 
 
 
-        const UIPipeline = gpu.canvasRootLayout.addRenderPipeline('UIRenderPipeline',
-            new VertexShader(gpu, 'deferred/UI.vert.wgsl', [
-                {
-                    arrayStride: 4 * 4,
-                    stepMode: "vertex",
-                    attributes: [{
-                        // position
-                        shaderLocation: 0,
-                        offset: 0,
-                        format: "float32x2",
-                    },
-                    {
-                        // uv
-                        shaderLocation: 1,
-                        offset: 8,
-                        format: "float32x2",
-                    }]
-                }
-            ]),
-            new Shader(gpu, 'deferred/UI.frag.wgsl'),{
-            primitive: {
-                topology: 'triangle-list',
-                frontFace: 'ccw'
-            },
-        });
+        
         new UIRectangle({
-            canvaspipeline: UIPipeline,
+            canvaspipeline: gpu.UIPipeline,
             renderPass: gpu.renderPassCanvas,
             label:'UICanvas',
             borderSize:{width:0, height:0, texture_width:0, texture_height:0},
@@ -205,26 +185,8 @@ export class Canvas extends TerraCompoment {
             translate: {x:0, y:0},
         });
         
-        const b = await (await fetch('/assets/button.webp')).blob();
 
-        const bitmap = await createImageBitmap(b);
-
-        new UIRectangle({
-            canvaspipeline: UIPipeline,
-            renderPass: gpu.renderPassCanvas,
-            label: 'UIButton',
-            borderSize: {width:0.01, height: 'auto', texture_width: 0.2, texture_height: 0.2 },
-            backgroundTexture: bitmap,
-            scale: {min_width:0.1, y:0.1},
-            translate: { x:-0.9, y: 0.5 },
-            originalAspectRatio: 0.3,
-            events: {
-                onClick: (e) => {
-                    console.log(e);
-                }
-            },
-            text: 'hello'
-        });
+        
 
         this.progress = 20;
 
@@ -275,7 +237,7 @@ export class Canvas extends TerraCompoment {
         super();
         this.#errorDialog.addEventListener('close', () => {
             this.showError();
-        })
+        });
         this.progress = 2;
         this.uiTabs.forEach(tool => {
             const menuContainer: HTMLFieldSetElement = <fieldset class="w3-dropdown-content w3-card-4 w3-show" style="margin-top:36px"></fieldset>
@@ -291,7 +253,7 @@ export class Canvas extends TerraCompoment {
                 this.timeOfDay.value = new Date(Number(engine.physics.gameTime)).toUTCString();
             }, 1000);
 
-            const [terrain] = await args[0].ready!;
+            const terrain = await args[0].ready!;
             this.menuClick = (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => {
                 if (this.openedMenu) {
                     const [oldInstance, oldMenuContainer] = this.openedMenu;

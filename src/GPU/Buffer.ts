@@ -40,7 +40,7 @@ export interface IndexBuffer extends Buffer {
 export interface IndirectBuffer extends Buffer {
     indirectBuffer: GPUBuffer;
 }
-function bufferBinding(this:Buffer,label:string, bindGroup: BindGroup, offset=0,bindingSize?:GPUSize64): GPUBufferBinding&GPUObjectBase {
+function bufferBinding(this:Buffer,label:string, bindGroup: BindGroup, offset=0, bindingSize?:GPUSize64): GPUBufferBinding&GPUObjectBase {
     const obj : GPUBufferBinding&GPUObjectBase={
         buffer: this.buffer,
         offset,
@@ -234,7 +234,7 @@ export class ReadBuffer extends Buffer {
         }
         
         await callback(arrbuff);
-        this.buffer.destroy();
+        this.destroy();
     }
 }
 export type CopySrcBuffer = copySrcBuffer

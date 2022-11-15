@@ -6,7 +6,7 @@ export class BindGroup {
     #dirty=true;
     #bindGroup: GPUBindGroup;
     readonly #renderBundles: Set<RenderBundleEncoder> = new Set();
-    getForRenderPass(renderBundleEncoder: RenderBundleEncoder) {
+    getForRenderBundle(renderBundleEncoder: RenderBundleEncoder) {
         this.#renderBundles.add(renderBundleEncoder);
         return this.bindGroup;
     }

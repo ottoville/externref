@@ -7,7 +7,7 @@ import { BindGroupLayout, type GPUBindGroupTextureEntry } from "./GPU/BindGroupL
 import type { Projection } from "./GPU/Projection.js";
 import shaders from "./shaders.json" assert { type: "json" };
 import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
-import type { RenderPipeline } from "./GPU/RenderPipeline.js";
+import { RenderPipeline, Shader, VertexShader } from "./GPU/RenderPipeline.js";
 import { ComputePipeline } from "./GPU/ComputePipeline.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer, GPUBufferUsage } from "./GPU/Buffer.js";
@@ -100,6 +100,12 @@ export class GPU {
     readonly bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
     ro: ResizeObserver;
     canvasRootLayout: PipelineLayout;
+    UIPipeline: RenderPipeline<VertexShader<[{
+        arrayStride: number; stepMode: "vertex"; attributes: {
+            // position
+            shaderLocation: number; offset: number; format: "float32x2";
+        }[];
+    }]>>;
     createRenderPipeline<R extends RenderPipeline>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
     createRenderPipeline<R extends RenderPipeline>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
     createRenderPipeline<R extends RenderPipeline>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive?: Omit<GPUPrimitiveState, 'topology'>): R
@@ -457,6 +463,32 @@ export class GPU {
             label: 'canvasRootLayout',
             bindGroupLayout: BindGroupLayoutCanvas
         });
+
+        this.UIPipeline = this.canvasRootLayout.addRenderPipeline('UIRenderPipeline',
+        new VertexShader(this, 'deferred/UI.vert.wgsl', [
+            {
+                arrayStride: 4 * 4,
+                stepMode: "vertex",
+                attributes: [{
+                    // position
+                    shaderLocation: 0,
+                    offset: 0,
+                    format: "float32x2",
+                },
+                {
+                    // uv
+                    shaderLocation: 1,
+                    offset: 8,
+                    format: "float32x2",
+                }]
+            }
+        ]),
+        new Shader(this, 'deferred/UI.frag.wgsl'),{
+        primitive: {
+            topology: 'triangle-list',
+            frontFace: 'ccw'
+        },
+    });
 
         this.renderPassCanvas = new RenderPass({
             gpu: this,

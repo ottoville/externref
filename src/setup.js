@@ -10,7 +10,8 @@ const DIR = path.join(os.tmpdir(), 'jest_puppeteer_global_setup');
 module.exports = async function () {
   const browser = await puppeteer.launch({
     product: 'chrome',
-    channel: 'chrome',
+    channel: 'chrome-canary',
+    executablePath: "C:/Users/lamminpa/AppData/Local/Google/Chrome SxS/Application/chrome.exe",
     headless:false,
     args: [
     "--remote-debugging-port=9222",

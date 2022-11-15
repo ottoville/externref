@@ -298,10 +298,6 @@ export abstract class DataNode extends MainNode {
                    collider._testTriangle(this.#triangleFaces[i]!, scaledPosition, scaledVelocity);
                }*/
         }
-
-
-
-
     }
     protected buildFaces() {
         if (this.faces_count % 4 === 0) {
