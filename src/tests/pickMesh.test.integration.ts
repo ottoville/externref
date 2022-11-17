@@ -4,6 +4,8 @@ import type { Page, Browser } from 'puppeteer-core';
 import { Box as Box2 } from "../GPU/Meshes/Box.js";
 
 import type { Engine } from "../engine.js";
+import type { TerraVector3 } from '../Math.js';
+import type { MainNode } from '../MainNode.js';
 const browser = globalThis.__BROWSER_GLOBAL__ as Browser;
 
 describe('Pick box ', function () {
@@ -39,16 +41,19 @@ describe('Pick box ', function () {
       control.updatePosition(position => position.set([5000, 400, 0]))
       control.updateDirection(direction => direction.set([1, 0, 0]))
 
-      await new Promise<void>(res => {
-        requestAnimationFrame(() => res());
+      const [pickedPosition, pickedMesh] = await new Promise<[{
+        position: TerraVector3;
+        meshId: number;
+    } | null,{
+      position: TerraVector3;
+      mesh: MainNode;
+  } | null]>((res) => {
+        engine.gpu!.afterRenderStart(async () => {
+          engine.gpu!.mousePosition[0] = (engine.canvas!.width / 2) | 0;
+          engine.gpu!.mousePosition[1] = (engine.canvas!.height / 2) | 0;
+          res([await engine.gpu!.renderPassScreen.pickPosition(true), await engine.gpu!.renderPassScreen.pickMesh(undefined)]);
+        })
       });
-      await new Promise((res) => {
-        setTimeout(res, 500)
-      });
-      engine.gpu!.mousePosition[0] = (engine.canvas!.width / 2) | 0;
-      engine.gpu!.mousePosition[1] = (engine.canvas!.height / 2) | 0;
-      const pickedPosition = await engine.gpu!.renderPassScreen.pickPosition(true);
-      const pickedMesh = await engine.gpu!.renderPassScreen.pickMesh(undefined);
       return [pickedPosition, { position: pickedMesh?.position, label: pickedMesh?.mesh.label }, b.id] as const;
     });
     expect(pickInfo0).not.toBeNull();

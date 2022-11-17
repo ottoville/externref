@@ -10,10 +10,6 @@ import { Engine } from "../engine.js";
 declare const engine:Engine;
 
 
-let width: number;
-let height: number;
-//let rotation: number;
-
 export enum DrawType {
     plane = 1,
     texture = 2,
@@ -24,6 +20,10 @@ export abstract class paintGround {
     protected ang360: Angle = new Angle(0);
     #end_position: Float32Array = new Float32Array(2);
     #start_position = new TerraVector2(2);
+    #size = {
+        width: 0,
+        height: 0
+    }
     constructor(
         protected scene: Scene,
         protected ground: Terrain,
@@ -50,7 +50,7 @@ export abstract class paintGround {
             this.#drawVector[0] = this.#start_position[0] - this.#end_position[0];
             this.#drawVector[1] = (this.#start_position[1] - this.#end_position[1]) * -1
 
-            height = Math.sqrt(this.#drawVector[0] * this.#drawVector[0] + this.#drawVector[1] * this.#drawVector[1])
+            this.#size.height = Math.sqrt(this.#drawVector[0] * this.#drawVector[0] + this.#drawVector[1] * this.#drawVector[1])
 
             const rad = Math.atan(Math.abs(this.#drawVector[1]) / Math.abs(this.#drawVector[0]));
             if (this.#drawVector[1] < 0) {
@@ -94,17 +94,15 @@ export abstract class paintGround {
             }
 
             const dotang = this.ang360.distance(rad);
-            //console.log(rad);
-            //console.log(dotang);
 
             /* let dotprod = height * distance * Math.cos(dotang.rad);
                 let shadow = dotprod / height;
                 width = Math.sqrt(Math.pow(distance, 2) - Math.pow(shadow, 2));*/
-            width = Math.sqrt(distanceSquared - distanceSquared * Math.pow(Math.cos(dotang.rad), 2));
+            this.#size.width = Math.sqrt(distanceSquared - distanceSquared * Math.pow(Math.cos(dotang.rad), 2));
 
             if (p1 * this.#drawVector[0] + p0 * this.#drawVector[1] < 0)  //Dot product
-                width *= -1;
-            this.onAreaDraw(width);
+                this.#size.width *= -1;
+            this.onAreaDraw(this.#size.width);
         }
     }
     #finalClick = () => {
@@ -113,7 +111,7 @@ export abstract class paintGround {
         // zones.push({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } });
         //(await me.db).transaction("zones", 'readwrite').objectStore("zones").put({ coord: startingPoint, ang: ang360, size: { h: height * -1, w: width } })
         engine.addInputListenerOnce('pointerdown', this, this.#mainPointerDown);
-        this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: { h: height, w: width } });
+        this.resolve({ coord: this.#start_position, rad: this.ang360.rad, size: this.#size });
     }
     private mouseMoveRegisterClick = () => {
         engine.addInputListenerOnce('pointerup', this, this.#finalClick);
@@ -125,7 +123,7 @@ export abstract class paintGround {
         if (this.#end_position[0] == 0)
             return;
         try {
-            this.onMainPointerUp(height, this.#end_position);
+            this.onMainPointerUp(this.#size.height, this.#end_position);
         } catch (e) {
             console.log(e);
         } finally {

@@ -13,10 +13,10 @@ type PTDresult =
     {
         coord: TerraVector2,
         rad: number, // Angle,
-        size: {
-            w: number,
-            h: number
-        }
+        size: Readonly<{
+            width: number,
+            height: number
+        }>
     }
     type PTResultF= ( coords: PTDresult) => void;
 

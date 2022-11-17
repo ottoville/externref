@@ -702,7 +702,15 @@ export class GPU {
     readonly timeAndDeltaBuffer = new ArrayBuffer(8);
     readonly deltaView = new Float32Array(this.timeAndDeltaBuffer, 4, 1);
     readonly #timeView = new Uint32Array(this.timeAndDeltaBuffer, 0, 1);
-
+    #renderStarted = false;
+    #renderStartedCallbacks:(() => void)[] = []
+    afterRenderStart(cb: () => void) {
+        if(this.#renderStarted) {
+            cb();
+        } else {
+            this.#renderStartedCallbacks.push(cb);
+        }
+    }
     readonly #renderLoop = (time: DOMHighResTimeStamp) => {
         //msPerFrame = performance.now() - startTime;
         //startTime = performance.now();
@@ -783,6 +791,11 @@ export class GPU {
         this.pendingCommandBuffers.clear();
         this.tempGPUBuffers.forEach(buff => buff.destroy());
         this.tempGPUBuffers.length = 0;
+        if(!this.#renderStarted) {
+            this.#renderStartedCallbacks.forEach(cb => cb());
+            this.#renderStartedCallbacks.length = 0;
+            this.#renderStarted = true;
+        }
         this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
     }
 }

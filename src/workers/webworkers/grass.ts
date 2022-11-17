@@ -50,9 +50,9 @@ const methods = {
         new Float32Array(data.data.positions,0,grasspositions.length).set(grasspositions);
         grasspositions = new Float32Array(data.data.positions);
     },
-    save: async (data: WMessage<{ angle: number, area: { size: {w:number, h:number}, coord: Float32Array } }>) => {
+    save: async (data: WMessage<{ angle: number, area: { size: {width:number, height:number}, coord: Float32Array } }>) => {
         const grassPerSquareMeter=8
-        const amount = Math.abs(data.data.area.size.h * data.data.area.size.w) * grassPerSquareMeter
+        const amount = Math.abs(data.data.area.size.height * data.data.area.size.width) * grassPerSquareMeter
         if (amount === 0)
             return;
        // var d = new Date().getTime();
@@ -73,8 +73,8 @@ const methods = {
 
         
         for (let i = 0; i < amount; ++i) {
-            const posX = (Math.random() * data.data.area.size.h * -1);
-            const posZ = (Math.random() * data.data.area.size.w * -1);
+            const posX = (Math.random() * data.data.area.size.height * -1);
+            const posZ = (Math.random() * data.data.area.size.width * -1);
             const offsetsX = data.data.area.coord[0] + posX * cos + posZ * sin
             const offsetsY = data.data.area.coord[1] + posX * -sin + posZ * cos
             offsets[i * 2 + 0] = offsetsX;

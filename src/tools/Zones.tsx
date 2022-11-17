@@ -73,7 +73,7 @@ export class Zones extends UITAB {
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
                     ctx.translate(centerX + z.coord[0] / this.#ratio, centerZ + z.coord[1] / this.#ratio );
                     ctx.rotate(-z.rad);
-                    ctx.fillRect(0, 0, -(z.size.h / this.#ratio), -(z.size.w / this.#ratio));
+                    ctx.fillRect(0, 0, -(z.size.height / this.#ratio), -(z.size.width / this.#ratio));
                 });
                 ctx.stroke();
                 this.#zoneTexture.copyFromExternalImage({source: texture}, {}, {width: 5120, height: 5120});
