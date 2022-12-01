@@ -1,4 +1,3 @@
-import { UINode } from "../MainNode.js";
 import type { RenderPipeline, VertexShader } from "../GPU/RenderPipeline.js";
 import type { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
 import { Buffer, GPUBufferUsage } from "../GPU/Buffer.js";
@@ -10,7 +9,7 @@ import { Texture2D, type Texture2dSize } from "../GPU/Texture2D.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 declare const engine: Engine;
 
-type ButtonSize = { min_width: number, y: number }
+export type ButtonSize = { min_width: number, y: number }
 
 function createVertexBuffer(
     scale: ButtonSize,
@@ -154,10 +153,51 @@ function createVertexBuffer(
     }
     return vertices;
 }
+export type UIRectangleProps = {
+    canvaspipeline: RenderPipeline<VertexShader<[{
+        arrayStride: number;
+        stepMode: "vertex";
+        attributes: {
+            shaderLocation: number;
+            offset: number;
+            format: "float32x2";
+        }[];
+    }]>>,
+    renderPass: RenderPass,
+    label: string,
+    /*
+        BorderSize
+            width: Relative width of borders to viewport, value between 0 and 1
+            height: Relative height of borders to viewport, value between 0 and 1
+                    If "auto", it is calculated to be same than width
+            texture_width: Relative width of border in texture UV mapping, between 0 and 1
+            texture_height: Relative height of border in texture UV mapping, between 0 and 1
+    */
+    borderSize: {
+        width: number, height: number | 'auto',
+        texture_width: number, texture_height: number
+    },
+    backgroundTexture: ImageBitmap | TextureView<Texture2D>,
+    text?: string,
+    /*
+        Scale:
+            Size of the button relative to viewport size, value between 0 and 1.
+            Border size is taken account to scale.
+    */
+    scale: ButtonSize,
+    translate: { x: number, y: number },
+    originalAspectRatio?: number,
+    events?: {
+        onClick?: (e: PointerEvent) => void,
+    }
+};
 /*
     Draws rectangle.
 */
-export class UIRectangle extends UINode {
+export class UIRectangle /*extends UINode*/ {
+    label: string;
+    positions_count: number;
+
     drawable: DrawableSimple<RenderPipeline<VertexShader<[{
         arrayStride: number;
         stepMode: "vertex";
@@ -184,46 +224,10 @@ export class UIRectangle extends UINode {
         translate,
         originalAspectRatio,
         events,
-        text }:
-        {
-            canvaspipeline: RenderPipeline<VertexShader<[{
-                arrayStride: number;
-                stepMode: "vertex";
-                attributes: {
-                    shaderLocation: number;
-                    offset: number;
-                    format: "float32x2";
-                }[];
-            }]>>,
-            renderPass: RenderPass,
-            label: string,
-            /*
-                BorderSize
-                    width: Relative width of borders to viewport, value between 0 and 1
-                    height: Relative height of borders to viewport, value between 0 and 1
-                            If "auto", it is calculated to be same than width
-                    texture_width: Relative width of border in texture UV mapping, between 0 and 1
-                    texture_height: Relative height of border in texture UV mapping, between 0 and 1
-            */
-            borderSize: {
-                width: number, height: number | 'auto',
-                texture_width: number, texture_height: number
-            },
-            backgroundTexture: ImageBitmap | TextureView<Texture2D>,
-            text?: string,
-            /*
-                Scale:
-                    Size of the button relative to viewport size, value between 0 and 1.
-                    Border size is taken account to scale.
-            */
-            scale: ButtonSize,
-            translate: { x: number, y: number },
-            originalAspectRatio?: number,
-            events?: {
-                onClick?: (e: PointerEvent) => void,
-            }
-        }) {
-        super({ positionsCount: (borderSize.width > 0 || borderSize.height > 0) ? 54 : 6, label });
+        text } : UIRectangleProps) {
+        this.positions_count = (borderSize.width > 0 || borderSize.height > 0) ? 54 : 6;
+        this.label = label;
+        //super({ positionsCount: (borderSize.width > 0 || borderSize.height > 0) ? 54 : 6, label });
         this.#renderPass = renderPass;
         let textureView: TextureView<Texture<GPUTextureFormat, TextureUsageValue>>
         let textUV: readonly [[number, number], [number, number], [number, number], [number, number]] = [
@@ -269,9 +273,6 @@ export class UIRectangle extends UINode {
                 copySource.width = extendedSize.width;
                 copySource.height = extendedSize.height;
                 ctx.drawImage(backgroundTexture, 0, 0);
-
-                
-                backgroundSize.height*borderSize.texture_height
 
                 const borderSizeInPixel = {
                     width: backgroundSize.width*borderSize.texture_width,
@@ -336,9 +337,6 @@ export class UIRectangle extends UINode {
         }
 
 
-
-
-
         const uniformBuffer = Buffer.create(renderPass.gpu, 8 /* size of vec2<f32> */, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'UI_transform', (buff) => {
             const b = new Float32Array(buff.getMappedRange())
             b.set([translate.x, translate.y])
@@ -356,13 +354,17 @@ export class UIRectangle extends UINode {
             engine.addInputListener('pointerup', this, (e) => {
                 if(pointerDown && checkClickArea(e)) {
                     onClick(e);
+                    return true;
                 }
-            })
+                return false;
+            }, true)
             engine.addInputListener('pointerdown', this, (e) => {
                 if(checkClickArea(e)) {
                     pointerDown = true;
+                    return true;
                 }
-            })
+                return false;
+            }, true)
         }
         const updateBoundingBoxAndVertices = () => {
             const widthPixels = renderPass.size.width * scale.min_width;
@@ -414,9 +416,9 @@ export class UIRectangle extends UINode {
             ]
         })
     }
-    override destroy() {
-        super.destroy();
+    destroy() {
         this.#renderPass.onResize.delete(this);
         engine.clearInputListeners(this);
+        this.drawable.destroy();
     }
 }

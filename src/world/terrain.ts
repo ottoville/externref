@@ -1,5 +1,5 @@
 ﻿import type { Scene } from "../Scene.js";
-import { TerrainTool } from "../tools/Terrain.js";
+import { TerrainTool } from "../tools/TerrainTool.js";
 import { TerrainMesh } from "../GPU/Meshes/Terrain.js";
 import type { PipelineLayout } from "../GPU/PipelineLayout.js";
 import { Engine } from "../engine.js";

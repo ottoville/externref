@@ -3,12 +3,9 @@ import { Engine } from "../engine.js";
 
 
 import { Plants } from "../plants/Plants.js";
-import { UITAB, UITABClassLike } from "../UITAB.js";
 import { PlantsUI } from "../tools/plantsUI.js";
 /*import { CameraTAB } from "../tools/camera.js";
 import { BuildingsUI } from "../tools/buildings.js";*/
-import { TerrainTool } from "../tools/Terrain.js";
-import { Zones } from "../tools/Zones.js";
 import { Terrain } from "../world/terrain.js";
 import { Sea } from "../world/water.js";
 //import { LazyEval } from "../LazyEval.js";
@@ -48,7 +45,6 @@ export class Canvas extends TerraCompoment {
     #errorDialog: HTMLDialogElement = <dialog></dialog>
     #canvasElem: HTMLCanvasElement = <canvas class="gameControl hidden"></canvas>
     currentGameTime = 0;
-    menuClick?: (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => void;
     showError() {
         if(!this.#errorDialog.open) {
             const e=errors.shift();
@@ -103,7 +99,7 @@ export class Canvas extends TerraCompoment {
                 }
             })
             const terrainInited = Terrain.loadFromTexture([terrascene]);
-            terrainInited.then(terrain => createTopMenu(gpu, terrain)).catch(err => {
+            terrainInited.then(terrain => new createTopMenu({gpu, terrain})).catch(err => {
                 errors.push(err)
                 this.showError();
             });
@@ -227,11 +223,8 @@ export class Canvas extends TerraCompoment {
         */
         return [mainScene];
     }
-    toolsContainer: HTMLFieldSetElement = <fieldset class="w3-bar w3-light-grey w3-border w3-top" style="top:15px; overflow: visible;"></fieldset>
     gameState = <fieldset class="gameControl hidden" id="gameState"></fieldset>
 
-    uiTabs: (UITABClassLike)[] = [PlantsUI, /*BuildingsUI, CameraTAB,*/ TerrainTool, Zones]
-    openedMenu: [UITAB, HTMLFieldSetElement] | undefined;
     timeOfDay: HTMLOutputElement = <output id="TODout" fow="TOD"></output>
     constructor() {
         super();
@@ -239,37 +232,14 @@ export class Canvas extends TerraCompoment {
             this.showError();
         });
         this.progress = 2;
-        this.uiTabs.forEach(tool => {
-            const menuContainer: HTMLFieldSetElement = <fieldset class="w3-dropdown-content w3-card-4 w3-show" style="margin-top:36px"></fieldset>
-            this.toolsContainer.appendChild(<div class="w3-dropdown-click">
-                <button class="w3-bar-item w3-button" onClick={() => this.menuClick && this.menuClick(tool, menuContainer)}>{tool.label}</button>
-                {menuContainer}
-            </div>)
-        });
-        this.initalize().then(async args => {
+
+        this.initalize().then(args => {
             if(!args)
                 return;
             setInterval(() => {
                 this.timeOfDay.value = new Date(Number(engine.physics.gameTime)).toUTCString();
             }, 1000);
 
-            const terrain = await args[0].ready!;
-            this.menuClick = (tool: UITABClassLike, menuContainer: HTMLFieldSetElement) => {
-                if (this.openedMenu) {
-                    const [oldInstance, oldMenuContainer] = this.openedMenu;
-                    oldInstance.destroy();
-                    if (oldMenuContainer.firstChild) {
-                        oldMenuContainer.removeChild(oldMenuContainer.firstChild);
-                        if (oldMenuContainer == menuContainer) {
-                            this.openedMenu = undefined;
-                            return;
-                        }
-                    }
-                }
-                const instance = new tool(terrain);
-                menuContainer.appendChild(tool.menuElem(instance));
-                this.openedMenu = [instance, menuContainer];
-            }
             this.gameState.appendChild(<div onChange={(e: Event) => { engine.physics.gameSpeed = parseInt((e.target as HTMLInputElement).value) }}>
                 <label>Time of day: {this.timeOfDay}</label>
                 <br />
@@ -303,7 +273,6 @@ export class Canvas extends TerraCompoment {
         return <div style="height:100%">
             {this.#errorDialog}
             {this.#canvasElem}
-            {this.toolsContainer}
             <div id="fps">@(rendertime) @(msPerFrame)</div>
             {this.gameState}
             <div style="position:absolute;top:30%; background-color:white;width:100%;text-align:center ">

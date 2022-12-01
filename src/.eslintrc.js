@@ -41,7 +41,10 @@ module.exports = {
         "no-self-compare": 2,
         "no-throw-literal": 2,
         "valid-typeof": 2,
-        "import/no-cycle": 2
+        "import/no-cycle": 2,
+        "prefer-promise-reject-errors": 2,
+        "no-unused-expressions": 2,
+        "no-loop-func": 2
     },
     settings: {
         "import/resolver": {

@@ -33,6 +33,9 @@ globalThis.addEventListener && globalThis.addEventListener('unhandledrejection',
     debugger;
 })
 */
+
+type Listener = (e: UIEvent) => (void | boolean)
+
 export type rustWasm = {
     GPUMeshes(): rust_pointer<"GPUMeshes">,
 
@@ -163,13 +166,13 @@ interface EarthDatabase extends IDBDatabase {
     createObjectStore(name: ObjectStore, optionalParameters?: IDBObjectStoreParameters): IDBObjectStore;
 }
 export interface ColliderWasm {
-    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number, velocity: number, basePoint: number, collidedPointInTrianglePointer:number): void;
+    construct(collisionFound: number, intersectionPointer: number, nearestDistanceSquaredPointer: number, collidedMeshPointer: number, velocity: number, basePoint: number, collidedPointInTrianglePointer: number): void;
     memory: WebAssembly.Memory
     getLowestRoot: (a: number, b: number, c: number, maxR: number) => number
     testTriangles: (position: rust_pointer<"collider_faces">, positionParallel: rust_pointer<"collider_planes_parallel_pointer">, length: number, meshID: number) => void
     _initialize: () => void
 }
-let deviceId=0;
+let deviceId = 0;
 type Events = 'pointerdown' | 'pointerup' | 'pointermove' | 'pointerleave' | 'wheel' | 'keydown' | 'keyup'
 
 export class Engine {
@@ -252,13 +255,13 @@ export class Engine {
                     return performance.now()
                 },
                 jspanic(ptr: number) {
-                    if(!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
+                    if (!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
                         throw new Error('Webassembly module does not have memory');
                     }
                     console.error(new TextDecoder().decode(new Uint8Array(rust.instance.exports.memory.buffer, ptr, 512)).trimEnd())
                 },
                 jslog(ptr: number) {
-                    if(!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
+                    if (!(rust.instance.exports.memory instanceof WebAssembly.Memory)) {
                         throw new Error('Webassembly module does not have memory');
                     }
                     console.log(new TextDecoder().decode(new Uint8Array(rust.instance.exports.memory.buffer, ptr, 512)).trimEnd())
@@ -349,8 +352,8 @@ export class Engine {
 
     }
     gpu: GPU | undefined
-    async createGPU(GPUDataSize: number,cb:(gpu:GPU) => void, adapter: GPUAdapter | null) {
-        if(!adapter) {
+    async createGPU(GPUDataSize: number, cb: (gpu: GPU) => void, adapter: GPUAdapter | null) {
+        if (!adapter) {
             // eslint-disable-next-line require-atomic-updates
             adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
             if (!adapter) {
@@ -365,7 +368,7 @@ export class Engine {
         let device: GPUDevice;
         try {
             console.log('getting new device');
-            device = await adapter!.requestDevice({label:'device'+(deviceId++)});
+            device = await adapter!.requestDevice({ label: 'device' + (deviceId++) });
         } catch (e) {
             console.error('failed to get new device, getting new adapter');
             let adapter2 = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
@@ -378,7 +381,7 @@ export class Engine {
             }
             console.log('got adapter, getting device')
             try {
-                device = await adapter2!.requestDevice({label:'device'+(deviceId++)});
+                device = await adapter2!.requestDevice({ label: 'device' + (deviceId++) });
             } catch (ee) {
                 console.error(ee);
                 throw new Error('Cannot get device');
@@ -389,7 +392,7 @@ export class Engine {
         }
         device.lost.then(reason => {
             console.error('GPU device lost', reason);
-            const newGPU=this.createGPU(GPUDataSize,cb, adapter);
+            const newGPU = this.createGPU(GPUDataSize, cb, adapter);
             this.gpu!.destroy(newGPU);
             this.gpu = undefined;
             this.GPUReady = newGPU;
@@ -399,7 +402,7 @@ export class Engine {
             else
                 throw (new Error(ee));
         });
-        
+
         const gpu = new GPU(this.canvas!, device, GPUDataSize);
         this.gpu = gpu;
         console.log('new GPU initialized');
@@ -408,22 +411,37 @@ export class Engine {
 
     }
     #inputMaps = {
-        pointerdown: new Map<object, Set<(e: UIEvent) => void>>(),
-        pointerup: new Map<object, Set<(e: UIEvent) => void>>(),
-        pointermove: new Map<object, Set<(e: UIEvent) => void>>(),
-        pointerleave: new Map<object, Set<(e: UIEvent) => void>>(),
-        wheel: new Map<object, Set<(e: UIEvent) => void>>(),
-        keydown: new Map<object, Set<(e: UIEvent) => void>>(),
-        keyup: new Map<object, Set<(e: UIEvent) => void>>(),
+        pointerdown: new Map<object, Set<Listener>>(),
+        pointerup: new Map<object, Set<Listener>>(),
+        pointermove: new Map<object, Set<Listener>>(),
+        pointerleave: new Map<object, Set<Listener>>(),
+        wheel: new Map<object, Set<Listener>>(),
+        keydown: new Map<object, Set<Listener>>(),
+        keyup: new Map<object, Set<Listener>>(),
 
-        pointerdownOnce: new Map<object, Set<(e: UIEvent) => void>>(),
-        pointerupOnce: new Map<object, Set<(e: UIEvent) => void>>(),
-        pointermoveOnce: new Map<object, Set<(e: UIEvent) => void>>(),
-        pointerleaveOnce: new Map<object, Set<(e: UIEvent) => void>>(),
-        wheelOnce: new Map<object, Set<(e: UIEvent) => void>>(),
-        keydownOnce: new Map<object, Set<(e: UIEvent) => void>>(),
-        keyupOnce: new Map<object, Set<(e: UIEvent) => void>>(),
+        pointerdownOnce: new Map<object, Set<Listener>>(),
+        pointerupOnce: new Map<object, Set<Listener>>(),
+        pointermoveOnce: new Map<object, Set<Listener>>(),
+        pointerleaveOnce: new Map<object, Set<Listener>>(),
+        wheelOnce: new Map<object, Set<Listener>>(),
+        keydownOnce: new Map<object, Set<Listener>>(),
+        keyupOnce: new Map<object, Set<Listener>>(),
 
+        UIpointerdown: new Map<object, Set<Listener>>(),
+        UIpointerup: new Map<object, Set<Listener>>(),
+        UIpointermove: new Map<object, Set<Listener>>(),
+        UIpointerleave: new Map<object, Set<Listener>>(),
+        UIwheel: new Map<object, Set<Listener>>(),
+        UIkeydown: new Map<object, Set<Listener>>(),
+        UIkeyup: new Map<object, Set<Listener>>(),
+
+        UIpointerdownOnce: new Map<object, Set<Listener>>(),
+        UIpointerupOnce: new Map<object, Set<Listener>>(),
+        UIpointermoveOnce: new Map<object, Set<Listener>>(),
+        UIpointerleaveOnce: new Map<object, Set<Listener>>(),
+        UIwheelOnce: new Map<object, Set<Listener>>(),
+        UIkeydownOnce: new Map<object, Set<Listener>>(),
+        UIkeyupOnce: new Map<object, Set<Listener>>(),
 
     } as const;
     /*
@@ -431,31 +449,41 @@ export class Engine {
          * type: type of listener
          * object: The object which adds the listener, this is used to remove listener when object is destroyed
     */
-    addInputListener<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => void) {
-        const map = this.#inputMaps[type];
+    addInputListener<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => (void | boolean), ui = false) {
+        let map: Map<object, Set<Listener>>
+        if(ui) {
+            map = this.#inputMaps[`UI${type}`];
+        } else {
+            map = this.#inputMaps[type];
+        }
         let cbs = map.get(object);
-        if(!cbs) {
+        if (!cbs) {
             cbs = new Set();
             map.set(object, cbs);
         }
         //@ts-expect-error
         cbs.add(cb);
     }
-    addInputListenerOnce<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => void) {
-        const map = this.#inputMaps[`${type}Once`];
+    addInputListenerOnce<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => (void | boolean), ui = false) {
+        let map: Map<object, Set<Listener>>
+        if(ui) {
+            map = this.#inputMaps[`UI${type}Once`];
+        } else {
+            map = this.#inputMaps[`${type}Once`];
+        }
         let cbs = map.get(object);
-        if(!cbs) {
+        if (!cbs) {
             cbs = new Set();
             map.set(object, cbs);
         }
         //@ts-expect-error
         cbs.add(cb);
     }
-    removeInputListener<K extends (Events & keyof HTMLElementEventMap)>(type: K, object:object, cb: (e: HTMLElementEventMap[K]) => void) {
-    //@ts-expect-error
+    removeInputListener<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => void) {
+        //@ts-expect-error
         const removed = this.#inputMaps[type].get(object)?.delete(cb) || this.#inputMaps[`${type}Once`].get(object)?.delete(cb)
-        if(!removed) {
-            console.warn('Removed', type, 'listener on',object,'that did not exists');
+        if (!removed) {
+            console.warn('Removed', type, 'listener on', object, 'that did not exists');
         }
     }
     clearInputListeners(object: object) {
@@ -475,44 +503,39 @@ export class Engine {
         globalThis.engine = this;
         this.mainCamera = new TerraCamera();
 
-        if(canvas) {
-            canvas.ownerDocument.addEventListener('pointerup', (e) => {
-                this.#inputMaps.pointerup.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.#inputMaps.pointerupOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.#inputMaps.pointerupOnce.clear();
-            });
-            canvas.ownerDocument.addEventListener('pointerdown', (e) => {
-                this.#inputMaps.pointerdown.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.#inputMaps.pointerdownOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.#inputMaps.pointerdownOnce.clear();
-            });
-            canvas.ownerDocument.addEventListener('pointermove', (e) => {
-                this.#inputMaps.pointermove.forEach(cbs => cbs.forEach(cb => cb(e)));
-                this.#inputMaps.pointermoveOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.#inputMaps.pointermoveOnce.clear();
-            });
-            canvas.ownerDocument.addEventListener('wheel', (e) => {
-                this.#inputMaps.wheel.forEach(cbs => cbs.forEach(cb => cb(e)));
-                this.#inputMaps.wheelOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.#inputMaps.wheelOnce.clear();
-            });
-            canvas.ownerDocument.addEventListener('pointerleave', (e) => {
-                this.#inputMaps.pointerleave.forEach(cbs => cbs.forEach(cb => cb(e)));
-                this.#inputMaps.pointerleaveOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.#inputMaps.pointerleaveOnce.clear();
-            });
-            canvas.ownerDocument.addEventListener('keydown', (e) => {
-                this.#inputMaps.keydown.forEach(cbs => cbs.forEach(cb => cb(e)));
-                this.#inputMaps.keydownOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.#inputMaps.keydownOnce.clear();
-            });
-            canvas.ownerDocument.addEventListener('keyup', (e) => {
-                this.#inputMaps.keyup.forEach(cbs => cbs.forEach(cb => cb(e)));
-                this.#inputMaps.keyupOnce.forEach(cbs => cbs.forEach(cb => cb(e)))
-                this.#inputMaps.keyupOnce.clear();
+        if (canvas) {
+            (['pointerup', 'pointerdown', 'pointermove', 'wheel', 'pointerleave', 'keydown', 'keyup'] as const).forEach(eventType => {
+                const UI = 'UI' + eventType as `UI${typeof eventType}`;
+                const UIOnce = UI + 'Once' as `${typeof UI}Once`;
+                const UIEvents = [UI, UIOnce] as const;
+                canvas.ownerDocument.addEventListener(eventType, (e) => {
+                    // TODO: quite a heavy processing, move to rust
+                    for(let i = 0 as 0|1; i < 2; i++) {
+                        const inputEntries = this.#inputMaps[UIEvents[i]].entries();
+                        let inputEntryResult = inputEntries.next();
+                        while(!inputEntryResult.done) {
+                            const [,cbs] = inputEntryResult.value;
+                            const cbsEntries = cbs.entries();
+                            let result = cbsEntries.next();
+                            while (!result.done) {
+                                const [cb] = result.value;
+                                if(cb(e)) {
+                                    return;
+                                }
+                                result = cbsEntries.next();
+                            }
+                            inputEntryResult = inputEntries.next();
+                        }
+                    }
+
+                    this.#inputMaps[eventType].forEach(cbs => cbs.forEach(cb => cb(e)))
+                    const once = eventType + 'Once' as `${typeof eventType}Once`;
+                    this.#inputMaps[once].forEach(cbs => cbs.forEach(cb => cb(e)))
+                    this.#inputMaps[once].clear();
+                });
             });
 
-            this.GPUReady=this.createGPU(GPUDataSize,gpu => {
+            this.GPUReady = this.createGPU(GPUDataSize, gpu => {
                 this.mainCamera.initForGPU(gpu.renderPassScreen, gpu, new Projection(gpu));
                 gpu.pickRenderPass.perspectiveCameras.add(this.mainCamera);
                 //@ts-ignore
@@ -527,7 +550,7 @@ export class Engine {
                 window.printRenderTarget3 = () => {
                     gpu.renderPassScreen.colorRenderTargets.gRenderTargetDiffuse.resolveTexture!.print_bitmap()
                 }
-            } ,null);
+            }, null);
             const saveControllerState = () => {
                 this.inputManager?.serialize();
             };
@@ -535,7 +558,7 @@ export class Engine {
             window.addEventListener('beforeunload', saveControllerState);
 
         } else {
-            this.GPUReady=new Promise(() => {undefined});
+            this.GPUReady = new Promise(() => { return; });
         }
         this.physics = new Physics(this);
         this.memory = rust.memory;

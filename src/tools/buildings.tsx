@@ -1,11 +1,7 @@
-﻿import { UITAB } from "../UITAB.js";
-import { Terrain } from "../world/terrain.js";
-
-import { Engine } from "../engine.js";
+﻿import { Engine } from "../engine.js";
 declare const engine:Engine;
 
-export class BuildingsUI extends UITAB {
-    static override label = 'Buildings'
+export class BuildingsUI {
     static menuElem = <div><legend style="background-color:white">
         Buildings
 </legend>
@@ -15,12 +11,6 @@ export class BuildingsUI extends UITAB {
     destroy: () => void = () => {
         engine.clearInputListeners(this);
     };
-    constructor(
-        terrain: Terrain,
-    ) {
-        super(terrain);
-
-    }
     public create = (type: string): void => {
         const scene = engine.scenes.get('main');
 

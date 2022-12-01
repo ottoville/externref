@@ -14,8 +14,6 @@ const enum ARROW_KEYS  {
     LEFT_AND_RIGHT = ARROW_KEYS.RIGHT|ARROW_KEYS.LEFT
 }
 
-ARROW_KEYS.LEFT_AND_RIGHT
-
 /*
     This camera is used for camera that can be moved with keyboard
     without being attached to any mesh

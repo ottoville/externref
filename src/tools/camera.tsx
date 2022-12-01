@@ -1,17 +1,5 @@
-import { UITAB } from "../UITAB.js";
-import type { Terrain } from "../world/terrain.js";
-export class CameraTAB extends UITAB {
-    static menuElem = <button class="w3-bar-item w3-button">Debug camera</button>;
-    static override label = 'Camera';
-    constructor(
-        terrain: Terrain
-    ) {
-        super(terrain);
+export class CameraTAB {
 
-    }
-    override destroy = (): void => {
-        throw(new Error('not implemented'))
-     }
     /* activate = (): void => {
         this.activated=true;
     }*/

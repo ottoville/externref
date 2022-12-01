@@ -7,7 +7,6 @@ import type { PipelineLayout } from "../PipelineLayout.js";
 import { type BindUniformBuffer, Buffer, GPUBufferUsage } from "../Buffer.js";
 import type { BindGroup } from "../BindGroup.js";
 import { RenderBundleEncoder } from "../RenderBundleEncoder.js";
-import type { DrawableNode } from "../../MainNode.js";
 import type { RenderTargetTextureUsageValue } from "../Texture.js";
 
 
@@ -41,7 +40,7 @@ export class RenderPass<U extends {
     readonly sizeBindGroup: () => BindGroup;
     #sizeBuffer: BindUniformBuffer;
     readonly colorRenderTargets = {} as U
-    onResize: Map<DrawableNode, () => void> = new Map();
+    onResize: Map<object, () => void> = new Map();
     public gpu: GPU
     public sampleCount: 1 | 4;
     public size: { width: number, height: number };

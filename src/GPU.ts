@@ -574,7 +574,8 @@ export class GPU {
             if (!entry)
                 return;
             window.cancelAnimationFrame(this.#renderFrame)
-            resizeHandler && clearTimeout(resizeHandler);
+            if(resizeHandler)
+                clearTimeout(resizeHandler)
             resizeHandler = setTimeout(() => {
                 try {
                     const aspectRatio = entry.contentRect.width / entry.contentRect.height

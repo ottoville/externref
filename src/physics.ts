@@ -176,8 +176,8 @@ export class Physics {
                 /*
                     TODO: friction is now set higher in x and z because human cannot brake otherwise.
                 */
-                    motionFrictionAcceleration[0] = -tickable.last_velocity[0]*tickable.grip,
-                    motionFrictionAcceleration[1] = -tickable.last_velocity[1]*tickable.grip,
+                    motionFrictionAcceleration[0] = -tickable.last_velocity[0]*tickable.grip;
+                    motionFrictionAcceleration[1] = -tickable.last_velocity[1]*tickable.grip;
                     motionFrictionAcceleration[2] = -tickable.last_velocity[2]*tickable.grip;
                 } else {
                     tickable.last_velocity[0] = wantedVelocityPerDelta[0] * delta_multiplier;
@@ -240,7 +240,9 @@ export class Physics {
         this.#lastStateChangeGameTime = this.gameTime;
         this.#lastStateChangeTime = new Date().getTime();
 
-        this.#interval && clearTimeout(this.#interval);
+        if(this.#interval) {
+            clearTimeout(this.#interval);
+        }
         this.#timeUntillTick = this.tickIntervalMs - this.#tickDeltaWhenStateChange;
         if (this.#gameSpeed >= 0) {
             this.#tickDeltaWhenStateChange = (new Date().getTime() - this.#lastTickTimeMs) * this.#gameSpeed

@@ -80,7 +80,9 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
         }
         if (buffer instanceof Buffer) {
             this.#indexBuffer = buffer;
-            GPUIndexFormat && (this.#GPUIndexFormat = GPUIndexFormat);
+            if(GPUIndexFormat) {
+                this.#GPUIndexFormat = GPUIndexFormat
+            }
         }
         else {
             this.#indexBuffer = Buffer.create(this.renderPipeline.bindgroupdrawable.bindGroupLayout.gpu, buffer.byteLength, [GPUBufferUsage.INDEX], 'index_' + this.label, b => {

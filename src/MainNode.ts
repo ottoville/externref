@@ -8,29 +8,6 @@ export interface DrawableNode {
     label: string;
     destroy(): void;
 }
-//TODO this class can be "inlined" to UIRectangle?
-export abstract class UINode implements DrawableNode {
-    label: string;
-    positions_count: number;
-    constructor(
-        { positionsCount = 0,
-            label
-        }:
-            {
-                positionsCount?: number,
-                label: string,
-            }
-    ) {
-        this.positions_count = positionsCount
-        this.label = label;
-        const label_ptr = engine.rust.alloc_string(label.length);
-        const view = new Uint8Array(engine.rust.memory.buffer, label_ptr, label.length);
-        view.set(new TextEncoder().encode(label));
-    }
-    destroy() {
-        // TODO
-    }
-}
 export abstract class MainNode implements DrawableNode {
     acceleration2: [number, number, number] = [0, 0, 0];
     //Actual velocity that occured last tick
