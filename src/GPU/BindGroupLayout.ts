@@ -34,7 +34,7 @@ export class BindGroupLayout<T extends GPUBindGroupEntry[] = GPUBindGroupEntry[]
     }
     createBindGroup(
         label: string,
-        entries: (bindGroup: BindGroup) => MapToGPUBindGroupEntry<T>,
+        entries: (bindGroup: BindGroup) => Readonly<MapToGPUBindGroupEntry<T>>,
         renderPasses?: Set<RenderPass>): BindGroup {
         return new BindGroup(this, label,entries, renderPasses)
     } 

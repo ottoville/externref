@@ -1,7 +1,7 @@
-import { type GPU } from "../GPU.js";
-import type { Engine } from "../engine.js";
-import type { BindGroup } from "./BindGroup.js";
-import { Bindable } from "./Bindable.js";
+import { type GPU } from "../../GPU.js";
+import type { Engine } from "../../engine.js";
+import type { BindGroup } from "../BindGroup.js";
+import { Bindable } from "../Bindable.js";
 declare const engine:Engine;
 export const enum GPUBufferUsage {
     MAP_READ = 0x0001,
@@ -113,7 +113,7 @@ export class Buffer extends Bindable {
         return b;
     }
     protected buffer: GPUBuffer;
-    constructor(protected gpu: GPU, size: number, protected usages: number[], mappedAtCreation = false, public label:string) {
+    constructor(protected gpu: GPU, public size: number, protected usages: number[], mappedAtCreation = false, public label:string) {
         if (size === 0)
             throw (new Error('Cannot create zero sized buffer'));
         super();
@@ -184,7 +184,7 @@ export class Buffer extends Bindable {
     }
 }
 class copySrcBuffer extends Buffer {
-    constructor(gpu: GPU, private size: number, usages: number[], mappedAtCreation=false, label: string) {
+    constructor(gpu: GPU, size: number, usages: number[], mappedAtCreation=false, label: string) {
         super(gpu, size, [GPUBufferUsage.COPY_SRC, ...usages],mappedAtCreation, label)
     }
     copyTo(commandEncoder: GPUCommandEncoder, buffer: CopyDstBuffer, sourceOffset: GPUSize64, destinationOffset: GPUSize64, copySize: GPUSize64) {
@@ -216,7 +216,7 @@ export class WriteBuffer extends copySrcBuffer {
         super(gpu, size, [GPUBufferUsage.MAP_WRITE, GPUBufferUsage.COPY_SRC], false, label)
     }
 }
- //MAP read (Only CopyDtst is allowed with MapRead)
+//MAP read (Only CopyDtst is allowed with MapRead)
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ReadBuffer extends CopyDstBuffer {}
 export class ReadBuffer extends Buffer {

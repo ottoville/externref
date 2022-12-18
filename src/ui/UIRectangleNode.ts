@@ -12,13 +12,14 @@ export type UIRectangleNodeProps = {
     translate: { x: number, y: number },
     text: string,
     open: boolean,
+    menuTree: {level: number}
     onClick?: (menuName: string) => void
     children?: ({
         ctr: new(props:UIRectangleNodeProps) => UIRectangleNode;
         props: UIRectangleNodeProps;
     } | null)[] | null
 }
-export class UIRectangleNode extends UINode<UIRectangleNodeProps> {
+export class UIRectangleNode<P extends UIRectangleNodeProps = UIRectangleNodeProps, S extends object = object> extends UINode<Readonly<P>, S> {
     static createCtrProps(props: UIRectangleNodeProps) {
         return {
             ctr: UIRectangleNode,
@@ -34,7 +35,7 @@ export class UIRectangleNode extends UINode<UIRectangleNodeProps> {
         }
         return instance;
     }
-    constructor(props:UIRectangleNodeProps) {
+    constructor(props: P) {
         super(props);
     }
     #instance?: UIRectangle;

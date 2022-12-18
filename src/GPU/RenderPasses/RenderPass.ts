@@ -4,7 +4,7 @@ import type { RenderPipeline } from "../RenderPipeline.js";
 import type { Drawable } from "../Drawables/Drawable.js";
 import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
 import type { PipelineLayout } from "../PipelineLayout.js";
-import { type BindUniformBuffer, Buffer, GPUBufferUsage } from "../Buffer.js";
+import { type BindUniformBuffer, Buffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { BindGroup } from "../BindGroup.js";
 import { RenderBundleEncoder } from "../RenderBundleEncoder.js";
 import type { RenderTargetTextureUsageValue } from "../Texture.js";

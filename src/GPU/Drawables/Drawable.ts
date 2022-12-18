@@ -1,7 +1,7 @@
 ﻿import type { RenderPipeline } from "../RenderPipeline.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import { GPU } from "../../GPU.js"
-import { Buffer, type VertexBuffer, GPUBufferUsage } from "../Buffer.js";
+import { Buffer, type VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 
 import type { Engine } from "../../engine.js";
 import { BindGroup } from "../BindGroup.js";
@@ -88,7 +88,7 @@ export abstract class Drawable {
         return Tbuffer;
     }
     abstract render(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder): void
-    draw(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex: number[]) {       
+    draw(renderEncoder: GPURenderBundleEncoder | GPURenderPassEncoder, BindGroupsStart: number, dynamicIndex: number[]) {
         this.#dynamicBindGroups.forEach(([{bindGroup}, offset], i) => {
             const di = dynamicIndex[i];
             if (di) {

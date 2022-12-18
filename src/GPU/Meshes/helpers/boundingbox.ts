@@ -1,5 +1,5 @@
 import { MainNode } from "../../../MainNode.js";
-import { Buffer, GPUBufferUsage } from "../../Buffer.js"
+import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
 
 import { BoundingBoxPipeline } from "../../RenderPipeLines/Boundingbox.js";
 

@@ -20,7 +20,6 @@ export abstract class UINode<P extends object = object, S extends object = objec
         queueMicrotask(() => {
             this.#requestRender();
         })
-        
     }
     abstract destroy(): void;
     #requestRender() {

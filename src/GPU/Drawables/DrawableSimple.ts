@@ -4,7 +4,7 @@ import type { Engine } from "../../engine.js";
 import { DrawableDirect } from "./DrawableDirect.js";
 import { type DrawableNode, MainNode } from "../../MainNode.js";
 import type { BindGroup } from "../BindGroup.js";
-import type { VertexBuffer } from "../Buffer.js";
+import type { VertexBuffer } from "../Buffer/Buffer.js";
 declare const engine: Engine;
 
 export class DrawableSimple<R extends RenderPipeline = RenderPipeline> extends DrawableDirect {

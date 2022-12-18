@@ -3,7 +3,7 @@ import { MainNode } from "../../MainNode.js";
 import { MSAARenderTarget } from "../RenderTargets/MSAARenderTarget.js";
 import { ComputePipeline } from "../ComputePipeline.js";
 import type { BindGroup } from "../BindGroup.js";
-import { type BindUniformBuffer, type CopyDstBuffer, Buffer, GPUBufferUsage } from "../Buffer.js";
+import { type BindUniformBuffer, type CopyDstBuffer, Buffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import { RenderPassProps } from "./RenderPass.js";
 import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
 import { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";

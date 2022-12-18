@@ -26,25 +26,57 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
         }).catch(err => {
             engine.showError(err);
         })
+
+        engine.addInputListener('keydown', this, this.#inputListener);
+    }
+    menuTree = { level: 0 }
+    #inputListener = (e: KeyboardEvent) => {
+        if(this.state.menuOpenName === undefined) {
+            this.menuTree.level = 1;
+            if(e.code === "Digit1") {
+                this.setState({
+                    menuOpenName: 'Plants'
+                })
+            } else if(e.code === "Digit2") {
+                this.setState({
+                    menuOpenName: 'Terrain'
+                })
+            }
+            else if(e.code === "Digit3") {
+                this.setState({
+                    menuOpenName: 'Zones'
+                })
+            }
+        } else if(e.code === 'Backspace' && this.menuTree.level === 1) {
+            this.setState({
+                menuOpenName: undefined
+            })
+        }
     }
     render() {
         const props = this.props;
         if (!this.state.bitmap)
             return null;
+        const commonProps = 
+        {
+            gpu: props.gpu,
+            terrain: props.terrain,
+            bitmap: this.state.bitmap,
+            onClick: this.setActiveMenu
+        }
 
         return [
             UIRectangleNode.createCtrProps({
+                ...commonProps,
                 open: this.state.menuOpenName === 'Plants',
-                onClick: this.setActiveMenu,
-                gpu: props.gpu,
-                terrain: props.terrain,
-                bitmap: this.state.bitmap,
                 label: 'UIButton',
                 scale: { min_width: 0.07, y: 0.07 },
                 translate: { x: -0.9, y: 0.9 },
-                text: 'Plants',
-                children: 
-                    this.state.menuOpenName !== 'Plants' ? null : [{ctr: PlantsUI,
+                text: 'Plants (1)',
+                menuTree: this.menuTree,
+                children:
+                    this.state.menuOpenName !== 'Plants' ? null : [{
+                        ctr: PlantsUI,
                         props: {
                             gpu: props.gpu,
                             terrain: props.terrain,
@@ -53,25 +85,43 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                             scale: { min_width: 0.15, y: 0.07 },
                             translate: { x: -0.8, y: 0.8 },
                             open: true,
-                            text: 'Create grass'
+                            text: 'Create grass',
+                            menuTree: this.menuTree,
                         }
-                }]
-                
+                    }]
             }),
-            TerrainToolButton.createCtrProps({ open: this.state.menuOpenName === 'Terrain',
-            onClick: this.setActiveMenu, gpu: props.gpu, terrain: props.terrain, bitmap: this.state.bitmap, label: 'UIButton2', scale: { min_width: 0.07, y: 0.07 }, translate: { x: -0.75, y: 0.9 }, text: 'Terrain' }),
-                Zones.createCtrProps({ open: this.state.menuOpenName === 'Zones',
-                onClick: this.setActiveMenu,
-                gpu: props.gpu, terrain: props.terrain, bitmap: this.state.bitmap, label: 'UIButton2', scale: { min_width: 0.07, y: 0.07 }, translate: { x: -0.6, y: 0.9 }, text: 'Zones' }),
+            TerrainToolButton.createCtrPropsTerrainToolButton(
+                {
+                    ...commonProps,
+                    open: this.state.menuOpenName === 'Terrain',
+                    label: 'TerrainButton',
+                    scale: { min_width: 0.07, y: 0.07 },
+                    translate: { x: -0.75, y: 0.9 },
+                    text: 'Terrain (2)',
+                    menuTree: this.menuTree,
+                }
+            ),
+            Zones.createCtrPropsZones(
+                {
+                    ...commonProps,
+                    open: this.state.menuOpenName === 'Zones',
+                    label: 'ZonesButton',
+                    scale: { min_width: 0.07, y: 0.07 },
+                    translate: { x: -0.6, y: 0.9 },
+                    text: 'Zones (3)',
+                    menuTree: this.menuTree,
+                }
+            ),
         ]
     }
     setActiveMenu = (menuName: string) => {
         this.setState({
-            menuOpenName: this.state.menuOpenName === menuName ? undefined: menuName
+            menuOpenName: this.state.menuOpenName === menuName ? undefined : menuName
         })
     }
     destroy(): void {
         this.state.bitmap?.close();
+        engine.removeInputListener('keydown', this, this.#inputListener)
     }
 }
 

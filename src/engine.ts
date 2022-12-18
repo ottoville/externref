@@ -461,8 +461,12 @@ export class Engine {
             cbs = new Set();
             map.set(object, cbs);
         }
-        //@ts-expect-error
-        cbs.add(cb);
+        // To ensure that events added while processing events does not trigger in same loop
+        queueMicrotask(() => {
+            //@ts-expect-error
+            cbs.add(cb);
+        })
+        
     }
     addInputListenerOnce<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => (void | boolean), ui = false) {
         let map: Map<object, Set<Listener>>

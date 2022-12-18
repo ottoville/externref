@@ -98,7 +98,7 @@ export class Canvas extends TerraCompoment {
                     }
                 }
             })
-            const terrainInited = Terrain.loadFromTexture([terrascene]);
+            const terrainInited = Terrain.loadFromTexture(gpu, [terrascene]);
             terrainInited.then(terrain => new createTopMenu({gpu, terrain})).catch(err => {
                 errors.push(err)
                 this.showError();

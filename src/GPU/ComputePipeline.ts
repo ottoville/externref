@@ -5,7 +5,11 @@ import { BindGroupLayout } from "./BindGroupLayout.js";
 
 export class ComputePipeline {
     pipeline: GPUComputePipeline;
-    constructor(private gpu: GPU, private shader: keyof typeof shaders, layout: GPUPipelineLayout | 'auto' = 'auto', private entryPoint = 'main') {
+    constructor(
+        private gpu: GPU,
+        private shader: keyof typeof shaders,
+        layout: GPUPipelineLayout | 'auto' = 'auto',
+        private entryPoint = 'main') {
         const shaderModule = gpu.shaderModules[shader];
         if (!shaderModule)
             throw (new Error('Shader ' + shader + ' not found'));

@@ -10,7 +10,7 @@ import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import { UIRectangleNode, UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
 declare const engine:Engine;
 export class Zones extends UIRectangleNode {
-    static override createCtrProps(props: UIRectangleNodeProps) {
+    static createCtrPropsZones(props: UIRectangleNodeProps) {
         return {
             ctr: Zones,
             props
@@ -79,6 +79,7 @@ export class Zones extends UIRectangleNode {
             this.props.terrain.mesh.set_scenes(staticScene.id)
             return [UIRectangleNode.createCtrProps(
                 {
+                    menuTree: this.props.menuTree,
                     gpu: this.props.gpu,
                     terrain: this.props.terrain,
                     bitmap: this.props.bitmap,

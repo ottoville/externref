@@ -6,12 +6,12 @@ import { PTDresult } from "../types/interfaces/index.js";
 
 import type { Scene } from "../Scene.js";
 import { PlantsRenderPipeline } from "../GPU/RenderPipeLines/Plants.js";
-import { ComputePipeline } from "../GPU/ComputePipeline.js";
-import { Buffer, GPUBufferUsage } from "../GPU/Buffer.js";
+import { Buffer, GPUBufferUsage } from "../GPU/Buffer/Buffer.js";
 
 import type { Engine } from "../engine.js";
 import { DrawableIndirect } from "../GPU/Drawables/DrawableIndirect.js";
-declare const engine:Engine;
+import { getHeightAtCoordinates } from "../GPU/Shaders/grass/getHeightAtCoordinates.comp.js";
+declare const engine: Engine;
 
 /**
  * Sets up indices for single blade mesh.
@@ -20,7 +20,7 @@ declare const engine:Engine;
  * @param vc2 vertex start offset for back side of blade
  * @param i index offset
  */
- const numBlades = 65535;
+const numBlades = 65535;
 
 export class Plants {
     public opts = {
@@ -38,22 +38,22 @@ export class Plants {
                 {
                     area: area,
                     angle: area.rad
-                },[])
+                }, [])
         }).catch(engine.showError)
     }
     constructor(
         scene: Scene,
         terrainP: Promise<Terrain>,
     ) {
-        const indirectBuffer = Buffer.create(scene.gpu,4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST],'indirectBuffer');
-        const positionGPU = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'positionGPU');
-        const shapeGPU = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST],'shapeGPU');
+        const indirectBuffer = Buffer.create(scene.gpu, 4 * 4, [GPUBufferUsage.INDIRECT, GPUBufferUsage.COPY_DST], 'indirectBuffer');
+        const positionGPU = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], 'positionGPU');
+        const shapeGPU = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.VERTEX, GPUBufferUsage.COPY_DST], 'shapeGPU');
 
 
         const positionGPUSwap = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE], 'positionGPUSwap');
-        const shapeGPUSwap = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE],'shapeGPUSwap');
-        if(engine.gpu) {
-            const renderPipeline = engine.gpu.createRenderPipeline(PlantsRenderPipeline,{ topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' });
+        const shapeGPUSwap = Buffer.create(scene.gpu, numBlades * 4 * 4, [GPUBufferUsage.COPY_SRC, GPUBufferUsage.STORAGE], 'shapeGPUSwap');
+        if (engine.gpu) {
+            const renderPipeline = engine.gpu.createRenderPipeline(PlantsRenderPipeline, { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint16' });
             new DrawableIndirect({
                 renderPipeline,
                 label: 'Plants',
@@ -83,14 +83,23 @@ export class Plants {
             });
         }
 
-        this.#ready =  terrainP.then(async terrain => {
+        this.#ready = terrainP.then(async terrain => {
             await this.#worker.message(WorkerReturn.Promise, 'init', {
                 //  positions: this.offset,
                 shape: shapes,
                 noises: noises,
-            },[]);
-            const computePipeline = new ComputePipeline(engine.gpu!, "grass/getHeightAtCoordinates.comp.wgsl");
-            const bindGroup = computePipeline.createBindGroup(0, 'bindGroup1', bindGroup1 => [
+            }, []);
+            const getHeightAtCoordinatesShader = new getHeightAtCoordinates(terrain.settingsLayout);
+            
+            const computePipeline = getHeightAtCoordinatesShader.createComputePipeline('main');
+            
+            const settingsBindGroup = getHeightAtCoordinatesShader.bindLayouts[0].createBindGroup('bindGroup0', bindGroup0 => [
+                {
+                    binding: 0,
+                    resource: terrain.settingsGPU.getStorageBinding(bindGroup0)
+                }
+            ])
+            const bindGroup = getHeightAtCoordinatesShader.bindLayouts[1].createBindGroup('bindGroup1', bindGroup1 => [
                 {
                     binding: 0,
                     resource: terrain.slopeArrGPUBuffer.getStorageBinding(bindGroup1)
@@ -107,35 +116,34 @@ export class Plants {
                     binding: 3,
                     resource: shapeGPUSwap.getStorageBinding(bindGroup1)
                 },
-                {
-                    binding: 4,
-                    resource: terrain.settingsGPU.getStorageBinding(bindGroup1)
-                }])
+                ]);
+
             this.#worker.subscribe('updated', (data: { buffer: SharedArrayBuffer }) => {
-                    const commandEncoder = scene.gpu.device.createCommandEncoder({label: 'plants_encoder'});
-                    const passEncoder = commandEncoder.beginComputePass({label: 'plants_pass_encoder'});
-                    passEncoder.setPipeline(computePipeline.pipeline);
+                const commandEncoder = scene.gpu.device.createCommandEncoder({ label: 'plants_encoder' });
+                const passEncoder = commandEncoder.beginComputePass({ label: 'plants_pass_encoder' });
+                passEncoder.setPipeline(computePipeline);
 
-                    const worldCopyGPU = Buffer.create(scene.gpu, numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'worldCopyGPU', (buffer) => {
-                        const worldSetArr = buffer.getMappedRange();
-                        new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
-                    });
-                    const bindGroup2 = computePipeline.createBindGroup(1, 'bindGroup2', bg => [{
-                        binding: 0,
-                        resource: worldCopyGPU.getStorageBinding(bg)
-                    }])
+                const worldCopyGPU = Buffer.create(scene.gpu, numBlades * 2 * 4, [GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'worldCopyGPU', (buffer) => {
+                    const worldSetArr = buffer.getMappedRange();
+                    new Uint8Array(worldSetArr).set(new Uint8Array(data.buffer));
+                });
+                const bindGroup2 = getHeightAtCoordinatesShader.bindLayouts[2].createBindGroup('bindGroup2', bg => [{
+                    binding: 0,
+                    resource: worldCopyGPU.getStorageBinding(bg)
+                }]);
 
-                    passEncoder.setBindGroup(0, bindGroup.bindGroup);
-                    passEncoder.setBindGroup(1, bindGroup2.bindGroup);
-                    passEncoder.dispatchWorkgroups(numBlades);
-                    passEncoder.end();
+                passEncoder.setBindGroup(0, settingsBindGroup.bindGroup);
+                passEncoder.setBindGroup(1, bindGroup.bindGroup);
+                passEncoder.setBindGroup(2, bindGroup2.bindGroup);
+                passEncoder.dispatchWorkgroups(numBlades);
+                passEncoder.end();
 
-                    positionGPUSwap.copyTo(commandEncoder, positionGPU, 0, 0, numBlades * 4 * 4);
+                positionGPUSwap.copyTo(commandEncoder, positionGPU, 0, 0, numBlades * 4 * 4);
 
-                    shapeGPUSwap.copyTo(commandEncoder,shapeGPU, 0, 0, numBlades * 4 * 4);
+                shapeGPUSwap.copyTo(commandEncoder, shapeGPU, 0, 0, numBlades * 4 * 4);
 
-                    indirectBuffer.updateBufferRaw(commandEncoder, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
-                    scene.gpu.pendingCommandBuffers.add(commandEncoder.finish());
+                indirectBuffer.updateBufferRaw(commandEncoder, new Uint32Array([7, (data.buffer.byteLength / 4) * 2]).buffer)
+                scene.gpu.pendingCommandBuffers.add(commandEncoder.finish());
             });
         }).catch(engine.showError)
 

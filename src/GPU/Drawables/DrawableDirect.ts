@@ -3,7 +3,7 @@ import { Drawable } from "./Drawable.js";
 import type { RenderPipeline } from "../RenderPipeline";
 import type { BindGroup } from "../BindGroup.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
-import { VertexBuffer } from "../Buffer.js";
+import { VertexBuffer } from "../Buffer/Buffer.js";
 
 export abstract class DrawableDirect extends Drawable {
     #instanceCount: number;

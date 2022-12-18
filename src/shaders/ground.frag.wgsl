@@ -30,7 +30,7 @@ struct ClusterBounds {
   minAABB : vec3<f32>,
   maxAABB : vec3<f32>
 };
-struct Clusters {
+struct Clusters { //minBindingSize = 1741824 + 27648 +(27648*8) = 7 962 624
   bounds: array<ClusterBounds, 27648>, //32 * 18 * 48 = total tiles = 27648
   lightsCount: array<u32, 27648>,
   lights: array<u32, 1741824>  //27648 * 63 = 1741824

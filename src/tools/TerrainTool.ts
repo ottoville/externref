@@ -30,8 +30,12 @@ function getRenderPipeline(terrain: Terrain): RenderPipeline<VertexShader<[]>> {
     renderPipelines.set(engine.gpu!, renderPipeline);
     return renderPipeline
 }
-export class TerrainToolButton extends UIRectangleNode {
-    static override createCtrProps(props: UIRectangleNodeProps) {
+type TerrainToolButtonState = {subMenu: 'lower' | 'raise' | undefined};
+export class TerrainToolButton extends UIRectangleNode<
+    UIRectangleNodeProps,
+    TerrainToolButtonState
+> {
+    static createCtrPropsTerrainToolButton(props: UIRectangleNodeProps) {
         return {
             ctr: TerrainToolButton,
             props
@@ -42,14 +46,49 @@ export class TerrainToolButton extends UIRectangleNode {
         props: UIRectangleNodeProps,
     ) {
         super(props);
+        this.state = {
+            subMenu: undefined
+        }
+        
+    }
+    #inputListener = (e: KeyboardEvent) => {
+        if(this.state.subMenu === undefined) {
+            if(e.code === "Digit1") {
+                console.log('lower pressed')
+                this.setState({
+                    subMenu: 'lower'
+                })
+            } else if(e.code === "Digit2") {
+                console.log('raise pressed')
+                this.setState({
+                    subMenu: 'raise'
+                })
+            }
+        } else if(e.code === 'Backspace') {
+            this.props.menuTree.level = 1;
+            this.setState({
+                subMenu: undefined
+            })
+        }
     }
     #tool?: TerrainTool
     override render() {
-        super.render()
+        super.render();
+        if(this.state.subMenu === 'lower') {
+            this.#tool?.lower();
+            this.props.menuTree.level = 2;
+
+        } else if(this.state.subMenu === 'raise') {
+            this.#tool?.raise()
+            this.props.menuTree.level = 2;
+        }
         if (this.props.open && !this.#wasOpen) {
             this.#wasOpen = true;
+            console.log('addInputListener keydown')
+            engine.addInputListener('keydown', this, this.#inputListener);
             this.#tool = new TerrainTool(this.props.terrain);
             return [UIRectangleNode.createCtrProps({
+                menuTree: this.props.menuTree,
                 gpu: this.props.gpu,
                 terrain: this.props.terrain,
                 bitmap: this.props.bitmap,
@@ -57,9 +96,14 @@ export class TerrainToolButton extends UIRectangleNode {
                 scale: { min_width: 0.10, y: 0.07 },
                 translate: { x: -0.85, y: 0.8 },
                 open: false,
-                text: 'Lower',
-                onClick: () => this.#tool?.lower()
+                text: 'Lower (1)',
+                onClick: () => {
+                    this.setState({
+                        subMenu: 'lower'
+                    })
+                }
             }), UIRectangleNode.createCtrProps({
+                menuTree: this.props.menuTree,
                 gpu: this.props.gpu,
                 terrain: this.props.terrain,
                 bitmap: this.props.bitmap,
@@ -67,12 +111,18 @@ export class TerrainToolButton extends UIRectangleNode {
                 scale: { min_width: 0.10, y: 0.07 },
                 translate: { x: -0.6, y: 0.8 },
                 open: false,
-                text: 'Raise',
-                onClick: () => this.#tool?.raise()
+                text: 'Raise (2)',
+                onClick: () => {
+                    this.setState({
+                        subMenu: 'raise'
+                    })
+                }
             })]
         } else if (!this.props.open && this.#wasOpen) {
             this.#wasOpen = false;
             this.#tool?.destroy();
+            console.log('remove inputlistener')
+            engine.removeInputListener('keydown', this, this.#inputListener)
         }
         return null
     }
@@ -132,7 +182,6 @@ export class TerrainTool extends MainNode {
     static saveTexture(arrayBuffer: ArrayBuffer, size: readonly [number, number]) {
         terrainWorker.message<ArrayBuffer>(WorkerReturn.Promise, 'saveTexture', { buffer: arrayBuffer, size: size }, [arrayBuffer]);
     }
-    //TERRAIN EDITING DISABLED
     private direction: 1 | 0 | -1 = 0;
     private mouseinterval = 0;
 

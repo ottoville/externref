@@ -1,4 +1,4 @@
-import type { IndirectBuffer, VertexBuffer } from "../Buffer.js";
+import type { IndirectBuffer, VertexBuffer } from "../Buffer/Buffer.js";
 import { Drawable } from "./Drawable.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import type { RenderPipeline, VertexShader } from "../RenderPipeline.js";

@@ -1,7 +1,7 @@
 import { MainNode } from "../../../MainNode.js";
 import { NormalsPipeline } from "../../RenderPipeLines/Normals.js";
 import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
-import { Buffer, GPUBufferUsage } from "../../Buffer.js"
+import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
 import { DrawableIndexed } from "GPU/Drawables/DrawableIndexed.js";
 
 export class NormalsMesh extends MainNode {

@@ -4,7 +4,7 @@ import { DrawableIndexed } from "../Drawables/DrawableIndexed.js";
 import type { Engine, rust_pointer } from "../../engine.js";
 import { TerrainRenderPipeline } from "../RenderPipeLines/Terrain.js";
 declare const engine:Engine;
-import type { IndexBuffer, VertexBuffer} from "../../GPU/Buffer.js";
+import type { IndexBuffer, VertexBuffer} from "../../GPU/Buffer/Buffer.js";
 import { RenderPipeline, VertexShader } from "GPU/RenderPipeline.js";
 import { NormalsMesh } from "./helpers/normals.js";
 import { TextureView } from "GPU/TextureView.js";

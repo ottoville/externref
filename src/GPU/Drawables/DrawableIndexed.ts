@@ -1,6 +1,6 @@
 import type { RenderPipeline, VertexShader } from "../RenderPipeline.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
-import { Buffer, type VertexBuffer, type IndexBuffer, GPUBufferUsage } from "../Buffer.js";
+import { Buffer, type VertexBuffer, type IndexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { Engine } from "../../engine.js";
 import { DrawableDirect } from "./DrawableDirect.js";
 import { BoundableNodeIndexed } from "nodes/BoundableNodeIndexed.js";

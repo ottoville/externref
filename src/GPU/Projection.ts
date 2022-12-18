@@ -1,7 +1,7 @@
 import { TerraMatrix } from "../Math.js";
 import type { GPU } from "../GPU.js";
-import { BindUniformBuffer, Buffer, GPUBufferUsage } from "../GPU/Buffer.js";
-
+import { BindUniformBuffer, Buffer, GPUBufferUsage } from "../GPU/Buffer/Buffer.js";
+export const PROJECTION_BUFFER_SIZE = 224; // 64+64+64+8+4+4+4+4 + ALIGN
 export class Projection {
     readonly projectionReversedZ=new TerraMatrix();
     readonly reversedProjectionFarPlane = new TerraMatrix();
@@ -34,7 +34,7 @@ export class Projection {
 
         if(!initial && this.gpuBuffer)
             this.gpuBuffer.destroy();
-        this.gpuBuffer = Buffer.create(gpu, 64+64+64+8+4+4+4+4, [GPUBufferUsage.UNIFORM],  'uniform_projection', b => {
+        this.gpuBuffer = Buffer.create(gpu, PROJECTION_BUFFER_SIZE, [GPUBufferUsage.UNIFORM],  'uniform_projection', b => {
             const gpuBuffer = b.getMappedRange();
             this.projectionReversedZ.invertToRef(new TerraMatrix(gpuBuffer));
             new TerraMatrix(gpuBuffer,64).set(this.projectionReversedZ);
