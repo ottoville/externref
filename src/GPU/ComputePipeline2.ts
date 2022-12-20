@@ -4,7 +4,8 @@ export class ComputePipeline2<C extends ComputeShader> {
     pipeline: GPUComputePipeline;
     constructor(
         shader: C,
-        entryPoint: C extends ComputeShader<infer X> ? keyof X : never
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        entryPoint: C extends ComputeShader<infer _Y, infer X> ? keyof X : never
     ) {
         this.pipeline = shader.gpu.device.createComputePipeline({
             compute: {

@@ -1,7 +1,6 @@
 import { TerraVector3 } from "../../Math.js";
 import { MainNode } from "../../MainNode.js";
 import { MSAARenderTarget } from "../RenderTargets/MSAARenderTarget.js";
-import { ComputePipeline } from "../ComputePipeline.js";
 import type { BindGroup } from "../BindGroup.js";
 import { type BindUniformBuffer, type CopyDstBuffer, Buffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import { RenderPassProps } from "./RenderPass.js";
@@ -9,6 +8,7 @@ import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
 import { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";
 import { DepthRenderPass } from "./DepthRenderPass.js";
 import type { RenderTargetTextureUsageValue } from "../Texture.js";
+import { ReadDepth } from "../../GPU/Shaders/ReadDepth.comp.js";
 
 export class PickableRenderPass<T extends {
     [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
@@ -17,7 +17,7 @@ export class PickableRenderPass<T extends {
 }> extends DepthRenderPass<T> {
     #pickBuffer: GPUBuffer;
     readonly #pickBufferRead?: GPUBuffer;
-    readonly #pickPositionPipeline?: ComputePipeline;
+    readonly #pickPositionPipeline?: GPUComputePipeline;
     readonly #mousePositionBuffer?: CopyDstBuffer & BindUniformBuffer;
     readonly #pickPositionBindGroup0?: BindGroup;
     readonly #pickPositionBindGroup1?: BindGroup;
@@ -28,7 +28,9 @@ export class PickableRenderPass<T extends {
         ) {
             super(renderPassProps, depthRenderTargets);
             if(renderPassProps.sampleCount == 4) {
-                this.#pickPositionPipeline= new ComputePipeline(renderPassProps.gpu, 'readDepth.comp.wgsl');
+                const readDepthShader = new ReadDepth(renderPassProps.gpu);
+                
+                this.#pickPositionPipeline= readDepthShader.createComputePipeline('main')
 
                 this.#pickBuffer = renderPassProps.gpu.device.createBuffer({
                     size: 4 * 4, //depth + meshID (four pixel)
@@ -41,15 +43,15 @@ export class PickableRenderPass<T extends {
                     label: 'pickBufferRead'
                 });
                 this.#mousePositionBuffer = Buffer.create(renderPassProps.gpu, 8,[GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST],'mousePositionBuffer');
-
-                this.#pickPositionBindGroup0 = this.#pickPositionPipeline.createBindGroup(0,'pickPositionBindGroup0',() => [
+                
+                this.#pickPositionBindGroup0 = readDepthShader.bindLayouts[0].createBindGroup('pickPositionBindGroup0',() => [
                     {
                         binding: 0,
                         resource: {
                             buffer: this.#pickBuffer
                         }
                     }]);
-                this.#pickPositionBindGroup1 = this.#pickPositionPipeline.createBindGroup(1,'pickPositionBindGroup1',(bindGroup) => [
+                this.#pickPositionBindGroup1 = readDepthShader.bindLayouts[1].createBindGroup('pickPositionBindGroup1',(bindGroup) => [
                         {
                             binding: 0,
                             resource: this.depthRenderTarget.view.getTextureBinding(bindGroup),
@@ -120,7 +122,7 @@ export class PickableRenderPass<T extends {
                 });
                 mousePositionSwapBuffer.copyTo(encoder,this.#mousePositionBuffer!,0, 0, 8,);
                 const pickPass = encoder.beginComputePass({label:'pickPass'});
-                pickPass.setPipeline(this.#pickPositionPipeline!.pipeline);
+                pickPass.setPipeline(this.#pickPositionPipeline!);
                 pickPass.setBindGroup(0, this.#pickPositionBindGroup0!.bindGroup);
                 pickPass.setBindGroup(1, this.#pickPositionBindGroup1!.bindGroup);
                 pickPass.dispatchWorkgroups(1);

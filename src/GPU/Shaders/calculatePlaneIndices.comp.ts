@@ -2,12 +2,25 @@ import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLay
 import { PipelineLayout2 } from '../PipelineLayout2.js';
 import { ComputeShader } from './ComputeShader.js';
 
-export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout2 }> {
+export class CalculatePlaneIndices extends ComputeShader<
+[BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>],
+{ main: PipelineLayout2 }> {
   entryPoints: { main: PipelineLayout2; };
   module: GPUShaderModule;
-  bindLayouts: [BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>]
   constructor(settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>) {
-    super(settingsLayout.gpu)
+    const bindLayouts = [
+      settingsLayout,
+      new BindGroupLayout2(settingsLayout.gpu, 'calculateIndicesBindGroupLayout',
+      {
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: {
+          type: "storage",
+          hasDynamicOffset: false,
+          minBindingSize: 32
+        }
+      })
+    ] as const
+    super(settingsLayout.gpu, bindLayouts)
     const wgsl = /* wgsl */ `
       struct Indices {
         numbers: array<u32>
@@ -20,8 +33,8 @@ export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout2
           max : vec2<i32>,  //8
           textureSize: vec2<u32>       //8
       };
-      @binding(0) @group(0) var<uniform> settings : Settings;
-      @binding(0) @group(1) var<storage, read_write> indices : Indices;
+      ${this.groups[0]![0]} settings : Settings;
+      ${this.groups[1]![0]} indices : Indices;
       
       
       @compute @workgroup_size(1)
@@ -41,18 +54,6 @@ export class CalculatePlaneIndices extends ComputeShader<{ main: PipelineLayout2
         return;
       }
       `;
-    this.bindLayouts = [
-      settingsLayout,
-      new BindGroupLayout2(this.gpu, 'calculateIndicesBindGroupLayout',
-      {
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: "storage",
-          hasDynamicOffset: false,
-          minBindingSize: 32
-        }
-      })
-    ]
     const pipelineLayout = new PipelineLayout2({
       label: 'calculatePlaneIndicesPipeline',
       bindGroupLayouts: this.bindLayouts

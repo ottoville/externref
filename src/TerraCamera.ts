@@ -74,7 +74,7 @@ export class TerraCamera {
                 resource: projection.gpuBuffer.getUniformBinding(bindGroup)
             }
             ], new Set([renderPass]));
-        this.updateViewBindGroup = gpu.updateViewPipeline.createBindGroup(gpu.viewUniformsLayout, 'updateViewBindGroup2',
+        this.updateViewBindGroup = gpu.updateViewShader.bindLayouts[1].createBindGroup('updateViewBindGroup2',
             (bindGroup) => [
                 {
                     binding: 0,

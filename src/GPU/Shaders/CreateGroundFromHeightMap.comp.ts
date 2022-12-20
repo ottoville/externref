@@ -2,32 +2,33 @@ import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntr
 import { PipelineLayout2 } from '../PipelineLayout2.js';
 import { ComputeShader } from './ComputeShader.js';
 
-export class CreateGroundFromHeightMap extends ComputeShader<{ main: PipelineLayout2 }> {
+export class CreateGroundFromHeightMap extends ComputeShader<
+[BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture]>],
+{ main: PipelineLayout2 }> {
   entryPoints: { main: PipelineLayout2; };
   module: GPUShaderModule;
-  bindLayouts: [BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture]>]
   constructor(settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>) {
-    super(settingsLayout.gpu);
-    this.bindLayouts = [
-        settingsLayout,
-        new BindGroupLayout2(this.gpu, 'indicesBindGroupLayout',
-        {
+    const bindLayouts = [
+      settingsLayout,
+      new BindGroupLayout2(settingsLayout.gpu, 'indicesBindGroupLayout',
+      {
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: {
+          type: "storage",
+          hasDynamicOffset: false,
+          minBindingSize: 48
+        }
+      },
+      {
           visibility: GPUShaderStage.COMPUTE,
-          buffer: {
-            type: "storage",
-            hasDynamicOffset: false,
-            minBindingSize: 48
+          texture: {
+              
           }
-        },
-        {
-            visibility: GPUShaderStage.COMPUTE,
-            texture: {
-                
-            }
-            
-          })
-      ]
-    const groups = this.getGroups();
+          
+        })
+    ] as const
+    super(settingsLayout.gpu, bindLayouts);
+    
     const wgsl = /* wgsl */ `
     const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0);
 
@@ -50,9 +51,9 @@ export class CreateGroundFromHeightMap extends ComputeShader<{ main: PipelineLay
     struct Pixels {
         pixels: array<u32>
     };
-    ${groups[0]![0]} settings : Settings;
-    ${groups[1]![0]} positions : Vertices;
-    ${groups[1]![1]} pixels : texture_2d<f32>;
+    ${this.groups[0]![0]} settings : Settings;
+    ${this.groups[1]![0]} positions : Vertices;
+    ${this.groups[1]![1]} pixels : texture_2d<f32>;
     
     
     @compute @workgroup_size(1)

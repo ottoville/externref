@@ -2,22 +2,23 @@ import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLay
 import { PipelineLayout2 } from '../PipelineLayout2.js';
 import { ComputeShader } from './ComputeShader.js';
 
-export class CalculateNormals extends ComputeShader<{ main: PipelineLayout2 }> {
+export class CalculateNormals extends ComputeShader<
+[
+  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
+  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
+  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>,
+]
+,
+{ main: PipelineLayout2 }> {
   entryPoints: { main: PipelineLayout2; };
   module: GPUShaderModule;
-  bindLayouts: [
-    BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-    BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-    BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>,
-  ];
   constructor(
     settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
     slopesLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>
     ) {
-    super(settingsLayout.gpu);
-    this.bindLayouts = [
+    const bindLayouts = [
       settingsLayout,
-      new BindGroupLayout2(this.gpu, 'normalsBindGroupLayout',
+      new BindGroupLayout2(settingsLayout.gpu, 'normalsBindGroupLayout',
       {
         visibility: GPUShaderStage.COMPUTE,
         buffer: {
@@ -27,8 +28,8 @@ export class CalculateNormals extends ComputeShader<{ main: PipelineLayout2 }> {
         }
       }),
       slopesLayout
-    ]
-    const groups = this.getGroups();
+    ] as const
+    super(settingsLayout.gpu, bindLayouts);
     const wgsl = /* wgsl */ `
     struct FloatArray {
       numbers: array<f32>
@@ -52,10 +53,10 @@ export class CalculateNormals extends ComputeShader<{ main: PipelineLayout2 }> {
         textureSize:vec2<u32>
    };
    
-   ${groups[0]![0]} settings : Settings;
-   ${groups[1]![0]} normals : FloatArray;
-   ${groups[2]![0]} slopes : Slopes;
-   ${groups[2]![1]} facet12 : PlaneArray;
+   ${this.groups[0]![0]} settings : Settings;
+   ${this.groups[1]![0]} normals : FloatArray;
+   ${this.groups[2]![0]} slopes : Slopes;
+   ${this.groups[2]![1]} facet12 : PlaneArray;
    
    
    @compute @workgroup_size(1)

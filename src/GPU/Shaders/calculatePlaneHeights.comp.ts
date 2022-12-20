@@ -2,16 +2,46 @@ import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLay
 import { PipelineLayout2 } from '../PipelineLayout2.js';
 import { ComputeShader } from './ComputeShader.js';
 
-export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout2 }> {
+export class CalculatePlaneHeights extends ComputeShader<
+[
+  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
+  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
+  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>,
+],
+{ main: PipelineLayout2 }> {
   entryPoints: { main: PipelineLayout2; };
   module: GPUShaderModule;
-  bindLayouts: [
-    BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-    BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-    BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>,
-  ];
   constructor(settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>) {
-    super(settingsLayout.gpu)
+    const bindLayouts = [
+      settingsLayout,
+      new BindGroupLayout2(settingsLayout.gpu, 'verticesBindGroupLayout',
+      {
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: {
+          type: "read-only-storage",
+          hasDynamicOffset: false,
+          minBindingSize: 48
+        }
+      }),
+      new BindGroupLayout2(settingsLayout.gpu, 'slopesAndFacesBindGroupLayout',
+      {
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: {
+          type: "storage",
+          hasDynamicOffset: false,
+          minBindingSize: 32
+        },
+      },
+      {
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: {
+          type: "storage",
+          hasDynamicOffset: false,
+          minBindingSize: 32
+        }
+      })
+    ] as const
+    super(settingsLayout.gpu, bindLayouts)
     const wgsl = /* wgsl */ `
     struct Settings {
       size : vec2<u32>,
@@ -41,10 +71,10 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout2
     struct PlaneArray {
       plane: array<Plane>
     };
-    @binding(0) @group(0) var<uniform> settings : Settings;
-    @binding(0) @group(1) var<storage, read> vertices : Vertices;
-    @binding(0) @group(2) var<storage, read_write> slopes :  IntArray;
-    @binding(1) @group(2) var<storage, read_write> facet12 : PlaneArray;
+    ${this.groups[0]![0]} settings : Settings;
+    ${this.groups[1]![0]} vertices : Vertices;
+    ${this.groups[2]![0]} slopes :  IntArray;
+    ${this.groups[2]![1]} facet12 : PlaneArray;
     
     
     const cd: f32 = -1.0;
@@ -99,35 +129,7 @@ export class CalculatePlaneHeights extends ComputeShader<{ main: PipelineLayout2
         return;
       }
       `;
-    this.bindLayouts = [
-      settingsLayout,
-      new BindGroupLayout2(this.gpu, 'verticesBindGroupLayout',
-      {
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: "read-only-storage",
-          hasDynamicOffset: false,
-          minBindingSize: 48
-        }
-      }),
-      new BindGroupLayout2(this.gpu, 'slopesAndFacesBindGroupLayout',
-      {
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: "storage",
-          hasDynamicOffset: false,
-          minBindingSize: 32
-        },
-      },
-      {
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: "storage",
-          hasDynamicOffset: false,
-          minBindingSize: 32
-        }
-      })
-    ]
+    
     const pipelineLayout = new PipelineLayout2({
       label: 'calculatePlaneHeightsPipeline',
       bindGroupLayouts: this.bindLayouts

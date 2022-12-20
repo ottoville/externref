@@ -2,18 +2,18 @@ import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntr
 import { PipelineLayout2 } from '../PipelineLayout2.js';
 import { ComputeShader } from './ComputeShader.js';
 
-export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout2 }> {
+export class CreateTerrainTexture extends ComputeShader<
+[BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryStorageTexture]>],
+{ main: PipelineLayout2 }> {
   entryPoints: { main: PipelineLayout2; };
   module: GPUShaderModule;
-  bindLayouts: [BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryStorageTexture]>]
   constructor(
     settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
     slopesLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>) {
-    super(settingsLayout.gpu);
-    this.bindLayouts = [
+    const bindLayouts = [
       settingsLayout,
       slopesLayout,
-      new BindGroupLayout2(this.gpu, 'TerrainTextureLayout',
+      new BindGroupLayout2(settingsLayout.gpu, 'TerrainTextureLayout',
         {
           visibility: GPUShaderStage.COMPUTE,
           storageTexture: {
@@ -21,8 +21,9 @@ export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout2 
               format: 'rgba8unorm'
           }
         })
-    ]
-    const groups = this.getGroups();
+    ] as const
+    super(settingsLayout.gpu, bindLayouts);
+
     const wgsl = /* wgsl */ `
     struct Settings {
       size : vec2<u32>,
@@ -142,10 +143,10 @@ export class CreateTerrainTexture extends ComputeShader<{ main: PipelineLayout2 
  }
  
 
- ${groups[0]![0]} settings : Settings;
- ${groups[1]![0]} slopes : IntArray;
- ${groups[1]![1]} facet12 : PlaneArray;
- ${groups[2]![0]} ground_texture: texture_storage_2d<rgba8unorm,write>;
+ ${this.groups[0]![0]} settings : Settings;
+ ${this.groups[1]![0]} slopes : IntArray;
+ ${this.groups[1]![1]} facet12 : PlaneArray;
+ ${this.groups[2]![0]} ground_texture: texture_storage_2d<rgba8unorm,write>;
  
  
  @compute @workgroup_size(1)

@@ -1,5 +1,5 @@
 ﻿import { BindGroup } from "./BindGroup.js";
-import { BindGroupLayout } from "./BindGroupLayout.js";
+import { BindGroupLayout2 } from "./BindGroupLayout2.js";
 import { RenderPipeline } from "./RenderPipeline.js";
 
 export class PipelineLayout2 {
@@ -25,7 +25,7 @@ export class PipelineLayout2 {
             bindGroupLayouts,
         } : {
             label: string;
-            bindGroupLayouts: BindGroupLayout[];
+            bindGroupLayouts: readonly BindGroupLayout2[];
         }) {
         if(!bindGroupLayouts[0]) {
             throw new Error('pipelineLayout needs bindgrouplayouts');

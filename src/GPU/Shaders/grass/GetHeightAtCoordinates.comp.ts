@@ -2,20 +2,20 @@ import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../../BindGroup
 import { PipelineLayout2 } from '../../PipelineLayout2.js';
 import { ComputeShader } from '../ComputeShader.js';
 
-export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout2 }> {
+export class getHeightAtCoordinates extends ComputeShader<
+[
+  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
+  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>,
+  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
+],
+{ main: PipelineLayout2 }> {
   entryPoints: { main: PipelineLayout2; };
   module: GPUShaderModule;
-  bindLayouts: [
-    BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-    BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>,
-    BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-  ];
   constructor(settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>) {
-    super(settingsLayout.gpu);
     //TODO: set actual minBindingSize values other than 32
-    this.bindLayouts = [
+    const bindLayouts = [
       settingsLayout,
-      new BindGroupLayout2(this.gpu, 'slopesBindGroupLayout',
+      new BindGroupLayout2(settingsLayout.gpu, 'slopesBindGroupLayout',
         {
           visibility: GPUShaderStage.COMPUTE,
           buffer: {
@@ -49,7 +49,7 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
           },
         },
       ),
-      new BindGroupLayout2(this.gpu, 'positionsBindGroupLayout',
+      new BindGroupLayout2(settingsLayout.gpu, 'positionsBindGroupLayout',
         {
           visibility: GPUShaderStage.COMPUTE,
           buffer: {
@@ -58,7 +58,8 @@ export class getHeightAtCoordinates extends ComputeShader<{ main: PipelineLayout
             minBindingSize: 32
           },
         })
-    ]
+    ] as const
+    super(settingsLayout.gpu, bindLayouts);
 
     const groups = this.bindLayouts.map((group, gi) => {
       //@binding(0) @group(0) var<storage, read> settings : Settings;
