@@ -3,7 +3,6 @@ import { TerrainTool } from "../tools/TerrainTool.js";
 import { TerrainMesh } from "../GPU/Meshes/Terrain.js";
 import type { PipelineLayout } from "../GPU/PipelineLayout.js";
 import type { Engine } from "../engine.js";
-import { BindGroupLayout } from "../GPU/BindGroupLayout.js";
 import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindUniformBuffer, BindStorageBuffer, VertexBuffer } from "../GPU/Buffer/Buffer.js";
 import type { BindGroup } from "../GPU/BindGroup.js";
 import { TextureUsageEnums } from "../GPU/Texture.js";
@@ -239,27 +238,26 @@ TODO
                 resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup)
             }
         ] as const
-        const heightsLayout = BindGroupLayout.create(engine.gpu, 'terrain',
+        const heightsLayout = new BindGroupLayout2(engine.gpu, 'terrain',
             {
-                binding: 0,
                 visibility: GPUShaderStage.VERTEX,
                 buffer: {
-                    type: "read-only-storage"
-                }
-
+                    type: "read-only-storage",
+                    minBindingSize: 32
+                },
             },
             {
-                binding: 1,
                 visibility: GPUShaderStage.VERTEX,
                 buffer: {
-                    type: "read-only-storage"
+                    type: "read-only-storage",
+                    minBindingSize: 32
                 }
             },
             {
-                binding: 2,
                 visibility: GPUShaderStage.VERTEX,
                 buffer: {
-                    type: "read-only-storage"
+                    type: "read-only-storage",
+                    minBindingSize: 32
                 }
             }
         )

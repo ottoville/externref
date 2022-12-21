@@ -6,7 +6,7 @@ import type { RenderPass } from "./RenderPasses/RenderPass.js";
 export interface GPUBindGroupTextureEntry {
     texture: GPUTextureBindingLayout;
 }
-type MapToGPUBindGroupEntry<T> = {
+export type MapToGPUBindGroupEntry<T> = {
     [K in keyof T]: T[K] extends GPUBindGroupTextureEntry ? { binding: GPUIndex32, resource: GPUTextureView | GPUExternalTexture } : GPUBindGroupEntry };
 
 export type GPUBindGroupLayoutEntryBuffer = Omit<GPUBindGroupLayoutEntry, 'binding'> & {
@@ -14,12 +14,13 @@ export type GPUBindGroupLayoutEntryBuffer = Omit<GPUBindGroupLayoutEntry, 'bindi
 }
 export type GPUBindGroupLayoutEntryTexture = Omit<GPUBindGroupLayoutEntry, 'binding'> & { texture: NonNullable<GPUBindGroupLayoutEntry['texture']> }
 export type GPUBindGroupLayoutEntryStorageTexture = Omit<GPUBindGroupLayoutEntry, 'binding'> & { storageTexture: NonNullable<GPUBindGroupLayoutEntry['storageTexture']> }
+export type GPUBindGroupLayoutEntrySampler = Omit<GPUBindGroupLayoutEntry, 'binding'> & { sampler: NonNullable<GPUBindGroupLayoutEntry['sampler']> }
 
-type GPUBindingGroupLayoytEntryStrict = (GPUBindGroupLayoutEntryBuffer | GPUBindGroupLayoutEntryTexture | GPUBindGroupLayoutEntryStorageTexture)
+export type GPUBindingGroupLayoytEntryStrict = (GPUBindGroupLayoutEntryBuffer | GPUBindGroupLayoutEntryTexture | GPUBindGroupLayoutEntryStorageTexture | GPUBindGroupLayoutEntrySampler)
 export class BindGroupLayout2<T extends GPUBindingGroupLayoytEntryStrict[] = GPUBindingGroupLayoytEntryStrict[]> {
     layout: GPUBindGroupLayout;
     dynamicIndices = false;
-    entries: T;
+    entries: Readonly<T>;
     constructor(public gpu: GPU, label: string, ...entries: T) {
         this.layout = gpu.device.createBindGroupLayout({
             label, entries: entries.map((entry, i) => {

@@ -1,9 +1,9 @@
 ﻿import { BindGroup } from "./BindGroup.js";
-import { BindGroupLayout } from "./BindGroupLayout.js";
+import { BindGroupLayout2, GPUBindingGroupLayoytEntryStrict, MapToGPUBindGroupEntry } from "./BindGroupLayout2.js";
 import { RenderPipeline, Shader, VertexShader } from "./RenderPipeline.js";
 
 
-type extractGeneric<Type> = Type extends BindGroupLayout<infer X> ? X : never
+type extractGeneric<Type> = Type extends BindGroupLayout2<infer X> ? MapToGPUBindGroupEntry<X> : never
 
 export class PipelineLayout {
     subBindGroups: PipelineLayout[] = [];
@@ -23,7 +23,7 @@ export class PipelineLayout {
 
     layout: GPUPipelineLayout;
     #parent: PipelineLayout | undefined
-    bindGroupLayout: BindGroupLayout;
+    bindGroupLayout: BindGroupLayout2;
     sharedBindgroup: BindGroup | undefined;
     constructor(
         {
@@ -35,7 +35,7 @@ export class PipelineLayout {
             debug = false
         } : {
             label: string;
-            bindGroupLayout: BindGroupLayout;
+            bindGroupLayout: BindGroupLayout2;
             parent?: PipelineLayout;
             sharedBindgroup?: BindGroup;
             isRoot?: boolean;
@@ -57,7 +57,7 @@ export class PipelineLayout {
         }
         this.layout = this.bindGroupLayout.gpu.device.createPipelineLayout({ bindGroupLayouts: layoutTree, label });
     }
-    addChildLayout<T extends BindGroupLayout<GPUBindGroupEntry[]>>(label:string, meshBindGroupLayout: T,debug = false): LayoutGroupDrawable<extractGeneric<T>> {
+    addChildLayout<T extends BindGroupLayout2<GPUBindingGroupLayoytEntryStrict[]>>(label:string, meshBindGroupLayout: T,debug = false): LayoutGroupDrawable<extractGeneric<T>> {
         return new LayoutGroupDrawable({
             label, bindGroupLayout: meshBindGroupLayout, parent: this, debug });
     }
@@ -108,9 +108,6 @@ export class LayoutGroupDrawable<T extends GPUBindGroupEntry[]> extends Pipeline
         ) {
         const RP = super.addRenderPipeline(label, vertexShader,fragmentShader,renderPipeline,depthBuffer);
         if (bindGroups) {
-
-            new BindGroup(this.bindGroupLayout, 'sharedBindGroup', bindGroups)
-
             RP.createSharedBindGroups = (): Set<BindGroup> => {
                 return new Set([new BindGroup(this.bindGroupLayout, 'sharedBindGroup', bindGroups)])
             }

@@ -3,7 +3,6 @@ import { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
 
 import { type LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { ColorRenderTarget } from "./GPU/RenderTargets/ColorRenderTarget.js";
-import { BindGroupLayout, type GPUBindGroupTextureEntry } from "./GPU/BindGroupLayout.js";
 import { Projection, PROJECTION_BUFFER_SIZE } from "./GPU/Projection.js";
 import shaders from "./shaders.json" assert { type: "json" };
 import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
@@ -98,7 +97,7 @@ export class GPU {
     readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
     readonly sizeBindGroupLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>;
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
-    readonly bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupTextureEntry<unknown>]>;
+    readonly bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
     readonly #ro: ResizeObserver;
     readonly #canvasRootLayout: PipelineLayout;
     readonly UIPipeline: RenderPipeline<VertexShader<[{
@@ -225,14 +224,14 @@ export class GPU {
             parent: sizePipelineLayout
         });
 
-        const BindGroupLayoutPosition = BindGroupLayout.create(this,
+        const BindGroupLayoutPosition = new BindGroupLayout2(this,
             'BindGroupLayoutPosition',
             {
-                binding: 0,
                 visibility: GPUShaderStage.VERTEX,
                 buffer: {
                     type: "uniform",
-                    hasDynamicOffset: true
+                    hasDynamicOffset: true,
+                    minBindingSize: GPU.gpu_memory_index_size
                 }
             }
         );
@@ -242,36 +241,31 @@ export class GPU {
                 resource: this.GPUMeshes.getUniformBinding(bindGroup, 0, GPU.gpu_memory_index_size)
             }]);
         this.positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout('positionBindGroupTimeWGSL', BindGroupLayoutPosition);
-        this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout('lightsBindGroupTexture2', BindGroupLayout.create(this,
+        this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout('lightsBindGroupTexture2', new BindGroupLayout2(this,
             'lightsBindGroupTexture2',
             {
-                binding: 0,
                 visibility: GPUShaderStage.FRAGMENT,
                 sampler: {
                 },
-            }, {
-            binding: 1,
-            visibility: GPUShaderStage.FRAGMENT,
-            texture: {}
-        }
-        ));
-        this.bindGroupTextureWater = this.positionBindGroupTimeWGSL.addChildLayout('water', BindGroupLayout.create(
-            this,
-            'water',
+            },
             {
-                binding: 0,
                 visibility: GPUShaderStage.FRAGMENT,
-                sampler: {
-                    type: 'non-filtering'
-                }
-            }, {
-            binding: 1,
-            visibility: GPUShaderStage.FRAGMENT,
-            texture: {
-
+                texture: {}
             }
-        }
         ));
+        this.bindGroupTextureWater = this.positionBindGroupTimeWGSL.addChildLayout('water',
+            new BindGroupLayout2(this, 'water',
+                {
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {
+                        type: 'non-filtering'
+                    }
+                },
+                {
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                }
+            ));
 
         this.pickRenderPass = new RenderPass({
             gpu: this,
@@ -406,19 +400,18 @@ export class GPU {
             usage: GPUTextureUsage.RENDER_ATTACHMENT
         });
 
-        const BindGroupLayoutCanvas = BindGroupLayout.create(this, 'BindGroupLayoutUI',
+        const BindGroupLayoutCanvas = new BindGroupLayout2(this, 'BindGroupLayoutUI',
             {
-                binding: 0,
                 visibility: GPUShaderStage.VERTEX,
                 buffer: {
-                    type: "uniform"
-                } as GPUBufferBindingLayout
+                    type: "uniform",
+                    minBindingSize: 8
+                }
             },
             {
-                binding: 1,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {
-                } as GPUTextureBindingLayout
+                }
             }
         )
         this.#canvasRootLayout = new PipelineLayout({
