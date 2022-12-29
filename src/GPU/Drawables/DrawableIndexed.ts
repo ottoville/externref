@@ -1,9 +1,10 @@
-import type { RenderPipeline, VertexShader } from "../RenderPipeline.js";
+import type { VertexShader } from "../RenderPipeline.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import { Buffer, type VertexBuffer, type IndexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { Engine } from "../../engine.js";
 import { DrawableDirect } from "./DrawableDirect.js";
 import { BoundableNodeIndexed } from "nodes/BoundableNodeIndexed.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 declare const engine: Engine;
 
 export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends DrawableDirect {
@@ -51,7 +52,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
         super(
             {
                 renderPipeline,
-                dynamicBindGroups: [[renderPipeline.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, engine.rust.gpu_alignment(node.ptr)]],
+                dynamicBindGroups: [[renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, engine.rust.gpu_alignment(node.ptr)]],
                 label: node.label,
                 renderPasses,
                 instanceCount,
@@ -85,7 +86,7 @@ export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends 
             }
         }
         else {
-            this.#indexBuffer = Buffer.create(this.renderPipeline.bindgroupdrawable.bindGroupLayout.gpu, buffer.byteLength, [GPUBufferUsage.INDEX], 'index_' + this.label, b => {
+            this.#indexBuffer = Buffer.create(this.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu, buffer.byteLength, [GPUBufferUsage.INDEX], 'index_' + this.label, b => {
                 if (buffer.BYTES_PER_ELEMENT == 4) {
                     new Uint32Array(b.getMappedRange()).set(buffer);
                     this.#GPUIndexFormat = 'uint32';

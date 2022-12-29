@@ -1,13 +1,13 @@
 ﻿import type { TerraCamera } from "../../TerraCamera.js";
 import { type GPU } from "../../GPU.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
 import type { Drawable } from "../Drawables/Drawable.js";
 import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
-import type { PipelineLayout } from "../PipelineLayout.js";
 import { type BindUniformBuffer, Buffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { BindGroup } from "../BindGroup.js";
 import { RenderBundleEncoder } from "../RenderBundleEncoder.js";
 import type { RenderTargetTextureUsageValue } from "../Texture.js";
+import { RenderPipelineLayout } from "../PipelineLayout.js";
+import { RenderPipeline } from "GPU/RenderPipeline.js";
 
 
 interface RenderPipelineVariant2 {
@@ -22,7 +22,7 @@ export type RenderPassProps<U> = {
     size: { width: number, height: number };
     getSizeOnResize: (width: number, height: number) => [number, number];
     entryPoint: string;
-    rootLayout: PipelineLayout;
+    rootLayout: RenderPipelineLayout;
     label: string;
     GPURenderBundleEncoderDescriptor?: Partial<GPURenderBundleEncoderDescriptor>
 }
@@ -46,7 +46,7 @@ export class RenderPass<U extends {
     public size: { width: number, height: number };
     #entryPoint: string
     #getSizeOnResize: (width: number, height: number) => [number, number];
-    #rootLayout: PipelineLayout
+    #rootLayout: RenderPipelineLayout
     public label: string
     constructor(
         {
@@ -133,11 +133,11 @@ export class RenderPass<U extends {
     protected onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>): Omit<GPURenderPipelineDescriptor, 'layout'> {
         const renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'layout'> = {
             vertex: {
-                ...renderpipeline.vertexShader,
+                ...renderpipeline.props.vertexShader,
                 entryPoint: this.#entryPoint,
             },
             fragment: {
-                ...renderpipeline.fragmentShader,
+                ...renderpipeline.props.fragmentShader,
                 entryPoint: this.#entryPoint,
                 targets: Object.values(this.colorRenderTargets).map(rt => {
                     const state: GPUColorTargetState = {
@@ -159,10 +159,10 @@ export class RenderPass<U extends {
         renderpipeline: Readonly<RenderPipeline>): GPURenderPipeline {
         return this.gpu.device.createRenderPipeline(
             {
-                ...renderpipeline.renderPipelineDescriptor,
-                layout: renderpipeline.bindgroupdrawable.layout,
+                ...renderpipeline.props.renderPipeline,
+                layout: renderpipeline.props.bindgroupdrawable.layout,
                 ...this.onDecoratePipeline(renderpipeline),
-                label: 'renderPipeline:' + renderpipeline.label + ' RenderPass:' + this.label
+                label: 'renderPipeline:' + renderpipeline.props.label + ' RenderPass:' + this.label
 
             }
         )
@@ -184,7 +184,7 @@ export class RenderPass<U extends {
         return renderPassDescriptor;
     }
 
-    #renderCamera(renderBundleEncoder: RenderBundleEncoder, rootLayout: PipelineLayout, bindGroupStartIndex: number) {
+    #renderCamera(renderBundleEncoder: RenderBundleEncoder, rootLayout: RenderPipelineLayout, bindGroupStartIndex: number) {
         let drawedMeshes = 0;
         rootLayout.renderPipeLines.forEach(renderPipeline => {
             drawedMeshes += renderPipeline.draw(renderBundleEncoder.renderBundleEncoder, this, bindGroupStartIndex);

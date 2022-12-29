@@ -1,10 +1,10 @@
 import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout2.js'
-import { PipelineLayout2 } from '../PipelineLayout2.js';
+import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 export class Clusters extends ComputeShader<
     [BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>],
-    { main: PipelineLayout2 }> {
-    entryPoints: { main: PipelineLayout2; };
+    { main: PipelineLayout }> {
+    entryPoints: { main: PipelineLayout; };
     module: GPUShaderModule;
     constructor(
         sizeGroup: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
@@ -124,7 +124,7 @@ export class Clusters extends ComputeShader<
   
       `;
         ///////////////////////////
-        const pipelineLayout = new PipelineLayout2({
+        const pipelineLayout = new PipelineLayout({
             label: 'ClustersPipeline',
             bindGroupLayouts: this.bindLayouts
         });

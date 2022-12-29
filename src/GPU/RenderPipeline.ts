@@ -1,8 +1,8 @@
-﻿import type { PipelineLayout } from "./PipelineLayout.js";
-import type { RenderPass } from "./RenderPasses/RenderPass.js";
+﻿import type { RenderPass } from "./RenderPasses/RenderPass.js";
 import type { GPU } from "../GPU.js";
 import type shaders from "../shaders.json";
-import { BindGroup } from "./BindGroup.js";
+import type { BindGroup } from "./BindGroup.js";
+import type { RenderPipelineLayout } from "./PipelineLayout.js";
 
 export class Shader {
     module: GPUShaderModule;
@@ -24,21 +24,26 @@ export class VertexShader<B extends VertexBuffers = VertexBuffers> extends Shade
         this.buffers = buffers;
     }
 }
+export type RenderPipelineProps<V extends VertexShader> = {
+    label: string,
+    vertexShader: V,
+    fragmentShader: Shader,
+    renderPipeline: Omit<GPURenderPipelineDescriptor, 'depthStencil' | 'fragment' | 'vertex' | 'layout'>,
+    depthBuffer?: {
+        depthWriteEnabled: boolean, depthCompare: GPUCompareFunction
+    },
+    bindgroupdrawable: RenderPipelineLayout
+}
 export class RenderPipeline<V extends VertexShader = VertexShader> {
 
     dynamicBindGroupOffset: number[] = [];
     public createSharedBindGroups?: () => Set<BindGroup>;
     constructor(
-        public label: string,
-        public vertexShader: V,
-        public fragmentShader: Shader,
-        public renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'vertex' | 'fragment' | 'layout'>,
-        public bindgroupdrawable: PipelineLayout,
-        public depthBuffer?: { depthWriteEnabled: boolean, depthCompare: GPUCompareFunction },
+        public props: Readonly<RenderPipelineProps<V>>,
     ) {
     }
     destroy(): void {
-        this.bindgroupdrawable.renderPipeLines.delete(this);
+        this.props.bindgroupdrawable.renderPipeLines.delete(this);
     }
     draw(renderPassEncoder: GPURenderBundleEncoder | GPURenderPassEncoder,
         renderPass: RenderPass,
@@ -46,12 +51,14 @@ export class RenderPipeline<V extends VertexShader = VertexShader> {
         dynamicIndices: number[] = []): number {
         const variant = renderPass.renderPipelines.get(this)
         if (!variant) {
-            console.warn('No renderPipelines has been set for renderpass', this.label, ', wont draw anything')
+            console.warn('No renderPipelines has been set for renderpass', this.props.label, ', wont draw anything')
             return 0;
         }
         var drawables = variant.rootDrawables;
-        if (!drawables || drawables.size == 0)
+        if (!drawables || drawables.size == 0) {
+            console.warn('No drawables has been set for renderpass', this.props.label, ', wont draw anything')
             return 0;
+        }
 
         renderPassEncoder.setPipeline(variant.renderpipeline);
         //variant.renderpipeline.label && console.log('set Pipeline ', variant.renderpipeline.label)

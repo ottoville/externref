@@ -3,7 +3,8 @@ import type { Scene } from "../Scene.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { WaterRenderPipeline } from "../GPU/RenderPipeLines/Water.js";
 import type { Engine } from "../engine.js";
-import { RenderPipeline, VertexShader } from "../GPU/RenderPipeline.js";
+import { VertexShader } from "../GPU/RenderPipeline.js";
+import { RenderPipeline } from "../GPU/RenderPipeline.js";
 declare const engine:Engine;
 
 export class Sea extends BoundableNodeSimple {

@@ -4,7 +4,8 @@ import { Angle } from "../Math.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import type { Engine } from "../engine.js";
 import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
-import { RenderPipeline, VertexShader } from "GPU/RenderPipeline.js";
+import { VertexShader } from "GPU/RenderPipeline.js";
+import { RenderPipeline } from "GPU/RenderPipeline.js";
 declare const engine:Engine;
 
 //const sundistance = 149600000000;

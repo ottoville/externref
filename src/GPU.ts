@@ -1,12 +1,11 @@
 ﻿import { RenderPass } from "./GPU/RenderPasses/RenderPass.js";
 import { PickableRenderPass } from "./GPU/RenderPasses/PickableRenderPass.js";
 
-import { type LayoutGroupDrawable, PipelineLayout } from "./GPU/PipelineLayout.js";
 import { ColorRenderTarget } from "./GPU/RenderTargets/ColorRenderTarget.js";
 import { Projection, PROJECTION_BUFFER_SIZE } from "./GPU/Projection.js";
 import shaders from "./shaders.json" assert { type: "json" };
 import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
-import { RenderPipeline, Shader, VertexShader } from "./GPU/RenderPipeline.js";
+import { Shader, VertexShader } from "./GPU/RenderPipeline.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer, GPUBufferUsage } from "./GPU/Buffer/Buffer.js";
 
@@ -19,6 +18,8 @@ import { TextureUsageEnums, TextureUsageType } from "./GPU/Texture.js";
 import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from "./GPU/BindGroupLayout2.js";
 import { UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
 import { Clusters } from "./GPU/Shaders/Clusters.comp.js";
+import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
+import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -50,7 +51,7 @@ export class GPU {
     readonly pendingCommandBuffers: Set<GPUCommandBuffer> = new Set();
     readonly tempGPUBuffers: GPUBuffer[] = [];
 
-    readonly rootCameralayout: PipelineLayout;
+    readonly rootCameralayout: BindablePipelineLayout;
 
     readonly projections: Set<Projection> = new Set();
     readonly cameras: TerraCamera[] = []
@@ -59,9 +60,9 @@ export class GPU {
     readonly GPUMeshes: CopySrcBuffer & CopyDstBuffer & BindStorageBuffer & BindUniformBuffer
     readonly #GPUPointLights: CopyDstBuffer & BindStorageBuffer & BindUniformBuffer;
     readonly #GPUDirectionalLights: CopyDstBuffer & BindStorageBuffer
-    readonly positionBindGroupTimeWGSL: LayoutGroupDrawable<[GPUBindGroupEntry]>;
+    readonly positionBindGroupTimeWGSL: BindablePipelineLayout;
 
-    readonly lightsBindGroupTexture2: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
+    readonly lightsBindGroupTexture2: BindablePipelineLayout;
 
     readonly BindGroupPosition: BindGroup;
     readonly timeBuffer: CopyDstBuffer & BindUniformBuffer
@@ -97,9 +98,9 @@ export class GPU {
     readonly pickRenderPass: RenderPass<{ gRenderTargetId: ColorRenderTarget<"r32uint", TextureUsageType["RENDER_ATTACHMENT|TEXTURE_BINDING|COPY_SRC"]>; }>;
     readonly sizeBindGroupLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>;
     static readonly #renderPipelines: Map<string, RenderPipeline> = new Map();
-    readonly bindGroupTextureWater: LayoutGroupDrawable<[GPUBindGroupEntry, GPUBindGroupEntry]>;
+    readonly bindGroupTextureWater: SharedPipelineLayout<[GPUBindGroupEntry, GPUBindGroupEntry]>;
     readonly #ro: ResizeObserver;
-    readonly #canvasRootLayout: PipelineLayout;
+    readonly #canvasRootLayout: BindablePipelineLayout;
     readonly UIPipeline: RenderPipeline<VertexShader<[{
         arrayStride: number; stepMode: "vertex"; attributes: {
             // position
@@ -213,17 +214,10 @@ export class GPU {
                 minBindingSize: 16
             }
         })
-        const sizePipelineLayout = new PipelineLayout({
-            label: 'renderPass',
-            bindGroupLayout: this.sizeBindGroupLayout
-        });
-
-        this.rootCameralayout = new PipelineLayout({
+        this.rootCameralayout = new BindablePipelineLayout({
             label: 'rootCamera',
-            bindGroupLayout: this.uniformBindGroupLayoutWithTime,
-            parent: sizePipelineLayout
+            bindGroupLayouts: [this.sizeBindGroupLayout, this.uniformBindGroupLayoutWithTime],
         });
-
         const BindGroupLayoutPosition = new BindGroupLayout2(this,
             'BindGroupLayoutPosition',
             {
@@ -240,8 +234,8 @@ export class GPU {
                 binding: 0,
                 resource: this.GPUMeshes.getUniformBinding(bindGroup, 0, GPU.gpu_memory_index_size)
             }]);
-        this.positionBindGroupTimeWGSL = this.rootCameralayout.addChildLayout('positionBindGroupTimeWGSL', BindGroupLayoutPosition);
-        this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.addChildLayout('lightsBindGroupTexture2', new BindGroupLayout2(this,
+        this.positionBindGroupTimeWGSL = this.rootCameralayout.createAppendedLayout('positionBindGroupTimeWGSLLayot', BindGroupLayoutPosition)
+        this.lightsBindGroupTexture2 = this.positionBindGroupTimeWGSL.createAppendedLayout('lightsBindGroupTexture2Layout', new BindGroupLayout2(this,
             'lightsBindGroupTexture2',
             {
                 visibility: GPUShaderStage.FRAGMENT,
@@ -253,19 +247,18 @@ export class GPU {
                 texture: {}
             }
         ));
-        this.bindGroupTextureWater = this.positionBindGroupTimeWGSL.addChildLayout('water',
-            new BindGroupLayout2(this, 'water',
-                {
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {
-                        type: 'non-filtering'
-                    }
+        this.bindGroupTextureWater = this.positionBindGroupTimeWGSL.createSharedLayout('lightsBindGroupTexture2PipelineLayout', new BindGroupLayout2(this,
+            'lightsBindGroupTexture2water',
+            {
+                visibility: GPUShaderStage.FRAGMENT,
+                sampler: {
                 },
-                {
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
-                }
-            ));
+            },
+            {
+                visibility: GPUShaderStage.FRAGMENT,
+                texture: {}
+            }
+        ))
 
         this.pickRenderPass = new RenderPass({
             gpu: this,
@@ -414,36 +407,40 @@ export class GPU {
                 }
             }
         )
-        this.#canvasRootLayout = new PipelineLayout({
+        this.#canvasRootLayout = new BindablePipelineLayout({
             label: 'canvasRootLayout',
-            bindGroupLayout: BindGroupLayoutCanvas
+            bindGroupLayouts: [BindGroupLayoutCanvas]
         });
 
-        this.UIPipeline = this.#canvasRootLayout.addRenderPipeline('UIRenderPipeline',
-            new VertexShader(this, 'deferred/UI.vert.wgsl', [
-                {
-                    arrayStride: 4 * 4,
-                    stepMode: "vertex",
-                    attributes: [{
-                        // position
-                        shaderLocation: 0,
-                        offset: 0,
-                        format: "float32x2",
-                    },
+        this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
+            {
+                label: 'UIRenderPipeline',
+                vertexShader: new VertexShader(this, 'deferred/UI.vert.wgsl', [
                     {
-                        // uv
-                        shaderLocation: 1,
-                        offset: 8,
-                        format: "float32x2",
-                    }]
-                }
-            ]),
-            new Shader(this, 'deferred/UI.frag.wgsl'), {
-            primitive: {
-                topology: 'triangle-list',
-                frontFace: 'ccw'
-            },
-        });
+                        arrayStride: 4 * 4,
+                        stepMode: "vertex",
+                        attributes: [{
+                            // position
+                            shaderLocation: 0,
+                            offset: 0,
+                            format: "float32x2",
+                        },
+                        {
+                            // uv
+                            shaderLocation: 1,
+                            offset: 8,
+                            format: "float32x2",
+                        }]
+                    }
+                ]),
+                fragmentShader: new Shader(this, 'deferred/UI.frag.wgsl'),
+                renderPipeline: {
+                    primitive: {
+                        topology: 'triangle-list',
+                        frontFace: 'ccw'
+                    }
+                },
+            });
 
         this.renderPassCanvas = new RenderPass({
             gpu: this,

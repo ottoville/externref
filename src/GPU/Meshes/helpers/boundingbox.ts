@@ -4,9 +4,10 @@ import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
 import { BoundingBoxPipeline } from "../../RenderPipeLines/Boundingbox.js";
 
 import type { Engine } from "../../../engine.js";
-import { RenderPipeline, VertexShader } from "../../RenderPipeline.js";
+import { VertexShader } from "../../RenderPipeline.js";
 import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
 import { DrawableSimple } from "../..//Drawables/DrawableSimple.js";
+import type { RenderPipeline } from "GPU/RenderPipeline.js";
 declare const engine:Engine;
 
 
@@ -42,7 +43,7 @@ export class BoundingBoxMesh extends MainNode {
             vectors_simd[15]!, vectors_simd[19]!, vectors_simd[23]!, 0,
         ]);
         const positions_amount = 26;
-        const gpu = targetNode.renderPipeline.bindgroupdrawable.bindGroupLayout.gpu;
+        const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
         const debug_render_boundingbox_vertexBuffer = Buffer.create(gpu, positions_amount * 4 * Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], 'vertex_debug_bounding_box', b => {
             const view = new Float32Array(b.getMappedRange());
             view.set(vectors);

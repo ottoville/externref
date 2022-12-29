@@ -1,11 +1,11 @@
 import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture } from '../BindGroupLayout2.js'
-import { PipelineLayout2 } from '../PipelineLayout2.js';
+import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
 export class ReadDepth extends ComputeShader<
     [BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryTexture, GPUBindGroupLayoutEntryTexture, GPUBindGroupLayoutEntryBuffer]>],
-    { main: PipelineLayout2 }> {
-    entryPoints: { main: PipelineLayout2; };
+    { main: PipelineLayout }> {
+    entryPoints: { main: PipelineLayout; };
     module: GPUShaderModule;
     constructor(gpu: GPU) {
         const bindLayouts = [
@@ -71,7 +71,7 @@ struct Depth_And_Mesh {
   }  
       `;
         ///////////////////////////
-        const pipelineLayout = new PipelineLayout2({
+        const pipelineLayout = new PipelineLayout({
             label: 'ReadDepthPipeline',
             bindGroupLayouts: this.bindLayouts
         });

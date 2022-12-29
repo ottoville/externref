@@ -1,4 +1,4 @@
-import type { RenderPipeline, VertexShader } from "../GPU/RenderPipeline.js";
+import type { VertexShader } from "../GPU/RenderPipeline.js";
 import type { RenderPass } from "../GPU/RenderPasses/RenderPass.js";
 import { Buffer, GPUBufferUsage } from "../GPU/Buffer/Buffer.js";
 import { TextureView } from "../GPU/TextureView.js";
@@ -7,6 +7,7 @@ import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { Texture, TextureUsageEnums, TextureUsageValue } from "../GPU/Texture.js";
 import { Texture2D, type Texture2dSize } from "../GPU/Texture2D.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
+import { RenderPipeline } from "GPU/RenderPipeline.js";
 declare const engine: Engine;
 
 export type ButtonSize = { min_width: number, y: number }

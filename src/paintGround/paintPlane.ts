@@ -2,14 +2,15 @@
 import type { Terrain } from "../world/terrain.js";
 import { PTResultF } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
-import { RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 
 import { TerraVector2 } from "../Math.js";
 import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 import type { Engine } from "../engine.js";
 import { BoundableNodeIndexed } from "../nodes/BoundableNodeIndexed.js";
-declare const engine:Engine;
+import type { RenderPipeline } from "../GPU/RenderPipeline.js";
+declare const engine: Engine;
 
 
 
@@ -55,7 +56,7 @@ const renderPipelines: Map<GPU, RenderPipeline<VertexShader<[{
     }[];
 }]>>> = new Map();
 export class paintPlane extends paintGround {
-    #mesh:PlaneMesh
+    #mesh: PlaneMesh
     constructor(
         scene: Scene,
         ground: Terrain,
@@ -67,18 +68,24 @@ export class paintPlane extends paintGround {
         });
         let renderPipeline = renderPipelines.get(scene.gpu);
         if (!renderPipeline) {
-            renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline('paintPlaneRenderpipeline', new VertexShader(engine.gpu!,'plane.vert.wgsl', [{
-                arrayStride: 4 * 2,
-                stepMode: "vertex" as GPUVertexStepMode,
-                attributes: [{
-                    // position
-                    shaderLocation: 0,
-                    offset: 0,
-                    format: "float32x2"
-                }]
-            }]), new Shader(engine.gpu!,'UIColor.frag.wgsl'), {
-                primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat:'uint32' },
-            });
+            renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline(
+                {
+                    label: 'paintPlaneRenderpipeline',
+                    vertexShader: new VertexShader(engine.gpu!, 'plane.vert.wgsl', [{
+                        arrayStride: 4 * 2,
+                        stepMode: "vertex" as GPUVertexStepMode,
+                        attributes: [{
+                            // position
+                            shaderLocation: 0,
+                            offset: 0,
+                            format: "float32x2"
+                        }]
+                    }]),
+                    fragmentShader: new Shader(engine.gpu!, 'UIColor.frag.wgsl'),
+                    renderPipeline: {
+                        primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint32' },
+                    }
+                });
             renderPipelines.set(scene.gpu, renderPipeline);
         }
         this.#mesh = new PlaneMesh(renderPipeline, new Float32Array([0, 0, 0]));
@@ -137,10 +144,10 @@ export class paintPlane extends paintGround {
         this.#rowGenerator = null;
         this.#rows = 0;
         this.#columns = Math.floor(height / 10);
-        this.#mesh.translation = [this.#startingPoint[0] - 0.5,5, this.#startingPoint[1] - 1];
-       /* this.#mesh.translation[0] = this.#startingPoint[0] - 0.5
-        this.#mesh.translation[1] = 5;
-        this.#mesh.translation[2] = this.#startingPoint[1] - 1;*/
+        this.#mesh.translation = [this.#startingPoint[0] - 0.5, 5, this.#startingPoint[1] - 1];
+        /* this.#mesh.translation[0] = this.#startingPoint[0] - 0.5
+         this.#mesh.translation[1] = 5;
+         this.#mesh.translation[2] = this.#startingPoint[1] - 1;*/
 
         // const rotQ = Quaternion.RotationYawPitchRoll(this.ang360.rad - Math.PI, 0, 0)
         //Quaternion.RotationYawPitchRollToRef(this.ang360.rad - Math.PI, 0, 0, rotQ);

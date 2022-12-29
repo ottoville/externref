@@ -4,7 +4,8 @@ import { DrawableSimple } from "../Drawables/DrawableSimple.js";
 import { Engine } from "../../engine.js";
 import { SimpleRenderPipeline } from "../RenderPipeLines/Simple.js";
 import { Buffer, VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
-import { RenderPipeline, VertexShader } from "../RenderPipeline.js";
+import { VertexShader } from "../RenderPipeline.js";
+import type { RenderPipeline } from "GPU/RenderPipeline.js";
 
 declare const engine:Engine;
 

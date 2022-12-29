@@ -1,11 +1,11 @@
 import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryStorageTexture } from '../BindGroupLayout2.js'
-import { PipelineLayout2 } from '../PipelineLayout2.js';
+import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
 export class CreateTerrainTexture extends ComputeShader<
 [BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryStorageTexture]>],
-{ main: PipelineLayout2 }> {
-  entryPoints: { main: PipelineLayout2; };
+{ main: PipelineLayout }> {
+  entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
   constructor(
     settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
@@ -181,7 +181,7 @@ export class CreateTerrainTexture extends ComputeShader<
      return;
    }
       `;
-    const pipelineLayout = new PipelineLayout2({
+    const pipelineLayout = new PipelineLayout({
       label: 'CreateTerrainTexturePipeline',
       bindGroupLayouts: this.bindLayouts
     });

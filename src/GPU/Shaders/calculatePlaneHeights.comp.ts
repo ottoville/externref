@@ -1,5 +1,5 @@
 import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout2.js';
-import { PipelineLayout2 } from '../PipelineLayout2.js';
+import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
 export class CalculatePlaneHeights extends ComputeShader<
@@ -8,8 +8,8 @@ export class CalculatePlaneHeights extends ComputeShader<
   BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
   BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>,
 ],
-{ main: PipelineLayout2 }> {
-  entryPoints: { main: PipelineLayout2; };
+{ main: PipelineLayout }> {
+  entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
   constructor(settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>) {
     const bindLayouts = [
@@ -130,7 +130,7 @@ export class CalculatePlaneHeights extends ComputeShader<
       }
       `;
     
-    const pipelineLayout = new PipelineLayout2({
+    const pipelineLayout = new PipelineLayout({
       label: 'calculatePlaneHeightsPipeline',
       bindGroupLayouts: this.bindLayouts
     });

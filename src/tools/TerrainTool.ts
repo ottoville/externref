@@ -2,12 +2,13 @@
 import { WorkerReturn, WorkerThread } from "../WorkerThread.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import { MainNode } from "../MainNode.js";
-import { type RenderPipeline, Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
 import { type GPU } from "../GPU.js"
 import { TerraVector3 } from "../Math.js";
 import type { Engine, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
 import { UIRectangleNode, UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
+import type { RenderPipeline } from "GPU/RenderPipeline.js";
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
@@ -19,18 +20,23 @@ function getRenderPipeline(terrain: Terrain): RenderPipeline<VertexShader<[]>> {
         return renderPipeline;
     }
 
-    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline('TerrainToolRenderpipeline',
-        new VertexShader(engine.gpu!, "helper2.vert.wgsl", []),
-        new Shader(engine.gpu!, 'UIColor.frag.wgsl'), {
-        primitive: {
-            topology: 'triangle-list',
-            cullMode: 'none'
+    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
+        {
+            label: 'TerrainToolRenderpipeline',
+            vertexShader: new VertexShader(engine.gpu!, "helper2.vert.wgsl", []),
+            fragmentShader: new Shader(engine.gpu!, 'UIColor.frag.wgsl'),
+            renderPipeline: {
+                primitive: {
+                    topology: 'triangle-list',
+                    cullMode: 'none'
+                }
+            }
         }
-    })
+    )
     renderPipelines.set(engine.gpu!, renderPipeline);
     return renderPipeline
 }
-type TerrainToolButtonState = {subMenu: 'lower' | 'raise' | undefined};
+type TerrainToolButtonState = { subMenu: 'lower' | 'raise' | undefined };
 export class TerrainToolButton extends UIRectangleNode<
     UIRectangleNodeProps,
     TerrainToolButtonState
@@ -49,22 +55,21 @@ export class TerrainToolButton extends UIRectangleNode<
         this.state = {
             subMenu: undefined
         }
-        
     }
     #inputListener = (e: KeyboardEvent) => {
-        if(this.state.subMenu === undefined) {
-            if(e.code === "Digit1") {
+        if (this.state.subMenu === undefined) {
+            if (e.code === "Digit1") {
                 console.log('lower pressed')
                 this.setState({
                     subMenu: 'lower'
                 })
-            } else if(e.code === "Digit2") {
+            } else if (e.code === "Digit2") {
                 console.log('raise pressed')
                 this.setState({
                     subMenu: 'raise'
                 })
             }
-        } else if(e.code === 'Backspace') {
+        } else if (e.code === 'Backspace') {
             this.props.menuTree.level = 1;
             this.setState({
                 subMenu: undefined
@@ -74,11 +79,11 @@ export class TerrainToolButton extends UIRectangleNode<
     #tool?: TerrainTool
     override render() {
         super.render();
-        if(this.state.subMenu === 'lower') {
+        if (this.state.subMenu === 'lower') {
             this.#tool?.lower();
             this.props.menuTree.level = 2;
 
-        } else if(this.state.subMenu === 'raise') {
+        } else if (this.state.subMenu === 'raise') {
             this.#tool?.raise()
             this.props.menuTree.level = 2;
         }

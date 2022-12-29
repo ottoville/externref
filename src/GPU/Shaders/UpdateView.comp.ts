@@ -1,12 +1,12 @@
 import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout2.js'
-import { PipelineLayout2 } from '../PipelineLayout2.js';
+import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { MeshUniforms } from './structs/MeshUniforms.js';
 import type { GPU } from '../../GPU.js'
 export class UpdateView extends ComputeShader<
     [BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>],
-    { main: PipelineLayout2 }> {
-    entryPoints: { main: PipelineLayout2; };
+    { main: PipelineLayout }> {
+    entryPoints: { main: PipelineLayout; };
     module: GPUShaderModule;
     constructor(
         gpu: GPU) {
@@ -158,7 +158,7 @@ export class UpdateView extends ComputeShader<
         
       `;
         ///////////////////////////
-        const pipelineLayout = new PipelineLayout2({
+        const pipelineLayout = new PipelineLayout({
             label: 'UpdateViewPipeline',
             bindGroupLayouts: this.bindLayouts
         });

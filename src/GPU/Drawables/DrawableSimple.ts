@@ -1,10 +1,11 @@
-import type { RenderPipeline, VertexShader } from "../RenderPipeline.js";
+import type { VertexShader } from "../RenderPipeline.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import type { Engine } from "../../engine.js";
 import { DrawableDirect } from "./DrawableDirect.js";
 import { type DrawableNode, MainNode } from "../../MainNode.js";
 import type { BindGroup } from "../BindGroup.js";
 import type { VertexBuffer } from "../Buffer/Buffer.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 declare const engine: Engine;
 
 export class DrawableSimple<R extends RenderPipeline = RenderPipeline> extends DrawableDirect {
@@ -44,7 +45,7 @@ export class DrawableSimple<R extends RenderPipeline = RenderPipeline> extends D
         const dynamicBindGroups:[BindGroup, number][]=[]
         if(node instanceof MainNode) {
             const dynamicIndex = engine.rust.gpu_alignment(node.ptr);
-            dynamicBindGroups.push([renderPipeline.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, dynamicIndex])
+            dynamicBindGroups.push([renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu.BindGroupPosition, dynamicIndex])
         }
         super({
             renderPipeline,

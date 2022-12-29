@@ -1,9 +1,9 @@
 import { type DrawableNode } from "../../MainNode.js";
 import { Drawable } from "./Drawable.js";
-import type { RenderPipeline } from "../RenderPipeline";
 import type { BindGroup } from "../BindGroup.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import { VertexBuffer } from "../Buffer/Buffer.js";
+import type { RenderPipeline } from "../RenderPipeline.js"
 
 export abstract class DrawableDirect extends Drawable {
     #instanceCount: number;

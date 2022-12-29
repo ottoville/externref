@@ -1,10 +1,10 @@
-﻿import type { RenderPipeline } from "../RenderPipeline.js";
-import type { RenderPass } from "../RenderPasses/RenderPass.js";
+﻿import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import { GPU } from "../../GPU.js"
 import { Buffer, type VertexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 
 import type { Engine } from "../../engine.js";
 import { BindGroup } from "../BindGroup.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 declare const engine: Engine;
 
 
@@ -48,7 +48,7 @@ export abstract class Drawable {
         staticBuffers:(bindGroup: BindGroup) => Iterable<GPUBindGroupEntry>) {
         this.clearBundles();
         this.#staticBindGroup = new BindGroup(
-            this.renderPipeline.bindgroupdrawable.bindGroupLayout,
+            this.renderPipeline.props.bindgroupdrawable.bindGroupLayout,
             label,
             staticBuffers,
             this.#renderPasses
@@ -80,7 +80,7 @@ export abstract class Drawable {
         if (buffer instanceof Buffer)
             var Tbuffer = buffer;
         else {
-            var Tbuffer = Buffer.create(this.renderPipeline.bindgroupdrawable.bindGroupLayout.gpu, buffer.byteLength, [GPUBufferUsage.VERTEX], 'vertex_' + this.label, b => {
+            var Tbuffer = Buffer.create(this.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu, buffer.byteLength, [GPUBufferUsage.VERTEX], 'vertex_' + this.label, b => {
                 new Uint8Array(b.getMappedRange()).set(new Uint8Array(buffer.buffer));
             })
         }

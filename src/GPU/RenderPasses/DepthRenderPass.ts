@@ -1,8 +1,8 @@
 import type { ColorRenderTarget } from "../RenderTargets/ColorRenderTarget.js";
 import { RenderPass, RenderPassProps } from "./RenderPass.js";
-import type { RenderPipeline } from "../RenderPipeline.js";
 import type { DepthRenderTarget } from "../RenderTargets/DepthRenderTarget.js";
 import type { RenderTargetTextureUsageValue } from "../Texture.js";
+import type { RenderPipeline } from "../RenderPipeline.js";
 
 export class DepthRenderPass<T extends {
     [index: string]: ColorRenderTarget<GPUTextureFormat, RenderTargetTextureUsageValue>;
@@ -38,8 +38,8 @@ export class DepthRenderPass<T extends {
         return {
             ...super.onDecoratePipeline(renderpipeline),
             depthStencil: {
-                depthWriteEnabled: renderpipeline.depthBuffer?.depthWriteEnabled ?? true,
-                depthCompare: renderpipeline.depthBuffer?.depthCompare ?? 'greater',
+                depthWriteEnabled: renderpipeline.props.depthBuffer?.depthWriteEnabled ?? true,
+                depthCompare: renderpipeline.props.depthBuffer?.depthCompare ?? 'greater',
                 format: this.depthRenderTarget.format
             }
         }

@@ -10,7 +10,7 @@ export class NormalsMesh extends MainNode {
         const positionsCount = targetNode.node.positions_count * 2
         super({ positionsCount, label: 'NormalsDebug' });
         
-        const gpu = targetNode.renderPipeline.bindgroupdrawable.bindGroupLayout.gpu;
+        const gpu = targetNode.renderPipeline.props.bindgroupdrawable.bindGroupLayout.gpu;
         const vertices = targetNode.node.verticesArray;
         const stride = targetNode.node.vertices_stride;
         const vertexBuffer = Buffer.create(gpu, targetNode.node.positions_count * stride * 2 * Float32Array.BYTES_PER_ELEMENT, [GPUBufferUsage.VERTEX], 'vertex_debug_render_normals', b => {

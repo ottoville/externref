@@ -1,7 +1,6 @@
 ﻿import type { Scene } from "../Scene.js";
 import { TerrainTool } from "../tools/TerrainTool.js";
 import { TerrainMesh } from "../GPU/Meshes/Terrain.js";
-import type { PipelineLayout } from "../GPU/PipelineLayout.js";
 import type { Engine } from "../engine.js";
 import { Buffer, GPUBufferUsage, type CopySrcBuffer, ReadBuffer, WriteBuffer, CopyDstBuffer, BindUniformBuffer, BindStorageBuffer, VertexBuffer } from "../GPU/Buffer/Buffer.js";
 import type { BindGroup } from "../GPU/BindGroup.js";
@@ -16,6 +15,7 @@ import { BindGroupLayout2, type GPUBindGroupLayoutEntryBuffer } from "../GPU/Bin
 import { CreateGroundFromHeightMap } from "../GPU/Shaders/CreateGroundFromHeightMap.comp.js";
 import type { GPU } from '../GPU.js'
 import { CreateTerrainTexture } from "../GPU/Shaders/CreateTerrainTexture.comp.js";
+import { BindablePipelineLayout } from "../GPU/PipelineLayout.js";
 declare const engine: Engine;
 
 
@@ -43,7 +43,7 @@ TODO
 
     readonly mesh: TerrainMesh;
 
-    readonly TerrainHeightsbindGroupTree: PipelineLayout;
+    readonly TerrainHeightsbindGroupTree: BindablePipelineLayout;
     readonly #ready: Promise<void>;
     readonly #terrainIndicesLength = Uint32Array.BYTES_PER_ELEMENT * (Terrain.#subdivisions[0] * Terrain.#subdivisions[1] * 6);
 

@@ -7,8 +7,8 @@ export interface GPUBindGroupTextureEntry {
     texture: GPUTextureBindingLayout;
 }
 export type MapToGPUBindGroupEntry<T> = {
-    [K in keyof T]: T[K] extends GPUBindGroupTextureEntry ? { binding: GPUIndex32, resource: GPUTextureView | GPUExternalTexture } : GPUBindGroupEntry };
-
+    [K in keyof T]: T[K] extends GPUBindGroupTextureEntry ? { binding: GPUIndex32, resource: GPUTextureView | GPUExternalTexture } : 
+    GPUBindGroupEntry };
 export type GPUBindGroupLayoutEntryBuffer = Omit<GPUBindGroupLayoutEntry, 'binding'> & {
     buffer: GPUBufferBindingLayout & { minBindingSize: GPUSize64 }
 }
