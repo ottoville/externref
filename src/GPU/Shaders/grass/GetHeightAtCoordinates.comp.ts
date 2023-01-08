@@ -1,63 +1,68 @@
-import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../../BindGroupLayout2.js'
+import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../../BindGroupLayout.js'
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { ComputeShader } from '../ComputeShader.js';
 
 export class getHeightAtCoordinates extends ComputeShader<
-[
-  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>,
-  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-],
-{ main: PipelineLayout }> {
+  [
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+  ],
+  { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
-  constructor(settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>) {
+  constructor(settingsLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     //TODO: set actual minBindingSize values other than 32
     const bindLayouts = [
       settingsLayout,
-      new BindGroupLayout2(settingsLayout.gpu, 'slopesBindGroupLayout',
-        {
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: {
-            type: "read-only-storage",
-            hasDynamicOffset: false,
-            minBindingSize: 32
-          },
-        },
-        {
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: {
-            type: "read-only-storage",
-            hasDynamicOffset: false,
-            minBindingSize: 32
-          },
-        },
-        {
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: {
-            type: "storage",
-            hasDynamicOffset: false,
-            minBindingSize: 32
-          },
-        },
-        {
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: {
-            type: "storage",
-            hasDynamicOffset: false,
-            minBindingSize: 32
-          },
-        },
+      new BindGroupLayout(settingsLayout.gpu, 'slopesBindGroupLayout',
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "read-only-storage",
+              hasDynamicOffset: false,
+              minBindingSize: 32
+            },
+          }, 'slopes', 'IntArray'),
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "read-only-storage",
+              hasDynamicOffset: false,
+              minBindingSize: 32
+            },
+          }, 'facet12', 'PlaneArray'),
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage",
+              hasDynamicOffset: false,
+              minBindingSize: 32
+            },
+          }, 'positionAndRotate', 'PositionAndRotateArray'),
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage",
+              hasDynamicOffset: false,
+              minBindingSize: 32
+            },
+          }, 'shapes', 'FloatArray'),
       ),
-      new BindGroupLayout2(settingsLayout.gpu, 'positionsBindGroupLayout',
-        {
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: {
-            type: "read-only-storage",
-            hasDynamicOffset: false,
-            minBindingSize: 32
-          },
-        })
+      new BindGroupLayout(settingsLayout.gpu, 'positionsBindGroupLayout',
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "read-only-storage",
+              hasDynamicOffset: false,
+              minBindingSize: 32
+            },
+          }, 'positions', 'Vec2Array'))
     ] as const
     super(settingsLayout.gpu, bindLayouts);
 
@@ -65,11 +70,11 @@ export class getHeightAtCoordinates extends ComputeShader<
       //@binding(0) @group(0) var<storage, read> settings : Settings;
       return group.entries.map((binding, bi) => {
         let qualifiers = '';
-        if(binding.buffer) {
-          if(binding.buffer.type === 'uniform') {
+        if (binding.entry.buffer) {
+          if (binding.entry.buffer.type === 'uniform') {
             qualifiers = '<uniform>';
           }
-          else if(binding.buffer.type === 'read-only-storage') {
+          else if (binding.entry.buffer.type === 'read-only-storage') {
             qualifiers = '<storage, read>';
           } else {
             qualifiers = '<storage, read_write>';
@@ -78,7 +83,6 @@ export class getHeightAtCoordinates extends ComputeShader<
         return `@binding(${bi}) @group(${gi}) var${qualifiers}`
       })
     });
-    console.log('bindings',groups)
     const wgsl = /* wgsl */ `
     struct Vec2Array {
       vectors: array<vec2<f32>>
@@ -238,7 +242,7 @@ export class getHeightAtCoordinates extends ComputeShader<
         return;
     }
       `;
-    
+
     const pipelineLayout = new PipelineLayout({
       label: 'GetHeightAtCoordinatesPipeLine',
       bindGroupLayouts: this.bindLayouts

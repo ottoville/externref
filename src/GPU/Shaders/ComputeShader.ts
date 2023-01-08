@@ -1,8 +1,8 @@
-import type { BindGroupLayout2 } from "../BindGroupLayout2.js";
+import type { BindGroupLayout } from "../BindGroupLayout.js";
 import type { PipelineLayout } from "../PipelineLayout.js";
 import type { GPU } from "../../GPU.js"
 export abstract class ComputeShader<
-B extends BindGroupLayout2[] = BindGroupLayout2[],
+B extends BindGroupLayout[] = BindGroupLayout[],
 E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout }
 > {
     abstract entryPoints: E;
@@ -12,11 +12,11 @@ E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayou
         this.groups = bindLayouts.map((group, gi) => {
             return group.entries.map((binding, bi) => {
                 let qualifiers = '';
-                if (binding.buffer) {
-                    if (binding.buffer.type === 'uniform') {
+                if (binding.entry.buffer) {
+                    if (binding.entry.buffer.type === 'uniform') {
                         qualifiers = '<uniform>';
                     }
-                    else if (binding.buffer.type === 'read-only-storage') {
+                    else if (binding.entry.buffer.type === 'read-only-storage') {
                         qualifiers = '<storage, read>';
                     } else {
                         qualifiers = '<storage, read_write>';
@@ -25,6 +25,7 @@ E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayou
                 return `@binding(${bi}) @group(${gi}) var${qualifiers}`
             })
         });
+
     }
     createComputePipeline(entryPoint: keyof E) {
         return this.gpu.device.createComputePipeline({

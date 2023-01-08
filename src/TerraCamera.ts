@@ -7,7 +7,7 @@ import type { GPU } from "./GPU.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, GPUBufferUsage } from "./GPU/Buffer/Buffer.js";
 import type { CameraController } from "./controllers/CameraController.js";
-import { BindGroupLayout2 } from "GPU/BindGroupLayout2.js";
+import { BindGroupLayout } from "./GPU/BindGroupLayout.js";
 declare const engine: Engine;
 
 export type CameraControl = { updatePosition(cb: (position: TerraVector3) => void): void; updateDirection(cb: (direction: TerraVector3) => void): void; }
@@ -139,7 +139,7 @@ export class TerraCamera {
     get position(): Readonly<{ [0]: number, [1]: number, [2]: number }> {
         return this.#position
     }
-    updateClusters(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: BindGroupLayout2) {
+    updateClusters(passEncoder: GPUComputePassEncoder, computePipelineClustersLayout: BindGroupLayout) {
         //TODO move out from loop
         const bindGroup = computePipelineClustersLayout.createBindGroup('updateProjection', bindGroup2 => [{
             binding: 0,

@@ -2,38 +2,23 @@
 import type { Terrain } from "../world/terrain.js";
 import { PTResultF } from "../types/interfaces/index.js";
 import type { Scene } from "../Scene.js";
-import { Shader, VertexShader } from "../GPU/RenderPipeline.js";
+import { Shader} from "../GPU/RenderPipeline.js";
 import type { GPU } from "../GPU.js";
 
 import { TerraVector2 } from "../Math.js";
 import { DrawableIndexed } from "../GPU/Drawables/DrawableIndexed.js";
 import type { Engine } from "../engine.js";
 import { BoundableNodeIndexed } from "../nodes/BoundableNodeIndexed.js";
-import type { RenderPipeline } from "../GPU/RenderPipeline.js";
+import { PlaneVertShader } from "../GPU/Shaders/Plane.vert.js";
+import { RenderPipeline2 } from "../GPU/RenderPipeline2.js";
 declare const engine: Engine;
 
 
 
 class PlaneMesh extends BoundableNodeIndexed {
     //indices_count=0;
-    drawable: DrawableIndexed<RenderPipeline<VertexShader<[{
-        arrayStride: number;
-        stepMode: GPUVertexStepMode;
-        attributes: {
-            shaderLocation: number;
-            offset: number;
-            format: "float32x2";
-        }[];
-    }]>>>;
-    constructor(renderPipeline: RenderPipeline<VertexShader<[{
-        arrayStride: number;
-        stepMode: GPUVertexStepMode;
-        attributes: {
-            shaderLocation: number;
-            offset: number;
-            format: "float32x2";
-        }[];
-    }]>>, vertexBuffer: Float32Array) {
+    drawable: DrawableIndexed<RenderPipeline2<PlaneVertShader>>;
+    constructor(renderPipeline: RenderPipeline2<PlaneVertShader>, vertexBuffer: Float32Array) {
         super(vertexBuffer, 2,
             new Uint32Array(),
             false, false, undefined, undefined, 'plane', undefined, undefined, false, false, false);
@@ -46,15 +31,7 @@ class PlaneMesh extends BoundableNodeIndexed {
     }
 }
 
-const renderPipelines: Map<GPU, RenderPipeline<VertexShader<[{
-    arrayStride: number;
-    stepMode: GPUVertexStepMode;
-    attributes: {
-        shaderLocation: number;
-        offset: number;
-        format: "float32x2";
-    }[];
-}]>>> = new Map();
+const renderPipelines: Map<GPU, RenderPipeline2<PlaneVertShader>> = new Map();
 export class paintPlane extends paintGround {
     #mesh: PlaneMesh
     constructor(
@@ -68,20 +45,25 @@ export class paintPlane extends paintGround {
         });
         let renderPipeline = renderPipelines.get(scene.gpu);
         if (!renderPipeline) {
-            renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline(
+            const planeVertShader = new PlaneVertShader(
+                [...scene.gpu.worldUniformBindGroupLayouts,
+                    ground.heightsLayout
+                ], {
+                    arrayStride: 4 * 2,
+                    stepMode: "vertex" as GPUVertexStepMode,
+                    attributes: [{
+                        // position
+                        shaderLocation: 0,
+                        offset: 0,
+                        format: "float32x2"
+                    }]
+                }
+            )
+            renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline2(
                 {
                     label: 'paintPlaneRenderpipeline',
-                    vertexShader: new VertexShader(engine.gpu!, 'plane.vert.wgsl', [{
-                        arrayStride: 4 * 2,
-                        stepMode: "vertex" as GPUVertexStepMode,
-                        attributes: [{
-                            // position
-                            shaderLocation: 0,
-                            offset: 0,
-                            format: "float32x2"
-                        }]
-                    }]),
-                    fragmentShader: new Shader(engine.gpu!, 'UIColor.frag.wgsl'),
+                    vertexShader: planeVertShader,
+                    fragmentShader: new Shader(scene.gpu, 'UIColor.frag.wgsl'),
                     renderPipeline: {
                         primitive: { topology: 'triangle-strip', cullMode: 'none', stripIndexFormat: 'uint32' },
                     }

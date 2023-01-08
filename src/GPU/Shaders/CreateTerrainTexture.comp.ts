@@ -1,26 +1,30 @@
-import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryStorageTexture } from '../BindGroupLayout2.js'
+import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryStorageTexture } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
 export class CreateTerrainTexture extends ComputeShader<
-[BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryStorageTexture]>],
-{ main: PipelineLayout }> {
+  [BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryStorageTexture>]>],
+  { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
   constructor(
-    settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-    slopesLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>) {
+    settingsLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    slopesLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     const bindLayouts = [
       settingsLayout,
       slopesLayout,
-      new BindGroupLayout2(settingsLayout.gpu, 'TerrainTextureLayout',
-        {
-          visibility: GPUShaderStage.COMPUTE,
-          storageTexture: {
+      new BindGroupLayout(settingsLayout.gpu, 'TerrainTextureLayout',
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            storageTexture: {
               access: 'write-only',
               format: 'rgba8unorm'
-          }
-        })
+            }
+          }, 'ground_texture', 'texture_storage_2d'
+        ))
     ] as const
     super(settingsLayout.gpu, bindLayouts);
 

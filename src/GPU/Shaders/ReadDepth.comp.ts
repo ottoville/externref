@@ -1,47 +1,52 @@
-import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture } from '../BindGroupLayout2.js'
+import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
 export class ReadDepth extends ComputeShader<
-    [BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryTexture, GPUBindGroupLayoutEntryTexture, GPUBindGroupLayoutEntryBuffer]>],
+    [BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+        BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
     { main: PipelineLayout }> {
     entryPoints: { main: PipelineLayout; };
     module: GPUShaderModule;
     constructor(gpu: GPU) {
         const bindLayouts = [
-            new BindGroupLayout2(gpu, 'DepthAndMeshLayout',
-                {
-                    visibility: GPUShaderStage.COMPUTE,
-                    buffer: {
-                        type: "storage",
-                        hasDynamicOffset: false,
-                        minBindingSize: 16
-                    }
-                }
+            new BindGroupLayout(gpu, 'DepthAndMeshLayout',
+                new BindGroupLayoutEntry(
+                    {
+                        visibility: GPUShaderStage.COMPUTE,
+                        buffer: {
+                            type: "storage",
+                            hasDynamicOffset: false,
+                            minBindingSize: 16
+                        }
+                    }, 'depth_and_mesh', 'Depth_And_Mesh')
             ),
-            new BindGroupLayout2(gpu, 'DepthTextureLayout',
-                {
-                    visibility: GPUShaderStage.COMPUTE,
-                    texture: {
-                        multisampled: true,
-                        sampleType: 'depth'
-                    }
-                },
-                {
-                    visibility: GPUShaderStage.COMPUTE,
-                    texture: {
-                        multisampled: false,
-                        sampleType: 'uint'
-                    }
-                },
-                {
-                    visibility: GPUShaderStage.COMPUTE,
-                    buffer: {
-                        type: 'uniform',
-                        hasDynamicOffset: false,
-                        minBindingSize: 8
-                    }
-                }
+            new BindGroupLayout(gpu, 'DepthTextureLayout',
+                new BindGroupLayoutEntry(
+                    {
+                        visibility: GPUShaderStage.COMPUTE,
+                        texture: {
+                            multisampled: true,
+                            sampleType: 'depth'
+                        }
+                    }, 'depth_texture', 'texture_depth_multisampled_2d'),
+                new BindGroupLayoutEntry(
+                    {
+                        visibility: GPUShaderStage.COMPUTE,
+                        texture: {
+                            multisampled: false,
+                            sampleType: 'uint'
+                        }
+                    }, 'mesh_texture', 'texture_2d'),
+                new BindGroupLayoutEntry(
+                    {
+                        visibility: GPUShaderStage.COMPUTE,
+                        buffer: {
+                            type: 'uniform',
+                            hasDynamicOffset: false,
+                            minBindingSize: 8
+                        }
+                    }, 'mouse', 'Mouse')
             )
         ] as const;
         super(gpu, bindLayouts);

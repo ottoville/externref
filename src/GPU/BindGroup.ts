@@ -1,8 +1,8 @@
-import type { BindGroupLayout2 } from "./BindGroupLayout2.js";
+import type { BindGroupLayout } from "./BindGroupLayout.js";
 import type { RenderBundleEncoder } from "./RenderBundleEncoder.js";
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
 
-export class BindGroup {
+export class BindGroup<L extends BindGroupLayout = BindGroupLayout> {
     #dirty=true;
     #bindGroup: GPUBindGroup;
     readonly #renderBundles: Set<RenderBundleEncoder> = new Set();
@@ -28,7 +28,7 @@ export class BindGroup {
         return this.#bindGroup;
     }
     constructor(
-        public layout: BindGroupLayout2,
+        public layout: L,
         private label: string,
         private entriesf: (bindGroup: BindGroup) => Iterable<GPUBindGroupEntry>,
         readonly renderPasses: Set<RenderPass> = new Set()) {

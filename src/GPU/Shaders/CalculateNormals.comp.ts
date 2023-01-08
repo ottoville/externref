@@ -1,64 +1,71 @@
-import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout2.js';
+import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
 export class CalculateNormals extends ComputeShader<
-[
-  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>,
-]
-,
-{ main: PipelineLayout }> {
+  [
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+  ]
+  ,
+  { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
   constructor(
-    settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-    slopesLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>
-    ) {
+    settingsLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    slopesLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>
+  ) {
     const bindLayouts = [
       settingsLayout,
-      new BindGroupLayout2(settingsLayout.gpu, 'normalsBindGroupLayout',
-      {
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: "storage",
-          hasDynamicOffset: false,
-          minBindingSize: 32
-        }
-      }),
+      new BindGroupLayout(settingsLayout.gpu, 'normalsBindGroupLayout',
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage",
+              hasDynamicOffset: false,
+              minBindingSize: 32
+            }
+          }, 'normals', 'FloatArray')),
       slopesLayout
     ] as const
     super(settingsLayout.gpu, bindLayouts);
+
+
+    /////////////////
+
     const wgsl = /* wgsl */ `
-    struct FloatArray {
-      numbers: array<f32>
-   };
-    struct Plane {
-      norm : vec3<f32>,
-      d : f32
-   };
-   struct PlaneArray {
-     plane: array<Plane>
-   };
-   struct Slopes {
-      numbers: array<i32>
-   };
-   struct Settings {
-        size : vec2<u32>,
-        bufferSize : vec2<u32>,
-        subdivisions : u32,
-        heightMinMax : vec2<i32>,
-        max : vec2<i32>,
-        textureSize:vec2<u32>
-   };
+
    
    ${this.groups[0]![0]} settings : Settings;
    ${this.groups[1]![0]} normals : FloatArray;
    ${this.groups[2]![0]} slopes : Slopes;
    ${this.groups[2]![1]} facet12 : PlaneArray;
    
-   
+   struct FloatArray {
+    numbers: array<f32>
+ };
+  struct Plane {
+    norm : vec3<f32>,
+    d : f32
+ };
+ struct PlaneArray {
+   plane: array<Plane>
+ };
+ struct Slopes {
+    numbers: array<i32>
+ };
+ struct Settings {
+      size : vec2<u32>,
+      bufferSize : vec2<u32>,
+      subdivisions : u32,
+      heightMinMax : vec2<i32>,
+      max : vec2<i32>,
+      textureSize:vec2<u32>
+ };
+
+
    @compute @workgroup_size(1)
    fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
        let stride : u32 = 12u;
@@ -117,6 +124,9 @@ export class CalculateNormals extends ComputeShader<
        return;
     }
       `;
+
+    /////////////////////////////////
+
     const pipelineLayout = new PipelineLayout({
       label: 'calculateNormalsPipeline',
       bindGroupLayouts: this.bindLayouts

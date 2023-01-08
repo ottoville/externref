@@ -1,38 +1,40 @@
-import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout2.js'
+import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 export class Clusters extends ComputeShader<
-    [BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>, BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>],
-    { main: PipelineLayout }> {
-    entryPoints: { main: PipelineLayout; };
-    module: GPUShaderModule;
-    constructor(
-        sizeGroup: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-        ) {
-        const bindLayouts = [
-            sizeGroup,
-            new BindGroupLayout2(sizeGroup.gpu, 'CreateClustersLayout2',
-            {
-                visibility: GPUShaderStage.COMPUTE,
-                buffer: {
-                    type: "storage",
-                    hasDynamicOffset: false,
-                    minBindingSize: 7962624
-                }
-            },
-            {
-                visibility: GPUShaderStage.COMPUTE,
-                buffer: {
-                    type: 'uniform',
-                    hasDynamicOffset: false,
-                    minBindingSize: 208
-                }
+  [BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>, BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
+  { main: PipelineLayout }> {
+  entryPoints: { main: PipelineLayout; };
+  module: GPUShaderModule;
+  constructor(
+    sizeGroup: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+  ) {
+    const bindLayouts = [
+      sizeGroup,
+      new BindGroupLayout(sizeGroup.gpu, 'CreateClustersLayout2',
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage",
+              hasDynamicOffset: false,
+              minBindingSize: 7962624
             }
-        )
-        ] as const;
-        super(sizeGroup.gpu, bindLayouts);
-        /////////////////
-        const wgsl = /* wgsl */ `
+          }, 'clusters', 'clusterArray'),
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: 'uniform',
+              hasDynamicOffset: false,
+              minBindingSize: 208
+            }
+          }, 'screentoview', 'Projection')
+      )
+    ] as const;
+    super(sizeGroup.gpu, bindLayouts);
+    /////////////////
+    const wgsl = /* wgsl */ `
     
         //ssbo initialization
  struct VolumeTileAABB {
@@ -123,19 +125,19 @@ export class Clusters extends ComputeShader<
   }
   
       `;
-        ///////////////////////////
-        const pipelineLayout = new PipelineLayout({
-            label: 'ClustersPipeline',
-            bindGroupLayouts: this.bindLayouts
-        });
-        this.entryPoints = {
-            main: pipelineLayout
-        }
-        this.module = this.gpu.device.createShaderModule(
-            {
-                code: wgsl,
-                label: 'Clusters.comp',
-                hints: this.entryPoints
-            });
+    ///////////////////////////
+    const pipelineLayout = new PipelineLayout({
+      label: 'ClustersPipeline',
+      bindGroupLayouts: this.bindLayouts
+    });
+    this.entryPoints = {
+      main: pipelineLayout
     }
+    this.module = this.gpu.device.createShaderModule(
+      {
+        code: wgsl,
+        label: 'Clusters.comp',
+        hints: this.entryPoints
+      });
+  }
 }

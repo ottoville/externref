@@ -3,11 +3,12 @@ import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import { Buffer, type VertexBuffer, type IndexBuffer, GPUBufferUsage } from "../Buffer/Buffer.js";
 import type { Engine } from "../../engine.js";
 import { DrawableDirect } from "./DrawableDirect.js";
-import { BoundableNodeIndexed } from "nodes/BoundableNodeIndexed.js";
+import { BoundableNodeIndexed } from "../../nodes/BoundableNodeIndexed.js";
 import type { RenderPipeline } from "../RenderPipeline.js";
+import { RenderPipeline2 } from "../RenderPipeline2.js";
 declare const engine: Engine;
 
-export class DrawableIndexed<R extends RenderPipeline = RenderPipeline> extends DrawableDirect {
+export class DrawableIndexed<R extends RenderPipeline | RenderPipeline2 = RenderPipeline> extends DrawableDirect {
     node: BoundableNodeIndexed;
     #indexBuffer: IndexBuffer | undefined
     #baseVertex: number;

@@ -134,7 +134,7 @@ export class ArcRotateCamera extends CameraController {
                     this.#targetMovingTo = position.position;
                     this.#targetLerpPosition = 0;
                 }
-            }).catch(engine.showError)
+            }).catch(err => engine.showError(err))
         }
         engine.addInputListener('pointermove', this, this.#cameraMove);
         const onceUp = () => {

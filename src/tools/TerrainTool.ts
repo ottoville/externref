@@ -8,39 +8,14 @@ import { TerraVector3 } from "../Math.js";
 import type { Engine, rust_pointer } from "../engine.js";
 import type { Scene } from "../Scene.js";
 import { UIRectangleNode, UIRectangleNodeProps } from "../ui/UIRectangleNode.js";
-import type { RenderPipeline } from "GPU/RenderPipeline.js";
+import type { RenderPipeline } from "../GPU/RenderPipeline.js";
+import { HelperVertShader } from "../GPU/Shaders/helper.vert.js";
 declare const engine: Engine;
 
 const terrainWorker = new WorkerThread('terrainWorker.js');
-const renderPipelines: Map<GPU, RenderPipeline<VertexShader<[]>>> = new Map();
 
-function getRenderPipeline(terrain: Terrain): RenderPipeline<VertexShader<[]>> {
-    let renderPipeline = renderPipelines.get(engine.gpu!);
-    if (renderPipeline) {
-        return renderPipeline;
-    }
-
-    renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
-        {
-            label: 'TerrainToolRenderpipeline',
-            vertexShader: new VertexShader(engine.gpu!, "helper2.vert.wgsl", []),
-            fragmentShader: new Shader(engine.gpu!, 'UIColor.frag.wgsl'),
-            renderPipeline: {
-                primitive: {
-                    topology: 'triangle-list',
-                    cullMode: 'none'
-                }
-            }
-        }
-    )
-    renderPipelines.set(engine.gpu!, renderPipeline);
-    return renderPipeline
-}
 type TerrainToolButtonState = { subMenu: 'lower' | 'raise' | undefined };
-export class TerrainToolButton extends UIRectangleNode<
-    UIRectangleNodeProps,
-    TerrainToolButtonState
-> {
+export class TerrainToolButton extends UIRectangleNode<TerrainToolButtonState> {
     static createCtrPropsTerrainToolButton(props: UIRectangleNodeProps) {
         return {
             ctr: TerrainToolButton,
@@ -144,7 +119,28 @@ export class TerrainTool extends MainNode {
         super({ positionsCount: 4, label: 'TerrainTool' });
 
 
-        const renderPipeline = getRenderPipeline(terrain);
+        const getRenderPipeline = ['TerrainToolRenderpipeline', function getRenderPipelinef(gpu: GPU, label: string, primitive: GPUPrimitiveState,
+        ) {
+            //const helperVertShader = new HelperVertShader(terrain.heightsLayout);
+            const helperVertShader = new HelperVertShader(terrain.TerrainHeightsbindGroupTree.bindGroupLayouts);
+            
+            const renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline2(
+                {
+                    label,
+                    vertexShader: helperVertShader,
+                    fragmentShader: new Shader(gpu, 'UIColor.frag.wgsl'),
+                    renderPipeline: {
+                        primitive
+                    }
+                }
+            )
+            return renderPipeline
+        }] as const
+
+        const renderPipeline = terrain.gpu.createRenderPipeline(getRenderPipeline, {
+            topology: 'triangle-list',
+            cullMode: 'none'
+        })
         const scene = engine.scenes.get('main');
         if (!scene)
             throw (new Error('no scene'));
@@ -214,7 +210,6 @@ export class TerrainTool extends MainNode {
         engine.clearInputListeners(this);
         //There is only one mesh in this renderpipeline so destroy the pipeline and release its memory
         super.destroy();
-        renderPipelines.delete(engine.gpu!);
     };
     #mouseListener = () => {
         /*this.terrain.mesh.intersectsRay(this.scene.TerraCameras[0].pickingRay).then(() => {

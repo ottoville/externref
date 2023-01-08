@@ -7,7 +7,9 @@ import type { BindGroup } from "../BindGroup.js";
 import { RenderBundleEncoder } from "../RenderBundleEncoder.js";
 import type { RenderTargetTextureUsageValue } from "../Texture.js";
 import { RenderPipelineLayout } from "../PipelineLayout.js";
-import { RenderPipeline } from "GPU/RenderPipeline.js";
+import { RenderPipeline } from "../RenderPipeline.js";
+import { RenderPipeline2 } from "../RenderPipeline2.js";
+//import { VertexShader } from "GPU/Shaders/VertexShader.js";
 
 
 interface RenderPipelineVariant2 {
@@ -36,7 +38,7 @@ export class RenderPass<U extends {
     readonly perspectiveCameras: Set<TerraCamera> = new Set();
 
     readonly bundles: RenderBundleEncoder[] = [];
-    readonly renderPipelines: Map<Readonly<RenderPipeline>, RenderPipelineVariant2> = new Map();
+    readonly renderPipelines: Map<Readonly<RenderPipeline | RenderPipeline2>, RenderPipelineVariant2 | Promise<RenderPipelineVariant2>> = new Map();
     readonly sizeBindGroup: () => BindGroup;
     #sizeBuffer: BindUniformBuffer;
     readonly colorRenderTargets = {} as U
@@ -117,20 +119,25 @@ export class RenderPass<U extends {
 
         return this.#sizeBuffer;
     }
-    getVariant(renderPipeline: Readonly<RenderPipeline>) {
-        let variant = this.renderPipelines.get(renderPipeline)
+    getVariant(renderPipeline: Readonly<RenderPipeline | RenderPipeline2>) {
+        let variant = this.renderPipelines.get(renderPipeline);
         if (!variant) {
-            const renderpipeline = this.#decoratePipeline(renderPipeline);
-            variant = {
-                renderpipeline: renderpipeline,
-                rootDrawables: new Set()
-            }
+            variant = this.#decoratePipeline(renderPipeline).then(renderpipeline => {
+                const variant2 = {
+                    renderpipeline: renderpipeline,
+                    rootDrawables: new Set<Drawable>()
+                }
+                // Replace promise with real object
+                this.renderPipelines.set(renderPipeline, variant2)
+                return variant2
+            });
+            // Save promise
             this.renderPipelines.set(renderPipeline, variant)
         }
         return variant;
     }
 
-    protected onDecoratePipeline(renderpipeline: Readonly<RenderPipeline>): Omit<GPURenderPipelineDescriptor, 'layout'> {
+    protected onDecoratePipeline(renderpipeline: Readonly<RenderPipeline | RenderPipeline2>): Omit<GPURenderPipelineDescriptor, 'layout'> {
         const renderPipelineDescriptor: Omit<GPURenderPipelineDescriptor, 'layout'> = {
             vertex: {
                 ...renderpipeline.props.vertexShader,
@@ -156,16 +163,17 @@ export class RenderPass<U extends {
         return renderPipelineDescriptor;
     }
     #decoratePipeline(
-        renderpipeline: Readonly<RenderPipeline>): GPURenderPipeline {
-        return this.gpu.device.createRenderPipeline(
-            {
-                ...renderpipeline.props.renderPipeline,
-                layout: renderpipeline.props.bindgroupdrawable.layout,
-                ...this.onDecoratePipeline(renderpipeline),
-                label: 'renderPipeline:' + renderpipeline.props.label + ' RenderPass:' + this.label
-
-            }
-        )
+        renderpipeline: Readonly<RenderPipeline | RenderPipeline2>) {
+            return this.gpu.device.createRenderPipelineAsync(
+                {
+                    ...renderpipeline.props.renderPipeline,
+                    layout: renderpipeline.props.bindgroupdrawable.layout,
+                    ...this.onDecoratePipeline(renderpipeline),
+                    label: 'renderPipeline:' + renderpipeline.props.label + ' RenderPass:' + this.label
+                }
+            )/*.catch ((err: unknown) => {
+                throw (new Error('createRenderPipelineAsync failed, wgsl: '+(renderpipeline.props.vertexShader as VertexShader).wgsl, {cause: err}));
+            });*/
     }
     resize(width: number, height: number) {
         [this.size.width, this.size.height] = this.#getSizeOnResize(width, height);

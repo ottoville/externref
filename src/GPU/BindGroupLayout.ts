@@ -16,8 +16,25 @@ export type GPUBindGroupLayoutEntryTexture = Omit<GPUBindGroupLayoutEntry, 'bind
 export type GPUBindGroupLayoutEntryStorageTexture = Omit<GPUBindGroupLayoutEntry, 'binding'> & { storageTexture: NonNullable<GPUBindGroupLayoutEntry['storageTexture']> }
 export type GPUBindGroupLayoutEntrySampler = Omit<GPUBindGroupLayoutEntry, 'binding'> & { sampler: NonNullable<GPUBindGroupLayoutEntry['sampler']> }
 
-export type GPUBindingGroupLayoytEntryStrict = (GPUBindGroupLayoutEntryBuffer | GPUBindGroupLayoutEntryTexture | GPUBindGroupLayoutEntryStorageTexture | GPUBindGroupLayoutEntrySampler)
-export class BindGroupLayout2<T extends GPUBindingGroupLayoytEntryStrict[] = GPUBindingGroupLayoytEntryStrict[]> {
+export type GPUBindingGroupLayoytEntryStrict =
+    (GPUBindGroupLayoutEntryBuffer
+        | GPUBindGroupLayoutEntryTexture
+        | GPUBindGroupLayoutEntryStorageTexture 
+        | GPUBindGroupLayoutEntrySampler)
+
+export class BindGroupLayoutEntry<T extends GPUBindingGroupLayoytEntryStrict = GPUBindingGroupLayoytEntryStrict> {
+    constructor(
+        public entry: T,
+        public variableName: string,
+        public structName: string) {
+    }
+}
+
+export type BufferLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>
+export type SamplerLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntrySampler>
+export type TextureLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>
+
+export class BindGroupLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutEntry[]> {
     layout: GPUBindGroupLayout;
     dynamicIndices = false;
     entries: Readonly<T>;
@@ -25,14 +42,14 @@ export class BindGroupLayout2<T extends GPUBindingGroupLayoytEntryStrict[] = GPU
         this.layout = gpu.device.createBindGroupLayout({
             label, entries: entries.map((entry, i) => {
                 return {
-                    ...entry,
+                    ...entry.entry,
                     binding: i
                 }
             })
         });
         this.entries = entries;
         for (const e of entries) {
-            if (e.buffer && e.buffer.hasDynamicOffset) {
+            if (e.entry.buffer && e.entry.buffer.hasDynamicOffset) {
                 this.dynamicIndices = true;
                 break;
             }
@@ -41,7 +58,7 @@ export class BindGroupLayout2<T extends GPUBindingGroupLayoytEntryStrict[] = GPU
     createBindGroup(
         label: string,
         entries: (bindGroup: BindGroup) => Readonly<MapToGPUBindGroupEntry<T>>,
-        renderPasses?: Set<RenderPass>): BindGroup {
-        return new BindGroup(this, label, entries, renderPasses)
+        renderPasses?: Set<RenderPass>): BindGroup<BindGroupLayout<T>> {
+        return new BindGroup<typeof this>(this, label, entries, renderPasses)
     }
 }

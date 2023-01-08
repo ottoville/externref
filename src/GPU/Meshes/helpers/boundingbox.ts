@@ -6,8 +6,8 @@ import { BoundingBoxPipeline } from "../../RenderPipeLines/Boundingbox.js";
 import type { Engine } from "../../../engine.js";
 import { VertexShader } from "../../RenderPipeline.js";
 import { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
-import { DrawableSimple } from "../..//Drawables/DrawableSimple.js";
-import type { RenderPipeline } from "GPU/RenderPipeline.js";
+import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
+import type { RenderPipeline } from "../../RenderPipeline.js";
 declare const engine:Engine;
 
 

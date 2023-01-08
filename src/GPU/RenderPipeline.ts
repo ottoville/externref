@@ -54,6 +54,10 @@ export class RenderPipeline<V extends VertexShader = VertexShader> {
             console.warn('No renderPipelines has been set for renderpass', this.props.label, ', wont draw anything')
             return 0;
         }
+        if(!('rootDrawables' in variant)) {
+            //There is unresolved promise
+            return 0;
+        }
         var drawables = variant.rootDrawables;
         if (!drawables || drawables.size == 0) {
             console.warn('No drawables has been set for renderpass', this.props.label, ', wont draw anything')

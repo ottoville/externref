@@ -3,9 +3,10 @@ import { NormalsPipeline } from "../../RenderPipeLines/Normals.js";
 import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
 import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
 import { DrawableIndexed } from "GPU/Drawables/DrawableIndexed.js";
+import { RenderPipeline } from "GPU/RenderPipeline.js";
 
 export class NormalsMesh extends MainNode {
-    drawable: DrawableSimple | undefined;
+    drawable: DrawableSimple<RenderPipeline> | undefined;
     constructor(targetNode: DrawableIndexed) {
         const positionsCount = targetNode.node.positions_count * 2
         super({ positionsCount, label: 'NormalsDebug' });
@@ -27,6 +28,6 @@ export class NormalsMesh extends MainNode {
             renderPipeline,
             renderPasses: undefined,
             vertexBuffers: [vertexBuffer]
-        })
+        });
     }
 }

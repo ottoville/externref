@@ -1,45 +1,48 @@
-import { BindGroupLayout2, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout2.js';
+import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
 export class CalculatePlaneHeights extends ComputeShader<
-[
-  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>,
-  BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryBuffer]>,
-],
-{ main: PipelineLayout }> {
+  [
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+  ],
+  { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
-  constructor(settingsLayout: BindGroupLayout2<[GPUBindGroupLayoutEntryBuffer]>) {
+  constructor(settingsLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     const bindLayouts = [
       settingsLayout,
-      new BindGroupLayout2(settingsLayout.gpu, 'verticesBindGroupLayout',
-      {
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: "read-only-storage",
-          hasDynamicOffset: false,
-          minBindingSize: 48
-        }
-      }),
-      new BindGroupLayout2(settingsLayout.gpu, 'slopesAndFacesBindGroupLayout',
-      {
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: "storage",
-          hasDynamicOffset: false,
-          minBindingSize: 32
-        },
-      },
-      {
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: "storage",
-          hasDynamicOffset: false,
-          minBindingSize: 32
-        }
-      })
+      new BindGroupLayout(settingsLayout.gpu, 'verticesBindGroupLayout',
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "read-only-storage",
+              hasDynamicOffset: false,
+              minBindingSize: 48
+            }
+          }, 'vertices', 'Vertices')),
+      new BindGroupLayout(settingsLayout.gpu, 'slopesAndFacesBindGroupLayout',
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage",
+              hasDynamicOffset: false,
+              minBindingSize: 32
+            },
+          }, 'slopes', 'IntArray'),
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage",
+              hasDynamicOffset: false,
+              minBindingSize: 32
+            }
+          }, 'facet12', 'PlaneArray'))
     ] as const
     super(settingsLayout.gpu, bindLayouts)
     const wgsl = /* wgsl */ `
@@ -129,7 +132,7 @@ export class CalculatePlaneHeights extends ComputeShader<
         return;
       }
       `;
-    
+
     const pipelineLayout = new PipelineLayout({
       label: 'calculatePlaneHeightsPipeline',
       bindGroupLayouts: this.bindLayouts

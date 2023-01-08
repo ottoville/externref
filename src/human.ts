@@ -4,6 +4,7 @@ import { ARROW_KEYS, MeshCamera } from "./controllers/MeshCamera.js";
 import type { Engine } from "./engine.js";
 import { Box } from "./GPU/Meshes/Box.js";
 import type { Scene } from "./Scene.js";
+import { BoundingBoxMesh } from "./GPU/Meshes/helpers/boundingbox.js";
 declare const engine: Engine;
 const maxAcceleration = 10;
 export const closeDistance = 0.0022
@@ -21,6 +22,10 @@ export class Human extends Box {
 
     constructor(properties: { scenes: Scene[], inputEnabled: boolean }) {
         super({ ...properties, point_light: 400, can_collide: false, label: 'human' });
+        //@ts-expect-error
+        window.debug_bounding_box=() => {
+            new BoundingBoxMesh(this.drawable!)
+        }
         engine.physics.tickables.push(this);
         this.hasGravity = true;
         //this.velocity=[0,-5,0];

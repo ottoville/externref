@@ -69,7 +69,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
             UIRectangleNode.createCtrProps({
                 ...commonProps,
                 open: this.state.menuOpenName === 'Plants',
-                label: 'UIButton',
+                label: 'Plants',
                 scale: { min_width: 0.07, y: 0.07 },
                 translate: { x: -0.9, y: 0.9 },
                 text: 'Plants (1)',
@@ -94,7 +94,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                 {
                     ...commonProps,
                     open: this.state.menuOpenName === 'Terrain',
-                    label: 'TerrainButton',
+                    label: 'Terrain',
                     scale: { min_width: 0.07, y: 0.07 },
                     translate: { x: -0.75, y: 0.9 },
                     text: 'Terrain (2)',
@@ -105,7 +105,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
                 {
                     ...commonProps,
                     open: this.state.menuOpenName === 'Zones',
-                    label: 'ZonesButton',
+                    label: 'Zones',
                     scale: { min_width: 0.07, y: 0.07 },
                     translate: { x: -0.6, y: 0.9 },
                     text: 'Zones (3)',
@@ -115,6 +115,7 @@ export class createTopMenu extends UINode<{ gpu: GPU, terrain: Terrain }, MenuSt
         ]
     }
     setActiveMenu = (menuName: string) => {
+        console.log('setActiveMenu', this.state.menuOpenName === menuName ? undefined : menuName)
         this.setState({
             menuOpenName: this.state.menuOpenName === menuName ? undefined : menuName
         })

@@ -19,7 +19,7 @@ export type UIRectangleNodeProps = {
         props: UIRectangleNodeProps;
     } | null)[] | null
 }
-export class UIRectangleNode<P extends UIRectangleNodeProps = UIRectangleNodeProps, S extends object = object> extends UINode<Readonly<P>, S> {
+export class UIRectangleNode<S extends object = object> extends UINode<UIRectangleNodeProps, S> {
     static createCtrProps(props: UIRectangleNodeProps) {
         return {
             ctr: UIRectangleNode,
@@ -35,7 +35,7 @@ export class UIRectangleNode<P extends UIRectangleNodeProps = UIRectangleNodePro
         }
         return instance;
     }
-    constructor(props: P) {
+    constructor(props: UIRectangleNodeProps) {
         super(props);
     }
     #instance?: UIRectangle;
@@ -57,7 +57,7 @@ export class UIRectangleNode<P extends UIRectangleNodeProps = UIRectangleNodePro
                 events: {
                     onClick: () => {
                         if(this.props.onClick) {
-                            this.props.onClick(props.text)
+                            this.props.onClick(props.label)
                         }
                     }
                 },

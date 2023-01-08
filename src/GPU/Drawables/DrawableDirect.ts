@@ -4,6 +4,7 @@ import type { BindGroup } from "../BindGroup.js";
 import type { RenderPass } from "../RenderPasses/RenderPass.js";
 import { VertexBuffer } from "../Buffer/Buffer.js";
 import type { RenderPipeline } from "../RenderPipeline.js"
+import { RenderPipeline2 } from "GPU/RenderPipeline2.js";
 
 export abstract class DrawableDirect extends Drawable {
     #instanceCount: number;
@@ -19,7 +20,7 @@ export abstract class DrawableDirect extends Drawable {
             vertexBuffers
         } : 
         {
-            renderPipeline: RenderPipeline;
+            renderPipeline: RenderPipeline | RenderPipeline2;
             dynamicBindGroups: [BindGroup, number][];
             label: string;
             renderPasses: Set<RenderPass> | undefined;
