@@ -26,6 +26,9 @@ export abstract class VertexShader<
         ) {
         const groups = bindLayouts.reduce((groupstring, group, gi) => {
             return group.entries.reduce((acc, binding, bi) => {
+                if((binding.entry.visibility & GPUShaderStage.VERTEX) === 0) {
+                    return acc;
+                }
                 let qualifiers = '';
                 if (binding.entry.buffer) {
                     if (binding.entry.buffer.type === 'uniform') {

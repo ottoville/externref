@@ -144,7 +144,7 @@ export class GPU {
         // eslint-disable-next-line promise/catch-or-return
         newGPU.then(gpu => {
             this.cameras.forEach(camera => {
-                camera.initForGPU(gpu.renderPassScreen, gpu, camera.projection!);
+                camera.initForGPU(gpu.renderPassScreen, gpu, new Projection(gpu));
             })
         })
         this.#ro.disconnect();
@@ -188,7 +188,7 @@ export class GPU {
                         type: "uniform",
                         minBindingSize: 144
                     }
-                }, 'TODOVAR', 'TODOSTRUCT'),
+                }, 'scene', 'Scene'),
             new BindGroupLayoutEntry(
                 {
                     visibility: GPUShaderStage.VERTEX,
@@ -196,7 +196,7 @@ export class GPU {
                         type: "uniform",
                         minBindingSize: 8
                     }
-                }, 'TODOVAR', 'TODOSTRUCT'),
+                }, 'time', 'Time'),
             new BindGroupLayoutEntry(
                 {
                     //clusters
@@ -247,7 +247,7 @@ export class GPU {
         this.sizeBindGroupLayout = new BindGroupLayout(this, 'sizeBindGroupLayout',
             new BindGroupLayoutEntry(
                 {
-                    visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+                    visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
                     buffer: {
                         type: 'uniform',
                         minBindingSize: 16
@@ -268,7 +268,7 @@ export class GPU {
                         hasDynamicOffset: true,
                         minBindingSize: GPU.gpu_memory_index_size
                     }
-                }, 'TODOVAR', 'TODOSTRUCT') as BufferLayout
+                }, 'world', 'MeshUniforms') as BufferLayout
         );
         this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition', bindGroup => [
             {

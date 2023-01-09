@@ -108,46 +108,12 @@ export class HelperVertShader extends VertexShader<
   BindLayouts> {
   constructor(
     bindLayouts: BindLayouts) {
-
-/*
-    const bindLayouts = [
-      new BindGroupLayout(heightsLayout.gpu, 'normalsBindGroupLayout',
-        new BindGroupLayoutEntry({
-          visibility: GPUShaderStage.VERTEX,
-          buffer: {
-            type: "uniform",
-            hasDynamicOffset: false,
-            minBindingSize: 32
-          }
-        }, 'scene', 'Scene'),
-        new BindGroupLayoutEntry(
-          {
-            visibility: GPUShaderStage.VERTEX,
-            buffer: {
-              type: "uniform",
-              hasDynamicOffset: false,
-              minBindingSize: 32
-            }
-          }, 'time', 'Time')
-      ),
-      new BindGroupLayout(heightsLayout.gpu, 'normalsBindGroupLayout',
-        new BindGroupLayoutEntry(
-          {
-            visibility: GPUShaderStage.VERTEX,
-            buffer: {
-              type: "uniform",
-              hasDynamicOffset: false,
-              minBindingSize: 32
-            }
-          }, 'world', 'MeshUniforms')),
-      heightsLayout
-    ] as const;  */
     const pipelineLayout = new PipelineLayout({
       label: 'calculateNormalsPipeline',
       bindGroupLayouts: bindLayouts
     });
     super(bindLayouts[0].gpu, bindLayouts, [], wgsl,{
       main: pipelineLayout
-    }, 'helper.vert', 1);
+    }, 'helper.vert');
   }
 }

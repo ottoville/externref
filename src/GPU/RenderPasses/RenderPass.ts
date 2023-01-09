@@ -9,7 +9,7 @@ import type { RenderTargetTextureUsageValue } from "../Texture.js";
 import { RenderPipelineLayout } from "../PipelineLayout.js";
 import { RenderPipeline } from "../RenderPipeline.js";
 import { RenderPipeline2 } from "../RenderPipeline2.js";
-//import { VertexShader } from "GPU/Shaders/VertexShader.js";
+import { VertexShader } from "../Shaders/VertexShader.js";
 
 
 interface RenderPipelineVariant2 {
@@ -77,8 +77,8 @@ export class RenderPass<U extends {
         });
         const renderBundle = new RenderBundleEncoder(this, GPURenderBundleEncoderDescriptor, (renderBundleEncoder) => {
             Object.values(this.colorRenderTargets).some(rt => {
-                if(rt.texture.sampleCount === 0 &&  rt.view.bindGroups.size === 0) {
-                    console.warn('Rendertarget ',rt.label,' is not binded as texture, render result will be shown.')
+                if (rt.texture.sampleCount === 0 && rt.view.bindGroups.size === 0) {
+                    console.warn('Rendertarget ', rt.label, ' is not binded as texture, render result will be shown.')
                 }
             })
             //@ts-ignore
@@ -122,17 +122,28 @@ export class RenderPass<U extends {
     getVariant(renderPipeline: Readonly<RenderPipeline | RenderPipeline2>) {
         let variant = this.renderPipelines.get(renderPipeline);
         if (!variant) {
-            variant = this.#decoratePipeline(renderPipeline).then(renderpipeline => {
-                const variant2 = {
-                    renderpipeline: renderpipeline,
+            const variantP = this.gpu.device.createRenderPipelineAsync(
+                {
+                    ...renderPipeline.props.renderPipeline,
+                    layout: renderPipeline.props.bindgroupdrawable.layout,
+                    ...this.onDecoratePipeline(renderPipeline),
+                    label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label
+                }
+            ).catch((err: unknown) => {
+                console.error('createRenderPipelineAsync failed, wgsl:', (renderPipeline.props.vertexShader as VertexShader).wgsl, { cause: err })
+                throw (new Error('createRenderPipelineAsync failed', { cause: err }));
+            }).then((variantPipeline) => {
+                variant = {
+                    renderpipeline: variantPipeline,
                     rootDrawables: new Set<Drawable>()
                 }
                 // Replace promise with real object
-                this.renderPipelines.set(renderPipeline, variant2)
-                return variant2
-            });
+                this.renderPipelines.set(renderPipeline, variant);
+                return variant;
+            })
             // Save promise
-            this.renderPipelines.set(renderPipeline, variant)
+            this.renderPipelines.set(renderPipeline, variantP)
+            variant = variantP;
         }
         return variant;
     }
@@ -161,19 +172,6 @@ export class RenderPass<U extends {
         if (this.sampleCount > 1)
             renderPipelineDescriptor.multisample = { count: this.sampleCount };
         return renderPipelineDescriptor;
-    }
-    #decoratePipeline(
-        renderpipeline: Readonly<RenderPipeline | RenderPipeline2>) {
-            return this.gpu.device.createRenderPipelineAsync(
-                {
-                    ...renderpipeline.props.renderPipeline,
-                    layout: renderpipeline.props.bindgroupdrawable.layout,
-                    ...this.onDecoratePipeline(renderpipeline),
-                    label: 'renderPipeline:' + renderpipeline.props.label + ' RenderPass:' + this.label
-                }
-            )/*.catch ((err: unknown) => {
-                throw (new Error('createRenderPipelineAsync failed, wgsl: '+(renderpipeline.props.vertexShader as VertexShader).wgsl, {cause: err}));
-            });*/
     }
     resize(width: number, height: number) {
         [this.size.width, this.size.height] = this.#getSizeOnResize(width, height);

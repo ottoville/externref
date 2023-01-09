@@ -346,50 +346,44 @@ export class Engine {
     readonly cameras: Set<TerraCamera> = new Set();
 
     showError(e: unknown) {
+        if(e instanceof DOMException) {
+            //When device is lost new device will be set in GPU.ts
+            if(!(e.name === "AbortError" && e.message === "Device is lost")) {
+                this.showErrorError(e);
+            }
+            return;
+        }
         const error = createError(e);
-        if (!error.cause)
-            this.showErrorError(error);
-
+        this.showErrorError(error);
     }
     gpu: GPU | undefined
     async createGPU(GPUDataSize: number, cb: (gpu: GPU) => void, adapter: GPUAdapter | null) {
-        if (!adapter) {
-            // eslint-disable-next-line require-atomic-updates
-            adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
+        let device: GPUDevice | undefined;
+        let forceFallbackAdapter = false;
+        do {
+            console.log('Getting adapter, fallback:', forceFallbackAdapter)
+            adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter })
             if (!adapter) {
-                console.error('Failed to get adapter, getting fallback adapter');
-                // eslint-disable-next-line require-atomic-updates
-                adapter = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter: true })
+                if(forceFallbackAdapter) {
+                    throw new Error('Could not get adapter');
+                }
+                console.log('Failed to get adapter')
+                forceFallbackAdapter = true;
+                continue;
             }
-            if (!adapter) {
-                throw new Error('Cannot get adapter');
-            }
-        }
-        let device: GPUDevice;
-        try {
-            console.log('getting new device');
-            device = await adapter!.requestDevice({ label: 'device' + (deviceId++) });
-        } catch (e) {
-            console.error('failed to get new device, getting new adapter');
-            let adapter2 = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
-            if (!adapter2) {
-                console.error('Failed to get adapter, getting fallback adapter');
-                adapter2 = await window.navigator.gpu.requestAdapter({ powerPreference: 'high-performance', forceFallbackAdapter: true })
-            }
-            if (!adapter2) {
-                throw new Error('Cannot get adapter');
-            }
-            console.log('got adapter, getting device')
             try {
-                device = await adapter2!.requestDevice({ label: 'device' + (deviceId++) });
-            } catch (ee) {
-                console.error(ee);
-                throw new Error('Cannot get device');
+                console.log('Getting device')
+                device = await adapter.requestDevice({ label: 'device' + (deviceId++) });
+            } catch (e) {
+                console.log('Failed to get device');
+                if(forceFallbackAdapter) {
+                    throw new Error('Could not get device');
+                }
+                forceFallbackAdapter = true;
+                continue;
             }
-            // eslint-disable-next-line require-atomic-updates
-            adapter = adapter2;
+        } while (typeof device === 'undefined')
 
-        }
         device.lost.then(reason => {
             console.error('GPU device lost', reason);
             const newGPU = this.createGPU(GPUDataSize, cb, adapter);
@@ -451,7 +445,7 @@ export class Engine {
     */
     addInputListener<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => (void | boolean), ui = false) {
         let map: Map<object, Set<Listener>>
-        if(ui) {
+        if (ui) {
             map = this.#inputMaps[`UI${type}`];
         } else {
             map = this.#inputMaps[type];
@@ -466,11 +460,11 @@ export class Engine {
             //@ts-expect-error
             cbs.add(cb);
         })
-        
+
     }
     addInputListenerOnce<K extends (Events & keyof HTMLElementEventMap)>(type: K, object: object, cb: (e: HTMLElementEventMap[K]) => (void | boolean), ui = false) {
         let map: Map<object, Set<Listener>>
-        if(ui) {
+        if (ui) {
             map = this.#inputMaps[`UI${type}Once`];
         } else {
             map = this.#inputMaps[`${type}Once`];
@@ -514,16 +508,16 @@ export class Engine {
                 const UIEvents = [UI, UIOnce] as const;
                 canvas.ownerDocument.addEventListener(eventType, (e) => {
                     // TODO: quite a heavy processing, move to rust
-                    for(let i = 0 as 0|1; i < 2; i++) {
+                    for (let i = 0 as 0 | 1; i < 2; i++) {
                         const inputEntries = this.#inputMaps[UIEvents[i]].entries();
                         let inputEntryResult = inputEntries.next();
-                        while(!inputEntryResult.done) {
-                            const [,cbs] = inputEntryResult.value;
+                        while (!inputEntryResult.done) {
+                            const [, cbs] = inputEntryResult.value;
                             const cbsEntries = cbs.entries();
                             let result = cbsEntries.next();
                             while (!result.done) {
                                 const [cb] = result.value;
-                                if(cb(e)) {
+                                if (cb(e)) {
                                     return;
                                 }
                                 result = cbsEntries.next();
