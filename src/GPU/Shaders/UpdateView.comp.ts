@@ -1,17 +1,17 @@
-import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
+import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { MeshUniforms } from './structs/MeshUniforms.js';
 import type { GPU } from '../../GPU.js'
 export class UpdateView extends ComputeShader<
-  [BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>, BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
+  [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>, BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
   { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
   constructor(
     gpu: GPU) {
     const bindLayouts = [
-      new BindGroupLayout(gpu, 'UpdateViewLayout',
+      new BGLayout(gpu, 'UpdateViewLayout',
         new BindGroupLayoutEntry(
           {
             visibility: GPUShaderStage.COMPUTE,
@@ -40,7 +40,7 @@ export class UpdateView extends ComputeShader<
             }
           }, 'directional_lights', 'Lights')
       ),
-      new BindGroupLayout(gpu, 'UpdateClustersLayout',
+      new BGLayout(gpu, 'UpdateClustersLayout',
         new BindGroupLayoutEntry(
           {
             visibility: GPUShaderStage.COMPUTE,

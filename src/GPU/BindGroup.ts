@@ -1,8 +1,8 @@
-import type { BindGroupLayout } from "./BindGroupLayout.js";
+import type { BGLayout } from "./BindGroupLayout.js";
 import type { RenderBundleEncoder } from "./RenderBundleEncoder.js";
 import type { RenderPass } from "./RenderPasses/RenderPass.js";
 
-export class BindGroup<L extends BindGroupLayout = BindGroupLayout> {
+export class BindGroup<L extends BGLayout = BGLayout> {
     #dirty=true;
     #bindGroup: GPUBindGroup;
     readonly #renderBundles: Set<RenderBundleEncoder> = new Set();

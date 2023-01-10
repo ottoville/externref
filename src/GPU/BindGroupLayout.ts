@@ -7,7 +7,7 @@ export interface GPUBindGroupTextureEntry {
     texture: GPUTextureBindingLayout;
 }
 export type MapToGPUBindGroupEntry<T> = {
-    [K in keyof T]: T[K] extends GPUBindGroupTextureEntry ? { binding: GPUIndex32, resource: GPUTextureView | GPUExternalTexture } : 
+    [K in keyof T]: T[K] extends TextLayout ? { binding: GPUIndex32, resource: GPUTextureView | GPUExternalTexture } : 
     GPUBindGroupEntry };
 export type GPUBindGroupLayoutEntryBuffer = Omit<GPUBindGroupLayoutEntry, 'binding'> & {
     buffer: GPUBufferBindingLayout & { minBindingSize: GPUSize64 }
@@ -30,11 +30,11 @@ export class BindGroupLayoutEntry<T extends GPUBindingGroupLayoytEntryStrict = G
     }
 }
 
-export type BufferLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>
-export type SamplerLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntrySampler>
-export type TextureLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>
+export type BufLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>
+export type SampLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntrySampler>
+export type TextLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>
 
-export class BindGroupLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutEntry[]> {
+export class BGLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutEntry[]> {
     layout: GPUBindGroupLayout;
     dynamicIndices = false;
     entries: Readonly<T>;
@@ -58,7 +58,7 @@ export class BindGroupLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutE
     createBindGroup(
         label: string,
         entries: (bindGroup: BindGroup) => Readonly<MapToGPUBindGroupEntry<T>>,
-        renderPasses?: Set<RenderPass>): BindGroup<BindGroupLayout<T>> {
+        renderPasses?: Set<RenderPass>): BindGroup<BGLayout<T>> {
         return new BindGroup<typeof this>(this, label, entries, renderPasses)
     }
 }

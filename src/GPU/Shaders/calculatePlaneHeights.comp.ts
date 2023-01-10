@@ -1,20 +1,20 @@
-import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
+import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
 export class CalculatePlaneHeights extends ComputeShader<
   [
-    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
   ],
   { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
-  constructor(settingsLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+  constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     const bindLayouts = [
       settingsLayout,
-      new BindGroupLayout(settingsLayout.gpu, 'verticesBindGroupLayout',
+      new BGLayout(settingsLayout.gpu, 'verticesBindGroupLayout',
         new BindGroupLayoutEntry(
           {
             visibility: GPUShaderStage.COMPUTE,
@@ -24,7 +24,7 @@ export class CalculatePlaneHeights extends ComputeShader<
               minBindingSize: 48
             }
           }, 'vertices', 'Vertices')),
-      new BindGroupLayout(settingsLayout.gpu, 'slopesAndFacesBindGroupLayout',
+      new BGLayout(settingsLayout.gpu, 'slopesAndFacesBindGroupLayout',
         new BindGroupLayoutEntry(
           {
             visibility: GPUShaderStage.COMPUTE,

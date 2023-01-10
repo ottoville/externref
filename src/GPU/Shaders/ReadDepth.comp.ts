@@ -1,16 +1,16 @@
-import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture } from '../BindGroupLayout.js'
+import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
 export class ReadDepth extends ComputeShader<
-    [BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-        BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
+    [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+        BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
     { main: PipelineLayout }> {
     entryPoints: { main: PipelineLayout; };
     module: GPUShaderModule;
     constructor(gpu: GPU) {
         const bindLayouts = [
-            new BindGroupLayout(gpu, 'DepthAndMeshLayout',
+            new BGLayout(gpu, 'DepthAndMeshLayout',
                 new BindGroupLayoutEntry(
                     {
                         visibility: GPUShaderStage.COMPUTE,
@@ -21,7 +21,7 @@ export class ReadDepth extends ComputeShader<
                         }
                     }, 'depth_and_mesh', 'Depth_And_Mesh')
             ),
-            new BindGroupLayout(gpu, 'DepthTextureLayout',
+            new BGLayout(gpu, 'DepthTextureLayout',
                 new BindGroupLayoutEntry(
                     {
                         visibility: GPUShaderStage.COMPUTE,

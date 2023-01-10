@@ -1,17 +1,17 @@
-import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture } from '../BindGroupLayout.js'
+import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
 export class CreateGroundFromHeightMap extends ComputeShader<
-[BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>]>],
+[BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>]>],
 { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
-  constructor(settingsLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+  constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     const bindLayouts = [
       settingsLayout,
-      new BindGroupLayout(settingsLayout.gpu, 'indicesBindGroupLayout',
+      new BGLayout(settingsLayout.gpu, 'indicesBindGroupLayout',
       new BindGroupLayoutEntry(
       {
         visibility: GPUShaderStage.COMPUTE,

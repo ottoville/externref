@@ -1,4 +1,4 @@
-import type { BindGroupLayout } from "../BindGroupLayout.js";
+import type { BGLayout } from "../BindGroupLayout.js";
 import { PipelineLayout } from "../PipelineLayout.js";
 import type { GPU } from "../../GPU.js"
 
@@ -10,7 +10,7 @@ export type VertexBuffers = [GPUVertexBufferLayout]
 export abstract class VertexShader<
     E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
     BU extends VertexBuffers = VertexBuffers,
-    B extends readonly BindGroupLayout[] = readonly BindGroupLayout[],
+    B extends readonly BGLayout[] = readonly BGLayout[],
 > {
     
     module: GPUShaderModule;
@@ -22,7 +22,6 @@ export abstract class VertexShader<
         wgsl: string,
         public entryPoints: E,
         label: string,
-        groupOffset = 0
         ) {
         const groups = bindLayouts.reduce((groupstring, group, gi) => {
             return group.entries.reduce((acc, binding, bi) => {
@@ -40,7 +39,7 @@ export abstract class VertexShader<
                         qualifiers = '<storage, read_write>';
                     }
                 }
-                return `${acc}@group(${gi + groupOffset}) @binding(${bi}) var${qualifiers} ${binding.variableName} : ${binding.structName};\n`
+                return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${binding.variableName} : ${binding.structName};\n`
             }, groupstring)
         }, '\n');
         this.wgsl = groups + wgsl;

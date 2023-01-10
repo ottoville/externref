@@ -1,21 +1,21 @@
-import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../../BindGroupLayout.js'
+import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../../BindGroupLayout.js'
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { ComputeShader } from '../ComputeShader.js';
 
 export class getHeightAtCoordinates extends ComputeShader<
   [
-    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
   ],
   { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
-  constructor(settingsLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+  constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     //TODO: set actual minBindingSize values other than 32
     const bindLayouts = [
       settingsLayout,
-      new BindGroupLayout(settingsLayout.gpu, 'slopesBindGroupLayout',
+      new BGLayout(settingsLayout.gpu, 'slopesBindGroupLayout',
         new BindGroupLayoutEntry(
           {
             visibility: GPUShaderStage.COMPUTE,
@@ -53,7 +53,7 @@ export class getHeightAtCoordinates extends ComputeShader<
             },
           }, 'shapes', 'FloatArray'),
       ),
-      new BindGroupLayout(settingsLayout.gpu, 'positionsBindGroupLayout',
+      new BGLayout(settingsLayout.gpu, 'positionsBindGroupLayout',
         new BindGroupLayoutEntry(
           {
             visibility: GPUShaderStage.COMPUTE,

@@ -10,7 +10,7 @@ import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import { CalculatePlaneIndices } from "../GPU/Shaders/calculatePlaneIndices.comp.js";
 import { CalculatePlaneHeights } from "../GPU/Shaders/calculatePlaneHeights.comp.js";
 import { CalculateNormals } from "../GPU/Shaders/CalculateNormals.comp.js";
-import { BindGroupLayout, BindGroupLayoutEntry, BufferLayout, type GPUBindGroupLayoutEntryBuffer } from "../GPU/BindGroupLayout.js";
+import { BGLayout, BindGroupLayoutEntry, BufLayout, type GPUBindGroupLayoutEntryBuffer } from "../GPU/BindGroupLayout.js";
 import { CreateGroundFromHeightMap } from "../GPU/Shaders/CreateGroundFromHeightMap.comp.js";
 import type { GPU } from '../GPU.js'
 import { CreateTerrainTexture } from "../GPU/Shaders/CreateTerrainTexture.comp.js";
@@ -44,19 +44,19 @@ TODO
 
     //readonly TerrainHeightsbindGroupTree: BindablePipelineLayout;
     TerrainHeightsbindGroupTree: BindablePipelineLayout<readonly [
-        BindGroupLayout<[BufferLayout]>,
-        BindGroupLayout<[BufferLayout, BufferLayout, BufferLayout, BufferLayout, BufferLayout]>,
-        BindGroupLayout<[BufferLayout]>,
-        BindGroupLayout<[BufferLayout, BufferLayout, BufferLayout]>]>;
+        BGLayout<[BufLayout]>,
+        BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
+        BGLayout<[BufLayout]>,
+        BGLayout<[BufLayout, BufLayout, BufLayout]>]>;
 
     readonly #ready: Promise<void>;
     readonly #terrainIndicesLength = Uint32Array.BYTES_PER_ELEMENT * (Terrain.#subdivisions[0] * Terrain.#subdivisions[1] * 6);
 
     #autosave = 0;
-    heightsLayout: BindGroupLayout<[
-        BufferLayout,
-        BufferLayout,
-        BufferLayout
+    heightsLayout: BGLayout<[
+        BufLayout,
+        BufLayout,
+        BufLayout
     ]>;
 
     public static fromSave(cachedvertices: Response): Promise<ArrayBuffer> {
@@ -103,7 +103,7 @@ TODO
     }
 
     static async loadFromTexture(gpu: GPU, scenes: Scene[]): Promise<Terrain> {
-        const settingsLayout = new BindGroupLayout(gpu, 'settingsBindGroupLayout',
+        const settingsLayout = new BGLayout(gpu, 'settingsBindGroupLayout',
             new BindGroupLayoutEntry(
                 {
                     visibility: GPUShaderStage.COMPUTE,
@@ -223,7 +223,7 @@ TODO
     constructor(
         public gpu: GPU,
         public scenes: Scene[],
-        public settingsLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+        public settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
         public settingsGPU: BindUniformBuffer & BindStorageBuffer,
         private terrainPositionAndUvsAndNormalsGPU: CopySrcBuffer & CopyDstBuffer & BindStorageBuffer & VertexBuffer
     ) {
@@ -247,7 +247,7 @@ TODO
                 resource: this.facet12ArrGPUBuffer.getStorageBinding(bindGroup)
             }
         ] as const
-        this.heightsLayout = new BindGroupLayout(gpu, 'terrainBindGroupLayout',
+        this.heightsLayout = new BGLayout(gpu, 'terrainBindGroupLayout',
             new BindGroupLayoutEntry(
                 {
                     visibility: GPUShaderStage.VERTEX,
@@ -303,7 +303,7 @@ TODO
         const passEncoder = commandEncoder.beginComputePass({ label: 'terrain_pass_encoder' });
 
         //const computePipelineNormals = new ComputePipeline(engine.gpu, 'terrain/calculateNormals.comp.wgsl', normalsLayout)
-        const slopesLayout = new BindGroupLayout(gpu, 'slopesAndFacesBindGroupLayoutReadOnly',
+        const slopesLayout = new BGLayout(gpu, 'slopesAndFacesBindGroupLayoutReadOnly',
             new BindGroupLayoutEntry(
                 {
                     visibility: GPUShaderStage.COMPUTE,
@@ -380,7 +380,7 @@ TODO
                 var gpuReadBufferIndices = terrainIndicesGPU.createReadCopy(commandEncoder);
                 const bitmap = await createImageBitmap(await cachedtexture.blob());
                 this.texture.copyFromExternalImage({ source: bitmap }, {}, Terrain.#textureSize);
-                engine.gpu!.device.queue.submit([commandEncoder.finish()]);
+                gpu.device.queue.submit([commandEncoder.finish()]);
             } else {
                 const createTextureShader = new CreateTerrainTexture(this.settingsLayout, slopesLayout)
                 const createTexturePipeline = createTextureShader.createComputePipeline('main')
@@ -400,14 +400,14 @@ TODO
 
 
                 // Get a GPU buffer for reading in an unmapped state.
-                const gpuReadBuffer = new ReadBuffer(engine.gpu!, textureSizeBytes, 'terrainReaduBuffer');
+                const gpuReadBuffer = new ReadBuffer(gpu, textureSizeBytes, 'terrainReaduBuffer');
                 // Encode commands for copying buffer to buffer.
                 gpuReadBuffer.copyFromTexture(commandEncoder, { texture: this.texture.texture }, { bytesPerRow: 4 * Terrain.#textureSize.width }, Terrain.#textureSize)
 
                 var gpuReadBufferPositions = this.terrainPositionAndUvsAndNormalsGPU.createReadCopy(commandEncoder);
                 var gpuReadBufferIndices = terrainIndicesGPU.createReadCopy(commandEncoder);
                 const gpuCommands = commandEncoder.finish();
-                engine.gpu!.device.queue.submit([gpuCommands]);
+                gpu.device.queue.submit([gpuCommands]);
                 const c = new OffscreenCanvas(Terrain.#textureSize.width, Terrain.#textureSize.height);
                 const ctx = c.getContext("2d");
                 if (!ctx)
@@ -419,9 +419,9 @@ TODO
                 })
             }
 
-            const commandEncoder2 = engine.gpu!.device.createCommandEncoder({ label: 'terrain_encoder2' });
+            const commandEncoder2 = gpu.device.createCommandEncoder({ label: 'terrain_encoder2' });
             const readBuffer2 = this.facet12ArrGPUBuffer.createReadCopy(commandEncoder2);
-            engine.gpu!.device.queue.submit([commandEncoder2.finish()]);
+            gpu.device.queue.submit([commandEncoder2.finish()]);
             readBuffer2.readAndDestroy(buff => {
                 this.mesh.faces = new Float32Array(buff);
             });

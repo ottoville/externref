@@ -1,17 +1,17 @@
-import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
+import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 export class Clusters extends ComputeShader<
-  [BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>, BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
+  [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>, BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
   { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
   constructor(
-    sizeGroup: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    sizeGroup: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
   ) {
     const bindLayouts = [
       sizeGroup,
-      new BindGroupLayout(sizeGroup.gpu, 'CreateClustersLayout2',
+      new BGLayout(sizeGroup.gpu, 'CreateClustersLayout2',
         new BindGroupLayoutEntry(
           {
             visibility: GPUShaderStage.COMPUTE,

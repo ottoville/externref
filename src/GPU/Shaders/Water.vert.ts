@@ -1,13 +1,12 @@
-import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout, SampLayout, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import { MeshUniforms } from './structs/MeshUniforms.js';
-import type { GPU } from '../../GPU.js'
 
 //////////////////////////////////
 
 const wgsl = /* wgsl */ `
-struct Uniforms {
+struct Scene {
   modelViewProjectionMatrix : mat4x4<f32>,
   view : mat4x4<f32>,
   viewPosition : vec3<f32>
@@ -30,10 +29,10 @@ struct Output {
 @vertex
 fn main(@location(0) position : vec3<f32>) -> Output {
   var output:Output;
-  output.Position = uniforms.modelViewProjectionMatrix * vec4<f32>(position, 1.0);
+  output.Position = scene.modelViewProjectionMatrix * vec4<f32>(position, 1.0);
   output.v_uv = output.Position;
   output.position=position;
-  output.id=worldposition.id;
+  output.id=world.id;
 
   //shading = dot(vec3<f32>(0.0,1.0,0.0), lights.sunDirection)*lights.shadow;
   //ambient=lights.ambient;
@@ -41,57 +40,26 @@ fn main(@location(0) position : vec3<f32>) -> Output {
 }
   `;
   //////////////
-
+type BindLayouts = [
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
+  BGLayout<[BufLayout]>,
+  BGLayout<[SampLayout, TextLayout]>];
 
 export class WaterVertShader extends VertexShader<
 { main: PipelineLayout },
 [GPUVertexBufferLayout],
-  [
-    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-  ]> {
-  constructor(gpu: GPU, buffers: GPUVertexBufferLayout) {
-
-
-    const bindLayouts = [
-      new BindGroupLayout(gpu, 'normalsBindGroupLayout',
-        new BindGroupLayoutEntry({
-          visibility: GPUShaderStage.VERTEX,
-          buffer: {
-            type: "uniform",
-            hasDynamicOffset: false,
-            minBindingSize: 32
-          }
-        }, 'uniforms', 'Uniforms'),
-        new BindGroupLayoutEntry(
-          {
-            visibility: GPUShaderStage.VERTEX,
-            buffer: {
-              type: "uniform",
-              hasDynamicOffset: false,
-              minBindingSize: 32
-            }
-          }, 'times', 'Time')
-      ),
-      new BindGroupLayout(gpu, 'normalsBindGroupLayout',
-        new BindGroupLayoutEntry(
-          {
-            visibility: GPUShaderStage.VERTEX,
-            buffer: {
-              type: "uniform",
-              hasDynamicOffset: false,
-              minBindingSize: 32
-            }
-          }, 'worldposition', 'MeshUniforms'))    ] as const;
+BindLayouts> {
+  constructor(bindLayouts: BindLayouts, buffers: GPUVertexBufferLayout) {
 
   const pipelineLayout = new PipelineLayout({
     label: 'calculateNormalsPipeline',
     bindGroupLayouts: bindLayouts
   });
 
-    super(gpu, bindLayouts, [buffers], wgsl, {
+    super(bindLayouts[0].gpu, bindLayouts, [buffers], wgsl, {
       main: pipelineLayout
-    }, 'water.vert', 1);
+    }, 'water.vert');
 
   }
 }

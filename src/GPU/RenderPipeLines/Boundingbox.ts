@@ -3,7 +3,7 @@ import { GPU } from "../../GPU.js";
 import { DebugBoundingBoxVertShader } from "../Shaders/debug_boundingbox.vert.js";
 
 export const BoundingBoxPipeline = ['BoundingBoxPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-    const shader = new DebugBoundingBoxVertShader(gpu.worldUniformBindGroupLayouts, {
+    const shader = new DebugBoundingBoxVertShader(gpu.positionBindGroupTimeWGSL.bindGroupLayouts, {
         arrayStride: 16,
         stepMode: "vertex",
         attributes: [{

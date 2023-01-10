@@ -375,6 +375,7 @@ export class Engine {
                 console.log('Getting device')
                 device = await adapter.requestDevice({ label: 'device' + (deviceId++) });
             } catch (e) {
+                console.error(e);
                 console.log('Failed to get device');
                 if(forceFallbackAdapter) {
                     throw new Error('Could not get device');

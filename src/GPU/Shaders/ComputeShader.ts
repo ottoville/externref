@@ -1,8 +1,8 @@
-import type { BindGroupLayout } from "../BindGroupLayout.js";
+import type { BGLayout } from "../BindGroupLayout.js";
 import type { PipelineLayout } from "../PipelineLayout.js";
 import type { GPU } from "../../GPU.js"
 export abstract class ComputeShader<
-B extends BindGroupLayout[] = BindGroupLayout[],
+B extends BGLayout[] = BGLayout[],
 E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout }
 > {
     abstract entryPoints: E;

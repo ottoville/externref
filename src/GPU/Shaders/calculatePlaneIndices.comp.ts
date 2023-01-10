@@ -1,17 +1,17 @@
-import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
+import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
 export class CalculatePlaneIndices extends ComputeShader<
-[BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
+[BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
 { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
-  constructor(settingsLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+  constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     const bindLayouts = [
       settingsLayout,
-      new BindGroupLayout(settingsLayout.gpu, 'calculateIndicesBindGroupLayout',
+      new BGLayout(settingsLayout.gpu, 'calculateIndicesBindGroupLayout',
       new BindGroupLayoutEntry(
       {
         visibility: GPUShaderStage.COMPUTE,

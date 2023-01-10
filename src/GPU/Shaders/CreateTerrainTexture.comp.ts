@@ -1,21 +1,21 @@
-import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryStorageTexture } from '../BindGroupLayout.js'
+import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryStorageTexture } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
 export class CreateTerrainTexture extends ComputeShader<
-  [BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryStorageTexture>]>],
+  [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryStorageTexture>]>],
   { main: PipelineLayout }> {
   entryPoints: { main: PipelineLayout; };
   module: GPUShaderModule;
   constructor(
-    settingsLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    slopesLayout: BindGroupLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+    settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    slopesLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
     const bindLayouts = [
       settingsLayout,
       slopesLayout,
-      new BindGroupLayout(settingsLayout.gpu, 'TerrainTextureLayout',
+      new BGLayout(settingsLayout.gpu, 'TerrainTextureLayout',
         new BindGroupLayoutEntry(
           {
             visibility: GPUShaderStage.COMPUTE,

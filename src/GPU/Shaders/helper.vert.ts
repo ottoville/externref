@@ -1,4 +1,4 @@
-import { BindGroupLayout, BufferLayout } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import { MeshUniforms } from './structs/MeshUniforms.js';
@@ -97,10 +97,10 @@ import { MeshUniforms } from './structs/MeshUniforms.js';
   //////////////////////////////////
 
 type BindLayouts = readonly [
-  BindGroupLayout<[BufferLayout]>,
-  BindGroupLayout<[BufferLayout, BufferLayout, BufferLayout, BufferLayout, BufferLayout]>,
-  BindGroupLayout<[BufferLayout]>,
-  BindGroupLayout<[BufferLayout, BufferLayout, BufferLayout]>,
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout, BufLayout]>,
 ];
 export class HelperVertShader extends VertexShader<
 { main: PipelineLayout },

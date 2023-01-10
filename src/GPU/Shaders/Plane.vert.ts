@@ -1,4 +1,4 @@
-import { BindGroupLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
+import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
 import { MeshUniforms } from './structs/MeshUniforms.js';
@@ -7,10 +7,15 @@ import { MeshUniforms } from './structs/MeshUniforms.js';
 //////////////////////////////////
 
 const wgsl = /* wgsl */ `
- struct Uniforms {
+struct Scene {
   viewProjection : mat4x4<f32>,
   view : mat4x4<f32>,
-  viewPosition : vec3<f32>
+  cameraPosition : vec3<f32>
+};
+
+struct Time {
+ time : u32,
+ delta : f32
 };
 
 struct IntArray {
@@ -58,9 +63,9 @@ struct Output {
 fn main(@location(0) position : vec3<f32>) -> Output {
    let facetSize:u32 = settings.subdivisions * settings.subdivisions; //250 * 250;
    var output:Output;
-   var worldPos:vec4<f32> = worldposition.transformation * vec4<f32>(position.x, 0.0, position.y, 1.0);
+   var worldPos:vec4<f32> = world.transformation * vec4<f32>(position.x, 0.0, position.y, 1.0);
    worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz, facetSize);
-   output.Position = uniforms.viewProjection * worldPos;
+   output.Position = scene.viewProjection * worldPos;
    output.color = vec3<f32>(1.0,1.0,1.0);
    return output;
 }
@@ -70,19 +75,11 @@ fn main(@location(0) position : vec3<f32>) -> Output {
 //////////////////////////////////
 
 type BindLayouts = readonly [
-  BindGroupLayout<[
-    BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>
-  ]>,
-  BindGroupLayout<[
-    BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>
-  ]>,
-  BindGroupLayout<[
-    BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>,
-    BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>,
-    BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>
-  ]>
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>,
+  BGLayout<[BufLayout]>,
+  BGLayout<[BufLayout, BufLayout, BufLayout]>,
 ];
-
 export class PlaneVertShader extends VertexShader<
   { main: PipelineLayout },
   [GPUVertexBufferLayout],
@@ -95,6 +92,6 @@ export class PlaneVertShader extends VertexShader<
     const entryPoints = {
       main: pipelineLayout
     }
-    super(bindLayouts[0].gpu, bindLayouts, [buffers], wgsl, entryPoints, 'plane.vert', 1);
+    super(bindLayouts[0].gpu, bindLayouts, [buffers], wgsl, entryPoints, 'plane.vert');
   }
 }
