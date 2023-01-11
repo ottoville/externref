@@ -2,36 +2,7 @@ import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindG
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
-export class CreateGroundFromHeightMap extends ComputeShader<
-[BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>]>],
-{ main: PipelineLayout }> {
-  entryPoints: { main: PipelineLayout; };
-  module: GPUShaderModule;
-  constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
-    const bindLayouts = [
-      settingsLayout,
-      new BGLayout(settingsLayout.gpu, 'indicesBindGroupLayout',
-      new BindGroupLayoutEntry(
-      {
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: "storage",
-          hasDynamicOffset: false,
-          minBindingSize: 48
-        }
-      }, 'positions', 'Vertices'),
-      new BindGroupLayoutEntry(
-      {
-          visibility: GPUShaderStage.COMPUTE,
-          texture: {
-              
-          }
-          
-        }, 'pixels', 'texture_2d'))
-    ] as const
-    super(settingsLayout.gpu, bindLayouts);
-    
+    //////////////////////////
     const wgsl = /* wgsl */ `
     const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0);
 
@@ -53,11 +24,7 @@ BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEn
     };
     struct Pixels {
         pixels: array<u32>
-    };
-    ${this.groups[0]![0]} settings : Settings;
-    ${this.groups[1]![0]} positions : Vertices;
-    ${this.groups[1]![1]} pixels : texture_2d<f32>;
-    
+    };    
     
     @compute @workgroup_size(1)
     fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
@@ -82,20 +49,41 @@ BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEn
        return;
     }
       `;
+    ///////////////
 
+export class CreateGroundFromHeightMap extends ComputeShader<
+[BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>]>],
+{ main: PipelineLayout }> {
+  constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+    const bindLayouts = [
+      settingsLayout,
+      new BGLayout(settingsLayout.gpu, 'indicesBindGroupLayout',
+      new BindGroupLayoutEntry(
+      {
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: {
+          type: "storage",
+          hasDynamicOffset: false,
+          minBindingSize: 48
+        }
+      }, 'positions', 'Vertices'),
+      new BindGroupLayoutEntry(
+      {
+          visibility: GPUShaderStage.COMPUTE,
+          texture: {
+              
+          }
+          
+        }, 'pixels', 'texture_2d<f32>'))
+    ] as const
 
     const pipelineLayout = new PipelineLayout({
       label: 'CreateGroundFromHeightMapPipeline',
-      bindGroupLayouts: this.bindLayouts
+      bindGroupLayouts: bindLayouts
     });
-    this.entryPoints = {
+    super(settingsLayout.gpu, bindLayouts, wgsl, "CreateGroundFromHeightMap.comp", {
       main: pipelineLayout
-    }
-    this.module = this.gpu.device.createShaderModule(
-      {
-        code: wgsl,
-        label: 'CreateGroundFromHeightMap.comp',
-        hints: this.entryPoints
-      });
+    });
   }
 }

@@ -3,65 +3,7 @@ import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import { MeshUniforms } from './structs/MeshUniforms.js';
 import type { GPU } from '../../GPU.js'
-export class UpdateView extends ComputeShader<
-  [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>, BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
-  { main: PipelineLayout }> {
-  entryPoints: { main: PipelineLayout; };
-  module: GPUShaderModule;
-  constructor(
-    gpu: GPU) {
-    const bindLayouts = [
-      new BGLayout(gpu, 'UpdateViewLayout',
-        new BindGroupLayoutEntry(
-          {
-            visibility: GPUShaderStage.COMPUTE,
-            buffer: {
-              type: "read-only-storage",
-              hasDynamicOffset: false,
-              minBindingSize: 512
-            }
-          }, 'meshes', 'MeshArray'),
-        new BindGroupLayoutEntry(
-          {
-            visibility: GPUShaderStage.COMPUTE,
-            buffer: {
-              type: "read-only-storage",
-              hasDynamicOffset: false,
-              minBindingSize: 16
-            }
-          }, 'point_lights', 'Lights'),
-        new BindGroupLayoutEntry(
-          {
-            visibility: GPUShaderStage.COMPUTE,
-            buffer: {
-              type: "read-only-storage",
-              hasDynamicOffset: false,
-              minBindingSize: 16
-            }
-          }, 'directional_lights', 'Lights')
-      ),
-      new BGLayout(gpu, 'UpdateClustersLayout',
-        new BindGroupLayoutEntry(
-          {
-            visibility: GPUShaderStage.COMPUTE,
-            buffer: {
-              type: "storage",
-              hasDynamicOffset: false,
-              minBindingSize: 7962624
-            }
-          }, 'clusters', 'Clusters'),
-        new BindGroupLayoutEntry(
-          {
-            visibility: GPUShaderStage.COMPUTE,
-            buffer: {
-              type: 'uniform',
-              hasDynamicOffset: false,
-              minBindingSize: 144
-            }
-          }, 'viewUniforms', 'ViewUniforms')
-      )
-    ] as const;
-    super(gpu, bindLayouts);
+
     /////////////////
     const wgsl = /* wgsl */ `
     
@@ -89,15 +31,7 @@ export class UpdateView extends ComputeShader<
           bounds: array<ClusterBounds, 27648>, //32 * 18 * 48 = total tiles = 27648
           lightsCount: array<u32, 27648>,
           lights: array<u32, 1741824>  //27648 * 63 = 1741824
-        };
-        
-        @binding(0) @group(0) var<storage, read> meshes : MeshArray;
-        @binding(1) @group(0) var<storage, read> point_lights : Lights;
-        @binding(2) @group(0) var<storage, read> directional_lights : Lights;
-        @binding(0) @group(1) var<storage, read_write> clusters : Clusters;
-        @binding(1) @group(1) var<uniform> viewUniforms : ViewUniforms;
-        
-        
+        };        
         
           fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {
             var sqDist = 0.0;
@@ -163,18 +97,71 @@ export class UpdateView extends ComputeShader<
         
       `;
     ///////////////////////////
+
+export class UpdateView extends ComputeShader<
+  [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>, BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
+  { main: PipelineLayout }> {
+  constructor(
+    gpu: GPU) {
+    const bindLayouts = [
+      new BGLayout(gpu, 'UpdateViewLayout',
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "read-only-storage",
+              hasDynamicOffset: false,
+              minBindingSize: 512
+            }
+          }, 'meshes', 'MeshArray'),
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "read-only-storage",
+              hasDynamicOffset: false,
+              minBindingSize: 16
+            }
+          }, 'point_lights', 'Lights'),
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "read-only-storage",
+              hasDynamicOffset: false,
+              minBindingSize: 16
+            }
+          }, 'directional_lights', 'Lights')
+      ),
+      new BGLayout(gpu, 'UpdateClustersLayout',
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage",
+              hasDynamicOffset: false,
+              minBindingSize: 7962624
+            }
+          }, 'clusters', 'Clusters'),
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: 'uniform',
+              hasDynamicOffset: false,
+              minBindingSize: 144
+            }
+          }, 'viewUniforms', 'ViewUniforms')
+      )
+    ] as const;
+
     const pipelineLayout = new PipelineLayout({
       label: 'UpdateViewPipeline',
-      bindGroupLayouts: this.bindLayouts
+      bindGroupLayouts: bindLayouts
     });
-    this.entryPoints = {
+    super(gpu, bindLayouts, wgsl, "UpdateView.comp", {
       main: pipelineLayout
-    }
-    this.module = this.gpu.device.createShaderModule(
-      {
-        code: wgsl,
-        label: 'UpdateView.comp',
-        hints: this.entryPoints
-      });
+    });
+
   }
 }

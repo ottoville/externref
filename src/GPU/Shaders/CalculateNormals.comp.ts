@@ -1,47 +1,10 @@
-import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
+import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
-export class CalculateNormals extends ComputeShader<
-  [
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-  ]
-  ,
-  { main: PipelineLayout }> {
-  entryPoints: { main: PipelineLayout; };
-  module: GPUShaderModule;
-  constructor(
-    settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    slopesLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>
-  ) {
-    const bindLayouts = [
-      settingsLayout,
-      new BGLayout(settingsLayout.gpu, 'normalsBindGroupLayout',
-        new BindGroupLayoutEntry(
-          {
-            visibility: GPUShaderStage.COMPUTE,
-            buffer: {
-              type: "storage",
-              hasDynamicOffset: false,
-              minBindingSize: 32
-            }
-          }, 'normals', 'FloatArray')),
-      slopesLayout
-    ] as const
-    super(settingsLayout.gpu, bindLayouts);
+/////////////////
 
-
-    /////////////////
-
-    const wgsl = /* wgsl */ `
-
-   
-   ${this.groups[0]![0]} settings : Settings;
-   ${this.groups[1]![0]} normals : FloatArray;
-   ${this.groups[2]![0]} slopes : Slopes;
-   ${this.groups[2]![1]} facet12 : PlaneArray;
+const wgsl = /* wgsl */ `
    
    struct FloatArray {
     numbers: array<f32>
@@ -125,20 +88,43 @@ export class CalculateNormals extends ComputeShader<
     }
       `;
 
-    /////////////////////////////////
+/////////////////////////////////
+
+export class CalculateNormals extends ComputeShader<
+  [
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+  ]
+  ,
+  { main: PipelineLayout }> {
+  constructor(
+    settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
+    slopesLayout: BGLayout<[BufLayout, BufLayout]>
+  ) {
+    const bindLayouts = [
+      settingsLayout,
+      new BGLayout(settingsLayout.gpu, 'normalsBindGroupLayout',
+        new BindGroupLayoutEntry(
+          {
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage",
+              hasDynamicOffset: false,
+              minBindingSize: 32
+            }
+          }, 'normals', 'FloatArray')),
+      slopesLayout
+    ] as const
 
     const pipelineLayout = new PipelineLayout({
       label: 'calculateNormalsPipeline',
-      bindGroupLayouts: this.bindLayouts
+      bindGroupLayouts: bindLayouts
     });
-    this.entryPoints = {
+
+    super(settingsLayout.gpu, bindLayouts, wgsl, 'CalculateNormals.comp', {
       main: pipelineLayout
-    }
-    this.module = this.gpu.device.createShaderModule(
-      {
-        code: wgsl,
-        label: 'calculateNormals.comp',
-        hints: this.entryPoints
-      });
+    });
+
   }
 }

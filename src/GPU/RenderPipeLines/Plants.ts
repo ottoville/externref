@@ -1,41 +1,43 @@
-import { Shader, VertexShader } from "../RenderPipeline.js";
+import { Shader } from "../RenderPipeline.js";
 import { GPU } from "../../GPU.js";
+import { GrassVertShader } from "../Shaders/Grass.vert.js";
 
 export const PlantsRenderPipeline = ['PlantsRenderPipeline', function PlantsRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-    return gpu.rootCameralayout.addRenderPipeline(
+    const grassVertShader = new GrassVertShader(gpu.rootCameralayout.bindGroupLayouts, [
+        {
+            arrayStride: 4 * 4,
+            stepMode: "instance",
+            attributes: [{ // position
+                shaderLocation: 0,
+                offset: 0,
+                format: "float32x4"
+            }]
+        },
+        {
+            arrayStride: 4 * 4,
+            stepMode: "instance",
+            attributes: [
+                {  // shape
+                    shaderLocation: 1,
+                    offset: 0,
+                    format: "float32x4"
+                }
+            ]
+        }, {
+            arrayStride: 12,
+            stepMode: 'vertex',
+            attributes: [{
+                // vertex position
+                shaderLocation: 2,
+                offset: 0,
+                format: "float32x3"
+            }]
+        }
+    ]);
+    return gpu.rootCameralayout.addRenderPipeline2(
         {
             label,
-            vertexShader: new VertexShader(gpu, 'grass/grass.vert.wgsl', [
-                {
-                    arrayStride: 4 * 4,
-                    stepMode: "instance",
-                    attributes: [{ // position
-                        shaderLocation: 0,
-                        offset: 0,
-                        format: "float32x4"
-                    }]
-                },
-                {
-                    arrayStride: 4 * 4,
-                    stepMode: "instance",
-                    attributes: [
-                        {  // shape
-                            shaderLocation: 1,
-                            offset: 0,
-                            format: "float32x4"
-                        }
-                    ]
-                }, {
-                    arrayStride: 12,
-                    stepMode: 'vertex',
-                    attributes: [{
-                        // vertex position
-                        shaderLocation: 2,
-                        offset: 0,
-                        format: "float32x3"
-                    }]
-                }
-            ]),
+            vertexShader: grassVertShader,
             fragmentShader: new Shader(gpu, 'color.frag.wgsl'),
             renderPipeline: {
                 primitive

@@ -91,7 +91,7 @@ export class Plants {
             }, []);
             const getHeightAtCoordinatesShader = new getHeightAtCoordinates(terrain.settingsLayout);
             
-            const computePipeline = getHeightAtCoordinatesShader.createComputePipeline('main');
+            const computePipeline = await getHeightAtCoordinatesShader.createComputePipeline('main');
             
             const settingsBindGroup = getHeightAtCoordinatesShader.bindLayouts[0].createBindGroup('bindGroup0', bindGroup0 => [
                 {

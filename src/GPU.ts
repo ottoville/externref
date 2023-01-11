@@ -90,7 +90,6 @@ export class GPU {
     }>;
     readonly renderPassCanvas: RenderPass<{ swap: ColorRenderTarget<GPUTextureFormat, TextureUsageType["RENDER_ATTACHMENT"]>; }>;
 
-    readonly #updateViewPipeline: GPUComputePipeline;
     readonly #updateViewBindGroup: BindGroup;
     readonly clustersInRow: [number, number, number] = [32, 18, 48];
 
@@ -160,7 +159,6 @@ export class GPU {
         const totalClusters = this.clustersInRow[0] * this.clustersInRow[1] * this.clustersInRow[2]
         this.clusterSizeinBytes = totalClusters * (8 + 64) * Uint32Array.BYTES_PER_ELEMENT;
         this.updateViewShader = new UpdateView(this)
-        this.#updateViewPipeline = this.updateViewShader.createComputePipeline('main');
 
         this.GPUMeshes = Buffer.create(this, GPU.gpu_memory_index_size /* meshes count etc */ + GPU.gpu_memory_index_size * this.#maxInstances, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_SRC], 'GPUMeshes')
         this.#GPUPointLights = Buffer.create(this, this.#gpu_max_point_lights * 4, [GPUBufferUsage.UNIFORM, GPUBufferUsage.STORAGE, GPUBufferUsage.COPY_DST], 'GPUPointLights')
@@ -230,7 +228,7 @@ export class GPU {
                         type: 'uniform',
                         minBindingSize: 16
                     }
-                }, 'TODOVAR', 'TODOSTRUCT')
+                }, 'uniforms', 'Uniforms')
         )
         this.rootCameralayout = new BindablePipelineLayout({
             label: 'rootCamera',
@@ -522,7 +520,9 @@ export class GPU {
         this.timeBuffer = Buffer.create(this, timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'timeBuffer');
 
         const ClustersShader = new Clusters(this.sizeBindGroupLayout);
-        const computePipelineClusters = ClustersShader.createComputePipeline('main');
+        const computePipelineClustersP = ClustersShader.createComputePipeline('main');
+        const updateViewPipelineP = this.updateViewShader.createComputePipeline('main');
+
         let resizeHandler: null | ReturnType<typeof setTimeout> = null;
         const maxResolution = {
             width: 1920,
@@ -535,7 +535,7 @@ export class GPU {
             window.cancelAnimationFrame(this.#renderFrame)
             if (resizeHandler)
                 clearTimeout(resizeHandler)
-            resizeHandler = setTimeout(() => {
+            resizeHandler = setTimeout(async () => {
                 try {
                     const aspectRatio = entry.contentRect.width / entry.contentRect.height
                     canvas.width = Math.min((entry.contentRect.width | 0) * window.devicePixelRatio, maxResolution.width);
@@ -557,7 +557,7 @@ export class GPU {
                     })
                     const commandEncoder = this.device.createCommandEncoder({ label: 'resizeEncoder' });
                     const passEncoder = commandEncoder.beginComputePass({ label: 'resizePassEncoder' });
-                    passEncoder.setPipeline(computePipelineClusters);
+                    passEncoder.setPipeline(await computePipelineClustersP);
 
                     this.projections.forEach(projection => projection.update(aspectRatio, this));
                     this.#renderPasses.forEach(renderPass => {
@@ -574,7 +574,8 @@ export class GPU {
                     });
                     passEncoder.end();
                     this.device.queue.submit([commandEncoder.finish()]);
-                    this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
+                    const updateViewPipeline = await updateViewPipelineP;
+                    this.#renderFrame = window.requestAnimationFrame((time) => this.#renderLoop(time, updateViewPipeline));
                 } catch (e) {
                     engine.showError(e);
                 }
@@ -671,7 +672,7 @@ export class GPU {
             this.#renderStartedCallbacks.push(cb);
         }
     }
-    readonly #renderLoop = (time: DOMHighResTimeStamp) => {
+    readonly #renderLoop = (time: DOMHighResTimeStamp, updateViewPipeline: GPUComputePipeline) => {
         //msPerFrame = performance.now() - startTime;
         //startTime = performance.now();
 
@@ -716,7 +717,7 @@ export class GPU {
                 camera.updateView(renderEncoder)
             })
             const lightPass = renderEncoder.beginComputePass({ label: 'lightPassEncoder' });
-            lightPass.setPipeline(this.#updateViewPipeline);
+            lightPass.setPipeline(updateViewPipeline);
             lightPass.setBindGroup(0, this.#updateViewBindGroup.bindGroup);
             engine.cameras.forEach(camera => {
                 if (camera.viewUpdated || engine.updateLights) {
@@ -756,6 +757,6 @@ export class GPU {
             this.#renderStartedCallbacks.length = 0;
             this.#renderStarted = true;
         }
-        this.#renderFrame = window.requestAnimationFrame(this.#renderLoop);
+        this.#renderFrame = window.requestAnimationFrame((time2) => this.#renderLoop(time2, updateViewPipeline));
     }
 }

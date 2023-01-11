@@ -17,7 +17,7 @@ export class PickableRenderPass<T extends {
 }> extends DepthRenderPass<T> {
     #pickBuffer: GPUBuffer;
     readonly #pickBufferRead?: GPUBuffer;
-    readonly #pickPositionPipeline?: GPUComputePipeline;
+    #pickPositionPipeline?: GPUComputePipeline | Promise<GPUComputePipeline>;
     readonly #mousePositionBuffer?: CopyDstBuffer & BindUniformBuffer;
     readonly #pickPositionBindGroup0?: BindGroup;
     readonly #pickPositionBindGroup1?: BindGroup;
@@ -29,9 +29,10 @@ export class PickableRenderPass<T extends {
             super(renderPassProps, depthRenderTargets);
             if(renderPassProps.sampleCount == 4) {
                 const readDepthShader = new ReadDepth(renderPassProps.gpu);
-                
-                this.#pickPositionPipeline= readDepthShader.createComputePipeline('main')
-
+                this.#pickPositionPipeline = readDepthShader.createComputePipeline('main').then(pickPositionPipeline => {
+                    this.#pickPositionPipeline = pickPositionPipeline;
+                    return pickPositionPipeline;
+                });
                 this.#pickBuffer = renderPassProps.gpu.device.createBuffer({
                     size: 4 * 4, //depth + meshID (four pixel)
                     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
@@ -103,9 +104,9 @@ export class PickableRenderPass<T extends {
     pickPromise: Promise<{ position: TerraVector3 } | null> | null = null;
     pickPromiseMesh: Promise<{ position: TerraVector3, meshId: number } | null> | null = null;
     #zAndIDPromise:Promise<[z:number, id:number]> | null = null;
-    pickPosition(): Promise<{ position: TerraVector3 } | null>
-    pickPosition(mesh:true): Promise<{ position: TerraVector3, meshId: number } | null>
-    pickPosition(mesh=false): Promise<{ position: TerraVector3 } | null> | Promise<{ position: TerraVector3, meshId: number } | null> {
+    async pickPosition(): Promise<{ position: TerraVector3 } | null>
+    async pickPosition(mesh:true): Promise<{ position: TerraVector3, meshId: number } | null>
+    async pickPosition(mesh=false): Promise<{ position: TerraVector3; } | { position: TerraVector3; meshId: number; } | null> {
         if (mesh && this.pickPromiseMesh) {
             return this.pickPromiseMesh
         }
@@ -122,7 +123,11 @@ export class PickableRenderPass<T extends {
                 });
                 mousePositionSwapBuffer.copyTo(encoder,this.#mousePositionBuffer!,0, 0, 8,);
                 const pickPass = encoder.beginComputePass({label:'pickPass'});
-                pickPass.setPipeline(this.#pickPositionPipeline!);
+                if(this.#pickPositionPipeline instanceof GPUComputePipeline) {
+                    pickPass.setPipeline(this.#pickPositionPipeline);
+                } else {
+                    pickPass.setPipeline(await this.#pickPositionPipeline!);
+                }
                 pickPass.setBindGroup(0, this.#pickPositionBindGroup0!.bindGroup);
                 pickPass.setBindGroup(1, this.#pickPositionBindGroup1!.bindGroup);
                 pickPass.dispatchWorkgroups(1);
