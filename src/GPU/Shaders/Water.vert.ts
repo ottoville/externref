@@ -1,13 +1,10 @@
 import { BGLayout, BufLayout, SampLayout, TextLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-import { MeshUniforms } from './structs/MeshUniforms.js';
 
 //////////////////////////////////
 
 const wgsl = /* wgsl */ `
-
-${MeshUniforms}
 
 //[[location(1)]] var<out> ambient : vec3<f32>;
 struct Output {

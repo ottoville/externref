@@ -1,8 +1,6 @@
 import { BGLayout, BufLayout } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-import { MeshUniforms } from './structs/MeshUniforms.js';
-
 
 //////////////////////////////////
 
@@ -20,7 +18,6 @@ struct PlaneArray {
   plane: array<Plane>
 };
 
-${MeshUniforms}
 struct Settings {
     size : vec2<u32>,
     bufferSize : vec2<u32>,

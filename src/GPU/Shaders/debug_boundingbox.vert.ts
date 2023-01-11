@@ -1,14 +1,10 @@
 import { BGLayout, BufLayout} from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { VertexShader } from './VertexShader.js';
-import { MeshUniforms } from './structs/MeshUniforms.js';
-
 
 //////////////////////////////////
 
 const wgsl = /* wgsl */ `
-  ${MeshUniforms}
-
   struct Output {
     @builtin(position) Position : vec4<f32>,
     @location(0) color : vec3<f32>
