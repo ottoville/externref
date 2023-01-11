@@ -6,16 +6,7 @@ import { MeshUniforms } from './structs/MeshUniforms.js';
 //////////////////////////////////
 
 const wgsl = /* wgsl */ `
-struct Scene {
-  modelViewProjectionMatrix : mat4x4<f32>,
-  view : mat4x4<f32>,
-  viewPosition : vec3<f32>
-};
 
-struct Time {
-  time : u32,
-  @align(4) delta : f32
-};
 ${MeshUniforms}
 
 //[[location(1)]] var<out> ambient : vec3<f32>;
@@ -29,7 +20,7 @@ struct Output {
 @vertex
 fn main(@location(0) position : vec3<f32>) -> Output {
   var output:Output;
-  output.Position = scene.modelViewProjectionMatrix * vec4<f32>(position, 1.0);
+  output.Position = scene.modelViewProjection * vec4<f32>(position, 1.0);
   output.v_uv = output.Position;
   output.position=position;
   output.id=world.id;

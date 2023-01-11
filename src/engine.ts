@@ -347,10 +347,14 @@ export class Engine {
 
     showError(e: unknown) {
         if(e instanceof DOMException) {
-            //When device is lost new device will be set in GPU.ts
-            if(!(e.name === "AbortError" && e.message === "Device is lost")) {
-                this.showErrorError(e);
+            if(
+                (e.message.includes("Device") && e.message.includes("is lost")) || 
+                (e.cause instanceof DOMException && e.cause.message.includes("Device") && e.cause.message.includes("is lost"))
+            ) {
+                //When device is lost new device will be set in GPU.ts
+                return;
             }
+            this.showErrorError(e);
             return;
         }
         const error = createError(e);

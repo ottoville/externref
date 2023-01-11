@@ -26,7 +26,8 @@ export class BindGroupLayoutEntry<T extends GPUBindingGroupLayoytEntryStrict = G
     constructor(
         public entry: T,
         public variableName: string,
-        public structName: string) {
+        public structName: string,
+        public struct?: string) {
     }
 }
 

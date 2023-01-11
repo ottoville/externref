@@ -7,16 +7,6 @@ import { MeshUniforms } from './structs/MeshUniforms.js';
 //////////////////////////////////
 
 const wgsl = /* wgsl */ `
-struct Scene {
-  viewProjection : mat4x4<f32>,
-  view : mat4x4<f32>,
-  cameraPosition : vec3<f32>
-};
-
-struct Time {
- time : u32,
- delta : f32
-};
 
 struct IntArray {
   numbers: array<i32>
@@ -65,7 +55,7 @@ fn main(@location(0) position : vec3<f32>) -> Output {
    var output:Output;
    var worldPos:vec4<f32> = world.transformation * vec4<f32>(position.x, 0.0, position.y, 1.0);
    worldPos.y = worldPos.y + getHeightAtCoordinates(worldPos.xz, facetSize);
-   output.Position = scene.viewProjection * worldPos;
+   output.Position = scene.modelViewProjection * worldPos;
    output.color = vec3<f32>(1.0,1.0,1.0);
    return output;
 }

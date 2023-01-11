@@ -8,7 +8,7 @@ export abstract class Shader<
     E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayout },
     B extends readonly BGLayout[] = readonly BGLayout[],
 > {
-    
+
     readonly module: GPUShaderModule;
     readonly wgsl: string;
     constructor(
@@ -18,10 +18,11 @@ export abstract class Shader<
         public readonly entryPoints: E,
         label: string,
         shaderFlag: typeof GPUShaderStage.VERTEX | typeof GPUShaderStage.FRAGMENT | typeof GPUShaderStage.COMPUTE,
-        ) {
+    ) {
+        const structs:Set<string> = new Set();
         const groups = bindLayouts.reduce((groupstring, group, gi) => {
             return group.entries.reduce((acc, binding, bi) => {
-                if((binding.entry.visibility & shaderFlag) === 0) {
+                if ((binding.entry.visibility & shaderFlag) === 0) {
                     return acc;
                 }
                 let qualifiers = '';
@@ -35,15 +36,18 @@ export abstract class Shader<
                         qualifiers = '<storage, read_write>';
                     }
                 }
+                if(binding.struct) {
+                    structs.add(`struct ${binding.structName} {\n${binding.struct}\n}`);
+                }
                 return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${binding.variableName} : ${binding.structName};\n`
             }, groupstring)
         }, '\n');
-        this.wgsl = groups + wgsl;
+        this.wgsl = groups + [...structs].join('\n') +  wgsl;
         this.module = gpu.device.createShaderModule(
             {
-              code: this.wgsl,
-              label,
-              hints: entryPoints
+                code: this.wgsl,
+                label,
+                hints: entryPoints
             });
     }
 }

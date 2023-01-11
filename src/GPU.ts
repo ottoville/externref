@@ -185,7 +185,10 @@ export class GPU {
                         type: "uniform",
                         minBindingSize: 144
                     }
-                }, 'scene', 'Scene'),
+                }, 'scene', 'Scene',
+                `modelViewProjection : mat4x4<f32>,
+                view : mat4x4<f32>,
+                viewPosition : vec3<f32>`),
             new BindGroupLayoutEntry(
                 {
                     visibility: GPUShaderStage.VERTEX,
@@ -193,7 +196,10 @@ export class GPU {
                         type: "uniform",
                         minBindingSize: 8
                     }
-                }, 'time', 'Time'),
+                }, 'time', 'Time',
+                `time : u32,
+                 delta : f32
+              `),
             new BindGroupLayoutEntry(
                 {
                     //clusters

@@ -18,17 +18,6 @@ const rot :array<vec2<f32>, 7> = array<vec2<f32>, 7>(
   vec2<f32>(1.0,0.0),
   vec2<f32>(1.0,0.0));
 
-struct Scene {
-  viewProjection : mat4x4<f32>,
-  view : mat4x4<f32>,
-  cameraPosition : vec3<f32>
-};
-
-struct Time {
-  time : u32,
-  delta : f32
-};
-
 //[[block]] struct Lights {
 //  [[offset(48)]] sunDirection : vec3<f32>;
 //  [[offset(80)]] ambient : vec3<f32>;
@@ -110,12 +99,12 @@ fn main(
 
    
    var worldPos:vec4<f32> = vec4<f32>(positions.xyz, 1.0) + vec4<f32>(scaled.x, scaled.y, scaled.z, 0.0);
-   var viewDirectionW:vec3<f32> = normalize(scene.cameraPosition - worldPos.xyz);
+   var viewDirectionW:vec3<f32> = normalize(scene.viewPosition - worldPos.xyz);
    //normal = normal * sign(dot(viewDirectionW, normal));
 
    //var diffuse:f32 = dot(normal, lights.sunDirection)*lights.shadow;
 
-   output.Position = scene.viewProjection * worldPos;
+   output.Position = scene.modelViewProjection * worldPos;
 
    output.color = vec3<f32>(clamp(shape.w,0.0,1.0),1.0,0.0);//*diffuse;
     return output;

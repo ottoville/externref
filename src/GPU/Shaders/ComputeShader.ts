@@ -19,7 +19,7 @@ E extends { [index: string]: PipelineLayout } = { [index: string]: PipelineLayou
             label: this.module.label + ' ' + (entryPoint as string),
             layout: this.entryPoints[entryPoint]!.layout
         }).catch((err: unknown) => {
-            console.error('createComputePipelineAsync failed, wgsl:', this.wgsl, { cause: err })
+            console.error('createComputePipelineAsync failed on,',this.module.label,', wgsl:', this.wgsl, { cause: err })
             throw (new Error('createComputePipelineAsync failed', { cause: err }));
         });
     }

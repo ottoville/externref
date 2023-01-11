@@ -7,17 +7,7 @@ import { MeshUniforms } from './structs/MeshUniforms.js';
 //////////////////////////////////
 
 const wgsl = /* wgsl */ `
- struct Scene {
-    modelViewProjectionMatrix : mat4x4<f32>,
-    view : mat4x4<f32>,
-    viewPosition : vec3<f32>
-  };
-  struct Time {
-    time : u32,
-    delta : f32
-   };
   ${MeshUniforms}
-
 
   struct Output {
     @builtin(position) Position : vec4<f32>,
@@ -29,7 +19,7 @@ const wgsl = /* wgsl */ `
     @builtin(vertex_index) gl_VertexIndex : u32 ) -> Output {
       var output : Output;
       var vertexPosition:vec4<f32> = vec4<f32>(position.xyz, 1.0);
-      output.Position = scene.modelViewProjectionMatrix * vertexPosition;
+      output.Position = scene.modelViewProjection * vertexPosition;
       output.color = vec3<f32>(0.0,1.0,0.0);
       return output;
     }
