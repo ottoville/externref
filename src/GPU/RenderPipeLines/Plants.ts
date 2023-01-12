@@ -34,7 +34,7 @@ export const PlantsRenderPipeline = ['PlantsRenderPipeline', function PlantsRend
             }]
         }
     ]);
-    return gpu.rootCameralayout.addRenderPipeline2(
+    return gpu.rootCameralayout.addRenderPipeline(
         {
             label,
             vertexShader: grassVertShader,

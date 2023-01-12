@@ -14,7 +14,7 @@ export const BoundingBoxPipeline = ['BoundingBoxPipeline', function create(gpu: 
         }
         ]
     });
-    return gpu.positionBindGroupTimeWGSL.addRenderPipeline2(
+    return gpu.positionBindGroupTimeWGSL.addRenderPipeline(
         {
             label,
             vertexShader: shader,

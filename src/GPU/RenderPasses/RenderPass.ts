@@ -128,7 +128,15 @@ export class RenderPass<U extends {
                     label: 'renderPipeline:' + renderPipeline.props.label + ' RenderPass:' + this.label
                 }
             ).catch((err: unknown) => {
-                console.error('createRenderPipelineAsync failed, wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err })
+                if(err instanceof DOMException) {
+                    if(err.message.includes(renderPipeline.props.vertexShader.module.label)) {
+                        console.error('createRenderPipelineAsync failed, vertex wgsl:', renderPipeline.props.vertexShader.wgsl, { cause: err })
+                    }
+                    if(err.message.includes(renderPipeline.props.fragmentShader.module.label)) {
+                        //@ts-expect-error
+                        console.error('createRenderPipelineAsync failed, fragment wgsl:', renderPipeline.props.fragmentShader.wgsl, { cause: err })
+                    }
+                }
                 throw (new Error('createRenderPipelineAsync failed', { cause: err }));
             }).then((variantPipeline) => {
                 variant = {

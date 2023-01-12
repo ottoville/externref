@@ -123,7 +123,7 @@ export class TerrainTool extends MainNode {
         ) {
             const helperVertShader = new HelperVertShader(terrain.TerrainHeightsbindGroupTree.bindGroupLayouts);
             
-            const renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline2(
+            const renderPipeline = terrain.TerrainHeightsbindGroupTree.addRenderPipeline(
                 {
                     label,
                     vertexShader: helperVertShader,

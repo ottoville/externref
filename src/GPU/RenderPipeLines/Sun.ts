@@ -4,7 +4,7 @@ import { SunVertShader } from "../Shaders/Sun.vert.js";
 
 export const SunRenderPipeline = ['SunRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
     const sunVertShader = new SunVertShader(gpu.positionBindGroupTimeWGSL.bindGroupLayouts)
-    return gpu.positionBindGroupTimeWGSL.addRenderPipeline2(
+    return gpu.positionBindGroupTimeWGSL.addRenderPipeline(
         {
             label,
             vertexShader: sunVertShader,

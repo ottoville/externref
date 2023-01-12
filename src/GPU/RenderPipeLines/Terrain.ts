@@ -30,7 +30,7 @@ export const TerrainRenderPipeline = ['TerrainRenderPipeline', function create(g
         }
 
     );
-    return gpu.lightsBindGroupTexture2.addRenderPipeline2(
+    return gpu.lightsBindGroupTexture2.addRenderPipeline(
         {
             label,
             vertexShader: groundVertShader,

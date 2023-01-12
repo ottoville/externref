@@ -106,7 +106,7 @@ export class BindablePipelineLayout<B extends readonly BGLayout[] = readonly BGL
         sharedBindgroup?: BindGroup | undefined) {
         super(props, sharedBindgroup);
     }
-    addRenderPipeline2<V extends VertexShader>(
+    addRenderPipeline<V extends VertexShader>(
         props: Omit<RenderPipelineProps<V>, 'bindgroupdrawable'>,
 
     ): RenderPipeline<V> {

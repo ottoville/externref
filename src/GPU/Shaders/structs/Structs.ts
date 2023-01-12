@@ -42,9 +42,13 @@ export const Projection = {
     struct: /* wgsl */ `
         inversed_projection : mat4x4<f32>,
         reversed_projection:mat4x4<f32>,
-        inversed_projection_farplane:mat4x4<f32>,
+        projectionFarPlane:mat4x4<f32>,
         zNear : f32,
-        zFar : f32`
+        zFar : f32,
+        z_near_multiplied_far: f32,
+        z_near_substracted_far: f32,
+        slice_scale:f32,
+        slice_bias:f32`
 }
 export const IntArray = {
     name: 'IntArray',

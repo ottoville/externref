@@ -17,10 +17,10 @@ import { TerraCamera } from "./TerraCamera.js";
 import { TextureUsageEnums, TextureUsageType } from "./GPU/Texture.js";
 import { BGLayout, BindGroupLayoutEntry, BufLayout, SampLayout, TextLayout } from "./GPU/BindGroupLayout.js";
 import { UpdateView } from "./GPU/Shaders/UpdateView.comp.js";
-import { Clusters } from "./GPU/Shaders/Clusters.comp.js";
+import { ClustersComp } from "./GPU/Shaders/Clusters.comp.js";
 import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
 import { RenderPipeline } from "./GPU/RenderPipeline2.js";
-import { MeshUniforms, Scene, Time, UIUniforms, Uniforms } from "./GPU/Shaders/structs/Structs.js";
+import { Clusters, MeshArray, MeshUniforms, Scene, Time, UIUniforms, Uniforms, Projection as ProjectionStruct } from "./GPU/Shaders/structs/Structs.js";
 import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
 declare const engine: Engine;
 
@@ -191,7 +191,7 @@ export class GPU {
                         minBindingSize: 8
                     }
                 }, 'time', Time),
-            new BindGroupLayoutEntry(
+            new BufLayout(
                 {
                     //clusters
                     visibility: GPUShaderStage.FRAGMENT,
@@ -199,23 +199,23 @@ export class GPU {
                         type: 'read-only-storage',
                         minBindingSize: 7962624 //Must be in sync with Struct Clusters in shader
                     }
-                }, 'TODOVAR', 'TODOSTRUCTNAME'),
-            new BindGroupLayoutEntry(
+                }, 'clusters_array', Clusters),
+            new BufLayout(
                 {   // mesh array for lights
                     visibility: GPUShaderStage.FRAGMENT,
                     buffer: {
                         type: "read-only-storage",
                         minBindingSize: 512
                     }
-                }, 'TODOVAR', 'TODOSTRUCTNAME'),
-            new BindGroupLayoutEntry(
+                }, 'meshes', MeshArray),
+            new BufLayout(
                 {   //projection
                     visibility: GPUShaderStage.FRAGMENT,
                     buffer: {
                         type: "uniform",
                         minBindingSize: PROJECTION_BUFFER_SIZE
                     }
-                }, 'TODOVAR', 'TODOSTRUCTNAME')
+                }, 'projection', ProjectionStruct)
         );
         this.sizeBindGroupLayout = new BGLayout(this, 'sizeBindGroupLayout',
             new BufLayout(
@@ -450,7 +450,7 @@ export class GPU {
                 format: "float32x2",
             }]
         })
-        this.UIPipeline = this.#canvasRootLayout.addRenderPipeline2(
+        this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
             {
                 label: 'UIRenderPipeline',
                 vertexShader: uiVertShader,
@@ -515,7 +515,7 @@ export class GPU {
         const timeAndDeltaBuffer = new ArrayBuffer(8);
         this.timeBuffer = Buffer.create(this, timeAndDeltaBuffer.byteLength, [GPUBufferUsage.UNIFORM, GPUBufferUsage.COPY_DST], 'timeBuffer');
 
-        const ClustersShader = new Clusters(this.sizeBindGroupLayout);
+        const ClustersShader = new ClustersComp(this.sizeBindGroupLayout);
         const computePipelineClustersP = ClustersShader.createComputePipeline('main');
         const updateViewPipelineP = this.updateViewShader.createComputePipeline('main');
 

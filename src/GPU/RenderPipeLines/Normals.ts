@@ -20,7 +20,7 @@ export const NormalsPipeline = ['NormalsPipeline', function create(gpu: GPU, lab
         }
         ]
     });
-    return gpu.positionBindGroupTimeWGSL.addRenderPipeline2(
+    return gpu.positionBindGroupTimeWGSL.addRenderPipeline(
         {
             label,
             vertexShader: debugNormalsVertShader,

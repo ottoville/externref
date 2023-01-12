@@ -57,7 +57,7 @@ export class paintPlane extends paintGround {
                     }]
                 }
             )
-            renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline2(
+            renderPipeline = ground.TerrainHeightsbindGroupTree.addRenderPipeline(
                 {
                     label: 'paintPlaneRenderpipeline',
                     vertexShader: planeVertShader,

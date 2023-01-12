@@ -1,6 +1,6 @@
-import { Shader } from "../RenderPipeline.js";
 import { GPU } from "../../GPU.js";
 import { SimpleVertShader } from "../Shaders/Simple.vert.js";
+import { SimpleFragShader } from "../Shaders/Simple.frag.js";
 
 export const SimpleRenderPipeline = ['SimpleRenderPipeline', function SimpleRenderPipeline(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
     const simpleVertShader = new SimpleVertShader(gpu.positionBindGroupTimeWGSL.bindGroupLayouts,
@@ -18,12 +18,13 @@ export const SimpleRenderPipeline = ['SimpleRenderPipeline', function SimpleRend
                 offset: 12,
                 format: "float32x3"
             }]
-        })
-    return gpu.positionBindGroupTimeWGSL.addRenderPipeline2(
+        });
+    const simpleFragShader = new SimpleFragShader(gpu.positionBindGroupTimeWGSL.bindGroupLayouts);
+    return gpu.positionBindGroupTimeWGSL.addRenderPipeline(
         {
             label,
             vertexShader: simpleVertShader,
-            fragmentShader: new Shader(gpu, 'simple.frag.wgsl'),
+            fragmentShader: simpleFragShader,
             renderPipeline: {
                 primitive,
             }
