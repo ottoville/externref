@@ -5,7 +5,7 @@ import { ColorRenderTarget } from "./GPU/RenderTargets/ColorRenderTarget.js";
 import { Projection, PROJECTION_BUFFER_SIZE } from "./GPU/Projection.js";
 import shaders from "./shaders.json" assert { type: "json" };
 import { MSAARenderTarget } from "./GPU/RenderTargets/MSAARenderTarget.js";
-import { Shader, VertexShader } from "./GPU/RenderPipeline.js";
+import { Shader } from "./GPU/RenderPipeline.js";
 import type { BindGroup } from "./GPU/BindGroup.js";
 import { BindStorageBuffer, BindUniformBuffer, Buffer, CopyDstBuffer, CopySrcBuffer, GPUBufferUsage } from "./GPU/Buffer/Buffer.js";
 
@@ -21,7 +21,8 @@ import { Clusters } from "./GPU/Shaders/Clusters.comp.js";
 import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import { RenderPipeline2 } from "./GPU/RenderPipeline2.js";
-import { MeshUniforms, Scene, Time, Uniforms } from "./GPU/Shaders/structs/Structs.js";
+import { MeshUniforms, Scene, Time, UIUniforms, Uniforms } from "./GPU/Shaders/structs/Structs.js";
+import { UIVertShader } from "./GPU/Shaders/UI.vert.js";
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -108,13 +109,9 @@ export class GPU {
     static readonly #renderPipelines: Map<string, RenderPipeline | RenderPipeline2> = new Map();
     readonly bindGroupTextureWater: SharedPipelineLayout<[BGLayout<[BufLayout]>, BGLayout<[BufLayout, BufLayout, BufLayout, BufLayout, BufLayout]>, BGLayout<[BufLayout]>, BGLayout<[SampLayout, TextLayout]>]>;
     readonly #ro: ResizeObserver;
-    readonly #canvasRootLayout: BindablePipelineLayout;
-    readonly UIPipeline: RenderPipeline<VertexShader<[{
-        arrayStride: number; stepMode: "vertex"; attributes: {
-            // position
-            shaderLocation: number; offset: number; format: "float32x2";
-        }[];
-    }]>>;
+    readonly #canvasRootLayout: BindablePipelineLayout<readonly [BGLayout<[BufLayout, TextLayout]>]>
+    readonly UIPipeline: RenderPipeline2<UIVertShader>
+
     readonly updateViewShader: UpdateView;
     createRenderPipeline<R extends (RenderPipeline | RenderPipeline2)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: GPUPrimitiveState & { topology: 'triangle-strip' | 'line-strip', stripIndexFormat: GPUIndexFormat }): R
     createRenderPipeline<R extends (RenderPipeline | RenderPipeline2)>(desc: readonly [label: string, create: (gpu: GPU, hash: string, primitive: GPUPrimitiveState) => R], primitive: Omit<GPUPrimitiveState, 'stripIndexFormat'> & { topology: 'triangle-list' | 'line-list' }): R
@@ -418,47 +415,46 @@ export class GPU {
         });
 
         const BindGroupLayoutCanvas = new BGLayout(this, 'BindGroupLayoutUI',
-            new BindGroupLayoutEntry(
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.VERTEX,
                     buffer: {
                         type: "uniform",
                         minBindingSize: 8
                     }
-                }, 'TODOVAR', 'TODOSTRUCTNAME'),
-            new BindGroupLayoutEntry(
+                }, 'uniforms', UIUniforms),
+            new TextLayout(
                 {
                     visibility: GPUShaderStage.FRAGMENT,
                     texture: {
                     }
                 }, 'TODOVAR', 'TODOSTRUCTNAME')
         )
+
         this.#canvasRootLayout = new BindablePipelineLayout({
             label: 'canvasRootLayout',
             bindGroupLayouts: [BindGroupLayoutCanvas]
         });
-
-        this.UIPipeline = this.#canvasRootLayout.addRenderPipeline(
+        const uiVertShader = new UIVertShader(this.#canvasRootLayout.bindGroupLayouts, {
+            arrayStride: 4 * 4,
+            stepMode: "vertex",
+            attributes: [{
+                // position
+                shaderLocation: 0,
+                offset: 0,
+                format: "float32x2",
+            },
+            {
+                // uv
+                shaderLocation: 1,
+                offset: 8,
+                format: "float32x2",
+            }]
+        })
+        this.UIPipeline = this.#canvasRootLayout.addRenderPipeline2(
             {
                 label: 'UIRenderPipeline',
-                vertexShader: new VertexShader(this, 'deferred/UI.vert.wgsl', [
-                    {
-                        arrayStride: 4 * 4,
-                        stepMode: "vertex",
-                        attributes: [{
-                            // position
-                            shaderLocation: 0,
-                            offset: 0,
-                            format: "float32x2",
-                        },
-                        {
-                            // uv
-                            shaderLocation: 1,
-                            offset: 8,
-                            format: "float32x2",
-                        }]
-                    }
-                ]),
+                vertexShader: uiVertShader,
                 fragmentShader: new Shader(this, 'deferred/UI.frag.wgsl'),
                 renderPipeline: {
                     primitive: {

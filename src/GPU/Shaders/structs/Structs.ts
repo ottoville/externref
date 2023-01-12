@@ -134,3 +134,9 @@ export const Mouse = {
     struct: /* wgsl */ `
         position:vec2<i32>`
 }
+export const UIUniforms = {
+    name: 'UIUniforms',
+    struct: /* wgsl */ `
+        translate: vec2<f32>`
+}
+

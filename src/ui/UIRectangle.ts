@@ -8,6 +8,8 @@ import { Texture, TextureUsageEnums, TextureUsageValue } from "../GPU/Texture.js
 import { Texture2D, type Texture2dSize } from "../GPU/Texture2D.js";
 import { RenderTarget } from "../GPU/RenderTargets/RenderTarget.js";
 import { RenderPipeline } from "../GPU/RenderPipeline.js";
+import type { RenderPipeline2 } from "../GPU/RenderPipeline2.js";
+import type { UIVertShader } from "../GPU/Shaders/UI.vert.js";
 declare const engine: Engine;
 
 export type ButtonSize = { min_width: number, y: number }
@@ -155,15 +157,7 @@ function createVertexBuffer(
     return vertices;
 }
 export type UIRectangleProps = {
-    canvaspipeline: RenderPipeline<VertexShader<[{
-        arrayStride: number;
-        stepMode: "vertex";
-        attributes: {
-            shaderLocation: number;
-            offset: number;
-            format: "float32x2";
-        }[];
-    }]>>,
+    canvaspipeline: RenderPipeline2<UIVertShader>,
     renderPass: RenderPass,
     label: string,
     /*
