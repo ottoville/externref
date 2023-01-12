@@ -4,17 +4,7 @@ import { ComputeShader } from './ComputeShader.js';
 import { IntArray, PlaneArray, Vertices } from './structs/Structs.js';
 
 const wgsl = /* wgsl */ `
-//TODO: remove size attr
-struct Vertice {
-  @size(16) position : vec3<f32>,
-  @size(16) normals : vec3<f32>,
-  @size(16) uv : vec2<f32>
-};
 
-  struct Plane {
-    norm : vec3<f32>,
-    d : f32
-};
 const cd: f32 = -1.0;
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {

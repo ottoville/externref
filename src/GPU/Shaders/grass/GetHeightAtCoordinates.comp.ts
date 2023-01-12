@@ -5,16 +5,6 @@ import { FloatArray, IntArray, PlaneArray, PositionAndRotateArray, Vec2Array } f
 
 const wgsl = /* wgsl */ `
 
-struct Plane {
-  norm : vec3<f32>,
-  d : f32
-};
-
-struct PositionAndRotate {
-   position : vec3<f32>,
-   rotation : f32
-};
-
 const PI:f32 = 3.141592653589793;
 //
 // Description : Array and textureless GLSL 2D simplex noise function.

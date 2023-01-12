@@ -5,11 +5,6 @@ import { ComputeShader } from './ComputeShader.js';
 /////////////////
 const wgsl = /* wgsl */ `
 
-struct Plane {
-  norm : vec3<f32>,
-  d : f32
-};
-
 fn mod289(x:f32) -> f32 {
 return x - floor(x * (1. / 289.)) * 289.;
 }

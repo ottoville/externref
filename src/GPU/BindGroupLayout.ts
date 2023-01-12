@@ -29,11 +29,12 @@ export class BindGroupLayoutEntry<T extends GPUBindingGroupLayoytEntryStrict = G
         public structName: string) {
     }
 }
+export type Struct = {name: string, struct: string, depedencies?: Struct[]}
 export class BufLayout extends BindGroupLayoutEntry {
     constructor(
         public override entry: GPUBindGroupLayoutEntryBuffer,
         variableName: string,
-        public struct?: {name: string, struct: string}) {
+        public struct?: Struct) {
             super(entry, variableName, struct?.name ?? '')
     }
 }

@@ -6,12 +6,6 @@ import { FloatArray } from './structs/Structs.js';
 /////////////////
 
 const wgsl = /* wgsl */ `
-   
-  struct Plane {
-    norm : vec3<f32>,
-    d : f32
- };
-
    @compute @workgroup_size(1)
    fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
        let stride : u32 = 12u;

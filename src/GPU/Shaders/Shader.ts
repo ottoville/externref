@@ -1,4 +1,4 @@
-import { BGLayout, BufLayout } from "../BindGroupLayout.js";
+import { BGLayout, BufLayout, Struct } from "../BindGroupLayout.js";
 import { PipelineLayout } from "../PipelineLayout.js";
 import type { GPU } from "../../GPU.js"
 
@@ -19,7 +19,7 @@ export abstract class Shader<
         label: string,
         shaderFlag: typeof GPUShaderStage.VERTEX | typeof GPUShaderStage.FRAGMENT | typeof GPUShaderStage.COMPUTE,
     ) {
-        const structs:Set<string> = new Set();
+        const structs:Set<Struct> = new Set();
         const groups = bindLayouts.reduce((groupstring, group, gi) => {
             return group.entries.reduce((acc, binding, bi) => {
                 if ((binding.entry.visibility & shaderFlag) === 0) {
@@ -35,12 +35,21 @@ export abstract class Shader<
                     } else {
                         qualifiers = '<storage, read_write>';
                     }
-                    structs.add(`struct ${binding.struct!.name} {\n${binding.struct!.struct}\n}`);
+                    if(binding.struct!.depedencies) {
+                        binding.struct!.depedencies.forEach(depedency => {
+                            structs.add(depedency);
+                        })
+                    }
+                    structs.add(binding.struct!);
                 }
                 return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${binding.variableName} : ${binding.structName};\n`
             }, groupstring)
         }, '\n');
-        this.wgsl = groups + [...structs].join('\n') +  wgsl;
+        const structString = [...structs].reduce((s, struct) => 
+            `${s}struct ${struct.name} {\n${struct.struct}\n}\n`
+        , '')
+        //
+        this.wgsl = groups + structString +  wgsl;
         this.module = gpu.device.createShaderModule(
             {
                 code: this.wgsl,

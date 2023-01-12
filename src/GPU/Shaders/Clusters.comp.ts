@@ -2,17 +2,11 @@ import { PROJECTION_BUFFER_SIZE } from '../Projection.js';
 import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
-import { clusterArray, Projection } from './structs/Structs.js';
+import { Clusters, Projection } from './structs/Structs.js';
 
    /////////////////
    const wgsl = /* wgsl */ `
     
-   //ssbo initialization
-struct VolumeTileAABB {
-minPoint : vec3<f32>,
-maxPoint : vec3<f32>
-};
-
 fn clipToView(clip : vec4<f32>) -> vec4<f32> {
 //View space transform
  let view = screentoview.inversed_projection * clip;
@@ -71,8 +65,8 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
  let maxPointNear = lineIntersectionToZPlane(eyePos, maxPoint_vS, tileNear);
  let maxPointFar = lineIntersectionToZPlane(eyePos, maxPoint_vS, tileFar);
  //Getting the 
- clusters.bounds[tileIndex].minPoint = min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar));
- clusters.bounds[tileIndex].maxPoint = max(max(minPointNear, minPointFar),max(maxPointNear, maxPointFar));
+ clusters.bounds[tileIndex].minAABB = vec4<f32>(min(min(minPointNear, minPointFar),min(maxPointNear, maxPointFar)),0);
+ clusters.bounds[tileIndex].maxAABB = vec4<f32>(max(max(minPointNear, minPointFar),max(maxPointNear, maxPointFar)),0);
 }
 
  `;
@@ -95,7 +89,7 @@ export class ClustersComp extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 7962624
             }
-          }, 'clusters', clusterArray),
+          }, 'clusters', Clusters),
         new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,

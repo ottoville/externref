@@ -5,27 +5,7 @@ import { Vertices } from './structs/Structs.js';
 
     //////////////////////////
     const wgsl = /* wgsl */ `
-    const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0);
-
-    struct Settings {
-         size : vec2<u32>,
-         bufferSize : vec2<u32>,
-         subdivisions : u32,
-         heightMinMax : vec2<i32>,
-         max : vec2<i32>,
-         textureSize:vec2<u32>
-    };
-    struct Vertice {
-      position : vec3<f32>,
-      normals : vec3<f32>,
-      @size(16) uv : vec2<f32>
-    };
-    struct Vertices {
-        vert: array<Vertice>
-    };
-    struct Pixels {
-        pixels: array<u32>
-    };    
+    const filt:vec4<f32> = vec4<f32>(0.3, 0.59, 0.11, 0.0); 
     
     @compute @workgroup_size(1)
     fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {

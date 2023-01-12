@@ -5,11 +5,6 @@ import { VertexShader } from './VertexShader.js';
 
   const wgsl = /* wgsl */ `
   
- struct Plane {
-   norm : vec3<f32>,
-   d : f32
- };
- 
  //let PI:f32 = 3.1415926535897932384626433832795;
  const angleStep:f32 = 0.7853981633974483; //(PI * 2.0) / 8.0;
  

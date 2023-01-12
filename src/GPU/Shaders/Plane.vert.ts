@@ -6,10 +6,6 @@ import { VertexShader } from './VertexShader.js';
 
 const wgsl = /* wgsl */ `
 
-struct Plane {
-  norm : vec3<f32>,
-  d : f32
-};
 fn getHeightAtCoordinates(xz:vec2<f32>, facetSize:u32) -> f32 {
    let col:u32 = u32(floor((xz.x + f32(settings.max.x)) * f32(settings.subdivisions) / f32(settings.size.x)));
    let row:u32 = u32(floor(- (xz.y + f32(settings.max.y)) * f32(settings.subdivisions) / f32(settings.size.y) + f32(settings.subdivisions)));

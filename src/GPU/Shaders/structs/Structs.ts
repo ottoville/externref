@@ -30,13 +30,12 @@ export const Uniforms = {
     struct: /* wgsl */ `
         screenDimensions : vec2<f32>`
 }
-export const clusterArray = {
-    name: 'clusterArray',
+export const ClusterBounds = {
+    name: 'ClusterBounds',
     struct: /* wgsl */ `
-        bounds: array<VolumeTileAABB,27648>, //32 * 18 * 48 = total tiles = 27648
-        lightsCount: array<u32, 27648>,
-        lights: array<u32, 1741824>  //27648 * 63 = 1741824`
-}
+        minAABB : vec4<f32>,
+        maxAABB : vec4<f32>`
+  }
 export const Projection = {
     name: 'Projection',
     struct: /* wgsl */ `
@@ -55,15 +54,29 @@ export const IntArray = {
     struct: /* wgsl */ `
         numbers: array<i32>`
 }
+export const Plane = {
+    name: 'Plane',
+    struct: /* wgsl */ `
+        norm : vec3<f32>,
+        d : f32`
+}
 export const PlaneArray = {
     name: 'PlaneArray',
     struct: /* wgsl */ `
-        plane: array<Plane>`
+        plane: array<Plane>`,
+    depedencies: [Plane]
+}
+export const PositionAndRotate = {
+    name: 'PositionAndRotate',
+    struct: /* wgsl */ `
+        position : vec3<f32>,
+        rotation : f32`
 }
 export const PositionAndRotateArray = {
     name: 'PositionAndRotateArray',
     struct: /* wgsl */ `
-        arr:  array<PositionAndRotate>`
+        arr:  array<PositionAndRotate>`,
+    depedencies: [PositionAndRotate]
 }
 export const FloatArray = {
     name: 'FloatArray',
@@ -90,10 +103,18 @@ export const Settings = {
         max : vec2<i32>,
         textureSize: vec2<u32>`
 }
+export const Vertice = {
+    name: 'Vertice',
+    struct: /* wgsl */ `
+        position : vec3<f32>,
+        normals : vec3<f32>,
+        @size(16) uv : vec2<f32>`
+}
 export const Vertices = {
     name: 'Vertices',
     struct: /* wgsl */ `
-        vert: array<Vertice>`
+        vert: array<Vertice>`,
+    depedencies: [Vertice]
 }
 export const Indices = {
     name: 'Indices',
@@ -105,7 +126,8 @@ export const MeshArray = {
     struct: /* wgsl */ `
         length:u32,
         pointers: array<u32, 63>,
-        mesh: array<MeshUniforms>`
+        mesh: array<MeshUniforms>`,
+    depedencies: [MeshUniforms]
 }
 export const Lights = {
     name: 'Lights',
@@ -118,7 +140,8 @@ export const Clusters = {
     struct: /* wgsl */ `
         bounds: array<ClusterBounds, 27648>, //32 * 18 * 48 = total tiles = 27648
         lightsCount: array<u32, 27648>,
-        lights: array<u32, 1741824>  //27648 * 63 = 1741824`
+        lights: array<u32, 1741824>  //27648 * 63 = 1741824`,
+    depedencies: [ClusterBounds]
 }
 export const ViewUniforms = {
     name: 'ViewUniforms',
