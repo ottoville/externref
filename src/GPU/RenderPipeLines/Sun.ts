@@ -1,11 +1,13 @@
-import { Shader, VertexShader } from "../RenderPipeline.js";
+import { Shader } from "../RenderPipeline.js";
 import { GPU } from "../../GPU.js";
+import { SunVertShader } from "../Shaders/Sun.vert.js";
 
 export const SunRenderPipeline = ['SunRenderPipeline', function create(gpu: GPU, label: string, primitive: GPUPrimitiveState) {
-    return gpu.positionBindGroupTimeWGSL.addRenderPipeline(
+    const sunVertShader = new SunVertShader(gpu.positionBindGroupTimeWGSL.bindGroupLayouts)
+    return gpu.positionBindGroupTimeWGSL.addRenderPipeline2(
         {
             label,
-            vertexShader: new VertexShader(gpu, 'sun.vert.wgsl', []),
+            vertexShader: sunVertShader,
             fragmentShader: new Shader(gpu, 'sun.frag.wgsl'),
             renderPipeline: {
                 primitive

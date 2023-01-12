@@ -2,8 +2,8 @@ import { MainNode } from "../../../MainNode.js";
 import { NormalsPipeline } from "../../RenderPipeLines/Normals.js";
 import { DrawableSimple } from "../../Drawables/DrawableSimple.js";
 import { Buffer, GPUBufferUsage } from "../../Buffer/Buffer.js"
-import { DrawableIndexed } from "GPU/Drawables/DrawableIndexed.js";
-import { RenderPipeline } from "GPU/RenderPipeline.js";
+import type { DrawableIndexed } from "../../Drawables/DrawableIndexed.js";
+import type { RenderPipeline } from "../../RenderPipeline.js";
 
 export class NormalsMesh extends MainNode {
     drawable: DrawableSimple<RenderPipeline> | undefined;

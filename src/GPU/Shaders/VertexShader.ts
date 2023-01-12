@@ -16,6 +16,7 @@ export abstract class VertexShader<
     constructor(
         gpu: GPU,
         bindLayouts: Readonly<B>,
+        //Comsumed by GPURenderPipelineDescriptor
         public buffers: BU,
         wgsl: string,
         entryPoints: E,

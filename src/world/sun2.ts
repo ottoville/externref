@@ -4,8 +4,8 @@ import { Angle } from "../Math.js";
 import { DrawableSimple } from "../GPU/Drawables/DrawableSimple.js";
 import type { Engine } from "../engine.js";
 import { SunRenderPipeline } from "../GPU/RenderPipeLines/Sun.js";
-import { VertexShader } from "GPU/RenderPipeline.js";
-import { RenderPipeline } from "GPU/RenderPipeline.js";
+import type { VertexShader, RenderPipeline } from "../GPU/RenderPipeline.js";
+import type { GPU } from "../GPU.js"
 declare const engine:Engine;
 
 //const sundistance = 149600000000;
@@ -50,21 +50,20 @@ export class Sun2 extends MainNode {
 
     }
     drawable: DrawableSimple<RenderPipeline<VertexShader<[]>>> | undefined;
-    constructor(scenes: Scene[]) {
+    constructor(gpu: GPU, scenes: Scene[]) {
         super({ positionsCount: 14, directional_light: 1,label: 'sun', scenes});
-        if(engine.gpu) {
-            const renderPipeline = engine.gpu.createRenderPipeline(SunRenderPipeline, {
-                topology: 'triangle-strip',
-                cullMode: 'none',
-                stripIndexFormat:'uint16'
-            });
-            this.drawable = new DrawableSimple({
-                node: this,
-                renderPipeline,
-                renderPasses: undefined,
-                vertexBuffers: []
-            })
-        }
+        const renderPipeline = gpu.createRenderPipeline(SunRenderPipeline, {
+            topology: 'triangle-strip',
+            cullMode: 'none',
+            stripIndexFormat:'uint16'
+        });
+        this.drawable = new DrawableSimple({
+            node: this,
+            renderPipeline,
+            renderPasses: undefined,
+            vertexBuffers: []
+        })
+        
         engine.physics.movables.push(this);
     }
 }

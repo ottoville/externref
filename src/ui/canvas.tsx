@@ -78,7 +78,7 @@ export class Canvas extends TerraCompoment {
         this.progress = 19;
 
         const mainScene = new Scene('main', gpu, [engine.mainCamera, waterCamera], (terrascene) => {
-            new Sun2([terrascene]);
+            new Sun2(gpu, [terrascene]);
             // Initial scene objects here
 
             new Sea([terrascene]);
