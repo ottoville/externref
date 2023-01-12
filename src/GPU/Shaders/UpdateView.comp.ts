@@ -1,7 +1,8 @@
-import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
+import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
+import { Clusters, Lights, MeshArray, ViewUniforms } from './structs/Structs.js';
 
     /////////////////
     const wgsl = /* wgsl */ `
@@ -17,24 +18,10 @@ import type { GPU } from '../../GPU.js'
             scenes:u32, //bitmask
             @size(128) z: f32  //padding
         }
-        struct Lights {
-          length:u32,
-          pointers: array<u32>
-        };
-        struct ViewUniforms {
-          modelViewProjectionMatrix : mat4x4<f32>,
-          view : mat4x4<f32>,
-          viewPosition : vec3<f32>
-        };
         struct ClusterBounds {
           minAABB : vec4<f32>,
           maxAABB : vec4<f32>
-        };
-        struct Clusters {
-          bounds: array<ClusterBounds, 27648>, //32 * 18 * 48 = total tiles = 27648
-          lightsCount: array<u32, 27648>,
-          lights: array<u32, 1741824>  //27648 * 63 = 1741824
-        };        
+        };      
         
           fn sqDistPointAABB(position : vec3<f32>, minAABB : vec3<f32>, maxAABB : vec3<f32>) -> f32 {
             var sqDist = 0.0;
@@ -108,7 +95,7 @@ export class UpdateView extends ComputeShader<
     gpu: GPU) {
     const bindLayouts = [
       new BGLayout(gpu, 'UpdateViewLayout',
-        new BindGroupLayoutEntry(
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -116,13 +103,8 @@ export class UpdateView extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 512
             }
-          }, 'meshes', 'MeshArray', 
-          `
-            length:u32,
-            pointers: array<u32, 63>,
-            mesh: array<MeshUniforms>
-          `),
-        new BindGroupLayoutEntry(
+          }, 'meshes', MeshArray),
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -130,8 +112,8 @@ export class UpdateView extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 16
             }
-          }, 'point_lights', 'Lights'),
-        new BindGroupLayoutEntry(
+          }, 'point_lights', Lights),
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -139,10 +121,10 @@ export class UpdateView extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 16
             }
-          }, 'directional_lights', 'Lights')
+          }, 'directional_lights', Lights)
       ),
       new BGLayout(gpu, 'UpdateClustersLayout',
-        new BindGroupLayoutEntry(
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -150,8 +132,8 @@ export class UpdateView extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 7962624
             }
-          }, 'clusters', 'Clusters'),
-        new BindGroupLayoutEntry(
+          }, 'clusters', Clusters),
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -159,7 +141,7 @@ export class UpdateView extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 144
             }
-          }, 'viewUniforms', 'ViewUniforms')
+          }, 'viewUniforms', ViewUniforms)
       )
     ] as const;
 

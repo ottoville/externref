@@ -1,20 +1,11 @@
-import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 import type { GPU } from '../../GPU.js'
+import { Depth_And_Mesh, Mouse } from './structs/Structs.js';
 
        /////////////////
-       const wgsl = /* wgsl */ `
-    
-       struct Depth_And_Mesh {
-           depth:f32,
-           mesh:u32
-         };
-         
-         struct Mouse {
-           position:vec2<i32>
-         };
-         
+       const wgsl = /* wgsl */ `         
          @compute @workgroup_size(1, 1, 1)
          fn main(
              @builtin(global_invocation_id) global_id : vec3<u32>
@@ -27,13 +18,13 @@ import type { GPU } from '../../GPU.js'
                ///////////////////////////
 
 export class ReadDepth extends ComputeShader<
-    [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-        BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>],
+    [BGLayout<[BufLayout]>,
+        BGLayout<[TextLayout, TextLayout, BufLayout]>],
     { main: PipelineLayout }> {
     constructor(gpu: GPU) {
         const bindLayouts = [
             new BGLayout(gpu, 'DepthAndMeshLayout',
-                new BindGroupLayoutEntry(
+                new BufLayout(
                     {
                         visibility: GPUShaderStage.COMPUTE,
                         buffer: {
@@ -41,10 +32,10 @@ export class ReadDepth extends ComputeShader<
                             hasDynamicOffset: false,
                             minBindingSize: 16
                         }
-                    }, 'depth_and_mesh', 'Depth_And_Mesh')
+                    }, 'depth_and_mesh', Depth_And_Mesh)
             ),
             new BGLayout(gpu, 'DepthTextureLayout',
-                new BindGroupLayoutEntry(
+                new TextLayout(
                     {
                         visibility: GPUShaderStage.COMPUTE,
                         texture: {
@@ -52,7 +43,7 @@ export class ReadDepth extends ComputeShader<
                             sampleType: 'depth'
                         }
                     }, 'depth_texture', 'texture_depth_multisampled_2d'),
-                new BindGroupLayoutEntry(
+                new TextLayout(
                     {
                         visibility: GPUShaderStage.COMPUTE,
                         texture: {
@@ -60,7 +51,7 @@ export class ReadDepth extends ComputeShader<
                             sampleType: 'uint'
                         }
                     }, 'mesh_texture', 'texture_2d<u32>'),
-                new BindGroupLayoutEntry(
+                new BufLayout(
                     {
                         visibility: GPUShaderStage.COMPUTE,
                         buffer: {
@@ -68,7 +59,7 @@ export class ReadDepth extends ComputeShader<
                             hasDynamicOffset: false,
                             minBindingSize: 8
                         }
-                    }, 'mouse', 'Mouse')
+                    }, 'mouse', Mouse)
             )
         ] as const;
         

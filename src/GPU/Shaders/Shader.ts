@@ -1,4 +1,4 @@
-import type { BGLayout } from "../BindGroupLayout.js";
+import { BGLayout, BufLayout } from "../BindGroupLayout.js";
 import { PipelineLayout } from "../PipelineLayout.js";
 import type { GPU } from "../../GPU.js"
 
@@ -26,7 +26,7 @@ export abstract class Shader<
                     return acc;
                 }
                 let qualifiers = '';
-                if (binding.entry.buffer) {
+                if(binding instanceof BufLayout) {
                     if (binding.entry.buffer.type === 'uniform') {
                         qualifiers = '<uniform>';
                     }
@@ -35,9 +35,7 @@ export abstract class Shader<
                     } else {
                         qualifiers = '<storage, read_write>';
                     }
-                }
-                if(binding.struct) {
-                    structs.add(`struct ${binding.structName} {\n${binding.struct}\n}`);
+                    structs.add(`struct ${binding.struct!.name} {\n${binding.struct!.struct}\n}`);
                 }
                 return `${acc}@group(${gi}) @binding(${bi}) var${qualifiers} ${binding.variableName} : ${binding.structName};\n`
             }, groupstring)

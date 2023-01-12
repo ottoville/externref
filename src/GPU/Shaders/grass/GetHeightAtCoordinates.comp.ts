@@ -1,40 +1,18 @@
-import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../../BindGroupLayout.js'
+import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../../BindGroupLayout.js'
 import { PipelineLayout } from '../../PipelineLayout.js';
 import { ComputeShader } from '../ComputeShader.js';
+import { FloatArray, IntArray, PlaneArray, PositionAndRotateArray, Vec2Array } from '../structs/Structs.js';
 
 const wgsl = /* wgsl */ `
-struct Vec2Array {
-  vectors: array<vec2<f32>>
-};
-
-struct IntArray {
-   numbers: array<i32>
-};
 
 struct Plane {
   norm : vec3<f32>,
   d : f32
 };
-struct PlaneArray {
-   plane: array<Plane>
-};
-struct FloatArray {
-  numbers: array<f32>
-};
+
 struct PositionAndRotate {
    position : vec3<f32>,
    rotation : f32
-};
-struct PositionAndRotateArray {
-   arr:  array<PositionAndRotate>
-};
-
-struct Settings {
-    size : vec2<u32>,
-    bufferSize : vec2<u32>,
-    subdivisions : u32,
-    heightMinMax : vec2<i32>,
-    max : vec2<i32>
 };
 
 const PI:f32 = 3.141592653589793;
@@ -167,7 +145,7 @@ export class getHeightAtCoordinates extends ComputeShader<
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'slopesBindGroupLayout',
-        new BindGroupLayoutEntry(
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -175,8 +153,8 @@ export class getHeightAtCoordinates extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 32
             },
-          }, 'slopes', 'IntArray'),
-        new BindGroupLayoutEntry(
+          }, 'slopes', IntArray),
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -184,8 +162,8 @@ export class getHeightAtCoordinates extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 32
             },
-          }, 'facet12', 'PlaneArray'),
-        new BindGroupLayoutEntry(
+          }, 'facet12', PlaneArray),
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -193,8 +171,8 @@ export class getHeightAtCoordinates extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 32
             },
-          }, 'positionAndRotate', 'PositionAndRotateArray'),
-        new BindGroupLayoutEntry(
+          }, 'positionAndRotate', PositionAndRotateArray),
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -202,10 +180,10 @@ export class getHeightAtCoordinates extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 32
             },
-          }, 'shapes', 'FloatArray'),
+          }, 'shapes', FloatArray),
       ),
       new BGLayout(settingsLayout.gpu, 'positionsBindGroupLayout',
-        new BindGroupLayoutEntry(
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -213,7 +191,7 @@ export class getHeightAtCoordinates extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 32
             },
-          }, 'positions', 'Vec2Array'))
+          }, 'positions', Vec2Array))
     ] as const
 
 

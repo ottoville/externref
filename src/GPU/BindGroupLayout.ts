@@ -26,14 +26,27 @@ export class BindGroupLayoutEntry<T extends GPUBindingGroupLayoytEntryStrict = G
     constructor(
         public entry: T,
         public variableName: string,
-        public structName: string,
-        public struct?: string) {
+        public structName: string) {
+    }
+}
+export class BufLayout extends BindGroupLayoutEntry {
+    constructor(
+        public override entry: GPUBindGroupLayoutEntryBuffer,
+        variableName: string,
+        public struct?: {name: string, struct: string}) {
+            super(entry, variableName, struct?.name ?? '')
+    }
+}
+export class TextLayout extends BindGroupLayoutEntry {
+    constructor(
+        public override entry: GPUBindGroupLayoutEntryTexture | GPUBindGroupLayoutEntryStorageTexture,
+        variableName: string,
+        structName: string) {
+            super(entry, variableName, structName)
     }
 }
 
-export type BufLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>
 export type SampLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntrySampler>
-export type TextLayout = BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>
 
 export class BGLayout<T extends BindGroupLayoutEntry[] = BindGroupLayoutEntry[]> {
     layout: GPUBindGroupLayout;

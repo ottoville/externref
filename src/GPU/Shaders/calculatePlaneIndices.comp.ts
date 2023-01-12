@@ -1,18 +1,8 @@
 import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
+import { Indices } from './structs/Structs.js';
 const wgsl = /* wgsl */ `
-struct Indices {
-  numbers: array<u32>
-};
-struct Settings {
-    size : vec2<u32>,            //8
-    bufferSize : vec2<u32>,      //8
-    subdivisions : u32,          //4, size = 8 because align of nect item
-    heightMinMax : vec2<i32>,    //8, align 4
-    max : vec2<i32>,  //8
-    textureSize: vec2<u32>       //8
-};
 
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
@@ -39,7 +29,7 @@ export class CalculatePlaneIndices extends ComputeShader<
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'calculateIndicesBindGroupLayout',
-        new BindGroupLayoutEntry(
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -47,7 +37,7 @@ export class CalculatePlaneIndices extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 32
             }
-          }, 'indices', 'Indices'))
+          }, 'indices', Indices))
     ] as const
 
     const pipelineLayout = new PipelineLayout({

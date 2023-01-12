@@ -1,6 +1,7 @@
-import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryTexture } from '../BindGroupLayout.js'
+import { BGLayout, BufLayout, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
+import { Vertices } from './structs/Structs.js';
 
     //////////////////////////
     const wgsl = /* wgsl */ `
@@ -52,14 +53,14 @@ import { ComputeShader } from './ComputeShader.js';
     ///////////////
 
 export class CreateGroundFromHeightMap extends ComputeShader<
-[BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryTexture>]>],
+[BGLayout<[BufLayout]>,
+BGLayout<[BufLayout, TextLayout]>],
 { main: PipelineLayout }> {
-  constructor(settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+  constructor(settingsLayout: BGLayout<[BufLayout]>) {
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'indicesBindGroupLayout',
-      new BindGroupLayoutEntry(
+      new BufLayout(
       {
         visibility: GPUShaderStage.COMPUTE,
         buffer: {
@@ -67,8 +68,8 @@ BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEn
           hasDynamicOffset: false,
           minBindingSize: 48
         }
-      }, 'positions', 'Vertices'),
-      new BindGroupLayoutEntry(
+      }, 'positions', Vertices),
+      new TextLayout(
       {
           visibility: GPUShaderStage.COMPUTE,
           texture: {

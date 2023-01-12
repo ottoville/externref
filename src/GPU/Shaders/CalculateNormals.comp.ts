@@ -1,33 +1,16 @@
 import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js';
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
+import { FloatArray } from './structs/Structs.js';
 
 /////////////////
 
 const wgsl = /* wgsl */ `
    
-   struct FloatArray {
-    numbers: array<f32>
- };
   struct Plane {
     norm : vec3<f32>,
     d : f32
  };
- struct PlaneArray {
-   plane: array<Plane>
- };
- struct Slopes {
-    numbers: array<i32>
- };
- struct Settings {
-      size : vec2<u32>,
-      bufferSize : vec2<u32>,
-      subdivisions : u32,
-      heightMinMax : vec2<i32>,
-      max : vec2<i32>,
-      textureSize:vec2<u32>
- };
-
 
    @compute @workgroup_size(1)
    fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
@@ -105,7 +88,7 @@ export class CalculateNormals extends ComputeShader<
     const bindLayouts = [
       settingsLayout,
       new BGLayout(settingsLayout.gpu, 'normalsBindGroupLayout',
-        new BindGroupLayoutEntry(
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -113,7 +96,7 @@ export class CalculateNormals extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 32
             }
-          }, 'normals', 'FloatArray')),
+          }, 'normals', FloatArray)),
       slopesLayout
     ] as const
 

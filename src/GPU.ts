@@ -21,6 +21,7 @@ import { Clusters } from "./GPU/Shaders/Clusters.comp.js";
 import { SharedPipelineLayout, BindablePipelineLayout } from "./GPU/PipelineLayout.js";
 import type { RenderPipeline } from "./GPU/RenderPipeline.js";
 import { RenderPipeline2 } from "./GPU/RenderPipeline2.js";
+import { MeshUniforms, Scene, Time, Uniforms } from "./GPU/Shaders/structs/Structs.js";
 declare const engine: Engine;
 
 let curSecond = 0;
@@ -178,28 +179,22 @@ export class GPU {
             resource: this.#GPUDirectionalLights.getStorageBinding(bindGroup),
         }]);
         this.uniformBindGroupLayoutWithTime = new BGLayout(this, 'uniformBindGroupLayoutWithTime',
-            new BindGroupLayoutEntry(
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                     buffer: {
                         type: "uniform",
                         minBindingSize: 144
                     }
-                }, 'scene', 'Scene',
-                `modelViewProjection : mat4x4<f32>,
-                view : mat4x4<f32>,
-                viewPosition : vec3<f32>`),
-            new BindGroupLayoutEntry(
+                }, 'scene', Scene),
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.VERTEX,
                     buffer: {
                         type: "uniform",
                         minBindingSize: 8
                     }
-                }, 'time', 'Time',
-                `time : u32,
-                 delta : f32
-              `),
+                }, 'time', Time),
             new BindGroupLayoutEntry(
                 {
                     //clusters
@@ -208,7 +203,7 @@ export class GPU {
                         type: 'read-only-storage',
                         minBindingSize: 7962624 //Must be in sync with Struct Clusters in shader
                     }
-                }, 'TODOVAR', 'TODOSTRUCT'),
+                }, 'TODOVAR', 'TODOSTRUCTNAME'),
             new BindGroupLayoutEntry(
                 {   // mesh array for lights
                     visibility: GPUShaderStage.FRAGMENT,
@@ -216,7 +211,7 @@ export class GPU {
                         type: "read-only-storage",
                         minBindingSize: 512
                     }
-                }, 'TODOVAR', 'TODOSTRUCT'),
+                }, 'TODOVAR', 'TODOSTRUCTNAME'),
             new BindGroupLayoutEntry(
                 {   //projection
                     visibility: GPUShaderStage.FRAGMENT,
@@ -224,17 +219,17 @@ export class GPU {
                         type: "uniform",
                         minBindingSize: PROJECTION_BUFFER_SIZE
                     }
-                }, 'TODOVAR', 'TODOSTRUCT')
+                }, 'TODOVAR', 'TODOSTRUCTNAME')
         );
         this.sizeBindGroupLayout = new BGLayout(this, 'sizeBindGroupLayout',
-            new BindGroupLayoutEntry(
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
                     buffer: {
                         type: 'uniform',
                         minBindingSize: 16
                     }
-                }, 'uniforms', 'Uniforms')
+                }, 'uniforms', Uniforms)
         )
         this.rootCameralayout = new BindablePipelineLayout({
             label: 'rootCamera',
@@ -242,7 +237,7 @@ export class GPU {
         });
         const BindGroupLayoutPosition = new BGLayout(this,
             'BindGroupLayoutPosition',
-            new BindGroupLayoutEntry(
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.VERTEX,
                     buffer: {
@@ -250,19 +245,7 @@ export class GPU {
                         hasDynamicOffset: true,
                         minBindingSize: GPU.gpu_memory_index_size
                     }
-                }, 'world', 'MeshUniforms', 
-                `
-                transformation : mat4x4<f32>,
-                @size(16) color : vec3<f32>,
-                @size(12) ambient : vec3<f32>,
-                shadow : f32,
-                @size(16) spot_light : vec3<f32>,
-                id : u32,
-                point_light_squared:f32,          //30
-                directional_light:f32,
-                scenes:u32, //bitmask
-                @size(128) z: f32  //padding
-                `) as BufLayout
+                }, 'world', MeshUniforms)
         );
         this.BindGroupPosition = BindGroupLayoutPosition.createBindGroup('BindGroupPosition', bindGroup => [
             {
@@ -278,12 +261,12 @@ export class GPU {
                         visibility: GPUShaderStage.FRAGMENT,
                         sampler: {
                         },
-                    }, 'TODOVAR', 'TODOSTRUCT'),
-                new BindGroupLayoutEntry(
+                    }, 'TODOVAR', 'TODOSTRUCTNAME'),
+                new TextLayout(
                     {
                         visibility: GPUShaderStage.FRAGMENT,
                         texture: {}
-                    }, 'TODOVAR', 'TODOSTRUCT')
+                    }, 'TODOVAR', 'TODOTEXTURE')
             ));
         this.bindGroupTextureWater = this.positionBindGroupTimeWGSL.createSharedLayout('lightsBindGroupTexture2PipelineLayout',
             new BGLayout(this,
@@ -293,12 +276,12 @@ export class GPU {
                         visibility: GPUShaderStage.FRAGMENT,
                         sampler: {
                         },
-                    }, 'TODOVAR', 'TODOSTRUCT') as SampLayout,
+                    }, 'TODOVAR', 'TODOSTRUCTNAME') as SampLayout,
                 new BindGroupLayoutEntry(
                     {
                         visibility: GPUShaderStage.FRAGMENT,
                         texture: {}
-                    }, 'TODOVAR', 'TODOSTRUCT') as TextLayout
+                    }, 'TODOVAR', 'TODOSTRUCTNAME') as TextLayout
             ));
 
         this.pickRenderPass = new RenderPass({
@@ -442,13 +425,13 @@ export class GPU {
                         type: "uniform",
                         minBindingSize: 8
                     }
-                }, 'TODOVAR', 'TODOSTRUCT'),
+                }, 'TODOVAR', 'TODOSTRUCTNAME'),
             new BindGroupLayoutEntry(
                 {
                     visibility: GPUShaderStage.FRAGMENT,
                     texture: {
                     }
-                }, 'TODOVAR', 'TODOSTRUCT')
+                }, 'TODOVAR', 'TODOSTRUCTNAME')
         )
         this.#canvasRootLayout = new BindablePipelineLayout({
             label: 'canvasRootLayout',

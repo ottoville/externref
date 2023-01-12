@@ -1,27 +1,13 @@
-import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer, GPUBindGroupLayoutEntryStorageTexture } from '../BindGroupLayout.js'
+import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer, TextLayout } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
 
 /////////////////
 const wgsl = /* wgsl */ `
-struct Settings {
-  size : vec2<u32>,
-  bufferSize : vec2<u32>,
-  subdivisions : u32,
-  heightMinMax : vec2<i32>,
-  max : vec2<i32>,
-  textureSize:vec2<u32>
-};
 
 struct Plane {
-norm : vec3<f32>,
-d : f32
-};
-struct PlaneArray {
-plane: array<Plane>
-};
-struct Slopes {
-numbers: array<i32>
+  norm : vec3<f32>,
+  d : f32
 };
 
 fn mod289(x:f32) -> f32 {
@@ -158,16 +144,16 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 export class CreateTerrainTexture extends ComputeShader<
   [BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
     BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryStorageTexture>]>],
+    BGLayout<[TextLayout]>],
   { main: PipelineLayout }> {
   constructor(
-    settingsLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>,
-    slopesLayout: BGLayout<[BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>, BindGroupLayoutEntry<GPUBindGroupLayoutEntryBuffer>]>) {
+    settingsLayout: BGLayout<[BufLayout]>,
+    slopesLayout: BGLayout<[BufLayout, BufLayout]>) {
     const bindLayouts = [
       settingsLayout,
       slopesLayout,
       new BGLayout(settingsLayout.gpu, 'TerrainTextureLayout',
-        new BindGroupLayoutEntry(
+        new TextLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             storageTexture: {

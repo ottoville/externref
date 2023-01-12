@@ -1,6 +1,7 @@
-import { BGLayout, BindGroupLayoutEntry, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
+import { BGLayout, BindGroupLayoutEntry, BufLayout, GPUBindGroupLayoutEntryBuffer } from '../BindGroupLayout.js'
 import { PipelineLayout } from '../PipelineLayout.js';
 import { ComputeShader } from './ComputeShader.js';
+import { clusterArray, Projection } from './structs/Structs.js';
 
    /////////////////
    const wgsl = /* wgsl */ `
@@ -10,24 +11,6 @@ struct VolumeTileAABB {
 minPoint : vec3<f32>,
 maxPoint : vec3<f32>
 };
-struct clusterArray {
-bounds: array<VolumeTileAABB,27648>, //32 * 18 * 48 = total tiles = 27648
-lightsCount: array<u32, 27648>,
-lights: array<u32, 1741824>  //27648 * 63 = 1741824
-};
-
-struct Projection {
-inversed_projection : mat4x4<f32>,
-reversed_projection:mat4x4<f32>,
-inversed_projection_farplane:mat4x4<f32>,
-zNear : f32,
-zFar : f32
-};
-
-struct Uniforms {
-screenDimensions : vec2<f32>
-};
-
 
 fn clipToView(clip : vec4<f32>) -> vec4<f32> {
 //View space transform
@@ -103,7 +86,7 @@ export class Clusters extends ComputeShader<
     const bindLayouts = [
       sizeGroup,
       new BGLayout(sizeGroup.gpu, 'CreateClustersLayout2',
-        new BindGroupLayoutEntry(
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -111,8 +94,8 @@ export class Clusters extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 7962624
             }
-          }, 'clusters', 'clusterArray'),
-        new BindGroupLayoutEntry(
+          }, 'clusters', clusterArray),
+        new BufLayout(
           {
             visibility: GPUShaderStage.COMPUTE,
             buffer: {
@@ -120,7 +103,7 @@ export class Clusters extends ComputeShader<
               hasDynamicOffset: false,
               minBindingSize: 208
             }
-          }, 'screentoview', 'Projection')
+          }, 'screentoview', Projection)
       )
     ] as const;
  

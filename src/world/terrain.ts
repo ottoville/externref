@@ -15,6 +15,7 @@ import { CreateGroundFromHeightMap } from "../GPU/Shaders/CreateGroundFromHeight
 import type { GPU } from '../GPU.js'
 import { CreateTerrainTexture } from "../GPU/Shaders/CreateTerrainTexture.comp.js";
 import { BindablePipelineLayout } from "../GPU/PipelineLayout.js";
+import { IntArray, PlaneArray, Settings, Slopes } from "../GPU/Shaders/structs/Structs.js";
 declare const engine: Engine;
 
 
@@ -104,7 +105,7 @@ TODO
 
     static async loadFromTexture(gpu: GPU, scenes: Scene[]): Promise<Terrain> {
         const settingsLayout = new BGLayout(gpu, 'settingsBindGroupLayout',
-            new BindGroupLayoutEntry(
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.COMPUTE,
                     buffer: {
@@ -112,7 +113,7 @@ TODO
                         hasDynamicOffset: false,
                         minBindingSize: 48
                     }
-                }, 'settings', 'Settings'));
+                }, 'settings', Settings));
         const settingsGPU = Buffer.create(gpu, 48, [GPUBufferUsage.STORAGE, GPUBufferUsage.UNIFORM], 'settingsGPU', b => {
             const sourcearrSettings = b.getMappedRange();
             new Uint32Array(sourcearrSettings).set(this.size);   // terrain width and height
@@ -182,7 +183,7 @@ TODO
             }
 
             const slopesLayout = new BGLayout(gpu, 'slopesAndFacesBindGroupLayoutReadOnly',
-            new BindGroupLayoutEntry(
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.COMPUTE,
                     buffer: {
@@ -190,8 +191,8 @@ TODO
                         hasDynamicOffset: false,
                         minBindingSize: 32
                     },
-                }, 'slopes', 'Slopes'),
-            new BindGroupLayoutEntry(
+                }, 'slopes', Slopes),
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.COMPUTE,
                     buffer: {
@@ -199,7 +200,7 @@ TODO
                         hasDynamicOffset: false,
                         minBindingSize: 32
                     }
-                }, 'facet12', 'PlaneArray'));
+                }, 'facet12', PlaneArray));
 
 
             const calculatePlaneIndicesShader = new CalculatePlaneIndices(settingsLayout);
@@ -293,30 +294,30 @@ TODO
             }
         ] as const
         this.heightsLayout = new BGLayout(gpu, 'terrainBindGroupLayout',
-            new BindGroupLayoutEntry(
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.VERTEX,
                     buffer: {
                         type: "read-only-storage",
                         minBindingSize: 32
                     },
-                }, 'slopes', 'IntArray'),
-            new BindGroupLayoutEntry(
+                }, 'slopes', IntArray),
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.VERTEX,
                     buffer: {
                         type: "read-only-storage",
                         minBindingSize: 32
                     }
-                }, 'facet12', 'PlaneArray'),
-            new BindGroupLayoutEntry(
+                }, 'facet12', PlaneArray),
+            new BufLayout(
                 {
                     visibility: GPUShaderStage.VERTEX,
                     buffer: {
                         type: "read-only-storage",
-                        minBindingSize: 40
+                        minBindingSize: 48
                     }
-                }, 'settings', 'Settings')
+                }, 'settings', Settings)
         )
         this.TerrainHeightsbindGroupTree = gpu.positionBindGroupTimeWGSL.addChildBindGroupLayout('terrainPipelineLayout',
             this.heightsLayout.createBindGroup('TerrainHeightsbindGroupTree', bindGroup => [
